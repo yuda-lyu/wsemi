@@ -15,7 +15,7 @@ export default function arraccum(vec) {
 
     //check
     if (!isarr(vec)) {
-        return {}
+        return []
     }
 
     let r = []
