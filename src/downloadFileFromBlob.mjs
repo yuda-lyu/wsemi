@@ -1,0 +1,68 @@
+import isestr from './isestr.mjs'
+
+
+/**
+ * 前端下載binary資料核心, 支援IE11
+ *
+ * @param {String} cfn 輸入檔名字串
+ * @param {Blob} blob 輸入資料Blob
+ */
+function df_IE11(cfn, blob) {
+
+    //msSaveOrOpenBlob
+    window.navigator.msSaveOrOpenBlob(blob, cfn)
+
+}
+
+
+/**
+ * 前端下載binary資料核心, 支援HTML5瀏覽器
+ *
+ * @param {String} cfn 輸入檔名字串
+ * @param {Blob} blob 輸入資料Blob
+ */
+function df_HTML5(cfn, blob) {
+
+    //createObjectURL
+    let url = window.URL.createObjectURL(blob)
+
+    //tag a
+    let a = document.createElement('a')
+    a.href = url
+    a.download = cfn
+
+    //download
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    //revokeObjectURL
+    window.URL.revokeObjectURL(url)
+
+}
+
+
+/**
+ * 前端下載Blob資料成為檔案
+ *
+ * @export
+ * @param {String} cfn 輸入檔名字串
+ * @param {Blob} blob 輸入資料Blob
+ */
+export default function downloadFileFromBlob(cfn, blob) {
+
+    //check
+    if (!isestr(cfn)) {
+        console.warn('no filename')
+        return
+    }
+
+    //download
+    if (window.navigator && window.navigator.msSaveOrOpenBlob) { //IE11
+        df_IE11(cfn, blob)
+    }
+    else {
+        df_HTML5(cfn, blob)
+    }
+
+}
