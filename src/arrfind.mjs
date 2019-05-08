@@ -1,6 +1,6 @@
 import map from 'lodash/map'
 import indexOf from 'lodash/indexOf'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -14,10 +14,10 @@ import isarr from './isarr.mjs'
 export default function arrfind(vall, vfind) {
 
     //check
-    if (!isarr(vall)) {
+    if (!isearr(vall)) {
         return []
     }
-    if (!isarr(vfind)) {
+    if (!isearr(vfind)) {
         return []
     }
 
