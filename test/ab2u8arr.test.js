@@ -8,7 +8,7 @@ describe('ab2u8arr', function() {
         let ab = new ArrayBuffer(8)
         let r = ab2u8arr(ab)
         r = Object.prototype.toString.call(r)
-        assert.strictEqual(r, '[object Uint8Array]')
+        assert.strict.deepEqual(r, '[object Uint8Array]')
     })
 
 })
