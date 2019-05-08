@@ -1,8 +1,8 @@
 import each from 'lodash/each'
 import map from 'lodash/map'
-import join from 'lodash/join'
-import isarr from './isarr.mjs'
-import isobj from './isobj.mjs'
+import isearr from './isearr.mjs'
+import isstr from './isstr.mjs'
+import isnum from './isnum.mjs'
 import o2j from './o2j.mjs'
 
 
@@ -17,10 +17,10 @@ import o2j from './o2j.mjs'
 export default function ltdt2mat(keys, ltdt) {
 
     //check
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return []
     }
-    if (!isarr(ltdt)) {
+    if (!isearr(ltdt)) {
         return []
     }
 
@@ -28,15 +28,7 @@ export default function ltdt2mat(keys, ltdt) {
     let mdata = []
     each(ltdt, function(v) {
         let r = map(keys, function(k) {
-            if (isarr(v[k])) {
-                if (v[k].length > 0) {
-                    return join(v[k], ',')
-                }
-                else {
-                    return ''
-                }
-            }
-            else if (isobj(v[k])){
+            if (!isstr(v[k]) && !isnum(v[k])) {
                 return o2j(v[k])
             }
             return v[k]

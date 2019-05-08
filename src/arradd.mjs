@@ -1,6 +1,6 @@
 import size from 'lodash/size'
 import each from 'lodash/each'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import cdbl from './cdbl.mjs'
 
 
@@ -19,17 +19,17 @@ import cdbl from './cdbl.mjs'
 export default function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
 
     //check
-    if (!isarr(v1)) {
+    if (!isearr(v1)) {
         return []
     }
-    if (!isarr(v2)) {
+    if (!isearr(v2)) {
         return []
     }
 
     //b3,b4,b5
-    let b3 = isarr(v3)
-    let b4 = isarr(v4)
-    let b5 = isarr(v5)
+    let b3 = isearr(v3)
+    let b4 = isearr(v4)
+    let b5 = isearr(v5)
 
     //check size
     if (size(v1) !== size(v2)) {

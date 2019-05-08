@@ -1,5 +1,5 @@
 import isestr from './isestr.mjs'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -16,7 +16,7 @@ export default function arrhas(vtar, vhas) {
     if (isestr(vtar)) {
         vtar = [vtar]
     }
-    else if (isarr(vtar)) {
+    else if (isearr(vtar)) {
         //預設輸入陣列
     }
     else {
@@ -27,7 +27,7 @@ export default function arrhas(vtar, vhas) {
     if (isestr(vhas)) {
         vhas = [vhas]
     }
-    else if (isarr(vhas)) {
+    else if (isearr(vhas)) {
         //預設輸入陣列
     }
     else {

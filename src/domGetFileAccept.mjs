@@ -3,7 +3,7 @@ import concat from 'lodash/concat'
 import filter from 'lodash/filter'
 import join from 'lodash/join'
 import isstr from './isstr.mjs'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import isernot from './isernot.mjs'
 
 
@@ -24,7 +24,7 @@ export default function domGetFileAccept(kind = '*') {
     }
 
     //check not string or array
-    if (!isstr(kind) && !isarr(kind)) {
+    if (!isstr(kind) && !isearr(kind)) {
         return '*'
     }
 
@@ -158,12 +158,12 @@ export default function domGetFileAccept(kind = '*') {
     ]
 
     function getName(name) {
-        let rs = filter(data, {name: name})
+        let rs = filter(data, { name: name })
         return getAcp(rs)
     }
 
     function getMode(kind) {
-        let rs = filter(data, {group: kind})
+        let rs = filter(data, { group: kind })
         return getAcp(rs)
     }
 
@@ -178,7 +178,7 @@ export default function domGetFileAccept(kind = '*') {
 
     //accept string
     let c = ''
-    if (isarr(kind)) {
+    if (isearr(kind)) {
         let r1 = map(kind, function(v) {
             return getMode(v)
         })

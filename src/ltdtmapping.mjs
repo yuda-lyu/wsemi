@@ -1,5 +1,5 @@
 import each from 'lodash/each'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import dtmapping from './dtmapping.mjs'
 
 
@@ -15,10 +15,10 @@ export default function ltdtmapping(ltdt, keys) {
     //針對物件陣列ltdt呼叫dtmapping處理
 
     //check
-    if (!isarr(ltdt)) {
+    if (!isearr(ltdt)) {
         return []
     }
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return []
     }
 

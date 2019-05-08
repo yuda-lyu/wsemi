@@ -1,6 +1,6 @@
 import range from 'lodash/range'
 import at from 'lodash/at'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import isp0int from './isp0int.mjs'
 import iser from './iser.mjs'
 
@@ -18,7 +18,7 @@ import iser from './iser.mjs'
 export default function arrat(vall, istart, iend = undefined) {
 
     //check
-    if (!isarr(vall)) {
+    if (!isearr(vall)) {
         return []
     }
     if (!isp0int(istart)) {

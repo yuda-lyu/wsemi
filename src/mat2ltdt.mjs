@@ -1,6 +1,6 @@
 import take from 'lodash/take'
 import tail from 'lodash/tail'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import keysmat2ltdt from './keysmat2ltdt.mjs'
 
 
@@ -14,7 +14,7 @@ import keysmat2ltdt from './keysmat2ltdt.mjs'
 export default function mat2ltdt(mdata) {
 
     //check
-    if (!isarr(mdata)) {
+    if (!isearr(mdata)) {
         return []
     }
 

@@ -4,7 +4,10 @@ import mean from 'lodash/mean'
 import every from 'lodash/every'
 import fuzzball from 'fuzzball'
 import iser from './iser.mjs'
-import isarr from './isarr.mjs'
+import isstr from './isstr.mjs'
+import isnum from './isnum.mjs'
+import isearr from './isearr.mjs'
+import cstr from './cstr.mjs'
 import binstr from './binstr.mjs'
 import sep from './sep.mjs'
 
@@ -31,8 +34,19 @@ export default function fuzzfind(ar, strkey, bscore = false) {
     }
 
     //自動將陣列轉字串
-    if (isarr(ar)) {
+    if (isstr(ar) || isnum(ar)) {
+        ar = cstr(ar)
+    }
+    else if (isearr(ar)) {
         ar = join(ar, '')
+    }
+    else {
+        if (bscore) {
+            return 0
+        }
+        else {
+            return false
+        }
     }
 
     //若有存在完整符合

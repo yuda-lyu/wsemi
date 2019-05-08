@@ -4,7 +4,7 @@ import reverse from 'lodash/reverse'
 import size from 'lodash/size'
 import range from 'lodash/range'
 import isEqual from 'lodash/isEqual'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import arrhas from './arrhas.mjs'
 
 
@@ -19,10 +19,10 @@ import arrhas from './arrhas.mjs'
 export default function ltdt2vrtsable(ltdt, mergerowkeys) {
 
     //check
-    if (!isarr(ltdt)) {
+    if (!isearr(ltdt)) {
         return []
     }
-    if (!isarr(mergerowkeys)) {
+    if (!isearr(mergerowkeys)) {
         return []
     }
 

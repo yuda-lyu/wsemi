@@ -1,6 +1,7 @@
 import each from 'lodash/each'
+import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -20,8 +21,18 @@ export default function binstr(s, keys, mode = 'anyone') {
     }
 
     //keys為字串不是陣列時自動轉陣列
-    if (!isarr(keys) && isestr(keys)) {
-        keys = [keys]
+    if (isstr(keys)) {
+        if (isestr(keys)) {
+            keys = [keys]
+        }
+        else {
+            return false
+        }
+    }
+
+    //keys需為有效陣列
+    if (!isearr(keys)) {
+        return false
     }
 
     //check keys內都需要為字串

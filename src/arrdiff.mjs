@@ -2,7 +2,7 @@ import each from 'lodash/each'
 import find from 'lodash/find'
 import isEqual from 'lodash/isEqual'
 import isestr from './isestr.mjs'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import iser from './iser.mjs'
 import haskey from './haskey.mjs'
 
@@ -24,38 +24,38 @@ export default function arrdiff(vold, vnew, key) {
     }
 
     //to array
-    if (!isarr(vold)) {
+    if (!isearr(vold)) {
         vold = [vold]
     }
-    if (!isarr(vnew)) {
+    if (!isearr(vnew)) {
         vnew = [vnew]
     }
-    
+
     //check obj and key
     let haveKey = 0
-    each(vold, function(v){
-        if (iser(v)){
+    each(vold, function(v) {
+        if (iser(v)) {
             return {}
         }
-        if (haskey(v, key)){
+        if (haskey(v, key)) {
             haveKey = 1
         }
     })
-    if (haveKey===0){
+    if (haveKey === 0) {
         return {}
     }
-    each(vnew, function(v){
-        if (iser(v)){
+    each(vnew, function(v) {
+        if (iser(v)) {
             return {}
         }
-        if (haskey(v, key)){
+        if (haskey(v, key)) {
             haveKey = 2
         }
     })
-    if (haveKey===1){
+    if (haveKey === 1) {
         return {}
     }
-    
+
     //vinfor,vdel, vdiff, vsame
     let vinfor = {}
     let vdel = []

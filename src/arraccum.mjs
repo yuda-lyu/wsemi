@@ -1,5 +1,5 @@
 import each from 'lodash/each'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 
@@ -14,7 +14,7 @@ import cdbl from './cdbl.mjs'
 export default function arraccum(vec) {
 
     //check
-    if (!isarr(vec)) {
+    if (!isearr(vec)) {
         return []
     }
 

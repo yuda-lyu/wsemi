@@ -1,6 +1,6 @@
 import each from 'lodash/each'
 import zipObject from 'lodash/zipObject'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -14,10 +14,10 @@ import isarr from './isarr.mjs'
 export default function keysmat2ltdt(keys, mdata) {
 
     //check
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return []
     }
-    if (!isarr(mdata)) {
+    if (!isearr(mdata)) {
         return []
     }
 

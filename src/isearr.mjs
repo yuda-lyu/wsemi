@@ -13,22 +13,21 @@ import iser from './iser.mjs'
 export default function isearr(v) {
 
     //check
-    if (!isarr(v)){
+    if (!isarr(v)) {
         return false
     }
-    
-    //check length
-    if (v.length===0){
-        return false
-    }
-    
-    //check content
-    let b = true
-    each(v, function(vv){
-        if (iser(vv)){
-            b = false
-        }
-    })
 
-    return b
+    //check length
+    if (v.length === 0) {
+        return false
+    }
+
+    //check length=1
+    if (v.length === 1) {
+        if (iser(v[0])) {
+            return false
+        }
+    }
+
+    return true
 }

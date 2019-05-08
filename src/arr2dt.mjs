@@ -2,7 +2,7 @@ import times from 'lodash/times'
 import size from 'lodash/size'
 import stubString from 'lodash/stubString'
 import zipObject from 'lodash/zipObject'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import iser from './iser.mjs'
 
 
@@ -17,7 +17,7 @@ import iser from './iser.mjs'
 export default function arr2dt(keys, values = undefined) {
 
     //check
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return {}
     }
 
@@ -25,10 +25,10 @@ export default function arr2dt(keys, values = undefined) {
     if (iser(values)) {
         values = times(size(keys), stubString)
     }
-    
+
     //check values
-    if(isarr(values)) {
-        if(size(keys)!==size(values)){
+    if (isearr(values)) {
+        if (size(keys) !== size(values)) {
             return {}
         }
     }

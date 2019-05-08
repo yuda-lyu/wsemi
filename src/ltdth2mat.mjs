@@ -1,6 +1,6 @@
 import each from 'lodash/each'
 import concat from 'lodash/concat'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import isobj from './isobj.mjs'
 import ltdt2mat from './ltdt2mat.mjs'
 
@@ -17,13 +17,13 @@ import ltdt2mat from './ltdt2mat.mjs'
 export default function ltdth2mat(keys, kphead, ltdt) {
 
     //check
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return []
     }
     if (!isobj(kphead)) {
         return []
     }
-    if (!isarr(ltdt)) {
+    if (!isearr(ltdt)) {
         return []
     }
 

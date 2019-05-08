@@ -1,6 +1,6 @@
 import each from 'lodash/each'
 import isobj from './isobj.mjs'
-import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import haskey from './haskey.mjs'
 import getdtv from './getdtv.mjs'
 
@@ -19,7 +19,7 @@ export default function dtpick(dt, keys) {
     if (!isobj(dt)) {
         return {}
     }
-    if (!isarr(keys)) {
+    if (!isearr(keys)) {
         return {}
     }
 
