@@ -1,5 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep'
 import pullAll from 'lodash/pullAll'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -12,6 +13,14 @@ import pullAll from 'lodash/pullAll'
  */
 export default function arrpull(vall, vdel) {
 
+    //check
+    if (!isearr(vall)) {
+        return []
+    }
+    if (!isearr(vdel)) {
+        return []
+    }
+    
     let t = cloneDeep(vall)
     pullAll(t, vdel)
 
