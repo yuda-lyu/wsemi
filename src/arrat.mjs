@@ -29,6 +29,9 @@ export default function arrat(vall, istart, iend = undefined) {
     if (!iser(iend)) {
 
         //check
+        if (!isp0int(iend)) {
+            return []
+        }
         if (istart >= vall.length || iend >= vall.length) {
             return []
         }
