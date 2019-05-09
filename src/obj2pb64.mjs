@@ -11,7 +11,7 @@ import o2j from './o2j.mjs'
  * @param {*} data 輸入任意物件
  * @returns {String} 回傳加密base64字串
  */
-export default function o2p(key, data) {
+export default function obj2pb64(key, data) {
 
     //check
     if (!isstr(key)) {

@@ -12,7 +12,7 @@ import j2o from './j2o.mjs'
  * @param {String} data 輸入加密base64字串
  * @returns {*} 回傳任意物件
  */
-export default function p2o(key, data) {
+export default function pb642obj(key, data) {
 
     //check
     if (!isstr(key)) {
