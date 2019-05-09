@@ -1,23 +1,23 @@
 import encbase64 from 'crypto-js/enc-base64'
 import libwa from 'crypto-js/lib-typedarrays'
-import isarr from './isarr.mjs'
+import isu8arr from './isu8arr.mjs'
 
 
 /**
- * binary(Uint8Array)轉base64字串
+ * Uint8Array轉base64字串
  *
  * @export
- * @param {Array} bin 輸入binary(Uint8Array)
+ * @param {Array} u8a 輸入Uint8Array
  * @returns {String} 回傳base64字串
  */
-export default function bin2b64(bin) {
+export default function u8arr2b64(u8a) {
 
     //check
-    if (!isarr(bin)) { //待確認是否有例外
+    if (!isu8arr(u8a)) {
         return ''
     }
 
-    let wa = libwa.create(bin)
+    let wa = libwa.create(u8a)
     let b64 = wa.toString(encbase64)
     return b64
 }

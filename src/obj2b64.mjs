@@ -9,7 +9,7 @@ import o2j from './o2j.mjs'
  * @param {*} obj 輸入任意物件
  * @returns {String} 回傳base64字串
  */
-export default function o2b(obj) {
+export default function obj2b64(obj) {
 
     let b64 = ''
     try {
