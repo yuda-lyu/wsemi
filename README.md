@@ -4,7 +4,7 @@ A support package for web developer.
 [![Build Status](https://travis-ci.org/yuda-lyu/wsemi.svg?branch=master)](https://travis-ci.org/yuda-lyu/wsemi)
 
 ## Installation
-### Using npm:(ES6 module)
+### Using npm(ES6 module):
 ```alias
 npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tippy.js
 ```
