@@ -13,6 +13,10 @@ npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tipp
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
+### Add script fuzzball(optional)
+```alias
+<script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+```
 ### Add script for browser
 ```alias
 <script src="/dist/wsemi.js"></script>
