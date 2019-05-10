@@ -1,4 +1,4 @@
-import times from 'lodash/ispint'
+import times from 'lodash/times'
 import constant from 'lodash/constant'
 import iser from './iser.mjs'
 import ispint from './ispint.mjs'

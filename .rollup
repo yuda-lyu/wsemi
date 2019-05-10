@@ -1,0 +1,49 @@
+import commonjs from 'rollup-plugin-commonjs'
+import resolve from 'rollup-plugin-node-resolve'
+import postcss from 'rollup-plugin-postcss'
+//import builtins from 'rollup-plugin-node-builtins'
+import babel from 'rollup-plugin-babel'
+import minify from 'rollup-plugin-babel-minify'
+
+export default {
+  input: 'src/index.mjs',
+  output: {
+    globals: {
+      'xlsx': 'xlsx',
+      'fs': 'fs',
+      //'dayjs': 'dayjs',
+      //'tippy.js': 'tippy.js',
+    },
+    format: 'umd', //iife, umd
+    name: 'wsemi', //iife時名稱內不能使用「-」
+    file: 'dist/wsemi.js'
+  },
+  external: [
+      'xlsx',
+      'fs',
+      //'dayjs',
+      //'tippy.js',
+  ], 
+  plugins: [
+    commonjs(),
+    //builtins(),
+    resolve({
+        preferBuiltins: false,
+        browser: true,
+    }),
+    babel({
+      runtimeHelpers: true,
+      exclude: 'node_modules/**',
+      presets: [
+        "@babel/preset-env",
+      ],
+    }),
+    postcss({
+      extensions: ['.css']
+      }),
+    minify({
+      comments:false,
+    }),
+  ]
+}
+

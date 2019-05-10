@@ -1,0 +1,46 @@
+import _ from 'lodash'
+import fs from 'fs'
+
+
+let fd = './src/'
+let fnidx = 'index.mjs'
+
+
+async function getFiles() {
+    let fsp = fs.promises
+    let ltfs = await fsp.readdir(fd)
+    return ltfs
+}
+
+
+async function main() {
+
+    //getFiles
+    let ltfs = await getFiles()
+
+    //pull
+    _.pull(ltfs, 'index.mjs')
+
+    //readFile
+    let scs = []
+    _.each(ltfs, function(v) {
+
+        //name
+        let name = v.replace('.mjs', '')
+
+        //sc
+        let sc = `export ${name} from './${name}.mjs'`
+
+        //push
+        scs.push(sc)
+
+    })
+
+    //c
+    let c = _.join(scs, '\r\n')
+
+    //write
+    fs.writeFileSync(fd + fnidx, c, 'utf8')
+
+}
+main()

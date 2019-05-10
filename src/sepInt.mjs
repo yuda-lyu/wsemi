@@ -1,7 +1,7 @@
 import floor from 'lodash/floor'
 import reverse from 'lodash/reverse'
 import ispint from './isp0int.mjs'
-import isbol from './isbool.mjs'
+import isbol from './isbol.mjs'
 
 
 /**

@@ -1,4 +1,4 @@
-import * as ldtrim from 'lodash/trim'
+import lotrim from 'lodash/trim'
 import isestr from './isestr.mjs'
 
 
@@ -16,7 +16,7 @@ export default function trim(c) {
         return ''
     }
 
-    let r = ldtrim(c)
+    let r = lotrim(c)
 
     return r
 }

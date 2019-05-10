@@ -1,4 +1,4 @@
-import * as ldround from 'lodash/round'
+import loround from 'lodash/round'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
@@ -20,7 +20,7 @@ export default function round(v) {
 
     v = cdbl(v)
 
-    let r = ldround(v)
+    let r = loround(v)
 
     return r
 }

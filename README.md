@@ -5,5 +5,5 @@ A support package for web developer.
 
 ## Install
 ```alias
-npm i lodash dayjs crypto-js fuzzball xss js-xlsx ua-parser-js tippy.js
+npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tippy.js
 ```
