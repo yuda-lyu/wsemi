@@ -19,5 +19,5 @@ npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tipp
 ```
 ### Add script for browser
 ```alias
-<script src="/dist/wsemi.js"></script>
+<script src="/dist/wsemi.umd.js"></script>
 ```
