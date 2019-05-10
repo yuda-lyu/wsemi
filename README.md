@@ -9,11 +9,11 @@ npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tipp
 ```
 
 ## Use in ES5(UMD module)
-### Depends on xlsx
+### Add script xlsx(optional)
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
-### Depends on fs ()
+### Add script for browser
 ```alias
 <script src="/dist/wsemi.js"></script>
 ```
