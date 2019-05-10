@@ -4,10 +4,10 @@ import binstr from './binstr.mjs'
 /**
  * 前端判斷是否為開發階段
  * 主要判斷location.href內是否含有localhost
- * @export
+ * @memberOf wsemi
  * @returns {Boolean} 回傳是否為開發階段
  */
-export default function isdev() {
+function isdev() {
 
     //check
     if (location) {
@@ -16,3 +16,6 @@ export default function isdev() {
 
     return false
 }
+
+
+export default isdev

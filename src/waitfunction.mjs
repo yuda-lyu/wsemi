@@ -6,12 +6,12 @@ import ispint from './ispint.mjs'
 /**
  * 等待f函數回傳true
  *
- * @export
+ * @memberOf wsemi
  * @param {Function} f 輸入判斷用函數
  * @param {PositiveInteger} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
  * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  */
-export default function waitfunction(f, maxnum = 180) {
+function waitfunction(f, maxnum = 180) {
 
     //df
     let df = genPm()
@@ -49,3 +49,5 @@ export default function waitfunction(f, maxnum = 180) {
     return df
 }
 
+
+export default waitfunction

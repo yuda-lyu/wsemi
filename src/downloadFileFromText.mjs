@@ -6,11 +6,11 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 /**
  * 前端下載text資料成為utf-8(含BOM)檔案
  *
- * @export
+ * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} ccont 輸入內容字串
  */
-export default function downloadFileFromText(cfn, ccont) {
+function downloadFileFromText(cfn, ccont) {
 
     //check
     if (!isestr(cfn)) {
@@ -29,3 +29,6 @@ export default function downloadFileFromText(cfn, ccont) {
     downloadFileFromBlob(cfn, blob)
 
 }
+
+
+export default downloadFileFromText

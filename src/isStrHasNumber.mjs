@@ -4,11 +4,11 @@ import isestr from './isestr.mjs'
 /**
  * 字串是否包含數字
  *
- * @export
+ * @memberOf wsemi
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含數字
  */
-export default function isStrHasNumber(str) {
+function isStrHasNumber(str) {
 
     //check
     if (!isestr(str)) {
@@ -20,3 +20,6 @@ export default function isStrHasNumber(str) {
 
     return r
 }
+
+
+export default isStrHasNumber

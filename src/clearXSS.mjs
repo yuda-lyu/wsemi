@@ -10,11 +10,11 @@ import isstr from './isstr.mjs'
  * 清除xss攻擊語法
  * https://jsxss.com/zh/index.html
  *
- * @export
+ * @memberOf wsemi
  * @param {Object|Array|String} obj 輸入資料
  * @returns {Object|Array|String} 輸出資料
  */
-export default function clearXSS(obj) {
+function clearXSS(obj) {
 
     //ftxss
     function ftxss(c) {
@@ -48,3 +48,6 @@ export default function clearXSS(obj) {
 
     return t
 }
+
+
+export default clearXSS

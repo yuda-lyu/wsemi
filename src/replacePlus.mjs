@@ -5,7 +5,7 @@ import isstr from './isstr.mjs'
 /**
  * 取代字串，找尋條件為滿足具字首字尾則被取代
  *
- * @export
+ * @memberOf wsemi
  * @param {String} c 輸入要被取代的字串
  * @param {String} pre 輸入需為字首的字串
  * @param {String} aft 輸入需為字尾的字串
@@ -13,7 +13,7 @@ import isstr from './isstr.mjs'
  * @param {String} r 輸入要取代的字串
  * @returns {String} 回傳取代後字串
  */
-export default function replacePlus(c, pre, aft, not = undefined, r) {
+function replacePlus(c, pre, aft, not = undefined, r) {
 
     //check
     if (!isestr(c) || !isestr(pre) || !isestr(aft)) {
@@ -34,3 +34,6 @@ export default function replacePlus(c, pre, aft, not = undefined, r) {
 
     return rr
 }
+
+
+export default replacePlus

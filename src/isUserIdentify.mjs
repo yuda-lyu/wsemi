@@ -6,11 +6,11 @@ import cstr from './cstr.mjs'
 /**
  * 判斷是否為有效中華民國身份證
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  */
-export default function isUserIdentify(v) {
+function isUserIdentify(v) {
 
     let df = genPm()
 
@@ -65,3 +65,6 @@ export default function isUserIdentify(v) {
 
     return df
 }
+
+
+export default isUserIdentify

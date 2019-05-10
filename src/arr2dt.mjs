@@ -9,12 +9,12 @@ import iser from './iser.mjs'
 /**
  * 結合keys與values成為物件
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} keys 輸入keys字串陣列
  * @param {Array} [values=undefined] 輸入values物件陣列，預設不使用
  * @returns {Object} 回傳組合後物件
  */
-export default function arr2dt(keys, values = undefined) {
+function arr2dt(keys, values = undefined) {
 
     //check
     if (!isearr(keys)) {
@@ -35,3 +35,6 @@ export default function arr2dt(keys, values = undefined) {
 
     return zipObject(keys, values)
 }
+
+
+export default arr2dt

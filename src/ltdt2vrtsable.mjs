@@ -11,12 +11,12 @@ import arrhas from './arrhas.mjs'
 /**
  * 由物件陣列ltdt轉陣列vrtable(使用value,style,rowspan儲存)
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} mergerowkeys 輸入需合併列的關鍵字keys，為字串陣列
  * @returns {Array} 回傳物件陣列
  */
-export default function ltdt2vrtsable(ltdt, mergerowkeys) {
+function ltdt2vrtsable(ltdt, mergerowkeys) {
 
     //check
     if (!isearr(ltdt)) {
@@ -83,3 +83,6 @@ export default function ltdt2vrtsable(ltdt, mergerowkeys) {
 
     return tabrows
 }
+
+
+export default ltdt2vrtsable

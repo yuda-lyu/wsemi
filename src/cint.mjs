@@ -6,11 +6,11 @@ import cdbl from './cdbl.mjs'
 /**
  * 數字或字串四捨五入轉整數
  * 若輸入非數字則回傳0
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @returns {Integer} 回傳四捨五入後整數
  */
-export default function cint(v) {
+function cint(v) {
 
     //check
     if (!isnum(v)) {
@@ -23,3 +23,6 @@ export default function cint(v) {
 
     return r
 }
+
+
+export default cint

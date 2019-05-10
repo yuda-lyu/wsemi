@@ -92,12 +92,12 @@ function to_csv(workbook) {
  * 讀取xlsx檔，由input file的檔案讀取excel數據出來
  * 若fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
  *
- * @export
+ * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {String} [fmt='ltdt'] 輸入數據回傳格式，可有'ltdt','csv','array'，預設為'ltdt'
  * @returns {Array} 回傳數據陣列
  */
-export default function getDataFromExcelFile(u8a, fmt = 'ltdt') {
+function getDataFromExcelFile(u8a, fmt = 'ltdt') {
 
     //workbook
     let workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
@@ -116,3 +116,5 @@ export default function getDataFromExcelFile(u8a, fmt = 'ltdt') {
     return null
 }
 
+
+export default getDataFromExcelFile

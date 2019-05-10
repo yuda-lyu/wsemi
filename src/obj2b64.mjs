@@ -5,11 +5,11 @@ import o2j from './o2j.mjs'
 /**
  * 任意物件轉base64字串
  *
- * @export
+ * @memberOf wsemi
  * @param {*} obj 輸入任意物件
  * @returns {String} 回傳base64字串
  */
-export default function obj2b64(obj) {
+function obj2b64(obj) {
 
     let b64 = ''
     try {
@@ -21,3 +21,6 @@ export default function obj2b64(obj) {
 
     return b64
 }
+
+
+export default obj2b64

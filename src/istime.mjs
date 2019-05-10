@@ -5,11 +5,11 @@ import isestr from './isestr.mjs'
 /**
  * 判斷是否為秒時間
  *
- * @export
+ * @memberOf wsemi
  * @param {String} v 輸入秒時間字串
  * @returns {Boolean} 回傳是否為秒時間布林值
  */
-export default function istime(v) {
+function istime(v) {
 
     //check
     if (!isestr(v)) {
@@ -20,3 +20,6 @@ export default function istime(v) {
     let m = ot(v, df).format(df)
     return (v === m)
 }
+
+
+export default istime

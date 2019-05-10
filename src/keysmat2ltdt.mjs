@@ -6,12 +6,12 @@ import isearr from './isearr.mjs'
 /**
  * 由keys與二維陣列mdata轉ltdt
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
  * @param {Array} mdata 輸入資料陣列
  * @returns {Array} 回傳物件陣列
  */
-export default function keysmat2ltdt(keys, mdata) {
+function keysmat2ltdt(keys, mdata) {
 
     //check
     if (!isearr(keys)) {
@@ -29,3 +29,6 @@ export default function keysmat2ltdt(keys, mdata) {
 
     return ltdt
 }
+
+
+export default keysmat2ltdt

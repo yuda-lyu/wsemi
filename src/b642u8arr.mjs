@@ -5,11 +5,11 @@ import isstr from './isstr.mjs'
 /**
  * base64字串轉Uint8Array
  *
- * @export
+ * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {Array} 回傳Uint8Array
  */
-export default function b642u8arr(b64) {
+function b642u8arr(b64) {
 
     //check
     if (!isstr(b64)) {
@@ -31,3 +31,6 @@ export default function b642u8arr(b64) {
 
     return u8a
 }
+
+
+export default b642u8arr

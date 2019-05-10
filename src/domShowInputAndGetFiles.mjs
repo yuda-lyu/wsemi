@@ -11,13 +11,13 @@ import domTriggerEvent from './domTriggerEvent.mjs'
 /**
  * 前端開啟上傳視窗並回傳檔案
  *
- * @export
+ * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
  * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Promise} 回傳Promise，resolve為各檔案陣列，無reject
  */
-export default function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
+function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
 
     let df = genPm()
 
@@ -71,3 +71,6 @@ export default function domShowInputAndGetFiles(kind = '*', multiple = false, si
 
     return df
 }
+
+
+export default domShowInputAndGetFiles

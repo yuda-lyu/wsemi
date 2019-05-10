@@ -2,11 +2,11 @@
 /**
  * ArrayBuffer資料轉Unit8Array資料
  *
- * @export
+ * @memberOf wsemi
  * @param {ArrayBuffer} ab 輸入ArrayBuffer資料
  * @returns {Unit8Array} 回傳Unit8Array資料
  */
-export default function ab2u8arr(ab) {
+function ab2u8arr(ab) {
     let l = ab.length
     let u8a = new Uint8Array(l)
     for (let i = 0; i < l; i++) {
@@ -14,3 +14,6 @@ export default function ab2u8arr(ab) {
     }
     return u8a
 }
+
+
+export default ab2u8arr

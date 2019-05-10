@@ -1,10 +1,11 @@
 /**
  * 以Promise開啟鏈式
  *
- * @export
- * @returns
+ * @memberOf wsemi
+ * @returns {Promise} 回傳Promise
  */
-export default function psChain() {
-
+function psChain() {
     return Promise.resolve()
 }
+
+export default psChain

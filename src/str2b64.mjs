@@ -6,11 +6,11 @@ import isstr from './isstr.mjs'
 /**
  * 一般字串轉base64字串
  *
- * @export
+ * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @returns {String} 回傳base64字串
  */
-export default function str2b64(str) {
+function str2b64(str) {
 
     //check
     if (!isstr(str)) {
@@ -21,3 +21,6 @@ export default function str2b64(str) {
     let base64 = encbase64.stringify(words)
     return base64
 }
+
+
+export default str2b64

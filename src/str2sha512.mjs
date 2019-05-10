@@ -7,11 +7,11 @@ import isstr from './isstr.mjs'
  * 一般字串轉SHA512字串
  * Secure Hash Algorithm 512位，採Hex顯示
  *
- * @export
+ * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @returns {String} 回傳經SHA512轉換後字串，採Hex顯示
  */
-export default function str2sha512(str) {
+function str2sha512(str) {
 
     //check
     if (!isstr(str)) {
@@ -21,3 +21,6 @@ export default function str2sha512(str) {
     let hex = SHA512(str).toString(enchex)
     return hex
 }
+
+
+export default str2sha512

@@ -8,7 +8,8 @@ import cdbl from './cdbl.mjs'
  * 各陣列內元素相加
  * v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數字，若非數字將自動轉數字
  * 若需使用之陣列長度不同，則回傳空陣列
- * @export
+ *
+ * @memberOf wsemi
  * @param {Array} v1 輸入第1個陣列
  * @param {Array} v2 輸入第2個陣列
  * @param {Array} [v3=undefined] 輸入第3個陣列，預設不使用
@@ -16,7 +17,7 @@ import cdbl from './cdbl.mjs'
  * @param {Array} [v5=undefined] 輸入第5個陣列，預設不使用
  * @returns {Array} 回傳各元素相加後陣列
  */
-export default function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
+function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
 
     //check
     if (!isearr(v1)) {
@@ -72,3 +73,6 @@ export default function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = unde
 
     return r
 }
+
+
+export default arradd

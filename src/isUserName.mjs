@@ -5,11 +5,11 @@ import isestr from './isestr.mjs'
 /**
  * 判斷是否為有效使用者名稱
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  */
-export default function isUserName(v) {
+function isUserName(v) {
 
     let df = genPm()
 
@@ -25,3 +25,6 @@ export default function isUserName(v) {
 
     return df
 }
+
+
+export default isUserName

@@ -6,11 +6,11 @@ import isstr from './isstr.mjs'
 /**
  * base64字串轉一般字串
  *
- * @export
+ * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {String} 回傳一般字串
  */
-export default function b642str(b64) {
+function b642str(b64) {
 
     //check
     if (!isstr(b64)) {
@@ -21,3 +21,6 @@ export default function b642str(b64) {
     let str = wa.toString(encutf8)
     return str
 }
+
+
+export default b642str

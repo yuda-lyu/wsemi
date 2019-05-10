@@ -6,13 +6,13 @@ import isstr from './isstr.mjs'
  * 取代字串
  * 針對c查找是否含有t，並將t全部取代成r
  * 若輸入c,t,r不是字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {String} c 輸入要被取代的字串
  * @param {String} t 輸入要查找的字串
  * @param {String} r 輸入要取代的字串
  * @returns {String} 回傳取代後字串
  */
-export default function replace(c, t, r) {
+function replace(c, t, r) {
 
     //check
     if (!isestr(c)) {
@@ -30,3 +30,6 @@ export default function replace(c, t, r) {
 
     return rr
 }
+
+
+export default replace

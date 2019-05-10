@@ -5,12 +5,12 @@ import haskey from './haskey.mjs'
 /**
  * 取得dt內key對應value
  *
- * @export
+ * @memberOf wsemi
  * @param {Object} dt 輸入物件
  * @param {String} key 輸入要找的key值字串
  * @returns {*} 回傳任意資料
  */
-export default function getdtv(dt, key) {
+function getdtv(dt, key) {
 
     //check
     if (!isobj(dt)) {
@@ -22,3 +22,6 @@ export default function getdtv(dt, key) {
     }
     return ''
 }
+
+
+export default getdtv

@@ -5,12 +5,12 @@ import isearr from './isearr.mjs'
 /**
  * 判斷任一字串陣列vtar內元素，是否「等於」任一字串陣列vhas內元素
  *
- * @export
+ * @memberOf wsemi
  * @param {Array|String} vtar 輸入被查找的字串陣列或字串
  * @param {Array|String} vhas 輸入查找字串陣列或字串
  * @returns {Boolean} 回傳判斷布林值
  */
-export default function arrhas(vtar, vhas) {
+function arrhas(vtar, vhas) {
 
     //不是陣列則自動轉陣列
     if (isestr(vtar)) {
@@ -44,3 +44,6 @@ export default function arrhas(vtar, vhas) {
     }
     return false
 }
+
+
+export default arrhas

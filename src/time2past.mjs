@@ -6,12 +6,12 @@ import isbol from './isbol.mjs'
 /**
  * 秒時間轉過去時間
  *
- * @export
+ * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @param {Boolean} [bReturnString=false] 輸入是否只回傳字串訊息，預設為false
  * @returns {String} 回傳過去時間字串
  */
-export default function time2past(t, bReturnString = false) {
+function time2past(t, bReturnString = false) {
 
     //check
     if (!istime(t)) {
@@ -92,3 +92,6 @@ export default function time2past(t, bReturnString = false) {
         msg: c,
     }
 }
+
+
+export default time2past

@@ -7,12 +7,12 @@ import iser from './iser.mjs'
 /**
  * 切割字串並剔除非有效元素
  *
- * @export
+ * @memberOf wsemi
  * @param {String} c 輸入要被切割的字串
  * @param {String} t 輸入用來切割的符號字串
  * @returns {Array} 回傳切割後的字串陣列
  */
-export default function sep(c, t) {
+function sep(c, t) {
 
     //check
     if (!isestr(c)) {
@@ -32,3 +32,6 @@ export default function sep(c, t) {
 
     return r
 }
+
+
+export default sep

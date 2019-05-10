@@ -8,12 +8,12 @@ import dig from './dig.mjs'
 /**
  * 數字取指定小數位，小於1e-6改指數顯示
  * 若輸入不是數字或字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳取指定小數位的字串
  */
-export default function digExp(v, idig) {
+function digExp(v, idig) {
 
     //check
     if (!isestr(v) && !isnum(v)) {
@@ -38,3 +38,6 @@ export default function digExp(v, idig) {
 
     return r
 }
+
+
+export default digExp

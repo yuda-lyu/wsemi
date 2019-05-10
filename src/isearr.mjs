@@ -1,4 +1,3 @@
-import each from 'lodash/each'
 import isarr from './isarr.mjs'
 import iser from './iser.mjs'
 
@@ -6,11 +5,11 @@ import iser from './iser.mjs'
 /**
  * 判斷是否為有效陣列，長度至少大於等於1，各元素至少皆為有效
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  */
-export default function isearr(v) {
+function isearr(v) {
 
     //check
     if (!isarr(v)) {
@@ -31,3 +30,6 @@ export default function isearr(v) {
 
     return true
 }
+
+
+export default isearr

@@ -9,13 +9,13 @@ import ab2u8arr from './ab2u8arr.mjs'
 /**
  * 前端開啟上傳視窗並讀取各檔案Uint8Array資料陣列
  *
- * @export
+ * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
  * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
  */
-export default function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 500) {
+function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 500) {
 
     //df
     let df = genPm()
@@ -60,3 +60,6 @@ export default function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = fal
 
     return df
 }
+
+
+export default domShowInputAndGetFilesU8Arrs

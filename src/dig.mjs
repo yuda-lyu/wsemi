@@ -11,12 +11,12 @@ import cdbl from './cdbl.mjs'
  * console.log(1.005.toFixed(2)) //1.00
  * console.log(dig(1.005, 2)) //1.01
  * 若輸入不是數字或字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳取指定小數位的字串
  */
-export default function dig(v, idig = 0) {
+function dig(v, idig = 0) {
 
     //check
     if (!isestr(v) && !isnum(v)) {
@@ -31,3 +31,6 @@ export default function dig(v, idig = 0) {
 
     return r
 }
+
+
+export default dig

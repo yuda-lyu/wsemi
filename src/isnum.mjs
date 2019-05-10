@@ -5,11 +5,11 @@ import isnbr from './isnbr.mjs'
 /**
  * 判斷是否為數字
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  */
-export default function isnum(v) {
+function isnum(v) {
 
     let b = false
     if (isestr(v)) {
@@ -21,3 +21,6 @@ export default function isnum(v) {
 
     return b
 }
+
+
+export default isnum

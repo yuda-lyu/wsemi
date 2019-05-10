@@ -1,9 +1,6 @@
-//https://github.com/pgrabovets/json-view
-//原作者沒有加入預先展開數據功能, 自己下載來修改
-
-
 /**
  * Create html element
+ * @private
  * @param {String} type html element
  * @param {Object} config
  */
@@ -35,6 +32,8 @@ function createElement(type, config) {
 
 
 /**
+ * create expanded element
+ * @private
  * @param {Object} node
  * @return {HTMLElement}
  */
@@ -107,6 +106,8 @@ function createExpandedElement(node) {
 
 
 /**
+ * create not expanded element
+ * @private
  * @param {Object} node
  * @return {HTMLElement}
  */
@@ -147,6 +148,7 @@ function createNotExpandedElement(node) {
 
 /**
  * create tree node
+ * @private
  * @return {Object}
  */
 function createNode() {
@@ -210,6 +212,7 @@ function createNode() {
 
 /**
  * Return variable type
+ * @private
  * @param {*} val
  */
 function getType(val) {
@@ -226,6 +229,7 @@ function getType(val) {
 
 /**
  * Recursively traverse json object
+ * @private
  * @param {Object} obj parsed json object
  * @param {Object} parent of object tree
  */
@@ -255,6 +259,7 @@ function traverseObject(obj, parent) {
 
 /**
  * Create root of a tree
+ * @private
  * @param {Object} obj Json object
  * @return {Object}
  */
@@ -273,6 +278,7 @@ function createTree(obj) {
 
 /**
  * Recursively traverse Tree object
+ * @private
  * @param {Object} node
  * @param {Callback} callback
  */
@@ -288,6 +294,7 @@ function traverseTree(node, callback) {
 
 /**
  * Render Tree object
+ * @private
  * @param {Object} tree
  * @param {String} rootElem
  */
@@ -302,12 +309,19 @@ function render(tree, rootElem) {
 
 
 /**
- * Render JSON into DOM container
- * @param {*} jsonObj
- * @param {Element} rootElem
+ * 針對元素rootElem產生展示Json樹狀套件
+ * github: https://github.com/pgrabovets/json-view
+ * 因沒有加入預先展開數據功能, 自己下載來修改
+ *
+ * @memberOf wsemi
+ * @param {Object} jsonObj 輸入Json物件
+ * @param {Element} rootElem 輸入初始化元素
  */
-export default function viewJsonTree(jsonObj, rootElem) {
+function viewJsonTree(jsonObj, rootElem) {
     rootElem.innerHTML = ''
     let tree = createTree(jsonObj)
     render(tree, rootElem)
 }
+
+
+export default viewJsonTree

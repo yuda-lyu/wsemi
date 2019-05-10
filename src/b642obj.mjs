@@ -6,11 +6,11 @@ import j2o from './j2o.mjs'
 /**
  * base64字串轉物件
  *
- * @export
+ * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {*} 回傳任意物件
  */
-export default function b642obj(b64) {
+function b642obj(b64) {
 
     //check
     if (!isstr(b64)) {
@@ -27,3 +27,6 @@ export default function b642obj(b64) {
 
     return obj
 }
+
+
+export default b642obj

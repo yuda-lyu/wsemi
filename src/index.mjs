@@ -1,3 +1,8 @@
+
+/**
+ * @class wsemi
+ */
+ 
 export ab2blob from './ab2blob.mjs'
 export ab2u8arr from './ab2u8arr.mjs'
 export addMonth from './addMonth.mjs'
@@ -103,7 +108,7 @@ export obj2b64 from './obj2b64.mjs'
 export obj2pb64 from './obj2pb64.mjs'
 export onTooltip from './onTooltip.mjs'
 export oo from './oo.mjs'
-export openlink from './openlink.mjs'
+export openLink from './openLink.mjs'
 export pb642obj from './pb642obj.mjs'
 export psChain from './psChain.mjs'
 export replace from './replace.mjs'

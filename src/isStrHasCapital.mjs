@@ -4,11 +4,11 @@ import isestr from './isestr.mjs'
 /**
  * 字串是否包含大寫英文字元
  *
- * @export
+ * @memberOf wsemi
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含大寫英文字元
  */
-export default function isStrHasCapital(str) {
+function isStrHasCapital(str) {
 
     //check
     if (!isestr(str)) {
@@ -20,3 +20,6 @@ export default function isStrHasCapital(str) {
 
     return r
 }
+
+
+export default isStrHasCapital

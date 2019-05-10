@@ -7,12 +7,12 @@ import j2o from './j2o.mjs'
 /**
  * base64解密取得原始資料
  *
- * @export
+ * @memberOf wsemi
  * @param {String} key 輸入加密key
  * @param {String} data 輸入加密base64字串
  * @returns {*} 回傳任意物件
  */
-export default function pb642obj(key, data) {
+function pb642obj(key, data) {
 
     //check
     if (!isstr(key)) {
@@ -27,3 +27,6 @@ export default function pb642obj(key, data) {
     let r = p.data
     return r
 }
+
+
+export default pb642obj

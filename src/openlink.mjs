@@ -4,10 +4,10 @@ import isestr from './isestr.mjs'
 /**
  * 前端開啟連結
  *
- * @export
+ * @memberOf wsemi
  * @param {String} url
  */
-export default function openlink(url) {
+function openLink(url) {
 
     //check
     if (!isestr(url)) {
@@ -25,3 +25,6 @@ export default function openlink(url) {
     document.body.removeChild(a)
 
 }
+
+
+export default openLink

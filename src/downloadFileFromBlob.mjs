@@ -4,6 +4,7 @@ import isestr from './isestr.mjs'
 /**
  * 前端下載binary資料核心, 支援IE11
  *
+ * @private
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
@@ -18,6 +19,7 @@ function df_IE11(cfn, blob) {
 /**
  * 前端下載binary資料核心, 支援HTML5瀏覽器
  *
+ * @private
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
@@ -45,11 +47,11 @@ function df_HTML5(cfn, blob) {
 /**
  * 前端下載Blob資料成為檔案
  *
- * @export
+ * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
-export default function downloadFileFromBlob(cfn, blob) {
+function downloadFileFromBlob(cfn, blob) {
 
     //check
     if (!isestr(cfn)) {
@@ -66,3 +68,6 @@ export default function downloadFileFromBlob(cfn, blob) {
     }
 
 }
+
+
+export default downloadFileFromBlob

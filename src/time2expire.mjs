@@ -1,17 +1,17 @@
 import ot from 'dayjs'
 import istime from './istime.mjs'
 import isbol from './isbol.mjs'
- 
+
 
 /**
  * 秒時間轉到期時間
  *
- * @export
+ * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @param {Boolean} [bReturnString=false] 輸入是否只回傳字串訊息，預設為false
  * @returns {String} 回傳到期時間字串
  */
-export default function time2expire(t, bReturnString = false) {
+function time2expire(t, bReturnString = false) {
 
     //check
     if (!istime(t)) {
@@ -97,3 +97,6 @@ export default function time2expire(t, bReturnString = false) {
         msg: c,
     }
 }
+
+
+export default time2expire

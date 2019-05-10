@@ -7,11 +7,11 @@ import cdbl from './cdbl.mjs'
 /**
  * 回傳累加後陣列
  * arraccum([1,2,3,null,4])=[1,3,6,'',10]
- * @export
+ * @memberOf wsemi
  * @param {Array} vec 輸入要被累加計算的陣列
  * @returns {Array} 回傳各元素累加後之陣列
  */
-export default function arraccum(vec) {
+function arraccum(vec) {
 
     //check
     if (!isearr(vec)) {
@@ -31,3 +31,6 @@ export default function arraccum(vec) {
     })
     return r
 }
+
+
+export default arraccum

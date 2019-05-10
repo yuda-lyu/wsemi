@@ -8,11 +8,11 @@ import isarr0 from './isarr0.mjs'
 /**
  * 判斷是否為廣義無效
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  */
-export default function iser(v) {
+function iser(v) {
 
     if (isundefined(v)) {
         return true
@@ -31,3 +31,6 @@ export default function iser(v) {
     }
     return false
 }
+
+
+export default iser

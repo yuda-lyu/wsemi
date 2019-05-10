@@ -5,10 +5,10 @@ import getdtvstr from './getdtvstr.mjs'
 /**
  * 前端取得使用者瀏覽器資訊
  *
- * @export
+ * @memberOf wsemi
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  */
-export default function getUserAgent() {
+function getUserAgent() {
 
     let parser = new UAParser()
     let oua = parser.getResult()
@@ -21,3 +21,7 @@ export default function getUserAgent() {
         cpuarchitecture: oua.cpu.architecture
     }
 }
+
+
+export default getUserAgent
+

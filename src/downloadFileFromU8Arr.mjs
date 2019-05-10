@@ -7,11 +7,11 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 /**
  * 前端下載binary資料成為檔案
  *
- * @export
+ * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {Uint8Array} u8a 輸入Uint8Array資料
  */
-export default function downloadFileFromU8Arr(cfn, u8a) {
+function downloadFileFromU8Arr(cfn, u8a) {
 
     //check
     if (!isestr(cfn)) {
@@ -30,3 +30,6 @@ export default function downloadFileFromU8Arr(cfn, u8a) {
     downloadFileFromBlob(cfn, blob)
 
 }
+
+
+export default downloadFileFromU8Arr

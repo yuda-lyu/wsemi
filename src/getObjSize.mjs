@@ -1,37 +1,38 @@
 /**
  * 計算物件記憶體大小
  *
- * @export
+ * @memberOf wsemi
  * @param {*} obj 傳入欲計算大小的任意數據
  * @returns {Object} 回傳記憶體大小物件, int屬性為記憶體所使用的bytes整數, str屬性為自動處理單位後的字串
  */
-export default function getObjSize(obj) {
+function getObjSize(obj) {
 
     let bytes = 0
 
     function sizeOf(obj) {
         if (obj !== null && obj !== undefined) {
             switch (typeof obj) {
-                case 'number':
-                    bytes += 8
-                    break
-                case 'string':
-                    bytes += obj.length * 2
-                    break
-                case 'boolean':
-                    bytes += 4
-                    break
-                case 'object': {
-                    let objClass = Object.prototype.toString.call(obj).slice(8, -1)
-                    if (objClass === 'Object' || objClass === 'Array') {
-                        for (let key in obj) {
-                            if (!obj.hasOwnProperty(key)) continue
-                            sizeOf(obj[key])
-                        }
+            case 'number':
+                bytes += 8
+                break
+            case 'string':
+                bytes += obj.length * 2
+                break
+            case 'boolean':
+                bytes += 4
+                break
+            case 'object':
+                let objClass = Object.prototype.toString.call(obj).slice(8, -1)
+                if (objClass === 'Object' || objClass === 'Array') {
+                    for (let key in obj) {
+                        if (!obj.hasOwnProperty(key)) continue
+                        sizeOf(obj[key])
                     }
-                    else bytes += obj.toString().length * 2
-                    break
                 }
+                else {
+                    bytes += obj.toString().length * 2
+                }
+                break
             }
         }
         return bytes
@@ -52,3 +53,6 @@ export default function getObjSize(obj) {
         str: csize
     }
 }
+
+
+export default getObjSize

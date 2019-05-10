@@ -6,11 +6,11 @@ import trim from './trim.mjs'
 /**
  * 函數內註解轉字串
  *
- * @export
+ * @memberOf wsemi
  * @param {Function} c 輸入函數
  * @returns {String} 回傳字串
  */
-export default function f2c(f) {
+function f2c(f) {
 
     //check
     if (!isfun(f)) {
@@ -23,3 +23,7 @@ export default function f2c(f) {
 
     return r
 }
+
+
+export default f2c
+

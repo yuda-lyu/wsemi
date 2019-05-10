@@ -1,10 +1,10 @@
 /**
  * 產生Promise物件，具備鏈式resolve與reject
  * 主要受jQuery Deferred概念啟發
- * @export
+ * @memberOf wsemi
  * @returns {Object} 回傳Promise物件
  */
-export default function genPm() {
+function genPm() {
 
     let resolve
     let reject
@@ -17,3 +17,6 @@ export default function genPm() {
 
     return p
 }
+
+
+export default genPm

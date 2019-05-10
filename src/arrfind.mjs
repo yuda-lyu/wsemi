@@ -6,12 +6,12 @@ import isearr from './isearr.mjs'
 /**
  * 由vall陣列找尋vfind內各元素之第1位置
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} vall 輸入要被尋找的任意資料陣列
  * @param {Array} vfind 輸入要尋找的任意資料陣列
  * @returns {Array} 回傳所找到各元素第1位置之陣列
  */
-export default function arrfind(vall, vfind) {
+function arrfind(vall, vfind) {
 
     //check
     if (!isearr(vall)) {
@@ -27,3 +27,6 @@ export default function arrfind(vall, vfind) {
 
     return inds
 }
+
+
+export default arrfind

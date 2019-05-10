@@ -5,11 +5,11 @@ import isestr from './isestr.mjs'
 /**
  * 字串頭尾去除空白字串
  * 若輸入不是字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {String} c 輸入字串
  * @returns {String} 回傳去除空白的字串
  */
-export default function trim(c) {
+function trim(c) {
 
     //check
     if (!isestr(c)) {
@@ -20,3 +20,6 @@ export default function trim(c) {
 
     return r
 }
+
+
+export default trim

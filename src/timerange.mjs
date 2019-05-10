@@ -6,12 +6,12 @@ import time2min from './time2min.mjs'
 /**
  * 起訖時間合併顯示
  *
- * @export
+ * @memberOf wsemi
  * @param {String} t1 輸入開始秒時間字串
  * @param {String} t2 輸入結束秒時間字串，若不輸入則等同於開始時間字串
  * @returns {String} 回傳合併顯示時間字串
  */
-export default function timerange(t1, t2) {
+function timerange(t1, t2) {
 
     //check
     if (!istime(t1)) {
@@ -56,3 +56,6 @@ export default function timerange(t1, t2) {
 
     return ''
 }
+
+
+export default timerange

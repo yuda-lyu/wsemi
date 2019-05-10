@@ -8,11 +8,11 @@ import reverse from 'lodash/reverse'
 /**
  * 由ltdt提取不重複keys
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @returns {Array} 回傳不重複keys陣列
  */
-export default function getltdtkeys(ltdt) {
+function getltdtkeys(ltdt) {
 
     //keys
     // let keys = _.chain(ltdt)
@@ -44,3 +44,6 @@ export default function getltdtkeys(ltdt) {
 
     return r
 }
+
+
+export default getltdtkeys

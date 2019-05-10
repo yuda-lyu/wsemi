@@ -5,11 +5,11 @@ import isnum from './isnum.mjs'
 /**
  * 輸入轉字串
  * 若輸入不是數字或字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入資料
  * @returns {String} 回傳字串
  */
-export default function cstr(v) {
+function cstr(v) {
 
     //check
     if (!isestr(v) && !isnum(v)) {
@@ -20,3 +20,6 @@ export default function cstr(v) {
 
     return r
 }
+
+
+export default cstr

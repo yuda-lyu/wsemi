@@ -6,11 +6,11 @@ import cstr from './cstr.mjs'
 /**
  * 數字或字串轉金融格式(百分位添加逗號)表示
  * 若輸入不是數字或字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @returns {String} 回傳金融格式的字串
  */
-export default function cfinancial(v) {
+function cfinancial(v) {
 
     //check
     if (!isestr(v) && !isnum(v)) {
@@ -31,3 +31,6 @@ export default function cfinancial(v) {
 
     return r
 }
+
+
+export default cfinancial

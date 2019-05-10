@@ -1,7 +1,3 @@
-//https://github.com/marianoguerra/json.human.js
-//原作者js模組化與css設定不佳, 自己下載來修改
-
-
 let indexOf = [].indexOf || function(item) {
     for (let i = 0, l = this.length; i < l; i++) {
         if (i in this && this[i] === item) return i
@@ -382,7 +378,17 @@ function format(data, options) {
     return result
 }
 
-export default function viewJsonTable(jsonObj, rootElem) {
+
+/**
+ * 針對元素rootElem產生展示Json表格套件
+ * github: https://github.com/marianoguerra/json.human.js
+ * 因js與css設定無法進行模組化, 自己下載來修改
+ *
+ * @memberOf wsemi
+ * @param {Object} jsonObj 輸入Json物件
+ * @param {Element} rootElem 輸入初始化元素
+ */
+function viewJsonTable(jsonObj, rootElem) {
     rootElem.innerHTML = ''
     // let options = {
     //     // Show or hide Array-Indices in the output
@@ -417,3 +423,6 @@ export default function viewJsonTable(jsonObj, rootElem) {
     let node = format(jsonObj)
     rootElem.appendChild(node)
 }
+
+
+export default viewJsonTable

@@ -6,11 +6,11 @@ import isu8arr from './isu8arr.mjs'
 /**
  * Uint8Array轉base64字串
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} u8a 輸入Uint8Array
  * @returns {String} 回傳base64字串
  */
-export default function u8arr2b64(u8a) {
+function u8arr2b64(u8a) {
 
     //check
     if (!isu8arr(u8a)) {
@@ -21,3 +21,6 @@ export default function u8arr2b64(u8a) {
     let b64 = wa.toString(encbase64)
     return b64
 }
+
+
+export default u8arr2b64

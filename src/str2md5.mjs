@@ -6,11 +6,11 @@ import isstr from './isstr.mjs'
 /**
  * 一般字串轉MD5字串
  *
- * @export
+ * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @returns {String} 回傳經MD5轉換後字串，採Hex顯示
  */
-export default function str2md5(str) {
+function str2md5(str) {
 
     //check
     if (!isstr(str)) {
@@ -20,3 +20,6 @@ export default function str2md5(str) {
     let hex = MD5(str).toString(enchex)
     return hex
 }
+
+
+export default str2md5

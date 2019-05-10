@@ -5,13 +5,13 @@ import ispint from './ispint.mjs'
 /**
  * 取字串中位置s開始後n個字元
  *
- * @export
+ * @memberOf wsemi
  * @param {String} c 輸入要被取的字串
  * @param {Integer} s 輸入要由第s個位置開始，為整數
  * @param {Integer} n 輸入開始後n個字元，為整數
- * @returns
+ * @returns {String} 回傳處理後字串
  */
-export default function strmid(c, s, n) {
+function strmid(c, s, n) {
 
     //check
     if (!isestr(c)) {
@@ -26,3 +26,5 @@ export default function strmid(c, s, n) {
 
     return c.substring((s - 1), (s + n - 1))
 }
+
+export default strmid

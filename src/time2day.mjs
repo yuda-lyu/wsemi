@@ -5,11 +5,11 @@ import istime from './istime.mjs'
 /**
  * 秒時間取至日時間
  *
- * @export
+ * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳日時間字串
  */
-export default function time2day(t) {
+function time2day(t) {
 
     //check
     if (!istime(t)) {
@@ -21,3 +21,6 @@ export default function time2day(t) {
 
     return r
 }
+
+
+export default time2day

@@ -9,12 +9,12 @@ import o2j from './o2j.mjs'
 /**
  * 由物件陣列ltdt並使用keys轉二維陣列mat
  *
- * @export
+ * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
  * @param {Array} ltdt 輸入物件陣列
  * @returns {Array} 回傳資料陣列
  */
-export default function ltdt2mat(keys, ltdt) {
+function ltdt2mat(keys, ltdt) {
 
     //check
     if (!isearr(keys)) {
@@ -38,3 +38,6 @@ export default function ltdt2mat(keys, ltdt) {
 
     return mdata
 }
+
+
+export default ltdt2mat

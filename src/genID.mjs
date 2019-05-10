@@ -5,11 +5,11 @@ import ispint from './ispint.mjs'
  * 產生隨機id
  * Wind4/Math.uuid.js
  * https://gist.github.com/Wind4/3baa40b26b89b686e4f2
- * @export
+ * @memberOf wsemi
  * @param {PositiveInteger} [len=undefined] 輸入uuid長度，為正整數，預設不使用，產生uuid為32位(rfc4122格式)
  * @returns {String} 回傳uuid字串
  */
-export default function genID(len) {
+function genID(len) {
 
     let i
     let chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
@@ -42,3 +42,6 @@ export default function genID(len) {
 
     return r
 }
+
+
+export default genID

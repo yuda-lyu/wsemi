@@ -5,12 +5,12 @@ import isestr from './isestr.mjs'
 /**
  * 判斷物件是否有key屬性
  *
- * @export
+ * @memberOf wsemi
  * @param {Object} obj 輸入物件
  * @param {String} key 輸入要查找的key字串
  * @returns {Boolean} 回傳判斷布林值
  */
-export default function haskey(obj, key) {
+function haskey(obj, key) {
 
     //check
     if (!isobj(obj)) {
@@ -22,3 +22,6 @@ export default function haskey(obj, key) {
 
     return (key in obj)
 }
+
+
+export default haskey

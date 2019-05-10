@@ -4,11 +4,11 @@ import tippy from 'tippy.js'
 /**
  * 滑鼠移入元素時彈出提示訊息
  *
- * @export
+ * @memberOf wsemi
  * @param {*} ele DOM元素物件
  * @param {*} ct 提示html訊息字串
  */
-export default function onTooltip(ele, ct) {
+function onTooltip(ele, ct) {
 
     //h
     let h = ct
@@ -45,3 +45,5 @@ export default function onTooltip(ele, ct) {
 
 }
 
+
+export default onTooltip

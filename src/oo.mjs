@@ -5,11 +5,14 @@ import o2j from './o2j.mjs'
 /**
  * 暴力cloneDeep物件
  *
- * @export
+ * @memberOf wsemi
  * @param {*} o 輸入任意資料
  * @returns {*} 回傳任意資料
  */
-export default function oo(o) {
+function oo(o) {
 
     return j2o(o2j(o))
 }
+
+
+export default oo

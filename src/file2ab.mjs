@@ -5,11 +5,11 @@ import domTriggerEvent from './domTriggerEvent.mjs'
 /**
  * 前端input檔案物件轉ArrayBuffer資料陣列
  *
- * @export
+ * @memberOf wsemi
  * @param {Object} file 輸入file物件
  * @returns {Promise} 回傳Promise，resolve回傳檔案的ArrayBuffer資料陣列
  */
-export default function file2ab(file) {
+function file2ab(file) {
 
     //df
     let df = genPm()
@@ -58,3 +58,6 @@ export default function file2ab(file) {
 
     return df
 }
+
+
+export default file2ab

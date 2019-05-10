@@ -1,11 +1,11 @@
 /**
  * 前端觸發ele的eventName
  *
- * @export
+ * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {String} eventName 輸入事件名稱字串
  */
-export default function domTriggerEvent(ele, eventName) {
+function domTriggerEvent(ele, eventName) {
 
     //event
     let event = new MouseEvent(eventName, {
@@ -18,3 +18,6 @@ export default function domTriggerEvent(ele, eventName) {
     ele.dispatchEvent(event)
 
 }
+
+
+export default domTriggerEvent

@@ -5,12 +5,12 @@ import ispint from './ispint.mjs'
 /**
  * 前端回傳Input元素所給予的檔案
  *
- * @export
+ * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Array} 回傳檔案陣列
  */
-export default function domGetFiles(ele, sizelimit = 500) {
+function domGetFiles(ele, sizelimit = 500) {
 
     //check
     if (ispint(sizelimit)) {
@@ -46,3 +46,6 @@ export default function domGetFiles(ele, sizelimit = 500) {
         err: err
     }
 }
+
+
+export default domGetFiles

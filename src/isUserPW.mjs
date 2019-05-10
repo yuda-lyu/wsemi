@@ -10,11 +10,11 @@ import isStrHasNumber from './isStrHasNumber.mjs'
 /**
  * 判斷是否為有效user password
  *
- * @export
+ * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  */
-export default function isUserPW(v) {
+function isUserPW(v) {
 
     let df = genPm()
 
@@ -46,3 +46,6 @@ export default function isUserPW(v) {
 
     return df
 }
+
+
+export default isUserPW

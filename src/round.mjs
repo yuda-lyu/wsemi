@@ -7,11 +7,11 @@ import cdbl from './cdbl.mjs'
 /**
  * 數字或字串四捨五入至整數
  * 若輸入不是數字或字串時則回傳空字串
- * @export
+ * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @returns {Integer} 回傳四捨五入的整數
  */
-export default function round(v) {
+function round(v) {
 
     //check
     if (!isestr(v) && !isnum(v)) {
@@ -24,3 +24,6 @@ export default function round(v) {
 
     return r
 }
+
+
+export default round

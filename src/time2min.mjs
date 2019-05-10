@@ -5,11 +5,11 @@ import istime from './istime.mjs'
 /**
  * 秒時間取至分時間
  *
- * @export
+ * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳分時間字串
  */
-export default function time2min(t) {
+function time2min(t) {
 
     //check
     if (!istime(t)) {
@@ -21,3 +21,6 @@ export default function time2min(t) {
 
     return r
 }
+
+
+export default time2min
