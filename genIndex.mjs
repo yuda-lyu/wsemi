@@ -19,7 +19,7 @@ async function main() {
     let ltfs = await getFiles()
 
     //pull
-    _.pull(ltfs, 'index.mjs')
+    _.pull(ltfs, '_class.mjs', 'index.mjs')
 
     //get names
     let scs = []
