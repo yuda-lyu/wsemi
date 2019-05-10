@@ -39,14 +39,6 @@ async function main() {
     //merge content
     let c = _.join(scs, '\r\n')
 
-    //add jsdoc class
-    let h = `
-/**
- * @class wsemi
- */
- `
-    c = h + '\r\n' + c
-
     //write content
     fs.writeFileSync(fd + fnidx, c, 'utf8')
 

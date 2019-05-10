@@ -1,8 +1,3 @@
-
-/**
- * @class wsemi
- */
- 
 export ab2blob from './ab2blob.mjs'
 export ab2u8arr from './ab2u8arr.mjs'
 export addMonth from './addMonth.mjs'
@@ -140,3 +135,4 @@ export u8arr2blob from './u8arr2blob.mjs'
 export viewJsonTable from './viewJsonTable.mjs'
 export viewJsonTree from './viewJsonTree.mjs'
 export waitfunction from './waitfunction.mjs'
+export _class from './_class.mjs'
