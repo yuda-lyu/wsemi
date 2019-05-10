@@ -13,6 +13,7 @@ export default {
       'fs': 'fs',
       //'dayjs': 'dayjs',
       //'tippy.js': 'tippy.js',
+      'fuzzball': 'fuzzball',
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
@@ -23,6 +24,7 @@ export default {
       'fs',
       //'dayjs',
       //'tippy.js',
+      'fuzzball',
   ], 
   plugins: [
     commonjs(),
