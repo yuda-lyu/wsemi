@@ -21,7 +21,7 @@ async function main() {
     //pull
     _.pull(ltfs, 'index.mjs')
 
-    //readFile
+    //get names
     let scs = []
     _.each(ltfs, function(v) {
 
@@ -36,10 +36,10 @@ async function main() {
 
     })
 
-    //c
+    //merge content
     let c = _.join(scs, '\r\n')
 
-    //write
+    //write content
     fs.writeFileSync(fd + fnidx, c, 'utf8')
 
 }
