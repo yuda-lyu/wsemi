@@ -51,7 +51,11 @@
     "crypto",
     "fuzzy",
     "xss",
-    "tool"
+    "xlsx",
+    "tool",
+    "package ",
+    "browser",
+    "developer"
   ],
   "author": "semisphere",
   "license": "MIT"
