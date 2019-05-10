@@ -24,29 +24,37 @@
             wsemi.domShowInputAndGetFilesU8Arrs(kind)
                 .then(function(d) {
 
-                    //file
+                    //get first file
                     let file = d[0]
 
                     //u8a
                     let u8a = file.u8a
                     console.log('u8a', typeof u8a, _.size(u8a))
+                    
+                    //download u8a
                     wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
 
                     //dcsv
                     let dcsv = wsemi.getDataFromExcelFile(u8a, 'csv')
                     dcsv = dcsv.data
                     console.log('dcsv', typeof dcsv, _.size(dcsv))
+                    
+                    //download csv
                     wsemi.downloadFileFromText('temp.csv', dcsv)
 
                     //dltdt
                     let dltdt = wsemi.getDataFromExcelFile(u8a, 'ltdt')
                     console.log('dltdt', dltdt)
+                    
+                    //download json
                     wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))
 
                     //darray
                     let darray = wsemi.getDataFromExcelFile(u8a, 'array')
                     darray = _.concat([darray.keys], darray.data)
                     console.log('darray', darray)
+                    
+                    //download array
                     wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray)
 
                 })
