@@ -18,7 +18,7 @@ export default {
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
-    file: 'dist/wsemi.js'
+    file: 'dist/wsemi.umd.js'
   },
   external: [
       'XLSX',
