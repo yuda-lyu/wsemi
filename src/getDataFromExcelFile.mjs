@@ -5,7 +5,7 @@ import trim from 'lodash/trim'
 import head from 'lodash/head'
 import tail from 'lodash/tail'
 import invokeMap from 'lodash/invokeMap'
-import XLSX from 'xlsx'
+import XLSX from 'XLSX'
 
 
 function to_ltdt(workbook) {

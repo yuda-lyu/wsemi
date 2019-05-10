@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for xlsx(js-xlsx)</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+        let xlsx=XLSX
+    </script>
+    
+    <script src="../dist/wsemi.js"></script>
+
+</head>
+<body>
+
+    <button onclick="testExcel()">testExcel</button>
+
+    <script>
+            
+        function testExcel(){
+
+            let kind = 'xlsx'
+            //kind = 'common'
+            wsemi.domShowInputAndGetFilesU8Arrs(kind)
+                .then(function(d) {
+
+                    //file
+                    let file = d[0]
+
+                    //u8a
+                    let u8a = file.u8a
+                    console.log('u8a', typeof u8a, _.size(u8a))
+                    wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
+
+                    //dcsv
+                    let dcsv = wsemi.getDataFromExcelFile(u8a, 'csv')
+                    dcsv = dcsv.data
+                    console.log('dcsv', typeof dcsv, _.size(dcsv))
+                    wsemi.downloadFileFromText('temp.csv', dcsv)
+
+                    //dltdt
+                    let dltdt = wsemi.getDataFromExcelFile(u8a, 'ltdt')
+                    console.log('dltdt', dltdt)
+                    wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))
+
+                    //darray
+                    let darray = wsemi.getDataFromExcelFile(u8a, 'array')
+                    darray = _.concat([darray.keys], darray.data)
+                    console.log('darray', darray)
+                    wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray)
+
+                })
+
+        }
+
+    </script>
+  
+</body>
+</html>

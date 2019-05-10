@@ -5,11 +5,12 @@ import postcss from 'rollup-plugin-postcss'
 import babel from 'rollup-plugin-babel'
 import minify from 'rollup-plugin-babel-minify'
 
+
 export default {
   input: 'src/index.mjs',
   output: {
     globals: {
-      'xlsx': 'xlsx',
+      'XLSX': 'XLSX',
       'fs': 'fs',
       //'dayjs': 'dayjs',
       //'tippy.js': 'tippy.js',
@@ -20,7 +21,7 @@ export default {
     file: 'dist/wsemi.js'
   },
   external: [
-      'xlsx',
+      'XLSX',
       'fs',
       //'dayjs',
       //'tippy.js',
