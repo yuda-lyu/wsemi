@@ -24,11 +24,21 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
     domShowInputAndGetFiles(kind, multiple, sizelimit)
         .then(function(rs) {
 
+            //df
+            let dft = genPm()
+
             //err
             let err = rs.err
             if (size(err) > 0) {
-                df.reject(err)
+                dft.reject(err)
             }
+            else {
+                dft.resolve(rs)
+            }
+
+            return dft
+        })
+        .then(function(rs) {
 
             //files
             let files = rs.files

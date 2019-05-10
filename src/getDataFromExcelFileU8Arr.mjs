@@ -97,7 +97,7 @@ function to_csv(workbook) {
  * @param {String} [fmt='ltdt'] 輸入數據回傳格式，可有'ltdt','csv','array'，預設為'ltdt'
  * @returns {Array} 回傳數據陣列
  */
-function getDataFromExcelFile(u8a, fmt = 'ltdt') {
+function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt') {
 
     //workbook
     let workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
@@ -117,4 +117,4 @@ function getDataFromExcelFile(u8a, fmt = 'ltdt') {
 }
 
 
-export default getDataFromExcelFile
+export default getDataFromExcelFileU8Arr

@@ -1,5 +1,6 @@
 import XLSX from 'XLSX'
 import isestr from './isestr.mjs'
+import isearr from './isearr.mjs'
 import ab2u8arr from './ab2u8arr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
 
@@ -77,6 +78,10 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
     }
     if (!isestr(csn)) {
         csn = 'data'
+    }
+    if (!isearr(data)) {
+        console.warn('no data')
+        return
     }
 
     //wb
