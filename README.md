@@ -13,6 +13,8 @@ npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tipp
 ```
 
 ### In a browser(UMD module):
+> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking), @ctrl/tinycolor, xss, ua-parser-js, tippy.js
+
 [Optional] Add script for xlsx
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
