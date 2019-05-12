@@ -10,13 +10,18 @@ import isearr from './isearr.mjs'
  * @memberOf wsemi
  * @param {String} s 輸入要判斷的字串
  * @param {Array|String} keys 輸入字串陣列或字串
- * @param {String} mode 輸入模式，預設為'anyone'
+ * @param {String} mode 輸入模式，可選'anyone'與'all'，預設為'anyone'
  * @returns {Boolean} 回傳判斷布林值
  */
 function binstr(s, keys, mode = 'anyone') {
 
     //check
     if (!isestr(s)) {
+        return false
+    }
+    
+    //check mode
+    if (mode !== 'anyone' && mode !== 'all') {
         return false
     }
 

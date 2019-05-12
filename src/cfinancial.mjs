@@ -1,6 +1,6 @@
-import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
-import cstr from './cstr.mjs'
+import isp0int from './isp0int.mjs'
+import dig from './dig.mjs'
 
 
 /**
@@ -8,16 +8,20 @@ import cstr from './cstr.mjs'
  * 若輸入不是數字或字串時則回傳空字串
  * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
+ * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳金融格式的字串
  */
-function cfinancial(v) {
+function cfinancial(v, idig = 0) {
 
     //check
-    if (!isestr(v) && !isnum(v)) {
+    if (!isnum(v)) {
         return ''
     }
-
-    v = cstr(v)
+    if (!isp0int(idig)) {
+        return ''
+    }
+    
+    v = dig(v, idig)
 
     //轉成金融數字格式
     let x = v.split('.')

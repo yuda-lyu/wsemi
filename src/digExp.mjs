@@ -13,10 +13,10 @@ import dig from './dig.mjs'
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳取指定小數位的字串
  */
-function digExp(v, idig) {
+function digExp(v, idig = 0) {
 
     //check
-    if (!isestr(v) && !isnum(v)) {
+    if (!isnum(v)) {
         return ''
     }
     if (!isp0int(idig)) {

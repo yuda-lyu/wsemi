@@ -1,5 +1,4 @@
 import round from 'lodash/round'
-import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 import isp0int from './isp0int.mjs'
 import cdbl from './cdbl.mjs'
@@ -19,7 +18,7 @@ import cdbl from './cdbl.mjs'
 function dig(v, idig = 0) {
 
     //check
-    if (!isestr(v) && !isnum(v)) {
+    if (!isnum(v)) {
         return ''
     }
     if (!isp0int(idig)) {

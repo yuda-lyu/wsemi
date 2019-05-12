@@ -1,4 +1,3 @@
-import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import dig from './dig.mjs'
@@ -15,7 +14,7 @@ import dig from './dig.mjs'
 function cfilesize(kb) {
 
     //check
-    if (!isestr(kb) && !isnum(kb)) {
+    if (!isnum(kb)) {
         return ''
     }
 
@@ -27,7 +26,7 @@ function cfilesize(kb) {
         return dig(kb / 1024, 1) + ' mb'
     }
     else if (kb < 1024 * 1024 * 1024) {
-        return dig(kb / 1024 / 1024, 1) + ' g'
+        return dig(kb / 1024 / 1024, 1) + ' gb'
     }
 
     return ''
