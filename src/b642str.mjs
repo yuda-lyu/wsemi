@@ -1,6 +1,6 @@
 import encutf8 from 'crypto-js/enc-utf8'
 import encbase64 from 'crypto-js/enc-base64'
-import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
 
 
 /**
@@ -13,7 +13,7 @@ import isstr from './isstr.mjs'
 function b642str(b64) {
 
     //check
-    if (!isstr(b64)) {
+    if (!isestr(b64)) {
         return ''
     }
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for lodash, fuzzball, tippyjs</title>
+    <title>examples for fuzzball</title>
     
     <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 
@@ -11,22 +11,8 @@
 </head>
 <body>
 
-    <button onmouseenter="wsemi.onTooltip(this,'<b>提示</b><br>test tooltip')">tooltip from tippy.js</button>
-
     <script>
 
-        console.log('*from lodash')
-        
-        console.log('isarr([])',  wsemi.isarr([])  )
-
-        console.log('isarr({})',  wsemi.isarr({})  )
-
-        console.log('isbol(true)',  wsemi.isbol(true)  )
-
-        console.log('isbol({})',  wsemi.isbol({})  )
-
-        console.log('*from fuzzball')
-        
         console.log("fuzzfind(['abc','def123'],'ef')",  wsemi.fuzzfind(['abc','def123'],'ef')  )
 
         console.log("fuzzfind(['abc','def123'],'xyz')",  wsemi.fuzzfind(['abc','def123'],'xyz')  )
