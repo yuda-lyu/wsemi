@@ -4,7 +4,7 @@ import assert from 'assert'
 
 describe('domTriggerEvent', function() {
 
-    it('is unable to test', function() {
+    it('need test in browser', function() {
         assert.strict.deepEqual(1, 1)
     })
 

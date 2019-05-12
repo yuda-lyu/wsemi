@@ -4,7 +4,7 @@ import assert from 'assert'
 
 describe('ab2blob', function() {
 
-    it('is unable to test', function() {
+    it('need test in browser', function() {
     //let ab = new ArrayBuffer(8)
         assert.strict.deepEqual(1, 1)
     })
