@@ -4,6 +4,10 @@ import isestr from './isestr.mjs'
 /**
  * 切割字串
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/split.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} c 輸入要被切割的字串
  * @param {String} t 輸入用來切割的符號字串

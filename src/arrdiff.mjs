@@ -10,6 +10,10 @@ import haskey from './haskey.mjs'
 /**
  * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrdiff.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array|Object} vold 輸入舊的物件陣列或物件
  * @param {Array|Object} vnew 輸入新的物件陣列或物件

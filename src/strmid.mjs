@@ -5,6 +5,10 @@ import ispint from './ispint.mjs'
 /**
  * 取字串中位置s開始後n個字元
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strmid.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} c 輸入要被取的字串
  * @param {Integer} s 輸入要由第s個位置開始，為整數

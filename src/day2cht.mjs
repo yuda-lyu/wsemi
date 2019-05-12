@@ -5,6 +5,10 @@ import isday from './isday.mjs'
 /**
  * 日時間轉中文格式時間字串
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/day2cht.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} t 輸入日時間字串
  * @param {boolean} [bNoDisplayYear=false] 輸入是否輸出民國年，預設為false

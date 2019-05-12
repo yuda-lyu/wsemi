@@ -7,6 +7,10 @@ import istime from './istime.mjs'
 /**
  * 由兩日期之前回傳以unit分切的時間點
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timebetween.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} t1 輸入開始秒時間字串
  * @param {String} t2 輸入結束秒時間字串

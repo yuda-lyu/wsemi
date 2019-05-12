@@ -10,6 +10,10 @@ import iser from './iser.mjs'
  * 若istart與iend有效, 提取istart~iend欄位
  * 若僅istart有效, 提取istart欄位
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrat.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
  * @param {Integer} istart 輸入起始的欄位指標整數

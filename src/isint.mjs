@@ -6,6 +6,10 @@ import cdbl from './cdbl.mjs'
 /**
  * 判斷是否為整數
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isint.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值

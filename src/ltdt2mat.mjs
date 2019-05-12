@@ -9,6 +9,10 @@ import o2j from './o2j.mjs'
 /**
  * 由物件陣列ltdt並使用keys轉二維陣列mat
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdt2mat.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
  * @param {Array} ltdt 輸入物件陣列

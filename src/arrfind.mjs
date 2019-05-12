@@ -6,6 +6,10 @@ import isearr from './isearr.mjs'
 /**
  * 由vall陣列找尋vfind內各元素之第1位置
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfind.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} vall 輸入要被尋找的任意資料陣列
  * @param {Array} vfind 輸入要尋找的任意資料陣列

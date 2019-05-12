@@ -9,6 +9,10 @@ import cdbl from './cdbl.mjs'
  * v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數字，若非數字將自動轉數字
  * 若需使用之陣列長度不同，則回傳空陣列
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} v1 輸入第1個陣列
  * @param {Array} v2 輸入第2個陣列

@@ -5,6 +5,10 @@ import istime from './istime.mjs'
 /**
  * 秒時間取至日時間
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2day.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳日時間字串

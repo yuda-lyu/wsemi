@@ -8,6 +8,10 @@ import ltdt2mat from './ltdt2mat.mjs'
 /**
  * keys轉heads後，由物件陣列ltdt轉二維陣列mat
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdth2mat.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
  * @param {Object} kphead 輸入字典物件，內含keys對應values之物件，供keys查詢得values

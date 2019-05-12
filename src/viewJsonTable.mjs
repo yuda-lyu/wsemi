@@ -384,6 +384,10 @@ function format(data, options) {
  * github: https://github.com/marianoguerra/json.human.js
  * 因js與css設定無法進行模組化, 自己下載來修改
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/viewJsonTable.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Object} jsonObj 輸入Json物件
  * @param {Element} rootElem 輸入初始化元素

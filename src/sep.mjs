@@ -7,6 +7,10 @@ import iser from './iser.mjs'
 /**
  * 切割字串並剔除非有效元素
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sep.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} c 輸入要被切割的字串
  * @param {String} t 輸入用來切割的符號字串

@@ -8,6 +8,10 @@ import getdtv from './getdtv.mjs'
 /**
  * 由dt物件提取keys, 僅保留有keys的欄位, 不存在keys的欄位則刪除
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dtpick.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Object} dt 輸入資料物件
  * @param {Array} keys 輸入keys值字串陣列

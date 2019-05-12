@@ -8,7 +8,12 @@ import isstr from './isstr.mjs'
 
 /**
  * 清除xss攻擊語法
- * https://jsxss.com/zh/index.html
+ *
+ * Depend on: {@link https://jsxss.com/zh/index.html https://jsxss.com/zh/index.html}
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSS.test.js Github}
+ *
+ * @example
  *
  * @memberOf wsemi
  * @param {Object|Array|String} obj 輸入資料

@@ -6,6 +6,10 @@ import isearr from './isearr.mjs'
 /**
  * 由vall陣列移除vdel陣列
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrpull.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array} vall 輸入要被刪除的任意資料陣列
  * @param {Array} vdel 輸入要刪除的任意資料陣列

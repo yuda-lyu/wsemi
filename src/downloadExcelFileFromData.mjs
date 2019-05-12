@@ -64,6 +64,10 @@ function getWB(csn, data) {
 /**
  * 前端下載text資料成為utf-8(含BOM)檔案
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'

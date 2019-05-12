@@ -5,6 +5,10 @@ import o2j from './o2j.mjs'
 /**
  * 任意物件轉base64字串
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2b64.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} obj 輸入任意物件
  * @returns {String} 回傳base64字串

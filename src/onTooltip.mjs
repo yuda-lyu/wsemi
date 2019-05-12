@@ -4,6 +4,10 @@ import tippy from 'tippy.js'
 /**
  * 滑鼠移入元素時彈出提示訊息
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/onTooltip.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} ele DOM元素物件
  * @param {*} ct 提示html訊息字串

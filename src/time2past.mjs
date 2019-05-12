@@ -6,6 +6,10 @@ import isbol from './isbol.mjs'
 /**
  * 秒時間轉過去時間
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2past.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @param {Boolean} [bReturnString=false] 輸入是否只回傳字串訊息，預設為false

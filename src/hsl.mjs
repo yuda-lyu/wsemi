@@ -4,6 +4,10 @@ import TinyColor from '@ctrl/tinycolor'
 /**
  * 由hsl回傳hex顏色字串
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/hsl.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Number} rh 輸入色相: Hue(0~1)
  * @param {Number} rs 輸入飽和度: Saturation(0~1)

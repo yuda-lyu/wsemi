@@ -4,7 +4,10 @@ import isint from './isint.mjs'
 
 
 /**
- * 月份增加
+ * 輸入年月並增加/減少月份數量
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/addMonth.test.js Github}
+ *
+ * @example
  *
  * @memberOf wsemi
  * @param {String} g 輸入月時間字串

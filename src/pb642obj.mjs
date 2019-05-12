@@ -7,6 +7,10 @@ import j2o from './j2o.mjs'
 /**
  * base64解密取得原始資料
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pb642obj.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} key 輸入加密key
  * @param {String} data 輸入加密base64字串

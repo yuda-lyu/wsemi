@@ -5,6 +5,10 @@ import getdtvstr from './getdtvstr.mjs'
 /**
  * 前端取得使用者瀏覽器資訊
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  */

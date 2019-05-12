@@ -8,6 +8,10 @@ import isbol from './isbol.mjs'
  * 切分正整數
  * 例如10/3為[4,3,3]
  * 若輸入v,n不是整數或breverse不是布林值時則回傳空陣列
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Integer} v 輸入要被切分的整數
  * @param {Integer} n 輸入要切分數量的整數

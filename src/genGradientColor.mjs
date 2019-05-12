@@ -4,6 +4,10 @@ import TinyColor from '@ctrl/tinycolor'
 /**
  * 產生highchart直條圖用漸變顏色物件
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genGradientColor.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} hex 輸入hex顏色字串
  * @returns {Object} 回傳漸變顏色物件

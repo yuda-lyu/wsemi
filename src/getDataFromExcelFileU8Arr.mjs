@@ -92,6 +92,10 @@ function to_csv(workbook) {
  * 讀取xlsx檔，由input file的檔案讀取excel數據出來
  * 若fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {String} [fmt='ltdt'] 輸入數據回傳格式，可有'ltdt','csv','array'，預設為'ltdt'

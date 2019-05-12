@@ -10,6 +10,10 @@ import cdbl from './cdbl.mjs'
  * console.log(1.005.toFixed(2)) //1.00
  * console.log(dig(1.005, 2)) //1.01
  * 若輸入不是數字或字串時則回傳空字串
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dig.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0

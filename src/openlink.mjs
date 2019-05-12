@@ -4,6 +4,10 @@ import isestr from './isestr.mjs'
 /**
  * 前端開啟連結
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/openLink.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} url
  */

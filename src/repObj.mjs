@@ -7,6 +7,10 @@ import ispint from './ispint.mjs'
 /**
  * 產生重複n次任意資料之陣列
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/repObj.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} o 輸入任意資料
  * @param {PositiveInteger} n 輸入重複次數之正整數

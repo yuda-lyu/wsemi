@@ -15,6 +15,10 @@ import sep from './sep.mjs'
 /**
  * 以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fuzzfind.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料
  * @param {String} strkey 查找ar內是否含有關鍵字

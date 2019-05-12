@@ -10,6 +10,10 @@ import isStrHasNumber from './isStrHasNumber.mjs'
 /**
  * 判斷是否為有效user password
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserPW.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息

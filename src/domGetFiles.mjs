@@ -5,6 +5,10 @@ import ispint from './ispint.mjs'
 /**
  * 前端回傳Input元素所給予的檔案
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFiles.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb

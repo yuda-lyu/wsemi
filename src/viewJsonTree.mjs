@@ -313,6 +313,10 @@ function render(tree, rootElem) {
  * github: https://github.com/pgrabovets/json-view
  * 因沒有加入預先展開數據功能, 自己下載來修改
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/viewJsonTree.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {Object} jsonObj 輸入Json物件
  * @param {Element} rootElem 輸入初始化元素

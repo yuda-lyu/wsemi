@@ -1,6 +1,10 @@
 /**
  * 計算物件記憶體大小
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getObjSize.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {*} obj 傳入欲計算大小的任意數據
  * @returns {Object} 回傳記憶體大小物件, int屬性為記憶體所使用的bytes整數, str屬性為自動處理單位後的字串

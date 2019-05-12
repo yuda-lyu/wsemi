@@ -5,6 +5,10 @@ import isestr from './isestr.mjs'
 /**
  * 判斷是否為日時間
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isday.test.js Github}
+ *
+ * @example
+ *
  * @memberOf wsemi
  * @param {String} v 輸入日時間字串
  * @returns {Boolean} 回傳是否為日時間布林值
