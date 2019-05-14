@@ -17,9 +17,9 @@ npm i wsemi
 ### In a browser(UMD module):
 > **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking), @ctrl/tinycolor, xss, ua-parser-js, tippy.js
 
-[Optional] Add script for IE11
+[Optional] Add script with nomodule for IE11
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for xlsx
 ```alias
