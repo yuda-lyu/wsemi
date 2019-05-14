@@ -20,21 +20,26 @@ npm i wsemi
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
-[Optional] Add script for xlsx
-> **Note:** It is necessary to include when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function
-```alias
-<script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
-```
 [Optional] Add script for fuzzball
 > **Note:** It is necessary to include when use `fuzzfind` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+```
+[Optional] Add script for ua-parser-js
+> **Note:** It is necessary to include when use `getUserAgent` function
+```alias
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
 ```
 [Optional] Add script for popper.js and tippy.js
 > **Note:** It is necessary to include when use `onTooltip` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
+```
+[Optional] Add script for xlsx
+> **Note:** It is necessary to include when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function
+```alias
+<script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
 Add script for wsemi
 ```alias
