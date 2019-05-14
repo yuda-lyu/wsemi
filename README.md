@@ -20,6 +20,13 @@ npm i wsemi
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
+[Optional] Add script for dayjs(or moment)
+> **Note:** It is necessary to include when use some function of time
+```alias
+<script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+//dayjs(or moment) need to save in window.ot
+window.ot = dayjs
+```
 [Optional] Add script for fuzzball
 > **Note:** It is necessary to include when use `fuzzfind` function
 ```alias

@@ -10,6 +10,7 @@ export default {
   output: {
     globals: {
       'fs': 'fs',
+      'ot': 'dayjs',
       'XLSX': 'XLSX',
       'fuzzball': 'fuzzball',
       'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
@@ -23,6 +24,7 @@ export default {
   },
   external: [
       'fs',
+      'dayjs',
       'XLSX',
       'fuzzball',
       'tippy.js', //內部套件名稱
