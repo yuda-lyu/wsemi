@@ -1,5 +1,5 @@
 import each from 'lodash/each'
-import isobj from './isobj.mjs'
+import iseobj from './iseobj.mjs'
 import isearr from './isearr.mjs'
 import getdtv from './getdtv.mjs'
 
@@ -19,7 +19,7 @@ import getdtv from './getdtv.mjs'
 function dtmapping(dt, keys) {
 
     //check
-    if (!isobj(dt)) {
+    if (!iseobj(dt)) {
         return {}
     }
     if (!isearr(keys)) {

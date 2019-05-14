@@ -1,3 +1,4 @@
+import each from 'lodash/each'
 import domFinds from './domFinds.mjs'
 
 
@@ -21,7 +22,7 @@ function domRemove(query) {
     let rs = domFinds(query)
 
     //remove
-    rs.forEach(function(ele) {
+    each(rs, function(ele) {
         remove(ele)
     })
 

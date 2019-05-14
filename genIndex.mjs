@@ -39,6 +39,14 @@ async function main() {
     //merge content
     let c = _.join(scs, '\r\n')
 
+    //add polyfill
+    //https://github.com/zloirock/core-js
+    //core-js integrated with babel and is the base for polyfilling-related babel
+    //As a full equal of @babel/polyfill, you can use this:
+    //let h = `import '@babel/polyfill'\r\n` //import '@babel/polyfill' is deprecated
+    //let h = `import 'core-js/stable'\r\n` + `import 'regenerator-runtime/runtime'\r\n`
+    //c = h + c
+
     //write content
     fs.writeFileSync(fd + fnidx, c, 'utf8')
 

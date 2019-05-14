@@ -1,5 +1,4 @@
 import isfun from './isfun.mjs'
-import cstr from './cstr.mjs'
 import trim from './trim.mjs'
 
 
@@ -21,7 +20,7 @@ function f2c(f) {
         return ''
     }
 
-    let cont = cstr(f)
+    let cont = String(f)
     let r = cont.substring(cont.indexOf('/*') + 3, cont.lastIndexOf('*/'))
     r = trim(r)
 

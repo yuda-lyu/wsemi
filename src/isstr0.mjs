@@ -1,3 +1,6 @@
+import isstr from './isstr.mjs'
+
+
 /**
  * 判斷是否為空字串
  *
@@ -11,8 +14,10 @@
  */
 function isstr0(v) {
 
-    if (v === '') {
-        return true
+    if (isstr(v)){
+        if (v === '') {
+            return true
+        }
     }
     return false
 }

@@ -1,7 +1,6 @@
 import commonjs from 'rollup-plugin-commonjs'
 import resolve from 'rollup-plugin-node-resolve'
 import postcss from 'rollup-plugin-postcss'
-//import builtins from 'rollup-plugin-node-builtins'
 import babel from 'rollup-plugin-babel'
 import minify from 'rollup-plugin-babel-minify'
 
@@ -29,7 +28,6 @@ export default {
   ], 
   plugins: [
     commonjs(),
-    //builtins(),
     resolve({
         preferBuiltins: false,
         browser: true,
@@ -38,15 +36,19 @@ export default {
       runtimeHelpers: true,
       exclude: 'node_modules/**',
       presets: [
-        "@babel/preset-env",
+        [
+          "@babel/preset-env",
+          {
+            useBuiltIns: 'entry', //entry usage, usage is not stable
+            corejs: 3,
+          }
+        ]
       ],
     }),
     postcss({
       extensions: ['.css']
-      }),
-    minify({
-      comments:false,
     }),
+    minify({ comments: false, }),
   ]
 }
 

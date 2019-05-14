@@ -2,8 +2,7 @@ import size from 'lodash/size'
 import each from 'lodash/each'
 import genPm from './genPm.mjs'
 import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
-import files2abs from './files2abs.mjs'
-import ab2u8arr from './ab2u8arr.mjs'
+import files2u8arrs from './files2u8arrs.mjs'
 
 
 /**
@@ -56,13 +55,12 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
                 })
             })
 
-            return files2abs(files)
+            return files2u8arrs(files)
         })
-        .then(function(abs) {
+        .then(function(u8as) {
 
             //ArrayBuffer to Uint8Array and save
-            each(abs, function(ab, k) {
-                let u8a = ab2u8arr(ab)
+            each(u8as, function(u8a, k) {
                 resfiles[k]['u8a'] = u8a
             })
 
