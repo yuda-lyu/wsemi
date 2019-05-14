@@ -9,7 +9,6 @@ To view documentation or get support , visit [docs](https://yuda-lyu.github.io/w
 ## Installation
 ### Using npm(ES6 module):
 > **Note:** wsemi depends on lodash, dayjs, crypto-js, @ctrl/tinycolor, fuzzball, xss, xlsx, ua-parser-js, tippy.js
-
 ```alias
 npm i wsemi
 ```
@@ -22,10 +21,12 @@ npm i wsemi
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for xlsx
+> **Note:** It is necessary to include when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
 [Optional] Add script for fuzzball
+> **Note:** It is necessary to include when use `fuzzfind` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
