@@ -7,7 +7,9 @@
  * @param {ArrayBuffer} ab 輸入ArrayBuffer資料
  * @returns {Unit8Array} 回傳Unit8Array資料
  * @example
- *
+ * let ab = new ArrayBuffer(8)
+ * ab2u8arr(ab)
+ * //[object Uint8Array]
  */
 function ab2u8arr(ab) {
     let l = ab.length
