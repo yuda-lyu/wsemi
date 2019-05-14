@@ -9,10 +9,9 @@ export default {
   input: 'src/index.mjs',
   output: {
     globals: {
-      'XLSX': 'XLSX',
       'fs': 'fs',
-      //'dayjs': 'dayjs',
-      //'tippy.js': 'tippy.js',
+      'XLSX': 'XLSX',
+      'tippy': 'tippy.js',
       'fuzzball': 'fuzzball',
     },
     format: 'umd', //iife, umd
@@ -20,10 +19,9 @@ export default {
     file: 'dist/wsemi.umd.js'
   },
   external: [
-      'XLSX',
       'fs',
-      //'dayjs',
-      //'tippy.js',
+      'XLSX',
+      'tippy.js',
       'fuzzball',
   ], 
   plugins: [

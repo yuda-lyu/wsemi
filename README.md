@@ -8,7 +8,7 @@ To view documentation or get support , visit [docs](https://yuda-lyu.github.io/w
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on lodash, dayjs, crypto-js, @ctrl/tinycolor, fuzzball, xss, xlsx, ua-parser-js, tippy.js
+> **Note:** wsemi depends on lodash, dayjs, crypto-js, @ctrl/tinycolor, xss, ua-parser-js, xlsx, fuzzball, tippy.js
 ```alias
 npm i wsemi
 ```
@@ -29,6 +29,12 @@ npm i wsemi
 > **Note:** It is necessary to include when use `fuzzfind` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+```
+[Optional] Add script for popper.js and tippy.js
+> **Note:** It is necessary to include when use `onTooltip` function
+```alias
+<script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
 ```
 Add script for wsemi
 ```alias
