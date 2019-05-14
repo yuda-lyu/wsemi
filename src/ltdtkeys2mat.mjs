@@ -1,35 +1,47 @@
 import each from 'lodash/each'
 import map from 'lodash/map'
 import isearr from './isearr.mjs'
+import iseobj from './iseobj.mjs'
 import isstr from './isstr.mjs'
 import isnum from './isnum.mjs'
 import o2j from './o2j.mjs'
 
 
 /**
- * 由物件陣列ltdt並使用keys轉二維陣列mat
+ * 由物件陣列ltdt並使用keys取值轉二維陣列mat
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdt2mat.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.js Github}
  *
  * @example
  *
  * @memberOf wsemi
- * @param {Array} keys 輸入字串陣列
  * @param {Array} ltdt 輸入物件陣列
+ * @param {Array} keys 輸入字串陣列
  * @returns {Array} 回傳資料陣列
  */
-function ltdt2mat(keys, ltdt) {
+function ltdtkeys2mat(ltdt, keys) {
 
     //check
-    if (!isearr(keys)) {
-        return []
-    }
     if (!isearr(ltdt)) {
         return []
     }
-
-    //mdata
-    let mdata = []
+    if (!isearr(keys)) {
+        return []
+    }
+    
+    //check ltdt
+    let b = false
+    each(ltdt, function(v) {
+        if (!iseobj(v)){
+            b = true
+        }
+    })
+    if (b) {
+        return []
+    }
+    
+    //mat
+    let mat = []
     each(ltdt, function(v) {
         let r = map(keys, function(k) {
             if (!isstr(v[k]) && !isnum(v[k])) {
@@ -37,11 +49,11 @@ function ltdt2mat(keys, ltdt) {
             }
             return v[k]
         })
-        mdata.push(r)
+        mat.push(r)
     })
 
-    return mdata
+    return mat
 }
 
 
-export default ltdt2mat
+export default ltdtkeys2mat

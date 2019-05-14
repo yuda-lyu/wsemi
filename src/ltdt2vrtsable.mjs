@@ -5,7 +5,10 @@ import size from 'lodash/size'
 import range from 'lodash/range'
 import isEqual from 'lodash/isEqual'
 import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
+import iseobj from './iseobj.mjs'
 import arrhas from './arrhas.mjs'
+import getltdtkeys from './getltdtkeys.mjs'
 
 
 /**
@@ -17,21 +20,32 @@ import arrhas from './arrhas.mjs'
  *
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
- * @param {Array} mergerowkeys 輸入需合併列的關鍵字keys，為字串陣列
+ * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
  * @returns {Array} 回傳物件陣列
  */
-function ltdt2vrtsable(ltdt, mergerowkeys) {
+function ltdt2vrtsable(ltdt, mergerowkeys = []) {
 
     //check
     if (!isearr(ltdt)) {
         return []
     }
-    if (!isearr(mergerowkeys)) {
+    if (!isarr(mergerowkeys)) {
         return []
     }
 
+    //check ltdt
+    let b = false
+    each(ltdt, function(v) {
+        if (!iseobj(v)){
+            b = true
+        }
+    })
+    if (b) {
+        return []
+    }
+    
     //tabkeys
-    let tabkeys = keys(ltdt[0])
+    let tabkeys = getltdtkeys(ltdt)
 
     //ws, 轉為正規化陣列
     let ws = []

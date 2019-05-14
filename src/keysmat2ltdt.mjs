@@ -12,21 +12,24 @@ import isearr from './isearr.mjs'
  *
  * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
- * @param {Array} mdata 輸入資料陣列
+ * @param {Array} mat 輸入資料陣列
  * @returns {Array} 回傳物件陣列
  */
-function keysmat2ltdt(keys, mdata) {
+function keysmat2ltdt(keys, mat) {
 
     //check
     if (!isearr(keys)) {
         return []
     }
-    if (!isearr(mdata)) {
+    if (!isearr(mat)) {
+        return []
+    }
+    if (!isearr(mat[0])) {
         return []
     }
 
     let ltdt = []
-    each(mdata, function(r) {
+    each(mat, function(r) {
         let o = zipObject(keys, r)
         ltdt.push(o)
     })
