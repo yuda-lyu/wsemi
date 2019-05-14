@@ -24,6 +24,7 @@ npm i wsemi
 > **Note:** It is necessary to include when use some function of time
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+...
 //dayjs(or moment) need to save in window.ot
 window.ot = dayjs
 ```
@@ -32,7 +33,7 @@ window.ot = dayjs
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
-[Optional] Add script for tinycolor2
+[Optional] Add script for tinycolor2, it's almost same as @ctrl/tinycolor
 > **Note:** It is necessary to include when use `hsl` or `genGradientColor` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js"></script>
