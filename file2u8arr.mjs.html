@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domShowInputAndGetFiles.mjs - Documentation</title>
+    <title>file2u8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domShowInputAndGetFiles.mjs</h1>
+    <h1 class="page-title">file2u8arr.mjs</h1>
     
 
     
@@ -42,85 +42,49 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
-import genID from './genID.mjs'
-import domRemove from './domRemove.mjs'
-import domGetFileAccept from './domGetFileAccept.mjs'
-import domAppend from './domAppend.mjs'
-import domFind from './domFind.mjs'
-import domGetFiles from './domGetFiles.mjs'
-import domTriggerEvent from './domTriggerEvent.mjs'
 
 
 /**
- * 前端開啟上傳視窗並回傳檔案
+ * 前端input檔案物件轉Uint8Array資料陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFiles.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/file2u8arr.test.js Github}
  *
  * @example
  *
  * @memberOf wsemi
- * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
- * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
- * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
- * @returns {Promise} 回傳Promise，resolve為各檔案陣列，無reject
+ * @param {Object} file 輸入file物件
+ * @returns {Promise} 回傳Promise，resolve回傳檔案的Uint8Array資料陣列
  */
-function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
+function file2u8arr(file) {
 
+    //df
     let df = genPm()
 
-    //id
-    let id = 'drf' + genID() //若全英文數字可能會導致出現特例如hex問題, 添加字首以避免
+    //reader
+    let reader = new FileReader()
 
-    //gname
-    let gname = 'GrpDomReadFile'
+    //onload
+    reader.onload = function(event) {
 
-    //remove
-    domRemove(`[name=${gname}]`)
+        //ab
+        let ab = event.target.result
 
-    //acp
-    let acp = domGetFileAccept(kind)
-
-    //mp
-    let mp = multiple ? 'multiple' : ''
-
-    //append html
-    let hidehtml = `&lt;div name="${gname}" style="position:relative; width:0px; height:0px; overflow:hidden;">&lt;input id="${id}" type="file" accept="${acp}" ${mp} style="opacity:0; position:absolute; top:-10000px; left:-10000px;">&lt;/div>`
-    domAppend('body', hidehtml)
-
-    //inp
-    let inp = domFind('#' + id)
-
-    //evChange
-    function evChange() {
-
-        //ele
-        let ele = this
-
-        //domGetFiles
-        let rs = domGetFiles(ele, sizelimit)
+        //u8a
+        let u8a = new Uint8Array(ab)
 
         //resolve
-        df.resolve(rs)
-
-        //remove event
-        inp.removeEventListener('change', evChange)
-
-        //remove element
-        domRemove(`[name=${gname}]`)
+        df.resolve(u8a)
 
     }
 
-    //change
-    inp.addEventListener('change', evChange)
-
-    //click
-    domTriggerEvent(inp, 'click')
+    //readAsArrayBuffer
+    reader.readAsArrayBuffer(file)
 
     return df
 }
 
 
-export default domShowInputAndGetFiles
+export default file2u8arr
 </code></pre>
         </article>
     </section>
