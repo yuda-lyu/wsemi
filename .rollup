@@ -14,6 +14,7 @@ export default {
       'fuzzball': 'fuzzball',
       'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
       'UAParser': 'ua-parser-js',
+      'filterXSS': 'xss',
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
@@ -25,6 +26,7 @@ export default {
       'fuzzball',
       'tippy.js', //內部套件名稱
       'ua-parser-js',
+      'xss',
   ], 
   plugins: [
     commonjs(),

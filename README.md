@@ -14,7 +14,7 @@ npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking), @ctrl/tinycolor, xss, ua-parser-js, tippy.js
+> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking), @ctrl/tinycolor, xss
 
 [Optional] Add script with nomodule for IE11
 ```alias
@@ -29,6 +29,11 @@ npm i wsemi
 > **Note:** It is necessary to include when use `getUserAgent` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
+```
+[Optional] Add script for xss
+> **Note:** It is necessary to include when use `clearXSS` function
+```alias
+<script src="https://gitcdn.xyz/repo/leizongmin/js-xss/master/dist/xss.min.js"></script>
 ```
 [Optional] Add script for popper.js and tippy.js
 > **Note:** It is necessary to include when use `onTooltip` function
