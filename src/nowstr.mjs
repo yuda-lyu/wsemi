@@ -5,11 +5,10 @@ import ot from 'dayjs'
  * 取得目前至秒時間
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/nowstr.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @returns {String} 回傳目前至秒時間字串
+ * @example
+ *
  */
 function nowstr() {
 

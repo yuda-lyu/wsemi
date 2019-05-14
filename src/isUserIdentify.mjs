@@ -1,4 +1,3 @@
-import join from 'lodash/join'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 
@@ -7,23 +6,22 @@ import isestr from './isestr.mjs'
  * 判斷是否為有效中華民國身份證
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserIdentify.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
+ * @example
+ *
  */
 function isUserIdentify(v) {
 
     let df = genPm()
-    
+
     //check
-    if (!isestr(v)){
+    if (!isestr(v)) {
         df.reject('身份證字號非有效字串')
         return df
     }
-    
+
     //身分證字號長度
     if (v.length !== 10) {
         df.reject('身份證字號長度非10位')

@@ -6,14 +6,14 @@ import dig from './dig.mjs'
 /**
  * 數字或字串轉金融格式(百分位添加逗號)表示
  * 若輸入不是數字或字串時則回傳空字串
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfinancial.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳金融格式的字串
+ * @example
+ *
  */
 function cfinancial(v, idig = 0) {
 
@@ -24,7 +24,7 @@ function cfinancial(v, idig = 0) {
     if (!isp0int(idig)) {
         return ''
     }
-    
+
     v = dig(v, idig)
 
     //轉成金融數字格式

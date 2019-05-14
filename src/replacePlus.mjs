@@ -6,9 +6,6 @@ import isstr from './isstr.mjs'
  * 取代字串，找尋條件為滿足具字首字尾則被取代
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/replacePlus.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} c 輸入要被取代的字串
  * @param {String} pre 輸入需為字首的字串
@@ -16,6 +13,8 @@ import isstr from './isstr.mjs'
  * @param {String} [not=undefined] 輸入需不包含的字串，預設為不使用
  * @param {String} r 輸入要取代的字串
  * @returns {String} 回傳取代後字串
+ * @example
+ *
  */
 function replacePlus(c, pre, aft, not = undefined, r) {
 

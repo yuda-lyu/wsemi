@@ -9,9 +9,7 @@ describe('f2c', function() {
 
     k = 1
     f[k] = function() {
-        /*
-            abc
-        */
+        /*abc*/
     }
     fr[k] = 'abc'
     it('should return ' + fr[k] + ' when input ' + f[k], function() {

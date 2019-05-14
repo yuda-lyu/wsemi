@@ -1,5 +1,4 @@
 import each from 'lodash/each'
-import keys from 'lodash/keys'
 import reverse from 'lodash/reverse'
 import size from 'lodash/size'
 import range from 'lodash/range'
@@ -15,13 +14,12 @@ import getltdtkeys from './getltdtkeys.mjs'
  * 由物件陣列ltdt轉陣列vrtable(使用value,style,rowspan儲存)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdt2vrtsable.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
  * @returns {Array} 回傳物件陣列
+ * @example
+ *
  */
 function ltdt2vrtsable(ltdt, mergerowkeys = []) {
 
@@ -36,14 +34,14 @@ function ltdt2vrtsable(ltdt, mergerowkeys = []) {
     //check ltdt
     let b = false
     each(ltdt, function(v) {
-        if (!iseobj(v)){
+        if (!iseobj(v)) {
             b = true
         }
     })
     if (b) {
         return []
     }
-    
+
     //tabkeys
     let tabkeys = getltdtkeys(ltdt)
 

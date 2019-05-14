@@ -6,12 +6,11 @@ import istime from './istime.mjs'
  * 秒時間取至分時間
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2min.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳分時間字串
+ * @example
+ *
  */
 function time2min(t) {
 

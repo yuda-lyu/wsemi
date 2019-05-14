@@ -7,12 +7,11 @@ import isestr from './isestr.mjs'
  * base64字串轉一般字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642str.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {String} 回傳一般字串
+ * @example
+ *
  */
 function b642str(b64) {
 

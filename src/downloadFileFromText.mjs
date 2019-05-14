@@ -7,12 +7,11 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * 前端下載text資料成為utf-8(含BOM)檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromText.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} ccont 輸入內容字串
+ * @example
+ *
  */
 function downloadFileFromText(cfn, ccont) {
 

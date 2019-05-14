@@ -6,13 +6,12 @@ import ispint from './ispint.mjs'
  * 前端回傳Input元素所給予的檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFiles.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Array} 回傳檔案陣列
+ * @example
+ *
  */
 function domGetFiles(ele, sizelimit = 500) {
 
@@ -36,7 +35,7 @@ function domGetFiles(ele, sizelimit = 500) {
         if (size / 1024 / 1024 > sizelimit) { //轉mb
 
             //push err
-            err.push(`檔案大小超過上限${sizelimit}mb：${name}`)
+            err.push(`檔案大小超過上限${sizelimit}mb：$domGetFiles`)
 
         }
 

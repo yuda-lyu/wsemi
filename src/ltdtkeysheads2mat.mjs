@@ -11,14 +11,13 @@ import ltdtkeys2mat from './ltdtkeys2mat.mjs'
  * keys轉heads，物件陣列ltdt使用keys取值，兩者合併轉出二維陣列mat
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeysheads2mat.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} keys 輸入字串陣列
  * @param {Object} kphead 輸入字典物件，內含keys對應values之物件，供keys查詢得values
  * @returns {Array} 回傳資料陣列
+ * @example
+ *
  */
 function ltdtkeysheads2mat(ltdt, keys, kphead) {
 

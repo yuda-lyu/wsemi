@@ -6,12 +6,11 @@ import isstr from './isstr.mjs'
  * base64字串轉Uint8Array
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642u8arr.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {Array} 回傳Uint8Array
+ * @example
+ *
  */
 function b642u8arr(b64) {
 

@@ -7,13 +7,12 @@ import time2min from './time2min.mjs'
  * 起訖時間合併顯示
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timerange.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} t1 輸入開始秒時間字串
  * @param {String} t2 輸入結束秒時間字串，若不輸入則等同於開始時間字串
  * @returns {String} 回傳合併顯示時間字串
+ * @example
+ *
  */
 function timerange(t1, t2) {
 

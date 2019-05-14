@@ -1,6 +1,5 @@
 //MouseEvent polyfill
 //https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/MouseEvent#Polyfill
-
 (function (window) {
     try {
         new MouseEvent('test')
@@ -44,12 +43,11 @@
  * 前端觸發ele的eventName
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {String} eventName 輸入事件名稱字串
+ * @example
+ *
  */
 function domTriggerEvent(ele, eventName) {
 

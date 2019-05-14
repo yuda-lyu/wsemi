@@ -6,13 +6,12 @@ import isearr from './isearr.mjs'
  * 判斷任一字串陣列vtar內元素，是否「等於」任一字串陣列vhas內元素
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrhas.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array|String} vtar 輸入被查找的字串陣列或字串
  * @param {Array|String} vhas 輸入查找字串陣列或字串
  * @returns {Boolean} 回傳判斷布林值
+ * @example
+ *
  */
 function arrhas(vtar, vhas) {
 

@@ -6,12 +6,11 @@ import isstr from './isstr.mjs'
  * 前端找尋DOM元素並插入節點、元素或文字等
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} query 輸入查詢字串
  * @param {*} item 輸入要插入節點、元素或文字等內容
+ * @example
+ *
  */
 function domAppend(query, item) {
     let r = domFind(query)

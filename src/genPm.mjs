@@ -1,12 +1,12 @@
 /**
  * 產生Promise物件，具備鏈式resolve與reject
  * 主要受jQuery Deferred概念啟發
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genPm.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @returns {Object} 回傳Promise物件
+ * @example
+ *
  */
 function genPm() {
 

@@ -11,13 +11,12 @@ import o2j from './o2j.mjs'
  * 由物件陣列ltdt並使用keys取值轉二維陣列mat
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} keys 輸入字串陣列
  * @returns {Array} 回傳資料陣列
+ * @example
+ *
  */
 function ltdtkeys2mat(ltdt, keys) {
 
@@ -28,18 +27,18 @@ function ltdtkeys2mat(ltdt, keys) {
     if (!isearr(keys)) {
         return []
     }
-    
+
     //check ltdt
     let b = false
     each(ltdt, function(v) {
-        if (!iseobj(v)){
+        if (!iseobj(v)) {
             b = true
         }
     })
     if (b) {
         return []
     }
-    
+
     //mat
     let mat = []
     each(ltdt, function(v) {

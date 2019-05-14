@@ -7,6 +7,8 @@ import isestr from './isestr.mjs'
  * @private
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
+ * @example
+ *
  */
 function df_IE11(cfn, blob) {
 
@@ -48,12 +50,11 @@ function df_HTML5(cfn, blob) {
  * 前端下載Blob資料成為檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
+ * @example
+ *
  */
 function downloadFileFromBlob(cfn, blob) {
 

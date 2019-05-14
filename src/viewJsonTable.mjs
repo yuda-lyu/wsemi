@@ -381,16 +381,16 @@ function format(data, options) {
 
 /**
  * 針對元素rootElem產生展示Json表格套件
- * github: https://github.com/marianoguerra/json.human.js
  * 因js與css設定無法進行模組化, 自己下載來修改
  *
+ * Depend on: {@link https://github.com/marianoguerra/json.human.js json.human.js}
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/viewJsonTable.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Object} jsonObj 輸入Json物件
  * @param {Element} rootElem 輸入初始化元素
+ * @example
+ *
  */
 function viewJsonTable(jsonObj, rootElem) {
     rootElem.innerHTML = ''

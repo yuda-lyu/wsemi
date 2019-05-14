@@ -8,14 +8,13 @@ import istime from './istime.mjs'
  * 由兩日期之前回傳以unit分切的時間點
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timebetween.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} t1 輸入開始秒時間字串
  * @param {String} t2 輸入結束秒時間字串
  * @param {String} unit 輸入切分單位字串
  * @returns {Array} 回傳切分後各時間陣列
+ * @example
+ *
  */
 function timebetween(t1, t2, unit) {
 

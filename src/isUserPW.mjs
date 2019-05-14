@@ -11,23 +11,22 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  * 判斷是否為有效user password
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserPW.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
+ * @example
+ *
  */
 function isUserPW(v) {
 
     let df = genPm()
 
     //check
-    if (!isstr(v)){
+    if (!isstr(v)) {
         df.reject('密碼非字串')
         return df
     }
-    
+
     let err = []
 
     if (v.length < 8) {

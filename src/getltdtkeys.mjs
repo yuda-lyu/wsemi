@@ -2,7 +2,6 @@ import map from 'lodash/map'
 import keys from 'lodash/keys'
 import flattenDeep from 'lodash/flattenDeep'
 import uniq from 'lodash/uniq'
-import reverse from 'lodash/reverse'
 import isearr from './isearr.mjs'
 
 
@@ -10,12 +9,11 @@ import isearr from './isearr.mjs'
  * 由ltdt提取不重複keys
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getltdtkeys.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @returns {Array} 回傳不重複keys陣列
+ * @example
+ *
  */
 function getltdtkeys(ltdt) {
 

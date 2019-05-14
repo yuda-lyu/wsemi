@@ -5,12 +5,11 @@ import isestr from './isestr.mjs'
  * 字串是否包含數字
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isStrHasNumber.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含數字
+ * @example
+ *
  */
 function isStrHasNumber(str) {
 

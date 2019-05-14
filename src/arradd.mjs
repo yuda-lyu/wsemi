@@ -10,9 +10,6 @@ import cdbl from './cdbl.mjs'
  * 若需使用之陣列長度不同，則回傳空陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array} v1 輸入第1個陣列
  * @param {Array} v2 輸入第2個陣列
@@ -20,6 +17,8 @@ import cdbl from './cdbl.mjs'
  * @param {Array} [v4=undefined] 輸入第4個陣列，預設不使用
  * @param {Array} [v5=undefined] 輸入第5個陣列，預設不使用
  * @returns {Array} 回傳各元素相加後陣列
+ * @example
+ *
  */
 function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
 

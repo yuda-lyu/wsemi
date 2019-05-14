@@ -6,12 +6,11 @@ import iser from './iser.mjs'
  * 產生highchart直條圖用漸變顏色物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genGradientColor.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {*} color 輸入color資料
  * @returns {Object} 回傳漸變顏色物件
+ * @example
+ *
  */
 function genGradientColor(color) {
 

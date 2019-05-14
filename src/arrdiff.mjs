@@ -11,14 +11,13 @@ import haskey from './haskey.mjs'
  * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrdiff.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {Array|Object} vold 輸入舊的物件陣列或物件
  * @param {Array|Object} vnew 輸入新的物件陣列或物件
  * @param {String} key 輸入比對的主鍵key值字串
  * @returns {Object} 回傳比對結果物件
+ * @example
+ *
  */
 function arrdiff(vold, vnew, key) {
 

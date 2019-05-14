@@ -13,12 +13,11 @@ import isernot from './isernot.mjs'
  * kind若需使用通用檔案，可使用'common'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFileAccept.test.js Github}
- *
- * @example
- *
  * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列
  * @returns {String} 回傳input file的accept欄位所用字串
+ * @example
+ *
  */
 function domGetFileAccept(kind = '*') {
 
