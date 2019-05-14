@@ -4,7 +4,7 @@ import mean from 'lodash/mean'
 import every from 'lodash/every'
 import fuzzball from 'fuzzball'
 import iser from './iser.mjs'
-import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 import isearr from './isearr.mjs'
 import cstr from './cstr.mjs'
@@ -21,28 +21,19 @@ import sep from './sep.mjs'
  *
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料
- * @param {String} strkey 查找ar內是否含有關鍵字
+ * @param {String} strkey 查找ar內是否含有關鍵字，多關鍵字以空白區分
  * @param {Boolean} [bscore=false] 是否回傳分數，true:回傳值為分數，false:回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  */
 function fuzzfind(ar, strkey, bscore = false) {
 
-    //check
-    if (iser(strkey)) {
-        if (bscore) {
-            return 100
-        }
-        else {
-            return true
-        }
-    }
-
     //自動將陣列轉字串
-    if (isstr(ar) || isnum(ar)) {
-        ar = cstr(ar)
+    let c = ''
+    if (isestr(ar) || isnum(ar)) {
+        c = cstr(ar)
     }
     else if (isearr(ar)) {
-        ar = join(ar, '')
+        c = join(ar, '')
     }
     else {
         if (bscore) {
@@ -53,8 +44,26 @@ function fuzzfind(ar, strkey, bscore = false) {
         }
     }
 
+    //check
+    if (strkey === '') {
+        if (bscore) {
+            return 100
+        }
+        else {
+            return true
+        }
+    }
+    else if (iser(strkey)) {
+        if (bscore) {
+            return 0
+        }
+        else {
+            return false
+        }
+    }
+
     //若有存在完整符合
-    if (binstr(ar, strkey)) {
+    if (binstr(c, strkey)) {
         if (bscore) {
             return 100
         }
@@ -68,12 +77,12 @@ function fuzzfind(ar, strkey, bscore = false) {
 
     //全部關鍵字查詢所得分數
     let bs = map(keys, function(key) {
-        return fuzzball.partial_ratio(ar, key)
+        return fuzzball.partial_ratio(c, key)
     })
 
     //bscore
     if (bscore) {
-        //回傳分數
+        //回傳平均分數, 為查找多關鍵字之整體符合分數
 
         return mean(bs)
     }

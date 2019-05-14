@@ -10,10 +10,10 @@ import ispint from './ispint.mjs'
  * @example
  *
  * @memberOf wsemi
- * @param {PositiveInteger} [len=undefined] 輸入uuid長度，為正整數，預設不使用，產生uuid為32位(rfc4122格式)
+ * @param {PositiveInteger} [len=32] 輸入uuid長度，為正整數，預設32
  * @returns {String} 回傳uuid字串
  */
-function genID(len) {
+function genID(len = 32) {
 
     let i
     let chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')
@@ -25,7 +25,7 @@ function genID(len) {
 
         for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random() * radix]
     }
-    else {
+    else if (len === 'rfc4122') {
         //rfc4122, version 4 form
 
         //requires these characters
@@ -40,6 +40,9 @@ function genID(len) {
                 uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r]
             }
         }
+    }
+    else {
+        return ''
     }
 
     let r = uuid.join('')

@@ -3,6 +3,7 @@ import keys from 'lodash/keys'
 import flattenDeep from 'lodash/flattenDeep'
 import uniq from 'lodash/uniq'
 import reverse from 'lodash/reverse'
+import isearr from './isearr.mjs'
 
 
 /**
@@ -18,6 +19,11 @@ import reverse from 'lodash/reverse'
  */
 function getltdtkeys(ltdt) {
 
+    //check
+    if (!isearr(ltdt)) {
+        return []
+    }
+
     //keys
     // let keys = _.chain(ltdt)
     //     .map(function(v) {
@@ -26,7 +32,6 @@ function getltdtkeys(ltdt) {
     //     .flattenDeep()
     //     .uniq()
     //     .sort()
-    //     .reverse()
     //     .value()
 
     //rowkeys
@@ -42,9 +47,6 @@ function getltdtkeys(ltdt) {
 
     //sort
     r.sort()
-
-    //reverse
-    r = reverse(r)
 
     return r
 }

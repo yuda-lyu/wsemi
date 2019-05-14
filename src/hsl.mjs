@@ -1,4 +1,6 @@
 import TinyColor from '@ctrl/tinycolor'
+import isnum from './isnum.mjs'
+import cdbl from './cdbl.mjs'
 
 
 /**
@@ -15,6 +17,22 @@ import TinyColor from '@ctrl/tinycolor'
  * @returns {String} 回傳顏色字串(hex)
  */
 function hsl(rh, rs, rl) {
+
+    //check
+    if (!isnum(rh) || !isnum(rs) || !isnum(rl)) {
+        return ''
+    }
+
+    //check range
+    function ck01(v) {
+        return v >= 0 && v <= 1
+    }
+    rh = cdbl(rh)
+    rs = cdbl(rs)
+    rl = cdbl(rl)
+    if (!ck01(rh) || !ck01(rs) || !ck01(rl)) {
+        return ''
+    }
 
     //使用hsl物件各值需0~100, 跟原版tinycolor不同
     return new TinyColor({

@@ -1,4 +1,5 @@
 import TinyColor from '@ctrl/tinycolor'
+import iser from './iser.mjs'
 
 
 /**
@@ -9,16 +10,29 @@ import TinyColor from '@ctrl/tinycolor'
  * @example
  *
  * @memberOf wsemi
- * @param {String} hex 輸入hex顏色字串
+ * @param {*} color 輸入color資料
  * @returns {Object} 回傳漸變顏色物件
  */
-function genGradientColor(hex) {
+function genGradientColor(color) {
+
+    //check
+    if (iser(color)) {
+        return {}
+    }
+
+    //t
+    let t = new TinyColor(color)
+
+    //check
+    if (t.isValid === false) {
+        return {}
+    }
 
     return {
         linearGradient: { x1: 0, x2: 0, y1: 0, y2: 1 },
         stops: [
-            [0, new TinyColor(hex).setAlpha(0.4).toHslString()],
-            [1, new TinyColor(hex).setAlpha(0.9).toHslString()]
+            [0, t.setAlpha(0.4).toHslString()],
+            [1, t.setAlpha(0.9).toHslString()]
         ]
     }
 }

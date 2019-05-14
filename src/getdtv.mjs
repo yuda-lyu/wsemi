@@ -1,4 +1,5 @@
-import isobj from './isobj.mjs'
+import iseobj from './iseobj.mjs'
+import isestr from './isestr.mjs'
 import haskey from './haskey.mjs'
 
 
@@ -17,7 +18,10 @@ import haskey from './haskey.mjs'
 function getdtv(dt, key) {
 
     //check
-    if (!isobj(dt)) {
+    if (!iseobj(dt)) {
+        return ''
+    }
+    if (!isestr(key)) {
         return ''
     }
 
