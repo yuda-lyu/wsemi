@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isarr.mjs - Documentation</title>
+    <title>isn0num.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isarr.mjs</h1>
+    <h1 class="page-title">isn0num.mjs</h1>
     
 
     
@@ -41,10 +41,14 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為陣列
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isarr.test.js Github}
+            <pre class="prettyprint source linenums"><code>import isnum from './isnum.mjs'
+import cdbl from './cdbl.mjs'
+
+
+/**
+ * 判斷是否為小於等於0浮點數(非正浮點數)
+ * 非正浮點數包含0
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isn0num.test.js Github}
  *
  * @example
  *
@@ -52,14 +56,20 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  */
-function isarr(v) {
+function isn0num(v) {
 
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Array]'
+    //check
+    if (!isnum(v)) {
+        return false
+    }
+
+    let r = cdbl(v) &lt;= 0
+
+    return r
 }
 
 
-export default isarr
+export default isn0num
 </code></pre>
         </article>
     </section>

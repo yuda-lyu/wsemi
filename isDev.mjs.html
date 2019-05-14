@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isarr.mjs - Documentation</title>
+    <title>isDev.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isarr.mjs</h1>
+    <h1 class="page-title">isDev.mjs</h1>
     
 
     
@@ -41,25 +41,31 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為陣列
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isarr.test.js Github}
+            <pre class="prettyprint source linenums"><code>import binstr from './binstr.mjs'
+
+
+/**
+ * 前端判斷是否為開發階段
+ * 主要判斷location.href內是否含有localhost
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.test.js Github}
  *
  * @example
  *
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值
+ * @returns {Boolean} 回傳是否為開發階段
  */
-function isarr(v) {
+function isDev() {
 
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Array]'
+    //check
+    if (location) {
+        return binstr(location.href, 'localhost')
+    }
+
+    return false
 }
 
 
-export default isarr
+export default isDev
 </code></pre>
         </article>
     </section>
