@@ -25,7 +25,7 @@ npm i wsemi
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
 ...
-//dayjs(or moment) need to save in window.ot
+//dayjs(or moment) need to save as window.ot
 window.ot = dayjs
 ```
 [Optional] Add script for fuzzball
