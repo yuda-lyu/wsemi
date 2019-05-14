@@ -8,13 +8,13 @@ To view documentation or get support , visit [docs](https://yuda-lyu.github.io/w
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on lodash, dayjs, crypto-js, @ctrl/tinycolor, xss, ua-parser-js, xlsx, fuzzball, tippy.js
+> **Note:** wsemi depends on lodash, dayjs, crypto-js, fuzzball, @ctrl/tinycolor, ua-parser-js, xss, tippy.js, xlsx
 ```alias
 npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking), @ctrl/tinycolor, xss
+> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking)
 
 [Optional] Add script with nomodule for IE11
 ```alias
@@ -24,6 +24,11 @@ npm i wsemi
 > **Note:** It is necessary to include when use `fuzzfind` function
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+```
+[Optional] Add script for tinycolor2
+> **Note:** It is necessary to include when use `hsl` or `genGradientColor` function
+```alias
+<script src="https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js"></script>
 ```
 [Optional] Add script for ua-parser-js
 > **Note:** It is necessary to include when use `getUserAgent` function

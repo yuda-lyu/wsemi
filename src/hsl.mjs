@@ -1,4 +1,4 @@
-import TinyColor from '@ctrl/tinycolor'
+import tinycolor from '@ctrl/tinycolor'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 
@@ -34,7 +34,7 @@ function hsl(rh, rs, rl) {
     }
 
     //使用hsl物件各值需0~100, 跟原版tinycolor不同
-    return new TinyColor({
+    return tinycolor({
         h: rh * 100,
         s: rs * 100,
         l: rl * 100

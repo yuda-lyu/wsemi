@@ -15,6 +15,7 @@ export default {
       'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
       'UAParser': 'ua-parser-js',
       'filterXSS': 'xss',
+      'tinycolor': '@ctrl/tinycolor',
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
@@ -27,6 +28,7 @@ export default {
       'tippy.js', //內部套件名稱
       'ua-parser-js',
       'xss',
+      '@ctrl/tinycolor',
   ], 
   plugins: [
     commonjs(),

@@ -1,4 +1,4 @@
-import TinyColor from '@ctrl/tinycolor'
+import tinycolor from '@ctrl/tinycolor'
 import iser from './iser.mjs'
 
 
@@ -20,7 +20,7 @@ function genGradientColor(color) {
     }
 
     //t
-    let t = new TinyColor(color)
+    let t = tinycolor(color)
 
     //check
     if (t.isValid === false) {
