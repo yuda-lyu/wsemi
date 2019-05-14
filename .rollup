@@ -11,8 +11,9 @@ export default {
     globals: {
       'fs': 'fs',
       'XLSX': 'XLSX',
-      'tippy': 'tippy.js',
       'fuzzball': 'fuzzball',
+      'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
+      'UAParser': 'ua-parser-js',
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
@@ -21,8 +22,9 @@ export default {
   external: [
       'fs',
       'XLSX',
-      'tippy.js',
       'fuzzball',
+      'tippy.js', //內部套件名稱
+      'ua-parser-js',
   ], 
   plugins: [
     commonjs(),
