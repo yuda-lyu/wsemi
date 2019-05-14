@@ -24,8 +24,23 @@ describe('isday', function() {
         assert.strict.deepEqual(r, false)
     })
 
+    it('should return false when input 125', function() {
+        let r = isday(125)
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return false when input -125', function() {
+        let r = isday(-125)
+        assert.strict.deepEqual(r, false)
+    })
+
     it('should return false when input 1.25', function() {
         let r = isday(1.25)
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return false when input -1.25', function() {
+        let r = isday(-1.25)
         assert.strict.deepEqual(r, false)
     })
 
@@ -59,8 +74,38 @@ describe('isday', function() {
         assert.strict.deepEqual(r, false)
     })
 
+    it('should return false when input [{}]', function() {
+        let r = isday([{}])
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return false when input [{ a: 123 }]', function() {
+        let r = isday([{ a: 123 }])
+        assert.strict.deepEqual(r, false)
+    })
+
+    it("should return false when input ['']", function() {
+        let r = isday([''])
+        assert.strict.deepEqual(r, false)
+    })
+
+    it("should return false when input ['abc']", function() {
+        let r = isday(['abc'])
+        assert.strict.deepEqual(r, false)
+    })
+
     it('should return false when input {}', function() {
         let r = isday({})
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return false when input { a: 123 }', function() {
+        let r = isday({ a: 123 })
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return false when input { a: 123, b: null, c: [45.67] }', function() {
+        let r = isday({ a: 123, b: null, c: [45.67] })
         assert.strict.deepEqual(r, false)
     })
 

@@ -1,3 +1,6 @@
+import isundefined from './isundefined.mjs'
+
+
 /**
  * 任意資料轉json文字
  *
@@ -12,6 +15,11 @@
  */
 function o2j(v, bFormat = false) {
 
+    //check
+    if (isundefined(v)){
+        return ''
+    }
+    
     let c = ''
     try {
         if (bFormat) {

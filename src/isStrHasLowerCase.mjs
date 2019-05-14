@@ -16,7 +16,7 @@ function isStrHasLowerCase(str) {
 
     //check
     if (!isestr(str)) {
-        return ''
+        return false
     }
 
     let result = str.match(/^.*[a-z]+.*$/)

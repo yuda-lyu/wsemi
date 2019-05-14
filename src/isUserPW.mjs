@@ -1,6 +1,6 @@
 import join from 'lodash/join'
 import genPm from './genPm.mjs'
-import cstr from './cstr.mjs'
+import isstr from './isstr.mjs'
 import binstr from './binstr.mjs'
 import isStrHasCapital from './isStrHasCapital.mjs'
 import isStrHasLowerCase from './isStrHasLowerCase.mjs'
@@ -22,7 +22,12 @@ function isUserPW(v) {
 
     let df = genPm()
 
-    v = cstr(v)
+    //check
+    if (!isstr(v)){
+        df.reject('密碼非字串')
+        return df
+    }
+    
     let err = []
 
     if (v.length < 8) {
