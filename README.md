@@ -8,8 +8,10 @@ To view documentation or get support , visit [docs](https://yuda-lyu.github.io/w
 
 ## Installation
 ### Using npm(ES6 module):
+> **Note:** wsemi depends on lodash, dayjs, crypto-js, @ctrl/tinycolor, fuzzball, xss, xlsx, ua-parser-js, tippy.js
+
 ```alias
-npm i lodash dayjs crypto-js @ctrl/tinycolor fuzzball xss xlsx ua-parser-js tippy.js
+npm i wsemi
 ```
 
 ### In a browser(UMD module):
