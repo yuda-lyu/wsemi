@@ -1,4 +1,7 @@
 
+import isab from './isab.mjs'
+
+
 /**
  * ArrayBuffer資料轉Unit8Array資料
  *
@@ -12,11 +15,19 @@
  * //[object Uint8Array]
  */
 function ab2u8arr(ab) {
-    let l = ab.length
-    let u8a = new Uint8Array(l)
-    for (let i = 0; i < l; i++) {
-        u8a[i] = ab.charCodeAt(i)
+
+    //check
+    if (!isab(ab)) {
+        return new Uint8Array()
     }
+
+    // let l = ab.length
+    // let u8a = new Uint8Array(l)
+    // for (let i = 0; i < l; i++) {
+    //     u8a[i] = ab.charCodeAt(i)
+    // }
+    let u8a = new Uint8Array(ab)
+
     return u8a
 }
 

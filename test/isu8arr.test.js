@@ -4,8 +4,14 @@ import isu8arr from '../src/isu8arr.mjs'
 
 describe('isu8arr', function() {
 
-    it("should return true when input new Uint8Array([1, 2.3, '45', 'abc'])", function() {
-        let u8a = new Uint8Array([1, 2.3, '45', 'abc'])
+    it('should return false when input new ArrayBuffer(1)', function() {
+        let ab = new ArrayBuffer(1)
+        let r = isu8arr(ab)
+        assert.strict.deepEqual(r, false)
+    })
+
+    it('should return true when input new Uint8Array(1)', function() {
+        let u8a = new Uint8Array(1)
         let r = isu8arr(u8a)
         assert.strict.deepEqual(r, true)
     })

@@ -1,0 +1,26 @@
+import isu8arr from './isu8arr.mjs'
+
+
+/**
+ * Uint8Array轉ArrayBuffer
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2ab.test.js Github}
+ * @memberOf wsemi
+ * @param {Array} u8a 輸入Uint8Array
+ * @returns {ArrayBuffer} 回傳ArrayBuffer
+ * @example
+ *
+ */
+function u8arr2ab(u8a) {
+
+    //check
+    if (!isu8arr(u8a)) {
+        return new ArrayBuffer()
+    }
+
+    let ab = u8a.buffer
+    return ab
+}
+
+
+export default u8arr2ab

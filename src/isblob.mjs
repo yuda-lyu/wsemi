@@ -1,0 +1,18 @@
+/**
+ * 前端判斷是否為Blob，NodeJS沒有Blob
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isblob.test.js Github}
+ * @memberOf wsemi
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
+ * @example
+ *
+ */
+function isblob(v) {
+
+    let c = Object.prototype.toString.call(v)
+    return c === '[object Blob]'
+}
+
+
+export default isblob

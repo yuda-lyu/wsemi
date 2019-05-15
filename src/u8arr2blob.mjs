@@ -1,4 +1,7 @@
 
+import isu8arr from './isu8arr.mjs'
+
+
 /**
  * Unit8Array資料轉Blob資料
  *
@@ -10,7 +13,14 @@
  *
  */
 function u8arr2blob(u8a) {
-    return new Blob([u8a])
+
+    //check
+    if (!isu8arr(u8a)) {
+        return new Blob()
+    }
+
+    let bb = new Blob([u8a])
+    return bb
 }
 
 
