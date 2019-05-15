@@ -14,7 +14,7 @@ npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file is included with lodash(part, tree-shaking), dayjs, crypto-js(part, tree-shaking)
+> **Note:** umd file is included with lodash and crypto-js, by using tree-shaking for dead-code elimination
 
 [Optional] Add script with nomodule for IE11
 ```alias
