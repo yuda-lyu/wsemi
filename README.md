@@ -8,7 +8,7 @@ To view documentation or get support , visit [docs](https://yuda-lyu.github.io/w
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on lodash, dayjs, crypto-js, fuzzball, @ctrl/tinycolor, ua-parser-js, xss, tippy.js, xlsx
+> **Note:** wsemi depends on lodash, crypto-js, dayjs, fuzzball, @ctrl/tinycolor, ua-parser-js, xss, tippy.js, xlsx
 ```alias
 npm i wsemi
 ```
