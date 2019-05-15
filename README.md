@@ -24,9 +24,10 @@ npm i wsemi
 > **Note:** It is necessary to include when use some function of time
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
-...
-//dayjs(or moment) need to save as window.ot
-window.ot = dayjs
+<script>
+    //dayjs(or moment) need to save as window.ot
+    window.ot = dayjs
+</script>
 ```
 [Optional] Add script for fuzzball
 > **Note:** It is necessary to include when use `fuzzfind` function
