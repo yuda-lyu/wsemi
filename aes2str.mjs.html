@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>viewJsonTable.mjs - Documentation</title>
+    <title>aes2str.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">viewJsonTable.mjs</h1>
+    <h1 class="page-title">aes2str.mjs</h1>
     
 
     
@@ -41,438 +41,59 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>let indexOf = [].indexOf || function(item) {
-    for (let i = 0, l = this.length; i &lt; l; i++) {
-        if (i in this &amp;&amp; this[i] === item) return i
-    } return -1
-}
-
-function makePrefixer(prefix) {
-    return function(name) {
-        return prefix + '-' + name
-    }
-}
-
-function isArray(obj) {
-    return toString.call(obj) === '[object Array]'
-}
-
-function sn(tagName, className, data) {
-    let result = document.createElement(tagName)
-
-    result.className = className
-    result.appendChild(document.createTextNode('' + data))
-
-    return result
-}
-
-function scn(tagName, className, child) {
-    let result = document.createElement(tagName)
-    let i
-    let len
-
-    result.className = className
-
-    if (isArray(child)) {
-        for (i = 0, len = child.length; i &lt; len; i += 1) {
-            result.appendChild(child[i])
-        }
-    }
-    else {
-        result.appendChild(child)
-    }
-
-    return result
-}
-
-function linkNode(child, href, target) {
-    let a = scn('a', HYPERLINK_CLASS_NAME, child)
-    a.setAttribute('href', href)
-    a.setAttribute('target', target)
-    return a
-}
-
-let toString = Object.prototype.toString
-let prefixer = makePrefixer('jh')
-let p = prefixer
-let ARRAY = 1
-let BOOL = 2
-let INT = 3
-let FLOAT = 4
-let STRING = 5
-let OBJECT = 6
-let FUNCTION = 7
-let UNK = 99
-
-let STRING_CLASS_NAME = p('type-string')
-let STRING_EMPTY_CLASS_NAME = p('type-string') + ' ' + p('empty')
-
-let BOOL_TRUE_CLASS_NAME = p('type-bool-true')
-let BOOL_FALSE_CLASS_NAME = p('type-bool-false')
-let BOOL_IMAGE = p('type-bool-image')
-let INT_CLASS_NAME = p('type-int') + ' ' + p('type-number')
-let FLOAT_CLASS_NAME = p('type-float') + ' ' + p('type-number')
-
-let OBJECT_CLASS_NAME = p('type-object')
-let OBJ_KEY_CLASS_NAME = p('key') + ' ' + p('object-key')
-let OBJ_VAL_CLASS_NAME = p('value') + ' ' + p('object-value')
-let OBJ_EMPTY_CLASS_NAME = p('type-object') + ' ' + p('empty')
-
-let FUNCTION_CLASS_NAME = p('type-function')
-
-let ARRAY_KEY_CLASS_NAME = p('key') + ' ' + p('array-key')
-let ARRAY_VAL_CLASS_NAME = p('value') + ' ' + p('array-value')
-let ARRAY_CLASS_NAME = p('type-array')
-let ARRAY_EMPTY_CLASS_NAME = p('type-array') + ' ' + p('empty')
-
-let HYPERLINK_CLASS_NAME = p('a')
-
-let UNKNOWN_CLASS_NAME = p('type-unk')
-
-function getType(obj) {
-    let type = typeof obj
-
-    switch (type) {
-    case 'boolean':
-        return BOOL
-    case 'string':
-        return STRING
-    case 'number':
-        return (obj % 1 === 0) ? INT : FLOAT
-    case 'function':
-        return FUNCTION
-    default:
-        if (isArray(obj)) {
-            return ARRAY
-        }
-        else if (obj === Object(obj)) {
-            return OBJECT
-        }
-        else {
-            return UNK
-        }
-    }
-}
-
-function _format(data, options, parentKey) {
-
-    let result
-    let container
-    let key
-    let keyNode
-    let valNode
-    let len
-    let childs
-    let tr
-    let value
-    let isEmpty = true
-    let type = getType(data)
-
-    // Initialized &amp; used only in case of objects &amp; arrays
-    let hyperlinksEnabled, aTarget, hyperlinkKeys
-
-    switch (type) {
-    case BOOL:
-        let boolOpt = options.bool
-        container = document.createElement('div')
-
-        if (boolOpt.showImage) {
-            let img = document.createElement('img')
-            img.setAttribute('class', BOOL_IMAGE)
-
-            img.setAttribute('src',
-                '' + (data ? boolOpt.img.true : boolOpt.img.false))
-
-            container.appendChild(img)
-        }
-
-        if (boolOpt.showText) {
-            container.appendChild(data
-                ? sn('span', BOOL_TRUE_CLASS_NAME, boolOpt.text.true)
-                : sn('span', BOOL_FALSE_CLASS_NAME, boolOpt.text.false))
-        }
-
-        result = container
-        break
-
-    case STRING:
-        if (data === '') {
-            result = sn('span', STRING_EMPTY_CLASS_NAME, '(Empty Text)')
-        }
-        else {
-            result = sn('span', STRING_CLASS_NAME, data)
-        }
-        break
-    case INT:
-        result = sn('span', INT_CLASS_NAME, data)
-        break
-    case FLOAT:
-        result = sn('span', FLOAT_CLASS_NAME, data)
-        break
-    case OBJECT:
-        childs = []
-
-        aTarget = options.hyperlinks.target
-        hyperlinkKeys = options.hyperlinks.keys
-
-        // Is Hyperlink Key
-        hyperlinksEnabled =
-                options.hyperlinks.enable &amp;&amp;
-                hyperlinkKeys &amp;&amp;
-                hyperlinkKeys.length > 0
-
-        for (key in data) {
-            isEmpty = false
-
-            value = data[key]
-
-            valNode = _format(value, options, key)
-            keyNode = sn('th', OBJ_KEY_CLASS_NAME, key)
-
-            if (hyperlinksEnabled &amp;&amp;
-                    typeof (value) === 'string' &amp;&amp;
-                    indexOf.call(hyperlinkKeys, key) >= 0) {
-
-                valNode = scn('td', OBJ_VAL_CLASS_NAME, linkNode(valNode, value, aTarget))
-            }
-            else {
-                valNode = scn('td', OBJ_VAL_CLASS_NAME, valNode)
-            }
-
-            tr = document.createElement('tr')
-            tr.appendChild(keyNode)
-            tr.appendChild(valNode)
-
-            childs.push(tr)
-        }
-
-        if (isEmpty) {
-            result = sn('span', OBJ_EMPTY_CLASS_NAME, '(Empty Object)')
-        }
-        else {
-            result = scn('table', OBJECT_CLASS_NAME, scn('tbody', '', childs))
-        }
-        break
-    case FUNCTION:
-        result = sn('span', FUNCTION_CLASS_NAME, data)
-        break
-    case ARRAY:
-        if (data.length > 0) {
-            childs = []
-            let showArrayIndices = options.showArrayIndex
-
-            aTarget = options.hyperlinks.target
-            hyperlinkKeys = options.hyperlinks.keys
-
-            // Hyperlink of arrays?
-            hyperlinksEnabled = parentKey &amp;&amp; options.hyperlinks.enable &amp;&amp;
-                    hyperlinkKeys &amp;&amp;
-                    hyperlinkKeys.length > 0 &amp;&amp;
-                    indexOf.call(hyperlinkKeys, parentKey) >= 0
-
-            for (key = 0, len = data.length; key &lt; len; key += 1) {
-
-                keyNode = sn('th', ARRAY_KEY_CLASS_NAME, key)
-                value = data[key]
-
-                if (hyperlinksEnabled &amp;&amp; typeof (value) === 'string') {
-                    valNode = _format(value, options, key)
-                    valNode = scn('td', ARRAY_VAL_CLASS_NAME, linkNode(valNode, value, aTarget))
-                }
-                else {
-                    valNode = scn('td', ARRAY_VAL_CLASS_NAME, _format(value, options, key))
-                }
-
-                tr = document.createElement('tr')
-
-                if (showArrayIndices) {
-                    tr.appendChild(keyNode)
-                }
-                tr.appendChild(valNode)
-
-                childs.push(tr)
-            }
-
-            result = scn('table', ARRAY_CLASS_NAME, scn('tbody', '', childs))
-        }
-        else {
-            result = sn('span', ARRAY_EMPTY_CLASS_NAME, '(Empty List)')
-        }
-        break
-    default:
-        result = sn('span', UNKNOWN_CLASS_NAME, data)
-        break
-    }
-
-    return result
-}
-
-function validateOptions(options) {
-    options = validateArrayIndexOption(options)
-    options = validateHyperlinkOptions(options)
-    options = validateBoolOptions(options)
-
-    // Add any more option validators here
-
-    return options
-}
-
-
-function validateArrayIndexOption(options) {
-    if (options.showArrayIndex === undefined) {
-        options.showArrayIndex = true
-    }
-    else {
-        // Force to boolean just in case
-        options.showArrayIndex = !!options.showArrayIndex
-    }
-
-    return options
-}
-
-function validateHyperlinkOptions(options) {
-    let hyperlinks = {
-        enable: false,
-        keys: null,
-        target: ''
-    }
-
-    if (options.hyperlinks &amp;&amp; options.hyperlinks.enable) {
-        hyperlinks.enable = true
-
-        hyperlinks.keys = isArray(options.hyperlinks.keys) ? options.hyperlinks.keys : []
-
-        if (options.hyperlinks.target) {
-            hyperlinks.target = '' + options.hyperlinks.target
-        }
-        else {
-            hyperlinks.target = '_blank'
-        }
-    }
-
-    options.hyperlinks = hyperlinks
-
-    return options
-}
-
-function validateBoolOptions(options) {
-    if (!options.bool) {
-        options.bool = {
-            text: {
-                true: 'true',
-                false: 'false'
-            },
-            img: {
-                true: '',
-                false: ''
-            },
-            showImage: false,
-            showText: true
-        }
-    }
-    else {
-        let boolOptions = options.bool
-
-        // Show text if no option
-        if (!boolOptions.showText &amp;&amp; !boolOptions.showImage) {
-            boolOptions.showImage = false
-            boolOptions.showText = true
-        }
-
-        if (boolOptions.showText) {
-            if (!boolOptions.text) {
-                boolOptions.text = {
-                    true: 'true',
-                    false: 'false'
-                }
-            }
-            else {
-                let t = boolOptions.text.true
-                let f = boolOptions.text.false
-
-                if (getType(t) !== STRING || t === '') {
-                    boolOptions.text.true = 'true'
-                }
-
-                if (getType(f) !== STRING || f === '') {
-                    boolOptions.text.false = 'false'
-                }
-            }
-        }
-
-        if (boolOptions.showImage) {
-            if (!boolOptions.img.true &amp;&amp; !boolOptions.img.false) {
-                boolOptions.showImage = false
-            }
-        }
-    }
-
-    return options
-}
-
-function format(data, options) {
-    options = validateOptions(options || {})
-
-    let result
-
-    result = _format(data, options)
-    result.className = result.className + ' ' + prefixer('root')
-
-    return result
-}
+            <pre class="prettyprint source linenums"><code>import AES from 'crypto-js/aes'
+// import encutf8 from 'crypto-js/enc-utf8'
+// import padPkcs7 from 'crypto-js/pad-pkcs7'
+import encutf8 from 'crypto-js/enc-utf8'
+import encb64 from 'crypto-js/enc-base64'
+import enchex from 'crypto-js/enc-hex'
+import isestr from './isestr.mjs'
+import isbol from './isbol.mjs'
 
 
 /**
- * 針對元素rootElem產生展示Json表格套件
- * 因js與css設定無法進行模組化, 自己下載來修改
+ * 一般字串轉AES字串
+ * 使用AES-128-CBC加密，字串採用PKCS#7填充
  *
- * Depend on: {@link https://github.com/marianoguerra/json.human.js json.human.js}
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/viewJsonTable.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/aes2str.test.js Github}
  * @memberOf wsemi
- * @param {Object} jsonObj 輸入Json物件
- * @param {Element} rootElem 輸入初始化元素
+ * @param {String} str 輸入一般字串
+ * @param {String} key 輸入加密key
+ * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
+ * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示
  * @example
  *
  */
-function viewJsonTable(jsonObj, rootElem) {
-    rootElem.innerHTML = ''
-    // let options = {
-    //     // Show or hide Array-Indices in the output
-    //     showArrayIndex: true,
+function aes2str(str, key, base64 = false) {
 
-    //     // Hyperlinks Option
-    //     // Enable &lt;a> tag in the output html based on object keys
-    //     // Supports only strings and arrays
-    //     hyperlinks: {
-    //         enable: true,
-    //         keys: ['url'], // Keys which will be output as links
-    //         target: '_blank' // 'target' attribute of a
-    //     },
+    //check
+    if (!isestr(str)) {
+        return ''
+    }
+    if (!isestr(key)) {
+        return ''
+    }
+    if (!isbol(base64)) {
+        return ''
+    }
 
-    //     // Options for displaying bool
-    //     bool: {
-    //         // Show text? And what text for true &amp; false?
-    //         showText: true,
-    //         text: {
-    //             true: 'Yes',
-    //             false: 'No'
-    //         },
+    let c = ''
+    if (base64) {
+        let o = AES.decrypt(str, key)
+        c = o.toString(encutf8)
+    }
+    else {
+        let reb64 = enchex.parse(str)
+        let bytes = reb64.toString(encb64)
+        let decrypt = AES.decrypt(bytes, key)
+        c = decrypt.toString(encutf8)
+    }
 
-    //         // Show image? And which images (urls)?
-    //         showImage: true,
-    //         img: {
-    //             true: 'css/true.png',
-    //             false: 'css/false.png'
-    //         }
-    //     }
-    // }
-    let node = format(jsonObj)
-    rootElem.appendChild(node)
+    return c
 }
 
 
-export default viewJsonTable
+export default aes2str
 </code></pre>
         </article>
     </section>
