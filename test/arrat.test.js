@@ -10,9 +10,9 @@ describe('arrat', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return [2, 3, '4'] when input [1, 2, 3, '4', 5, 'abc'], 1, 4", function() {
+    it("should return [2, 3, '4', 5] when input [1, 2, 3, '4', 5, 'abc'], 1, 4", function() {
         let r = arrat([1, 2, 3, '4', 5, 'abc'], 1, 4)
-        let rr = [2, 3, '4']
+        let rr = [2, 3, '4', 5]
         assert.strict.deepEqual(r, rr)
     })
 

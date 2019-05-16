@@ -1,22 +1,22 @@
-import str2b64 from './str2b64.mjs'
 import o2j from './o2j.mjs'
+import str2b64 from './str2b64.mjs'
 
 
 /**
- * 任意物件轉base64字串
+ * 任意資料轉base64字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2b64.test.js Github}
  * @memberOf wsemi
- * @param {*} obj 輸入任意物件
+ * @param {*} data 輸入任意資料
  * @returns {String} 回傳base64字串
  * @example
  *
  */
-function obj2b64(obj) {
+function obj2b64(data) {
 
     let b64 = ''
     try {
-        b64 = str2b64(o2j(obj))
+        b64 = str2b64(o2j(data))
     }
     catch (err) {
         b64 = ''

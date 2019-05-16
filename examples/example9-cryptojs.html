@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for crypto-js</title>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <script>
+
+        let s='中文測試'
+        let key='1234567890abcdefghijk'
+
+        //一般字串轉AES加密字串, 以base64格式呈現
+        let aesb=wsemi.str2aes(s,key,true)
+        let ivaecb=wsemi.aes2str(aesb,key,true)
+
+        //一般字串轉AES加密字串, 以hex格式呈現
+        let aes=wsemi.str2aes(s,key,false)
+        let ivaec=wsemi.aes2str(aes,key,false)
+
+        console.log('base64: str2aes(s,key)',  aesb )
+        console.log('base64: aes2str(aes,key)',  ivaecb  )
+        console.log('hex: str2aes(s,key)',  aes )
+        console.log('hex: aes2str(aes,key)',  ivaec  )
+
+    </script>
+
+</script>
+
+</body>
+</html>

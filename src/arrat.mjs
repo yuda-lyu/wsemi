@@ -40,7 +40,7 @@ function arrat(vall, istart, iend = undefined) {
             return []
         }
 
-        let inds = range(istart, iend)
+        let inds = range(istart, iend+1)
         t = at(vall, inds)
 
     }

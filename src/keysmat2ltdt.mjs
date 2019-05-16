@@ -1,3 +1,4 @@
+import map from 'lodash/map'
 import each from 'lodash/each'
 import zipObject from 'lodash/zipObject'
 import isearr from './isearr.mjs'
@@ -27,10 +28,19 @@ function keysmat2ltdt(keys, mat) {
         return []
     }
 
-    let ltdt = []
-    each(mat, function(r) {
+    let ltdt = map(mat, function(r) {
+    
+        //o
         let o = zipObject(keys, r)
-        ltdt.push(o)
+        
+        //clear undefined
+        each(o, function(v,  k){
+            if (v===undefined){
+                o[k] = ''
+            }
+        })
+        
+        return o
     })
 
     return ltdt

@@ -1,32 +1,39 @@
-import AES from 'crypto-js/aes'
-import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
 import o2j from './o2j.mjs'
+import str2aes from './str2aes.mjs'
 
 
 /**
- * 資料加密儲存為base64
+ * 任意資料由key進行AES加密轉為為base64
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2pb64.test.js Github}
  * @memberOf wsemi
+ * @param {*} data 輸入任意資料
  * @param {String} key 輸入加密key
- * @param {*} data 輸入任意物件
  * @returns {String} 回傳加密base64字串
  * @example
  *
  */
-function obj2pb64(key, data) {
+function obj2pb64(data, key) {
 
     //check
-    if (!isstr(key)) {
+    if (data === undefined) {
+        return ''
+    }
+    if (!isestr(key)) {
         return ''
     }
 
+    //先封裝成物件再轉字串
     let p = {
         data: data
     }
-    let b = o2j(p)
-    let r = AES.encrypt(b, key).toString()
-    return r
+    let c = o2j(p)
+
+    //str2aes
+    let b64 = str2aes(c, key, true)
+
+    return b64
 }
 
 
