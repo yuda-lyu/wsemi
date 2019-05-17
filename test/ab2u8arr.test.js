@@ -13,43 +13,43 @@ describe('ab2u8arr', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input '1.25'", function() {
+    it(`should return new Uint8Array() when input '1.25'`, function() {
         let r = ab2u8arr('1.25')
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input 2.25", function() {
+    it(`should return new Uint8Array() when input 2.25`, function() {
         let r = ab2u8arr(2.25)
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input ''", function() {
+    it(`should return new Uint8Array() when input ''`, function() {
         let r = ab2u8arr('')
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input []", function() {
+    it(`should return new Uint8Array() when input []`, function() {
         let r = ab2u8arr([])
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input {}", function() {
+    it(`should return new Uint8Array() when input {}`, function() {
         let r = ab2u8arr({})
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input null", function() {
+    it(`should return new Uint8Array() when input null`, function() {
         let r = ab2u8arr(null)
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input undefined", function() {
+    it(`should return new Uint8Array() when input undefined`, function() {
         let r = ab2u8arr(undefined)
         let rr = new Uint8Array()
         assert.strict.deepEqual(r, rr)
