@@ -9,19 +9,19 @@ import isbol from './isbol.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2past.test.js Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
- * @param {Boolean} [bReturnString=false] 輸入是否只回傳字串訊息，預設為false
  * @returns {String} 回傳過去時間字串
  * @example
  *
  */
-function time2past(t, bReturnString = false) {
+function time2past(t) {
 
     //check
     if (!istime(t)) {
-        return ''
-    }
-    if (!isbol(bReturnString)) {
-        return ''
+        return {
+            today: null,
+            msg: '',
+            err: '時間格式錯誤',
+        }
     }
 
     //ot
@@ -30,7 +30,11 @@ function time2past(t, bReturnString = false) {
 
     //check
     if (mnow < mtime) {
-        return ''
+        return {
+            today: null,
+            msg: '',
+            err: '時間未到',
+        }
     }
 
     //day
@@ -51,7 +55,7 @@ function time2past(t, bReturnString = false) {
     //c
     let today = false
     let c = '剛剛'
-    if (iseconds > 0) {
+    if (iseconds >= 0) {
         today = true
         c = iseconds + '秒前'
     }
@@ -87,12 +91,10 @@ function time2past(t, bReturnString = false) {
         c = iyears + '年前'
     }
 
-    if (bReturnString) {
-        return c
-    }
     return {
         today: today,
         msg: c,
+        err: '',
     }
 }
 
