@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>day2cht.mjs - Documentation</title>
+    <title>rep.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">day2cht.mjs</h1>
+    <h1 class="page-title">rep.mjs</h1>
     
 
     
@@ -41,42 +41,39 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
-import isday from './isday.mjs'
+            <pre class="prettyprint source linenums"><code>import repeat from 'lodash/repeat'
+import isestr from './isestr.mjs'
+import isp0int from './isp0int.mjs'
 
 
 /**
- * 日時間轉中文格式時間字串
+ * 產生重複n次字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/day2cht.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入日時間字串
- * @param {boolean} [bNoDisplayYear=false] 輸入是否輸出民國年，預設為false
- * @returns {String} 回傳中文格式時間字串
+ * @param {String} c 輸入欲重複的字串
+ * @param {PositiveInteger} n 輸入重複次數之含零正整數
+ * @returns {Array} 回傳任意資料之陣列
  * @example
  *
  */
-function day2cht(t, bNoDisplayYear = false) {
+function rep(c, n) {
 
     //check
-    if (!isday(t)) {
+    if (!isestr(c)) {
+        return ''
+    }
+    if (!isp0int(n)) {
         return ''
     }
 
-    let d = ot(t, 'YYYY/MM/DD')
-    let r = ''
-    if (bNoDisplayYear) {
-        r = (d.month() + 1) + '月' + d.date() + '日'
-    }
-    else {
-        r = '民國 ' + (d.year() - 1911) + ' 年 ' + (d.month() + 1) + ' 月 ' + d.date() + ' 日'
-    }
+    let r = repeat(c, n)
 
     return r
 }
 
 
-export default day2cht
+export default rep
 </code></pre>
         </article>
     </section>

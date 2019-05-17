@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>day2cht.mjs - Documentation</title>
+    <title>waitFunction.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">day2cht.mjs</h1>
+    <h1 class="page-title">waitFunction.mjs</h1>
     
 
     
@@ -41,42 +41,62 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
-import isday from './isday.mjs'
+            <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
+import isfun from './isfun.mjs'
+import ispint from './ispint.mjs'
 
 
 /**
- * 日時間轉中文格式時間字串
+ * 等待f函數回傳true
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/day2cht.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFunction.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入日時間字串
- * @param {boolean} [bNoDisplayYear=false] 輸入是否輸出民國年，預設為false
- * @returns {String} 回傳中文格式時間字串
+ * @param {Function} f 輸入判斷用函數
+ * @param {PositiveInteger} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
+ * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
  *
  */
-function day2cht(t, bNoDisplayYear = false) {
+function waitFunction(f, maxnum = 180) {
+
+    //df
+    let df = genPm()
 
     //check
-    if (!isday(t)) {
-        return ''
+    if (!isfun(f)) {
+        df.reject('waitfunction需輸入函數f')
+        return df
     }
 
-    let d = ot(t, 'YYYY/MM/DD')
-    let r = ''
-    if (bNoDisplayYear) {
-        r = (d.month() + 1) + '月' + d.date() + '日'
-    }
-    else {
-        r = '民國 ' + (d.year() - 1911) + ' 年 ' + (d.month() + 1) + ' 月 ' + d.date() + ' 日'
+    //default
+    if (!ispint(maxnum)) {
+        maxnum = 60 * 3 //3min
     }
 
-    return r
+    //setInterval
+    let n = 0
+    let t = setInterval(function() {
+        n += 1
+        //console.log('waitFunction: ', n)
+
+        if (f() === true) {
+            //console.log('resolve', n)
+            clearInterval(t)
+            df.resolve()
+        }
+        if (n >= maxnum) {
+            //console.log('reject', n, maxnum)
+            clearInterval(t)
+            df.resolve() //已超過最大次數
+        }
+
+    }, 1000) //每1秒偵測一次
+
+    return df
 }
 
 
-export default day2cht
+export default waitFunction
 </code></pre>
         </article>
     </section>
