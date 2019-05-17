@@ -5,11 +5,12 @@ import ispint from './ispint.mjs'
 
 /**
  * 等待f函數回傳true
+ * 原始名稱為waitFunction，但與nodejs或travis-ci有名稱衝突，故才改為waitFun
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.js Github}
  * @memberOf wsemi
  * @param {Function} f 輸入判斷用函數
- * @param {PositiveInteger} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
+ * @param {Integer} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
  * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
  *

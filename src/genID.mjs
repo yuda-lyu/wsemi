@@ -8,7 +8,7 @@ import ispint from './ispint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genID.test.js Github}
  * @memberOf wsemi
- * @param {PositiveInteger} [len=32] 輸入uuid長度，為正整數，預設32
+ * @param {Integer} [len=32] 輸入uuid長度，為正整數，預設32
  * @returns {String} 回傳uuid字串
  * @example
  *

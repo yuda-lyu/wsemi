@@ -10,7 +10,7 @@ import ispint from './ispint.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/repObj.test.js Github}
  * @memberOf wsemi
  * @param {*} o 輸入任意資料
- * @param {PositiveInteger} n 輸入重複次數之正整數
+ * @param {Integer} n 輸入重複次數之正整數
  * @returns {Array} 回傳任意資料之陣列
  * @example
  *

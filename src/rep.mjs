@@ -9,7 +9,7 @@ import isp0int from './isp0int.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.js Github}
  * @memberOf wsemi
  * @param {String} c 輸入欲重複的字串
- * @param {PositiveInteger} n 輸入重複次數之含零正整數
+ * @param {Integer} n 輸入重複次數之含零正整數
  * @returns {Array} 回傳任意資料之陣列
  * @example
  *
