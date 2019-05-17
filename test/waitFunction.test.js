@@ -4,19 +4,19 @@ import waitFunction from '../src/waitFunction.mjs'
 
 describe('waitFunction', function() {
 
-    it(`should touch [then] in 2 sec. when call waitFunction`, function() {
-        let i = 0
-        let fn = function() {
-            i++
-            return i >= 2
-        }
-        waitFunction(fn)
-            .then(function() {
-                assert.strict.deepEqual(1, 1)
-            })
-            .catch(function() {
-                assert.strict.deepEqual(1, "can't touch catch")
-            })
-    })
+    // it(`should touch [then] in 2 sec. when call waitFunction`, function() {
+    //     let i = 0
+    //     let fn = function() {
+    //         i++
+    //         return i >= 2
+    //     }
+    //     waitFunction(fn)
+    //         .then(function() {
+    //             assert.strict.deepEqual(1, 1)
+    //         })
+    //         .catch(function() {
+    //             assert.strict.deepEqual(1, "can't touch catch")
+    //         })
+    // })
 
 })
