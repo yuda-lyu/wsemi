@@ -1,71 +1,71 @@
 import assert from 'assert'
-import sep from '../src/sep.mjs'
+import split from '../src/split.mjs'
 
 
-describe('sep', function() {
+describe('split', function() {
 
-    it(`should return ['1.25', 'abc', 中文'] when input '1.25 abc  中文', ' '`, function() {
-        let r = sep('1.25 abc  中文', ' ')
-        assert.strict.deepEqual(r, ['1.25', 'abc', '中文'])
+    it(`should return ['1.25', 'abc', '', '中文'] when input '1.25 abc  中文', ' '`, function() {
+        let r = split('1.25 abc  中文', ' ')
+        assert.strict.deepEqual(r, ['1.25', 'abc', '', '中文'])
     })
 
     it(`should return ['1.25', 'abc', '中文'] when input '1.25 abc 中文', ' '`, function() {
-        let r = sep('1.25 abc 中文', ' ')
+        let r = split('1.25 abc 中文', ' ')
         assert.strict.deepEqual(r, ['1.25', 'abc', '中文'])
     })
 
     it(`should return ['1.25', 'abc', '中文'] when input '1.25*abc*中文', '*'`, function() {
-        let r = sep('1.25*abc*中文', '*')
+        let r = split('1.25*abc*中文', '*')
         assert.strict.deepEqual(r, ['1.25', 'abc', '中文'])
     })
 
     it(`should return [] when input '1.25 abc 中文', ''`, function() {
-        let r = sep('1.25 abc 中文', '')
+        let r = split('1.25 abc 中文', '')
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input '1.25 abc 中文', []`, function() {
-        let r = sep('1.25 abc 中文', [])
+        let r = split('1.25 abc 中文', [])
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input '1.25 abc 中文', {}`, function() {
-        let r = sep('1.25 abc 中文', {})
+        let r = split('1.25 abc 中文', {})
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input '1.25 abc 中文', null`, function() {
-        let r = sep('1.25 abc 中文', null)
+        let r = split('1.25 abc 中文', null)
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input '1.25 abc 中文', undefined`, function() {
-        let r = sep('1.25 abc 中文', undefined)
+        let r = split('1.25 abc 中文', undefined)
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input ''`, function() {
-        let r = sep('')
+        let r = split('')
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input []`, function() {
-        let r = sep([])
+        let r = split([])
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input {}`, function() {
-        let r = sep({})
+        let r = split({})
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input null`, function() {
-        let r = sep(null)
+        let r = split(null)
         assert.strict.deepEqual(r, [])
     })
 
     it(`should return [] when input undefined`, function() {
-        let r = sep(undefined)
+        let r = split(undefined)
         assert.strict.deepEqual(r, [])
     })
 
