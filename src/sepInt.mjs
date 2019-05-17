@@ -1,13 +1,12 @@
 import floor from 'lodash/floor'
 import reverse from 'lodash/reverse'
-import ispint from './isp0int.mjs'
+import isint from './isint.mjs'
+import isp0int from './isp0int.mjs'
 import isbol from './isbol.mjs'
 
 
 /**
- * 切分正整數
- * 例如10/3為[4,3,3]
- * 若輸入v,n不是整數或breverse不是布林值時則回傳空陣列
+ * 由整數v切分n個正整數，回傳切分後之整數陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.js Github}
  * @memberOf wsemi
@@ -21,10 +20,10 @@ import isbol from './isbol.mjs'
 function sepInt(v, n, breverse = true) {
 
     //check
-    if (!ispint(v)) {
+    if (!isint(v)) {
         return []
     }
-    if (!ispint(n)) {
+    if (!isp0int(n)) {
         return []
     }
     if (!isbol(breverse)) {

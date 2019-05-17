@@ -1,6 +1,8 @@
 import MD5 from 'crypto-js/md5'
+import encb64 from 'crypto-js/enc-base64'
 import enchex from 'crypto-js/enc-hex'
-import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
+import isbol from './isbol.mjs'
 
 
 /**
@@ -9,19 +11,31 @@ import isstr from './isstr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2md5.test.js Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
- * @returns {String} 回傳經MD5轉換後字串，採Hex顯示
+ * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
+ * @returns {String} 回傳經MD5轉換後字串
  * @example
  *
  */
-function str2md5(str) {
+function str2md5(str, base64 = false) {
 
     //check
-    if (!isstr(str)) {
+    if (!isestr(str)) {
+        return ''
+    }
+    if (!isbol(base64)) {
         return ''
     }
 
-    let hex = MD5(str).toString(enchex)
-    return hex
+    let o = MD5(str)
+    let c = ''
+    if (base64) {
+        c = o.toString(encb64)
+    }
+    else {
+        c = o.toString(enchex)
+    }
+
+    return c
 }
 
 

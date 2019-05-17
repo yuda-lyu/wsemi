@@ -1,10 +1,11 @@
+import each from 'lodash/each'
 import isestr from './isestr.mjs'
-import isobj from './isobj.mjs'
-import iser from './iser.mjs'
+import iseobj from './iseobj.mjs'
+import replace from './replace.mjs'
 
 
 /**
- * 取代字串，由c內大括號會標記為被取代的{key}，再由物件o的key所對應value進行取代
+ * 取代字串，由c內大括號會標記為被取代的{key}，再由物件o的key所對應value進行取代，而各value皆需要為有效字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/replaceObj.test.js Github}
  * @memberOf wsemi
@@ -20,19 +21,26 @@ function replaceObj(c, o) {
     if (!isestr(c)) {
         return ''
     }
-    if (!isobj(o)) {
+    if (!iseobj(o)) {
         return ''
     }
-
-    let r = c.replace(/{([^{}]*)}/g, function(a, b) {
-        if (!iser(o[b])) {
-            let v = o[b]
-            return v
+    
+    //check obj value(replace string)
+    let b = false
+    each(o, function(v, k){
+        if (!isestr(v)) {
+            b = true
         }
-        return a
+    })
+    if (b){
+        return ''
+    }
+    
+    each(o, function(v, k){
+        c = replace(c, k, v)
     })
 
-    return r
+    return c
 }
 
 

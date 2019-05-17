@@ -1,6 +1,6 @@
 import loround from 'lodash/round'
-import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
+import isp0int from './isp0int.mjs'
 import cdbl from './cdbl.mjs'
 
 
@@ -18,7 +18,7 @@ import cdbl from './cdbl.mjs'
 function round(v) {
 
     //check
-    if (!isestr(v) && !isnum(v)) {
+    if (!isnum(v)) {
         return ''
     }
 

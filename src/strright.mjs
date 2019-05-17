@@ -23,7 +23,12 @@ function strright(c, n) {
         return ''
     }
 
-    return c.substr(c.length - n, n)
+    let i =c.length - n
+    if (i<0){
+        i = 0
+    }
+    
+    return c.substr(i, n)
 }
 
 

@@ -1,7 +1,6 @@
 import each from 'lodash/each'
 import isestr from './isestr.mjs'
 import split from './split.mjs'
-import iser from './iser.mjs'
 
 
 /**
@@ -28,7 +27,7 @@ function sep(c, t) {
     let s = split(c, t)
     let r = []
     each(s, function(v) {
-        if (!iser(v)) {
+        if (isestr(v)) {
             r.push(v)
         }
     })

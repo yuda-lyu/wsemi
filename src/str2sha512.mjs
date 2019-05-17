@@ -1,6 +1,8 @@
 import SHA512 from 'crypto-js/sha512'
+import encb64 from 'crypto-js/enc-base64'
 import enchex from 'crypto-js/enc-hex'
 import isestr from './isestr.mjs'
+import isbol from './isbol.mjs'
 
 
 /**
@@ -21,11 +23,14 @@ function str2sha512(str, base64 = false) {
     if (!isestr(str)) {
         return ''
     }
+    if (!isbol(base64)) {
+        return ''
+    }
 
     let o = SHA512(str)
     let c = ''
     if (base64) {
-        c = o.toString()
+        c = o.toString(encb64)
     }
     else {
         c = o.toString(enchex)

@@ -14,6 +14,11 @@ import o2j from './o2j.mjs'
  */
 function oo(o) {
 
+    //check
+    if(o===undefined){
+        return undefined
+    }
+    
     return j2o(o2j(o))
 }
 
