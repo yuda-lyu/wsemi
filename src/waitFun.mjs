@@ -6,7 +6,7 @@ import ispint from './ispint.mjs'
 /**
  * 等待f函數回傳true
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFunction.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.js Github}
  * @memberOf wsemi
  * @param {Function} f 輸入判斷用函數
  * @param {PositiveInteger} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
@@ -14,7 +14,7 @@ import ispint from './ispint.mjs'
  * @example
  *
  */
-function waitFunction(f, maxnum = 180) {
+function waitFun(f, maxnum = 180) {
 
     //df
     let df = genPm()
@@ -34,7 +34,7 @@ function waitFunction(f, maxnum = 180) {
     let n = 0
     let t = setInterval(function() {
         n += 1
-        //console.log('waitFunction: ', n)
+        //console.log('waitFun: ', n)
 
         if (f() === true) {
             //console.log('resolve', n)
@@ -53,4 +53,4 @@ function waitFunction(f, maxnum = 180) {
 }
 
 
-export default waitFunction
+export default waitFun

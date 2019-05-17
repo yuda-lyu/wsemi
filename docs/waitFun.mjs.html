@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>onTooltip.mjs - Documentation</title>
+    <title>waitFun.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">onTooltip.mjs</h1>
+    <h1 class="page-title">waitFun.mjs</h1>
     
 
     
@@ -41,58 +41,62 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import tippy from 'tippy.js'
+            <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
+import isfun from './isfun.mjs'
+import ispint from './ispint.mjs'
 
 
 /**
- * 滑鼠移入元素時彈出提示訊息
+ * 等待f函數回傳true
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/onTooltip.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.js Github}
  * @memberOf wsemi
- * @param {*} ele DOM元素物件
- * @param {*} ct 提示html訊息字串
+ * @param {Function} f 輸入判斷用函數
+ * @param {PositiveInteger} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
+ * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
  *
  */
-function onTooltip(ele, ct) {
+function waitFun(f, maxnum = 180) {
 
-    //h
-    let h = ct
-    if (!ct) {
-        h = ele.innerHTML
+    //df
+    let df = genPm()
+
+    //check
+    if (!isfun(f)) {
+        df.reject('waitfunction需輸入函數f')
+        return df
     }
 
-    //tippystate
-    let tippystate = ele.getAttribute('tippystate')
-    if (tippystate === 'uesd') {
-        return
+    //default
+    if (!ispint(maxnum)) {
+        maxnum = 60 * 3 //3min
     }
-    ele.setAttribute('tippystate', 'uesd')
 
-    //h, 文字對齊預設靠左
-    h = `&lt;div style="text-align:left;">${h}&lt;/div>`
+    //setInterval
+    let n = 0
+    let t = setInterval(function() {
+        n += 1
+        //console.log('waitFun: ', n)
 
-    //tippy
-    let tp = tippy(ele, {
-        content: h,
-        arrow: true,
-        //animation: 'fade',
-        placement: 'bottom',
-        //duration: [500,100],
-        delay: 150,
-    })
-    tp.show()
+        if (f() === true) {
+            //console.log('resolve', n)
+            clearInterval(t)
+            df.resolve()
+        }
+        if (n >= maxnum) {
+            //console.log('reject', n, maxnum)
+            clearInterval(t)
+            df.resolve() //已超過最大次數
+        }
 
-    //auto destroy
-    setTimeout(function() {
-        tp.destroy(true)
-        ele.setAttribute('tippystate', '')
-    }, 5000)
+    }, 1000) //每1秒偵測一次
 
+    return df
 }
 
 
-export default onTooltip
+export default waitFun
 </code></pre>
         </article>
     </section>
