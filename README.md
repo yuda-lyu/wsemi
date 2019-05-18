@@ -85,5 +85,5 @@ npm i wsemi
 ```
 Add script for wsemi
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.0/dist/wsemi.umd.js"></script>
 ```
