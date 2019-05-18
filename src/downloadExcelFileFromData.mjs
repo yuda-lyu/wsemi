@@ -1,7 +1,7 @@
 import XLSX from 'XLSX'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
-import ab2u8arr from './ab2u8arr.mjs'
+import bs2u8arr from './bs2u8arr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
 
 
@@ -55,7 +55,7 @@ function getWB(csn, data) {
     let ws = sheet_from_array_of_arrays(data)
     wb.SheetNames.push(csn)
     wb.Sheets[csn] = ws
-    let wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' }) //binary, 但實際使用buffer無用, 一樣是回傳ArrayBuffer
+    let wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' }) //binary, buffer, 但實際使用buffer無用, 一樣是回傳ArrayBuffer
 
     return wbout
 }
@@ -90,8 +90,8 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
     //wb
     let wb = getWB(csn, data)
 
-    //ArrayBuffer to Uint8Array
-    let u8a = ab2u8arr(wb)
+    //ArrayBuffer to BinaryString(Uint8Array)
+    let u8a = bs2u8arr(wb)
 
     //downloadFileFromU8Arr
     downloadFileFromU8Arr(cfn, u8a)

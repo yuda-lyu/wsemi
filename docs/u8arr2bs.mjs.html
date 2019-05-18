@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isStrHasLowerCase.mjs - Documentation</title>
+    <title>u8arr2bs.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isStrHasLowerCase.mjs</h1>
+    <h1 class="page-title">u8arr2bs.mjs</h1>
     
 
     
@@ -41,34 +41,37 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+            <pre class="prettyprint source linenums"><code>import isu8arr from './isu8arr.mjs'
 
 
 /**
- * 字串是否包含小寫英文字元
+ * Unit8Array資料BinaryString
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isStrHasLowerCase.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2bs.test.js Github}
  * @memberOf wsemi
- * @param {String} str 輸入欲判斷的字串
- * @returns {Boolean} 回傳是否包含小寫英文字元
+ * @param {Unit8Array} u8a 輸入Unit8Array資料
+ * @returns {String} 回傳BinaryString資料
  * @example
  *
  */
-function isStrHasLowerCase(str) {
+function u8arr2bs(u8a) {
 
     //check
-    if (!isestr(str)) {
-        return false
+    if (!isu8arr(u8a)) {
+        return ''
     }
 
-    let result = str.match(/^.*[a-z]+.*$/)
-    let r = !(result === null)
+    let l = u8a.length
+    let c = ''
+    for (let i = 0; i &lt; l; i++) {
+        c += String.fromCharCode(u8a[i])
+    }
 
-    return r
+    return c
 }
 
 
-export default isStrHasLowerCase
+export default u8arr2bs
 </code></pre>
         </article>
     </section>

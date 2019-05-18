@@ -1,75 +1,131 @@
 import split from 'lodash/split'
 import each from 'lodash/each'
+import map from 'lodash/map'
 import every from 'lodash/every'
 import trim from 'lodash/trim'
 import head from 'lodash/head'
 import tail from 'lodash/tail'
 import invokeMap from 'lodash/invokeMap'
 import XLSX from 'XLSX'
+import isbol from './isbol.mjs'
 
 
 function to_ltdt(workbook) {
-    let ar = to_array(workbook)
-    let result = []
-    each(ar.data, function (r) {
 
-        //b, 資料列各欄數據不能trim後為空白
-        let b = every(r, function (v) {
-            return trim(v) === ''
-        })
+    function core(m) {
+        let rs = []
+        each(m.rows, function (c) {
 
-        if (!b) {
-
-            //o
-            let o = {}
-            each(ar.keys, function (key, i) {
-                o[key] = r[i]
+            //b, 資料列各欄數據不能trim後為空白
+            let b = every(c, function (v) {
+                return trim(v) === ''
             })
 
-            //push
-            result.push(o)
+            if (!b) {
 
+                //o
+                let o = {}
+                each(m.keys, function (key, i) {
+                    o[key] = c[i]
+                })
+
+                //push
+                rs.push(o)
+
+            }
+
+        })
+        return rs
+    }
+
+    let ars = to_array(workbook, true)
+
+    //r
+    let r = map(ars, function(ar) {
+        return {
+            sheetname: ar.sheetname,
+            data: core(ar.data)
         }
-
     })
-    return result
+
+    return r
 }
 
 
-function to_array(workbook) {
-    let otab = to_tab(workbook)
-    let fst
-    for (let k in otab) {
-        fst = otab[k] //取第一表內資料出來
-        break
+function to_array(workbook, useHead = false) {
+
+    //check
+    if (!isbol(useHead)) {
+        useHead = false
     }
-    let lines = split(fst, '\n')
 
-    //因資料rows最後有換行符號，切分row最後為空
-    lines.pop()
+    function core(c) {
 
-    //head依tab分隔符號切分
-    let firstline = head(lines)
-    let keys = split(firstline, '\t')
+        //lines
+        let lines = split(c, '\n')
 
-    //data依tab分隔符號切分
-    let otherlines = tail(lines)
-    let data = invokeMap(otherlines, String.prototype.split, '\t')
+        //因資料rows最後有換行符號，切分row最後為空
+        lines.pop()
 
-    let result = {
-        keys: keys,
-        data: data,
+        //useHead
+        let result = {}
+        if (useHead) {
+
+            //head依tab分隔符號切分
+            let firstline = head(lines)
+            let keys = split(firstline, '\t')
+
+            //data依tab分隔符號切分
+            let otherlines = tail(lines)
+            let rows = invokeMap(otherlines, String.prototype.split, '\t')
+
+            //result
+            result = {
+                keys: keys,
+                rows: rows,
+            }
+
+        }
+        else {
+
+            //data依tab分隔符號切分
+            let rows = invokeMap(lines, String.prototype.split, '\t')
+
+            //result
+            result = {
+                keys: null,
+                rows: rows,
+            }
+
+        }
+
+        return result
     }
-    return result
+
+    //tabs
+    let tabs = to_tab(workbook)
+
+    //r
+    let r = map(tabs, function(tab) {
+        return {
+            sheetname: tab.sheetname,
+            data: core(tab.data)
+        }
+    })
+
+    return r
 }
 
 
 function to_tab(workbook) {
-    let result = {}
-    workbook.SheetNames.forEach(function (sheetName) {
-        let csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName], { FS: '\t' })
-        if (csv.length > 0) {
-            result[sheetName] = csv
+    let result = []
+    workbook.SheetNames.forEach(function (sheetname) {
+        let tab = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetname], { FS: '\t' })
+        if (tab.length > 0) {
+            result.push({
+                sheetname: sheetname,
+                data: tab
+            })
         }
     })
     return result
@@ -77,11 +133,14 @@ function to_tab(workbook) {
 
 
 function to_csv(workbook) {
-    let result = {}
-    workbook.SheetNames.forEach(function (sheetName) {
-        let csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName])
+    let result = []
+    workbook.SheetNames.forEach(function (sheetname) {
+        let csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetname])
         if (csv.length > 0) {
-            result[sheetName] = csv
+            result.push({
+                sheetname: sheetname,
+                data: csv
+            })
         }
     })
     return result
@@ -96,11 +155,12 @@ function to_csv(workbook) {
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {String} [fmt='ltdt'] 輸入數據回傳格式，可有'ltdt','csv','array'，預設為'ltdt'
+ * @param {Boolean} [useHead=false] 輸入數據是否讀入首行head，需配合fmt='array'，預設為false
  * @returns {Array} 回傳數據陣列
  * @example
  *
  */
-function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt') {
+function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
 
     //workbook
     let workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
@@ -110,7 +170,7 @@ function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt') {
         return to_ltdt(workbook)
     }
     else if (fmt === 'array') {
-        return to_array(workbook)
+        return to_array(workbook, useHead)
     }
     else if (fmt === 'csv') {
         return to_csv(workbook)

@@ -1,0 +1,31 @@
+import isestr from './isestr.mjs'
+
+
+/**
+ * BinaryString資料Unit8Array
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.js Github}
+ * @memberOf wsemi
+ * @param {String} bs 輸入BinaryString資料
+ * @returns {Unit8Array} 回傳Unit8Array資料
+ * @example
+ *
+ */
+function bs2u8arr(str) {
+
+    //check
+    if (!isestr(str)) {
+        return new Uint8Array()
+    }
+
+    let l = str.length
+    let u8a = new Uint8Array(l)
+    for (let i = 0; i < l; i++) {
+        u8a[i] = str.charCodeAt(i)
+    }
+
+    return u8a
+}
+
+
+export default bs2u8arr

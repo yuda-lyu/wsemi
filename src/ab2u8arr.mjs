@@ -1,4 +1,3 @@
-
 import isab from './isab.mjs'
 
 
@@ -21,11 +20,6 @@ function ab2u8arr(ab) {
         return new Uint8Array()
     }
 
-    // let l = ab.length
-    // let u8a = new Uint8Array(l)
-    // for (let i = 0; i < l; i++) {
-    //     u8a[i] = ab.charCodeAt(i)
-    // }
     let u8a = new Uint8Array(ab)
 
     return u8a
