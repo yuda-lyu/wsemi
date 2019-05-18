@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for time2expire, time2past</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+    <script>
+        //要把時間套件dayjs重命名至windwo.ot, 若改用moment也使用此法即可支援
+        window.ot = dayjs
+    </script>
+
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <script>
+
+        //time2expire未到
+        console.log('time2expire')
+        
+        let e_y = dayjs().add(1,'years').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_y + "')",  wsemi.time2expire(e_y)  )
+
+        let e_m = dayjs().add(1,'months').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_m + "')",  wsemi.time2expire(e_m)  )
+
+        let e_d = dayjs().add(1,'days').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_d + "')",  wsemi.time2expire(e_d)  )
+
+        let e_h = dayjs().add(1,'hours').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_h + "')",  wsemi.time2expire(e_h)  )
+
+        let e_min = dayjs().add(1,'minutes').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_min + "')",  wsemi.time2expire(e_min)  )
+
+        let e_s = dayjs().add(1,'seconds').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_s + "')",  wsemi.time2expire(e_s)  )
+
+        //time2expire已過
+        let e_ny = dayjs().add(-1,'years').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_ny + "')",  wsemi.time2expire(e_ny)  )
+
+        let e_nm = dayjs().add(-1,'months').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_nm + "')",  wsemi.time2expire(e_nm)  )
+
+        let e_nd = dayjs().add(-1,'days').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_nd + "')",  wsemi.time2expire(e_nd)  )
+
+        let e_nh = dayjs().add(-1,'hours').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_nh + "')",  wsemi.time2expire(e_nh)  )
+
+        let e_nmin = dayjs().add(-1,'minutes').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_nmin + "')",  wsemi.time2expire(e_nmin)  )
+
+        let e_ns = dayjs().add(-1,'seconds').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2expire('" + e_ns + "')",  wsemi.time2expire(e_ns)  )
+
+        console.log('')
+    </script>
+        
+    <script>
+
+        //time2past未到
+        console.log('time2past')
+        
+        let p_y = dayjs().add(1,'years').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_y + "')",  wsemi.time2past(p_y)  )
+
+        let p_m = dayjs().add(1,'months').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_m + "')",  wsemi.time2past(p_m)  )
+
+        let p_d = dayjs().add(1,'days').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_d + "')",  wsemi.time2past(p_d)  )
+
+        let p_h = dayjs().add(1,'hours').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_h + "')",  wsemi.time2past(p_h)  )
+
+        let p_min = dayjs().add(1,'minutes').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_min + "')",  wsemi.time2past(p_min)  )
+
+        let p_s = dayjs().add(1,'seconds').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_s + "')",  wsemi.time2past(p_s)  )
+
+        //time2past已過
+        let p_ny = dayjs().add(-1,'years').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_ny + "')",  wsemi.time2past(p_ny)  )
+
+        let p_nm = dayjs().add(-1,'months').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_nm + "')",  wsemi.time2past(p_nm)  )
+
+        let p_nd = dayjs().add(-1,'days').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_nd + "')",  wsemi.time2past(p_nd)  )
+
+        let p_nh = dayjs().add(-1,'hours').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_nh + "')",  wsemi.time2past(p_nh)  )
+
+        let p_nmin = dayjs().add(-1,'minutes').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_nmin + "')",  wsemi.time2past(p_nmin)  )
+
+        let p_ns = dayjs().add(-1,'seconds').format('YYYY/MM/DD HH:mm:ss')
+        console.log("  time2past('" + p_ns + "')",  wsemi.time2past(p_ns)  )
+
+    </script>
+
+</body>
+</html>
