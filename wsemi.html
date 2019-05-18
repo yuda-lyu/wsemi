@@ -228,7 +228,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser.</code></pre>
 
 
 
@@ -392,7 +392,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>let ab = new ArrayBuffer(8)ab2u8arr(ab)//[object Uint8Array]</code></pre>
+    <pre class="prettyprint"><code>let ab = (new Uint8Array([66, 97, 115])).bufferab2u8arr(ab)// => new Uint8Array([66, 97, 115])</code></pre>
 
 
 
@@ -502,7 +502,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addMonth.mjs.html">addMonth.mjs</a>, <a href="addMonth.mjs.html#line17">line 17</a>
+        <a href="addMonth.mjs.html">addMonth.mjs</a>, <a href="addMonth.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -556,7 +556,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>addMonth('2019/01', 2)// => '2019/03'addMonth('2018/12', -1)// => '2018/11'</code></pre>
 
 
 
@@ -689,7 +689,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="aes2str.mjs.html">aes2str.mjs</a>, <a href="aes2str.mjs.html#line24">line 24</a>
+        <a href="aes2str.mjs.html">aes2str.mjs</a>, <a href="aes2str.mjs.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -744,7 +744,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let str = '53616c7465645f5f47214797ac01bc03cceb69ebced4948501ab94ca9644a6dfd277456aead4432cb9c9d74c38c42c79'let key = '1234567890abcdefghijk'aes2str(str, key)// => 'test中文abcdefghijklmn'</code></pre>
 
 
 
@@ -944,7 +944,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arr2dt.mjs.html">arr2dt.mjs</a>, <a href="arr2dt.mjs.html#line20">line 20</a>
+        <a href="arr2dt.mjs.html">arr2dt.mjs</a>, <a href="arr2dt.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -998,7 +998,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arr2dt(['a', 'b'])// => { 'a': '', 'b': '' }arr2dt(['a', 'b'], [12.3, '456a'])// => { 'a': 12.3, 'b': '456a' }</code></pre>
 
 
 
@@ -1151,7 +1151,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arraccum.mjs.html">arraccum.mjs</a>, <a href="arraccum.mjs.html#line17">line 17</a>
+        <a href="arraccum.mjs.html">arraccum.mjs</a>, <a href="arraccum.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -1205,7 +1205,7 @@
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arraccum([1, 2, 3, 4])// => [1, 3, 6, 10]</code></pre>
 
 
 
@@ -1315,7 +1315,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arradd.mjs.html">arradd.mjs</a>, <a href="arradd.mjs.html#line23">line 23</a>
+        <a href="arradd.mjs.html">arradd.mjs</a>, <a href="arradd.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -1371,7 +1371,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arradd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1])// => [1.1, 2.1, 3.1, 4.1]</code></pre>
 
 
 
@@ -1621,7 +1621,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrat.mjs.html">arrat.mjs</a>, <a href="arrat.mjs.html#line22">line 22</a>
+        <a href="arrat.mjs.html">arrat.mjs</a>, <a href="arrat.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -1677,7 +1677,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arrat([1, 2, 3, '4', 5, 'abc'], 1)// => [2]arrat([1, 2, 3, '4', 5, 'abc'], 1, 4)// => [2, 3, '4', 5]</code></pre>
 
 
 
@@ -1877,7 +1877,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrdiff.mjs.html">arrdiff.mjs</a>, <a href="arrdiff.mjs.html#line22">line 22</a>
+        <a href="arrdiff.mjs.html">arrdiff.mjs</a>, <a href="arrdiff.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -1931,7 +1931,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id')// => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id')// => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }</code></pre>
 
 
 
@@ -2093,7 +2093,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrfind.mjs.html">arrfind.mjs</a>, <a href="arrfind.mjs.html#line17">line 17</a>
+        <a href="arrfind.mjs.html">arrfind.mjs</a>, <a href="arrfind.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -2147,7 +2147,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arrfind([1, 2, 3, '4', 5, 'abc'], ['4', 2])// => [3, 1]</code></pre>
 
 
 
@@ -2280,7 +2280,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrhas.mjs.html">arrhas.mjs</a>, <a href="arrhas.mjs.html#line16">line 16</a>
+        <a href="arrhas.mjs.html">arrhas.mjs</a>, <a href="arrhas.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -2334,7 +2334,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arrhas(['abc', 'bcd'], 'abc')// => truearrhas(['xyz', 'bcd'], 'abc')// => falsearrhas(['abc', 'bcd'], ['abc', 'cde'])// => truearrhas(['abc', 'bcd'], ['xyz', 'cde'])// => false</code></pre>
 
 
 
@@ -2473,7 +2473,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrpull.mjs.html">arrpull.mjs</a>, <a href="arrpull.mjs.html#line17">line 17</a>
+        <a href="arrpull.mjs.html">arrpull.mjs</a>, <a href="arrpull.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -2527,7 +2527,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>arrpull([1, 2, '3', 4, '3', 'abc'], [2])// => [1, '3', 4, '3', 'abc']arrpull([1, 2, '3', 4, '3', 'abc'], [2, '3'])// => [1, 4, 'abc']</code></pre>
 
 
 
@@ -2660,7 +2660,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="b642obj.mjs.html">b642obj.mjs</a>, <a href="b642obj.mjs.html#line16">line 16</a>
+        <a href="b642obj.mjs.html">b642obj.mjs</a>, <a href="b642obj.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -2714,7 +2714,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>b642obj('WzEsIjMiLCJhYmMiXQ==')// => [1, '3', 'abc']</code></pre>
 
 
 
@@ -2824,7 +2824,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="b642str.mjs.html">b642str.mjs</a>, <a href="b642str.mjs.html#line16">line 16</a>
+        <a href="b642str.mjs.html">b642str.mjs</a>, <a href="b642str.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -2878,7 +2878,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>b642str('dGVzdOS4reaWhw==')// => 'test中文'</code></pre>
 
 
 
@@ -2988,7 +2988,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="b642u8arr.mjs.html">b642u8arr.mjs</a>, <a href="b642u8arr.mjs.html#line15">line 15</a>
+        <a href="b642u8arr.mjs.html">b642u8arr.mjs</a>, <a href="b642u8arr.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -3042,7 +3042,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>b642u8arr('AQItAA==')// => new Uint8Array([1, 2.3, '45', 'abc'])</code></pre>
 
 
 
@@ -3152,7 +3152,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="binstr.mjs.html">binstr.mjs</a>, <a href="binstr.mjs.html#line19">line 19</a>
+        <a href="binstr.mjs.html">binstr.mjs</a>, <a href="binstr.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -3206,7 +3206,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>binstr('1.25abc', 'ab')// => true</code></pre>
 
 
 
@@ -3381,7 +3381,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bs2u8arr.mjs.html">bs2u8arr.mjs</a>, <a href="bs2u8arr.mjs.html#line14">line 14</a>
+        <a href="bs2u8arr.mjs.html">bs2u8arr.mjs</a>, <a href="bs2u8arr.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -3435,7 +3435,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>bs2u8arr('abc')// => new Uint8Array([97, 98, 99])</code></pre>
 
 
 
@@ -3545,7 +3545,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cdbl.mjs.html">cdbl.mjs</a>, <a href="cdbl.mjs.html#line16">line 16</a>
+        <a href="cdbl.mjs.html">cdbl.mjs</a>, <a href="cdbl.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -3600,7 +3600,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>cdbl('25')// => 25</code></pre>
 
 
 
@@ -3713,7 +3713,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line18">line 18</a>
+        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -3769,7 +3769,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>cfilesize(2048)// => '2.0 mb'</code></pre>
 
 
 
@@ -3882,7 +3882,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cfinancial.mjs.html">cfinancial.mjs</a>, <a href="cfinancial.mjs.html#line18">line 18</a>
+        <a href="cfinancial.mjs.html">cfinancial.mjs</a>, <a href="cfinancial.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -3937,7 +3937,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>cfinancial(0.123456789, 3)// => '0.123'</code></pre>
 
 
 
@@ -4105,7 +4105,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cint.mjs.html">cint.mjs</a>, <a href="cint.mjs.html#line17">line 17</a>
+        <a href="cint.mjs.html">cint.mjs</a>, <a href="cint.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -4160,7 +4160,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>cint('1.5')// => 2</code></pre>
 
 
 
@@ -4273,7 +4273,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="clearXSS.mjs.html">clearXSS.mjs</a>, <a href="clearXSS.mjs.html#line21">line 21</a>
+        <a href="clearXSS.mjs.html">clearXSS.mjs</a>, <a href="clearXSS.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -4328,7 +4328,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>clearXSS(`>&lt;script>alert('XSS')&lt;/script>`)// => `&amp;gt;&amp;lt;script&amp;gt;alert('XSS')&amp;lt;/script&amp;gt;`clearXSS(`&lt;img src="javascript:alert('XSS')">`)// => `&lt;img src>`</code></pre>
 
 
 
@@ -4450,7 +4450,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cstr.mjs.html">cstr.mjs</a>, <a href="cstr.mjs.html#line16">line 16</a>
+        <a href="cstr.mjs.html">cstr.mjs</a>, <a href="cstr.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -4505,7 +4505,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>cstr(2.25)// => '2.25'</code></pre>
 
 
 
@@ -4618,7 +4618,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="day2cht.mjs.html">day2cht.mjs</a>, <a href="day2cht.mjs.html#line16">line 16</a>
+        <a href="day2cht.mjs.html">day2cht.mjs</a>, <a href="day2cht.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -4672,7 +4672,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>day2cht('2019/01/02')// => '民國 108 年 1 月 2 日'</code></pre>
 
 
 
@@ -4837,7 +4837,7 @@ v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="dig.mjs.html">dig.mjs</a>, <a href="dig.mjs.html#line22">line 22</a>
+        <a href="dig.mjs.html">dig.mjs</a>, <a href="dig.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -4895,7 +4895,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>dig(0.123456789, 3)// => '0.123'dig(0.123456789, 4)// => '0.1235'</code></pre>
 
 
 
@@ -5063,7 +5063,7 @@ console.log(dig(1.005, 2)) //1.01
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="digExp.mjs.html">digExp.mjs</a>, <a href="digExp.mjs.html#line19">line 19</a>
+        <a href="digExp.mjs.html">digExp.mjs</a>, <a href="digExp.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -5118,7 +5118,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>digExp(0.000000123456789, 2)// => '1.23e-7'</code></pre>
 
 
 
@@ -5340,7 +5340,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -5505,7 +5505,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -5669,7 +5669,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -5835,7 +5835,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -6022,7 +6022,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -6241,7 +6241,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -6383,7 +6383,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -6648,7 +6648,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -6913,7 +6913,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -7078,7 +7078,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -7310,7 +7310,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -7475,7 +7475,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -7640,7 +7640,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -7751,7 +7751,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="dtmapping.mjs.html">dtmapping.mjs</a>, <a href="dtmapping.mjs.html#line18">line 18</a>
+        <a href="dtmapping.mjs.html">dtmapping.mjs</a>, <a href="dtmapping.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -7805,7 +7805,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>dtmapping({ a: 'a123', b: 234, c: '345' }, ['a', 'b'])// => { a: 'a123', b: 234 }dtmapping({ a: 'a123', b: 234, c: '345' }, ['a', 'b', 'x'])// => { a: 'a123', b: 234, x: '' }</code></pre>
 
 
 
@@ -7938,7 +7938,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="dtpick.mjs.html">dtpick.mjs</a>, <a href="dtpick.mjs.html#line19">line 19</a>
+        <a href="dtpick.mjs.html">dtpick.mjs</a>, <a href="dtpick.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -7992,7 +7992,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b'])// => { a: 'a123', b: 234 }dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b', 'x'])// => { a: 'a123', b: 234 }</code></pre>
 
 
 
@@ -8125,7 +8125,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="f2c.mjs.html">f2c.mjs</a>, <a href="f2c.mjs.html#line15">line 15</a>
+        <a href="f2c.mjs.html">f2c.mjs</a>, <a href="f2c.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -8179,7 +8179,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let f = function() { ╱**abc*╱ } //jsdoc can't parser multi-line comments here, need convert "╱" to "/"f2c(f)// => 'abc'</code></pre>
 
 
 
@@ -8343,7 +8343,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -8507,7 +8507,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -8671,7 +8671,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in file env.</code></pre>
 
 
 
@@ -8813,7 +8813,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in file env.</code></pre>
 
 
 
@@ -8924,7 +8924,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fuzzfind.mjs.html">fuzzfind.mjs</a>, <a href="fuzzfind.mjs.html#line27">line 27</a>
+        <a href="fuzzfind.mjs.html">fuzzfind.mjs</a>, <a href="fuzzfind.mjs.html#line32">line 32</a>
     </li></ul></dd>
     
 
@@ -8978,7 +8978,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>fuzzfind(['abc', 'def123', '中文測試'], 'ef')// => truefuzzfind(['abc', 'def123', '中文測試'], 'ef', true)// => 100fuzzfind(['abc', 'def123', '中文測試'], 'efgg', true)// => 50</code></pre>
 
 
 
@@ -9184,7 +9184,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="genGradientColor.mjs.html">genGradientColor.mjs</a>, <a href="genGradientColor.mjs.html#line15">line 15</a>
+        <a href="genGradientColor.mjs.html">genGradientColor.mjs</a>, <a href="genGradientColor.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -9238,7 +9238,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>genGradientColor('#000')// => {"linearGradient":{"x1":0,"x2":0,"y1":0,"y2":1},"stops":[[0,"hsla(0, 0%, 0%, 0.4)"],[1,"hsla(0, 0%, 0%, 0.9)"]]}</code></pre>
 
 
 
@@ -9348,7 +9348,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="genID.mjs.html">genID.mjs</a>, <a href="genID.mjs.html#line16">line 16</a>
+        <a href="genID.mjs.html">genID.mjs</a>, <a href="genID.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -9403,7 +9403,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>genID()// => Is1NyImU3A9fyqFyYBWuJu4ivXXcGZAb (is random)</code></pre>
 
 
 
@@ -9533,7 +9533,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="genPm.mjs.html">genPm.mjs</a>, <a href="genPm.mjs.html#line11">line 11</a>
+        <a href="genPm.mjs.html">genPm.mjs</a>, <a href="genPm.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -9588,7 +9588,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let fn = function() {  let df = genPm()  setTimeout(function() {    df.resolve()  }, 1)  return df}fn()  .then(function(){    //add code  })</code></pre>
 
 
 
@@ -9704,7 +9704,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -9908,7 +9908,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getdtv.mjs.html">getdtv.mjs</a>, <a href="getdtv.mjs.html#line17">line 17</a>
+        <a href="getdtv.mjs.html">getdtv.mjs</a>, <a href="getdtv.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -9962,7 +9962,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getdtv({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')// => 123</code></pre>
 
 
 
@@ -10095,7 +10095,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getdtvstr.mjs.html">getdtvstr.mjs</a>, <a href="getdtvstr.mjs.html#line16">line 16</a>
+        <a href="getdtvstr.mjs.html">getdtvstr.mjs</a>, <a href="getdtvstr.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -10149,7 +10149,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getdtvstr({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')// => '123'</code></pre>
 
 
 
@@ -10282,7 +10282,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getltdtkeys.mjs.html">getltdtkeys.mjs</a>, <a href="getltdtkeys.mjs.html#line18">line 18</a>
+        <a href="getltdtkeys.mjs.html">getltdtkeys.mjs</a>, <a href="getltdtkeys.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -10336,7 +10336,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getltdtkeys([{ a: 123, b: 'xyz', c: '45op', d: null }, { a: 123.456, b: 'xyz', d: '45op', e: '' }])// => ['a', 'b', 'c', 'd', 'e']</code></pre>
 
 
 
@@ -10446,7 +10446,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getObjSize.mjs.html">getObjSize.mjs</a>, <a href="getObjSize.mjs.html#line11">line 11</a>
+        <a href="getObjSize.mjs.html">getObjSize.mjs</a>, <a href="getObjSize.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -10500,7 +10500,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getObjSize('abc123')// => 12getObjSize({ a: 123, b: 'xyz', c: '45op', d: null })// => 22</code></pre>
 
 
 
@@ -10610,7 +10610,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getTimeFromUnit.mjs.html">getTimeFromUnit.mjs</a>, <a href="getTimeFromUnit.mjs.html#line11">line 11</a>
+        <a href="getTimeFromUnit.mjs.html">getTimeFromUnit.mjs</a>, <a href="getTimeFromUnit.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -10664,7 +10664,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getTimeFromUnit('years')// => 'YYYY'getTimeFromUnit('seconds')// => 'YYYY/MM/DD HH:mm:ss'</code></pre>
 
 
 
@@ -10774,7 +10774,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getTimeObject.mjs.html">getTimeObject.mjs</a>, <a href="getTimeObject.mjs.html#line44">line 44</a>
+        <a href="getTimeObject.mjs.html">getTimeObject.mjs</a>, <a href="getTimeObject.mjs.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -10828,7 +10828,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>getTimeObject('2019/01/01', 'days')// => dayjs('2019/01/01', 'YYYY/MM/DD') //dayjs &lt;-> momentgetTimeObject('2019/01/01 12:34:56', 'seconds')// => dayjs('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss') //dayjs &lt;-> moment</code></pre>
 
 
 
@@ -11047,7 +11047,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -11108,7 +11108,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="haskey.mjs.html">haskey.mjs</a>, <a href="haskey.mjs.html#line16">line 16</a>
+        <a href="haskey.mjs.html">haskey.mjs</a>, <a href="haskey.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -11162,7 +11162,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>haskey({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')// => true</code></pre>
 
 
 
@@ -11295,7 +11295,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="hsl.mjs.html">hsl.mjs</a>, <a href="hsl.mjs.html#line18">line 18</a>
+        <a href="hsl.mjs.html">hsl.mjs</a>, <a href="hsl.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -11349,7 +11349,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>hsl(0.5, 0.5, 0.5)// => '#bfaa40'</code></pre>
 
 
 
@@ -11505,7 +11505,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isab.mjs.html">isab.mjs</a>, <a href="isab.mjs.html#line11">line 11</a>
+        <a href="isab.mjs.html">isab.mjs</a>, <a href="isab.mjs.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -11559,7 +11559,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isab(new ArrayBuffer(1))// => true</code></pre>
 
 
 
@@ -11669,7 +11669,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isarr.mjs.html">isarr.mjs</a>, <a href="isarr.mjs.html#line11">line 11</a>
+        <a href="isarr.mjs.html">isarr.mjs</a>, <a href="isarr.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -11723,7 +11723,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isarr([])// => trueisarr([{}])// => true</code></pre>
 
 
 
@@ -11833,7 +11833,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isarr0.mjs.html">isarr0.mjs</a>, <a href="isarr0.mjs.html#line14">line 14</a>
+        <a href="isarr0.mjs.html">isarr0.mjs</a>, <a href="isarr0.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -11887,7 +11887,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isarr([])// => trueisarr([{}])// => false</code></pre>
 
 
 
@@ -12051,7 +12051,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -12161,7 +12161,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isbol.mjs.html">isbol.mjs</a>, <a href="isbol.mjs.html#line14">line 14</a>
+        <a href="isbol.mjs.html">isbol.mjs</a>, <a href="isbol.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -12215,7 +12215,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isbol(false)// => true</code></pre>
 
 
 
@@ -12325,7 +12325,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isday.mjs.html">isday.mjs</a>, <a href="isday.mjs.html#line15">line 15</a>
+        <a href="isday.mjs.html">isday.mjs</a>, <a href="isday.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -12379,7 +12379,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isday('2019/01/01')// => true</code></pre>
 
 
 
@@ -12544,7 +12544,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -12605,7 +12605,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isearr.mjs.html">isearr.mjs</a>, <a href="isearr.mjs.html#line15">line 15</a>
+        <a href="isearr.mjs.html">isearr.mjs</a>, <a href="isearr.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -12659,7 +12659,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isearr([{}])// => falseisearr([{ a: 123 }])// => true</code></pre>
 
 
 
@@ -12823,7 +12823,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -12933,7 +12933,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="iseobj.mjs.html">iseobj.mjs</a>, <a href="iseobj.mjs.html#line14">line 14</a>
+        <a href="iseobj.mjs.html">iseobj.mjs</a>, <a href="iseobj.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -12987,7 +12987,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>iseobj({})// => falseiseobj({ a: 123 })// => true</code></pre>
 
 
 
@@ -13097,7 +13097,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="iser.mjs.html">iser.mjs</a>, <a href="iser.mjs.html#line18">line 18</a>
+        <a href="iser.mjs.html">iser.mjs</a>, <a href="iser.mjs.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -13151,7 +13151,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>iser('12a5')// => falseiser('')// => trueiser([])// => trueiser([{}])// => falseiser([''])// => falseiser({})// => trueiser(null)// => trueiser(undefined)// => true</code></pre>
 
 
 
@@ -13261,7 +13261,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isernot.mjs.html">isernot.mjs</a>, <a href="isernot.mjs.html#line14">line 14</a>
+        <a href="isernot.mjs.html">isernot.mjs</a>, <a href="isernot.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -13315,7 +13315,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isernot('12a5')// => trueisernot('')// => falseisernot([])// => falseisernot([{}])// => trueisernot([''])// => trueisernot({})// => falseisernot(null)// => falseisernot(undefined)// => false</code></pre>
 
 
 
@@ -13425,7 +13425,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isestr.mjs.html">isestr.mjs</a>, <a href="isestr.mjs.html#line14">line 14</a>
+        <a href="isestr.mjs.html">isestr.mjs</a>, <a href="isestr.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -13479,7 +13479,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isestr('1.25')// => trueisestr(125)// => falseisestr('')// => false</code></pre>
 
 
 
@@ -13589,7 +13589,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isfun.mjs.html">isfun.mjs</a>, <a href="isfun.mjs.html#line11">line 11</a>
+        <a href="isfun.mjs.html">isfun.mjs</a>, <a href="isfun.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -13643,7 +13643,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isfun('1.25')// => falseisfun(function() {})// => true</code></pre>
 
 
 
@@ -13753,7 +13753,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isint.mjs.html">isint.mjs</a>, <a href="isint.mjs.html#line16">line 16</a>
+        <a href="isint.mjs.html">isint.mjs</a>, <a href="isint.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -13807,7 +13807,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isint('1.25')// => falseisint('125')// => trueisint(1.25)// => falseisint(125)// => true</code></pre>
 
 
 
@@ -13917,7 +13917,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ismonth.mjs.html">ismonth.mjs</a>, <a href="ismonth.mjs.html#line15">line 15</a>
+        <a href="ismonth.mjs.html">ismonth.mjs</a>, <a href="ismonth.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -13971,7 +13971,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ismonth('2019/01/01')// => falseismonth('2019/01')// => true</code></pre>
 
 
 
@@ -14081,7 +14081,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isn0int.mjs.html">isn0int.mjs</a>, <a href="isn0int.mjs.html#line16">line 16</a>
+        <a href="isn0int.mjs.html">isn0int.mjs</a>, <a href="isn0int.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -14136,7 +14136,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isn0int(0)// => trueisn0int(125)// => falseisn0int(-125)// => true</code></pre>
 
 
 
@@ -14246,7 +14246,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isn0num.mjs.html">isn0num.mjs</a>, <a href="isn0num.mjs.html#line16">line 16</a>
+        <a href="isn0num.mjs.html">isn0num.mjs</a>, <a href="isn0num.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -14301,7 +14301,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isn0num(0)// => trueisn0num(-125)// => trueisn0num(-1.25)// => trueisn0num(125)// => falseisn0num('-125')// => trueisn0num('-1.25')// => trueisn0num('125')// => false</code></pre>
 
 
 
@@ -14466,7 +14466,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -14588,7 +14588,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isnbr.mjs.html">isnbr.mjs</a>, <a href="isnbr.mjs.html#line11">line 11</a>
+        <a href="isnbr.mjs.html">isnbr.mjs</a>, <a href="isnbr.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -14642,7 +14642,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isnbr(1.25)// => trueisnbr('1.25')// => false</code></pre>
 
 
 
@@ -14752,7 +14752,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isnint.mjs.html">isnint.mjs</a>, <a href="isnint.mjs.html#line16">line 16</a>
+        <a href="isnint.mjs.html">isnint.mjs</a>, <a href="isnint.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -14807,7 +14807,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isnint(0)// => falseisnint(125)// => falseisnint(-125)// => true</code></pre>
 
 
 
@@ -14917,7 +14917,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isnull.mjs.html">isnull.mjs</a>, <a href="isnull.mjs.html#line11">line 11</a>
+        <a href="isnull.mjs.html">isnull.mjs</a>, <a href="isnull.mjs.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -14971,7 +14971,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isnull(null)// => true</code></pre>
 
 
 
@@ -15081,7 +15081,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isnum.mjs.html">isnum.mjs</a>, <a href="isnum.mjs.html#line15">line 15</a>
+        <a href="isnum.mjs.html">isnum.mjs</a>, <a href="isnum.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -15135,7 +15135,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isnum(0)// => trueisnum(1.25)// => trueisnum('-125')// => true</code></pre>
 
 
 
@@ -15245,7 +15245,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isobj.mjs.html">isobj.mjs</a>, <a href="isobj.mjs.html#line11">line 11</a>
+        <a href="isobj.mjs.html">isobj.mjs</a>, <a href="isobj.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -15299,7 +15299,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isobj({})// => trueisobj({ a: 123 })// => true</code></pre>
 
 
 
@@ -15409,7 +15409,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isobj0.mjs.html">isobj0.mjs</a>, <a href="isobj0.mjs.html#line14">line 14</a>
+        <a href="isobj0.mjs.html">isobj0.mjs</a>, <a href="isobj0.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -15463,7 +15463,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isobj0({})// => trueisobj0({ a: 123 })// => false</code></pre>
 
 
 
@@ -15573,7 +15573,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isp0int.mjs.html">isp0int.mjs</a>, <a href="isp0int.mjs.html#line16">line 16</a>
+        <a href="isp0int.mjs.html">isp0int.mjs</a>, <a href="isp0int.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -15628,7 +15628,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isp0int(0)// => trueisp0int(125)// => trueisp0int(1.25)// => falseisp0int('125')// => true</code></pre>
 
 
 
@@ -15738,7 +15738,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isp0num.mjs.html">isp0num.mjs</a>, <a href="isp0num.mjs.html#line16">line 16</a>
+        <a href="isp0num.mjs.html">isp0num.mjs</a>, <a href="isp0num.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -15793,7 +15793,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isp0num(0)// => trueisp0num(125)// => trueisp0num(1.25)// => trueisp0num(-1.25)// => falseisp0num('1.25')// => true</code></pre>
 
 
 
@@ -15903,7 +15903,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ispint.mjs.html">ispint.mjs</a>, <a href="ispint.mjs.html#line16">line 16</a>
+        <a href="ispint.mjs.html">ispint.mjs</a>, <a href="ispint.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -15958,7 +15958,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ispint(0)// => falseispint(125)// => trueispint('125')// => trueispint(1.25)// => false</code></pre>
 
 
 
@@ -16068,7 +16068,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isstr.mjs.html">isstr.mjs</a>, <a href="isstr.mjs.html#line11">line 11</a>
+        <a href="isstr.mjs.html">isstr.mjs</a>, <a href="isstr.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -16122,7 +16122,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isstr(0)// => falseisstr('0')// => trueisstr('')// => true</code></pre>
 
 
 
@@ -16232,7 +16232,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isstr0.mjs.html">isstr0.mjs</a>, <a href="isstr0.mjs.html#line14">line 14</a>
+        <a href="isstr0.mjs.html">isstr0.mjs</a>, <a href="isstr0.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -16286,7 +16286,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isstr0('')// => trueisstr0('0')// => false</code></pre>
 
 
 
@@ -16396,7 +16396,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isStrHasCapital.mjs.html">isStrHasCapital.mjs</a>, <a href="isStrHasCapital.mjs.html#line14">line 14</a>
+        <a href="isStrHasCapital.mjs.html">isStrHasCapital.mjs</a>, <a href="isStrHasCapital.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -16450,7 +16450,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isStrHasCapital('abc125')// => falseisStrHasCapital('abC125')// => true</code></pre>
 
 
 
@@ -16560,7 +16560,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isStrHasLowerCase.mjs.html">isStrHasLowerCase.mjs</a>, <a href="isStrHasLowerCase.mjs.html#line14">line 14</a>
+        <a href="isStrHasLowerCase.mjs.html">isStrHasLowerCase.mjs</a>, <a href="isStrHasLowerCase.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -16614,7 +16614,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isStrHasLowerCase('ABC125')// => falseisStrHasLowerCase('abC125')// => true</code></pre>
 
 
 
@@ -16724,7 +16724,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isStrHasNumber.mjs.html">isStrHasNumber.mjs</a>, <a href="isStrHasNumber.mjs.html#line14">line 14</a>
+        <a href="isStrHasNumber.mjs.html">isStrHasNumber.mjs</a>, <a href="isStrHasNumber.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -16778,7 +16778,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isStrHasNumber('abc')// => falseisStrHasNumber('abc125')// => true</code></pre>
 
 
 
@@ -16888,7 +16888,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="istime.mjs.html">istime.mjs</a>, <a href="istime.mjs.html#line15">line 15</a>
+        <a href="istime.mjs.html">istime.mjs</a>, <a href="istime.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -16942,7 +16942,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>istime('2019/01/01 12:34:56:789')// => falseistime('2019/01/01 12:34:56')// => trueistime('2019/01/01')// => false</code></pre>
 
 
 
@@ -17052,7 +17052,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isu8arr.mjs.html">isu8arr.mjs</a>, <a href="isu8arr.mjs.html#line11">line 11</a>
+        <a href="isu8arr.mjs.html">isu8arr.mjs</a>, <a href="isu8arr.mjs.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -17106,7 +17106,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isu8arr(new Uint8Array(1))// => true</code></pre>
 
 
 
@@ -17216,7 +17216,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isundefined.mjs.html">isundefined.mjs</a>, <a href="isundefined.mjs.html#line11">line 11</a>
+        <a href="isundefined.mjs.html">isundefined.mjs</a>, <a href="isundefined.mjs.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -17270,7 +17270,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isundefined(undefined)// => true</code></pre>
 
 
 
@@ -17380,7 +17380,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserIdentify.mjs.html">isUserIdentify.mjs</a>, <a href="isUserIdentify.mjs.html#line15">line 15</a>
+        <a href="isUserIdentify.mjs.html">isUserIdentify.mjs</a>, <a href="isUserIdentify.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -17434,7 +17434,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isUserIdentify('A122471399')  .then(function(){    //code here  })</code></pre>
 
 
 
@@ -17544,7 +17544,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserName.mjs.html">isUserName.mjs</a>, <a href="isUserName.mjs.html#line15">line 15</a>
+        <a href="isUserName.mjs.html">isUserName.mjs</a>, <a href="isUserName.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -17598,7 +17598,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isUserName('我的名稱')  .then(function() {    //code here  })</code></pre>
 
 
 
@@ -17708,7 +17708,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserPW.mjs.html">isUserPW.mjs</a>, <a href="isUserPW.mjs.html#line20">line 20</a>
+        <a href="isUserPW.mjs.html">isUserPW.mjs</a>, <a href="isUserPW.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -17762,7 +17762,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>isUserPW('Asdf1234')  .then(function() {    //code here  })</code></pre>
 
 
 
@@ -17872,7 +17872,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="j2o.mjs.html">j2o.mjs</a>, <a href="j2o.mjs.html#line14">line 14</a>
+        <a href="j2o.mjs.html">j2o.mjs</a>, <a href="j2o.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -17926,7 +17926,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>j2o('[1,"3","abc"]')// => [1, '3', 'abc']j2o('{"a":12.34,"b":"abc"}')// => { a: 12.34, b: 'abc' }</code></pre>
 
 
 
@@ -18036,7 +18036,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="keysmat2ltdt.mjs.html">keysmat2ltdt.mjs</a>, <a href="keysmat2ltdt.mjs.html#line18">line 18</a>
+        <a href="keysmat2ltdt.mjs.html">keysmat2ltdt.mjs</a>, <a href="keysmat2ltdt.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -18090,7 +18090,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>keysmat2ltdt(['a', 'b'], [[12, 34.56], ['123', 'xyz']])// => [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]</code></pre>
 
 
 
@@ -18223,7 +18223,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdt2vrtsable.mjs.html">ltdt2vrtsable.mjs</a>, <a href="ltdt2vrtsable.mjs.html#line24">line 24</a>
+        <a href="ltdt2vrtsable.mjs.html">ltdt2vrtsable.mjs</a>, <a href="ltdt2vrtsable.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -18277,7 +18277,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a'])// => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]</code></pre>
 
 
 
@@ -18442,7 +18442,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtkeys2mat.mjs.html">ltdtkeys2mat.mjs</a>, <a href="ltdtkeys2mat.mjs.html#line21">line 21</a>
+        <a href="ltdtkeys2mat.mjs.html">ltdtkeys2mat.mjs</a>, <a href="ltdtkeys2mat.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -18496,7 +18496,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'])// => [[12, 34.56], ['123', 'xyz']]</code></pre>
 
 
 
@@ -18629,7 +18629,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtkeysheads2mat.mjs.html">ltdtkeysheads2mat.mjs</a>, <a href="ltdtkeysheads2mat.mjs.html#line22">line 22</a>
+        <a href="ltdtkeysheads2mat.mjs.html">ltdtkeysheads2mat.mjs</a>, <a href="ltdtkeysheads2mat.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -18683,7 +18683,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' })// => [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]</code></pre>
 
 
 
@@ -18839,7 +18839,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtmapping.mjs.html">ltdtmapping.mjs</a>, <a href="ltdtmapping.mjs.html#line18">line 18</a>
+        <a href="ltdtmapping.mjs.html">ltdtmapping.mjs</a>, <a href="ltdtmapping.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -18893,7 +18893,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>ltdtmapping([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz', c: 'mn' }], ['a', 'b', 'c'])// => [{ a: 12, b: 34.56, c: '' }, { a: '123', b: 'xyz', c: 'mn' }]</code></pre>
 
 
 
@@ -19026,7 +19026,7 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mat2ltdt.mjs.html">mat2ltdt.mjs</a>, <a href="mat2ltdt.mjs.html#line19">line 19</a>
+        <a href="mat2ltdt.mjs.html">mat2ltdt.mjs</a>, <a href="mat2ltdt.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -19081,7 +19081,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']])// => [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }]</code></pre>
 
 
 
@@ -19191,7 +19191,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="matat.mjs.html">matat.mjs</a>, <a href="matat.mjs.html#line20">line 20</a>
+        <a href="matat.mjs.html">matat.mjs</a>, <a href="matat.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -19247,7 +19247,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1)// => [['b'], [34.56]]matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1, 2)// => [['b', '12.34'], [34.56, 'abc']]</code></pre>
 
 
 
@@ -19447,7 +19447,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="nowstr.mjs.html">nowstr.mjs</a>, <a href="nowstr.mjs.html#line13">line 13</a>
+        <a href="nowstr.mjs.html">nowstr.mjs</a>, <a href="nowstr.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -19501,7 +19501,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>nowstr()// => dayjs().format('YYYY/MM/DD HH:mm:ss') //use dayjs or moment</code></pre>
 
 
 
@@ -19562,7 +19562,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="nowstrday.mjs.html">nowstrday.mjs</a>, <a href="nowstrday.mjs.html#line13">line 13</a>
+        <a href="nowstrday.mjs.html">nowstrday.mjs</a>, <a href="nowstrday.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -19616,7 +19616,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>nowstrday()// => dayjs().format('YYYY/MM/DD') //use dayjs or moment</code></pre>
 
 
 
@@ -19677,7 +19677,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="o2j.mjs.html">o2j.mjs</a>, <a href="o2j.mjs.html#line15">line 15</a>
+        <a href="o2j.mjs.html">o2j.mjs</a>, <a href="o2j.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -19731,7 +19731,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>o2j([1, '3', 'abc'])// => '[1,"3","abc"]'o2j({ a: 12.34, b: 'abc' })// => '{"a":12.34,"b":"abc"}'</code></pre>
 
 
 
@@ -19896,7 +19896,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="obj2b64.mjs.html">obj2b64.mjs</a>, <a href="obj2b64.mjs.html#line15">line 15</a>
+        <a href="obj2b64.mjs.html">obj2b64.mjs</a>, <a href="obj2b64.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -19950,7 +19950,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>obj2b64([1, '3', 'abc'])// => 'WzEsIjMiLCJhYmMiXQ=='obj2b64({ a: 12.34, b: 'abc' })// => 'eyJhIjoxMi4zNCwiYiI6ImFiYyJ9'</code></pre>
 
 
 
@@ -20060,7 +20060,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="obj2pb64.mjs.html">obj2pb64.mjs</a>, <a href="obj2pb64.mjs.html#line17">line 17</a>
+        <a href="obj2pb64.mjs.html">obj2pb64.mjs</a>, <a href="obj2pb64.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -20114,7 +20114,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let key = '1234567890abcdef'obj2pb64([1, '3', 'abc'], key)// => U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf (is random)</code></pre>
 
 
 
@@ -20301,7 +20301,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -20412,7 +20412,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="oo.mjs.html">oo.mjs</a>, <a href="oo.mjs.html#line15">line 15</a>
+        <a href="oo.mjs.html">oo.mjs</a>, <a href="oo.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -20466,7 +20466,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>oo([1, '3', 'abc'])// => [1, '3', 'abc']</code></pre>
 
 
 
@@ -20630,7 +20630,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -20718,7 +20718,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pb642obj.mjs.html">pb642obj.mjs</a>, <a href="pb642obj.mjs.html#line17">line 17</a>
+        <a href="pb642obj.mjs.html">pb642obj.mjs</a>, <a href="pb642obj.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -20772,7 +20772,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let key = '1234567890abcdef'let str = U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf //(is random)pb642obj(str, key)// => [1, '3', 'abc']</code></pre>
 
 
 
@@ -20905,7 +20905,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="psChain.mjs.html">psChain.mjs</a>, <a href="psChain.mjs.html#line10">line 10</a>
+        <a href="psChain.mjs.html">psChain.mjs</a>, <a href="psChain.mjs.html#line13">line 13</a>
     </li></ul></dd>
     
 
@@ -20959,7 +20959,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>psChain()  .then(function() {    //code here  })</code></pre>
 
 
 
@@ -21020,7 +21020,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="rep.mjs.html">rep.mjs</a>, <a href="rep.mjs.html#line17">line 17</a>
+        <a href="rep.mjs.html">rep.mjs</a>, <a href="rep.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -21074,7 +21074,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>rep('abc', 2)// => 'abcabc'</code></pre>
 
 
 
@@ -21207,7 +21207,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="replace.mjs.html">replace.mjs</a>, <a href="replace.mjs.html#line19">line 19</a>
+        <a href="replace.mjs.html">replace.mjs</a>, <a href="replace.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -21263,7 +21263,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>replace('1.25abc', '5a', '0')// => '1.20bc'</code></pre>
 
 
 
@@ -21419,7 +21419,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="replaceObj.mjs.html">replaceObj.mjs</a>, <a href="replaceObj.mjs.html#line18">line 18</a>
+        <a href="replaceObj.mjs.html">replaceObj.mjs</a>, <a href="replaceObj.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -21473,7 +21473,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>replaceObj('1.25abc中文', { '5a': '0', '中': '英' })// => '1.20bc英文'</code></pre>
 
 
 
@@ -21606,7 +21606,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="replacePlus.mjs.html">replacePlus.mjs</a>, <a href="replacePlus.mjs.html#line19">line 19</a>
+        <a href="replacePlus.mjs.html">replacePlus.mjs</a>, <a href="replacePlus.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -21660,7 +21660,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>replacePlus('1.25mn1.25abc中文結尾', '1', '文', null, 'xyz')// => 'xyz結尾'replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz')// => '1.25mnxyz結尾'</code></pre>
 
 
 
@@ -21930,7 +21930,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="repObj.mjs.html">repObj.mjs</a>, <a href="repObj.mjs.html#line18">line 18</a>
+        <a href="repObj.mjs.html">repObj.mjs</a>, <a href="repObj.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -21984,7 +21984,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>repObj({ a: 12.45, b: 'opqr' }, 2)// => [{ a: 12.45, b: 'opqr' }, { a: 12.45, b: 'opqr' }]repObj({ a: 12.45, b: 'opqr' }, 0)// => []</code></pre>
 
 
 
@@ -22117,7 +22117,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="round.mjs.html">round.mjs</a>, <a href="round.mjs.html#line18">line 18</a>
+        <a href="round.mjs.html">round.mjs</a>, <a href="round.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -22172,7 +22172,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>round(1.5)// => 2round('1.5')// => 2round('125abc')// => ''</code></pre>
 
 
 
@@ -22285,7 +22285,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="sep.mjs.html">sep.mjs</a>, <a href="sep.mjs.html#line17">line 17</a>
+        <a href="sep.mjs.html">sep.mjs</a>, <a href="sep.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -22339,7 +22339,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>sep('1.25 abc  中文', ' ')// => ['1.25', 'abc', '中文']</code></pre>
 
 
 
@@ -22472,7 +22472,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line20">line 20</a>
+        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -22526,7 +22526,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>sepInt(10, 3)// => [3, 3, 4]</code></pre>
 
 
 
@@ -22726,7 +22726,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="split.mjs.html">split.mjs</a>, <a href="split.mjs.html#line15">line 15</a>
+        <a href="split.mjs.html">split.mjs</a>, <a href="split.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -22780,7 +22780,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>split('1.25 abc  中文', ' ')// => ['1.25', 'abc', '', '中文']</code></pre>
 
 
 
@@ -22913,7 +22913,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="str2aes.mjs.html">str2aes.mjs</a>, <a href="str2aes.mjs.html#line23">line 23</a>
+        <a href="str2aes.mjs.html">str2aes.mjs</a>, <a href="str2aes.mjs.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -22968,7 +22968,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let str = 'test中文abcdefghijklmn'let key = '1234567890abcdefghijk'str2aes(str, key)// => 53616c7465645f5f9d7366e54b51e9352dbccf6a6ec9b3af0595b19b345ea903b713143f5d66417f4cd968c628863f61 (is random)str2aes(str, key, true)// => U2FsdGVkX19c7rKkQ38SfqZLaQEKzLD0PhXzzdYeGbngewsPmzS8PcOwHQIsf2Zo (is random)</code></pre>
 
 
 
@@ -23168,7 +23168,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="str2b64.mjs.html">str2b64.mjs</a>, <a href="str2b64.mjs.html#line16">line 16</a>
+        <a href="str2b64.mjs.html">str2b64.mjs</a>, <a href="str2b64.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -23222,7 +23222,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>str2b64('test中文')// => 'dGVzdOS4reaWhw=='</code></pre>
 
 
 
@@ -23332,7 +23332,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="str2md5.mjs.html">str2md5.mjs</a>, <a href="str2md5.mjs.html#line19">line 19</a>
+        <a href="str2md5.mjs.html">str2md5.mjs</a>, <a href="str2md5.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -23386,7 +23386,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>str2md5('test中文')// => '5393554e94bf0eb6436f240a4fd71282'</code></pre>
 
 
 
@@ -23551,7 +23551,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="str2sha512.mjs.html">str2sha512.mjs</a>, <a href="str2sha512.mjs.html#line20">line 20</a>
+        <a href="str2sha512.mjs.html">str2sha512.mjs</a>, <a href="str2sha512.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -23606,7 +23606,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>str2sha512('test中文')// => 'ab43333a01571e767a2eb15460c270fa123964c121b88c73e274a211d6e2cf98b10d89220e8d04e2fc573354da93400f3255e94d445dc956e177aa4201a4fc30'</code></pre>
 
 
 
@@ -23771,7 +23771,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strdelleft.mjs.html">strdelleft.mjs</a>, <a href="strdelleft.mjs.html#line17">line 17</a>
+        <a href="strdelleft.mjs.html">strdelleft.mjs</a>, <a href="strdelleft.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -23825,7 +23825,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>strdelleft('test中文', 2)// => 'st中文'</code></pre>
 
 
 
@@ -23958,7 +23958,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strdelright.mjs.html">strdelright.mjs</a>, <a href="strdelright.mjs.html#line17">line 17</a>
+        <a href="strdelright.mjs.html">strdelright.mjs</a>, <a href="strdelright.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -24012,7 +24012,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>strdelright('test中文', 2)// => 'test'</code></pre>
 
 
 
@@ -24145,7 +24145,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strleft.mjs.html">strleft.mjs</a>, <a href="strleft.mjs.html#line16">line 16</a>
+        <a href="strleft.mjs.html">strleft.mjs</a>, <a href="strleft.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -24199,7 +24199,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>strleft('test中文', 2)// => 'te'</code></pre>
 
 
 
@@ -24332,7 +24332,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strmid.mjs.html">strmid.mjs</a>, <a href="strmid.mjs.html#line18">line 18</a>
+        <a href="strmid.mjs.html">strmid.mjs</a>, <a href="strmid.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -24386,7 +24386,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>strmid('test中文', 2, 1)// => 's'strmid('test中文', 2, 3)// => 'st中'</code></pre>
 
 
 
@@ -24542,7 +24542,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strright.mjs.html">strright.mjs</a>, <a href="strright.mjs.html#line16">line 16</a>
+        <a href="strright.mjs.html">strright.mjs</a>, <a href="strright.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -24596,7 +24596,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>strright('test中文', 2)// => '中文'</code></pre>
 
 
 
@@ -24729,7 +24729,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="time2day.mjs.html">time2day.mjs</a>, <a href="time2day.mjs.html#line15">line 15</a>
+        <a href="time2day.mjs.html">time2day.mjs</a>, <a href="time2day.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -24783,7 +24783,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>time2day('2019/01/01 12:34:56')// => '2019/01/01'</code></pre>
 
 
 
@@ -24893,7 +24893,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="time2expire.mjs.html">time2expire.mjs</a>, <a href="time2expire.mjs.html#line16">line 16</a>
+        <a href="time2expire.mjs.html">time2expire.mjs</a>, <a href="time2expire.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -24947,7 +24947,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -25057,7 +25057,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="time2hour.mjs.html">time2hour.mjs</a>, <a href="time2hour.mjs.html#line15">line 15</a>
+        <a href="time2hour.mjs.html">time2hour.mjs</a>, <a href="time2hour.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -25111,7 +25111,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>time2hour('2019/01/01 12:34:56')// => '2019/01/01 12'</code></pre>
 
 
 
@@ -25221,7 +25221,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="time2min.mjs.html">time2min.mjs</a>, <a href="time2min.mjs.html#line15">line 15</a>
+        <a href="time2min.mjs.html">time2min.mjs</a>, <a href="time2min.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -25275,7 +25275,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>time2min('2019/01/01 12:34:56')// => '2019/01/01 12:34'</code></pre>
 
 
 
@@ -25385,7 +25385,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="time2past.mjs.html">time2past.mjs</a>, <a href="time2past.mjs.html#line16">line 16</a>
+        <a href="time2past.mjs.html">time2past.mjs</a>, <a href="time2past.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -25439,7 +25439,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -25549,7 +25549,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="timebetween.mjs.html">timebetween.mjs</a>, <a href="timebetween.mjs.html#line19">line 19</a>
+        <a href="timebetween.mjs.html">timebetween.mjs</a>, <a href="timebetween.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -25603,7 +25603,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>timebetween('2017', '2019', 'years')// => ['2017', '2018', '2019']timebetween('2019/01/01', '2019/01/03', 'days')// => ['2019/01/01', '2019/01/02', '2019/01/03']timebetween('2019/01/01', '2019/01/03')// => ['2019/01/01', '2019/01/02', '2019/01/03']</code></pre>
 
 
 
@@ -25803,7 +25803,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="timerange.mjs.html">timerange.mjs</a>, <a href="timerange.mjs.html#line17">line 17</a>
+        <a href="timerange.mjs.html">timerange.mjs</a>, <a href="timerange.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -25857,7 +25857,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>timerange('2019/01/01 09:00:00')// => '2019/01/01 09:00 至 無'timerange('2019/01/01 09:00:00', '2019/01/01 12:34:56')// => '2019/01/01 09:00 至 12:34'timerange('2019/01/01 09:00:00', '2019/01/03 12:00:00')// => '2019/01/01 09:00 至 2019/01/03 12:00'</code></pre>
 
 
 
@@ -25990,7 +25990,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="trim.mjs.html">trim.mjs</a>, <a href="trim.mjs.html#line16">line 16</a>
+        <a href="trim.mjs.html">trim.mjs</a>, <a href="trim.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -26045,7 +26045,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>trim(' abc 中 文 ')// => 'abc 中 文'</code></pre>
 
 
 
@@ -26155,7 +26155,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="u8arr2ab.mjs.html">u8arr2ab.mjs</a>, <a href="u8arr2ab.mjs.html#line14">line 14</a>
+        <a href="u8arr2ab.mjs.html">u8arr2ab.mjs</a>, <a href="u8arr2ab.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -26209,7 +26209,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>u8arr2ab(new Uint8Array([66, 97, 115]))// (new Uint8Array([66, 97, 115])).buffer</code></pre>
 
 
 
@@ -26319,7 +26319,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="u8arr2b64.mjs.html">u8arr2b64.mjs</a>, <a href="u8arr2b64.mjs.html#line16">line 16</a>
+        <a href="u8arr2b64.mjs.html">u8arr2b64.mjs</a>, <a href="u8arr2b64.mjs.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -26373,7 +26373,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>u8arr2b64(new Uint8Array([1, 2.3, '45', 'abc']))// => 'AQItAA=='</code></pre>
 
 
 
@@ -26537,7 +26537,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -26647,7 +26647,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="u8arr2bs.mjs.html">u8arr2bs.mjs</a>, <a href="u8arr2bs.mjs.html#line14">line 14</a>
+        <a href="u8arr2bs.mjs.html">u8arr2bs.mjs</a>, <a href="u8arr2bs.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -26701,7 +26701,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>u8arr2bs(new Uint8Array([97, 98, 99]))// => 'abc'</code></pre>
 
 
 
@@ -26867,7 +26867,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>need test in browser</code></pre>
 
 
 
@@ -27140,7 +27140,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line18">line 18</a>
+        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -27195,7 +27195,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code></code></pre>
+    <pre class="prettyprint"><code>let i = 0let fn = function() {  i++  return i >= 2}waitFun(fn)  .then(function() {    //code here  })</code></pre>
 
 
 
@@ -27363,7 +27363,7 @@ Secure Hash Algorithm 512位</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.2</a> on Sat May 18 2019 20:28:52 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.2</a> on Sat May 18 2019 23:05:02 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
