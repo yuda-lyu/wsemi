@@ -54,7 +54,7 @@ function df_HTML5(cfn, blob) {
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  * @example
- *
+ * need test in browser
  */
 function downloadFileFromBlob(cfn, blob) {
 

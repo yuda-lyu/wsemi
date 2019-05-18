@@ -9,7 +9,7 @@ import domFinds from './domFinds.mjs'
  * @memberOf wsemi
  * @param {String} query 輸入查詢字串
  * @example
- *
+ * need test in browser
  */
 function domRemove(query) {
 

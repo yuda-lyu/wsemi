@@ -9,7 +9,10 @@ import isobj from './isobj.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isobj0({})
+ * // => true
+ * isobj0({ a: 123 })
+ * // => false
  */
 function isobj0(v) {
 

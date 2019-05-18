@@ -14,7 +14,8 @@ import isearr from './isearr.mjs'
  * @param {String} mode 輸入模式，可選'anyone'與'all'，預設為'anyone'
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * binstr('1.25abc', 'ab')
+ * // => true
  */
 function binstr(s, keys, mode = 'anyone') {
 
@@ -22,7 +23,7 @@ function binstr(s, keys, mode = 'anyone') {
     if (!isestr(s)) {
         return false
     }
-    
+
     //check mode
     if (mode !== 'anyone' && mode !== 'all') {
         return false

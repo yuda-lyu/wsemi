@@ -6,7 +6,17 @@
  * @memberOf wsemi
  * @returns {Object} 回傳Promise物件
  * @example
- *
+ * let fn = function() {
+ *   let df = genPm()
+ *   setTimeout(function() {
+ *     df.resolve()
+ *   }, 1)
+ *   return df
+ * }
+ * fn()
+ *   .then(function(){
+ *     //add code
+ *   })
  */
 function genPm() {
 

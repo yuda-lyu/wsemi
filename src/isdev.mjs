@@ -8,7 +8,7 @@ import binstr from './binstr.mjs'
  * @memberOf wsemi
  * @returns {Boolean} 回傳是否為開發階段
  * @example
- *
+ * need test in browser
  */
 function isDev() {
 

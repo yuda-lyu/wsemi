@@ -14,14 +14,14 @@ describe('replacePlus', function() {
         assert.strict.deepEqual(r, 'xyz結尾')
     })
 
+    it("should return '1.25mnxyz結尾' when input '1.25mn1.25abc中文結尾', '1', '文', 'mn', 'xyz'", function() {
+        let r = replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz')
+        assert.strict.deepEqual(r, '1.25mnxyz結尾')
+    })
+
     it("should return '1.25abxyz結尾' when input '1.25abc中文結尾', 'c', '文', 'mn', 'xyz'", function() {
         let r = replacePlus('1.25abc中文結尾', 'c', '文', 'mn', 'xyz')
         assert.strict.deepEqual(r, '1.25abxyz結尾')
-    })
-
-    it("should return '1.25mnxyz結尾' when input '1.25mn1.25abc中文結尾', '1', '文', 'mn', 'xyz'", function() {
-        let r = replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'mn', 'xyz')
-        assert.strict.deepEqual(r, '1.25mnxyz結尾')
     })
 
     it("should return '1.25mn1.25ab結尾' when input '1.25mn1.25abc中文結尾', 'c', '文', null, ''", function() {

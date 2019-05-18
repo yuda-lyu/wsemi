@@ -13,7 +13,8 @@ import isearr from './isearr.mjs'
  * @param {Array} mat 輸入資料陣列
  * @returns {Array} 回傳物件陣列
  * @example
- *
+ * keysmat2ltdt(['a', 'b'], [[12, 34.56], ['123', 'xyz']])
+ * // => [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]
  */
 function keysmat2ltdt(keys, mat) {
 
@@ -29,17 +30,17 @@ function keysmat2ltdt(keys, mat) {
     }
 
     let ltdt = map(mat, function(r) {
-    
+
         //o
         let o = zipObject(keys, r)
-        
+
         //clear undefined
-        each(o, function(v,  k){
-            if (v===undefined){
+        each(o, function(v, k) {
+            if (v === undefined) {
                 o[k] = ''
             }
         })
-        
+
         return o
     })
 

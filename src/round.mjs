@@ -1,6 +1,5 @@
 import loround from 'lodash/round'
 import isnum from './isnum.mjs'
-import isp0int from './isp0int.mjs'
 import cdbl from './cdbl.mjs'
 
 
@@ -13,7 +12,12 @@ import cdbl from './cdbl.mjs'
  * @param {Number|String} v 輸入數字或字串
  * @returns {Integer} 回傳四捨五入的整數
  * @example
- *
+ * round(1.5)
+ * // => 2
+ * round('1.5')
+ * // => 2
+ * round('125abc')
+ * // => ''
  */
 function round(v) {
 

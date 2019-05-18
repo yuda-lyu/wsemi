@@ -39,7 +39,10 @@ function parseTime(t, unit) {
  * @param {String} [unit='days'] 輸入時間單位字串，預設為'days'
  * @returns {Object} 回傳時間物件，若非法時間則回傳null
  * @example
- *
+ * getTimeObject('2019/01/01', 'days')
+ * // => dayjs('2019/01/01', 'YYYY/MM/DD') //dayjs <-> moment
+ * getTimeObject('2019/01/01 12:34:56', 'seconds')
+ * // => dayjs('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss') //dayjs <-> moment
  */
 function getTimeObject(t, unit = 'days') {
     //依照unit取得時間物件

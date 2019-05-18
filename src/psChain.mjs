@@ -5,7 +5,10 @@
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise
  * @example
- *
+ * psChain()
+ *   .then(function() {
+ *     //code here
+ *   })
  */
 function psChain() {
     return Promise.resolve()

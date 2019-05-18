@@ -10,7 +10,10 @@ import isundefined from './isundefined.mjs'
  * @param {Boolean} [bFormat=false] 輸入是否格式化布林值，預設為false
  * @returns {String} 回傳json格式字串
  * @example
- *
+ * o2j([1, '3', 'abc'])
+ * // => '[1,"3","abc"]'
+ * o2j({ a: 12.34, b: 'abc' })
+ * // => '{"a":12.34,"b":"abc"}'
  */
 function o2j(v, bFormat = false) {
 

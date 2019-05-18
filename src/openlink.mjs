@@ -8,7 +8,7 @@ import isestr from './isestr.mjs'
  * @memberOf wsemi
  * @param {String} url
  * @example
- *
+ * need test in browser
  */
 function openLink(url) {
 

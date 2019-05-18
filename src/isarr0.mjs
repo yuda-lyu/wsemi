@@ -9,7 +9,10 @@ import isarr from './isarr.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isarr([])
+ * // => true
+ * isarr([{}])
+ * // => false
  */
 function isarr0(v) {
 

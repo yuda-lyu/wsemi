@@ -9,7 +9,7 @@ import tippy from 'tippy.js'
  * @param {*} ele DOM元素物件
  * @param {*} ct 提示html訊息字串
  * @example
- *
+ * need test in browser
  */
 function onTooltip(ele, ct) {
 

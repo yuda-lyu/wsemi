@@ -9,7 +9,10 @@ import isstr from './isstr.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isstr0('')
+ * // => true
+ * isstr0('0')
+ * // => false
  */
 function isstr0(v) {
 

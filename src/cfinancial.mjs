@@ -13,7 +13,8 @@ import dig from './dig.mjs'
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳金融格式的字串
  * @example
- *
+ * cfinancial(0.123456789, 3)
+ * // => '0.123'
  */
 function cfinancial(v, idig = 0) {
 

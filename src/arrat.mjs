@@ -17,7 +17,10 @@ import iser from './iser.mjs'
  * @param {Integer} [iend=undefined|] 輸入結束的欄位指標整數，若不使用則等同於istart
  * @returns {Array} 回傳提取的任意資料陣列
  * @example
- *
+ * arrat([1, 2, 3, '4', 5, 'abc'], 1)
+ * // => [2]
+ * arrat([1, 2, 3, '4', 5, 'abc'], 1, 4)
+ * // => [2, 3, '4', 5]
  */
 function arrat(vall, istart, iend = undefined) {
 
@@ -40,7 +43,7 @@ function arrat(vall, istart, iend = undefined) {
             return []
         }
 
-        let inds = range(istart, iend+1)
+        let inds = range(istart, iend + 1)
         t = at(vall, inds)
 
     }

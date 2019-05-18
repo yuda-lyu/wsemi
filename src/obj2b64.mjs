@@ -10,7 +10,10 @@ import str2b64 from './str2b64.mjs'
  * @param {*} data 輸入任意資料
  * @returns {String} 回傳base64字串
  * @example
- *
+ * obj2b64([1, '3', 'abc'])
+ * // => 'WzEsIjMiLCJhYmMiXQ=='
+ * obj2b64({ a: 12.34, b: 'abc' })
+ * // => 'eyJhIjoxMi4zNCwiYiI6ImFiYyJ9'
  */
 function obj2b64(data) {
 

@@ -17,7 +17,7 @@ import isernot from './isernot.mjs'
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列
  * @returns {String} 回傳input file的accept欄位所用字串
  * @example
- *
+ * need test in browser
  */
 function domGetFileAccept(kind = '*') {
 

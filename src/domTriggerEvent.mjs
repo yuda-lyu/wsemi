@@ -47,7 +47,7 @@
  * @param {Element} ele 輸入Element元素
  * @param {String} eventName 輸入事件名稱字串
  * @example
- *
+ * need test in browser
  */
 function domTriggerEvent(ele, eventName) {
 

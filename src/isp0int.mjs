@@ -11,7 +11,14 @@ import cint from './cint.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isp0int(0)
+ * // => true
+ * isp0int(125)
+ * // => true
+ * isp0int(1.25)
+ * // => false
+ * isp0int('125')
+ * // => true
  */
 function isp0int(v) {
 

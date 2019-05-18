@@ -10,7 +10,8 @@ import istime from './istime.mjs'
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳時時間字串
  * @example
- *
+ * time2hour('2019/01/01 12:34:56')
+ * // => '2019/01/01 12'
  */
 function time2hour(t) {
 

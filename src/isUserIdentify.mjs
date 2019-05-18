@@ -10,7 +10,10 @@ import isestr from './isestr.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  * @example
- *
+ * isUserIdentify('A122471399')
+ *   .then(function(){
+ *     //code here
+ *   })
  */
 function isUserIdentify(v) {
 

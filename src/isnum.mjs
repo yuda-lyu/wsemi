@@ -10,7 +10,12 @@ import isnbr from './isnbr.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isnum(0)
+ * // => true
+ * isnum(1.25)
+ * // => true
+ * isnum('-125')
+ * // => true
  */
 function isnum(v) {
 

@@ -17,7 +17,10 @@ import cdbl from './cdbl.mjs'
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳取指定小數位的字串
  * @example
- *
+ * dig(0.123456789, 3)
+ * // => '0.123'
+ * dig(0.123456789, 4)
+ * // => '0.1235'
  */
 function dig(v, idig = 0) {
 

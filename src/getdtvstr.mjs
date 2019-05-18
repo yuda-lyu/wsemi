@@ -11,7 +11,8 @@ import cstr from './cstr.mjs'
  * @param {String} key 輸入要找的key值字串
  * @returns {String} 回傳強制轉為字串之資料
  * @example
- *
+ * getdtvstr({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
+ * // => '123'
  */
 function getdtvstr(dt, key) {
 

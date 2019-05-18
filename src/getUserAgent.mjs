@@ -9,7 +9,7 @@ import getdtvstr from './getdtvstr.mjs'
  * @memberOf wsemi
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  * @example
- *
+ * need test in browser
  */
 function getUserAgent() {
 

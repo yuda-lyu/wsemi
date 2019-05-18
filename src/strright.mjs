@@ -11,7 +11,8 @@ import ispint from './ispint.mjs'
  * @param {Integer} n 輸入取右邊n個字元
  * @returns {String} 回傳處理後字串
  * @example
- *
+ * strright('test中文', 2)
+ * // => '中文'
  */
 function strright(c, n) {
 
@@ -23,11 +24,11 @@ function strright(c, n) {
         return ''
     }
 
-    let i =c.length - n
-    if (i<0){
+    let i = c.length - n
+    if (i < 0) {
         i = 0
     }
-    
+
     return c.substr(i, n)
 }
 

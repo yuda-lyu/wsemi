@@ -11,7 +11,8 @@ import isestr from './isestr.mjs'
  * @param {String} key 輸入要查找的key字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * haskey({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
+ * // => true
  */
 function haskey(obj, key) {
 

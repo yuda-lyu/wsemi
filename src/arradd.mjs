@@ -18,7 +18,8 @@ import cdbl from './cdbl.mjs'
  * @param {Array} [v5=undefined] 輸入第5個陣列，預設不使用
  * @returns {Array} 回傳各元素相加後陣列
  * @example
- *
+ * arradd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1])
+ * // => [1.1, 2.1, 3.1, 4.1]
  */
 function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
 

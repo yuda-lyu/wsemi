@@ -10,7 +10,8 @@ import isstr from './isstr.mjs'
  * @param {String} b64 輸入base64字串
  * @returns {Array} 回傳Uint8Array
  * @example
- *
+ * b642u8arr('AQItAA==')
+ * // => new Uint8Array([1, 2.3, '45', 'abc'])
  */
 function b642u8arr(b64) {
 

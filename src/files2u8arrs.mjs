@@ -10,7 +10,7 @@ import file2u8arr from './file2u8arr.mjs'
  * @param {Array} files 輸入檔案物件陣列
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列
  * @example
- *
+ * need test in browser
  */
 function files2u8arrs(files) {
 

@@ -10,15 +10,16 @@ import o2j from './o2j.mjs'
  * @param {*} o 輸入任意資料
  * @returns {*} 回傳任意資料
  * @example
- *
+ * oo([1, '3', 'abc'])
+ * // => [1, '3', 'abc']
  */
 function oo(o) {
 
     //check
-    if(o===undefined){
+    if (o === undefined) {
         return undefined
     }
-    
+
     return j2o(o2j(o))
 }
 

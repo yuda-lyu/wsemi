@@ -11,7 +11,12 @@ import cint from './cint.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isn0int(0)
+ * // => true
+ * isn0int(125)
+ * // => false
+ * isn0int(-125)
+ * // => true
  */
 function isn0int(v) {
 

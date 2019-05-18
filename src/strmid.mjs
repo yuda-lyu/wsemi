@@ -13,7 +13,10 @@ import ispint from './ispint.mjs'
  * @param {Integer} n 輸入開始後n個字元，為正整數
  * @returns {String} 回傳處理後字串
  * @example
- *
+ * strmid('test中文', 2, 1)
+ * // => 's'
+ * strmid('test中文', 2, 3)
+ * // => 'st中'
  */
 function strmid(c, s, n) {
 

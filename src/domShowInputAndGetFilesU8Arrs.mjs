@@ -15,7 +15,7 @@ import files2u8arrs from './files2u8arrs.mjs'
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
  * @example
- *
+ * need test in browser
  */
 function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 500) {
 

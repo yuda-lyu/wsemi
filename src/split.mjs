@@ -10,7 +10,8 @@ import isestr from './isestr.mjs'
  * @param {String} t 輸入用來切割的符號字串
  * @returns {Array} 回傳切割後的字串陣列
  * @example
- *
+ * split('1.25 abc  中文', ' ')
+ * // => ['1.25', 'abc', '', '中文']
  */
 function split(c, t) {
 

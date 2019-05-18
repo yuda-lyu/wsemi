@@ -12,7 +12,8 @@ import cdbl from './cdbl.mjs'
  * @param {Number|String} v 輸入數字或字串
  * @returns {Integer} 回傳四捨五入後整數
  * @example
- *
+ * cint('1.5')
+ * // => 2
  */
 function cint(v) {
 

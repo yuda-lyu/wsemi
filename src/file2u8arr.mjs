@@ -9,7 +9,7 @@ import genPm from './genPm.mjs'
  * @param {Object} file 輸入file物件
  * @returns {Promise} 回傳Promise，resolve回傳檔案的Uint8Array資料陣列
  * @example
- *
+ * need test in browser
  */
 function file2u8arr(file) {
 

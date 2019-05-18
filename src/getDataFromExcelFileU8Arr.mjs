@@ -158,7 +158,7 @@ function to_csv(workbook) {
  * @param {Boolean} [useHead=false] 輸入數據是否讀入首行head，需配合fmt='array'，預設為false
  * @returns {Array} 回傳數據陣列
  * @example
- *
+ * need test in browser
  */
 function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
 

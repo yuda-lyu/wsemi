@@ -14,7 +14,8 @@ import dig from './dig.mjs'
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
  * @returns {String} 回傳取指定小數位的字串
  * @example
- *
+ * digExp(0.000000123456789, 2)
+ * // => '1.23e-7'
  */
 function digExp(v, idig = 0) {
 

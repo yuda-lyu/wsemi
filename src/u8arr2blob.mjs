@@ -10,7 +10,7 @@ import isu8arr from './isu8arr.mjs'
  * @param {Unit8Array} u8a 輸入Unit8Array資料
  * @returns {Blob} 回傳Blob資料
  * @example
- *
+ * need test in browser
  */
 function u8arr2blob(u8a) {
 

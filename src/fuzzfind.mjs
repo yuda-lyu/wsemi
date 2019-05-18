@@ -22,7 +22,12 @@ import sep from './sep.mjs'
  * @param {Boolean} [bscore=false] 是否回傳分數，true:回傳值為分數，false:回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
- *
+ * fuzzfind(['abc', 'def123', '中文測試'], 'ef')
+ * // => true
+ * fuzzfind(['abc', 'def123', '中文測試'], 'ef', true)
+ * // => 100
+ * fuzzfind(['abc', 'def123', '中文測試'], 'efgg', true)
+ * // => 50
  */
 function fuzzfind(ar, strkey, bscore = false) {
 

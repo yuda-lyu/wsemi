@@ -1,6 +1,5 @@
 import ot from 'dayjs'
 import istime from './istime.mjs'
-import isbol from './isbol.mjs'
 
 
 /**
@@ -11,7 +10,7 @@ import isbol from './isbol.mjs'
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳到期時間字串
  * @example
- *
+ * need test in browser
  */
 function time2expire(t) {
 

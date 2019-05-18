@@ -6,7 +6,7 @@
  * @param {String} query 輸入查詢字串
  * @returns {Array} 回傳DOM元素Element陣列
  * @example
- *
+ * need test in browser
  */
 function domFinds(query) {
     let r = document.querySelectorAll(query)

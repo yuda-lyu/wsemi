@@ -12,7 +12,8 @@ import isearr from './isearr.mjs'
  * @param {Array} vfind 輸入要尋找的任意資料陣列
  * @returns {Array} 回傳所找到各元素第1位置之陣列
  * @example
- *
+ * arrfind([1, 2, 3, '4', 5, 'abc'], ['4', 2])
+ * // => [3, 1]
  */
 function arrfind(vall, vfind) {
 

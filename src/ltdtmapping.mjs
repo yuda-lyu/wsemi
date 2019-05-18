@@ -13,7 +13,8 @@ import dtmapping from './dtmapping.mjs'
  * @param {Array} keys 輸入keys值字串陣列
  * @returns {Array} 回傳處理後物件陣列
  * @example
- *
+ * ltdtmapping([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz', c: 'mn' }], ['a', 'b', 'c'])
+ * // => [{ a: 12, b: 34.56, c: '' }, { a: '123', b: 'xyz', c: 'mn' }]
  */
 function ltdtmapping(ltdt, keys) {
     //針對物件陣列ltdt呼叫dtmapping處理

@@ -14,7 +14,10 @@ import getdtv from './getdtv.mjs'
  * @param {Array} keys 輸入keys值字串陣列
  * @returns {Object} 回傳處理後物件
  * @example
- *
+ * dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b'])
+ * // => { a: 'a123', b: 234 }
+ * dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b', 'x'])
+ * // => { a: 'a123', b: 234 }
  */
 function dtpick(dt, keys) {
 

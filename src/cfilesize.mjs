@@ -13,7 +13,8 @@ import dig from './dig.mjs'
  * @param {Number|String} kb 輸入單位需為kb的檔案大小，可為數字或字串
  * @returns {String} 回傳自動轉換單位後的字串
  * @example
- *
+ * cfilesize(2048)
+ * // => '2.0 mb'
  */
 function cfilesize(kb) {
 

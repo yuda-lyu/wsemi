@@ -70,7 +70,7 @@ function getWB(csn, data) {
  * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'
  * @param {Array} data 輸入內容陣列
  * @example
- *
+ * need test in browser
  */
 function downloadExcelFileFromData(cfn, csn = 'data', data) {
 

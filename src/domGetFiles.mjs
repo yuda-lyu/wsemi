@@ -11,7 +11,7 @@ import ispint from './ispint.mjs'
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Array} 回傳檔案陣列
  * @example
- *
+ * need test in browser
  */
 function domGetFiles(ele, sizelimit = 500) {
 
@@ -24,9 +24,6 @@ function domGetFiles(ele, sizelimit = 500) {
     let err = []
     let files = []
     each(ele.files, function(file) {
-
-        //name
-        let name = file.name
 
         //size
         let size = file.size

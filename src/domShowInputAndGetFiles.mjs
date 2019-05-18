@@ -18,7 +18,7 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
  * @returns {Promise} 回傳Promise，resolve為各檔案陣列，無reject
  * @example
- *
+ * need test in browser
  */
 function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
 

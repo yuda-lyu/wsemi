@@ -9,7 +9,10 @@ import isestr from './isestr.mjs'
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含大寫英文字元
  * @example
- *
+ * isStrHasCapital('abc125')
+ * // => false
+ * isStrHasCapital('abC125')
+ * // => true
  */
 function isStrHasCapital(str) {
 

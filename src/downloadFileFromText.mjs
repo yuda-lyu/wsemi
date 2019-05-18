@@ -11,7 +11,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * @param {String} cfn 輸入檔名字串
  * @param {String} ccont 輸入內容字串
  * @example
- *
+ * need test in browser
  */
 function downloadFileFromText(cfn, ccont) {
 

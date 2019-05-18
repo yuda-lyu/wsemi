@@ -9,7 +9,8 @@ import isu8arr from './isu8arr.mjs'
  * @param {Array} u8a 輸入Uint8Array
  * @returns {ArrayBuffer} 回傳ArrayBuffer
  * @example
- *
+ * u8arr2ab(new Uint8Array([66, 97, 115]))
+ * // (new Uint8Array([66, 97, 115])).buffer
  */
 function u8arr2ab(u8a) {
 

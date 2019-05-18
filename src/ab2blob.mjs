@@ -9,7 +9,7 @@ import ab2u8arr from './ab2u8arr.mjs'
  * @param {ArrayBuffer} ab 輸入ArrayBuffer資料
  * @returns {Blob} 回傳Blob資料
  * @example
- *
+ * need test in browser.
  */
 function ab2blob(ab) {
     let u8a = ab2u8arr(ab)

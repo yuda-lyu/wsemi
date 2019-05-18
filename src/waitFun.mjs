@@ -13,7 +13,15 @@ import ispint from './ispint.mjs'
  * @param {Integer} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
  * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
- *
+ * let i = 0
+ * let fn = function() {
+ *   i++
+ *   return i >= 2
+ * }
+ * waitFun(fn)
+ *   .then(function() {
+ *     //code here
+ *   })
  */
 function waitFun(f, maxnum = 180) {
 

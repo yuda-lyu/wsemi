@@ -6,7 +6,8 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * isu8arr(new Uint8Array(1))
+ * // => true
  */
 function isu8arr(v) {
 

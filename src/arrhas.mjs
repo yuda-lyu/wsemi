@@ -11,7 +11,14 @@ import isearr from './isearr.mjs'
  * @param {Array|String} vhas 輸入查找字串陣列或字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * arrhas(['abc', 'bcd'], 'abc')
+ * // => true
+ * arrhas(['xyz', 'bcd'], 'abc')
+ * // => false
+ * arrhas(['abc', 'bcd'], ['abc', 'cde'])
+ * // => true
+ * arrhas(['abc', 'bcd'], ['xyz', 'cde'])
+ * // => false
  */
 function arrhas(vtar, vhas) {
 

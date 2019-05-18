@@ -14,7 +14,10 @@ import isstr from './isstr.mjs'
  * @param {String} r 輸入要取代的字串
  * @returns {String} 回傳取代後字串
  * @example
- *
+ * replacePlus('1.25mn1.25abc中文結尾', '1', '文', null, 'xyz')
+ * // => 'xyz結尾'
+ * replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz')
+ * // => '1.25mnxyz結尾'
  */
 function replacePlus(c, pre, aft, not = null, r) {
 

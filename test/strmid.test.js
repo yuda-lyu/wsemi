@@ -10,6 +10,12 @@ describe('strmid', function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    it(`sould return 's' when input 'test中文', 2, 3`, function() {
+        let r = strmid('test中文', 2, 3)
+        let rr = 'st中'
+        assert.strict.deepEqual(r, rr)
+    })
+
     it(`sould return 'st中文' when input 'test中文', 2, 10`, function() {
         let r = strmid('test中文', 2, 10)
         let rr = 'st中文'

@@ -390,7 +390,7 @@ function format(data, options) {
  * @param {Object} jsonObj 輸入Json物件
  * @param {Element} rootElem 輸入初始化元素
  * @example
- *
+ * need test in browser
  */
 function viewJsonTable(jsonObj, rootElem) {
     rootElem.innerHTML = ''

@@ -9,7 +9,7 @@ import isestr from './isestr.mjs'
  * @param {String} id 輸入id字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
- *
+ * need test in browser
  */
 function isEleExist(id) {
 

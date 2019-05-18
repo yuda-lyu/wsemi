@@ -7,7 +7,7 @@
  * @param {Element} [ele=undefined] 輸入為DOM元素，預設為不使用
  * @returns {Boolean} 回傳是否為窄版裝置
  * @example
- *
+ * need test in browser
  */
 function isNarrow(ele) {
 
