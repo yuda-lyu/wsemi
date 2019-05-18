@@ -4,7 +4,31 @@ A support package for web developer.
 [![Build Status](https://travis-ci.org/yuda-lyu/wsemi.svg?branch=master)](https://travis-ci.org/yuda-lyu/wsemi)
 
 ## Documentation
-To view documentation or get support , visit [docs](https://yuda-lyu.github.io/wsemi/wsemi.html).
+To view documentation or get support, visit [docs](https://yuda-lyu.github.io/wsemi/wsemi.html).
+
+## Example
+To view some examples for more understanding, visit [examples](https://github.com/yuda-lyu/wsemi/tree/master/docs/examples).
+> **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html)
+
+> **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html)
+
+> **time[time2expire, time2past]:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html)
+
+> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html)
+
+> **fuzzball:** [ex-fuzzball.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball.html)
+
+> **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html)
+
+> **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html)
+
+> **xss:** [ex-xss.html](https://yuda-lyu.github.io/wsemi/examples/ex-xss.html)
+
+> **openlink:** [ex-openlink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openlink.html)
+
+> **tippyjs[with popper.js]:** [ex-tippyjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-tippyjs.html)
+
+> **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html)
 
 ## Installation
 ### Using npm(ES6 module):

@@ -318,6 +318,8 @@ function render(tree, rootElem) {
  * @memberOf wsemi
  * @param {Object} jsonObj 輸入Json物件
  * @param {Element} rootElem 輸入初始化元素
+ * @example
+ * need test in browser
  */
 function viewJsonTree(jsonObj, rootElem) {
     rootElem.innerHTML = ''
