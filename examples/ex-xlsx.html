@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for xlsx</title>
+    
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/lodash/lodash.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
+
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <button onclick="testXLSX()">read file(*.xlsx) from xlsx</button>
+
+    <script>
+            
+        function testXLSX(){
+
+            let kind = 'xlsx'
+            //kind = 'common'
+            wsemi.domShowInputAndGetFilesU8Arrs(kind)
+                .then(function(d) {
+
+                    //get first file
+                    let file = d[0]
+
+                    //u8a
+                    let u8a = file.u8a
+                    console.log('u8a', typeof u8a, _.size(u8a))
+                    
+                    //download u8a
+                    wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
+
+                    //dcsv
+                    let dcsv = wsemi.getDataFromExcelFileU8Arr(u8a, 'csv')
+                    dcsv = dcsv.data
+                    console.log('dcsv', typeof dcsv, _.size(dcsv))
+                    
+                    //download csv
+                    wsemi.downloadFileFromText('temp.csv', dcsv)
+
+                    //dltdt
+                    let dltdt = wsemi.getDataFromExcelFileU8Arr(u8a, 'ltdt')
+                    console.log('dltdt', dltdt)
+                    
+                    //download json
+                    wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))
+
+                    //darray
+                    let darray = wsemi.getDataFromExcelFileU8Arr(u8a, 'array')
+                    darray = _.concat([darray.keys], darray.data)
+                    console.log('darray', darray)
+                    
+                    //download array
+                    wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray)
+
+                })
+                .catch(function(msg){
+                    console.log(msg)
+                })
+
+        }
+
+    </script>
+  
+</body>
+</html>

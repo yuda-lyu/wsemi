@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for fuzzball</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <script>
+
+        console.log("fuzzfind(['abc','def123'],'ef')",  wsemi.fuzzfind(['abc','def123'],'ef')  )
+
+        console.log("fuzzfind(['abc','def123'],'xyz')",  wsemi.fuzzfind(['abc','def123'],'xyz')  )
+
+        console.log("fuzzfind(['abc','def123'],'ef',true)",  wsemi.fuzzfind(['abc','def123'],'ef',true)  )
+
+        console.log("fuzzfind(['abc','def123'],'efgg',true)",  wsemi.fuzzfind(['abc','def123'],'efgg',true)  )
+
+        console.log("fuzzfind(['abc','def123'],'xyz',true)",  wsemi.fuzzfind(['abc','def123'],'xyz',true)  )
+
+    </script>
+
+</body>
+</html>
