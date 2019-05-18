@@ -7,7 +7,7 @@ A support package for web developer.
 To view documentation or get support, visit [docs](https://yuda-lyu.github.io/wsemi/wsemi.html).
 
 ## Example
-To view some examples for more understanding, visit [examples](https://github.com/yuda-lyu/wsemi/tree/master/docs/examples).
+To view some examples for more understanding, visit examples:
 > **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html)
 
 > **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html)
