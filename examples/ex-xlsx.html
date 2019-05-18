@@ -11,23 +11,23 @@
     <script src="../dist/wsemi.umd.js"></script>
 
     <script>
-        // console.log = function () {
-        //     //覆蓋log
-        //     function htmlEncode(str) {
-        //         let ele=document.createElement('span')
-        //         ele.appendChild( document.createTextNode(str))
-        //         return ele.innerHTML
-        //     }
-        //     let v=Array.prototype.slice.call(arguments).map(function(v){return wsemi.o2j(v)}).join(', ')
-        //     let s=''
-        //     s+='<div style="padding:5px; font-size:10pt; font-family:Microsoft JhengHei, Helvetica;">'
-        //     s+='<span style="color:#f26;">log: </span>'
-        //     s+='<code>'+htmlEncode(v)+'</code>'
-        //     s+='</div>'
-        //     document
-        //         .querySelector('body')
-        //         .insertAdjacentHTML('beforeend', s)
-        // }
+        console.log = function () {
+            //覆蓋log
+            function htmlEncode(str) {
+                let ele=document.createElement('span')
+                ele.appendChild( document.createTextNode(str))
+                return ele.innerHTML
+            }
+            let v=Array.prototype.slice.call(arguments).map(function(v){return wsemi.o2j(v)}).join(', ')
+            let s=''
+            s+='<div style="padding:5px; font-size:10pt; font-family:Microsoft JhengHei, Helvetica;">'
+            s+='<span style="color:#f26;">log: </span>'
+            s+='<code>'+htmlEncode(v)+'</code>'
+            s+='</div>'
+            document
+                .querySelector('body')
+                .insertAdjacentHTML('beforeend', s)
+        }
     </script>
     
 </head>
@@ -49,15 +49,15 @@
 
                     //u8a
                     let u8a = file.u8a
-                    console.log('u8a', typeof u8a, u8a.length)
-                    
+                    console.log('u8a', Object.prototype.toString.call(u8a), u8a.length)
+
                     //download u8a
                     wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
 
                     //dcsv
                     let dcsv = wsemi.getDataFromExcelFileU8Arr(u8a, 'csv')
                     dcsv = dcsv[0]
-                    console.log('dcsv', dcsv.data)
+                    console.log('dcsv', dcsv.sheetname, dcsv.data)
 
                     //download csv
                     wsemi.downloadFileFromText('temp.csv', dcsv.data)
@@ -65,7 +65,7 @@
                     //dltdt
                     let dltdt = wsemi.getDataFromExcelFileU8Arr(u8a, 'ltdt')
                     dltdt = dltdt[0]
-                    console.log('dltdt', dltdt.data)
+                    console.log('dltdt', dltdt.sheetname, dltdt.data)
 
                     //download json
                     wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))

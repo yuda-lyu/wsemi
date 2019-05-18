@@ -3,6 +3,7 @@ import resolve from 'rollup-plugin-node-resolve'
 import postcss from 'rollup-plugin-postcss'
 import babel from 'rollup-plugin-babel'
 import minify from 'rollup-plugin-babel-minify'
+import banner from 'rollup-plugin-banner'
 
 
 export default {
@@ -55,6 +56,7 @@ export default {
       extensions: ['.css']
     }),
     minify({ comments: false, }),
+    banner('wsemi v<%= pkg.version %>\n(c) 2018-2019 <%= pkg.author %>\nReleased under the MIT License.'),
   ]
 }
 
