@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A useful package for web-servant.",
   "main": ".eslintrc.js",
   "dependencies": {
