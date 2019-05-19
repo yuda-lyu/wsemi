@@ -14,6 +14,7 @@ import isint from './isint.mjs'
  * @example
  * addMonth('2019/01', 2)
  * // => '2019/03'
+ *
  * addMonth('2018/12', -1)
  * // => '2018/11'
  */

@@ -11,6 +11,7 @@ import isestr from './isestr.mjs'
  * @example
  * isStrHasLowerCase('ABC125')
  * // => false
+ *
  * isStrHasLowerCase('abC125')
  * // => true
  */

@@ -12,8 +12,10 @@ import isnbr from './isnbr.mjs'
  * @example
  * isnum(0)
  * // => true
+ *
  * isnum(1.25)
  * // => true
+ *
  * isnum('-125')
  * // => true
  */

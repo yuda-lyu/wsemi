@@ -15,6 +15,7 @@ import ispint from './ispint.mjs'
  * @example
  * repObj({ a: 12.45, b: 'opqr' }, 2)
  * // => [{ a: 12.45, b: 'opqr' }, { a: 12.45, b: 'opqr' }]
+ *
  * repObj({ a: 12.45, b: 'opqr' }, 0)
  * // => []
  */

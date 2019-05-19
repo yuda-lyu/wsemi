@@ -13,16 +13,22 @@ import cdbl from './cdbl.mjs'
  * @example
  * isn0num(0)
  * // => true
+ *
  * isn0num(-125)
  * // => true
+ *
  * isn0num(-1.25)
  * // => true
+ *
  * isn0num(125)
  * // => false
+ *
  * isn0num('-125')
  * // => true
+ *
  * isn0num('-1.25')
  * // => true
+ *
  * isn0num('125')
  * // => false
  */

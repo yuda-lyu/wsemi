@@ -12,8 +12,10 @@ import isestr from './isestr.mjs'
  * @example
  * istime('2019/01/01 12:34:56:789')
  * // => false
+ *
  * istime('2019/01/01 12:34:56')
  * // => true
+ *
  * istime('2019/01/01')
  * // => false
  */

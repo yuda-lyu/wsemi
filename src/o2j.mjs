@@ -12,6 +12,7 @@ import isundefined from './isundefined.mjs'
  * @example
  * o2j([1, '3', 'abc'])
  * // => '[1,"3","abc"]'
+ *
  * o2j({ a: 12.34, b: 'abc' })
  * // => '{"a":12.34,"b":"abc"}'
  */

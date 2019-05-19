@@ -12,6 +12,7 @@ import isestr from './isestr.mjs'
  * @example
  * ismonth('2019/01/01')
  * // => false
+ *
  * ismonth('2019/01')
  * // => true
  */

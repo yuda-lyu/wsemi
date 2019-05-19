@@ -11,6 +11,7 @@ import isobj from './isobj.mjs'
  * @example
  * iseobj({})
  * // => false
+ *
  * iseobj({ a: 123 })
  * // => true
  */

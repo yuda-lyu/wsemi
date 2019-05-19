@@ -8,6 +8,7 @@
  * @example
  * isfun('1.25')
  * // => false
+ *
  * isfun(function() {})
  * // => true
  */

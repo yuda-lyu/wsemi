@@ -16,6 +16,7 @@ import isstr from './isstr.mjs'
  * @example
  * replacePlus('1.25mn1.25abc中文結尾', '1', '文', null, 'xyz')
  * // => 'xyz結尾'
+ *
  * replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz')
  * // => '1.25mnxyz結尾'
  */

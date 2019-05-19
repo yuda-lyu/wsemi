@@ -15,6 +15,12 @@ import dig from './dig.mjs'
  * @example
  * cfinancial(0.123456789, 3)
  * // => '0.123'
+ *
+ * cfinancial(1234567.89)
+ * // => '1,234,568'
+ *
+ * cfinancial(1234567.89, 1)
+ * // => '1,234,567.9'
  */
 function cfinancial(v, idig = 0) {
 

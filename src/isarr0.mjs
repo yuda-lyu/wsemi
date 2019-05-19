@@ -11,6 +11,7 @@ import isarr from './isarr.mjs'
  * @example
  * isarr([])
  * // => true
+ *
  * isarr([{}])
  * // => false
  */

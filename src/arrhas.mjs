@@ -13,10 +13,13 @@ import isearr from './isearr.mjs'
  * @example
  * arrhas(['abc', 'bcd'], 'abc')
  * // => true
+ *
  * arrhas(['xyz', 'bcd'], 'abc')
  * // => false
+ *
  * arrhas(['abc', 'bcd'], ['abc', 'cde'])
  * // => true
+ *
  * arrhas(['abc', 'bcd'], ['xyz', 'cde'])
  * // => false
  */

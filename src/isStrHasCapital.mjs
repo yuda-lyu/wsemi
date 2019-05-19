@@ -11,6 +11,7 @@ import isestr from './isestr.mjs'
  * @example
  * isStrHasCapital('abc125')
  * // => false
+ *
  * isStrHasCapital('abC125')
  * // => true
  */

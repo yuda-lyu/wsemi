@@ -11,6 +11,7 @@ import isestr from './isestr.mjs'
  * @example
  * isStrHasNumber('abc')
  * // => false
+ *
  * isStrHasNumber('abc125')
  * // => true
  */

@@ -8,6 +8,7 @@
  * @example
  * isnbr(1.25)
  * // => true
+ *
  * isnbr('1.25')
  * // => false
  */

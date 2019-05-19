@@ -24,8 +24,10 @@ import sep from './sep.mjs'
  * @example
  * fuzzfind(['abc', 'def123', '中文測試'], 'ef')
  * // => true
+ *
  * fuzzfind(['abc', 'def123', '中文測試'], 'ef', true)
  * // => 100
+ *
  * fuzzfind(['abc', 'def123', '中文測試'], 'efgg', true)
  * // => 50
  */

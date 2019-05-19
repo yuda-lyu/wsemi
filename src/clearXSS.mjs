@@ -18,6 +18,7 @@ import isstr from './isstr.mjs'
  * @example
  * clearXSS(`><script>alert('XSS')</script>`)
  * // => `&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;`
+ *
  * clearXSS(`<img src="javascript:alert('XSS')">`)
  * // => `<img src>`
  */

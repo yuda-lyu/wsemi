@@ -11,18 +11,25 @@ import iser from './iser.mjs'
  * @example
  * isernot('12a5')
  * // => true
+ *
  * isernot('')
  * // => false
+ *
  * isernot([])
  * // => false
+ *
  * isernot([{}])
  * // => true
+ *
  * isernot([''])
  * // => true
+ *
  * isernot({})
  * // => false
+ *
  * isernot(null)
  * // => false
+ *
  * isernot(undefined)
  * // => false
  */

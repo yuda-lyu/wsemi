@@ -8,6 +8,7 @@
  * @example
  * isarr([])
  * // => true
+ *
  * isarr([{}])
  * // => true
  */

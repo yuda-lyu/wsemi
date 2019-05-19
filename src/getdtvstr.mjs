@@ -13,6 +13,12 @@ import cstr from './cstr.mjs'
  * @example
  * getdtvstr({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
  * // => '123'
+ *
+ * getdtvstr({ a: 123, b: 'xyz', c: '45op', d: null }, 'c')
+ * // => '45op'
+ *
+ * getdtvstr({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
+ * // => ''
  */
 function getdtvstr(dt, key) {
 

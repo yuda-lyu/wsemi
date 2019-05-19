@@ -10,6 +10,12 @@ describe('oo', function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    it(`should return [1, '3', 'abc', null] when input [1, '3', 'abc', function(){}]`, function() {
+        let r = oo([1, '3', 'abc', function(){}])
+        let rr = [1, '3', 'abc', null]
+        assert.strict.deepEqual(r, rr)
+    })
+
     it(`should return [1, '', null, null, [], {}, '3', 'abc'] when input [1, '', null, undefined, [], {}, '3', 'abc']`, function() {
         let r = oo([1, '', null, undefined, [], {}, '3', 'abc'])
         let rr = [1, '', null, null, [], {}, '3', 'abc']
@@ -18,6 +24,12 @@ describe('oo', function() {
 
     it(`should return { a: 12.34, b: 'abc' } when input { a: 12.34, b: 'abc' }`, function() {
         let r = oo({ a: 12.34, b: 'abc' })
+        let rr = { a: 12.34, b: 'abc' }
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return { a: 12.34, b: 'abc' } when input { a: 12.34, b: 'abc', c: function(){} }`, function() {
+        let r = oo({ a: 12.34, b: 'abc', c: function(){} })
         let rr = { a: 12.34, b: 'abc' }
         assert.strict.deepEqual(r, rr)
     })

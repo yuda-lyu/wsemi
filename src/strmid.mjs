@@ -15,6 +15,7 @@ import ispint from './ispint.mjs'
  * @example
  * strmid('test中文', 2, 1)
  * // => 's'
+ *
  * strmid('test中文', 2, 3)
  * // => 'st中'
  */

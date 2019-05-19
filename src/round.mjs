@@ -14,8 +14,10 @@ import cdbl from './cdbl.mjs'
  * @example
  * round(1.5)
  * // => 2
+ *
  * round('1.5')
  * // => 2
+ *
  * round('125abc')
  * // => ''
  */

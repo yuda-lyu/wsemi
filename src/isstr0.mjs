@@ -11,7 +11,11 @@ import isstr from './isstr.mjs'
  * @example
  * isstr0('')
  * // => true
+ *
  * isstr0('0')
+ * // => false
+ *
+ * isstr0('abc125')
  * // => false
  */
 function isstr0(v) {

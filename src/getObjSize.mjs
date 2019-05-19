@@ -8,6 +8,7 @@
  * @example
  * getObjSize('abc123')
  * // => 12
+ *
  * getObjSize({ a: 123, b: 'xyz', c: '45op', d: null })
  * // => 22
  */

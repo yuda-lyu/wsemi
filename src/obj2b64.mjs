@@ -12,6 +12,7 @@ import str2b64 from './str2b64.mjs'
  * @example
  * obj2b64([1, '3', 'abc'])
  * // => 'WzEsIjMiLCJhYmMiXQ=='
+ *
  * obj2b64({ a: 12.34, b: 'abc' })
  * // => 'eyJhIjoxMi4zNCwiYiI6ImFiYyJ9'
  */

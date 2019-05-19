@@ -8,6 +8,7 @@
  * @example
  * getTimeFromUnit('years')
  * // => 'YYYY'
+ *
  * getTimeFromUnit('seconds')
  * // => 'YYYY/MM/DD HH:mm:ss'
  */

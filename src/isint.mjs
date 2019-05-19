@@ -13,10 +13,13 @@ import cdbl from './cdbl.mjs'
  * @example
  * isint('1.25')
  * // => false
+ *
  * isint('125')
  * // => true
+ *
  * isint(1.25)
  * // => false
+ *
  * isint(125)
  * // => true
  */

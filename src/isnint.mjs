@@ -13,8 +13,10 @@ import cint from './cint.mjs'
  * @example
  * isnint(0)
  * // => false
+ *
  * isnint(125)
  * // => false
+ *
  * isnint(-125)
  * // => true
  */

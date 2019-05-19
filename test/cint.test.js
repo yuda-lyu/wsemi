@@ -29,6 +29,31 @@ describe('cint', function() {
         assert.strict.deepEqual(r, 2)
     })
 
+    it('should return 3 when input 2.5', function() {
+        let r = cint(2.5)
+        assert.strict.deepEqual(r, 3)
+    })
+
+    it('should return 0 when input -0.123456789', function() {
+        let r = cint(-0.123456789)
+        assert.strict.deepEqual(r, 0)
+    })
+
+    it('should return -1 when input -1.4', function() {
+        let r = cint(-1.4)
+        assert.strict.deepEqual(r, -1)
+    })
+
+    it('should return -1 when input -1.5', function() {
+        let r = cint(-1.5)
+        assert.strict.deepEqual(r, -1)
+    })
+
+    it('should return -2 when input -2.5', function() {
+        let r = cint(-2.5)
+        assert.strict.deepEqual(r, -2)
+    })
+
     it('should return 100 when input 100', function() {
         let r = cint(100)
         assert.strict.deepEqual(r, 100)
@@ -50,7 +75,7 @@ describe('cint', function() {
     })
 
     it("should return 0 when input '0.1'", function() {
-        let r = cint('0')
+        let r = cint('0.1')
         assert.strict.deepEqual(r, 0)
     })
 
@@ -67,6 +92,31 @@ describe('cint', function() {
     it("should return 2 when input '1.5'", function() {
         let r = cint('1.5')
         assert.strict.deepEqual(r, 2)
+    })
+
+    it("should return 3 when input '2.5'", function() {
+        let r = cint('2.5')
+        assert.strict.deepEqual(r, 3)
+    })
+
+    it("should return 0 when input '-0.123456789'", function() {
+        let r = cint('-0.123456789')
+        assert.strict.deepEqual(r, 0)
+    })
+
+    it("should return -1 when input '-1.4'", function() {
+        let r = cint('-1.4')
+        assert.strict.deepEqual(r, -1)
+    })
+
+    it("should return -1 when input '-1.5'", function() {
+        let r = cint('-1.5')
+        assert.strict.deepEqual(r, -1)
+    })
+
+    it("should return -2 when input '-2.5'", function() {
+        let r = cint('-2.5')
+        assert.strict.deepEqual(r, -2)
     })
 
     it("should return 100 when input '100'", function() {

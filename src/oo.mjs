@@ -12,6 +12,15 @@ import o2j from './o2j.mjs'
  * @example
  * oo([1, '3', 'abc'])
  * // => [1, '3', 'abc']
+ *
+ * oo([1, '3', 'abc', function(){}])
+ * // => [1, '3', 'abc', null]
+ *
+ * oo({ a: 12.34, b: 'abc' })
+ * // => { a: 12.34, b: 'abc' }
+ *
+ * oo({ a: 12.34, b: 'abc', c: function(){} })
+ * // => { a: 12.34, b: 'abc' }
  */
 function oo(o) {
 

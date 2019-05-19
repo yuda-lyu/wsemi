@@ -8,8 +8,10 @@
  * @example
  * isstr(0)
  * // => false
+ *
  * isstr('0')
  * // => true
+ *
  * isstr('')
  * // => true
  */

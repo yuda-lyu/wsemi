@@ -40,9 +40,10 @@ function parseTime(t, unit) {
  * @returns {Object} 回傳時間物件，若非法時間則回傳null
  * @example
  * getTimeObject('2019/01/01', 'days')
- * // => dayjs('2019/01/01', 'YYYY/MM/DD') //dayjs <-> moment
+ * // => dayjs('2019/01/01', 'YYYY/MM/DD') //use dayjs or moment
+ *
  * getTimeObject('2019/01/01 12:34:56', 'seconds')
- * // => dayjs('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss') //dayjs <-> moment
+ * // => dayjs('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss') //use dayjs or moment
  */
 function getTimeObject(t, unit = 'days') {
     //依照unit取得時間物件

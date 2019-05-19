@@ -15,10 +15,13 @@ import dig from './dig.mjs'
  * @example
  * cfilesize(0)
  * // => '0.0 kb'
+ *
  * cfilesize(100)
  * // => '100.0 kb'
+ *
  * cfilesize(2048)
  * // => '2.0 mb'
+ *
  * cfilesize(2000000)
  * // => '1.9 gb'
  */

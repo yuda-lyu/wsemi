@@ -12,6 +12,7 @@ import iser from './iser.mjs'
  * @example
  * isearr([{}])
  * // => false
+ *
  * isearr([{ a: 123 }])
  * // => true
  */

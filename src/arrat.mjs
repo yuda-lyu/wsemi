@@ -19,6 +19,7 @@ import iser from './iser.mjs'
  * @example
  * arrat([1, 2, 3, '4', 5, 'abc'], 1)
  * // => [2]
+ *
  * arrat([1, 2, 3, '4', 5, 'abc'], 1, 4)
  * // => [2, 3, '4', 5]
  */

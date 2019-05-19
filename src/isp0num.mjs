@@ -13,12 +13,16 @@ import cdbl from './cdbl.mjs'
  * @example
  * isp0num(0)
  * // => true
+ *
  * isp0num(125)
  * // => true
+ *
  * isp0num(1.25)
  * // => true
+ *
  * isp0num(-1.25)
  * // => false
+ *
  * isp0num('1.25')
  * // => true
  */

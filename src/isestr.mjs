@@ -11,8 +11,10 @@ import isstr from './isstr.mjs'
  * @example
  * isestr('1.25')
  * // => true
+ *
  * isestr(125)
  * // => false
+ *
  * isestr('')
  * // => false
  */

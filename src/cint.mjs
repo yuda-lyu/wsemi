@@ -14,6 +14,9 @@ import cdbl from './cdbl.mjs'
  * @example
  * cint('1.5')
  * // => 2
+ *
+ *  cint('-1.5')
+ * // => -1
  */
 function cint(v) {
 
@@ -25,6 +28,11 @@ function cint(v) {
     v = cdbl(v)
 
     let r = round(v)
+
+    //check -0
+    if (String(r) === '0') {
+        return 0
+    }
 
     return r
 }

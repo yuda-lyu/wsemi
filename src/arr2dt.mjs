@@ -17,6 +17,7 @@ import iser from './iser.mjs'
  * @example
  * arr2dt(['a', 'b'])
  * // => { 'a': '', 'b': '' }
+ *
  * arr2dt(['a', 'b'], [12.3, '456a'])
  * // => { 'a': 12.3, 'b': '456a' }
  */

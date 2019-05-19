@@ -14,6 +14,7 @@ import isearr from './isearr.mjs'
  * @example
  * arrpull([1, 2, '3', 4, '3', 'abc'], [2])
  * // => [1, '3', 4, '3', 'abc']
+ *
  * arrpull([1, 2, '3', 4, '3', 'abc'], [2, '3'])
  * // => [1, 4, 'abc']
  */

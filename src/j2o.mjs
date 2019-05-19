@@ -11,6 +11,7 @@ import isestr from './isestr.mjs'
  * @example
  * j2o('[1,"3","abc"]')
  * // => [1, '3', 'abc']
+ *
  * j2o('{"a":12.34,"b":"abc"}')
  * // => { a: 12.34, b: 'abc' }
  */

@@ -15,18 +15,25 @@ import isarr0 from './isarr0.mjs'
  * @example
  * iser('12a5')
  * // => false
+ *
  * iser('')
  * // => true
+ *
  * iser([])
  * // => true
+ *
  * iser([{}])
  * // => false
+ *
  * iser([''])
  * // => false
+ *
  * iser({})
  * // => true
+ *
  * iser(null)
  * // => true
+ *
  * iser(undefined)
  * // => true
  */

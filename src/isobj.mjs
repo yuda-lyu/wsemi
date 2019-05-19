@@ -8,6 +8,7 @@
  * @example
  * isobj({})
  * // => true
+ *
  * isobj({ a: 123 })
  * // => true
  */
