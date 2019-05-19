@@ -11,6 +11,11 @@
  */
 function isNarrow(ele) {
 
+    //check
+    if (!window) {
+        return false
+    }
+
     let rwdWidthWin = 1024
     let rwdWidthEle = 700
 

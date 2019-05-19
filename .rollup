@@ -3,12 +3,16 @@ import resolve from 'rollup-plugin-node-resolve'
 import postcss from 'rollup-plugin-postcss'
 import babel from 'rollup-plugin-babel'
 import minify from 'rollup-plugin-babel-minify'
-import banner from 'rollup-plugin-banner'
+import fs from 'fs'
+ 
+ 
+let pkg=JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
 
 export default {
   input: 'src/index.mjs',
   output: {
+    banner: '/*!\n * wsemi v' + pkg.version + '\n * (c) 2018-2019 ' + pkg.author + '\n * Released under the MIT License.\n */',
     globals: {
       'fs': 'fs',
       'ot': 'dayjs',
@@ -21,7 +25,8 @@ export default {
     },
     format: 'umd', //iife, umd
     name: 'wsemi', //iife時名稱內不能使用「-」
-    file: 'dist/wsemi.umd.js'
+    file: 'dist/wsemi.umd.js',
+    sourcemap: true
   },
   external: [
       'fs',
@@ -56,7 +61,6 @@ export default {
       extensions: ['.css']
     }),
     minify({ comments: false, }),
-    banner('wsemi v<%= pkg.version %>\n(c) 2018-2019 <%= pkg.author %>\nReleased under the MIT License.'),
   ]
 }
 

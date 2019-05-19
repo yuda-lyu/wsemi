@@ -64,6 +64,12 @@ function downloadFileFromBlob(cfn, blob) {
         return
     }
 
+    //check
+    if (!window) {
+        console.warn('no window')
+        return
+    }
+
     //download
     if (window.navigator && window.navigator.msSaveOrOpenBlob) { //IE11
         df_IE11(cfn, blob)
