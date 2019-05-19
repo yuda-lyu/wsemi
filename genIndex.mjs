@@ -22,19 +22,21 @@ async function main() {
     _.pull(ltfs, '_class.mjs', 'index.mjs')
 
     //get names
-    let scs = []
-    _.each(ltfs, function(v) {
-
-        //name
-        let name = v.replace('.mjs', '')
-
-        //sc
-        let sc = `export ${name} from './${name}.mjs'`
-
-        //push
-        scs.push(sc)
-
+    let ns = _.map(ltfs, function(v) {
+        return v.replace('.mjs', '')
     })
+
+    //scs
+    let scs = []
+    _.each(ns, function(name) {
+        let sc = `import ${name} from './${name}.mjs'`
+        scs.push(sc)
+    })
+    if (true) {
+        let c = _.join(ns, ', ')
+        let sc = `export { ${c} }`
+        scs.push(sc)
+    }
 
     //merge content
     let c = _.join(scs, '\r\n')
