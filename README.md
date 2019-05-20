@@ -45,7 +45,9 @@ npm i wsemi
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for dayjs(or moment)
-> **Note:** include script when use some function of time. If use moment, need [let dayjs = moment] before include script for wsemi
+> **Note:** include script when use some function of time. 
+
+> **Note:** If include moment, need rename to [dayjs] (ex: let dayjs = moment), and put it before include script for wsemi.umd.js.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
 ```
