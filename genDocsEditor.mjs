@@ -4,7 +4,7 @@ import fs from 'fs'
 
 let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'
 let fn_html = 'docs/wsemi.html'
-let fn_html2 = 'docs/wsemicv.html'
+//let fn_html2 = 'docs/wsemi2.html'
 
 
 async function main() {
@@ -65,7 +65,6 @@ async function main() {
     <script>
         let prefill = { 
             'scripts': [
-                'https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js',
                 'https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js',
                 'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
                 'https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js',
@@ -73,7 +72,8 @@ async function main() {
                 'https://rawgit.com/leizongmin/js-xss/master/dist/xss.js',
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
-                //'https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js'
+                //'https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
