@@ -45,38 +45,38 @@ npm i wsemi
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for dayjs(or moment)
-> **Note:** include script when use some function of time
+> **Note:** include script when use some function of time. If use moment, need [let dayjs = moment] before include script for wsemi
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
 ```
 [Optional] Add script for fuzzball
-> **Note:** include script when use `fuzzfind` function
+> **Note:** include script when use `fuzzfind` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
 [Optional] Add script for tinycolor2, it's almost same as @ctrl/tinycolor
-> **Note:** include script when use `hsl` or `genGradientColor` function
+> **Note:** include script when use `hsl` or `genGradientColor` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js"></script>
 ```
 [Optional] Add script for ua-parser-js
-> **Note:** include script when use `getUserAgent` function
+> **Note:** include script when use `getUserAgent` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
 ```
 [Optional] Add script for xss
-> **Note:** include script when use `clearXSS` function
+> **Note:** include script when use `clearXSS` function.
 ```alias
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 ```
 [Optional] Add script for popper.js and tippy.js
-> **Note:** include script when use `onTooltip` function
+> **Note:** include script when use `onTooltip` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
 ```
 [Optional] Add script for xlsx
-> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function
+> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
