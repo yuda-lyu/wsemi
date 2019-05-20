@@ -14,6 +14,7 @@ async function getFiles() {
 
 
 async function main() {
+    //由src內取得指定函數檔案, 再自動產生index.mjs, 供rollup編譯之用
 
     //getFiles
     let ltfs = await getFiles()
@@ -49,7 +50,8 @@ async function main() {
     //let h = `import 'core-js/stable'\r\n` + `import 'regenerator-runtime/runtime'\r\n`
     //c = h + c
 
-    //write content
+    //write
+    //console.log(c)
     fs.writeFileSync(fd + fnidx, c, 'utf8')
 
 }

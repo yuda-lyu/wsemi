@@ -48,9 +48,6 @@ npm i wsemi
 > **Note:** include script when use some function of time
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
-<script>
-    window.ot = dayjs //dayjs(or moment) need to save as window.ot
-</script>
 ```
 [Optional] Add script for fuzzball
 > **Note:** include script when use `fuzzfind` function
@@ -85,5 +82,5 @@ npm i wsemi
 ```
 Add script for wsemi
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.2/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.3/dist/wsemi.umd.js"></script>
 ```

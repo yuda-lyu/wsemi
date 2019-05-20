@@ -1,0 +1,140 @@
+import cheerio from 'cheerio'
+import fs from 'fs'
+
+
+let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'
+let fn_html = 'docs/wsemi.html'
+let fn_html2 = 'docs/wsemicv.html'
+
+
+async function main() {
+    //由jsdoc產製之wsemi.html, 自動添加將example轉換成codepen線上編輯功能
+
+    //wrap
+    function wrap(selector, wrapper) {
+        return $(selector).each(function() {
+            $(this).before(wrapper).prev().append(this)
+        })
+    }
+
+    //pkg
+    let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+
+    //read
+    let h = fs.readFileSync(fn_html, 'utf8')
+
+    //check
+    if (h.indexOf(cdnCodepen) >= 0) {
+        console.log('已進行轉換')
+        return
+    }
+
+    //$
+    const $ = cheerio.load(h)
+    //console.log($('body').html())
+
+    //modify each pre
+    $('pre[class="prettyprint"]').map(function(i, v) {
+
+        //name
+        let name = $(v).prev().prev().prev().prev().attr('id')
+        name = name.replace('.', '')
+
+        //h
+        let h = $(v).html()
+
+        //wrap, pre換成div
+        wrap(v, '<div style="position:relative;"></div>')
+
+        //取得div, 物件因wrap變成為原本pre的外層
+        let p = $(v).parent()
+
+        //把div內按鈕與原pre內容塞回去
+        p.html(`
+<div onclick="editOnline(this, '${name}')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
+<pre class="prettyprint">${h}</pre>
+        `)
+
+    })
+    //console.log($.html())
+
+    //add script, 使用jquery操作dom與掛載codepen, 而codepen還需要提供wsemi所需js套件
+    let scOper = `
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="${cdnCodepen}"></script>
+    <script>
+        let prefill = { 
+            'scripts': [
+                'https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js',
+                'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
+                'https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js',
+                'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
+                'https://rawgit.com/leizongmin/js-xss/master/dist/xss.js',
+                //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
+                //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
+                //'https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js'
+            ] 
+        }
+        prefill = JSON.stringify(prefill)
+    </script>
+    <script>
+        function editOnline(me, name) {
+    
+            //me
+            me = $(me)
+    
+            //parent
+            let p = me.parent()
+    
+            //ele, pre(prettyprint)
+            let ele = me.next()
+    
+            //get code from pre
+            let code = ele.children().text()
+            //console.log(code)
+
+            //add code for extract function
+            code='let '+name+' = wsemi.'+name+'<br>'+code
+    
+            //reset to empty div
+            ele.remove()
+            p.html('<div></div>')
+            let ediv = p.children()
+    
+            //ediv setting
+            ediv
+                .attr('class', 'codepen-later-' + name)
+                .attr({
+                    'data-prefill': prefill,
+                    'data-height': 200,
+                    'data-default-tab': 'js',
+                    'data-editable': true
+                })
+    
+            //add pre for js code
+            ediv.append('<pre data-lang="js"></pre>')
+    
+            //epre
+            let epre = ediv.children()
+    
+            //set code
+            epre.html(code)
+    
+            //convert to codepen
+            window.__CPEmbed('.' + 'codepen-later-' + name)
+    
+        }
+    </script>
+    `
+    $('body').append(scOper)
+
+    //get html
+    let c = $.html()
+
+    //write
+    //console.log(c)
+    fs.writeFileSync(fn_html, c, 'utf8')
+
+}
+main()

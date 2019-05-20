@@ -2,18 +2,11 @@ import _ from 'lodash'
 import fs from 'fs'
 
 
-let fn_pks = 'package.json'
 let fn_rdme = 'README.md'
 
 
-function getPks(fn) {
-    let c = fs.readFileSync(fn, 'utf8')
-    return JSON.parse(c)
-}
-
-
-function getReadme(fn) {
-    let c = fs.readFileSync(fn, 'utf8')
+function getReadme() {
+    let c = fs.readFileSync(fn_rdme, 'utf8')
     return {
         content: c,
         lines: _.split(c, '\r\n')
@@ -22,12 +15,13 @@ function getReadme(fn) {
 
 
 async function main() {
+    //由package.json取得版本, 再更換readme內cdn版本
 
-    let pks = getPks(fn_pks)
-    //console.log(pks)
+    //pkg
+    let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
     //rdme
-    let rdme = getReadme(fn_rdme)
+    let rdme = getReadme()
 
     //rdmever
     let rdmever = ''
@@ -40,15 +34,13 @@ async function main() {
     //replace
     let c = ''
     if (rdmever !== '') {
-        let r = `<script src="https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js"></script>`
+        let r = `<script src="https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js"></script>`
         c = rdme.content.replace(rdmever, r)
     }
 
-    //write content
+    //write
     //console.log(c)
-    if (c !== '') {
-        fs.writeFileSync(fn_rdme, c, 'utf8')
-    }
+    fs.writeFileSync(fn_rdme, c, 'utf8')
 
 }
 main()

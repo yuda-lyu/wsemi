@@ -2,19 +2,8 @@ import _ from 'lodash'
 import fs from 'fs'
 
 
-let fn_rdme = 'README.md'
 let fd_src = './examples/'
 let fd_tar = './docs/examples/'
-
-
-function getWSemiCDN(fn) {
-    let c = fs.readFileSync(fn, 'utf8')
-    let s = _.split(c, '\r\n')
-    let r = _.find(s, function(v) {
-        return v.indexOf('wsemi.umd.js') >= 0
-    })
-    return r
-}
 
 
 async function getFiles(fd) {
@@ -25,9 +14,13 @@ async function getFiles(fd) {
 
 
 async function main() {
+    //把example裡面cdn更換, 再複製到docs的example內, 作為日後發佈為靜態網站
+
+    //pkg
+    let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
     //cdn
-    let cdn = getWSemiCDN(fn_rdme)
+    let cdn = `<script src="https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js"></script>`
 
     //mkdirSync
     fs.mkdirSync(fd_tar)
@@ -47,7 +40,7 @@ async function main() {
         let r = `<script src="../dist/wsemi.umd.js"></script>`
         c = c.replace(r, cdn)
 
-        //write content
+        //write
         //console.log(c)
         fs.writeFileSync(fd_tar + v, c, 'utf8')
 

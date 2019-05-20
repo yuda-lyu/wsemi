@@ -15,7 +15,7 @@ export default {
     banner: '/*!\n * wsemi v' + pkg.version + '\n * (c) 2018-2019 ' + pkg.author + '\n * Released under the MIT License.\n */',
     globals: {
       'fs': 'fs',
-      'ot': 'dayjs',
+      'dayjs': 'dayjs',
       'XLSX': 'XLSX',
       'fuzzball': 'fuzzball',
       'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
