@@ -48,7 +48,9 @@ npm i wsemi
 > **Note:** Include script when use some function of time. If include moment, need rename to [dayjs] (ex: let dayjs = moment), and put it before include script for wsemi.umd.js.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+```
 or
+```alias
 <script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
 <script>
   let dayjs = moment
