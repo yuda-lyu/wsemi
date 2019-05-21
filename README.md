@@ -12,7 +12,7 @@ To view some examples for more understanding, visit examples:
 
 > **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html)
 
-> **time[time2expire, time2past]:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html)
+> **dayjs:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html)
 
 > **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html)
 
