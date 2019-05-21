@@ -9,27 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.5/dist/wsemi.umd.js"></script>
-
     <script>
-        console.log = function () {
-            //覆蓋log
-            function htmlEncode(str) {
-                let ele=document.createElement('span')
-                ele.appendChild( document.createTextNode(str))
-                return ele.innerHTML
-            }
-            let v=Array.prototype.slice.call(arguments).map(function(v){return wsemi.o2j(v)}).join(', ')
-            let s=''
-            s+='<div style="padding:5px; font-size:10pt; font-family:Microsoft JhengHei, Helvetica;">'
-            s+='<span style="color:#f26;">log: </span>'
-            s+='<code>'+htmlEncode(v)+'</code>'
-            s+='</div>'
-            document
-                .querySelector('body')
-                .insertAdjacentHTML('beforeend', s)
-        }
+        console.log = wsemi.bodyLog
     </script>
-    
+
 </head>
 <body>
 
