@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import isEleExist from '../src/isEleExist.mjs'
+//import htmlDecode from '../src/htmlDecode.mjs'
 
 
-describe('isEleExist', function() {
+describe('htmlDecode', function() {
 
     it('need test in browser', function() {
         assert.strict.deepEqual(1, 1)

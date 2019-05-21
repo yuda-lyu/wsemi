@@ -60,6 +60,7 @@ async function main() {
 
     //add script, 使用jquery操作dom與掛載codepen, 而codepen還需要提供wsemi所需js套件
     let scOper = `
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="${cdnCodepen}"></script>
     <script>
@@ -94,9 +95,20 @@ async function main() {
             let code = ele.children().text()
             //console.log(code)
 
-            //add code for extract function
+            //add bodyLog
+            let s=code.split('\\n')
+            s=_.map(s,function(v){
+                if (v.indexOf(name)>=0){
+                    return 'bodyLog('+v+')'
+                }
+                return v
+            })
+            code=_.join(s,'\\n')
+            
+            //add code for test and bodyLog function
             code='let '+name+' = wsemi.'+name+'<br>'+code
-    
+            code='let bodyLog = wsemi.bodyLog<br>'+code
+
             //reset to empty div
             ele.remove()
             p.html('<div></div>')
@@ -108,7 +120,7 @@ async function main() {
                 .attr({
                     'data-prefill': prefill,
                     'data-height': 200,
-                    'data-default-tab': 'js',
+                    'data-default-tab': 'js,result',
                     'data-editable': true
                 })
     
