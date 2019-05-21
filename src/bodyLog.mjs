@@ -1,6 +1,4 @@
 import map from 'lodash/map'
-import isestr from './isestr.mjs'
-import isEle from './isEle.mjs'
 import o2j from './o2j.mjs'
 import htmlEncode from './htmlEncode.mjs'
 
@@ -11,17 +9,11 @@ import htmlEncode from './htmlEncode.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bodyLog.test.js Github}
  * @memberOf wsemi
  * @param {String} c 輸入字串
- * @param {Element} ele 輸入DOM元素，預設為body
  * @example
  * bodyLog('show訊息')
  * // => 由html顯示'show訊息'
  */
-function bodyLog(c, ele) {
-
-    //check
-    if (!isestr(c)) {
-        return ''
-    }
+function bodyLog() {
 
     //join arguments
     let as = map(arguments, function(v) {
@@ -36,13 +28,8 @@ function bodyLog(c, ele) {
     </div>
     `
 
-    //ele
-    if (!isEle(ele)) {
-        ele = document.querySelector('body')
-    }
-
     //append
-    ele.insertAdjacentHTML('beforeend', s)
+    document.querySelector('body').insertAdjacentHTML('beforeend', s)
 
 }
 
