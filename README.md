@@ -40,11 +40,11 @@ npm i wsemi
 ### In a browser(UMD module):
 > **Note:** umd file includes with lodash and crypto-js, by using tree-shaking for dead-code elimination
 
-[Optional] Add script with nomodule for IE11
+[Optional] Add script with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
-[Optional] Add script for dayjs(or moment)
+[Optional] Add script for dayjs(or moment).
 > **Note:** Include script when use some function of time. If include moment, need set moment to window.dayjs (ex: window.dayjs = moment), and put it before include script for wsemi.umd.js.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
@@ -56,38 +56,38 @@ or
   window.dayjs = moment
 </script>
 ```
-[Optional] Add script for fuzzball
+[Optional] Add script for fuzzball.
 > **Note:** include script when use `fuzzfind` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
-[Optional] Add script for tinycolor2, it's almost same as @ctrl/tinycolor
+[Optional] Add script for tinycolor2, it's almost same as @ctrl/tinycolor.
 > **Note:** include script when use `hsl` or `genGradientColor` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js"></script>
 ```
-[Optional] Add script for ua-parser-js
+[Optional] Add script for ua-parser-js.
 > **Note:** include script when use `getUserAgent` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
 ```
-[Optional] Add script for xss
+[Optional] Add script for xss.
 > **Note:** include script when use `clearXSS` function.
 ```alias
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 ```
-[Optional] Add script for popper.js and tippy.js
+[Optional] Add script for popper.js and tippy.js, because tippy.js depends on popper.js.
 > **Note:** include script when use `onTooltip` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
 ```
-[Optional] Add script for xlsx
+[Optional] Add script for xlsx.
 > **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
-Add script for wsemi
+Add script for wsemi.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.5/dist/wsemi.umd.js"></script>
 ```
