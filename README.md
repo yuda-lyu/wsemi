@@ -1,34 +1,34 @@
 # wsemi
 A support package for web developer.
 
-![language](https://img.shields.io/badge/language-JavaScript-orange.svg) [![npm version](http://img.shields.io/npm/v/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) [![Build Status](https://travis-ci.org/yuda-lyu/wsemi.svg?branch=master)](https://travis-ci.org/yuda-lyu/wsemi) [![npm download](https://img.shields.io/npm/dt/wsemi.svg)](https://npmjs.org/package/wsemi) [![license](https://img.shields.io/npm/l/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi)
+![language](https://img.shields.io/badge/language-JavaScript-orange.svg) [![npm version](http://img.shields.io/npm/v/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) [![Build Status](https://travis-ci.org/yuda-lyu/wsemi.svg?branch=master)](https://travis-ci.org/yuda-lyu/wsemi) [![license](https://img.shields.io/npm/l/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) [![npm download](https://img.shields.io/npm/dt/wsemi.svg)](https://npmjs.org/package/wsemi) [![jsdelivr download](https://data.jsdelivr.com/v1/package/npm/wsemi/badge)](https://www.jsdelivr.com/package/npm/wsemi)
 
 ## Documentation
 To view documentation or get support, visit [docs](https://yuda-lyu.github.io/wsemi/wsemi.html).
 
 ## Example
 To view some examples for more understanding, visit examples:
-> **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html)
+> **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-lodash.html)]
 
-> **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html)
+> **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-dayjs.html)]
 
-> **dayjs:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html)
+> **dayjs:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-time2expire-time2past.html)]
 
-> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html)
+> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
 
-> **fuzzball:** [ex-fuzzball.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball.html)
+> **fuzzball:** [ex-fuzzball.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-fuzzball.html)]
 
-> **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html)
+> **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tinycolor.html)]
 
-> **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html)
+> **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser.html)]
 
-> **xss:** [ex-xss.html](https://yuda-lyu.github.io/wsemi/examples/ex-xss.html)
+> **xss:** [ex-xss.html](https://yuda-lyu.github.io/wsemi/examples/ex-xss.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xss.html)]
 
-> **openlink:** [ex-openlink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openlink.html)
+> **openlink:** [ex-openlink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openlink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openlink.html)]
 
-> **tippyjs[with popper.js]:** [ex-tippyjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-tippyjs.html)
+> **tippyjs[with popper.js]:** [ex-tippyjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-tippyjs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tippyjs.html)]
 
-> **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html)
+> **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
 
 ## Installation
 ### Using npm(ES6 module):
