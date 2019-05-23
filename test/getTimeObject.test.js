@@ -3,7 +3,7 @@ import ot from 'dayjs'
 import getTimeObject from '../src/getTimeObject.mjs'
 
 
-describe('getTimeObject', function() {
+describe(`getTimeObject`, function() {
 
     it(`should return null when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)

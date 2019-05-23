@@ -2,7 +2,7 @@ import assert from 'assert'
 import str2md5 from '../src/str2md5.mjs'
 
 
-describe('str2md5', function() {
+describe(`str2md5`, function() {
 
     it(`sould return '5393554e94bf0eb6436f240a4fd71282' when input 'test中文'`, function() {
         let r = str2md5('test中文')

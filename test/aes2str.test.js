@@ -2,7 +2,7 @@ import assert from 'assert'
 import aes2str from '../src/aes2str.mjs'
 
 
-describe('aes2str', function() {
+describe(`aes2str`, function() {
     let k
     let o = {}
 
@@ -27,55 +27,55 @@ describe('aes2str', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input 12.34", function() {
+    it(`should return '' when input 12.34`, function() {
         let r = aes2str(12.34)
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input [1, '3', 'abc']", function() {
+    it(`should return '' when input [1, '3', 'abc']`, function() {
         let r = aes2str([1, '3', 'abc'])
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input { a: 12.34, b: 'abc' }", function() {
+    it(`should return '' when input { a: 12.34, b: 'abc' }`, function() {
         let r = aes2str({ a: 12.34, b: 'abc' })
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input { a: 12.34, b: 'abc', c: '', d: null, e: undefined, f: [], g: {} }", function() {
+    it(`should return '' when input { a: 12.34, b: 'abc', c: '', d: null, e: undefined, f: [], g: {} }`, function() {
         let r = aes2str({ a: 12.34, b: 'abc', c: '', d: null, e: undefined, f: [], g: {} })
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input ''", function() {
+    it(`should return '' when input ''`, function() {
         let r = aes2str('')
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input []", function() {
+    it(`should return '' when input []`, function() {
         let r = aes2str([])
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input {}", function() {
+    it(`should return '' when input {}`, function() {
         let r = aes2str({})
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input null", function() {
+    it(`should return '' when input null`, function() {
         let r = aes2str(null)
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input undefined", function() {
+    it(`should return '' when input undefined`, function() {
         let r = aes2str(undefined)
         let rr = ''
         assert.strict.deepEqual(r, rr)

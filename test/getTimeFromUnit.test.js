@@ -2,7 +2,7 @@ import assert from 'assert'
 import getTimeFromUnit from '../src/getTimeFromUnit.mjs'
 
 
-describe('getTimeFromUnit', function() {
+describe(`getTimeFromUnit`, function() {
 
     it(`should return 'YYYY' when input 'years'`, function() {
         let r = getTimeFromUnit('years')
@@ -40,31 +40,31 @@ describe('getTimeFromUnit', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input ''", function() {
+    it(`should return '' when input ''`, function() {
         let r = getTimeFromUnit('')
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input []", function() {
+    it(`should return '' when input []`, function() {
         let r = getTimeFromUnit([])
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input {}", function() {
+    it(`should return '' when input {}`, function() {
         let r = getTimeFromUnit({})
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input null", function() {
+    it(`should return '' when input null`, function() {
         let r = getTimeFromUnit(null)
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return '' when input undefined", function() {
+    it(`should return '' when input undefined`, function() {
         let r = getTimeFromUnit(undefined)
         let rr = ''
         assert.strict.deepEqual(r, rr)

@@ -2,7 +2,7 @@ import assert from 'assert'
 import timerange from '../src/timerange.mjs'
 
 
-describe('timerange', function() {
+describe(`timerange`, function() {
 
     it(`sould return '2019/01/01 09:00 至 無' when input '2019/01/01 09:00:00'`, function() {
         let r = timerange('2019/01/01 09:00:00')

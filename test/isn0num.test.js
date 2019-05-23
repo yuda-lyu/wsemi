@@ -2,7 +2,7 @@ import assert from 'assert'
 import isn0num from '../src/isn0num.mjs'
 
 
-describe('isn0num', function() {
+describe(`isn0num`, function() {
 
     it(`should return false when input '2019/01/01'`, function() {
         let r = isn0num('2019/01/01')

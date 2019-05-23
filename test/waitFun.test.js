@@ -2,7 +2,7 @@ import assert from 'assert'
 import waitFun from '../src/waitFun.mjs'
 
 
-describe('waitFun', function() {
+describe(`waitFun`, function() {
 
     it(`should touch [then] in 2 sec. when call waitFun`, function() {
         let i = 0

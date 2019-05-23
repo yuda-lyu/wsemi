@@ -2,7 +2,7 @@ import assert from 'assert'
 import genPm from '../src/genPm.mjs'
 
 
-describe('genPm', function() {
+describe(`genPm`, function() {
 
     let fn = function() {
         let df = genPm()

@@ -2,7 +2,7 @@ import assert from 'assert'
 import strmid from '../src/strmid.mjs'
 
 
-describe('strmid', function() {
+describe(`strmid`, function() {
 
     it(`sould return 's' when input 'test中文', 2, 1`, function() {
         let r = strmid('test中文', 2, 1)

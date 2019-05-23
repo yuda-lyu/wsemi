@@ -2,7 +2,7 @@ import assert from 'assert'
 import ltdt2vrtsable from '../src/ltdt2vrtsable.mjs'
 
 
-describe('ltdt2vrtsable', function() {
+describe(`ltdt2vrtsable`, function() {
     let k
     let o = {}
 
@@ -57,7 +57,7 @@ describe('ltdt2vrtsable', function() {
             }
         ]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].mgkeys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].mgkeys)}`, function() {
         k = 1
         let r = ltdt2vrtsable(o[k].ltdt, o[k].mgkeys)
         let rr = o[k].out
@@ -115,7 +115,7 @@ describe('ltdt2vrtsable', function() {
             }
         ]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].mgkeys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].mgkeys)}`, function() {
         k = 2
         let r = ltdt2vrtsable(o[k].ltdt, o[k].mgkeys)
         let rr = o[k].out
@@ -173,7 +173,7 @@ describe('ltdt2vrtsable', function() {
             }
         ]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].mgkeys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].mgkeys)}`, function() {
         k = 3
         let r = ltdt2vrtsable(o[k].ltdt, o[k].mgkeys)
         let rr = o[k].out
@@ -186,7 +186,7 @@ describe('ltdt2vrtsable', function() {
         mgkeys: [],
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].mgkeys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].mgkeys)}`, function() {
         k = 4
         let r = ltdt2vrtsable(o[k].ltdt, o[k].mgkeys)
         let rr = o[k].out

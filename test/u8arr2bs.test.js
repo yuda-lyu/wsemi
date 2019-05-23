@@ -2,7 +2,7 @@ import assert from 'assert'
 import u8arr2bs from '../src/u8arr2bs.mjs'
 
 
-describe('u8arr2bs', function() {
+describe(`u8arr2bs`, function() {
 
     it(`should return  when input new Uint8Array([97, 98, 99])`, function() {
         let r = u8arr2bs(new Uint8Array([97, 98, 99]))

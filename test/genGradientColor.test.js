@@ -2,7 +2,7 @@ import assert from 'assert'
 import genGradientColor from '../src/genGradientColor.mjs'
 
 
-describe('genGradientColor', function() {
+describe(`genGradientColor`, function() {
     let k
     let o = {}
 
@@ -28,7 +28,7 @@ describe('genGradientColor', function() {
             ]
         }
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + o[k].in, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}`, function() {
         k = 1
         let r = genGradientColor(o[k].in)
         let rr = o[k].out
@@ -57,7 +57,7 @@ describe('genGradientColor', function() {
             ]
         }
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + o[k].in, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}`, function() {
         k = 2
         let r = genGradientColor(o[k].in)
         let rr = o[k].out
@@ -86,7 +86,7 @@ describe('genGradientColor', function() {
             ]
         }
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + o[k].in, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}`, function() {
         k = 3
         let r = genGradientColor(o[k].in)
         let rr = o[k].out
@@ -115,69 +115,69 @@ describe('genGradientColor', function() {
             ]
         }
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + o[k].in, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}`, function() {
         k = 4
         let r = genGradientColor(o[k].in)
         let rr = o[k].out
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input #'", function() {
+    it(`should return {} when input #'`, function() {
         let r = genGradientColor('#')
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input #0'", function() {
+    it(`should return {} when input #0'`, function() {
         let r = genGradientColor('#0')
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input #00'", function() {
+    it(`should return {} when input #00'`, function() {
         let r = genGradientColor('#00')
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input #f'", function() {
+    it(`should return {} when input #f'`, function() {
         let r = genGradientColor('#f')
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input #ff'", function() {
+    it(`should return {} when input #ff'`, function() {
         let r = genGradientColor('#ff')
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input '1.25'", function() {
+    it(`should return {} when input '1.25'`, function() {
         let r = genGradientColor('1.25')
         assert.strict.deepEqual(r, {})
     })
 
-    it('should return {} when input 2.25', function() {
+    it(`should return {} when input 2.25`, function() {
         let r = genGradientColor(2.25)
         assert.strict.deepEqual(r, {})
     })
 
-    it("should return {} when input ''", function() {
+    it(`should return {} when input ''`, function() {
         let r = genGradientColor('')
         assert.strict.deepEqual(r, {})
     })
 
-    it('should return {} when input []', function() {
+    it(`should return {} when input []`, function() {
         let r = genGradientColor([])
         assert.strict.deepEqual(r, {})
     })
 
-    it('should return {} when input {}', function() {
+    it(`should return {} when input {}`, function() {
         let r = genGradientColor({})
         assert.strict.deepEqual(r, {})
     })
 
-    it('should return {} when input null', function() {
+    it(`should return {} when input null`, function() {
         let r = genGradientColor(null)
         assert.strict.deepEqual(r, {})
     })
 
-    it('should return {} when input undefined', function() {
+    it(`should return {} when input undefined`, function() {
         let r = genGradientColor(undefined)
         assert.strict.deepEqual(r, {})
     })

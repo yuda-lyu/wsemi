@@ -2,7 +2,7 @@ import assert from 'assert'
 import j2o from '../src/j2o.mjs'
 
 
-describe('j2o', function() {
+describe(`j2o`, function() {
 
     it(`should return [1, '3', 'abc'] when input [1,"3","abc"]`, function() {
         let r = j2o('[1,"3","abc"]')
@@ -58,25 +58,25 @@ describe('j2o', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return [] when input '[]'", function() {
+    it(`should return [] when input '[]'`, function() {
         let r = j2o('[]')
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return {} when input '{}'", function() {
+    it(`should return {} when input '{}'`, function() {
         let r = j2o('{}')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return null when input 'null'", function() {
+    it(`should return null when input 'null'`, function() {
         let r = j2o('null')
         let rr = null
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return {} when input ''", function() {
+    it(`should return {} when input ''`, function() {
         let r = j2o('')
         let rr = {}
         assert.strict.deepEqual(r, rr)

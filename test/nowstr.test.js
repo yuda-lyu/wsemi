@@ -3,9 +3,9 @@ import ot from 'dayjs'
 import nowstr from '../src/nowstr.mjs'
 
 
-describe('nowstr', function() {
+describe(`nowstr`, function() {
 
-    //ÁÙ¬O¦³¥i¯à­è¦n¹J¨ì®É¶¡®t1s
+    //é‚„æ˜¯æœ‰å¯èƒ½å‰›å¥½é‡åˆ°æ™‚é–“å·®1s
     let r = nowstr()
     let d = ot()
     let rr = d.format('YYYY/MM/DD HH:mm:ss')

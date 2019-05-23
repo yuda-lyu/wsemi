@@ -2,7 +2,7 @@ import assert from 'assert'
 import oo from '../src/oo.mjs'
 
 
-describe('oo', function() {
+describe(`oo`, function() {
 
     it(`should return [1, '3', 'abc'] when input [1, '3', 'abc']`, function() {
         let r = oo([1, '3', 'abc'])
@@ -11,7 +11,7 @@ describe('oo', function() {
     })
 
     it(`should return [1, '3', 'abc', null] when input [1, '3', 'abc', function(){}]`, function() {
-        let r = oo([1, '3', 'abc', function(){}])
+        let r = oo([1, '3', 'abc', function() {}])
         let rr = [1, '3', 'abc', null]
         assert.strict.deepEqual(r, rr)
     })
@@ -29,7 +29,7 @@ describe('oo', function() {
     })
 
     it(`should return { a: 12.34, b: 'abc' } when input { a: 12.34, b: 'abc', c: function(){} }`, function() {
-        let r = oo({ a: 12.34, b: 'abc', c: function(){} })
+        let r = oo({ a: 12.34, b: 'abc', c: function() {} })
         let rr = { a: 12.34, b: 'abc' }
         assert.strict.deepEqual(r, rr)
     })
@@ -70,25 +70,25 @@ describe('oo', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it('sould return [] when input []', function() {
+    it(`should return [] when input []`, function() {
         let r = oo([])
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it('sould return {} when input {}', function() {
+    it(`should return {} when input {}`, function() {
         let r = oo({})
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it('sould return null when input null', function() {
+    it(`should return null when input null`, function() {
         let r = oo(null)
         let rr = null
         assert.strict.deepEqual(r, rr)
     })
 
-    it('sould return undefined when input undefined', function() {
+    it(`should return undefined when input undefined`, function() {
         let r = oo(undefined)
         assert.strict.deepEqual(r, undefined)
     })

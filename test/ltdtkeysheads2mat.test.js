@@ -2,7 +2,7 @@ import assert from 'assert'
 import ltdtkeysheads2mat from '../src/ltdtkeysheads2mat.mjs'
 
 
-describe('ltdtkeysheads2mat', function() {
+describe(`ltdtkeysheads2mat`, function() {
     let k
     let o = {}
 
@@ -13,7 +13,7 @@ describe('ltdtkeysheads2mat', function() {
         kphead: { a: 'c1', b: 'c2' },
         out: [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].kphead), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 1
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
@@ -27,7 +27,7 @@ describe('ltdtkeysheads2mat', function() {
         kphead: {},
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].kphead), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 2
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
@@ -41,7 +41,7 @@ describe('ltdtkeysheads2mat', function() {
         kphead: { a: 'c1', b: 'c2' },
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].kphead), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 3
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
@@ -55,7 +55,7 @@ describe('ltdtkeysheads2mat', function() {
         kphead: {},
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].kphead), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 4
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out

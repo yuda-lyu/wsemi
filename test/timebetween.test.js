@@ -2,7 +2,7 @@ import assert from 'assert'
 import timebetween from '../src/timebetween.mjs'
 
 
-describe('timebetween', function() {
+describe(`timebetween`, function() {
 
     it(`sould return ['2017', '2018', '2019'] when input '2017', '2019', 'years'`, function() {
         let r = timebetween('2017', '2019', 'years')

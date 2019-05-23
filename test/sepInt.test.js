@@ -2,7 +2,7 @@ import assert from 'assert'
 import sepInt from '../src/sepInt.mjs'
 
 
-describe('sepInt', function() {
+describe(`sepInt`, function() {
 
     it(`should return [3, 3, 4] when input 10, 3`, function() {
         let r = sepInt(10, 3)

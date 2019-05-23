@@ -2,7 +2,7 @@ import assert from 'assert'
 import keysmat2ltdt from '../src/keysmat2ltdt.mjs'
 
 
-describe('keysmat2ltdt', function() {
+describe(`keysmat2ltdt`, function() {
     let k
     let o = {}
 
@@ -12,7 +12,7 @@ describe('keysmat2ltdt', function() {
         mdata: [[12, 34.56], ['123', 'xyz']],
         out: [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].mdata), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].mdata)}`, function() {
         let r = keysmat2ltdt(o[k].keys, o[k].mdata)
         let rr = o[k].out
         assert.strict.deepEqual(r, rr)
@@ -24,7 +24,7 @@ describe('keysmat2ltdt', function() {
         mdata: [12, 34.56],
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].mdata), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].mdata)}`, function() {
         let r = keysmat2ltdt(o[k].keys, o[k].mdata)
         let rr = o[k].out
         assert.strict.deepEqual(r, rr)

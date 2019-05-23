@@ -2,7 +2,7 @@ import assert from 'assert'
 import strright from '../src/strright.mjs'
 
 
-describe('strright', function() {
+describe(`strright`, function() {
 
     it(`sould return '中文' when input 'test中文', 2`, function() {
         let r = strright('test中文', 2)

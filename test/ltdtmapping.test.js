@@ -2,7 +2,7 @@ import assert from 'assert'
 import ltdtmapping from '../src/ltdtmapping.mjs'
 
 
-describe('ltdtmapping', function() {
+describe(`ltdtmapping`, function() {
     let k
     let o = {}
 
@@ -12,7 +12,7 @@ describe('ltdtmapping', function() {
         keys: ['a', 'b', 'c'],
         out: [{ a: 12, b: 34.56, c: '' }, { a: '123', b: 'xyz', c: 'mn' }]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 1
         let r = ltdtmapping(o[k].ltdt, o[k].keys)
         let rr = o[k].out
@@ -25,7 +25,7 @@ describe('ltdtmapping', function() {
         keys: ['b', 'c'],
         out: [{ b: 34.56, c: '' }, { b: 'xyz', c: 'mn' }]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 2
         let r = ltdtmapping(o[k].ltdt, o[k].keys)
         let rr = o[k].out
@@ -38,7 +38,7 @@ describe('ltdtmapping', function() {
         keys: ['x'],
         out: [{ x: '' }, { x: '' }]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 3
         let r = ltdtmapping(o[k].ltdt, o[k].keys)
         let rr = o[k].out

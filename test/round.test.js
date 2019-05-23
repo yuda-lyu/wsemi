@@ -2,7 +2,7 @@ import assert from 'assert'
 import round from '../src/round.mjs'
 
 
-describe('round', function() {
+describe(`round`, function() {
 
     it(`should return '' when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)

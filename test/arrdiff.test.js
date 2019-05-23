@@ -2,7 +2,7 @@ import assert from 'assert'
 import arrdiff from '../src/arrdiff.mjs'
 
 
-describe('arrdiff', function() {
+describe(`arrdiff`, function() {
     let k
     let o = {}
 
@@ -18,7 +18,7 @@ describe('arrdiff', function() {
             add: [],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 1
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
@@ -31,7 +31,7 @@ describe('arrdiff', function() {
         new: { id: 'pk', a: 'abc', b: 123 },
         ret: {}
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'temp'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'temp'`, function() {
         k = 2
         let r = arrdiff(o[k].old, o[k].new, 'temp')
         let rr = o[k].ret
@@ -50,7 +50,7 @@ describe('arrdiff', function() {
             add: [],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 3
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
@@ -69,7 +69,7 @@ describe('arrdiff', function() {
             add: [{ id: 'pk1', a: 'abc', b: 456 }],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 4
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
@@ -88,7 +88,7 @@ describe('arrdiff', function() {
             add: [{ id: 'pk1', a: 'abc', b: 123 }],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 5
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
@@ -107,7 +107,7 @@ describe('arrdiff', function() {
             add: [{ id: 'pk1', a: 'abc', b: 123 }],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 6
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
@@ -126,102 +126,102 @@ describe('arrdiff', function() {
             add: [{ id: 'pk1', a: 'abc', b: 123 }],
         }
     }
-    it('should return ' + JSON.stringify(o[k].ret) + ' when input ' + JSON.stringify(o[k].old) + ', ' + JSON.stringify(o[k].new) + ", 'id'", function() {
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
         k = 7
         let r = arrdiff(o[k].old, o[k].new, 'id')
         let rr = o[k].ret
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input ''", function() {
+    it(`should return {} when input ''`, function() {
         let r = arrdiff('')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it('should return {} when input []', function() {
+    it(`should return {} when input []`, function() {
         let r = arrdiff([])
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it('should return {} when input {}', function() {
+    it(`should return {} when input {}`, function() {
         let r = arrdiff({})
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it('should return {} when input null', function() {
+    it(`should return {} when input null`, function() {
         let r = arrdiff(null)
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it('should return {} when input undefined', function() {
+    it(`should return {} when input undefined`, function() {
         let r = arrdiff(undefined)
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input '', 'id'", function() {
+    it(`should return {} when input '', 'id'`, function() {
         let r = arrdiff('', 'id')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input [], 'id'", function() {
+    it(`should return {} when input [], 'id'`, function() {
         let r = arrdiff([], 'id')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input {}, 'id'", function() {
+    it(`should return {} when input {}, 'id'`, function() {
         let r = arrdiff({}, 'id')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input null, 'id'", function() {
+    it(`should return {} when input null, 'id'`, function() {
         let r = arrdiff(null, 'id')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input undefined, 'id'", function() {
+    it(`should return {} when input undefined, 'id'`, function() {
         let r = arrdiff(undefined, 'id')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
 
-    it("should return {} when input '', ''", function() {
+    it(`should return {} when input '', ''`, function() {
         let r = arrdiff('', '')
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
 
-    it("should return {} when input '', []", function() {
+    it(`should return {} when input '', []`, function() {
         let r = arrdiff('', [])
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
 
-    it("should return {} when input '', {}", function() {
+    it(`should return {} when input '', {}`, function() {
         let r = arrdiff('', {})
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
 
-    it("should return {} when input '', null", function() {
+    it(`should return {} when input '', null`, function() {
         let r = arrdiff('', null)
         let rr = {}
         assert.strict.deepEqual(r, rr)
     })
 
-    it("should return {} when input '', undefined", function() {
+    it(`should return {} when input '', undefined`, function() {
         let r = arrdiff('', undefined)
         let rr = {}
         assert.strict.deepEqual(r, rr)

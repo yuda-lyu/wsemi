@@ -1,6 +1,7 @@
+import get from 'lodash/get'
 import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
-import haskey from './haskey.mjs'
+//import haskey from './haskey.mjs'
 
 
 /**
@@ -25,10 +26,12 @@ function getdtv(dt, key) {
         return ''
     }
 
-    if (haskey(dt, key)) {
-        return dt[key]
-    }
-    return ''
+    // if (haskey(dt, key)) {
+    //     return dt[key]
+    // }
+    //return ''
+
+    return get(dt, key, '')
 }
 
 

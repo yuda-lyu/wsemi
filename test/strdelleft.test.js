@@ -2,7 +2,7 @@ import assert from 'assert'
 import strdelleft from '../src/strdelleft.mjs'
 
 
-describe('strdelleft', function() {
+describe(`strdelleft`, function() {
 
     it(`sould return 'st中文' when input 'test中文', 2`, function() {
         let r = strdelleft('test中文', 2)

@@ -2,7 +2,7 @@ import assert from 'assert'
 import strdelright from '../src/strdelright.mjs'
 
 
-describe('strdelright', function() {
+describe(`strdelright`, function() {
 
     it(`sould return 'test' when input 'test中文', 2`, function() {
         let r = strdelright('test中文', 2)

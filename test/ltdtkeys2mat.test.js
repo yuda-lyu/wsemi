@@ -2,7 +2,7 @@ import assert from 'assert'
 import ltdtkeys2mat from '../src/ltdtkeys2mat.mjs'
 
 
-describe('ltdtkeys2mat', function() {
+describe(`ltdtkeys2mat`, function() {
     let k
     let o = {}
 
@@ -12,7 +12,7 @@ describe('ltdtkeys2mat', function() {
         keys: ['a', 'b'],
         out: [[12, 34.56], ['123', 'xyz']]
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 1
         let r = ltdtkeys2mat(o[k].ltdt, o[k].keys)
         let rr = o[k].out
@@ -25,7 +25,7 @@ describe('ltdtkeys2mat', function() {
         keys: [],
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].keys) + ', ' + JSON.stringify(o[k].mdata), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 2
         let r = ltdtkeys2mat(o[k].ltdt, o[k].keys)
         let rr = o[k].out
@@ -38,7 +38,7 @@ describe('ltdtkeys2mat', function() {
         keys: ['a', 'b'],
         out: []
     }
-    it('should return ' + JSON.stringify(o[k].out) + ' when input ' + JSON.stringify(o[k].ltdt) + ', ' + JSON.stringify(o[k].keys), function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}`, function() {
         k = 3
         let r = ltdtkeys2mat(o[k].ltdt, o[k].keys)
         let rr = o[k].out

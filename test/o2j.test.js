@@ -2,7 +2,7 @@ import assert from 'assert'
 import o2j from '../src/o2j.mjs'
 
 
-describe('o2j', function() {
+describe(`o2j`, function() {
 
     it(`should return '[1,"3","abc"]' when input [1, '3', 'abc']`, function() {
         let r = o2j([1, '3', 'abc'])
@@ -58,25 +58,25 @@ describe('o2j', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '[]' when input []", function() {
+    it(`should return '[]' when input []`, function() {
         let r = o2j([])
         let rr = '[]'
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '{}' when input {}", function() {
+    it(`should return '{}' when input {}`, function() {
         let r = o2j({})
         let rr = '{}'
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return 'null' when input null", function() {
+    it(`should return 'null' when input null`, function() {
         let r = o2j(null)
         let rr = 'null'
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input undefined", function() {
+    it(`should return '' when input undefined`, function() {
         let r = o2j(undefined)
         let rr = ''
         assert.strict.deepEqual(r, rr)

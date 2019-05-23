@@ -2,7 +2,7 @@ import assert from 'assert'
 import psChain from '../src/psChain.mjs'
 
 
-describe('psChain', function() {
+describe(`psChain`, function() {
 
     it(`should touch [then] when call psChain`, function() {
         psChain()

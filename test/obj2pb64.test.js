@@ -3,7 +3,7 @@ import obj2pb64 from '../src/obj2pb64.mjs'
 import pb642obj from '../src/pb642obj.mjs'
 
 
-describe('obj2pb64', function() {
+describe(`obj2pb64`, function() {
     let key = '1234567890abcdef'
     let k
     let o = {}
@@ -86,31 +86,31 @@ describe('obj2pb64', function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input ''", function() {
+    it(`should return '' when input ''`, function() {
         let r = obj2pb64('')
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input []", function() {
+    it(`should return '' when input []`, function() {
         let r = obj2pb64([])
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input {}", function() {
+    it(`should return '' when input {}`, function() {
         let r = obj2pb64({})
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input null", function() {
+    it(`should return '' when input null`, function() {
         let r = obj2pb64(null)
         let rr = ''
         assert.strict.deepEqual(r, rr)
     })
 
-    it("sould return '' when input undefined", function() {
+    it(`should return '' when input undefined`, function() {
         let r = obj2pb64(undefined)
         let rr = ''
         assert.strict.deepEqual(r, rr)

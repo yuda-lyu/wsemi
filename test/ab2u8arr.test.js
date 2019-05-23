@@ -3,7 +3,7 @@ import ab2u8arr from '../src/ab2u8arr.mjs'
 import u8arr2ab from '../src/u8arr2ab.mjs'
 
 
-describe('ab2u8arr', function() {
+describe(`ab2u8arr`, function() {
 
     let u8a = new Uint8Array([66, 97, 115])
     let ab = u8arr2ab(u8a)

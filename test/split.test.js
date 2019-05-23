@@ -2,7 +2,7 @@ import assert from 'assert'
 import split from '../src/split.mjs'
 
 
-describe('split', function() {
+describe(`split`, function() {
 
     it(`should return ['1.25', 'abc', '', '中文'] when input '1.25 abc  中文', ' '`, function() {
         let r = split('1.25 abc  中文', ' ')

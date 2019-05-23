@@ -2,7 +2,7 @@ import assert from 'assert'
 import sep from '../src/sep.mjs'
 
 
-describe('sep', function() {
+describe(`sep`, function() {
 
     it(`should return ['1.25', 'abc', 中文'] when input '1.25 abc  中文', ' '`, function() {
         let r = sep('1.25 abc  中文', ' ')

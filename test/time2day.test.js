@@ -2,7 +2,7 @@ import assert from 'assert'
 import time2day from '../src/time2day.mjs'
 
 
-describe('time2day', function() {
+describe(`time2day`, function() {
 
     it(`should return '' when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)
