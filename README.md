@@ -32,20 +32,20 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on lodash, crypto-js, dayjs, fuzzball, @ctrl/tinycolor, ua-parser-js, xss, tippy.js, xlsx
+> **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `@ctrl/tinycolor`, `ua-parser-js`, `xss`, `tippy.js`, `xlsx`
 ```alias
 npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with lodash and crypto-js, by using tree-shaking for dead-code elimination
+> **Note:** umd file includes with `lodash` and `crypto-js`, by using tree-shaking for dead-code elimination
 
 [Optional] Add script with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for dayjs(or moment).
-> **Note:** Include script when use some function of time. If include moment, need set moment to window.dayjs (ex: window.dayjs = moment), and put it before include script for wsemi.umd.js.
+> **Note:** Include script when use some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
 ```
@@ -87,7 +87,7 @@ or
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
 ```
-Add script for wsemi.
+[Necessary] Add script for wsemi.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.5/dist/wsemi.umd.js"></script>
 ```
