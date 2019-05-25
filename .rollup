@@ -2,12 +2,26 @@ import commonjs from 'rollup-plugin-commonjs'
 import resolve from 'rollup-plugin-node-resolve'
 import postcss from 'rollup-plugin-postcss'
 import babel from 'rollup-plugin-babel'
+import buble from 'rollup-plugin-buble'
 import minify from 'rollup-plugin-babel-minify'
 import fs from 'fs'
  
  
 let pkg=JSON.parse(fs.readFileSync('package.json', 'utf8'))
 
+let optBabel={
+      runtimeHelpers: true,
+      exclude: 'node_modules/**',
+      presets: [
+        [
+          "@babel/preset-env",
+          {
+            useBuiltIns: 'entry', //entry usage, usage is not stable
+            corejs: 3,
+          }
+        ]
+      ],
+    }
 
 export default {
   input: 'src/index.mjs',
@@ -44,19 +58,8 @@ export default {
         preferBuiltins: false,
         browser: true,
     }),
-    babel({
-      runtimeHelpers: true,
-      exclude: 'node_modules/**',
-      presets: [
-        [
-          "@babel/preset-env",
-          {
-            useBuiltIns: 'entry', //entry usage, usage is not stable
-            corejs: 3,
-          }
-        ]
-      ],
-    }),
+    babel(optBabel),
+    //buble(),
     postcss({
       extensions: ['.css']
     }),
