@@ -7,7 +7,7 @@ A support package for web developer.
 [![license](https://img.shields.io/npm/l/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) 
 [![gzip file size](http://img.badgesize.io/yuda-lyu/wsemi/master/dist/wsemi.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/wsemi)
 [![npm download](https://img.shields.io/npm/dt/wsemi.svg)](https://npmjs.org/package/wsemi) 
-[![jsdelivr download](https://data.jsdelivr.com/v1/package/npm/wsemi/badge)](https://www.jsdelivr.com/package/npm/wsemi)
+[![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/wsemi.svg)](https://www.jsdelivr.com/package/npm/wsemi)
 
 ## Documentation
 To view documentation or get support, visit [docs](https://yuda-lyu.github.io/wsemi/wsemi.html).
