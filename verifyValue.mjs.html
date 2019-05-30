@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domGetFileAccept.mjs - Documentation</title>
+    <title>verifyValue.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domGetFileAccept.mjs</h1>
+    <h1 class="page-title">verifyValue.mjs</h1>
     
 
     
@@ -41,206 +41,167 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import map from 'lodash/map'
-import concat from 'lodash/concat'
-import filter from 'lodash/filter'
-import join from 'lodash/join'
-import isstr from './isstr.mjs'
-import isearr from './isearr.mjs'
-import isernot from './isernot.mjs'
+            <pre class="prettyprint source linenums"><code>import isstr from './isstr.mjs'
+import isnum from './isnum.mjs'
+import isp0num from './isp0num.mjs'
+import isn0num from './isn0num.mjs'
+import isint from './isint.mjs'
+import ispint from './ispint.mjs'
+import isp0int from './isp0int.mjs'
+import isnint from './isnint.mjs'
+import isn0int from './isn0int.mjs'
+import isfun from './isfun.mjs'
+import istime from './istime.mjs'
+import isday from './isday.mjs'
+import ismonth from './ismonth.mjs'
 
 
 /**
- * 前端依照檔案類型或種類回傳input file的accept欄位所用字串
- * kind若需使用種類，可選為'docums', 'compress', 'image', 'data'，或複選以陣列儲存傳入
- * kind若需使用通用檔案，可使用'common'
+ * 驗證數值是否為指定類型
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFileAccept.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/verifyValue.test.js Github}
  * @memberOf wsemi
- * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列
- * @returns {String} 回傳input file的accept欄位所用字串
+ * @param {String|Function} type 輸入判斷資料類型字串或判斷函式，資料類型可選為'isstr','isnum','isp0num','isn0num','isint','ispint','isp0int','isnint','isn0int','isfun'
+ * @param {*} value 輸入任意資料
+ * @returns {Object} 回傳判斷結果，屬性value為回傳資料類型的取值，屬性err為是否資料類型有錯，屬性errmsg為類型有錯時之錯誤訊息
  * @example
- * need test in browser
+ * verifyValue('12a5', 'isstr')
+ * // => r.err=false
+ *
+ * verifyValue('12', 'isint')
+ * // => r.err=false
+ *
+ * verifyValue('0', 'isp0int')
+ * // => r.err=false
+ *
+ * verifyValue('12', 'isp0int')
+ * // => r.err=false
+ *
+ * verifyValue('0', 'isn0int')
+ * // => r.err=false
+ *
+ * verifyValue('-12', 'isn0int')
+ * // => r.err=false
+ *
+ * verifyValue('12.34', 'isnum')
+ * // => r.err=false
+ *
+ * verifyValue('12.34', 'isp0num')
+ * // => r.err=false
+ *
+ * verifyValue('-12.34', 'isn0num')
+ * // => r.err=false
+ *
  */
-function domGetFileAccept(kind = '*') {
+function verifyValue(value, type) {
 
-    //check all
-    if (kind === '*') {
-        return kind
+    let err = false
+    let errmsg = ''
+    if (type === 'isstr') {
+        if (!isstr(value)) {
+            err = true
+            errmsg = '需要為字串'
+            value = ''
+        }
+    }
+    else if (type === 'istime') {
+        if (!istime(value)) {
+            err = true
+            errmsg = '需要為時間(YYYY/MM/DD HH:mm:ss)'
+            value = ''
+        }
+    }
+    else if (type === 'isday') {
+        if (!isday(value)) {
+            err = true
+            errmsg = '需要為西元年/月/日'
+            value = ''
+        }
+    }
+    else if (type === 'ismonth') {
+        if (!ismonth(value)) {
+            err = true
+            errmsg = '需要為西元年/月'
+            value = ''
+        }
+    }
+    else if (type === 'isnum') {
+        if (!isnum(value)) {
+            err = true
+            errmsg = '需要為數字'
+            value = 0
+        }
+    }
+    else if (type === 'isp0num') {
+        if (!isp0num(value)) {
+            err = true
+            errmsg = '需要為含0的正浮點數'
+            value = 0
+        }
+    }
+    else if (type === 'isn0num') {
+        if (!isn0num(value)) {
+            err = true
+            errmsg = '需要為含0的負浮點數'
+            value = 0
+        }
     }
 
-    //check not string or array
-    if (!isstr(kind) &amp;&amp; !isearr(kind)) {
-        return '*'
+    else if (type === 'isint') {
+        if (!isint(value)) {
+            err = true
+            errmsg = '需要為整數'
+            value = 0
+        }
+    }
+    else if (type === 'ispint') {
+        if (!ispint(value)) {
+            err = true
+            errmsg = '需要為不含0正整數'
+            value = 0
+        }
+    }
+    else if (type === 'isp0int') {
+        if (!isp0int(value)) {
+            err = true
+            errmsg = '需要為含0正整數'
+            value = 0
+        }
+    }
+    else if (type === 'isnint') {
+        if (!isnint(value)) {
+            err = true
+            errmsg = '需要為不含0負整數'
+            value = 0
+        }
+    }
+    else if (type === 'isn0int') {
+        if (!isn0int(value)) {
+            err = true
+            errmsg = '需要為含0負整數'
+            value = 0
+        }
     }
 
-    //check common
-    if (kind === 'common') {
-        kind = ['docums', 'compress', 'image', 'data']
+    else if (isfun(type)) {
+        let f = type
+        value = f(value)
     }
-
-    //data, MIME_types: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
-    let data = [
-        {
-            name: 'htm',
-            group: 'docums',
-            acp: '.htm',
-        },
-        {
-            name: 'html',
-            group: 'docums',
-            acp: '.html',
-        },
-        {
-            name: 'pdf',
-            group: 'docums',
-            acp: 'application/pdf',
-        },
-        {
-            name: 'rtf',
-            group: 'docums',
-            acp: 'application/rtf',
-        },
-        {
-            name: 'doc',
-            group: 'docums',
-            acp: 'application/msword',
-        },
-        {
-            name: 'docx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        },
-        {
-            name: 'ppt',
-            group: 'docums',
-            acp: 'application/vnd.ms-powerpoint',
-        },
-        {
-            name: 'pptx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        },
-        {
-            name: 'xls',
-            group: 'docums',
-            acp: 'application/vnd.ms-excel',
-        },
-        {
-            name: 'xlsx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        },
-        {
-            name: 'odt',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.text',
-        },
-        {
-            name: 'odp',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.presentation',
-        },
-        {
-            name: 'application/vnd.oasis.opendocument.spreadsheet',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.spreadsheet',
-        },
-        {
-            name: 'zip',
-            group: 'compress',
-            acp: 'application/zip',
-        },
-        {
-            name: 'rar',
-            group: 'compress',
-            acp: 'application/x-rar-compressed',
-        },
-        {
-            name: '7z',
-            group: 'compress',
-            acp: 'application/x-7z-compressed',
-        },
-        {
-            name: 'bzip',
-            group: 'compress',
-            acp: 'application/x-bzip',
-        },
-        {
-            name: 'bzip2',
-            group: 'compress',
-            acp: 'application/x-bzip2',
-        },
-        {
-            name: 'pic',
-            group: 'image',
-            acp: 'image/*',
-        },
-        {
-            name: 'xml',
-            group: 'data',
-            acp: '.xml',
-        },
-        {
-            name: 'json',
-            group: 'data',
-            acp: '.json',
-        },
-        {
-            name: 'txt',
-            group: 'data',
-            acp: '.txt',
-        },
-        {
-            name: 'csv',
-            group: 'data',
-            acp: '.csv',
-        },
-        {
-            name: 'dat',
-            group: 'data',
-            acp: '.dat',
-        },
-    ]
-
-    function getName(name) {
-        let rs = filter(data, { name: name })
-        return getAcp(rs)
+    else {
+        err = true
+        errmsg = '需要指定驗證類型'
+        value = null
     }
-
-    function getMode(kind) {
-        let rs = filter(data, { group: kind })
-        return getAcp(rs)
+    let r = {
+        value: value,
+        err: err,
+        errmsg: errmsg,
     }
-
-    function getAcp(rs) {
-        return map(rs, 'acp')
-    }
-
-    //convert to array
-    if (isstr(kind)) {
-        kind = [kind]
-    }
-
-    //accept string
-    let c = ''
-    if (isearr(kind)) {
-        let r1 = map(kind, function(v) {
-            return getMode(v)
-        })
-        let r2 = map(kind, function(v) {
-            return getName(v)
-        })
-        let r = concat(r1, r2)
-        r = filter(r, isernot)
-        c = join(r, ',')
-    }
-
-    return c
+    return r
 }
 
 
-export default domGetFileAccept
+export default verifyValue
 </code></pre>
         </article>
     </section>
