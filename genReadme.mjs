@@ -23,20 +23,8 @@ async function main() {
     //rdme
     let rdme = getReadme()
 
-    //rdmever
-    let rdmever = ''
-    _.each(rdme.lines, function(v) {
-        if (v.indexOf('dist/wsemi.umd.js') >= 0) {
-            rdmever = v
-        }
-    })
-
     //replace
-    let c = ''
-    if (rdmever !== '') {
-        let r = `<script src="https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js"></script>`
-        c = rdme.content.replace(rdmever, r)
-    }
+    let c = rdme.content.replace(/(wsemi@)+([0-9]{1}.[0-9]{1}.[0-9]{1})/g, pkg.version)
 
     //write
     //console.log(c)
