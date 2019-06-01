@@ -8,9 +8,6 @@ import isp0int from './isp0int.mjs'
 import isnint from './isnint.mjs'
 import isn0int from './isn0int.mjs'
 import isfun from './isfun.mjs'
-import istime from './istime.mjs'
-import isday from './isday.mjs'
-import ismonth from './ismonth.mjs'
 
 
 /**
@@ -58,27 +55,6 @@ function verifyValue(value, type) {
         if (!isstr(value)) {
             err = true
             errmsg = '需要為字串'
-            value = ''
-        }
-    }
-    else if (type === 'istime') {
-        if (!istime(value)) {
-            err = true
-            errmsg = '需要為時間(YYYY/MM/DD HH:mm:ss)'
-            value = ''
-        }
-    }
-    else if (type === 'isday') {
-        if (!isday(value)) {
-            err = true
-            errmsg = '需要為西元年/月/日'
-            value = ''
-        }
-    }
-    else if (type === 'ismonth') {
-        if (!ismonth(value)) {
-            err = true
-            errmsg = '需要為西元年/月'
             value = ''
         }
     }

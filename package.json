@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "A support package for web developer.",
   "main": "",
   "dependencies": {

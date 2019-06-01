@@ -6,48 +6,14 @@ describe(`verifyValue`, function() {
     let k
     let o = {}
 
-    k = 1
-    o[k] = {
-        in1: '2019/01/01 12:34:56',
-        in2: 'istime',
-        out: {
-            err: false,
-            errmsg: '',
-            value: '2019/01/01 12:34:56'
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
-        let k = 1
-        let r = verifyValue(o[k].in1, o[k].in2)
-        let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
-    })
-
-    k = 2
-    o[k] = {
-        in1: '2019/01/01',
-        in2: 'isday',
-        out: {
-            err: false,
-            errmsg: '',
-            value: '2019/01/01'
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
-        let k = 2
-        let r = verifyValue(o[k].in1, o[k].in2)
-        let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
-    })
-
     k = 3
     o[k] = {
-        in1: '2019/01',
-        in2: 'ismonth',
+        in1: 12.34,
+        in2: 'any',
         out: {
             err: false,
             errmsg: '',
-            value: '2019/01'
+            value: 12.34
         }
     }
     it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
