@@ -103,7 +103,6 @@ function verifyValue(value, type) {
             value = 0
         }
     }
-
     else if (type === 'isint') {
         if (!isint(value)) {
             err = true
@@ -139,10 +138,16 @@ function verifyValue(value, type) {
             value = 0
         }
     }
-
     else if (isfun(type)) {
         let f = type
         value = f(value)
+    }
+    else if (type === 'any') {
+        if (!isnum(value) && !isstr(value)) {
+            err = true
+            errmsg = '需要為字串或數字'
+            value = ''
+        }
     }
     else {
         err = true

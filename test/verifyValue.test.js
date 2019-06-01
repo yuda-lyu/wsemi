@@ -57,6 +57,23 @@ describe(`verifyValue`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    k = 4
+    o[k] = {
+        in1: 'abc',
+        in2: 'any',
+        out: {
+            err: false,
+            errmsg: '',
+            value: 'abc'
+        }
+    }
+    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+        let k = 4
+        let r = verifyValue(o[k].in1, o[k].in2)
+        let rr = o[k].out
+        assert.strict.deepEqual(r, rr)
+    })
+
     k = 5
     o[k] = {
         in1: 'abc123',
