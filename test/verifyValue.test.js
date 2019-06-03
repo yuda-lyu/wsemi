@@ -16,7 +16,7 @@ describe(`verifyValue`, function() {
             value: 12.34
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 3
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -33,7 +33,7 @@ describe(`verifyValue`, function() {
             value: 'abc'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 4
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -50,7 +50,7 @@ describe(`verifyValue`, function() {
             value: 'abc123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 5
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -67,7 +67,7 @@ describe(`verifyValue`, function() {
             value: '12.34'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 6
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -84,7 +84,7 @@ describe(`verifyValue`, function() {
             value: '0'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 7
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -101,7 +101,7 @@ describe(`verifyValue`, function() {
             value: '0.123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 8
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -118,7 +118,7 @@ describe(`verifyValue`, function() {
             value: '0'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 9
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -135,7 +135,7 @@ describe(`verifyValue`, function() {
             value: '-0.123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 10
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -152,7 +152,7 @@ describe(`verifyValue`, function() {
             value: '0'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 11
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -169,7 +169,7 @@ describe(`verifyValue`, function() {
             value: '123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 12
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -186,7 +186,7 @@ describe(`verifyValue`, function() {
             value: '123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 13
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -203,7 +203,7 @@ describe(`verifyValue`, function() {
             value: '-123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 14
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -220,7 +220,7 @@ describe(`verifyValue`, function() {
             value: '0'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 15
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -237,7 +237,7 @@ describe(`verifyValue`, function() {
             value: '123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 16
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -254,7 +254,7 @@ describe(`verifyValue`, function() {
             value: '0'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 17
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -271,7 +271,7 @@ describe(`verifyValue`, function() {
             value: '-123'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 18
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -290,7 +290,7 @@ describe(`verifyValue`, function() {
             value: 'abc'
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 19
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -307,7 +307,7 @@ describe(`verifyValue`, function() {
             value: 12.34
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 20
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -324,7 +324,7 @@ describe(`verifyValue`, function() {
             value: 0
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 21
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -341,7 +341,7 @@ describe(`verifyValue`, function() {
             value: 0.123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 22
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -358,7 +358,7 @@ describe(`verifyValue`, function() {
             value: 0
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 23
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -375,7 +375,7 @@ describe(`verifyValue`, function() {
             value: -0.123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 24
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -392,7 +392,7 @@ describe(`verifyValue`, function() {
             value: 0
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 25
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -409,7 +409,7 @@ describe(`verifyValue`, function() {
             value: 123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 26
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -426,7 +426,7 @@ describe(`verifyValue`, function() {
             value: 123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 27
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -443,7 +443,7 @@ describe(`verifyValue`, function() {
             value: -123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 28
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -460,7 +460,7 @@ describe(`verifyValue`, function() {
             value: 0
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 29
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -477,7 +477,7 @@ describe(`verifyValue`, function() {
             value: 123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 30
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -494,7 +494,7 @@ describe(`verifyValue`, function() {
             value: 0
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 31
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out
@@ -511,7 +511,7 @@ describe(`verifyValue`, function() {
             value: -123
         }
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${o[k].in1}, ${o[k].in2}`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}`, function() {
         let k = 32
         let r = verifyValue(o[k].in1, o[k].in2)
         let rr = o[k].out

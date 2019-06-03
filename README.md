@@ -63,7 +63,7 @@ or
 </script>
 ```
 [Optional] Add script for fuzzball.
-> **Note:** include script when use `fuzzfind` function.
+> **Note:** include script when use `strFindFuzz` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
@@ -95,5 +95,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.8/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.1.9/dist/wsemi.umd.js"></script>
 ```

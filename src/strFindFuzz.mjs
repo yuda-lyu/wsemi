@@ -15,23 +15,29 @@ import sep from './sep.mjs'
 /**
  * 以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fuzzfind.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzz.test.js Github}
  * @memberOf wsemi
- * @param {Array|String} ar 輸入資料
- * @param {String} strkey 查找ar內是否含有關鍵字，多關鍵字以空白區分
+ * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
+ * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分
  * @param {Boolean} [bscore=false] 是否回傳分數，true:回傳值為分數，false:回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
- * fuzzfind(['abc', 'def123', '中文測試'], 'ef')
- * // => true
+ * strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
+ * // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
  *
- * fuzzfind(['abc', 'def123', '中文測試'], 'ef', true)
+ * strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
+ * // => 82
+ *
+ * strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true)
  * // => 100
  *
- * fuzzfind(['abc', 'def123', '中文測試'], 'efgg', true)
+ * strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true)
  * // => 50
+ *
+ * strFindFuzz(['abc', 'def123', '中文測試'], 'ef')
+ * // => true
  */
-function fuzzfind(ar, strkey, bscore = false) {
+function strFindFuzz(ar, strkey, bscore = false) {
 
     //自動將陣列轉字串
     let c = ''
@@ -106,4 +112,4 @@ function fuzzfind(ar, strkey, bscore = false) {
 }
 
 
-export default fuzzfind
+export default strFindFuzz
