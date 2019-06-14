@@ -27,13 +27,13 @@ function core(mainString, targetStrings) {
 
 
 /**
- * 以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
+ * 計算字串ar與多關鍵字陣列strkeys之相似程度，主要來自[Fork: {@link https://github.com/aceakash/string-similarity string-similarity}]
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindSimilar.test.js Github}
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number|Array} strkeys 查找ar內與多關鍵字strkeys的個別相似度
- * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
+ * @returns {Object} 輸出比對資料物件，回傳與各關鍵字之相似度以及最相關者
  * @example
  * strFindSimilar('The Woodman(樵夫) set to work at once, and so...', ['Wodooman(樵夫)', 'manWood(樵夫)', 'Wood樵man(夫)', 'Woodman(樵夫)'])
  * // => { 'ratings': [{ 'target': 'Wodooman(樵夫)', 'rating': 0.375 }, { 'target': 'manWood(樵夫)', 'rating': 0.3404255319148936 }, { 'target': 'Wood樵man(夫)', 'rating': 0.2978723404255319 }, { 'target': 'Woodman(樵夫)', 'rating': 0.425531914893617 }], 'bestMatch': { 'target': 'Woodman(樵夫)', 'rating': 0.425531914893617 }, 'bestMatchIndex': 3 }
