@@ -13,7 +13,19 @@ import j2o from './j2o.mjs'
  * @param {Array} params 輸入傳入腳本的參數陣列
  * @returns {*} 回傳任意資料
  * @example
- * need test in os env.
+ * let prog = 'python'
+ * let scp = 'fun.py'
+ * let fd_temp = 'D:\\temp\\'
+ * let pa = 'sin'
+ * let pb = '12'
+ * let pc = '34.56'
+ * execScript(prog, scp, [pa, pb, pc])
+ *     .then(function(data) {
+ *         console.log('then', data)
+ *     })
+ *     .catch(function(data) {
+ *         console.log('catch', data)
+ *     })
  */
 function execScript(prog, scp, params) {
     return new Promise(function(resolve, reject) {
