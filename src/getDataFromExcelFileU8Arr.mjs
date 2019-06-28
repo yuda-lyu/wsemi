@@ -11,7 +11,9 @@ import isbol from './isbol.mjs'
 
 
 function to_ltdt(workbook) {
-
+    //可改使用: sheet_to_row_object_array
+    //https://juejin.im/post/5d0105c7e51d45105e0212a4
+    
     function core(m) {
         let rs = []
         each(m.rows, function (c) {

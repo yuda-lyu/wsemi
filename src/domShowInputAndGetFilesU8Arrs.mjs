@@ -58,7 +58,7 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
         })
         .then(function(u8as) {
 
-            //ArrayBuffer to Uint8Array and save
+            //save Uint8Array
             each(u8as, function(u8a, k) {
                 resfiles[k]['u8a'] = u8a
             })
