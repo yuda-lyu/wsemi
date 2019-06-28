@@ -15,7 +15,6 @@ import j2o from './j2o.mjs'
  * @example
  * let prog = 'python'
  * let scp = 'fun.py'
- * let fd_temp = 'D:\\temp\\'
  * let pa = 'sin'
  * let pb = '12'
  * let pc = '34.56'
