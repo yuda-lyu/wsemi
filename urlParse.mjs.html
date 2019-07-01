@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domGetFiles.mjs - Documentation</title>
+    <title>urlParse.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -31,7 +31,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domGetFiles.mjs</h1>
+    <h1 class="page-title">urlParse.mjs</h1>
     
 
     
@@ -41,57 +41,56 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
-import ispint from './ispint.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import split from 'lodash/split'
+import map from 'lodash/map'
+import fromPairs from 'lodash/fromPairs'
+import isestr from './isestr.mjs'
 
 
 /**
- * 前端回傳Input元素所給予的檔案
+ * 切分網址取得參數物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFiles.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/urlParse.test.js Github}
  * @memberOf wsemi
- * @param {Element} ele 輸入Element Input元素
- * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
- * @returns {Array} 回傳檔案陣列
+ * @param {String} url 輸入要切分的網址字串
+ * @returns {Object} 回傳資訊物件
  * @example
- * need test in browser
+ * urlParse('http://localhost:3000/index.html?a=12.34&amp;b=xyz&amp;abc=xyz123.456')
+ * // => { a: '12.34', abc: 'xyz123.456', b: 'xyz' }
  */
-function domGetFiles(ele, sizelimit = 500) {
+function urlParse(url) {
 
     //check
-    if (ispint(sizelimit)) {
-        sizelimit = 500
+    if (!isestr(url)) {
+        return {}
     }
 
-    //files
-    let err = []
-    let files = []
-    each(ele.files, function(file) {
+    //依?切開
+    url = split(url, '?')
+    url = get(url, '[1]')
 
-        //size
-        let size = file.size
+    //check
+    if (!isestr(url)) {
+        return {}
+    }
 
-        //check
-        if (size / 1024 / 1024 > sizelimit) { //轉mb
+    //依&amp;切開
+    let s = split(url, '&amp;')
 
-            //push err
-            err.push(`檔案大小超過上限${sizelimit}mb：$domGetFiles`)
-
-        }
-
-        //push file
-        files.push(file)
-
+    //依=切開
+    s = map(s, function(v) {
+        return split(v, '=')
     })
 
-    return {
-        files: files,
-        err: err
-    }
+    //依照key為[0], value為[1]組合成物件
+    s = fromPairs(s)
+
+    return s
 }
 
 
-export default domGetFiles
+export default urlParse
 </code></pre>
         </article>
     </section>
