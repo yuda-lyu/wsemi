@@ -24,7 +24,7 @@ async function main() {
     let rdme = getReadme()
 
     //replace
-    let c = rdme.content.replace(/(wsemi@)+(\d.\d.\d)/g, 'wsemi@' + pkg.version)
+    let c = rdme.content.replace(/(wsemi@)+(\d+.\d+.\d+)/g, 'wsemi@' + pkg.version)
 
     //write
     //console.log(c)
