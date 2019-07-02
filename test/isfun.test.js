@@ -14,6 +14,12 @@ describe(`isfun`, function() {
         assert.strict.deepEqual(r, false)
     })
 
+    //error: regeneratorRuntime is not defined, 因mocha無法編譯isfun再進行測試
+    // it(`should return false when input async function() {}`, function() {
+    //     let r = isfun(async function() {})
+    //     assert.strict.deepEqual(r, true)
+    // })
+
     it(`should return true when input function() {}`, function() {
         let r = isfun(function() {})
         assert.strict.deepEqual(r, true)

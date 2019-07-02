@@ -15,7 +15,7 @@
 function isfun(v) {
 
     let c = Object.prototype.toString.call(v)
-    return c === '[object Function]'
+    return c === '[object Function]' || c === '[object AsyncFunction]'
 }
 
 
