@@ -2,7 +2,7 @@ import isestr from './isestr.mjs'
 
 
 /**
- * BinaryString資料Unit8Array
+ * BinaryString資料轉Unit8Array
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.js Github}
  * @memberOf wsemi

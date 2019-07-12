@@ -1,19 +1,38 @@
 import UAParser from 'ua-parser-js'
+import isstr from './isstr.mjs'
 import getdtvstr from './getdtvstr.mjs'
 
 
 /**
- * 前端取得使用者瀏覽器資訊
+ * 取得使用者瀏覽器資訊，於browser中不輸入即可自動偵測，於nodejs環境則需提供user agent字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.js Github}
  * @memberOf wsemi
+ * @param {String} [v=null] 輸入user agent字串，預設null
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  * @example
- * need test in browser
+ * let ua = 'Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)'
+ * getUserAgent(ua)
+ * // => {
+ *     browsername: 'Konqueror',
+ *     browserversion: '4.1',
+ *     cpuarchitecture: undefined,
+ *     devicetype: '',
+ *     engineinfor: 'KHTML4.1.4',
+ *     platform: 'OpenBSDundefined'
+ * }
  */
-function getUserAgent() {
+function getUserAgent(v = null) {
 
-    let parser = new UAParser()
+    //parser
+    let parser
+    if (isstr(v)) {
+        parser = new UAParser(v)
+    }
+    else {
+        parser = new UAParser()
+    }
+
     let oua = parser.getResult()
     return {
         browsername: oua.browser.name,
