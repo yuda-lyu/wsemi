@@ -2,7 +2,7 @@ import isu8arr from './isu8arr.mjs'
 
 
 /**
- * Unit8Array資料BinaryString
+ * Unit8Array資料BinaryString，BinaryString為UTF-16編碼
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2bs.test.js Github}
  * @memberOf wsemi

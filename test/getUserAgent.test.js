@@ -11,7 +11,7 @@ describe(`getUserAgent`, function() {
         let rr = {
             browsername: 'Konqueror',
             browserversion: '4.1',
-            cpuarchitecture: undefined,
+            cpuarchitecture: '',
             devicetype: '',
             engineinfor: 'KHTML4.1.4',
             platform: 'OpenBSDundefined'

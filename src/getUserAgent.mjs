@@ -16,7 +16,7 @@ import getdtvstr from './getdtvstr.mjs'
  * // => {
  *     browsername: 'Konqueror',
  *     browserversion: '4.1',
- *     cpuarchitecture: undefined,
+ *     cpuarchitecture: '',
  *     devicetype: '',
  *     engineinfor: 'KHTML4.1.4',
  *     platform: 'OpenBSDundefined'
@@ -40,7 +40,7 @@ function getUserAgent(v = null) {
         engineinfor: oua.engine.name + oua.engine.version,
         platform: oua.os.name + oua.os.version,
         devicetype: getdtvstr(oua.device, 'type'),
-        cpuarchitecture: oua.cpu.architecture
+        cpuarchitecture: getdtvstr(oua.cpu, 'architecture')
     }
 }
 
