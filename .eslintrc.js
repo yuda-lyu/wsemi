@@ -4,16 +4,19 @@ module.exports = {
         "es6": true,
         "mocha": true
     },
-    "extends": "standard",
+    "extends": ["plugin:vue/essential", "standard"],
+    "plugins": [
+        "vue"
+    ],
     "globals": {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
         "ecmaVersion": 2018,
-        "sourceType": "module"
+        "sourceType": "module",
     },
-rules: {
+    rules: {
         // allow async-await
         'generator-star-spacing': 'off',
         // allow debugger during development
@@ -37,5 +40,7 @@ rules: {
         'no-constant-condition': 'off',
         'camelcase': 'off',
         'no-new': 'off',
+        'prefer-const': 'off',
+        'quote-props': ['error', 'consistent'],
     }
 };
