@@ -22,8 +22,8 @@ describe(`isu16arr`, function() {
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return false when input '2019-01-01T12:34:56+08:00:789'`, function() {
-        let r = isu16arr('2019-01-01T12:34:56+08:00:789')
+    it(`should return false when input '2019-01-01T12:34:56:789+08:00'`, function() {
+        let r = isu16arr('2019-01-01T12:34:56:789+08:00')
         assert.strict.deepEqual(r, false)
     })
 

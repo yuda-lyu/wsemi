@@ -17,8 +17,8 @@ describe(`getTimeObject`, function() {
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019-01-01T12:34:56+08:00:789'`, function() {
-        let r = getTimeObject('2019-01-01T12:34:56+08:00:789')
+    it(`should return null when input '2019-01-01T12:34:56:789+08:00'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:56:789+08:00')
         assert.strict.deepEqual(r, null)
     })
 

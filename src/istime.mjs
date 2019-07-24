@@ -10,7 +10,7 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入秒時間字串
  * @returns {Boolean} 回傳是否為秒時間布林值
  * @example
- * istime('2019-01-01T12:34:56+08:00:789')
+ * istime('2019-01-01T12:34:56:789+08:00')
  * // => false
  *
  * istime('2019-01-01T12:34:56+08:00')
