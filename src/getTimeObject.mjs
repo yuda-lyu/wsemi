@@ -4,28 +4,24 @@ import getTimeFromUnit from './getTimeFromUnit.mjs'
 
 
 function parseTime(t, unit) {
-    let fm = ''
     if (unit === 'years') {
-        fm = 'YYYY'
+        t += '-01-01T00:00:00+08:00'
     }
     else if (unit === 'months') {
-        t += '-01'
-        fm = 'YYYY-MM-DD'
+        t += '-01T00:00:00+08:00'
     }
     else if (unit === 'days') {
-        fm = 'YYYY-MM-DD'
+        t += 'T00:00:00+08:00'
     }
     else if (unit === 'hours') {
-        t += ':00:00'
-        fm = 'YYYY-MM-DDTHH:mm:ssZ'
+        t += ':00:00+08:00'
     }
     else if (unit === 'minutes') {
-        t += ':00'
-        fm = 'YYYY-MM-DDTHH:mm:ssZ'
+        t += ':00+08:00'
     }
     else if (unit === 'seconds') {
-        fm = 'YYYY-MM-DDTHH:mm:ssZ'
     }
+    let fm = 'YYYY-MM-DDTHH:mm:ssZ'
     return ot(t, fm)
 }
 
