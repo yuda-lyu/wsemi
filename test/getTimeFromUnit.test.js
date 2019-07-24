@@ -16,25 +16,25 @@ describe(`getTimeFromUnit`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return 'YYYY' when input 'days'`, function() {
+    it(`should return 'YYYY-MM-DD' when input 'days'`, function() {
         let r = getTimeFromUnit('days')
         let rr = 'YYYY-MM-DD'
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return 'YYYY' when input 'hours'`, function() {
+    it(`should return 'YYYY-MM-DDTHH' when input 'hours'`, function() {
         let r = getTimeFromUnit('hours')
         let rr = 'YYYY-MM-DDTHH'
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return 'YYYY' when input 'minutes'`, function() {
+    it(`should return 'YYYY-MM-DDTHH:mm' when input 'minutes'`, function() {
         let r = getTimeFromUnit('minutes')
         let rr = 'YYYY-MM-DDTHH:mm'
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return 'YYYY' when input 'seconds'`, function() {
+    it(`should return 'YYYY-MM-DDTHH:mm:ssZ' when input 'seconds'`, function() {
         let r = getTimeFromUnit('seconds')
         let rr = 'YYYY-MM-DDTHH:mm:ssZ'
         assert.strict.deepEqual(r, rr)

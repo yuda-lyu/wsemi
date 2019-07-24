@@ -33,6 +33,11 @@ describe(`getTimeObject`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    it(`should return null when input '2019-01-01T12:34:66+08:00', 'seconds'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:66+08:00', 'seconds')
+        assert.strict.deepEqual(r, null)
+    })
+
     it(`should return null when input '2019-01-01T12:34:56+08:00'`, function() {
         let r = getTimeObject('2019-01-01T12:34:56+08:00')
         assert.strict.deepEqual(r, null)
@@ -76,7 +81,7 @@ describe(`getTimeObject`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019-01-01'`, function() {
+    it(`should return (ot object) when input '2019-01-01'`, function() {
         let r = getTimeObject('2019-01-01')
         let rr = ot('2019-01-01T00:00:00+08:00', 'YYYY-MM-DDTHH:mm:ssZ')
         assert.strict.deepEqual(r, rr)

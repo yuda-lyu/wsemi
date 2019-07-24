@@ -1,28 +1,30 @@
 import ot from 'dayjs'
+import 'dayjs/locale/zh-tw'
 import isestr from './isestr.mjs'
 import getTimeFromUnit from './getTimeFromUnit.mjs'
 
 
 function parseTime(t, unit) {
+    let e = ''
     if (unit === 'years') {
-        t += '-01-01T00:00:00+08:00'
+        e = '-01-01T00:00:00+08:00'
     }
     else if (unit === 'months') {
-        t += '-01T00:00:00+08:00'
+        e = '-01T00:00:00+08:00'
     }
     else if (unit === 'days') {
-        t += 'T00:00:00+08:00'
+        e = 'T00:00:00+08:00'
     }
     else if (unit === 'hours') {
-        t += ':00:00+08:00'
+        e = ':00:00+08:00'
     }
     else if (unit === 'minutes') {
-        t += ':00+08:00'
+        e = ':00+08:00'
     }
     else if (unit === 'seconds') {
     }
     let fm = 'YYYY-MM-DDTHH:mm:ssZ'
-    return ot(t, fm)
+    return ot(t + e, fm)
 }
 
 
@@ -59,7 +61,7 @@ function getTimeObject(t, unit = 'days') {
     let o = parseTime(t, unit)
 
     //check unit
-    let m = o.format(fmt)
+    let m = o.locale('zh-tw').format(fmt)
     let b = (t === m)
     if (b) {
         return o
