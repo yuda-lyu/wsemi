@@ -10,18 +10,18 @@ function parseTime(t, unit) {
     }
     else if (unit === 'months') {
         t += '-01'
-        fm = 'YYYY-MM-01'
+        fm = 'YYYY-MM-DD'
     }
     else if (unit === 'days') {
         fm = 'YYYY-MM-DD'
     }
     else if (unit === 'hours') {
         t += ':00:00'
-        fm = 'YYYY-MM-DDTHH:00:00'
+        fm = 'YYYY-MM-DDTHH:mm:ssZ'
     }
     else if (unit === 'minutes') {
         t += ':00'
-        fm = 'YYYY-MM-DDTHH:mm:00'
+        fm = 'YYYY-MM-DDTHH:mm:ssZ'
     }
     else if (unit === 'seconds') {
         fm = 'YYYY-MM-DDTHH:mm:ssZ'
