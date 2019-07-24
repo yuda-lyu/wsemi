@@ -61,11 +61,12 @@ function getTimeObject(t, unit = 'days') {
     let o = parseTime(t, unit)
 
     //check unit
-    let m = o.locale('zh-tw').format(fmt)
-    let b = (t === m)
-    if (b) {
-        return o
-    }
+    let m = o.locale('zh-tw').format(fmt) //因為補齊時間為+08:00為zh-tw時間
+    return m
+    // let b = (t === m)
+    // if (b) {
+    //     return o
+    // }
 
     return null
 }
