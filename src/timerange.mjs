@@ -12,20 +12,20 @@ import time2min from './time2min.mjs'
  * @param {String} tend 輸入結束秒時間字串，若不輸入則等同於開始時間字串
  * @returns {String} 回傳合併顯示時間字串
  * @example
- * timerange('2019/01/01 09:00:00')
- * // => '2019/01/01 09:00 至 無'
+ * timerange('2019-01-01T09:00:00+08:00')
+ * // => '2019-01-01T09:00 至 無'
  *
- * timerange('2019/01/01 09:00:00', '2019/01/01 12:34:56')
- * // => '2019/01/01 09:00 至 12:34'
+ * timerange('2019-01-01T09:00:00+08:00', '2019-01-01T12:34:56+08:00')
+ * // => '2019-01-01T09:00 至 12:34'
  *
- * timerange('2019/01/01 09:00:00', '2019/01/03 12:00:00')
- * // => '2019/01/01 09:00 至 2019/01/03 12:00'
+ * timerange('2019-01-01T09:00:00+08:00', '2019-01-03T12:00:00+08:00')
+ * // => '2019-01-01T09:00 至 2019-01-03T12:00'
  *
- * timerange('2019/01/01 19:00:00', '2019/01/01 12:00:00')
- * // => '2019/01/01 19:00 至 12:00 (起始時間大於結束時間)'
+ * timerange('2019-01-01T19:00:00+08:00', '2019-01-01T12:00:00+08:00')
+ * // => '2019-01-01T19:00 至 12:00 (起始時間大於結束時間)'
  *
- * timerange('2019/01/03 09:00:00', '2019/01/01 12:00:00')
- * // => '2019/01/03 09:00 至 2019/01/01 12:00 (起始時間大於結束時間)'
+ * timerange('2019-01-03T09:00:00+08:00', '2019-01-01T12:00:00+08:00')
+ * // => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'
  */
 function timerange(tstart, tend) {
 
@@ -45,12 +45,12 @@ function timerange(tstart, tend) {
     }
 
     //m1, m2
-    let m1 = ot(tstart, 'YYYY/MM/DD HH:mm:ss')
-    let m2 = ot(tend, 'YYYY/MM/DD HH:mm:ss')
+    let m1 = ot(tstart, 'YYYY-MM-DDTHH:mm:ssZ')
+    let m2 = ot(tend, 'YYYY-MM-DDTHH:mm:ssZ')
 
     //day
-    let ctstart = m1.format('YYYY/MM/DD')
-    let ctend = m2.format('YYYY/MM/DD')
+    let ctstart = m1.format('YYYY-MM-DD')
+    let ctend = m2.format('YYYY-MM-DD')
 
     if (ctstart === ctend) { //同天
         let h = m2.format('HH:mm')

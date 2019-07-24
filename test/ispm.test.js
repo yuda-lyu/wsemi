@@ -9,13 +9,13 @@ describe(`ispm`, function() {
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return false when input '2019/01/01'`, function() {
-        let r = ispm('2019/01/01')
+    it(`should return false when input '2019-01-01'`, function() {
+        let r = ispm('2019-01-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/21/01'`, function() {
-        let r = ispm('2019/21/01')
+    it(`should return false when input '2019-21-01'`, function() {
+        let r = ispm('2019-21-01')
         assert.strict.deepEqual(r, false)
     })
 

@@ -10,10 +10,10 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入月時間字串
  * @returns {Boolean} 回傳是否為月時間布林值
  * @example
- * ismonth('2019/01/01')
+ * ismonth('2019-01-01')
  * // => false
  *
- * ismonth('2019/01')
+ * ismonth('2019-01')
  * // => true
  */
 function ismonth(v) {
@@ -23,7 +23,7 @@ function ismonth(v) {
         return false
     }
 
-    let df = 'YYYY/MM'
+    let df = 'YYYY-MM'
     let m = ot(v, df).format(df)
     return (v === m)
 }

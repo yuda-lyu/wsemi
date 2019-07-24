@@ -4,13 +4,13 @@ import isernot from '../src/isernot.mjs'
 
 describe(`isernot`, function() {
 
-    it(`should return true when input '2019/01/01'`, function() {
-        let r = isernot('2019/01/01')
+    it(`should return true when input '2019-01-01'`, function() {
+        let r = isernot('2019-01-01')
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return true when input '2019/21/01'`, function() {
-        let r = isernot('2019/21/01')
+    it(`should return true when input '2019-21-01'`, function() {
+        let r = isernot('2019-21-01')
         assert.strict.deepEqual(r, true)
     })
 

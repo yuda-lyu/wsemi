@@ -17,89 +17,89 @@ describe(`getTimeObject`, function() {
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/01/01 12:34:56:789'`, function() {
-        let r = getTimeObject('2019/01/01 12:34:56:789')
+    it(`should return null when input '2019-01-01T12:34:56+08:00:789'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:56+08:00:789')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/01/01 12:34:66:789'`, function() {
-        let r = getTimeObject('2019/01/01 12:34:66:789')
+    it(`should return null when input '2019-01-01T12:34:66:789+08:00'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:66:789+08:00')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return (ot object) when input '2019/01/01 12:34:56', 'seconds'`, function() {
-        let r = getTimeObject('2019/01/01 12:34:56', 'seconds')
-        let rr = ot('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss')
+    it(`should return (ot object) when input '2019-01-01T12:34:56+08:00', 'seconds'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:56+08:00', 'seconds')
+        let rr = ot('2019-01-01T12:34:56+08:00', 'YYYY-MM-DDTHH:mm:ssZ')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/01/01 12:34:56'`, function() {
-        let r = getTimeObject('2019/01/01 12:34:56')
+    it(`should return null when input '2019-01-01T12:34:56+08:00'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:56+08:00')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/01/01 12:34:66'`, function() {
-        let r = getTimeObject('2019/01/01 12:34:66')
+    it(`should return null when input '2019-01-01T12:34:66+08:00'`, function() {
+        let r = getTimeObject('2019-01-01T12:34:66+08:00')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/21/01 12:34:56'`, function() {
-        let r = getTimeObject('2019/21/01 12:34:56')
+    it(`should return null when input '2019-21-01T12:34:56+08:00'`, function() {
+        let r = getTimeObject('2019-21-01T12:34:56+08:00')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return (ot object) when input '2019/01/01 12:34', 'minutes'`, function() {
-        let r = getTimeObject('2019/01/01 12:34', 'minutes')
-        let rr = ot('2019/01/01 12:34:00', 'YYYY/MM/DD HH:mm:ss')
+    it(`should return (ot object) when input '2019-01-01T12:34', 'minutes'`, function() {
+        let r = getTimeObject('2019-01-01T12:34', 'minutes')
+        let rr = ot('2019-01-01T12:34:00+08:00', 'YYYY-MM-DDTHH:mm:ssZ')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/01/01 12:34'`, function() {
-        let r = getTimeObject('2019/01/01 12:34')
+    it(`should return null when input '2019-01-01T12:34'`, function() {
+        let r = getTimeObject('2019-01-01T12:34')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return (ot object) when input '2019/01/01 12', 'hours'`, function() {
-        let r = getTimeObject('2019/01/01 12', 'hours')
-        let rr = ot('2019/01/01 12:00:00', 'YYYY/MM/DD HH:mm:ss')
+    it(`should return (ot object) when input '2019-01-01T12', 'hours'`, function() {
+        let r = getTimeObject('2019-01-01T12', 'hours')
+        let rr = ot('2019-01-01T12:00:00+08:00', 'YYYY-MM-DDTHH:mm:ssZ')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/01/01 12'`, function() {
-        let r = getTimeObject('2019/01/01 12')
+    it(`should return null when input '2019-01-01T12'`, function() {
+        let r = getTimeObject('2019-01-01T12')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return (ot object) when input '2019/01/01', 'days'`, function() {
-        let r = getTimeObject('2019/01/01', 'days')
-        let rr = ot('2019/01/01', 'YYYY/MM/DD')
+    it(`should return (ot object) when input '2019-01-01', 'days'`, function() {
+        let r = getTimeObject('2019-01-01', 'days')
+        let rr = ot('2019-01-01', 'YYYY-MM-DD')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/01/01'`, function() {
-        let r = getTimeObject('2019/01/01')
-        let rr = ot('2019/01/01', 'YYYY/MM/DD')
+    it(`should return null when input '2019-01-01'`, function() {
+        let r = getTimeObject('2019-01-01')
+        let rr = ot('2019-01-01', 'YYYY-MM-DD')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/21/01'`, function() {
-        let r = getTimeObject('2019/21/01')
+    it(`should return null when input '2019-21-01'`, function() {
+        let r = getTimeObject('2019-21-01')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/01', 'months'`, function() {
-        let r = getTimeObject('2019/01', 'months')
-        let rr = ot('2019/01/01', 'YYYY/MM/DD')
+    it(`should return null when input '2019-01', 'months'`, function() {
+        let r = getTimeObject('2019-01', 'months')
+        let rr = ot('2019-01-01', 'YYYY-MM-DD')
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return null when input '2019/01'`, function() {
-        let r = getTimeObject('2019/01')
+    it(`should return null when input '2019-01'`, function() {
+        let r = getTimeObject('2019-01')
         assert.strict.deepEqual(r, null)
     })
 
-    it(`should return null when input '2019/21'`, function() {
-        let r = getTimeObject('2019/21')
+    it(`should return null when input '2019-21'`, function() {
+        let r = getTimeObject('2019-21')
         assert.strict.deepEqual(r, null)
     })
 

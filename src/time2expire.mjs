@@ -25,7 +25,7 @@ function time2expire(t) {
 
     //ot
     let mnow = ot()
-    let mtime = ot(t, 'YYYY/MM/DD HH:mm:ss')
+    let mtime = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
 
     //check
     if (mnow > mtime) {
@@ -37,10 +37,10 @@ function time2expire(t) {
     }
 
     //day
-    let nowday = mnow.format('YYYY/MM/DD')
-    let timeday = mtime.format('YYYY/MM/DD')
-    let mnowday = ot(nowday, 'YYYY/MM/DD')
-    let mtimeday = ot(timeday, 'YYYY/MM/DD')
+    let nowday = mnow.format('YYYY-MM-DD')
+    let timeday = mtime.format('YYYY-MM-DD')
+    let mnowday = ot(nowday, 'YYYY-MM-DD')
+    let mtimeday = ot(timeday, 'YYYY-MM-DD')
 
     //diff
     let iseconds = mtime.diff(mnow, 'seconds')

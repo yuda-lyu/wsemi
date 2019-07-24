@@ -10,8 +10,8 @@ import istime from './istime.mjs'
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳日時間字串
  * @example
- * time2day('2019/01/01 12:34:56')
- * // => '2019/01/01'
+ * time2day('2019-01-01T12:34:56+08:00')
+ * // => '2019-01-01'
  */
 function time2day(t) {
 
@@ -20,8 +20,8 @@ function time2day(t) {
         return ''
     }
 
-    let d = ot(t, 'YYYY/MM/DD HH:mm:ss')
-    let r = d.format('YYYY/MM/DD')
+    let d = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
+    let r = d.format('YYYY-MM-DD')
 
     return r
 }

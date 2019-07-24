@@ -4,13 +4,13 @@ import isint from '../src/isint.mjs'
 
 describe(`isint`, function() {
 
-    it(`should return false when input '2019/01/01'`, function() {
-        let r = isint('2019/01/01')
+    it(`should return false when input '2019-01-01'`, function() {
+        let r = isint('2019-01-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/21/01'`, function() {
-        let r = isint('2019/21/01')
+    it(`should return false when input '2019-21-01'`, function() {
+        let r = isint('2019-21-01')
         assert.strict.deepEqual(r, false)
     })
 

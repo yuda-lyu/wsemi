@@ -4,23 +4,23 @@ import iseobj from '../src/iseobj.mjs'
 
 describe(`iseobj`, function() {
 
-    it(`should return false when input '2019/01/01'`, function() {
-        let r = iseobj('2019/01/01')
+    it(`should return false when input '2019-01-01'`, function() {
+        let r = iseobj('2019-01-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/21/01'`, function() {
-        let r = iseobj('2019/21/01')
+    it(`should return false when input '2019-21-01'`, function() {
+        let r = iseobj('2019-21-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/01'`, function() {
-        let r = iseobj('2019/01')
+    it(`should return false when input '2019-01'`, function() {
+        let r = iseobj('2019-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/21'`, function() {
-        let r = iseobj('2019/21')
+    it(`should return false when input '2019-21'`, function() {
+        let r = iseobj('2019-21')
         assert.strict.deepEqual(r, false)
     })
 

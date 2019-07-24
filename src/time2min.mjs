@@ -10,8 +10,8 @@ import istime from './istime.mjs'
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳分時間字串
  * @example
- * time2min('2019/01/01 12:34:56')
- * // => '2019/01/01 12:34'
+ * time2min('2019-01-01T12:34:56+08:00')
+ * // => '2019-01-01T12:34'
  */
 function time2min(t) {
 
@@ -20,8 +20,8 @@ function time2min(t) {
         return ''
     }
 
-    let d = ot(t, 'YYYY/MM/DD HH:mm:ss')
-    let r = d.format('YYYY/MM/DD HH:mm')
+    let d = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
+    let r = d.format('YYYY-MM-DDTHH:mm')
 
     return r
 }

@@ -11,7 +11,7 @@ import isday from './isday.mjs'
  * @param {boolean} [bNoDisplayYear=false] 輸入是否輸出民國年，預設為false
  * @returns {String} 回傳中文格式時間字串
  * @example
- * day2cht('2019/01/02')
+ * day2cht('2019-01-02')
  * // => '民國 108 年 1 月 2 日'
  */
 function day2cht(t, bNoDisplayYear = false) {
@@ -21,7 +21,7 @@ function day2cht(t, bNoDisplayYear = false) {
         return ''
     }
 
-    let d = ot(t, 'YYYY/MM/DD')
+    let d = ot(t, 'YYYY-MM-DD')
     let r = ''
     if (bNoDisplayYear) {
         r = (d.month() + 1) + '月' + d.date() + '日'

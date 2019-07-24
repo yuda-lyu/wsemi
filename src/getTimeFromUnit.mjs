@@ -10,7 +10,7 @@
  * // => 'YYYY'
  *
  * getTimeFromUnit('seconds')
- * // => 'YYYY/MM/DD HH:mm:ss'
+ * // => 'YYYY-MM-DDTHH:mm:ssZ'
  */
 function getTimeFromUnit(unit) {
     let fm = ''
@@ -18,19 +18,19 @@ function getTimeFromUnit(unit) {
         fm = 'YYYY'
     }
     else if (unit === 'months') {
-        fm = 'YYYY/MM'
+        fm = 'YYYY-MM'
     }
     else if (unit === 'days') {
-        fm = 'YYYY/MM/DD'
+        fm = 'YYYY-MM-DD'
     }
     else if (unit === 'hours') {
-        fm = 'YYYY/MM/DD HH'
+        fm = 'YYYY-MM-DDTHH'
     }
     else if (unit === 'minutes') {
-        fm = 'YYYY/MM/DD HH:mm'
+        fm = 'YYYY-MM-DDTHH:mm'
     }
     else if (unit === 'seconds') {
-        fm = 'YYYY/MM/DD HH:mm:ss'
+        fm = 'YYYY-MM-DDTHH:mm:ssZ'
     }
     return fm
 }

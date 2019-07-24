@@ -9,22 +9,22 @@ function parseTime(t, unit) {
         fm = 'YYYY'
     }
     else if (unit === 'months') {
-        t += '/01'
-        fm = 'YYYY/MM/01'
+        t += '-01'
+        fm = 'YYYY-MM-01'
     }
     else if (unit === 'days') {
-        fm = 'YYYY/MM/DD'
+        fm = 'YYYY-MM-DD'
     }
     else if (unit === 'hours') {
         t += ':00:00'
-        fm = 'YYYY/MM/DD HH:00:00'
+        fm = 'YYYY-MM-DDTHH:00:00'
     }
     else if (unit === 'minutes') {
         t += ':00'
-        fm = 'YYYY/MM/DD HH:mm:00'
+        fm = 'YYYY-MM-DDTHH:mm:00'
     }
     else if (unit === 'seconds') {
-        fm = 'YYYY/MM/DD HH:mm:ss'
+        fm = 'YYYY-MM-DDTHH:mm:ssZ'
     }
     return ot(t, fm)
 }
@@ -39,11 +39,11 @@ function parseTime(t, unit) {
  * @param {String} [unit='days'] 輸入時間單位字串，預設為'days'
  * @returns {Object} 回傳時間物件，若非法時間則回傳null
  * @example
- * getTimeObject('2019/01/01', 'days')
- * // => dayjs('2019/01/01', 'YYYY/MM/DD') //use dayjs or moment
+ * getTimeObject('2019-01-01', 'days')
+ * // => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or moment
  *
- * getTimeObject('2019/01/01 12:34:56', 'seconds')
- * // => dayjs('2019/01/01 12:34:56', 'YYYY/MM/DD HH:mm:ss') //use dayjs or moment
+ * getTimeObject('2019-01-01T12:34:56+08:00', 'seconds')
+ * // => dayjs('2019-01-01T12:34:56+08:00', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
  */
 function getTimeObject(t, unit = 'days') {
     //依照unit取得時間物件

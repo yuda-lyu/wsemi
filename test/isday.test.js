@@ -4,13 +4,13 @@ import isday from '../src/isday.mjs'
 
 describe(`isday`, function() {
 
-    it(`should return true when input '2019/01/01'`, function() {
-        let r = isday('2019/01/01')
+    it(`should return true when input '2019-01-01'`, function() {
+        let r = isday('2019-01-01')
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return false when input '2019/21/01'`, function() {
-        let r = isday('2019/21/01')
+    it(`should return false when input '2019-21-01'`, function() {
+        let r = isday('2019-21-01')
         assert.strict.deepEqual(r, false)
     })
 

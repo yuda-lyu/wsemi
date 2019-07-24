@@ -4,13 +4,13 @@ import isfun from '../src/isfun.mjs'
 
 describe(`isfun`, function() {
 
-    it(`should return false when input '2019/01/01'`, function() {
-        let r = isfun('2019/01/01')
+    it(`should return false when input '2019-01-01'`, function() {
+        let r = isfun('2019-01-01')
         assert.strict.deepEqual(r, false)
     })
 
-    it(`should return false when input '2019/21/01'`, function() {
-        let r = isfun('2019/21/01')
+    it(`should return false when input '2019-21-01'`, function() {
+        let r = isfun('2019-21-01')
         assert.strict.deepEqual(r, false)
     })
 

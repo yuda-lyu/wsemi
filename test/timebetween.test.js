@@ -10,39 +10,39 @@ describe(`timebetween`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01', '2019/02', '2019/03'] when input '2019/01', '2019/03', 'months'`, function() {
-        let r = timebetween('2019/01', '2019/03', 'months')
-        let rr = ['2019/01', '2019/02', '2019/03']
+    it(`sould return ['2019-01', '2019-02', '2019-03'] when input '2019-01', '2019-03', 'months'`, function() {
+        let r = timebetween('2019-01', '2019-03', 'months')
+        let rr = ['2019-01', '2019-02', '2019-03']
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01/01', '2019/01/02', '2019/01/03'] when input '2019/01/01', '2019/01/03', 'days'`, function() {
-        let r = timebetween('2019/01/01', '2019/01/03', 'days')
-        let rr = ['2019/01/01', '2019/01/02', '2019/01/03']
+    it(`sould return ['2019-01-01', '2019-01-02', '2019-01-03'] when input '2019-01-01', '2019-01-03', 'days'`, function() {
+        let r = timebetween('2019-01-01', '2019-01-03', 'days')
+        let rr = ['2019-01-01', '2019-01-02', '2019-01-03']
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01/01', '2019/01/02', '2019/01/03'] when input '2019/01/01', '2019/01/03'`, function() {
-        let r = timebetween('2019/01/01', '2019/01/03')
-        let rr = ['2019/01/01', '2019/01/02', '2019/01/03']
+    it(`sould return ['2019-01-01', '2019-01-02', '2019-01-03'] when input '2019-01-01', '2019-01-03'`, function() {
+        let r = timebetween('2019-01-01', '2019-01-03')
+        let rr = ['2019-01-01', '2019-01-02', '2019-01-03']
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01/01 01', '2019/01/01 02', '2019/01/01 03'] when input '2019/01/01 01', '2019/01/01 03', 'hours'`, function() {
-        let r = timebetween('2019/01/01 01', '2019/01/01 03', 'hours')
-        let rr = ['2019/01/01 01', '2019/01/01 02', '2019/01/01 03']
+    it(`sould return ['2019-01-01T01', '2019-01-01T02', '2019-01-01T03'] when input '2019-01-01T01', '2019-01-01T03', 'hours'`, function() {
+        let r = timebetween('2019-01-01T01', '2019-01-01T03', 'hours')
+        let rr = ['2019-01-01T01', '2019-01-01T02', '2019-01-01T03']
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01/01 01:01', '2019/01/01 01:02', '2019/01/01 01:03'] when input '2019/01/01 01:01', '2019/01/01 01:03', 'minutes'`, function() {
-        let r = timebetween('2019/01/01 01:01', '2019/01/01 01:03', 'minutes')
-        let rr = ['2019/01/01 01:01', '2019/01/01 01:02', '2019/01/01 01:03']
+    it(`sould return ['2019-01-01T01:01', '2019-01-01T01:02', '2019-01-01T01:03'] when input '2019-01-01T01:01', '2019-01-01T01:03', 'minutes'`, function() {
+        let r = timebetween('2019-01-01T01:01', '2019-01-01T01:03', 'minutes')
+        let rr = ['2019-01-01T01:01', '2019-01-01T01:02', '2019-01-01T01:03']
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`sould return ['2019/01/01 01:01:01', '2019/01/01 01:01:02', '2019/01/01 01:01:03'] when input '2019/01/01 01:01:01', '2019/01/01 01:01:03', 'seconds'`, function() {
-        let r = timebetween('2019/01/01 01:01:01', '2019/01/01 01:01:03', 'seconds')
-        let rr = ['2019/01/01 01:01:01', '2019/01/01 01:01:02', '2019/01/01 01:01:03']
+    it(`sould return ['2019-01-01T01:01:01+08:00', '2019-01-01T01:01:02+08:00', '2019-01-01T01:01:03+08:00'] when input '2019-01-01T01:01:01+08:00', '2019-01-01T01:01:03+08:00', 'seconds'`, function() {
+        let r = timebetween('2019-01-01T01:01:01+08:00', '2019-01-01T01:01:03+08:00', 'seconds')
+        let rr = ['2019-01-01T01:01:01+08:00', '2019-01-01T01:01:02+08:00', '2019-01-01T01:01:03+08:00']
         assert.strict.deepEqual(r, rr)
     })
 

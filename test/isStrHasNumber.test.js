@@ -4,23 +4,23 @@ import isStrHasNumber from '../src/isStrHasNumber.mjs'
 
 describe(`isStrHasNumber`, function() {
 
-    it(`should return true when input '2019/01/01'`, function() {
-        let r = isStrHasNumber('2019/01/01')
+    it(`should return true when input '2019-01-01'`, function() {
+        let r = isStrHasNumber('2019-01-01')
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return true when input '2019/21/01'`, function() {
-        let r = isStrHasNumber('2019/21/01')
+    it(`should return true when input '2019-21-01'`, function() {
+        let r = isStrHasNumber('2019-21-01')
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return true when input '2019/01'`, function() {
-        let r = isStrHasNumber('2019/01')
+    it(`should return true when input '2019-01'`, function() {
+        let r = isStrHasNumber('2019-01')
         assert.strict.deepEqual(r, true)
     })
 
-    it(`should return true when input '2019/21'`, function() {
-        let r = isStrHasNumber('2019/21')
+    it(`should return true when input '2019-21'`, function() {
+        let r = isStrHasNumber('2019-21')
         assert.strict.deepEqual(r, true)
     })
 

@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.1.18",
+  "version": "1.1.19",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -8,10 +8,10 @@
     "crypto-js": "^3.1.9-1",
     "dayjs": "^1.8.15",
     "fuzzball": "^1.2.2",
-    "lodash": "^4.17.14",
+    "lodash": "^4.17.15",
     "tippy.js": "^4.3.4",
     "ua-parser-js": "^0.7.20",
-    "xlsx": "^0.14.3",
+    "xlsx": "^0.14.4",
     "xss": "^1.0.6"
   },
   "devDependencies": {
@@ -26,11 +26,11 @@
     "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.1.4",
     "docdash": "^1.1.1",
-    "eslint": "^6.0.1",
+    "eslint": "^6.1.0",
     "eslint-config-standard": "^13.0.1",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^2.2.1",
-    "eslint-plugin-import": "^2.18.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
@@ -38,7 +38,7 @@
     "gh-pages": "^2.0.1",
     "jsdoc": "^3.6.3",
     "jsdoc-vuejs": "^3.0.0",
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.0",
     "rollup": "^1.17.0",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-babel-minify": "^9.0.0",
