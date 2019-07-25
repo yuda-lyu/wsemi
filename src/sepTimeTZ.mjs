@@ -12,7 +12,7 @@ import strright from './strright.mjs'
  * @returns {Object} 回傳切分後時間物件，t為無時區秒時間，tz為時區
  * @example
  * sepTimeTZ('2019-01-01T12:34:56+08:00')
- * // => { t : '2019-01-01T12:34:56', tz : '+08:00' }
+ * // => { t: '2019-01-01T12:34:56', tz: '+08:00' }
  */
 function sepTimeTZ(v) {
 
