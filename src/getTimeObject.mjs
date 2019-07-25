@@ -1,5 +1,4 @@
 import ot from 'dayjs'
-import 'dayjs/locale/zh-tw'
 import isestr from './isestr.mjs'
 import getTimeFromUnit from './getTimeFromUnit.mjs'
 
@@ -7,23 +6,23 @@ import getTimeFromUnit from './getTimeFromUnit.mjs'
 function parseTime(t, unit) {
     let e = ''
     if (unit === 'years') {
-        e = '-01-01T00:00:00+08:00'
+        e = '-01-01T00:00:00'
     }
     else if (unit === 'months') {
-        e = '-01T00:00:00+08:00'
+        e = '-01T00:00:00'
     }
     else if (unit === 'days') {
-        e = 'T00:00:00+08:00'
+        e = 'T00:00:00'
     }
     else if (unit === 'hours') {
-        e = ':00:00+08:00'
+        e = ':00:00'
     }
     else if (unit === 'minutes') {
-        e = ':00+08:00'
+        e = ':00'
     }
     else if (unit === 'seconds') {
     }
-    let fm = 'YYYY-MM-DDTHH:mm:ssZ'
+    let fm = 'YYYY-MM-DDTHH:mm:ss'
     return ot(t + e, fm)
 }
 
@@ -33,15 +32,15 @@ function parseTime(t, unit) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeObject.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入時間字串
+ * @param {String} t 輸入時間字串，不含時區
  * @param {String} [unit='days'] 輸入時間單位字串，預設為'days'
  * @returns {Object} 回傳時間物件，若非法時間則回傳null
  * @example
  * getTimeObject('2019-01-01', 'days')
  * // => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or moment
  *
- * getTimeObject('2019-01-01T12:34:56+08:00', 'seconds')
- * // => dayjs('2019-01-01T12:34:56+08:00', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
+ * getTimeObject('2019-01-01T12:34:56', 'seconds')
+ * // => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
  */
 function getTimeObject(t, unit = 'days') {
     //依照unit取得時間物件
@@ -54,19 +53,18 @@ function getTimeObject(t, unit = 'days') {
         return null
     }
 
-    //fmt
-    let fmt = getTimeFromUnit(unit)
-
     //o
     let o = parseTime(t, unit)
 
+    //fmt
+    let fmt = getTimeFromUnit(unit)
+
     //check unit
-    let m = o.locale('zh-tw').format(fmt) //因為補齊時間為+08:00為zh-tw時間
-    return m
-    // let b = (t === m)
-    // if (b) {
-    //     return o
-    // }
+    let m = o.format(fmt)
+    let b = (t === m)
+    if (b) {
+        return o
+    }
 
     return null
 }

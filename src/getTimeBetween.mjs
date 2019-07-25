@@ -7,23 +7,23 @@ import getTimeObject from './getTimeObject.mjs'
 /**
  * 輸入兩時間，單位皆為unit，由兩時間之間回傳以unit分切的時間點，回傳時間單位一樣為unit
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timebetween.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeBetween.test.js Github}
  * @memberOf wsemi
- * @param {String} tstart 輸入開始時間字串
- * @param {String} tend 輸入結束時間字串
+ * @param {String} tstart 輸入開始時間字串，不含時區
+ * @param {String} tend 輸入結束時間字串，不含時區
  * @param {String} [unit='days'] 輸入切分單位字串，預設為'days'
  * @returns {Array} 回傳切分後各時間陣列
  * @example
- * timebetween('2017', '2019', 'years')
+ * getTimeBetween('2017', '2019', 'years')
  * // => ['2017', '2018', '2019']
  *
- * timebetween('2019-01-01', '2019-01-03', 'days')
+ * getTimeBetween('2019-01-01', '2019-01-03', 'days')
  * // => ['2019-01-01', '2019-01-02', '2019-01-03']
  *
- * timebetween('2019-01-01', '2019-01-03')
+ * getTimeBetween('2019-01-01', '2019-01-03')
  * // => ['2019-01-01', '2019-01-02', '2019-01-03']
  */
-function timebetween(tstart, tend, unit = 'days') {
+function getTimeBetween(tstart, tend, unit = 'days') {
 
     //fmt
     let fmt = getTimeFromUnit(unit)
@@ -58,4 +58,4 @@ function timebetween(tstart, tend, unit = 'days') {
 }
 
 
-export default timebetween
+export default getTimeBetween

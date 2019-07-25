@@ -6,28 +6,28 @@ import time2min from './time2min.mjs'
 /**
  * 起訖時間合併顯示，時間單位皆為秒
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timerange.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeRange.test.js Github}
  * @memberOf wsemi
- * @param {String} tstart 輸入開始秒時間字串
- * @param {String} tend 輸入結束秒時間字串，若不輸入則等同於開始時間字串
+ * @param {String} tstart 輸入開始秒時間字串，不含時區
+ * @param {String} tend 輸入結束秒時間字串，不含時區，若不輸入則等同於開始時間字串
  * @returns {String} 回傳合併顯示時間字串
  * @example
- * timerange('2019-01-01T09:00:00+08:00')
+ * getTimeRange('2019-01-01T09:00:00')
  * // => '2019-01-01T09:00 至 無'
  *
- * timerange('2019-01-01T09:00:00+08:00', '2019-01-01T12:34:56+08:00')
+ * getTimeRange('2019-01-01T09:00:00', '2019-01-01T12:34:56')
  * // => '2019-01-01T09:00 至 12:34'
  *
- * timerange('2019-01-01T09:00:00+08:00', '2019-01-03T12:00:00+08:00')
+ * getTimeRange('2019-01-01T09:00:00', '2019-01-03T12:00:00')
  * // => '2019-01-01T09:00 至 2019-01-03T12:00'
  *
- * timerange('2019-01-01T19:00:00+08:00', '2019-01-01T12:00:00+08:00')
+ * getTimeRange('2019-01-01T19:00:00', '2019-01-01T12:00:00')
  * // => '2019-01-01T19:00 至 12:00 (起始時間大於結束時間)'
  *
- * timerange('2019-01-03T09:00:00+08:00', '2019-01-01T12:00:00+08:00')
+ * getTimeRange('2019-01-03T09:00:00', '2019-01-01T12:00:00')
  * // => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'
  */
-function timerange(tstart, tend) {
+function getTimeRange(tstart, tend) {
 
     //check
     if (!istime(tstart)) {
@@ -45,8 +45,8 @@ function timerange(tstart, tend) {
     }
 
     //m1, m2
-    let m1 = ot(tstart, 'YYYY-MM-DDTHH:mm:ssZ')
-    let m2 = ot(tend, 'YYYY-MM-DDTHH:mm:ssZ')
+    let m1 = ot(tstart, 'YYYY-MM-DDTHH:mm:ss')
+    let m2 = ot(tend, 'YYYY-MM-DDTHH:mm:ss')
 
     //day
     let ctstart = m1.format('YYYY-MM-DD')
@@ -81,4 +81,4 @@ function timerange(tstart, tend) {
 }
 
 
-export default timerange
+export default getTimeRange

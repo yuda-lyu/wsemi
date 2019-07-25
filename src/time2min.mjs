@@ -7,10 +7,10 @@ import istime from './istime.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2min.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入秒時間字串
+ * @param {String} t 輸入秒時間字串，不含時區
  * @returns {String} 回傳分時間字串
  * @example
- * time2min('2019-01-01T12:34:56+08:00')
+ * time2min('2019-01-01T12:34:56')
  * // => '2019-01-01T12:34'
  */
 function time2min(t) {
@@ -20,7 +20,7 @@ function time2min(t) {
         return ''
     }
 
-    let d = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
+    let d = ot(t, 'YYYY-MM-DDTHH:mm:ss')
     let r = d.format('YYYY-MM-DDTHH:mm')
 
     return r

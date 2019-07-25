@@ -36,7 +36,7 @@ describe(`getTimeFromUnit`, function() {
 
     it(`should return 'YYYY-MM-DDTHH:mm:ssZ' when input 'seconds'`, function() {
         let r = getTimeFromUnit('seconds')
-        let rr = 'YYYY-MM-DDTHH:mm:ssZ'
+        let rr = 'YYYY-MM-DDTHH:mm:ss'
         assert.strict.deepEqual(r, rr)
     })
 

@@ -4,7 +4,7 @@
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeFromUnit.test.js Github}
  * @memberOf wsemi
  * @param {String} unit 輸入時間單位字串
- * @returns {String} 回傳時間套件所需之解析字串
+ * @returns {String} 回傳時間套件所需之解析字串，當unit='seconds'時回傳不含時區格式
  * @example
  * getTimeFromUnit('years')
  * // => 'YYYY'
@@ -30,7 +30,7 @@ function getTimeFromUnit(unit) {
         fm = 'YYYY-MM-DDTHH:mm'
     }
     else if (unit === 'seconds') {
-        fm = 'YYYY-MM-DDTHH:mm:ssZ'
+        fm = 'YYYY-MM-DDTHH:mm:ss' //不含時區
     }
     return fm
 }

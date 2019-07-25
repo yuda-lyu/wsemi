@@ -4,6 +4,31 @@ import istime from '../src/istime.mjs'
 
 describe(`istime`, function() {
 
+    it(`should return false when input '2019-01-01T12:34:56:789'`, function() {
+        let r = istime('2019-01-01T12:34:56:789')
+        assert.strict.deepEqual(r, false)
+    })
+
+    it(`should return false when input '2019-01-01T12:34:66:789'`, function() {
+        let r = istime('2019-01-01T12:34:66:789')
+        assert.strict.deepEqual(r, false)
+    })
+
+    it(`should return true when input '2019-01-01T12:34:56'`, function() {
+        let r = istime('2019-01-01T12:34:56')
+        assert.strict.deepEqual(r, true)
+    })
+
+    it(`should return false when input '2019-01-01T12:34:66'`, function() {
+        let r = istime('2019-01-01T12:34:66')
+        assert.strict.deepEqual(r, false)
+    })
+
+    it(`should return false when input '2019-21-01T12:34:56'`, function() {
+        let r = istime('2019-21-01T12:34:56')
+        assert.strict.deepEqual(r, false)
+    })
+
     it(`should return false when input '2019-01-01T12:34:56:789+08:00'`, function() {
         let r = istime('2019-01-01T12:34:56:789+08:00')
         assert.strict.deepEqual(r, false)
@@ -16,7 +41,7 @@ describe(`istime`, function() {
 
     it(`should return true when input '2019-01-01T12:34:56+08:00'`, function() {
         let r = istime('2019-01-01T12:34:56+08:00')
-        assert.strict.deepEqual(r, true)
+        assert.strict.deepEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12:34:66+08:00'`, function() {
