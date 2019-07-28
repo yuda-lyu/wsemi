@@ -1,4 +1,5 @@
 import each from 'lodash/each'
+import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import replace from './replace.mjs'
@@ -29,7 +30,7 @@ function replaceObj(c, o) {
     //check obj value(replace string)
     let b = false
     each(o, function(v, k) {
-        if (!isestr(v)) {
+        if (!isstr(v)) { //允許空字串
             b = true
         }
     })

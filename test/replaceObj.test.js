@@ -9,6 +9,16 @@ describe(`replaceObj`, function() {
         assert.strict.deepEqual(r, '1.20bc英文')
     })
 
+    it(`should return '1.20bc英文' when input '1.25abc中文', { '5a': '', '中': '英' }`, function() {
+        let r = replaceObj('1.25abc中文', { '5a': '', '中': '英' })
+        assert.strict.deepEqual(r, '1.2bc英文')
+    })
+
+    it(`should return '1.20bc英文' when input '1.25abc中文', { '5a': null, '中': '英' }`, function() {
+        let r = replaceObj('1.25abc中文', { '5a': null, '中': '英' })
+        assert.strict.deepEqual(r, '')
+    })
+
     it(`should return '' when input '1.25abc', ''`, function() {
         let r = replaceObj('1.25abc', '')
         assert.strict.deepEqual(r, '')
