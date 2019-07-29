@@ -9,30 +9,30 @@ import isfun from './isfun.mjs'
  * 若輸入rs為函數或Promise陣列，則使用循序執行函數或Promise方式，而v則為初始輸入參數。
  * 若輸入rs為其餘資料的陣列，則v為循序取值用並回傳Promise的函數。
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/mapSeries.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.js Github}
  * @memberOf wsemi
  * @param {Array} rs 輸入資料陣列
  * @param {Function} fn 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
- * mapSeries([2, 3, 1], function(v) {
+ * pmSeries([2, 3, 1], function(v) {
  *     return new Promise(function(resolve, reject) {
  *         setTimeout(function() {
- *             console.log('mapSeries: ' + v)
- *             resolve('mapSeries: ' + v)
+ *             console.log('pmSeries: ' + v)
+ *             resolve('pmSeries: ' + v)
  *         }, 1)
  *     })
  * })
  *     .then(function(r) {
  *         console.log(r)
  *     })
- * // => mapSeries: 2
- * // => mapSeries: 3
- * // => mapSeries: 1
- * // => ["mapSeries: 2", "mapSeries: 3", "mapSeries: 1"]
+ * // => pmSeries: 2
+ * // => pmSeries: 3
+ * // => pmSeries: 1
+ * // => ["pmSeries: 2", "pmSeries: 3", "pmSeries: 1"]
  */
 
-function mapSeries(rs, fn) {
+function pmSeries(rs, fn) {
 
     //pm
     let pm = genPm()
@@ -68,4 +68,4 @@ function mapSeries(rs, fn) {
 }
 
 
-export default mapSeries
+export default pmSeries

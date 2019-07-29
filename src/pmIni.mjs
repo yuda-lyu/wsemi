@@ -1,17 +1,17 @@
 /**
  * 以Promise開啟鏈式
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/psChain.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmIni.test.js Github}
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise
  * @example
- * psChain()
+ * pmIni()
  *   .then(function() {
  *     //code here
  *   })
  */
-function psChain() {
+function pmIni() {
     return Promise.resolve()
 }
 
-export default psChain
+export default pmIni

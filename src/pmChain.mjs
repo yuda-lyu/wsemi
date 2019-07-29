@@ -5,7 +5,7 @@ import isarr from './isarr.mjs'
 /**
  * 傳入initial初始值並循序執行Promise陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/psSeries.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.js Github}
  * @memberOf wsemi
  * @param {Array} pms 輸入Promise陣列
  * @param {*} initial 輸入循序執行Promise陣列的初始值
@@ -35,15 +35,15 @@ import isarr from './isarr.mjs'
  *     }, 50)
  *     return pm
  * }
- * psSeries([pm1, pm2, pm3], '*').then((r) => {
- *     console.log('psSeries: ', r)
+ * pmChain([pm1, pm2, pm3], '*').then((r) => {
+ *     console.log('pmChain: ', r)
  * })
  * // => pm1*
  * // => pm2pm1*
  * // => pm3pm2pm1*
- * // => psSeries: pm3pm2pm1*
+ * // => pmChain: pm3pm2pm1*
  */
-function psSeries(pms, initial = null) {
+function pmChain(pms, initial = null) {
     if (!isarr(pms)) {
         let pm = genPm()
         pm.reject('pms is not array')
@@ -55,4 +55,4 @@ function psSeries(pms, initial = null) {
 }
 
 
-export default psSeries
+export default pmChain

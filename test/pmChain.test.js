@@ -1,8 +1,8 @@
 import assert from 'assert'
-import psSeries from '../src/psSeries.mjs'
+import pmChain from '../src/pmChain.mjs'
 
 
-describe(`psSeries`, function() {
+describe(`pmChain`, function() {
 
     let pm1 = function(v) {
         return new Promise(function(resolve, reject) {
@@ -26,8 +26,8 @@ describe(`psSeries`, function() {
         })
     }
 
-    it(`should then 'pm3pm2pm1*' when call psSeries([pm1, pm2, pm3], '*')`, function() {
-        psSeries([pm1, pm2, pm3], '*')
+    it(`should then 'pm3pm2pm1*' when call pmChain([pm1, pm2, pm3], '*')`, function() {
+        pmChain([pm1, pm2, pm3], '*')
             .then(function(r) {
                 assert.strict.deepEqual(r, 'pm3pm2pm1*')
             })

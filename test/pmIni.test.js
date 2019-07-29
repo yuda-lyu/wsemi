@@ -1,11 +1,11 @@
 import assert from 'assert'
-import psChain from '../src/psChain.mjs'
+import pmIni from '../src/pmIni.mjs'
 
 
-describe(`psChain`, function() {
+describe(`pmIni`, function() {
 
-    it(`should touch [then] when call psChain`, function() {
-        psChain()
+    it(`should touch [then] when call pmIni`, function() {
+        pmIni()
             .then(function() {
                 assert.strict.deepEqual(1, 1)
             })
