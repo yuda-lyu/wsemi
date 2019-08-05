@@ -20,7 +20,7 @@ async function main() {
     let ltfs = await getFiles()
 
     //pull
-    _.pull(ltfs, '_class.mjs', 'index.mjs')
+    _.pull(ltfs, '_class.mjs', '_jsonType.mjs', 'index.mjs')
 
     //get names
     let ns = _.map(ltfs, function(v) {
@@ -30,14 +30,15 @@ async function main() {
     //scs
     let scs = []
     _.each(ns, function(name) {
-        let sc = `import ${name} from './${name}.mjs'`
+        //let sc = `import ${name} from './${name}.mjs'`
+        let sc = `export ${name} from './${name}.mjs'`
         scs.push(sc)
     })
-    if (true) {
-        let c = _.join(ns, ', ')
-        let sc = `export { ${c} }`
-        scs.push(sc)
-    }
+    // if (true) {
+    //     let c = _.join(ns, ', ')
+    //     let sc = `export { ${c} }`
+    //     scs.push(sc)
+    // }
 
     //merge content
     let c = _.join(scs, '\r\n')
