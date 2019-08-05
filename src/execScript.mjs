@@ -27,6 +27,7 @@ import j2o from './j2o.mjs'
  *     })
  */
 function execScript(prog, scp, params) {
+    //日後可換execa
     return new Promise(function(resolve, reject) {
 
         //spawn
