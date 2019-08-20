@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>downloadFileFromText.mjs - Documentation</title>
+    <title>getGlobal.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">downloadFileFromText.mjs</h1>
+    <h1 class="page-title">getGlobal.mjs</h1>
     
 
     
@@ -42,43 +42,33 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
-import isstr from './isstr.mjs'
-import downloadFileFromBlob from './downloadFileFromBlob.mjs'
-
-
-/**
- * 前端下載text資料成為utf-8(含BOM)檔案
+            <pre class="prettyprint source linenums"><code>/**
+ * 取得運行環境中的頂層物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromText.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getGlobal.test.js Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
- * @param {String} ccont 輸入內容字串
+ * @returns {Object} 回傳頂層物件，若無法取得則回傳null
  * @example
- * need test in browser
+ * getGlobal()
+ * // => global object in running environment
  */
-function downloadFileFromText(cfn, ccont) {
+function getGlobal() {
 
-    //check
-    if (!isestr(cfn)) {
-        console.warn('no filename')
-        return
+    if (typeof self !== 'undefined') {
+        return self
     }
-    if (!isstr(ccont)) { //可允許空字串
-        console.warn('no content')
-        return
+    if (typeof window !== 'undefined') {
+        return window //於borwser的型別為[object Window]
+    }
+    if (typeof global !== 'undefined') {
+        return global //於nodejs的型別為[object global]
     }
 
-    //blob
-    let blob = new Blob(['\ufeff', ccont]) //轉utf8 with BOM
-
-    //downloadFileFromBlob
-    downloadFileFromBlob(cfn, blob)
-
+    return null
 }
 
 
-export default downloadFileFromText
+export default getGlobal
 </code></pre>
         </article>
     </section>
