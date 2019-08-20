@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>pmIni.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">pmIni.mjs</h1>
     
 
     
@@ -43,8 +43,22 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+ * 以Promise開啟鏈式
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmIni.test.js Github}
+ * @memberOf wsemi
+ * @returns {Promise} 回傳Promise
+ * @example
+ * pmIni()
+ *   .then(function() {
+ *     //code here
+ *   })
  */
+function pmIni() {
+    return Promise.resolve()
+}
+
+export default pmIni
 </code></pre>
         </article>
     </section>

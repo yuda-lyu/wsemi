@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>genPm.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">genPm.mjs</h1>
     
 
     
@@ -43,8 +43,41 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+ * 產生Promise物件，具備鏈式resolve與reject
+ * 主要受jQuery Deferred概念啟發
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genPm.test.js Github}
+ * @memberOf wsemi
+ * @returns {Object} 回傳Promise物件
+ * @example
+ * let fn = function() {
+ *   let df = genPm()
+ *   setTimeout(function() {
+ *     df.resolve()
+ *   }, 1)
+ *   return df
+ * }
+ * fn()
+ *   .then(function(){
+ *     //add code
+ *   })
  */
+function genPm() {
+
+    let resolve
+    let reject
+    let p = new Promise(function() {
+        resolve = arguments[0]
+        reject = arguments[1]
+    })
+    p.resolve = resolve
+    p.reject = reject
+
+    return p
+}
+
+
+export default genPm
 </code></pre>
         </article>
     </section>

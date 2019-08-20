@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for dayjs</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@latest/dist/wsemi.umd.js"></script>
+    <script>
+        console.log = wsemi.bodyLog
+    </script>
+
+</head>
+<body>
+
+    <script>
+
+        console.log("isday('2019-01-01')",  wsemi.isday('2019-01-01')  )
+
+        console.log("isday('2019-21-01')",  wsemi.isday('2019-21-01')  )
+
+        console.log("ismonth('2019-01')",  wsemi.ismonth('2019-01')  )
+
+        console.log("addMonth('2019-01',1)",  wsemi.addMonth('2019-01',1)  )
+
+        console.log("addMonth('2019-01',-1)",  wsemi.addMonth('2019-01',-1)  )
+
+    </script>
+
+</body>
+</html>

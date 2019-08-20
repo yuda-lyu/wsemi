@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>isu8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">isu8arr.mjs</h1>
     
 
     
@@ -43,8 +43,24 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+ * 判斷是否為Uint8Array
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isu8arr.test.js Github}
+ * @memberOf wsemi
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
+ * @example
+ * isu8arr(new Uint8Array(1))
+ * // => true
  */
+function isu8arr(v) {
+
+    let c = Object.prototype.toString.call(v)
+    return c === '[object Uint8Array]'
+}
+
+
+export default isu8arr
 </code></pre>
         </article>
     </section>

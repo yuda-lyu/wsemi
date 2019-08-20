@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>cdbl.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">cdbl.mjs</h1>
     
 
     
@@ -42,9 +42,36 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import toFinite from 'lodash/toFinite'
+import isnum from './isnum.mjs'
+
+
+/**
+ * 數字或字串轉浮點數
+ * 若輸入非數字則回傳0
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cdbl.test.js Github}
+ * @memberOf wsemi
+ * @param {Number|String} v 輸入數字或字串
+ * @returns {Number} 回傳數字
+ * @example
+ * cdbl('25')
+ * // => 25
  */
+function cdbl(v) {
+
+    //check
+    if (!isnum(v)) {
+        return 0
+    }
+
+    let r = toFinite(v)
+
+    return r
+}
+
+
+export default cdbl
 </code></pre>
         </article>
     </section>

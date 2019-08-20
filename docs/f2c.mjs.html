@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>f2c.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">f2c.mjs</h1>
     
 
     
@@ -42,9 +42,39 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import isfun from './isfun.mjs'
+import trim from './trim.mjs'
+
+
+/**
+ * 函數內註解轉字串
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/f2c.test.js Github}
+ * @memberOf wsemi
+ * @param {Function} c 輸入函數
+ * @returns {String} 回傳字串
+ * @example
+ * let f = function() { ╱**abc*╱ } //jsdoc can't parser multi-line comments here, need convert "╱" to "/"
+ * f2c(f)
+ * // => 'abc'
  */
+function f2c(f) {
+
+    //check
+    if (!isfun(f)) {
+        return ''
+    }
+
+    let cont = String(f)
+    let r = cont.substring(cont.indexOf('/*') + 3, cont.lastIndexOf('*/'))
+    r = trim(r)
+
+    return r
+}
+
+
+export default f2c
+
 </code></pre>
         </article>
     </section>

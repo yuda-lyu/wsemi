@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>isUserName.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">isUserName.mjs</h1>
     
 
     
@@ -42,9 +42,39 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
+import isestr from './isestr.mjs'
+
+
+/**
+ * 判斷是否為有效使用者名稱
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserName.test.js Github}
+ * @memberOf wsemi
+ * @param {*} v 輸入任意資料
+ * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
+ * @example
+ * isUserName('我的名稱')
+ *   .then(function() {
+ *     //code here
+ *   })
  */
+function isUserName(v) {
+
+    let df = genPm()
+
+    //check
+    if (!isestr(v)) {
+        df.reject('請填入姓名')
+        return df
+    }
+
+    df.resolve()
+    return df
+}
+
+
+export default isUserName
 </code></pre>
         </article>
     </section>

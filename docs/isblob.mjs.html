@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>isblob.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">isblob.mjs</h1>
     
 
     
@@ -43,8 +43,23 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+ * 前端判斷是否為Blob，NodeJS沒有Blob
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isblob.test.js Github}
+ * @memberOf wsemi
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
+ * @example
+ * need test in browser
  */
+function isblob(v) {
+
+    let c = Object.prototype.toString.call(v)
+    return c === '[object Blob]'
+}
+
+
+export default isblob
 </code></pre>
         </article>
     </section>

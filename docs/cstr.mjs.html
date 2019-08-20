@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>cstr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">cstr.mjs</h1>
     
 
     
@@ -42,9 +42,36 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+import isnum from './isnum.mjs'
+
+
+/**
+ * 輸入轉字串
+ * 若輸入不是數字或字串時則回傳空字串
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cstr.test.js Github}
+ * @memberOf wsemi
+ * @param {Number|String} v 輸入資料
+ * @returns {String} 回傳字串
+ * @example
+ * cstr(2.25)
+ * // => '2.25'
  */
+function cstr(v) {
+
+    //check
+    if (!isestr(v) &amp;&amp; !isnum(v)) {
+        return ''
+    }
+
+    let r = String(v)
+
+    return r
+}
+
+
+export default cstr
 </code></pre>
         </article>
     </section>

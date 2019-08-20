@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>htmlEncode.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">htmlEncode.mjs</h1>
     
 
     
@@ -43,8 +43,23 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+ * 前端html字串編碼
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/htmlEncode.test.js Github}
+ * @memberOf wsemi
+ * @param {String} str 輸入html字串
+ * @returns {String} 回傳編碼後html字串
+ * @example
+ * need test in browser
  */
+function htmlEncode(str) {
+    let ele = document.createElement('span')
+    ele.appendChild(document.createTextNode(str))
+    return ele.innerHTML
+}
+
+
+export default htmlEncode
 </code></pre>
         </article>
     </section>

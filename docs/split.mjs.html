@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>split.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">split.mjs</h1>
     
 
     
@@ -42,9 +42,38 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+
+
+/**
+ * 切割字串
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/split.test.js Github}
+ * @memberOf wsemi
+ * @param {String} c 輸入要被切割的字串
+ * @param {String} t 輸入用來切割的符號字串
+ * @returns {Array} 回傳切割後的字串陣列
+ * @example
+ * split('1.25 abc  中文', ' ')
+ * // => ['1.25', 'abc', '', '中文']
  */
+function split(c, t) {
+
+    //check
+    if (!isestr(c)) {
+        return []
+    }
+    if (!isestr(t)) {
+        return []
+    }
+
+    let r = c.split(t)
+
+    return r
+}
+
+
+export default split
 </code></pre>
         </article>
     </section>

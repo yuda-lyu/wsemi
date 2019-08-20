@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>file2u8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">file2u8arr.mjs</h1>
     
 
     
@@ -42,9 +42,49 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
+
+
+/**
+ * 前端input檔案物件轉Uint8Array資料陣列
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/file2u8arr.test.js Github}
+ * @memberOf wsemi
+ * @param {Object} file 輸入file物件
+ * @returns {Promise} 回傳Promise，resolve回傳檔案的Uint8Array資料陣列
+ * @example
+ * need test in browser
  */
+function file2u8arr(file) {
+
+    //df
+    let df = genPm()
+
+    //reader
+    let reader = new FileReader()
+
+    //onload
+    reader.onload = function(event) {
+
+        //ab
+        let ab = event.target.result
+
+        //u8a
+        let u8a = new Uint8Array(ab)
+
+        //resolve
+        df.resolve(u8a)
+
+    }
+
+    //readAsArrayBuffer
+    reader.readAsArrayBuffer(file)
+
+    return df
+}
+
+
+export default file2u8arr
 </code></pre>
         </article>
     </section>

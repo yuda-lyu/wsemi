@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>bs2u8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">bs2u8arr.mjs</h1>
     
 
     
@@ -42,9 +42,38 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+
+
+/**
+ * BinaryString資料轉Unit8Array，BinaryString為UTF-16編碼
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.js Github}
+ * @memberOf wsemi
+ * @param {String} bs 輸入BinaryString資料
+ * @returns {Unit8Array} 回傳Unit8Array資料
+ * @example
+ * bs2u8arr('abc')
+ * // => new Uint8Array([97, 98, 99])
  */
+function bs2u8arr(str) {
+
+    //check
+    if (!isestr(str)) {
+        return new Uint8Array()
+    }
+
+    let l = str.length
+    let u8a = new Uint8Array(l)
+    for (let i = 0; i &lt; l; i++) {
+        u8a[i] = str.charCodeAt(i)
+    }
+
+    return u8a
+}
+
+
+export default bs2u8arr
 </code></pre>
         </article>
     </section>

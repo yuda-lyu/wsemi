@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>_class.mjs - Documentation</title>
+    <title>strright.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">_class.mjs</h1>
+    <h1 class="page-title">strright.mjs</h1>
     
 
     
@@ -42,9 +42,42 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @class wsemi
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+import ispint from './ispint.mjs'
+
+
+/**
+ * 取字串右邊n個字元
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strright.test.js Github}
+ * @memberOf wsemi
+ * @param {String} c 輸入要被取的字串
+ * @param {Integer} n 輸入取右邊n個字元
+ * @returns {String} 回傳處理後字串
+ * @example
+ * strright('test中文', 2)
+ * // => '中文'
  */
+function strright(c, n) {
+
+    //check
+    if (!isestr(c)) {
+        return ''
+    }
+    if (!ispint(n)) {
+        return ''
+    }
+
+    let i = c.length - n
+    if (i &lt; 0) {
+        i = 0
+    }
+
+    return c.substr(i, n)
+}
+
+
+export default strright
 </code></pre>
         </article>
     </section>
