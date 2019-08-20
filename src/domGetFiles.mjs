@@ -32,7 +32,7 @@ function domGetFiles(ele, sizelimit = 500) {
         if (size / 1024 / 1024 > sizelimit) { //轉mb
 
             //push err
-            err.push(`檔案大小超過上限${sizelimit}mb：$domGetFiles`)
+            err.push(`檔案大小超過上限${sizelimit}mb`)
 
         }
 

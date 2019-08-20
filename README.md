@@ -91,9 +91,9 @@ or
 [Optional] Add script for xlsx.
 > **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.3/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.4/dist/wsemi.umd.js"></script>
 ```
