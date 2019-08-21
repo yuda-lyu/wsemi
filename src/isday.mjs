@@ -20,8 +20,8 @@ function isday(v) {
         return false
     }
 
-    let df = 'YYYY-MM-DD'
-    let m = ot(v, df).format(df)
+    let ft = 'YYYY-MM-DD'
+    let m = ot(v, ft).format(ft)
     return (v === m)
 }
 

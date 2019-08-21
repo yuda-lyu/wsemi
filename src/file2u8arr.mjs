@@ -13,8 +13,8 @@ import genPm from './genPm.mjs'
  */
 function file2u8arr(file) {
 
-    //df
-    let df = genPm()
+    //pm
+    let pm = genPm()
 
     //reader
     let reader = new FileReader()
@@ -29,14 +29,14 @@ function file2u8arr(file) {
         let u8a = new Uint8Array(ab)
 
         //resolve
-        df.resolve(u8a)
+        pm.resolve(u8a)
 
     }
 
     //readAsArrayBuffer
     reader.readAsArrayBuffer(file)
 
-    return df
+    return pm
 }
 
 

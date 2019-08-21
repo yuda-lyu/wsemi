@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isnull.mjs - Documentation</title>
+    <title>files2data.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isnull.mjs</h1>
+    <h1 class="page-title">files2data.mjs</h1>
     
 
     
@@ -42,25 +42,56 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為null
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnull.test.js Github}
- * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值
- * @example
- * isnull(null)
- * // => true
- */
-function isnull(v) {
+            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
+import genPm from './genPm.mjs'
+import files2u8arrs from './files2u8arrs.mjs'
 
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Null]'
+
+/**
+ * 前端input檔案物件轉Uint8Array資料陣列
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/files2data.test.js Github}
+ * @memberOf wsemi
+ * @param {Array} files 輸入file物件陣列
+ * @returns {Promise} 回傳Promise，resolve回傳檔案的Uint8Array資料陣列
+ * @example
+ * need test in browser
+ */
+function files2data(files) {
+
+    //pm
+    let pm = genPm()
+
+    //rs
+    let rs = []
+
+    //save
+    each(files, function(file) {
+        rs.push({
+            name: file.name,
+            size: file.size,
+            type: file.type
+        })
+    })
+
+    //files2u8arrs
+    files2u8arrs(files)
+        .then(function(u8as) {
+            //save Uint8Array
+            each(u8as, function(u8a, k) {
+                rs[k]['u8a'] = u8a
+            })
+            pm.resolve(rs)
+        })
+        .catch(function(msg) {
+            pm.reject(msg)
+        })
+
+    return pm
 }
 
 
-export default isnull
+export default files2data
 </code></pre>
         </article>
     </section>

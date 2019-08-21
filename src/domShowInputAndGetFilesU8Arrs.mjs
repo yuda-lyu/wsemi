@@ -19,26 +19,26 @@ import files2u8arrs from './files2u8arrs.mjs'
  */
 function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 500) {
 
-    //df
-    let df = genPm()
+    //pm
+    let pm = genPm()
 
     let resfiles = []
     domShowInputAndGetFiles(kind, multiple, sizelimit)
         .then(function(rs) {
 
-            //df
-            let dft = genPm()
+            //pmt
+            let pmt = genPm()
 
             //err
             let err = rs.err
             if (size(err) > 0) {
-                dft.reject(err)
+                pmt.reject(err)
             }
             else {
-                dft.resolve(rs)
+                pmt.resolve(rs)
             }
 
-            return dft
+            return pmt
         })
         .then(function(rs) {
 
@@ -63,13 +63,13 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
                 resfiles[k]['u8a'] = u8a
             })
 
-            df.resolve(resfiles)
+            pm.resolve(resfiles)
         })
         .catch(function(msg) {
-            df.reject(msg)
+            pm.reject(msg)
         })
 
-    return df
+    return pm
 }
 
 

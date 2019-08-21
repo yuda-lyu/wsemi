@@ -2,16 +2,16 @@ import assert from 'assert'
 import genPm from '../src/genPm.mjs'
 
 
-describe(`genPm`, function() {
+describe('genPm', function() {
 
     let fn = function() {
-        let df = genPm()
+        let pm = genPm()
         setTimeout(function() {
-            df.resolve()
+            pm.resolve()
         }, 1)
-        return df
+        return pm
     }
-    it(`should touch [then] when call fn`, function() {
+    it('should touch [then] when call fn', function() {
         fn()
             .then(function() {
                 assert.strict.deepEqual(1, 1)

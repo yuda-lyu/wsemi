@@ -22,12 +22,12 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  */
 function isUserPW(v) {
 
-    let df = genPm()
+    let pm = genPm()
 
     //check
     if (!isstr(v)) {
-        df.reject('密碼非字串')
-        return df
+        pm.reject('密碼非字串')
+        return pm
     }
 
     let err = []
@@ -49,13 +49,13 @@ function isUserPW(v) {
     }
 
     if (err.length > 0) {
-        df.reject(join(err, '，'))
+        pm.reject(join(err, '，'))
     }
     else {
-        df.resolve()
+        pm.resolve()
     }
 
-    return df
+    return pm
 }
 
 

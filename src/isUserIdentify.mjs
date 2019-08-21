@@ -17,24 +17,24 @@ import isestr from './isestr.mjs'
  */
 function isUserIdentify(v) {
 
-    let df = genPm()
+    let pm = genPm()
 
     //check
     if (!isestr(v)) {
-        df.reject('身份證字號非有效字串')
-        return df
+        pm.reject('身份證字號非有效字串')
+        return pm
     }
 
     //身分證字號長度
     if (v.length !== 10) {
-        df.reject('身份證字號長度非10位')
-        return df
+        pm.reject('身份證字號長度非10位')
+        return pm
     }
 
     //身分證字號格式，用正則表示式比對第一個字母是否為英文字母
     if (isNaN(v.substr(1, 9)) || (!/^[A-Z]$/.test(v.substr(0, 1)))) {
-        df.reject('身份證格式錯誤，字首需大寫英文')
-        return df
+        pm.reject('身份證格式錯誤，字首需大寫英文')
+        return pm
     }
 
     //按照轉換後權數的大小進行排序
@@ -63,12 +63,12 @@ function isUserIdentify(v) {
         //有效
     }
     else {
-        df.reject('非有效身份證')
-        return df
+        pm.reject('非有效身份證')
+        return pm
     }
 
-    df.resolve()
-    return df
+    pm.resolve()
+    return pm
 }
 
 

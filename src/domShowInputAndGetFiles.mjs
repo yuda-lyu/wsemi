@@ -22,7 +22,7 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  */
 function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
 
-    let df = genPm()
+    let pm = genPm()
 
     //id
     let id = 'drf' + genID() //若全英文數字可能會導致出現特例如hex問題, 添加字首以避免
@@ -56,7 +56,7 @@ function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) 
         let rs = domGetFiles(ele, sizelimit)
 
         //resolve
-        df.resolve(rs)
+        pm.resolve(rs)
 
         //remove event
         inp.removeEventListener('change', evChange)
@@ -72,7 +72,7 @@ function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) 
     //click
     domTriggerEvent(inp, 'click')
 
-    return df
+    return pm
 }
 
 

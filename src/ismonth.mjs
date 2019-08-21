@@ -23,8 +23,8 @@ function ismonth(v) {
         return false
     }
 
-    let df = 'YYYY-MM'
-    let m = ot(v, df).format(df)
+    let ft = 'YYYY-MM'
+    let m = ot(v, ft).format(ft)
     return (v === m)
 }
 

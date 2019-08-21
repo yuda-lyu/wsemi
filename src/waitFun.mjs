@@ -25,13 +25,13 @@ import ispint from './ispint.mjs'
  */
 function waitFun(f, maxnum = 180) {
 
-    //df
-    let df = genPm()
+    //pm
+    let pm = genPm()
 
     //check
     if (!isfun(f)) {
-        df.reject('waitfunction需輸入函數f')
-        return df
+        pm.reject('waitfunction需輸入函數f')
+        return pm
     }
 
     //default
@@ -48,17 +48,17 @@ function waitFun(f, maxnum = 180) {
         if (f() === true) {
             //console.log('resolve', n)
             clearInterval(t)
-            df.resolve()
+            pm.resolve()
         }
         if (n >= maxnum) {
             //console.log('reject', n, maxnum)
             clearInterval(t)
-            df.resolve() //已超過最大次數
+            pm.resolve() //已超過最大次數
         }
 
     }, 1000) //每1秒偵測一次
 
-    return df
+    return pm
 }
 
 

@@ -17,16 +17,16 @@ import isestr from './isestr.mjs'
  */
 function isUserName(v) {
 
-    let df = genPm()
+    let pm = genPm()
 
     //check
     if (!isestr(v)) {
-        df.reject('請填入姓名')
-        return df
+        pm.reject('請填入姓名')
+        return pm
     }
 
-    df.resolve()
-    return df
+    pm.resolve()
+    return pm
 }
 
 

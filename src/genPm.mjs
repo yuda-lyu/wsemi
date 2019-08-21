@@ -7,11 +7,11 @@
  * @returns {Object} 回傳Promise物件
  * @example
  * let fn = function() {
- *   let df = genPm()
+ *   let pm = genPm()
  *   setTimeout(function() {
- *     df.resolve()
+ *     pm.resolve()
  *   }, 1)
- *   return df
+ *   return pm
  * }
  * fn()
  *   .then(function(){

@@ -39,8 +39,8 @@ function istimeTZ(v) {
     //t
     let t = strdelright(v, 6)
 
-    let df = 'YYYY-MM-DDTHH:mm:ss'
-    let m = ot(t, df).format(df)
+    let ft = 'YYYY-MM-DDTHH:mm:ss'
+    let m = ot(t, ft).format(ft)
     return (t === m)
 }
 
