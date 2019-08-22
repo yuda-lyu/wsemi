@@ -1,6 +1,7 @@
-import each from 'lodash/each'
+import map from 'lodash/map'
 import genPm from './genPm.mjs'
-import files2u8arrs from './files2u8arrs.mjs'
+import files2b64s from './files2b64s.mjs'
+import ltdtmerge from './ltdtmerge.mjs'
 
 
 /**
@@ -18,29 +19,30 @@ function files2data(files) {
     //pm
     let pm = genPm()
 
-    //rs
-    let rs = []
-
-    //save
-    each(files, function(file) {
-        rs.push({
+    //fs
+    let fs = map(files, function(file) {
+        return {
             name: file.name,
             size: file.size,
             type: file.type
-        })
+        }
     })
 
-    //files2u8arrs
-    files2u8arrs(files)
-        .then(function(u8as) {
-            //save Uint8Array
-            each(u8as, function(u8a, k) {
-                rs[k]['u8a'] = u8a
+    //files2b64s
+    files2b64s(files)
+        .then(function(b64s) {
+
+            //bs
+            let bs = map(b64s, function(v) {
+                return { b64: v }
             })
+
+            //ltdtmerge
+            let rs = ltdtmerge(fs, bs)
+
+            //resolve
             pm.resolve(rs)
-        })
-        .catch(function(msg) {
-            pm.reject(msg)
+
         })
 
     return pm

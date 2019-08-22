@@ -17,7 +17,6 @@ import dtmapping from './dtmapping.mjs'
  * // => [{ a: 12, b: 34.56, c: '' }, { a: '123', b: 'xyz', c: 'mn' }]
  */
 function ltdtmapping(ltdt, keys) {
-    //針對物件陣列ltdt呼叫dtmapping處理
 
     //check
     if (!isearr(ltdt)) {
