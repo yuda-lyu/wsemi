@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>fsReadText.mjs - Documentation</title>
+    <title>ltdtmerge.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">fsReadText.mjs</h1>
+    <h1 class="page-title">ltdtmerge.mjs</h1>
     
 
     
@@ -42,24 +42,42 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+            <pre class="prettyprint source linenums"><code>import map from 'lodash/map'
+import merge from 'lodash/merge'
+import isarr from './isarr.mjs'
 
 
 /**
- * 由檔案讀取utf-8文字
+ * 針對物件陣列ltdt1與ltdt2逐一呼叫merge合併
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadText.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtmerge.test.js Github}
  * @memberOf wsemi
- * @param {String} fn 輸入檔案名稱
+ * @param {Array} ltdt1 輸入資料物件陣列
+ * @param {Array} ltdt2 輸入資料物件陣列
+ * @returns {Array} 回傳處理後物件陣列
  * @example
- * need test in file env.
+ * ltdtmerge([{ a: 12, b: 34.56 }, {}], [{ a: '123', c: 'mn' }, { aa: 'a123', bb: 'bmn' }])
+ * // => [{ a: '123', b: 34.56, c: 'mn' }, { aa: 'a123', bb: 'bmn' }]
  */
-function fsReadText(fn) {
-    return fs.readFileSync(fn, 'utf8')
+function ltdtmerge(ltdt1, ltdt2) {
+
+    //check
+    if (!isarr(ltdt1) || !isarr(ltdt2)) {
+        return []
+    }
+    if (ltdt1.length !== ltdt2.length) {
+        return []
+    }
+
+    let r = map(ltdt1, function(v, k) {
+        return merge(ltdt1[k], ltdt2[k])
+    })
+
+    return r
 }
 
 
-export default fsReadText
+export default ltdtmerge
 </code></pre>
         </article>
     </section>
