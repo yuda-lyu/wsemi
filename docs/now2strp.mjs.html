@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>getdtv.mjs - Documentation</title>
+    <title>now2strp.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">getdtv.mjs</h1>
+    <h1 class="page-title">now2strp.mjs</h1>
     
 
     
@@ -42,44 +42,29 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
-import iseobj from './iseobj.mjs'
-import isestr from './isestr.mjs'
-//import haskey from './haskey.mjs'
+            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
 
 
 /**
- * 取得dt內key對應value
+ * 取得目前至秒時間，產生無特殊字串之時間戳
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getdtv.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/now2strp.test.js Github}
  * @memberOf wsemi
- * @param {Object} dt 輸入物件
- * @param {String} key 輸入要找的key值字串
- * @returns {*} 回傳任意資料
+ * @returns {String} 回傳目前至秒時間字串
  * @example
- * getdtv({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
- * // => 123
+ * now2strp()
+ * // => dayjs().format('YYYYMMDDHHmmss') //use dayjs or moment
  */
-function getdtv(dt, key) {
+function now2strp() {
 
-    //check
-    if (!iseobj(dt)) {
-        return ''
-    }
-    if (!isestr(key)) {
-        return ''
-    }
+    let d = ot()
+    let r = d.format('YYYYMMDDHHmmss')
 
-    // if (haskey(dt, key)) {
-    //     return dt[key]
-    // }
-    //return ''
-
-    return get(dt, key, '')
+    return r
 }
 
 
-export default getdtv
+export default now2strp
 </code></pre>
         </article>
     </section>

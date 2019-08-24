@@ -6,7 +6,6 @@
     }]
   ],
   "plugins": [
-    "@babel/plugin-proposal-export-default-from",
-    "@babel/plugin-syntax-import-meta"
+    "@babel/plugin-proposal-export-default-from"
   ]
 }
