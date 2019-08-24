@@ -1,5 +1,6 @@
 import { dirname } from 'path'
-import { platform } from 'os'
+import { fileURLToPath } from 'url'
+//import { platform } from 'os'
 
 
 /**
@@ -10,31 +11,35 @@ import { platform } from 'os'
  * @returns {Object} 回傳CommonJS環境變數物件
  * @example
  * getCJSVars()
- * // => { __dirname: '/folder' }
+ * // => { __filename: '/path/to/file',  __dirname: '/folder' }
  */
 function getCJSVars() {
 
-    //__dirname
+    //__filename, __dirname
+    let __filename = ''
     let __dirname = ''
     try {
         gotoError //直接出錯
     }
     catch (e) {
-        const initiator = e.stack.split('\n').slice(2, 3)[0]
-        let path = /(?<path>[^\(\s]+):[0-9]+:[0-9]+/.exec(initiator).groups.path
-        if (path.indexOf('file') >= 0) {
-            path = new URL(path).pathname
-        }
-        let dir = dirname(path)
-        if (dir[0] === '/' && platform() === 'win32') {
-            dir = dir.slice(1)
-        }
-        __dirname = decodeURIComponent(dir)
+
+        //initiator
+        let initiator = e.stack.split('\n').slice(2, 3)[0] //由錯誤訊息提取出錯位置
+        initiator = decodeURIComponent(initiator) //中文是用utf8 encode表達, 得decode
+
+        //path
+        let path = /(?<path>[^\(\s]+):[0-9]+:[0-9]+/.exec(initiator).groups.path //取得錯誤位置當中的檔案路徑
+        path = fileURLToPath(path) //會使用file開頭路徑, 得去除
+
+        //save
+        __filename = path
+        __dirname = dirname(path)
+
     }
 
     //r
     let r = {
-        //__filename,
+        __filename,
         __dirname
     }
 
