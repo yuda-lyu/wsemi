@@ -30,7 +30,6 @@ export default {
     globals: { //指定哪些外部模組的名稱，左邊為內部模組名稱，右邊為外部提供模組名稱
       'fs': 'fs',
       'url': 'url',
-      //'os': 'os',
       'path': 'path',
       'child_process': 'child_process',
       'dayjs': 'dayjs',
@@ -50,7 +49,6 @@ export default {
       'fs',
       'url',
       'path',
-      //'os',
       'child_process',
       'dayjs',
       'XLSX',

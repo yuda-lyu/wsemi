@@ -1,6 +1,12 @@
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
-//import { platform } from 'os'
+import trim from 'lodash/trim'
+import split from 'lodash/split'
+import size from 'lodash/size'
+import dropRight from 'lodash/dropRight'
+import join from 'lodash/join'
+import strleft from './strleft.mjs'
+import strdelleft from './strdelleft.mjs'
 
 
 /**
@@ -25,15 +31,31 @@ function getCJSVars() {
 
         //initiator
         let initiator = e.stack.split('\n').slice(2, 3)[0] //由錯誤訊息提取出錯位置
-        initiator = decodeURIComponent(initiator) //中文是用utf8 encode表達, 得decode
 
-        //path
-        let path = /(?<path>[^\(\s]+):[0-9]+:[0-9]+/.exec(initiator).groups.path //取得錯誤位置當中的檔案路徑
-        path = fileURLToPath(path) //會使用file開頭路徑, 得去除
+        //transfrom, 中文是用utf8 encode表達, 得decode
+        initiator = decodeURIComponent(initiator) //
+
+        //clear at
+        initiator = trim(initiator)
+        if (strleft(initiator, 3) === 'at ') {
+            initiator = strdelleft(initiator, 3)
+        }
+
+        //clear :x:x
+        let s = split(initiator, ':')
+        if (size(s) >= 3) {
+            s = dropRight(s, 2)
+        }
+        initiator = join(s, ':')
+
+        //clear file:///
+        if (strleft(initiator, 5) === 'file:') {
+            initiator = fileURLToPath(initiator)
+        }
 
         //save
-        __filename = path
-        __dirname = dirname(path)
+        __filename = initiator
+        __dirname = dirname(initiator)
 
     }
 
