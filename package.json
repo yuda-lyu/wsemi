@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -19,6 +19,7 @@
     "@babel/core": "^7.5.5",
     "@babel/node": "^7.5.5",
     "@babel/plugin-proposal-export-default-from": "^7.5.2",
+    "@babel/plugin-syntax-import-meta": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.5.5",
