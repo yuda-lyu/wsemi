@@ -1,5 +1,5 @@
-import url from 'url'
-import path from 'path'
+import { dirname } from 'path'
+import { platform } from 'os'
 
 
 /**
@@ -10,18 +10,33 @@ import path from 'path'
  * @returns {Object} 回傳CommonJS環境變數物件
  * @example
  * getCJSVars()
- * // => { __filename: '/path/file', __dirname: '/folder' }
+ * // => { __dirname: '/folder' }
  */
 function getCJSVars() {
 
-    //__filename
-    const __filename = url.fileURLToPath(import.meta.url)
-
     //__dirname
-    const __dirname = path.dirname(__filename)
+    let __dirname = ''
+    try {
+        gotoError //直接出錯
+    }
+    catch (e) {
+        const initiator = e.stack.split('\n').slice(2, 3)[0]
+        let path = /(?<path>[^\(\s]+):[0-9]+:[0-9]+/.exec(initiator).groups.path
+        if (path.indexOf('file') >= 0) {
+            path = new URL(path).pathname
+        }
+        let dir = dirname(path)
+        if (dir[0] === '/' && platform() === 'win32') {
+            dir = dir.slice(1)
+        }
+        __dirname = decodeURIComponent(dir)
+    }
 
     //r
-    let r = { __filename, __dirname }
+    let r = {
+        //__filename,
+        __dirname
+    }
 
     return r
 }
