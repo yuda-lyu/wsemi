@@ -44,5 +44,6 @@ module.exports = {
         'quote-props': ['error', 'consistent'],
         'dot-notation': 'off',
         'standard/no-callback-literal': 'off',
+        'quotes': ['error', "single", { "allowTemplateLiterals": true }],
     }
 };
