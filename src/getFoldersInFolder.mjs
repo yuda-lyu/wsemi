@@ -15,7 +15,7 @@ import getPathInFolder from './getPathInFolder.mjs'
  * // => ['folder p4','folder p5']
  */
 function getFoldersInFolder(fd, filterName = '') {
-    return getPathInFolder(fd, false, filterName)
+    return getPathInFolder(fd, true, filterName)
 }
 
 
