@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>keysmat2ltdt.mjs - Documentation</title>
+    <title>getPathInFolder.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">keysmat2ltdt.mjs</h1>
+    <h1 class="page-title">getPathInFolder.mjs</h1>
     
 
     
@@ -42,57 +42,64 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import map from 'lodash/map'
-import each from 'lodash/each'
-import zipObject from 'lodash/zipObject'
-import isearr from './isearr.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+import filter from 'lodash/filter'
+import map from 'lodash/map'
 
 
 /**
- * 由keys與二維陣列mdata轉ltdt
+ * 列舉指定資料夾下的全部檔案或資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/keysmat2ltdt.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getPathInFolder.test.js Github}
  * @memberOf wsemi
- * @param {Array} keys 輸入字串陣列
- * @param {Array} mat 輸入資料陣列
- * @returns {Array} 回傳物件陣列
+ * @param {String} fd 輸入欲列舉的資料夾字串
+ * @param {boolean} [filterFolder=false] 輸入是否為資料夾，預設為false
+ * @param {string} [filterName=''] 輸入欲過濾名稱字串，預設為''
+ * @returns {Array} 回傳列舉檔案或資料夾陣列
  * @example
- * keysmat2ltdt(['a', 'b'], [[12, 34.56], ['123', 'xyz']])
- * // => [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]
+ * let fd = 'folder p'
+ * getPathInFolder(fd)
+ * // => ['file p1','file p2','file p3']
+ *
+ * getPathInFolder(fd, true)
+ * // => ['folder p4','folder p5']
  */
-function keysmat2ltdt(keys, mat) {
+function getPathInFolder(fd, filterFolder = false, filterName = '') {
 
     //check
-    if (!isearr(keys)) {
-        return []
-    }
-    if (!isearr(mat)) {
-        return []
-    }
-    if (!isearr(mat[0])) {
+    if (!fs.existsSync(fd)) {
         return []
     }
 
-    let ltdt = map(mat, function(r) {
+    //readdir
+    let ltfs = fs.readdirSync(fd, { withFileTypes: true })
 
-        //o
-        let o = zipObject(keys, r)
-
-        //clear undefined
-        each(o, function(v, k) {
-            if (v === undefined) {
-                o[k] = ''
-            }
-        })
-
-        return o
+    //filter
+    ltfs = filter(ltfs, function(v) {
+        let b = !v.isDirectory()
+        if (filterFolder) {
+            b = !b
+        }
+        return b
     })
 
-    return ltdt
+    //filter
+    if (filterName !== '') {
+        ltfs = ltfs.filter(function (v) {
+            return v.indexOf(filterName) >= 0
+        })
+    }
+
+    //map
+    ltfs = map(ltfs, function(v) {
+        return v.name
+    })
+
+    return ltfs
 }
 
 
-export default keysmat2ltdt
+export default getPathInFolder
 </code></pre>
         </article>
     </section>
