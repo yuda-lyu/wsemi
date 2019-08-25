@@ -14,9 +14,8 @@ function getEnv() {
     let isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined'
 
     //isWebWorker
-    let isWebWorker = typeof self === 'object' &&
-        self.constructor &&
-        self.constructor.name === 'DedicatedWorkerGlobalScope'
+    //let isWebWorker = typeof self === 'object' && self.constructor && self.constructor.name === 'DedicatedWorkerGlobalScope' //於ie11的webworker內失效
+    let isWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope
 
     //isNode
     let isNode = typeof process !== 'undefined' &&
