@@ -39,17 +39,17 @@ function getPathInFolder(fd, filterFolder = false, filterName = '') {
         return b
     })
 
-    //filter
-    if (filterName !== '') {
-        ltfs = ltfs.filter(function (v) {
-            return v.indexOf(filterName) >= 0
-        })
-    }
-
     //map
     ltfs = map(ltfs, function(v) {
         return v.name
     })
+
+    //filter
+    if (filterName !== '') {
+        ltfs = filter(ltfs, function (v) {
+            return v.indexOf(filterName) >= 0
+        })
+    }
 
     return ltfs
 }
