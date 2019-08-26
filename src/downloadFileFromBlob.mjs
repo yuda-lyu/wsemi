@@ -7,8 +7,6 @@ import isestr from './isestr.mjs'
  * @private
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
- * @example
- *
  */
 function df_IE11(cfn, blob) {
 

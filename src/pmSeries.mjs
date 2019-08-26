@@ -6,12 +6,11 @@ import isfun from './isfun.mjs'
 
 /**
  * Promise的mapSeries
- * 若輸入rs為函數或Promise陣列，則使用循序執行函數或Promise方式，而v則為初始輸入參數。
- * 若輸入rs為其餘資料的陣列，則v為循序取值用並回傳Promise的函數。
+ * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.js Github}
  * @memberOf wsemi
- * @param {Array} rs 輸入資料陣列
+ * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
  * @param {Function} fn 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
@@ -42,15 +41,18 @@ function pmSeries(rs, fn) {
         pm.reject('rs is not array')
         return pm
     }
+    
+    //default fn
     if (!isfun(fn)) {
-        pm.reject('v is not Function')
-        return pm
+        fn = function(v){
+          return v
+        }
     }
 
     //ts
     let ts = []
-    rs.reduce(function(pm, v) {
-        return pm.then(function(t) {
+    rs.reduce(function(pmm, v) {
+        return pmm.then(function(t) {
             ts.push(t)
             return fn(v)
         })
