@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>strCompare.mjs - Documentation</title>
+    <title>getFileAccept.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">strCompare.mjs</h1>
+    <h1 class="page-title">getFileAccept.mjs</h1>
     
 
     
@@ -42,73 +42,207 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
-
-
-function core(s1, s2) {
-    s1 = s1.replace(/\s+/g, '')
-    s2 = s2.replace(/\s+/g, '')
-
-    if (!s1.length &amp;&amp; !s2.length) return 1 // if both are empty strings
-    if (!s1.length || !s2.length) return 0 // if only one is empty string
-    if (s1 === s2) return 1 // identical
-    if (s1.length === 1 &amp;&amp; s2.length === 1) return 0 // both are 1-letter strings
-    if (s1.length &lt; 2 || s2.length &lt; 2) return 0 // if either is a 1-letter string
-
-    let firstBigrams = new Map()
-    for (let i = 0; i &lt; s1.length - 1; i++) {
-        const bigram = s1.substring(i, i + 2)
-        const count = firstBigrams.has(bigram)
-            ? firstBigrams.get(bigram) + 1
-            : 1
-
-        firstBigrams.set(bigram, count)
-    };
-
-    let intersectionSize = 0
-    for (let i = 0; i &lt; s2.length - 1; i++) {
-        const bigram = s2.substring(i, i + 2)
-        const count = firstBigrams.has(bigram)
-            ? firstBigrams.get(bigram)
-            : 0
-
-        if (count > 0) {
-            firstBigrams.set(bigram, count - 1)
-            intersectionSize++
-        }
-    }
-
-    return (2.0 * intersectionSize) / (s1.length + s2.length - 2)
-}
+            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
+import haskey from './haskey.mjs'
 
 
 /**
- * 計算2字串相似度，主要來自[Fork: {@link https://github.com/aceakash/string-similarity string-similarity}]
+ * 取得檔案關聯性資訊
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.js Github}
- * @memberOf wsemi
- * @param {String} str1 輸入欲比對之一般字串
- * @param {String} str2 輸入欲比對之一般字串
- * @returns {Number} 回傳字串相似度0~1
+ * @param {string} [groupBy=''] 輸入群組化關鍵字字串，預設''，可選用'name','group','acp','exec'
+ * @returns {Array} 回傳檔案關聯性資訊陣列，若有給groupBy則自動群組化
  * @example
- * strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)')
- * // => 0.375
+ * getFileAccept()[2]
+ * // => { name: 'pdf',
+ * //      group: 'docums',
+ * //      acp: 'application/pdf',
+ * //      exec: 'acrobat' }
+ *
+ * getFileAccept('acp')['text/html']
+ * // => [ { name: 'htm',
+ * //        group: 'docums',
+ * //        acp: 'text/html',
+ * //        exec: 'browser' },
+ * //      { name: 'html',
+ * //        group: 'docums',
+ * //        acp: 'text/html',
+ * //        exec: 'browser' } ]
  */
-function strCompare(str1, str2) {
+function getFileAccept(groupBy = '') {
 
     //check
-    if (!isestr(str1)) {
-        return 0
-    }
-    if (!isestr(str2)) {
-        return 0
+    if (groupBy !== '' &amp;&amp; groupBy !== 'name' &amp;&amp; groupBy !== 'group' &amp;&amp; groupBy !== 'acp' &amp;&amp; groupBy !== 'exec') {
+        return []
     }
 
-    return core(str1, str2)
+    //data, MIME_types: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
+    let data = [
+        {
+            name: 'htm',
+            group: 'docums',
+            acp: 'text/html',
+            exec: 'browser',
+        },
+        {
+            name: 'html',
+            group: 'docums',
+            acp: 'text/html',
+            exec: 'browser',
+        },
+        {
+            name: 'pdf',
+            group: 'docums',
+            acp: 'application/pdf',
+            exec: 'acrobat',
+        },
+        {
+            name: 'rtf',
+            group: 'docums',
+            acp: 'application/rtf',
+            exec: 'word',
+        },
+        {
+            name: 'doc',
+            group: 'docums',
+            acp: 'application/msword',
+            exec: 'word',
+        },
+        {
+            name: 'docx',
+            group: 'docums',
+            acp: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            exec: 'word',
+        },
+        {
+            name: 'ppt',
+            group: 'docums',
+            acp: 'application/vnd.ms-powerpoint',
+            exec: 'powerpoint',
+        },
+        {
+            name: 'pptx',
+            group: 'docums',
+            acp: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            exec: 'powerpoint',
+        },
+        {
+            name: 'xls',
+            group: 'docums',
+            acp: 'application/vnd.ms-excel',
+            exec: 'excel',
+        },
+        {
+            name: 'xlsx',
+            group: 'docums',
+            acp: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            exec: 'excel',
+        },
+        {
+            name: 'odt',
+            group: 'docums',
+            acp: 'application/vnd.oasis.opendocument.text',
+            exec: 'word',
+        },
+        {
+            name: 'odp',
+            group: 'docums',
+            acp: 'application/vnd.oasis.opendocument.presentation',
+            exec: 'powerpoint',
+        },
+        {
+            name: 'application/vnd.oasis.opendocument.spreadsheet',
+            group: 'docums',
+            acp: 'application/vnd.oasis.opendocument.spreadsheet',
+            exec: 'excel',
+        },
+        {
+            name: 'zip',
+            group: 'compress',
+            acp: 'application/zip',
+            exec: '7z',
+        },
+        {
+            name: 'rar',
+            group: 'compress',
+            acp: 'application/x-rar-compressed',
+            exec: '7z',
+        },
+        {
+            name: '7z',
+            group: 'compress',
+            acp: 'application/x-7z-compressed',
+            exec: '7z',
+        },
+        {
+            name: 'bzip',
+            group: 'compress',
+            acp: 'application/x-bzip',
+            exec: '7z',
+        },
+        {
+            name: 'bzip2',
+            group: 'compress',
+            acp: 'application/x-bzip2',
+            exec: '7z',
+        },
+        {
+            name: 'pic',
+            group: 'image',
+            acp: 'image/*',
+            exec: 'imageviwer',
+        },
+        {
+            name: 'xml',
+            group: 'data',
+            acp: 'text/xml',
+            exec: 'textviwer',
+        },
+        {
+            name: 'json',
+            group: 'data',
+            acp: 'application/json',
+            exec: 'textviwer',
+        },
+        {
+            name: 'txt',
+            group: 'data',
+            acp: 'text/plain',
+            exec: 'textviwer',
+        },
+        {
+            name: 'csv',
+            group: 'data',
+            acp: 'text/csv',
+            exec: 'excel',
+        },
+        {
+            name: 'dat',
+            group: 'data',
+            acp: 'application/octet-streamt',
+            exec: 'binaryviwer',
+        },
+    ]
+
+    //check
+    if (groupBy === '') {
+        return data
+    }
+
+    //groupBy
+    let r = {}
+    each(data, function(v) {
+        let k = v[groupBy]
+        if (!haskey(r, k)) {
+            r[k] = []
+        }
+        r[k].push(v)
+    })
+
+    return r
 }
 
 
-export default strCompare
+export default getFileAccept
 </code></pre>
         </article>
     </section>

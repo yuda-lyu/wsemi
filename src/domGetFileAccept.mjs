@@ -2,9 +2,11 @@ import map from 'lodash/map'
 import concat from 'lodash/concat'
 import filter from 'lodash/filter'
 import join from 'lodash/join'
+import unique from 'lodash/unique'
 import isstr from './isstr.mjs'
 import isearr from './isearr.mjs'
 import isernot from './isernot.mjs'
+import getFileAccept from './getFileAccept.mjs'
 
 
 /**
@@ -36,129 +38,8 @@ function domGetFileAccept(kind = '*') {
         kind = ['docums', 'compress', 'image', 'data']
     }
 
-    //data, MIME_types: https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
-    let data = [
-        {
-            name: 'htm',
-            group: 'docums',
-            acp: '.htm',
-        },
-        {
-            name: 'html',
-            group: 'docums',
-            acp: '.html',
-        },
-        {
-            name: 'pdf',
-            group: 'docums',
-            acp: 'application/pdf',
-        },
-        {
-            name: 'rtf',
-            group: 'docums',
-            acp: 'application/rtf',
-        },
-        {
-            name: 'doc',
-            group: 'docums',
-            acp: 'application/msword',
-        },
-        {
-            name: 'docx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        },
-        {
-            name: 'ppt',
-            group: 'docums',
-            acp: 'application/vnd.ms-powerpoint',
-        },
-        {
-            name: 'pptx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        },
-        {
-            name: 'xls',
-            group: 'docums',
-            acp: 'application/vnd.ms-excel',
-        },
-        {
-            name: 'xlsx',
-            group: 'docums',
-            acp: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        },
-        {
-            name: 'odt',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.text',
-        },
-        {
-            name: 'odp',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.presentation',
-        },
-        {
-            name: 'application/vnd.oasis.opendocument.spreadsheet',
-            group: 'docums',
-            acp: 'application/vnd.oasis.opendocument.spreadsheet',
-        },
-        {
-            name: 'zip',
-            group: 'compress',
-            acp: 'application/zip',
-        },
-        {
-            name: 'rar',
-            group: 'compress',
-            acp: 'application/x-rar-compressed',
-        },
-        {
-            name: '7z',
-            group: 'compress',
-            acp: 'application/x-7z-compressed',
-        },
-        {
-            name: 'bzip',
-            group: 'compress',
-            acp: 'application/x-bzip',
-        },
-        {
-            name: 'bzip2',
-            group: 'compress',
-            acp: 'application/x-bzip2',
-        },
-        {
-            name: 'pic',
-            group: 'image',
-            acp: 'image/*',
-        },
-        {
-            name: 'xml',
-            group: 'data',
-            acp: '.xml',
-        },
-        {
-            name: 'json',
-            group: 'data',
-            acp: '.json',
-        },
-        {
-            name: 'txt',
-            group: 'data',
-            acp: '.txt',
-        },
-        {
-            name: 'csv',
-            group: 'data',
-            acp: '.csv',
-        },
-        {
-            name: 'dat',
-            group: 'data',
-            acp: '.dat',
-        },
-    ]
+    //data
+    let data = getFileAccept()
 
     function getName(name) {
         let rs = filter(data, { name: name })
@@ -171,7 +52,7 @@ function domGetFileAccept(kind = '*') {
     }
 
     function getAcp(rs) {
-        return map(rs, 'acp')
+        return unique(map(rs, 'acp'))
     }
 
     //convert to array
