@@ -2,7 +2,7 @@ import map from 'lodash/map'
 import concat from 'lodash/concat'
 import filter from 'lodash/filter'
 import join from 'lodash/join'
-import unique from 'lodash/unique'
+import uniq from 'lodash/uniq'
 import isstr from './isstr.mjs'
 import isearr from './isearr.mjs'
 import isernot from './isernot.mjs'
@@ -52,7 +52,7 @@ function domGetFileAccept(kind = '*') {
     }
 
     function getAcp(rs) {
-        return unique(map(rs, 'acp'))
+        return uniq(map(rs, 'acp'))
     }
 
     //convert to array

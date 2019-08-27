@@ -5,6 +5,8 @@ import haskey from './haskey.mjs'
 /**
  * 取得檔案關聯性資訊
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileAccept.test.js Github}
+ * @memberOf wsemi
  * @param {string} [groupBy=''] 輸入群組化關鍵字字串，預設''，可選用'name','group','acp','exec'
  * @returns {Array} 回傳檔案關聯性資訊陣列，若有給groupBy則自動群組化
  * @example
