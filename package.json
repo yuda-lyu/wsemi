@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.2.24",
+  "version": "1.2.25",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -27,7 +27,7 @@
     "core-js": "^3.2.1",
     "docdash": "^1.1.1",
     "eslint": "^6.2.2",
-    "eslint-config-standard": "^14.0.1",
+    "eslint-config-standard": "^14.1.0",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^3.0.0",
     "eslint-plugin-import": "^2.18.2",
