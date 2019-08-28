@@ -14,11 +14,11 @@ import isfun from './isfun.mjs'
  * @param {Function} fn 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
- * pmSeries([2, 3, 1], function(v) {
+ * pmSeries([2, 3, 1], function(v, k) {
  *     return new Promise(function(resolve, reject) {
  *         setTimeout(function() {
  *             console.log('pmSeries: ' + v)
- *             resolve('pmSeries: ' + v)
+ *             resolve('pmSeries: ' + v + '(' + k + ')')
  *         }, 1)
  *     })
  * })
@@ -28,7 +28,7 @@ import isfun from './isfun.mjs'
  * // => pmSeries: 2
  * // => pmSeries: 3
  * // => pmSeries: 1
- * // => ["pmSeries: 2", "pmSeries: 3", "pmSeries: 1"]
+ * // => ['pmSeries: 2(0)', 'pmSeries: 3(1)', 'pmSeries: 1(2)']
  */
 
 function pmSeries(rs, fn) {
@@ -41,20 +41,22 @@ function pmSeries(rs, fn) {
         pm.reject('rs is not array')
         return pm
     }
-    
+
     //default fn
     if (!isfun(fn)) {
-        fn = function(v){
-          return v
+        fn = function(v) {
+            return v
         }
     }
 
     //ts
+    let k = -1
     let ts = []
     rs.reduce(function(pmm, v) {
         return pmm.then(function(t) {
             ts.push(t)
-            return fn(v)
+            k += 1
+            return fn(v, k)
         })
     }, Promise.resolve())
         .then(function(t) {

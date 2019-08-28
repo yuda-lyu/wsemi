@@ -32,7 +32,7 @@ describe(`pmChain`, function() {
                 assert.strict.deepEqual(r, 'pm3pm2pm1*')
             })
             .catch(function() {
-                assert.strict.deepEqual(1, "can't touch catch")
+                assert.strict.deepEqual(1, 'can not touch catch')
             })
     })
 

@@ -20,7 +20,7 @@ describe(`pm2resolve`, function() {
     function fReject(c) {
         let pm = genPm()
         setTimeout(function() {
-            pm.resolve('fReject:' + c)
+            pm.reject('fReject:' + c)
         }, 1)
         return pm
     }
@@ -29,24 +29,14 @@ describe(`pm2resolve`, function() {
         msg: 'fReject:def'
     }
 
-    it(`should then ${JSON.stringify(rResolve)} when call pm2resolve(fResolve)('abc')`, function() {
-        pm2resolve(fResolve)('abc')
-            .then(function(msg) {
-                assert.strict.deepEqual(msg, rResolve)
-            })
-            .catch(function() {
-                assert.strict.deepEqual(1, "can't touch catch")
-            })
+    it(`should then ${JSON.stringify(rResolve)} when call pm2resolve(fResolve)('abc')`, async function() {
+        let msg = await pm2resolve(fResolve)('abc')
+        assert.strict.deepEqual(msg, rResolve)
     })
 
-    it(`should then ${JSON.stringify(rReject)} when call pm2resolve(fReject)('def')`, function() {
-        pm2resolve(fReject)('def')
-            .then(function(msg) {
-                assert.strict.deepEqual(msg, rReject)
-            })
-            .catch(function() {
-                assert.strict.deepEqual(1, "can't touch catch")
-            })
+    it(`should then ${JSON.stringify(rReject)} when call pm2resolve(fReject)('def')`, async function() {
+        let msg = await pm2resolve(fReject)('def')
+        assert.strict.deepEqual(msg, rReject)
     })
 
 })

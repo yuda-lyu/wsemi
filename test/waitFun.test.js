@@ -15,7 +15,7 @@ describe(`waitFun`, function() {
                 assert.strict.deepEqual(1, 1)
             })
             .catch(function() {
-                assert.strict.deepEqual(1, "can't touch catch")
+                assert.strict.deepEqual(1, 'can not touch catch')
             })
     })
 

@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.2.25",
+  "version": "1.2.26",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -23,6 +23,7 @@
     "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.5.5",
     "@babel/register": "^7.5.5",
+    "@babel/runtime": "^7.5.5",
     "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.2.1",
     "docdash": "^1.1.1",
