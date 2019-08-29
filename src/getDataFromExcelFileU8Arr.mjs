@@ -6,14 +6,14 @@ import trim from 'lodash/trim'
 import head from 'lodash/head'
 import tail from 'lodash/tail'
 import invokeMap from 'lodash/invokeMap'
-import XLSX from 'XLSX'
+import XLSX from 'xlsx'
 import isbol from './isbol.mjs'
 
 
 function to_ltdt(workbook) {
     //可改使用: sheet_to_row_object_array
     //https://juejin.im/post/5d0105c7e51d45105e0212a4
-    
+
     function core(m) {
         let rs = []
         each(m.rows, function (c) {
@@ -165,7 +165,14 @@ function to_csv(workbook) {
 function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
 
     //workbook
-    let workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
+    let workbook
+    try {
+        workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
+    }
+    catch (e) {
+        console.log('getDataFromExcelFileU8Arr: error: ', e)
+        return null
+    }
 
     //convert
     if (fmt === 'ltdt') {

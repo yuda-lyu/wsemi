@@ -32,7 +32,7 @@ export default {
       //'path': 'path',
       'child_process': 'child_process',
       'dayjs': 'dayjs',
-      'XLSX': 'XLSX',
+      'XLSX': 'xlsx',
       'fuzzball': 'fuzzball',
       'tippy': 'tippy.js', //外部預設名稱: 內部套件名稱
       'UAParser': 'ua-parser-js',
@@ -50,7 +50,7 @@ export default {
       //'path',
       'child_process',
       'dayjs',
-      'XLSX',
+      'xlsx',
       'fuzzball',
       'tippy.js', //內部套件名稱
       'ua-parser-js',
@@ -64,7 +64,6 @@ export default {
         browser: true,
     }),
     babel(optBabel),
-    //buble(),
     postcss({
       extensions: ['.css']
     }),

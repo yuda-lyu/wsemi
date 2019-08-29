@@ -1,4 +1,4 @@
-import XLSX from 'XLSX'
+import XLSX from 'xlsx'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
 import bs2u8arr from './bs2u8arr.mjs'
