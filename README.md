@@ -98,5 +98,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.28/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.29/dist/wsemi.umd.js"></script>
 ```

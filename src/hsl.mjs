@@ -1,4 +1,5 @@
-import { TinyColor } from '@ctrl/tinycolor'
+import cttc from '@ctrl/tinycolor'
+import isFunction from 'lodash/isFunction'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 
@@ -32,6 +33,12 @@ function hsl(rh, rs, rl) {
     rl = cdbl(rl)
     if (!ck01(rh) || !ck01(rs) || !ck01(rl)) {
         return ''
+    }
+
+    //TinyColor
+    let TinyColor = cttc
+    if (!isFunction(cttc)) {
+        TinyColor = cttc.default
     }
 
     //使用hsl物件各值需0~100, 跟原版tinycolor不同

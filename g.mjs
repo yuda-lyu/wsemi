@@ -1,16 +1,14 @@
-import pmSeries from './src/pmSeries.mjs'
+import cttc from '@ctrl/tinycolor'
+import isFunction from 'lodash/isFunction'
 
+console.log('cttc', isFunction(cttc))
+let TinyColor = cttc.default
+console.log('TinyColor', TinyColor)
 
-pmSeries([2, 3, 1], function(v, k) {
-    return new Promise(function(resolve, reject) {
-        setTimeout(function() {
-            resolve('pmSeries: ' + v + '(' + k + ')')
-        }, 1)
-    })
-})
-    .then(function(r) {
-        console.log('then', r)
-    })
-    .catch(function(r) {
-        console.log('catch', r)
-    })
+let r = new TinyColor({
+    h: 0.5 * 100,
+    s: 0.5 * 100,
+    l: 0.5 * 100
+}).toHexString()
+
+console.log(r)
