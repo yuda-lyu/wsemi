@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.2.27",
+  "version": "1.2.28",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
