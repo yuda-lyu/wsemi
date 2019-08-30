@@ -1,4 +1,5 @@
-import tinycolor from '@ctrl/tinycolor'
+import cttc from '@ctrl/tinycolor'
+import isFunction from 'lodash/isFunction'
 import iser from './iser.mjs'
 
 
@@ -20,8 +21,14 @@ function genGradientColor(color) {
         return {}
     }
 
+    //TinyColor
+    let TinyColor = cttc
+    if (!isFunction(cttc)) {
+        TinyColor = cttc.default
+    }
+
     //t
-    let t = tinycolor(color)
+    let t = new TinyColor(color)
 
     //check
     if (t.isValid === false) {
