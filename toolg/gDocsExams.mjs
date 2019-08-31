@@ -1,16 +1,10 @@
 import _ from 'lodash'
 import fs from 'fs'
+import getFiles from '../tool/getFiles.mjs'
 
 
 let fd_src = './examples/'
 let fd_tar = './docs/examples/'
-
-
-async function getFiles(fd) {
-    let fsp = fs.promises
-    let ltfs = await fsp.readdir(fd)
-    return ltfs
-}
 
 
 async function main() {
@@ -25,7 +19,7 @@ async function main() {
     }
 
     //getFiles
-    let ltfs = await getFiles(fd_src)
+    let ltfs = getFiles(fd_src)
 
     _.each(ltfs, function(v) {
 

@@ -1,23 +1,17 @@
 import _ from 'lodash'
 import fs from 'fs'
+import getFiles from '../tool/getFiles.mjs'
 
 
 let fd = './src/'
 let fnidx = 'index.mjs'
 
 
-async function getFiles() {
-    let fsp = fs.promises
-    let ltfs = await fsp.readdir(fd)
-    return ltfs
-}
-
-
 async function main() {
     //由src內取得指定函數檔案, 再自動產生index.mjs, 供rollup編譯之用
 
     //getFiles
-    let ltfs = await getFiles()
+    let ltfs = getFiles(fd)
 
     //pull
     _.pull(ltfs, '_class.mjs', '_jsonType.mjs', 'index.mjs')

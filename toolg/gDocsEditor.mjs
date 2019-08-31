@@ -1,10 +1,11 @@
 import cheerio from 'cheerio'
 import fs from 'fs'
+import getPks from '../tool/getPks.mjs'
 
 
 let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'
-let fn_html = 'docs/wsemi.html'
-//let fn_html2 = 'docs/wsemi2.html'
+let fn_html = './docs/wsemi.html'
+//let fn_html2 = './docs/wsemi2.html'
 
 
 async function main() {
@@ -17,8 +18,8 @@ async function main() {
         })
     }
 
-    //pkg
-    let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+    //pks
+    let pks = getPks()
 
     //read
     let h = fs.readFileSync(fn_html, 'utf8')
@@ -74,7 +75,7 @@ async function main() {
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@${pkg.version}/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

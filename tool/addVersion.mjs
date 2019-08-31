@@ -1,24 +1,13 @@
 import _ from 'lodash'
-import fs from 'fs'
-
-
-function getPks() {
-    let c = fs.readFileSync('package.json', 'utf8')
-    return JSON.parse(c)
-}
-
-
-function setPks(c) {
-    fs.writeFileSync('package.json', c, 'utf8')
-}
+import getPks from './getPks.mjs'
+import setPks from './setPks.mjs'
 
 
 async function main() {
     //自動添加版本補丁號
 
-    //read
+    //pks
     let pks = getPks()
-    //console.log(pks)
 
     //v
     let v = pks.version
@@ -27,8 +16,9 @@ async function main() {
     pks.version = _.join(s, '.')
 
     //save
+    setPks(pks)
+
     console.log('now version: ' + pks.version)
-    setPks(JSON.stringify(pks, null, 2))
 
 }
 main()
