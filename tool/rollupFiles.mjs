@@ -31,15 +31,12 @@ async function rollupFiles(opt = {}) {
         fns = [fns]
     }
 
-    //pms
-    let pms = _.map(fns, (fn) => {
+    //pmSeries
+    return pmSeries(fns, (fn) => {
         let o = { ...opt }
         o.fn = fn
         return rollupFile(o)
     })
-
-    //reduce
-    return pmSeries(pms)
         .then()
         .catch()
 

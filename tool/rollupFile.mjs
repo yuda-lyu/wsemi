@@ -18,7 +18,7 @@ import getPks from './getPks.mjs'
  * @param {String} opt.fn 輸入原始碼檔案名稱字串，檔案需含副檔名，不含所在資料夾
  * @param {String} opt.fdSrc 輸入原始碼檔案所在資料夾字串
  * @param {String} opt.fdTar 輸入編譯檔案至儲存資料夾字串
- * @param {String} [opt.hookNameDist=null]  輸入強制指定編譯檔案名稱字串，預設為null
+ * @param {Function} [opt.hookNameDist=null]  輸入強制指定編譯檔案名稱函數，預設為null
  * @param {String} [opt.nameDistType=''] 輸入編譯檔案名稱格式字串，預設為''，可選'kebabCase'
  * @param {String} [opt.format='umd'] 輸入編譯格式字串，預設為'umd'，可選'umd','iife'
  * @param {Boolean} [opt.bSourcemap=true] 輸入編譯檔案是否提供sourcemap布林值，預設為true
@@ -30,7 +30,7 @@ import getPks from './getPks.mjs'
 async function rollupFile(opt = {}) {
 
     //console
-    console.log('\x1b[32m%s\x1b[0m', 'compile: ' + opt.fn)
+    console.log('compiling: ' + opt.fn)
 
     //pkg
     let pkg = getPks()
@@ -184,6 +184,9 @@ async function rollupFile(opt = {}) {
 
     //write
     let r = await bundle.write(outputOptions)
+
+    //console
+    console.log('\x1b[32m%s\x1b[0m', 'output: ' + `${nameDist}.${format}.js`)
 
     return r
 }

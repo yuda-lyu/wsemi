@@ -1,16 +1,16 @@
-function pmSeries(pms) {
+function pmSeries(pms, fn) {
     return new Promise((resolve, reject) => {
-        pms.reduce(function(pmm, pm) {
-            return pmm.then(function() {
-                return pm
+        pms.reduce(function(pmm, v) {
+            return pmm.then(function(t) {
+                return fn(v)
             })
-        }, Promise.resolve()).then(function() {
-            resolve()
-        }).catch(function(err) {
-            reject(err)
-        })
+        }, Promise.resolve())
+            .then(function() {
+                resolve()
+            }).catch(function(err) {
+                reject(err)
+            })
     })
 }
-
 
 export default pmSeries

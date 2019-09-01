@@ -4,8 +4,7 @@ import getPks from '../tool/getPks.mjs'
 
 
 let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'
-let fn_html = './docs/wsemi.html'
-//let fn_html2 = './docs/wsemi2.html'
+let fnHtml = './docs/wsemi.html'
 
 
 async function main() {
@@ -22,7 +21,7 @@ async function main() {
     let pks = getPks()
 
     //read
-    let h = fs.readFileSync(fn_html, 'utf8')
+    let h = fs.readFileSync(fnHtml, 'utf8')
 
     //check
     if (h.indexOf(cdnCodepen) >= 0) {
@@ -147,7 +146,7 @@ async function main() {
 
     //write
     //console.log(c)
-    fs.writeFileSync(fn_html, c, 'utf8')
+    fs.writeFileSync(fnHtml, c, 'utf8')
 
 }
 main()

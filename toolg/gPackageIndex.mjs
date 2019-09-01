@@ -4,7 +4,7 @@ import getFiles from '../tool/getFiles.mjs'
 
 
 let fd = './src/'
-let fnidx = 'index.mjs'
+let fnIndex = 'index.mjs'
 
 
 async function main() {
@@ -47,7 +47,7 @@ async function main() {
 
     //write
     //console.log(c)
-    fs.writeFileSync(fd + fnidx, c, 'utf8')
+    fs.writeFileSync(fd + fnIndex, c, 'utf8')
 
 }
 main()

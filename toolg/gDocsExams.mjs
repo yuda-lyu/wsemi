@@ -3,8 +3,8 @@ import fs from 'fs'
 import getFiles from '../tool/getFiles.mjs'
 
 
-let fd_src = './examples/'
-let fd_tar = './docs/examples/'
+let fdSrc = './examples/'
+let fdTar = './docs/examples/'
 
 
 async function main() {
@@ -14,17 +14,17 @@ async function main() {
     let cdn = `<script src="https://cdn.jsdelivr.net/npm/wsemi@latest/dist/wsemi.umd.js"></script>`
 
     //mkdirSync
-    if (!fs.existsSync(fd_tar)) {
-        fs.mkdirSync(fd_tar)
+    if (!fs.existsSync(fdTar)) {
+        fs.mkdirSync(fdTar)
     }
 
     //getFiles
-    let ltfs = getFiles(fd_src)
+    let ltfs = getFiles(fdSrc)
 
     _.each(ltfs, function(v) {
 
         //fn
-        let fn = fd_src + v
+        let fn = fdSrc + v
 
         //c
         let c = fs.readFileSync(fn, 'utf8')
@@ -35,7 +35,7 @@ async function main() {
 
         //write
         //console.log(c)
-        fs.writeFileSync(fd_tar + v, c, 'utf8')
+        fs.writeFileSync(fdTar + v, c, 'utf8')
 
     })
 
