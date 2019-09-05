@@ -1,6 +1,6 @@
-import cheerio from 'cheerio'
 import fs from 'fs'
-import getPks from '../tool/getPks.mjs'
+import cheerio from 'cheerio'
+import getPks from 'w-package-tools/src/getPks.mjs'
 
 
 let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'

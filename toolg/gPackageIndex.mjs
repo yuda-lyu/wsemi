@@ -1,6 +1,6 @@
-import _ from 'lodash'
 import fs from 'fs'
-import getFiles from '../tool/getFiles.mjs'
+import _ from 'lodash'
+import getFiles from 'w-package-tools/src/getFiles.mjs'
 
 
 let fd = './src/'
