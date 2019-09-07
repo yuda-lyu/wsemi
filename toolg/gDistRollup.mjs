@@ -20,7 +20,6 @@ rollupFiles({
         'tippy.js': 'tippy',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        '@ctrl/tinycolor': 'tinycolor',
     },
     external: [
         'fs',
@@ -31,6 +30,5 @@ rollupFiles({
         'tippy.js',
         'ua-parser-js',
         'xss',
-        '@ctrl/tinycolor',
     ],
 })

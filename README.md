@@ -38,7 +38,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `@ctrl/tinycolor`, `ua-parser-js`, `xss`, `tippy.js`, `xlsx`
+> **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `tippy.js`, `xlsx`
 ```alias
 npm i wsemi
 ```
@@ -67,11 +67,6 @@ or
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
-[Optional] Add script for tinycolor2, it's almost same as @ctrl/tinycolor.
-> **Note:** include script when use `hsl` or `genGradientColor` function.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js"></script>
-```
 [Optional] Add script for ua-parser-js.
 > **Note:** include script when use `getUserAgent` function.
 ```alias
@@ -98,5 +93,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.33/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.34/dist/wsemi.umd.js"></script>
 ```

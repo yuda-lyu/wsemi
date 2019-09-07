@@ -68,7 +68,6 @@ async function main() {
             'scripts': [
                 'https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js',
                 'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
-                'https://cdn.jsdelivr.net/npm/tinycolor2/dist/tinycolor-min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
                 'https://rawgit.com/leizongmin/js-xss/master/dist/xss.js',
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
