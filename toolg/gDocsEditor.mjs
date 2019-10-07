@@ -7,7 +7,7 @@ let cdnCodepen = 'https://static.codepen.io/assets/embed/ei.js'
 let fnHtml = './docs/wsemi.html'
 
 
-async function main() {
+function main() {
     //由jsdoc產製之wsemi.html, 自動添加將example轉換成codepen線上編輯功能
 
     //wrap

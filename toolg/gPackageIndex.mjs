@@ -7,7 +7,7 @@ let fd = './src/'
 let fnIndex = 'index.mjs'
 
 
-async function main() {
+function main() {
     //由src內取得指定函數檔案, 再自動產生index.mjs, 供rollup編譯之用
 
     //getFiles
