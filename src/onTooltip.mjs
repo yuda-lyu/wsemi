@@ -33,6 +33,7 @@ function onTooltip(ele, ct) {
     let tp = tippy(ele, {
         content: h,
         arrow: true,
+        theme: 'dark',
         //animation: 'fade',
         placement: 'bottom',
         //duration: [500,100],
