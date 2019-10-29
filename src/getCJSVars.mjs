@@ -18,7 +18,9 @@ import strdelleft from './strdelleft.mjs'
  * @param {Object} url 輸入Nodejs的url物件
  * @returns {Object} 回傳CommonJS環境變數物件
  * @example
- * getCJSVars()
+ * import path from 'path'
+ * import url from 'url'
+ * getCJSVars(path, url)
  * // => { __filename: '/path/to/file',  __dirname: '/folder' }
  */
 function getCJSVars(path, url) {
