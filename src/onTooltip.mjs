@@ -30,6 +30,7 @@ function onTooltip(ele, ct) {
     h = `<div style="text-align:left;">${h}</div>`
 
     //tippy
+    console.log('tippy', tippy)
     let tp = tippy(ele, {
         content: h,
         arrow: true,
