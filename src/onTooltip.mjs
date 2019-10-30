@@ -1,4 +1,5 @@
 import tippy from 'tippy.js'
+import 'tippy.js/dist/tippy.css'
 
 
 /**
@@ -29,7 +30,7 @@ function onTooltip(ele, ct) {
     //h, 文字對齊預設靠左
     h = `<div style="text-align:left;">${h}</div>`
 
-    //useTippy
+    //useTippy, tippy於weboack打包時會用default儲存, 調用時則需改用default
     let useTippy = tippy
     if (tippy.default) {
         useTippy = tippy.default
