@@ -17,7 +17,7 @@ rollupFiles({
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
-        'tippy.js': 'tippy.js',
+        //'tippy.js': 'tippy.js', //編譯tippy.js與popper.js進umd
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
     },
@@ -27,7 +27,7 @@ rollupFiles({
         'dayjs',
         'xlsx',
         'fuzzball',
-        'tippy.js',
+        //'tippy.js',
         'ua-parser-js',
         'xss',
     ],

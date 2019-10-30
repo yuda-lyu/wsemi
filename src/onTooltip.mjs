@@ -1,6 +1,4 @@
 import tippy from 'tippy.js'
-// import tippy from 'tippy.js/dist/tippy.esm.js'
-// import 'tippy.js/dist/tippy.css'
 
 
 /**

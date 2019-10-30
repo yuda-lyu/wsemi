@@ -38,7 +38,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `tippy.js`, `xlsx`
+> **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`
 ```alias
 npm i wsemi
 ```
@@ -77,12 +77,6 @@ or
 ```alias
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 ```
-[Optional] Add script for popper.js and tippy.js, because tippy.js depends on popper.js.
-> **Note:** include script when use `onTooltip` function.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
-```
 [Optional] Add script for xlsx.
 > **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function.
 ```alias
@@ -93,5 +87,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.40/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.2.41/dist/wsemi.umd.js"></script>
 ```
