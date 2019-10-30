@@ -29,13 +29,14 @@ function onTooltip(ele, ct) {
     //h, 文字對齊預設靠左
     h = `<div style="text-align:left;">${h}</div>`
 
-    //check
+    //useTippy
+    let useTippy = tippy
     if (tippy.default) {
-        tippy = tippy.default
+        useTippy = tippy.default
     }
 
     //tippy
-    let tp = tippy(ele, {
+    let tp = useTippy(ele, {
         content: h,
         arrow: true,
         theme: 'dark',
