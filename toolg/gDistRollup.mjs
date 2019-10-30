@@ -17,7 +17,7 @@ rollupFiles({
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
-        'tippy.js': 'tippy',
+        'tippy.js': 'tippy.js',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
     },
