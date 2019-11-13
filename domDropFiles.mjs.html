@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>pmChain.mjs - Documentation</title>
+    <title>domDropFiles.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">pmChain.mjs</h1>
+    <h1 class="page-title">domDropFiles.mjs</h1>
     
 
     
@@ -42,64 +42,92 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
-import isarr from './isarr.mjs'
+            <pre class="prettyprint source linenums"><code>import Mitt from 'mitt'
 
 
 /**
- * 傳入initial初始值並循序執行Promise陣列
+ * 前端取得拖曳進指定元素的檔案陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.js Github}
  * @memberOf wsemi
- * @param {Array} pms 輸入Promise陣列
- * @param {*} initial 輸入循序執行Promise陣列的初始值
- * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
+ * @param {HTMLElement} ele 輸入dom元素
+ * @returns {Object} 回傳物件，包含emit與off事件，emit可監聽dropIn、dropOut、getFiles，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列
  * @example
- * let pm1 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm1' + v)
- *         pm.resolve('pm1' + v)
- *     }, 100)
- *     return pm
- * }
- * let pm2 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm2' + v)
- *         pm.resolve('pm2' + v)
- *     }, 150)
- *     return pm
- * }
- * let pm3 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm3' + v)
- *         pm.resolve('pm3' + v)
- *     }, 50)
- *     return pm
- * }
- * pmChain([pm1, pm2, pm3], '*').then((r) => {
- *     console.log('pmChain: ', r)
- * })
- * // => pm1*
- * // => pm2pm1*
- * // => pm3pm2pm1*
- * // => pmChain: pm3pm2pm1*
+ * need test in browser
  */
-function pmChain(pms, initial = null) {
-    if (!isarr(pms)) {
-        let pm = genPm()
-        pm.reject('pms is not array')
-        return pm
+function domDropFiles(ele) {
+    let bMouseIn = false
+    let bMouseInTemp = false
+
+    //ev
+    let ev = new Mitt()
+
+    //addEventListener
+    ele.addEventListener('dragenter', dgDragin, false)
+    ele.addEventListener('dragover', dgDragin, false)
+    ele.addEventListener('dragleave', dgDragout, false)
+    ele.addEventListener('drop', dgDrop, false)
+
+    function dgIn(e) {
+        e.stopPropagation()
+        e.preventDefault()
+        bMouseInTemp = true //所有滑鼠進入或移動都標記為滑鼠移入狀態
+        if (bMouseIn === false) {
+            bMouseIn = true
+            ev.emit('dropIn', e)
+        }
     }
-    return pms.reduce((pm, v) => {
-        return pm.then(v)
-    }, Promise.resolve(initial))
+
+    function dgOut(e) {
+        e.stopPropagation()
+        e.preventDefault()
+        bMouseInTemp = false //暫時視為滑鼠移出
+        setTimeout(function() {
+            if (!bMouseInTemp) { //若100ms後仍為滑鼠移出狀態才emit事件
+                bMouseIn = false
+                ev.emit('dropOut', e)
+            }
+        }, 100)
+    }
+
+    function dgDragin(e) {
+        dgIn(e)
+    }
+
+    function dgDragout(e) {
+        dgOut(e)
+    }
+
+    function dgDrop(e) {
+
+        //dgIn
+        dgIn(e)
+
+        //cb for dgOut
+        function cb() {
+            dgOut(e)
+        }
+
+        //emit
+        let files = e.dataTransfer.files
+        ev.emit('getFiles', { files, e, cb })
+
+    }
+
+    //off
+    function off() {
+        ele.removeEventListener('dragenter', dgDragin, false)
+        ele.removeEventListener('dragover', dgDragin, false)
+        ele.removeEventListener('dragleave', dgDragout, false)
+        ele.removeEventListener('drop', dgDrop, false)
+    }
+    ev.off = off
+
+    return ev
 }
 
 
-export default pmChain
+export default domDropFiles
 </code></pre>
         </article>
     </section>
