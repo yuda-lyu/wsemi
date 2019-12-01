@@ -9,8 +9,7 @@ import j2o from './j2o.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execScript.test.js Github}
  * @memberOf wsemi
  * @param {String} prog 輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收
- * @param {String} scp 輸入腳本檔案位置字串
- * @param {Array} params 輸入傳入腳本的參數陣列
+ * @param {String|Array} scp 輸入腳本檔案位置字串或參數
  * @returns {*} 回傳任意資料
  * @example
  * let prog = 'python'
@@ -18,7 +17,7 @@ import j2o from './j2o.mjs'
  * let pa = 'sin'
  * let pb = '12'
  * let pc = '34.56'
- * execScript(prog, scp, [pa, pb, pc])
+ * execScript(prog, [scp, pa, pb, pc])
  *     .then(function(data) {
  *         console.log('then', data)
  *     })
@@ -26,12 +25,11 @@ import j2o from './j2o.mjs'
  *         console.log('catch', data)
  *     })
  */
-function execScript(prog, scp, params) {
-    //日後可換execa
+function execScript(prog, scp) {
     return new Promise(function(resolve, reject) {
 
         //spawn
-        let process = cp.spawn(prog, concat([scp], params))
+        let process = cp.spawn(prog, concat([scp]))
 
         //result
         process.stdout.on('data', function(data) {
