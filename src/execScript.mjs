@@ -1,6 +1,5 @@
 import cp from 'child_process'
 import concat from 'lodash/concat'
-import j2o from './j2o.mjs'
 
 
 /**
@@ -34,14 +33,12 @@ function execScript(prog, scp) {
         //result
         process.stdout.on('data', function(data) {
             data = data.toString('utf8')
-            data = j2o(data)
             resolve(data)
         })
 
         //reject
         process.stderr.on('data', function(data) {
             data = data.toString('utf8')
-            data = j2o(data)
             reject(data)
         })
 
