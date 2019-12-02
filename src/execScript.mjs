@@ -23,12 +23,22 @@ import concat from 'lodash/concat'
  *     .catch(function(data) {
  *         console.log('catch', data)
  *     })
+ *
+ * let prog = 'prog.exe'
+ * let arg = 'input'
+ * execScript(prog, arg)
+ *     .then(function(data) {
+ *         console.log('then', data)
+ *     })
+ *     .catch(function(data) {
+ *         console.log('catch', data)
+ *     })
  */
-function execScript(prog, scp) {
+function execScript(prog, args) {
     return new Promise(function(resolve, reject) {
 
         //spawn
-        let process = cp.spawn(prog, concat([scp]))
+        let process = cp.spawn(prog, args)
 
         //result
         process.stdout.on('data', function(data) {
