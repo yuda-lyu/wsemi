@@ -1,5 +1,5 @@
 import cp from 'child_process'
-import concat from 'lodash/concat'
+import isarr from './isarr.mjs'
 
 
 /**
@@ -37,19 +37,30 @@ import concat from 'lodash/concat'
 function execScript(prog, args) {
     return new Promise(function(resolve, reject) {
 
+        //check
+        if (!isarr(args)) {
+            args = [args]
+        }
+
         //spawn
         let process = cp.spawn(prog, args)
 
-        //result
+        //resolve result
+        let rOut = ''
         process.stdout.on('data', function(data) {
-            data = data.toString('utf8')
-            resolve(data)
+            rOut += data.toString('utf8')
+        })
+        process.stdout.on('end', function() {
+            resolve(rOut)
         })
 
-        //reject
+        //reject error
+        let rError = ''
         process.stderr.on('data', function(data) {
-            data = data.toString('utf8')
-            reject(data)
+            rError += data.toString('utf8')
+        })
+        process.stderr.on('end', function() {
+            reject(rError)
         })
 
     })
