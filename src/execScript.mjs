@@ -45,22 +45,38 @@ function execScript(prog, args) {
         //spawn
         let process = cp.spawn(prog, args)
 
-        //resolve result
+        //rOut
         let rOut = ''
         process.stdout.on('data', function(data) {
+            //console.log('stdout data', data)
             rOut += data.toString('utf8')
         })
-        process.stdout.on('end', function() {
-            resolve(rOut)
-        })
+        // process.stdout.on('end', function() {
+        //     console.log('stdout end', rOut)
+        //     resolve(rOut)
+        // })
 
-        //reject error
+        //rError
         let rError = ''
         process.stderr.on('data', function(data) {
+            //console.log('stderr data', data)
             rError += data.toString('utf8')
         })
-        process.stderr.on('end', function() {
-            reject(rError)
+        // process.stderr.on('end', function() { //有可能無錯誤但監聽到stderr end事件, 進而導致回傳錯誤又無錯誤數據, 改統一使用process close處理回傳數據與狀態
+        //     console.log('stderr end', rError)
+        //     reject(rError)
+        // })
+
+        process.on('close', function (code) {
+            if (rOut) {
+                resolve(rOut)
+            }
+            else if (rError) {
+                reject(rError)
+            }
+            else {
+                reject(`process is aborted unexpectedly with code ${code}`) //無任何數據回傳但程序被強制中止
+            }
         })
 
     })
