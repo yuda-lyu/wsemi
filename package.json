@@ -1,9 +1,10 @@
 {
   "name": "wsemi",
-  "version": "1.2.53",
+  "version": "1.2.54",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "crypto-js": "^3.1.9-1",
     "dayjs": "^1.8.17",
     "fuzzball": "^1.3.0",
@@ -12,9 +13,7 @@
     "tippy.js": "^5.1.2",
     "ua-parser-js": "^0.7.20",
     "xlsx": "^0.15.3",
-    "xss": "^1.0.6"
-  },
-  "devDependencies": {
+    "xss": "^1.0.6",
     "@babel/cli": "^7.7.5",
     "@babel/core": "^7.7.5",
     "@babel/node": "^7.7.4",
@@ -25,7 +24,7 @@
     "@babel/register": "^7.7.4",
     "@babel/runtime": "^7.7.6",
     "cheerio": "^1.0.0-rc.3",
-    "core-js": "^3.4.8",
+    "core-js": "^3.5.0",
     "docdash": "^1.1.1",
     "eslint": "^6.7.2",
     "eslint-config-standard": "^14.1.0",
@@ -40,16 +39,16 @@
     "jsdoc": "^3.6.3",
     "jsdoc-vuejs": "^3.0.5",
     "mocha": "^6.2.2",
-    "rollup": "^1.27.9",
+    "rollup": "^1.27.13",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-postcss": "^2.0.3",
     "rollup-plugin-replace": "^2.2.0",
-    "rollup-plugin-terser": "^5.1.2",
+    "rollup-plugin-terser": "^5.1.3",
     "rollup-plugin-vue": "^5.1.4",
-    "vue-template-compiler": "^2.6.10",
-    "w-package-tools": "^1.0.11"
+    "vue-template-compiler": "^2.6.11",
+    "w-package-tools": "^1.0.12"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --require @babel/register",
