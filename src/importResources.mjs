@@ -4,11 +4,11 @@ import join from 'lodash/join'
 import isarr from './isarr.mjs'
 import isstr from './isstr.mjs'
 import isfun from './isfun.mjs'
-import haskey from './haskey.mjs'
 import genPm from './genPm.mjs'
 import pmSeries from './pmSeries.mjs'
 import waitFun from './waitFun.mjs'
 import strright from './strright.mjs'
+import delay from './delay.mjs'
 
 
 let _paths = {}
@@ -16,50 +16,86 @@ let _pathItems = {}
 
 
 function importResource({ tagName, path, attributes = {}, func }) {
+
+    //pm
     let pm = genPm()
 
     //check
-    if (haskey(_paths, path)) {
-        pm.resolve()
+    if (_paths[path] === 'done') {
+        pm.resolve('loaded')
         return pm
     }
-    //console.log('load path', path)
+    else if (_paths[path] === 'loading') {
+        waitFun(() => {
+            return _paths[path] === 'done'
+        })
+            .then(function() {
+                pm.resolve('loaded')
+            })
+        return pm
+    }
 
-    //save key, 呼叫即紀錄, 不論加載成功或失敗皆視為不重複加載
-    _paths[path] = true
+    //loading
+    _paths[path] = 'loading'
 
-    //element attrs
-    let element = document.createElement(tagName)
+    //ele attrs
+    let ele = document.createElement(tagName)
     each(attributes, (v, k) => {
-        element.setAttribute(k, v)
+        ele.setAttribute(k, v)
     })
 
-    //element type
+    //ele type
     if (attributes.rel && attributes.rel === 'stylesheet') {
-        element.setAttribute('href', path)
+        ele.setAttribute('href', path)
         setTimeout(() => {
-            pm.resolve(element)
+
+            //resolve
+            pm.resolve(ele)
+
+            //done
+            _paths[path] = 'done'
+
         }, 1)
     }
     else {
-        element.src = path
-        element.addEventListener('load', () => {
-            if (!isfun(func)) {
-                func = () => true
+        ele.src = path
+        ele.addEventListener('load', () => {
+            let wf
+            if (isfun(func)) {
+                wf = waitFun(func)
             }
-            waitFun(func)
+            else {
+                wf = genPm()
+                wf.resolve()
+            }
+            wf
+                .then(() => {
+                    return delay(500) //無縫載入頁面會無法更新, 強制delay 0.5s使頁面可更新
+                })
                 .then(function() {
-                    pm.resolve(element)
+
+                    //resolve
+                    pm.resolve(ele)
+
+                    //done
+                    _paths[path] = 'done'
+
                 })
         })
-        element.addEventListener('error', () => {
-            pm.reject(element)
+        ele.addEventListener('error', () => {
+
+            //reject
+            pm.reject(ele)
+
+            //done
+            _paths[path] = 'done'
+
         })
     }
 
     //appendChild
     let head = document.getElementsByTagName('head')[0]
-    head.appendChild(element)
+    head.appendChild(ele)
 
     return pm
 }
@@ -109,6 +145,9 @@ function importResource({ tagName, path, attributes = {}, func }) {
  */
 function importResources(pathItems) {
 
+    //pm
+    let pm = genPm()
+
     //check
     if (!isarr(pathItems)) {
         pathItems = [pathItems]
@@ -128,12 +167,10 @@ function importResources(pathItems) {
 
     //check
     if (_pathItems[key] === 'done') {
-        let pm = genPm()
         pm.resolve('loaded')
         return pm
     }
     else if (_pathItems[key] === 'loading') {
-        let pm = genPm()
         waitFun(() => {
             return _pathItems[key] === 'done'
         })
@@ -163,9 +200,9 @@ function importResources(pathItems) {
 
     //pmSeries
     return pmSeries(pathItems, (pathItem) => {
-        let p
+        let pm = genPm()
         if (pathItem.type === 'js') {
-            p = importResource({
+            pm = importResource({
                 tagName: 'script',
                 path: pathItem.path,
                 attributes: { type: 'text/javascript' },
@@ -173,16 +210,18 @@ function importResources(pathItems) {
             })
         }
         else if (pathItem.type === 'css') {
-            p = importResource({
+            pm = importResource({
                 tagName: 'link',
                 path: pathItem.path,
                 attributes: { rel: 'stylesheet' },
             })
         }
         else {
-            console.log('invalid pathItem.type: ', pathItem.type)
+            let err = 'invalid pathItem.type: ' + pathItem.type
+            console.log(err)
+            pm.reject(err)
         }
-        return p
+        return pm
     })
         .then(() => {
 
