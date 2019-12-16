@@ -25,7 +25,7 @@ function importResource({ tagName, path, attributes = {}, func }) {
     }
     //console.log('load path', path)
 
-    //save key
+    //save key, 呼叫即紀錄, 不論加載成功或失敗皆視為不重複加載
     _paths[path] = true
 
     //element attrs
