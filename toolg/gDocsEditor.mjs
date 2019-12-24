@@ -94,19 +94,9 @@ function main() {
             let code = ele.children().text()
             //console.log(code)
 
-            //add bodyLog
-            let s=code.split('\\n')
-            s=_.map(s,function(v){
-                if (v.indexOf(name)>=0){
-                    return 'bodyLog('+v+')'
-                }
-                return v
-            })
-            code=_.join(s,'\\n')
-            
             //add code for test and bodyLog function
             code='let '+name+' = wsemi.'+name+'<br>'+code
-            code='let bodyLog = wsemi.bodyLog<br>'+code
+            code='console.log = wsemi.bodyLog<br>'+code
 
             //reset to empty div
             ele.remove()
