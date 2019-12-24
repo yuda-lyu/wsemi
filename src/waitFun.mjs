@@ -34,6 +34,12 @@ function waitFun(f, maxnum = 180) {
         return pm
     }
 
+    //immediate call
+    if (f() === true) {
+        pm.resolve()
+        return pm
+    }
+
     //default
     if (!ispint(maxnum)) {
         maxnum = 60 * 3 //3min

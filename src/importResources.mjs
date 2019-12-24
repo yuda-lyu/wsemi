@@ -223,7 +223,7 @@ function importResources(pathItems) {
         }
         return pm
     })
-        .then(() => {
+        .finally(() => {
 
             //done
             _pathItems[key] = 'done'
