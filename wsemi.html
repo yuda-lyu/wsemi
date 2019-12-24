@@ -397,7 +397,7 @@
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ab2u8arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let ab = (new Uint8Array([66, 97, 115])).buffer
-ab2u8arr(ab)
+console.log(ab2u8arr(ab))
 // =&gt; new Uint8Array([66, 97, 115])</code></pre>
         </div>
 
@@ -565,10 +565,10 @@ ab2u8arr(ab)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;addMonth&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>addMonth(&apos;2019-01&apos;, 2)
+<pre class="prettyprint"><code>console.log(addMonth(&apos;2019-01&apos;, 2))
 // =&gt; &apos;2019-03&apos;
 
-addMonth(&apos;2018-12&apos;, -1)
+console.log(addMonth(&apos;2018-12&apos;, -1))
 // =&gt; &apos;2018-11&apos;</code></pre>
         </div>
 
@@ -762,7 +762,7 @@ addMonth(&apos;2018-12&apos;, -1)
 <div onclick="editOnline(this, &apos;aes2str&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let str = &apos;53616c7465645f5f47214797ac01bc03cceb69ebced4948501ab94ca9644a6dfd277456aead4432cb9c9d74c38c42c79&apos;
 let key = &apos;1234567890abcdefghijk&apos;
-aes2str(str, key)
+console.log(aes2str(str, key))
 // =&gt; &apos;test&#x4E2D;&#x6587;abcdefghijklmn&apos;</code></pre>
         </div>
 
@@ -1020,10 +1020,10 @@ aes2str(str, key)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arr2dt&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arr2dt([&apos;a&apos;, &apos;b&apos;])
+<pre class="prettyprint"><code>console.log(arr2dt([&apos;a&apos;, &apos;b&apos;]))
 // =&gt; { &apos;a&apos;: &apos;&apos;, &apos;b&apos;: &apos;&apos; }
 
-arr2dt([&apos;a&apos;, &apos;b&apos;], [12.3, &apos;456a&apos;])
+console.log(arr2dt([&apos;a&apos;, &apos;b&apos;], [12.3, &apos;456a&apos;]))
 // =&gt; { &apos;a&apos;: 12.3, &apos;b&apos;: &apos;456a&apos; }</code></pre>
         </div>
 
@@ -1234,7 +1234,7 @@ arr2dt([&apos;a&apos;, &apos;b&apos;], [12.3, &apos;456a&apos;])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arraccum&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arraccum([1, 2, 3, 4])
+<pre class="prettyprint"><code>console.log(arraccum([1, 2, 3, 4]))
 // =&gt; [1, 3, 6, 10]</code></pre>
         </div>
 
@@ -1404,7 +1404,7 @@ v1&#x8207;v2&#x9700;&#x8F38;&#x5165;&#x540C;&#x9577;&#x5EA6;&#x4E4B;&#x9663;&#x5
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arradd&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arradd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1])
+<pre class="prettyprint"><code>console.log(arradd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1]))
 // =&gt; [1.1, 2.1, 3.1, 4.1]</code></pre>
         </div>
 
@@ -1714,10 +1714,10 @@ v1&#x8207;v2&#x9700;&#x8F38;&#x5165;&#x540C;&#x9577;&#x5EA6;&#x4E4B;&#x9663;&#x5
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrat&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1)
+<pre class="prettyprint"><code>console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1))
 // =&gt; [2]
 
-arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4)
+console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
 // =&gt; [2, 3, &apos;4&apos;, 5]</code></pre>
         </div>
 
@@ -1975,10 +1975,10 @@ arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrdiff&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;)
+<pre class="prettyprint"><code>console.log(arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;))
 // =&gt; { infor: { pk: &apos;diff&apos; }, del: [], same: [], diff: [{ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }], add: [] }
 
-arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk1&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;)
+console.log(arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk1&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;))
 // =&gt; { infor: { pk: &apos;del&apos;, pk1: &apos;add&apos; }, del: [{ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }], same: [], diff: [], add: [{ id: &apos;pk1&apos;, a: &apos;abc&apos;, b: 456 }] }</code></pre>
         </div>
 
@@ -2198,7 +2198,7 @@ arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk1&apos
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrfind&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, 2])
+<pre class="prettyprint"><code>console.log(arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, 2]))
 // =&gt; [3, 1]</code></pre>
         </div>
 
@@ -2389,16 +2389,16 @@ arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk1&apos
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrhas&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arrhas([&apos;abc&apos;, &apos;bcd&apos;], &apos;abc&apos;)
+<pre class="prettyprint"><code>console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], &apos;abc&apos;))
 // =&gt; true
 
-arrhas([&apos;xyz&apos;, &apos;bcd&apos;], &apos;abc&apos;)
+console.log(arrhas([&apos;xyz&apos;, &apos;bcd&apos;], &apos;abc&apos;))
 // =&gt; false
 
-arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;abc&apos;, &apos;cde&apos;])
+console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;abc&apos;, &apos;cde&apos;]))
 // =&gt; true
 
-arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;cde&apos;])
+console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;cde&apos;]))
 // =&gt; false</code></pre>
         </div>
 
@@ -2595,10 +2595,10 @@ arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;cde&apos;])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrpull&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2])
+<pre class="prettyprint"><code>console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2]))
 // =&gt; [1, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;]
 
-arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&apos;])
+console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&apos;]))
 // =&gt; [1, 4, &apos;abc&apos;]</code></pre>
         </div>
 
@@ -2789,7 +2789,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;b642obj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>b642obj(&apos;WzEsIjMiLCJhYmMiXQ==&apos;)
+<pre class="prettyprint"><code>console.log(b642obj(&apos;WzEsIjMiLCJhYmMiXQ==&apos;))
 // =&gt; [1, &apos;3&apos;, &apos;abc&apos;]</code></pre>
         </div>
 
@@ -2957,7 +2957,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;b642str&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>b642str(&apos;dGVzdOS4reaWhw==&apos;)
+<pre class="prettyprint"><code>console.log(b642str(&apos;dGVzdOS4reaWhw==&apos;))
 // =&gt; &apos;test&#x4E2D;&#x6587;&apos;</code></pre>
         </div>
 
@@ -3125,7 +3125,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;b642u8arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>b642u8arr(&apos;AQItAA==&apos;)
+<pre class="prettyprint"><code>console.log(b642u8arr(&apos;AQItAA==&apos;))
 // =&gt; new Uint8Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;])</code></pre>
         </div>
 
@@ -3293,7 +3293,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;b642u16arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>b642u16arr(&apos;AQItAA==&apos;)
+<pre class="prettyprint"><code>console.log(b642u16arr(&apos;AQItAA==&apos;))
 // =&gt; new Uint16Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;])</code></pre>
         </div>
 
@@ -3461,7 +3461,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;binstr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>binstr(&apos;1.25abc&apos;, &apos;ab&apos;)
+<pre class="prettyprint"><code>console.log(binstr(&apos;1.25abc&apos;, &apos;ab&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -3840,7 +3840,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;bs2u8arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>bs2u8arr(&apos;abc&apos;)
+<pre class="prettyprint"><code>console.log(bs2u8arr(&apos;abc&apos;))
 // =&gt; new Uint8Array([97, 98, 99])</code></pre>
         </div>
 
@@ -4009,7 +4009,7 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cdbl&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>cdbl(&apos;25&apos;)
+<pre class="prettyprint"><code>console.log(cdbl(&apos;25&apos;))
 // =&gt; 25</code></pre>
         </div>
 
@@ -4182,16 +4182,16 @@ arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&ap
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cfilesize&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>cfilesize(0)
+<pre class="prettyprint"><code>console.log(cfilesize(0))
 // =&gt; &apos;0.0 kb&apos;
 
-cfilesize(100)
+console.log(cfilesize(100))
 // =&gt; &apos;100.0 kb&apos;
 
-cfilesize(2048)
+console.log(cfilesize(2048))
 // =&gt; &apos;2.0 mb&apos;
 
-cfilesize(2000000)
+console.log(cfilesize(2000000))
 // =&gt; &apos;1.9 gb&apos;</code></pre>
         </div>
 
@@ -4363,13 +4363,13 @@ cfilesize(2000000)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cfinancial&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>cfinancial(0.123456789, 3)
+<pre class="prettyprint"><code>console.log(cfinancial(0.123456789, 3))
 // =&gt; &apos;0.123&apos;
 
-cfinancial(1234567.89)
+console.log(cfinancial(1234567.89))
 // =&gt; &apos;1,234,568&apos;
 
-cfinancial(1234567.89, 1)
+console.log(cfinancial(1234567.89, 1))
 // =&gt; &apos;1,234,567.9&apos;</code></pre>
         </div>
 
@@ -4596,10 +4596,10 @@ cfinancial(1234567.89, 1)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cint&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>cint(&apos;1.5&apos;)
+<pre class="prettyprint"><code>console.log(cint(&apos;1.5&apos;))
 // =&gt; 2
 
- cint(&apos;-1.5&apos;)
+console.log(cint(&apos;-1.5&apos;))
 // =&gt; -1</code></pre>
         </div>
 
@@ -4771,10 +4771,10 @@ cfinancial(1234567.89, 1)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;clearXSS&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>clearXSS(`&gt;&lt;script&gt;alert(&apos;XSS&apos;)&lt;/script&gt;`)
+<pre class="prettyprint"><code>console.log(clearXSS(`&gt;&lt;script&gt;alert(&apos;XSS&apos;)&lt;/script&gt;`))
 // =&gt; `&amp;gt;&amp;lt;script&amp;gt;alert(&apos;XSS&apos;)&amp;lt;/script&amp;gt;`
 
-clearXSS(`&lt;img src=&quot;javascript:alert(&apos;XSS&apos;)&quot;&gt;`)
+console.log(clearXSS(`&lt;img src=&quot;javascript:alert(&apos;XSS&apos;)&quot;&gt;`))
 // =&gt; `&lt;img src&gt;`</code></pre>
         </div>
 
@@ -4955,7 +4955,7 @@ clearXSS(`&lt;img src=&quot;javascript:alert(&apos;XSS&apos;)&quot;&gt;`)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cstr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>cstr(2.25)
+<pre class="prettyprint"><code>console.log(cstr(2.25))
 // =&gt; &apos;2.25&apos;</code></pre>
         </div>
 
@@ -5126,7 +5126,7 @@ clearXSS(`&lt;img src=&quot;javascript:alert(&apos;XSS&apos;)&quot;&gt;`)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;day2cht&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>day2cht(&apos;2019-01-02&apos;)
+<pre class="prettyprint"><code>console.log(day2cht(&apos;2019-01-02&apos;))
 // =&gt; &apos;&#x6C11;&#x570B; 108 &#x5E74; 1 &#x6708; 2 &#x65E5;&apos;</code></pre>
         </div>
 
@@ -5801,10 +5801,10 @@ console.log(dig(1.005, 2)) //1.01
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;dig&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>dig(0.123456789, 3)
+<pre class="prettyprint"><code>console.log(dig(0.123456789, 3))
 // =&gt; &apos;0.123&apos;
 
-dig(0.123456789, 4)
+console.log(dig(0.123456789, 4))
 // =&gt; &apos;0.1235&apos;</code></pre>
         </div>
 
@@ -6031,7 +6031,7 @@ dig(0.123456789, 4)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;digExp&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>digExp(0.000000123456789, 2)
+<pre class="prettyprint"><code>console.log(digExp(0.000000123456789, 2))
 // =&gt; &apos;1.23e-7&apos;</code></pre>
         </div>
 
@@ -8928,10 +8928,10 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;dtmapping&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>dtmapping({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;])
+<pre class="prettyprint"><code>console.log(dtmapping({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;]))
 // =&gt; { a: &apos;a123&apos;, b: 234 }
 
-dtmapping({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;, &apos;x&apos;])
+console.log(dtmapping({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;, &apos;x&apos;]))
 // =&gt; { a: &apos;a123&apos;, b: 234, x: &apos;&apos; }</code></pre>
         </div>
 
@@ -9122,10 +9122,10 @@ dtmapping({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;dtpick&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;])
+<pre class="prettyprint"><code>console.log(dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;]))
 // =&gt; { a: &apos;a123&apos;, b: 234 }
 
-dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;, &apos;x&apos;])
+console.log(dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apos;b&apos;, &apos;x&apos;]))
 // =&gt; { a: &apos;a123&apos;, b: 234 }</code></pre>
         </div>
 
@@ -9260,7 +9260,7 @@ dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apo
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execScript.mjs.html">execScript.mjs</a>, <a href="execScript.mjs.html#line37">line 37</a>
+        <a href="execScript.mjs.html">execScript.mjs</a>, <a href="execScript.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -9316,7 +9316,8 @@ dtpick({ a: &apos;a123&apos;, b: 234, c: &apos;345&apos; }, [&apos;a&apos;, &apo
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;execScript&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let prog = &apos;python&apos;
+<pre class="prettyprint"><code>//need test in nodejs
+let prog = &apos;python&apos;
 let scp = &apos;fun.py&apos;
 let pa = &apos;sin&apos;
 let pb = &apos;12&apos;
@@ -9531,7 +9532,7 @@ execScript(prog, arg)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;f2c&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let f = function() { &#x2571;**abc*&#x2571; } //jsdoc can&apos;t parser multi-line comments here, need convert &quot;&#x2571;&quot; to &quot;/&quot;
-f2c(f)
+console.log(f2c(f))
 // =&gt; &apos;abc&apos;</code></pre>
         </div>
 
@@ -10534,7 +10535,7 @@ f2c(f)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;fsReadText&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>need test in file env.</code></pre>
+<pre class="prettyprint"><code>need test in nodejs.</code></pre>
         </div>
 
 
@@ -10679,7 +10680,7 @@ f2c(f)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;fsWriteText&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>need test in file env.</code></pre>
+<pre class="prettyprint"><code>need test in nodejs.</code></pre>
         </div>
 
 
@@ -10847,7 +10848,7 @@ f2c(f)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;genGradientColor&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>genGradientColor(&apos;#000&apos;)
+<pre class="prettyprint"><code>console.log(genGradientColor(&apos;#000&apos;))
 // =&gt; {&quot;linearGradient&quot;:{&quot;x1&quot;:0,&quot;x2&quot;:0,&quot;y1&quot;:0,&quot;y2&quot;:1},&quot;stops&quot;:[[0,&quot;hsla(0, 0%, 0%, 0.4)&quot;],[1,&quot;hsla(0, 0%, 0%, 0.9)&quot;]]}</code></pre>
         </div>
 
@@ -11016,7 +11017,7 @@ f2c(f)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;genID&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>genID()
+<pre class="prettyprint"><code>console.log(genID())
 // =&gt; Is1NyImU3A9fyqFyYBWuJu4ivXXcGZAb (is random)</code></pre>
         </div>
 
@@ -11148,7 +11149,7 @@ f2c(f)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="genPm.mjs.html">genPm.mjs</a>, <a href="genPm.mjs.html#line21">line 21</a>
+        <a href="genPm.mjs.html">genPm.mjs</a>, <a href="genPm.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -11206,16 +11207,17 @@ f2c(f)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;genPm&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let fn = function() {
-  let pm = genPm()
-  setTimeout(function() {
-    pm.resolve()
-  }, 1)
-  return pm
+    let pm = genPm()
+    setTimeout(function() {
+        pm.resolve()
+    }, 1)
+    return pm
 }
 fn()
-  .then(function(){
-    //add code
-  })</code></pre>
+    .then(function() {
+        console.log(&apos;then&apos;)
+        //add code
+    })</code></pre>
         </div>
 
 
@@ -11595,7 +11597,7 @@ fn()
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getdtv&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getdtv({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;)
+<pre class="prettyprint"><code>console.log(getdtv({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;))
 // =&gt; 123</code></pre>
         </div>
 
@@ -11786,13 +11788,13 @@ fn()
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getdtvstr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;)
+<pre class="prettyprint"><code>console.log(getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;))
 // =&gt; &apos;123&apos;
 
-getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;c&apos;)
+console.log(getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;c&apos;))
 // =&gt; &apos;45op&apos;
 
-getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;)
+console.log(getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;))
 // =&gt; &apos;&apos;</code></pre>
         </div>
 
@@ -11983,7 +11985,7 @@ getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getEnv&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getEnv()
+<pre class="prettyprint"><code>console.log(getEnv())
 // =&gt; { isBrowser: false, isWebWorker: false, isNode: true }</code></pre>
         </div>
 
@@ -12102,13 +12104,13 @@ getdtvstr({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getFileAccept&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getFileAccept()[2]
+<pre class="prettyprint"><code>console.log(getFileAccept()[2])
 // =&gt; { name: &apos;pdf&apos;,
 //      group: &apos;docums&apos;,
 //      acp: &apos;application/pdf&apos;,
 //      exec: &apos;acrobat&apos; }
 
-getFileAccept(&apos;acp&apos;)[&apos;text/html&apos;]
+console.log(getFileAccept(&apos;acp&apos;)[&apos;text/html&apos;])
 // =&gt; [ { name: &apos;htm&apos;,
 //        group: &apos;docums&apos;,
 //        acp: &apos;text/html&apos;,
@@ -12247,7 +12249,7 @@ getFileAccept(&apos;acp&apos;)[&apos;text/html&apos;]
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getFilesInFolder.mjs.html">getFilesInFolder.mjs</a>, <a href="getFilesInFolder.mjs.html#line17">line 17</a>
+        <a href="getFilesInFolder.mjs.html">getFilesInFolder.mjs</a>, <a href="getFilesInFolder.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -12303,7 +12305,8 @@ getFileAccept(&apos;acp&apos;)[&apos;text/html&apos;]
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getFilesInFolder&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let fd = &apos;folder p&apos;
+<pre class="prettyprint"><code>//need test in nodejs
+let fd = &apos;folder p&apos;
 getPathInFolder(fd)
 // =&gt; [&apos;file p1&apos;,&apos;file p2&apos;,&apos;file p3&apos;]</code></pre>
         </div>
@@ -12471,7 +12474,7 @@ getPathInFolder(fd)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getFoldersInFolder.mjs.html">getFoldersInFolder.mjs</a>, <a href="getFoldersInFolder.mjs.html#line17">line 17</a>
+        <a href="getFoldersInFolder.mjs.html">getFoldersInFolder.mjs</a>, <a href="getFoldersInFolder.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -12527,7 +12530,8 @@ getPathInFolder(fd)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getFoldersInFolder&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let fd = &apos;folder p&apos;
+<pre class="prettyprint"><code>//need test in nodejs
+let fd = &apos;folder p&apos;
 getPathInFolder(fd, true)
 // =&gt; [&apos;folder p4&apos;,&apos;folder p5&apos;]</code></pre>
         </div>
@@ -12751,7 +12755,7 @@ getPathInFolder(fd, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getGlobal&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getGlobal()
+<pre class="prettyprint"><code>console.log(getGlobal())
 // =&gt; global object in running environment</code></pre>
         </div>
 
@@ -12870,7 +12874,7 @@ getPathInFolder(fd, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getltdtkeys&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getltdtkeys([{ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, { a: 123.456, b: &apos;xyz&apos;, d: &apos;45op&apos;, e: &apos;&apos; }])
+<pre class="prettyprint"><code>console.log(getltdtkeys([{ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, { a: 123.456, b: &apos;xyz&apos;, d: &apos;45op&apos;, e: &apos;&apos; }]))
 // =&gt; [&apos;a&apos;, &apos;b&apos;, &apos;c&apos;, &apos;d&apos;, &apos;e&apos;]</code></pre>
         </div>
 
@@ -13038,10 +13042,10 @@ getPathInFolder(fd, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getObjSize&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getObjSize(&apos;abc123&apos;)
+<pre class="prettyprint"><code>console.log(getObjSize(&apos;abc123&apos;))
 // =&gt; 12
 
-getObjSize({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null })
+console.log(getObjSize({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }))
 // =&gt; 22</code></pre>
         </div>
 
@@ -13153,7 +13157,7 @@ getObjSize({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null })
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getPathInFolder.mjs.html">getPathInFolder.mjs</a>, <a href="getPathInFolder.mjs.html#line23">line 23</a>
+        <a href="getPathInFolder.mjs.html">getPathInFolder.mjs</a>, <a href="getPathInFolder.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -13209,7 +13213,8 @@ getObjSize({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null })
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getPathInFolder&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let fd = &apos;folder p&apos;
+<pre class="prettyprint"><code>//need test in nodejs
+let fd = &apos;folder p&apos;
 getPathInFolder(fd)
 // =&gt; [&apos;file p1&apos;,&apos;file p2&apos;,&apos;file p3&apos;]
 
@@ -13475,13 +13480,13 @@ getPathInFolder(fd, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getTimeBetween&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getTimeBetween(&apos;2017&apos;, &apos;2019&apos;, &apos;years&apos;)
+<pre class="prettyprint"><code>console.log(getTimeBetween(&apos;2017&apos;, &apos;2019&apos;, &apos;years&apos;))
 // =&gt; [&apos;2017&apos;, &apos;2018&apos;, &apos;2019&apos;]
 
-getTimeBetween(&apos;2019-01-01&apos;, &apos;2019-01-03&apos;, &apos;days&apos;)
+console.log(getTimeBetween(&apos;2019-01-01&apos;, &apos;2019-01-03&apos;, &apos;days&apos;))
 // =&gt; [&apos;2019-01-01&apos;, &apos;2019-01-02&apos;, &apos;2019-01-03&apos;]
 
-getTimeBetween(&apos;2019-01-01&apos;, &apos;2019-01-03&apos;)
+console.log(getTimeBetween(&apos;2019-01-01&apos;, &apos;2019-01-03&apos;))
 // =&gt; [&apos;2019-01-01&apos;, &apos;2019-01-02&apos;, &apos;2019-01-03&apos;]</code></pre>
         </div>
 
@@ -13739,10 +13744,10 @@ getTimeBetween(&apos;2019-01-01&apos;, &apos;2019-01-03&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getTimeFromUnit&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getTimeFromUnit(&apos;years&apos;)
+<pre class="prettyprint"><code>console.log(getTimeFromUnit(&apos;years&apos;))
 // =&gt; &apos;YYYY&apos;
 
-getTimeFromUnit(&apos;seconds&apos;)
+console.log(getTimeFromUnit(&apos;seconds&apos;))
 // =&gt; &apos;YYYY-MM-DDTHH:mm:ssZ&apos;</code></pre>
         </div>
 
@@ -13910,10 +13915,10 @@ getTimeFromUnit(&apos;seconds&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getTimeObject&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getTimeObject(&apos;2019-01-01&apos;, &apos;days&apos;)
+<pre class="prettyprint"><code>console.log(getTimeObject(&apos;2019-01-01&apos;, &apos;days&apos;))
 // =&gt; dayjs(&apos;2019-01-01&apos;, &apos;YYYY-MM-DD&apos;) //use dayjs or moment
 
-getTimeObject(&apos;2019-01-01T12:34:56&apos;, &apos;seconds&apos;)
+console.log(getTimeObject(&apos;2019-01-01T12:34:56&apos;, &apos;seconds&apos;))
 // =&gt; dayjs(&apos;2019-01-01T12:34:56&apos;, &apos;YYYY-MM-DDTHH:mm:ssZ&apos;) //use dayjs or moment</code></pre>
         </div>
 
@@ -14136,19 +14141,19 @@ getTimeObject(&apos;2019-01-01T12:34:56&apos;, &apos;seconds&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getTimeRange&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>getTimeRange(&apos;2019-01-01T09:00:00&apos;)
+<pre class="prettyprint"><code>console.log(getTimeRange(&apos;2019-01-01T09:00:00&apos;))
 // =&gt; &apos;2019-01-01T09:00 &#x81F3; &#x7121;&apos;
 
-getTimeRange(&apos;2019-01-01T09:00:00&apos;, &apos;2019-01-01T12:34:56&apos;)
+console.log(getTimeRange(&apos;2019-01-01T09:00:00&apos;, &apos;2019-01-01T12:34:56&apos;))
 // =&gt; &apos;2019-01-01T09:00 &#x81F3; 12:34&apos;
 
-getTimeRange(&apos;2019-01-01T09:00:00&apos;, &apos;2019-01-03T12:00:00&apos;)
+console.log(getTimeRange(&apos;2019-01-01T09:00:00&apos;, &apos;2019-01-03T12:00:00&apos;))
 // =&gt; &apos;2019-01-01T09:00 &#x81F3; 2019-01-03T12:00&apos;
 
-getTimeRange(&apos;2019-01-01T19:00:00&apos;, &apos;2019-01-01T12:00:00&apos;)
+console.log(getTimeRange(&apos;2019-01-01T19:00:00&apos;, &apos;2019-01-01T12:00:00&apos;))
 // =&gt; &apos;2019-01-01T19:00 &#x81F3; 12:00 (&#x8D77;&#x59CB;&#x6642;&#x9593;&#x5927;&#x65BC;&#x7D50;&#x675F;&#x6642;&#x9593;)&apos;
 
-getTimeRange(&apos;2019-01-03T09:00:00&apos;, &apos;2019-01-01T12:00:00&apos;)
+console.log(getTimeRange(&apos;2019-01-03T09:00:00&apos;, &apos;2019-01-01T12:00:00&apos;))
 // =&gt; &apos;2019-01-03T09:00 &#x81F3; 2019-01-01T12:00 (&#x8D77;&#x59CB;&#x6642;&#x9593;&#x5927;&#x65BC;&#x7D50;&#x675F;&#x6642;&#x9593;)&apos;</code></pre>
         </div>
 
@@ -14340,7 +14345,7 @@ getTimeRange(&apos;2019-01-03T09:00:00&apos;, &apos;2019-01-01T12:00:00&apos;)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;getUserAgent&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let ua = &apos;Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)&apos;
-getUserAgent(ua)
+console.log(getUserAgent(ua))
 // =&gt; {
     browsername: &apos;Konqueror&apos;,
     browserversion: &apos;4.1&apos;,
@@ -14535,7 +14540,7 @@ getUserAgent(ua)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;haskey&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>haskey({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;)
+<pre class="prettyprint"><code>console.log(haskey({ a: 123, b: &apos;xyz&apos;, c: &apos;45op&apos;, d: null }, &apos;a&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -14726,7 +14731,7 @@ getUserAgent(ua)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;hsl&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>hsl(0.5, 0.5, 0.5)
+<pre class="prettyprint"><code>console.log(hsl(0.5, 0.5, 0.5))
 // =&gt; &apos;#bfaa40&apos;</code></pre>
         </div>
 
@@ -15274,7 +15279,7 @@ getUserAgent(ua)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;importResources&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>need test in browser
+<pre class="prettyprint"><code>//need test in browser
 
 let pathItems
 
@@ -15478,7 +15483,7 @@ importResources(pathItems)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isab&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isab(new ArrayBuffer(1))
+<pre class="prettyprint"><code>console.log(isab(new ArrayBuffer(1)))
 // =&gt; true</code></pre>
         </div>
 
@@ -15646,10 +15651,10 @@ importResources(pathItems)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isarr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isarr([])
+<pre class="prettyprint"><code>console.log(isarr([]))
 // =&gt; true
 
-isarr([{}])
+console.log(isarr([{}]))
 // =&gt; true</code></pre>
         </div>
 
@@ -15817,10 +15822,10 @@ isarr([{}])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isarr0&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isarr([])
+<pre class="prettyprint"><code>console.log(isarr([]))
 // =&gt; true
 
-isarr([{}])
+console.log(isarr([{}]))
 // =&gt; false</code></pre>
         </div>
 
@@ -16155,7 +16160,7 @@ isarr([{}])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isbol&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isbol(false)
+<pre class="prettyprint"><code>console.log(isbol(false))
 // =&gt; true</code></pre>
         </div>
 
@@ -16323,7 +16328,7 @@ isarr([{}])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isday&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isday(&apos;2019-01-01&apos;)
+<pre class="prettyprint"><code>console.log(isday(&apos;2019-01-01&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -16610,10 +16615,10 @@ Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.tes
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isearr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isearr([{}])
+<pre class="prettyprint"><code>console.log(isearr([{}]))
 // =&gt; false
 
-isearr([{ a: 123 }])
+console.log(isearr([{ a: 123 }]))
 // =&gt; true</code></pre>
         </div>
 
@@ -17115,10 +17120,10 @@ isearr([{ a: 123 }])
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isEmail&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isEmail(&apos;abc@mail.com&apos;)
+<pre class="prettyprint"><code>console.log(isEmail(&apos;abc@mail.com&apos;))
 // =&gt; true
 
-isEmail(&apos;abc@a.b&apos;)
+console.log(isEmail(&apos;abc@a.b&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -17286,10 +17291,10 @@ isEmail(&apos;abc@a.b&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;iseobj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>iseobj({})
+<pre class="prettyprint"><code>console.log(iseobj({}))
 // =&gt; false
 
-iseobj({ a: 123 })
+console.log(iseobj({ a: 123 }))
 // =&gt; true</code></pre>
         </div>
 
@@ -17457,28 +17462,28 @@ iseobj({ a: 123 })
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;iser&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>iser(&apos;12a5&apos;)
+<pre class="prettyprint"><code>console.log(iser(&apos;12a5&apos;))
 // =&gt; false
 
-iser(&apos;&apos;)
+console.log(iser(&apos;&apos;))
 // =&gt; true
 
-iser([])
+console.log(iser([]))
 // =&gt; true
 
-iser([{}])
+console.log(iser([{}]))
 // =&gt; false
 
-iser([&apos;&apos;])
+console.log(iser([&apos;&apos;]))
 // =&gt; false
 
-iser({})
+console.log(iser({}))
 // =&gt; true
 
-iser(null)
+console.log(iser(null))
 // =&gt; true
 
-iser(undefined)
+console.log(iser(undefined))
 // =&gt; true</code></pre>
         </div>
 
@@ -17646,28 +17651,28 @@ iser(undefined)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isernot&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isernot(&apos;12a5&apos;)
+<pre class="prettyprint"><code>console.log(isernot(&apos;12a5&apos;))
 // =&gt; true
 
-isernot(&apos;&apos;)
+console.log(isernot(&apos;&apos;))
 // =&gt; false
 
-isernot([])
+console.log(isernot([]))
 // =&gt; false
 
-isernot([{}])
+console.log(isernot([{}]))
 // =&gt; true
 
-isernot([&apos;&apos;])
+console.log(isernot([&apos;&apos;]))
 // =&gt; true
 
-isernot({})
+console.log(isernot({}))
 // =&gt; false
 
-isernot(null)
+console.log(isernot(null))
 // =&gt; false
 
-isernot(undefined)
+console.log(isernot(undefined))
 // =&gt; false</code></pre>
         </div>
 
@@ -17835,13 +17840,13 @@ isernot(undefined)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isestr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isestr(&apos;1.25&apos;)
+<pre class="prettyprint"><code>console.log(isestr(&apos;1.25&apos;))
 // =&gt; true
 
-isestr(125)
+console.log(isestr(125))
 // =&gt; false
 
-isestr(&apos;&apos;)
+console.log(isestr(&apos;&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -18009,10 +18014,10 @@ isestr(&apos;&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isfun&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isfun(&apos;1.25&apos;)
+<pre class="prettyprint"><code>console.log(isfun(&apos;1.25&apos;))
 // =&gt; false
 
-isfun(function() {})
+console.log(isfun(function() {}))
 // =&gt; true</code></pre>
         </div>
 
@@ -18180,16 +18185,16 @@ isfun(function() {})
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isint&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isint(&apos;1.25&apos;)
+<pre class="prettyprint"><code>console.log(isint(&apos;1.25&apos;))
 // =&gt; false
 
-isint(&apos;125&apos;)
+console.log(isint(&apos;125&apos;))
 // =&gt; true
 
-isint(1.25)
+console.log(isint(1.25))
 // =&gt; false
 
-isint(125)
+console.log(isint(125))
 // =&gt; true</code></pre>
         </div>
 
@@ -18357,10 +18362,10 @@ isint(125)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ismonth&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ismonth(&apos;2019-01-01&apos;)
+<pre class="prettyprint"><code>console.log(ismonth(&apos;2019-01-01&apos;))
 // =&gt; false
 
-ismonth(&apos;2019-01&apos;)
+console.log(ismonth(&apos;2019-01&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -18529,13 +18534,13 @@ ismonth(&apos;2019-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isn0int&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isn0int(0)
+<pre class="prettyprint"><code>console.log(isn0int(0))
 // =&gt; true
 
-isn0int(125)
+console.log(isn0int(125))
 // =&gt; false
 
-isn0int(-125)
+console.log(isn0int(-125))
 // =&gt; true</code></pre>
         </div>
 
@@ -18704,25 +18709,25 @@ isn0int(-125)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isn0num&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isn0num(0)
+<pre class="prettyprint"><code>console.log(isn0num(0))
 // =&gt; true
 
-isn0num(-125)
+console.log(isn0num(-125))
 // =&gt; true
 
-isn0num(-1.25)
+console.log(isn0num(-1.25))
 // =&gt; true
 
-isn0num(125)
+console.log(isn0num(125))
 // =&gt; false
 
-isn0num(&apos;-125&apos;)
+console.log(isn0num(&apos;-125&apos;))
 // =&gt; true
 
-isn0num(&apos;-1.25&apos;)
+console.log(isn0num(&apos;-1.25&apos;))
 // =&gt; true
 
-isn0num(&apos;125&apos;)
+console.log(isn0num(&apos;125&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -19070,10 +19075,10 @@ isn0num(&apos;125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isnbr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isnbr(1.25)
+<pre class="prettyprint"><code>console.log(isnbr(1.25))
 // =&gt; true
 
-isnbr(&apos;1.25&apos;)
+console.log(isnbr(&apos;1.25&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -19242,13 +19247,13 @@ isnbr(&apos;1.25&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isnint&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isnint(0)
+<pre class="prettyprint"><code>console.log(isnint(0))
 // =&gt; false
 
-isnint(125)
+console.log(isnint(125))
 // =&gt; false
 
-isnint(-125)
+console.log(isnint(-125))
 // =&gt; true</code></pre>
         </div>
 
@@ -19416,7 +19421,7 @@ isnint(-125)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isnull&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isnull(null)
+<pre class="prettyprint"><code>console.log(isnull(null))
 // =&gt; true</code></pre>
         </div>
 
@@ -19584,13 +19589,13 @@ isnint(-125)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isnum&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isnum(0)
+<pre class="prettyprint"><code>console.log(isnum(0))
 // =&gt; true
 
-isnum(1.25)
+console.log(isnum(1.25))
 // =&gt; true
 
-isnum(&apos;-125&apos;)
+console.log(isnum(&apos;-125&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -19758,10 +19763,10 @@ isnum(&apos;-125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isobj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isobj({})
+<pre class="prettyprint"><code>console.log(isobj({}))
 // =&gt; true
 
-isobj({ a: 123 })
+console.log(isobj({ a: 123 }))
 // =&gt; true</code></pre>
         </div>
 
@@ -19929,10 +19934,10 @@ isobj({ a: 123 })
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isobj0&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isobj0({})
+<pre class="prettyprint"><code>console.log(isobj0({}))
 // =&gt; true
 
-isobj0({ a: 123 })
+console.log(isobj0({ a: 123 }))
 // =&gt; false</code></pre>
         </div>
 
@@ -20101,16 +20106,16 @@ isobj0({ a: 123 })
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isp0int&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isp0int(0)
+<pre class="prettyprint"><code>console.log(isp0int(0))
 // =&gt; true
 
-isp0int(125)
+console.log(isp0int(125))
 // =&gt; true
 
-isp0int(1.25)
+console.log(isp0int(1.25))
 // =&gt; false
 
-isp0int(&apos;125&apos;)
+console.log(isp0int(&apos;125&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -20279,19 +20284,19 @@ isp0int(&apos;125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isp0num&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isp0num(0)
+<pre class="prettyprint"><code>console.log(isp0num(0))
 // =&gt; true
 
-isp0num(125)
+console.log(isp0num(125))
 // =&gt; true
 
-isp0num(1.25)
+console.log(isp0num(1.25))
 // =&gt; true
 
-isp0num(-1.25)
+console.log(isp0num(-1.25))
 // =&gt; false
 
-isp0num(&apos;1.25&apos;)
+console.log(isp0num(&apos;1.25&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -20460,16 +20465,16 @@ isp0num(&apos;1.25&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ispint&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ispint(0)
+<pre class="prettyprint"><code>console.log(ispint(0))
 // =&gt; false
 
-ispint(125)
+console.log(ispint(125))
 // =&gt; true
 
-ispint(&apos;125&apos;)
+console.log(ispint(&apos;125&apos;))
 // =&gt; true
 
-ispint(1.25)
+console.log(ispint(1.25))
 // =&gt; false</code></pre>
         </div>
 
@@ -20637,10 +20642,10 @@ ispint(1.25)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ispm&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ispm(&apos;1.25&apos;)
+<pre class="prettyprint"><code>console.log(ispm(&apos;1.25&apos;))
 // =&gt; false
 
-ispm(new Promise(function() {}))
+console.log(ispm(new Promise(function() {})))
 // =&gt; true</code></pre>
         </div>
 
@@ -20808,13 +20813,13 @@ ispm(new Promise(function() {}))
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isstr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isstr(0)
+<pre class="prettyprint"><code>console.log(isstr(0))
 // =&gt; false
 
-isstr(&apos;0&apos;)
+console.log(isstr(&apos;0&apos;))
 // =&gt; true
 
-isstr(&apos;&apos;)
+console.log(isstr(&apos;&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -20982,13 +20987,13 @@ isstr(&apos;&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isstr0&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isstr0(&apos;&apos;)
+<pre class="prettyprint"><code>console.log(isstr0(&apos;&apos;))
 // =&gt; true
 
-isstr0(&apos;0&apos;)
+console.log(isstr0(&apos;0&apos;))
 // =&gt; false
 
-isstr0(&apos;abc125&apos;)
+console.log(isstr0(&apos;abc125&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -21156,10 +21161,10 @@ isstr0(&apos;abc125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isStrHasCapital&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isStrHasCapital(&apos;abc125&apos;)
+<pre class="prettyprint"><code>console.log(isStrHasCapital(&apos;abc125&apos;))
 // =&gt; false
 
-isStrHasCapital(&apos;abC125&apos;)
+console.log(isStrHasCapital(&apos;abC125&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -21327,10 +21332,10 @@ isStrHasCapital(&apos;abC125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isStrHasLowerCase&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isStrHasLowerCase(&apos;ABC125&apos;)
+<pre class="prettyprint"><code>console.log(isStrHasLowerCase(&apos;ABC125&apos;))
 // =&gt; false
 
-isStrHasLowerCase(&apos;abC125&apos;)
+console.log(isStrHasLowerCase(&apos;abC125&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -21498,10 +21503,10 @@ isStrHasLowerCase(&apos;abC125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isStrHasNumber&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isStrHasNumber(&apos;abc&apos;)
+<pre class="prettyprint"><code>console.log(isStrHasNumber(&apos;abc&apos;))
 // =&gt; false
 
-isStrHasNumber(&apos;abc125&apos;)
+console.log(isStrHasNumber(&apos;abc125&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -21669,13 +21674,13 @@ isStrHasNumber(&apos;abc125&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;istime&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>istime(&apos;2019-01-01T12:34:56:789&apos;)
+<pre class="prettyprint"><code>console.log(istime(&apos;2019-01-01T12:34:56:789&apos;))
 // =&gt; false
 
-istime(&apos;2019-01-01T12:34:56&apos;)
+console.log(istime(&apos;2019-01-01T12:34:56&apos;))
 // =&gt; true
 
-istime(&apos;2019-01-01&apos;)
+console.log(istime(&apos;2019-01-01&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -21843,13 +21848,13 @@ istime(&apos;2019-01-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;istimeTZ&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>istimeTZ(&apos;2019-01-01T12:34:56:789+08:00&apos;)
+<pre class="prettyprint"><code>console.log(istimeTZ(&apos;2019-01-01T12:34:56:789+08:00&apos;))
 // =&gt; false
 
-istimeTZ(&apos;2019-01-01T12:34:56+08:00&apos;)
+console.log(istimeTZ(&apos;2019-01-01T12:34:56+08:00&apos;))
 // =&gt; true
 
-istimeTZ(&apos;2019-01-01&apos;)
+console.log(istimeTZ(&apos;2019-01-01&apos;))
 // =&gt; false</code></pre>
         </div>
 
@@ -22017,7 +22022,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isu8arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isu8arr(new Uint8Array(1))
+<pre class="prettyprint"><code>console.log(isu8arr(new Uint8Array(1)))
 // =&gt; true</code></pre>
         </div>
 
@@ -22185,7 +22190,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isu16arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isu16arr(new Uint16Array(1))
+<pre class="prettyprint"><code>console.log(isu16arr(new Uint16Array(1)))
 // =&gt; true</code></pre>
         </div>
 
@@ -22353,7 +22358,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isundefined&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>isundefined(undefined)
+<pre class="prettyprint"><code>console.log(isundefined(undefined))
 // =&gt; true</code></pre>
         </div>
 
@@ -22465,7 +22470,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserIdentify.mjs.html">isUserIdentify.mjs</a>, <a href="isUserIdentify.mjs.html#line18">line 18</a>
+        <a href="isUserIdentify.mjs.html">isUserIdentify.mjs</a>, <a href="isUserIdentify.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -22522,9 +22527,10 @@ istimeTZ(&apos;2019-01-01&apos;)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isUserIdentify&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>isUserIdentify(&apos;A122471399&apos;)
-  .then(function(){
-    //code here
-  })</code></pre>
+    .then(function(){
+        console.log(&apos;then&apos;)
+        //code here
+    })</code></pre>
         </div>
 
 
@@ -22635,7 +22641,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserName.mjs.html">isUserName.mjs</a>, <a href="isUserName.mjs.html#line18">line 18</a>
+        <a href="isUserName.mjs.html">isUserName.mjs</a>, <a href="isUserName.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -22692,9 +22698,10 @@ istimeTZ(&apos;2019-01-01&apos;)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isUserName&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>isUserName(&apos;&#x6211;&#x7684;&#x540D;&#x7A31;&apos;)
-  .then(function() {
-    //code here
-  })</code></pre>
+    .then(function() {
+        console.log(&apos;then&apos;)
+        //code here
+    })</code></pre>
         </div>
 
 
@@ -22805,7 +22812,7 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isUserPW.mjs.html">isUserPW.mjs</a>, <a href="isUserPW.mjs.html#line23">line 23</a>
+        <a href="isUserPW.mjs.html">isUserPW.mjs</a>, <a href="isUserPW.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -22862,9 +22869,10 @@ istimeTZ(&apos;2019-01-01&apos;)
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;isUserPW&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>isUserPW(&apos;Asdf1234&apos;)
-  .then(function() {
-    //code here
-  })</code></pre>
+    .then(function() {
+        console.log(&apos;then&apos;)
+        //code here
+    })</code></pre>
         </div>
 
 
@@ -23031,10 +23039,10 @@ istimeTZ(&apos;2019-01-01&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;j2o&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>j2o(&apos;[1,&quot;3&quot;,&quot;abc&quot;]&apos;)
+<pre class="prettyprint"><code>console.log(j2o(&apos;[1,&quot;3&quot;,&quot;abc&quot;]&apos;))
 // =&gt; [1, &apos;3&apos;, &apos;abc&apos;]
 
-j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
+console.log(j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;))
 // =&gt; { a: 12.34, b: &apos;abc&apos; }</code></pre>
         </div>
 
@@ -23202,7 +23210,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;keysmat2ltdt&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>keysmat2ltdt([&apos;a&apos;, &apos;b&apos;], [[12, 34.56], [&apos;123&apos;, &apos;xyz&apos;]])
+<pre class="prettyprint"><code>console.log(keysmat2ltdt([&apos;a&apos;, &apos;b&apos;], [[12, 34.56], [&apos;123&apos;, &apos;xyz&apos;]]))
 // =&gt; [{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos; }]</code></pre>
         </div>
 
@@ -23393,7 +23401,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ltdt2vrtsable&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ltdt2vrtsable([{&quot;a&quot;:{&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;value&quot;:34.56,&quot;style&quot;:{}}},{&quot;a&quot;:{&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;value&quot;:&quot;xyz&quot;,&quot;style&quot;:{}}}], [&apos;a&apos;])
+<pre class="prettyprint"><code>console.log(ltdt2vrtsable([{&quot;a&quot;:{&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;value&quot;:34.56,&quot;style&quot;:{}}},{&quot;a&quot;:{&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;value&quot;:&quot;xyz&quot;,&quot;style&quot;:{}}}], [&apos;a&apos;]))
 // =&gt; [{&quot;a&quot;:{&quot;rowspan&quot;:2,&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;rowspan&quot;:1,&quot;value&quot;:34.56,&quot;style&quot;:{}}},{&quot;a&quot;:{&quot;rowspan&quot;:null,&quot;value&quot;:&quot;123&quot;,&quot;style&quot;:{}},&quot;b&quot;:{&quot;rowspan&quot;:1,&quot;value&quot;:&quot;xyz&quot;,&quot;style&quot;:{}}}]</code></pre>
         </div>
 
@@ -23616,7 +23624,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ltdtkeys2mat&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos; }], [&apos;a&apos;, &apos;b&apos;])
+<pre class="prettyprint"><code>console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos; }], [&apos;a&apos;, &apos;b&apos;]))
 // =&gt; [[12, 34.56], [&apos;123&apos;, &apos;xyz&apos;]]</code></pre>
         </div>
 
@@ -23807,7 +23815,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ltdtkeysheads2mat&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos; }], [&apos;a&apos;, &apos;b&apos;], { a: &apos;c1&apos;, b: &apos;c2&apos; })
+<pre class="prettyprint"><code>console.log(ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos; }], [&apos;a&apos;, &apos;b&apos;], { a: &apos;c1&apos;, b: &apos;c2&apos; }))
 // =&gt; [[&apos;c1&apos;, &apos;c2&apos;], [12, 34.56], [&apos;123&apos;, &apos;xyz&apos;]]</code></pre>
         </div>
 
@@ -24021,7 +24029,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ltdtmapping&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ltdtmapping([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos;, c: &apos;mn&apos; }], [&apos;a&apos;, &apos;b&apos;, &apos;c&apos;])
+<pre class="prettyprint"><code>console.log(ltdtmapping([{ a: 12, b: 34.56 }, { a: &apos;123&apos;, b: &apos;xyz&apos;, c: &apos;mn&apos; }], [&apos;a&apos;, &apos;b&apos;, &apos;c&apos;]))
 // =&gt; [{ a: 12, b: 34.56, c: &apos;&apos; }, { a: &apos;123&apos;, b: &apos;xyz&apos;, c: &apos;mn&apos; }]</code></pre>
         </div>
 
@@ -24212,7 +24220,7 @@ j2o(&apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;ltdtmerge&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>ltdtmerge([{ a: 12, b: 34.56 }, {}], [{ a: &apos;123&apos;, c: &apos;mn&apos; }, { aa: &apos;a123&apos;, bb: &apos;bmn&apos; }])
+<pre class="prettyprint"><code>console.log(ltdtmerge([{ a: 12, b: 34.56 }, {}], [{ a: &apos;123&apos;, c: &apos;mn&apos; }, { aa: &apos;a123&apos;, bb: &apos;bmn&apos; }]))
 // =&gt; [{ a: &apos;123&apos;, b: 34.56, c: &apos;mn&apos; }, { aa: &apos;a123&apos;, bb: &apos;bmn&apos; }]</code></pre>
         </div>
 
@@ -24404,7 +24412,7 @@ mat&#x7B2C;1&#x884C;&#x9700;&#x70BA;&#x5B57;&#x4E32;&#x9663;&#x5217;&#xFF0C;&#x6
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;mat2ltdt&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>mat2ltdt([[&apos;a&apos;, &apos;b&apos;], [12, 34.56], [&apos;x&apos;, &apos;12.34&apos;]])
+<pre class="prettyprint"><code>console.log(mat2ltdt([[&apos;a&apos;, &apos;b&apos;], [12, 34.56], [&apos;x&apos;, &apos;12.34&apos;]]))
 // =&gt; [{ a: 12, b: 34.56 }, { a: &apos;x&apos;, b: &apos;12.34&apos; }]</code></pre>
         </div>
 
@@ -24574,10 +24582,10 @@ mat&#x7B2C;1&#x884C;&#x9700;&#x70BA;&#x5B57;&#x4E32;&#x9663;&#x5217;&#xFF0C;&#x6
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;matat&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&apos;]], 1)
+<pre class="prettyprint"><code>console.log(matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&apos;]], 1))
 // =&gt; [[&apos;b&apos;], [34.56]]
 
-matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&apos;]], 1, 2)
+console.log(matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&apos;]], 1, 2))
 // =&gt; [[&apos;b&apos;, &apos;12.34&apos;], [34.56, &apos;abc&apos;]]</code></pre>
         </div>
 
@@ -24835,7 +24843,7 @@ matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;now2str&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>now2str()
+<pre class="prettyprint"><code>console.log(now2str())
 // =&gt; dayjs().format(&apos;YYYY-MM-DDTHH:mm:ssZ&apos;) //use dayjs or moment</code></pre>
         </div>
 
@@ -24954,7 +24962,7 @@ matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;now2strp&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>now2strp()
+<pre class="prettyprint"><code>console.log(now2strp())
 // =&gt; dayjs().format(&apos;YYYYMMDDHHmmss&apos;) //use dayjs or moment</code></pre>
         </div>
 
@@ -25073,7 +25081,7 @@ matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;nowDay2str&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>nowDay2str()
+<pre class="prettyprint"><code>console.log(nowDay2str())
 // =&gt; dayjs().format(&apos;YYYY-MM-DD&apos;) //use dayjs or moment</code></pre>
         </div>
 
@@ -25192,10 +25200,10 @@ matat([[&apos;a&apos;, &apos;b&apos;, &apos;12.34&apos;], [12, 34.56, &apos;abc&
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;o2j&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>o2j([1, &apos;3&apos;, &apos;abc&apos;])
+<pre class="prettyprint"><code>console.log(o2j([1, &apos;3&apos;, &apos;abc&apos;]))
 // =&gt; &apos;[1,&quot;3&quot;,&quot;abc&quot;]&apos;
 
-o2j({ a: 12.34, b: &apos;abc&apos; })
+console.log(o2j({ a: 12.34, b: &apos;abc&apos; }))
 // =&gt; &apos;{&quot;a&quot;:12.34,&quot;b&quot;:&quot;abc&quot;}&apos;</code></pre>
         </div>
 
@@ -25418,10 +25426,10 @@ o2j({ a: 12.34, b: &apos;abc&apos; })
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;obj2b64&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>obj2b64([1, &apos;3&apos;, &apos;abc&apos;])
+<pre class="prettyprint"><code>console.log(obj2b64([1, &apos;3&apos;, &apos;abc&apos;]))
 // =&gt; &apos;WzEsIjMiLCJhYmMiXQ==&apos;
 
-obj2b64({ a: 12.34, b: &apos;abc&apos; })
+console.log(obj2b64({ a: 12.34, b: &apos;abc&apos; }))
 // =&gt; &apos;eyJhIjoxMi4zNCwiYiI6ImFiYyJ9&apos;</code></pre>
         </div>
 
@@ -25590,7 +25598,7 @@ obj2b64({ a: 12.34, b: &apos;abc&apos; })
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;obj2pb64&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let key = &apos;1234567890abcdef&apos;
-obj2pb64([1, &apos;3&apos;, &apos;abc&apos;], key)
+console.log(obj2pb64([1, &apos;3&apos;, &apos;abc&apos;], key))
 // =&gt; U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf (is random)</code></pre>
         </div>
 
@@ -25787,10 +25795,10 @@ obj2pb64([1, &apos;3&apos;, &apos;abc&apos;], key)
     u8a: new Uint8Array([66, 97, 115]),
     u16a: new Uint16Array([11, 79, 6]),
 }
-obj2str(o)
+console.log(obj2str(o))
 // =&gt; &apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:{&quot;0&quot;:11,&quot;1&quot;:79,&quot;2&quot;:6}}&apos;
 
-obj2str(o, [&apos;Uint8Array&apos;, &apos;Uint16Array&apos;]})
+console.log(obj2str(o, [&apos;Uint8Array&apos;, &apos;Uint16Array&apos;]}))
 // =&gt; &apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:&quot;[Uint16Array]::C08G&quot;}&apos;</code></pre>
         </div>
 
@@ -26184,16 +26192,16 @@ obj2str(o, [&apos;Uint8Array&apos;, &apos;Uint16Array&apos;]})
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;oo&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>oo([1, &apos;3&apos;, &apos;abc&apos;])
+<pre class="prettyprint"><code>console.log(oo([1, &apos;3&apos;, &apos;abc&apos;]))
 // =&gt; [1, &apos;3&apos;, &apos;abc&apos;]
 
-oo([1, &apos;3&apos;, &apos;abc&apos;, function(){}])
+console.log(oo([1, &apos;3&apos;, &apos;abc&apos;, function(){}]))
 // =&gt; [1, &apos;3&apos;, &apos;abc&apos;, null]
 
-oo({ a: 12.34, b: &apos;abc&apos; })
+console.log(oo({ a: 12.34, b: &apos;abc&apos; }))
 // =&gt; { a: 12.34, b: &apos;abc&apos; }
 
-oo({ a: 12.34, b: &apos;abc&apos;, c: function(){} })
+console.log(oo({ a: 12.34, b: &apos;abc&apos;, c: function(){} }))
 // =&gt; { a: 12.34, b: &apos;abc&apos; }</code></pre>
         </div>
 
@@ -26508,7 +26516,7 @@ oo({ a: 12.34, b: &apos;abc&apos;, c: function(){} })
 <div onclick="editOnline(this, &apos;pb642obj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let key = &apos;1234567890abcdef&apos;
 let str = U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf //(is random)
-pb642obj(str, key)
+console.log(pb642obj(str, key))
 // =&gt; [1, &apos;3&apos;, &apos;abc&apos;]</code></pre>
         </div>
 
@@ -27026,7 +27034,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmIni.mjs.html">pmIni.mjs</a>, <a href="pmIni.mjs.html#line13">line 13</a>
+        <a href="pmIni.mjs.html">pmIni.mjs</a>, <a href="pmIni.mjs.html#line14">line 14</a>
     </li></ul></dd>
     
 
@@ -27083,9 +27091,10 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;pmIni&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>pmIni()
-  .then(function() {
-    //code here
-  })</code></pre>
+    .then(function() {
+        console.log(&apos;then&apos;)
+        //code here
+    })</code></pre>
         </div>
 
 
@@ -27408,7 +27417,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;rep&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>rep(&apos;abc&apos;, 2)
+<pre class="prettyprint"><code>console.log(rep(&apos;abc&apos;, 2))
 // =&gt; &apos;abcabc&apos;</code></pre>
         </div>
 
@@ -27601,7 +27610,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;replace&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>replace(&apos;1.25abc&apos;, &apos;5a&apos;, &apos;0&apos;)
+<pre class="prettyprint"><code>console.log(replace(&apos;1.25abc&apos;, &apos;5a&apos;, &apos;0&apos;))
 // =&gt; &apos;1.20bc&apos;</code></pre>
         </div>
 
@@ -27815,7 +27824,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;replaceObj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>replaceObj(&apos;1.25abc&#x4E2D;&#x6587;&apos;, { &apos;5a&apos;: &apos;0&apos;, &apos;&#x4E2D;&apos;: &apos;&#x82F1;&apos; })
+<pre class="prettyprint"><code>console.log(replaceObj(&apos;1.25abc&#x4E2D;&#x6587;&apos;, { &apos;5a&apos;: &apos;0&apos;, &apos;&#x4E2D;&apos;: &apos;&#x82F1;&apos; }))
 // =&gt; &apos;1.20bc&#x82F1;&#x6587;&apos;</code></pre>
         </div>
 
@@ -28006,10 +28015,10 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;replacePlus&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>replacePlus(&apos;1.25mn1.25abc&#x4E2D;&#x6587;&#x7D50;&#x5C3E;&apos;, &apos;1&apos;, &apos;&#x6587;&apos;, null, &apos;xyz&apos;)
+<pre class="prettyprint"><code>console.log(replacePlus(&apos;1.25mn1.25abc&#x4E2D;&#x6587;&#x7D50;&#x5C3E;&apos;, &apos;1&apos;, &apos;&#x6587;&apos;, null, &apos;xyz&apos;))
 // =&gt; &apos;xyz&#x7D50;&#x5C3E;&apos;
 
-replacePlus(&apos;1.25mn1.25abc&#x4E2D;&#x6587;&#x7D50;&#x5C3E;&apos;, &apos;1&apos;, &apos;&#x6587;&apos;, &apos;m&apos;, &apos;xyz&apos;)
+console.log(replacePlus(&apos;1.25mn1.25abc&#x4E2D;&#x6587;&#x7D50;&#x5C3E;&apos;, &apos;1&apos;, &apos;&#x6587;&apos;, &apos;m&apos;, &apos;xyz&apos;))
 // =&gt; &apos;1.25mnxyz&#x7D50;&#x5C3E;&apos;</code></pre>
         </div>
 
@@ -28337,10 +28346,10 @@ replacePlus(&apos;1.25mn1.25abc&#x4E2D;&#x6587;&#x7D50;&#x5C3E;&apos;, &apos;1&a
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;repObj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>repObj({ a: 12.45, b: &apos;opqr&apos; }, 2)
+<pre class="prettyprint"><code>console.log(repObj({ a: 12.45, b: &apos;opqr&apos; }, 2))
 // =&gt; [{ a: 12.45, b: &apos;opqr&apos; }, { a: 12.45, b: &apos;opqr&apos; }]
 
-repObj({ a: 12.45, b: &apos;opqr&apos; }, 0)
+console.log(repObj({ a: 12.45, b: &apos;opqr&apos; }, 0))
 // =&gt; []</code></pre>
         </div>
 
@@ -28532,13 +28541,13 @@ repObj({ a: 12.45, b: &apos;opqr&apos; }, 0)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;round&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>round(1.5)
+<pre class="prettyprint"><code>console.log(round(1.5))
 // =&gt; 2
 
-round(&apos;1.5&apos;)
+console.log(round(&apos;1.5&apos;))
 // =&gt; 2
 
-round(&apos;125abc&apos;)
+console.log(round(&apos;125abc&apos;))
 // =&gt; &apos;&apos;</code></pre>
         </div>
 
@@ -28709,7 +28718,7 @@ round(&apos;125abc&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;sep&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>sep(&apos;1.25 abc  &#x4E2D;&#x6587;&apos;, &apos; &apos;)
+<pre class="prettyprint"><code>console.log(sep(&apos;1.25 abc  &#x4E2D;&#x6587;&apos;, &apos; &apos;))
 // =&gt; [&apos;1.25&apos;, &apos;abc&apos;, &apos;&#x4E2D;&#x6587;&apos;]</code></pre>
         </div>
 
@@ -28900,7 +28909,7 @@ round(&apos;125abc&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;sepInt&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>sepInt(10, 3)
+<pre class="prettyprint"><code>console.log(sepInt(10, 3))
 // =&gt; [3, 3, 4]</code></pre>
         </div>
 
@@ -29158,7 +29167,7 @@ round(&apos;125abc&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;sepTimeTZ&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>sepTimeTZ(&apos;2019-01-01T12:34:56+08:00&apos;)
+<pre class="prettyprint"><code>console.log(sepTimeTZ(&apos;2019-01-01T12:34:56+08:00&apos;))
 // =&gt; { t: &apos;2019-01-01T12:34:56&apos;, tz: &apos;+08:00&apos; }</code></pre>
         </div>
 
@@ -29326,7 +29335,7 @@ round(&apos;125abc&apos;)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;split&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>split(&apos;1.25 abc  &#x4E2D;&#x6587;&apos;, &apos; &apos;)
+<pre class="prettyprint"><code>console.log(split(&apos;1.25 abc  &#x4E2D;&#x6587;&apos;, &apos; &apos;))
 // =&gt; [&apos;1.25&apos;, &apos;abc&apos;, &apos;&apos;, &apos;&#x4E2D;&#x6587;&apos;]</code></pre>
         </div>
 
@@ -29520,10 +29529,10 @@ round(&apos;125abc&apos;)
 <div onclick="editOnline(this, &apos;str2aes&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let str = &apos;test&#x4E2D;&#x6587;abcdefghijklmn&apos;
 let key = &apos;1234567890abcdefghijk&apos;
-str2aes(str, key)
+console.log(str2aes(str, key))
 // =&gt; 53616c7465645f5f9d7366e54b51e9352dbccf6a6ec9b3af0595b19b345ea903b713143f5d66417f4cd968c628863f61 (is random)
 
-str2aes(str, key, true)
+console.log(str2aes(str, key, true))
 // =&gt; U2FsdGVkX19c7rKkQ38SfqZLaQEKzLD0PhXzzdYeGbngewsPmzS8PcOwHQIsf2Zo (is random)</code></pre>
         </div>
 
@@ -29781,7 +29790,7 @@ str2aes(str, key, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;str2b64&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>str2b64(&apos;test&#x4E2D;&#x6587;&apos;)
+<pre class="prettyprint"><code>console.log(str2b64(&apos;test&#x4E2D;&#x6587;&apos;))
 // =&gt; &apos;dGVzdOS4reaWhw==&apos;</code></pre>
         </div>
 
@@ -29949,7 +29958,7 @@ str2aes(str, key, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;str2md5&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>str2md5(&apos;test&#x4E2D;&#x6587;&apos;)
+<pre class="prettyprint"><code>console.log(str2md5(&apos;test&#x4E2D;&#x6587;&apos;))
 // =&gt; &apos;5393554e94bf0eb6436f240a4fd71282&apos;</code></pre>
         </div>
 
@@ -30172,7 +30181,7 @@ str2aes(str, key, true)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;str2obj&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>str2obj(&apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:{&quot;0&quot;:11,&quot;1&quot;:79,&quot;2&quot;:6}}&apos;)
+<pre class="prettyprint"><code>console.log(str2obj(&apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:{&quot;0&quot;:11,&quot;1&quot;:79,&quot;2&quot;:6}}&apos;))
 // =&gt; {
 // =&gt;   a: &apos;abc&apos;,
 // =&gt;   b: 12.3,
@@ -30180,7 +30189,7 @@ str2aes(str, key, true)
 // =&gt;   u16a: { &apos;0&apos;: 11, &apos;1&apos;: 79, &apos;2&apos;: 6 }
 // =&gt; }
 
-str2obj(&apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:&quot;[Uint8Array]::C08G&quot;}&apos;, [&apos;Uint8Array&apos;, &apos;Uint16Array&apos;]})
+console.log(str2obj(&apos;{&quot;a&quot;:&quot;abc&quot;,&quot;b&quot;:12.3,&quot;u8a&quot;:&quot;[Uint8Array]::QmFz&quot;,&quot;u16a&quot;:&quot;[Uint8Array]::C08G&quot;}&apos;, [&apos;Uint8Array&apos;, &apos;Uint16Array&apos;]}))
 // =&gt; {
 // =&gt;   a: &apos;abc&apos;,
 // =&gt;   b: 12.3,
@@ -30412,7 +30421,7 @@ Secure Hash Algorithm 512&#x4F4D;</p>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;str2sha512&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>str2sha512(&apos;test&#x4E2D;&#x6587;&apos;)
+<pre class="prettyprint"><code>console.log(str2sha512(&apos;test&#x4E2D;&#x6587;&apos;))
 // =&gt; &apos;ab43333a01571e767a2eb15460c270fa123964c121b88c73e274a211d6e2cf98b10d89220e8d04e2fc573354da93400f3255e94d445dc956e177aa4201a4fc30&apos;</code></pre>
         </div>
 
@@ -30635,7 +30644,7 @@ Secure Hash Algorithm 512&#x4F4D;</p>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strCompare&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strCompare(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, &apos;Wodooman(&#x6A35;&#x592B;)&apos;)
+<pre class="prettyprint"><code>console.log(strCompare(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, &apos;Wodooman(&#x6A35;&#x592B;)&apos;))
 // =&gt; 0.375</code></pre>
         </div>
 
@@ -30826,7 +30835,7 @@ Secure Hash Algorithm 512&#x4F4D;</p>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strdelleft&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strdelleft(&apos;test&#x4E2D;&#x6587;&apos;, 2)
+<pre class="prettyprint"><code>console.log(strdelleft(&apos;test&#x4E2D;&#x6587;&apos;, 2))
 // =&gt; &apos;st&#x4E2D;&#x6587;&apos;</code></pre>
         </div>
 
@@ -31017,7 +31026,7 @@ Secure Hash Algorithm 512&#x4F4D;</p>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strdelright&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strdelright(&apos;test&#x4E2D;&#x6587;&apos;, 2)
+<pre class="prettyprint"><code>console.log(strdelright(&apos;test&#x4E2D;&#x6587;&apos;, 2))
 // =&gt; &apos;test&apos;</code></pre>
         </div>
 
@@ -31208,19 +31217,19 @@ Secure Hash Algorithm 512&#x4F4D;</p>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strFindFuzz&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strFindFuzz(&apos;Wodooman(&#x6A35;&#x592B;)&apos;, &apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, true)
+<pre class="prettyprint"><code>console.log(strFindFuzz(&apos;Wodooman(&#x6A35;&#x592B;)&apos;, &apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, true))
 // =&gt; 41.333333333333336, &#x7B2C;2&#x53C3;&#x6578;&#x6703;&#x88AB;&#x7A7A;&#x767D;&#x5207;&#x5206;&#x6210;&#x591A;&#x95DC;&#x9375;&#x5B57;
 
-strFindFuzz(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, &apos;Wodooman(&#x6A35;&#x592B;)&apos;, true)
+console.log(strFindFuzz(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, &apos;Wodooman(&#x6A35;&#x592B;)&apos;, true))
 // =&gt; 82
 
-strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;ef&apos;, true)
+console.log(strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;ef&apos;, true))
 // =&gt; 100
 
-strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;efgg&apos;, true)
+console.log(strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;efgg&apos;, true))
 // =&gt; 50
 
-strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;ef&apos;)
+console.log(strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;&#x8A66;&apos;], &apos;ef&apos;))
 // =&gt; true</code></pre>
         </div>
 
@@ -31471,7 +31480,7 @@ strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;
 
 
 <div class="description">
-    <p>&#x8A08;&#x7B97;&#x5B57;&#x4E32;ar&#x8207;&#x591A;&#x95DC;&#x9375;&#x5B57;&#x9663;&#x5217;strkeys&#x4E4B;&#x76F8;&#x4F3C;&#x7A0B;&#x5EA6;&#xFF0C;&#x4E3B;&#x8981;&#x4F86;&#x81EA;[Fork: <a href="https://github.com/aceakash/string-similarity">string-similarity</a>]</p>
+    <p>&#x8A08;&#x7B97;&#x5B57;&#x4E32;ar&#x8207;&#x591A;&#x95DC;&#x9375;&#x5B57;&#x9663;&#x5217;strkeys&#x4E4B;&#x76F8;&#x4F3C;&#x7A0B;&#x5EA6;</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/strFindSimilar.test.js">Github</a></p>
 </div>
 
@@ -31487,7 +31496,7 @@ strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strFindSimilar&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strFindSimilar(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, [&apos;Wodooman(&#x6A35;&#x592B;)&apos;, &apos;manWood(&#x6A35;&#x592B;)&apos;, &apos;Wood&#x6A35;man(&#x592B;)&apos;, &apos;Woodman(&#x6A35;&#x592B;)&apos;])
+<pre class="prettyprint"><code>console.log(strFindSimilar(&apos;The Woodman(&#x6A35;&#x592B;) set to work at once, and so...&apos;, [&apos;Wodooman(&#x6A35;&#x592B;)&apos;, &apos;manWood(&#x6A35;&#x592B;)&apos;, &apos;Wood&#x6A35;man(&#x592B;)&apos;, &apos;Woodman(&#x6A35;&#x592B;)&apos;]))
 // =&gt; { &apos;ratings&apos;: [{ &apos;target&apos;: &apos;Wodooman(&#x6A35;&#x592B;)&apos;, &apos;rating&apos;: 0.375 }, { &apos;target&apos;: &apos;manWood(&#x6A35;&#x592B;)&apos;, &apos;rating&apos;: 0.3404255319148936 }, { &apos;target&apos;: &apos;Wood&#x6A35;man(&#x592B;)&apos;, &apos;rating&apos;: 0.2978723404255319 }, { &apos;target&apos;: &apos;Woodman(&#x6A35;&#x592B;)&apos;, &apos;rating&apos;: 0.425531914893617 }], &apos;bestMatch&apos;: { &apos;target&apos;: &apos;Woodman(&#x6A35;&#x592B;)&apos;, &apos;rating&apos;: 0.425531914893617 }, &apos;bestMatchIndex&apos;: 3 }</code></pre>
         </div>
 
@@ -31687,7 +31696,7 @@ strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strleft&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strleft(&apos;test&#x4E2D;&#x6587;&apos;, 2)
+<pre class="prettyprint"><code>console.log(strleft(&apos;test&#x4E2D;&#x6587;&apos;, 2))
 // =&gt; &apos;te&apos;</code></pre>
         </div>
 
@@ -31878,10 +31887,10 @@ strFindFuzz([&apos;abc&apos;, &apos;def123&apos;, &apos;&#x4E2D;&#x6587;&#x6E2C;
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strmid&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 1)
+<pre class="prettyprint"><code>console.log(strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 1))
 // =&gt; &apos;s&apos;
 
-strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
+console.log(strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3))
 // =&gt; &apos;st&#x4E2D;&apos;</code></pre>
         </div>
 
@@ -32095,7 +32104,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;strright&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>strright(&apos;test&#x4E2D;&#x6587;&apos;, 2)
+<pre class="prettyprint"><code>console.log(strright(&apos;test&#x4E2D;&#x6587;&apos;, 2))
 // =&gt; &apos;&#x4E2D;&#x6587;&apos;</code></pre>
         </div>
 
@@ -32286,7 +32295,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;time2day&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>time2day(&apos;2019-01-01T12:34:56&apos;)
+<pre class="prettyprint"><code>console.log(time2day(&apos;2019-01-01T12:34:56&apos;))
 // =&gt; &apos;2019-01-01&apos;</code></pre>
         </div>
 
@@ -32621,7 +32630,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;time2hour&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>time2hour(&apos;2019-01-01T12:34:56&apos;)
+<pre class="prettyprint"><code>console.log(time2hour(&apos;2019-01-01T12:34:56&apos;))
 // =&gt; &apos;2019-01-01T12&apos;</code></pre>
         </div>
 
@@ -32789,7 +32798,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;time2min&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>time2min(&apos;2019-01-01T12:34:56&apos;)
+<pre class="prettyprint"><code>console.log(time2min(&apos;2019-01-01T12:34:56&apos;))
 // =&gt; &apos;2019-01-01T12:34&apos;</code></pre>
         </div>
 
@@ -33124,7 +33133,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;timeTZ2day&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>timeTZ2day(&apos;2019-01-01T12:34:56+08:00&apos;)
+<pre class="prettyprint"><code>console.log(timeTZ2day(&apos;2019-01-01T12:34:56+08:00&apos;))
 // =&gt; &apos;2019-01-01&apos;</code></pre>
         </div>
 
@@ -33292,7 +33301,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;timeTZ2hour&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>timeTZ2hour(&apos;2019-01-01T12:34:56+08:00&apos;)
+<pre class="prettyprint"><code>console.log(timeTZ2hour(&apos;2019-01-01T12:34:56+08:00&apos;))
 // =&gt; &apos;2019-01-01T12&apos;</code></pre>
         </div>
 
@@ -33460,7 +33469,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;timeTZ2min&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>timeTZ2min(&apos;2019-01-01T12:34:56+08:00&apos;)
+<pre class="prettyprint"><code>console.log(timeTZ2min(&apos;2019-01-01T12:34:56+08:00&apos;))
 // =&gt; &apos;2019-01-01T12:34&apos;</code></pre>
         </div>
 
@@ -33800,7 +33809,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;trim&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>trim(&apos; abc &#x4E2D; &#x6587; &apos;)
+<pre class="prettyprint"><code>console.log(trim(&apos; abc &#x4E2D; &#x6587; &apos;))
 // =&gt; &apos;abc &#x4E2D; &#x6587;&apos;</code></pre>
         </div>
 
@@ -33968,7 +33977,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u8arr2ab&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u8arr2ab(new Uint8Array([66, 97, 115]))
+<pre class="prettyprint"><code>console.log(u8arr2ab(new Uint8Array([66, 97, 115])))
 // (new Uint8Array([66, 97, 115])).buffer</code></pre>
         </div>
 
@@ -34136,7 +34145,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u8arr2b64&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u8arr2b64(new Uint8Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;]))
+<pre class="prettyprint"><code>console.log(u8arr2b64(new Uint8Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;])))
 // =&gt; &apos;AQItAA==&apos;</code></pre>
         </div>
 
@@ -34471,7 +34480,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u8arr2bs&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u8arr2bs(new Uint8Array([97, 98, 99]))
+<pre class="prettyprint"><code>console.log(u8arr2bs(new Uint8Array([97, 98, 99])))
 // =&gt; &apos;abc&apos;</code></pre>
         </div>
 
@@ -34639,7 +34648,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u8arr2u16arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u8arr2u16arr(new Uint8Array([66, 97, 115]))
+<pre class="prettyprint"><code>console.log(u8arr2u16arr(new Uint8Array([66, 97, 115])))
 // =&gt; new Uint16Array([66, 97, 115])</code></pre>
         </div>
 
@@ -34807,7 +34816,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u16arr2b64&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u16arr2b64(new Uint16Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;]))
+<pre class="prettyprint"><code>console.log(u16arr2b64(new Uint16Array([1, 2.3, &apos;45&apos;, &apos;abc&apos;])))
 // =&gt; &apos;AQItAA==&apos;</code></pre>
         </div>
 
@@ -34975,7 +34984,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;u16arr2u8arr&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>u16arr2u8arr(new Uint16Array([66, 97, 115]))
+<pre class="prettyprint"><code>console.log(u16arr2u8arr(new Uint16Array([66, 97, 115])))
 // =&gt; new Uint8Array([66, 97, 115])</code></pre>
         </div>
 
@@ -35143,7 +35152,7 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;urlParse&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>urlParse(&apos;http://localhost:3000/index.html?a=12.34&amp;b=xyz&amp;abc=xyz123.456&apos;)
+<pre class="prettyprint"><code>console.log(urlParse(&apos;http://localhost:3000/index.html?a=12.34&amp;b=xyz&amp;abc=xyz123.456&apos;))
 // =&gt; { a: &apos;12.34&apos;, abc: &apos;xyz123.456&apos;, b: &apos;xyz&apos; }</code></pre>
         </div>
 
@@ -35311,31 +35320,31 @@ strmid(&apos;test&#x4E2D;&#x6587;&apos;, 2, 3)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;verifyValue&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>verifyValue(&apos;12a5&apos;, &apos;isstr&apos;)
+<pre class="prettyprint"><code>console.log(verifyValue(&apos;12a5&apos;, &apos;isstr&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;12&apos;, &apos;isint&apos;)
+console.log(verifyValue(&apos;12&apos;, &apos;isint&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;0&apos;, &apos;isp0int&apos;)
+console.log(verifyValue(&apos;0&apos;, &apos;isp0int&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;12&apos;, &apos;isp0int&apos;)
+console.log(verifyValue(&apos;12&apos;, &apos;isp0int&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;0&apos;, &apos;isn0int&apos;)
+console.log(verifyValue(&apos;0&apos;, &apos;isn0int&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;-12&apos;, &apos;isn0int&apos;)
+console.log(verifyValue(&apos;-12&apos;, &apos;isn0int&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;12.34&apos;, &apos;isnum&apos;)
+console.log(verifyValue(&apos;12.34&apos;, &apos;isnum&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;12.34&apos;, &apos;isp0num&apos;)
+console.log(verifyValue(&apos;12.34&apos;, &apos;isp0num&apos;))
 // =&gt; r.err=false
 
-verifyValue(&apos;-12.34&apos;, &apos;isn0num&apos;)
+console.log(verifyValue(&apos;-12.34&apos;, &apos;isn0num&apos;))
 // =&gt; r.err=false</code></pre>
         </div>
 
@@ -35473,7 +35482,7 @@ verifyValue(&apos;-12.34&apos;, &apos;isn0num&apos;)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line26">line 26</a>
+        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -35536,9 +35545,10 @@ let fn = function() {
   return i &gt;= 2
 }
 waitFun(fn)
-  .then(function() {
-    //code here
-  })</code></pre>
+    .then(function() {
+        console.log(&apos;then&apos;)
+        //code here
+    })</code></pre>
         </div>
 
 
@@ -35707,7 +35717,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Tue Dec 24 2019 14:41:10 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Tue Dec 24 2019 15:12:54 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
