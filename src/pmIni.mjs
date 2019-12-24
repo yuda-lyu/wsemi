@@ -6,9 +6,10 @@
  * @returns {Promise} 回傳Promise
  * @example
  * pmIni()
- *   .then(function() {
- *     //code here
- *   })
+ *     .then(function() {
+ *         console.log('then')
+ *         //code here
+ *     })
  */
 function pmIni() {
     return Promise.resolve()

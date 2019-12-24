@@ -10,7 +10,7 @@ import isab from './isab.mjs'
  * @returns {Unit8Array} 回傳Unit8Array資料
  * @example
  * let ab = (new Uint8Array([66, 97, 115])).buffer
- * ab2u8arr(ab)
+ * console.log(ab2u8arr(ab))
  * // => new Uint8Array([66, 97, 115])
  */
 function ab2u8arr(ab) {

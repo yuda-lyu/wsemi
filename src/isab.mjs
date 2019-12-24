@@ -6,7 +6,7 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isab(new ArrayBuffer(1))
+ * console.log(isab(new ArrayBuffer(1)))
  * // => true
  */
 function isab(v) {

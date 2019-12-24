@@ -9,10 +9,10 @@ import isestr from './isestr.mjs'
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含數字
  * @example
- * isStrHasNumber('abc')
+ * console.log(isStrHasNumber('abc'))
  * // => false
  *
- * isStrHasNumber('abc125')
+ * console.log(isStrHasNumber('abc125'))
  * // => true
  */
 function isStrHasNumber(str) {

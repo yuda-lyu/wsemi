@@ -11,19 +11,19 @@ import cdbl from './cdbl.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isp0num(0)
+ * console.log(isp0num(0))
  * // => true
  *
- * isp0num(125)
+ * console.log(isp0num(125))
  * // => true
  *
- * isp0num(1.25)
+ * console.log(isp0num(1.25))
  * // => true
  *
- * isp0num(-1.25)
+ * console.log(isp0num(-1.25))
  * // => false
  *
- * isp0num('1.25')
+ * console.log(isp0num('1.25'))
  * // => true
  */
 function isp0num(v) {

@@ -10,13 +10,13 @@ import haskey from './haskey.mjs'
  * @param {string} [groupBy=''] 輸入群組化關鍵字字串，預設''，可選用'name','group','acp','exec'
  * @returns {Array} 回傳檔案關聯性資訊陣列，若有給groupBy則自動群組化
  * @example
- * getFileAccept()[2]
+ * console.log(getFileAccept()[2])
  * // => { name: 'pdf',
  * //      group: 'docums',
  * //      acp: 'application/pdf',
  * //      exec: 'acrobat' }
  *
- * getFileAccept('acp')['text/html']
+ * console.log(getFileAccept('acp')['text/html'])
  * // => [ { name: 'htm',
  * //        group: 'docums',
  * //        acp: 'text/html',

@@ -14,7 +14,7 @@ import j2o from './j2o.mjs'
  * @example
  * let key = '1234567890abcdef'
  * let str = U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf //(is random)
- * pb642obj(str, key)
+ * console.log(pb642obj(str, key))
  * // => [1, '3', 'abc']
  */
 function pb642obj(b64, key) {

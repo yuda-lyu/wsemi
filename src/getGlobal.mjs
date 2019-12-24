@@ -5,7 +5,7 @@
  * @memberOf wsemi
  * @returns {Object} 回傳頂層物件，若無法取得則回傳null
  * @example
- * getGlobal()
+ * console.log(getGlobal())
  * // => global object in running environment
  */
 function getGlobal() {

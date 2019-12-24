@@ -17,10 +17,10 @@ import haskey from './haskey.mjs'
  * @param {String} key 輸入比對的主鍵key值字串
  * @returns {Object} 回傳比對結果物件
  * @example
- * arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id')
+ * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
  * // => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }
  *
- * arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id')
+ * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
  * // => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }
  */
 function arrdiff(vold, vnew, key) {

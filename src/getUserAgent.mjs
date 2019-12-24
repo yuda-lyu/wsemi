@@ -12,7 +12,7 @@ import getdtvstr from './getdtvstr.mjs'
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  * @example
  * let ua = 'Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)'
- * getUserAgent(ua)
+ * console.log(getUserAgent(ua))
  * // => {
  *     browsername: 'Konqueror',
  *     browserversion: '4.1',

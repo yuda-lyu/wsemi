@@ -11,7 +11,7 @@ import trim from './trim.mjs'
  * @returns {String} 回傳字串
  * @example
  * let f = function() { ╱**abc*╱ } //jsdoc can't parser multi-line comments here, need convert "╱" to "/"
- * f2c(f)
+ * console.log(f2c(f))
  * // => 'abc'
  */
 function f2c(f) {

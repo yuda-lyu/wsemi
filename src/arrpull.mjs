@@ -12,10 +12,10 @@ import isearr from './isearr.mjs'
  * @param {Array} vdel 輸入要刪除的任意資料陣列
  * @returns {Array} 回傳被刪除的任意資料陣列
  * @example
- * arrpull([1, 2, '3', 4, '3', 'abc'], [2])
+ * console.log(arrpull([1, 2, '3', 4, '3', 'abc'], [2]))
  * // => [1, '3', 4, '3', 'abc']
  *
- * arrpull([1, 2, '3', 4, '3', 'abc'], [2, '3'])
+ * console.log(arrpull([1, 2, '3', 4, '3', 'abc'], [2, '3']))
  * // => [1, 4, 'abc']
  */
 function arrpull(vall, vdel) {

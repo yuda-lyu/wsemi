@@ -9,7 +9,7 @@ import isu8arr from './isu8arr.mjs'
  * @param {Array} u8a 輸入Uint8Array
  * @returns {Array} 回傳Uint16Array
  * @example
- * u8arr2u16arr(new Uint8Array([66, 97, 115]))
+ * console.log(u8arr2u16arr(new Uint8Array([66, 97, 115])))
  * // => new Uint16Array([66, 97, 115])
  */
 function u8arr2u16arr(u8a) {

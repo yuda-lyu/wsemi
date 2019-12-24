@@ -12,13 +12,13 @@ import cdbl from './cdbl.mjs'
  * @param {Number|String} v 輸入數字或字串
  * @returns {Integer} 回傳四捨五入的整數
  * @example
- * round(1.5)
+ * console.log(round(1.5))
  * // => 2
  *
- * round('1.5')
+ * console.log(round('1.5'))
  * // => 2
  *
- * round('125abc')
+ * console.log(round('125abc'))
  * // => ''
  */
 function round(v) {

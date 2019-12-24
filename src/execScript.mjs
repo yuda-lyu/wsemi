@@ -11,6 +11,7 @@ import isarr from './isarr.mjs'
  * @param {String|Array} scp 輸入腳本檔案位置字串或參數
  * @returns {*} 回傳任意資料
  * @example
+ * //need test in nodejs
  * let prog = 'python'
  * let scp = 'fun.py'
  * let pa = 'sin'

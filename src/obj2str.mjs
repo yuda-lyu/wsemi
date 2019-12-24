@@ -19,10 +19,10 @@ import isarr from './isarr.mjs'
  *     u8a: new Uint8Array([66, 97, 115]),
  *     u16a: new Uint16Array([11, 79, 6]),
  * }
- * obj2str(o)
+ * console.log(obj2str(o))
  * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":{"0":11,"1":79,"2":6}}'
  *
- * obj2str(o, ['Uint8Array', 'Uint16Array']})
+ * console.log(obj2str(o, ['Uint8Array', 'Uint16Array']}))
  * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::C08G"}'
  */
 function obj2str(data, ext = 'Uint8Array') {

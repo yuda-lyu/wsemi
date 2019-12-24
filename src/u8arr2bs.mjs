@@ -9,7 +9,7 @@ import isu8arr from './isu8arr.mjs'
  * @param {Unit8Array} u8a 輸入Unit8Array資料
  * @returns {String} 回傳BinaryString資料
  * @example
- * u8arr2bs(new Uint8Array([97, 98, 99]))
+ * console.log(u8arr2bs(new Uint8Array([97, 98, 99])))
  * // => 'abc'
  */
 function u8arr2bs(u8a) {

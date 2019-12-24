@@ -12,7 +12,7 @@ import isp0int from './isp0int.mjs'
  * @param {Integer} n 輸入重複次數之含零正整數
  * @returns {Array} 回傳任意資料之陣列
  * @example
- * rep('abc', 2)
+ * console.log(rep('abc', 2))
  * // => 'abcabc'
  */
 function rep(c, n) {

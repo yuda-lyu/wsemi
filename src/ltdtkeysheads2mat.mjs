@@ -17,7 +17,7 @@ import ltdtkeys2mat from './ltdtkeys2mat.mjs'
  * @param {Object} kphead 輸入字典物件，內含keys對應values之物件，供keys查詢得values
  * @returns {Array} 回傳資料陣列
  * @example
- * ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' })
+ * console.log(ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' }))
  * // => [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]
  */
 function ltdtkeysheads2mat(ltdt, keys, kphead) {

@@ -11,7 +11,7 @@ import j2o from './j2o.mjs'
  * @param {String} b64 輸入base64字串
  * @returns {*} 回傳任意物件
  * @example
- * b642obj('WzEsIjMiLCJhYmMiXQ==')
+ * console.log(b642obj('WzEsIjMiLCJhYmMiXQ=='))
  * // => [1, '3', 'abc']
  */
 function b642obj(b64) {

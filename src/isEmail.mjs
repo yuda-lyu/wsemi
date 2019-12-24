@@ -9,10 +9,10 @@ import isestr from './isestr.mjs'
  * @param {String} email 輸入email字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isEmail('abc@mail.com')
+ * console.log(isEmail('abc@mail.com'))
  * // => true
  *
- * isEmail('abc@a.b')
+ * console.log(isEmail('abc@a.b'))
  * // => false
  */
 function isEmail(email) {

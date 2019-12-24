@@ -11,7 +11,7 @@ import u8arr2b64 from './u8arr2b64.mjs'
  * @param {Array} u16a 輸入Uint16Array
  * @returns {String} 回傳base64字串
  * @example
- * u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc']))
+ * console.log(u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc'])))
  * // => 'AQItAA=='
  */
 function u16arr2b64(u16a) {

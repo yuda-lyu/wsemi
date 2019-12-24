@@ -6,10 +6,10 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isfun('1.25')
+ * console.log(isfun('1.25'))
  * // => false
  *
- * isfun(function() {})
+ * console.log(isfun(function() {}))
  * // => true
  */
 function isfun(v) {

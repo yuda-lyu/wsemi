@@ -47,7 +47,7 @@ function core(s1, s2) {
  * @param {String} str2 輸入欲比對之一般字串
  * @returns {Number} 回傳字串相似度0~1
  * @example
- * strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)')
+ * console.log(strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)'))
  * // => 0.375
  */
 function strCompare(str1, str2) {

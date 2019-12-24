@@ -12,7 +12,7 @@ import strright from './strright.mjs'
  * @param {Integer} n 輸入刪除左邊n個字元正整數
  * @returns {String} 回傳處理後字串
  * @example
- * strdelleft('test中文', 2)
+ * console.log(strdelleft('test中文', 2))
  * // => 'st中文'
  */
 function strdelleft(c, n) {

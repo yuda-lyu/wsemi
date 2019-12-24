@@ -21,7 +21,7 @@ import isbol from './isbol.mjs'
  * @example
  * let str = '53616c7465645f5f47214797ac01bc03cceb69ebced4948501ab94ca9644a6dfd277456aead4432cb9c9d74c38c42c79'
  * let key = '1234567890abcdefghijk'
- * aes2str(str, key)
+ * console.log(aes2str(str, key))
  * // => 'test中文abcdefghijklmn'
  */
 function aes2str(str, key, base64 = false) {

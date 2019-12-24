@@ -14,7 +14,7 @@ import replace from './replace.mjs'
  * @param {Object} o 輸入用來取代的key,value物件
  * @returns {String} 回傳取代後字串
  * @example
- * replaceObj('1.25abc中文', { '5a': '0', '中': '英' })
+ * console.log(replaceObj('1.25abc中文', { '5a': '0', '中': '英' }))
  * // => '1.20bc英文'
  */
 function replaceObj(c, o) {

@@ -11,7 +11,7 @@ import ispint from './ispint.mjs'
  * @param {Integer} n 輸入取左邊n個字元
  * @returns {String} 回傳處理後字串
  * @example
- * strleft('test中文', 2)
+ * console.log(strleft('test中文', 2))
  * // => 'te'
  */
 function strleft(c, n) {

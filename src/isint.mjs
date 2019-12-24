@@ -11,16 +11,16 @@ import cdbl from './cdbl.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isint('1.25')
+ * console.log(isint('1.25'))
  * // => false
  *
- * isint('125')
+ * console.log(isint('125'))
  * // => true
  *
- * isint(1.25)
+ * console.log(isint(1.25))
  * // => false
  *
- * isint(125)
+ * console.log(isint(125))
  * // => true
  */
 function isint(v) {

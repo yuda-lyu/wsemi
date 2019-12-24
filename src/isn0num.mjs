@@ -11,25 +11,25 @@ import cdbl from './cdbl.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isn0num(0)
+ * console.log(isn0num(0))
  * // => true
  *
- * isn0num(-125)
+ * console.log(isn0num(-125))
  * // => true
  *
- * isn0num(-1.25)
+ * console.log(isn0num(-1.25))
  * // => true
  *
- * isn0num(125)
+ * console.log(isn0num(125))
  * // => false
  *
- * isn0num('-125')
+ * console.log(isn0num('-125'))
  * // => true
  *
- * isn0num('-1.25')
+ * console.log(isn0num('-1.25'))
  * // => true
  *
- * isn0num('125')
+ * console.log(isn0num('125'))
  * // => false
  */
 function isn0num(v) {

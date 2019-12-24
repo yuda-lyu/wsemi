@@ -9,7 +9,7 @@ import isestr from './isestr.mjs'
  * @param {String} bs 輸入BinaryString資料
  * @returns {Unit8Array} 回傳Unit8Array資料
  * @example
- * bs2u8arr('abc')
+ * console.log(bs2u8arr('abc'))
  * // => new Uint8Array([97, 98, 99])
  */
 function bs2u8arr(str) {

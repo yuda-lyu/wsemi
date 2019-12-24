@@ -6,10 +6,10 @@
  * @param {String} unit 輸入時間單位字串
  * @returns {String} 回傳時間套件所需之解析字串，當unit='seconds'時回傳不含時區格式
  * @example
- * getTimeFromUnit('years')
+ * console.log(getTimeFromUnit('years'))
  * // => 'YYYY'
  *
- * getTimeFromUnit('seconds')
+ * console.log(getTimeFromUnit('seconds'))
  * // => 'YYYY-MM-DDTHH:mm:ssZ'
  */
 function getTimeFromUnit(unit) {

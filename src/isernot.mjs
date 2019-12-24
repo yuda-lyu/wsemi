@@ -9,28 +9,28 @@ import iser from './iser.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * isernot('12a5')
+ * console.log(isernot('12a5'))
  * // => true
  *
- * isernot('')
+ * console.log(isernot(''))
  * // => false
  *
- * isernot([])
+ * console.log(isernot([]))
  * // => false
  *
- * isernot([{}])
+ * console.log(isernot([{}]))
  * // => true
  *
- * isernot([''])
+ * console.log(isernot(['']))
  * // => true
  *
- * isernot({})
+ * console.log(isernot({}))
  * // => false
  *
- * isernot(null)
+ * console.log(isernot(null))
  * // => false
  *
- * isernot(undefined)
+ * console.log(isernot(undefined))
  * // => false
  */
 function isernot(v) {

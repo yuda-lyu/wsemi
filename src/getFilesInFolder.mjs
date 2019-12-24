@@ -10,6 +10,7 @@ import getPathInFolder from './getPathInFolder.mjs'
  * @param {string} [filterName=''] 輸入欲過濾名稱字串，預設為''
  * @returns {Array} 回傳列舉檔案或資料夾陣列
  * @example
+ * //need test in nodejs
  * let fd = 'folder p'
  * getPathInFolder(fd)
  * // => ['file p1','file p2','file p3']

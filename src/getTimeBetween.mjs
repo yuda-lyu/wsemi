@@ -14,13 +14,13 @@ import getTimeObject from './getTimeObject.mjs'
  * @param {String} [unit='days'] 輸入切分單位字串，預設為'days'
  * @returns {Array} 回傳切分後各時間陣列
  * @example
- * getTimeBetween('2017', '2019', 'years')
+ * console.log(getTimeBetween('2017', '2019', 'years'))
  * // => ['2017', '2018', '2019']
  *
- * getTimeBetween('2019-01-01', '2019-01-03', 'days')
+ * console.log(getTimeBetween('2019-01-01', '2019-01-03', 'days'))
  * // => ['2019-01-01', '2019-01-02', '2019-01-03']
  *
- * getTimeBetween('2019-01-01', '2019-01-03')
+ * console.log(getTimeBetween('2019-01-01', '2019-01-03'))
  * // => ['2019-01-01', '2019-01-02', '2019-01-03']
  */
 function getTimeBetween(tstart, tend, unit = 'days') {

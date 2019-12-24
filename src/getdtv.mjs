@@ -13,7 +13,7 @@ import isestr from './isestr.mjs'
  * @param {String} key 輸入要找的key值字串
  * @returns {*} 回傳任意資料
  * @example
- * getdtv({ a: 123, b: 'xyz', c: '45op', d: null }, 'a')
+ * console.log(getdtv({ a: 123, b: 'xyz', c: '45op', d: null }, 'a'))
  * // => 123
  */
 function getdtv(dt, key) {

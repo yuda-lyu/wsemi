@@ -27,7 +27,7 @@ function core(mainString, targetStrings) {
 
 
 /**
- * 計算字串ar與多關鍵字陣列strkeys之相似程度，主要來自[Fork: {@link https://github.com/aceakash/string-similarity string-similarity}]
+ * 計算字串ar與多關鍵字陣列strkeys之相似程度
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindSimilar.test.js Github}
  * @memberOf wsemi
@@ -35,7 +35,7 @@ function core(mainString, targetStrings) {
  * @param {String|Number|Array} strkeys 查找ar內與多關鍵字strkeys的個別相似度
  * @returns {Object} 輸出比對資料物件，回傳與各關鍵字之相似度以及最相關者
  * @example
- * strFindSimilar('The Woodman(樵夫) set to work at once, and so...', ['Wodooman(樵夫)', 'manWood(樵夫)', 'Wood樵man(夫)', 'Woodman(樵夫)'])
+ * console.log(strFindSimilar('The Woodman(樵夫) set to work at once, and so...', ['Wodooman(樵夫)', 'manWood(樵夫)', 'Wood樵man(夫)', 'Woodman(樵夫)']))
  * // => { 'ratings': [{ 'target': 'Wodooman(樵夫)', 'rating': 0.375 }, { 'target': 'manWood(樵夫)', 'rating': 0.3404255319148936 }, { 'target': 'Wood樵man(夫)', 'rating': 0.2978723404255319 }, { 'target': 'Woodman(樵夫)', 'rating': 0.425531914893617 }], 'bestMatch': { 'target': 'Woodman(樵夫)', 'rating': 0.425531914893617 }, 'bestMatchIndex': 3 }
  */
 function strFindSimilar(ar, strkeys) {

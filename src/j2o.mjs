@@ -9,10 +9,10 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入json格式字串
  * @returns {*} 回傳任意資料
  * @example
- * j2o('[1,"3","abc"]')
+ * console.log(j2o('[1,"3","abc"]'))
  * // => [1, '3', 'abc']
  *
- * j2o('{"a":12.34,"b":"abc"}')
+ * console.log(j2o('{"a":12.34,"b":"abc"}'))
  * // => { a: 12.34, b: 'abc' }
  */
 function j2o(v) {

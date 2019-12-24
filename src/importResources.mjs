@@ -109,7 +109,7 @@ function importResource({ tagName, path, attributes = {}, func }) {
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳注入成功的HtmlElement，reject回傳錯誤訊息
  * @example
- * need test in browser
+ * //need test in browser
  *
  * let pathItems
  *

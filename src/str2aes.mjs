@@ -20,10 +20,10 @@ import isbol from './isbol.mjs'
  * @example
  * let str = 'test中文abcdefghijklmn'
  * let key = '1234567890abcdefghijk'
- * str2aes(str, key)
+ * console.log(str2aes(str, key))
  * // => 53616c7465645f5f9d7366e54b51e9352dbccf6a6ec9b3af0595b19b345ea903b713143f5d66417f4cd968c628863f61 (is random)
  *
- * str2aes(str, key, true)
+ * console.log(str2aes(str, key, true))
  * // => U2FsdGVkX19c7rKkQ38SfqZLaQEKzLD0PhXzzdYeGbngewsPmzS8PcOwHQIsf2Zo (is random)
  */
 function str2aes(str, key, base64 = false) {

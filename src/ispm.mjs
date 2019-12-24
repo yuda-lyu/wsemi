@@ -6,10 +6,10 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * ispm('1.25')
+ * console.log(ispm('1.25'))
  * // => false
  *
- * ispm(new Promise(function() {}))
+ * console.log(ispm(new Promise(function() {})))
  * // => true
  */
 function ispm(v) {

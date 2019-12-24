@@ -11,9 +11,10 @@ import isestr from './isestr.mjs'
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  * @example
  * isUserName('我的名稱')
- *   .then(function() {
- *     //code here
- *   })
+ *     .then(function() {
+ *         console.log('then')
+ *         //code here
+ *     })
  */
 function isUserName(v) {
 

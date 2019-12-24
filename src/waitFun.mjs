@@ -19,9 +19,10 @@ import ispint from './ispint.mjs'
  *   return i >= 2
  * }
  * waitFun(fn)
- *   .then(function() {
- *     //code here
- *   })
+ *     .then(function() {
+ *         console.log('then')
+ *         //code here
+ *     })
  */
 function waitFun(f, maxnum = 180) {
 

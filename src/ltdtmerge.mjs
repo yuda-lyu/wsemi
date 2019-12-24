@@ -12,7 +12,7 @@ import isarr from './isarr.mjs'
  * @param {Array} ltdt2 輸入資料物件陣列
  * @returns {Array} 回傳處理後物件陣列
  * @example
- * ltdtmerge([{ a: 12, b: 34.56 }, {}], [{ a: '123', c: 'mn' }, { aa: 'a123', bb: 'bmn' }])
+ * console.log(ltdtmerge([{ a: 12, b: 34.56 }, {}], [{ a: '123', c: 'mn' }, { aa: 'a123', bb: 'bmn' }]))
  * // => [{ a: '123', b: 34.56, c: 'mn' }, { aa: 'a123', bb: 'bmn' }]
  */
 function ltdtmerge(ltdt1, ltdt2) {

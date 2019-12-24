@@ -15,10 +15,10 @@ import iser from './iser.mjs'
  * @param {Array} [values=undefined] 輸入values物件陣列，預設不使用
  * @returns {Object} 回傳組合後物件
  * @example
- * arr2dt(['a', 'b'])
+ * console.log(arr2dt(['a', 'b']))
  * // => { 'a': '', 'b': '' }
  *
- * arr2dt(['a', 'b'], [12.3, '456a'])
+ * console.log(arr2dt(['a', 'b'], [12.3, '456a']))
  * // => { 'a': 12.3, 'b': '456a' }
  */
 function arr2dt(keys, values = undefined) {

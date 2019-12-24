@@ -19,31 +19,31 @@ import isfun from './isfun.mjs'
  * @param {*} value 輸入任意資料
  * @returns {Object} 回傳判斷結果，屬性value為回傳資料類型的取值，屬性err為是否資料類型有錯，屬性errmsg為類型有錯時之錯誤訊息
  * @example
- * verifyValue('12a5', 'isstr')
+ * console.log(verifyValue('12a5', 'isstr'))
  * // => r.err=false
  *
- * verifyValue('12', 'isint')
+ * console.log(verifyValue('12', 'isint'))
  * // => r.err=false
  *
- * verifyValue('0', 'isp0int')
+ * console.log(verifyValue('0', 'isp0int'))
  * // => r.err=false
  *
- * verifyValue('12', 'isp0int')
+ * console.log(verifyValue('12', 'isp0int'))
  * // => r.err=false
  *
- * verifyValue('0', 'isn0int')
+ * console.log(verifyValue('0', 'isn0int'))
  * // => r.err=false
  *
- * verifyValue('-12', 'isn0int')
+ * console.log(verifyValue('-12', 'isn0int'))
  * // => r.err=false
  *
- * verifyValue('12.34', 'isnum')
+ * console.log(verifyValue('12.34', 'isnum'))
  * // => r.err=false
  *
- * verifyValue('12.34', 'isp0num')
+ * console.log(verifyValue('12.34', 'isp0num'))
  * // => r.err=false
  *
- * verifyValue('-12.34', 'isn0num')
+ * console.log(verifyValue('-12.34', 'isn0num'))
  * // => r.err=false
  *
  */

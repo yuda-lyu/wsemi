@@ -11,7 +11,7 @@ import isestr from './isestr.mjs'
  * @param {String} b64 輸入base64字串
  * @returns {String} 回傳一般字串
  * @example
- * b642str('dGVzdOS4reaWhw==')
+ * console.log(b642str('dGVzdOS4reaWhw=='))
  * // => 'test中文'
  */
 function b642str(b64) {

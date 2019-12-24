@@ -5,7 +5,7 @@
  * @memberOf wsemi
  * @returns {Object} 回傳運行環境物件
  * @example
- * getEnv()
+ * console.log(getEnv())
  * // => { isBrowser: false, isWebWorker: false, isNode: true }
  */
 function getEnv() {

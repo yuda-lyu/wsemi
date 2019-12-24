@@ -10,13 +10,13 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入秒時間字串，不含時區
  * @returns {Boolean} 回傳是否為秒時間布林值
  * @example
- * istime('2019-01-01T12:34:56:789')
+ * console.log(istime('2019-01-01T12:34:56:789'))
  * // => false
  *
- * istime('2019-01-01T12:34:56')
+ * console.log(istime('2019-01-01T12:34:56'))
  * // => true
  *
- * istime('2019-01-01')
+ * console.log(istime('2019-01-01'))
  * // => false
  */
 function istime(v) {
