@@ -1,4 +1,4 @@
-
+import get from 'lodash/get'
 import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
@@ -38,11 +38,11 @@ function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
             //downloadExcelFileFromData
             let r = downloadExcelFileFromData(cfn, csn, data)
 
-            if (r === 'ok') {
-                pm.resolve()
+            if (get(r, 'error', '') !== '') {
+                pm.reject(r.error)
             }
             else {
-                pm.reject(r)
+                pm.resolve()
             }
 
         })

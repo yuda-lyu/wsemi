@@ -13,7 +13,8 @@ import isbol from './isbol.mjs'
 
 function getXLSX() {
     let g = getGlobal()
-    return XLSX || g.XLSX || g.xlsx
+    let x = XLSX || g.XLSX || g.xlsx
+    return x
 }
 
 
@@ -177,7 +178,7 @@ function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
         workbook = getXLSX().read(u8a, { type: 'buffer' }) //Uint8Array
     }
     catch (e) {
-        console.log('getDataFromExcelFileU8Arr: error: ', e)
+        console.log('error: ', e)
         return {
             error: 'can not read file'
         }
@@ -185,24 +186,30 @@ function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
 
     //convert
     let r = null
-    if (fmt === 'ltdt') {
-        r = to_ltdt(workbook)
+    try {
+        if (fmt === 'ltdt') {
+            r = to_ltdt(workbook)
+        }
+        else if (fmt === 'array') {
+            r = to_array(workbook, useHead)
+        }
+        else if (fmt === 'csv') {
+            r = to_csv(workbook)
+        }
+        else {
+            return {
+                error: 'invalid fmt'
+            }
+        }
     }
-    else if (fmt === 'array') {
-        r = to_array(workbook, useHead)
-    }
-    else if (fmt === 'csv') {
-        r = to_csv(workbook)
-    }
-    else {
+    catch (e) {
+        console.log('error: ', e)
         return {
-            error: 'invalid fmt'
+            error: 'can not convert data'
         }
     }
 
-    return {
-        success: r
-    }
+    return r
 }
 
 

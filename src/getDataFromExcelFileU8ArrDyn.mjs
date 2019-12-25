@@ -43,7 +43,7 @@ function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathIt
                 pm.reject(r.error)
             }
             else {
-                pm.resolve(r.success)
+                pm.resolve(r)
             }
 
         })

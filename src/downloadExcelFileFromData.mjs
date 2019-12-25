@@ -8,7 +8,8 @@ import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
 
 function getXLSX() {
     let g = getGlobal()
-    return XLSX || g.XLSX || g.xlsx
+    let x = XLSX || g.XLSX || g.xlsx
+    return x
 }
 
 
@@ -83,25 +84,41 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
 
     //check
     if (!isestr(cfn)) {
-        console.log('no filename')
-        return 'no filename'
+        let msg = 'no filename'
+        console.log(msg)
+        return {
+            error: msg
+        }
     }
     if (!isestr(csn)) {
         csn = 'data'
     }
     if (!isearr(data)) {
-        console.log('no data')
-        return 'no data'
+        let msg = 'no data'
+        console.log(msg)
+        return {
+            error: msg
+        }
     }
 
-    //wb
-    let wb = getWB(csn, data)
+    try {
 
-    //ArrayBuffer to BinaryString(Uint8Array)
-    let u8a = bs2u8arr(wb)
+        //wb
+        let wb = getWB(csn, data)
 
-    //downloadFileFromU8Arr
-    downloadFileFromU8Arr(cfn, u8a)
+        //ArrayBuffer to BinaryString(Uint8Array)
+        let u8a = bs2u8arr(wb)
+
+        //downloadFileFromU8Arr
+        downloadFileFromU8Arr(cfn, u8a)
+
+    }
+    catch (e) {
+        console.log('error: ', e)
+        return {
+            error: 'can not download Excel file from data'
+        }
+    }
 
     return 'ok'
 }
