@@ -7,7 +7,14 @@ import head from 'lodash/head'
 import tail from 'lodash/tail'
 import invokeMap from 'lodash/invokeMap'
 import XLSX from 'xlsx'
+import getGlobal from './getGlobal.mjs'
 import isbol from './isbol.mjs'
+
+
+function getXLSX() {
+    let g = getGlobal()
+    return XLSX || g.XLSX || g.xlsx
+}
 
 
 function to_ltdt(workbook) {
@@ -122,7 +129,7 @@ function to_array(workbook, useHead = false) {
 function to_tab(workbook) {
     let result = []
     workbook.SheetNames.forEach(function (sheetname) {
-        let tab = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetname], { FS: '\t' })
+        let tab = getXLSX().utils.sheet_to_csv(workbook.Sheets[sheetname], { FS: '\t' })
         if (tab.length > 0) {
             result.push({
                 sheetname: sheetname,
@@ -137,7 +144,7 @@ function to_tab(workbook) {
 function to_csv(workbook) {
     let result = []
     workbook.SheetNames.forEach(function (sheetname) {
-        let csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetname])
+        let csv = getXLSX().utils.sheet_to_csv(workbook.Sheets[sheetname])
         if (csv.length > 0) {
             result.push({
                 sheetname: sheetname,
@@ -150,13 +157,13 @@ function to_csv(workbook) {
 
 
 /**
- * 讀取xlsx檔，由input file的檔案讀取excel數據出來
- * 若fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
+ * 前端讀取Excel(*.xlsx)檔，由input file的檔案讀取excel數據出來
+ * 若輸出fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
- * @param {String} [fmt='ltdt'] 輸入數據回傳格式，可有'ltdt','csv','array'，預設為'ltdt'
+ * @param {String} [fmt='ltdt'] 輸入數據輸出格式，可有'ltdt','csv','array'，預設為'ltdt'
  * @param {Boolean} [useHead=false] 輸入數據是否讀入首行head，需配合fmt='array'，預設為false
  * @returns {Array} 回傳數據陣列
  * @example
@@ -167,25 +174,35 @@ function getDataFromExcelFileU8Arr(u8a, fmt = 'ltdt', useHead = false) {
     //workbook
     let workbook
     try {
-        workbook = XLSX.read(u8a, { type: 'buffer' }) //Uint8Array
+        workbook = getXLSX().read(u8a, { type: 'buffer' }) //Uint8Array
     }
     catch (e) {
         console.log('getDataFromExcelFileU8Arr: error: ', e)
-        return null
+        return {
+            error: 'can not read file'
+        }
     }
 
     //convert
+    let r = null
     if (fmt === 'ltdt') {
-        return to_ltdt(workbook)
+        r = to_ltdt(workbook)
     }
     else if (fmt === 'array') {
-        return to_array(workbook, useHead)
+        r = to_array(workbook, useHead)
     }
     else if (fmt === 'csv') {
-        return to_csv(workbook)
+        r = to_csv(workbook)
+    }
+    else {
+        return {
+            error: 'invalid fmt'
+        }
     }
 
-    return null
+    return {
+        success: r
+    }
 }
 
 

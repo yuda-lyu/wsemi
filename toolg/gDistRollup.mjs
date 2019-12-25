@@ -14,6 +14,7 @@ rollupFiles({
     globals: {
         'fs': 'fs',
         'child_process': 'child_process',
+        //'crypto-js': 'crypto-js', //編譯crypto-js進umd
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
@@ -24,6 +25,7 @@ rollupFiles({
     external: [
         'fs',
         'child_process',
+        //'crypto-js',
         'dayjs',
         'xlsx',
         'fuzzball',

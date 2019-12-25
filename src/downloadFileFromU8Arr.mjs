@@ -18,11 +18,11 @@ function downloadFileFromU8Arr(cfn, u8a) {
 
     //check
     if (!isestr(cfn)) {
-        console.warn('no filename')
+        console.log('no filename')
         return
     }
     if (!isu8arr(u8a)) {
-        console.warn('no data')
+        console.log('no data')
         return
     }
 

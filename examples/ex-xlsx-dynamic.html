@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for xlsx</title>
+    
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        console.log = wsemi.bodyLog
+    </script>
+
+</head>
+<body>
+
+    <button onclick="testXLSX()">read file(*.xlsx) from xlsx</button>
+
+    <script>
+            
+        function testXLSX(){
+
+			let kind = 'xlsx'
+			//kind = 'common'
+			wsemi.domShowInputAndGetFilesU8Arrs(kind)
+				.then(async function (d) {
+
+					//get first file
+					let file = d[0]
+
+					//u8a
+					let u8a = file.u8a
+					console.log('u8a', Object.prototype.toString.call(u8a), u8a.length)
+
+					//download u8a
+					wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
+
+					//dcsv
+					let dcsv = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'csv')
+					dcsv = dcsv[0]
+					console.log('dcsv', dcsv.sheetname, dcsv.data)
+
+					//download csv
+					wsemi.downloadFileFromText('temp.csv', dcsv.data)
+
+					//dltdt
+					let dltdt = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'ltdt')
+					dltdt = dltdt[0]
+					console.log('dltdt', dltdt.sheetname, dltdt.data)
+
+					//download json
+					wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))
+
+					//darray
+					let darray = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
+					darray = darray[0]
+					console.log('darray', darray.sheetname, darray.data.rows)
+
+					//download array
+					await wsemi.downloadExcelFileFromDataDyn('temp.array.xlsx', 'data', darray.data.rows)
+
+				})
+				.catch(function (msg) {
+					console.log(msg)
+				})
+
+        }
+
+    </script>
+  
+</body>
+</html>

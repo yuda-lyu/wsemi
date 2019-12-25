@@ -72,7 +72,7 @@ function main() {
                 'https://rawgit.com/leizongmin/js-xss/master/dist/xss.js',
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
-                //'https://cdn.jsdelivr.net/npm/js-xlsx/dist/xlsx.full.min.js',
+                //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
                 'https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js',
             ] 
         }

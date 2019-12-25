@@ -58,13 +58,13 @@ function downloadFileFromBlob(cfn, blob) {
 
     //check
     if (!isestr(cfn)) {
-        console.warn('no filename')
+        console.log('no filename')
         return
     }
 
     //check
     if (!window) {
-        console.warn('no window')
+        console.log('no window')
         return
     }
 

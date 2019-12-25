@@ -36,6 +36,8 @@ To view some examples for more understanding, visit examples:
 
 > **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
 
+> **xlsx[dynamic import]:** [ex-xlsx-dynamic](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx-dynamic) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx-dynamic)]
+
 ## Installation
 ### Using npm(ES6 module):
 > **Note:** wsemi depends on `lodash`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`
@@ -78,7 +80,7 @@ or
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 ```
 [Optional] Add script for xlsx.
-> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function.
+> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and do not include script when use `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
@@ -87,5 +89,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.1/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.2/dist/wsemi.umd.js"></script>
 ```

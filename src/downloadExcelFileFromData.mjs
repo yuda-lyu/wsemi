@@ -1,8 +1,15 @@
 import XLSX from 'xlsx'
+import getGlobal from './getGlobal.mjs'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
 import bs2u8arr from './bs2u8arr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
+
+
+function getXLSX() {
+    let g = getGlobal()
+    return XLSX || g.XLSX || g.xlsx
+}
 
 
 function datenum(v, date1904) {
@@ -23,12 +30,12 @@ function sheet_from_array_of_arrays(data, opts) {
             if (range.e.c < C) range.e.c = C
             let cell = { v: data[R][C] }
             if (cell.v === null) continue
-            let cell_ref = XLSX.utils.encode_cell({ c: C, r: R })
+            let cell_ref = getXLSX().utils.encode_cell({ c: C, r: R })
 
             if (typeof cell.v === 'number') cell.t = 'n'
             else if (typeof cell.v === 'boolean') cell.t = 'b'
             else if (cell.v instanceof Date) {
-                cell.t = 'n'; cell.z = XLSX.SSF._table[14]
+                cell.t = 'n'; cell.z = getXLSX().SSF._table[14]
                 cell.v = datenum(cell.v)
             }
             else cell.t = 's'
@@ -36,7 +43,7 @@ function sheet_from_array_of_arrays(data, opts) {
             ws[cell_ref] = cell
         }
     }
-    if (range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range)
+    if (range.s.c < 10000000) ws['!ref'] = getXLSX().utils.encode_range(range)
     return ws
 }
 
@@ -55,14 +62,14 @@ function getWB(csn, data) {
     let ws = sheet_from_array_of_arrays(data)
     wb.SheetNames.push(csn)
     wb.Sheets[csn] = ws
-    let wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' }) //binary, buffer, 但實際使用buffer無用, 一樣是回傳ArrayBuffer
+    let wbout = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' }) //binary, buffer, 但實際使用buffer無用, 一樣是回傳ArrayBuffer
 
     return wbout
 }
 
 
 /**
- * 前端下載text資料成為utf-8(含BOM)檔案
+ * 前端下載資料成為Excel(*.xlsx)檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.js Github}
  * @memberOf wsemi
@@ -76,15 +83,15 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
 
     //check
     if (!isestr(cfn)) {
-        console.warn('no filename')
-        return
+        console.log('no filename')
+        return 'no filename'
     }
     if (!isestr(csn)) {
         csn = 'data'
     }
     if (!isearr(data)) {
-        console.warn('no data')
-        return
+        console.log('no data')
+        return 'no data'
     }
 
     //wb
@@ -96,6 +103,7 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
     //downloadFileFromU8Arr
     downloadFileFromU8Arr(cfn, u8a)
 
+    return 'ok'
 }
 
 

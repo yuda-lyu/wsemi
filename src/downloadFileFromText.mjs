@@ -17,11 +17,11 @@ function downloadFileFromText(cfn, ccont) {
 
     //check
     if (!isestr(cfn)) {
-        console.warn('no filename')
+        console.log('no filename')
         return
     }
     if (!isstr(ccont)) { //可允許空字串
-        console.warn('no content')
+        console.log('no content')
         return
     }
 
