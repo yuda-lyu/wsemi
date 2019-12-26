@@ -9,7 +9,7 @@ import getDataFromExcelFileU8Arr from './getDataFromExcelFileU8Arr.mjs'
  * 前端自動載入xlsx的Javascript腳本，再讀取Excel(*.xlsx)檔，由input file的檔案讀取excel數據出來
  * 若輸出fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8ArrDyn.test.js Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {String} [fmt='ltdt'] 輸入數據輸出格式，可有'ltdt','csv','array'，預設為'ltdt'

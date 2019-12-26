@@ -8,7 +8,7 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
 /**
  * 前端自動載入xlsx的Javascript腳本，再下載資料成為Excel(*.xlsx)檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromDataDyn.test.js Github}
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'

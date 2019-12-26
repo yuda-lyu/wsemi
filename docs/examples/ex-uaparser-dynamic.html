@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for ua-parser-js by dynamic import</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.4/dist/wsemi.umd.js"></script>
+    <script>
+        console.log = wsemi.bodyLog
+    </script>
+
+</head>
+<body>
+
+    <script>
+
+        wsemi.getUserAgentDyn()
+            .then(function(r) {
+                console.log('getUserAgentDyn', r)
+            })
+
+    </script>
+
+</body>
+</html>

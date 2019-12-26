@@ -28,6 +28,8 @@ To view some examples for more understanding, visit examples:
 
 > **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser.html)]
 
+> **uaparser:** [ex-uaparser-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser-dynamic.html)]
+
 > **xss:** [ex-xss.html](https://yuda-lyu.github.io/wsemi/examples/ex-xss.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xss.html)]
 
 > **openlink:** [ex-openlink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openlink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openlink.html)]
@@ -86,5 +88,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.3/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.4/dist/wsemi.umd.js"></script>
 ```

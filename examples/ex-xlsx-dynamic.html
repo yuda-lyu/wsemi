@@ -17,58 +17,79 @@
     <button onclick="testXLSX()">read file(*.xlsx) from xlsx</button>
 
     <script>
-            
-        function testXLSX(){
 
+		function testXLSX() {
+
+			//u8a
+			let u8a
 			let kind = 'xlsx'
 			//kind = 'common'
 			wsemi.domShowInputAndGetFilesU8Arrs(kind)
-				.then(async function (d) {
+				.then(function (d) {
 
 					//get first file
 					let file = d[0]
 
-					//u8a
-					let u8a = file.u8a
+					//save u8a
+					u8a = file.u8a
 					console.log('get u8a', Object.prototype.toString.call(u8a), u8a.length)
 
 					//download u8a
 					wsemi.downloadFileFromU8Arr('temp.xlsx', u8a)
 					console.log('download u8a')
 
-					//dcsv
-					let dcsv = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'csv')
-					dcsv = dcsv[0]
+					return Promise.resolve()
+				})
+				.then(function () {
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'csv')
+				})
+				.then(function (r) {
+
+					//dcsv, get first sheet
+					let dcsv = r[0]
 					console.log('get csv', dcsv.sheetname, dcsv.data)
 
 					//download csv
 					wsemi.downloadFileFromText('temp.csv', dcsv.data)
 					console.log('download csv')
 
-					//dltdt
-					let dltdt = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'ltdt')
-					dltdt = dltdt[0]
+					return Promise.resolve()
+				})
+				.then(function () {
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'ltdt')
+				})
+				.then(function (r) {
+
+					//dltdt, get first sheet
+					let dltdt = r[0]
 					console.log('get dltdt', dltdt.sheetname, dltdt.data)
 
 					//download json
 					wsemi.downloadFileFromText('temp.json', JSON.stringify(dltdt))
 					console.log('download json(from dltdt)')
 
-					//darray
-					let darray = await wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
-					darray = darray[0]
+					return Promise.resolve()
+				})
+				.then(function () {
+					return wsemi.wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
+				})
+				.then(function (r) {
+
+					//darray, get first sheet
+					let darray = r[0]
 					console.log('get array', darray.sheetname, darray.data.rows)
 
 					//download array
-					await wsemi.downloadExcelFileFromDataDyn('temp.array.xlsx', 'data', darray.data.rows)
+					wsemi.downloadExcelFileFromDataDyn('temp.array.xlsx', 'data', darray.data.rows)
 					console.log('download array')
 
+					return Promise.resolve()
 				})
 				.catch(function (msg) {
 					console.log(msg)
 				})
 
-        }
+		}
 
     </script>
   

@@ -1,10 +1,19 @@
 import UAParser from 'ua-parser-js'
+import getGlobal from './getGlobal.mjs'
 import isstr from './isstr.mjs'
 import getdtvstr from './getdtvstr.mjs'
 
 
+function getUAParser() {
+    let g = getGlobal()
+    let x = UAParser || g.UAParser
+    return x
+}
+
+
 /**
- * 取得使用者瀏覽器資訊，於browser中不輸入即可自動偵測，於nodejs環境則需提供user agent字串
+ * 前端取得使用者瀏覽器資訊，於browser中不輸入即可自動偵測
+ * 後端nodejs環境則需提供user agent字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.js Github}
  * @memberOf wsemi
@@ -26,11 +35,12 @@ function getUserAgent(v = null) {
 
     //parser
     let parser
+    let U = getUAParser()
     if (isstr(v)) {
-        parser = new UAParser(v)
+        parser = new U(v)
     }
     else {
-        parser = new UAParser()
+        parser = new U()
     }
 
     let oua = parser.getResult()
