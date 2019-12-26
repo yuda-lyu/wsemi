@@ -1,8 +1,9 @@
+import fuzzball from 'fuzzball'
 import join from 'lodash/join'
 import map from 'lodash/map'
 import mean from 'lodash/mean'
 import every from 'lodash/every'
-import fuzzball from 'fuzzball'
+import getGlobal from './getGlobal.mjs'
 import iser from './iser.mjs'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
@@ -12,6 +13,13 @@ import binstr from './binstr.mjs'
 import sep from './sep.mjs'
 
 
+function getFuzzball() {
+    let g = getGlobal()
+    let x = fuzzball || g.fuzzball
+    return x
+}
+
+
 /**
  * 以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
  *
@@ -19,7 +27,7 @@ import sep from './sep.mjs'
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分
- * @param {Boolean} [bscore=false] 是否回傳分數，true:回傳值為分數，false:回傳值為是否(預設)
+ * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為分數，設定為false時回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
  * console.log(strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))
@@ -89,7 +97,7 @@ function strFindFuzz(ar, strkey, bscore = false) {
 
     //全部關鍵字查詢所得分數
     let bs = map(keys, function(key) {
-        return fuzzball.partial_ratio(c, key)
+        return getFuzzball().partial_ratio(c, key)
     })
 
     //bscore

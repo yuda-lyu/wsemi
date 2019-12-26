@@ -14,7 +14,7 @@ import getUserAgent from './getUserAgent.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
  * @example
  * let ua = 'Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)'
- * getUserAgent(ua)
+ * getUserAgentDyn(ua)
  *     .then(function(r) {
  *         console.log(r)
  *         // => {
@@ -28,7 +28,6 @@ import getUserAgent from './getUserAgent.mjs'
  *     })
  */
 function getUserAgentDyn(v = null, pathItems) {
-
 
     //pm
     let pm = genPm()

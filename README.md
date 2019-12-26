@@ -24,11 +24,13 @@ To view some examples for more understanding, visit examples:
 
 > **fuzzball:** [ex-fuzzball.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-fuzzball.html)]
 
+> **fuzzball[dynamic import]:** [ex-fuzzball-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-fuzzball-dynamic.html)]
+
 > **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tinycolor.html)]
 
 > **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser.html)]
 
-> **uaparser:** [ex-uaparser-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser-dynamic.html)]
+> **uaparser[dynamic import]:** [ex-uaparser-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser-dynamic.html)]
 
 > **xss:** [ex-xss.html](https://yuda-lyu.github.io/wsemi/examples/ex-xss.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xss.html)]
 
@@ -88,5 +90,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.4/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.5/dist/wsemi.umd.js"></script>
 ```

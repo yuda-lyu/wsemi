@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for fuzzball by dynamic import</title>
+    
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        console.log = wsemi.bodyLog
+    </script>
+
+</head>
+<body>
+
+    <script>
+        
+        Promise.resolve()
+            .then(function() {
+                return wsemi.strFindFuzzDyn('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
+                    .then(function(r) {
+                        console.log("strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)", r)
+                        // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+                    })
+            })
+            .then(function() {
+                return wsemi.strFindFuzzDyn('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
+                    .then(function(r) {
+                        console.log("strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)", r)
+                        // => 82
+                    })
+            })
+            .then(function() {
+                return wsemi.strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef', true)
+                    .then(function(r) {
+                        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true)", r)
+                        // => 100
+                    })
+            })
+            .then(function() {
+                return wsemi.strFindFuzzDyn(['abc', 'def123', '中文測試'], 'efgg', true)
+                    .then(function(r) {
+                        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true)", r)
+                        // => 50
+                    })
+            })
+            .then(function() {
+                return wsemi.strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef')
+                    .then(function(r) {
+                        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef')", r)
+                        // => true
+                    })
+            })
+
+    </script>
+
+</body>
+</html>

@@ -6,7 +6,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.4/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.5/dist/wsemi.umd.js"></script>
     <script>
         console.log = wsemi.bodyLog
     </script>
@@ -16,16 +16,21 @@
 
     <script>
 
-        console.log("strFindFuzz(['abc','def123'],'ef')",  wsemi.strFindFuzz(['abc','def123'],'ef')  )
-
-        console.log("strFindFuzz(['abc','def123'],'xyz')",  wsemi.strFindFuzz(['abc','def123'],'xyz')  )
-
-        console.log("strFindFuzz(['abc','def123'],'ef',true)",  wsemi.strFindFuzz(['abc','def123'],'ef',true)  )
-
-        console.log("strFindFuzz(['abc','def123'],'efgg',true)",  wsemi.strFindFuzz(['abc','def123'],'efgg',true)  )
-
-        console.log("strFindFuzz(['abc','def123'],'xyz',true)",  wsemi.strFindFuzz(['abc','def123'],'xyz',true)  )
-
+        console.log("strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)", wsemi.strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))
+        // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+    
+        console.log("strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)", wsemi.strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true))
+        // => 82
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true)", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true))
+        // => 100
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true)", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true))
+        // => 50
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef')", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'ef'))
+        // => true
+        
     </script>
 
 </body>
