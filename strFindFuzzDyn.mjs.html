@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isUserName.mjs - Documentation</title>
+    <title>strFindFuzzDyn.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isUserName.mjs</h1>
+    <h1 class="page-title">strFindFuzzDyn.mjs</h1>
     
 
     
@@ -43,39 +43,82 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import genPm from './genPm.mjs'
-import isestr from './isestr.mjs'
+import isearr from './isearr.mjs'
+import importResources from './importResources.mjs'
+import strFindFuzz from './strFindFuzz.mjs'
 
 
 /**
- * 判斷是否為有效使用者名稱
+ * 前端以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserName.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzzDyn.test.js Github}
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
+ * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
+ * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分
+ * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為分數，設定為false時回傳值為是否(預設)
+ * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
+ * @returns {Promise} 回傳Promise，resolve回傳為分數或是否，reject回傳錯誤訊息
  * @example
- * isUserName('我的名稱')
- *     .then(function() {
- *         console.log('then')
- *         //code here
+ * strFindFuzzDyn('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
+ *     .then(function(r) {
+ *         console.log(r)
+ *         // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+ *     })
+ *
+ * strFindFuzzDyn('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
+ *     .then(function(r) {
+ *         console.log(r)
+ *         // => 82
+ *     })
+ *
+ * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef', true)
+ *     .then(function(r) {
+ *         console.log(r)
+ *         // => 100
+ *     })
+ *
+ * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'efgg', true)
+ *     .then(function(r) {
+ *         console.log(r)
+ *         // => 50
+ *     })
+ *
+ * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef')
+ *     .then(function(r) {
+ *         console.log(r)
+ *         // => true
  *     })
  */
-function isUserName(v) {
+function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
 
+    //pm
     let pm = genPm()
 
-    //check
-    if (!isestr(v)) {
-        pm.reject('請填入姓名')
-        return pm
+    //pathItems
+    if (!isearr(pathItems)) {
+        pathItems = [
+            'https://cdn.jsdelivr.net/npm/fuzzball@1.3.0/dist/fuzzball.umd.min.js',
+        ]
     }
 
-    pm.resolve()
+    //importResources
+    importResources(pathItems)
+        .then((res) => {
+            //console.log('strFindFuzzDyn res', res)
+
+            //strFindFuzz
+            let r = strFindFuzz(ar, strkey, bscore)
+
+            //resolve
+            pm.resolve(r)
+
+        })
+
     return pm
 }
 
 
-export default isUserName
+export default strFindFuzzDyn
 </code></pre>
         </article>
     </section>

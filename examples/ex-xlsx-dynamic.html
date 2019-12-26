@@ -6,7 +6,7 @@
     
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.4/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.5/dist/wsemi.umd.js"></script>
     <script>
         console.log = wsemi.bodyLog
     </script>
@@ -71,7 +71,7 @@
 					return Promise.resolve()
 				})
 				.then(function () {
-					return wsemi.wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
 				})
 				.then(function (r) {
 
