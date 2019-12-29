@@ -50,7 +50,7 @@ npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash` and `crypto-js`, by using tree-shaking for dead-code elimination
+> **Note:** umd file includes with `lodash`, `crypto-js` and `tippy.js`, by using tree-shaking for dead-code elimination
 
 [Optional] Add script with nomodule for IE11.
 ```alias
@@ -69,12 +69,12 @@ or
 </script>
 ```
 [Optional] Add script for fuzzball.
-> **Note:** include script when use `strFindFuzz` function.
+> **Note:** include script when use `strFindFuzz` function, and don't need include script when use `strFindFuzzDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
 ```
 [Optional] Add script for ua-parser-js.
-> **Note:** include script when use `getUserAgent` function.
+> **Note:** include script when use `getUserAgent` function, and don't need include script when use `getUserAgentDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
 ```
@@ -84,11 +84,11 @@ or
 <script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
 ```
 [Optional] Add script for xlsx.
-> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and do not include script when use `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
+> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't need include script when use `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.5/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.6/dist/wsemi.umd.js"></script>
 ```
