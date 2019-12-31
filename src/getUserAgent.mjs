@@ -1,7 +1,7 @@
 import UAParser from 'ua-parser-js'
+import get from 'lodash/get'
 import getGlobal from './getGlobal.mjs'
 import isstr from './isstr.mjs'
-import getdtvstr from './getdtvstr.mjs'
 
 
 function getUAParser() {
@@ -49,8 +49,8 @@ function getUserAgent(v = null) {
         browserversion: oua.browser.version,
         engineinfor: oua.engine.name + oua.engine.version,
         platform: oua.os.name + oua.os.version,
-        devicetype: getdtvstr(oua.device, 'type'),
-        cpuarchitecture: getdtvstr(oua.cpu, 'architecture')
+        devicetype: get(oua.device, 'type', ''),
+        cpuarchitecture: get(oua.cpu, 'architecture', '')
     }
 }
 
