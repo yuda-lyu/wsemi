@@ -1,7 +1,7 @@
 import each from 'lodash/each'
+import get from 'lodash/get'
 import iseobj from './iseobj.mjs'
 import isearr from './isearr.mjs'
-import getdtv from './getdtv.mjs'
 
 
 /**
@@ -31,7 +31,7 @@ function dtmapping(dt, keys) {
 
     let r = {}
     each(keys, function(key) {
-        r[key] = getdtv(dt, key)
+        r[key] = get(dt, key)
     })
 
     return r

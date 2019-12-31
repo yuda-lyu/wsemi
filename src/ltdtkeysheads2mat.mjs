@@ -1,9 +1,9 @@
 import each from 'lodash/each'
+import get from 'lodash/get'
 import map from 'lodash/map'
 import concat from 'lodash/concat'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
-import getdtv from './getdtv.mjs'
 import ltdtkeys2mat from './ltdtkeys2mat.mjs'
 
 
@@ -46,7 +46,7 @@ function ltdtkeysheads2mat(ltdt, keys, kphead) {
 
     //h
     let h = map(keys, function(key) {
-        return getdtv(kphead, key)
+        return get(kphead, key)
     })
 
     //m

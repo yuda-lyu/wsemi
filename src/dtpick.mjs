@@ -1,8 +1,8 @@
 import each from 'lodash/each'
+import get from 'lodash/get'
 import isobj from './isobj.mjs'
 import isearr from './isearr.mjs'
 import haskey from './haskey.mjs'
-import getdtv from './getdtv.mjs'
 
 
 /**
@@ -33,7 +33,7 @@ function dtpick(dt, keys) {
     let r = {}
     each(keys, function(key) {
         if (haskey(dt, key)) {
-            r[key] = getdtv(dt, key)
+            r[key] = get(dt, key)
         }
     })
 

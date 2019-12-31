@@ -2,6 +2,7 @@ import cp from 'child_process'
 import isarr from './isarr.mjs'
 
 
+//nodejs 12.14時stdout on data會收到奇怪符號, 原因未知, 先通過判斷是否為utf8剔除, 也就是程序輸出入皆限定為utf8即可, 但建議避免直接傳中文改編碼成base64再傳
 function isUtf8(buf) {
     //from https://github.com/hcodes/isutf8/
 
