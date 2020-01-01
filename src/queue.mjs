@@ -1,4 +1,6 @@
 import mitt from 'mitt'
+import ispint from './ispint.mjs'
+import cint from './cint.mjs'
 
 
 /**
@@ -6,17 +8,21 @@ import mitt from 'mitt'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.js Github}
  * @memberOf wsemi
- * @param {Number} [takeLimit=0] 輸入同時處理上限數量整數，預設0，代表無限制
+ * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Object} 回傳佇列處理器物件，包含事件on、push、get、cb。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息
  * @example
  *
  * //queue, takeLimit=2
  * let q = queue(2)
  * let n = 0
+ * let ms = []
  *
  * //message
  * q.on('message', function(qs) {
  *     console.log('message', qs)
+ *
+ *     //ms
+ *     ms.push(JSON.parse(JSON.stringify(qs)))
  *
  *     //get
  *     let v = q.get()
@@ -63,6 +69,7 @@ import mitt from 'mitt'
  *     console.log(JSON.stringify(ms))
  * }, 7000)
  *
+ *
  * // queues push 1~5
  * // message [ '$1' ]
  * // get $1
@@ -97,7 +104,7 @@ import mitt from 'mitt'
  * // cb $10
  * // [["$1"],["$2"],["$3","$4","$5","$6"],["$4","$5","$6","$7"],["$5","$6","$7","$8","$9","$10"],["$6","$7","$8","$9","$10"],["$7","$8","$9","$10"],["$8","$9","$10"],["$9","$10"],["$10"]]
  *
- * // when run in q = queue(), takeLimit<=0
+ * // when run by q = queue(), it means takeLimit<=0
  * // queues push 1~5
  * // message [ '$1' ]
  * // get $1
@@ -136,6 +143,12 @@ import mitt from 'mitt'
 function queue(takeLimit = 0) {
     let takeNow = 0 //目前執行數量
     let qs = []
+
+    //check
+    if (!ispint(takeLimit)) {
+        takeLimit = 0
+    }
+    takeLimit = cint(takeLimit)
 
     //ev
     let ev = mitt()
@@ -182,7 +195,7 @@ function queue(takeLimit = 0) {
 
         //push
         qs.push(v)
-        //console.log('push', qs)
+        //console.log('push', v, qs)
 
         //emit
         if (takeLimit <= 0 || takeNow < takeLimit) {
