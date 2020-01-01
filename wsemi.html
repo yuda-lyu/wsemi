@@ -27819,7 +27819,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line86">line 86</a>
+        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line111">line 111</a>
     </li></ul></dd>
     
 
@@ -27859,8 +27859,10 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
 
 
 <div class="description">
-    <p>Promise&#x7684;mapSeries
-&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise</p>
+    <p>Promise&#x7684;map&#xFF0C;&#x53EF;&#x8A2D;&#x5B9A;&#x540C;&#x6642;&#x8655;&#x7406;&#x6578;&#x91CF;&#x3002;
+&#x82E5;&#x5148;&#x884C;&#x7522;&#x751F;promise&#x5247;takeLimit&#x8A2D;&#x5B9A;&#x6703;&#x7121;&#x6548;&#xFF0C;&#x56E0;&#x5DF2;&#x5148;&#x884C;&#x521D;&#x59CB;&#x5316;&#x555F;&#x52D5;&#x3002;
+&#x7B49;&#x540C;&#x65BC;Bluebird&#x7684;Promise.map&#xFF0C;&#x800C;concurrency&#x70BA;takeLimit&#x3002;
+&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise&#x3002;</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.js">Github</a></p>
 </div>
 
@@ -27877,48 +27879,71 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;pmMap&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let takeLimit = 2
-let rs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-//pmMap
-pmMap(rs, function (v, k) {
-    console.log(&apos;call&apos;, v)
-    return new Promise(function(resolve, reject) {
-        setTimeout(function() {
-            console.log(&apos;resolve&apos;, v)
-            resolve(&apos;#&apos; + v)
-        }, 300)
+setTimeout(function() {
+
+    //&#x901A;&#x904E;function&#x8ABF;&#x7528;&#x7522;&#x751F;promise, &#x53EF;&#x53D7;takeLimit&#x63A7;&#x7BA1;&#x540C;&#x6642;&#x57F7;&#x884C;&#x6578;&#x91CF;
+    pmMap([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], function (v, k) {
+        console.log(&apos;call&apos;, v)
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                console.log(&apos;use function resolve&apos;, v)
+                resolve(&apos;#&apos; + v)
+            }, 300)
+        })
+    }, takeLimit)
+        .then(function(res) {
+            console.log(&apos;use function then&apos;, JSON.stringify(res))
+        })
+        .catch(function(err) {
+            console.log(&apos;use function catch&apos;, err)
+        })
+
+}, 1)
+
+setTimeout(function() {
+
+    //&#x5148;&#x7522;&#x751F;promise, &#x56E0;&#x4E8B;&#x5148;&#x521D;&#x59CB;&#x5316;&#x6545;&#x7121;&#x6CD5;&#x53D7;takeLimit&#x63A7;&#x7BA1;
+    let rs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function(v, k) {
+        console.log(&apos;call&apos;, v)
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                console.log(&apos;use promise resolve&apos;, v)
+                resolve(&apos;#&apos; + v)
+            }, 300)
+        })
     })
-}, takeLimit)
-    .then(function(res) {
-        console.log(&apos;pmMap then&apos;, JSON.stringify(res))
-    })
-    .catch(function(err) {
-        console.log(&apos;pmMap catch&apos;, err)
-    })
+    pmMap(rs, null, takeLimit)
+        .then(function(res) {
+            console.log(&apos;use promise then&apos;, JSON.stringify(res))
+        })
+        .catch(function(err) {
+            console.log(&apos;use promise catch&apos;, err)
+        })
+
+}, 3000)
 
 // call 1
 // call 2
-// resolve 1
+// use function resolve 1
 // call 3
-// resolve 2
+// use function resolve 2
 // call 4
-// resolve 3
+// use function resolve 3
 // call 5
-// resolve 4
+// use function resolve 4
 // call 6
-// resolve 5
+// use function resolve 5
 // call 7
-// resolve 6
+// use function resolve 6
 // call 8
-// resolve 7
+// use function resolve 7
 // call 9
-// resolve 8
+// use function resolve 8
 // call 10
-// resolve 9
-// resolve 10
-// pmMap then [&quot;#1&quot;,&quot;#2&quot;,&quot;#3&quot;,&quot;#4&quot;,&quot;#5&quot;,&quot;#6&quot;,&quot;#7&quot;,&quot;#8&quot;,&quot;#9&quot;,&quot;#10&quot;]
-
-// when run pmMap by takeLimit&lt;=0
+// use function resolve 9
+// use function resolve 10
+// use function then [&quot;#1&quot;,&quot;#2&quot;,&quot;#3&quot;,&quot;#4&quot;,&quot;#5&quot;,&quot;#6&quot;,&quot;#7&quot;,&quot;#8&quot;,&quot;#9&quot;,&quot;#10&quot;]
 // call 1
 // call 2
 // call 3
@@ -27929,17 +27954,17 @@ pmMap(rs, function (v, k) {
 // call 8
 // call 9
 // call 10
-// resolve 1
-// resolve 2
-// resolve 3
-// resolve 4
-// resolve 5
-// resolve 6
-// resolve 7
-// resolve 8
-// resolve 9
-// resolve 10
-// pmMap then [&quot;#1&quot;,&quot;#2&quot;,&quot;#3&quot;,&quot;#4&quot;,&quot;#5&quot;,&quot;#6&quot;,&quot;#7&quot;,&quot;#8&quot;,&quot;#9&quot;,&quot;#10&quot;]</code></pre>
+// use promise resolve 1
+// use promise resolve 2
+// use promise resolve 3
+// use promise resolve 4
+// use promise resolve 5
+// use promise resolve 6
+// use promise resolve 7
+// use promise resolve 8
+// use promise resolve 9
+// use promise resolve 10
+// use promise then [&quot;#1&quot;,&quot;#2&quot;,&quot;#3&quot;,&quot;#4&quot;,&quot;#5&quot;,&quot;#6&quot;,&quot;#7&quot;,&quot;#8&quot;,&quot;#9&quot;,&quot;#10&quot;]</code></pre>
         </div>
 
 
@@ -28140,7 +28165,7 @@ pmMap(rs, function (v, k) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmSeries.mjs.html">pmSeries.mjs</a>, <a href="pmSeries.mjs.html#line34">line 34</a>
+        <a href="pmSeries.mjs.html">pmSeries.mjs</a>, <a href="pmSeries.mjs.html#line59">line 59</a>
     </li></ul></dd>
     
 
@@ -28180,8 +28205,8 @@ pmMap(rs, function (v, k) {
 
 
 <div class="description">
-    <p>Promise&#x7684;mapSeries
-&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise</p>
+    <p>Promise&#x7684;mapSeries&#xFF0C;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;promise&#x3002;
+&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise&#x3002;</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.js">Github</a></p>
 </div>
 
@@ -28200,18 +28225,42 @@ pmMap(rs, function (v, k) {
 <pre class="prettyprint"><code>pmSeries([2, 3, 1], function(v, k) {
     return new Promise(function(resolve, reject) {
         setTimeout(function() {
-            console.log(&apos;pmSeries: &apos; + v)
-            resolve(&apos;pmSeries: &apos; + v + &apos;(&apos; + k + &apos;)&apos;)
+            console.log(&apos;use function resolve: &apos; + v)
+            resolve(&apos;use function: &apos; + v + &apos;(&apos; + k + &apos;)&apos;)
         }, 1)
     })
 })
     .then(function(r) {
-        console.log(r)
+        console.log(&apos;use function then&apos;, r)
     })
-// =&gt; pmSeries: 2
-// =&gt; pmSeries: 3
-// =&gt; pmSeries: 1
-// =&gt; [&apos;pmSeries: 2(0)&apos;, &apos;pmSeries: 3(1)&apos;, &apos;pmSeries: 1(2)&apos;]</code></pre>
+    .catch(function(err) {
+        console.log(&apos;use function catch&apos;, err)
+    })
+
+let rs = [2, 3, 1].map(function(v, k) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+            console.log(&apos;use promise resolve: &apos; + v)
+            resolve(&apos;use promise: &apos; + v + &apos;(&apos; + k + &apos;)&apos;)
+        }, 1)
+    })
+})
+pmSeries(rs)
+    .then(function(r) {
+        console.log(&apos;use promise then&apos;, r)
+    })
+    .catch(function(err) {
+        console.log(&apos;use promise catch&apos;, err)
+    })
+
+// use promise resolve: 2
+// use promise resolve: 3
+// use promise resolve: 1
+// use promise then [ &apos;use promise: 2(0)&apos;, &apos;use promise: 3(1)&apos;, &apos;use promise: 1(2)&apos; ]
+// use function resolve: 2
+// use function resolve: 3
+// use function resolve: 1
+// use function then [ &apos;use function: 2(0)&apos;, &apos;use function: 3(1)&apos;, &apos;use function: 1(2)&apos; ]</code></pre>
         </div>
 
 
@@ -37345,7 +37394,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Jan 01 2020 22:25:45 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Jan 01 2020 23:03:13 GMT+0800 (GMT+08:00) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -37369,7 +37418,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.3.14/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.3.15/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
