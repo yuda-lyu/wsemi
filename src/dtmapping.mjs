@@ -31,7 +31,7 @@ function dtmapping(dt, keys) {
 
     let r = {}
     each(keys, function(key) {
-        r[key] = get(dt, key)
+        r[key] = get(dt, key, '')
     })
 
     return r
