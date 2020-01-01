@@ -6,8 +6,10 @@ import queue from './queue.mjs'
 
 
 /**
- * Promise的mapSeries
- * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise
+ * Promise的map，可設定同時處理數量。
+ * 若先行產生promise則takeLimit設定會無效，因已先行初始化啟動。
+ * 等同於Bluebird的Promise.map，而concurrency為takeLimit。
+ * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.js Github}
  * @memberOf wsemi
@@ -18,48 +20,71 @@ import queue from './queue.mjs'
  * @example
  *
  * let takeLimit = 2
- * let rs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
  *
- * //pmMap
- * pmMap(rs, function (v, k) {
- *     console.log('call', v)
- *     return new Promise(function(resolve, reject) {
- *         setTimeout(function() {
- *             console.log('resolve', v)
- *             resolve('#' + v)
- *         }, 300)
+ * setTimeout(function() {
+ *
+ *     //通過function調用產生promise, 可受takeLimit控管同時執行數量
+ *     pmMap([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], function (v, k) {
+ *         console.log('call', v)
+ *         return new Promise(function(resolve, reject) {
+ *             setTimeout(function() {
+ *                 console.log('use function resolve', v)
+ *                 resolve('#' + v)
+ *             }, 300)
+ *         })
+ *     }, takeLimit)
+ *         .then(function(res) {
+ *             console.log('use function then', JSON.stringify(res))
+ *         })
+ *         .catch(function(err) {
+ *             console.log('use function catch', err)
+ *         })
+ *
+ * }, 1)
+ *
+ * setTimeout(function() {
+ *
+ *     //先產生promise, 因事先初始化故無法受takeLimit控管
+ *     let rs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function(v, k) {
+ *         console.log('call', v)
+ *         return new Promise(function(resolve, reject) {
+ *             setTimeout(function() {
+ *                 console.log('use promise resolve', v)
+ *                 resolve('#' + v)
+ *             }, 300)
+ *         })
  *     })
- * }, takeLimit)
- *     .then(function(res) {
- *         console.log('pmMap then', JSON.stringify(res))
- *     })
- *     .catch(function(err) {
- *         console.log('pmMap catch', err)
- *     })
+ *     pmMap(rs, null, takeLimit)
+ *         .then(function(res) {
+ *             console.log('use promise then', JSON.stringify(res))
+ *         })
+ *         .catch(function(err) {
+ *             console.log('use promise catch', err)
+ *         })
+ *
+ * }, 3000)
  *
  * // call 1
  * // call 2
- * // resolve 1
+ * // use function resolve 1
  * // call 3
- * // resolve 2
+ * // use function resolve 2
  * // call 4
- * // resolve 3
+ * // use function resolve 3
  * // call 5
- * // resolve 4
+ * // use function resolve 4
  * // call 6
- * // resolve 5
+ * // use function resolve 5
  * // call 7
- * // resolve 6
+ * // use function resolve 6
  * // call 8
- * // resolve 7
+ * // use function resolve 7
  * // call 9
- * // resolve 8
+ * // use function resolve 8
  * // call 10
- * // resolve 9
- * // resolve 10
- * // pmMap then ["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]
- *
- * // when run pmMap by takeLimit<=0
+ * // use function resolve 9
+ * // use function resolve 10
+ * // use function then ["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]
  * // call 1
  * // call 2
  * // call 3
@@ -70,17 +95,17 @@ import queue from './queue.mjs'
  * // call 8
  * // call 9
  * // call 10
- * // resolve 1
- * // resolve 2
- * // resolve 3
- * // resolve 4
- * // resolve 5
- * // resolve 6
- * // resolve 7
- * // resolve 8
- * // resolve 9
- * // resolve 10
- * // pmMap then ["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]
+ * // use promise resolve 1
+ * // use promise resolve 2
+ * // use promise resolve 3
+ * // use promise resolve 4
+ * // use promise resolve 5
+ * // use promise resolve 6
+ * // use promise resolve 7
+ * // use promise resolve 8
+ * // use promise resolve 9
+ * // use promise resolve 10
+ * // use promise then ["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]
  *
  */
 function pmMap(rs, fn, takeLimit = 0) {
@@ -94,13 +119,6 @@ function pmMap(rs, fn, takeLimit = 0) {
     if (!isarr(rs)) {
         pm.reject('rs is not array')
         return pm
-    }
-
-    //default fn
-    if (!isfun(fn)) {
-        fn = function(v) {
-            return v
-        }
     }
 
     //queue
@@ -119,8 +137,17 @@ function pmMap(rs, fn, takeLimit = 0) {
         let v = q.get()
         //console.log('get', v)
 
-        //fn
-        fn(v.value, v.key)
+        //pmm
+        let pmm
+        if (isfun(fn)) {
+            pmm = fn(v.value, v.key)
+        }
+        else {
+            pmm = v.value
+        }
+
+        //then and catch
+        pmm
             .then((res) => {
 
                 //push
