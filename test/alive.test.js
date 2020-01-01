@@ -18,7 +18,7 @@ describe(`alive`, function() {
 
         setTimeout(() => {
             //console.log('trigger a2')
-            oAL.trigger('a', { data: 123 })
+            oAL.trigger('a', a)
         }, 2000)
 
         setTimeout(() => {

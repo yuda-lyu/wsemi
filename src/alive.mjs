@@ -16,8 +16,8 @@ import haskey from './haskey.mjs'
  * @example
  * let oAL = alive(1500)
  *
- * let a = { data: 123 }
- * let b = { data: '34.56' }
+ * let a = { value: 123 }
+ * let b = { value: '34.56' }
  * let m = []
  *
  * setTimeout(() => {
@@ -27,7 +27,7 @@ import haskey from './haskey.mjs'
  *
  * setTimeout(() => {
  *     console.log('trigger a2')
- *     oAL.trigger('a', { data: 123 })
+ *     oAL.trigger('a', a)
  * }, 2000)
  *
  * setTimeout(() => {
@@ -49,15 +49,15 @@ import haskey from './haskey.mjs'
  *     m.push(eventName + '|' + key)
  * })
  * // trigger a1
- * // { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
+ * // { eventName: 'enter', key: 'a', data: { value: 123 }, now: 1 }
  * // trigger b1
- * // { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
+ * // { eventName: 'enter', key: 'b', data: { value: '34.56' }, now: 2 }
  * // trigger a2
- * // { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }
+ * // { eventName: 'leave', key: 'b', data: { value: '34.56' }, now: 1 }
  * // trigger b2
- * // { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
- * // { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }
- * // { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }
+ * // { eventName: 'enter', key: 'b', data: { value: '34.56' }, now: 2 }
+ * // { eventName: 'leave', key: 'a', data: { value: 123 }, now: 1 }
+ * // { eventName: 'leave', key: 'b', data: { value: '34.56' }, now: 0 }
  * // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
  */
 function alive(timeAlive = 10000) {
@@ -126,8 +126,17 @@ function alive(timeAlive = 10000) {
 
     }
 
-    //save trigger
+    function get() {
+        let rs = []
+        each(q, (v, k) => {
+            rs.push({ key: k, data: v.data })
+        })
+        return rs
+    }
+
+    //save
     ev.trigger = trigger
+    ev.get = get
 
     return ev
 }
