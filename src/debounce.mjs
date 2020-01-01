@@ -1,10 +1,8 @@
 import each from 'lodash/each'
-import last from 'lodash/last'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
 import isint from './isint.mjs'
-import haskey from './haskey.mjs'
 
 
 let q = {} //queue
@@ -20,10 +18,11 @@ function detect() {
 
         //detect
         each(q, (v, key) => {
-            let vv = last(v)
-            let tt = Date.now() - vv.time
-            if (tt > vv.ms) {
-                vv.func() //最後1筆超過指定延時則呼叫指定func
+            let t = Date.now() - v.time
+            if (t > v.ms) { //超過指定延時則呼叫指定func
+                if (isfun(v.func)) {
+                    v.func()
+                }
                 delete q[key] //刪除佇列內key紀錄
             }
         })
@@ -37,12 +36,13 @@ function detect() {
     }, 10) //10ms偵測, 啟動後跑timer, 無佇列則會停止減耗
 }
 
+
 /**
  * 函數去除抖動
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.js Github}
  * @memberOf wsemi
- * @param {String}} key 輸入標記用關鍵字字串
+ * @param {String} key 輸入標記用關鍵字字串
  * @param {Function} f 輸入調用函數
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
  * @example
@@ -75,7 +75,6 @@ function detect() {
  */
 function debounce(key, func, ms = 300) {
 
-
     //check
     if (!isestr(key)) {
         console.log('need key')
@@ -90,13 +89,8 @@ function debounce(key, func, ms = 300) {
         return
     }
 
-    //check
-    if (!haskey(q, key)) {
-        q[key] = []
-    }
-
-    //push
-    q[key].push({ func, ms, time: Date.now() })
+    //update
+    q[key] = { func, ms, time: Date.now() }
 
     //detect
     detect()
