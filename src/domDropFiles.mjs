@@ -1,4 +1,4 @@
-import Mitt from 'mitt'
+import Evem from './evem.mjs'
 
 
 /**
@@ -16,7 +16,7 @@ function domDropFiles(ele) {
     let bMouseInTemp = false
 
     //ev
-    let ev = new Mitt()
+    let ev = new Evem()
 
     //addEventListener
     ele.addEventListener('dragenter', dgDragin, false)

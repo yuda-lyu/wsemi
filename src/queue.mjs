@@ -1,4 +1,4 @@
-import mitt from 'mitt'
+import Evem from './evem.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 
@@ -151,7 +151,7 @@ function queue(takeLimit = 0) {
     takeLimit = cint(takeLimit)
 
     //ev
-    let ev = mitt()
+    let ev = new Evem()
 
     //get, like iterator
     function get() {
