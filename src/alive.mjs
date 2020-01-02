@@ -112,10 +112,12 @@ function alive(timeAlive = 10000) {
 
         //check
         if (!haskey(q, key)) {
+            setTimeout(() => { //因需判斷是否為新單元故放於update前, 而emit內可能會被存取q故需要用setTimeout脫勾, 而此時q已經被更新, size即為當前單元數量
 
-            //emit enter
-            ev.emit('message', { eventName: 'enter', key, data, now: size(q) + 1 })
+                //emit enter
+                ev.emit('message', { eventName: 'enter', key, data, now: size(q) })
 
+            }, 1)
         }
 
         //update
