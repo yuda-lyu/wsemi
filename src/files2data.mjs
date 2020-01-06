@@ -1,20 +1,21 @@
 import map from 'lodash/map'
 import genPm from './genPm.mjs'
-import files2b64s from './files2b64s.mjs'
+import blobs2b64s from './blobs2b64s.mjs'
 import ltdtmerge from './ltdtmerge.mjs'
 
 
 /**
- * 前端input檔案物件轉Uint8Array資料陣列
+ * 前端input檔案物件陣列轉資料物件陣列，各檔案將轉為Base64字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/files2data.test.js Github}
  * @memberOf wsemi
- * @param {Array} files 輸入file物件陣列
- * @returns {Promise} 回傳Promise，resolve回傳檔案的Uint8Array資料陣列
+ * @param {Array} files 輸入File陣列
+ * @returns {Promise} 回傳Promise，resolve回傳File的資料物件陣列，各檔案將轉為Base64字串
  * @example
  * need test in browser
  */
 function files2data(files) {
+    //若輸入Blob陣列, 不會有name, 故只能輸入File陣列
 
     //pm
     let pm = genPm()
@@ -28,8 +29,8 @@ function files2data(files) {
         }
     })
 
-    //files2b64s
-    files2b64s(files)
+    //blobs2b64s
+    blobs2b64s(files)
         .then(function(b64s) {
 
             //bs

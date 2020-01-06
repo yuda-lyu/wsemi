@@ -176,7 +176,7 @@ function getFileAccept(groupBy = '') {
         {
             name: 'dat',
             group: 'data',
-            acp: 'application/octet-streamt',
+            acp: 'application/octet-stream',
             exec: 'binaryviwer',
         },
     ]

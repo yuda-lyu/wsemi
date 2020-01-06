@@ -8,7 +8,7 @@ import haskey from './haskey.mjs'
 
 
 /**
- * 判斷是否單元在線
+ * 偵測單元是否在線
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/alive.test.js Github}
  * @memberOf wsemi

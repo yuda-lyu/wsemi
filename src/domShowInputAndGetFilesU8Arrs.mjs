@@ -2,7 +2,7 @@ import size from 'lodash/size'
 import each from 'lodash/each'
 import genPm from './genPm.mjs'
 import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
-import files2u8arrs from './files2u8arrs.mjs'
+import blobs2u8arrs from './blobs2u8arrs.mjs'
 
 
 /**
@@ -54,7 +54,7 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
                 })
             })
 
-            return files2u8arrs(files)
+            return blobs2u8arrs(files)
         })
         .then(function(u8as) {
 

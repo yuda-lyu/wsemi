@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import files2u8arrs from '../src/files2u8arrs.mjs'
+//import blob2u8arr from '../src/blob2u8arr.mjs'
 
 
-describe(`files2u8arrs`, function() {
+describe(`blob2u8arr`, function() {
 
     it(`need test in browser`, function() {
         assert.strict.deepEqual(1, 1)
