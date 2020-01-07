@@ -1,6 +1,5 @@
 import assert from 'assert'
 import str2u8arr from '../src/str2u8arr.mjs'
-import u8arr2ab from '../src/u8arr2ab.mjs'
 
 
 describe(`str2u8arr`, function() {

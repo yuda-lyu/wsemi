@@ -19,13 +19,14 @@ describe(`bufWrite`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should get ${k} from buffer when input '1.25', ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
-        let b = Buffer.alloc(8)
-        bufWrite('1.25', b, offset, isBE, mLen, nBytes)
-        let r = new Uint8Array(b)
-        let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
-    })
+    //'1.25'可自動轉數字故為有效
+    // it(`should get ${k} from buffer when input '1.25', ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
+    //     let b = Buffer.alloc(8)
+    //     bufWrite('1.25', b, offset, isBE, mLen, nBytes)
+    //     let r = new Uint8Array(b)
+    //     let rr = new Uint8Array(Buffer.alloc(8))
+    //     assert.strict.deepEqual(r, rr)
+    // })
 
     it(`should get ${k} from buffer when input '', ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let b = Buffer.alloc(8)
