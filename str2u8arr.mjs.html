@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>cfilesize.mjs - Documentation</title>
+    <title>str2u8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">cfilesize.mjs</h1>
+    <h1 class="page-title">str2u8arr.mjs</h1>
     
 
     
@@ -42,56 +42,43 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
-import dig from './dig.mjs'
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+import str2b64 from './str2b64.mjs'
+import b642u8arr from './b642u8arr.mjs'
 
 
 /**
- * 檔案大小(kb)自動轉換單位
- * 可調整檔案大小為kb,mb,g，並添加單位
- * 若輸入不是數字或字串時則回傳空字串
+ * 字串轉Uint8Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfilesize.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2u8arr.test.js Github}
  * @memberOf wsemi
- * @param {Number|String} kb 輸入單位需為kb的檔案大小，可為數字或字串
- * @returns {String} 回傳自動轉換單位後的字串
+ * @param {String} str 輸入一般字串
+ * @returns {Uint8Array} 回傳Uint8Array
  * @example
- * console.log(cfilesize(0))
- * // => '0.0 kb'
- *
- * console.log(cfilesize(100))
- * // => '100.0 kb'
- *
- * console.log(cfilesize(2048))
- * // => '2.0 mb'
- *
- * console.log(cfilesize(2000000))
- * // => '1.9 gb'
+ * console.log(str2u8arr('test中文'))
+ * // => Uint8Array [116, 101, 115, 116, 228, 184, 173, 230, 150, 135]
  */
-function cfilesize(kb) {
+function str2u8arr(str) {
 
     //check
-    if (!isnum(kb)) {
-        return ''
+    if (!isestr(str)) {
+        return new Uint8Array()
     }
 
-    kb = cdbl(kb)
-    if (kb &lt; 1024) {
-        return dig(kb, 1) + ' kb'
+    //r
+    let r
+    try {
+        r = b642u8arr(str2b64(str))
     }
-    else if (kb &lt; 1024 * 1024) {
-        return dig(kb / 1024, 1) + ' mb'
-    }
-    else if (kb &lt; 1024 * 1024 * 1024) {
-        return dig(kb / 1024 / 1024, 1) + ' gb'
+    catch (err) {
+        return new Uint8Array()
     }
 
-    return ''
+    return r
 }
 
 
-export default cfilesize
+export default str2u8arr
 </code></pre>
         </article>
     </section>
