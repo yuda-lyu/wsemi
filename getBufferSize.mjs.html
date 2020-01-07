@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>timeTZ2min.mjs - Documentation</title>
+    <title>getBufferSize.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">timeTZ2min.mjs</h1>
+    <h1 class="page-title">getBufferSize.mjs</h1>
     
 
     
@@ -42,40 +42,67 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
-import istimeTZ from './istimeTZ.mjs'
-import sepTimeTZ from './sepTimeTZ.mjs'
+            <pre class="prettyprint source linenums"><code>import isab from './isab.mjs'
+import isblob from './isblob.mjs'
+import isu8arr from './isu8arr.mjs'
+import isu16arr from './isu16arr.mjs'
 
 
 /**
- * 秒時間取至分時間
+ * 計算Uint8Array(Nodejs,Browser)或Buffer(Nodejs)的大小
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2min.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getBufferSize.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入秒時間字串
- * @returns {String} 回傳分時間字串
+ * @param {Unit8Array|Buffer} buf 傳入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)
+ * @returns {Integer} 回傳Uint8Array(Nodejs,Browser)或Buffer(Nodejs)的大小
  * @example
- * console.log(timeTZ2min('2019-01-01T12:34:56+08:00'))
- * // => '2019-01-01T12:34'
+ * let u8a = new Uint8Array([1, 2, 3, 123])
+ * console.log(getBufferSize(u8a))
+ * // => 4
+ *
+ * let buf = Buffer.alloc(8)
+ * console.log(getBufferSize(buf))
+ * // => 8
  */
-function timeTZ2min(t) {
+function getBufferSize(buf) {
 
     //check
-    if (!istimeTZ(t)) {
-        return ''
+    if (isab(buf) || isblob(buf) || isu8arr(buf) || isu16arr(buf)) {
+    }
+    else {
+        return null
     }
 
-    //sepTimeTZ
-    let o = sepTimeTZ(t)
+    //byteLength
+    try {
+        if (buf.byteLength) {
+            return buf.byteLength
+        }
+    }
+    catch (err) {}
 
-    let d = ot(o.t, 'YYYY-MM-DDTHH:mm:ss')
-    let r = d.format('YYYY-MM-DDTHH:mm')
+    //length
+    try {
+        if (buf.length) {
+            return buf.length
+        }
+    }
+    catch (err) {}
 
-    return r
+    //size
+    try {
+        if (buf.size) {
+            return buf.size
+        }
+    }
+    catch (err) {}
+
+    return null
+
 }
 
 
-export default timeTZ2min
+export default getBufferSize
 </code></pre>
         </article>
     </section>
