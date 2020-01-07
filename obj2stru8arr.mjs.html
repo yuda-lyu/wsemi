@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>arrdiff.mjs - Documentation</title>
+    <title>obj2stru8arr.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">arrdiff.mjs</h1>
+    <h1 class="page-title">obj2stru8arr.mjs</h1>
     
 
     
@@ -42,119 +42,89 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
-import find from 'lodash/find'
-import isEqual from 'lodash/isEqual'
-import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
-import iser from './iser.mjs'
-import haskey from './haskey.mjs'
+            <pre class="prettyprint source linenums"><code>import isobj from './isobj.mjs'
+import isobj0 from './isobj0.mjs'
+import isu8arr from './isu8arr.mjs'
+import isu16arr from './isu16arr.mjs'
 
 
 /**
- * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
+ * 物件資料轉字串與Unit8Array，物件內可含Unit8Array數據，適用於大檔。
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrdiff.test.js Github}
+ * 通過JSON序列化物件內非Unit8Array數據成為字串，另分拆Unit8Array數據出來回傳，兩者間通過指標關聯，主要為避免序列化大型Unit8Array數據造成效能或記憶體不足問題
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.js Github}
  * @memberOf wsemi
- * @param {Array|Object} vold 輸入舊的物件陣列或物件
- * @param {Array|Object} vnew 輸入新的物件陣列或物件
- * @param {String} key 輸入比對的主鍵key值字串
- * @returns {Object} 回傳比對結果物件
+ * @param {*} data 輸入任意資料
+ * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據
  * @example
- * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
- * // => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }
- *
- * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
- * // => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }
+ * let data = {
+ *     a: 123,
+ *     b: 45.67,
+ *     c: 'l1-測試中文',
+ *     d: {
+ *         da: 123,
+ *         db: 45.67,
+ *         dc: 'l2-測試中文',
+ *         dd: ['a', 'xyz', 321, 76.54],
+ *         de: new Uint8Array([66, 97, 115]),
+ *     },
+ * }
+ * let r = obj2stru8arr(data)
+ * console.log(r)
+ * // => {
+ * //     results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[Uint8Array]::0"}}',
+ * //     binarys: [ Uint8Array [ 66, 97, 115 ] ]
+ * // }
  */
-function arrdiff(vold, vnew, key) {
+function obj2stru8arr(o) {
 
     //check
-    if (!isestr(key)) {
-        return {}
+    if (!isobj(o)) {
+        return {
+            results: '',
+            binarys: []
+        }
+    }
+    if (isobj0(o)) {
+        return {
+            results: '{}',
+            binarys: []
+        }
     }
 
-    //to array
-    if (!isearr(vold)) {
-        vold = [vold]
-    }
-    if (!isearr(vnew)) {
-        vnew = [vnew]
-    }
+    let r = ''
+    let bs = []
+    try {
 
-    //check obj and key
-    let haveKey = 0
-    each(vold, function(v) {
-        if (iser(v)) {
-            return {}
-        }
-        if (haskey(v, key)) {
-            haveKey = 1
-        }
-    })
-    if (haveKey === 0) {
-        return {}
-    }
-    each(vnew, function(v) {
-        if (iser(v)) {
-            return {}
-        }
-        if (haskey(v, key)) {
-            haveKey = 2
-        }
-    })
-    if (haveKey === 1) {
-        return {}
-    }
-
-    //vinfor,vdel, vdiff, vsame
-    let vinfor = {}
-    let vdel = []
-    let vdiff = []
-    let vsame = []
-    each(vold, function(v) {
-        let q = {}
-        q[key] = v[key]
-        let o = find(vnew, q)
-        if (iser(o)) {
-            vdel.push(v) //vold需刪去之項目
-            vinfor[v[key]] = 'del'
-        }
-        else {
-            if (isEqual(v, o)) {
-                vsame.push(o) //vsame與vold有同樣之項目
-                vinfor[o[key]] = 'same'
+        let i = -1
+        r = JSON.stringify(o, function(key, value) {
+            if (isu8arr(value)) {
+                i += 1
+                let id = `[Uint8Array]::${i}`
+                bs.push(value)
+                return id
             }
-            else {
-                vdiff.push(o) //vsame對vold有變更之項目
-                vinfor[o[key]] = 'diff'
+            else if (isu16arr(value)) {
+                i += 1
+                let id = `[Uint16Array]::${i}`
+                bs.push(value)
+                return id
             }
-        }
-    })
+            return value
+        })
 
-    //vadd
-    let vadd = []
-    each(vnew, function(v) {
-        let q = {}
-        q[key] = v[key]
-        let o = find(vold, q)
-        if (iser(o)) {
-            vadd.push(v) //vsame對vold有新增之項目
-            vinfor[v[key]] = 'add'
-        }
-    })
+    }
+    catch (err) { }
 
     return {
-        infor: vinfor,
-        del: vdel,
-        same: vsame,
-        diff: vdiff,
-        add: vadd,
+        results: r,
+        binarys: bs
     }
 }
 
 
-export default arrdiff
+export default obj2stru8arr
 </code></pre>
         </article>
     </section>
