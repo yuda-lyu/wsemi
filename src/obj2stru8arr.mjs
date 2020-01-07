@@ -44,7 +44,7 @@ function obj2stru8arr(o) {
     }
     if (isobj0(o)) {
         return {
-            results: '{}',
+            results: '',
             binarys: []
         }
     }

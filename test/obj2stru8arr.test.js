@@ -21,7 +21,7 @@ describe(`obj2stru8arr`, function() {
     }
     let cout = `{ results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[Uint8Array]::0"}}', binarys: [ Uint8Array [ 66, 97, 115 ] ] }`
     let empty = {
-        results: '{}',
+        results: '',
         binarys: []
     }
     let cempty = `{ results: '{}', binarys: [] }`
