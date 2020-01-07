@@ -6,8 +6,8 @@ import isu16arr from './isu16arr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2u8arr.test.js Github}
  * @memberOf wsemi
- * @param {Array} u16a 輸入Uint16Array
- * @returns {Array} 回傳Uint8Array
+ * @param {Uint16Array} u16a 輸入Uint16Array
+ * @returns {Uint8Array} 回傳Uint8Array
  * @example
  * console.log(u16arr2u8arr(new Uint16Array([66, 97, 115])))
  * // => new Uint8Array([66, 97, 115])

@@ -8,7 +8,7 @@ import isu8arr from './isu8arr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2b64.test.js Github}
  * @memberOf wsemi
- * @param {Array} u8a 輸入Uint8Array
+ * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {String} 回傳base64字串
  * @example
  * console.log(u8arr2b64(new Uint8Array([1, 2.3, '45', 'abc'])))

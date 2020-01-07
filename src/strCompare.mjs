@@ -39,7 +39,9 @@ function core(s1, s2) {
 
 
 /**
- * 計算2字串相似度，主要來自[Fork: {@link https://github.com/aceakash/string-similarity string-similarity}]
+ * 計算2字串相似度
+ *
+ * Fork: {@link https://github.com/aceakash/string-similarity string-similarity}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.js Github}
  * @memberOf wsemi

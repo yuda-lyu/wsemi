@@ -8,6 +8,8 @@ import cdbl from './cdbl.mjs'
 /**
  * 寫入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
  *
+ * Fork: {@link https://github.com/toots/buffer-browserify buffer-browserify}
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWrite.test.js Github}
  * @memberOf wsemi
  * @param {Number} value 輸入數字

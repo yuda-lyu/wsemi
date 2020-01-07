@@ -2,11 +2,11 @@ import isestr from './isestr.mjs'
 
 
 /**
- * BinaryString資料轉Unit8Array，BinaryString為UTF-16編碼
+ * BinaryString轉Unit8Array，BinaryString為UTF-16編碼
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.js Github}
  * @memberOf wsemi
- * @param {String} bs 輸入BinaryString資料
+ * @param {String} bs 輸入BinaryString字串
  * @returns {Unit8Array} 回傳Unit8Array資料
  * @example
  * console.log(bs2u8arr('abc'))

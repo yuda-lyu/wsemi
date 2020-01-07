@@ -6,6 +6,8 @@ import isbol from './isbol.mjs'
 /**
  * 讀取Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
  *
+ * Fork: {@link https://github.com/toots/buffer-browserify buffer-browserify}
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufRead.test.js Github}
  * @memberOf wsemi
  * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料

@@ -8,7 +8,7 @@ import isstr from './isstr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642u8arr.test.js Github}
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
- * @returns {Array} 回傳Uint8Array
+ * @returns {Uint8Array} 回傳Uint8Array
  * @example
  * console.log(b642u8arr('AQItAA=='))
  * // => new Uint8Array([1, 2.3, '45', 'abc'])

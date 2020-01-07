@@ -7,7 +7,7 @@ import blob2u8arr from './blob2u8arr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blobs2u8arrs.test.js Github}
  * @memberOf wsemi
- * @param {Array} bbs 輸入Blob或File陣列
+ * @param {Blob|File} bbs 輸入Blob或File陣列
  * @returns {Promise} 回傳Promise，resolve回傳各Blob或File的Uint8Array資料陣列，reject回傳錯誤訊息
  * @example
  * need test in browser

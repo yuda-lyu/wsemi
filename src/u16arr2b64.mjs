@@ -8,7 +8,7 @@ import u8arr2b64 from './u8arr2b64.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.js Github}
  * @memberOf wsemi
- * @param {Array} u16a 輸入Uint16Array
+ * @param {Uint16Array} u16a 輸入Uint16Array
  * @returns {String} 回傳base64字串
  * @example
  * console.log(u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc'])))

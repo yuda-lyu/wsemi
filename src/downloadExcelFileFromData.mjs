@@ -106,7 +106,7 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
         //wb
         let wb = getWB(csn, data)
 
-        //ArrayBuffer to BinaryString(Uint8Array)
+        //BinaryString(Uint8Array) to Uint8Array
         let u8a = bs2u8arr(wb)
 
         //downloadFileFromU8Arr

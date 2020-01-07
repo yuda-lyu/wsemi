@@ -7,7 +7,7 @@ import blob2b64 from './blob2b64.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blobs2b64s.test.js Github}
  * @memberOf wsemi
- * @param {Array} bbs 輸入Blob或File陣列
+ * @param {Blob|File} bbs 輸入Blob或File陣列
  * @returns {Promise} 回傳Promise，resolve回傳各Blob或File的Base64資料，reject回傳錯誤訊息
  * @example
  * need test in browser

@@ -6,7 +6,7 @@ import isu8arr from './isu8arr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2ab.test.js Github}
  * @memberOf wsemi
- * @param {Array} u8a 輸入Uint8Array
+ * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {ArrayBuffer} 回傳ArrayBuffer
  * @example
  * console.log(u8arr2ab(new Uint8Array([66, 97, 115])))
