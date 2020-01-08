@@ -7,8 +7,21 @@ import str2u8arr from './str2u8arr.mjs'
 import bufWriteDbl from './bufWriteDbl.mjs'
 
 
+// function concatU8arr(a, b) {
+//     return Uint8Array.from([...a, ...b])
+// }
 function concatU8arr(a, b) {
-    return Uint8Array.from([...a, ...b])
+    let r = new Uint8Array(a.length + b.length)
+    let k = -1
+    for (let i = 0; i < a.length; i++) {
+        k += 1
+        r[k] = a[i]
+    }
+    for (let i = 0; i < b.length; i++) {
+        k += 1
+        r[k] = b[i]
+    }
+    return r
 }
 
 
