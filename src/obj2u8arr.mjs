@@ -7,7 +7,7 @@ import str2u8arr from './str2u8arr.mjs'
 import bufWriteDbl from './bufWriteDbl.mjs'
 
 
-// function concatU8arr(a, b) {
+// function concatU8arr(a, b) { //處理大檔時Nodejs記憶體會不足
 //     return Uint8Array.from([...a, ...b])
 // }
 function concatU8arr(a, b) {

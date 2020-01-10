@@ -59,7 +59,7 @@ function treeObj(data, hookFun = null) {
 
     //check
     if (!isFunction(hookFun)) {
-        hookFun = (key, value) => {
+        hookFun = (value) => {
             return value
         }
     }
@@ -111,7 +111,7 @@ function treeObj(data, hookFun = null) {
     function pSelf({ key, value }) {
 
         //hookFun
-        value = hookFun(key, value)
+        value = hookFun(value, key, nowKey)
 
         //getType
         let t = getType(value)
