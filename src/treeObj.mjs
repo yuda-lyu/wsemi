@@ -4,6 +4,7 @@ import isBoolean from 'lodash/isBoolean'
 import isFunction from 'lodash/isFunction'
 import size from 'lodash/size'
 import set from 'lodash/set'
+import slice from 'lodash/slice'
 import isarr from './isarr.mjs'
 import isarr0 from './isarr0.mjs'
 import isobj from './isobj.mjs'
@@ -111,7 +112,8 @@ function treeObj(data, hookFun = null) {
     function pSelf({ key, value }) {
 
         //hookFun
-        value = hookFun(value, key, nowKey)
+        let nk = slice(nowKey, 1)
+        value = hookFun(value, key, nk)
 
         //getType
         let t = getType(value)
