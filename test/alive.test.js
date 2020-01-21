@@ -12,22 +12,22 @@ describe(`alive`, function() {
         let m = []
 
         setTimeout(() => {
-            //console.log('trigger a1')
+            //console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
             oAL.trigger('a', a)
         }, 500)
 
         setTimeout(() => {
-            //console.log('trigger a2')
+            //console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
             oAL.trigger('a', a)
-        }, 2000)
+        }, 1900)
 
         setTimeout(() => {
-            //console.log('trigger b1')
+            //console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
             oAL.trigger('b', b)
         }, 1000)
 
         setTimeout(() => {
-            //console.log('trigger b2')
+            //console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
             oAL.trigger('b', b)
         }, 3000)
 
@@ -37,7 +37,7 @@ describe(`alive`, function() {
         }, 5000)
 
         oAL.on('message', function({ eventName, key, data, now }) {
-            //console.log({ eventName, key, data, now })
+            //console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
             m.push(eventName + '|' + key)
         })
 

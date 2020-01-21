@@ -15,49 +15,51 @@ import haskey from './haskey.mjs'
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000，實體化後通過呼叫其內trigger事件，係給予單元的唯一key字串與攜帶數據data物件，即可監聽on事件名稱message取得單元進出事件
  * @example
  * let oAL = alive(1500)
+ * let t = new Date()
  *
- * let a = { value: 123 }
- * let b = { value: '34.56' }
+ * let a = { data: 123 }
+ * let b = { data: '34.56' }
  * let m = []
  *
  * setTimeout(() => {
- *     console.log('trigger a1')
+ *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
  *     oAL.trigger('a', a)
  * }, 500)
  *
  * setTimeout(() => {
- *     console.log('trigger a2')
+ *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
  *     oAL.trigger('a', a)
- * }, 2000)
+ * }, 1900)
  *
  * setTimeout(() => {
- *     console.log('trigger b1')
+ *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
  *     oAL.trigger('b', b)
  * }, 1000)
  *
  * setTimeout(() => {
- *     console.log('trigger b2')
+ *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
  *     oAL.trigger('b', b)
  * }, 3000)
  *
  * setTimeout(() => {
  *     console.log(JSON.stringify(m))
+ *     //assert.strict.deepEqual(JSON.stringify(m), '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]')
  * }, 5000)
  *
  * oAL.on('message', function({ eventName, key, data, now }) {
- *     console.log({ eventName, key, data, now })
+ *     console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
  *     m.push(eventName + '|' + key)
  * })
- * // trigger a1
- * // { eventName: 'enter', key: 'a', data: { value: 123 }, now: 1 }
- * // trigger b1
- * // { eventName: 'enter', key: 'b', data: { value: '34.56' }, now: 2 }
- * // trigger a2
- * // { eventName: 'leave', key: 'b', data: { value: '34.56' }, now: 1 }
- * // trigger b2
- * // { eventName: 'enter', key: 'b', data: { value: '34.56' }, now: 2 }
- * // { eventName: 'leave', key: 'a', data: { value: 123 }, now: 1 }
- * // { eventName: 'leave', key: 'b', data: { value: '34.56' }, now: 0 }
+ * // 501ms trigger a1
+ * // 504ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
+ * // 1001ms trigger b1
+ * // 1004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
+ * // 1901ms trigger a2
+ * // 2506ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }
+ * // 3001ms trigger b2
+ * // 3005ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
+ * // 3404ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }
+ * // 4511ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }
  * // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
  */
 function alive(timeAlive = 10000) {

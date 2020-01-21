@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>replaceObj.mjs - Documentation</title>
+    <title>cbol.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">replaceObj.mjs</h1>
+    <h1 class="page-title">cbol.mjs</h1>
     
 
     
@@ -42,55 +42,63 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
-import isstr from './isstr.mjs'
+            <pre class="prettyprint source linenums"><code>import toLower from 'lodash/toLower'
+import trim from 'lodash/trim'
+import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
-import iseobj from './iseobj.mjs'
-import replace from './replace.mjs'
 
 
 /**
- * 取代字串，由c內大括號會標記為被取代的{key}，再由物件o的key所對應value進行取代，而各value皆需要為有效字串
+ * 布林值或字串轉布林值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/replaceObj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cbol.test.js Github}
  * @memberOf wsemi
- * @param {String} c 輸入要被取代的字串
- * @param {Object} o 輸入用來取代的key,value物件
- * @returns {String} 回傳取代後字串
+ * @param {*} v 輸入任意值
+ * @returns {Boolean} 回傳布林值
  * @example
- * console.log(replaceObj('1.25abc中文', { '5a': '0', '中': '英' }))
- * // => '1.20bc英文'
+ * console.log(cbol(true))
+ * // => true
+ * console.log(cbol(false))
+ * // => false
+ * console.log(cbol('true'))
+ * // => true
+ * console.log(cbol('tRuE'))
+ * // => true
+ * console.log(cbol('TRUE'))
+ * // => true
+ * console.log(cbol('abc'))
+ * // => false
+ * console.log(cbol(''))
+ * // => false
+ * console.log(cbol([]))
+ * // => false
+ * console.log(cbol({}))
+ * // => false
+ * console.log(cbol(null))
+ * // => false
+ * console.log(cbol(undefined))
+ * // => false
  */
-function replaceObj(c, o) {
+function cbol(v) {
 
-    //check
-    if (!isestr(c)) {
-        return ''
-    }
-    if (!iseobj(o)) {
-        return ''
+    //cehck
+    if (isbol(v)) {
+        return v
     }
 
-    //check obj value(replace string)
-    let b = false
-    each(o, function(v, k) {
-        if (!isstr(v)) { //允許空字串
-            b = true
+    let r = false
+    if (isestr(v)) {
+        v = toLower(trim(v))
+        if (v === 'true') {
+            r = true
         }
-    })
-    if (b) {
-        return ''
     }
 
-    each(o, function(v, k) {
-        c = replace(c, k, v)
-    })
-
-    return c
+    return r
 }
 
 
-export default replaceObj
+export default cbol
 </code></pre>
         </article>
     </section>
