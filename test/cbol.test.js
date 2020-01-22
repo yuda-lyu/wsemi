@@ -14,6 +14,16 @@ describe(`cbol`, function() {
         assert.strict.deepEqual(r, false)
     })
 
+    it(`should return false when input 0`, function() {
+        let r = cbol(0)
+        assert.strict.deepEqual(r, false)
+    })
+
+    it(`should return true when input 1`, function() {
+        let r = cbol(1)
+        assert.strict.deepEqual(r, true)
+    })
+
     it(`should return true when input 'true'`, function() {
         let r = cbol('true')
         assert.strict.deepEqual(r, true)

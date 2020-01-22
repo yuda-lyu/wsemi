@@ -16,6 +16,10 @@ import isestr from './isestr.mjs'
  * // => true
  * console.log(cbol(false))
  * // => false
+ * console.log(cbol(0))
+ * // => false
+ * console.log(cbol(1))
+ * // => true
  * console.log(cbol('true'))
  * // => true
  * console.log(cbol('tRuE'))

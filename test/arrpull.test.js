@@ -4,6 +4,12 @@ import arrpull from '../src/arrpull.mjs'
 
 describe(`arrpull`, function() {
 
+    it(`should return [ { x: 2, y: 'y2' } ] when input [{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x'`, function() {
+        let r = arrpull([{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x')
+        let rr = [{ x: 2, y: 'y2' }]
+        assert.strict.deepEqual(r, rr)
+    })
+
     it(`should return [1, '3', 4, '3', 'abc'] when input [1, 2, '3', 4, '3', 'abc'], [2]`, function() {
         let r = arrpull([1, 2, '3', 4, '3', 'abc'], [2])
         let rr = [1, '3', 4, '3', 'abc']

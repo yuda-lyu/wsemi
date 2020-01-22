@@ -2130,7 +2130,7 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrdiff.mjs.html">arrdiff.mjs</a>, <a href="arrdiff.mjs.html#line26">line 26</a>
+        <a href="arrdiff.mjs.html">arrdiff.mjs</a>, <a href="arrdiff.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -2186,7 +2186,10 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrdiff&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;))
+<pre class="prettyprint"><code>console.log(arrdiff([{ x: &apos;xa&apos;, y: &apos;y1&apos; }, { x: &apos;xb&apos;, y: &apos;y2&apos; }], [{ x: &apos;xa&apos;, z: &apos;z3&apos; }], &apos;x&apos;))
+// =&gt; { infor: { xa: &apos;diff&apos;, xb: &apos;del&apos; }, del: [ { x: &apos;xb&apos;, y: &apos;y2&apos; } ], same: [], diff: [ { x: &apos;xa&apos;, z: &apos;z3&apos; } ], add: [] }
+
+console.log(arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;))
 // =&gt; { infor: { pk: &apos;diff&apos; }, del: [], same: [], diff: [{ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 456 }], add: [] }
 
 console.log(arrdiff({ id: &apos;pk&apos;, a: &apos;abc&apos;, b: 123 }, { id: &apos;pk1&apos;, a: &apos;abc&apos;, b: 456 }, &apos;id&apos;))
@@ -2738,7 +2741,7 @@ console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;c
 
     
 
-    <h4 class="name" id=".arrpull"><span class="type-signature">(static) </span>arrpull<span class="signature">(vall, vdel)</span><span class="type-signature"> &#x2192; {Array}</span></h4>
+    <h4 class="name" id=".arrpull"><span class="type-signature">(static) </span>arrpull<span class="signature">(vall, vdel, key<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &#x2192; {Array}</span></h4>
 
     
 
@@ -2750,7 +2753,7 @@ console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;c
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrpull.mjs.html">arrpull.mjs</a>, <a href="arrpull.mjs.html#line21">line 21</a>
+        <a href="arrpull.mjs.html">arrpull.mjs</a>, <a href="arrpull.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -2806,7 +2809,10 @@ console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;c
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrpull&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2]))
+<pre class="prettyprint"><code>console.log(arrpull([{ x: 1, y: &apos;y1&apos; }, { x: 2, y: &apos;y2&apos; }], [{ x: 1, y: &apos;y3&apos; }], &apos;x&apos;))
+// =&gt; [ { x: 2, y: &apos;y2&apos; } ]
+
+console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2]))
 // =&gt; [1, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;]
 
 console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2, &apos;3&apos;]))
@@ -2829,7 +2835,11 @@ console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -2854,7 +2864,19 @@ console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>&#x8F38;&#x5165;&#x8981;&#x88AB;&#x522A;&#x9664;&#x7684;&#x4EFB;&#x610F;&#x8CC7;&#x6599;&#x9663;&#x5217;</p></td>
@@ -2877,10 +2899,61 @@ console.log(arrpull([1, 2, &apos;3&apos;, 4, &apos;3&apos;, &apos;abc&apos;], [2
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>&#x8F38;&#x5165;&#x8981;&#x522A;&#x9664;&#x7684;&#x4EFB;&#x610F;&#x8CC7;&#x6599;&#x9663;&#x5217;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>&#x8F38;&#x5165;&#x8981;&#x6BD4;&#x5C0D;&#x7684;&#x7269;&#x4EF6;key&#x503C;&#xFF0C;&#x6240;&#x50B3;&#x5165;&#x7684;&#x9663;&#x5217;&#x5404;&#x5143;&#x7D20;&#x9700;&#x70BA;&#x7269;&#x4EF6;&#xFF0C;&#x9810;&#x8A2D;null</p></td>
         </tr>
 
     
@@ -6456,7 +6529,7 @@ console.log(new Uint8Array(b))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cbol.mjs.html">cbol.mjs</a>, <a href="cbol.mjs.html#line38">line 38</a>
+        <a href="cbol.mjs.html">cbol.mjs</a>, <a href="cbol.mjs.html#line42">line 42</a>
     </li></ul></dd>
     
 
@@ -6516,6 +6589,10 @@ console.log(new Uint8Array(b))
 // =&gt; true
 console.log(cbol(false))
 // =&gt; false
+console.log(cbol(0))
+// =&gt; false
+console.log(cbol(1))
+// =&gt; true
 console.log(cbol(&apos;true&apos;))
 // =&gt; true
 console.log(cbol(&apos;tRuE&apos;))
@@ -40917,7 +40994,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Jan 22 2020 12:22:42 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Jan 22 2020 15:17:44 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -40941,7 +41018,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.3.32/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.3.33/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
