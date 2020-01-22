@@ -41,6 +41,12 @@ function cbol(v) {
     if (isbol(v)) {
         return v
     }
+    if (v === 0) {
+        return false
+    }
+    if (v === 1) {
+        return true
+    }
 
     let r = false
     if (isestr(v)) {
