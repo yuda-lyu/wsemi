@@ -2,7 +2,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import pullAll from 'lodash/pullAll'
 import every from 'lodash/every'
 import differenceBy from 'lodash/differenceBy'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import isobj from './isobj.mjs'
 
@@ -29,10 +29,10 @@ import isobj from './isobj.mjs'
 function arrpull(vall, vdel, key = null) {
 
     //check
-    if (!isearr(vall)) {
+    if (!isarr(vall)) { //可能會傳空陣列, 故需要isarr
         return []
     }
-    if (!isearr(vdel)) {
+    if (!isarr(vdel)) { //可能會傳空陣列, 故需要isarr
         return []
     }
 
