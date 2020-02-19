@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>o2j.mjs - Documentation</title>
+    <title>domDetect.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">o2j.mjs</h1>
+    <h1 class="page-title">domDetect.mjs</h1>
     
 
     
@@ -42,49 +42,87 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isundefined from './isundefined.mjs'
+            <pre class="prettyprint source linenums"><code>import Evem from './evem.mjs'
+import isfun from './isfun.mjs'
 
 
 /**
- * 任意資料轉json文字
+ * 前端偵測DOM元素resize與display事件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/o2j.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.js Github}
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @param {Boolean} [bFormat=false] 輸入是否格式化布林值，預設為false
- * @returns {String} 回傳json格式字串
+ * @param {Function} f 輸入取得dom函數
+ * @param {Integer} [ms=20] 輸入偵測頻率整數，預設20毫秒
  * @example
- * console.log(o2j([1, '3', 'abc']))
- * // => '[1,"3","abc"]'
- *
- * console.log(o2j({ a: 12.34, b: 'abc' }))
- * // => '{"a":12.34,"b":"abc"}'
+ * need test in browser
  */
-function o2j(v, bFormat = false) {
+function domDetect(f, ms = 20) {
+    let ev = new Evem()
+    let timer
+    let s = {
+        clientWidth: 0,
+        clientHeight: 0,
+    }
 
     //check
-    if (isundefined(v)) {
-        return ''
+    if (!isfun(f)) {
+        return null
     }
 
-    let c = ''
-    try {
-        if (bFormat) {
-            c = JSON.stringify(v, null, 2)
+    //setInterval
+    timer = setInterval(() => {
+
+        //execute
+        let p = f()
+
+        //check
+        if (p) {
+
+            //new size
+            let snew = {
+                clientWidth: p.clientWidth,
+                clientHeight: p.clientHeight,
+            }
+
+            //detect
+            if (s.clientWidth !== snew.clientWidth || s.clientHeight !== snew.clientHeight) {
+                let sold = { ...s }
+                setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
+
+                    //detect resize
+                    if (snew.clientWidth > 0 &amp;&amp; snew.clientHeight > 0) {
+                        ev.emit('resize', { sold, snew, ele: p })
+                    }
+
+                    //detect display
+                    if (s.clientWidth === 0 &amp;&amp; s.clientHeight === 0 &amp;&amp; (snew.clientWidth > 0 || snew.clientHeight > 0)) {
+                        ev.emit('display', { mode: 'show', ele: p })
+                    }
+                    if ((s.clientWidth > 0 || s.clientHeight > 0) &amp;&amp; snew.clientWidth === 0 &amp;&amp; snew.clientHeight === 0) {
+                        ev.emit('display', { mode: 'hide', ele: p })
+                    }
+
+                }, 1)
+            }
+
+            //save
+            s = snew
+
         }
-        else {
-            c = JSON.stringify(v)
-        }
-    }
-    catch (err) {
-        c = ''
+
+
+    }, ms)
+
+    //clear
+    ev.clear = () => {
+        clearInterval(timer)
     }
 
-    return c
+    return ev
 }
 
 
-export default o2j
+export default domDetect
 </code></pre>
         </article>
     </section>

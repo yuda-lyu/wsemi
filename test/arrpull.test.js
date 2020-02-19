@@ -102,7 +102,7 @@ describe(`arrpull`, function() {
 
     it(`should return [] when input ['abc'], []`, function() {
         let r = arrpull(['abc'], [])
-        let rr = []
+        let rr = ['abc']
         assert.strict.deepEqual(r, rr)
     })
 
