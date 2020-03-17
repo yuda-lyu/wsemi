@@ -108,7 +108,7 @@ function alive(timeAlive = 10000) {
 
         //check
         if (!isestr(key)) {
-            console.log('need key')
+            console.log('trigger need key')
             return
         }
 

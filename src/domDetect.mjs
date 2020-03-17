@@ -22,6 +22,7 @@ function domDetect(f, ms = 20) {
 
     //check
     if (!isfun(f)) {
+        console.log('invalid f', f)
         return null
     }
 

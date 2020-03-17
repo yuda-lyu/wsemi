@@ -218,6 +218,9 @@ function pmMap(rs, fn, takeLimit = 0) {
                 //abort
                 abort = true
 
+                //clear
+                q.clear()
+
                 //reject
                 pm.reject(err)
 

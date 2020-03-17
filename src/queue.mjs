@@ -9,7 +9,7 @@ import cint from './cint.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.js Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Object} 回傳佇列處理器物件，包含事件on、push、get、cb。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息
+ * @returns {Object} 回傳佇列處理器物件，包含事件on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列
  * @example
  *
  * //queue, takeLimit=2
@@ -204,10 +204,17 @@ function queue(takeLimit = 0) {
 
     }
 
+    //clear
+    function clear() {
+        takeNow = 0
+        qs = []
+    }
+
     //save
     ev.get = get
     ev.cb = cb
     ev.push = push
+    ev.clear = clear
 
     return ev
 }
