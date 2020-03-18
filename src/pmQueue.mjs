@@ -8,12 +8,12 @@ import delay from './delay.mjs'
 
 
 /**
- * 傳入initial初始值並循序執行Promise陣列
+ * 通過佇列限制與呼叫非同步(Promise)函數
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Object} 回傳佇列處理器物件，包含事件on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列
+ * @returns {Object} 回傳佇列處理器物件，額外提供run函數，第一參數為非同步(Promise)函數，第二參數之後為欲輸入非同步函數之參數，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
  * @example
  *
  * async function fun1(v) {
