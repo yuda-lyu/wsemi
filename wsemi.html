@@ -6551,7 +6551,7 @@ console.log(new Uint8Array(b))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cache.mjs.html">cache.mjs</a>, <a href="cache.mjs.html#line102">line 102</a>
+        <a href="cache.mjs.html">cache.mjs</a>, <a href="cache.mjs.html#line197">line 197</a>
     </li></ul></dd>
     
 
@@ -6607,86 +6607,181 @@ console.log(new Uint8Array(b))
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;cache&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let oc = cache()
+<pre class="prettyprint"><code>function test1() {
+    console.log(&apos;test set and get&apos;)
 
-// oc.on(&apos;message&apos;, (msg) =&gt; {
-//     console.log(&apos;message&apos;, msg)
-// })
-// oc.on(&apos;error&apos;, (msg) =&gt; {
-//     console.log(&apos;error&apos;, msg)
-// })
+    let oc = cache()
 
-let ms = []
-let n = 0
-async function fun(v1, v2) {
-    console.log(&apos;call fun&apos;)
+    // oc.on(&apos;message&apos;, function(msg) {
+    //     console.log(&apos;message&apos;, msg)
+    // })
+    // oc.on(&apos;error&apos;, function(msg) {
+    //     console.log(&apos;error&apos;, msg)
+    // })
+
+    let ms1 = []
+    let n1 = 0
+    function fun1(v1, v2) {
+        console.log(&apos;call fun1&apos;)
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                n1 += 1
+                resolve(v1 + &apos;|&apos; + v2 + &apos;, count=&apos; + n1)
+            }, 300)
+        })
+    }
+
+    oc.set(&apos;fun1&apos;, { execFun: fun1, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 }) //&#x5FEB;&#x53D6;1200ms, &#x4F46;&#x7B2C;1&#x6B21;&#x57F7;&#x884C;&#x5C31;&#x9700;&#x8981;300ms, &#x6545;&#x57F7;&#x884C;&#x5B8C;&#x7562;&#x5F8C;&#x53EA;&#x6703;&#x518D;&#x4FDD;&#x7559;800ms
+    setTimeout(function() {
+    //&#x7B2C;1&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x6C92;&#x6709;&#x5FEB;&#x53D6;&#x53EA;&#x80FD;&#x57F7;&#x884C;&#x53D6;&#x503C;
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 1st&apos;, msg)
+                console.log(&apos;fun1 1st&apos;, msg)
+            })
+    }, 1)
+    setTimeout(function() {
+    //&#x7B2C;2&#x6B21;&#x547C;&#x53EB;(50ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x9084;&#x6C92;&#x5B8C;&#x6210;(&#x8981;&#x5230;300ms), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;1050ms, &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;&#x5C1A;&#x672A;&#x904E;&#x671F;(1200ms), &#x6545;1050ms&#x53D6;&#x503C;&#x6642;&#x6703;&#x62FF;&#x5230;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 2nd&apos;, msg)
+                console.log(&apos;fun1 2nd&apos;, msg)
+            })
+    }, 50)
+    setTimeout(function() {
+    //&#x7B2C;3&#x6B21;&#x547C;&#x53EB;(250ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x9084;&#x6C92;&#x5B8C;&#x6210;(&#x8981;&#x5230;300ms), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;1250ms, &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;&#x5DF2;&#x904E;&#x671F;(1200ms), &#x6545;1250ms&#x53D6;&#x503C;&#x6642;&#x6703;&#x91CD;&#x65B0;&#x57F7;&#x884C;&#x53D6;&#x503C;(count=2)
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 3rd&apos;, msg)
+                console.log(&apos;fun1 3rd&apos;, msg)
+            })
+    }, 250)
+    setTimeout(function() {
+    //&#x7B2C;4&#x6B21;&#x547C;&#x53EB;(500ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x5DF2;&#x7D50;&#x675F;(300ms), &#x4E14;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)&#x672A;&#x904E;&#x671F;(&#x8981;&#x5230;1200ms), &#x6545;get&#x53EF;&#x62FF;&#x5230;&#x7B2C;1&#x6B21;&#x8A08;&#x7B97;&#x7684;&#x5FEB;&#x53D6;(count=1)
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 4th&apos;, msg)
+                console.log(&apos;fun1 4th&apos;, msg)
+            })
+    }, 500)
+    setTimeout(function() {
+    //&#x7B2C;5&#x6B21;&#x547C;&#x53EB;(1300ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)&#x5DF2;&#x904E;&#x671F;(1200ms), &#x4F46;&#x7B2C;3&#x6B21;&#x5DF2;&#x91CD;&#x65B0;&#x57F7;&#x884C;&#x53D6;&#x503C;(1250~1550ms&#x57F7;&#x884C;, 2450ms&#x904E;&#x671F;), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;2300ms, &#x4E14;&#x6B64;&#x6642;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)&#x5C1A;&#x672A;&#x904E;&#x671F;(2450ms), &#x6B64;&#x6642;&#x5C31;&#x6703;&#x62FF;&#x5230;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 5th&apos;, msg)
+                console.log(&apos;fun1 5th&apos;, msg)
+            })
+    }, 1300)
+    setTimeout(function() {
+    //&#x7B2C;6&#x6B21;&#x547C;&#x53EB;(1600ms), &#x6B64;&#x6642;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)&#x9084;&#x5728;&#x6709;&#x6548;&#x671F;(1550ms&#x57F7;&#x884C;&#x7D50;&#x675F;, 2450ms&#x904E;&#x671F;), &#x6545;get&#x6703;&#x62FF;&#x5230;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)
+        oc.get(&apos;fun1&apos;)
+            .then(function(msg) {
+                ms1.push(&apos;fun1 6th&apos;, msg)
+                console.log(&apos;fun1 6th&apos;, msg)
+            })
+    }, 1600)
+
     return new Promise(function(resolve, reject) {
         setTimeout(function() {
-            n += 1
-            resolve(v1 + &apos;|&apos; + v2 + &apos;, count=&apos; + n)
-        }, 300)
+            resolve(ms1)
+        }, 2400)
     })
 }
-
-oc.set(&apos;fun&apos;, { execFun: fun, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 }) //&#x5FEB;&#x53D6;1200ms, &#x4F46;&#x7B2C;1&#x6B21;&#x57F7;&#x884C;&#x5C31;&#x9700;&#x8981;300ms, &#x6545;&#x57F7;&#x884C;&#x5B8C;&#x7562;&#x5F8C;&#x53EA;&#x6703;&#x518D;&#x4FDD;&#x7559;800ms
-//&#x7B2C;1&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x6C92;&#x6709;&#x5FEB;&#x53D6;&#x53EA;&#x80FD;&#x57F7;&#x884C;&#x53D6;&#x503C;
-oc.get(&apos;fun&apos;)
-    .then((msg) =&gt; {
-        ms.push(&apos;fun 1st&apos;, msg)
-        console.log(&apos;fun 1st&apos;, msg)
-    })
-setTimeout(() =&gt; {
-    //&#x7B2C;2&#x6B21;&#x547C;&#x53EB;(50ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x9084;&#x6C92;&#x5B8C;&#x6210;(&#x8981;&#x5230;300ms), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;1050ms, &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;&#x5C1A;&#x672A;&#x904E;&#x671F;(1200ms), &#x6545;1050ms&#x53D6;&#x503C;&#x6642;&#x6703;&#x62FF;&#x5230;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)
-    oc.get(&apos;fun&apos;)
-        .then((msg) =&gt; {
-            ms.push(&apos;fun 2nd&apos;, msg)
-            console.log(&apos;fun 2nd&apos;, msg)
-        })
-}, 50)
-setTimeout(() =&gt; {
-    //&#x7B2C;3&#x6B21;&#x547C;&#x53EB;(250ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x9084;&#x6C92;&#x5B8C;&#x6210;(&#x8981;&#x5230;300ms), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;1250ms, &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;&#x5DF2;&#x904E;&#x671F;(1200ms), &#x6545;1250ms&#x53D6;&#x503C;&#x6642;&#x6703;&#x91CD;&#x65B0;&#x57F7;&#x884C;&#x53D6;&#x503C;(count=2)
-    oc.get(&apos;fun&apos;)
-        .then((msg) =&gt; {
-            ms.push(&apos;fun 3rd&apos;, msg)
-            console.log(&apos;fun 3rd&apos;, msg)
-        })
-}, 250)
-setTimeout(() =&gt; {
-    //&#x7B2C;4&#x6B21;&#x547C;&#x53EB;(500ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x547C;&#x53EB;&#x5DF2;&#x7D50;&#x675F;(300ms), &#x4E14;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)&#x672A;&#x904E;&#x671F;(&#x8981;&#x5230;1200ms), &#x6545;get&#x53EF;&#x62FF;&#x5230;&#x7B2C;1&#x6B21;&#x8A08;&#x7B97;&#x7684;&#x5FEB;&#x53D6;(count=1)
-    oc.get(&apos;fun&apos;)
-        .then((msg) =&gt; {
-            ms.push(&apos;fun 4th&apos;, msg)
-            console.log(&apos;fun 4th&apos;, msg)
-        })
-}, 500)
-setTimeout(() =&gt; {
-    //&#x7B2C;5&#x6B21;&#x547C;&#x53EB;(1300ms), &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)&#x5DF2;&#x904E;&#x671F;(1200ms), &#x4F46;&#x7B2C;3&#x6B21;&#x5DF2;&#x91CD;&#x65B0;&#x57F7;&#x884C;&#x53D6;&#x503C;(1250~1550ms&#x57F7;&#x884C;, 2450ms&#x904E;&#x671F;), &#x6545;get&#x6703;&#x5075;&#x6E2C;&#x4E26;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1000ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x662F;2300ms, &#x4E14;&#x6B64;&#x6642;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)&#x5C1A;&#x672A;&#x904E;&#x671F;(2450ms), &#x6B64;&#x6642;&#x5C31;&#x6703;&#x62FF;&#x5230;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)
-    oc.get(&apos;fun&apos;)
-        .then((msg) =&gt; {
-            ms.push(&apos;fun 5th&apos;, msg)
-            console.log(&apos;fun 5th&apos;, msg)
-        })
-}, 1300)
-setTimeout(() =&gt; {
-    //&#x7B2C;6&#x6B21;&#x547C;&#x53EB;(1600ms), &#x6B64;&#x6642;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)&#x9084;&#x5728;&#x6709;&#x6548;&#x671F;(1550ms&#x57F7;&#x884C;&#x7D50;&#x675F;, 2450ms&#x904E;&#x671F;), &#x6545;get&#x6703;&#x62FF;&#x5230;&#x7B2C;3&#x6B21;&#x6240;&#x5F97;&#x5FEB;&#x53D6;(count=2)
-    oc.get(&apos;fun&apos;)
-        .then((msg) =&gt; {
-            ms.push(&apos;fun 6th&apos;, msg)
-            console.log(&apos;fun 6th&apos;, msg)
-        })
-}, 1600)
 setTimeout(function() {
-    console.log(JSON.stringify(ms))
-}, 2400)
-// call fun
-// fun 1st inp1|inp2, count=1
-// fun 4th inp1|inp2, count=1
-// fun 2nd inp1|inp2, count=1
-// call fun
-// fun 3rd inp1|inp2, count=2
-// fun 6th inp1|inp2, count=2
-// fun 5th inp1|inp2, count=2
-// [&quot;fun 1st&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun 4th&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun 2nd&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun 3rd&quot;,&quot;inp1|inp2, count=2&quot;,&quot;fun 6th&quot;,&quot;inp1|inp2, count=2&quot;,&quot;fun 5th&quot;,&quot;inp1|inp2, count=2&quot;]</code></pre>
+    test1()
+        .then(function(ms1) {
+            console.log(JSON.stringify(ms1))
+        })
+}, 1)
+// test set and get
+// call fun1
+// fun1 1st inp1|inp2, count=1
+// fun1 4th inp1|inp2, count=1
+// fun1 2nd inp1|inp2, count=1
+// call fun1
+// fun1 3rd inp1|inp2, count=2
+// fun1 6th inp1|inp2, count=2
+// fun1 5th inp1|inp2, count=2
+// [&quot;fun1 1st&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun1 4th&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun1 2nd&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun1 3rd&quot;,&quot;inp1|inp2, count=2&quot;,&quot;fun1 6th&quot;,&quot;inp1|inp2, count=2&quot;,&quot;fun1 5th&quot;,&quot;inp1|inp2, count=2&quot;]
+
+function test2() {
+    console.log(&apos;test getProxy&apos;)
+
+    let oc = cache()
+
+    // oc.on(&apos;message&apos;, function(msg) {
+    //     console.log(&apos;message&apos;, msg)
+    // })
+    // oc.on(&apos;error&apos;, function(msg) {
+    //     console.log(&apos;error&apos;, msg)
+    // })
+
+    let ms2 = []
+    let n2 = 0
+    function fun2(v1, v2) {
+        console.log(&apos;call fun2&apos;)
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                n2 += 1
+                resolve(v1 + &apos;|&apos; + v2 + &apos;, count=&apos; + n2)
+            }, 300)
+        })
+    }
+
+    oc.getProxy(&apos;fun2&apos;, { execFun: fun2, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 }) //&#x5FEB;&#x53D6;1200ms, &#x4F46;&#x7B2C;1&#x6B21;&#x57F7;&#x884C;&#x5C31;&#x9700;&#x8981;300ms, &#x6545;&#x57F7;&#x884C;&#x5B8C;&#x7562;&#x5F8C;&#x53EA;&#x6703;&#x518D;&#x4FDD;&#x7559;800ms
+    setTimeout(function() {
+        //&#x7B2C;1&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x6C92;&#x6709;&#x5FEB;&#x53D6;&#x53EA;&#x80FD;&#x57F7;&#x884C;&#x53D6;&#x503C;, &#x6703;&#x53D6;&#x5F97;&#x7B2C;1&#x6B21;&#x7D50;&#x679C;(count=1)
+        oc.getProxy(&apos;fun2&apos;, { execFun: fun2, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 })
+            .then(function(msg) {
+                ms2.push(&apos;fun2 1st&apos;, msg)
+                console.log(&apos;fun2 1st&apos;, msg)
+            })
+    }, 1)
+    setTimeout(function() {
+        //&#x7B2C;2&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x57F7;&#x884C;&#x4E2D;&#x6703;&#x7B49;&#x5F85;, &#x5075;&#x6E2C;&#x9031;&#x671F;&#x70BA;1ms, &#x4E0B;&#x6B21;&#x5075;&#x6E2C;&#x70BA;1100ms, &#x6B64;&#x6642;&#x6703;&#x53D6;&#x5F97;&#x7B2C;1&#x6B21;&#x7D50;&#x679C;(count=1)
+        oc.getProxy(&apos;fun2&apos;, { execFun: fun2, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 })
+            .then(function(msg) {
+                ms2.push(&apos;fun2 2nd&apos;, msg)
+                console.log(&apos;fun2 2nd&apos;, msg)
+            })
+    }, 100)
+    setTimeout(function() {
+        //&#x7B2C;3&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x5DF2;&#x6709;&#x5FEB;&#x53D6;, &#x6703;&#x53D6;&#x5F97;&#x7B2C;1&#x6B21;&#x7D50;&#x679C;(count=1)
+        oc.getProxy(&apos;fun2&apos;, { execFun: fun2, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 })
+            .then(function(msg) {
+                ms2.push(&apos;fun2 3rd&apos;, msg)
+                console.log(&apos;fun2 3rd&apos;, msg)
+            })
+    }, 500)
+    setTimeout(function() {
+        //&#x7B2C;4&#x6B21;&#x547C;&#x53EB;, &#x6B64;&#x6642;&#x7B2C;1&#x6B21;&#x5FEB;&#x53D6;(count=1)&#x5DF2;&#x5931;&#x6548;, &#x6703;&#x91CD;&#x65B0;&#x547C;&#x53EB;&#x51FD;&#x6578;&#x53D6;&#x503C;, &#x53D6;&#x5F97;&#x7B2C;2&#x6B21;&#x7D50;&#x679C;(count=2)
+        oc.getProxy(&apos;fun2&apos;, { execFun: fun2, inputFun: [&apos;inp1&apos;, &apos;inp2&apos;], timeExpired: 1200 })
+            .then(function(msg) {
+                ms2.push(&apos;fun2 4th&apos;, msg)
+                console.log(&apos;fun2 4th&apos;, msg)
+            })
+    }, 1300)
+
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+            resolve(ms2)
+        }, 1700)
+    })
+}
+setTimeout(function() {
+    test2()
+        .then(function(ms2) {
+            console.log(JSON.stringify(ms2))
+        })
+}, 2500)
+// test getProxy
+// call fun2
+// fun2 3rd inp1|inp2, count=1
+// fun2 1st inp1|inp2, count=1
+// fun2 2nd inp1|inp2, count=1
+// call fun2
+// fun2 4th inp1|inp2, count=2
+// [&quot;fun2 3rd&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun2 1st&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun2 2nd&quot;,&quot;inp1|inp2, count=1&quot;,&quot;fun2 4th&quot;,&quot;inp1|inp2, count=2&quot;]</code></pre>
         </div>
 
 
@@ -41713,7 +41808,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Thu Mar 19 2020 17:00:15 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Thu Mar 19 2020 18:06:21 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
