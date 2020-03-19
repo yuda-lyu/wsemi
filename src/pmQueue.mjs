@@ -13,7 +13,7 @@ import delay from './delay.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Object} 回傳佇列處理器物件，額外提供run函數，第一參數為非同步(Promise)函數，第二參數之後為欲輸入非同步函數之參數，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @returns {Object} 回傳佇列處理器物件，額外提供run函數，第1參數為非同步(Promise)函數，第2參數之後(含第3,4,...)為欲輸入非同步函數之參數，多參數時每個用逗號區隔即可，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
  * @example
  *
  * async function fun1(v) {
