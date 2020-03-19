@@ -3,11 +3,9 @@ import waitFun from './waitFun.mjs'
 import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
 import isnint from './isnint.mjs'
+import isarr from './isarr.mjs'
 import cint from './cint.mjs'
 
-
-//供全域快取資料
-let data = {}
 
 /**
  * 非同步函數快取
@@ -196,6 +194,7 @@ let data = {}
  */
 function cache() {
     let ev = new Evem()
+    let data = {} //快取資料
 
     function emit(mode, data) {
         setTimeout(() => { //用timer脫勾
@@ -213,6 +212,9 @@ function cache() {
             timeExpired = 5000
         }
         timeExpired = cint(timeExpired)
+        if (!isarr(inputFun)) {
+            inputFun = []
+        }
 
         //add
         if (!haskey(data, key)) {
