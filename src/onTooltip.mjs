@@ -1,5 +1,8 @@
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
+import 'tippy.js/themes/light.css'
+import merge from 'lodash/merge'
+import iseobj from './iseobj.mjs'
 
 
 /**
@@ -7,12 +10,33 @@ import 'tippy.js/dist/tippy.css'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/onTooltip.test.js Github}
  * @memberOf wsemi
- * @param {*} ele DOM元素物件
- * @param {*} ct 提示html訊息字串
+ * @param {Element} ele 輸入DOM元素
+ * @param {String} ct 輸入提示html訊息字串，若不給則使用ele.innerHTML
+ * @param {Object} [option={}] 輸入tippy提示設定物件，預設{}
  * @example
  * need test in browser
  */
-function onTooltip(ele, ct) {
+function onTooltip(ele, ct, option = {}) {
+
+    //optionDef
+    let optionDef = {
+        arrow: true,
+        theme: 'dark',
+        //animation: 'fade',
+        placement: 'bottom',
+        //duration: [500,100],
+        delay: 150,
+    }
+
+    //option
+    console.log('option', option)
+    if (iseobj(option)) {
+        option = merge(optionDef, option)
+        console.log('merge option', option)
+    }
+    else {
+        option = optionDef
+    }
 
     //h
     let h = ct
@@ -38,13 +62,8 @@ function onTooltip(ele, ct) {
 
     //tippy
     let tp = useTippy(ele, {
+        ...option,
         content: h,
-        arrow: true,
-        theme: 'dark',
-        //animation: 'fade',
-        placement: 'bottom',
-        //duration: [500,100],
-        delay: 150,
     })
     tp.show()
 

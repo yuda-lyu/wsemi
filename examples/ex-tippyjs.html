@@ -11,7 +11,21 @@
 </head>
 <body>
 
-    <button onmouseenter="wsemi.onTooltip(this,'<b>提示</b><br>test tooltip')">tooltip from tippy.js</button>
+    <button onmouseenter="t1(this)">tooltip from tippy.js</button>
+    <script>
+        function t1(slef){
+            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip')
+        }
+    </script>
+
+    <button onmouseenter="t2(this)">tooltip from tippy.js</button>
+    <script>
+        function t2(slef){
+            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip',{
+                theme:'light',
+            })
+        }
+    </script>
 
 </body>
 </html>

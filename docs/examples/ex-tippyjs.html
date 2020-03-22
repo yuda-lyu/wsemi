@@ -6,12 +6,26 @@
     
     <script src="https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.45/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.3.46/dist/wsemi.umd.js"></script>
 
 </head>
 <body>
 
-    <button onmouseenter="wsemi.onTooltip(this,'<b>提示</b><br>test tooltip')">tooltip from tippy.js</button>
+    <button onmouseenter="t1(this)">tooltip from tippy.js</button>
+    <script>
+        function t1(slef){
+            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip')
+        }
+    </script>
+
+    <button onmouseenter="t2(this)">tooltip from tippy.js</button>
+    <script>
+        function t2(slef){
+            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip',{
+                theme:'light',
+            })
+        }
+    </script>
 
 </body>
 </html>
