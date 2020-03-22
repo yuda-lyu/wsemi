@@ -24,15 +24,10 @@ function main() {
     //scs
     let scs = []
     _.each(ns, function(name) {
-        //let sc = `import ${name} from './${name}.mjs'`
-        let sc = `export ${name} from './${name}.mjs'`
+        //let sc = `export ${name} from './${name}.mjs'` //stage1語法, 需要安裝@babel/plugin-proposal-export-default-from
+        let sc = `export { default as ${name} } from './${name}.mjs'`
         scs.push(sc)
     })
-    // if (true) {
-    //     let c = _.join(ns, ', ')
-    //     let sc = `export { ${c} }`
-    //     scs.push(sc)
-    // }
 
     //merge content
     let c = _.join(scs, '\r\n')
