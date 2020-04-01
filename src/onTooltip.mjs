@@ -12,7 +12,7 @@ import iseobj from './iseobj.mjs'
  * @memberOf wsemi
  * @param {Element} ele 輸入DOM元素
  * @param {String} ct 輸入提示html訊息字串，若不給則使用ele.innerHTML
- * @param {Object} [option={}] 輸入tippy提示設定物件，預設{}
+ * @param {Object} [option={}] 輸入tippy提示設定物件，預設{}，設定物件詳見tippy官網
  * @example
  * need test in browser
  */
@@ -64,6 +64,7 @@ function onTooltip(ele, ct, option = {}) {
     let tp = useTippy(ele, {
         ...option,
         content: h,
+        allowHTML: true,
     })
     tp.show()
 
