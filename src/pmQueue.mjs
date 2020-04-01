@@ -10,10 +10,14 @@ import delay from './delay.mjs'
 /**
  * 通過佇列限制與呼叫非同步(Promise)函數
  *
+ * 可限制同時運行的非同步函數數量(takeLimit>0)。
+ * 可只取最後呼叫的非同步函數進行防抖功能(takeLast=true)，前面的呼叫皆自動轉為catch，回傳訊息為物件{reason:'cancelled'}。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Object} 回傳佇列處理器物件，額外提供run函數，第1參數為非同步(Promise)函數，第2參數之後(含第3,4,...)為欲輸入非同步函數之參數，多參數時每個用逗號區隔即可，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖
+ * @returns {Object} 回傳佇列處理器物件，額外提供run函數，第1參數為非同步函數，第2參數之後(含第3,4,...)為欲輸入非同步函數之參數，多參數時每個用逗號區隔即可，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
  * @example
  *
  * async function fun1(v) {
@@ -40,6 +44,66 @@ import delay from './delay.mjs'
  *         setTimeout(function() {
  *             resolve('#' + v)
  *         }, 100)
+ *     })
+ * }
+ *
+ * async function fun4() {
+ *     return new Promise((resolve, reject) => {
+ *
+ *         let ms = []
+ *
+ *         let fpm = function (name, t) {
+ *             return new Promise(function(resolve, reject) {
+ *                 setTimeout(() => {
+ *                     resolve('resolve: ' + name)
+ *                 }, t)
+ *             })
+ *         }
+ *         let q3 = pmQueue(null, true)
+ *
+ *         q3.run(fpm, 'pm1', 150)
+ *             .then(function(msg) {
+ *                 console.log('pm1 then', msg)
+ *                 ms.push('pm1 then: ' + msg)
+ *             })
+ *             .catch(function(msg) {
+ *                 console.log('pm1 catch', msg)
+ *                 ms.push('pm1 catch: ' + 'reason ' + msg.reason)
+ *             })
+ *         q3.run(fpm, 'pm2', 100)
+ *             .then(function(msg) {
+ *                 console.log('pm2 then', msg)
+ *                 ms.push('pm2 then: ' + msg)
+ *             })
+ *             .catch(function(msg) {
+ *                 console.log('pm2 catch', msg)
+ *                 ms.push('pm2 catch: ' + 'reason ' + msg.reason)
+ *             })
+ *         q3.run(fpm, 'pm3', 50)
+ *             .then(function(msg) {
+ *                 console.log('pm3 then', msg)
+ *                 ms.push('pm3 then: ' + msg)
+ *             })
+ *             .catch(function(msg) {
+ *                 console.log('pm3 catch', msg)
+ *                 ms.push('pm3 catch: ' + 'reason ' + msg.reason)
+ *             })
+ *
+ *         setTimeout(() => {
+ *             q3.run(fpm, 'pm4', 50)
+ *                 .then((msg) => {
+ *                     console.log('pm4 then', msg)
+ *                     ms.push('pm4 then: ' + msg)
+ *                 })
+ *                 .catch((msg) => {
+ *                     console.log('pm4 catch', msg)
+ *                     ms.push('pm4 catch: ' + 'reason ' + msg.reason)
+ *                 })
+ *                 .finally(() => {
+ *                     resolve(ms)
+ *                 })
+ *         }, 200)
+ *
  *     })
  * }
  *
@@ -131,8 +195,23 @@ import delay from './delay.mjs'
  * // fun3 then #inp3
  * // ["fun2 catch #inp2","fun1 then #inp1","fun3 then #inp3"]
  *
+ * setTimeout(function() {
+ *     console.log('test q3')
+ *     fun4()
+ *         .then((ms3) => {
+ *             console.log(JSON.stringify(ms3))
+ *         })
+ * }, 1400)
+ * // test q3
+ * // pm3 then resolve: pm3
+ * // pm2 catch { reason: 'cancelled' }
+ * // pm1 catch { reason: 'cancelled' }
+ * // pm4 then resolve: pm4
+ * // ["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]
+ *
  */
-function pmQueue(takeLimit = 0) {
+function pmQueue(takeLimit = 0, takeLast = false) {
+    let gid = null
 
     //queue
     let q = queue(takeLimit)
@@ -188,6 +267,9 @@ function pmQueue(takeLimit = 0) {
         //id
         let id = genID()
 
+        //save gid
+        gid = id
+
         //p
         let p = {
             id,
@@ -201,11 +283,26 @@ function pmQueue(takeLimit = 0) {
         //once
         q.once(id, (res) => {
             //console.log('once', id, res)
-            if (res.state === 'success') {
-                pm.resolve(res.msg)
+            if (takeLast) {
+                if (id === gid) {
+                    if (res.state === 'success') {
+                        pm.resolve(res.msg)
+                    }
+                    else {
+                        pm.reject(res.msg)
+                    }
+                }
+                else {
+                    pm.reject({ reason: 'cancelled' })
+                }
             }
             else {
-                pm.reject(res.msg)
+                if (res.state === 'success') {
+                    pm.resolve(res.msg)
+                }
+                else {
+                    pm.reject(res.msg)
+                }
             }
         })
 

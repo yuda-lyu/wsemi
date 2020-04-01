@@ -19,7 +19,7 @@ import queue from './queue.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.js Github}
  * @memberOf wsemi
  * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
- * @param {Function} fn 輸入循序執行值的呼叫函數
+ * @param {Function} fun 輸入循序執行值的呼叫函數
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
@@ -168,7 +168,7 @@ import queue from './queue.mjs'
  * // use promise then ["#1","#2","#3","#4","#5"]
  *
  */
-function pmMap(rs, fn, takeLimit = 0) {
+function pmMap(rs, fun, takeLimit = 0) {
     let ts = {}
     let abort = false
 
@@ -199,8 +199,8 @@ function pmMap(rs, fn, takeLimit = 0) {
 
         //pmm
         let pmm
-        if (isfun(fn)) {
-            pmm = fn(v.value, v.key)
+        if (isfun(fun)) {
+            pmm = fun(v.value, v.key)
         }
         else {
             pmm = v.value

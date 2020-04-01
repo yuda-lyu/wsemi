@@ -5,7 +5,8 @@ import isfun from './isfun.mjs'
 
 
 /**
- * Promise的mapSeries，循序執行promise。
+ * Promise的mapSeries，循序執行promise
+ *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
  * 使用函數執行時，等同於pmMap使用函數執行且takeLimit=1，promise依序執行完畢才會調用下一個promise。
  * 先行產生promise時，等同於pmMap使用函數執行且takeLimit=0，或是等同於pmMap先行產生promise，各promise直接執行視各自執行時間結束。
@@ -13,7 +14,7 @@ import isfun from './isfun.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.js Github}
  * @memberOf wsemi
  * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
- * @param {Function} fn 輸入循序執行值的呼叫函數
+ * @param {Function} fun 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
  *
@@ -87,7 +88,7 @@ import isfun from './isfun.mjs'
  * // use promise then ["#1","#2","#3","#4","#5"]
  *
  */
-function pmSeries(rs, fn) {
+function pmSeries(rs, fun) {
 
     //pm
     let pm = genPm()
@@ -98,9 +99,9 @@ function pmSeries(rs, fn) {
         return pm
     }
 
-    //default fn
-    if (!isfun(fn)) {
-        fn = function(v) {
+    //default fun
+    if (!isfun(fun)) {
+        fun = function(v) {
             return v
         }
     }
@@ -112,8 +113,8 @@ function pmSeries(rs, fn) {
         return pmm.then(function(t) {
             ts.push(t)
             k += 1
-            if (isfun(fn)) {
-                return fn(v, k)
+            if (isfun(fun)) {
+                return fun(v, k)
             }
             else {
                 return v

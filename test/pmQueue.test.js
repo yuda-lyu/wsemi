@@ -5,7 +5,7 @@ import pmQueue from '../src/pmQueue.mjs'
 describe(`pmQueue`, function() {
 
     async function fun1(v) {
-        console.log('call fun1')
+        //console.log('call fun1')
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve('#' + v)
@@ -14,7 +14,7 @@ describe(`pmQueue`, function() {
     }
 
     async function fun2(v) {
-        console.log('call fun2')
+        //console.log('call fun2')
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 reject('#' + v)
@@ -23,11 +23,71 @@ describe(`pmQueue`, function() {
     }
 
     async function fun3(v) {
-        console.log('call fun3')
+        //console.log('call fun3')
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve('#' + v)
             }, 100)
+        })
+    }
+
+    async function fun4() {
+        return new Promise((resolve, reject) => {
+
+            let ms = []
+
+            let fpm = function (name, t) {
+                return new Promise(function(resolve, reject) {
+                    setTimeout(() => {
+                        resolve('resolve: ' + name)
+                    }, t)
+                })
+            }
+            let q3 = pmQueue(null, true)
+
+            q3.run(fpm, 'pm1', 150)
+                .then(function(msg) {
+                    //console.log('pm1 then', msg)
+                    ms.push('pm1 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('pm1 catch', msg)
+                    ms.push('pm1 catch: ' + 'reason ' + msg.reason)
+                })
+            q3.run(fpm, 'pm2', 100)
+                .then(function(msg) {
+                    //console.log('pm2 then', msg)
+                    ms.push('pm2 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('pm2 catch', msg)
+                    ms.push('pm2 catch: ' + 'reason ' + msg.reason)
+                })
+            q3.run(fpm, 'pm3', 50)
+                .then(function(msg) {
+                    //console.log('pm3 then', msg)
+                    ms.push('pm3 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('pm3 catch', msg)
+                    ms.push('pm3 catch: ' + 'reason ' + msg.reason)
+                })
+
+            setTimeout(() => {
+                q3.run(fpm, 'pm4', 50)
+                    .then((msg) => {
+                        //console.log('pm4 then', msg)
+                        ms.push('pm4 then: ' + msg)
+                    })
+                    .catch((msg) => {
+                        //console.log('pm4 catch', msg)
+                        ms.push('pm4 catch: ' + 'reason ' + msg.reason)
+                    })
+                    .finally(() => {
+                        resolve(JSON.stringify(ms))
+                    })
+            }, 200)
+
         })
     }
 
@@ -104,5 +164,14 @@ describe(`pmQueue`, function() {
             assert.strict.deepEqual(JSON.stringify(ms2), '["fun2 catch #inp2","fun1 then #inp1","fun3 then #inp3"]')
         }, 450)
     }, 700)
+
+    setTimeout(function() {
+        //console.log('test q3')
+        fun4()
+            .then((ms3) => {
+                //console.log(JSON.stringify(ms))
+                assert.strict.deepEqual(JSON.stringify(ms3), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
+            })
+    }, 1400)
 
 })

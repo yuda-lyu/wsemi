@@ -72,7 +72,7 @@ describe(`pmLast`, function() {
                     //console.log(msg)
                     assert.strict.deepEqual(msg, '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
                 })
-        }, 3000)
+        }, 3000) //delay避開測試尖峰
     })
 
 })

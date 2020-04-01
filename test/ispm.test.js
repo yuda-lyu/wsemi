@@ -1,11 +1,26 @@
 import assert from 'assert'
 import ispm from '../src/ispm.mjs'
+import genPm from '../src/genPm.mjs'
 
 
 describe(`ispm`, function() {
 
     it(`should return true when input new Promise(function() {})`, function() {
         let r = ispm(new Promise(function() {}))
+        assert.strict.deepEqual(r, true)
+    })
+
+    it(`should return true when input by genPm()`, function() {
+        let r = ispm(genPm())
+        assert.strict.deepEqual(r, true)
+    })
+
+    it(`should return true when input by async function`, function() {
+        async function func() {
+            return ''
+        }
+        let f = func()
+        let r = ispm(f)
         assert.strict.deepEqual(r, true)
     })
 

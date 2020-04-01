@@ -3,7 +3,9 @@ import genID from './genID.mjs'
 
 
 /**
- * 高頻呼叫非同步函數時，僅受理最末一次的呼叫，前面的呼叫皆自動轉為catch，回傳訊息為物件{reason:'cancelled'}
+ * 封裝非同步函數進行防抖
+ *
+ * 多次呼叫非同步函數時，僅受理最末一次的呼叫，前面的呼叫皆自動轉為catch，回傳訊息為物件{reason:'cancelled'}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmLast.test.js Github}
  * @memberOf wsemi

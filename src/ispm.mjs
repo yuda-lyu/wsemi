@@ -13,9 +13,24 @@
  * // => true
  */
 function ispm(v) {
+    let b
 
     let c = Object.prototype.toString.call(v)
-    return c === '[object Promise]'
+    b = c === '[object Promise]'
+    if (b) {
+        return true //若為[object Promise]則直接回傳true
+    }
+
+    if (c !== '[object Function]') {
+        return false //若不是[object Promise]也不是[object Function]則直接回傳false
+    }
+
+    try {
+        b = v && typeof v.subscribe !== 'function' && typeof v.then === 'function' //可偵測async function
+    }
+    catch (err) {}
+
+    return b
 }
 
 
