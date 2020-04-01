@@ -8,7 +8,8 @@ import queue from './queue.mjs'
 
 
 /**
- * Promise的map，可設定同時處理數量。
+ * Promise的map，可設定同時處理數量
+ *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
  * 若先行產生promise則takeLimit設定會無效，因promise已先行初始化啟動。
  * 等同於Bluebird的Promise.map，而concurrency為takeLimit。

@@ -4,7 +4,7 @@ import pmMap from '../src/pmMap.mjs'
 
 describe(`pmMap`, function() {
 
-    it(`should return '["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]' when input [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 2`, function() {
+    it(`should return '["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]' when input [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`, function() {
         let takeLimit = 2
 
         //pmMap

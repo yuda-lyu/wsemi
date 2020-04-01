@@ -4,7 +4,6 @@ import pmHook from '../src/pmHook.mjs'
 
 describe(`pmHook`, function() {
 
-
     async function test() {
         let ms
 

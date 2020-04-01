@@ -31239,7 +31239,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
 
     
 
-    <h4 class="name" id=".pmLast"><span class="type-signature">(static) </span>pmLast<span class="signature">(rs, fn, takeLimit<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &#x2192; {Promise}</span></h4>
+    <h4 class="name" id=".pmLast"><span class="type-signature">(static) </span>pmLast<span class="signature">(pm)</span><span class="type-signature"> &#x2192; {Promise}</span></h4>
 
     
 
@@ -31251,7 +31251,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmLast.mjs.html">pmLast.mjs</a>, <a href="pmLast.mjs.html#line70">line 70</a>
+        <a href="pmLast.mjs.html">pmLast.mjs</a>, <a href="pmLast.mjs.html#line85">line 85</a>
     </li></ul></dd>
     
 
@@ -31291,12 +31291,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
 
 
 <div class="description usertext">
-    <p>Promise&#x7684;map&#xFF0C;&#x53EF;&#x8A2D;&#x5B9A;&#x540C;&#x6642;&#x8655;&#x7406;&#x6578;&#x91CF;&#x3002;
-&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise&#x3002;
-&#x82E5;&#x5148;&#x884C;&#x7522;&#x751F;promise&#x5247;takeLimit&#x8A2D;&#x5B9A;&#x6703;&#x7121;&#x6548;&#xFF0C;&#x56E0;promise&#x5DF2;&#x5148;&#x884C;&#x521D;&#x59CB;&#x5316;&#x555F;&#x52D5;&#x3002;
-&#x7B49;&#x540C;&#x65BC;Bluebird&#x7684;Promise.map&#xFF0C;&#x800C;concurrency&#x70BA;takeLimit&#x3002;
-&#x4F7F;&#x7528;&#x51FD;&#x6578;&#x57F7;&#x884C;&#x6642;&#xFF0C;&#x7576;takeLimit=1&#xFF0C;&#x7B49;&#x540C;&#x65BC;mapSeries&#xFF0C;promise&#x4F9D;&#x5E8F;&#x57F7;&#x884C;&#x5B8C;&#x7562;&#x624D;&#x6703;&#x8ABF;&#x7528;&#x4E0B;&#x4E00;&#x500B;promise&#x3002;
-&#x4F7F;&#x7528;&#x51FD;&#x6578;&#x57F7;&#x884C;&#x6642;&#xFF0C;&#x7576;takeLimit=0&#xFF0C;&#x7B49;&#x540C;&#x65BC;&#x5148;&#x884C;&#x7522;&#x751F;promise&#x7684;&#x60C5;&#x5F62;&#xFF0C;&#x5404;promise&#x76F4;&#x63A5;&#x57F7;&#x884C;&#x8996;&#x5404;&#x81EA;&#x57F7;&#x884C;&#x6642;&#x9593;&#x7D50;&#x675F;&#x3002;</p>
+    <p>&#x9AD8;&#x983B;&#x547C;&#x53EB;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x6642;&#xFF0C;&#x50C5;&#x53D7;&#x7406;&#x6700;&#x672B;&#x4E00;&#x6B21;&#x7684;&#x547C;&#x53EB;&#xFF0C;&#x524D;&#x9762;&#x7684;&#x547C;&#x53EB;&#x7686;&#x81EA;&#x52D5;&#x8F49;&#x70BA;catch&#xFF0C;&#x56DE;&#x50B3;&#x8A0A;&#x606F;&#x70BA;&#x7269;&#x4EF6;{reason:&apos;cancelled&apos;}</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmLast.test.js">Github</a></p>
 </div>
 
@@ -31312,53 +31307,75 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;pmLast&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let ms = []
+<pre class="prettyprint"><code>async function test() {
+    return new Promise((resolve, reject) =&gt; {
 
-let pm = function (name, t) {
-    return new Promise(function(resolve, reject) {
+        let ms = []
+
+        let pm = function (name, t) {
+            return new Promise(function(resolve, reject) {
+                setTimeout(() =&gt; {
+                    resolve(&apos;resolve: &apos; + name)
+                }, t)
+            })
+        }
+
+        let pmm = pmLast(pm)
+
+        pmm(&apos;pm1&apos;, 150)
+            .then(function(msg) {
+                console.log(&apos;pm1 then&apos;, msg)
+                ms.push(&apos;pm1 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;pm1 catch&apos;, msg)
+                ms.push(&apos;pm1 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+        pmm(&apos;pm2&apos;, 100)
+            .then(function(msg) {
+                console.log(&apos;pm2 then&apos;, msg)
+                ms.push(&apos;pm2 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;pm2 catch&apos;, msg)
+                ms.push(&apos;pm2 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+        pmm(&apos;pm3&apos;, 50)
+            .then(function(msg) {
+                console.log(&apos;pm3 then&apos;, msg)
+                ms.push(&apos;pm3 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;pm3 catch&apos;, msg)
+                ms.push(&apos;pm3 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+
         setTimeout(() =&gt; {
-            resolve(&apos;resolve: &apos; + name)
-        }, t)
+            pmm(&apos;pm4&apos;, 50)
+                .then((msg) =&gt; {
+                    console.log(&apos;pm4 then&apos;, msg)
+                    ms.push(&apos;pm4 then: &apos; + msg)
+                })
+                .catch((msg) =&gt; {
+                    console.log(&apos;pm4 catch&apos;, msg)
+                    ms.push(&apos;pm4 catch: &apos; + &apos;reason &apos; + msg.reason)
+                })
+                .finally(() =&gt; {
+                    resolve(JSON.stringify(ms))
+                })
+        }, 200)
+
     })
 }
-
-let pmm = pmLast(pm)
-
-pmm(&apos;pm1&apos;, 200)
-    .then(function(msg) {
-        console.log(&apos;pm1 then&apos;, msg)
-        ms.push(&apos;pm1 then: &apos; + msg)
+test()
+    .then((msg) =&gt; {
+        console.log(msg)
     })
-    .catch(function(msg) {
-        console.log(&apos;pm1 catch&apos;, msg)
-        ms.push(&apos;pm1 catch: &apos; + &apos;reason &apos; + msg.reason)
-    })
-pmm(&apos;pm2&apos;, 150)
-    .then(function(msg) {
-        console.log(&apos;pm2 then&apos;, msg)
-        ms.push(&apos;pm2 then: &apos; + msg)
-    })
-    .catch(function(msg) {
-        console.log(&apos;pm2 catch&apos;, msg)
-        ms.push(&apos;pm2 catch: &apos; + &apos;reason &apos; + msg.reason)
-    })
-pmm(&apos;pm3&apos;, 100)
-    .then(function(msg) {
-        console.log(&apos;pm3 then&apos;, msg)
-        ms.push(&apos;pm3 then: &apos; + msg)
-    })
-    .catch(function(msg) {
-        console.log(&apos;pm3 catch&apos;, msg)
-        ms.push(&apos;pm3 catch: &apos; + &apos;reason &apos; + msg.reason)
-    })
-
-setTimeout(() =&gt; {
-    console.log(JSON.stringify(ms))
-}, 250)
 // pm3 then resolve: pm3
 // pm2 catch { reason: &apos;cancelled&apos; }
 // pm1 catch { reason: &apos;cancelled&apos; }
-// [&quot;pm3 then: resolve: pm3&quot;,&quot;pm2 catch: reason cancelled&quot;,&quot;pm1 catch: reason cancelled&quot;]</code></pre>
+// pm4 then resolve: pm4
+// [&quot;pm3 then: resolve: pm3&quot;,&quot;pm2 catch: reason cancelled&quot;,&quot;pm1 catch: reason cancelled&quot;,&quot;pm4 then: resolve: pm4&quot;]</code></pre>
         </div>
 
 
@@ -31377,11 +31394,7 @@ setTimeout(() =&gt; {
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -31393,42 +31406,7 @@ setTimeout(() =&gt; {
 
         <tr>
             
-                <td class="name"><code>rs</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>&#x8F38;&#x5165;&#x8CC7;&#x6599;&#x9663;&#x5217;&#xFF0C;&#x82E5;&#x4E0D;&#x7D66;fn&#x5247;rs&#x9700;&#x8981;&#x70BA;Promise&#x9663;&#x5217;</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>fn</code></td>
+                <td class="name"><code>pm</code></td>
             
 
             <td class="type">
@@ -31441,61 +31419,10 @@ setTimeout(() =&gt; {
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                </td>
-            
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x503C;&#x7684;&#x547C;&#x53EB;&#x51FD;&#x6578;</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>takeLimit</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Integer</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional&gt;<br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>0</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>&#x8F38;&#x5165;&#x540C;&#x6642;&#x8655;&#x7406;&#x6578;&#x91CF;&#x6574;&#x6578;&#xFF0C;&#x9810;&#x8A2D;0&#xFF0C;&#x4EE3;&#x8868;&#x7121;&#x9650;&#x5236;</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;</p></td>
         </tr>
 
     
@@ -31559,7 +31486,7 @@ setTimeout(() =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line170">line 170</a>
+        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line171">line 171</a>
     </li></ul></dd>
     
 
@@ -31599,8 +31526,8 @@ setTimeout(() =&gt; {
 
 
 <div class="description usertext">
-    <p>Promise&#x7684;map&#xFF0C;&#x53EF;&#x8A2D;&#x5B9A;&#x540C;&#x6642;&#x8655;&#x7406;&#x6578;&#x91CF;&#x3002;
-&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise&#x3002;
+    <p>Promise&#x7684;map&#xFF0C;&#x53EF;&#x8A2D;&#x5B9A;&#x540C;&#x6642;&#x8655;&#x7406;&#x6578;&#x91CF;</p>
+<p>&#x82E5;&#x8F38;&#x5165;rs&#x70BA;&#x8CC7;&#x6599;&#x9663;&#x5217;&#x5247;fn&#x9700;&#x5C07;&#x6578;&#x64DA;&#x8655;&#x7406;&#x4E26;&#x56DE;&#x50B3;Promise&#xFF0C;&#x82E5;&#x8F38;&#x5165;rs&#x70BA;Promise&#x9663;&#x5217;&#x5247;fn&#x53EF;&#x4E0D;&#x7D66;&#xFF0C;&#x4E26;&#x5FAA;&#x5E8F;&#x57F7;&#x884C;&#x5404;Promise&#x3002;
 &#x82E5;&#x5148;&#x884C;&#x7522;&#x751F;promise&#x5247;takeLimit&#x8A2D;&#x5B9A;&#x6703;&#x7121;&#x6548;&#xFF0C;&#x56E0;promise&#x5DF2;&#x5148;&#x884C;&#x521D;&#x59CB;&#x5316;&#x555F;&#x52D5;&#x3002;
 &#x7B49;&#x540C;&#x65BC;Bluebird&#x7684;Promise.map&#xFF0C;&#x800C;concurrency&#x70BA;takeLimit&#x3002;
 &#x4F7F;&#x7528;&#x51FD;&#x6578;&#x57F7;&#x884C;&#x6642;&#xFF0C;&#x7576;takeLimit=1&#xFF0C;&#x7B49;&#x540C;&#x65BC;mapSeries&#xFF0C;promise&#x4F9D;&#x5E8F;&#x57F7;&#x884C;&#x5B8C;&#x7562;&#x624D;&#x6703;&#x8ABF;&#x7528;&#x4E0B;&#x4E00;&#x500B;promise&#x3002;
@@ -32522,7 +32449,7 @@ setTimeout(function() {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="queue.mjs.html">queue.mjs</a>, <a href="queue.mjs.html#line143">line 143</a>
+        <a href="queue.mjs.html">queue.mjs</a>, <a href="queue.mjs.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -32578,125 +32505,142 @@ setTimeout(function() {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;queue&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>//queue, takeLimit=2
-let q = queue(2)
-let n = 0
-let ms = []
+<pre class="prettyprint"><code>async function test(takeLimit, timeCallBack) {
+    return new Promise((resolve, reject) =&gt; {
 
-//message
-q.on(&apos;message&apos;, function(qs) {
-    console.log(&apos;message&apos;, qs)
+        //queue
+        let q = queue(takeLimit)
+        let n = 0
+        let ms = []
 
-    //ms
-    ms.push(JSON.parse(JSON.stringify(qs)))
+        //message
+        q.on(&apos;message&apos;, function(qs) {
+            console.log(&apos;message&apos;, JSON.stringify(qs))
 
-    //get
-    let v = q.get()
-    if (!v) {
-        return
-    }
-    console.log(&apos;get&apos;, v)
+            //ms
+            ms.push(JSON.parse(JSON.stringify(qs)))
 
-    setTimeout(function() {
-        console.log(&apos;cb&apos;, v)
+            //get
+            let v = q.get()
+            if (!v) {
+                return
+            }
+            console.log(&apos;get&apos;, v)
 
-        //cb
-        q.cb()
+            setTimeout(function() {
+                console.log(&apos;cb&apos;, v)
 
-    }, 1000)
+                //cb
+                q.cb()
 
-})
+                //resolve
+                if (v === &apos;$10&apos;) {
+                    resolve(JSON.stringify(ms))
+                }
 
-//queues push 1~5
-setTimeout(function() {
-    console.log(&apos;queues push 1~5&apos;)
-    let t = setInterval(function() {
-        n += 1
-        q.push(&apos;$&apos; + n)
-        if (n === 5) {
-            clearInterval(t)
-        }
-    }, 50)
+            }, timeCallBack)
+
+        })
+
+        //queues push 1~5
+        setTimeout(function() {
+            console.log(&apos;queues push 1~5&apos;)
+            let t = setInterval(function() {
+                n += 1
+                q.push(&apos;$&apos; + n)
+                if (n === 5) {
+                    clearInterval(t)
+                }
+            }, 50)
+        }, 1)
+
+        //queues push 6~10 by delay 1s
+        setTimeout(function() {
+            console.log(&apos;queues push 6~10&apos;)
+            let t = setInterval(function() {
+                n += 1
+                q.push(&apos;$&apos; + n)
+                if (n === 10) {
+                    clearInterval(t)
+                }
+            }, 50)
+        }, 500)
+
+    })
+}
+
+setTimeout(() =&gt; {
+    test(2, 1000) //takeLimit=2, timeCallBack=1000ms
+        .then((msg) =&gt; {
+            console.log(msg)
+        })
 }, 1)
-
-//queues push 6~10 by delay 1s
-setTimeout(function() {
-    console.log(&apos;queues push 6~10&apos;)
-    let t = setInterval(function() {
-        n += 1
-        q.push(&apos;$&apos; + n)
-        if (n === 10) {
-            clearInterval(t)
-        }
-    }, 50)
-}, 1000)
-
-setTimeout(function() {
-    console.log(JSON.stringify(ms))
-}, 7000)
-
-
 // queues push 1~5
-// message [ &apos;$1&apos; ]
+// message [&quot;$1&quot;]
 // get $1
-// message [ &apos;$2&apos; ]
+// message [&quot;$2&quot;]
 // get $2
 // queues push 6~10
 // cb $1
-// message [ &apos;$3&apos;, &apos;$4&apos;, &apos;$5&apos;, &apos;$6&apos; ]
+// message [&quot;$3&quot;,&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $3
 // cb $2
-// message [ &apos;$4&apos;, &apos;$5&apos;, &apos;$6&apos; ]
+// message [&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $4
 // cb $3
-// message [ &apos;$5&apos;, &apos;$6&apos;, &apos;$7&apos;, &apos;$8&apos;, &apos;$9&apos;, &apos;$10&apos; ]
+// message [&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $5
 // cb $4
-// message [ &apos;$6&apos;, &apos;$7&apos;, &apos;$8&apos;, &apos;$9&apos;, &apos;$10&apos; ]
+// message [&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $6
 // cb $5
-// message [ &apos;$7&apos;, &apos;$8&apos;, &apos;$9&apos;, &apos;$10&apos; ]
+// message [&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $7
 // cb $6
-// message [ &apos;$8&apos;, &apos;$9&apos;, &apos;$10&apos; ]
+// message [&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;]
 // get $8
 // cb $7
-// message [ &apos;$9&apos;, &apos;$10&apos; ]
+// message [&quot;$9&quot;,&quot;$10&quot;]
 // get $9
 // cb $8
-// message [ &apos;$10&apos; ]
+// message [&quot;$10&quot;]
 // get $10
 // cb $9
 // cb $10
-// [[&quot;$1&quot;],[&quot;$2&quot;],[&quot;$3&quot;,&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;],[&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;],[&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$9&quot;,&quot;$10&quot;],[&quot;$10&quot;]]
+// [[&quot;$1&quot;],[&quot;$2&quot;],[&quot;$3&quot;,&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$4&quot;,&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$5&quot;,&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$6&quot;,&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$7&quot;,&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$8&quot;,&quot;$9&quot;,&quot;$10&quot;],[&quot;$9&quot;,&quot;$10&quot;],[&quot;$10&quot;]]
 
-// when run by q = queue(), it means takeLimit&lt;=0
+setTimeout(() =&gt; {
+    test(0, 500) //takeLimit=0, timeCallBack=500ms
+        .then((msg) =&gt; {
+            console.log(msg)
+        })
+}, 5200)
 // queues push 1~5
-// message [ &apos;$1&apos; ]
+// message [&quot;$1&quot;]
 // get $1
-// message [ &apos;$2&apos; ]
+// message [&quot;$2&quot;]
 // get $2
-// message [ &apos;$3&apos; ]
+// message [&quot;$3&quot;]
 // get $3
-// message [ &apos;$4&apos; ]
+// message [&quot;$4&quot;]
 // get $4
-// message [ &apos;$5&apos; ]
+// message [&quot;$5&quot;]
 // get $5
 // queues push 6~10
-// message [ &apos;$6&apos; ]
+// message [&quot;$6&quot;]
 // get $6
 // cb $1
-// message [ &apos;$7&apos; ]
+// message [&quot;$7&quot;]
 // get $7
 // cb $2
 // cb $3
-// message [ &apos;$8&apos; ]
+// message [&quot;$8&quot;]
 // get $8
 // cb $4
-// message [ &apos;$9&apos; ]
+// message [&quot;$9&quot;]
 // get $9
 // cb $5
-// message [ &apos;$10&apos; ]
+// message [&quot;$10&quot;]
 // get $10
 // cb $6
 // cb $7
@@ -42498,7 +42442,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Apr 01 2020 17:46:48 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Wed Apr 01 2020 20:21:27 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -42522,7 +42466,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.3.47/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.3.48/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
