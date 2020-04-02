@@ -8,9 +8,9 @@ import delay from './delay.mjs'
 
 
 /**
- * 通過佇列限制與呼叫非同步(Promise)函數
+ * 通過佇列限制與呼叫非同步(Promise)函數，可推入不同之非同步函數，將一併受限
  *
- * 可限制同時運行的非同步函數數量(takeLimit>0)。
+ * 可限制同時運行的非同步函數總數量(takeLimit>0)。
  * 可只取最後呼叫的非同步函數進行防抖功能(takeLast=true)，前面的呼叫皆自動轉為catch，回傳訊息為物件{reason:'cancelled'}。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js Github}

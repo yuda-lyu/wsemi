@@ -31239,7 +31239,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
 
     
 
-    <h4 class="name" id=".pmLast"><span class="type-signature">(static) </span>pmLast<span class="signature">(pm)</span><span class="type-signature"> &#x2192; {Promise}</span></h4>
+    <h4 class="name" id=".pmLast"><span class="type-signature">(static) </span>pmLast<span class="signature">()</span><span class="type-signature"> &#x2192; {function}</span></h4>
 
     
 
@@ -31251,7 +31251,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmLast.mjs.html">pmLast.mjs</a>, <a href="pmLast.mjs.html#line87">line 87</a>
+        <a href="pmLast.mjs.html">pmLast.mjs</a>, <a href="pmLast.mjs.html#line178">line 178</a>
     </li></ul></dd>
     
 
@@ -31292,7 +31292,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
 
 <div class="description usertext">
     <p>&#x5C01;&#x88DD;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x9032;&#x884C;&#x9632;&#x6296;</p>
-<p>&#x591A;&#x6B21;&#x547C;&#x53EB;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x6642;&#xFF0C;&#x50C5;&#x53D7;&#x7406;&#x6700;&#x672B;&#x4E00;&#x6B21;&#x7684;&#x547C;&#x53EB;&#xFF0C;&#x524D;&#x9762;&#x7684;&#x547C;&#x53EB;&#x7686;&#x81EA;&#x52D5;&#x8F49;&#x70BA;catch&#xFF0C;&#x56DE;&#x50B3;&#x8A0A;&#x606F;&#x70BA;&#x7269;&#x4EF6;{reason:&apos;cancelled&apos;}</p>
+<p>&#x591A;&#x6B21;&#x547C;&#x53EB;&#x4E0D;&#x540C;&#x4E4B;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x6642;&#xFF0C;&#x50C5;&#x53D7;&#x7406;&#x6700;&#x672B;&#x4E00;&#x6B21;&#x7684;&#x547C;&#x53EB;&#xFF0C;&#x524D;&#x9762;&#x7684;&#x547C;&#x53EB;&#x7686;&#x6703;&#x81EA;&#x52D5;&#x8F49;&#x70BA;catch&#xFF0C;&#x56DE;&#x50B3;&#x8A0A;&#x606F;&#x70BA;&#x7269;&#x4EF6;{reason:&apos;cancelled&apos;}</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmLast.test.js">Github</a></p>
 </div>
 
@@ -31308,127 +31308,171 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;pmLast&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>async function test() {
+<pre class="prettyprint"><code>async function test1() {
     return new Promise((resolve, reject) =&gt; {
 
         let ms = []
 
-        let pm = function (name, t) {
+        let fun = function (name, t) {
             return new Promise(function(resolve, reject) {
                 setTimeout(() =&gt; {
-                    resolve(&apos;resolve: &apos; + name)
+                    resolve(&apos;[fun]resolve: &apos; + name)
                 }, t)
             })
         }
 
-        let pmm = pmLast(pm)
+        //&#x7528;pml&#x8F49;&#x63DB;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;
+        let pml = pmLast()
+        let funp = pml(fun) //&#x639B;&#x8F09;&#x55AE;&#x51FD;&#x6578;, &#x57F7;&#x884C;&#x624D;&#x63A8;&#x5165;&#x4F47;&#x5217;
 
-        pmm(&apos;pm1&apos;, 150)
+        funp(&apos;t1&apos;, 150)
             .then(function(msg) {
-                console.log(&apos;pm1 then&apos;, msg)
-                ms.push(&apos;pm1 then: &apos; + msg)
+                console.log(&apos;t1 then&apos;, msg)
+                ms.push(&apos;t1 then: &apos; + msg)
             })
             .catch(function(msg) {
-                console.log(&apos;pm1 catch&apos;, msg)
-                ms.push(&apos;pm1 catch: &apos; + &apos;reason &apos; + msg.reason)
+                console.log(&apos;t1 catch&apos;, msg)
+                ms.push(&apos;t1 catch: &apos; + &apos;reason &apos; + msg.reason)
             })
-        pmm(&apos;pm2&apos;, 100)
+        funp(&apos;t2&apos;, 100)
             .then(function(msg) {
-                console.log(&apos;pm2 then&apos;, msg)
-                ms.push(&apos;pm2 then: &apos; + msg)
+                console.log(&apos;t2 then&apos;, msg)
+                ms.push(&apos;t2 then: &apos; + msg)
             })
             .catch(function(msg) {
-                console.log(&apos;pm2 catch&apos;, msg)
-                ms.push(&apos;pm2 catch: &apos; + &apos;reason &apos; + msg.reason)
+                console.log(&apos;t2 catch&apos;, msg)
+                ms.push(&apos;t2 catch: &apos; + &apos;reason &apos; + msg.reason)
             })
-        pmm(&apos;pm3&apos;, 50)
+        funp(&apos;t3&apos;, 50)
             .then(function(msg) {
-                console.log(&apos;pm3 then&apos;, msg)
-                ms.push(&apos;pm3 then: &apos; + msg)
+                console.log(&apos;t3 then&apos;, msg)
+                ms.push(&apos;t3 then: &apos; + msg)
             })
             .catch(function(msg) {
-                console.log(&apos;pm3 catch&apos;, msg)
-                ms.push(&apos;pm3 catch: &apos; + &apos;reason &apos; + msg.reason)
+                console.log(&apos;t3 catch&apos;, msg)
+                ms.push(&apos;t3 catch: &apos; + &apos;reason &apos; + msg.reason)
             })
 
         setTimeout(() =&gt; {
-            pmm(&apos;pm4&apos;, 50)
+            funp(&apos;t4&apos;, 50)
                 .then((msg) =&gt; {
-                    console.log(&apos;pm4 then&apos;, msg)
-                    ms.push(&apos;pm4 then: &apos; + msg)
+                    console.log(&apos;t4 then&apos;, msg)
+                    ms.push(&apos;t4 then: &apos; + msg)
                 })
                 .catch((msg) =&gt; {
-                    console.log(&apos;pm4 catch&apos;, msg)
-                    ms.push(&apos;pm4 catch: &apos; + &apos;reason &apos; + msg.reason)
+                    console.log(&apos;t4 catch&apos;, msg)
+                    ms.push(&apos;t4 catch: &apos; + &apos;reason &apos; + msg.reason)
                 })
                 .finally(() =&gt; {
-                    resolve(JSON.stringify(ms))
+                    resolve(ms)
                 })
         }, 200)
 
     })
 }
-test()
-    .then((msg) =&gt; {
-        console.log(msg)
+
+async function test2() {
+    return new Promise((resolve, reject) =&gt; {
+
+        let ms = []
+
+        let fun1 = function (name, t) {
+            return new Promise(function(resolve, reject) {
+                setTimeout(() =&gt; {
+                    resolve(&apos;[fun1]resolve: &apos; + name)
+                }, t)
+            })
+        }
+
+        let fun2 = function (name, t) {
+            return new Promise(function(resolve, reject) {
+                setTimeout(() =&gt; {
+                    resolve(&apos;[fun2]resolve: &apos; + name)
+                }, t)
+            })
+        }
+
+        //&#x7528;pml&#x8F49;&#x63DB;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;
+        let pml = pmLast()
+        let funp1 = pml(fun1) //&#x639B;&#x8F09;&#x4E0D;&#x540C;&#x51FD;&#x6578;, &#x57F7;&#x884C;&#x624D;&#x63A8;&#x5165;&#x4F47;&#x5217;
+        let funp2 = pml(fun2) //&#x639B;&#x8F09;&#x4E0D;&#x540C;&#x51FD;&#x6578;, &#x57F7;&#x884C;&#x624D;&#x63A8;&#x5165;&#x4F47;&#x5217;
+
+        funp1(&apos;t1&apos;, 150)
+            .then(function(msg) {
+                console.log(&apos;t1 then&apos;, msg)
+                ms.push(&apos;t1 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;t1 catch&apos;, msg)
+                ms.push(&apos;t1 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+        funp2(&apos;t2&apos;, 100)
+            .then(function(msg) {
+                console.log(&apos;t2 then&apos;, msg)
+                ms.push(&apos;t2 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;t2 catch&apos;, msg)
+                ms.push(&apos;t2 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+        funp2(&apos;t3&apos;, 50)
+            .then(function(msg) {
+                console.log(&apos;t3 then&apos;, msg)
+                ms.push(&apos;t3 then: &apos; + msg)
+            })
+            .catch(function(msg) {
+                console.log(&apos;t3 catch&apos;, msg)
+                ms.push(&apos;t3 catch: &apos; + &apos;reason &apos; + msg.reason)
+            })
+
+        setTimeout(() =&gt; {
+            funp1(&apos;t4&apos;, 50)
+                .then((msg) =&gt; {
+                    console.log(&apos;t4 then&apos;, msg)
+                    ms.push(&apos;t4 then: &apos; + msg)
+                })
+                .catch((msg) =&gt; {
+                    console.log(&apos;t4 catch&apos;, msg)
+                    ms.push(&apos;t4 catch: &apos; + &apos;reason &apos; + msg.reason)
+                })
+                .finally(() =&gt; {
+                    resolve(ms)
+                })
+        }, 200)
+
     })
-// pm3 then resolve: pm3
-// pm2 catch { reason: &apos;cancelled&apos; }
-// pm1 catch { reason: &apos;cancelled&apos; }
-// pm4 then resolve: pm4
-// [&quot;pm3 then: resolve: pm3&quot;,&quot;pm2 catch: reason cancelled&quot;,&quot;pm1 catch: reason cancelled&quot;,&quot;pm4 then: resolve: pm4&quot;]</code></pre>
+}
+
+setTimeout(() =&gt; {
+    console.log(&apos;test1&apos;)
+    test1()
+        .then((ms) =&gt; {
+            console.log(JSON.stringify(ms))
+        })
+}, 1)
+// test1
+// t3 then [fun]resolve: t3
+// t2 catch { reason: &apos;cancelled&apos; }
+// t1 catch { reason: &apos;cancelled&apos; }
+// t4 then [fun]resolve: t4
+// [&quot;t3 then: [fun]resolve: t3&quot;,&quot;t2 catch: reason cancelled&quot;,&quot;t1 catch: reason cancelled&quot;,&quot;t4 then: [fun]resolve: t4&quot;]
+
+setTimeout(() =&gt; {
+    console.log(&apos;test2&apos;)
+    test2()
+        .then((ms) =&gt; {
+            console.log(JSON.stringify(ms))
+        })
+}, 300)
+// test2
+// t3 then [fun2]resolve: t3
+// t2 catch { reason: &apos;cancelled&apos; }
+// t1 catch { reason: &apos;cancelled&apos; }
+// t4 then [fun1]resolve: t4
+// [&quot;t3 then: [fun2]resolve: t3&quot;,&quot;t2 catch: reason cancelled&quot;,&quot;t1 catch: reason cancelled&quot;,&quot;t4 then: [fun1]resolve: t4&quot;]</code></pre>
         </div>
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>pm</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>&#x8F38;&#x5165;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -31449,7 +31493,7 @@ test()
 
         
 <div class="param-desc">
-    <p>&#x56DE;&#x50B3;Promise&#xFF0C;resolve&#x70BA;&#x6210;&#x529F;&#x7D50;&#x679C;&#xFF0C;reject&#x70BA;&#x5931;&#x6557;&#x7D50;&#x679C;</p>
+    <p>&#x56DE;&#x50B3;Function&#xFF0C;&#x70BA;pmQueue&#x7684;equip&#x51FD;&#x6578;&#x3002;equip&#x8F38;&#x5165;&#x70BA;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#xFF0C;&#x8F49;&#x63DB;&#x8A72;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x5F8C;&#x4E26;&#x7B49;&#x5F85;&#x5176;&#x57F7;&#x884C;&#xFF0C;&#x57F7;&#x884C;&#x6642;&#x518D;&#x50B3;&#x5165;&#x539F;&#x672C;&#x6B32;&#x8F38;&#x5165;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x4E4B;&#x53C3;&#x6578;&#xFF0C;&#x56DE;&#x50B3;&#x70BA;Promise&#xFF0C;resolve&#x56DE;&#x50B3;&#x6210;&#x529F;&#x7D50;&#x679C;&#x800C;reject&#x56DE;&#x50B3;&#x5931;&#x6557;&#x8A0A;&#x606F;&#xFF0C;&#x8A73;&#x60C5;&#x53EF;&#x898B;pmQueue</p>
 </div>
 
 
@@ -31460,7 +31504,7 @@ test()
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type">function</span>
 
 
     </dd>
@@ -31930,8 +31974,8 @@ setTimeout(function() {
 
 
 <div class="description usertext">
-    <p>&#x901A;&#x904E;&#x4F47;&#x5217;&#x9650;&#x5236;&#x8207;&#x547C;&#x53EB;&#x975E;&#x540C;&#x6B65;(Promise)&#x51FD;&#x6578;</p>
-<p>&#x53EF;&#x9650;&#x5236;&#x540C;&#x6642;&#x904B;&#x884C;&#x7684;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x6578;&#x91CF;(takeLimit&gt;0)&#x3002;
+    <p>&#x901A;&#x904E;&#x4F47;&#x5217;&#x9650;&#x5236;&#x8207;&#x547C;&#x53EB;&#x975E;&#x540C;&#x6B65;(Promise)&#x51FD;&#x6578;&#xFF0C;&#x53EF;&#x63A8;&#x5165;&#x4E0D;&#x540C;&#x4E4B;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#xFF0C;&#x5C07;&#x4E00;&#x4F75;&#x53D7;&#x9650;</p>
+<p>&#x53EF;&#x9650;&#x5236;&#x540C;&#x6642;&#x904B;&#x884C;&#x7684;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x7E3D;&#x6578;&#x91CF;(takeLimit&gt;0)&#x3002;
 &#x53EF;&#x53EA;&#x53D6;&#x6700;&#x5F8C;&#x547C;&#x53EB;&#x7684;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x9032;&#x884C;&#x9632;&#x6296;&#x529F;&#x80FD;(takeLast=true)&#xFF0C;&#x524D;&#x9762;&#x7684;&#x547C;&#x53EB;&#x7686;&#x81EA;&#x52D5;&#x8F49;&#x70BA;catch&#xFF0C;&#x56DE;&#x50B3;&#x8A0A;&#x606F;&#x70BA;&#x7269;&#x4EF6;{reason:&apos;cancelled&apos;}&#x3002;</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js">Github</a></p>
 </div>
@@ -42655,7 +42699,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Thu Apr 02 2020 10:28:09 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a> on Thu Apr 02 2020 11:56:52 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -42679,7 +42723,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.3.50/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.4.0/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
