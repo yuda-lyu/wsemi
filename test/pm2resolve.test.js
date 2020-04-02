@@ -1,42 +1,58 @@
 import assert from 'assert'
-import genPm from '../src/genPm.mjs'
 import pm2resolve from '../src/pm2resolve.mjs'
 
 
 describe(`pm2resolve`, function() {
 
-    function fResolve(c) {
-        let pm = genPm()
-        setTimeout(function() {
-            pm.resolve('fResolve:' + c)
-        }, 1)
-        return pm
+    function fun1(c) {
+        return new Promise((resolve, reject) => {
+            setTimeout(function() {
+                resolve('fun1:' + c)
+            }, 1)
+        })
     }
-    let rResolve = {
+    let fun1r = {
         state: 'success',
-        msg: 'fResolve:abc'
+        msg: 'fun1:abc'
     }
 
-    function fReject(c) {
-        let pm = genPm()
-        setTimeout(function() {
-            pm.reject('fReject:' + c)
-        }, 1)
-        return pm
+    function fun2(c) {
+        return new Promise((resolve, reject) => {
+            setTimeout(function() {
+                reject('fun2:' + c)
+            }, 1)
+        })
     }
-    let rReject = {
+    let fun2r = {
         state: 'error',
-        msg: 'fReject:def'
+        msg: 'fun2:def'
     }
 
-    it(`should then ${JSON.stringify(rResolve)} when call pm2resolve(fResolve)('abc')`, async function() {
-        let msg = await pm2resolve(fResolve)('abc')
-        assert.strict.deepEqual(msg, rResolve)
+    function fun3(c) {
+        return new Promise((resolve, reject) => {
+            setTimeout(function() {
+                reject({ reason: 'cancelled' })
+            }, 1)
+        })
+    }
+    let fun3r = {
+        state: 'cancelled',
+        msg: ''
+    }
+
+    it(`should then ${JSON.stringify(fun1r)} when call pm2resolve(fun1)('abc')`, async function() {
+        let msg = await pm2resolve(fun1)('abc')
+        assert.strict.deepEqual(msg, fun1r)
     })
 
-    it(`should then ${JSON.stringify(rReject)} when call pm2resolve(fReject)('def')`, async function() {
-        let msg = await pm2resolve(fReject)('def')
-        assert.strict.deepEqual(msg, rReject)
+    it(`should then ${JSON.stringify(fun2r)} when call pm2resolve(fun2)('def')`, async function() {
+        let msg = await pm2resolve(fun2)('def')
+        assert.strict.deepEqual(msg, fun2r)
+    })
+
+    it(`should then ${JSON.stringify(fun3r)} when call pm2resolve(fun3)('ghi')`, async function() {
+        let msg = await pm2resolve(fun3)('ghi')
+        assert.strict.deepEqual(msg, fun3r)
     })
 
 })
