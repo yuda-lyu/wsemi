@@ -97,28 +97,47 @@ function isUtf8(buf) {
  * @returns {*} 回傳任意資料
  * @example
  * //need test in nodejs
- * let prog = 'python'
- * let scp = 'fun.py'
- * let pa = 'sin'
- * let pb = '12'
- * let pc = '34.56'
- * execScript(prog, [scp, pa, pb, pc])
- *     .then(function(data) {
- *         console.log('then', data)
- *     })
- *     .catch(function(data) {
- *         console.log('catch', data)
- *     })
  *
- * let prog = 'prog.exe'
- * let arg = 'input'
- * execScript(prog, arg)
- *     .then(function(data) {
- *         console.log('then', data)
- *     })
- *     .catch(function(data) {
- *         console.log('catch', data)
- *     })
+ * if(true){
+ *     let prog = 'python'
+ *     let scp = 'fun.py'
+ *     let pa = 'sin'
+ *     let pb = '12'
+ *     let pc = '34.56'
+ *     execScript(prog, [scp, pa, pb, pc])
+ *         .then(function(data) {
+ *             console.log('then', data)
+ *         })
+ *         .catch(function(data) {
+ *             console.log('catch', data)
+ *         })
+ * }
+ *
+ * if(true){
+ *     let prog = 'prog.exe'
+ *     let arg = 'input'
+ *     execScript(prog, arg)
+ *         .then(function(data) {
+ *             console.log('then', data)
+ *         })
+ *         .catch(function(data) {
+ *             console.log('catch', data)
+ *         })
+ * }
+ *
+ * if(true){
+ *     let prog = 'C:\\Program Files\\7-Zip\\7z.exe'
+ *     let pw = 'AbcD1234'
+ *     let arg = ['a', 'aaa.7z', 'aaa.txt', '-p' + pw]
+ *     execScript(prog, arg)
+ *         .then(function(data) {
+ *             console.log('then', data)
+ *         })
+ *         .catch(function(data) {
+ *             console.log('catch', data)
+ *         })
+ * }
+ *
  */
 function execScript(prog, args) {
     return new Promise(function(resolve, reject) {

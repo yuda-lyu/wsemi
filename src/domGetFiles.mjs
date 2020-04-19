@@ -21,9 +21,9 @@ function domGetFiles(ele, sizelimit = 500) {
     }
 
     //files
-    let err = []
+    let errs = {}
     let files = []
-    each(ele.files, function(file) {
+    each(ele.files, function(file, k) {
 
         //size
         let size = file.size
@@ -32,7 +32,7 @@ function domGetFiles(ele, sizelimit = 500) {
         if (size / 1024 / 1024 > sizelimit) { //轉mb
 
             //push err
-            err.push(`檔案大小超過上限${sizelimit}mb`)
+            errs[k] = `檔案大小超過上限${sizelimit}mb`
 
         }
 
@@ -42,8 +42,8 @@ function domGetFiles(ele, sizelimit = 500) {
     })
 
     return {
-        files: files,
-        err: err
+        files,
+        errs,
     }
 }
 
