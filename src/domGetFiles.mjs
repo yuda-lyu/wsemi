@@ -1,5 +1,5 @@
 import each from 'lodash/each'
-import ispint from './ispint.mjs'
+import cdbl from './cdbl.mjs'
 
 
 /**
@@ -16,7 +16,8 @@ import ispint from './ispint.mjs'
 function domGetFiles(ele, sizelimit = 500) {
 
     //check
-    if (ispint(sizelimit)) {
+    sizelimit = cdbl(sizelimit)
+    if (sizelimit <= 0) {
         sizelimit = 500
     }
 
@@ -25,7 +26,7 @@ function domGetFiles(ele, sizelimit = 500) {
     let files = []
     each(ele.files, function(file, k) {
 
-        //size
+        //size, 單位bytes
         let size = file.size
 
         //check
