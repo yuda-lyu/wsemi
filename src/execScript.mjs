@@ -151,13 +151,17 @@ function execScript(prog, args) {
         let r = cp.spawnSync(prog, args)
         let cstdout = r.stdout.toString('utf8')
         let cstderr = r.stderr.toString('utf8')
-        // console.log('spawnSync r', r)
-        // console.log('spawnSync stdout', cstdout)
-        // console.log('spawnSync stderr', cstderr)
+        //console.log('spawnSync r', r)
+        //console.log('spawnSync stdout', cstdout)
+        //console.log('spawnSync stderr', cstderr)
         if (cstderr) {
+            //console.log('reject(cstderr)')
             reject(cstderr)
         }
-        resolve(cstdout)
+        else {
+            //console.log('resolve(cstdout)')
+            resolve(cstdout)
+        }
 
         // //spawn
         // let process = cp.spawn(prog, args)
