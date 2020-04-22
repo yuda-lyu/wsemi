@@ -1,3 +1,4 @@
+import cloneDeep from 'lodash/cloneDeep'
 import Evem from './evem.mjs'
 import waitFun from './waitFun.mjs'
 import isfun from './isfun.mjs'
@@ -277,7 +278,7 @@ function cache() {
                 emit('message', { fun: 'get', key, msg: 'use cache' })
             }
 
-            return data[key].value
+            return cloneDeep(data[key].value) //若為物件可能受外部調用而被修改到快取區的記憶體, 故得要用cloneDeep複製才回傳
         }
         else {
             emit('error', { fun: 'get', key, msg: 'invalid key' })
