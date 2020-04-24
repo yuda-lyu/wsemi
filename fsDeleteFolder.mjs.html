@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>u16arr2b64.mjs - Documentation</title>
+    <title>fsDeleteFolder.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">u16arr2b64.mjs</h1>
+    <h1 class="page-title">fsDeleteFolder.mjs</h1>
     
 
     
@@ -42,34 +42,67 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isu16arr from './isu16arr.mjs'
-import u16arr2u8arr from './u16arr2u8arr.mjs'
-import u8arr2b64 from './u8arr2b64.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
 
 
 /**
- * Uint16Array轉base64字串
+ * 後端nodejs刪除資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFolder.test.js Github}
  * @memberOf wsemi
- * @param {Uint16Array} u16a 輸入Uint16Array
- * @returns {String} 回傳base64字串
+ * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @example
- * console.log(u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc'])))
- * // => 'AQItAA=='
+ * need test in nodejs.
  */
-function u16arr2b64(u16a) {
+function fsDeleteFolder(pah) {
 
     //check
-    if (!isu16arr(u16a)) {
-        return ''
+    if (!fs.existsSync(pah)) {
+        return {
+            error: 'file or folder is not exist: ' + pah
+        }
     }
 
-    return u8arr2b64(u16arr2u8arr(u16a))
+    //刪除資料夾內的全部資料夾與檔案
+    try {
+        fs.readdirSync(pah).forEach(function(file, index) {
+            let curPath = pah + '/' + file
+            if (fs.lstatSync(curPath).isDirectory()) {
+                fsDeleteFolder(curPath)
+            }
+            else {
+                try {
+                    fs.unlinkSync(curPath)
+                }
+                catch (err) {
+                    //
+                }
+            }
+        })
+    }
+    catch (err) {
+        return {
+            error: err
+        }
+    }
+
+    //刪除自己
+    try {
+        fs.rmdirSync(pah)
+    }
+    catch (err) {
+        return {
+            error: err
+        }
+    }
+
+    return {
+        success: 'fsDeleteFolder done: ' + pah
+    }
 }
 
 
-export default u16arr2b64
+export default fsDeleteFolder
 </code></pre>
         </article>
     </section>

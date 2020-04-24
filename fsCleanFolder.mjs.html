@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>u16arr2b64.mjs - Documentation</title>
+    <title>fsCleanFolder.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">u16arr2b64.mjs</h1>
+    <h1 class="page-title">fsCleanFolder.mjs</h1>
     
 
     
@@ -42,34 +42,73 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isu16arr from './isu16arr.mjs'
-import u16arr2u8arr from './u16arr2u8arr.mjs'
-import u8arr2b64 from './u8arr2b64.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+import fsDeleteFolder from './fsDeleteFolder.mjs'
 
 
 /**
- * Uint16Array轉base64字串
+ * 後端nodejs清空資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolder.test.js Github}
  * @memberOf wsemi
- * @param {Uint16Array} u16a 輸入Uint16Array
- * @returns {String} 回傳base64字串
+ * @param {String} pah 輸入欲清空資料夾路徑字串
  * @example
- * console.log(u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc'])))
- * // => 'AQItAA=='
+ * need test in nodejs.
  */
-function u16arr2b64(u16a) {
+function fsCleanFolder(pah) {
 
     //check
-    if (!isu16arr(u16a)) {
-        return ''
+    if (!fs.lstatSync(pah).isDirectory()) {
+        return {
+            error: 'input path is not folder'
+        }
     }
 
-    return u8arr2b64(u16arr2u8arr(u16a))
+    //check
+    if (!fs.existsSync(pah)) {
+        try {
+            fs.mkdirSync(pah)
+            return {
+                success: 'fsCleanFolder done: ' + pah
+            }
+        }
+        catch (err) {
+            return {
+                error: err
+            }
+        }
+    }
+
+    //刪除資料夾內的全部資料夾與檔案
+    try {
+        fs.readdirSync(pah).forEach(function(file, index) {
+            let curPath = pah + '/' + file
+            if (fs.lstatSync(curPath).isDirectory()) {
+                fsDeleteFolder(curPath)
+            }
+            else {
+                try {
+                    fs.unlinkSync(curPath)
+                }
+                catch (err) {
+                //
+                }
+            }
+        })
+    }
+    catch (err) {
+        return {
+            error: err
+        }
+    }
+
+    return {
+        success: 'fsCleanFolder done: ' + pah
+    }
 }
 
 
-export default u16arr2b64
+export default fsCleanFolder
 </code></pre>
         </article>
     </section>
