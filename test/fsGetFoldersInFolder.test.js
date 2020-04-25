@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import getFilesInFolder from '../src/getFilesInFolder.mjs'
+//import fsGetFoldersInFolder from '../src/fsGetFoldersInFolder.mjs'
 
 
-describe(`getFilesInFolder`, function() {
+describe(`fsGetFoldersInFolder`, function() {
 
     it(`need test in nodejs`, function() {
         assert.strict.deepEqual(1, 1)
