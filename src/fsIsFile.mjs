@@ -28,6 +28,9 @@ function fsIsFile(pah) {
     if (fs.lstatSync(pah).isDirectory()) {
         return false
     }
+    if (fs.lstatSync(pah).isSymbolicLink()) {
+        return false
+    }
 
     return true
 }
