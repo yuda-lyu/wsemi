@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isundefined.mjs - Documentation</title>
+    <title>fsIsFolder.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isundefined.mjs</h1>
+    <h1 class="page-title">fsIsFolder.mjs</h1>
     
 
     
@@ -42,25 +42,45 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為undefined
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isundefined.test.js Github}
- * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值
- * @example
- * console.log(isundefined(undefined))
- * // => true
- */
-function isundefined(v) {
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
 
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Undefined]'
+
+/**
+ * 後端nodejs判斷是否為資料夾
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFolder.test.js Github}
+ * @memberOf wsemi
+ * @param {String} pah 輸入路徑字串
+ * @example
+ * need test in nodejs.
+ * let fd = 'folder p'
+ * fsIsFolder(fd)
+ * // => true
+ *
+ * let fn = 'file q'
+ * fsIsFolder(fn)
+ * // => false
+ */
+function fsIsFolder(pah) {
+
+    //check
+    if (!fs.existsSync(pah)) {
+        return false
+    }
+
+    //check
+    if (fs.lstatSync(pah).isFile()) {
+        return false
+    }
+    if (fs.lstatSync(pah).isSymbolicLink()) {
+        return false
+    }
+
+    return true
 }
 
 
-export default isundefined
+export default fsIsFolder
 </code></pre>
         </article>
     </section>
