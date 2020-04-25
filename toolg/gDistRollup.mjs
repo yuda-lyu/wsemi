@@ -12,6 +12,7 @@ rollupFiles({
     hookNameDist: () => 'wsemi',
     nameDistType: 'kebabCase',
     globals: {
+        'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
         //'crypto-js': 'crypto-js', //按需打包crypto-js進來
@@ -23,6 +24,7 @@ rollupFiles({
         'xss': 'filterXSS',
     },
     external: [
+        'path',
         'fs',
         'child_process',
         //'crypto-js',
