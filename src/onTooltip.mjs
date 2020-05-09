@@ -29,10 +29,10 @@ function onTooltip(ele, ct, option = {}) {
     }
 
     //option
-    console.log('option', option)
+    // console.log('option', option)
     if (iseobj(option)) {
         option = merge(optionDef, option)
-        console.log('merge option', option)
+        // console.log('merge option', option)
     }
     else {
         option = optionDef

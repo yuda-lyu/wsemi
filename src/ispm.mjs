@@ -26,7 +26,7 @@ function ispm(v) {
     }
 
     try {
-        b = v && typeof v.subscribe !== 'function' && typeof v.then === 'function' //可偵測async function
+        b = typeof v.subscribe !== 'function' && typeof v.then === 'function' //可偵測async function
     }
     catch (err) {}
 
