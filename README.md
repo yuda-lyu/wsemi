@@ -44,7 +44,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`
+> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `viewerjs`
 ```alias
 npm i wsemi
 ```
@@ -88,7 +88,13 @@ or
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 ```
+[Optional] Add link and script for viewerjs.
+> **Note:** include script when use `showImages` function, and don't need include script when use `showImagesDyn` function.
+```alias
+<link href="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.js"></script>
+```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.14/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.15/dist/wsemi.umd.js"></script>
 ```

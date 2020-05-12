@@ -44,16 +44,6 @@ function optMuti() {
 }
 
 
-function isImg(ele) {
-    let name = ''
-    try {
-        name = ele.nodeName
-    }
-    catch (err) {}
-    return name === 'IMG'
-}
-
-
 function getViewer() {
     let g = getGlobal()
     let x = Viewer || g.Viewer
