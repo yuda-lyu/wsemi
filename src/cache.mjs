@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep'
-import Evem from './evem.mjs'
+import evem from './evem.mjs'
 import waitFun from './waitFun.mjs'
 import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
@@ -194,7 +194,7 @@ import cint from './cint.mjs'
  *
  */
 function cache() {
-    let ev = new Evem()
+    let ev = evem()
     let data = {} //快取資料
 
     function emit(mode, data) {

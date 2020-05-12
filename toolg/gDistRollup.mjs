@@ -22,6 +22,7 @@ rollupFiles({
         //'tippy.js': 'tippy.js', //按需(沒辦法只能全入)打包tippy.js與popper.js進來
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
+        'viewerjs': 'viewerjs',
     },
     external: [
         'path',
@@ -34,5 +35,6 @@ rollupFiles({
         //'tippy.js',
         'ua-parser-js',
         'xss',
+        'viewerjs',
     ],
 })

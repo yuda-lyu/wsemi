@@ -1,4 +1,4 @@
-import Evem from './evem.mjs'
+import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 
 
@@ -13,7 +13,7 @@ import isfun from './isfun.mjs'
  * need test in browser
  */
 function domDetect(f, ms = 20) {
-    let ev = new Evem()
+    let ev = evem()
     let timer
     let s = {
         clientWidth: 0,

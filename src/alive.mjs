@@ -1,7 +1,7 @@
 import each from 'lodash/each'
 import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
-import Evem from './evem.mjs'
+import evem from './evem.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
@@ -66,7 +66,7 @@ import cint from './cint.mjs'
  * // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
  */
 function alive(timeAlive = 10000) {
-    let ev = new Evem()
+    let ev = evem()
     let q = {} //queue
     let t = null //timer
 

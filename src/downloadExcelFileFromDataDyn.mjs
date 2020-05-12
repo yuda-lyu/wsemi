@@ -46,6 +46,9 @@ function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
             }
 
         })
+        .catch((err) => {
+            pm.reject(err)
+        })
 
     return pm
 }

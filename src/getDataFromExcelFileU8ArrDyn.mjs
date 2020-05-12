@@ -47,6 +47,9 @@ function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathIt
             }
 
         })
+        .catch((err) => {
+            pm.reject(err)
+        })
 
     return pm
 }

@@ -1,5 +1,5 @@
 /**
- * 前端判斷元素id是否存在
+ * 前端判斷元素是否存在
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEle.test.js Github}
  * @memberOf wsemi

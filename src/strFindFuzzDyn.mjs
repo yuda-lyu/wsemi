@@ -69,6 +69,9 @@ function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
             pm.resolve(r)
 
         })
+        .catch((err) => {
+            pm.reject(err)
+        })
 
     return pm
 }
