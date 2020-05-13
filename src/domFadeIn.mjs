@@ -1,5 +1,5 @@
 import get from 'lodash/get'
-import cdbl from 'wsemi/src/cdbl.mjs'
+import cdbl from './cdbl.mjs'
 
 
 /**
@@ -9,7 +9,7 @@ import cdbl from 'wsemi/src/cdbl.mjs'
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入取得dom函數
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Number} [opt.duration=1000] 輸入動畫持續時間毫秒整數，預設1000
+ * @param {Number} [opt.duration=500] 輸入動畫持續時間毫秒整數，預設500
  * @param {Number} [opt.delay=0] 輸入動畫延遲啟動時間毫秒整數，預設0
  * @param {Number} [opt.opacityIni=0] 輸入初始透明度浮點數，介於0至1之間，預設0
  * @example
@@ -22,7 +22,7 @@ import cdbl from 'wsemi/src/cdbl.mjs'
 function domFadeIn(ele, opt = {}) {
 
     //duration
-    let duration = get(opt, 'duration', 1000)
+    let duration = get(opt, 'duration', 500)
     duration = cdbl(duration)
     if (duration < 0) {
         duration = 1000
