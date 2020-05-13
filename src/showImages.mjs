@@ -72,6 +72,11 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
     let img = null
 
     //check
+    if (!iseobj(opt)) {
+        opt = {}
+    }
+
+    //img and check one
     if (!isEle(eleImg)) {
         return Promise.reject('eleImg is not HTMLElement')
     }
@@ -88,7 +93,7 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
         }
     }
 
-    //check
+    //check one
     if (!one) { //若有使用群組(父層)元素
         let imgs = eleGroup.querySelectorAll('img')
         let n = size(imgs)
@@ -98,11 +103,6 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
         else if (n === 1) {
             one = true //eleGroup其內只有一張圖片
         }
-    }
-
-    //check
-    if (!iseobj(opt)) {
-        opt = {}
     }
 
     //useOpt

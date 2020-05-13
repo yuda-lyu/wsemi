@@ -42,6 +42,10 @@ To view some examples for more understanding, visit examples:
 
 > **xlsx[dynamic import]:** [ex-xlsx-dynamic](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx-dynamic) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx-dynamic)]
 
+> **viewerjs:** [ex-viewerjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-viewerjs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-viewerjs.html)]
+
+> **viewerjs[dynamic import]:** [ex-viewerjs-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-viewerjs-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-viewerjs-dynamic.html)]
+
 ## Installation
 ### Using npm(ES6 module):
 > **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `viewerjs`
