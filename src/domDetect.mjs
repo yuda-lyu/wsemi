@@ -10,7 +10,21 @@ import isfun from './isfun.mjs'
  * @param {Function} f 輸入取得dom函數
  * @param {Integer} [ms=20] 輸入偵測頻率整數，預設20毫秒
  * @example
- * need test in browser
+ *
+ * //監聽dom
+ * let de = domDetect(() => {
+ *     return document.querySelector('#id')
+ * })
+ * de.on('resize', (s) => {
+ *     console.log('resize', s)
+ * })
+ * de.on('display', (s) => {
+ *     console.log('display', s)
+ * })
+ *
+ * //釋放監聽
+ * de.clear()
+ *
  */
 function domDetect(f, ms = 20) {
     let ev = evem()
