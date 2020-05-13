@@ -4,6 +4,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
 import getGlobal from './getGlobal.mjs'
 import isEle from './isEle.mjs'
+import iseobj from './iseobj.mjs'
 
 
 function optOne() {
@@ -97,6 +98,11 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
         else if (n === 1) {
             one = true //eleGroup其內只有一張圖片
         }
+    }
+
+    //check
+    if (!iseobj(opt)) {
+        opt = {}
     }
 
     //useOpt
