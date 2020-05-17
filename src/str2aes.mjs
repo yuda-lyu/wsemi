@@ -27,6 +27,28 @@ import isbol from './isbol.mjs'
  * // => U2FsdGVkX19c7rKkQ38SfqZLaQEKzLD0PhXzzdYeGbngewsPmzS8PcOwHQIsf2Zo (is random)
  */
 function str2aes(str, key, base64 = false) {
+    // let str='123abc中文'
+    // let key='123'
+    // let iv='abc'
+
+    // console.log('key1', key)
+    // key = CryptoJS.enc.Utf8.parse(key)
+    // console.log('key2', key)
+
+    // console.log('iv1', iv)
+    // iv = CryptoJS.enc.Utf8.parse(iv)
+    // console.log('iv2', iv)
+
+    // let o = CryptoJS.AES.encrypt(str, key, { iv: iv })
+    // //console.log('ciphertext', o.ciphertext)
+    // //console.log('key', o.key.words, o.key.sigBytes)
+    // //console.log('iv', o.iv.words, o.iv.sigBytes)
+    // //console.log('blockSize', o.blockSize)
+    // //console.log('salt', o.salt)
+
+    // let r = o.toString()
+    // console.log('output', r)
+    // //可固定輸出: DJ5FkpmWJPA/GJRB3/WYRQ==
 
     //check
     if (!isestr(str)) {
@@ -52,6 +74,5 @@ function str2aes(str, key, base64 = false) {
 
     return c
 }
-
 
 export default str2aes

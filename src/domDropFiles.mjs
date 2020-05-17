@@ -1,3 +1,4 @@
+import values from 'lodash/values'
 import evem from './evem.mjs'
 
 
@@ -64,8 +65,10 @@ function domDropFiles(ele) {
             dgOut(e)
         }
 
+        //files, 原dataTransfer.files是key為0~n的類似陣列物件, 為避免外部誤認為陣列, 故此處強制用values轉陣列
+        let files = values(e.dataTransfer.files)
+
         //emit
-        let files = e.dataTransfer.files
         ev.emit('getFiles', { files, e, cb })
 
     }
