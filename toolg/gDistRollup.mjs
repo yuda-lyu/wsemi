@@ -19,10 +19,11 @@ rollupFiles({
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
-        //'tippy.js': 'tippy.js', //按需(沒辦法只能全入)打包tippy.js與popper.js進來
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
         'viewerjs': 'viewerjs',
+        //'tippy.js': 'tippy.js', //打包tippy.js與popper.js進來, 因沒辦法按需只能全入
+        //'@shopify/draggable': '@shopify/draggable',
     },
     external: [
         'path',
@@ -32,9 +33,10 @@ rollupFiles({
         'dayjs',
         'xlsx',
         'fuzzball',
-        //'tippy.js',
         'ua-parser-js',
         'xss',
         'viewerjs',
+        //'tippy.js',
+        //'@shopify/draggable',
     ],
 })
