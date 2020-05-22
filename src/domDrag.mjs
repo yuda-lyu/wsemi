@@ -63,8 +63,14 @@ function domDrag(ele, opt = {}) {
     //ev
     let ev = evem()
 
+    //UseDraggable, Draggable於weboack打包時會用default儲存, 調用時則需改用default
+    let UseDraggable = Draggable
+    if (Draggable.default) {
+        UseDraggable = Draggable.default
+    }
+
     //draggable
-    let draggable = new Draggable(ele, {
+    let draggable = new UseDraggable(ele, {
         draggable: selectors,
     })
     // console.log('draggable', draggable)
