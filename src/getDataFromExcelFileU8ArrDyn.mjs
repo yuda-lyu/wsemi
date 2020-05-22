@@ -1,5 +1,4 @@
 import get from 'lodash/get'
-import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
 import getDataFromExcelFileU8Arr from './getDataFromExcelFileU8Arr.mjs'
@@ -19,10 +18,7 @@ import getDataFromExcelFileU8Arr from './getDataFromExcelFileU8Arr.mjs'
  * @example
  * need test in browser
  */
-function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathItems) {
-
-    //pm
-    let pm = genPm()
+async function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathItems) {
 
     //pathItems
     if (!isearr(pathItems)) {
@@ -32,26 +28,15 @@ function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathIt
     }
 
     //importResources
-    importResources(pathItems)
-        .then((res) => {
-            //console.log('getDataFromExcelFileU8ArrDyn res', res)
+    await importResources(pathItems)
 
-            //getDataFromExcelFileU8Arr
-            let r = getDataFromExcelFileU8Arr(u8a, fmt, useHead)
+    //getDataFromExcelFileU8Arr
+    let r = getDataFromExcelFileU8Arr(u8a, fmt, useHead)
 
-            if (get(r, 'error', '') !== '') {
-                pm.reject(r.error)
-            }
-            else {
-                pm.resolve(r)
-            }
-
-        })
-        .catch((err) => {
-            pm.reject(err)
-        })
-
-    return pm
+    if (get(r, 'error', '') !== '') {
+        return Promise.reject(r.error)
+    }
+    return r
 }
 
 

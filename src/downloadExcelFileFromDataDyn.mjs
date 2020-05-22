@@ -1,5 +1,4 @@
 import get from 'lodash/get'
-import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
 import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
@@ -18,10 +17,7 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * @example
  * need test in browser
  */
-function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
-
-    //pm
-    let pm = genPm()
+async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
 
     //pathItems
     if (!isearr(pathItems)) {
@@ -31,26 +27,15 @@ function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
     }
 
     //importResources
-    importResources(pathItems)
-        .then((res) => {
-            //console.log('downloadExcelFileFromDataDyn res', res)
+    await importResources(pathItems)
 
-            //downloadExcelFileFromData
-            let r = downloadExcelFileFromData(cfn, csn, data)
+    //downloadExcelFileFromData
+    let r = downloadExcelFileFromData(cfn, csn, data)
 
-            if (get(r, 'error', '') !== '') {
-                pm.reject(r.error)
-            }
-            else {
-                pm.resolve()
-            }
-
-        })
-        .catch((err) => {
-            pm.reject(err)
-        })
-
-    return pm
+    if (get(r, 'error', '') !== '') {
+        return Promise.reject(r.error)
+    }
+    return r
 }
 
 

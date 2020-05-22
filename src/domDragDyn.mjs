@@ -27,17 +27,12 @@ async function domDragDyn(ele, opt = {}, pathItems) {
     }
 
     //importResources
-    let res = await importResources(pathItems)
-    // console.log('res', res)
+    await importResources(pathItems)
 
     //domDrag
-    let r = await domDrag(ele, opt)
-    // console.log('r', r)
+    let r = domDrag(ele, opt)
 
-    return {
-        res,
-        state: r,
-    }
+    return r
 }
 
 

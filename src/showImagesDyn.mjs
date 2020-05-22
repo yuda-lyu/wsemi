@@ -28,17 +28,13 @@ async function showImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
     }
 
     //importResources
-    let res = await importResources(pathItems)
+    await importResources(pathItems)
     // console.log('res', res)
 
     //showImages
     let r = await showImages(eleImg, eleGroup, opt)
-    // console.log('r', r)
 
-    return {
-        res,
-        state: r,
-    }
+    return r
 }
 
 

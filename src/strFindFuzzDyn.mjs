@@ -1,4 +1,3 @@
-import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
 import strFindFuzz from './strFindFuzz.mjs'
@@ -45,10 +44,7 @@ import strFindFuzz from './strFindFuzz.mjs'
  *         // => true
  *     })
  */
-function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
-
-    //pm
-    let pm = genPm()
+async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
 
     //pathItems
     if (!isearr(pathItems)) {
@@ -58,22 +54,12 @@ function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
     }
 
     //importResources
-    importResources(pathItems)
-        .then((res) => {
-            //console.log('strFindFuzzDyn res', res)
+    await importResources(pathItems)
 
-            //strFindFuzz
-            let r = strFindFuzz(ar, strkey, bscore)
+    //strFindFuzz
+    let r = strFindFuzz(ar, strkey, bscore)
 
-            //resolve
-            pm.resolve(r)
-
-        })
-        .catch((err) => {
-            pm.reject(err)
-        })
-
-    return pm
+    return r
 }
 
 

@@ -27,10 +27,7 @@ import getUserAgent from './getUserAgent.mjs'
  *         }
  *     })
  */
-function getUserAgentDyn(v = null, pathItems) {
-
-    //pm
-    let pm = genPm()
+async function getUserAgentDyn(v = null, pathItems) {
 
     //pathItems
     if (!isearr(pathItems)) {
@@ -40,22 +37,12 @@ function getUserAgentDyn(v = null, pathItems) {
     }
 
     //importResources
-    importResources(pathItems)
-        .then((res) => {
-            //console.log('getUserAgentDyn res', res)
+    await importResources(pathItems)
 
-            //getUserAgent
-            let r = getUserAgent(v)
+    //getUserAgent
+    let r = getUserAgent(v)
 
-            //resolve
-            pm.resolve(r)
-
-        })
-        .catch((err) => {
-            pm.reject(err)
-        })
-
-    return pm
+    return r
 }
 
 
