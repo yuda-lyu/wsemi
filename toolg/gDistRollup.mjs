@@ -15,21 +15,19 @@ rollupFiles({
         'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
-        //'crypto-js': 'crypto-js', //按需打包crypto-js進來
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        'viewerjs': 'viewerjs',
+        'viewerjs': 'Viewer',
         //'tippy.js': 'tippy.js', //打包tippy.js與popper.js進來, 因沒辦法按需只能全入
-        //'@shopify/draggable': '@shopify/draggable',
+        //'@shopify/draggable': 'Draggable', //因draggable.js沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
     },
     external: [
         'path',
         'fs',
         'child_process',
-        //'crypto-js',
         'dayjs',
         'xlsx',
         'fuzzball',

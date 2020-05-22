@@ -4,13 +4,25 @@ import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'
 import evem from './evem.mjs'
+import getGlobal from './getGlobal.mjs'
 import domIsPageXYIn from './domIsPageXYIn.mjs'
 import domGetOffset from './domGetOffset.mjs'
-import Draggable from '@shopify/draggable/lib/draggable'
+//import Draggable from '@shopify/draggable/lib/draggable' //draggable.js沒有umd版, 故引用後即便用rollup剔除@shopify/draggable再打包, 還是會有未檢查window的殼層程式碼出現導致無法於nodejs環境下使用wsemi
+
+
+function getDraggable() {
+    let g = getGlobal()
+    //let x = Draggable || g.Draggable
+    let x = g.Draggable //直接取window內Draggable
+    if (x.default) {
+        x = x.default
+    }
+    return x
+}
 
 
 /**
- * 前端找尋DOM元素並插入節點、元素或文字等
+ * 前端DOM元素拖曳功能
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.js Github}
  * @memberOf wsemi
@@ -63,11 +75,8 @@ function domDrag(ele, opt = {}) {
     //ev
     let ev = evem()
 
-    //UseDraggable, Draggable於weboack打包時會用default儲存, 調用時則需改用default
-    let UseDraggable = Draggable
-    if (Draggable.default) {
-        UseDraggable = Draggable.default
-    }
+    //UseDraggable
+    let UseDraggable = getDraggable()
 
     //draggable
     let draggable = new UseDraggable(ele, {

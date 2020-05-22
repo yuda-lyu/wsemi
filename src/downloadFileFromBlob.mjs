@@ -10,6 +10,12 @@ import isestr from './isestr.mjs'
  */
 function df_IE11(cfn, blob) {
 
+    //check
+    if (typeof window !== 'undefined') {
+        console.log('no window')
+        return
+    }
+
     //msSaveOrOpenBlob
     window.navigator.msSaveOrOpenBlob(blob, cfn)
 
@@ -24,6 +30,12 @@ function df_IE11(cfn, blob) {
  * @param {Blob} blob 輸入資料Blob
  */
 function df_HTML5(cfn, blob) {
+
+    //check
+    if (typeof window !== 'undefined') {
+        console.log('no window')
+        return
+    }
 
     //createObjectURL
     let url = window.URL.createObjectURL(blob)
@@ -63,7 +75,7 @@ function downloadFileFromBlob(cfn, blob) {
     }
 
     //check
-    if (!window) {
+    if (typeof window !== 'undefined') {
         console.log('no window')
         return
     }

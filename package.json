@@ -1,10 +1,9 @@
 {
   "name": "wsemi",
-  "version": "1.4.23",
+  "version": "1.4.24",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
-    "@shopify/draggable": "^1.0.0-beta.8",
     "crypto-js": "^3.3.0",
     "dayjs": "^1.8.27",
     "eventemitter3": "^4.0.4",

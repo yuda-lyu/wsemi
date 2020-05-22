@@ -12,7 +12,7 @@
 function isNarrow(ele) {
 
     //check
-    if (!window) {
+    if (typeof window !== 'undefined') {
         return false
     }
 
