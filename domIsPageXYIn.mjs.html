@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>bs2u8arr.mjs - Documentation</title>
+    <title>domIsPageXYIn.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">bs2u8arr.mjs</h1>
+    <h1 class="page-title">domIsPageXYIn.mjs</h1>
     
 
     
@@ -42,38 +42,56 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+            <pre class="prettyprint source linenums"><code>import isNumber from 'lodash/isNumber'
+import isEle from './isEle.mjs'
+import domGetBounding from './domGetBounding.mjs'
 
 
 /**
- * BinaryString轉Unit8Array，BinaryString為UTF-16編碼
+ * 前端計算pageX與pageY是否位於DOM元素內
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsPageXYIn.test.js Github}
  * @memberOf wsemi
- * @param {String} bs 輸入BinaryString字串
- * @returns {Unit8Array} 回傳Unit8Array資料
+ * @param {Number} pageX 輸入點的pageX座標
+ * @param {Number} pageY 輸入點的pageY座標
+ * @param {HTMLElement} ele 輸入元素
  * @example
- * console.log(bs2u8arr('abc'))
- * // => new Uint8Array([97, 98, 99])
+ * need test in browser
  */
-function bs2u8arr(str) {
+function domIsPageXYIn(pageX, pageY, ele) {
+    let r = false
 
     //check
-    if (!isestr(str)) {
-        return new Uint8Array()
+    if (!isNumber(pageX)) {
+        console.log('pageX is not Number', pageX)
+        return
+    }
+    if (!isNumber(pageY)) {
+        console.log('pageY is not Number', pageY)
+        return
+    }
+    if (!isEle(ele)) {
+        console.log('ele is not HTMLElement', ele)
+        return
     }
 
-    let l = str.length
-    let u8a = new Uint8Array(l)
-    for (let i = 0; i &lt; l; i++) {
-        u8a[i] = str.charCodeAt(i)
+    //domGetBounding
+    let b = domGetBounding(ele)
+
+    if (b) {
+        try {
+            r = pageX >= b.pageLeft &amp;&amp; pageX &lt;= b.pageRight &amp;&amp; pageY >= b.pageTop &amp;&amp; pageY &lt;= b.pageBottom
+        }
+        catch (err) {
+            console.log('catch when calculating page information of element', err)
+        }
     }
 
-    return u8a
+    return r
 }
 
 
-export default bs2u8arr
+export default domIsPageXYIn
 </code></pre>
         </article>
     </section>
