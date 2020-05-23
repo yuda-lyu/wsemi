@@ -125,6 +125,7 @@ function domDrag(ele, opt = {}) {
 
         //check, 無拖曳進入drag-enter對象資料
         if (!iseobj(dragTo)) {
+            //console.log('無拖曳進入對象')
             return
         }
 
@@ -136,7 +137,7 @@ function domDrag(ele, opt = {}) {
 
         //oe
         let oe = get(de, 'sensorEvent.originalEvent', null)
-        console.log('oe', oe)
+        // console.log('oe', oe)
 
         //check
         if (!oe) {
@@ -150,6 +151,7 @@ function domDrag(ele, opt = {}) {
             return
         }
 
+        //已通過拖曳離開(drag:out)時清除dragTo, 且拖曳進入(drag:over)自己時不更新dragTo之機制, 避免拖曳回來原拖曳對象之問題
         // //isBack, 判斷滑鼠的pageX,Y是否位於原本拖曳對象內
         // let isBack = domIsPageXYIn(oe.pageX, oe.pageY, de.source) //若使用originalSource, 會因為被draggable隱藏無法取得bounding, 故改用source
         // // console.log('isBack', isBack)
@@ -170,9 +172,10 @@ function domDrag(ele, opt = {}) {
             return
         }
 
+        //因A拖曳至B再拖曳至C後, 由C拖曳回B時會觸發, 但此時是合理拖曳行為故不能使用此檢核, 且手機拖曳時target會提供原拖曳對象導致此條件必定成立而不能使用此檢核
         // //isIndependent
         // let isIndependent = !dragTo.ele.contains(oe.target)
-        // console.log('isIndependent', isIndependent)
+        // //console.log('isIndependent', isIndependent)
 
         // //check
         // if (isIndependent) {
@@ -184,7 +187,7 @@ function domDrag(ele, opt = {}) {
         let p = null
         if (oe.touches) {
             if (size(oe.touches) > 1) {
-                console.log('多點拖曳故取消事件')
+                //console.log('多點拖曳故取消事件')
                 return
             }
             p = oe.touches[0] //clientX,Y是放在各touches內, 此處只允許單點拖曳
