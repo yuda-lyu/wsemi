@@ -8,7 +8,7 @@ import evem from './evem.mjs'
 import getGlobal from './getGlobal.mjs'
 // import domIsPageXYIn from './domIsPageXYIn.mjs' //已不使用
 // import domGetOffset from './domGetOffset.mjs' //已不使用
-//import Draggable from '@shopify/draggable/lib/draggable' //draggable.js沒有umd版, 故引用後即便用rollup剔除@shopify/draggable再打包, 還是會有未檢查window的殼層程式碼出現導致無法於nodejs環境下使用wsemi
+//import Draggable from '@shopify/draggable/lib/draggable' //draggable.js沒有umd版, 故引用後即便用rollup剔除@shopify/draggable再打包, 還是會有未檢查window的殼層程式碼出現, 並再導致無法於nodejs環境下使用wsemi
 
 
 function getDraggable() {

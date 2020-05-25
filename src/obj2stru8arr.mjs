@@ -1,3 +1,4 @@
+import isError from 'lodash/isError'
 import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
 import isu8arr from './isu8arr.mjs'
@@ -69,6 +70,9 @@ function obj2stru8arr(o) {
                 let id = `[Uint16Array]::${i}`
                 bs.push(value)
                 return id
+            }
+            if (isError(value)) {
+                value = value.toString()
             }
             return value
         })
