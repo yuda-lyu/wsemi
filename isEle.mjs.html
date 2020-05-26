@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>haskey.mjs - Documentation</title>
+    <title>isEle.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">haskey.mjs</h1>
+    <h1 class="page-title">isEle.mjs</h1>
     
 
     
@@ -42,37 +42,29 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isobj from './isobj.mjs'
-import isestr from './isestr.mjs'
+            <pre class="prettyprint source linenums"><code>import isElement from 'lodash/isElement'
 
 
 /**
- * 判斷物件是否有key屬性
+ * 前端判斷元素是否存在
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/haskey.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEle.test.js Github}
  * @memberOf wsemi
- * @param {Object} obj 輸入物件
- * @param {String} key 輸入要查找的key字串
+ * @param {Element} ele 輸入DOM元素
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * console.log(haskey({ a: 123, b: 'xyz', c: '45op', d: null }, 'a'))
- * // => true
+ * need test in browser
  */
-function haskey(obj, key) {
-
-    //check
-    if (!isobj(obj)) {
-        return false
-    }
-    if (!isestr(key)) {
-        return false
-    }
-
-    return (key in obj)
+function isEle(ele) {
+    return isElement(ele)
+    // return (
+    //     typeof HTMLElement === 'object' ? ele instanceof HTMLElement
+    //         : ele &amp;&amp; typeof ele === 'object' &amp;&amp; ele !== null &amp;&amp; ele.nodeType === 1 &amp;&amp; typeof ele.nodeName === 'string'
+    // )
 }
 
 
-export default haskey
+export default isEle
 </code></pre>
         </article>
     </section>
