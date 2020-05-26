@@ -13,10 +13,10 @@ import isElement from 'lodash/isElement'
  */
 function isEle(ele) {
     return isElement(ele)
-    //return (
-        typeof HTMLElement === 'object' ? ele instanceof HTMLElement
-            : ele && typeof ele === 'object' && ele !== null && ele.nodeType === 1 && typeof ele.nodeName === 'string'
-    )
+    // return (
+    //     typeof HTMLElement === 'object' ? ele instanceof HTMLElement
+    //         : ele && typeof ele === 'object' && ele !== null && ele.nodeType === 1 && typeof ele.nodeName === 'string'
+    // )
 }
 
 
