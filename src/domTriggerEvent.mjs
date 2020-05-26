@@ -1,9 +1,12 @@
+import isWindow from './isWindow.mjs'
+
+
 function init() {
     //MouseEvent polyfill
     //https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/MouseEvent#Polyfill
 
     try {
-        new MouseEvent('test')
+        new MouseEvent('MouseEventPolyfillTest')
         return false // No need to polyfill
     }
     catch (e) {
@@ -38,7 +41,7 @@ function init() {
 
     window.MouseEvent = MouseEventPolyfill
 }
-if (typeof window !== 'undefined') {
+if (isWindow()) {
     init()
 }
 

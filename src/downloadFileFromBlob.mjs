@@ -1,4 +1,5 @@
 import isestr from './isestr.mjs'
+import isWindow from './isWindow.mjs'
 
 
 /**
@@ -11,7 +12,7 @@ import isestr from './isestr.mjs'
 function df_IE11(cfn, blob) {
 
     //check
-    if (typeof window !== 'undefined') {
+    if (!isWindow()) {
         console.log('no window')
         return
     }
@@ -32,7 +33,7 @@ function df_IE11(cfn, blob) {
 function df_HTML5(cfn, blob) {
 
     //check
-    if (typeof window !== 'undefined') {
+    if (!isWindow()) {
         console.log('no window')
         return
     }
@@ -75,7 +76,7 @@ function downloadFileFromBlob(cfn, blob) {
     }
 
     //check
-    if (typeof window !== 'undefined') {
+    if (!isWindow()) {
         console.log('no window')
         return
     }

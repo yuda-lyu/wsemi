@@ -1,3 +1,6 @@
+import isWindow from './isWindow.mjs'
+
+
 /**
  * 取得運行環境
  *
@@ -6,12 +9,12 @@
  * @returns {Object} 回傳運行環境物件
  * @example
  * console.log(getEnv())
- * // => { isBrowser: false, isWebWorker: false, isNode: true }
+ * // => { isWindow: false, isWebWorker: false, isNode: true }
  */
 function getEnv() {
 
     //isBrowser
-    let isBrowser = typeof window !== 'undefined' && typeof window.document !== 'undefined'
+    let isBrowser = isWindow()
 
     //isWebWorker
     //let isWebWorker = typeof self === 'object' && self.constructor && self.constructor.name === 'DedicatedWorkerGlobalScope' //於ie11的webworker內失效

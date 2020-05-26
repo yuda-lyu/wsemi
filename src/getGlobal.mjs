@@ -1,3 +1,6 @@
+import isWindow from './isWindow.mjs'
+
+
 /**
  * 取得運行環境中的頂層物件
  *
@@ -13,7 +16,7 @@ function getGlobal() {
     if (typeof self !== 'undefined') {
         return self
     }
-    if (typeof window !== 'undefined') {
+    if (isWindow()) {
         return window //於borwser的型別為[object Window]
     }
     if (typeof global !== 'undefined') {

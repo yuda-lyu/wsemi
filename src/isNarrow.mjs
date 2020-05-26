@@ -1,3 +1,6 @@
+import isWindow from './isWindow.mjs'
+
+
 /**
  * 前端判斷是否為窄版裝置
  * 主要判斷瀏覽器視窗寬度是否大於0與小於1024，若有傳DOM元素，則再加判斷該元素寬度是否大於0與小於700
@@ -12,7 +15,7 @@
 function isNarrow(ele) {
 
     //check
-    if (typeof window !== 'undefined') {
+    if (!isWindow()) {
         return false
     }
 

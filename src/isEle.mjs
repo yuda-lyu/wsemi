@@ -1,3 +1,6 @@
+import isElement from 'lodash/isElement'
+
+
 /**
  * 前端判斷元素是否存在
  *
@@ -9,7 +12,8 @@
  * need test in browser
  */
 function isEle(ele) {
-    return (
+    return isElement(ele)
+    //return (
         typeof HTMLElement === 'object' ? ele instanceof HTMLElement
             : ele && typeof ele === 'object' && ele !== null && ele.nodeType === 1 && typeof ele.nodeName === 'string'
     )
