@@ -6,7 +6,7 @@
     
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.31/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.32/dist/wsemi.umd.js"></script>
     <script>
         console.log = wsemi.bodyLog
     </script>
@@ -41,7 +41,7 @@
 					return Promise.resolve()
 				})
 				.then(function () {
-					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'csv')
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, { fmt: 'csv' })
 				})
 				.then(function (r) {
 
@@ -56,7 +56,7 @@
 					return Promise.resolve()
 				})
 				.then(function () {
-					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'ltdt')
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, { fmt: 'ltdt' })
 				})
 				.then(function (r) {
 
@@ -71,16 +71,16 @@
 					return Promise.resolve()
 				})
 				.then(function () {
-					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, 'array')
+					return wsemi.getDataFromExcelFileU8ArrDyn(u8a, { fmt: 'array' })
 				})
 				.then(function (r) {
 
 					//darray, get first sheet
 					let darray = r[0]
-					console.log('get array', darray.sheetname, darray.data.rows)
+					console.log('get array', darray.sheetname, darray.data)
 
 					//download array
-					wsemi.downloadExcelFileFromDataDyn('temp.array.xlsx', 'data', darray.data.rows)
+					wsemi.downloadExcelFileFromDataDyn('temp.array.xlsx', 'data', darray.data)
 					console.log('download array')
 
 					return Promise.resolve()

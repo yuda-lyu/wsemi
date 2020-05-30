@@ -8,9 +8,9 @@
     
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.31/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.32/dist/wsemi.umd.js"></script>
     <script>
-        console.log = wsemi.bodyLog
+        //console.log = wsemi.bodyLog
     </script>
 
 </head>
@@ -39,7 +39,7 @@
                     console.log('download u8a')
 
                     //dcsv
-                    let dcsv = wsemi.getDataFromExcelFileU8Arr(u8a, 'csv')
+                    let dcsv = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'csv' })
                     dcsv = dcsv[0]
                     console.log('get csv', dcsv.sheetname, dcsv.data)
 
@@ -48,7 +48,7 @@
                     console.log('download csv')
 
                     //dltdt
-                    let dltdt = wsemi.getDataFromExcelFileU8Arr(u8a, 'ltdt')
+                    let dltdt = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
                     dltdt = dltdt[0]
                     console.log('get dltdt', dltdt.sheetname, dltdt.data)
 
@@ -57,12 +57,12 @@
                     console.log('download json(from dltdt)')
 
                     //darray
-                    let darray = wsemi.getDataFromExcelFileU8Arr(u8a, 'array')
+                    let darray = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
                     darray = darray[0]
-                    console.log('get array', darray.sheetname, darray.data.rows)
+                    console.log('get array', darray.sheetname, darray.data)
 
                     //download array
-                    wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray.data.rows)
+                    wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray.data)
                     console.log('download array')
 
                 })
