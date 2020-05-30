@@ -14001,7 +14001,7 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
 
     
 
-    <h4 class="name" id=".downloadFileFromText"><span class="type-signature">(static) </span>downloadFileFromText<span class="signature">(cfn, ccont)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".downloadFileFromText"><span class="type-signature">(static) </span>downloadFileFromText<span class="signature">(cfn, ccont, withBOM<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -14013,7 +14013,7 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadFileFromText.mjs.html">downloadFileFromText.mjs</a>, <a href="downloadFileFromText.mjs.html#line16">line 16</a>
+        <a href="downloadFileFromText.mjs.html">downloadFileFromText.mjs</a>, <a href="downloadFileFromText.mjs.html#line18">line 18</a>
     </li></ul></dd>
     
 
@@ -14088,7 +14088,11 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -14113,7 +14117,19 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x540D;&#x5B57;&#x4E32;</p></td>
@@ -14136,10 +14152,61 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>&#x8F38;&#x5165;&#x5167;&#x5BB9;&#x5B57;&#x4E32;</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>withBOM</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>&#x8F38;&#x5165;&#x662F;&#x5426;&#x6DFB;&#x52A0;BOM&#xFF0C;&#x9810;&#x8A2D;true</p></td>
         </tr>
 
     
@@ -18004,7 +18071,7 @@ console.log(getBufferSize(buf))
 
     
 
-    <h4 class="name" id=".getDataFromExcelFileU8Arr"><span class="type-signature">(static) </span>getDataFromExcelFileU8Arr<span class="signature">(u8a, fmt<span class="signature-attributes">opt</span>, useHead<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &#x2192; {Array}</span></h4>
+    <h4 class="name" id=".getDataFromExcelFileU8Arr"><span class="type-signature">(static) </span>getDataFromExcelFileU8Arr<span class="signature">(u8a, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &#x2192; {Array}</span></h4>
 
     
 
@@ -18016,7 +18083,7 @@ console.log(getBufferSize(buf))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line173">line 173</a>
+        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line140">line 140</a>
     </li></ul></dd>
     
 
@@ -18143,6 +18210,68 @@ console.log(getBufferSize(buf))
 
         <tr>
             
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>&#x8F38;&#x5165;&#x8A2D;&#x5B9A;&#x7269;&#x4EF6;&#xFF0C;&#x9810;&#x8A2D;&#x70BA;{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
                 <td class="name"><code>fmt</code></td>
             
 
@@ -18182,7 +18311,7 @@ console.log(getBufferSize(buf))
 
         <tr>
             
-                <td class="name"><code>useHead</code></td>
+                <td class="name"><code>valueToString</code></td>
             
 
             <td class="type">
@@ -18209,12 +18338,19 @@ console.log(getBufferSize(buf))
             
                 <td class="default">
                 
-                    <code>false</code>
+                    <code>true</code>
                 
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x6578;&#x64DA;&#x662F;&#x5426;&#x8B80;&#x5165;&#x9996;&#x884C;head&#xFF0C;&#x9700;&#x914D;&#x5408;fmt=&apos;array&apos;&#xFF0C;&#x9810;&#x8A2D;&#x70BA;false</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x6578;&#x64DA;&#x662F;&#x5426;&#x5F37;&#x5236;&#x8F49;&#x5B57;&#x4E32;&#x5E03;&#x6797;&#x503C;&#xFF0C;&#x9810;&#x8A2D;&#x70BA;true</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -46216,7 +46352,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a> on Wed May 27 2020 08:49:21 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a> on Sat May 30 2020 14:52:22 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -46240,7 +46376,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.4.31/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.4.32/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
