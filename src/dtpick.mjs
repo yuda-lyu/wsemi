@@ -6,12 +6,12 @@ import haskey from './haskey.mjs'
 
 
 /**
- * 由dt物件提取keys, 僅保留有keys的欄位, 不存在keys的欄位則刪除
+ * 由dt物件提取指定keys欄位出來成為新物件，僅保留有keys的欄位，若不存在欄位就不提取
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dtpick.test.js Github}
  * @memberOf wsemi
  * @param {Object} dt 輸入資料物件
- * @param {Array} keys 輸入keys值字串陣列
+ * @param {Array} keys 輸入要提取欄位集合的字串陣列
  * @returns {Object} 回傳處理後物件
  * @example
  * console.log(dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b']))
