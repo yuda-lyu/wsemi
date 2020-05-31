@@ -27,10 +27,11 @@ function toStr(v) {
 
 function to_array(workbook, valueToString) {
     let result = []
+
     workbook.SheetNames.forEach(function (sheetname) {
 
         //sheet_to_json
-        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A' }) //會依照英文A開始編號欄位
+        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A' }) //資料轉json後, 各列會欄位名稱為依照英文A開始編號, 不能用raw:false轉出字串數據, 長整數會被以科學記號顯示而失去精度
 
         //提取數據
         arr = map(arr, (v) => {
@@ -53,12 +54,14 @@ function to_array(workbook, valueToString) {
         })
 
     })
+
     return result
 }
 
 
 function to_ltdt(workbook, valueToString) {
     let result = []
+
     workbook.SheetNames.forEach(function (sheetname) {
 
         //sheet_to_json
@@ -81,6 +84,7 @@ function to_ltdt(workbook, valueToString) {
         })
 
     })
+
     return result
 }
 
