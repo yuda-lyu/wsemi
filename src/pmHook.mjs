@@ -1,4 +1,5 @@
 import get from 'lodash/get'
+import isEqual from 'lodash/isEqual'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
 
@@ -108,6 +109,9 @@ import isfun from './isfun.mjs'
  *     // pm3p catch [modify catch]reject: [modify input]inp3
  *     // [{"cb":"pm3p","mode":"before","data":"inp3"},{"cb":"pm3p","mode":"afterCatch","data":"reject: [modify input]inp3"},"pm3p catch: [modify catch]reject: [modify input]inp3"]
  *
+ * }
+ * test()
+ *
  */
 function pmHook(fun, cb = () => {}) {
 
@@ -121,7 +125,7 @@ function pmHook(fun, cb = () => {}) {
 
     function getData(cbData, oriData) {
         let t = get(cbData, 'data', null)
-        if (t !== null && t !== oriData) {
+        if (t !== null && !isEqual(t, oriData)) {
             oriData = t
         }
         return oriData
