@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>urlParse.mjs - Documentation</title>
+    <title>strClipboard.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">urlParse.mjs</h1>
+    <h1 class="page-title">strClipboard.mjs</h1>
     
 
     
@@ -42,56 +42,49 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
-import split from 'lodash/split'
-import map from 'lodash/map'
-import fromPairs from 'lodash/fromPairs'
-import isestr from './isestr.mjs'
+            <pre class="prettyprint source linenums"><code>import isstr from './isstr.mjs'
 
 
 /**
- * 切分網址取得參數物件
+ * 複製字串至剪貼簿
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/urlParse.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strClipboard.test.js Github}
  * @memberOf wsemi
- * @param {String} url 輸入要切分的網址字串
- * @returns {Object} 回傳資訊物件
+ * @param {String} str 輸入欲複製至剪貼簿的字串
+ * @returns {Number} 回傳字串相似度0~1
  * @example
- * console.log(urlParse('http://localhost:3000/index.html?a=12.34&amp;b=xyz&amp;abc=xyz123.456'))
- * // => { a: '12.34', abc: 'xyz123.456', b: 'xyz' }
+ * strClipboard('The Woodman(樵夫) set to work at once, and so...')
  */
-function urlParse(url) {
+function strClipboard(str) {
+    let r = ''
 
-    //check
-    if (!isestr(url)) {
-        return {}
+    if (!isstr(str)) {
+        return 'invalid input'
     }
 
-    //依?切開
-    url = split(url, '?')
-    url = get(url, '[1]')
+    //使用textarea儲存並選擇字串
+    let ele = document.createElement('textarea')
+    ele.style.background = 'transparent'
+    ele.value = str
+    document.body.appendChild(ele)
+    ele.select()
 
-    //check
-    if (!isestr(url)) {
-        return {}
+    //copy
+    try {
+        document.execCommand('copy')
+    }
+    catch (err) {
+        r = 'unable to copy'
     }
 
-    //依&amp;切開
-    let s = split(url, '&amp;')
+    //removeChild
+    document.body.removeChild(ele)
 
-    //依=切開
-    s = map(s, function(v) {
-        return split(v, '=')
-    })
-
-    //依照key為[0], value為[1]組合成物件
-    s = fromPairs(s)
-
-    return s
+    return r
 }
 
 
-export default urlParse
+export default strClipboard
 </code></pre>
         </article>
     </section>
