@@ -18,12 +18,14 @@ import dtmapping from './dtmapping.mjs'
  *     { a: '1b23', b: 456, c: '123XYZ' },
  *     { a: '12c3', b: 789.0123, c: null }
  * ]
+ *
  * console.log(ltdtmapping(r, ['a', 'b']))
  * // => [
  * //     { a: 'a123', b: 123 },
  * //     { a: '1b23', b: 456 },
  * //     { a: '12c3', b: 789.0123 }
  * // ]
+ *
  * console.log(ltdtmapping(r, ['a', 'c', 'x']))
  * // => [
  * //     { a: 'a123', c: 'abc', x: '' },

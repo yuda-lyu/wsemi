@@ -25,7 +25,7 @@ import isearr from './isearr.mjs'
  */
 function arrhas(vtar, vhas) {
 
-    //不是陣列則自動轉陣列
+    //為有效字串且不是陣列時則自動轉陣列
     if (isestr(vtar)) {
         vtar = [vtar]
     }
@@ -36,7 +36,7 @@ function arrhas(vtar, vhas) {
         return false
     }
 
-    //不是陣列則自動轉陣列
+    //為有效字串且不是陣列則自動轉陣列
     if (isestr(vhas)) {
         vhas = [vhas]
     }
