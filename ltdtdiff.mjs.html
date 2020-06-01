@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>hsl.mjs - Documentation</title>
+    <title>ltdtdiff.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">hsl.mjs</h1>
+    <h1 class="page-title">ltdtdiff.mjs</h1>
     
 
     
@@ -42,52 +42,131 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import TinyColor from './tinycolor.mjs'
-import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
+import find from 'lodash/find'
+import isEqual from 'lodash/isEqual'
+import isestr from './isestr.mjs'
+import isarr from './isarr.mjs'
+import iser from './iser.mjs'
+import haskey from './haskey.mjs'
 
 
 /**
- * 由hsl回傳hex顏色字串
+ * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/hsl.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtdiff.test.js Github}
  * @memberOf wsemi
- * @param {Number} rh 輸入色相: Hue(0~1)
- * @param {Number} rs 輸入飽和度: Saturation(0~1)
- * @param {Number} rl 輸入亮度/明度: Lightness(0~1)
- * @returns {String} 回傳顏色字串(hex)
+ * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件
+ * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件
+ * @param {String} key 輸入比對的主鍵key值字串
+ * @returns {Object} 回傳比對結果物件
  * @example
- * console.log(hsl(0.5, 0.5, 0.5))
- * // => '#bfaa40'
+ * console.log(ltdtdiff([{ x: 'xa', y: 'y1' }, { x: 'xb', y: 'y2' }], [{ x: 'xa', z: 'z3' }], 'x'))
+ * // => { infor: { xa: 'diff', xb: 'del' }, del: [ { x: 'xb', y: 'y2' } ], same: [], diff: [ { x: 'xa', z: 'z3' } ], add: [] }
+ *
+ * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
+ * // => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }
+ *
+ * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
+ * // => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }
  */
-function hsl(rh, rs, rl) {
+function ltdtdiff(ltdtOld, ltdtNew, key) {
+
+    //def
+    let def = {
+        infor: {},
+        del: [],
+        same: [],
+        diff: [],
+        add: [],
+    }
 
     //check
-    if (!isnum(rh) || !isnum(rs) || !isnum(rl)) {
-        return ''
+    if (!isestr(key)) {
+        return def
     }
 
-    //check range
-    function ck01(v) {
-        return v >= 0 &amp;&amp; v &lt;= 1
+    //to array
+    if (!isarr(ltdtOld)) { //有可能傳空陣列故使用isarr
+        ltdtOld = [ltdtOld]
     }
-    rh = cdbl(rh)
-    rs = cdbl(rs)
-    rl = cdbl(rl)
-    if (!ck01(rh) || !ck01(rs) || !ck01(rl)) {
-        return ''
+    if (!isarr(ltdtNew)) { //有可能傳空陣列故使用isarr
+        ltdtNew = [ltdtNew]
     }
 
-    //使用hsl物件各值需0~100, 跟tinycolor所提供的範例不同
-    return new TinyColor({
-        h: rh * 100,
-        s: rs * 100,
-        l: rl * 100
-    }).toHexString()
+    // //check obj and key, 可能有空陣列情形
+    // let haveKey = 0
+    // each(ltdtOld, function(v) {
+    //     if (haskey(v, key)) {
+    //         haveKey = 1
+    //     }
+    // })
+    // if (haveKey === 0) {
+    //     return def
+    // }
+    // each(ltdtNew, function(v) {
+    //     if (haskey(v, key)) {
+    //         haveKey = 2
+    //     }
+    // })
+    // if (haveKey === 1) {
+    //     return def
+    // }
+
+    //tInfor, tDel, tDiff, tSame
+    let tInfor = {}
+    let tDel = []
+    let tDiff = []
+    let tSame = []
+    each(ltdtOld, function(v) {
+        if (haskey(v, key)) { //v需存在key
+            let q = {
+                [key]: v[key]
+            }
+            let o = find(ltdtNew, q)
+            if (iser(o)) {
+                tDel.push(v) //vold需刪去之項目
+                tInfor[v[key]] = 'del'
+            }
+            else {
+                if (isEqual(v, o)) {
+                    tSame.push(o) //vsame與vold有同樣之項目
+                    tInfor[o[key]] = 'same'
+                }
+                else {
+                    tDiff.push(o) //vsame對vold有變更之項目
+                    tInfor[o[key]] = 'diff'
+                }
+            }
+        }
+    })
+
+    //vadd
+    let vadd = []
+    each(ltdtNew, function(v) {
+        if (haskey(v, key)) { //v需存在key
+            let q = {
+                [key]: v[key]
+            }
+            let o = find(ltdtOld, q)
+            if (iser(o)) {
+                vadd.push(v) //vsame對vold有新增之項目
+                tInfor[v[key]] = 'add'
+            }
+        }
+    })
+
+    return {
+        infor: tInfor,
+        del: tDel,
+        same: tSame,
+        diff: tDiff,
+        add: vadd,
+    }
 }
 
 
-export default hsl
+export default ltdtdiff
 </code></pre>
         </article>
     </section>
