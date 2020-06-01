@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>time2expire.mjs - Documentation</title>
+    <title>ltdtpull.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">time2expire.mjs</h1>
+    <h1 class="page-title">ltdtpull.mjs</h1>
     
 
     
@@ -42,112 +42,70 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
-import istime from './istime.mjs'
+            <pre class="prettyprint source linenums"><code>import every from 'lodash/every'
+import differenceBy from 'lodash/differenceBy'
+import isarr from './isarr.mjs'
+import isestr from './isestr.mjs'
+import isobj from './isobj.mjs'
 
 
 /**
- * 秒時間轉到期時間
+ * 由ltdtAll陣列移除ltdtDel陣列，只會針對ltdtDel內各元素的指定key來查找
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2expire.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpull.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入秒時間字串
- * @returns {String} 回傳到期時間字串
+ * @param {Array} ltdtAll 輸入要被刪除的物件陣列
+ * @param {Array} ltdtDel 輸入要刪除的物件陣列
+ * @param {String} key 輸入要比對物件的key值
+ * @returns {Array} 回傳被刪除的物件陣列
  * @example
- * need test in browser
+ * console.log(ltdtpull([{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x'))
+ * // => [ { x: 2, y: 'y2' } ]
+ * console.log(ltdtpull([{ id: 1, v: 'v1' }, { id: 2, v: 'v2' }, { id: 3, v: 'v3' }], [{ id: 1, v: '-v1' }, { id: 3, v: '-v3' }], 'id'))
+ * // => [ { id: 2, v: 'v2' } ]
  */
-function time2expire(t) {
+function ltdtpull(ltdtAll, ltdtDel, key) {
 
     //check
-    if (!istime(t)) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間格式錯誤',
-        }
+    if (!isarr(ltdtAll)) { //可能會傳空陣列, 故需要isarr
+        return []
     }
-
-    //ot
-    let mnow = ot()
-    let mtime = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
+    if (!isarr(ltdtDel)) { //可能會傳空陣列, 故需要isarr
+        return []
+    }
+    if (!isestr(key)) {
+        return []
+    }
 
     //check
-    if (mnow > mtime) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間已過',
-        }
+    let bAll = every(ltdtAll, (v) => {
+        return isobj(v)
+    })
+    if (!bAll) {
+        return []
     }
 
-    //day
-    let nowday = mnow.format('YYYY-MM-DD')
-    let timeday = mtime.format('YYYY-MM-DD')
-    let mnowday = ot(nowday, 'YYYY-MM-DD')
-    let mtimeday = ot(timeday, 'YYYY-MM-DD')
-
-    //diff
-    let iseconds = mtime.diff(mnow, 'seconds')
-    let iminutes = mtime.diff(mnow, 'minutes')
-    let ihours = mtime.diff(mnow, 'hours')
-    let idays = mtimeday.diff(mnowday, 'days')
-    let iweeks = mtimeday.diff(mnowday, 'weeks')
-    let imonths = mtimeday.diff(mnowday, 'months')
-    let iyears = mtimeday.diff(mnowday, 'years')
-
-    //c
-    let today
-    let c = '即將到來'
-    if (iseconds >= 0) {
-        today = true
-        c = iseconds + '秒後'
-    }
-    if (iminutes > 0) {
-        today = true
-        c = iminutes + '分鐘後'
-    }
-    if (ihours > 0) {
-        let mm = mtime.format('HH:mm')
-        if (nowday === timeday) {
-            today = true
-            c = ihours + '小時後' + '，今天' + mm
-        }
-        else {
-            today = false
-            c = ihours + '小時後' + '，明天' + mm
-        }
-    }
-    if (idays > 1) { //明天交由小時部份處理
-        today = false
-        if (idays === 2) {
-            c = '後天'
-        }
-        else {
-            c = idays + '天後'
-        }
-    }
-    if (iweeks > 0) {
-        today = false
-        c = iweeks + '周後'
-    }
-    if (imonths > 0) {
-        today = false
-        c = imonths + '月後'
-    }
-    if (iyears > 0) {
-        today = false
-        c = iyears + '年後'
+    //check
+    if (ltdtDel.length === 0) { //傳空陣列就不刪除
+        return ltdtAll
     }
 
-    return {
-        today: today,
-        msg: c,
-        err: '',
+    //check
+    let bDel = every(ltdtDel, (v) => {
+        return isobj(v)
+    })
+    if (!bDel) {
+        return []
     }
+
+    //differenceBy
+    let t = differenceBy(ltdtAll, ltdtDel, key)
+
+    return t
 }
 
 
-export default time2expire
+export default ltdtpull
 </code></pre>
         </article>
     </section>
