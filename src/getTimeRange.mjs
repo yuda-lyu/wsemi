@@ -28,6 +28,7 @@ import time2min from './time2min.mjs'
  * // => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'
  */
 function getTimeRange(tstart, tend) {
+    //可再支援輸入TZ時間
 
     //check
     if (!istime(tstart)) {

@@ -43,7 +43,6 @@ function parseTime(t, unit) {
  * // => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
  */
 function getTimeObject(t, unit = 'days') {
-    //依照unit取得時間物件
 
     //check
     if (!isestr(t)) {
