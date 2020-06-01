@@ -1,20 +1,12 @@
-import arrpick from './src/arrpick.mjs'
-import arrmapping from './src/arrmapping.mjs'
+import arradd from './src/arradd.mjs'
 
-let r = [
-    { a: 'a123', b: 123, c: 'abc' },
-    { a: '1b23', b: 456, c: '123XYZ' },
-    { a: '12c3', b: 789.0123, c: null }
-]
-console.log(arrmapping(r, ['a', 'b']))
-// => [
-//     { a: 'a123', b: 123 },
-//     { a: '1b23', b: 456 },
-//     { a: '12c3', b: 789.0123 }
-// ]
-console.log(arrmapping(r, ['a', 'c', 'x']))
-// => [
-//     { a: 'a123', c: 'abc', x: '' },
-//     { a: '1b23', c: '123XYZ', x: '' },
-//     { a: '12c3', c: null, x: '' }
-// ]
+let v1 = [1, 2, 3, 4]
+let v2 = [0.1, 0.1, 0.1, 0.1]
+let v3 = [11, 22, 33, 44]
+console.log(arradd(v1, v2))
+// => [ 1.1, 2.1, 3.1, 4.1 ]
+console.log(arradd(v1, v2, v3))
+// => [ 12.1, 24.1, 36.1, 48.1 ]
+
+//node --experimental-modules --es-module-specifier-resolution=node g.mjs
+

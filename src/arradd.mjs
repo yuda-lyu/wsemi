@@ -1,79 +1,62 @@
 import size from 'lodash/size'
 import each from 'lodash/each'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import cdbl from './cdbl.mjs'
 
 
-/**
- * 各陣列內元素相加
- * v1與v2需輸入同長度之陣列，v3至v5為可選輸入。其內皆需為數字，若非數字將自動轉數字
- * 若需使用之陣列長度不同，則回傳空陣列
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.js Github}
- * @memberOf wsemi
- * @param {Array} v1 輸入第1個陣列
- * @param {Array} v2 輸入第2個陣列
- * @param {Array} [v3=undefined] 輸入第3個陣列，預設不使用
- * @param {Array} [v4=undefined] 輸入第4個陣列，預設不使用
- * @param {Array} [v5=undefined] 輸入第5個陣列，預設不使用
- * @returns {Array} 回傳各元素相加後陣列
- * @example
- * console.log(arradd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1]))
- * // => [1.1, 2.1, 3.1, 4.1]
- */
-function arradd(v1, v2, v3 = undefined, v4 = undefined, v5 = undefined) {
+function core(v1, v2) {
 
     //check
-    if (!isearr(v1)) {
+    if (!isarr(v1)) {
         return []
     }
-    if (!isearr(v2)) {
+    if (!isarr(v2)) {
         return []
     }
-
-    //b3,b4,b5
-    let b3 = isearr(v3)
-    let b4 = isearr(v4)
-    let b5 = isearr(v5)
 
     //check size
     if (size(v1) !== size(v2)) {
-        //console.log('v1與v2長度不同')
         return []
-    }
-    if (b3) {
-        if (size(v1) !== size(v3)) {
-            //console.log('v1與v3長度不同')
-            return []
-        }
-    }
-    if (b4) {
-        if (size(v1) !== size(v4)) {
-            //console.log('v1與v4長度不同')
-            return []
-        }
-    }
-    if (b5) {
-        if (size(v1) !== size(v5)) {
-            //console.log('v1與v5長度不同')
-            return []
-        }
     }
 
     let r = []
     each(v1, function(v, k) {
         let t = cdbl(v1[k]) + cdbl(v2[k])
-        if (b3) {
-            t += cdbl(v3[k])
-        }
-        if (b4) {
-            t += cdbl(v4[k])
-        }
-        if (b5) {
-            t += cdbl(v5[k])
-        }
         r.push(t)
     })
+
+    return r
+}
+
+
+/**
+ * 各陣列內元素相加，可輸入n個同長度陣列，若需輸入之陣列長度不同則回傳空陣列
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.js Github}
+ * @memberOf wsemi
+ * @param {Array} arguments 輸入n個陣列，需同長度，其內元素皆會轉為浮點數，各陣列針對各元素進行相加總
+ * @returns {Array} 回傳各元素相加後陣列
+ * @example
+ * let v1 = [1, 2, 3, 4]
+ * let v2 = [0.1, 0.1, 0.1, 0.1]
+ * let v3 = [11, 22, 33, 44]
+ * console.log(arradd(v1, v2))
+ * // => [ 1.1, 2.1, 3.1, 4.1 ]
+ * console.log(arradd(v1, v2, v3))
+ * // => [ 12.1, 24.1, 36.1, 48.1 ]
+ */
+function arradd() {
+
+    //check
+    if (size(arguments) < 2) {
+        return []
+    }
+
+    let r = arguments[0]
+    for (let i = 1; i < size(arguments); i++) {
+        let v = arguments[i]
+        r = core(r, v)
+    }
 
     return r
 }
