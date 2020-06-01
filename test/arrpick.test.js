@@ -33,91 +33,91 @@ describe(`arrpick`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ''`, function() {
+    it(`should return [] when input ''`, function() {
         let r = arrpick('')
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input []`, function() {
+    it(`should return [] when input []`, function() {
         let r = arrpick([])
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input {}`, function() {
+    it(`should return [] when input {}`, function() {
         let r = arrpick({})
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input null`, function() {
+    it(`should return [] when input null`, function() {
         let r = arrpick(null)
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input undefined`, function() {
+    it(`should return [] when input undefined`, function() {
         let r = arrpick(undefined)
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input [], ''`, function() {
+    it(`should return [] when input [], ''`, function() {
         let r = arrpick([], '')
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input [], []`, function() {
+    it(`should return [] when input [], []`, function() {
         let r = arrpick([], [])
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input [], {}`, function() {
+    it(`should return [] when input [], {}`, function() {
         let r = arrpick([], {})
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input [], null`, function() {
+    it(`should return [] when input [], null`, function() {
         let r = arrpick([], null)
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input [], undefined`, function() {
+    it(`should return [] when input [], undefined`, function() {
         let r = arrpick([], undefined)
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], ''`, function() {
+    it(`should return [] when input ['abc'], ''`, function() {
         let r = arrpick(['abc'], '')
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], []`, function() {
+    it(`should return [] when input ['abc'], []`, function() {
         let r = arrpick(['abc'], [])
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], {}`, function() {
+    it(`should return [] when input ['abc'], {}`, function() {
         let r = arrpick(['abc'], {})
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], null`, function() {
+    it(`should return [] when input ['abc'], null`, function() {
         let r = arrpick(['abc'], null)
         let rr = []
         assert.strict.deepEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], undefined`, function() {
+    it(`should return [] when input ['abc'], undefined`, function() {
         let r = arrpick(['abc'], undefined)
         let rr = []
         assert.strict.deepEqual(r, rr)

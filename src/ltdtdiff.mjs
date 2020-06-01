@@ -10,23 +10,23 @@ import haskey from './haskey.mjs'
 /**
  * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrdiff.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtdiff.test.js Github}
  * @memberOf wsemi
- * @param {Array|Object} vold 輸入舊的物件陣列或物件
- * @param {Array|Object} vnew 輸入新的物件陣列或物件
+ * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件
+ * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件
  * @param {String} key 輸入比對的主鍵key值字串
  * @returns {Object} 回傳比對結果物件
  * @example
- * console.log(arrdiff([{ x: 'xa', y: 'y1' }, { x: 'xb', y: 'y2' }], [{ x: 'xa', z: 'z3' }], 'x'))
+ * console.log(ltdtdiff([{ x: 'xa', y: 'y1' }, { x: 'xb', y: 'y2' }], [{ x: 'xa', z: 'z3' }], 'x'))
  * // => { infor: { xa: 'diff', xb: 'del' }, del: [ { x: 'xb', y: 'y2' } ], same: [], diff: [ { x: 'xa', z: 'z3' } ], add: [] }
  *
- * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
+ * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
  * // => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }
  *
- * console.log(arrdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
+ * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
  * // => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }
  */
-function arrdiff(vold, vnew, key) {
+function ltdtdiff(ltdtOld, ltdtNew, key) {
 
     //def
     let def = {
@@ -43,16 +43,16 @@ function arrdiff(vold, vnew, key) {
     }
 
     //to array
-    if (!isarr(vold)) { //有可能傳空陣列故使用isarr
-        vold = [vold]
+    if (!isarr(ltdtOld)) { //有可能傳空陣列故使用isarr
+        ltdtOld = [ltdtOld]
     }
-    if (!isarr(vnew)) { //有可能傳空陣列故使用isarr
-        vnew = [vnew]
+    if (!isarr(ltdtNew)) { //有可能傳空陣列故使用isarr
+        ltdtNew = [ltdtNew]
     }
 
     // //check obj and key, 可能有空陣列情形
     // let haveKey = 0
-    // each(vold, function(v) {
+    // each(ltdtOld, function(v) {
     //     if (haskey(v, key)) {
     //         haveKey = 1
     //     }
@@ -60,7 +60,7 @@ function arrdiff(vold, vnew, key) {
     // if (haveKey === 0) {
     //     return def
     // }
-    // each(vnew, function(v) {
+    // each(ltdtNew, function(v) {
     //     if (haskey(v, key)) {
     //         haveKey = 2
     //     }
@@ -69,29 +69,29 @@ function arrdiff(vold, vnew, key) {
     //     return def
     // }
 
-    //vinfor,vdel, vdiff, vsame
-    let vinfor = {}
-    let vdel = []
-    let vdiff = []
-    let vsame = []
-    each(vold, function(v) {
+    //tInfor, tDel, tDiff, tSame
+    let tInfor = {}
+    let tDel = []
+    let tDiff = []
+    let tSame = []
+    each(ltdtOld, function(v) {
         if (haskey(v, key)) { //v需存在key
             let q = {
                 [key]: v[key]
             }
-            let o = find(vnew, q)
+            let o = find(ltdtNew, q)
             if (iser(o)) {
-                vdel.push(v) //vold需刪去之項目
-                vinfor[v[key]] = 'del'
+                tDel.push(v) //vold需刪去之項目
+                tInfor[v[key]] = 'del'
             }
             else {
                 if (isEqual(v, o)) {
-                    vsame.push(o) //vsame與vold有同樣之項目
-                    vinfor[o[key]] = 'same'
+                    tSame.push(o) //vsame與vold有同樣之項目
+                    tInfor[o[key]] = 'same'
                 }
                 else {
-                    vdiff.push(o) //vsame對vold有變更之項目
-                    vinfor[o[key]] = 'diff'
+                    tDiff.push(o) //vsame對vold有變更之項目
+                    tInfor[o[key]] = 'diff'
                 }
             }
         }
@@ -99,27 +99,27 @@ function arrdiff(vold, vnew, key) {
 
     //vadd
     let vadd = []
-    each(vnew, function(v) {
+    each(ltdtNew, function(v) {
         if (haskey(v, key)) { //v需存在key
             let q = {
                 [key]: v[key]
             }
-            let o = find(vold, q)
+            let o = find(ltdtOld, q)
             if (iser(o)) {
                 vadd.push(v) //vsame對vold有新增之項目
-                vinfor[v[key]] = 'add'
+                tInfor[v[key]] = 'add'
             }
         }
     })
 
     return {
-        infor: vinfor,
-        del: vdel,
-        same: vsame,
-        diff: vdiff,
+        infor: tInfor,
+        del: tDel,
+        same: tSame,
+        diff: tDiff,
         add: vadd,
     }
 }
 
 
-export default arrdiff
+export default ltdtdiff

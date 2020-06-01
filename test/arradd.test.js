@@ -106,4 +106,94 @@ describe(`arradd`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    it(`should return [] when input ''`, function() {
+        let r = arradd('')
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input []`, function() {
+        let r = arradd([])
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input {}`, function() {
+        let r = arradd({})
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input null`, function() {
+        let r = arradd(null)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input undefined`, function() {
+        let r = arradd(undefined)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input [], ''`, function() {
+        let r = arradd([], '')
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input [], []`, function() {
+        let r = arradd([], [])
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input [], {}`, function() {
+        let r = arradd([], {})
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input [], null`, function() {
+        let r = arradd([], null)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input [], undefined`, function() {
+        let r = arradd([], undefined)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], ''`, function() {
+        let r = arradd(['abc'], '')
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], []`, function() {
+        let r = arradd(['abc'], [])
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], {}`, function() {
+        let r = arradd(['abc'], {})
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], null`, function() {
+        let r = arradd(['abc'], null)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], undefined`, function() {
+        let r = arradd(['abc'], undefined)
+        let rr = []
+        assert.strict.deepEqual(r, rr)
+    })
+
 })
