@@ -24,6 +24,16 @@ function tinycolor(color) {
     color = (color) || ''
     // opts = opts || { }
 
+    // If input is already a tinycolor, return itself
+    if (color instanceof tinycolor) {
+        return color
+    }
+    // If we are called as a function, call using new instead
+    if (!(this instanceof tinycolor)) {
+        let T = tinycolor
+        return new T(color) //eslint: new需要自首大寫
+    }
+
     let rgb = inputToRGB(color)
     this._originalInput = color
     this._r = rgb.r
