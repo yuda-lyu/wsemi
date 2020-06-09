@@ -30,8 +30,8 @@ function domDetect(f, ms = 20) {
     let ev = evem()
     let timer
     let s = {
-        clientWidth: 0,
-        clientHeight: 0,
+        offsetWidth: 0,
+        offsetHeight: 0,
     }
 
     //check
@@ -51,25 +51,25 @@ function domDetect(f, ms = 20) {
 
             //new size
             let snew = {
-                clientWidth: p.clientWidth,
-                clientHeight: p.clientHeight,
+                offsetWidth: p.offsetWidth,
+                offsetHeight: p.offsetHeight,
             }
 
             //detect
-            if (s.clientWidth !== snew.clientWidth || s.clientHeight !== snew.clientHeight) {
+            if (s.offsetWidth !== snew.offsetWidth || s.offsetHeight !== snew.offsetHeight) {
                 let sold = { ...s }
                 setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
 
                     //detect resize
-                    if (snew.clientWidth > 0 && snew.clientHeight > 0) {
+                    if (snew.offsetWidth > 0 && snew.offsetHeight > 0) {
                         ev.emit('resize', { sold, snew, ele: p })
                     }
 
                     //detect display
-                    if (s.clientWidth === 0 && s.clientHeight === 0 && (snew.clientWidth > 0 || snew.clientHeight > 0)) {
+                    if (s.offsetWidth === 0 && s.offsetHeight === 0 && (snew.offsetWidth > 0 || snew.offsetHeight > 0)) {
                         ev.emit('display', { mode: 'show', ele: p })
                     }
-                    if ((s.clientWidth > 0 || s.clientHeight > 0) && snew.clientWidth === 0 && snew.clientHeight === 0) {
+                    if ((s.offsetWidth > 0 || s.offsetHeight > 0) && snew.offsetWidth === 0 && snew.offsetHeight === 0) {
                         ev.emit('display', { mode: 'hide', ele: p })
                     }
 
