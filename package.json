@@ -1,19 +1,19 @@
 {
   "name": "wsemi",
-  "version": "1.4.43",
+  "version": "1.4.44",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^3.3.0",
-    "dayjs": "^1.8.27",
+    "dayjs": "^1.8.28",
     "eventemitter3": "^4.0.4",
     "fuzzball": "^1.3.0",
     "lodash": "^4.17.15",
     "tippy.js": "^6.2.3",
     "ua-parser-js": "^0.7.21",
-    "viewerjs": "^1.5.0",
-    "xlsx": "^0.16.1",
-    "xss": "^1.0.6"
+    "viewerjs": "^1.6.0",
+    "xlsx": "^0.16.2",
+    "xss": "^1.0.7"
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.3",
