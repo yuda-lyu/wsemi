@@ -1,6 +1,6 @@
 import get from 'lodash/get'
-import isNumber from 'lodash/isNumber'
 import isBoolean from 'lodash/isBoolean'
+import isFunction from 'lodash/isFunction'
 import evem from './evem.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
 
@@ -16,8 +16,8 @@ import domCancelEvent from './domCancelEvent.mjs'
  * //監聽dom
  * let divPanel = ele
  * let divBar = ele
- * let heighRatio = 0.9
- * let das = domDragBarAndScroll(divPanel, divBar, { heighRatio: heighRatio, stopEventScrollPanel: true })
+ * let getHeighRatio = () => 0.9
+ * let das = domDragBarAndScroll(divPanel, divBar, { getHeighRatio, stopScrollPropagationForPanel: true })
  * das.on('scrollPanel', () => {})
  * das.on('pressBar', () => {})
  * das.on('dragBar', () => {})
@@ -40,22 +40,28 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
     let fWindowMouseup = null
     let barPressing = false
 
-    //heighRatio
-    let heighRatio = get(opt, 'heighRatio', null)
-    if (!isNumber(heighRatio)) {
-        heighRatio = 1
+    //getHeighRatio, 因組件本身或內容物可能會調整尺寸, 故需由外部給予函數取得當前heighRatio
+    let getHeighRatio = get(opt, 'getHeighRatio', null)
+    if (!isFunction(getHeighRatio)) {
+        getHeighRatio = () => 1
     }
 
-    //widthRatio
-    let widthRatio = get(opt, 'widthRatio', null)
-    if (!isNumber(widthRatio)) {
-        widthRatio = 1
+    //getWidthRatio, 因組件本身或內容物可能會調整尺寸, 故需由外部給予函數取得當前widthRatio
+    let getWidthRatio = get(opt, 'getWidthRatio', null)
+    if (!isFunction(getWidthRatio)) {
+        getWidthRatio = () => 1
     }
 
-    //stopEventScrollPanel
-    let stopEventScrollPanel = get(opt, 'stopEventScrollPanel', null)
-    if (!isBoolean(stopEventScrollPanel)) {
-        stopEventScrollPanel = false
+    //stopScrollPropagationForPanel
+    let stopScrollPropagationForPanel = get(opt, 'stopScrollPropagationForPanel', null)
+    if (!isBoolean(stopScrollPropagationForPanel)) {
+        stopScrollPropagationForPanel = false
+    }
+
+    //useTouchDragForPanel
+    let useTouchDragForPanel = get(opt, 'useTouchDragForPanel', null)
+    if (!isBoolean(useTouchDragForPanel)) {
+        useTouchDragForPanel = true
     }
 
     //ele
@@ -72,7 +78,7 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
             let ry = e.deltaY / Math.abs(e.deltaY)
             let rx = e.deltaX / Math.abs(e.deltaX)
             ev.emit('scrollPanel', { ratioY: ry, ratioX: rx }) //寬版頁面, 用滾輪上下捲動, 實際是傳移動距離給bar
-            if (stopEventScrollPanel) {
+            if (stopScrollPropagationForPanel) {
                 domCancelEvent(e) //要禁止外部元素如body也被捲動
             }
         }
@@ -80,19 +86,21 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
 
         //fPanelTouchstart
         fPanelTouchstart = (e) => {
-            let cy = -e.touches[0].clientY * heighRatio
-            let cx = -e.touches[0].clientX * widthRatio
-            barPressing = true
-            ev.emit('pressBar', { clientY: cy, clientX: cx }) //窄版頁面, 上鎖與紀錄頁面點擊y座標, 僅紀錄第一觸擊點座標, 另需被heighRatio修正比例
-            // domCancelEvent(e)
+            if (useTouchDragForPanel) {
+                let cy = -e.touches[0].clientY * getHeighRatio()
+                let cx = -e.touches[0].clientX * getWidthRatio()
+                barPressing = true
+                ev.emit('pressBar', { clientY: cy, clientX: cx }) //窄版頁面, 上鎖與紀錄頁面點擊y座標, 僅紀錄第一觸擊點座標, 另需被heighRatio修正比例
+                // domCancelEvent(e)
+            }
         }
         elePanel.addEventListener('touchstart', fPanelTouchstart)
 
         //fPanelTouchmove
         fPanelTouchmove = (e) => {
             if (barPressing) {
-                let cy = -e.touches[0].clientY * heighRatio
-                let cx = -e.touches[0].clientX * widthRatio
+                let cy = -e.touches[0].clientY * getHeighRatio()
+                let cx = -e.touches[0].clientX * getWidthRatio()
                 ev.emit('dragBar', { clientY: cy, clientX: cx }) //窄版頁面, 用滑動距離拖曳頁面, 實際是傳移動距離給bar, 僅紀錄第一觸擊點座標, 另需被heighRatio修正比例
                 domCancelEvent(e) //要禁止回傳否則會連外部body捲軸一起移動畫面
             }
@@ -101,9 +109,11 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
 
         //fPanelTouchend
         fPanelTouchend = (e) => {
-            barPressing = false
-            ev.emit('freeBar') //窄版頁面, 解鎖
-            // domCancelEvent(e)
+            if (barPressing) {
+                barPressing = false
+                ev.emit('freeBar') //窄版頁面, 解鎖
+                // domCancelEvent(e)
+            }
         }
         elePanel.addEventListener('touchend', fPanelTouchend)
 
@@ -134,9 +144,11 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
 
         //fBarTouchend
         fBarTouchend = (e) => {
-            barPressing = false
-            ev.emit('freeBar') //窄版bar, 解鎖
-            // domCancelEvent(e)
+            if (barPressing) {
+                barPressing = false
+                ev.emit('freeBar') //窄版bar, 解鎖
+                // domCancelEvent(e)
+            }
         }
         eleBar.addEventListener('touchend', fBarTouchend)
 
@@ -151,9 +163,11 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
 
         //fWindowMouseup
         fWindowMouseup = (e) => {
-            barPressing = false
-            ev.emit('freeBar') //寬版bar, 解鎖
-            domCancelEvent(e) //要禁止回傳否則會連外部body捲軸一起移動畫面
+            if (barPressing) {
+                barPressing = false
+                ev.emit('freeBar') //寬版bar, 解鎖
+                domCancelEvent(e) //要禁止回傳否則會連外部body捲軸一起移動畫面
+            }
         }
         window.addEventListener('mouseup', fWindowMouseup)
 

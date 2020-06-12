@@ -17,14 +17,16 @@ import haskey from './haskey.mjs'
  * @param {String} key 輸入比對的主鍵key值字串
  * @returns {Object} 回傳比對結果物件
  * @example
- * console.log(ltdtdiff([{ x: 'xa', y: 'y1' }, { x: 'xb', y: 'y2' }], [{ x: 'xa', z: 'z3' }], 'x'))
- * // => { infor: { xa: 'diff', xb: 'del' }, del: [ { x: 'xb', y: 'y2' } ], same: [], diff: [ { x: 'xa', z: 'z3' } ], add: [] }
- *
- * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk', a: 'abc', b: 456 }, 'id'))
- * // => { infor: { pk: 'diff' }, del: [], same: [], diff: [{ id: 'pk', a: 'abc', b: 456 }], add: [] }
- *
- * console.log(ltdtdiff({ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 456 }, 'id'))
- * // => { infor: { pk: 'del', pk1: 'add' }, del: [{ id: 'pk', a: 'abc', b: 123 }], same: [], diff: [], add: [{ id: 'pk1', a: 'abc', b: 456 }] }
+ * let vOld = [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }]
+ * let vNew = [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }]
+ * console.log(ltdtdiff(vOld, vNew, 'id'))
+ * // => {
+ * //     infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
+ * //     del: [ { id: 'id-2', a: 'a2' } ],
+ * //     same: [ { id: 'id-3', a: 'a3' } ],
+ * //     diff: [ { id: 'id-1', z: 'z3' } ],
+ * //     add: [ { id: 'id-4', a: 'a4' } ]
+ * // }
  */
 function ltdtdiff(ltdtOld, ltdtNew, key) {
 
@@ -39,6 +41,7 @@ function ltdtdiff(ltdtOld, ltdtNew, key) {
 
     //check
     if (!isestr(key)) {
+        console.log('invalid key')
         return def
     }
 

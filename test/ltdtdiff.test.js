@@ -247,6 +247,26 @@ describe(`ltdtdiff`, function() {
         assert.strict.deepEqual(r, rr)
     })
 
+    k = 14
+    o[k] = {
+        old: [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }],
+        new: [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }],
+        ret: {
+            infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
+            del: [{ id: 'id-2', a: 'a2' }],
+            same: [{ id: 'id-3', a: 'a3' }],
+            diff: [{ id: 'id-1', z: 'z3' }],
+            add: [{ id: 'id-4', a: 'a4' }]
+        }
+    }
+    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
+        k = 14
+        let r = ltdtdiff(o[k].old, o[k].new, 'id')
+        let rr = o[k].ret
+        assert.strict.deepEqual(r, rr)
+    })
+
+
     it(`should return {} when input ''`, function() {
         let r = ltdtdiff('')
         let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
