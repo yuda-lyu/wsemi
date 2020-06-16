@@ -14,14 +14,14 @@
     <button onmouseenter="t1(this)">tooltip from tippy.js</button>
     <script>
         function t1(slef){
-            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip')
+            wsemi.domTooltip(slef,'<b>提示</b><br>test tooltip')
         }
     </script>
 
     <button onmouseenter="t2(this)">tooltip from tippy.js</button>
     <script>
         function t2(slef){
-            wsemi.onTooltip(slef,'<b>提示</b><br>test tooltip',{
+            wsemi.domTooltip(slef,'<b>提示</b><br>test tooltip',{
                 theme:'light',
             })
         }

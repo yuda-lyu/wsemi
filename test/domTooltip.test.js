@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import onTooltip from '../src/onTooltip.mjs'
+//import domTooltip from '../src/domTooltip.mjs'
 
 
-describe(`onTooltip`, function() {
+describe(`domTooltip`, function() {
 
     it(`need test in browser`, function() {
         assert.strict.deepEqual(1, 1)
