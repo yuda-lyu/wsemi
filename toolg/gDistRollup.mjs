@@ -21,6 +21,7 @@ rollupFiles({
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
         'viewerjs': 'Viewer',
+        'html2canvas': 'html2canvas',
         //'tippy.js': 'tippy.js', //打包tippy.js與popper.js進來, 因沒辦法按需只能全入
         //'@shopify/draggable': 'Draggable', //因draggable.js沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
     },
@@ -34,6 +35,7 @@ rollupFiles({
         'ua-parser-js',
         'xss',
         'viewerjs',
+        'html2canvas',
         //'tippy.js',
         //'@shopify/draggable',
     ],

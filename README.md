@@ -46,9 +46,13 @@ To view some examples for more understanding, visit examples:
 
 > **viewerjs[dynamic import]:** [ex-viewerjs-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-viewerjs-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-viewerjs-dynamic.html)]
 
+> **html2canvas:** [ex-html2canvas.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2canvas.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2canvas.html)]
+
+> **html2canvas[dynamic import]:** [ex-html2canvas-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2canvas-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2canvas-dynamic.html)]
+
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `viewerjs`, `tippy.js` and `@shopify/draggable`
+> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `viewerjs`, `html2canvas`, `tippy.js` and `@shopify/draggable`
 ```alias
 npm i wsemi
 ```
@@ -98,7 +102,12 @@ or
 <link href="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.js"></script>
 ```
+[Optional] Add script for html2canvas.
+> **Note:** include script when use `html2pic` function, and don't need include script when use `html2picDyn` function.
+```alias
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js"></script>
+```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.46/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.47/dist/wsemi.umd.js"></script>
 ```

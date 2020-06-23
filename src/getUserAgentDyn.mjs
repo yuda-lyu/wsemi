@@ -1,4 +1,3 @@
-import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
 import getUserAgent from './getUserAgent.mjs'

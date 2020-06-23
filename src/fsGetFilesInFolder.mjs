@@ -14,6 +14,7 @@ import fsIsFile from './fsIsFile.mjs'
  * @returns {Array} 回傳列舉檔案或資料夾陣列
  * @example
  * //need test in nodejs
+ *
  * let fd = './d'
  *
  * fsGetFilesInFolder(fd)

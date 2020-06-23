@@ -12,6 +12,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
  * @param {String} fpTar 輸入目的資料夾路徑字串
  * @example
  * need test in nodejs.
+ *
  * import fs from 'fs'
  * import fsCreateFolder from './src/fsCreateFolder.mjs'
  * import fsCleanFolder from './src/fsCleanFolder.mjs'

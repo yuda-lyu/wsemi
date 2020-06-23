@@ -15,6 +15,12 @@ import isundefined from './isundefined.mjs'
  *
  * console.log(o2j({ a: 12.34, b: 'abc' }))
  * // => '{"a":12.34,"b":"abc"}'
+ *
+ * console.log(o2j({ a: 12.34, b: 'abc' }, true))
+ * // => {
+ *   "a": 12.34,
+ *   "b": "abc"
+ * }
  */
 function o2j(v, bFormat = false) {
 
