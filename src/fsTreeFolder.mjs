@@ -42,8 +42,7 @@ function fsTreeFolder(fd, levelLimit = 1) {
         each(items, function(item) {
 
             //fp
-            let fp = fd + '/' + item
-            //let fp = path.join(fd, item)
+            let fp = path.resolve(fd, item)
 
             //stat
             let stat = fs.statSync(fp)
