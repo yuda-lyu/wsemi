@@ -52,13 +52,13 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `viewerjs`, `html2canvas`, `tippy.js` and `@shopify/draggable`
+> **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx` and `tippy.js`.
 ```alias
 npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash`, `crypto-js`, `tippy.js` and `@shopify/draggable`, by using tree-shaking for dead-code elimination
+> **Note:** umd file includes with `lodash`, `crypto-js` and `tippy.js`, by using tree-shaking for dead-code elimination.
 
 [Optional] Add script with nomodule for IE11.
 ```alias
@@ -109,5 +109,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.47/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.4.48/dist/wsemi.umd.js"></script>
 ```

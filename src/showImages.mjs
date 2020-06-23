@@ -1,10 +1,10 @@
-import Viewer from 'viewerjs'
+//import Viewer from 'viewerjs' //前端套件故盡量使用動態加載
 import merge from 'lodash/merge'
 import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
-import getGlobal from './getGlobal.mjs'
 import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
+import getGlobal from './getGlobal.mjs'
 
 
 function optOne() {
@@ -36,6 +36,8 @@ function optOne() {
         url: 'data-source',
     }
 }
+
+
 function optMuti() {
     let r = optOne()
     r.navbar = true
@@ -47,7 +49,7 @@ function optMuti() {
 
 function getViewer() {
     let g = getGlobal()
-    let x = Viewer || g.Viewer
+    let x = g.Viewer
     if (x.default) {
         x = x.default
     }
@@ -142,6 +144,7 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
     let vw = new UseViewer(img, useOpt)
 
     //show for one
+    //此法只能用於1.5.0版, 1.6.0以上已失效
     if (one) {
         vw.show() //只有一張圖時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
     }

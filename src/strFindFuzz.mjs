@@ -3,7 +3,6 @@ import join from 'lodash/join'
 import map from 'lodash/map'
 import mean from 'lodash/mean'
 import every from 'lodash/every'
-import getGlobal from './getGlobal.mjs'
 import iser from './iser.mjs'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
@@ -11,6 +10,7 @@ import isearr from './isearr.mjs'
 import cstr from './cstr.mjs'
 import binstr from './binstr.mjs'
 import sep from './sep.mjs'
+import getGlobal from './getGlobal.mjs'
 
 
 function getFuzzball() {

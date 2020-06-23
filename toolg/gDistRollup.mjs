@@ -12,6 +12,7 @@ rollupFiles({
     hookNameDist: () => 'wsemi',
     nameDistType: 'kebabCase',
     globals: {
+        //因draggable.js與html2canvas沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
         'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
@@ -20,10 +21,7 @@ rollupFiles({
         'fuzzball': 'fuzzball',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        'viewerjs': 'Viewer',
-        'html2canvas': 'html2canvas',
-        //'tippy.js': 'tippy.js', //打包tippy.js與popper.js進來, 因沒辦法按需只能全入
-        //'@shopify/draggable': 'Draggable', //因draggable.js沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
+        //'tippy.js': 'tippy.js', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來
     },
     external: [
         'path',
@@ -34,9 +32,6 @@ rollupFiles({
         'fuzzball',
         'ua-parser-js',
         'xss',
-        'viewerjs',
-        'html2canvas',
         //'tippy.js',
-        //'@shopify/draggable',
     ],
 })

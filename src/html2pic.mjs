@@ -1,15 +1,15 @@
+//import html2canvas from 'html2canvas' //html2canvas.js沒有umd版, 故引用後會有未檢查window的殼層程式碼出現, 並再導致無法於nodejs環境下使用wsemi
 import get from 'lodash/get'
 import isNumber from 'lodash/isNumber'
 import isBoolean from 'lodash/isBoolean'
 import isEle from './isEle.mjs'
 import isestr from './isestr.mjs'
-import html2canvas from 'html2canvas'
 import getGlobal from './getGlobal.mjs'
 
 
 function getHtml2canvas() {
     let g = getGlobal()
-    let x = html2canvas || g.html2canvas
+    let x = g.html2canvas
     return x
 }
 

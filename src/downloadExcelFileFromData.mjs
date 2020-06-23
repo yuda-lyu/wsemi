@@ -1,9 +1,9 @@
-import XLSX from 'xlsx'
-import getGlobal from './getGlobal.mjs'
+import XLSX from 'xlsx' //後端也需要能直接使用
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
 import bs2u8arr from './bs2u8arr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
+import getGlobal from './getGlobal.mjs'
 
 
 function getXLSX() {

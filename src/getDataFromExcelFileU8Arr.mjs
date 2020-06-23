@@ -1,3 +1,4 @@
+import XLSX from 'xlsx' //後端也需要能直接使用
 import get from 'lodash/get'
 import each from 'lodash/each'
 import map from 'lodash/map'
@@ -6,7 +7,6 @@ import join from 'lodash/join'
 import arrhas from './arrhas.mjs'
 import isbol from './isbol.mjs'
 import cstr from './cstr.mjs'
-import XLSX from 'xlsx'
 import getGlobal from './getGlobal.mjs'
 
 
