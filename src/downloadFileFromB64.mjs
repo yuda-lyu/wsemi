@@ -26,8 +26,6 @@ function downloadFileFromB64(cfn, b64) {
         return
     }
 
-    //download
-
     //tag a
     let a = document.createElement('a')
     a.href = b64
