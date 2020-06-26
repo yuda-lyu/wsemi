@@ -1,3 +1,5 @@
+import get from 'lodash/get'
+import ispint from './ispint.mjs'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 
@@ -8,7 +10,8 @@ import isfun from './isfun.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.js Github}
  * @memberOf wsemi
  * @param {Function} f 輸入取得dom函數
- * @param {Integer} [ms=20] 輸入偵測頻率整數，預設20毫秒
+ * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，預設20毫秒
+ * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，預設1
  * @example
  *
  * //監聽dom
@@ -26,8 +29,24 @@ import isfun from './isfun.mjs'
  * de.clear()
  *
  */
-function domDetect(f, ms = 20) {
+function domDetect(f, opt = {}) {
+
+    //timeInterval
+    let timeInterval = get(opt, 'timeInterval', null)
+    if (!ispint(timeInterval)) {
+        timeInterval = 20
+    }
+
+    //tolerancePixel
+    let tolerancePixel = get(opt, 'tolerancePixel', null)
+    if (!ispint(tolerancePixel)) {
+        tolerancePixel = 1
+    }
+
+    //ev
     let ev = evem()
+
+    //timer, s
     let timer
     let s = {
         offsetWidth: 0,
@@ -56,7 +75,9 @@ function domDetect(f, ms = 20) {
             }
 
             //detect
-            if (s.offsetWidth !== snew.offsetWidth || s.offsetHeight !== snew.offsetHeight) {
+            let bw = Math.abs(s.offsetWidth - snew.offsetWidth) > tolerancePixel
+            let bh = Math.abs(s.offsetHeight - snew.offsetHeight) > tolerancePixel
+            if (bw || bh) {
                 let sold = { ...s }
                 setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
 
@@ -82,7 +103,7 @@ function domDetect(f, ms = 20) {
         }
 
 
-    }, ms)
+    }, timeInterval)
 
     //clear
     ev.clear = () => {
