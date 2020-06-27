@@ -5,7 +5,7 @@ import isfun from './isfun.mjs'
 
 
 /**
- * 前端偵測DOM元素resize與display事件
+ * 前端偵測DOM元素resize、resizeWithWindow與display事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.js Github}
  * @memberOf wsemi
@@ -20,6 +20,9 @@ import isfun from './isfun.mjs'
  * })
  * de.on('resize', (s) => {
  *     console.log('resize', s)
+ * })
+ * de.on('resizeWithWindow', (s) => {
+ *     console.log('resizeWithWindow', s)
  * })
  * de.on('display', (s) => {
  *     console.log('display', s)
@@ -84,6 +87,7 @@ function domDetect(f, opt = {}) {
                     //detect resize
                     if (snew.offsetWidth > 0 && snew.offsetHeight > 0) {
                         ev.emit('resize', { sold, snew, ele: p })
+                        ev.emit('resizeWithWindow', { sold, snew, ele: p, from: 'dom' })
                     }
 
                     //detect display
@@ -105,9 +109,16 @@ function domDetect(f, opt = {}) {
 
     }, timeInterval)
 
+    //fWindowResize
+    let fWindowResize = (e) => {
+        ev.emit('resizeWithWindow', { snew: s, from: 'window' })
+    }
+    window.addEventListener('resize', fWindowResize)
+
     //clear
     ev.clear = () => {
         clearInterval(timer)
+        window.removeEventListener('resize', fWindowResize)
     }
 
     return ev
