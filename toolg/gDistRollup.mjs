@@ -16,6 +16,7 @@ rollupFiles({
         'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
+        'crypto': 'crypto', //因crypto-js修改使用內建crypto方式, 會偵測nodejs並使用require內建的crypto, 故需剔除
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuzzball': 'fuzzball',
@@ -27,6 +28,7 @@ rollupFiles({
         'path',
         'fs',
         'child_process',
+        'crypto',
         'dayjs',
         'xlsx',
         'fuzzball',
