@@ -11,11 +11,12 @@ import domCancelEvent from './domCancelEvent.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragBarAndScroll.test.js Github}
  * @memberOf wsemi
  * @param {HTMLEvent} event 輸入event物件
+ * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽pressBar、dragBar、freeBar事件，clear為釋放監聽
  * @example
  *
  * //監聽dom
- * let divPanel = ele
- * let divBar = ele
+ * let divPanel = document.querySelector('#id_panel')
+ * let divBar = document.querySelector('#id_bar')
  * let getHeighRatio = () => 0.9
  * let das = domDragBarAndScroll(divPanel, divBar, { getHeighRatio, stopScrollPropagationForPanel: true })
  * das.on('scrollPanel', () => {})

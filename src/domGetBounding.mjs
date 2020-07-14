@@ -7,8 +7,20 @@ import isEle from './isEle.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetBounding.test.js Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
+ * @returns {Object} 回傳物件，包含元素的pageLeft、pageTop、pageRight、pageBottom、width、height數字
  * @example
- * need test in browser
+ *
+ * //domGetBounding
+ * let b = domGetBounding(document.querySelector('#id'))
+ * // => {
+ * //     pageLeft: 'Number',
+ * //     pageTop: 'Number',
+ * //     pageRight: 'Number',
+ * //     pageBottom: 'Number',
+ * //     width: 'Number',
+ * //     height: 'Number',
+ * // }
+ *
  */
 function domGetBounding(ele) {
     let r = null

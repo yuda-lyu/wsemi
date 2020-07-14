@@ -1,43 +1,325 @@
-//import Draggable from '@shopify/draggable/lib/draggable' //draggable.js沒有umd版, 故引用後即便用rollup剔除@shopify/draggable再打包, 還是會有未檢查window的殼層程式碼出現, 並再導致無法於nodejs環境下使用wsemi
-import get from 'lodash/get'
+import each from 'lodash/each'
 import size from 'lodash/size'
-import isnum from './isnum.mjs'
-import iseobj from './iseobj.mjs'
+import get from 'lodash/get'
+import genID from './genID.mjs'
 import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'
+import cint from './cint.mjs'
 import evem from './evem.mjs'
-import getGlobal from './getGlobal.mjs'
-// import domIsPageXYIn from './domIsPageXYIn.mjs' //已不使用
-// import domGetOffset from './domGetOffset.mjs' //已不使用
+import domRemove from './domRemove.mjs'
+import domCancelEvent from './domCancelEvent.mjs'
+import domIsPageXYIn from './domIsPageXYIn.mjs'
 
 
-function getDraggable() {
-    let g = getGlobal()
-    //let x = Draggable || g.Draggable
-    let x = g.Draggable //直接取window內Draggable
-    if (x.default) {
-        x = x.default
+function getEles(ele, selectors) {
+    let eles = null
+    try {
+        eles = ele.querySelectorAll(selectors)
     }
-    return x
+    catch (err) { }
+    return eles
+}
+
+
+function getAttr(ele, attr) {
+    let r = null
+    try {
+        r = ele.getAttribute(attr)
+    }
+    catch (err) {}
+    return r
+}
+
+
+// function domFindParent(ele, f) {
+//     let r = null
+
+//     //check
+//     if (!isEle(ele)) {
+//         console.log('ele is not HTMLElement')
+//         return r
+//     }
+//     if (!isfun(f)) {
+//         console.log('invalid f')
+//         return r
+//     }
+
+//     //while
+//     let parent = ele
+//     try {
+//         while (parent) {
+
+//             //check
+//             if (f(parent)) {
+//                 r = parent
+//                 break
+//             }
+
+//             //parentNode
+//             parent = parent.parentNode
+
+//         }
+//     }
+//     catch (err) {
+//         console.log('can not find parent in while', err)
+//     }
+//     return r
+// }
+
+
+function getBoudRect(ele) {
+    try {
+        return ele.getBoundingClientRect()
+    }
+    catch (err) {}
+    return null
+}
+
+
+function getPointRefLoc(p, ele) {
+    let rt = getBoudRect(ele)
+    if (!rt) {
+        return null
+    }
+    let x = p.clientX - rt.left //事件的clientX,Y是基於瀏覽器可視區域左上角的座標
+    let y = p.clientY - rt.top
+    let w = ele.offsetWidth
+    let h = ele.offsetHeight
+    return {
+        x, y, w, h
+    }
+}
+
+
+// function isInner(p, ele) {
+//     let rl = getPointRefLoc(p, ele)
+//     if (!rl) {
+//         return false
+//     }
+//     return rl.x >= 0 && rl.x <= rl.w && rl.y >= 0 && rl.y <= rl.h
+// }
+
+
+function getPointFromEvent(e) {
+
+    //check
+    let cx = get(e, 'clientX', null)
+    let cy = get(e, 'clientY', null)
+    let px = get(e, 'pageX', null)
+    let py = get(e, 'pageY', null)
+    if (cx !== null && cy !== null && px !== null && py !== null) {
+        return {
+            clientX: cx,
+            clientY: cy,
+            pageX: px,
+            pageY: py,
+        }
+    }
+
+    //check
+    let touches = get(e, 'changedTouches', []) //touchend時touches長度為0, 故需改用changedTouches
+    if (size(touches) !== 1) {
+        return null
+    }
+
+    //p
+    let p = touches[0]
+
+    return {
+        clientX: get(p, 'clientX', null),
+        clientY: get(p, 'clientY', null),
+        pageX: get(p, 'pageX', null),
+        pageY: get(p, 'pageY', null),
+    }
+}
+
+
+function getIndex(ele, attIndex) {
+    let kitem = getAttr(ele, attIndex)
+    kitem = cint(kitem)
+    return kitem
+}
+
+
+function dragPreview() {
+    let _prevName = '_prevName'
+    let _node = null
+    let _container = null
+
+    function cloneNode(ele, x, y) {
+        //console.log('cloneNode')
+
+        //getBoudRect
+        let rt = getBoudRect(ele)
+        if (!rt) {
+            return
+        }
+
+        //深複製
+        let nd = ele.cloneNode(true)
+
+        //清空margin, 因getBoundingClientRect取得的left與top會因margin自動合併, 導致不含自己的margin, 故放到container時又會出現margin的影響導致偏移, 故需先清空margin
+        nd.style.margin = 0
+
+        //儲存資訊
+        nd.tShiftX = x - rt.left
+        nd.tShiftY = y - rt.top
+        nd.tWidth = ele.offsetWidth
+        nd.tHeight = ele.offsetHeight
+        nd.tParent = ele.parentNode
+        // console.log('cloneNode tShiftY', nd.tShiftY, 'y', y, 'rt.y', rt.y)
+
+        return nd
+    }
+
+    function createPreview(ele, x, y) {
+        //console.log('createPreview')
+
+        //複製ele
+        let node = cloneNode(ele, x, y)
+
+        //創建container
+        let container = document.createElement('div')
+        container.setAttribute('name', _prevName)
+        //container.style.display = 'none'//先隱藏
+
+        //將複製的ele塞入container
+        container.appendChild(node)
+
+        //將container塞入原本ele的父層內
+        node.tParent.appendChild(container)
+
+        //儲存至全域
+        _node = node
+        _container = container
+
+        //updateDragPreview
+        updateDragPreview(x, y, 'createPreview')
+
+    }
+
+    function updateDragPreview(x, y, from) {
+        //console.log('updateDragPreview', x, y, from)
+
+        //check
+        if (!_node || !_container) {
+            return
+        }
+
+        //update
+        //_container.style.display = 'display:block' //顯示
+        _container.style.position = 'fixed'
+        _container.style.pointerEvents = 'none'
+        _container.style.top = `${y - _node.tShiftY}px`
+        _container.style.left = `${x - _node.tShiftX}px`
+        _container.style.width = `${_node.tWidth}px`
+        _container.style.height = `${_node.tHeight}px`
+        // console.log('updateDragPreview', y, 'from', from)
+        // console.log('updateDragPreview y', y, ' y -_node.tShiftY=top', y - _node.tShiftY)
+
+    }
+
+    function removeDragPreview() {
+        //console.log('removeDragPreview')
+
+        //domRemove
+        domRemove(`[name=${_prevName}]`)
+
+        //clear
+        _node = null
+        _container = null
+
+    }
+
+    let evMM = function(e) {
+        //console.log('window mousemove', e)
+        updateDragPreview(e.clientX, e.clientY, 'window mousemove')
+    }
+    window.addEventListener('mousemove', evMM)
+
+    let evTM = function(e) {
+        //console.log('window touchmove', e)
+        let p = getPointFromEvent(e)
+        if (p) {
+            updateDragPreview(p.clientX, p.clientY, 'window touchmove')
+        }
+    }
+    window.addEventListener('touchmove', evTM)
+
+    let evDg = function(e) {
+        //console.log('window drag', e)
+        updateDragPreview(e.clientX, e.clientY, 'window drag')
+    }
+    window.addEventListener('drag', evDg)
+
+    let evDge = function(e) {
+        //console.log('window dragend', e)
+        removeDragPreview()
+    }
+    window.addEventListener('dragend', evDge)
+
+    function clear() {
+        window.removeEventListener('mousemove', evMM)
+        window.removeEventListener('touchmove', evTM)
+        window.removeEventListener('drag', evDg)
+        window.removeEventListener('dragend', evDge)
+    }
+
+    return {
+        createPreview,
+        updateDragPreview,
+        removeDragPreview,
+        clear,
+    }
 }
 
 
 /**
- * 前端DOM元素拖曳功能
+ * 前端監聽DOM元素陣列拖曳事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.js Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.attIndex='dragindex'] 輸入標記元素順序指標字串，預設'dragindex'
+ * @param {String} [opt.attGroup='draggroup'] 輸入標記元素群組字串，預設'draggroup'
  * @param {String} [opt.selectors='[dragtag]'] 輸入查詢元素用字串，主要是給draggable.js用來標記哪些元素可被拖曳之用，預設'[dragtag]'
+ * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽change、start、move、enter、leave、drop事件，clear為釋放監聽
  * @example
- * need test in browser
+ *
+ * //監聽dom
+ * let dd = domDrag(document.querySelector('#id'), { attIndex: 'dragindex', selectors: '[dragtag]' })
+ *
+ * //change
+ * dd.on('change', (msg) => {
+ *     console.log('change', msg)
+ * })
+ * dd.on('start', (msg) => {
+ *     console.log('start', msg)
+ * })
+ * dd.on('move', (msg) => {
+ *     console.log('move', msg)
+ * })
+ * dd.on('enter', (msg) => {
+ *     console.log('enter', msg)
+ * })
+ * dd.on('leave', (msg) => {
+ *     console.log('leave', msg)
+ * })
+ * dd.on('drop', (msg) => {
+ *     console.log('drop', msg)
+ * })
+ *
+ * //釋放監聽
+ * dd.clear()
+ *
  */
 function domDrag(ele, opt = {}) {
-    let self = null
-    let dragTo = null
-    let tmsgDragMove = null
+    let _startInd = null
+    let _startEle = null
+    let _endInd = null
+    let _endEle = null
+    let _events = []
 
     //check
     if (!isEle(ele)) {
@@ -49,329 +331,378 @@ function domDrag(ele, opt = {}) {
         console.log('invalid attIndex in opt', attIndex)
         return
     }
+    let attGroup = get(opt, 'attGroup', 'draggroup')
+    if (!isestr(attGroup)) {
+        console.log('invalid attGroup in opt', attGroup)
+        return
+    }
     let selectors = get(opt, 'selectors', '[dragtag]')
     if (!isestr(selectors)) {
         console.log('invalid selectors in opt', selectors)
         return
     }
 
-    function getAttr(el, attr) {
-        let ind = null
-        try {
-            ind = el.getAttribute(attr)
-        }
-        catch (err) {}
-        return ind
+    //dragPreview
+    let pv = dragPreview()
+
+    //eles
+    let eles = getEles(ele, selectors)
+    if (!eles) {
+        console.log('初始化時無法取得拖曳元素')
+        return
     }
 
-    function getIndex(el) {
-        return getAttr(el, attIndex)
+    //gid
+    let gid = 'dg' + genID(8)
+
+    //setAttrs
+    function setAttrs() {
+        each(eles, (ele, k) => {
+
+            //setAttribute
+            // ele.setAttribute('draggable', true)
+            ele.setAttribute(attGroup, gid)
+
+        })
     }
 
-    function getBoudRect(el) {
-        try {
-            return el.getBoundingClientRect()
+    //bindEvents
+    function bindEvents() {
+        let f
+        let name
+
+        name = 'mousemove'
+        f = function(e) {
+            dragMove(e, 'mouse')
         }
-        catch (err) {}
-        return null
+        window.addEventListener(name, f)
+        _events.push({ ele: window, name, f })
+
+        name = 'mouseup'
+        f = function(e) {
+            dragDrop(e, 'mouse')
+        }
+        window.addEventListener(name, f)
+        _events.push({ ele: window, name, f })
+
+        name = 'touchmove'
+        f = function(e) {
+            dragMove(e, 'touch')
+        }
+        window.addEventListener(name, f)
+        _events.push({ ele: window, name, f })
+
+        name = 'touchend'
+        f = function(e) {
+            dragDrop(e, 'touch')
+        }
+        window.addEventListener(name, f)
+        _events.push({ ele: window, name, f })
+
+        each(eles, (ele, k) => { //eles綁定成為元素需自動更新, 例如用vue自動由數據順序產生元素, 而拖曳完的eles將不會是原始元素順序, 故k不可信
+
+            name = 'mousedown'
+            f = function(e) {
+                dragStart(e, ele, 'mouse')
+            }
+            ele.addEventListener(name, f, false)
+            _events.push({ ele, name, f })
+
+            name = 'touchstart'
+            f = function(e) {
+                touchStart(e, ele)
+            }
+            ele.addEventListener(name, f, false)
+            _events.push({ ele, name, f })
+
+        })
     }
 
-    function getEle(ind) {
-        let el = null
-        try {
-            el = ele.querySelector(`[${attIndex}="${ind}"]`)
+    //unbindEvents
+    function unbindEvents() {
+        each(_events, ({ ele, name, f }) => {
+            ele.removeEventListener(name, f)
+        })
+    }
+
+    function dragStart(e, ele, from) {
+        //console.log('dragStart', e, ele, from)
+
+        //getIndex
+        let kitem = getIndex(ele, attIndex)
+
+        //check
+        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
+            //console.log('dragStart: 無法取得kitem')
+            return
         }
-        catch (err) {}
-        return el
+
+        _startInd = kitem
+        _startEle = ele
+
+        //emit
+        let msg = {
+            event: e,
+            startInd: _startInd,
+            startEle: _startEle,
+        }
+        ev.emit('change', { mode: 'start', ...msg })
+        ev.emit('start', msg)
+
+        //p
+        let p = getPointFromEvent(e)
+        if (!p) {
+            return
+        }
+
+        //createPreview
+        pv.createPreview(ele, p.clientX, p.clientY)
+
+    }
+
+    function findEleFromEvent(e) {
+        let eleIn = null
+
+        //p
+        let p = getPointFromEvent(e)
+        if (!p) {
+            return eleIn
+        }
+
+        //each
+        for (let i = 0; i < eles.length; i++) {
+            let ele = eles[i]
+            let b = domIsPageXYIn(p.pageX, p.pageY, ele)
+            if (b) {
+                eleIn = ele
+                break
+            }
+        }
+
+        return eleIn
+    }
+
+    function dragMove(e, from) {
+        //console.log('dragMove', e, from)
+
+        //check
+        if (_startInd === null) {
+            return
+        }
+
+        //p
+        let p = getPointFromEvent(e)
+        if (!p) {
+            return
+        }
+
+        function emitEnter(endInd, endEle) {
+            _endInd = endInd
+            _endEle = endEle
+
+            //emit
+            let msg = {
+                event: e,
+                startInd: _startInd,
+                startEle: _startEle,
+                endInd: _endInd,
+                endEle: _endEle,
+            }
+            ev.emit('change', { mode: 'enter', ...msg })
+            ev.emit('enter', msg)
+
+        }
+
+        function emitLeave() {
+
+            //emit
+            let msg = {
+                event: e,
+                startInd: _startInd,
+                startEle: _startEle,
+                endInd: _endInd,
+                endEle: _endEle,
+            }
+            ev.emit('change', { mode: 'leave', ...msg })
+            ev.emit('leave', msg)
+
+            //clear, 要放在emit之後才能清除
+            _endInd = null
+            _endEle = null
+
+        }
+
+        function emitMove(rl, rx, ry) {
+
+            //emit
+            let msg = {
+                event: e,
+                startInd: _startInd,
+                startEle: _startEle,
+                endInd: _endInd,
+                endEle: _endEle,
+                ...rl,
+                rx,
+                ry,
+            }
+            ev.emit('change', { mode: 'move', ...msg })
+            ev.emit('move', msg)
+
+        }
+
+        //eleIn
+        let eleIn = findEleFromEvent(e)
+
+        //check
+        if (!eleIn) {
+
+            //check
+            if (_endInd !== null) {
+
+                //emitLeave
+                emitLeave()
+
+            }
+
+            return
+        }
+
+        //getIndex
+        let kitem = getIndex(eleIn, attIndex)
+
+        //check
+        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
+            //console.log('dragMove: 無法取得kitem')
+            return
+        }
+
+        //check
+        if (kitem === _startInd) {
+            //console.log('dragMove: 仍於拖曳物件內')
+            return
+        }
+
+        if (kitem !== _endInd) {
+            //enter
+
+            //emitEnter
+            emitEnter(kitem, eleIn)
+
+        }
+        else {
+            //move
+
+            //rl
+            let rl = getPointRefLoc(p, eleIn)
+
+            //rx, ry
+            let rx = 0
+            if (rl.w > 0) {
+                rx = rl.x / rl.w
+            }
+            let ry = 0
+            if (rl.h > 0) {
+                ry = rl.y / rl.h
+            }
+
+            if (rx >= 0 && rx <= 1 && ry >= 0 && ry <= 1) {
+
+                //emitMove
+                emitMove(rl, rx, ry)
+
+            }
+
+        }
+
+    }
+
+    function dragDrop(e, from) {
+        //console.log('dragDrop', e, from)
+
+        //domCancelEvent
+        domCancelEvent(e)
+
+        //check
+        if (_startInd === null) {
+            return
+        }
+
+        //removeDragPreview
+        pv.removeDragPreview()
+
+        function emitDrop(endInd, endEle) {
+            _endInd = endInd
+            _endEle = endEle
+
+            //emit
+            let msg = {
+                event: e,
+                startInd: _startInd,
+                startEle: _startEle,
+                endInd: _endInd,
+                endEle: _endEle,
+            }
+            ev.emit('change', { mode: 'drop', ...msg })
+            ev.emit('drop', msg)
+
+        }
+
+        //eleIn
+        let eleIn = findEleFromEvent(e)
+
+        //check, 釋放時不在拖曳元素內故跳出
+        if (!eleIn) {
+            _startInd = null
+            _startEle = null
+            _endInd = null
+            _endEle = null
+            return
+        }
+
+        //getIndex
+        let kitem = getIndex(eleIn, attIndex)
+
+        //check
+        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
+            //console.log('dragDrop: 無法取得kitem')
+            return
+        }
+
+        //emitDrop
+        emitDrop(kitem, eleIn)
+
+        //clear, 要放在emit之後才能清除
+        _startInd = null
+        _startEle = null
+        _endInd = null
+        _endEle = null
+
+    }
+
+    function touchStart(e, ele) {
+        //console.log('touchStart', e, ele)
+
+        //domCancelEvent, touchstart需取消之後拖曳事件, 否則會變成捲動螢幕
+        domCancelEvent(e)
+
+        //dragStart
+        dragStart(e, ele, 'touch')
+
     }
 
     //ev
     let ev = evem()
 
-    //UseDraggable
-    let UseDraggable = getDraggable()
+    //bindEvents, setAttrs
+    bindEvents()
+    setAttrs()
 
-    //draggable
-    let draggable = new UseDraggable(ele, {
-        draggable: selectors,
-    })
-    // console.log('draggable', draggable)
-
-    //on
-    draggable.on('drag:start', (de) => {
-        // console.log('drag:start', de, de.originalSource)
-
-        //self
-        self = getIndex(de.originalSource)
-
-        //check, 非數字
-        if (!isnum(self)) {
-            return
-        }
-
-        //msg
-        let msg = {
-            selfInd: self,
-            selfEle: de.originalSource,
-        }
-
-        //emit
-        ev.emit('drag-start', msg)
-        ev.emit('change', { mode: 'drag-start', ...msg })
-
-    })
-    draggable.on('drag:move', (de) => {
-        //console.log('drag:move', de)
-
-        //check, 無拖曳進入drag-enter對象資料
-        if (!iseobj(dragTo)) {
-            //console.log('無拖曳進入對象')
-            return
-        }
-
-        //check
-        if (!de.source) {
-            //console.log('找不到source元素')
-            return
-        }
-
-        //oe
-        let oe = get(de, 'sensorEvent.originalEvent', null)
-        // console.log('oe', oe)
-
-        //check
-        if (!oe) {
-            //console.log('找不到sensorEvent.originalEvent')
-            return
-        }
-
-        //check
-        if (!oe.target) {
-            //console.log('找不到target元素')
-            return
-        }
-
-        //已通過拖曳離開(drag:out)時清除dragTo, 且拖曳進入(drag:over)自己時不更新dragTo之機制, 避免拖曳回來原拖曳對象之問題
-        // //isBack, 判斷滑鼠的pageX,Y是否位於原本拖曳對象內
-        // let isBack = domIsPageXYIn(oe.pageX, oe.pageY, de.source) //若使用originalSource, 會因為被draggable隱藏無法取得bounding, 故改用source
-        // // console.log('isBack', isBack)
-
-        // //check
-        // if (isBack) {
-        //     // console.log('拖曳回到原本拖曳對象內故取消事件')
-        //     return
-        // }
-
-        //isOuter
-        let isOuter = oe.target.contains(dragTo.ele)
-        // console.log('isOuter', isOuter)
-
-        //check
-        if (isOuter) {
-            //console.log('拖曳至外層元素故取消事件')
-            return
-        }
-
-        //因A拖曳至B再拖曳至C後, 由C拖曳回B時會觸發, 但此時是合理拖曳行為故不能使用此檢核, 且手機拖曳時target會提供原拖曳對象導致此條件必定成立而不能使用此檢核
-        // //isIndependent
-        // let isIndependent = !dragTo.ele.contains(oe.target)
-        // //console.log('isIndependent', isIndependent)
-
-        // //check
-        // if (isIndependent) {
-        //     console.log('拖曳至非所屬元素內故取消事件')
-        //     return
-        // }
-
-        //p, 若有touches為手機拖曳
-        let p = null
-        if (oe.touches) {
-            if (size(oe.touches) > 1) {
-                //console.log('多點拖曳故取消事件')
-                return
-            }
-            p = oe.touches[0] //clientX,Y是放在各touches內, 此處只允許單點拖曳
-        }
-        else {
-            p = oe //clientX,Y是原本事件就有提供
-        }
-
-        //rt
-        let rt = getBoudRect(dragTo.ele) //rect的left,top為基於瀏覽器可視區域左上角的座標
-        // console.log('rt', rt)
-
-        //x, y, w, h, rx, ry
-        let x = p.clientX - rt.left //事件的clientX,Y是基於瀏覽器可視區域左上角的座標
-        let y = p.clientY - rt.top
-        let w = get(dragTo, 'ele.offsetWidth', 0)
-        let h = get(dragTo, 'ele.offsetHeight', 0)
-        let rx = 0
-        if (w > 0) {
-            rx = x / w
-        }
-        let ry = 0
-        if (h > 0) {
-            ry = y / h
-        }
-        // console.log('y', y)
-        // console.log('h', h)
-        // console.log('ry', ry)
-
-        //cursorInfor
-        let cursorInfor = {
-            x,
-            y,
-            w,
-            h,
-            rx,
-            ry,
-        }
-
-        //check, 若靠近元素底部移動並移出時, 可能因有包覆層導致觸發drag:move, 但其offsetX,offsetY會很靠近0, 導致滑鼠所在位置的比例計算錯誤, 故給予門檻偵測並跳出
-        if (get(tmsgDragMove, 'enterInd', null) === dragTo.ind) {
-            if (tmsgDragMove.cursorInfor.ry > 0.95 && ry < 0.05) {
-                // console.log('同高之包覆層無效y向移動觸發故取消事件')
-                return
-            }
-            if (tmsgDragMove.cursorInfor.rx > 0.95 && rx < 0.05) {
-                // console.log('同寬之包覆層無效x向移動觸發故取消事件')
-                return
-            }
-        }
-
-        //msg
-        let msg = {
-            selfInd: self,
-            selfEle: de.originalSource,
-            enterInd: dragTo.ind,
-            enterEle: dragTo.ele,
-            enterEvent: oe,
-            cursorInfor,
-        }
-
-        //save
-        tmsgDragMove = msg
-
-        //emit
-        ev.emit('drag-move', msg)
-        ev.emit('change', { mode: 'drag-move', ...msg })
-
-    })
-    draggable.on('drag:over', (de) => {
-        //console.log('drag:over', de, de.over)
-
-        //ind
-        let ind = getIndex(de.over)
-
-        //check, 非數字
-        if (!isnum(self) || !isnum(ind)) {
-            return
-        }
-
-        //check, 等於原始拖曳對象
-        if (self === ind) {
-            return
-        }
-
-        //check, 已觸發拖曳進入drag-enter
-        if (ind === get(dragTo, 'ind')) {
-            return
-        }
-
-        //update dragTo
-        dragTo = {
-            ind,
-            ele: de.over,
-        }
-
-        //msg
-        let msg = {
-            selfInd: self,
-            selfEle: de.originalSource,
-            enterInd: ind,
-            enterEle: de.over, //getEle(ind),
-        }
-
-        //emit
-        ev.emit('drag-enter', msg)
-        ev.emit('change', { mode: 'drag-enter', ...msg })
-
-    })
-    // draggable.on('drag:over:container', (de) => {
-    //     console.log('drag:over:container', de, de.over)
-    // })
-    draggable.on('drag:out', (de) => {
-        //console.log('drag:out', de, de.over)
-
-        //ind
-        let ind = getIndex(de.over)
-
-        //check, 非數字
-        if (!isnum(self) || !isnum(ind)) {
-            return
-        }
-
-        //check, 等於原始拖曳對象
-        if (self === ind) {
-            return
-        }
-
-        //check, 已觸發拖曳離開drag-leave
-        if (!dragTo) {
-            return
-        }
-
-        //update dragTo
-        dragTo = null
-
-        //msg
-        let msg = {
-            selfInd: self,
-            selfEle: de.originalSource,
-            leaveInd: ind,
-            leaveEle: de.over, //getEle(ind),
-        }
-
-        //emit
-        ev.emit('drag-leave', msg)
-        ev.emit('change', { mode: 'drag-leave', ...msg })
-
-    })
-    // draggable.on('drag:out:container', (de) => {
-    //     console.log('drag:out:containerr', de, de.over)
-    // })
-    draggable.on('drag:stop', (de) => {
-        //console.log('drag:stop', de, de.source)
-
-        //check
-        if (!isnum(self) || !isnum(get(dragTo, 'ind'))) {
-            return
-        }
-
-        //check
-        if (self === dragTo.ind) {
-            return
-        }
-
-        //msg
-        let msg = {
-            selfInd: self,
-            selfEle: de.originalSource,
-            dropInd: dragTo.ind,
-            dropEle: getEle(dragTo.ind),
-        }
-
-        //emit
-        ev.emit('drag-drop', msg)
-        ev.emit('change', { mode: 'drag-drop', ...msg })
-
-        //update dragTo
-        dragTo = null
-
-    })
-
-    //save draggable, 一定要把draggable送出才能呼叫其內destroy, 因draggable內使用this處理相關呼叫, 不回傳整個draggable會導致this實際為ev而導致無法使用
-    ev.draggable = draggable
+    //save
+    ev.gid = gid
+    ev.clear = function() {
+        unbindEvents()
+        pv.clear()
+    }
 
     return ev
 }

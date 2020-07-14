@@ -11,6 +11,7 @@ import domGetBounding from './domGetBounding.mjs'
  * @param {Number} pageX 輸入點的pageX座標
  * @param {Number} pageY 輸入點的pageY座標
  * @param {HTMLElement} ele 輸入元素
+ * @returns {Boolean} 回傳是否位於DOM元素內布林值
  * @example
  * need test in browser
  */

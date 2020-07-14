@@ -18,6 +18,7 @@ function getDxy(rtInner, rtParent) {
  * @memberOf wsemi
  * @param {HTMLElement} eleInner 輸入內層元素
  * @param {HTMLElement} eleParent 輸入外層元素
+ * @returns {Object} 回傳物件，包含元素的dx、dy數字
  * @example
  * need test in browser
  */
