@@ -209,11 +209,13 @@ function dragPreview() {
         //update
         //_container.style.display = 'display:block' //顯示
         _container.style.position = 'fixed'
+        _container.style.zIndex = 100000
         _container.style.pointerEvents = 'none'
         _container.style.top = `${y - _node.tShiftY}px`
         _container.style.left = `${x - _node.tShiftX}px`
         _container.style.width = `${_node.tWidth}px`
         _container.style.height = `${_node.tHeight}px`
+        _container.style.background = 'rgba(255,255,255,0.5)'
         // console.log('updateDragPreview', y, 'from', from)
         // console.log('updateDragPreview y', y, ' y -_node.tShiftY=top', y - _node.tShiftY)
 
