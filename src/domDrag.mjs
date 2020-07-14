@@ -577,20 +577,36 @@ function domDrag(ele, opt = {}) {
         }
 
         //check
-        if (kitem === _startInd) {
-            //console.log('dragMove: 仍於拖曳物件內')
+        if (kitem === _startInd) { //拖曳至原拖曳項目
+
+            //由其他拖曳項目拖曳至原拖曳項目內, 需要觸發leave事件
+            if (_endInd !== null) {
+
+                //emitLeave
+                emitLeave()
+
+            }
+
             return
         }
 
-        if (kitem !== _endInd) {
+        //check
+        if (kitem !== _endInd) { //拖曳至不同於上一個拖曳項目
             //enter
+
+            //於其他拖曳項目之間拖曳, 且非拖曳至原拖曳項目, 故也需要觸發leave事件
+            if (_endInd !== null) {
+
+                //emitLeave
+                emitLeave()
+
+            }
 
             //emitEnter
             emitEnter(kitem, eleIn)
 
         }
-        else {
-            //move
+        else { //move, 於上一個拖曳項目內拖曳
 
             //rl
             let rl = getPointRefLoc(p, eleIn)
@@ -622,13 +638,13 @@ function domDrag(ele, opt = {}) {
         //domCancelEvent
         domCancelEvent(e)
 
+        //removeDragPreview
+        pv.removeDragPreview()
+
         //check
         if (_startInd === null) {
             return
         }
-
-        //removeDragPreview
-        pv.removeDragPreview()
 
         function emitDrop(endInd, endEle) {
             _endInd = endInd
@@ -668,7 +684,7 @@ function domDrag(ele, opt = {}) {
             return
         }
 
-        //emitDrop
+        //emitDrop, 若拖曳至原拖曳項目上也要能觸發, 否則外部收不到滑鼠放掉訊息, 僅收得到拖曳至非拖曳項目的leave事件
         emitDrop(kitem, eleIn)
 
         //clear, 要放在emit之後才能清除
