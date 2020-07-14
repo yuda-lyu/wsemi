@@ -194,6 +194,7 @@ function dragPreview() {
         //創建遮罩cover
         let cover = document.createElement('div')
         cover.style.position = 'absolute'
+        cover.style.zIndex = 1
         cover.style.top = 0
         cover.style.left = 0
         cover.style.width = '100%'
@@ -228,7 +229,6 @@ function dragPreview() {
         }
 
         //update
-        //_container.style.display = 'display:block' //顯示
         _container.style.position = 'fixed'
         _container.style.zIndex = 100000
         //_container.style.pointerEvents = 'none'
