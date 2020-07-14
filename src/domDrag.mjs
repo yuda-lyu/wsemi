@@ -6,9 +6,9 @@ import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'
 import cint from './cint.mjs'
 import evem from './evem.mjs'
-import domRemove from './domRemove.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
 import domIsPageXYIn from './domIsPageXYIn.mjs'
+import domRemove from './domRemove.mjs'
 
 
 function getEles(ele, selectors) {
@@ -144,6 +144,8 @@ function getIndex(ele, attIndex) {
 function dragPreview() {
     let _prevName = '_prevName'
     let _node = null
+    let _cover = null
+    let _shell = null
     let _container = null
 
     function cloneNode(ele, x, y) {
@@ -167,7 +169,6 @@ function dragPreview() {
         nd.tWidth = ele.offsetWidth
         nd.tHeight = ele.offsetHeight
         nd.tParent = ele.parentNode
-        // console.log('cloneNode tShiftY', nd.tShiftY, 'y', y, 'rt.y', rt.y)
 
         return nd
     }
@@ -183,14 +184,34 @@ function dragPreview() {
         container.setAttribute('name', _prevName)
         //container.style.display = 'none'//先隱藏
 
-        //將複製的ele塞入container
-        container.appendChild(node)
+        //創建殼層shell
+        let shell = document.createElement('div')
+        shell.style.position = 'relative'
+
+        //將複製的ele(node)塞入shell
+        shell.appendChild(node)
+
+        //創建遮罩cover
+        let cover = document.createElement('div')
+        cover.style.position = 'absolute'
+        cover.style.top = 0
+        cover.style.left = 0
+        cover.style.width = '100%'
+        cover.style.height = '100%'
+
+        //將cover塞入shell
+        shell.appendChild(cover)
+
+        //將shell塞入container
+        container.appendChild(shell)
 
         //將container塞入原本ele的父層內
         node.tParent.appendChild(container)
 
         //儲存至全域
         _node = node
+        _cover = cover
+        _shell = shell
         _container = container
 
         //updateDragPreview
@@ -202,7 +223,7 @@ function dragPreview() {
         //console.log('updateDragPreview', x, y, from)
 
         //check
-        if (!_node || !_container) {
+        if (!_node || !_cover || !_shell || !_container) {
             return
         }
 
@@ -210,14 +231,12 @@ function dragPreview() {
         //_container.style.display = 'display:block' //顯示
         _container.style.position = 'fixed'
         _container.style.zIndex = 100000
-        _container.style.pointerEvents = 'none'
+        //_container.style.pointerEvents = 'none'
         _container.style.top = `${y - _node.tShiftY}px`
         _container.style.left = `${x - _node.tShiftX}px`
         _container.style.width = `${_node.tWidth}px`
         _container.style.height = `${_node.tHeight}px`
         _container.style.background = 'rgba(255,255,255,0.5)'
-        // console.log('updateDragPreview', y, 'from', from)
-        // console.log('updateDragPreview y', y, ' y -_node.tShiftY=top', y - _node.tShiftY)
 
     }
 
@@ -229,6 +248,8 @@ function dragPreview() {
 
         //clear
         _node = null
+        _cover = null
+        _shell = null
         _container = null
 
     }
@@ -260,6 +281,42 @@ function dragPreview() {
     }
     window.addEventListener('dragend', evDge)
 
+    function setNodeStyle(st) {
+        try {
+            each(st, (v, k) => {
+                _node.style[k] = v
+            })
+        }
+        catch (err) {}
+    }
+
+    function setCoverStyle(st) {
+        try {
+            each(st, (v, k) => {
+                _cover.style[k] = v
+            })
+        }
+        catch (err) {}
+    }
+
+    function setSellStyle(st) {
+        try {
+            each(st, (v, k) => {
+                _shell.style[k] = v
+            })
+        }
+        catch (err) {}
+    }
+
+    function setContainerStyle(st) {
+        try {
+            each(st, (v, k) => {
+                _container.style[k] = v
+            })
+        }
+        catch (err) {}
+    }
+
     function clear() {
         window.removeEventListener('mousemove', evMM)
         window.removeEventListener('touchmove', evTM)
@@ -271,6 +328,10 @@ function dragPreview() {
         createPreview,
         updateDragPreview,
         removeDragPreview,
+        setNodeStyle,
+        setCoverStyle,
+        setSellStyle,
+        setContainerStyle,
         clear,
     }
 }
@@ -460,6 +521,9 @@ function domDrag(ele, opt = {}) {
         //createPreview
         pv.createPreview(ele, p.clientX, p.clientY)
 
+        //setCoverStyle
+        pv.setCoverStyle({ cursor: 'no-drop' })
+
     }
 
     function findEleFromEvent(e) {
@@ -513,6 +577,9 @@ function domDrag(ele, opt = {}) {
             ev.emit('change', { mode: 'enter', ...msg })
             ev.emit('enter', msg)
 
+            //setCoverStyle
+            pv.setCoverStyle({ cursor: 'pointer' })
+
         }
 
         function emitLeave() {
@@ -531,6 +598,9 @@ function domDrag(ele, opt = {}) {
             //clear, 要放在emit之後才能清除
             _endInd = null
             _endEle = null
+
+            //setCoverStyle
+            pv.setCoverStyle({ cursor: 'no-drop' })
 
         }
 
@@ -555,7 +625,7 @@ function domDrag(ele, opt = {}) {
         //eleIn
         let eleIn = findEleFromEvent(e)
 
-        //check
+        //check, 滑鼠所在處的可被拖曳元素
         if (!eleIn) {
 
             //check
