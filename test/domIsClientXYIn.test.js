@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import domIsPageXYIn from '../src/domIsPageXYIn.mjs'
+//import domIsClientXYIn from '../src/domIsClientXYIn.mjs'
 
 
-describe(`domIsPageXYIn`, function() {
+describe(`domIsClientXYIn`, function() {
 
     it(`need test in browser`, function() {
         assert.strict.deepEqual(1, 1)
