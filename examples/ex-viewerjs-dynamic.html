@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for viewerjs by dynamic import</title>
+    
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.7/dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="padding:20px;">
+        <div>show one image</div>
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/001.jpg" onclick="wsemi.showImagesDyn(this)">
+    </div>
+    
+    <div style="padding:20px;">
+        <div>show one image in elements group</div>
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/002.jpg" onclick="wsemi.showImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/003.jpg" onclick="wsemi.showImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/004.jpg" onclick="wsemi.showImagesDyn(this)">
+    </div>
+    
+    <div style="padding:20px;">
+        <div>show multiple image in elements group</div>
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/005.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/006.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/007.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
+    </div>
+
+    <script>
+        function showImages(eleImg, eleGroup){
+            wsemi.showImagesDyn(eleImg, eleGroup)
+                .catch(function(err){
+                    console.log(err)
+                })
+        }
+    </script>
+
+</body>
+</html>
