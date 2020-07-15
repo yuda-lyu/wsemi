@@ -604,14 +604,11 @@ function domDrag(ele, opt = {}) {
         if (!p) {
             return eleIn
         }
-        console.log('findEleFromEvent getPointFromEvent e', e)
-        console.log('findEleFromEvent getPointFromEvent p', p)
 
         //each
         for (let i = 0; i < eles.length; i++) {
             let ele = eles[i]
             let b = domIsClientXYIn(p.clientX, p.clientY, ele)
-            console.log('domIsClientXYIn', 'p.clientX', p.clientX, 'p.clientY', p.clientY, 'b', b)
             if (b) {
                 eleIn = ele
                 break
@@ -774,7 +771,6 @@ function domDrag(ele, opt = {}) {
 
         //eleIn
         let eleIn = findEleFromEvent(e)
-        console.log('findEleFromEvent eleIn', eleIn)
 
         //check, 滑鼠所在處的可被拖曳元素
         if (!eleIn) {
@@ -833,8 +829,6 @@ function domDrag(ele, opt = {}) {
 
             //rl
             let rl = getPointRefLoc(p, eleIn)
-            console.log('p', p)
-            console.log('rl', rl)
 
             //rx, ry
             let rx = 0
@@ -845,7 +839,6 @@ function domDrag(ele, opt = {}) {
             if (rl.h > 0) {
                 ry = rl.y / rl.h
             }
-            console.log('rx', rx, 'ry', ry)
 
             if (rx >= 0 && rx <= 1 && ry >= 0 && ry <= 1) {
 
