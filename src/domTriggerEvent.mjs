@@ -54,7 +54,7 @@ if (isWindow()) {
  * @param {Element} ele 輸入Element元素
  * @param {String} eventName 輸入事件名稱字串
  * @example
- * need test in browser
+ * domTriggerEvent(document.querySelector('#id'), 'click')
  */
 function domTriggerEvent(ele, eventName) {
 

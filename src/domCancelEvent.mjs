@@ -21,13 +21,17 @@ function domCancelEvent(e) {
         return 'event is not cancelable'
     }
 
-    if (window.event) {
-        e.cancelBubble = true //IE11
+    //try, 有些情形preventDefault是passive無法呼叫
+    try {
+        if (window.event) {
+            e.cancelBubble = true //IE11
+        }
+        else {
+            e.stopPropagation()
+        }
+        e.preventDefault()
     }
-    else {
-        e.stopPropagation()
-    }
-    e.preventDefault()
+    catch (err) {}
 
 }
 
