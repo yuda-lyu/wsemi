@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>obj2pb64.mjs - Documentation</title>
+    <title>domGetPointFromEvent.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">obj2pb64.mjs</h1>
+    <h1 class="page-title">domGetPointFromEvent.mjs</h1>
     
 
     
@@ -42,48 +42,56 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
-import o2j from './o2j.mjs'
-import str2aes from './str2aes.mjs'
+            <pre class="prettyprint source linenums"><code>import size from 'lodash/size'
+import get from 'lodash/get'
 
 
 /**
- * 任意資料由key進行AES加密轉為為base64
+ * 前端DOM元素事件取得使用者滑鼠或第一觸控點座標
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2pb64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetPointFromEvent.test.js Github}
  * @memberOf wsemi
- * @param {*} data 輸入任意資料
- * @param {String} key 輸入加密key
- * @returns {String} 回傳加密base64字串
+ * @param {HTEMLEvent} e 輸入dom事件物件
  * @example
- * let key = '1234567890abcdef'
- * console.log(obj2pb64([1, '3', 'abc'], key))
- * // => U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf (is random)
+ * window.addEventListener('mousemove', (e) => {
+ *   console.log(domGetPointFromEvent(e))
+ * })
  */
-function obj2pb64(data, key) {
+function domGetPointFromEvent(e) {
 
     //check
-    if (data === undefined) {
-        return ''
-    }
-    if (!isestr(key)) {
-        return ''
+    let cx = get(e, 'clientX', null)
+    let cy = get(e, 'clientY', null)
+    let px = get(e, 'pageX', null)
+    let py = get(e, 'pageY', null)
+    if (cx !== null &amp;&amp; cy !== null &amp;&amp; px !== null &amp;&amp; py !== null) {
+        return {
+            clientX: cx,
+            clientY: cy,
+            pageX: px,
+            pageY: py,
+        }
     }
 
-    //先封裝成物件再轉字串
-    let p = {
-        data: data
+    //check
+    let touches = get(e, 'changedTouches', []) //touchend時touches長度為0, 故需改用changedTouches
+    if (size(touches) !== 1) {
+        return null
     }
-    let c = o2j(p)
 
-    //str2aes
-    let b64 = str2aes(c, key, true)
+    //p
+    let p = touches[0]
 
-    return b64
+    return {
+        clientX: get(p, 'clientX', null),
+        clientY: get(p, 'clientY', null),
+        pageX: get(p, 'pageX', null),
+        pageY: get(p, 'pageY', null),
+    }
 }
 
 
-export default obj2pb64
+export default domGetPointFromEvent
 </code></pre>
         </article>
     </section>

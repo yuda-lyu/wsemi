@@ -1,5 +1,4 @@
 import each from 'lodash/each'
-import size from 'lodash/size'
 import get from 'lodash/get'
 import isNumber from 'lodash/isNumber'
 import isBoolean from 'lodash/isBoolean'
@@ -10,6 +9,7 @@ import cint from './cint.mjs'
 import evem from './evem.mjs'
 import domIsClientXYIn from './domIsClientXYIn.mjs'
 import domRemove from './domRemove.mjs'
+import domGetPointFromEvent from './domGetPointFromEvent.mjs'
 
 
 function getEles(ele, selectors) {
@@ -99,40 +99,6 @@ function getPointRefLoc(p, ele) {
 //     }
 //     return rl.x >= 0 && rl.x <= rl.w && rl.y >= 0 && rl.y <= rl.h
 // }
-
-
-function getPointFromEvent(e) {
-
-    //check
-    let cx = get(e, 'clientX', null)
-    let cy = get(e, 'clientY', null)
-    let px = get(e, 'pageX', null)
-    let py = get(e, 'pageY', null)
-    if (cx !== null && cy !== null && px !== null && py !== null) {
-        return {
-            clientX: cx,
-            clientY: cy,
-            pageX: px,
-            pageY: py,
-        }
-    }
-
-    //check
-    let touches = get(e, 'changedTouches', []) //touchend時touches長度為0, 故需改用changedTouches
-    if (size(touches) !== 1) {
-        return null
-    }
-
-    //p
-    let p = touches[0]
-
-    return {
-        clientX: get(p, 'clientX', null),
-        clientY: get(p, 'clientY', null),
-        pageX: get(p, 'pageX', null),
-        pageY: get(p, 'pageY', null),
-    }
-}
 
 
 function getIndex(ele, attIndex) {
@@ -317,7 +283,7 @@ function dragPreview(opt = {}) {
 
     let evTM = function(e) {
         //console.log('window touchmove', e)
-        let p = getPointFromEvent(e)
+        let p = domGetPointFromEvent(e)
         if (p) {
             updateDragPreview(p.clientX, p.clientY, 'window touchmove')
         }
@@ -600,7 +566,7 @@ function domDrag(ele, opt = {}) {
         let eleIn = null
 
         //p
-        let p = getPointFromEvent(e)
+        let p = domGetPointFromEvent(e)
         if (!p) {
             return eleIn
         }
@@ -652,7 +618,7 @@ function domDrag(ele, opt = {}) {
         ev.emit('start', msg)
 
         //p
-        let p = getPointFromEvent(e)
+        let p = domGetPointFromEvent(e)
         if (!p) {
             return
         }
@@ -692,7 +658,7 @@ function domDrag(ele, opt = {}) {
         }
 
         //p
-        let p = getPointFromEvent(e)
+        let p = domGetPointFromEvent(e)
         if (!p) {
             return
         }
