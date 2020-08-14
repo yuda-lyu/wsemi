@@ -1,3 +1,4 @@
+import get from 'lodash/get'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'
@@ -10,7 +11,9 @@ import ispint from './ispint.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.js Github}
  * @memberOf wsemi
  * @param {Function} f 輸入判斷用函數
- * @param {Integer} [maxnum=180] 輸入最大嘗試次數，為正整數，預設180次
+ * @param {Object} opt 輸入設定物件，預設{}
+ * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200
+ * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000
  * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
  * let i = 0
@@ -24,7 +27,7 @@ import ispint from './ispint.mjs'
  *         //code here
  *     })
  */
-function waitFun(f, maxnum = 180) {
+function waitFun(f, opt = {}) {
 
     //pm
     let pm = genPm()
@@ -41,9 +44,16 @@ function waitFun(f, maxnum = 180) {
         return pm
     }
 
-    //default
-    if (!ispint(maxnum)) {
-        maxnum = 60 * 3 //3min
+    //attemptNum
+    let attemptNum = get(opt, 'attemptNum', null)
+    if (!ispint(attemptNum)) {
+        attemptNum = 200
+    }
+
+    //timeInterval
+    let timeInterval = get(opt, 'timeInterval', null)
+    if (!ispint(timeInterval)) {
+        timeInterval = 1000
     }
 
     //setInterval
@@ -57,13 +67,13 @@ function waitFun(f, maxnum = 180) {
             clearInterval(t)
             pm.resolve()
         }
-        if (n >= maxnum) {
-            //console.log('reject', n, maxnum)
+        if (n > attemptNum) {
+            //console.log('reject', n, attemptNum)
             clearInterval(t)
             pm.resolve() //已超過最大次數
         }
 
-    }, 1000) //每1秒偵測一次
+    }, timeInterval)
 
     return pm
 }
