@@ -45,7 +45,11 @@ function fsTreeFolder(fd, levelLimit = 1) {
             let fp = path.resolve(fd, item)
 
             //stat
-            let stat = fs.statSync(fp)
+            let stat = null
+            try {
+                stat = fs.statSync(fp)
+            }
+            catch (err) {}
 
             //proc
             if (stat && stat.isDirectory()) {
