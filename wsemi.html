@@ -2047,7 +2047,7 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrfind.mjs.html">arrfind.mjs</a>, <a href="arrfind.mjs.html#line18">line 18</a>
+        <a href="arrfind.mjs.html">arrfind.mjs</a>, <a href="arrfind.mjs.html#line40">line 40</a>
     </li></ul></dd>
     
 
@@ -2103,8 +2103,29 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrfind&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, 2]))
-// =&gt; [3, 1]</code></pre>
+<pre class="prettyprint"><code>console.log(arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 2))
+// =&gt; [ 1 ]
+
+console.log(arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [2]))
+// =&gt; [ 1 ]
+
+console.log(arrfind([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, 2]))
+// =&gt; [ 3, 1 ]
+
+console.log(arrfind([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], true))
+// =&gt; [ 1 ]
+
+console.log(arrfind([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], [true]))
+// =&gt; [ 1 ]
+
+console.log(arrfind([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], { x: &apos;xyz&apos; }))
+// =&gt; [ 2 ]
+
+console.log(arrfind([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [{ x: &apos;xyz&apos; }]))
+// =&gt; [ 2 ]
+
+console.log(arrfind([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, { x: &apos;xyz&apos; }]))
+// =&gt; [ 4, 2 ]</code></pre>
         </div>
 
 
@@ -2141,6 +2162,18 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
             <td class="type">
             
                 
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Boolean</span>
+|
+
 <span class="param-type">Array</span>
 
 
@@ -2164,6 +2197,18 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
             <td class="type">
             
                 
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Boolean</span>
+|
+
 <span class="param-type">Array</span>
 
 
@@ -2238,7 +2283,7 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrhas.mjs.html">arrhas.mjs</a>, <a href="arrhas.mjs.html#line26">line 26</a>
+        <a href="arrhas.mjs.html">arrhas.mjs</a>, <a href="arrhas.mjs.html#line63">line 63</a>
     </li></ul></dd>
     
 
@@ -2294,16 +2339,52 @@ console.log(arrat([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 1, 4))
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;arrhas&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], &apos;abc&apos;))
+<pre class="prettyprint"><code>console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 2))
 // =&gt; true
 
-console.log(arrhas([&apos;xyz&apos;, &apos;bcd&apos;], &apos;abc&apos;))
+console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], 6))
 // =&gt; false
 
-console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;abc&apos;, &apos;cde&apos;]))
+console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [2]))
 // =&gt; true
 
-console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;cde&apos;]))
+console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [6]))
+// =&gt; false
+
+console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, 2]))
+// =&gt; true
+
+console.log(arrhas([1, 2, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;7&apos;, 6]))
+// =&gt; false
+
+console.log(arrhas([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], true))
+// =&gt; true
+
+console.log(arrhas([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], false))
+// =&gt; false
+
+console.log(arrhas([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], [true]))
+// =&gt; true
+
+console.log(arrhas([1, true, 2, 3, &apos;4&apos;, true, 5, &apos;abc&apos;], [false]))
+// =&gt; false
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], { x: &apos;xyz&apos; }))
+// =&gt; true
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], { x: &apos;opqr&apos; }))
+// =&gt; false
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [{ x: &apos;xyz&apos; }]))
+// =&gt; true
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [{ x: &apos;opqr&apos; }]))
+// =&gt; false
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;4&apos;, { x: &apos;xyz&apos; }]))
+// =&gt; true
+
+console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc&apos;], [&apos;7&apos;, { x: &apos;opqr&apos; }]))
 // =&gt; false</code></pre>
         </div>
 
@@ -2341,10 +2422,19 @@ console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;c
             <td class="type">
             
                 
-<span class="param-type">Array</span>
+<span class="param-type">String</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Boolean</span>
+|
+
+<span class="param-type">Array</span>
 
 
             
@@ -2367,10 +2457,19 @@ console.log(arrhas([&apos;abc&apos;, &apos;bcd&apos;], [&apos;xyz&apos;, &apos;c
             <td class="type">
             
                 
-<span class="param-type">Array</span>
+<span class="param-type">String</span>
 |
 
-<span class="param-type">String</span>
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Boolean</span>
+|
+
+<span class="param-type">Array</span>
 
 
             
@@ -48446,7 +48545,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.5</a> on Thu Sep 03 2020 14:14:06 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.5</a> on Mon Sep 07 2020 16:02:40 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -48470,7 +48569,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.5.13/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.5.14/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
