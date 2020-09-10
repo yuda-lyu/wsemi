@@ -23,7 +23,7 @@ async function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, 
     //pathItems
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/xlsx@0.15.4/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js',
         ]
     }
 

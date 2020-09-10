@@ -33,7 +33,7 @@ function optOne() {
         transition: true,
         fullscreen: false,
         keyboard: true,
-        url: 'data-source',
+        // url: 'src',
     }
 }
 
@@ -144,7 +144,6 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
     let vw = new UseViewer(img, useOpt)
 
     //show for one
-    //此法只能用於1.5.0版, 1.6.0以上已失效
     if (one) {
         vw.show() //只有一張圖時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
     }

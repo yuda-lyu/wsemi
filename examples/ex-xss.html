@@ -15,10 +15,8 @@
 <body>
 
     <script>
-
-        console.log('clearXSS()',  wsemi.clearXSS('<img src="javascript:alert(\'XSS\')">')  )
-        console.log('clearXSS()',  wsemi.clearXSS('<img src="http://888.888.com/999.png" onerror="alert(\'XSS\')">')  )
-
+        console.log("clearXSS('<img src=\"javascript:alert('XSS')\">')",  wsemi.clearXSS('<img src="javascript:alert(\'XSS\')">')  )
+        console.log("clearXSS('<img src=\"http://888.888.com/999.png\" onerror=\"alert('XSS')\">')",  wsemi.clearXSS('<img src="http://888.888.com/999.png" onerror="alert(\'XSS\')">')  )
     </script>
 
 </body>
