@@ -17,7 +17,7 @@ describe(`ltdtkeysheads2mat`, function() {
         k = 1
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -31,7 +31,7 @@ describe(`ltdtkeysheads2mat`, function() {
         k = 2
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 3
@@ -45,7 +45,7 @@ describe(`ltdtkeysheads2mat`, function() {
         k = 3
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 4
@@ -59,97 +59,97 @@ describe(`ltdtkeysheads2mat`, function() {
         k = 4
         let r = ltdtkeysheads2mat(o[k].ltdt, o[k].keys, o[k].kphead)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], ''`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], []`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], {}`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], null`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], undefined`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ''`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], []`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input ''`, function() {
         let r = ltdtkeysheads2mat('')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input []`, function() {
         let r = ltdtkeysheads2mat([])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input {}`, function() {
         let r = ltdtkeysheads2mat({})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input null`, function() {
         let r = ltdtkeysheads2mat(null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input undefined`, function() {
         let r = ltdtkeysheads2mat(undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

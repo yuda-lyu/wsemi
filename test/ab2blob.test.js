@@ -6,7 +6,7 @@ describe(`ab2blob`, function() {
 
     it(`need test in browser`, function() {
     //let ab = new ArrayBuffer(8)
-        assert.strict.deepEqual(1, 1)
+        assert.strict.deepStrictEqual(1, 1)
     })
 
 })

@@ -19,7 +19,7 @@ describe(`pmMap`, function() {
         }, takeLimit)
             .then(function(res) {
                 //console.log('pmMap then', JSON.stringify(res))
-                assert.strict.deepEqual(JSON.stringify(res), '["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]')
+                assert.strict.deepStrictEqual(JSON.stringify(res), '["#1","#2","#3","#4","#5","#6","#7","#8","#9","#10"]')
             })
             .catch(function() {
                 //console.log('pmMap catch', err)

@@ -18,7 +18,7 @@ describe(`ltdtpick`, function() {
     it(`should return ${JSON.stringify(out1)} when input ${JSON.stringify(inp)}, ['a', 'b']`, function() {
         let r = ltdtpick(inp, ['a', 'b'])
         let rr = out1
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     let out2 = [
@@ -30,97 +30,97 @@ describe(`ltdtpick`, function() {
     it(`should return ${JSON.stringify(out2)} when input ${JSON.stringify(inp)}, ['a', 'c', 'x']`, function() {
         let r = ltdtpick(inp, ['a', 'c', 'x'])
         let rr = out2
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ''`, function() {
         let r = ltdtpick('')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input []`, function() {
         let r = ltdtpick([])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input {}`, function() {
         let r = ltdtpick({})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input null`, function() {
         let r = ltdtpick(null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input undefined`, function() {
         let r = ltdtpick(undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], ''`, function() {
         let r = ltdtpick([], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], []`, function() {
         let r = ltdtpick([], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], {}`, function() {
         let r = ltdtpick([], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], null`, function() {
         let r = ltdtpick([], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], undefined`, function() {
         let r = ltdtpick([], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], ''`, function() {
         let r = ltdtpick(['abc'], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], []`, function() {
         let r = ltdtpick(['abc'], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], {}`, function() {
         let r = ltdtpick(['abc'], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], null`, function() {
         let r = ltdtpick(['abc'], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], undefined`, function() {
         let r = ltdtpick(['abc'], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

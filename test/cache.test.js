@@ -156,7 +156,7 @@ describe(`cache`, function() {
             test1()
                 .then(function(ms1) {
                     //console.log(JSON.stringify(ms1))
-                    assert.strict.deepEqual(JSON.stringify(ms1), '["fun1 1st","inp1|inp2, count=1","fun1 4th","inp1|inp2, count=1","fun1 2nd","inp1|inp2, count=1","fun1 3rd","inp1|inp2, count=2","fun1 6th","inp1|inp2, count=2","fun1 5th","inp1|inp2, count=2"]')
+                    assert.strict.deepStrictEqual(JSON.stringify(ms1), '["fun1 1st","inp1|inp2, count=1","fun1 4th","inp1|inp2, count=1","fun1 2nd","inp1|inp2, count=1","fun1 3rd","inp1|inp2, count=2","fun1 6th","inp1|inp2, count=2","fun1 5th","inp1|inp2, count=2"]')
                 })
         }, 1)
 
@@ -164,7 +164,7 @@ describe(`cache`, function() {
             test2()
                 .then(function(ms2) {
                     //console.log(JSON.stringify(ms2))
-                    assert.strict.deepEqual(JSON.stringify(ms2), '["fun2 3rd","inp1|inp2, count=1","fun2 1st","inp1|inp2, count=1","fun2 2nd","inp1|inp2, count=1","fun2 4th","inp1|inp2, count=2"]')
+                    assert.strict.deepStrictEqual(JSON.stringify(ms2), '["fun2 3rd","inp1|inp2, count=1","fun2 1st","inp1|inp2, count=1","fun2 2nd","inp1|inp2, count=1","fun2 4th","inp1|inp2, count=2"]')
                 })
         }, 2500)
 

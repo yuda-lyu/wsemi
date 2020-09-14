@@ -36,7 +36,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 0
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = r[0].data[1]
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
     k = 1
@@ -62,7 +62,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 1
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = r[0].data[1]
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
     k = 2
@@ -76,7 +76,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 2
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = replace(r[0].data, '\r\n', '\n')
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
     k = 3
@@ -90,7 +90,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 3
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = replace(r[0].data, '\r\n', '\n')
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
     k = 4
@@ -110,7 +110,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 4
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = r[0].data[1]
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
     k = 5
@@ -130,7 +130,7 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         let k = 5
         let r = getDataFromExcelFileU8Arr(u8a, o[k].in)
         r = r[0].data[1]
-        assert.strict.deepEqual(r, o[k].out)
+        assert.strict.deepStrictEqual(r, o[k].out)
     })
 
 })

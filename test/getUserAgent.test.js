@@ -16,7 +16,7 @@ describe(`getUserAgent`, function() {
             engineinfor: 'KHTML4.1.4',
             platform: 'OpenBSDundefined'
         }
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

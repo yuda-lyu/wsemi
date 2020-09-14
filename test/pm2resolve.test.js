@@ -42,17 +42,17 @@ describe(`pm2resolve`, function() {
 
     it(`should then ${JSON.stringify(fun1r)} when call pm2resolve(fun1)('abc')`, async function() {
         let msg = await pm2resolve(fun1)('abc')
-        assert.strict.deepEqual(msg, fun1r)
+        assert.strict.deepStrictEqual(msg, fun1r)
     })
 
     it(`should then ${JSON.stringify(fun2r)} when call pm2resolve(fun2)('def')`, async function() {
         let msg = await pm2resolve(fun2)('def')
-        assert.strict.deepEqual(msg, fun2r)
+        assert.strict.deepStrictEqual(msg, fun2r)
     })
 
     it(`should then ${JSON.stringify(fun3r)} when call pm2resolve(fun3)('ghi')`, async function() {
         let msg = await pm2resolve(fun3)('ghi')
-        assert.strict.deepEqual(msg, fun3r)
+        assert.strict.deepStrictEqual(msg, fun3r)
     })
 
 })

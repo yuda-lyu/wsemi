@@ -7,7 +7,7 @@ describe(`getGlobal`, function() {
     it(`should return [object global] in nodejs when no input`, function() {
         let r = getGlobal()
         r = Object.prototype.toString.call(r)
-        assert.strict.deepEqual(r, '[object global]')
+        assert.strict.deepStrictEqual(r, '[object global]')
     })
 
 })

@@ -16,7 +16,7 @@ describe(`bufWrite`, function() {
         bufWrite(i, b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = j
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     //'1.25'可自動轉數字故為有效
@@ -25,7 +25,7 @@ describe(`bufWrite`, function() {
     //     bufWrite('1.25', b, offset, isBE, mLen, nBytes)
     //     let r = new Uint8Array(b)
     //     let rr = new Uint8Array(Buffer.alloc(8))
-    //     assert.strict.deepEqual(r, rr)
+    //     assert.strict.deepStrictEqual(r, rr)
     // })
 
     it(`should get ${k} from buffer when input '', ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -33,7 +33,7 @@ describe(`bufWrite`, function() {
         bufWrite('', b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input [], ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -41,7 +41,7 @@ describe(`bufWrite`, function() {
         bufWrite([], b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input {}, ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -49,7 +49,7 @@ describe(`bufWrite`, function() {
         bufWrite({}, b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input null, ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -57,7 +57,7 @@ describe(`bufWrite`, function() {
         bufWrite(null, b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input undefined, ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -65,7 +65,7 @@ describe(`bufWrite`, function() {
         bufWrite(undefined, b, offset, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {
@@ -73,7 +73,7 @@ describe(`bufWrite`, function() {
         bufWrite(i, b, null, isBE, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, ${offset}, null, ${mLen}, ${nBytes}`, function() {
@@ -81,7 +81,7 @@ describe(`bufWrite`, function() {
         bufWrite(i, b, offset, null, mLen, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, ${offset}, ${isBE}, null, ${nBytes}`, function() {
@@ -89,7 +89,7 @@ describe(`bufWrite`, function() {
         bufWrite(i, b, offset, isBE, null, nBytes)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, ${offset}, ${isBE}, ${mLen}, null`, function() {
@@ -97,7 +97,7 @@ describe(`bufWrite`, function() {
         bufWrite(i, b, offset, isBE, mLen, null)
         let r = new Uint8Array(b)
         let rr = new Uint8Array(Buffer.alloc(8))
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

@@ -35620,7 +35620,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmHook.mjs.html">pmHook.mjs</a>, <a href="pmHook.mjs.html#line116">line 116</a>
+        <a href="pmHook.mjs.html">pmHook.mjs</a>, <a href="pmHook.mjs.html#line118">line 118</a>
     </li></ul></dd>
     
 
@@ -35680,9 +35680,9 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
     let ms
 
     ms = []
-    let pm1 = function (v) {
+    let pm1 = function (v1, v2) {
         return new Promise(function(resolve, reject) {
-            resolve(&apos;resolve: &apos; + v)
+            resolve(`resolve: v1=${v1}, v2=${v2}`)
         })
     }
     let pm1p = pmHook(pm1, (msg) =&gt; {
@@ -35692,7 +35692,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ...msg,
         })
     })
-    await pm1p(&apos;inp1&apos;)
+    await pm1p(&apos;inp1-a&apos;, &apos;inp1-b&apos;)
         .then(function(msg) {
             console.log(&apos;pm1p then&apos;, msg)
             ms.push(&apos;pm1p then: &apos; + msg)
@@ -35702,15 +35702,15 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ms.push(&apos;pm1p catch: &apos; + msg)
         })
     console.log(JSON.stringify(ms))
-    // pm1p cb { mode: &apos;before&apos;, data: &apos;inp1&apos; }
-    // pm1p cb { mode: &apos;afterThen&apos;, data: &apos;resolve: inp1&apos; }
-    // pm1p then resolve: inp1
-    // [{&quot;cb&quot;:&quot;pm1p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:&quot;inp1&quot;},{&quot;cb&quot;:&quot;pm1p&quot;,&quot;mode&quot;:&quot;afterThen&quot;,&quot;data&quot;:&quot;resolve: inp1&quot;},&quot;pm1p then: resolve: inp1&quot;]
+    // pm1p cb { mode: &apos;before&apos;, data: [Arguments] { &apos;0&apos;: &apos;inp1-a&apos;, &apos;1&apos;: &apos;inp1-b&apos; } }
+    // pm1p cb { mode: &apos;afterThen&apos;, data: &apos;resolve: v1=inp1-a, v2=inp1-b&apos; }
+    // pm1p then resolve: v1=inp1-a, v2=inp1-b
+    // [{&quot;cb&quot;:&quot;pm1p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:{&quot;0&quot;:&quot;inp1-a&quot;,&quot;1&quot;:&quot;inp1-b&quot;}},{&quot;cb&quot;:&quot;pm1p&quot;,&quot;mode&quot;:&quot;afterThen&quot;,&quot;data&quot;:&quot;resolve: v1=inp1-a, v2=inp1-b&quot;},&quot;pm1p then: resolve: v1=inp1-a, v2=inp1-b&quot;]
 
     ms = []
-    let pm2 = function (v) {
+    let pm2 = function (v1, v2) {
         return new Promise(function(resolve, reject) {
-            reject(&apos;reject: &apos; + v)
+            reject(`reject: v1=${v1}, v2=${v2}`)
         })
     }
     let pm2p = pmHook(pm2, (msg) =&gt; {
@@ -35720,7 +35720,7 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ...msg,
         })
     })
-    await pm2p(&apos;inp2&apos;)
+    await pm2p(&apos;inp2-a&apos;, &apos;inp2-b&apos;)
         .then(function(msg) {
             console.log(&apos;pm2p then&apos;, msg)
             ms.push(&apos;pm2p then: &apos; + msg)
@@ -35730,15 +35730,15 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ms.push(&apos;pm2p catch: &apos; + msg)
         })
     console.log(JSON.stringify(ms))
-    // pm2p cb { mode: &apos;before&apos;, data: &apos;inp2&apos; }
-    // pm2p cb { mode: &apos;afterCatch&apos;, data: &apos;reject: inp2&apos; }
-    // pm2p catch reject: inp2
-    // [{&quot;cb&quot;:&quot;pm2p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:&quot;inp2&quot;},{&quot;cb&quot;:&quot;pm2p&quot;,&quot;mode&quot;:&quot;afterCatch&quot;,&quot;data&quot;:&quot;reject: inp2&quot;},&quot;pm2p catch: reject: inp2&quot;]
+    // pm2p cb { mode: &apos;before&apos;, data: [Arguments] { &apos;0&apos;: &apos;inp2-a&apos;, &apos;1&apos;: &apos;inp2-b&apos; } }
+    // pm2p cb { mode: &apos;afterCatch&apos;, data: &apos;reject: v1=inp2-a, v2=inp2-b&apos; }
+    // pm2p catch reject: v1=inp2-a, v2=inp2-b
+    // [{&quot;cb&quot;:&quot;pm2p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:{&quot;0&quot;:&quot;inp2-a&quot;,&quot;1&quot;:&quot;inp2-b&quot;}},{&quot;cb&quot;:&quot;pm2p&quot;,&quot;mode&quot;:&quot;afterCatch&quot;,&quot;data&quot;:&quot;reject: v1=inp2-a, v2=inp2-b&quot;},&quot;pm2p catch: reject: v1=inp2-a, v2=inp2-b&quot;]
 
     ms = []
-    let pm3 = function (v) {
+    let pm3 = function (v1, v2) {
         return new Promise(function(resolve, reject) {
-            reject(&apos;reject: &apos; + v)
+            reject(`reject: v1=${v1}, v2=${v2}`)
         })
     }
     let pm3p = pmHook(pm3, (msg) =&gt; {
@@ -35748,15 +35748,16 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ...msg,
         })
         if (msg.mode === &apos;before&apos;) {
-            msg.data = &apos;[modify input]&apos; + msg.data
-            return msg
+            //arguments&#x6709;&#x5169;&#x500B;&#x8F38;&#x5165;&#x6545;&#x5F97;&#x5206;&#x958B;&#x6539;
+            msg.data[0] = &apos;[modify input a]&apos; + msg.data[0]
+            msg.data[1] = &apos;[modify input b]&apos; + msg.data[1]
+            return msg.data
         }
         if (msg.mode === &apos;afterCatch&apos;) {
-            msg.data = &apos;[modify catch]&apos; + msg.data
-            return msg
+            return &apos;[modify catch]&apos; + msg.data
         }
     })
-    await pm3p(&apos;inp3&apos;)
+    await pm3p(&apos;inp3-a&apos;, &apos;inp3-b&apos;)
         .then(function(msg) {
             console.log(&apos;pm3p then&apos;, msg)
             ms.push(&apos;pm3p then: &apos; + msg)
@@ -35766,10 +35767,10 @@ pmChain([pm1, pm2, pm3], &apos;*&apos;).then((r) =&gt; {
             ms.push(&apos;pm3p catch: &apos; + msg)
         })
     console.log(JSON.stringify(ms))
-    // pm3p cb { mode: &apos;before&apos;, data: &apos;inp3&apos; }
-    // pm3p cb { mode: &apos;afterCatch&apos;, data: &apos;reject: [modify input]inp3&apos; }
-    // pm3p catch [modify catch]reject: [modify input]inp3
-    // [{&quot;cb&quot;:&quot;pm3p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:&quot;inp3&quot;},{&quot;cb&quot;:&quot;pm3p&quot;,&quot;mode&quot;:&quot;afterCatch&quot;,&quot;data&quot;:&quot;reject: [modify input]inp3&quot;},&quot;pm3p catch: [modify catch]reject: [modify input]inp3&quot;]
+    // pm3p cb { mode: &apos;before&apos;, data: [Arguments] { &apos;0&apos;: &apos;inp3-a&apos;, &apos;1&apos;: &apos;inp3-b&apos; } }
+    // pm3p cb { mode: &apos;afterCatch&apos;, data: &apos;reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b&apos; }
+    // pm3p catch [modify catch]reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b
+    // [{&quot;cb&quot;:&quot;pm3p&quot;,&quot;mode&quot;:&quot;before&quot;,&quot;data&quot;:{&quot;0&quot;:&quot;[modify input a]inp3-a&quot;,&quot;1&quot;:&quot;[modify input b]inp3-b&quot;}},{&quot;cb&quot;:&quot;pm3p&quot;,&quot;mode&quot;:&quot;afterCatch&quot;,&quot;data&quot;:&quot;reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b&quot;},&quot;pm3p catch: [modify catch]reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b&quot;]
 
 }
 test()</code></pre>
@@ -35874,7 +35875,7 @@ test()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x56DE;&#x8ABF;&#x51FD;&#x6578;&#xFF0C;&#x9810;&#x8A2D;()={}&#xFF0C;cb&#x51FD;&#x6578;&#x4E4B;&#x8F38;&#x5165;&#x70BA;&#x76E3;&#x807D;&#x5230;&#x7684;&#x8CC7;&#x8A0A;&#x7269;&#x4EF6;&#xFF0C;&#x6B04;&#x4F4D;&#x6709;mode&#x8207;data&#xFF0C;mode&#x53EF;&#x70BA;&apos;before&apos;&#x3001;&apos;afterThen&apos;&#x3001;&apos;afterCatch&apos;&#x5B57;&#x4E32;&#xFF0C;&#x800C;data&#x5247;&#x4EE3;&#x8868;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x7684;&#x8F38;&#x5165;&#x6216;&#x8F38;&#x51FA;&#x8CC7;&#x8A0A;&#x3002;&#x82E5;&#x60F3;&#x65BC;cb&#x51FD;&#x6578;&#x4FEE;&#x6539;&#x56DE;&#x50B3;&#xFF0C;&#x5247;&#x7531;cb&#x51FD;&#x6578;&#x7684;&#x8F38;&#x5165;&#x4FEE;&#x6539;&#x5B8C;&#x56DE;&#x50B3;&#x5373;&#x53EF;&#x3002;&#x4F8B;&#x5982;&#x6536;&#x5230;msg={mode:&apos;before&apos;,data:&apos;123&apos;}&#xFF0C;&#x5C07;msg.data=&apos;abc&apos;&#xFF0C;&#x518D;return msg</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x56DE;&#x8ABF;&#x51FD;&#x6578;&#xFF0C;&#x9810;&#x8A2D;()={}&#xFF0C;cb&#x51FD;&#x6578;&#x4E4B;&#x8F38;&#x5165;&#x70BA;&#x76E3;&#x807D;&#x5230;&#x7684;&#x8CC7;&#x8A0A;&#x7269;&#x4EF6;&#xFF0C;&#x6B04;&#x4F4D;&#x6709;mode&#x8207;data&#xFF0C;mode&#x53EF;&#x70BA;&apos;before&apos;&#x3001;&apos;afterThen&apos;&#x3001;&apos;afterCatch&apos;&#x5B57;&#x4E32;&#xFF0C;&#x800C;data&#x5247;&#x4EE3;&#x8868;&#x975E;&#x540C;&#x6B65;&#x51FD;&#x6578;&#x7684;&#x8F38;&#x5165;&#x6216;&#x8F38;&#x51FA;&#x8CC7;&#x8A0A;&#x3002;&#x82E5;&#x60F3;&#x65BC;cb&#x51FD;&#x6578;&#x4FEE;&#x6539;&#x56DE;&#x50B3;&#xFF0C;&#x5247;&#x7531;cb&#x51FD;&#x6578;&#x7684;&#x8F38;&#x5165;&#x4FEE;&#x6539;&#x5B8C;&#x56DE;&#x50B3;&#x5373;&#x53EF;&#x3002;&#x4F8B;&#x5982;&#x6536;&#x5230;msg={mode:&apos;before&apos;,data:&apos;123&apos;}&#xFF0C;&#x5C07;msg.data=&apos;abc&apos;&#xFF0C;&#x518D;return msg.data</p></td>
         </tr>
 
     
@@ -35938,7 +35939,7 @@ test()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmHookReject.mjs.html">pmHookReject.mjs</a>, <a href="pmHookReject.mjs.html#line50">line 50</a>
+        <a href="pmHookReject.mjs.html">pmHookReject.mjs</a>, <a href="pmHookReject.mjs.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -35998,9 +35999,9 @@ test()</code></pre>
     let ms
 
     ms = []
-    let pm1 = function (v) {
+    let pm1 = function (v1, v2) {
         return new Promise(function(resolve, reject) {
-            reject(&apos;reject: &apos; + v)
+            reject(`reject: v1=${v1}, v2=${v2}`)
         })
     }
     let pm1p = pmHookReject(pm1, (msg) =&gt; {
@@ -36008,7 +36009,7 @@ test()</code></pre>
         msg = &apos;[modify catch]&apos; + msg
         return msg
     })
-    await pm1p(&apos;inp1&apos;)
+    await pm1p(&apos;inp1-a&apos;, &apos;inp1-b&apos;)
         .then(function(msg) {
             console.log(&apos;pm1p then&apos;, msg)
             ms.push(&apos;pm1p then: &apos; + msg)
@@ -36018,9 +36019,9 @@ test()</code></pre>
             ms.push(&apos;pm1p catch: &apos; + msg)
         })
     console.log(JSON.stringify(ms))
-    // pm1p cb reject: inp1
-    // pm1p catch [modify catch]reject: inp1
-    // [&quot;pm1p catch: [modify catch]reject: inp1&quot;]
+    // pm1p cb reject: v1=inp1-a, v2=inp1-b
+    // pm1p catch reject: v1=inp1-a, v2=inp1-b
+    // [&quot;pm1p catch: reject: v1=inp1-a, v2=inp1-b&quot;]
 
 }
 test()</code></pre>
@@ -48545,7 +48546,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.5</a> on Thu Sep 10 2020 21:22:08 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.5</a> on Mon Sep 14 2020 15:38:14 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -48569,7 +48570,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.5.15/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.5.16/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

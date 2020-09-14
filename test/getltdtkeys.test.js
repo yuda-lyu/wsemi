@@ -15,37 +15,37 @@ describe(`getltdtkeys`, function() {
         k = 1
         let r = getltdtkeys(o[k].in)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input { a: 123, b: 'xyz', c: '45op', d: null }`, function() {
         let r = getltdtkeys({ a: 123, b: 'xyz', c: '45op', d: null })
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return '' when input ''`, function() {
         let r = getltdtkeys('')
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return '' when input []`, function() {
         let r = getltdtkeys([])
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return '' when input {}`, function() {
         let r = getltdtkeys({})
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return '' when input null`, function() {
         let r = getltdtkeys(null)
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return '' when input undefined`, function() {
         let r = getltdtkeys(undefined)
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
 })

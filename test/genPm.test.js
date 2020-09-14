@@ -14,10 +14,10 @@ describe('genPm', function() {
     it('should touch [then] when call fn', function() {
         fn()
             .then(function() {
-                assert.strict.deepEqual(1, 1)
+                assert.strict.deepStrictEqual(1, 1)
             })
             .catch(function() {
-                assert.strict.deepEqual(1, 'can not touch catch')
+                assert.strict.deepStrictEqual(1, 'can not touch catch')
             })
     })
 

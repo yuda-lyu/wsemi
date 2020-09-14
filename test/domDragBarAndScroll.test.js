@@ -5,7 +5,7 @@ import assert from 'assert'
 describe(`domDragBarAndScroll`, function() {
 
     it(`need test in browser`, function() {
-        assert.strict.deepEqual(1, 1)
+        assert.strict.deepStrictEqual(1, 1)
     })
 
 })

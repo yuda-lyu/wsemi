@@ -29,10 +29,10 @@ describe(`pmChain`, function() {
     it(`should then 'pm3pm2pm1*' when call pmChain([pm1, pm2, pm3], '*')`, function() {
         pmChain([pm1, pm2, pm3], '*')
             .then(function(r) {
-                assert.strict.deepEqual(r, 'pm3pm2pm1*')
+                assert.strict.deepStrictEqual(r, 'pm3pm2pm1*')
             })
             .catch(function() {
-                assert.strict.deepEqual(1, 'can not touch catch')
+                assert.strict.deepStrictEqual(1, 'can not touch catch')
             })
     })
 

@@ -15,7 +15,7 @@ describe(`aes2str`, function() {
         k = 1
         let r = aes2str(o[k], key)
         let rr = str
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -24,61 +24,61 @@ describe(`aes2str`, function() {
         k = 2
         let r = aes2str(o[k], key, true)
         let rr = str
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input 12.34`, function() {
         let r = aes2str(12.34)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input [1, '3', 'abc']`, function() {
         let r = aes2str([1, '3', 'abc'])
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input { a: 12.34, b: 'abc' }`, function() {
         let r = aes2str({ a: 12.34, b: 'abc' })
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input { a: 12.34, b: 'abc', c: '', d: null, e: undefined, f: [], g: {} }`, function() {
         let r = aes2str({ a: 12.34, b: 'abc', c: '', d: null, e: undefined, f: [], g: {} })
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input ''`, function() {
         let r = aes2str('')
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input []`, function() {
         let r = aes2str([])
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input {}`, function() {
         let r = aes2str({})
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input null`, function() {
         let r = aes2str(null)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input undefined`, function() {
         let r = aes2str(undefined)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

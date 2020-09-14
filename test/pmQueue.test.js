@@ -235,7 +235,7 @@ describe(`pmQueue`, function() {
         testFun1()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["fun1 then #inp1","fun2 catch #inp2","fun3 then #inp3"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["fun1 then #inp1","fun2 catch #inp2","fun3 then #inp3"]')
             })
     }, 1)
 
@@ -244,7 +244,7 @@ describe(`pmQueue`, function() {
         testFun2()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["fun2 catch #inp2","fun1 then #inp1","fun3 then #inp3"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["fun2 catch #inp2","fun1 then #inp1","fun3 then #inp3"]')
             })
     }, 700)
 
@@ -253,7 +253,7 @@ describe(`pmQueue`, function() {
         testFun3()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
             })
     }, 1400)
 
@@ -262,7 +262,7 @@ describe(`pmQueue`, function() {
         testFun4()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
             })
     }, 2100)
 

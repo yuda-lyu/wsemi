@@ -5,7 +5,7 @@ import assert from 'assert'
 describe(`evem`, function() {
 
     it(`tested in eventemitter3`, function() {
-        assert.strict.deepEqual(1, 1)
+        assert.strict.deepStrictEqual(1, 1)
     })
 
 })

@@ -144,7 +144,7 @@ describe(`pmLast`, function() {
         test1()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["t3 then: [fun]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun]resolve: t4"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t3 then: [fun]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun]resolve: t4"]')
             })
     }, 1)
 
@@ -153,7 +153,7 @@ describe(`pmLast`, function() {
         test2()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepEqual(JSON.stringify(ms), '["t3 then: [fun2]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun1]resolve: t4"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t3 then: [fun2]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun1]resolve: t4"]')
             })
     }, 300)
 

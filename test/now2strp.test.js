@@ -10,7 +10,7 @@ describe('now2strp', function() {
     let d = ot()
     let rr = d.format('YYYYMMDDHHmmss')
     it(`should return ${rr} when input ${r}`, function() {
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

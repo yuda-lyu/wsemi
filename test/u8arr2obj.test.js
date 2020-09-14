@@ -24,37 +24,37 @@ describe(`u8arr2obj`, function() {
     it(`should return ${cdata} when input ${cu8a}`, function() {
         let r = u8arr2obj(u8a)
         let rr = data
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return null when input ''`, function() {
         let r = u8arr2obj('')
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return null when input []`, function() {
         let r = u8arr2obj([])
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return null when input {}`, function() {
         let r = u8arr2obj({})
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return null when input null`, function() {
         let r = u8arr2obj(null)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return null when input undefined`, function() {
         let r = u8arr2obj(undefined)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

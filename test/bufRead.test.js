@@ -13,73 +13,73 @@ describe(`bufRead`, function() {
     it(`should return ${j} when input ${b}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(b, offset, isBE, mLen, nBytes)
         let rr = j
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input '1.25', ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead('1.25', offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input 2.25, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(2.25, offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input '', ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead('', offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input [], ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead([], offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input {}, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead({}, offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input null, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(null, offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input undefined, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(undefined, offset, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input ${b}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(b, null, isBE, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input ${b}, ${offset}, null, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(b, offset, null, mLen, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input ${b}, ${offset}, ${isBE}, null, ${nBytes}`, function() {
         let r = bufRead(b, offset, isBE, null, nBytes)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${j} when input ${b}, ${offset}, ${isBE}, ${mLen}, null`, function() {
         let r = bufRead(b, offset, isBE, mLen, null)
         let rr = null
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

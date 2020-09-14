@@ -18,7 +18,7 @@ describe(`ltdtmapping`, function() {
     it(`should return ${JSON.stringify(out1)} when input ${JSON.stringify(inp)}, ['a', 'b']`, function() {
         let r = ltdtmapping(inp, ['a', 'b'])
         let rr = out1
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     let out2 = [
@@ -29,97 +29,97 @@ describe(`ltdtmapping`, function() {
     it(`should return ${JSON.stringify(out2)} when input ${JSON.stringify(inp)}, ['a', 'c', 'x']`, function() {
         let r = ltdtmapping(inp, ['a', 'c', 'x'])
         let rr = out2
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ''`, function() {
         let r = ltdtmapping('')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input []`, function() {
         let r = ltdtmapping([])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input {}`, function() {
         let r = ltdtmapping({})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input null`, function() {
         let r = ltdtmapping(null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input undefined`, function() {
         let r = ltdtmapping(undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], ''`, function() {
         let r = ltdtmapping([], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], []`, function() {
         let r = ltdtmapping([], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], {}`, function() {
         let r = ltdtmapping([], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], null`, function() {
         let r = ltdtmapping([], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], undefined`, function() {
         let r = ltdtmapping([], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], ''`, function() {
         let r = ltdtmapping(['abc'], '')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], []`, function() {
         let r = ltdtmapping(['abc'], [])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], {}`, function() {
         let r = ltdtmapping(['abc'], {})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], null`, function() {
         let r = ltdtmapping(['abc'], null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], undefined`, function() {
         let r = ltdtmapping(['abc'], undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

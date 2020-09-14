@@ -8,9 +8,9 @@ describe(`pmHookReject`, function() {
         let ms
 
         ms = []
-        let pm1 = function (v) {
+        let pm1 = function (v1, v2) {
             return new Promise(function(resolve, reject) {
-                reject('reject: ' + v)
+                reject(`reject: v1=${v1}, v2=${v2}`)
             })
         }
         let pm1p = pmHookReject(pm1, (msg) => {
@@ -18,7 +18,7 @@ describe(`pmHookReject`, function() {
             msg = '[modify catch]' + msg
             return msg
         })
-        await pm1p('inp1')
+        await pm1p('inp1-a', 'inp1-b')
             .then(function(msg) {
                 //console.log('pm1p then', msg)
                 ms.push('pm1p then: ' + msg)
@@ -28,7 +28,10 @@ describe(`pmHookReject`, function() {
                 ms.push('pm1p catch: ' + msg)
             })
         //console.log(JSON.stringify(ms))
-        assert.strict.deepEqual(JSON.stringify(ms), '["pm1p catch: [modify catch]reject: inp1"]')
+        // pm1p cb reject: v1=inp1-a, v2=inp1-b
+        // pm1p catch reject: v1=inp1-a, v2=inp1-b
+        // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
+        assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]]')
 
     }
     test()

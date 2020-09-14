@@ -10,7 +10,7 @@ describe(`nowDay2str`, function() {
     let d = ot()
     let rr = d.format('YYYY-MM-DD')
     it(`should return ${rr} when input ${r}`, function() {
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

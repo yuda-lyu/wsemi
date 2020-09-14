@@ -1,6 +1,3 @@
-// import get from 'lodash/get'
-// import isEqual from 'lodash/isEqual'
-// import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
 import pmHook from './pmHook.mjs'
 
@@ -19,9 +16,9 @@ import pmHook from './pmHook.mjs'
  *     let ms
  *
  *     ms = []
- *     let pm1 = function (v) {
+ *     let pm1 = function (v1, v2) {
  *         return new Promise(function(resolve, reject) {
- *             reject('reject: ' + v)
+ *             reject(`reject: v1=${v1}, v2=${v2}`)
  *         })
  *     }
  *     let pm1p = pmHookReject(pm1, (msg) => {
@@ -29,7 +26,7 @@ import pmHook from './pmHook.mjs'
  *         msg = '[modify catch]' + msg
  *         return msg
  *     })
- *     await pm1p('inp1')
+ *     await pm1p('inp1-a', 'inp1-b')
  *         .then(function(msg) {
  *             console.log('pm1p then', msg)
  *             ms.push('pm1p then: ' + msg)
@@ -39,9 +36,9 @@ import pmHook from './pmHook.mjs'
  *             ms.push('pm1p catch: ' + msg)
  *         })
  *     console.log(JSON.stringify(ms))
- *     // pm1p cb reject: inp1
- *     // pm1p catch [modify catch]reject: inp1
- *     // ["pm1p catch: [modify catch]reject: inp1"]
+ *     // pm1p cb reject: v1=inp1-a, v2=inp1-b
+ *     // pm1p catch reject: v1=inp1-a, v2=inp1-b
+ *     // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
  *
  * }
  * test()
@@ -60,8 +57,7 @@ function pmHookReject(fun, cb = () => {}) {
     //pmHook
     return pmHook(fun, (msg) => {
         if (msg.mode === 'afterCatch') {
-            msg.data = cb(msg.data)
-            return msg
+            return cb(msg.data)
         }
     })
 }

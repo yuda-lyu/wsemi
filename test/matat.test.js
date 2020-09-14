@@ -15,7 +15,7 @@ describe(`matat`, function() {
         k = 1
         let r = matat(o[k].in, 1)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -27,7 +27,7 @@ describe(`matat`, function() {
         k = 2
         let r = matat(o[k].in, 1, 2)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 3
@@ -39,7 +39,7 @@ describe(`matat`, function() {
         k = 3
         let r = matat(o[k].in, 1, 10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 4
@@ -51,7 +51,7 @@ describe(`matat`, function() {
         k = 4
         let r = matat(o[k].in, 1, -10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 5
@@ -63,7 +63,7 @@ describe(`matat`, function() {
         k = 5
         let r = matat(o[k].in, -1, 10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 6
@@ -75,7 +75,7 @@ describe(`matat`, function() {
         k = 6
         let r = matat(o[k].in, -1, -10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 7
@@ -87,7 +87,7 @@ describe(`matat`, function() {
         k = 7
         let r = matat(o[k].in, 10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 8
@@ -99,37 +99,37 @@ describe(`matat`, function() {
         k = 8
         let r = matat(o[k].in, -10)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input ''`, function() {
         let r = matat('')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input []`, function() {
         let r = matat([])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input {}`, function() {
         let r = matat({})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input null`, function() {
         let r = matat(null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input undefined`, function() {
         let r = matat(undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

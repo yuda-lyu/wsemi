@@ -26,37 +26,37 @@ describe(`stru8arr2obj`, function() {
     it(`should return ${cout} when input ${JSON.stringify(inp)}`, function() {
         let r = stru8arr2obj(inp)
         let rr = out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${cempty} when input ''`, function() {
         let r = stru8arr2obj('')
         let rr = empty
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${cempty} when input []`, function() {
         let r = stru8arr2obj([])
         let rr = empty
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${cempty} when input {}`, function() {
         let r = stru8arr2obj({})
         let rr = empty
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${cempty} when input null`, function() {
         let r = stru8arr2obj(null)
         let rr = empty
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return ${cempty} when input undefined`, function() {
         let r = stru8arr2obj(undefined)
         let rr = empty
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

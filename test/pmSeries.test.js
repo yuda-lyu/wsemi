@@ -13,7 +13,7 @@ describe(`pmSeries`, function() {
             }, 1)
             return pm
         })
-        assert.strict.deepEqual(r, ['pmSeries: 2(0)', 'pmSeries: 3(1)', 'pmSeries: 1(2)'])
+        assert.strict.deepStrictEqual(r, ['pmSeries: 2(0)', 'pmSeries: 3(1)', 'pmSeries: 1(2)'])
     })
 
 })

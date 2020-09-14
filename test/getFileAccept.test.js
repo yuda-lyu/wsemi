@@ -12,7 +12,7 @@ describe(`getFileAccept`, function() {
     }
     it(`should return ${JSON.stringify(o1)} when no input`, function() {
         let r = getFileAccept()[2]
-        assert.strict.deepEqual(r, o1)
+        assert.strict.deepStrictEqual(r, o1)
     })
 
     let o2 = [{
@@ -29,7 +29,7 @@ describe(`getFileAccept`, function() {
     }]
     it(`should return ${JSON.stringify(o2)} when 'acp'`, function() {
         let r = getFileAccept('acp')['text/html']
-        assert.strict.deepEqual(r, o2)
+        assert.strict.deepStrictEqual(r, o2)
     })
 
 })
