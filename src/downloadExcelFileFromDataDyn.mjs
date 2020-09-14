@@ -22,7 +22,7 @@ async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) 
     //pathItems
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/xlsx@0.16.6/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.16.7/dist/xlsx.full.min.js',
         ]
     }
 

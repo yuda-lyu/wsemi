@@ -31,7 +31,7 @@ async function getUserAgentDyn(v = null, pathItems) {
     //pathItems
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.21/dist/ua-parser.min.js',
+            'https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.22/dist/ua-parser.min.js',
         ]
     }
 
