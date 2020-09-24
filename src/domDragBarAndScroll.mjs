@@ -34,6 +34,7 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
     let fPanelTouchmove = null
     let fPanelTouchend = null
     let fBarMousedown = null
+    let fBarMouseup = null
     let fBarTouchstart = null
     let fBarTouchmove = null
     let fBarTouchend = null
@@ -126,6 +127,16 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
         }
         eleBar.addEventListener('mousedown', fBarMousedown)
 
+        //fBarMouseup, 可由fWindowMouseup自動解鎖, 不過若嵌入panel有攔截mouseup事件(例如popup)會導致外面window收不到mouseup事件, 故bar的mouseup事件仍需要監聽處理解鎖行為
+        fBarMouseup = (e) => {
+            if (barPressing) {
+                barPressing = false
+                ev.emit('freeBar') //窄版bar, 解鎖
+                // domCancelEvent(e)
+            }
+        }
+        eleBar.addEventListener('mouseup', fBarMouseup)
+
         //fBarTouchstart
         fBarTouchstart = (e) => {
             barPressing = true
@@ -182,8 +193,9 @@ function domDragBarAndScroll(panel, bar, opt = {}) {
         elePanel.removeEventListener('touchmove', fPanelTouchmove)
         elePanel.removeEventListener('touchend', fPanelTouchend)
 
-        //eleBar remove mousedown, touchstart, touchmove, touchend
+        //eleBar remove mousedown, mouseup, touchstart, touchmove, touchend
         eleBar.removeEventListener('mousedown', fBarMousedown)
+        eleBar.removeEventListener('mouseup', fBarMouseup)
         eleBar.removeEventListener('touchstart', fBarTouchstart)
         eleBar.removeEventListener('touchmove', fBarTouchmove)
         eleBar.removeEventListener('touchend', fBarTouchend)
