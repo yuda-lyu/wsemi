@@ -5,11 +5,14 @@
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise
  * @example
+ * need test in browser
+ *
  * pmIni()
  *     .then(function() {
  *         console.log('then')
  *         //code here
  *     })
+ *
  */
 function pmIni() {
     return Promise.resolve()

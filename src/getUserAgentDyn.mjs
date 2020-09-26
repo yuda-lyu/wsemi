@@ -12,6 +12,8 @@ import getUserAgent from './getUserAgent.mjs'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
  * @example
+ * need test in browser
+ *
  * let ua = 'Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)'
  * getUserAgentDyn(ua)
  *     .then(function(r) {
@@ -25,6 +27,7 @@ import getUserAgent from './getUserAgent.mjs'
  *             platform: 'OpenBSDundefined'
  *         }
  *     })
+ *
  */
 async function getUserAgentDyn(v = null, pathItems) {
 

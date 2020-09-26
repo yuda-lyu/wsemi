@@ -15,11 +15,14 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
  * @example
+ * need test in browser
+ *
  * isUserPW('Asdf1234')
  *     .then(function() {
  *         console.log('then')
  *         //code here
  *     })
+ *
  */
 function isUserPW(v) {
 

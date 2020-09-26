@@ -14,8 +14,12 @@ import showImages from './showImages.mjs'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳為分數或是否，reject回傳錯誤訊息
  * @example
+ * need test in browser
+ *
  * <img src="001.jpg" onclick="showImagesDyn(this)">
+ *
  * <img src="002.jpg" onclick="showImagesDyn(this,this.parentElement)">
+ *
  */
 async function showImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
 

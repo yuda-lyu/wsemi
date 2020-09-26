@@ -17,6 +17,7 @@ import isfun from './isfun.mjs'
  * @param {Function} fun 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
+ * need test in browser
  *
  * setTimeout(function() {
  *

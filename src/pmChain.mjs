@@ -11,6 +11,8 @@ import isarr from './isarr.mjs'
  * @param {*} initial 輸入循序執行Promise陣列的初始值
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
+ * need test in browser
+ *
  * let pm1 = function(v) {
  *     let pm = genPm()
  *     setTimeout(() => {
@@ -42,6 +44,7 @@ import isarr from './isarr.mjs'
  * // => pm2pm1*
  * // => pm3pm2pm1*
  * // => pmChain: pm3pm2pm1*
+ *
  */
 function pmChain(pms, initial = null) {
     if (!isarr(pms)) {

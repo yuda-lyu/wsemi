@@ -23,6 +23,7 @@ import queue from './queue.mjs'
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
+ * need test in browser
  *
  * let takeLimit
  *

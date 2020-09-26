@@ -10,7 +10,8 @@ import isstr from './isstr.mjs'
  * @param {String} query 輸入查詢字串
  * @param {*} item 輸入要插入節點、元素或文字等內容
  * @example
- * need test in browser
+ * let html = '<div>abc</div>'
+ * domAppend('#id',html)
  */
 function domAppend(query, item) {
     let r = domFind(query)

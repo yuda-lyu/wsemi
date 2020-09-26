@@ -9,6 +9,7 @@ import get from 'lodash/get'
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise，皆使用resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
  * @example
+ * need test in browser
  *
  * function fun1(c) {
  *     return new Promise((resolve, reject) => {

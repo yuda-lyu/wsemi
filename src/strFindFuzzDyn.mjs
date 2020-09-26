@@ -14,6 +14,8 @@ import strFindFuzz from './strFindFuzz.mjs'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳為分數或是否，reject回傳錯誤訊息
  * @example
+ * need test in browser
+ *
  * strFindFuzzDyn('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
  *     .then(function(r) {
  *         console.log(r)
@@ -43,6 +45,7 @@ import strFindFuzz from './strFindFuzz.mjs'
  *         console.log(r)
  *         // => true
  *     })
+ *
  */
 async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
 

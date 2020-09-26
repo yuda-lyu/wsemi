@@ -10,8 +10,11 @@ import isnum from './isnum.mjs'
  * @param {Number} [ms=1] 輸入延遲毫秒整數，預設10ms
  * @returns {Promise}} 回傳Promise，resolve代表延遲完畢
  * @example
+ * need test in browser
+ *
  * delay(1000)
  * // => 延遲1s才執行
+ *
  */
 function delay(ms = 10) {
 
