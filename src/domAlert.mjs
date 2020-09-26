@@ -3,6 +3,7 @@ import each from 'lodash/each'
 import get from 'lodash/get'
 import filter from 'lodash/filter'
 import sortBy from 'lodash/sortBy'
+import getGlobal from './getGlobal.mjs'
 import genID from './genID.mjs'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
@@ -29,13 +30,14 @@ let q = {} //queue
 let timer = null
 
 
-window.ttWAlertCancel = function(id) {
+let g = getGlobal() //於瀏覽器端為window, 若直接存window會因編譯至全域導致無法於nodejs運行, 得使用getGlobal取得window
+g.ttWAlertCancel = function(id) {
     removeItemByID(id)
 }
-window.ttWAlertFadeIn = function(id) {
+g.ttWAlertFadeIn = function(id) {
     domFadeIn(document.querySelector(`#${id}`))
 }
-window.ttWAlertFadeOut = function(id) {
+g.ttWAlertFadeOut = function(id) {
     domFadeOut(document.querySelector(`#${id}`))
 }
 
