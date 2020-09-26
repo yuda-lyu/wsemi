@@ -1,5 +1,8 @@
 import get from 'lodash/get'
 import cdbl from './cdbl.mjs'
+import isEle from './isEle.mjs'
+import isnum from './isnum.mjs'
+import genID from './genID.mjs'
 
 
 /**
@@ -21,6 +24,11 @@ import cdbl from './cdbl.mjs'
  */
 function domFadeOut(ele, opt = {}) {
 
+    //check
+    if (!isEle(ele)) {
+        return
+    }
+
     //duration
     let duration = get(opt, 'duration', 500)
     duration = cdbl(duration)
@@ -39,6 +47,9 @@ function domFadeOut(ele, opt = {}) {
     let useOpacity = get(opt, 'opacityIni', 1)
     useOpacity = cdbl(useOpacity)
     useOpacity = Math.min(Math.max(useOpacity, 0), 1)
+    if (isnum(ele.style.opacity)) {
+        useOpacity = cdbl(ele.style.opacity)
+    }
 
     //更新週期(ms)
     let ss = 10
@@ -46,20 +57,39 @@ function domFadeOut(ele, opt = {}) {
     //每次調整opacity
     let s = ss / duration
 
+    //tag
+    let tag = `tag-${genID()}`
+
+    //set tag
+    ele.setAttribute('dom-fade-tag', tag)
+
     //timer
     setTimeout(() => {
         let t = setInterval(() => {
+
+            //check tag
+            let tagTemp = ele.getAttribute('dom-fade-tag')
+            if (tagTemp !== tag) {
+                clearInterval(t) //只停掉timer, 由後續觸發的timer控制
+            }
+
+            //update
             ele.style.opacity = useOpacity
+
+            //clear
             if (useOpacity <= 0) {
                 clearInterval(t)
+                ele.removeAttribute('dom-fade-tag')
             }
+
+            //add
             useOpacity -= s
             if (useOpacity < 0) {
                 useOpacity = 0
             }
+
         }, ss)
     }, delay)
-
 
 }
 
