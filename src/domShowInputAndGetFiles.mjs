@@ -19,6 +19,7 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  * @returns {Promise} 回傳Promise，resolve為各檔案陣列，無reject
  * @example
  * need test in browser
+ * 
  */
 function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
 

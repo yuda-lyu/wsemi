@@ -7,6 +7,7 @@
  * @returns {Array} 回傳DOM元素Element陣列
  * @example
  * need test in browser
+ * 
  */
 function domFinds(query) {
     let r = document.querySelectorAll(query)

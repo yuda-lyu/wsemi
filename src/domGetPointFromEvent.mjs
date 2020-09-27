@@ -9,9 +9,12 @@ import get from 'lodash/get'
  * @memberOf wsemi
  * @param {HTEMLEvent} e 輸入dom事件物件
  * @example
+ * need test in browser
+ * 
  * window.addEventListener('mousemove', (e) => {
  *   console.log(domGetPointFromEvent(e))
  * })
+ *
  */
 function domGetPointFromEvent(e) {
 

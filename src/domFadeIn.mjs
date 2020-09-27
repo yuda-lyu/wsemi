@@ -16,7 +16,8 @@ import genID from './genID.mjs'
  * @param {Number} [opt.delay=0] 輸入動畫延遲啟動時間毫秒整數，預設0
  * @param {Number} [opt.opacityIni=0] 輸入初始透明度浮點數，介於0至1之間，預設0
  * @example
- *
+ * need test in browser
+ * 
  * domFadeIn(document.querySelector('#id'))
  *
  * domFadeIn(document.querySelector('#id'), { duration: 500, delay: 100, opacityIni: 0.2 })

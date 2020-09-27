@@ -5,9 +5,12 @@
  * @memberOf wsemi
  * @param {HTMLEvent} event 輸入event物件
  * @example
+ * need test in browser
+ * 
  * window.addEventListener('touchstart', (e) => {
  *     domCancelEvent(e)
  * })
+ *
  */
 function domCancelEvent(e) {
 

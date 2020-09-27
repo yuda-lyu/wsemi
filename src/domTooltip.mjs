@@ -16,8 +16,11 @@ import cint from './cint.mjs'
  * @param {String} content 輸入提示html訊息字串，若不給則使用ele.innerHTML
  * @param {Object} [option={}] 輸入tippy提示設定物件，預設{}，設定物件詳見tippy官網
  * @example
+ * need test in browser
+ * 
  * let ele = {HTMLElement}
  * domTooltip(ele, '<b>Hello</b>World')
+ *
  */
 function domTooltip(ele, content, option = {}) {
     let tp = null

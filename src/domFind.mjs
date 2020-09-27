@@ -7,6 +7,7 @@
  * @returns {Element} 回傳DOM元素Element
  * @example
  * need test in browser
+ * 
  */
 function domFind(query) {
     let r = document.querySelector(query)

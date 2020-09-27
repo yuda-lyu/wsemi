@@ -11,6 +11,7 @@ import evem from './evem.mjs'
  * @returns {Object} 回傳物件，包含emit與off事件，emit可監聽dropIn、dropOut、getFiles，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列
  * @example
  * need test in browser
+ *
  */
 function domDropFiles(ele) {
     let bMouseIn = false

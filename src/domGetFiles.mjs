@@ -12,6 +12,7 @@ import cdbl from './cdbl.mjs'
  * @returns {Array} 回傳檔案陣列
  * @example
  * need test in browser
+ * 
  */
 function domGetFiles(ele, sizelimit = 500) {
 

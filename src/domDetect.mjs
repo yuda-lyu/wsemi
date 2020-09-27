@@ -14,7 +14,8 @@ import isfun from './isfun.mjs'
  * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，預設1
  * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽
  * @example
- *
+ * need test in browser
+ * 
  * //監聽dom
  * let de = domDetect(() => {
  *     return document.querySelector('#id')

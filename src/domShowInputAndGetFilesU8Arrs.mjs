@@ -16,6 +16,7 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
  * @example
  * need test in browser
+ * 
  */
 function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 500) {
 

@@ -12,6 +12,8 @@ import isEle from './isEle.mjs'
  * @param {HTMLElement} ele 輸入元素
  * @returns {Boolean} 回傳是否位於DOM元素內布林值
  * @example
+ * need test in browser
+ * 
  * let p = {
  *     clientX: 'from event',
  *     clientY: 'from event',
@@ -19,6 +21,7 @@ import isEle from './isEle.mjs'
  * let ele = document.querySelector('#id')
  * let b = domIsClientXYIn(p.clientX, p.clientY, ele)
  * // => true or false
+ *
  */
 function domIsClientXYIn(clientX, clientY, ele) {
 

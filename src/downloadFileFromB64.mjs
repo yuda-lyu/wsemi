@@ -11,6 +11,7 @@ import isWindow from './isWindow.mjs'
  * @param {String} b64 輸入base64資料字串
  * @example
  * need test in browser
+ * 
  */
 function downloadFileFromB64(cfn, b64) {
 
