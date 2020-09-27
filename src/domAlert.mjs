@@ -89,6 +89,7 @@ function calcItemLocationCore(position) {
         //show
         q[v.id].ele.style.zIndex = 200000
         q[v.id].ele.style.opacity = 1
+        q[v.id].ele.style.transform = '' //IE11無法使用null來清除style, 需使用設定為空字串
         q[v.id].ele.style.transform = null
 
     })
