@@ -89,6 +89,7 @@ function calcItemLocationCore(position) {
         //show
         q[v.id].ele.style.zIndex = 200000
         q[v.id].ele.style.opacity = 1
+        q[v.id].ele.style.transform = null
 
     })
 
@@ -310,9 +311,15 @@ function domAlert(msg, opt = {}) {
     let div = document.createElement('div')
     div.id = id
     div.style.position = 'fixed'
-    div.style.transition = 'all 0.5s'
-    div.style.zIndex = -1 //200000
-    div.style.opacity = 0.001
+    div.style.transition = 'transform 0.3s, top 0.5s, bottom 0.5s'
+    div.style.zIndex = -1 //待恢復至200000
+    div.style.opacity = 0.001 //待恢復至1
+    if (position.indexOf('-left') >= 0) {
+        div.style.transform = 'translateX(-100%)'
+    }
+    else {
+        div.style.transform = 'translateX(100%)'
+    }
     div.innerHTML = message
 
     //塞入至body
