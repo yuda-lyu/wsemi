@@ -3,6 +3,7 @@ import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
 import isu8arr from './isu8arr.mjs'
 import isu16arr from './isu16arr.mjs'
+import isab from './isab.mjs'
 //import treeObj from './treeObj.mjs'
 
 
@@ -55,7 +56,7 @@ function obj2stru8arr(o) {
     let bs = []
     try {
 
-        //分離u8a或u16a出來
+        //分離u8a或u16a或ab出來
         let i = -1
         r = JSON.stringify(o, function(key, value) {
             //console.log(key, value)
@@ -68,6 +69,12 @@ function obj2stru8arr(o) {
             else if (isu16arr(value)) {
                 i += 1
                 let id = `[Uint16Array]::${i}`
+                bs.push(value)
+                return id
+            }
+            else if (isab(value)) {
+                i += 1
+                let id = `[ArrayBuffer]::${i}`
                 bs.push(value)
                 return id
             }

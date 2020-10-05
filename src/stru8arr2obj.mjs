@@ -63,6 +63,10 @@ function stru8arr2obj(data) {
                     let id = cint(value.replace('[Uint16Array]::', ''))
                     return binarys[id]
                 }
+                else if (value.indexOf('[ArrayBuffer]::') >= 0) {
+                    let id = cint(value.replace('[ArrayBuffer]::', ''))
+                    return binarys[id]
+                }
             }
             return value
         })

@@ -102,7 +102,7 @@ function obj2u8arr(data) {
 
         //flatten
         each(bs, (b) => {
-            r = concatU8arr(r, b) //合併各二進位數據(Uint8Array)
+            r = concatU8arr(r, b) //合併各二進位數據
         })
 
     }
