@@ -9,7 +9,7 @@ import isWindow from './isWindow.mjs'
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
-function df_IE11(cfn, blob) {
+function coreIE11(cfn, blob) {
 
     //check
     if (!isWindow()) {
@@ -30,7 +30,7 @@ function df_IE11(cfn, blob) {
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
-function df_HTML5(cfn, blob) {
+function coreHTML5(cfn, blob) {
 
     //check
     if (!isWindow()) {
@@ -66,7 +66,7 @@ function df_HTML5(cfn, blob) {
  * @param {Blob} blob 輸入資料Blob
  * @example
  * need test in browser
- * 
+ *
  */
 function downloadFileFromBlob(cfn, blob) {
 
@@ -82,12 +82,12 @@ function downloadFileFromBlob(cfn, blob) {
         return
     }
 
-    //download
+    //core
     if (window.navigator && window.navigator.msSaveOrOpenBlob) { //IE11
-        df_IE11(cfn, blob)
+        coreIE11(cfn, blob)
     }
     else {
-        df_HTML5(cfn, blob)
+        coreHTML5(cfn, blob)
     }
 
 }

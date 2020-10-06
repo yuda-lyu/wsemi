@@ -96,7 +96,7 @@ function main() {
 
             //add code for test and bodyLog function
             code='let '+name+' = wsemi.'+name+'<br>'+code
-            code='console.log = wsemi.bodyLog<br>'+code
+            code='let log = console.log; console.log = function(){ log.apply(null, arguments); wsemi.bodyLog.apply(null, arguments) }<br>'+code
 
             //reset to empty div
             ele.remove()

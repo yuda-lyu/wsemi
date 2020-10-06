@@ -62,7 +62,7 @@ npm i wsemi
 
 [Optional] Add script with nomodule for IE11.
 ```alias
-<script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill/dist/polyfill.min.js"></script>
+<script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.11.5/polyfill.min.js"></script>
 ```
 [Optional] Add script for dayjs(or moment).
 > **Note:** Include script when use some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
@@ -109,5 +109,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.27/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.28/dist/wsemi.umd.js"></script>
 ```

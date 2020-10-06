@@ -26,7 +26,7 @@ function sliceU8arr(u8a, inds) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2obj.test.js Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
- * @returns {Object|Array} 回傳物件或陣列資料
+ * @returns {Object|Array} 回傳物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，因obj2u8arr預設會把ArrayBuffer轉Uint8Array進行操作，故物件內原為ArrayBuffer者會以Uint8Array返回
  * @example
  * let u8a = new Uint8Array([
  *     64, 24, 0, 0, 0, 0, 0, 0, 91, 53, 56, 44,

@@ -13,15 +13,18 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFiles.test.js Github}
  * @memberOf wsemi
- * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
+ * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，可選'docums'、'compress'、'image'、'data'，若給予'common'則代表前述4種，也可給予有限的副檔名(詳見getFileAccept)，預設為全部'*'
  * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
- * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
+ * @param {Number} [sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
  * @returns {Promise} 回傳Promise，resolve為各檔案陣列，無reject
  * @example
  * need test in browser
- * 
+ *
+ * domShowInputAndGetFiles()
+ *     .then((files)=>{})
+ *
  */
-function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 500) {
+function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 1000) {
 
     let pm = genPm()
 

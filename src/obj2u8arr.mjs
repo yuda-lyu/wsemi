@@ -11,17 +11,12 @@ import bufWriteDbl from './bufWriteDbl.mjs'
 //     return Uint8Array.from([...a, ...b])
 // }
 function concatU8arr(a, b) {
-    let r = new Uint8Array(a.length + b.length)
-    let k = -1
-    for (let i = 0; i < a.length; i++) {
-        k += 1
-        r[k] = a[i]
-    }
-    for (let i = 0; i < b.length; i++) {
-        k += 1
-        r[k] = b[i]
-    }
-    return r
+    let ia = getBufferSize(a)
+    let ib = getBufferSize(b)
+    let tmp = new Uint8Array(ia + ib)
+    tmp.set(new Uint8Array(a), 0)
+    tmp.set(new Uint8Array(b), ia)
+    return tmp
 }
 
 
@@ -30,7 +25,7 @@ function concatU8arr(a, b) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.js Github}
  * @memberOf wsemi
- * @param {Object|Array} data 輸入物件或陣列資料
+ * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，注意因ArrayBuffer無法直接操作(非View，只有TypedArray與DataView可操作)故預設會轉Uint8Array進行處理
  * @returns {Uint8Array} 回傳Uint8Array
  * @example
  * let data = {
@@ -72,6 +67,7 @@ function obj2u8arr(data) {
 
         //obj2stru8arr
         let sb = obj2stru8arr(data) //序列化數據, 分別為無Uint8Array序列化字串(results), 以及各Uint8Array數據(binarys)
+        //console.log('sb', sb)
 
         //sb.results
         let bMain = str2u8arr(sb.results) //無Uint8Array序列化字串轉二進位數據(Uint8Array)

@@ -8,18 +8,18 @@ import cdbl from './cdbl.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFiles.test.js Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
- * @param {Number} [sizelimit=500] 輸入檔案大小上線，單位mb，預設為500mb
+ * @param {Number} [sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
  * @returns {Array} 回傳檔案陣列
  * @example
  * need test in browser
- * 
+ *
  */
-function domGetFiles(ele, sizelimit = 500) {
+function domGetFiles(ele, sizelimit = 1000) {
 
     //check
     sizelimit = cdbl(sizelimit)
     if (sizelimit <= 0) {
-        sizelimit = 500
+        sizelimit = 1000
     }
 
     //files

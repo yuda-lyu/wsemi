@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for obj2u8arr, u8arr2obj</title>
+    
+    <!-- 因tippy.js內使用Object.assign已包入wsemi內, 故於IE11執行時得要polyfill才能解析完整js -->
+    <script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.11.5/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        //可能上傳大檔案bodyLog會處理太久
+        // let log = console.log
+        // console.log = function(){
+        //     log.apply(null, arguments)
+        //     wsemi.bodyLog.apply(null, arguments)
+        // }
+    </script>
+
+</head>
+<body>
+
+    <button style="margin:10px;" onclick="cvSamll()">covert object from Uint8Array</button>
+
+    <button style="margin:10px;" onclick="cvFile()">covert object from file</button>
+
+    <script>
+        
+        function cvSamll(){
+
+            //u8a
+            let u8a = new Uint8Array([66, 97, 115])
+
+            //blob
+            let bb = new Blob([u8a])
+
+            //blob2ab
+            wsemi.blob2ab(bb)
+                .then(function(ab){
+                    console.log(ab)
+                    core('test.bin',ab)
+                })
+
+        }
+
+        function cvFile(){
+
+            wsemi.domShowInputAndGetFiles()
+                .then(function(msg){
+                    console.log('msg',msg)
+
+                    //check
+                    if(Object.keys(msg.errs).length > 0){
+                        console.log('errs',msg.errs)
+                        return
+                    }
+
+                    //file
+                    let file = msg.files[0]
+                    console.log('file',file)
+
+                    //blob2ab
+                    wsemi.blob2ab(file)
+                        .then(function(ab){
+                            console.log(ab)
+                            core(file.name,ab)
+                        })
+
+                })
+
+        }
+
+        function core(name, ab){
+
+            let obj = {
+                a: 12,
+                b: 34.56,
+                c: 'test中文',
+                d: {
+                    name: name,
+                    u8a: new Uint8Array([66, 97, 115]),
+                    ab: ab,
+                },
+            }
+            console.log('obj',obj) //可發現obj.d.ab是ArrayBuffer
+
+            let u8a = wsemi.obj2u8arr(obj) //全部轉Uint8Array
+            console.log('u8a',u8a)
+
+            let _obj = wsemi.u8arr2obj(u8a)
+            console.log('_obj',_obj) //可發現_obj.d.ab已是Uint8Array
+
+            //原本blob是轉ArrayBuffer. 經過obj2u8arr會自動採Uint8Array操作與儲存. 故可直接使用downloadFileFromU8Arr
+            wsemi.downloadFileFromU8Arr(name, _obj.d.ab)
+
+        }
+
+    </script>
+  
+</body>
+</html>
