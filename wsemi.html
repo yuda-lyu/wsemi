@@ -3448,7 +3448,7 @@ console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="blob2ab.mjs.html">blob2ab.mjs</a>, <a href="blob2ab.mjs.html#line14">line 14</a>
+        <a href="blob2ab.mjs.html">blob2ab.mjs</a>, <a href="blob2ab.mjs.html#line63">line 63</a>
     </li></ul></dd>
     
 
@@ -3504,7 +3504,18 @@ console.log(arrhas([1, 2, { x: &apos;xyz&apos; }, 3, &apos;4&apos;, 5, &apos;abc
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;blob2ab&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>need test in browser</code></pre>
+<pre class="prettyprint"><code>need test in browser
+
+let bb = new Blob([new Uint8Array([66, 97, 115])])
+blob2ab(b)
+    .then(function(ab){
+        console.log(ab)
+        // =&gt; ArrayBuffer(3)&#xA0;{
+        //     [[Int8Array]]: Int8Array(3) [66, 97, 115]
+        //     [[Uint8Array]]: Uint8Array(3) [66, 97, 115]
+        //     byteLength: 3
+        // }
+    })</code></pre>
         </div>
 
 
@@ -13139,12 +13150,12 @@ kind&#x82E5;&#x9700;&#x4F7F;&#x7528;&#x901A;&#x7528;&#x6A94;&#x6848;&#xFF0C;&#x5
             
                 <td class="default">
                 
-                    <code>500</code>
+                    <code>1000</code>
                 
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;500mb</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;1000mb(&#x7D04;1g)</p></td>
         </tr>
 
     
@@ -13723,7 +13734,7 @@ let b = domIsClientXYIn(p.clientX, p.clientY, ele)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line24">line 24</a>
+        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -13779,7 +13790,10 @@ let b = domIsClientXYIn(p.clientX, p.clientY, ele)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, &apos;domShowInputAndGetFiles&apos;)" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>need test in browser</code></pre>
+<pre class="prettyprint"><code>need test in browser
+
+domShowInputAndGetFiles()
+    .then((files)=&gt;{})</code></pre>
         </div>
 
 
@@ -13849,7 +13863,7 @@ let b = domIsClientXYIn(p.clientX, p.clientY, ele)
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x985E;&#x578B;&#x6216;&#x7A2E;&#x985E;&#x5B57;&#x4E32;&#x6216;&#x9663;&#x5217;&#xFF0C;&#x9810;&#x8A2D;&#x70BA;&#x5168;&#x90E8;&apos;*&apos;</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x985E;&#x578B;&#x6216;&#x7A2E;&#x985E;&#x5B57;&#x4E32;&#x6216;&#x9663;&#x5217;&#xFF0C;&#x53EF;&#x9078;&apos;docums&apos;&#x3001;&apos;compress&apos;&#x3001;&apos;image&apos;&#x3001;&apos;data&apos;&#xFF0C;&#x82E5;&#x7D66;&#x4E88;&apos;common&apos;&#x5247;&#x4EE3;&#x8868;&#x524D;&#x8FF0;4&#x7A2E;&#xFF0C;&#x4E5F;&#x53EF;&#x7D66;&#x4E88;&#x6709;&#x9650;&#x7684;&#x526F;&#x6A94;&#x540D;(&#x8A73;&#x898B;getFileAccept)&#xFF0C;&#x9810;&#x8A2D;&#x70BA;&#x5168;&#x90E8;&apos;*&apos;</p></td>
         </tr>
 
     
@@ -13922,12 +13936,12 @@ let b = domIsClientXYIn(p.clientX, p.clientY, ele)
             
                 <td class="default">
                 
-                    <code>500</code>
+                    <code>1000</code>
                 
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;500mb</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;1000mb(&#x7D04;1g)</p></td>
         </tr>
 
     
@@ -14190,12 +14204,12 @@ let b = domIsClientXYIn(p.clientX, p.clientY, ele)
             
                 <td class="default">
                 
-                    <code>500</code>
+                    <code>1000</code>
                 
                 </td>
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;500mb</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x6A94;&#x6848;&#x5927;&#x5C0F;&#x4E0A;&#x7DDA;&#xFF0C;&#x55AE;&#x4F4D;mb&#xFF0C;&#x9810;&#x8A2D;&#x70BA;1000mb(&#x7D04;1g)</p></td>
         </tr>
 
     
@@ -35709,7 +35723,7 @@ console.log(r)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="obj2u8arr.mjs.html">obj2u8arr.mjs</a>, <a href="obj2u8arr.mjs.html#line54">line 54</a>
+        <a href="obj2u8arr.mjs.html">obj2u8arr.mjs</a>, <a href="obj2u8arr.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -35831,7 +35845,7 @@ console.log(u8a)
 
             
 
-            <td class="description last"><p>&#x8F38;&#x5165;&#x7269;&#x4EF6;&#x6216;&#x9663;&#x5217;&#x8CC7;&#x6599;</p></td>
+            <td class="description last"><p>&#x8F38;&#x5165;&#x7269;&#x4EF6;&#x6216;&#x9663;&#x5217;&#x8CC7;&#x6599;&#xFF0C;&#x7269;&#x4EF6;&#x5167;&#x53EF;&#x652F;&#x63F4;Uint8Array&#x3001;Uint16Array&#x3001;ArrayBuffer&#xFF0C;&#x6CE8;&#x610F;&#x56E0;ArrayBuffer&#x7121;&#x6CD5;&#x76F4;&#x63A5;&#x64CD;&#x4F5C;(&#x975E;View&#xFF0C;&#x53EA;&#x6709;TypedArray&#x8207;DataView&#x53EF;&#x64CD;&#x4F5C;)&#x6545;&#x9810;&#x8A2D;&#x6703;&#x8F49;Uint8Array&#x9032;&#x884C;&#x8655;&#x7406;</p></td>
         </tr>
 
     
@@ -48350,7 +48364,7 @@ console.log(data)
 
         
 <div class="param-desc">
-    <p>&#x56DE;&#x50B3;&#x7269;&#x4EF6;&#x6216;&#x9663;&#x5217;&#x8CC7;&#x6599;</p>
+    <p>&#x56DE;&#x50B3;&#x7269;&#x4EF6;&#x6216;&#x9663;&#x5217;&#x8CC7;&#x6599;&#xFF0C;&#x7269;&#x4EF6;&#x5167;&#x53EF;&#x652F;&#x63F4;Uint8Array&#x3001;Uint16Array&#x3001;ArrayBuffer&#xFF0C;&#x56E0;obj2u8arr&#x9810;&#x8A2D;&#x6703;&#x628A;ArrayBuffer&#x8F49;Uint8Array&#x9032;&#x884C;&#x64CD;&#x4F5C;&#xFF0C;&#x6545;&#x7269;&#x4EF6;&#x5167;&#x539F;&#x70BA;ArrayBuffer&#x8005;&#x6703;&#x4EE5;Uint8Array&#x8FD4;&#x56DE;</p>
 </div>
 
 
@@ -49762,7 +49776,7 @@ waitFun(fn)
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Mon Oct 05 2020 21:38:58 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Tue Oct 06 2020 16:05:05 GMT+0800 (&#x53F0;&#x5317;&#x6A19;&#x6E96;&#x6642;&#x9593;) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -49786,7 +49800,7 @@ waitFun(fn)
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.5.27/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.5.28/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
@@ -49809,7 +49823,7 @@ waitFun(fn)
 
             //add code for test and bodyLog function
             code='let '+name+' = wsemi.'+name+'<br>'+code
-            code='console.log = wsemi.bodyLog<br>'+code
+            code='let log = console.log; console.log = function(){ log.apply(null, arguments); wsemi.bodyLog.apply(null, arguments) }<br>'+code
 
             //reset to empty div
             ele.remove()

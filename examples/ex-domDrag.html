@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domDrag</title>
+    
+    <!-- 因tippy.js內使用Object.assign已包入wsemi內, 故於IE11執行時得要polyfill才能解析完整js -->
+    <script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.11.5/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.28/dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+</head>
+<body>
+
+    <div id="panel" style="user-select:none; cursor:pointer;">
+        <div style="padding:5px;" dragtag dragindex="0">item A</div>
+        <div style="padding:5px;" dragtag dragindex="1">item B</div>
+        <div style="padding:5px;" dragtag dragindex="2">item C</div>
+        <div style="padding:5px;" dragtag dragindex="3">item D</div>
+        <div style="padding:5px;" dragtag dragindex="4">item E</div>
+    </div>
+
+    <script>
+
+        //domDrag
+        let dd = wsemi.domDrag(document.querySelector('#panel'), { attIndex: 'dragindex', selectors: '[dragtag]' })
+        dd.on('change', function(msg) {
+            //console.log('change', msg)
+        })
+        dd.on('start', function(msg) {
+            console.log('start', msg)
+        })
+        dd.on('move', function(msg) {
+            //console.log('move', msg)
+        })
+        dd.on('enter', function(msg) {
+            console.log('enter', msg)
+        })
+        dd.on('leave', function(msg) {
+            console.log('leave', msg)
+        })
+        dd.on('drop', function(msg) {
+            console.log('drop', msg)
+        })
+    
+    </script>
+
+</body>
+</html>
