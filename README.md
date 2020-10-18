@@ -18,7 +18,7 @@ To view some examples for more understanding, visit examples:
 
 > **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-dayjs.html)]
 
-> **dayjs:** [ex-time2expire-time2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-time2expire-time2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-time2expire-time2past.html)]
+> **dayjs:** [ex-timeTZ2expire-timeTZ2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-timeTZ2expire-timeTZ2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-timeTZ2expire-timeTZ2past.html)]
 
 > **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
 
@@ -109,5 +109,5 @@ or
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.28/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.29/dist/wsemi.umd.js"></script>
 ```

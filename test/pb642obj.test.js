@@ -17,7 +17,7 @@ describe(`pb642obj`, function() {
         k = 1
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -29,7 +29,7 @@ describe(`pb642obj`, function() {
         k = 2
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 3
@@ -41,7 +41,7 @@ describe(`pb642obj`, function() {
         k = 3
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 4
@@ -53,7 +53,7 @@ describe(`pb642obj`, function() {
         k = 4
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 5
@@ -65,7 +65,7 @@ describe(`pb642obj`, function() {
         k = 5
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 6
@@ -77,37 +77,37 @@ describe(`pb642obj`, function() {
         k = 6
         let r = pb642obj(o[k].in, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input ''`, function() {
         let r = pb642obj('')
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input []`, function() {
         let r = pb642obj([])
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input {}`, function() {
         let r = pb642obj({})
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input null`, function() {
         let r = pb642obj(null)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input undefined`, function() {
         let r = pb642obj(undefined)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

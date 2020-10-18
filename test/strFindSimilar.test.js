@@ -16,7 +16,7 @@ describe(`strFindSimilar`, function() {
         k = 1
         let r = strFindSimilar(o[k].in1, o[k].in2)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -29,67 +29,67 @@ describe(`strFindSimilar`, function() {
         k = 2
         let r = strFindSimilar(o[k].in1, o[k].in2)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', ''`, function() {
         let r = strFindSimilar('test中文', '')
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', []`, function() {
         let r = strFindSimilar('test中文', [])
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', {}`, function() {
         let r = strFindSimilar('test中文', {})
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', null`, function() {
         let r = strFindSimilar('test中文', null)
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '5393554e94bf0eb6436f240a4fd71282' when input 'test中文', undefined`, function() {
         let r = strFindSimilar('test中文', undefined)
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input ''`, function() {
         let r = strFindSimilar('')
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input []`, function() {
         let r = strFindSimilar([])
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input {}`, function() {
         let r = strFindSimilar({})
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input null`, function() {
         let r = strFindSimilar(null)
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input undefined`, function() {
         let r = strFindSimilar(undefined)
         let rr = {}
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

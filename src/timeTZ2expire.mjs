@@ -1,21 +1,62 @@
 import ot from 'dayjs'
-import istime from './istime.mjs'
+import istimeTZ from './istimeTZ.mjs'
+import isestr from './isestr.mjs'
 
 
 /**
  * 秒時間轉到期時間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2expire.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2expire.test.js Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
+ * @param {String} [tNow=null] 輸入現在秒時間字串
  * @returns {String} 回傳到期時間字串
  * @example
- * need test in browser
+ *
+ * let t
+ * let tNow = '2020-10-18T12:34:56+08:00'
+ * let r
+ *
+ * t = '2020-10-18T12:34:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: true, msg: '2秒後', err: '' }
+ *
+ * t = '2020-10-18T12:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: true, msg: '3分鐘後', err: '' }
+ *
+ * t = '2020-10-18T16:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: true, msg: '4小時後，今天16:37', err: '' }
+ *
+ * t = '2020-10-23T16:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: false, msg: '5天後', err: '' }
+ *
+ * t = '2021-04-23T16:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: false, msg: '6月後', err: '' }
+ *
+ * t = '2028-04-23T16:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: false, msg: '7年後', err: '' }
+ *
+ * t = '2018-04-23T16:37:58+08:00'
+ * r = timeTZ2expire(t, tNow)
+ * console.log(r)
+ * // => { today: null, msg: '', err: '時間已過' }
+ *
  */
-function time2expire(t) {
+function timeTZ2expire(t, tNow = null) {
 
     //check
-    if (!istime(t)) {
+    if (!istimeTZ(t)) {
         return {
             today: null,
             msg: '',
@@ -23,8 +64,13 @@ function time2expire(t) {
         }
     }
 
-    //ot
+    //mnow
     let mnow = ot()
+    if (isestr(tNow)) {
+        mnow = ot(tNow, 'YYYY-MM-DDTHH:mm:ssZ')
+    }
+
+    //mtime
     let mtime = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
 
     //check
@@ -103,4 +149,4 @@ function time2expire(t) {
 }
 
 
-export default time2expire
+export default timeTZ2expire

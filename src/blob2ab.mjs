@@ -52,7 +52,7 @@ function coreHTML5(bb) {
  * blob2ab(b)
  *     .then(function(ab){
  *         console.log(ab)
- *         // => ArrayBuffer(3) {
+ *         // => ArrayBuffer(3) {
  *         //     [[Int8Array]]: Int8Array(3) [66, 97, 115]
  *         //     [[Uint8Array]]: Uint8Array(3) [66, 97, 115]
  *         //     byteLength: 3

@@ -15,7 +15,7 @@ describe(`mat2ltdt`, function() {
         k = 1
         let r = mat2ltdt(o[k].in)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -27,7 +27,7 @@ describe(`mat2ltdt`, function() {
         k = 2
         let r = mat2ltdt(o[k].in)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 3
@@ -39,37 +39,37 @@ describe(`mat2ltdt`, function() {
         k = 3
         let r = mat2ltdt(o[k].in)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input ''`, function() {
         let r = mat2ltdt('')
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input []`, function() {
         let r = mat2ltdt([])
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input {}`, function() {
         let r = mat2ltdt({})
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input null`, function() {
         let r = mat2ltdt(null)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return [] when input undefined`, function() {
         let r = mat2ltdt(undefined)
         let rr = []
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

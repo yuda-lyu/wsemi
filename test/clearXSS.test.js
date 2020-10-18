@@ -13,7 +13,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 1
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 2
@@ -22,7 +22,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 2
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 3
@@ -31,7 +31,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 3
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 4
@@ -40,7 +40,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 4
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 5
@@ -49,7 +49,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 5
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 6
@@ -58,7 +58,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 6
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 7
@@ -67,7 +67,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 7
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 8
@@ -76,7 +76,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 8
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 9
@@ -85,7 +85,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 9
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 10
@@ -94,7 +94,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 10
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 11
@@ -103,7 +103,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 11
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 12
@@ -112,7 +112,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 12
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 13
@@ -121,7 +121,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 13
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 14
@@ -130,7 +130,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 14
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 15
@@ -139,7 +139,7 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 15
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     k = 16
@@ -148,32 +148,32 @@ describe(`clearXSS`, function() {
     it(`should return ' + fx[k] + ' when input ' + x[k]`, function() {
         k = 16
         let r = clearXSS(x[k])
-        assert.strict.deepEqual(r, fx[k])
+        assert.strict.deepStrictEqual(r, fx[k])
     })
 
     it(`should return '' when input ''`, function() {
         let r = clearXSS('')
-        assert.strict.deepEqual(r, '')
+        assert.strict.deepStrictEqual(r, '')
     })
 
     it(`should return [] when input []`, function() {
         let r = clearXSS([])
-        assert.strict.deepEqual(r, [])
+        assert.strict.deepStrictEqual(r, [])
     })
 
     it(`should return {} when input {}`, function() {
         let r = clearXSS({})
-        assert.strict.deepEqual(r, {})
+        assert.strict.deepStrictEqual(r, {})
     })
 
     it(`should return null when input null`, function() {
         let r = clearXSS(null)
-        assert.strict.deepEqual(r, null)
+        assert.strict.deepStrictEqual(r, null)
     })
 
     it(`should return undefined when input undefined`, function() {
         let r = clearXSS(undefined)
-        assert.strict.deepEqual(r, undefined)
+        assert.strict.deepStrictEqual(r, undefined)
     })
 
 })

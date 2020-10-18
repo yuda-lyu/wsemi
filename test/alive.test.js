@@ -33,7 +33,7 @@ describe(`alive`, function() {
 
         setTimeout(() => {
             //console.log(JSON.stringify(m))
-            assert.strict.deepEqual(JSON.stringify(m), '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]')
+            assert.strict.deepStrictEqual(JSON.stringify(m), '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]')
         }, 5000)
 
         oAL.on('message', function({ eventName, key, data, now }) {

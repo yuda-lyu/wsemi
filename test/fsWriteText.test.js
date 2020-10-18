@@ -5,7 +5,7 @@ import assert from 'assert'
 describe(`fsWriteText`, function() {
 
     it(`need test in nodejs.`, function() {
-        assert.strict.deepEqual(1, 1)
+        assert.strict.deepStrictEqual(1, 1)
     })
 
 })

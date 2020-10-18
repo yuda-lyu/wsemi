@@ -6,7 +6,7 @@ describe(`getEnv`, function() {
 
     it(`should return { isBrowser: false, isWebWorker: false, isNode: true } in nodejs when no input`, function() {
         let r = getEnv()
-        assert.strict.deepEqual(r, { isBrowser: false, isWebWorker: false, isNode: true })
+        assert.strict.deepStrictEqual(r, { isBrowser: false, isWebWorker: false, isNode: true })
     })
 
 })

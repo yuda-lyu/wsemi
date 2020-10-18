@@ -18,7 +18,7 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 2
@@ -31,7 +31,7 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 3
@@ -44,7 +44,7 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 4
@@ -57,7 +57,7 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 5
@@ -70,7 +70,7 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     k = 6
@@ -83,37 +83,37 @@ describe(`obj2pb64`, function() {
         let b64 = obj2pb64(o[k].in, key)
         let r = pb642obj(b64, key)
         let rr = o[k].out
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input ''`, function() {
         let r = obj2pb64('')
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input []`, function() {
         let r = obj2pb64([])
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input {}`, function() {
         let r = obj2pb64({})
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input null`, function() {
         let r = obj2pb64(null)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return '' when input undefined`, function() {
         let r = obj2pb64(undefined)
         let rr = ''
-        assert.strict.deepEqual(r, rr)
+        assert.strict.deepStrictEqual(r, rr)
     })
 
 })

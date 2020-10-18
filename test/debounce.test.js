@@ -10,7 +10,7 @@ describe(`debounce`, function() {
         function core(i) {
             j++
             console.log('j', j, 'i', i)
-            assert.strict.deepEqual(i, 3)
+            assert.strict.deepStrictEqual(i, 3)
         }
         function fn() {
             i++
