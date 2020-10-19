@@ -1,6 +1,5 @@
 import ot from 'dayjs'
 import istimeTZ from './istimeTZ.mjs'
-import isestr from './isestr.mjs'
 
 
 /**
@@ -66,7 +65,7 @@ function timeTZ2past(t, tNow = null) {
 
     //mnow
     let mnow = ot()
-    if (isestr(tNow)) {
+    if (istimeTZ(tNow)) {
         mnow = ot(tNow, 'YYYY-MM-DDTHH:mm:ssZ')
     }
 
@@ -109,14 +108,14 @@ function timeTZ2past(t, tNow = null) {
         c = iminutes + '分鐘前'
     }
     if (ihours > 0) {
-        let mm = mtime.format('HH:mm')
+        let hm = mtime.format('HH:mm')
         if (nowday === timeday) {
             today = true
             c = ihours + '小時前'
         }
         else {
             today = false
-            c = '昨天' + mm
+            c = '昨天' + hm
         }
     }
     if (idays > 1) { //昨天交由小時部份處理

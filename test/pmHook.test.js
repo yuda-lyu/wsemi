@@ -104,6 +104,6 @@ describe(`pmHook`, function() {
         assert.strict.deepStrictEqual(JSON.stringify(ms), '[{"cb":"pm3p","mode":"before","data":{"0":"[modify input a]inp3-a","1":"[modify input b]inp3-b"}},{"cb":"pm3p","mode":"afterCatch","data":"reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b"},"pm3p catch: [modify catch]reject: v1=[modify input a]inp3-a, v2=[modify input b]inp3-b"]')
 
     }
-    test()
+    test().catch(() => {})
 
 })

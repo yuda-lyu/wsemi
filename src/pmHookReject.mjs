@@ -42,7 +42,7 @@ import pmHook from './pmHook.mjs'
  *     // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
  *
  * }
- * test()
+ * test().catch(() => {})
  *
  */
 function pmHookReject(fun, cb = () => {}) {

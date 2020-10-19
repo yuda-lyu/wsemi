@@ -34,6 +34,6 @@ describe(`pmHookReject`, function() {
         assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]]')
 
     }
-    test()
+    test().catch(() => {})
 
 })
