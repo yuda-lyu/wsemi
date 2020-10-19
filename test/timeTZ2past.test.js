@@ -29,9 +29,9 @@ describe(`timeTZ2past`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return { today: false, msg: '6月前', err: '' } when input '2020-04-13T08:31:54+08:00', ${tNow}`, function() {
+    it(`sould return { today: false, msg: '6個月前', err: '' } when input '2020-04-13T08:31:54+08:00', ${tNow}`, function() {
         let r = timeTZ2past('2020-04-13T08:31:54+08:00', tNow)
-        let rr = { today: false, msg: '6月前', err: '' }
+        let rr = { today: false, msg: '6個月前', err: '' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

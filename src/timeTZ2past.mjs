@@ -40,7 +40,7 @@ import isestr from './isestr.mjs'
  * t = '2020-04-13T08:31:54+08:00'
  * r = timeTZ2past(t, tNow)
  * console.log(r)
- * // => { today: false, msg: '6月前', err: '' }
+ * // => { today: false, msg: '6個月前', err: '' }
  *
  * t = '2013-04-13T08:31:54+08:00'
  * r = timeTZ2past(t, tNow)
@@ -129,7 +129,7 @@ function timeTZ2past(t, tNow = null) {
     }
     if (imonths > 0) {
         today = false
-        c = imonths + '月前'
+        c = imonths + '個月前'
     }
     if (iyears > 0) {
         today = false

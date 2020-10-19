@@ -40,7 +40,7 @@ import isestr from './isestr.mjs'
  * t = '2021-04-23T16:37:58+08:00'
  * r = timeTZ2expire(t, tNow)
  * console.log(r)
- * // => { today: false, msg: '6月後', err: '' }
+ * // => { today: false, msg: '6個月後', err: '' }
  *
  * t = '2028-04-23T16:37:58+08:00'
  * r = timeTZ2expire(t, tNow)
@@ -134,7 +134,7 @@ function timeTZ2expire(t, tNow = null) {
     }
     if (imonths > 0) {
         today = false
-        c = imonths + '月後'
+        c = imonths + '個月後'
     }
     if (iyears > 0) {
         today = false
