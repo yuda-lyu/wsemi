@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>arrhas.mjs - Documentation</title>
+    <title>domGetScrollableParent.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">arrhas.mjs</h1>
+    <h1 class="page-title">domGetScrollableParent.mjs</h1>
     
 
     
@@ -42,108 +42,65 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isEqual from 'lodash/isEqual'
-import isarr from './isarr.mjs'
-import iser from './iser.mjs'
-
+            <pre class="prettyprint source linenums"><code>
 
 /**
- * 判斷任一字串陣列vtar內元素，是否「等於」任一字串陣列vhas內元素
+ * 前端找尋DOM元素最近的可捲動父層
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrhas.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetScrollableParent.test.js Github}
  * @memberOf wsemi
- * @param {String|Number|Object|Boolean|Array} vtar 輸入被查找的字串陣列或字串
- * @param {String|Number|Object|Boolean|Array} vhas 輸入查找字串陣列或字串
- * @returns {Boolean} 回傳判斷布林值
+ * @param {HTMLElement} ele 輸入dom元素
+ * @returns {Element} 回傳DOM元素
  * @example
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], 2))
- * // => true
+ * need test in browser
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], 6))
- * // => false
+ * let eleScrollableParent = domGetScrollableParent(document.querySelector('#id'))
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], [2]))
- * // => true
- *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], [6]))
- * // => false
- *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], ['4', 2]))
- * // => true
- *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], ['7', 6]))
- * // => false
- *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], true))
- * // => true
- *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], false))
- * // => false
- *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [true]))
- * // => true
- *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [false]))
- * // => false
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' }))
- * // => true
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' }))
- * // => false
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }]))
- * // => true
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }]))
- * // => false
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
- * // => true
- *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }]))
- * // => false
  */
-function arrhas(vtar, vhas) {
+function domGetScrollableParent(ele) {
 
-    function ck(v) {
-        if (isarr(v)) {
-            return v
+    let regex = /(auto|scroll)/
+
+    let parents = function (ele, ps) {
+        if (ele.parentNode === null) {
+            return ps
         }
-        return [v]
+
+        return parents(ele.parentNode, ps.concat([ele]))
     }
 
-    //check vtar, 會自動轉陣列
-    if (iser(vtar)) {
-        return false
-    }
-    vtar = ck(vtar)
-    if (vtar.length === 0) {
-        return false
+    let style = function (ele, prop) {
+        return getComputedStyle(ele, null).getPropertyValue(prop)
     }
 
-    //check vhas, 會自動轉陣列
-    if (iser(vtar)) {
-        return false
-    }
-    vhas = ck(vhas)
-    if (vhas.length === 0) {
-        return false
+    let overflow = function (ele) {
+        return style(ele, 'overflow') + style(ele, 'overflow-y') + style(ele, 'overflow-x')
     }
 
-    //由vtar各元素當中，若存在vhas內任一元素則回傳true，反之回傳false
-    for (let i = 0; i &lt; vtar.length; i++) {
-        for (let j = 0; j &lt; vhas.length; j++) {
-            if (isEqual(vtar[i], vhas[j])) {
-                return true
-            }
+    let scroll = function (ele) {
+        return regex.test(overflow(ele))
+    }
+
+    //check
+    if (!(ele instanceof HTMLElement || ele instanceof SVGElement)) {
+        return
+    }
+
+    //ps
+    let ps = parents(ele.parentNode, [])
+
+    //find
+    for (let i = 0; i &lt; ps.length; i += 1) {
+        if (scroll(ps[i])) {
+            return ps[i]
         }
     }
-    return false
+
+    return document.scrollingElement || document.documentElement
 }
 
 
-export default arrhas
+export default domGetScrollableParent
 </code></pre>
         </article>
     </section>
