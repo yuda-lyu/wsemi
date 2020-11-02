@@ -49,17 +49,17 @@ describe(`flattenTreeObj`, function() {
             children: [
                 {
                     id: 3,
-                    data: '3z',
+                    text: '3z',
                 },
             ],
         },
         {
             id: 4,
-            data: 'empty',
+            text: 'empty',
         },
     ]
     let cinp2 = JSON.stringify(data2)
-    let cout2 = `[{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"data":"3z"}],"level":0,"nk":[1]},{"id":3,"data":"3z","level":1,"nk":[1,"children",0]},{"id":4,"data":"empty","level":0,"nk":[2]}]`
+    let cout2 = `[{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]`
 
     it(`should return ${cout2} when input ${cinp2}`, function() {
         let r = flattenTreeObj(data2)

@@ -56,18 +56,18 @@ import isobj0 from './isobj0.mjs'
  *         children: [
  *             {
  *                 id: 3,
- *                 data: '3z',
+ *                 text: '3z',
  *             },
  *         ],
  *     },
  *     {
  *         id: 4,
- *         data: 'empty',
+ *         text: 'empty',
  *     },
  * ]
  * let r2 = flattenTreeObj(data2)
  * console.log(JSON.stringify(r2))
- * // => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"data":"3z"}],"level":0,"nk":[1]},{"id":3,"data":"3z","level":1,"nk":[1,"children",0]},{"id":4,"data":"empty","level":0,"nk":[2]}]
+ * // => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]
  *
  */
 function flattenTreeObj(data, opt = {}) {
