@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>pmHookReject.mjs - Documentation</title>
+    <title>Global - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,86 +32,401 @@
 
 <div id="main">
     
-    <h1 class="page-title">pmHookReject.mjs</h1>
+    <h1 class="page-title">Global</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>import isfun from './isfun.mjs'
-import pmHook from './pmHook.mjs'
+        <h2>
+        
+        </h2>
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
 
 
-/**
- * 掛勾非同步(Promise)函數，可監聽或修改Promise的reject輸出數據
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHookReject.test.js Github}
- * @memberOf wsemi
- * @param {Function} fun 輸入非同步Promise函數
- * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'aaa'，將msg='bbb'再return msg即可
- * @returns {Promise} 回傳為Promise，resolve為回傳成功結果，reject為回傳失敗訊息
- * @example
- * need test in browser
- *
- * async function test() {
- *     let ms
- *
- *     ms = []
- *     let pm1 = function (v1, v2) {
- *         return new Promise(function(resolve, reject) {
- *             reject(`reject: v1=${v1}, v2=${v2}`)
- *         })
- *     }
- *     let pm1p = pmHookReject(pm1, (msg) => {
- *         console.log('pm1p cb', msg)
- *         msg = '[modify catch]' + msg
- *         return msg
- *     })
- *     await pm1p('inp1-a', 'inp1-b')
- *         .then(function(msg) {
- *             console.log('pm1p then', msg)
- *             ms.push('pm1p then: ' + msg)
- *         })
- *         .catch(function(msg) {
- *             console.log('pm1p catch', msg)
- *             ms.push('pm1p catch: ' + msg)
- *         })
- *     console.log(JSON.stringify(ms))
- *     // pm1p cb reject: v1=inp1-a, v2=inp1-b
- *     // pm1p catch reject: v1=inp1-a, v2=inp1-b
- *     // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
- *
- * }
- * test().catch(() => {})
- *
- */
-function pmHookReject(fun, cb = () => {}) {
-
-    //check
-    if (!isfun(fun)) {
-        return null
-    }
-    if (!isfun(cb)) {
-        cb = () => {}
-    }
-
-    //pmHook
-    return pmHook(fun, (msg) => {
-        if (msg.mode === 'afterCatch') {
-            return cb(msg.data)
-        }
-    })
-}
 
 
-export default pmHookReject
-</code></pre>
-        </article>
-    </section>
+            
+
+            
+        
+        </div>
+    
+
+    
+
+    
+
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="flattenTreeObj"><span class="type-signature"></span>flattenTreeObj<span class="signature">(data, opt<span class="signature-attributes">opt</span>, bindKey<span class="signature-attributes">opt</span>, bindChildren<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="flattenTreeObj.mjs.html">flattenTreeObj.mjs</a>, <a href="flattenTreeObj.mjs.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description usertext">
+    <p>展平樹狀物件陣列</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>let data1 = {    id: 1,    data: '1-abc',    children: [        {            id: 2,            data: '2-def',        },        {            id: 3,            data: '3-ghi',            children: [                {                    id: 4,                    data: '4-jkl',                },            ],        },        {            id: 5,            data: '5-mno',        },    ],}let r1 = flattenTreeObj(data1)console.log(JSON.stringify(r1))// => {"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}let data2 = [    {        id: 1,        text: '1x',    },    {        id: 2,        text: '2y',        children: [            {                id: 3,                data: '3z',            },        ],    },    {        id: 4,        data: 'empty',    },]let r2 = flattenTreeObj(data2)console.log(JSON.stringify(r2))// => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"data":"3z"}],"level":0,"nk":[1]},{"id":3,"data":"3z","level":1,"nk":[1,"children",0]},{"id":4,"data":"empty","level":0,"nk":[2]}]</code></pre>
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入樹狀物件或陣列</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bindKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'id'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入節點物件識別用欄位字串，預設'id'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bindChildren</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'children'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入節點物件內存放子節點欄位字串，預設'children'</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳節點物件陣列</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>pmHookReject.mjs - Documentation</title>
+    <title>flattenTreeObj.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">pmHookReject.mjs</h1>
+    <h1 class="page-title">flattenTreeObj.mjs</h1>
     
 
     
@@ -42,73 +42,162 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isfun from './isfun.mjs'
-import pmHook from './pmHook.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import size from 'lodash/size'
+import treeObj from './treeObj.mjs'
+import isestr from './isestr.mjs'
+import isarr from './isarr.mjs'
+import isobj from './isobj.mjs'
+import isobj0 from './isobj0.mjs'
 
 
 /**
- * 掛勾非同步(Promise)函數，可監聽或修改Promise的reject輸出數據
+ * 展平樹狀物件陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHookReject.test.js Github}
- * @memberOf wsemi
- * @param {Function} fun 輸入非同步Promise函數
- * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'aaa'，將msg='bbb'再return msg即可
- * @returns {Promise} 回傳為Promise，resolve為回傳成功結果，reject為回傳失敗訊息
+ * @param {Array|Object} data 輸入樹狀物件或陣列
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [bindKey='id'] 輸入節點物件識別用欄位字串，預設'id'
+ * @param {String} [bindChildren='children'] 輸入節點物件內存放子節點欄位字串，預設'children'
+ * @returns {Array} 回傳節點物件陣列
  * @example
- * need test in browser
  *
- * async function test() {
- *     let ms
- *
- *     ms = []
- *     let pm1 = function (v1, v2) {
- *         return new Promise(function(resolve, reject) {
- *             reject(`reject: v1=${v1}, v2=${v2}`)
- *         })
- *     }
- *     let pm1p = pmHookReject(pm1, (msg) => {
- *         console.log('pm1p cb', msg)
- *         msg = '[modify catch]' + msg
- *         return msg
- *     })
- *     await pm1p('inp1-a', 'inp1-b')
- *         .then(function(msg) {
- *             console.log('pm1p then', msg)
- *             ms.push('pm1p then: ' + msg)
- *         })
- *         .catch(function(msg) {
- *             console.log('pm1p catch', msg)
- *             ms.push('pm1p catch: ' + msg)
- *         })
- *     console.log(JSON.stringify(ms))
- *     // pm1p cb reject: v1=inp1-a, v2=inp1-b
- *     // pm1p catch reject: v1=inp1-a, v2=inp1-b
- *     // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
- *
+ * let data1 = {
+ *     id: 1,
+ *     data: '1-abc',
+ *     children: [
+ *         {
+ *             id: 2,
+ *             data: '2-def',
+ *         },
+ *         {
+ *             id: 3,
+ *             data: '3-ghi',
+ *             children: [
+ *                 {
+ *                     id: 4,
+ *                     data: '4-jkl',
+ *                 },
+ *             ],
+ *         },
+ *         {
+ *             id: 5,
+ *             data: '5-mno',
+ *         },
+ *     ],
  * }
- * test().catch(() => {})
+ * let r1 = flattenTreeObj(data1)
+ * console.log(JSON.stringify(r1))
+ * // => {"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}
+ *
+ * let data2 = [
+ *     {
+ *         id: 1,
+ *         text: '1x',
+ *     },
+ *     {
+ *         id: 2,
+ *         text: '2y',
+ *         children: [
+ *             {
+ *                 id: 3,
+ *                 data: '3z',
+ *             },
+ *         ],
+ *     },
+ *     {
+ *         id: 4,
+ *         data: 'empty',
+ *     },
+ * ]
+ * let r2 = flattenTreeObj(data2)
+ * console.log(JSON.stringify(r2))
+ * // => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"data":"3z"}],"level":0,"nk":[1]},{"id":3,"data":"3z","level":1,"nk":[1,"children",0]},{"id":4,"data":"empty","level":0,"nk":[2]}]
  *
  */
-function pmHookReject(fun, cb = () => {}) {
+function flattenTreeObj(data, opt = {}) {
 
     //check
-    if (!isfun(fun)) {
-        return null
+    if (isarr(data)) {
+        if (data.length === 0) {
+            return []
+        }
     }
-    if (!isfun(cb)) {
-        cb = () => {}
+    else if (isobj(data)) {
+        if (isobj0(data)) {
+            return []
+        }
+    }
+    else {
+        return []
     }
 
-    //pmHook
-    return pmHook(fun, (msg) => {
-        if (msg.mode === 'afterCatch') {
-            return cb(msg.data)
+    //bindKey
+    let bindKey = get(opt, 'bindKey', null)
+    if (!isestr(bindKey)) {
+        bindKey = 'id'
+    }
+
+    //bindChildren
+    let bindChildren = get(opt, 'bindChildren', null)
+    if (!isestr(bindChildren)) {
+        bindChildren = 'children'
+    }
+
+    //data
+    let toArr = false
+    if (isobj(data)) {
+        toArr = true
+        data = [data]
+    }
+
+    function getNk(nk) {
+        //將nk內插入bindChildren, 因主節點為array, 各節點內的子節點也為array
+        let r = [nk[0]]
+        for (let i = 1; i &lt; nk.length; i++) {
+            let k = nk[i]
+            r.push(bindChildren)
+            r.push(k)
         }
+        return r
+    }
+
+    //nodes
+    let nodes = []
+    treeObj(data, (value, key, nk) => {
+        //console.log({ value, key, nk })
+
+        //pk
+        let pk = get(value, bindKey, null)
+
+        //children
+        let children = get(value, bindChildren, null)
+
+        //push
+        if (pk) {
+            let nkt = getNk([...nk, key])
+            nodes.push({
+                ...value,
+                level: (size(nkt) - 1) / 2,
+                nk: nkt,
+                // key,
+            })
+            if (children) {
+                return children
+            }
+        }
+
     })
+
+    //toArr
+    if (toArr) {
+        nodes = nodes[0]
+    }
+
+    return nodes
 }
 
 
-export default pmHookReject
+export default flattenTreeObj
 </code></pre>
         </article>
     </section>
