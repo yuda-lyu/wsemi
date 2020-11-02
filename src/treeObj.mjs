@@ -23,6 +23,7 @@ import isu16arr from './isu16arr.mjs'
  * @param {Function} [hookFun=null] 輸入攔截處理函數，預設null
  * @returns {*} 回傳複製後的任意資料
  * @example
+ *
  * let data = {
  *     a: 123,
  *     b: 145.67,
@@ -37,22 +38,46 @@ import isu16arr from './isu16arr.mjs'
  *         gd: new Uint8Array([66, 97, 115]),
  *     },
  * }
- * let r = treeObj(data)
- * console.log(r)
+ * let r = treeObj(data, (value, key, nk) => {
+ *     console.log('=>', value, key, nk)
+ *     return value
+ * })
+ * console.log('r =>', r)
+ * // => 123 a []
+ * // => 145.67 b []
+ * // => test中文1 c []
+ * // => true d []
+ * // => [Function: e] e []
+ * // => [ 11, 'xyz', false, Uint8Array(3) [ 166, 197, 215 ] ] f []
+ * // => 11 0 [ 'f' ]
+ * // => xyz 1 [ 'f' ]
+ * // => false 2 [ 'f' ]
+ * // => Uint8Array(3) [ 166, 197, 215 ] 3 [ 'f' ]
  * // => {
- * //     a: 123,
- * //     b: 145.67,
- * //     c: 'test中文1',
- * //     d: true,
- * //     e: [Function: e],
- * //     f: [ 11, 'xyz', false, Uint8Array [ 166, 197, 215 ] ],
- * //     g: {
- * //         ga: 223,
- * //         gb: 245.67,
- * //         gc: 'test中文2',
- * //         gd: Uint8Array [ 66, 97, 115 ]
- * //     }
+ * //   ga: 223,
+ * //   gb: 245.67,
+ * //   gc: 'test中文2',
+ * //   gd: Uint8Array(3) [ 66, 97, 115 ]
+ * // } g []
+ * // => 223 ga [ 'g' ]
+ * // => 245.67 gb [ 'g' ]
+ * // => test中文2 gc [ 'g' ]
+ * // => Uint8Array(3) [ 66, 97, 115 ] gd [ 'g' ]
+ * // r => {
+ * //   a: 123,
+ * //   b: 145.67,
+ * //   c: 'test中文1',
+ * //   d: true,
+ * //   e: [Function: e],
+ * //   f: [ 11, 'xyz', false, Uint8Array(3) [ 166, 197, 215 ] ],
+ * //   g: {
+ * //     ga: 223,
+ * //     gb: 245.67,
+ * //     gc: 'test中文2',
+ * //     gd: Uint8Array(3) [ 66, 97, 115 ]
+ * //   }
  * // }
+ *
  */
 function treeObj(data, hookFun = null) {
     let p = {}
