@@ -1,27 +1,25 @@
 import assert from 'assert'
-import pmLast from '../src/pmLast.mjs'
+import PmThrottle from '../src/pmThrottle.mjs'
 
 
-describe(`pmLast`, function() {
+describe(`pmThrottle`, function() {
 
     async function test1() {
         return new Promise((resolve, reject) => {
 
             let ms = []
+            let pmt = new PmThrottle()
 
             let fun = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
+                        //console.log('core: ' + '[fun]resolve: ' + name)
                         resolve('[fun]resolve: ' + name)
                     }, t)
                 })
             }
 
-            //用pml轉換非同步函數
-            let pml = pmLast()
-            let funp = pml(fun) //掛載單函數, 執行才推入佇列
-
-            funp('t1', 150)
+            pmt(fun, 't1', 150)
                 .then(function(msg) {
                     //console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
@@ -30,7 +28,7 @@ describe(`pmLast`, function() {
                     //console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
-            funp('t2', 100)
+            pmt(fun, 't2', 100)
                 .then(function(msg) {
                     //console.log('t2 then', msg)
                     ms.push('t2 then: ' + msg)
@@ -39,7 +37,7 @@ describe(`pmLast`, function() {
                     //console.log('t2 catch', msg)
                     ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
-            funp('t3', 50)
+            pmt(fun, 't3', 50)
                 .then(function(msg) {
                     //console.log('t3 then', msg)
                     ms.push('t3 then: ' + msg)
@@ -50,7 +48,7 @@ describe(`pmLast`, function() {
                 })
 
             setTimeout(() => {
-                funp('t4', 50)
+                pmt(fun, 't4', 50)
                     .then((msg) => {
                         //console.log('t4 then', msg)
                         ms.push('t4 then: ' + msg)
@@ -66,15 +64,33 @@ describe(`pmLast`, function() {
 
         })
     }
+    setTimeout(() => {
+        //console.log('test1')
+        test1()
+            .then((ms) => {
+                //console.log(JSON.stringify(ms))
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: [fun]resolve: t3","t4 then: [fun]resolve: t4"]')
+            })
+    }, 1)
+    // test1
+    // t1 catch { reason: 'cancelled' }
+    // t2 catch { reason: 'cancelled' }
+    // core: [fun]resolve: t3
+    // t3 then [fun]resolve: t3
+    // core: [fun]resolve: t4
+    // t4 then [fun]resolve: t4
+    // ["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: [fun]resolve: t3","t4 then: [fun]resolve: t4"]
 
     async function test2() {
         return new Promise((resolve, reject) => {
 
             let ms = []
+            let pmt = new PmThrottle()
 
             let fun1 = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
+                        //console.log('core: ' + '[fun1]resolve: ' + name)
                         resolve('[fun1]resolve: ' + name)
                     }, t)
                 })
@@ -83,17 +99,13 @@ describe(`pmLast`, function() {
             let fun2 = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
+                        //console.log('core: ' + '[fun2]resolve: ' + name)
                         resolve('[fun2]resolve: ' + name)
                     }, t)
                 })
             }
 
-            //用pml轉換非同步函數
-            let pml = pmLast()
-            let funp1 = pml(fun1) //掛載不同函數, 執行才推入佇列
-            let funp2 = pml(fun2) //掛載不同函數, 執行才推入佇列
-
-            funp1('t1', 150)
+            pmt(fun1, 't1', 150)
                 .then(function(msg) {
                     //console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
@@ -102,7 +114,7 @@ describe(`pmLast`, function() {
                     //console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
-            funp2('t2', 100)
+            pmt(fun2, 't2', 100)
                 .then(function(msg) {
                     //console.log('t2 then', msg)
                     ms.push('t2 then: ' + msg)
@@ -111,7 +123,7 @@ describe(`pmLast`, function() {
                     //console.log('t2 catch', msg)
                     ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
-            funp2('t3', 50)
+            pmt(fun2, 't3', 50)
                 .then(function(msg) {
                     //console.log('t3 then', msg)
                     ms.push('t3 then: ' + msg)
@@ -122,7 +134,7 @@ describe(`pmLast`, function() {
                 })
 
             setTimeout(() => {
-                funp1('t4', 50)
+                pmt(fun1, 't4', 50)
                     .then((msg) => {
                         //console.log('t4 then', msg)
                         ms.push('t4 then: ' + msg)
@@ -138,23 +150,21 @@ describe(`pmLast`, function() {
 
         })
     }
-
-    setTimeout(() => {
-        //console.log('test1')
-        test1()
-            .then((ms) => {
-                //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t3 then: [fun]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun]resolve: t4"]')
-            })
-    }, 1)
-
     setTimeout(() => {
         //console.log('test2')
         test2()
             .then((ms) => {
                 //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t3 then: [fun2]resolve: t3","t2 catch: reason cancelled","t1 catch: reason cancelled","t4 then: [fun1]resolve: t4"]')
+                assert.strict.deepStrictEqual(JSON.stringify(ms), '["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: [fun2]resolve: t3","t4 then: [fun1]resolve: t4"]')
             })
     }, 300)
+    // test2
+    // t1 catch { reason: 'cancelled' }
+    // t2 catch { reason: 'cancelled' }
+    // core: [fun2]resolve: t3
+    // t3 then [fun2]resolve: t3
+    // core: [fun1]resolve: t4
+    // t4 then [fun1]resolve: t4
+    // ["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: [fun2]resolve: t3","t4 then: [fun1]resolve: t4"]
 
 })
