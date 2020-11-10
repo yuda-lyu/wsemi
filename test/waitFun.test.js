@@ -4,19 +4,39 @@ import waitFun from '../src/waitFun.mjs'
 
 describe(`waitFun`, function() {
 
-    it(`should touch [then] in 2 sec. when call waitFun`, function() {
-        let i = 0
-        let fn = function() {
-            i++
-            return i >= 2
-        }
-        waitFun(fn)
-            .then(function() {
-                assert.strict.deepStrictEqual(1, 1)
+    function test1() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+
+            let i = 0
+            waitFun(function() {
+                i++
+                //console.log('waiting: ' + i)
+                ms.push('waiting: ' + i)
+                return i >= 2
             })
-            .catch(function() {
-                assert.strict.deepStrictEqual(1, 'can not touch catch')
-            })
+                .then(function() {
+                    //console.log('t1 then')
+                    ms.push('t1 then')
+                })
+
+            setTimeout(function() {
+                resolve(ms)
+            }, 1100)
+
+        })
+    }
+    //console.log('test1')
+    // test1
+    // waiting: 1
+    // waiting: 2
+    // t1 then
+    // ["waiting: 1","waiting: 2","t1 then"]
+    let r1 = '["waiting: 1","waiting: 2","t1 then"]'
+    it(`should return '${r1}' when run test1'`, async function() {
+        let ms = await test1()
+        //console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
 })

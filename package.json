@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.5.34",
+  "version": "1.5.35",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -19,7 +19,7 @@
     "w-package-tools": "^1.0.30"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --require @babel/register",
+    "test": "./node_modules/.bin/mocha --timeout 60000 --require @babel/register",
     "tests": "./node_modules/.bin/mocha --parallel --require @babel/register",
     "deploy": "gh-pages -d docs"
   },

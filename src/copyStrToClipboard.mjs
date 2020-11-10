@@ -4,14 +4,14 @@ import isstr from './isstr.mjs'
 /**
  * 複製字串至剪貼簿
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strClipboard.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/copyStrToClipboard.test.js Github}
  * @memberOf wsemi
  * @param {String} str 輸入欲複製至剪貼簿的字串
- * @returns {Number} 回傳字串相似度0~1
+ * @returns {String} 回傳字串，若成功則為空字串，若失敗則回傳錯誤訊息
  * @example
- * strClipboard('The Woodman(樵夫) set to work at once, and so...')
+ * copyStrToClipboard('The Woodman(樵夫) set to work at once, and so...')
  */
-function strClipboard(str) {
+function copyStrToClipboard(str) {
     let r = ''
 
     if (!isstr(str)) {
@@ -40,4 +40,4 @@ function strClipboard(str) {
 }
 
 
-export default strClipboard
+export default copyStrToClipboard

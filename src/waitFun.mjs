@@ -16,18 +16,42 @@ import ispint from './ispint.mjs'
  * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000
  * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
  * @example
- * need test in browser
  *
- * let i = 0
- * let fn = function() {
- *   i++
- *   return i >= 2
+ * async function topAsync() {
+ *
+ *     function test1() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let i = 0
+ *             waitFun(function() {
+ *                 i++
+ *                 console.log('waiting: ' + i)
+ *                 ms.push('waiting: ' + i)
+ *                 return i >= 2
+ *             })
+ *                 .then(function() {
+ *                     console.log('t1 then')
+ *                     ms.push('t1 then')
+ *                 })
+ *
+ *             setTimeout(function() {
+ *                 resolve(ms)
+ *             }, 1100)
+ *
+ *         })
+ *     }
+ *     console.log('test1')
+ *     let r1 = await test1()
+ *     console.log(JSON.stringify(r1))
+ *     // test1
+ *     // waiting: 1
+ *     // waiting: 2
+ *     // t1 then
+ *     // ["waiting: 1","waiting: 2","t1 then"]
+ *
  * }
- * waitFun(fn)
- *     .then(function() {
- *         console.log('then')
- *         //code here
- *     })
+ * topAsync().catch(() => {})
  *
  */
 function waitFun(f, opt = {}) {

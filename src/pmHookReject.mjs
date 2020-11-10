@@ -11,38 +11,93 @@ import pmHook from './pmHook.mjs'
  * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'aaa'，將msg='bbb'再return msg即可
  * @returns {Promise} 回傳為Promise，resolve為回傳成功結果，reject為回傳失敗訊息
  * @example
- * need test in browser
  *
- * async function test() {
- *     let ms
+ * async function topAsync() {
  *
- *     ms = []
- *     let pm1 = function (v1, v2) {
- *         return new Promise(function(resolve, reject) {
- *             reject(`reject: v1=${v1}, v2=${v2}`)
+ *     async function test1() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let pm = function (v1, v2) {
+ *                 return new Promise(function(resolve, reject) {
+ *                     ms.push(`reject: v1=${v1}, v2=${v2}`)
+ *                     reject(`reject: v1=${v1}, v2=${v2}`)
+ *                 })
+ *             }
+ *
+ *             let pmr = pmHookReject(pm, (msg) => {
+ *                 console.log('cb: ' + msg)
+ *                 msg = '[modify catch]' + msg
+ *                 ms.push('cb: ' + msg)
+ *                 return msg
+ *             })
+ *
+ *             pmr('t1', 12.3)
+ *                 .then(function(msg) {
+ *                     console.log('t1 then', msg)
+ *                     ms.push('t1 then: ' + msg)
+ *                 })
+ *                 .catch(function(msg) {
+ *                     console.log('t1 catch', msg)
+ *                     ms.push('t1 catch: ' + msg)
+ *                 })
+ *                 .finally(function() {
+ *                     resolve(ms)
+ *                 })
+ *
  *         })
  *     }
- *     let pm1p = pmHookReject(pm1, (msg) => {
- *         console.log('pm1p cb', msg)
- *         msg = '[modify catch]' + msg
- *         return msg
- *     })
- *     await pm1p('inp1-a', 'inp1-b')
- *         .then(function(msg) {
- *             console.log('pm1p then', msg)
- *             ms.push('pm1p then: ' + msg)
+ *     console.log('test1')
+ *     let r1 = await test1()
+ *     console.log(JSON.stringify(r1))
+ *     // test1
+ *     // cb: reject: v1=t1, v2=12.3
+ *     // t1 catch [modify catch]reject: v1=t1, v2=12.3
+ *     // ["reject: v1=t1, v2=12.3","cb: [modify catch]reject: v1=t1, v2=12.3","t1 catch: [modify catch]reject: v1=t1, v2=12.3"]
+ *
+ *     async function test2() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let pm = function () {
+ *                 return new Promise(function(resolve, reject) {
+ *                     ms.push(`reject`)
+ *                     reject(`reject`)
+ *                 })
+ *             }
+ *
+ *             let pmr = pmHookReject(pm, (msg) => {
+ *                 console.log('cb: ' + msg)
+ *                 msg = '[modify catch]' + msg
+ *                 ms.push('cb: ' + msg)
+ *                 return msg
+ *             })
+ *
+ *             pmr() //測試無輸入
+ *                 .then(function(msg) {
+ *                     console.log('t1 then', msg)
+ *                     ms.push('t1 then: ' + msg)
+ *                 })
+ *                 .catch(function(msg) {
+ *                     console.log('t1 catch', msg)
+ *                     ms.push('t1 catch: ' + msg)
+ *                 })
+ *                 .finally(function() {
+ *                     resolve(ms)
+ *                 })
+ *
  *         })
- *         .catch(function(msg) {
- *             console.log('pm1p catch', msg)
- *             ms.push('pm1p catch: ' + msg)
- *         })
- *     console.log(JSON.stringify(ms))
- *     // pm1p cb reject: v1=inp1-a, v2=inp1-b
- *     // pm1p catch reject: v1=inp1-a, v2=inp1-b
- *     // ["pm1p catch: reject: v1=inp1-a, v2=inp1-b"]
+ *     }
+ *     console.log('test2')
+ *     let r2 = await test2()
+ *     console.log(JSON.stringify(r2))
+ *     // test2
+ *     // cb: reject
+ *     // t1 catch [modify catch]reject
+ *     // ["reject","cb: [modify catch]reject","t1 catch: [modify catch]reject"]
  *
  * }
- * test().catch(() => {})
+ * topAsync().catch(() => {})
  *
  */
 function pmHookReject(fun, cb = () => {}) {

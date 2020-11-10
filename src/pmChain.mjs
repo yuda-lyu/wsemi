@@ -11,39 +11,125 @@ import isarr from './isarr.mjs'
  * @param {*} initial 輸入循序執行Promise陣列的初始值
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
- * need test in browser
  *
- * let pm1 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm1' + v)
- *         pm.resolve('pm1' + v)
- *     }, 100)
- *     return pm
+ * async function topAsync() {
+ *
+ *     async function test1() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let pm1 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('resolve pm1' + v)
+ *                         ms.push('resolve pm1' + v)
+ *                         resolve('pm1' + v)
+ *                     }, 100)
+ *                 })
+ *             }
+ *             let pm2 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('resolve pm2' + v)
+ *                         ms.push('resolve pm2' + v)
+ *                         resolve('pm2' + v)
+ *                     }, 150)
+ *                 })
+ *             }
+ *             let pm3 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('resolve pm3' + v)
+ *                         ms.push('resolve pm3' + v)
+ *                         resolve('pm3' + v)
+ *                     }, 50)
+ *                 })
+ *             }
+ *
+ *             pmChain([pm1, pm2, pm3], '*')
+ *                 .then((msg) => {
+ *                     console.log('t1 then: ', msg)
+ *                     ms.push('t1 then: ' + msg)
+ *                 })
+ *                 .catch((msg) => {
+ *                     console.log('t1 catch: ', msg)
+ *                     ms.push('t1 catch: ' + msg)
+ *                 })
+ *                 .finally(() => {
+ *                     resolve(ms)
+ *                 })
+ *
+ *         })
+ *     }
+ *     console.log('test1')
+ *     let r1 = await test1()
+ *     console.log(JSON.stringify(r1))
+ *     // test1
+ *     // resolve pm1*
+ *     // resolve pm2pm1*
+ *     // resolve pm3pm2pm1*
+ *     // t1 then:  pm3pm2pm1*
+ *     // ["resolve pm1*","resolve pm2pm1*","resolve pm3pm2pm1*","t1 then: pm3pm2pm1*"]
+ *
+ *     async function test2() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let pm1 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('resolve pm1' + v)
+ *                         ms.push('resolve pm1' + v)
+ *                         resolve('pm1' + v)
+ *                     }, 100)
+ *                 })
+ *             }
+ *             //pm2為reject
+ *             let pm2 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('reject pm2' + v)
+ *                         ms.push('reject pm2' + v)
+ *                         reject('pm2' + v)
+ *                     }, 150)
+ *                 })
+ *             }
+ *             let pm3 = function(v) {
+ *                 return new Promise((resolve, reject) => {
+ *                     setTimeout(() => {
+ *                         console.log('resolve pm3' + v)
+ *                         ms.push('resolve pm3' + v)
+ *                         resolve('pm3' + v)
+ *                     }, 50)
+ *                 })
+ *             }
+ *
+ *             pmChain([pm1, pm2, pm3], '*')
+ *                 .then((msg) => {
+ *                     console.log('t1 then: ', msg)
+ *                     ms.push('t1 then: ' + msg)
+ *                 })
+ *                 .catch((msg) => {
+ *                     console.log('t1 catch: ', msg)
+ *                     ms.push('t1 catch: ' + msg)
+ *                 })
+ *                 .finally(() => {
+ *                     resolve(ms)
+ *                 })
+ *
+ *         })
+ *     }
+ *     console.log('test2')
+ *     let r2 = await test2()
+ *     console.log(JSON.stringify(r2))
+ *     // test2
+ *     // resolve pm1*
+ *     // reject pm2pm1*
+ *     // t1 catch:  pm2pm1*
+ *     // ["resolve pm1*","reject pm2pm1*","t1 catch: pm2pm1*"]
+ *
  * }
- * let pm2 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm2' + v)
- *         pm.resolve('pm2' + v)
- *     }, 150)
- *     return pm
- * }
- * let pm3 = function(v) {
- *     let pm = genPm()
- *     setTimeout(() => {
- *         console.log('pm3' + v)
- *         pm.resolve('pm3' + v)
- *     }, 50)
- *     return pm
- * }
- * pmChain([pm1, pm2, pm3], '*').then((r) => {
- *     console.log('pmChain: ', r)
- * })
- * // => pm1*
- * // => pm2pm1*
- * // => pm3pm2pm1*
- * // => pmChain: pm3pm2pm1*
+ * topAsync().catch(() => {})
  *
  */
 function pmChain(pms, initial = null) {

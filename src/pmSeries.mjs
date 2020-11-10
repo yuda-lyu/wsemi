@@ -17,76 +17,159 @@ import isfun from './isfun.mjs'
  * @param {Function} fun 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
  * @example
- * need test in browser
  *
- * setTimeout(function() {
+ * async function topAsync() {
  *
- *     //通過function調用產生promise, 各promise循序調用
- *     pmSeries([1, 2, 3, 4, 5], function (v, k) {
- *         console.log('call', v)
- *         return new Promise(function(resolve, reject) {
- *             setTimeout(function() {
- *                 console.log('use function resolve', v)
- *                 resolve('#' + v)
- *             }, 300 - v * 10)
- *         })
- *     })
- *         .then(function(res) {
- *             console.log('use function then', JSON.stringify(res))
- *             console.log('')
- *         })
- *         .catch(function(err) {
- *             console.log('use function catch', err)
- *         })
+ *     async function test1() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
  *
- * }, 1)
+ *             //通過function調用產生promise, 各promise循序調用
+ *             pmSeries([1, 2, 3, 4, 5], function (v, k) {
+ *                 return new Promise(function(resolve, reject) {
+ *                     let d = 400 - ((v ** 2) * 10 + 50)
+ *                     console.log('call', v)
+ *                     ms.push({ call: v })
+ *                     setTimeout(function() {
+ *                         console.log('resolve', v, 'd', d)
+ *                         ms.push({ resolve: v, d })
+ *                         resolve('#' + v)
+ *                     }, d)
+ *                 })
+ *             })
+ *                 .then(function(res) {
+ *                     console.log('then', JSON.stringify(res))
+ *                     ms.push({ res })
+ *                     resolve(ms)
+ *                 })
+ *                 .catch(function(err) {
+ *                     console.log('catch', JSON.stringify(err))
+ *                     ms.push({ err })
+ *                     resolve(ms)
+ *                 })
  *
- * setTimeout(function() {
- *
- *     //先產生promise, 因事先初始化故各promise會依照各自執行時間結束
- *     let rs = [1, 2, 3, 4, 5].map(function(v, k) {
- *         console.log('call', v)
- *         return new Promise(function(resolve, reject) {
- *             setTimeout(function() {
- *                 console.log('use promise resolve', v)
- *                 resolve('#' + v)
- *             }, 300 - v * 10)
- *         })
- *     })
- *     pmSeries(rs, null)
- *         .then(function(res) {
- *             console.log('use promise then', JSON.stringify(res))
- *             console.log('')
- *         })
- *         .catch(function(err) {
- *             console.log('use promise catch', err)
  *         })
  *
- * }, 1500)
+ *     }
+ *     console.log('test1')
+ *     let r1 = await test1()
+ *     console.log(JSON.stringify(r1))
+ *     // test1
+ *     // call 1
+ *     // resolve 1 d 340
+ *     // call 2
+ *     // resolve 2 d 310
+ *     // call 3
+ *     // resolve 3 d 260
+ *     // call 4
+ *     // resolve 4 d 190
+ *     // call 5
+ *     // resolve 5 d 100
+ *     // then ["#1","#2","#3","#4","#5"]
+ *     // [{"call":1},{"resolve":1,"d":340},{"call":2},{"resolve":2,"d":310},{"call":3},{"resolve":3,"d":260},{"call":4},{"resolve":4,"d":190},{"call":5},{"resolve":5,"d":100},{"res":["#1","#2","#3","#4","#5"]}]
  *
- * // call 1
- * // use function resolve 1
- * // call 2
- * // use function resolve 2
- * // call 3
- * // use function resolve 3
- * // call 4
- * // use function resolve 4
- * // call 5
- * // use function resolve 5
- * // use function then ["#1","#2","#3","#4","#5"]
+ *     async function test2() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
  *
- * // call 1
- * // call 2
- * // call 3
- * // call 4
- * // call 5
- * // use promise resolve 5
- * // use promise resolve 4
- * // use promise resolve 3
- * // use promise resolve 2
- * // use promise resolve 1
- * // use promise then ["#1","#2","#3","#4","#5"]
+ *             //通過function調用產生promise, 各promise循序調用, 於3會觸發reject而跳出pmSeries
+ *             pmSeries([1, 2, 3, 4, 5], function (v, k) {
+ *                 return new Promise(function(resolve, reject) {
+ *                     let d = 400 - ((v ** 2) * 10 + 50)
+ *                     console.log('call', v)
+ *                     ms.push({ call: v })
+ *                     setTimeout(function() {
+ *                         if (v === 3) {
+ *                             console.log('reject', v, 'd', d)
+ *                             ms.push({ reject: v, d })
+ *                             reject('#' + v)
+ *                         }
+ *                         else {
+ *                             console.log('resolve', v, 'd', d)
+ *                             ms.push({ resolve: v, d })
+ *                             resolve('#' + v)
+ *                         }
+ *                     }, d)
+ *                 })
+ *             })
+ *                 .then(function(res) {
+ *                     console.log('then', JSON.stringify(res))
+ *                     ms.push({ res })
+ *                     resolve(ms)
+ *                 })
+ *                 .catch(function(err) {
+ *                     console.log('catch', JSON.stringify(err))
+ *                     ms.push({ err })
+ *                     resolve(ms)
+ *                 })
+ *
+ *         })
+ *
+ *     }
+ *     console.log('test2')
+ *     let r2 = await test2()
+ *     console.log(JSON.stringify(r2))
+ *     // test2
+ *     // call 1
+ *     // resolve 1 d 340
+ *     // call 2
+ *     // resolve 2 d 310
+ *     // call 3
+ *     // reject 3 d 260
+ *     // catch "#3"
+ *     // [{"call":1},{"resolve":1,"d":340},{"call":2},{"resolve":2,"d":310},{"call":3},{"reject":3,"d":260},{"err":"#3"}]
+ *
+ *     async function test3() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             //先產生promise, 因事先初始化故各promise會依照各自執行時間結束
+ *             let rs = [1, 2, 3, 4, 5].map(function (v, k) {
+ *                 return new Promise(function(resolve, reject) {
+ *                     let d = 400 - ((v ** 2) * 10 + 50)
+ *                     console.log('call', v)
+ *                     ms.push({ call: v })
+ *                     setTimeout(function() {
+ *                         console.log('resolve', v, 'd', d)
+ *                         ms.push({ resolve: v, d })
+ *                         resolve('#' + v)
+ *                     }, d)
+ *                 })
+ *             })
+ *             pmSeries(rs, null)
+ *                 .then(function(res) {
+ *                     console.log('then', JSON.stringify(res))
+ *                     ms.push({ res })
+ *                     resolve(ms)
+ *                 })
+ *                 .catch(function(err) {
+ *                     console.log('catch', JSON.stringify(err))
+ *                     ms.push({ err })
+ *                     resolve(ms)
+ *                 })
+ *
+ *         })
+ *
+ *     }
+ *     console.log('test3')
+ *     let r3 = await test3()
+ *     console.log(JSON.stringify(r3))
+ *     // test3
+ *     // call 1
+ *     // call 2
+ *     // call 3
+ *     // call 4
+ *     // call 5
+ *     // resolve 5 d 100
+ *     // resolve 4 d 190
+ *     // resolve 3 d 260
+ *     // resolve 2 d 310
+ *     // resolve 1 d 340
+ *     // then ["#1","#2","#3","#4","#5"]
+ *     // [{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"resolve":3,"d":260},{"resolve":2,"d":310},{"resolve":1,"d":340},{"res":["#1","#2","#3","#4","#5"]}]
+ *
+ * }
+ * topAsync().catch(() => {})
  *
  */
 function pmSeries(rs, fun) {

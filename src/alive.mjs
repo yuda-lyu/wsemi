@@ -17,53 +17,69 @@ import cint from './cint.mjs'
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
  * @returns {Object} 回傳事件物件，可呼叫事件on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單
  * @example
- * let oAL = alive(1500)
- * let t = new Date()
  *
- * let a = { data: 123 }
- * let b = { data: '34.56' }
- * let m = []
+ * async function topAsync() {
  *
- * setTimeout(() => {
- *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
- *     oAL.trigger('a', a)
- * }, 500)
+ *     function test1() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
  *
- * setTimeout(() => {
- *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
- *     oAL.trigger('a', a)
- * }, 1900)
+ *             let oAL = alive(1500)
+ *             let t = new Date()
  *
- * setTimeout(() => {
- *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
- *     oAL.trigger('b', b)
- * }, 1000)
+ *             let a = { data: 123 }
+ *             let b = { data: '34.56' }
  *
- * setTimeout(() => {
- *     console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
- *     oAL.trigger('b', b)
- * }, 3000)
+ *             setTimeout(() => {
+ *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
+ *                 oAL.trigger('a', a)
+ *             }, 500)
  *
- * setTimeout(() => {
- *     console.log(JSON.stringify(m))
- *     //assert.strict.deepStrictEqual(JSON.stringify(m), '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]')
- * }, 5000)
+ *             setTimeout(() => {
+ *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
+ *                 oAL.trigger('a', a)
+ *             }, 1900)
  *
- * oAL.on('message', function({ eventName, key, data, now }) {
- *     console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
- *     m.push(eventName + '|' + key)
- * })
- * // 501ms trigger a1
- * // 504ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
- * // 1001ms trigger b1
- * // 1004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
- * // 1901ms trigger a2
- * // 2506ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }
- * // 3001ms trigger b2
- * // 3005ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
- * // 3404ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }
- * // 4511ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }
- * // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
+ *             setTimeout(() => {
+ *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
+ *                 oAL.trigger('b', b)
+ *             }, 1000)
+ *
+ *             setTimeout(() => {
+ *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
+ *                 oAL.trigger('b', b)
+ *             }, 3000)
+ *
+ *             oAL.on('message', function({ eventName, key, data, now }) {
+ *                 console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
+ *                 ms.push(eventName + '|' + key)
+ *             })
+ *
+ *             setTimeout(() => {
+ *                 resolve(ms)
+ *             }, 5000)
+ *
+ *         })
+ *     }
+ *     console.log('test1')
+ *     let r1 = await test1()
+ *     console.log(JSON.stringify(r1))
+ *     // test1
+ *     // 503ms trigger a1
+ *     // 508ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
+ *     // 1001ms trigger b1
+ *     // 1003ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
+ *     // 1901ms trigger a2
+ *     // 2523ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }
+ *     // 3002ms trigger b2
+ *     // 3004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
+ *     // 3430ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }
+ *     // 4544ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }
+ *     // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
+ *
+ * }
+ * topAsync().catch(() => {})
+ *
  */
 function alive(timeAlive = 10000) {
     let ev = evem()

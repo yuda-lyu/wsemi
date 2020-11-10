@@ -12,149 +12,149 @@ import cint from './cint.mjs'
  * @returns {Object} 回傳事件物件，可呼叫事件on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列
  * @example
  *
- * async function test(takeLimit, timeCallBack) {
- *     return new Promise((resolve, reject) => {
+ * async function topAsync() {
  *
- *         //queue
- *         let q = queue(takeLimit)
- *         let n = 0
- *         let ms = []
+ *     async function test(takeLimit, timeCallBack) {
+ *         return new Promise((resolve, reject) => {
  *
- *         //message
- *         q.on('message', function(qs) {
- *             console.log('message', JSON.stringify(qs))
+ *             //queue
+ *             let q = queue(takeLimit)
+ *             let n = 0
+ *             let ms = []
  *
- *             //ms
- *             ms.push(JSON.parse(JSON.stringify(qs)))
+ *             //message
+ *             q.on('message', function(qs) {
+ *                 console.log('message', JSON.stringify(qs))
  *
- *             //get
- *             let v = q.get()
- *             if (!v) {
- *                 return
- *             }
- *             console.log('get', v)
+ *                 //ms
+ *                 ms.push(JSON.parse(JSON.stringify(qs)))
  *
+ *                 //get
+ *                 let v = q.get()
+ *                 if (!v) {
+ *                     return
+ *                 }
+ *                 console.log('get', v)
+ *
+ *                 setTimeout(function() {
+ *                     console.log('cb', v)
+ *
+ *                     //cb
+ *                     q.cb()
+ *
+ *                     //resolve
+ *                     if (v === '$10') {
+ *                         resolve(ms)
+ *                     }
+ *
+ *                 }, timeCallBack)
+ *
+ *             })
+ *
+ *             //queues push 1~5
  *             setTimeout(function() {
- *                 console.log('cb', v)
+ *                 console.log('queues push 1~5')
+ *                 let t = setInterval(function() {
+ *                     n += 1
+ *                     q.push('$' + n)
+ *                     if (n === 5) {
+ *                         clearInterval(t)
+ *                     }
+ *                 }, 50)
+ *             }, 1)
  *
- *                 //cb
- *                 q.cb()
- *
- *                 //resolve
- *                 if (v === '$10') {
- *                     resolve(JSON.stringify(ms))
- *                 }
- *
- *             }, timeCallBack)
+ *             //queues push 6~10 by delay 1s
+ *             setTimeout(function() {
+ *                 console.log('queues push 6~10')
+ *                 let t = setInterval(function() {
+ *                     n += 1
+ *                     q.push('$' + n)
+ *                     if (n === 10) {
+ *                         clearInterval(t)
+ *                     }
+ *                 }, 50)
+ *             }, 500)
  *
  *         })
+ *     }
  *
- *         //queues push 1~5
- *         setTimeout(function() {
- *             console.log('queues push 1~5')
- *             let t = setInterval(function() {
- *                 n += 1
- *                 q.push('$' + n)
- *                 if (n === 5) {
- *                     clearInterval(t)
- *                 }
- *             }, 50)
- *         }, 1)
+ *     console.log('test1')
+ *     let r1 = await test(2, 1000)
+ *     console.log(JSON.stringify(r1))
+ *     // queues push 1~5
+ *     // message ["$1"]
+ *     // get $1
+ *     // message ["$2"]
+ *     // get $2
+ *     // queues push 6~10
+ *     // cb $1
+ *     // message ["$3","$4","$5","$6","$7","$8","$9","$10"]
+ *     // get $3
+ *     // cb $2
+ *     // message ["$4","$5","$6","$7","$8","$9","$10"]
+ *     // get $4
+ *     // cb $3
+ *     // message ["$5","$6","$7","$8","$9","$10"]
+ *     // get $5
+ *     // cb $4
+ *     // message ["$6","$7","$8","$9","$10"]
+ *     // get $6
+ *     // cb $5
+ *     // message ["$7","$8","$9","$10"]
+ *     // get $7
+ *     // cb $6
+ *     // message ["$8","$9","$10"]
+ *     // get $8
+ *     // cb $7
+ *     // message ["$9","$10"]
+ *     // get $9
+ *     // cb $8
+ *     // message ["$10"]
+ *     // get $10
+ *     // cb $9
+ *     // cb $10
+ *     // [["$1"],["$2"],["$3","$4","$5","$6","$7","$8","$9","$10"],["$4","$5","$6","$7","$8","$9","$10"],["$5","$6","$7","$8","$9","$10"],["$6","$7","$8","$9","$10"],["$7","$8","$9","$10"],["$8","$9","$10"],["$9","$10"],["$10"]]
  *
- *         //queues push 6~10 by delay 1s
- *         setTimeout(function() {
- *             console.log('queues push 6~10')
- *             let t = setInterval(function() {
- *                 n += 1
- *                 q.push('$' + n)
- *                 if (n === 10) {
- *                     clearInterval(t)
- *                 }
- *             }, 50)
- *         }, 500)
+ *     console.log('test2')
+ *     let r2 = await test(0, 500) //takeLimit=0, timeCallBack=500ms
+ *     console.log(JSON.stringify(r2))
+ *     // test2
+ *     // queues push 1~5
+ *     // message ["$1"]
+ *     // get $1
+ *     // message ["$2"]
+ *     // get $2
+ *     // message ["$3"]
+ *     // get $3
+ *     // message ["$4"]
+ *     // get $4
+ *     // message ["$5"]
+ *     // get $5
+ *     // queues push 6~10
+ *     // message ["$6"]
+ *     // get $6
+ *     // cb $1
+ *     // message ["$7"]
+ *     // get $7
+ *     // cb $2
+ *     // message ["$8"]
+ *     // get $8
+ *     // cb $3
+ *     // message ["$9"]
+ *     // get $9
+ *     // cb $4
+ *     // message ["$10"]
+ *     // get $10
+ *     // cb $5
+ *     // cb $6
+ *     // cb $7
+ *     // cb $8
+ *     // cb $9
+ *     // cb $10
+ *     // [["$1"],["$2"],["$3"],["$4"],["$5"],["$6"],["$7"],["$8"],["$9"],["$10"]]
  *
- *     })
  * }
- *
- * setTimeout(() => {
- *     test(2, 1000) //takeLimit=2, timeCallBack=1000ms
- *         .then((msg) => {
- *             console.log(msg)
- *         })
- * }, 1)
- * // queues push 1~5
- * // message ["$1"]
- * // get $1
- * // message ["$2"]
- * // get $2
- * // queues push 6~10
- * // cb $1
- * // message ["$3","$4","$5","$6","$7","$8","$9","$10"]
- * // get $3
- * // cb $2
- * // message ["$4","$5","$6","$7","$8","$9","$10"]
- * // get $4
- * // cb $3
- * // message ["$5","$6","$7","$8","$9","$10"]
- * // get $5
- * // cb $4
- * // message ["$6","$7","$8","$9","$10"]
- * // get $6
- * // cb $5
- * // message ["$7","$8","$9","$10"]
- * // get $7
- * // cb $6
- * // message ["$8","$9","$10"]
- * // get $8
- * // cb $7
- * // message ["$9","$10"]
- * // get $9
- * // cb $8
- * // message ["$10"]
- * // get $10
- * // cb $9
- * // cb $10
- * // [["$1"],["$2"],["$3","$4","$5","$6","$7","$8","$9","$10"],["$4","$5","$6","$7","$8","$9","$10"],["$5","$6","$7","$8","$9","$10"],["$6","$7","$8","$9","$10"],["$7","$8","$9","$10"],["$8","$9","$10"],["$9","$10"],["$10"]]
- *
- * setTimeout(() => {
- *     test(0, 500) //takeLimit=0, timeCallBack=500ms
- *         .then((msg) => {
- *             console.log(msg)
- *         })
- * }, 5200)
- * // queues push 1~5
- * // message ["$1"]
- * // get $1
- * // message ["$2"]
- * // get $2
- * // message ["$3"]
- * // get $3
- * // message ["$4"]
- * // get $4
- * // message ["$5"]
- * // get $5
- * // queues push 6~10
- * // message ["$6"]
- * // get $6
- * // cb $1
- * // message ["$7"]
- * // get $7
- * // cb $2
- * // cb $3
- * // message ["$8"]
- * // get $8
- * // cb $4
- * // message ["$9"]
- * // get $9
- * // cb $5
- * // message ["$10"]
- * // get $10
- * // cb $6
- * // cb $7
- * // cb $8
- * // cb $9
- * // cb $10
- * // [["$1"],["$2"],["$3"],["$4"],["$5"],["$6"],["$7"],["$8"],["$9"],["$10"]]
+ * topAsync().catch(() => {})
  *
  */
 function queue(takeLimit = 0) {

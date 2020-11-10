@@ -4,266 +4,352 @@ import pmQueue from '../src/pmQueue.mjs'
 
 describe(`pmQueue`, function() {
 
-    async function fun1(v) {
-        //console.log('call fun1')
-        return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-                resolve('#' + v)
-            }, 300)
-        })
-    }
-
-    async function fun2(v) {
-        //console.log('call fun2')
-        return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-                reject('#' + v)
-            }, 200)
-        })
-    }
-
-    async function fun3(v) {
-        //console.log('call fun3')
-        return new Promise(function(resolve, reject) {
-            setTimeout(function() {
-                resolve('#' + v)
-            }, 100)
-        })
-    }
-
-    async function testFun1() {
+    async function test1() {
         return new Promise((resolve, reject) => {
+
             let ms = []
-            let q = pmQueue(1) //同時處理1個
-            q.run(fun1, 'inp1')
+            let pmq = pmQueue(1) //同時處理1個
+
+            function fun1(v) {
+                //console.log('call fun1')
+                ms.push('call fun1')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun1 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 300)
+                })
+            }
+
+            function fun2(v) {
+                //console.log('call fun2')
+                ms.push('call fun2')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun2 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 200)
+                })
+            }
+
+            function fun3(v) {
+                //console.log('call fun3')
+                ms.push('call fun3')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun3 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 100)
+                })
+            }
+
+            pmq(fun1, 'inp1')
                 .then(function(msg) {
-                    ms.push('fun1 then ' + msg)
-                    //console.log('fun1 then', msg)
+                    //console.log('t1 then', msg)
+                    ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun1 catch ' + msg)
-                    //console.log('fun1 catch', msg)
+                    //console.log('t1 catch', msg)
+                    ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
-            q.run(fun2, 'inp2')
+            pmq(fun2, 'inp2')
                 .then(function(msg) {
-                    ms.push('fun2 then ' + msg)
-                    //console.log('fun2 then', msg)
+                    //console.log('t2 then', msg)
+                    ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun2 catch ' + msg)
-                    //console.log('fun2 catch', msg)
+                    //console.log('t2 catch', msg)
+                    ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
-            q.run(fun3, 'inp3')
+            pmq(fun3, 'inp3')
                 .then(function(msg) {
-                    ms.push('fun3 then ' + msg)
-                    //console.log('fun3 then', msg)
+                    //console.log('t3 then', msg)
+                    ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun3 catch ' + msg)
-                    //console.log('fun3 catch', msg)
+                    //console.log('t3 catch', msg)
+                    ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
             setTimeout(function() {
                 resolve(ms)
             }, 650)
         })
     }
+    //console.log('test1')
+    // test1
+    // call fun1
+    // t1 then #inp1
+    // call fun2
+    // t2 then #inp2
+    // call fun3
+    // t3 then #inp3
+    // ["call fun1","fun1 resolve: inp1","t1 then: #inp1","call fun2","fun2 resolve: inp2","t2 then: #inp2","call fun3","fun3 resolve: inp3","t3 then: #inp3"]
+    let r1 = '["call fun1","fun1 resolve: inp1","t1 then: #inp1","call fun2","fun2 resolve: inp2","t2 then: #inp2","call fun3","fun3 resolve: inp3","t3 then: #inp3"]'
+    it(`should return '${r1}' when run test1'`, async function() {
+        let ms = await test1()
+        ////console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
+    })
 
-    async function testFun2() {
+    async function test2() {
         return new Promise((resolve, reject) => {
+
             let ms = []
-            let q = pmQueue(2) //同時處理2個
-            q.run(fun1, 'inp1')
+            let pmq = pmQueue(2) //同時處理2個
+
+            function fun1(v) {
+                //console.log('call fun1')
+                ms.push('call fun1')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun1 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 300)
+                })
+            }
+
+            function fun2(v) {
+                //console.log('call fun2')
+                ms.push('call fun2')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun2 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 200)
+                })
+            }
+
+            function fun3(v) {
+                //console.log('call fun3')
+                ms.push('call fun3')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun3 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 100)
+                })
+            }
+
+            pmq(fun1, 'inp1')
                 .then(function(msg) {
-                    ms.push('fun1 then ' + msg)
-                    //console.log('fun1 then', msg)
+                    //console.log('t1 then', msg)
+                    ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun1 catch ' + msg)
-                    //console.log('fun1 catch', msg)
+                    //console.log('t1 catch', msg)
+                    ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
-            q.run(fun2, 'inp2')
+            pmq(fun2, 'inp2')
                 .then(function(msg) {
-                    ms.push('fun2 then ' + msg)
-                    //console.log('fun2 then', msg)
+                    //console.log('t2 then', msg)
+                    ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun2 catch ' + msg)
-                    //console.log('fun2 catch', msg)
+                    //console.log('t2 catch', msg)
+                    ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
-            q.run(fun3, 'inp3')
+            pmq(fun3, 'inp3')
                 .then(function(msg) {
-                    ms.push('fun3 then ' + msg)
-                    //console.log('fun3 then', msg)
+                    //console.log('t3 then', msg)
+                    ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    ms.push('fun3 catch ' + msg)
-                    //console.log('fun3 catch', msg)
+                    //console.log('t3 catch', msg)
+                    ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
             setTimeout(function() {
                 resolve(ms)
-            }, 450)
+            }, 650)
         })
     }
+    //console.log('test2')
+    // test2
+    // call fun1
+    // call fun2
+    // t2 then #inp2
+    // call fun3
+    // t1 then #inp1
+    // t3 then #inp3
+    // ["call fun1","call fun2","fun2 resolve: inp2","t2 then: #inp2","call fun3","fun1 resolve: inp1","t1 then: #inp1","fun3 resolve: inp3","t3 then: #inp3"]
+    let r2 = '["call fun1","call fun2","fun2 resolve: inp2","t2 then: #inp2","call fun3","fun1 resolve: inp1","t1 then: #inp1","fun3 resolve: inp3","t3 then: #inp3"]'
+    it(`should return '${r2}' when run test2'`, async function() {
+        let ms = await test2()
+        ////console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
+    })
 
-    async function testFun3() {
+    async function test3() {
         return new Promise((resolve, reject) => {
-            let ms = []
-            let q = pmQueue(null, true) //同時處理全部, 但只拿最後執行者的結果
 
-            let fpm = function (name, t) {
+            let ms = []
+            let pmq = pmQueue(null) //同時處理全部
+
+            function fun1(v) {
+                //console.log('call fun1')
+                ms.push('call fun1')
                 return new Promise(function(resolve, reject) {
-                    setTimeout(() => {
-                        resolve('resolve: ' + name)
-                    }, t)
+                    setTimeout(function() {
+                        ms.push('fun1 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 300)
                 })
             }
 
-            //用run直接推函數入佇列並直接執行
-            q.run(fpm, 'pm1', 150)
-                .then(function(msg) {
-                    //console.log('pm1 then', msg)
-                    ms.push('pm1 then: ' + msg)
-                })
-                .catch(function(msg) {
-                    //console.log('pm1 catch', msg)
-                    ms.push('pm1 catch: ' + 'reason ' + msg.reason)
-                })
-            q.run(fpm, 'pm2', 100)
-                .then(function(msg) {
-                    //console.log('pm2 then', msg)
-                    ms.push('pm2 then: ' + msg)
-                })
-                .catch(function(msg) {
-                    //console.log('pm2 catch', msg)
-                    ms.push('pm2 catch: ' + 'reason ' + msg.reason)
-                })
-            q.run(fpm, 'pm3', 50)
-                .then(function(msg) {
-                    //console.log('pm3 then', msg)
-                    ms.push('pm3 then: ' + msg)
-                })
-                .catch(function(msg) {
-                    //console.log('pm3 catch', msg)
-                    ms.push('pm3 catch: ' + 'reason ' + msg.reason)
-                })
-
-            setTimeout(() => {
-                q.run(fpm, 'pm4', 50)
-                    .then((msg) => {
-                        //console.log('pm4 then', msg)
-                        ms.push('pm4 then: ' + msg)
-                    })
-                    .catch((msg) => {
-                        //console.log('pm4 catch', msg)
-                        ms.push('pm4 catch: ' + 'reason ' + msg.reason)
-                    })
-                    .finally(() => {
-                        resolve(ms)
-                    })
-            }, 200)
-
-        })
-    }
-
-    async function testFun4() {
-        return new Promise((resolve, reject) => {
-            let ms = []
-            let q = pmQueue(null, true) //同時處理全部, 但只拿最後執行者的結果
-
-            let fpm = function (name, t) {
+            function fun2(v) {
+                //console.log('call fun2')
+                ms.push('call fun2')
                 return new Promise(function(resolve, reject) {
-                    setTimeout(() => {
-                        resolve('resolve: ' + name)
-                    }, t)
+                    setTimeout(function() {
+                        ms.push('fun2 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 200)
                 })
             }
 
-            //用equip事先轉換函數, 之後再依需求執行
-            let fpm1 = q.equip(fpm)
-            let fpm2 = q.equip(fpm)
-            let fpm3 = q.equip(fpm)
-            let fpm4 = q.equip(fpm)
+            function fun3(v) {
+                //console.log('call fun3')
+                ms.push('call fun3')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun3 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 100)
+                })
+            }
 
-            fpm1('pm1', 150)
+            pmq(fun1, 'inp1')
                 .then(function(msg) {
-                    //console.log('pm1 then', msg)
-                    ms.push('pm1 then: ' + msg)
+                    //console.log('t1 then', msg)
+                    ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('pm1 catch', msg)
-                    ms.push('pm1 catch: ' + 'reason ' + msg.reason)
+                    //console.log('t1 catch', msg)
+                    ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
-            fpm2('pm2', 100)
+            pmq(fun2, 'inp2')
                 .then(function(msg) {
-                    //console.log('pm2 then', msg)
-                    ms.push('pm2 then: ' + msg)
+                    //console.log('t2 then', msg)
+                    ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('pm2 catch', msg)
-                    ms.push('pm2 catch: ' + 'reason ' + msg.reason)
+                    //console.log('t2 catch', msg)
+                    ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
-            fpm3('pm3', 50)
+            pmq(fun3, 'inp3')
                 .then(function(msg) {
-                    //console.log('pm3 then', msg)
-                    ms.push('pm3 then: ' + msg)
+                    //console.log('t3 then', msg)
+                    ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('pm3 catch', msg)
-                    ms.push('pm3 catch: ' + 'reason ' + msg.reason)
+                    //console.log('t3 catch', msg)
+                    ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
-
-            setTimeout(() => {
-                fpm4('pm4', 50)
-                    .then((msg) => {
-                        //console.log('pm4 then', msg)
-                        ms.push('pm4 then: ' + msg)
-                    })
-                    .catch((msg) => {
-                        //console.log('pm4 catch', msg)
-                        ms.push('pm4 catch: ' + 'reason ' + msg.reason)
-                    })
-                    .finally(() => {
-                        resolve(ms)
-                    })
-            }, 200)
-
+            setTimeout(function() {
+                resolve(ms)
+            }, 650)
         })
     }
+    //console.log('test3')
+    // test3
+    // call fun1
+    // call fun2
+    // call fun3
+    // t3 then #inp3
+    // t2 then #inp2
+    // t1 then #inp1
+    // ["call fun1","call fun2","call fun3","fun3 resolve: inp3","t3 then: #inp3","fun2 resolve: inp2","t2 then: #inp2","fun1 resolve: inp1","t1 then: #inp1"]
+    let r3 = '["call fun1","call fun2","call fun3","fun3 resolve: inp3","t3 then: #inp3","fun2 resolve: inp2","t2 then: #inp2","fun1 resolve: inp1","t1 then: #inp1"]'
+    it(`should return '${r3}' when run test3'`, async function() {
+        let ms = await test3()
+        ////console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
+    })
 
-    setTimeout(function() {
-        //console.log('testFun1')
-        testFun1()
-            .then((ms) => {
-                //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["fun1 then #inp1","fun2 catch #inp2","fun3 then #inp3"]')
-            })
-    }, 1)
+    async function test4() {
+        return new Promise((resolve, reject) => {
 
-    setTimeout(function() {
-        //console.log('testFun2')
-        testFun2()
-            .then((ms) => {
-                //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["fun2 catch #inp2","fun1 then #inp1","fun3 then #inp3"]')
-            })
-    }, 700)
+            let ms = []
+            let pmq = pmQueue(null, true) //同時處理全部, 但只拿最後執行者的結果
 
-    setTimeout(function() {
-        //console.log('testFun3')
-        testFun3()
-            .then((ms) => {
-                //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
-            })
-    }, 1400)
+            function fun1(v) {
+                //console.log('call fun1')
+                ms.push('call fun1')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun1 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 300)
+                })
+            }
 
-    setTimeout(function() {
-        //console.log('testFun4')
-        testFun4()
-            .then((ms) => {
-                //console.log(JSON.stringify(ms))
-                assert.strict.deepStrictEqual(JSON.stringify(ms), '["pm3 then: resolve: pm3","pm2 catch: reason cancelled","pm1 catch: reason cancelled","pm4 then: resolve: pm4"]')
-            })
-    }, 2100)
+            function fun2(v) {
+                //console.log('call fun2')
+                ms.push('call fun2')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun2 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 200)
+                })
+            }
+
+            function fun3(v) {
+                //console.log('call fun3')
+                ms.push('call fun3')
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        ms.push('fun3 resolve: ' + v)
+                        resolve('#' + v)
+                    }, 100)
+                })
+            }
+
+            pmq(fun1, 'inp1')
+                .then(function(msg) {
+                    //console.log('t1 then', msg)
+                    ms.push('t1 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('t1 catch', msg)
+                    ms.push('t1 catch: ' + 'reason ' + msg.reason)
+                })
+            pmq(fun2, 'inp2')
+                .then(function(msg) {
+                    //console.log('t2 then', msg)
+                    ms.push('t2 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('t2 catch', msg)
+                    ms.push('t2 catch: ' + 'reason ' + msg.reason)
+                })
+            pmq(fun3, 'inp3')
+                .then(function(msg) {
+                    //console.log('t3 then', msg)
+                    ms.push('t3 then: ' + msg)
+                })
+                .catch(function(msg) {
+                    //console.log('t3 catch', msg)
+                    ms.push('t3 catch: ' + 'reason ' + msg.reason)
+                })
+            setTimeout(function() {
+                resolve(ms)
+            }, 650)
+        })
+    }
+    //console.log('test4')
+    // test4
+    // call fun1
+    // call fun2
+    // call fun3
+    // t3 then #inp3
+    // t2 catch { reason: 'cancelled' }
+    // t1 catch { reason: 'cancelled' }
+    // ["call fun1","call fun2","call fun3","fun3 resolve: inp3","t3 then: #inp3","fun2 resolve: inp2","t2 catch: reason cancelled","fun1 resolve: inp1","t1 catch: reason cancelled"]
+    let r4 = '["call fun1","call fun2","call fun3","fun3 resolve: inp3","t3 then: #inp3","fun2 resolve: inp2","t2 catch: reason cancelled","fun1 resolve: inp1","t1 catch: reason cancelled"]'
+    it(`should return '${r4}' when run test4'`, async function() {
+        let ms = await test4()
+        ////console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
+    })
 
 })
