@@ -13,9 +13,12 @@ jobs:
       matrix:
         node-version: [12.x, 14.x]
     steps:
+    
+      # Checkout the repo
       - uses: actions/checkout@master
+      
+      # Run
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
         run: |
