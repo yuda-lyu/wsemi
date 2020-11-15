@@ -1,28 +1,23 @@
-name: ci-test
+name: Node.js CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-    
+on: [push]
+
 jobs:
   build:
+
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         node-version: [12.x, 14.x]
+
     steps:
-    
-      # Checkout the repo
-      - uses: actions/checkout@master
-      
-      # Run
-      - name: Use Node.js ${{ matrix.node-version }}
-        with:
-          node-version: ${{ matrix.node-version }}
-        run: |
-          npm install
-          npm test
-        env:
-          CI: true
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
+      env:
+        CI: true
