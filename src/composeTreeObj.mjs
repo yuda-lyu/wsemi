@@ -121,7 +121,6 @@ function composeTreeObj(items, opt = {}) {
         }
 
         function addNodeInParent(p) {
-            console.log('addNodeInParent')
             let _items = []
 
             each(items, (v, k) => {
