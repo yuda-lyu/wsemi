@@ -5,6 +5,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import omit from 'lodash/omit'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
+import isbol from './isbol.mjs'
 import iser from './iser.mjs'
 
 
@@ -16,6 +17,7 @@ import iser from './iser.mjs'
  * @param {String} [bindKey='id'] 輸入項目物件識別用欄位字串，預設'id'
  * @param {String} [bindParent='parentId'] 輸入項目物件內存放父節點欄位字串，預設'parentId'
  * @param {String} [bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
+ * @param {Boolean} [saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
  * @returns {Array} 回傳物件陣列
  * @example
  *
@@ -55,7 +57,8 @@ import iser from './iser.mjs'
  *
  */
 function composeTreeObj(items, opt = {}) {
-    let privateLevel = '__level__'
+    let privateLevel = '$level'
+    let privateParents = '$parents'
 
     //check
     if (!isearr(items)) {
@@ -80,6 +83,12 @@ function composeTreeObj(items, opt = {}) {
         bindChildren = 'children'
     }
 
+    //saveExtProps
+    let saveExtProps = get(opt, 'saveExtProps', null)
+    if (!isbol(saveExtProps)) {
+        saveExtProps = false
+    }
+
     function addNodeLevel(items) {
         let r = []
 
@@ -94,6 +103,7 @@ function composeTreeObj(items, opt = {}) {
                     //若不存在bindParent就代表頂層, 加入至r
                     r.push({
                         [privateLevel]: 0,
+                        [privateParents]: [],
                         ...v,
                     })
                 }
@@ -102,6 +112,8 @@ function composeTreeObj(items, opt = {}) {
                     _items.push(v)
                 }
             })
+            // console.log('_items a', _items)
+            // console.log('r a', r)
 
             //re-save
             items = _items
@@ -109,13 +121,20 @@ function composeTreeObj(items, opt = {}) {
         }
 
         function addNodeInParent(p) {
+            console.log('addNodeInParent')
             let _items = []
 
             each(items, (v, k) => {
                 if (v[bindParent] === p[bindKey]) {
                     //若非頂層項目物件v的bindParent, 等於所傳入的父層物件p的bindKey, 就代表找到從屬, 加入至r
+
+                    //parentIDs
+                    let parentIDs = get(v, privateParents, [])
+                    parentIDs.push(p[bindKey])
+
                     r.push({
-                        [privateLevel]: p[privateLevel] + 1,
+                        [privateLevel]: p[privateLevel] + 1, //level加1
+                        [privateParents]: parentIDs, //儲存父層節點的bindKey
                         ...v,
                     })
                 }
@@ -124,6 +143,8 @@ function composeTreeObj(items, opt = {}) {
                     _items.push(v)
                 }
             })
+            // console.log('_items b', _items)
+            // console.log('r b', r)
 
             //re-save
             items = _items
@@ -172,15 +193,18 @@ function composeTreeObj(items, opt = {}) {
             return null
         }
 
-        function omitLevel(v) {
-            return omit(v, privateLevel)
+        function omitProps(v) {
+            if (saveExtProps) {
+                return v
+            }
+            return omit(v, [privateLevel, privateParents])
         }
 
         //填入子節點至keyChildren欄位
         let kp = {}
         each(items, (v, k) => { //r為依照層級高低循序建立
             if (v[privateLevel] === 0) {
-                r.push(omitLevel(v))
+                r.push(omitProps(v))
                 kp[v[bindKey]] = [k] //頂層節點之指標k為keys內容
                 // console.log(k, 'r', cloneDeep(r))
             }
@@ -193,7 +217,7 @@ function composeTreeObj(items, opt = {}) {
                 // console.log(k, 'keys', cloneDeep(keys))
                 let cs = get(r, keys, [])
                 // console.log(k, 'cs1', cloneDeep(cs))
-                cs.push(omitLevel(v))
+                cs.push(omitProps(v))
                 kp[v[bindKey]] = [...keys, cs.length - 1]
                 // console.log(k, 'cs2', cloneDeep(cs))
                 set(r, keys, cs)

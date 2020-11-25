@@ -14,7 +14,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * @param {Boolean} [withBOM=true] 輸入是否添加BOM，預設true
  * @example
  * need test in browser
- * 
+ *
  */
 function downloadFileFromText(cfn, ccont, withBOM = true) {
 
