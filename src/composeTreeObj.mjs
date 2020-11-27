@@ -128,7 +128,8 @@ function composeTreeObj(items, opt = {}) {
                     //若非頂層項目物件v的bindParent, 等於所傳入的父層物件p的bindKey, 就代表找到從屬, 加入至r
 
                     //parentIDs
-                    let parentIDs = get(v, privateParents, [])
+                    let parentIDs = get(p, privateParents, [])
+                    parentIDs = cloneDeep(parentIDs)
                     parentIDs.push(p[bindKey])
 
                     r.push({
