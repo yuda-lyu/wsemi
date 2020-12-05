@@ -124,7 +124,9 @@ function composeTreeObj(items, opt = {}) {
             let _items = []
 
             each(items, (v, k) => {
-                if (v[bindParent] === p[bindKey]) {
+                let vbp = get(v, bindParent)
+                let pbk = get(p, bindKey)
+                if (vbp && pbk && (vbp === pbk)) {
                     //若非頂層項目物件v的bindParent, 等於所傳入的父層物件p的bindKey, 就代表找到從屬, 加入至r
 
                     //parentIDs
@@ -132,11 +134,13 @@ function composeTreeObj(items, opt = {}) {
                     parentIDs = cloneDeep(parentIDs)
                     parentIDs.push(p[bindKey])
 
+                    //push
                     r.push({
                         [privateLevel]: p[privateLevel] + 1, //level加1
                         [privateParents]: parentIDs, //儲存父層節點的bindKey
                         ...v,
                     })
+
                 }
                 else {
                     //非頂層項目物件v非隸屬於父層物件p, 加入至_items
@@ -163,6 +167,11 @@ function composeTreeObj(items, opt = {}) {
         let i = -1
         while (true) {
             i += 1
+
+            //check, 存取超過陣列長度
+            if (i > r.length - 1) {
+                break
+            }
 
             //p
             let p = r[i]
@@ -204,24 +213,55 @@ function composeTreeObj(items, opt = {}) {
         let kp = {}
         each(items, (v, k) => { //r為依照層級高低循序建立
             if (v[privateLevel] === 0) {
-                r.push(omitProps(v))
+
+                //omitProps
+                let omv = omitProps(v)
+
+                //push
+                r.push(omv)
+
+                //save kp
                 kp[v[bindKey]] = [k] //頂層節點之指標k為keys內容
                 // console.log(k, 'r', cloneDeep(r))
+
             }
             else {
                 // console.log(k, 'v', cloneDeep(v))
+
+                //findParent
                 let p = findParent(v)
                 // console.log(k, 'p', cloneDeep(p))
-                let keys = kp[p[bindKey]]
-                keys = [...keys, bindChildren]
-                // console.log(k, 'keys', cloneDeep(keys))
-                let cs = get(r, keys, [])
-                // console.log(k, 'cs1', cloneDeep(cs))
-                cs.push(omitProps(v))
-                kp[v[bindKey]] = [...keys, cs.length - 1]
-                // console.log(k, 'cs2', cloneDeep(cs))
-                set(r, keys, cs)
-                // console.log(k, 'r', cloneDeep(r))
+
+                //check, 找得到父層節點才處理
+                if (p !== null) {
+
+                    //keys
+                    let keys = kp[p[bindKey]]
+                    keys = [...keys, bindChildren]
+                    // console.log(k, 'keys', cloneDeep(keys))
+
+                    let cs = get(r, keys, [])
+                    // console.log(k, 'cs1', cloneDeep(cs))
+
+                    //omitProps
+                    let omv = omitProps(v)
+
+                    //push
+                    cs.push(omv)
+
+                    //save kp
+                    kp[v[bindKey]] = [...keys, cs.length - 1]
+                    // console.log(k, 'cs2', cloneDeep(cs))
+
+                    //set
+                    set(r, keys, cs)
+                    // console.log(k, 'r', cloneDeep(r))
+
+                }
+                else {
+                    console.log(`can not find parent for ${get(v, bindParent)}`)
+                }
+
             }
         })
 
