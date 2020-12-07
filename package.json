@@ -1,11 +1,11 @@
 {
   "name": "wsemi",
-  "version": "1.5.39",
+  "version": "1.5.40",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.0.0",
-    "dayjs": "^1.9.6",
+    "dayjs": "^1.9.7",
     "eventemitter3": "^4.0.7",
     "fuzzball": "^1.3.0",
     "lodash": "^4.17.20",
