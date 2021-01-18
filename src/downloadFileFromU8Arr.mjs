@@ -1,6 +1,7 @@
 import isestr from './isestr.mjs'
 import isu8arr from './isu8arr.mjs'
 import u8arr2blob from './u8arr2blob.mjs'
+import isWindow from './isWindow.mjs'
 import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 
 
@@ -13,9 +14,15 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * @param {Uint8Array} u8a 輸入Uint8Array資料
  * @example
  * need test in browser
- * 
+ *
  */
 function downloadFileFromU8Arr(cfn, u8a) {
+
+    //check
+    if (!isWindow()) {
+        console.log('no window')
+        return
+    }
 
     //check
     if (!isestr(cfn)) {

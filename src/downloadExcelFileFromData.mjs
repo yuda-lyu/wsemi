@@ -1,72 +1,8 @@
-import XLSX from 'xlsx' //後端也需要能直接使用
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
-import bs2u8arr from './bs2u8arr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
-import getGlobal from './getGlobal.mjs'
-
-
-function getXLSX() {
-    let g = getGlobal()
-    let x = XLSX || g.XLSX || g.xlsx
-    return x
-}
-
-
-function datenum(v, date1904) {
-    if (date1904) v += 1462
-    let epoch = Date.parse(v)
-    return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000)
-}
-
-
-function sheet_from_array_of_arrays(data, opts) {
-    let ws = {}
-    let range = { s: { c: 10000000, r: 10000000 }, e: { c: 0, r: 0 } }
-    for (let R = 0; R !== data.length; ++R) {
-        for (let C = 0; C !== data[R].length; ++C) {
-            if (range.s.r > R) range.s.r = R
-            if (range.s.c > C) range.s.c = C
-            if (range.e.r < R) range.e.r = R
-            if (range.e.c < C) range.e.c = C
-            let cell = { v: data[R][C] }
-            if (cell.v === null) continue
-            let cell_ref = getXLSX().utils.encode_cell({ c: C, r: R })
-
-            if (typeof cell.v === 'number') cell.t = 'n'
-            else if (typeof cell.v === 'boolean') cell.t = 'b'
-            else if (cell.v instanceof Date) {
-                cell.t = 'n'; cell.z = getXLSX().SSF._table[14]
-                cell.v = datenum(cell.v)
-            }
-            else cell.t = 's'
-
-            ws[cell_ref] = cell
-        }
-    }
-    if (range.s.c < 10000000) ws['!ref'] = getXLSX().utils.encode_range(range)
-    return ws
-}
-
-
-function getWB(csn, data) {
-
-    //Workbook
-    function Workbook() {
-        if (!(this instanceof Workbook)) return new Workbook()
-        this.SheetNames = []
-        this.Sheets = {}
-    }
-
-    //wbout
-    let wb = new Workbook()
-    let ws = sheet_from_array_of_arrays(data)
-    wb.SheetNames.push(csn)
-    wb.Sheets[csn] = ws
-    let wbout = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' }) //binary, buffer, 但實際使用buffer無用, 一樣是回傳ArrayBuffer
-
-    return wbout
-}
+import getExcelU8ArrFromData from './src/getExcelU8ArrFromData.mjs'
+import { get } from 'lodash'
 
 
 /**
@@ -79,7 +15,7 @@ function getWB(csn, data) {
  * @param {Array} data 輸入內容陣列
  * @example
  * need test in browser
- * 
+ *
  */
 function downloadExcelFileFromData(cfn, csn = 'data', data) {
 
@@ -102,24 +38,17 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
         }
     }
 
-    try {
+    //getExcelU8ArrFromData
+    let u8a = getExcelU8ArrFromData(data, csn)
 
-        //wb
-        let wb = getWB(csn, data)
-
-        //BinaryString(Uint8Array) to Uint8Array
-        let u8a = bs2u8arr(wb)
-
-        //downloadFileFromU8Arr
-        downloadFileFromU8Arr(cfn, u8a)
-
+    //check
+    if (get(u8a, 'error')) {
+        console.log(u8a.error)
+        return u8a.error
     }
-    catch (e) {
-        console.log('error: ', e)
-        return {
-            error: 'can not download Excel file from data'
-        }
-    }
+
+    //downloadFileFromU8Arr
+    downloadFileFromU8Arr(cfn, u8a)
 
     return 'ok'
 }

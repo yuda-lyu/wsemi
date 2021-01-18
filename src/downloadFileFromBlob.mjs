@@ -11,12 +11,6 @@ import isWindow from './isWindow.mjs'
  */
 function coreIE11(cfn, blob) {
 
-    //check
-    if (!isWindow()) {
-        console.log('no window')
-        return
-    }
-
     //msSaveOrOpenBlob
     window.navigator.msSaveOrOpenBlob(blob, cfn)
 
@@ -31,12 +25,6 @@ function coreIE11(cfn, blob) {
  * @param {Blob} blob 輸入資料Blob
  */
 function coreHTML5(cfn, blob) {
-
-    //check
-    if (!isWindow()) {
-        console.log('no window')
-        return
-    }
 
     //createObjectURL
     let url = window.URL.createObjectURL(blob)
@@ -71,14 +59,14 @@ function coreHTML5(cfn, blob) {
 function downloadFileFromBlob(cfn, blob) {
 
     //check
-    if (!isestr(cfn)) {
-        console.log('no filename')
+    if (!isWindow()) {
+        console.log('no window')
         return
     }
 
     //check
-    if (!isWindow()) {
-        console.log('no window')
+    if (!isestr(cfn)) {
+        console.log('no filename')
         return
     }
 

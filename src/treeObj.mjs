@@ -6,6 +6,74 @@ import cloneDeep from 'lodash/cloneDeep'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isbol from './isbol.mjs'
+// import isNumber from 'lodash/isNumber'
+// import isString from 'lodash/isString'
+// import isBoolean from 'lodash/isBoolean'
+// import isFunction from 'lodash/isFunction'
+// import size from 'lodash/size'
+// import set from 'lodash/set'
+// import get from 'lodash/get'
+// import slice from 'lodash/slice'
+// import range from 'lodash/range'
+// import cloneDeep from 'lodash/cloneDeep'
+// import isarr from './isarr.mjs'
+// import isarr0 from './isarr0.mjs'
+// import isobj from './isobj.mjs'
+// import isobj0 from './isobj0.mjs'
+// import isab from './isab.mjs'
+// import isu8arr from './isu8arr.mjs'
+// import isu16arr from './isu16arr.mjs'
+// import isbol from './isbol.mjs'
+// import treeObj from './src/treeObj.mjs'
+
+
+//performance for traverseObj and runObj
+// let data = {
+//     a: 123,
+//     b: 145.67,
+//     c: 'test中文1',
+//     d: true,
+//     e: function() {},
+//     f: [11, 'xyz', false, new Uint8Array([166, 197, 215])],
+//     g: {
+//         ga: 223,
+//         gb: 245.67,
+//         gc: 'test中文2',
+//         gd: new Uint8Array([66, 97, 115]),
+//     },
+//     h: Symbol('foo'),
+//     [Symbol('i-sym-key')]: 'i-sym-value',
+// }
+
+// if (true) {
+//     let start = process.hrtime()
+//     for (let i = 1; i <= 1000000; i++) {
+//         let r1 = traverseObj(data, (v, k) => {
+//             return v
+//         })
+//     }
+//     let diff = process.hrtime(start)
+//     let elapsedtime = diff[0] + diff[1] / 1e9
+//     console.log('traverseObj elapsedtime', elapsedtime)
+//     // traverseObj elapsedtime 4.2645716
+//     // traverseObj elapsedtime 4.2282303
+//     // traverseObj elapsedtime 4.2010933
+// }
+
+// if (true) {
+//     let start = process.hrtime()
+//     for (let i = 1; i <= 1000000; i++) {
+//         let r1 = runObj(data, (v, k) => {
+//             return v
+//         })
+//     }
+//     let diff = process.hrtime(start)
+//     let elapsedtime = diff[0] + diff[1] / 1e9
+//     console.log('runObj elapsedtime', elapsedtime)
+//     // runObj elapsedtime 10.2841799
+//     // runObj elapsedtime 10.8524164
+//     // runObj elapsedtime 10.8240743
+// }
 
 
 function traverseObj(data, f, keepSymbols = false) {

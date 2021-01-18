@@ -1,6 +1,7 @@
 import isestr from './isestr.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
+import isWindow from './isWindow.mjs'
 import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 
 
@@ -17,6 +18,12 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  *
  */
 function downloadFileFromText(cfn, ccont, withBOM = true) {
+
+    //check
+    if (!isWindow()) {
+        console.log('no window')
+        return
+    }
 
     //check
     if (!isestr(cfn)) {

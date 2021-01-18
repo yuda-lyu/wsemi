@@ -1,4 +1,4 @@
-import XLSX from 'xlsx' //後端也需要能直接使用
+import XLSX from 'xlsx'
 import get from 'lodash/get'
 import each from 'lodash/each'
 import map from 'lodash/map'
