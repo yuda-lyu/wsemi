@@ -1,8 +1,8 @@
+import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
 import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
-import getExcelU8ArrFromData from './src/getExcelU8ArrFromData.mjs'
-import { get } from 'lodash'
+import getExcelU8ArrFromData from './getExcelU8ArrFromData.mjs'
 
 
 /**
