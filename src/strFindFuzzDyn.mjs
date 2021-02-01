@@ -50,9 +50,10 @@ import strFindFuzz from './strFindFuzz.mjs'
 async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
 
     //pathItems
+    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/fuzzball@1.3.0/dist/fuzzball.umd.min.js',
+            'https://cdn.jsdelivr.net/npm/fuzzball@1.3.1/dist/fuzzball.umd.min.js',
         ]
     }
 

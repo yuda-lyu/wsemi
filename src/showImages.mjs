@@ -1,4 +1,4 @@
-//import Viewer from 'viewerjs' //前端套件故盡量使用動態加載
+import Viewer from 'viewerjs'
 import merge from 'lodash/merge'
 import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
@@ -49,10 +49,10 @@ function optMuti() {
 
 function getViewer() {
     let g = getGlobal()
-    let x = g.Viewer
-    if (x.default) {
-        x = x.default
-    }
+    let x = Viewer || g.Viewer
+    // if (x.default) {
+    //     x = x.default
+    // }
     return x
 }
 
@@ -143,10 +143,8 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
     //vw
     let vw = new UseViewer(img, useOpt)
 
-    //show for one
-    if (one) {
-        vw.show() //只有一張圖時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
-    }
+    //force show
+    vw.show() //於IE11時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
 
     return Promise.resolve('done')
 }

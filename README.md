@@ -58,56 +58,57 @@ npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash`, `crypto-js` and `tippy.js`, by using tree-shaking for dead-code elimination.
+> **Note:** umd file includes with `lodash`, `crypto-js` and `tippy.js`.
 
 [Optional] Add script with nomodule for IE11.
 ```alias
-<script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.11.5/polyfill.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
 ```
 [Optional] Add script for dayjs(or moment).
-> **Note:** Include script when use some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
+> **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.x/dayjs.min.js"></script>
 ```
 or
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.x/moment.min.js"></script>
 <script>
   window.dayjs = moment
 </script>
 ```
 [Optional] Add script for fuzzball.
-> **Note:** include script when use `strFindFuzz` function, and don't need include script when use `strFindFuzzDyn` function.
+> **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuzzball@1.3.1/dist/fuzzball.umd.min.js"></script>
 ```
 [Optional] Add script for ua-parser-js.
-> **Note:** include script when use `getUserAgent` function, and don't need include script when use `getUserAgentDyn` function.
+> **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.23/dist/ua-parser.min.js"></script>
 ```
 [Optional] Add script for xss.
-> **Note:** include script when use `clearXSS` function.
+> **Note:** Include script when using `clearXSS` function.
 ```alias
-<script src="https://rawgit.com/leizongmin/js-xss/master/dist/xss.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xss@1.x/dist/xss.min.js"></script>
 ```
 [Optional] Add script for xlsx.
-> **Note:** include script when use `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't need include script when use `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
+> **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js"></script>
 ```
 [Optional] Add link and script for viewerjs.
-> **Note:** include script when use `showImages` function, and don't need include script when use `showImagesDyn` function.
+> **Note:** Include script when using `showImages` function, and don't include script when using `showImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.js"></script>
 ```
 [Optional] Add script for html2canvas.
-> **Note:** include script when use `html2pic` function, and don't need include script when use `html2picDyn` function.
+> **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
 ```
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.44/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.45/dist/wsemi.umd.js"></script>
 ```

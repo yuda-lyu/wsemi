@@ -4,10 +4,13 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <title>examples for html2canvas</title>
     
-    <!-- 因tippy.js內使用Object.assign已包入wsemi內, 故於IE11執行時得要polyfill才能解析完整js -->
-    <script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.11.5/polyfill.min.js"></script>
+    <!-- babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.5/dist/html2canvas.min.js"></script>
+    <!-- 用nomodule是因IE11才需要用canvg將svg轉png -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
 
     <script src="../dist/wsemi.umd.js"></script>
 

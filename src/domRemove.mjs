@@ -1,4 +1,6 @@
 import each from 'lodash/each'
+import isEle from './isEle.mjs'
+import isestr from './isestr.mjs'
 import domFinds from './domFinds.mjs'
 
 
@@ -7,16 +9,29 @@ import domFinds from './domFinds.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRemove.test.js Github}
  * @memberOf wsemi
- * @param {String} query 輸入查詢字串
+ * @param {String|HTMLElement} inp 輸入查詢字串或dom函數
  * @example
  * need test in browser
- * 
+ *
  */
-function domRemove(query) {
+function domRemove(inp) {
 
     function remove(ele) {
         ele.parentNode.removeChild(ele)
     }
+
+    //isEle
+    if (isEle(inp)) {
+        let ele = inp
+        remove(ele)
+        return
+    }
+
+    //query
+    if (!isestr(inp)) {
+        return
+    }
+    let query = inp
 
     //find
     let rs = domFinds(query)

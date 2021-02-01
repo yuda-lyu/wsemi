@@ -16,14 +16,15 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * @returns {Promise} 回傳Promise，resolve代表成功，reject回傳錯誤訊息
  * @example
  * need test in browser
- * 
  */
 async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
 
     //pathItems
+    //最新可用版本詳見: https://www.npmjs.com/package/xlsx
+    //若更新, 記得另有函數也使用xlsx也需要更新, 且example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/xlsx@0.16.7/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
         ]
     }
 
