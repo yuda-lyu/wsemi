@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>alive.mjs - Documentation</title>
+    <title>interp1.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">alive.mjs</h1>
+    <h1 class="page-title">interp1.mjs</h1>
     
 
     
@@ -42,180 +42,648 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import each from 'lodash/each'
-import cloneDeep from 'lodash/cloneDeep'
-import size from 'lodash/size'
-import evem from './evem.mjs'
+            <pre class="prettyprint source linenums"><code>import size from 'lodash/size'
+import get from 'lodash/get'
+import each from 'lodash/each'
+import toNumber from 'lodash/toNumber'
+import isNumber from 'lodash/isNumber'
+import isnum from './isnum.mjs'
+import isarr from './isarr.mjs'
+import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
-import iseobj from './iseobj.mjs'
-import haskey from './haskey.mjs'
-import isnint from './isnint.mjs'
-import cint from './cint.mjs'
 
 
-/**
- * 偵測單元是否在線
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/alive.test.js Github}
- * @memberOf wsemi
- * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
- * @returns {Object} 回傳事件物件，可呼叫事件on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單
- * @example
- *
- * async function topAsync() {
- *
- *     function test1() {
- *         return new Promise((resolve, reject) => {
- *             let ms = []
- *
- *             let oAL = alive(1500)
- *             let t = new Date()
- *
- *             let a = { data: 123 }
- *             let b = { data: '34.56' }
- *
- *             setTimeout(() => {
- *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
- *                 oAL.trigger('a', a)
- *             }, 500)
- *
- *             setTimeout(() => {
- *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
- *                 oAL.trigger('a', a)
- *             }, 1900)
- *
- *             setTimeout(() => {
- *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
- *                 oAL.trigger('b', b)
- *             }, 1000)
- *
- *             setTimeout(() => {
- *                 console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
- *                 oAL.trigger('b', b)
- *             }, 3000)
- *
- *             oAL.on('message', function({ eventName, key, data, now }) {
- *                 console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
- *                 ms.push(eventName + '|' + key)
- *             })
- *
- *             setTimeout(() => {
- *                 resolve(ms)
- *             }, 5000)
- *
- *         })
- *     }
- *     console.log('test1')
- *     let r1 = await test1()
- *     console.log(JSON.stringify(r1))
- *     // test1
- *     // 503ms trigger a1
- *     // 508ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
- *     // 1001ms trigger b1
- *     // 1003ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
- *     // 1901ms trigger a2
- *     // 2523ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }
- *     // 3002ms trigger b2
- *     // 3004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }
- *     // 3430ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }
- *     // 4544ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }
- *     // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
- *
- * }
- * topAsync().catch(() => {})
- *
- */
-function alive(timeAlive = 10000) {
-    let ev = evem()
-    let q = {} //queue
-    let t = null //timer
+let inXRange = 'in x-range'
+let outOfXRange = 'out of x-range'
+let orderList = 'order list'
+let reverseOrderList = 'reverse order list'
 
-    //check
-    if (isnint(timeAlive)) {
-        timeAlive = 10000
+
+function toArrayXY(ps, opt = {}) {
+
+    //若無數據回傳空陣列
+    if (size(ps) &lt;= 0) {
+        return []
     }
-    timeAlive = cint(timeAlive)
 
-    function detect() {
-        if (t !== null) {
-            return
+    //keyX
+    let keyX = get(opt, 'keyX')
+    if (!isestr(keyX)) {
+        keyX = 'x'
+    }
+
+    //keyY
+    let keyY = get(opt, 'keyY')
+    if (!isestr(keyY)) {
+        keyY = 'y'
+    }
+
+    //rs
+    let rs = []
+    each(ps, (v) => {
+        let x = null
+        let y = null
+        if (isarr(v) &amp;&amp; size(v) >= 2) {
+            x = get(v, 0)
+            y = get(v, 1)
         }
-        t = setInterval(() => {
-            //console.log('q', q)
-
-            //detect
-            each(q, (v, key) => {
-
-                //t
-                let t = Date.now() - v.time
-
-                //check, 超過指定延時則視為離開
-                if (t > timeAlive) {
-
-                    //cloneDeep
-                    let r = cloneDeep(q[key])
-
-                    //刪除佇列內key紀錄
-                    delete q[key]
-
-                    //emit leave
-                    ev.emit('message', { eventName: 'leave', key, data: r.data, now: size(q) })
-
-                }
+        else {
+            x = get(v, keyX, null)
+            y = get(v, keyY, null)
+        }
+        if (isnum(x) &amp;&amp; isnum(y)) {
+            x = toNumber(x)
+            y = toNumber(y)
+            rs.push({
+                x,
+                y,
             })
-
-            //clear, 當無任何訊息存在
-            if (!iseobj(q)) {
-                clearInterval(t)
-                t = null
-            }
-
-        }, 50) //50ms偵測, 啟動後跑timer, 無佇列則會停止減耗
-    }
-
-    function trigger(key, data) {
-
-        //check
-        if (!isestr(key)) {
-            console.log('trigger need key')
-            return
         }
+    })
 
-        //check
-        if (!haskey(q, key)) {
-            setTimeout(() => { //因需判斷是否為新單元故需放於update前, 而emit內可能會被存取q, 故需要用setTimeout脫勾使q為被更新資訊, 才能正確取得當前單元數量
-
-                //emit enter
-                ev.emit('message', { eventName: 'enter', key, data, now: size(q) })
-
-            }, 1)
-        }
-
-        //update
-        q[key] = { data, time: Date.now() }
-
-        //detect
-        detect()
-
-    }
-
-    function get() {
-        let rs = []
-        each(q, (v, k) => {
-            rs.push({ key: k, data: v.data })
-        })
-        return rs
-    }
-
-    //save
-    ev.trigger = trigger
-    ev.get = get
-
-    return ev
+    return rs
 }
 
 
-export default alive
+function checkTrend(ps) {
+
+    //check
+    let bIncre = true
+    let bDecre = true
+    for (let i = 1; i &lt; size(ps); i++) {
+        let p0 = ps[i - 1]
+        let p1 = ps[i]
+        if (bIncre &amp;&amp; p0.x > p1.x) { //有遞減出現
+            bIncre = false
+        }
+        if (bDecre &amp;&amp; p0.x &lt; p1.x) { //有遞增出現
+            bDecre = false
+        }
+        if (p0.x === p1.x) {
+            return {
+                err: `x can not be equal: i=${i}, x=${p0.x}`
+            }
+        }
+    }
+
+    if (bIncre) {
+        return orderList
+    }
+    if (bDecre) {
+        return reverseOrderList
+    }
+    return 'no'
+}
+
+
+function checkLimit(ps, x, trend) {
+
+    //xmin, xmax
+    let xmin = null
+    let xmax = null
+    if (trend === orderList) {
+        xmin = ps[0].x
+        xmax = ps[size(ps) - 1].x
+    }
+    else { //reverseOrderList
+        xmin = ps[size(ps) - 1].x
+        xmax = ps[0].x
+    }
+
+    //lt, less than lower limit
+    if (x &lt; xmin) {
+        return {
+            err: outOfXRange,
+            msg: `x[${x}] less than lower limit[${xmin}]`,
+            data: {
+                ps,
+                x,
+                trend,
+                xmin,
+                xmax,
+            },
+        }
+    }
+
+    //gt, greater than upper limit
+    if (x > xmax) {
+        return {
+            err: outOfXRange,
+            msg: `x[${x}] greater than upper limit[${xmax}]`,
+            data: {
+                ps,
+                x,
+                trend,
+                xmin,
+                xmax,
+            },
+        }
+    }
+
+    return inXRange
+}
+
+
+function interp1Linear(ps, x, trend, opt = {}) {
+    //尋找x對應y值, 採各點之間線性內插
+
+    //checkLimit
+    let cl = checkLimit(ps, x, trend)
+    if (cl !== inXRange) {
+        return cl
+    }
+
+    //r
+    let r = null
+    for (let i = 1; i &lt; size(ps); i++) {
+        let p0 = ps[i - 1]
+        let p1 = ps[i]
+        if (p0.x &lt;= x &amp;&amp; x &lt;= p1.x) {
+            r = ((x - p0.x) * p1.y + (p1.x - x) * p0.y) / (p1.x - p0.x)
+            break
+        }
+    }
+
+    //check, 有檢核x是否超過上下限, 此處應該不會用到
+    if (r === null) {
+        return {
+            err: outOfXRange
+        }
+    }
+
+    return r
+}
+
+
+function interp1Stairs(ps, x, trend, opt = {}) {
+    //每個點為bar中點, 尋找x所在之bar值(y)
+
+    //xMin, 擴充最小x值範圍
+    let xMin = get(opt, 'xMin')
+    if (isNumber(xMin)) {
+        if (trend === orderList) {
+            if (xMin >= ps[0].x) {
+                return {
+                    err: `xMin=${xMin} >= ps[0].x=${ps[0].x}`
+                }
+            }
+            let p = {
+                x: xMin,
+                y: ps[0].y, //使用第一筆數據y
+            }
+            ps = [p, ...ps] //遞增數據得添加xMin於最前
+        }
+        else { //reverseOrderList
+            if (xMin >= ps[size(ps) - 1].x) {
+                return {
+                    err: `xMin=${xMin} >= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
+                }
+            }
+            let p = {
+                x: xMin,
+                y: ps[size(ps) - 1].y, //使用最後一筆數據y
+            }
+            ps = [...ps, p] //遞減數據得添加xMin於最後
+        }
+    }
+
+    //xMax, 擴充最大x值範圍
+    let xMax = get(opt, 'xMax')
+    if (isNumber(xMax)) {
+        if (trend === orderList) {
+            if (xMax &lt;= ps[size(ps) - 1].x) {
+                return {
+                    err: `xMax=${xMax} &lt;= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
+                }
+            }
+            let p = {
+                x: xMax,
+                y: ps[size(ps) - 1].y, //使用最後一筆數據y
+
+            }
+            ps = [...ps, p] //遞增數據得添加xMax於最後
+        }
+        else { //reverseOrderList
+            if (xMax &lt;= ps[0].x) {
+                return {
+                    err: `xMax=${xMax} &lt;= ps[0].x=${ps[0].x}`
+                }
+            }
+            let p = {
+                x: xMax,
+                y: ps[0].y, //使用第一筆數據y
+            }
+            ps = [p, ...ps] //遞減數據得添加xMax於最前
+        }
+    }
+
+    //checkLimit
+    let cl = checkLimit(ps, x, trend)
+    if (cl !== inXRange) {
+        return cl
+    }
+
+    //r
+    let r = null
+    for (let i = 0; i &lt; size(ps); i++) {
+        let p0 = get(ps, i - 1, null)
+        let p1 = get(ps, i, null)
+        let p2 = get(ps, i + 1, null)
+        let x0 = p1.x
+        if (p0) {
+            x0 = (p0.x + p1.x) / 2 //若有前者, 則取前者與自己x的平均值作為起點
+        }
+        let x1 = p1.x
+        if (p2) {
+            x1 = (p2.x + p1.x) / 2 //若有後者, 則取後者與自己x的平均值作為終點
+        }
+        if (x0 &lt;= x &amp;&amp; x &lt;= x1) {
+            r = p1.y
+            break
+        }
+    }
+
+    //check, 有檢核x是否超過上下限, 此處應該不會用到
+    if (r === null) {
+        return {
+            err: outOfXRange
+        }
+    }
+
+    return r
+}
+
+
+function interp1Blocks(ps, x, trend) {
+    //第1點為起點, 其餘各點為各bar終點, 尋找x所在之bar值(y)
+
+    //checkLimit
+    let cl = checkLimit(ps, x, trend)
+    if (cl !== inXRange) {
+        return cl
+    }
+
+    //r
+    let r = null
+    for (let i = 1; i &lt; size(ps); i++) {
+        let p0 = ps[i - 1]
+        let p1 = ps[i]
+        let x0 = p0.x
+        let x1 = p1.x
+        if (x0 &lt;= x &amp;&amp; x &lt;= x1) {
+            r = p1.y
+            break
+        }
+    }
+
+    //check, 有檢核x是否超過上下限, 此處應該不會用到
+    if (r === null) {
+        return {
+            err: outOfXRange
+        }
+    }
+
+    return r
+}
+
+
+/**
+ * 一維數據內插
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.js Github}
+ * @memberOf wsemi
+ * @param {Array} ps 輸入一維數據，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
+ * @param {Number} x 輸入要內插點的x值
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.mode=''] 輸入內插方法，可選'linear'、'stairs'、'blocks'，預設'linear'
+ * @param {String} [opt.keyX='x'] 輸入若數據為物件陣列，取物件x值時的key字串，預設為'x'
+ * @param {String} [opt.keyY='y'] 輸入若數據為物件陣列，取物件y值時的key字串，預設為'y'
+ * @param {Number} [opt.xMin=undefined] 輸入若mode='stairs'，更改x範圍下限值，預設為undefined
+ * @param {Number} [opt.xMax=undefined] 輸入若mode='stairs'，更改x範圍上限值，預設為undefined
+ * @returns {Number|Object} 回傳內插結果數值，或是無法內插時之錯誤訊息物件
+ * @example
+ *
+ * let r
+ * let x
+ *
+ * let ps = [
+ *     { x: 1, y: 0.2 },
+ *     { x: 3, y: 1.2 },
+ *     { x: 4, y: 2 },
+ * ]
+ *
+ * let opt = {
+ *     mode: 'stairs',
+ * }
+ *
+ * let optX = {
+ *     mode: 'stairs',
+ *     xMin: 0,
+ *     xMax: 4.5,
+ * }
+ *
+ * let optP = {
+ *     keyX: 'a',
+ *     keyY: 'b',
+ * }
+ *
+ * let psP = [
+ *     { a: 1, b: 0.2 },
+ *     { a: 3, b: 1.2 },
+ *     { a: 4, b: 2 },
+ * ]
+ *
+ * x = 0
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 1
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=1 r=0.2
+ *
+ * x = 2
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=2 r=0.7
+ *
+ * x = 2.6
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=2.6 r=1
+ *
+ * x = 3
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=3 r=1.2
+ *
+ * x = 3.5
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=3.5 r=1.6
+ *
+ * x = 4
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=4 r=2
+ *
+ * x = 5
+ * r = interp1(ps, x)
+ * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = -1
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=-1 r={"err":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 0.51
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=0.51 r={"err":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 1
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=1 r=0.2
+ *
+ * x = 1.9
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=1.9 r=0.2
+ *
+ * x = 2
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=2 r=0.2
+ *
+ * x = 2.1
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=2.1 r=1.2
+ *
+ * x = 2.5
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=2.5 r=1.2
+ *
+ * x = 3
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=3 r=1.2
+ *
+ * x = 3.49
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=3.49 r=1.2
+ *
+ * x = 3.5
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=3.5 r=1.2
+ *
+ * x = 3.51
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=3.51 r=2
+ *
+ * x = 4
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=4 r=2
+ *
+ * x = 4.5
+ * r = interp1(ps, x, opt)
+ * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs: x=4.5 r={"err":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = -1
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=-1 r={"err":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+ *
+ * x = 0
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=0 r=0.2
+ *
+ * x = 0.49
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=0.49 r=0.2
+ *
+ * x = 0.5
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=0.5 r=0.2
+ *
+ * x = 0.51
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=0.51 r=0.2
+ *
+ * x = 1
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=1 r=0.2
+ *
+ * x = 1.9
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=1.9 r=0.2
+ *
+ * x = 2
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=2 r=0.2
+ *
+ * x = 2.1
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=2.1 r=1.2
+ *
+ * x = 2.5
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=2.5 r=1.2
+ *
+ * x = 3
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=3 r=1.2
+ *
+ * x = 3.49
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=3.49 r=1.2
+ *
+ * x = 3.5
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=3.5 r=1.2
+ *
+ * x = 3.51
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=3.51 r=2
+ *
+ * x = 4
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=4 r=2
+ *
+ * x = 4.49
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=4.49 r=2
+ *
+ * x = 4.5
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=4.5 r=2
+ *
+ * x = 4.51
+ * r = interp1(ps, x, optX)
+ * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => stairs with x-limit: x=4.51 r={"err":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+ *
+ * x = 0
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 1
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=1 r=0.2
+ *
+ * x = 2
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=2 r=0.7
+ *
+ * x = 2.6
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=2.6 r=1
+ *
+ * x = 3
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=3 r=1.2
+ *
+ * x = 3.5
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=3.5 r=1.6
+ *
+ * x = 4
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=4 r=2
+ *
+ * x = 5
+ * r = interp1(psP, x, optP)
+ * console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear by keyX &amp; keyY: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ */
+function interp1(ps, x, opt = {}) {
+
+    //check
+    if (!isearr(ps)) {
+        return {
+            err: 'ps is not array'
+        }
+    }
+    if (!isNumber(x)) {
+        return {
+            err: 'x is not number'
+        }
+    }
+
+    //toArrayXY
+    ps = toArrayXY(ps, opt)
+    if (get(ps, 'err')) {
+        return get(ps, 'err')
+    }
+
+    //checkIncrea
+    let trend = checkTrend(ps)
+    if (trend === 'no') {
+        return {
+            err: 'ps is not increasing or decreasing'
+        }
+    }
+
+    //mode
+    let mode = get(opt, 'mode')
+    if (mode !== 'linear' &amp;&amp; mode !== 'stairs' &amp;&amp; mode !== 'blocks') {
+        mode = 'linear'
+    }
+
+    try {
+        if (mode === 'linear') {
+            return interp1Linear(ps, x, trend)
+        }
+        else if (mode === 'blocks') {
+            return interp1Blocks(ps, x, trend)
+        }
+        else if (mode === 'stairs') {
+            return interp1Stairs(ps, x, trend, opt)
+        }
+    }
+    catch (err) {
+        return {
+            err
+        }
+    }
+
+}
+
+export default interp1
+
 </code></pre>
         </article>
     </section>
@@ -230,7 +698,7 @@ export default alive
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Feb 03 2021 20:33:35 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Wed Feb 03 2021 20:33:36 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
