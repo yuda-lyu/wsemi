@@ -600,16 +600,29 @@ function interp1(ps, x, opt = {}) {
     }
 
     //toArrayXY
-    ps = toArrayXY(ps, opt)
-    if (get(ps, 'err')) {
-        return get(ps, 'err')
+    let psEff = toArrayXY(ps, opt)
+
+    //check
+    if (get(psEff, 'err')) {
+        return get(psEff, 'err')
+    }
+
+    //check
+    if (size(psEff) === 0) {
+        return {
+            err: 'ps is not effective array',
+            ps,
+            psEff,
+        }
     }
 
     //checkIncrea
-    let trend = checkTrend(ps)
+    let trend = checkTrend(psEff)
+
+    //check
     if (trend === 'no') {
         return {
-            err: 'ps is not increasing or decreasing'
+            err: 'psEff is not increasing or decreasing'
         }
     }
 
@@ -621,18 +634,18 @@ function interp1(ps, x, opt = {}) {
 
     try {
         if (mode === 'linear') {
-            return interp1Linear(ps, x, trend)
+            return interp1Linear(psEff, x, trend)
         }
         else if (mode === 'blocks') {
-            return interp1Blocks(ps, x, trend)
+            return interp1Blocks(psEff, x, trend)
         }
         else if (mode === 'stairs') {
-            return interp1Stairs(ps, x, trend, opt)
+            return interp1Stairs(psEff, x, trend, opt)
         }
     }
     catch (err) {
         return {
-            err
+            err: err.toString(),
         }
     }
 

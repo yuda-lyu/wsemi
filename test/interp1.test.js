@@ -10,6 +10,18 @@ describe(`interp1`, function() {
         { x: 4, y: 2 },
     ]
 
+    let psKey = [
+        { a: 1, b: 0.2 },
+        { a: 3, b: 1.2 },
+        { a: 4, b: 2 },
+    ]
+
+    let psErr = [
+        { x: 'a', y: 0.2 },
+        { x: 'mnop', y: 1.2 },
+        { x: 'xyz', y: 2 },
+    ]
+
     let optStairs = {
         mode: 'stairs',
     }
@@ -25,11 +37,10 @@ describe(`interp1`, function() {
         keyY: 'b',
     }
 
-    let psKey = [
-        { a: 1, b: 0.2 },
-        { a: 3, b: 1.2 },
-        { a: 4, b: 2 },
-    ]
+    it(`should return { 'err': 'ps is not effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] } when input psErr, 0`, function() {
+        let r = interp1(psErr, 0)
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
+    })
 
     it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, 0`, function() {
         let r = interp1(ps, 0)
