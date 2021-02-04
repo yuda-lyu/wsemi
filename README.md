@@ -108,6 +108,11 @@ or
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
 ```
+[Optional] Add script for tesseract.js.
+> **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
+```alias
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
+```
 [Necessary] Add script for wsemi.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.51/dist/wsemi.umd.js"></script>
