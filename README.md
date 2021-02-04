@@ -50,6 +50,10 @@ To view some examples for more understanding, visit examples:
 
 > **html2canvas[dynamic import]:** [ex-html2canvas-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2canvas-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2canvas-dynamic.html)]
 
+> **tesseract.js:** [ex-tesseract.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract.html)]
+
+> **tesseract.js[dynamic import]:** [ex-tesseract-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract-dynamic.html)]
+
 ## Installation
 ### Using npm(ES6 module):
 > **Note:** wsemi depends on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx` and `tippy.js`.
@@ -108,7 +112,7 @@ or
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
 ```
-[Optional] Add script for tesseract.js.
+[Optional] Add script for tesseract.js. It does not support IE11.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
