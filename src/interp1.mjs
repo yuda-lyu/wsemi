@@ -296,6 +296,33 @@ function interp1Blocks(ps, x) {
  *     { x: 4, y: 2 },
  * ]
  *
+ * let psInv = [
+ *     { x: 4, y: 2 },
+ *     { x: 3, y: 1.2 },
+ *     { x: 1, y: 0.2 },
+ * ]
+ *
+ * let psErr = [
+ *     { x: 'a', y: 0.2 },
+ *     { x: 'mnop', y: 1.2 },
+ *     { x: 'xyz', y: 2 },
+ * ]
+ *
+ * let psEmpty = [
+ * ]
+ *
+ * let psEffOne = [
+ *     { x: 1, y: 0.2 },
+ *     { x: 'mnop', y: 1.2 },
+ *     { x: 'xyz', y: 2 },
+ * ]
+ *
+ * let psP = [
+ *     { a: 1, b: 0.2 },
+ *     { a: 3, b: 1.2 },
+ *     { a: 4, b: 2 },
+ * ]
+ *
  * let opt = {
  *     mode: 'stairs',
  * }
@@ -311,11 +338,20 @@ function interp1Blocks(ps, x) {
  *     keyY: 'b',
  * }
  *
- * let psP = [
- *     { a: 1, b: 0.2 },
- *     { a: 3, b: 1.2 },
- *     { a: 4, b: 2 },
- * ]
+ * x = 0
+ * r = interp1(psErr, x)
+ * console.log(`linear(error data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(error data): x=0 r={"err":"ps(length=0) is not effective array","ps":[{"x":"a","y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[]}
+ *
+ * x = 0
+ * r = interp1(psEmpty, x)
+ * console.log(`linear(empty data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(empty data): x=0 r={"err":"ps(length=0) is not effective array","ps":[],"psEff":[]}
+ *
+ * x = 0
+ * r = interp1(psEffOne, x)
+ * console.log(`linear(one point): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(one point): x=0 r={"err":"ps(length=1) is one point only","ps":[{"x":1,"y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[{"x":1,"y":0.2}]}
  *
  * x = 0
  * r = interp1(ps, x)
@@ -355,6 +391,46 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(ps, x)
  * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 0
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ *
+ * x = 1
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=1 r=0.2
+ *
+ * x = 2
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=2 r=0.7
+ *
+ * x = 2.6
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=2.6 r=1
+ *
+ * x = 3
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=3 r=1.2
+ *
+ * x = 3.5
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=3.5 r=1.6
+ *
+ * x = 4
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
+ * // => linear(inverse data): x=4 r=2
+ *
+ * x = 5
+ * r = interp1(psInv, x)
+ * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
  * // => linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
  *
  * x = -1
@@ -556,7 +632,7 @@ function interp1Blocks(ps, x) {
 function interp1(ps, x, opt = {}) {
 
     //check
-    if (!isearr(ps)) {
+    if (!isarr(ps)) {
         return {
             err: 'ps is not array'
         }
@@ -578,7 +654,14 @@ function interp1(ps, x, opt = {}) {
     //check
     if (size(psEff) === 0) {
         return {
-            err: 'ps is not effective array',
+            err: 'ps(length=0) is not effective array',
+            ps,
+            psEff,
+        }
+    }
+    else if (size(psEff) === 1) {
+        return {
+            err: 'ps(length=1) is one point only',
             ps,
             psEff,
         }
