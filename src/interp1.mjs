@@ -4,10 +4,8 @@ import each from 'lodash/each'
 import reverse from 'lodash/reverse'
 import toNumber from 'lodash/toNumber'
 import isNumber from 'lodash/isNumber'
-import cloneDeep from 'lodash/cloneDeep'
 import isnum from './isnum.mjs'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 
 

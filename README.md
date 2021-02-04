@@ -97,7 +97,7 @@ or
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js"></script>
 ```
 [Optional] Add link and script for viewerjs.
-> **Note:** Include script when using `showImages` function, and don't include script when using `showImagesDyn` function.
+> **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
 <link href="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.js"></script>

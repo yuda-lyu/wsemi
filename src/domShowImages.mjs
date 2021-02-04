@@ -60,16 +60,16 @@ function getViewer() {
 /**
  * 前端彈窗顯示指定元素內圖片或圖片陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/showImages.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImages.test.js Github}
  * @memberOf wsemi
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
  * @example
- * <img src="001.jpg" onclick="showImages(this)">
- * <img src="002.jpg" onclick="showImages(this,this.parentElement)">
+ * <img src="001.jpg" onclick="domShowImages(this)">
+ * <img src="002.jpg" onclick="domShowImages(this,this.parentElement)">
  */
-async function showImages(eleImg, eleGroup = null, opt = {}) {
+async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     let one = true
     let img = null
 
@@ -150,4 +150,4 @@ async function showImages(eleImg, eleGroup = null, opt = {}) {
 }
 
 
-export default showImages
+export default domShowImages

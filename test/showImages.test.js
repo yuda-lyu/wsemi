@@ -1,8 +1,8 @@
 import assert from 'assert'
-//import showImages from '../src/showImages.mjs'
+//import domShowImages from '../src/domShowImages.mjs'
 
 
-describe(`showImages`, function() {
+describe(`domShowImages`, function() {
 
     it(`need test in browser`, function() {
         assert.strict.deepStrictEqual(1, 1)

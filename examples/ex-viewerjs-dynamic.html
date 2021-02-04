@@ -14,26 +14,26 @@
 
     <div style="padding:20px;">
         <div>show one image</div>
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/001.jpg" onclick="wsemi.showImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/001.jpg" onclick="wsemi.domShowImagesDyn(this)">
     </div>
     
     <div style="padding:20px;">
         <div>show one image in elements group</div>
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/002.jpg" onclick="wsemi.showImagesDyn(this)">
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/003.jpg" onclick="wsemi.showImagesDyn(this)">
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/004.jpg" onclick="wsemi.showImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/002.jpg" onclick="wsemi.domShowImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/003.jpg" onclick="wsemi.domShowImagesDyn(this)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/004.jpg" onclick="wsemi.domShowImagesDyn(this)">
     </div>
     
     <div style="padding:20px;">
         <div>show multiple image in elements group</div>
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/005.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/006.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
-        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/007.jpg" onclick="wsemi.showImagesDyn(this,this.parentElement)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/005.jpg" onclick="wsemi.domShowImagesDyn(this,this.parentElement)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/006.jpg" onclick="wsemi.domShowImagesDyn(this,this.parentElement)">
+        <img style="width:320px; height:180px; cursor:pointer;" src="https://cdn.jsdelivr.net/npm/w-demores/res/img/view/007.jpg" onclick="wsemi.domShowImagesDyn(this,this.parentElement)">
     </div>
 
     <script>
-        function showImages(eleImg, eleGroup){
-            wsemi.showImagesDyn(eleImg, eleGroup)
+        function domShowImages(eleImg, eleGroup){
+            wsemi.domShowImagesDyn(eleImg, eleGroup)
                 .catch(function(err){
                     console.log(err)
                 })

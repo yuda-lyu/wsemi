@@ -1,12 +1,12 @@
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
-import showImages from './showImages.mjs'
+import domShowImages from './domShowImages.mjs'
 
 
 /**
  * 前端彈窗顯示指定元素內圖片或圖片陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/showImagesDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImagesDyn.test.js Github}
  * @memberOf wsemi
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
@@ -16,12 +16,12 @@ import showImages from './showImages.mjs'
  * @example
  * need test in browser
  *
- * <img src="001.jpg" onclick="showImagesDyn(this)">
+ * <img src="001.jpg" onclick="domShowImagesDyn(this)">
  *
- * <img src="002.jpg" onclick="showImagesDyn(this,this.parentElement)">
+ * <img src="002.jpg" onclick="domShowImagesDyn(this,this.parentElement)">
  *
  */
-async function showImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
+async function domShowImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
 
     //pathItems
     //若更新, 記得example與readme也要更新
@@ -36,11 +36,11 @@ async function showImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
     await importResources(pathItems)
     // console.log('res', res)
 
-    //showImages
-    let r = await showImages(eleImg, eleGroup, opt)
+    //domShowImages
+    let r = await domShowImages(eleImg, eleGroup, opt)
 
     return r
 }
 
 
-export default showImagesDyn
+export default domShowImagesDyn
