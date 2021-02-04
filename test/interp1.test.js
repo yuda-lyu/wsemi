@@ -10,6 +10,12 @@ describe(`interp1`, function() {
         { x: 4, y: 2 },
     ]
 
+    let psInv = [
+        { x: 4, y: 2 },
+        { x: 3, y: 1.2 },
+        { x: 1, y: 0.2 },
+    ]
+
     let psKey = [
         { a: 1, b: 0.2 },
         { a: 3, b: 1.2 },
@@ -42,9 +48,9 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, { 'err': 'ps is not effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, 0`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input ps, 0`, function() {
         let r = interp1(ps, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input ps, 1`, function() {
@@ -77,19 +83,59 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, 5`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input ps, 5`, function() {
         let r = interp1(ps, 5)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, -1, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psInv, 0`, function() {
+        let r = interp1(psInv, 0)
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
+    })
+
+    it(`should return 0.2 when input psInv, 1`, function() {
+        let r = interp1(psInv, 1)
+        assert.strict.deepStrictEqual(r, 0.2)
+    })
+
+    it(`should return 0.7 when input psInv, 2`, function() {
+        let r = interp1(psInv, 2)
+        assert.strict.deepStrictEqual(r, 0.7)
+    })
+
+    it(`should return 1 when input psInv, 2.6`, function() {
+        let r = interp1(psInv, 2.6)
+        assert.strict.deepStrictEqual(r, 1)
+    })
+
+    it(`should return 1.2 when input psInv, 3`, function() {
+        let r = interp1(psInv, 3)
+        assert.strict.deepStrictEqual(r, 1.2)
+    })
+
+    it(`should return 1.6 when input psInv, 3.5`, function() {
+        let r = interp1(psInv, 3.5)
+        assert.strict.deepStrictEqual(r, 1.6)
+    })
+
+    it(`should return 2 when input psInv, 4`, function() {
+        let r = interp1(psInv, 4)
+        assert.strict.deepStrictEqual(r, 2)
+    })
+
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psInv, 5`, function() {
+        let r = interp1(psInv, 5)
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
+    })
+
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } } when input ps, -1, optStairs`, function() {
         let r = interp1(ps, -1, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, 0.51, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } } when input ps, 0.51, optStairs`, function() {
         let r = interp1(ps, 0.51, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input ps, 1, optStairs`, function() {
@@ -142,14 +188,14 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input ps, 4.5, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } } when input ps, 4.5, optStairs`, function() {
         let r = interp1(ps, 4.5, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'trend': 'order list', 'xmin': 0, 'xmax': 4.5 } } when input ps, -1, optStairsWithLimit`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } } when input ps, -1, optStairsWithLimit`, function() {
         let r = interp1(ps, -1, optStairsWithLimit)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'trend': 'order list', 'xmin': 0, 'xmax': 4.5 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } })
     })
 
     it(`should return 0.2 when input ps, 0, optStairsWithLimit`, function() {
@@ -232,14 +278,14 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'trend': 'order list', 'xmin': 0, 'xmax': 4.5 } } when input ps, 4.51, optStairsWithLimit`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } } when input ps, 4.51, optStairsWithLimit`, function() {
         let r = interp1(ps, 4.51, optStairsWithLimit)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'trend': 'order list', 'xmin': 0, 'xmax': 4.5 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input psKey, 0, optStairsWithKey`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psKey, 0, optStairsWithKey`, function() {
         let r = interp1(psKey, 0, optStairsWithKey)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input psKey, 1, optStairsWithKey`, function() {
@@ -272,9 +318,9 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } } when input psKey, 5, optStairsWithKey`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psKey, 5, optStairsWithKey`, function() {
         let r = interp1(psKey, 5, optStairsWithKey)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'trend': 'order list', 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return { 'err': 'ps is not array' } when input '1.25'`, function() {

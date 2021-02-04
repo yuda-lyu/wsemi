@@ -1,8 +1,10 @@
 import size from 'lodash/size'
 import get from 'lodash/get'
 import each from 'lodash/each'
+import reverse from 'lodash/reverse'
 import toNumber from 'lodash/toNumber'
 import isNumber from 'lodash/isNumber'
+import cloneDeep from 'lodash/cloneDeep'
 import isnum from './isnum.mjs'
 import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
@@ -64,16 +66,16 @@ function toArrayXY(ps, opt = {}) {
 function checkTrend(ps) {
 
     //check
-    let bIncre = true
-    let bDecre = true
+    let bOrder = true
+    let bReverseOrder = true
     for (let i = 1; i < size(ps); i++) {
         let p0 = ps[i - 1]
         let p1 = ps[i]
-        if (bIncre && p0.x > p1.x) { //有遞減出現
-            bIncre = false
+        if (bOrder && p0.x > p1.x) { //有遞減出現
+            bOrder = false
         }
-        if (bDecre && p0.x < p1.x) { //有遞增出現
-            bDecre = false
+        if (bReverseOrder && p0.x < p1.x) { //有遞增出現
+            bReverseOrder = false
         }
         if (p0.x === p1.x) {
             return {
@@ -82,29 +84,23 @@ function checkTrend(ps) {
         }
     }
 
-    if (bIncre) {
+    if (bOrder) {
         return orderList
     }
-    if (bDecre) {
+    if (bReverseOrder) {
         return reverseOrderList
     }
     return 'no'
 }
 
 
-function checkLimit(ps, x, trend) {
+function checkLimit(ps, x) {
 
-    //xmin, xmax
+    //xmin, xmax, 外部已確保x為遞增
     let xmin = null
     let xmax = null
-    if (trend === orderList) {
-        xmin = ps[0].x
-        xmax = ps[size(ps) - 1].x
-    }
-    else { //reverseOrderList
-        xmin = ps[size(ps) - 1].x
-        xmax = ps[0].x
-    }
+    xmin = ps[0].x
+    xmax = ps[size(ps) - 1].x
 
     //lt, less than lower limit
     if (x < xmin) {
@@ -114,7 +110,6 @@ function checkLimit(ps, x, trend) {
             data: {
                 ps,
                 x,
-                trend,
                 xmin,
                 xmax,
             },
@@ -129,7 +124,6 @@ function checkLimit(ps, x, trend) {
             data: {
                 ps,
                 x,
-                trend,
                 xmin,
                 xmax,
             },
@@ -140,11 +134,11 @@ function checkLimit(ps, x, trend) {
 }
 
 
-function interp1Linear(ps, x, trend, opt = {}) {
+function interp1Linear(ps, x) {
     //尋找x對應y值, 採各點之間線性內插
 
     //checkLimit
-    let cl = checkLimit(ps, x, trend)
+    let cl = checkLimit(ps, x)
     if (cl !== inXRange) {
         return cl
     }
@@ -171,70 +165,44 @@ function interp1Linear(ps, x, trend, opt = {}) {
 }
 
 
-function interp1Stairs(ps, x, trend, opt = {}) {
+function interp1Stairs(ps, x, opt = {}) {
     //每個點為bar中點, 尋找x所在之bar值(y)
 
     //xMin, 擴充最小x值範圍
     let xMin = get(opt, 'xMin')
     if (isNumber(xMin)) {
-        if (trend === orderList) {
-            if (xMin >= ps[0].x) {
-                return {
-                    err: `xMin=${xMin} >= ps[0].x=${ps[0].x}`
-                }
+        //外部已確保x為遞增
+        if (xMin >= ps[0].x) {
+            return {
+                err: `xMin=${xMin} >= ps[0].x=${ps[0].x}`
             }
-            let p = {
-                x: xMin,
-                y: ps[0].y, //使用第一筆數據y
-            }
-            ps = [p, ...ps] //遞增數據得添加xMin於最前
         }
-        else { //reverseOrderList
-            if (xMin >= ps[size(ps) - 1].x) {
-                return {
-                    err: `xMin=${xMin} >= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
-                }
-            }
-            let p = {
-                x: xMin,
-                y: ps[size(ps) - 1].y, //使用最後一筆數據y
-            }
-            ps = [...ps, p] //遞減數據得添加xMin於最後
+        let p = {
+            x: xMin,
+            y: ps[0].y, //使用第一筆數據y
         }
+        ps = [p, ...ps] //遞增數據得添加xMin於最前
     }
 
     //xMax, 擴充最大x值範圍
     let xMax = get(opt, 'xMax')
     if (isNumber(xMax)) {
-        if (trend === orderList) {
-            if (xMax <= ps[size(ps) - 1].x) {
-                return {
-                    err: `xMax=${xMax} <= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
-                }
+        //外部已確保x為遞增
+        if (xMax <= ps[size(ps) - 1].x) {
+            return {
+                err: `xMax=${xMax} <= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
             }
-            let p = {
-                x: xMax,
-                y: ps[size(ps) - 1].y, //使用最後一筆數據y
+        }
+        let p = {
+            x: xMax,
+            y: ps[size(ps) - 1].y, //使用最後一筆數據y
 
-            }
-            ps = [...ps, p] //遞增數據得添加xMax於最後
         }
-        else { //reverseOrderList
-            if (xMax <= ps[0].x) {
-                return {
-                    err: `xMax=${xMax} <= ps[0].x=${ps[0].x}`
-                }
-            }
-            let p = {
-                x: xMax,
-                y: ps[0].y, //使用第一筆數據y
-            }
-            ps = [p, ...ps] //遞減數據得添加xMax於最前
-        }
+        ps = [...ps, p] //遞增數據得添加xMax於最後
     }
 
     //checkLimit
-    let cl = checkLimit(ps, x, trend)
+    let cl = checkLimit(ps, x)
     if (cl !== inXRange) {
         return cl
     }
@@ -270,11 +238,11 @@ function interp1Stairs(ps, x, trend, opt = {}) {
 }
 
 
-function interp1Blocks(ps, x, trend) {
+function interp1Blocks(ps, x) {
     //第1點為起點, 其餘各點為各bar終點, 尋找x所在之bar值(y)
 
     //checkLimit
-    let cl = checkLimit(ps, x, trend)
+    let cl = checkLimit(ps, x)
     if (cl !== inXRange) {
         return cl
     }
@@ -626,6 +594,12 @@ function interp1(ps, x, opt = {}) {
         }
     }
 
+    //反序
+    if (trend === reverseOrderList) {
+        trend = orderList
+        psEff = reverse(psEff)
+    }
+
     //mode
     let mode = get(opt, 'mode')
     if (mode !== 'linear' && mode !== 'stairs' && mode !== 'blocks') {
@@ -634,13 +608,13 @@ function interp1(ps, x, opt = {}) {
 
     try {
         if (mode === 'linear') {
-            return interp1Linear(psEff, x, trend)
+            return interp1Linear(psEff, x)
         }
         else if (mode === 'blocks') {
-            return interp1Blocks(psEff, x, trend)
+            return interp1Blocks(psEff, x)
         }
         else if (mode === 'stairs') {
-            return interp1Stairs(psEff, x, trend, opt)
+            return interp1Stairs(psEff, x, opt)
         }
     }
     catch (err) {
