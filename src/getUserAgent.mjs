@@ -12,8 +12,7 @@ function getUAParser() {
 
 
 /**
- * 前端取得使用者瀏覽器資訊，於browser中不輸入即可自動偵測
- * 後端nodejs環境則需提供user agent字串
+ * 取得使用者瀏覽器資訊，後端nodejs環境使用需提供user agent字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.js Github}
  * @memberOf wsemi
