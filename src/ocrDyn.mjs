@@ -4,7 +4,7 @@ import ocr from './ocr.mjs'
 
 
 /**
- * 基於tesseract.js的文字辨識(OCR)，採用動態加載技術
+ * 基於tesseract.js的文字辨識(OCR)，採用動態加載技術，注意瀏覽器版精度較差
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocrDyn.test.js Github}
  * @memberOf wsemi

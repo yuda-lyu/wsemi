@@ -12,7 +12,7 @@ function getTesseract() {
 
 
 /**
- * 基於tesseract.js的文字辨識(OCR)
+ * 基於tesseract.js的文字辨識(OCR)，注意瀏覽器版精度較差
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocr.test.js Github}
  * @memberOf wsemi
