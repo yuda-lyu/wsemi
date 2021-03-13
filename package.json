@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.5.54",
+  "version": "1.5.55",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.5",
-    "w-package-tools": "^1.0.35"
+    "w-package-tools": "^1.0.36"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --timeout 60000 --require @babel/register",
