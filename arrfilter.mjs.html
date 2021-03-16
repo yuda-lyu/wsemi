@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>getDataFromExcelFileU8Arr.mjs - Documentation</title>
+    <title>arrfilter.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">getDataFromExcelFileU8Arr.mjs</h1>
+    <h1 class="page-title">arrfilter.mjs</h1>
     
 
     
@@ -42,211 +42,177 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import XLSX from 'xlsx'
-import get from 'lodash/get'
-import each from 'lodash/each'
-import map from 'lodash/map'
-import values from 'lodash/values'
-import join from 'lodash/join'
-import arrhas from './arrhas.mjs'
-import isbol from './isbol.mjs'
-import cstr from './cstr.mjs'
-import getGlobal from './getGlobal.mjs'
-
-
-function getXLSX() {
-    let g = getGlobal()
-    let x = XLSX || g.XLSX || g.xlsx
-    return x
-}
-
-
-function toStr(v) {
-    if (isbol(v)) {
-        return v ? 'true' : 'false'
-    }
-    return cstr(v)
-}
-
-
-function to_array(workbook, valueToString) {
-    let result = []
-
-    workbook.SheetNames.forEach(function (sheetname) {
-
-        //sheet_to_json
-        //資料轉json後, 各列會欄位名稱為依照英文A開始編號
-        //不能用raw:false轉出字串數據, 長整數會被以科學記號顯示而失去精度
-        //需使用defval='', 否則各列中若有無效值會跳過造成錯位
-        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A', defval: '' })
-
-        //提取數據
-        arr = map(arr, (v) => {
-            return values(v)
-        })
-
-        //valueToString
-        if (valueToString) {
-            arr = map(arr, (v) => {
-                return map(v, (vv) => {
-                    return toStr(vv)
-                })
-            })
-        }
-
-        //push
-        result.push({
-            sheetname: sheetname,
-            data: arr
-        })
-
-    })
-
-    return result
-}
-
-
-function to_ltdt(workbook, valueToString) {
-    let result = []
-
-    workbook.SheetNames.forEach(function (sheetname) {
-
-        //sheet_to_json
-        let j = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname])
-
-        //valueToString
-        if (valueToString) {
-            j = map(j, (v) => {
-                each(v, (vv, kk) => {
-                    v[kk] = toStr(vv)
-                })
-                return v
-            })
-        }
-
-        //push
-        result.push({
-            sheetname: sheetname,
-            data: j
-        })
-
-    })
-
-    return result
-}
-
-
-function to_csv(workbook, valueToString) {
-
-    //to_array
-    let shs = to_array(workbook, valueToString)
-
-    //convert
-    each(shs, (sh, ksh) => {
-
-        //map row
-        let res = map(sh.data, (r, kr) => {
-
-            //全部轉字串
-            r = map(r, (v) => {
-                return toStr(v)
-            })
-
-            //valueToString
-            if (valueToString) {
-                r = map(r, (v) => {
-                    return `"${v}"` //若valueToString則全部數值使用雙引號包住
-                })
-            }
-
-            return join(r, ',')
-        })
-
-        //join row
-        res = join(res, '\r\n')
-
-        //save
-        shs[ksh].data = res
-
-    })
-
-    return shs
-}
+            <pre class="prettyprint source linenums"><code>import map from 'lodash/map'
+import size from 'lodash/size'
+import isearr from './isearr.mjs'
+import isestr from './isestr.mjs'
+import sep from './sep.mjs'
+import strleft from './strleft.mjs'
+import strdelleft from './strdelleft.mjs'
 
 
 /**
- * 前端讀取Excel(*.xlsx)檔，由input file的檔案讀取excel數據出來
- * 若輸出fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
+ * 由vall陣列找尋vfind內各元素之第1位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfilter.test.js Github}
  * @memberOf wsemi
- * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
- * @param {Object} [opt={}] 輸入設定物件，預設為{}
- * @param {String} [opt.fmt='ltdt'] 輸入數據輸出格式，可有'ltdt','csv','array'，預設為'ltdt'
- * @param {Boolean} [opt.valueToString=true] 輸入數據是否強制轉字串布林值，預設為true
- * @returns {Array} 回傳數據陣列
+ * @param {Array} arr 輸入要被尋找的字串陣列
+ * @param {String} keywords 輸入要尋找的關鍵字字串
+ * @returns {Array} 回傳所找到各元素第1位置之陣列
  * @example
- * need test in browser
+ *
+ * let arr = [
+ *     'abc def xyz',
+ *     '測試abc中文mnop',
+ *     'Instead of creating yet another opinionated application',
+ *     'Node.js module which can be integrated into a larger application',
+ * ]
+ * let kws = null
+ * let r = null
+ *
+ * kws = 'abc'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def 中文'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 0.25 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def 中文 mnop'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 0.5555555555555557 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def +yet'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 0.25 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def of module -yet'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 0.25 }
+ * // ]
+ *
  */
-function getDataFromExcelFileU8Arr(u8a, opt) {
-
-    //fmt
-    let fmt = get(opt, 'fmt', 'ltdt')
+function arrfilter(arr, keywords) {
 
     //check
-    if (!arrhas(['ltdt', 'csv', 'array'], fmt)) {
-        return {
-            error: `opt.fmt is not is not any one of 'ltdt', 'csv', 'array'`
-        }
+    if (!isearr(arr)) {
+        return []
     }
-
-    //valueToString
-    let valueToString = get(opt, 'valueToString', true)
 
     //check
-    if (!isbol(valueToString)) {
+    if (!isestr(keywords)) {
+        return []
+    }
+
+    //kws, 用空白切分出各關鍵字
+    let kws = sep(keywords, ' ')
+
+    //n
+    let n = size(kws)
+
+    function core(c) {
+
+        //for
+        let b = false
+        let weight = 0
+        for (let k = 0; k &lt; n; k++) {
+            let kw = kws[k]
+
+            //ekw
+            let ekw = kw
+            let bInclude = strleft(kw, 1) === '+'
+            let bExclude = strleft(kw, 1) === '-'
+            if (bInclude || bExclude) {
+                ekw = strdelleft(kw, 1)
+            }
+
+            //bHas
+            let bHas = c.indexOf(ekw) >= 0
+            // console.log('c', c, ':ekw', ekw, ':bHas', bHas)
+
+            //必有關鍵字
+            if (bInclude) {
+                if (!bHas) {
+                    b = false //若無必有關鍵字, 強制視為找不到
+                    weight = 0
+                    break
+                }
+            }
+
+            //不能有關鍵字
+            if (bExclude) {
+                if (bHas) {
+                    b = false //找到不能有關鍵字, 強制視為找不到
+                    weight = 0
+                    break
+                }
+            }
+
+            //含有關建字則依照順序給予權重
+            if (bHas) {
+                b = true
+                let w = 1 - k / n
+                w = w ** 2 //非線性遞減, 有第1關鍵字權重1, 只有2+3關鍵字權重也不超過第1關鍵字權重
+                weight += w
+            }
+
+        }
+
         return {
-            error: 'opt.valueToString is not Boolean'
+            hasKeyword: b,
+            weight,
         }
     }
 
-    //workbook
-    let workbook
-    try {
-        workbook = getXLSX().read(u8a, { type: 'buffer' }) //Uint8Array
-    }
-    catch (e) {
-        console.log('error: ', e)
-        return {
-            error: 'can not read data from u8a'
-        }
-    }
+    //rs
+    let rs = map(arr, (c) => {
+        return core(c)
+    })
 
-    //convert
-    let r = null
-    try {
-        if (fmt === 'ltdt') {
-            r = to_ltdt(workbook, valueToString)
-        }
-        else if (fmt === 'array') {
-            r = to_array(workbook, valueToString)
-        }
-        else if (fmt === 'csv') {
-            r = to_csv(workbook, valueToString)
-        }
-    }
-    catch (e) {
-        console.log('error: ', e)
-        return {
-            error: 'can not convert data'
-        }
-    }
-
-    return r
+    return rs
 }
 
 
-export default getDataFromExcelFileU8Arr
+export default arrfilter
 </code></pre>
         </article>
     </section>
@@ -261,7 +227,7 @@ export default getDataFromExcelFileU8Arr
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Tue Mar 16 2021 17:29:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Tue Mar 16 2021 17:29:48 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
