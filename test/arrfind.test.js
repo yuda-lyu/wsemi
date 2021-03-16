@@ -76,91 +76,91 @@ describe(`arrfind`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ''`, function() {
+    it(`should return [] when input ''`, function() {
         let r = arrfind('')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input []`, function() {
+    it(`should return [] when input []`, function() {
         let r = arrfind([])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input {}`, function() {
+    it(`should return [] when input {}`, function() {
         let r = arrfind({})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input null`, function() {
+    it(`should return [] when input null`, function() {
         let r = arrfind(null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input undefined`, function() {
+    it(`should return [] when input undefined`, function() {
         let r = arrfind(undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input [], ''`, function() {
+    it(`should return [] when input [], ''`, function() {
         let r = arrfind([], '')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input [], []`, function() {
+    it(`should return [] when input [], []`, function() {
         let r = arrfind([], [])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input [], {}`, function() {
+    it(`should return [] when input [], {}`, function() {
         let r = arrfind([], {})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input [], null`, function() {
+    it(`should return [] when input [], null`, function() {
         let r = arrfind([], null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input [], undefined`, function() {
+    it(`should return [] when input [], undefined`, function() {
         let r = arrfind([], undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], ''`, function() {
+    it(`should return [] when input ['abc'], ''`, function() {
         let r = arrfind(['abc'], '')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], []`, function() {
+    it(`should return [] when input ['abc'], []`, function() {
         let r = arrfind(['abc'], [])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], {}`, function() {
+    it(`should return [] when input ['abc'], {}`, function() {
         let r = arrfind(['abc'], {})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], null`, function() {
+    it(`should return [] when input ['abc'], null`, function() {
         let r = arrfind(['abc'], null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], undefined`, function() {
+    it(`should return [] when input ['abc'], undefined`, function() {
         let r = arrfind(['abc'], undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
