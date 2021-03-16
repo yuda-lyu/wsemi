@@ -103,6 +103,51 @@ describe(`arrfilter`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    i++
+    din[i] = '+'
+    dout[i] = [
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 }
+    ]
+    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+        let j = 5
+        let r = arrfilter(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    i++
+    din[i] = '-'
+    dout[i] = [
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 }
+    ]
+    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+        let j = 6
+        let r = arrfilter(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    i++
+    din[i] = 'def +'
+    dout[i] = [
+        { hasKeyword: true, weight: 1 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 }
+    ]
+    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+        let j = 7
+        let r = arrfilter(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input []`, function() {
         let r = arrfilter([])
         let rr = []

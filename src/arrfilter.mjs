@@ -1,5 +1,6 @@
 import map from 'lodash/map'
 import size from 'lodash/size'
+import trim from 'lodash/trim'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 import sep from './sep.mjs'
@@ -86,6 +87,36 @@ import strdelleft from './strdelleft.mjs'
  * //     { hasKeyword: true, weight: 0.25 }
  * // ]
  *
+ * kws = '+'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = '-'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = 'def +'
+ * r = arrfilter(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
  */
 function arrfilter(arr, keywords) {
 
@@ -119,6 +150,11 @@ function arrfilter(arr, keywords) {
             let bExclude = strleft(kw, 1) === '-'
             if (bInclude || bExclude) {
                 ekw = strdelleft(kw, 1)
+            }
+
+            //check
+            if (trim(ekw) === '') {
+                continue
             }
 
             //bHas
