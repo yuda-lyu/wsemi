@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.5.57",
+  "version": "1.5.58",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -12,14 +12,14 @@
     "lodash": "^4.17.21",
     "tesseract.js": "^2.1.4",
     "tippy.js": "^6.3.1",
-    "ua-parser-js": "^0.7.24",
+    "ua-parser-js": "^0.7.26",
     "viewerjs": "^1.9.0",
     "xlsx": "^0.16.9",
     "xss": "^1.0.8"
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.5",
-    "w-package-tools": "^1.0.36"
+    "w-package-tools": "^1.0.37"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --timeout 60000 --require @babel/register",

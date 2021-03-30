@@ -12,7 +12,7 @@ let mathRandom = Math.random
  *
  * Fork: {@link https://github.com/bgrins/TinyColor/blob/master/tinycolor.js TinyColor 1.4.1}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ab2blob.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/tinycolor.test.js Github}
  * @memberOf wsemi
  * @param {String|Object} color 輸入顏色字串或物件
  * @returns {Object} 回傳TinyColor物件
