@@ -54,6 +54,10 @@ To view some examples for more understanding, visit examples:
 
 > **htmlparser[dynamic import]:** [ex-htmlparser-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-htmlparser-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-htmlparser-dynamic.html)]
 
+> **scrollIntoView:** [ex-scrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-scrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-scrollIntoView.html)]
+
+> **scrollTo:** [ex-scrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-scrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-scrollTo.html)]
+
 > **tesseract.js:** [ex-tesseract.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract.html)]
 
 > **tesseract.js[dynamic import]:** [ex-tesseract-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract-dynamic.html)]
@@ -138,5 +142,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.59/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.60/dist/wsemi.umd.js"></script>
 ```
