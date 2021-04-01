@@ -13,6 +13,7 @@ import each from 'lodash/each'
  * @returns {Array} 回傳列舉檔案或資料夾陣列
  * @example
  * //need test in nodejs
+ *
  * fsTreeFolder(fd)
  * // => [
  * //   { isFolder: false, level: 1, path: './d/a.txt', name: 'a.txt' },
@@ -27,6 +28,7 @@ import each from 'lodash/each'
  * //   { isFolder: true, level: 2, path: './d/ee/eee', name: 'eee' },
  * //   { isFolder: false, level: 3, path: './d/ee/eee/c.txt', name: 'c.txt' }
  * // ]
+ *
  */
 function fsTreeFolder(fd, levelLimit = 1) {
     let level = 1

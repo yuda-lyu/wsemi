@@ -7,6 +7,7 @@
  * @returns {String} 回傳html字串
  * @example
  * need test in browser
+ *
  */
 function htmlDecode(str) {
     let ele = document.createElement('span')

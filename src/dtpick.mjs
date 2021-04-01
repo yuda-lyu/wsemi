@@ -14,11 +14,13 @@ import haskey from './haskey.mjs'
  * @param {Array} keys 輸入要提取欄位集合的字串陣列
  * @returns {Object} 回傳處理後物件
  * @example
+ *
  * console.log(dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b']))
  * // => { a: 'a123', b: 234 }
  *
  * console.log(dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b', 'x']))
  * // => { a: 'a123', b: 234 }
+ *
  */
 function dtpick(dt, keys) {
 

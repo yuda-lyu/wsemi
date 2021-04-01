@@ -18,7 +18,7 @@ import cint from './cint.mjs'
  * @example
  * need test in browser
  *
- * let ele = {HTMLElement}
+ * let ele = document.querySelector('#id')
  * domTooltip(ele, '<b>Hello</b>World')
  *
  */

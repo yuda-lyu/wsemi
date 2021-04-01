@@ -16,6 +16,13 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * @returns {Promise} 回傳Promise，resolve代表成功，reject回傳錯誤訊息
  * @example
  * need test in browser
+ *
+ * let data = [
+ *     ['a','b','c'],
+ *     [1,23.45,'xyz']
+ * ]
+ * downloadExcelFileFromDataDyn('data.xlsx', 'data', data)
+ *
  */
 async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
 

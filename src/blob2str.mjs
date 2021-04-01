@@ -10,6 +10,17 @@ import genPm from './genPm.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳Blob或File的字串，reject回傳錯誤訊息
  * @example
  * need test in browser
+ *
+ * let strIn = 'abc測試'
+ * let b64 = str2b64(strIn)
+ * let u8a = b642u8arr(b64)
+ * let bb = new Blob([u8a])
+ * blob2str(bb)
+ *     .then(function(strOut){
+ *         console.log(strOut)
+ *         // => abc測試
+ *     })
+ *
  */
 function blob2str(bb) {
 

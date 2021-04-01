@@ -364,7 +364,7 @@ function dragPreview(opt = {}) {
  * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽change、start、move、enter、leave、drop事件，clear為釋放監聽
  * @example
  * need test in browser
- * 
+ *
  * //監聽dom
  * let dd = domDrag(document.querySelector('#id'), { attIndex: 'dragindex', selectors: '[dragtag]' })
  *

@@ -10,11 +10,13 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入月時間字串
  * @returns {Boolean} 回傳是否為月時間布林值
  * @example
+ *
  * console.log(ismonth('2019-01-01'))
  * // => false
  *
  * console.log(ismonth('2019-01'))
  * // => true
+ *
  */
 function ismonth(v) {
 

@@ -12,9 +12,11 @@ import str2aes from './str2aes.mjs'
  * @param {String} key 輸入加密key
  * @returns {String} 回傳加密base64字串
  * @example
+ *
  * let key = '1234567890abcdef'
  * console.log(obj2pb64([1, '3', 'abc'], key))
  * // => U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf (is random)
+ *
  */
 function obj2pb64(data, key) {
 

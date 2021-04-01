@@ -14,8 +14,10 @@ import isbol from './isbol.mjs'
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
  * @returns {String} 回傳經MD5轉換後字串
  * @example
+ *
  * console.log(str2md5('test中文'))
  * // => '5393554e94bf0eb6436f240a4fd71282'
+ *
  */
 function str2md5(str, base64 = false) {
 

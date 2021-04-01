@@ -10,8 +10,10 @@ import isestr from './isestr.mjs'
  * @param {String} v 輸入日時間字串
  * @returns {Boolean} 回傳是否為日時間布林值
  * @example
+ *
  * console.log(isday('2019-01-01'))
  * // => true
+ *
  */
 function isday(v) {
 

@@ -14,6 +14,7 @@ import bufWrite from './bufWrite.mjs'
  * @param {Integer} [nBytes=8] 輸入使用位元組整數，預設8
  * @returns {Number} 回傳數字
  * @example
+ *
  * let i = 1447656645380 //new Uint8Array([66, 117, 16, 240, 246, 48, 64, 0])
  * let b = Buffer.alloc(8)
  * bufWriteDbl(i, b)
@@ -21,6 +22,7 @@ import bufWrite from './bufWrite.mjs'
  * // >= <Buffer 42 75 10 f0 f6 30 40 00>
  * console.log(new Uint8Array(b))
  * // => Uint8Array [66, 117, 16, 240, 246, 48, 64, 0]
+ *
  */
 function bufWriteDbl(value, buffer, offset = 0, isBE = true, mLen = 52, nBytes = 8) {
     return bufWrite(value, buffer, offset, isBE, mLen, nBytes)

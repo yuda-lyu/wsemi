@@ -7,6 +7,11 @@
  * @returns {Boolean} 回傳判斷布林值
  * @example
  * need test in browser
+ *
+ * let bb = new Blob([new Uint8Array([66, 97, 115])])
+ * console.log(isblob(bb))
+ * // => true
+ *
  */
 function isblob(v) {
 

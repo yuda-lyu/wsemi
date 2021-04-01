@@ -9,6 +9,10 @@ import binstr from './binstr.mjs'
  * @returns {Boolean} 回傳是否為開發階段
  * @example
  * need test in browser
+ *
+ * console.log(isDev())
+ * // => true or false
+ *
  */
 function isDev() {
 

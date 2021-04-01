@@ -13,6 +13,7 @@ import iser from './iser.mjs'
  * @param {String|Number|Object|Boolean|Array} vfind 輸入要尋找的任意資料陣列
  * @returns {Array} 回傳所找到各元素第1位置之陣列
  * @example
+ *
  * console.log(arrfind([1, 2, 3, '4', 5, 'abc'], 2))
  * // => [ 1 ]
  *
@@ -36,6 +37,7 @@ import iser from './iser.mjs'
  *
  * console.log(arrfind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
  * // => [ 4, 2 ]
+ *
  */
 function arrfind(vall, vfind) {
 

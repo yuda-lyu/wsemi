@@ -28,6 +28,7 @@ function concatU8arr(a, b) {
  * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，注意因ArrayBuffer無法直接操作(非View，只有TypedArray與DataView可操作)故預設會轉Uint8Array進行處理
  * @returns {Uint8Array} 回傳Uint8Array
  * @example
+ *
  * let data = {
  *     a: [123, 45.67, 'test中文'],
  *     b: {
@@ -45,6 +46,7 @@ function concatU8arr(a, b) {
  * //     65, 114, 114,  97, 121, 93, 58,  58,  48,  34, 125, 125,
  * //     66,  97, 115
  * // ]
+ *
  */
 function obj2u8arr(data) {
     let bs = []

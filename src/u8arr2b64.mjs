@@ -11,8 +11,10 @@ import isu8arr from './isu8arr.mjs'
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {String} 回傳base64字串
  * @example
+ *
  * console.log(u8arr2b64(new Uint8Array([1, 2.3, '45', 'abc'])))
  * // => 'AQItAA=='
+ *
  */
 function u8arr2b64(u8a) {
 

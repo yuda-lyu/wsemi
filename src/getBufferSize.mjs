@@ -12,6 +12,7 @@ import isu16arr from './isu16arr.mjs'
  * @param {Unit8Array|Buffer} buf 傳入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)
  * @returns {Integer} 回傳Uint8Array(Nodejs,Browser)或Buffer(Nodejs)的大小
  * @example
+ *
  * let u8a = new Uint8Array([1, 2, 3, 123])
  * console.log(getBufferSize(u8a))
  * // => 4
@@ -19,6 +20,7 @@ import isu16arr from './isu16arr.mjs'
  * let buf = Buffer.alloc(8)
  * console.log(getBufferSize(buf))
  * // => 8
+ *
  */
 function getBufferSize(buf) {
 

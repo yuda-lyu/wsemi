@@ -6,6 +6,10 @@
  * @returns {Boolean} 回傳判斷布林值
  * @example
  * need test in browser
+ *
+ * console.log(isWindow())
+ * // => true or false
+ *
  */
 function isWindow() {
     return typeof window !== 'undefined' && typeof window.document !== 'undefined'

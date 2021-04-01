@@ -15,8 +15,10 @@ let radix = chars.length
  * @param {Integer} [len=32] 輸入uuid長度，為正整數，預設32
  * @returns {String} 回傳uuid字串
  * @example
+ *
  * console.log(genID())
  * // => Is1NyImU3A9fyqFyYBWuJu4ivXXcGZAb (is random)
+ *
  */
 function genID(len = 32) {
     let uuid = []

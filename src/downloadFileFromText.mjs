@@ -16,6 +16,12 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * @example
  * need test in browser
  *
+ * let ctxt = 'abc\r\nde測試'
+ * downloadFileFromText('data.txt',ctxt,false)
+ *
+ * let ccsv = 'a,b,c\r\nd,e,測試'
+ * downloadFileFromText('data.csv',ccsv,true)
+ *
  */
 function downloadFileFromText(cfn, ccont, withBOM = true) {
 

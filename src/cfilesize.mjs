@@ -13,6 +13,7 @@ import dig from './dig.mjs'
  * @param {Number|String} b 輸入單位需為bytes的檔案大小，可為數字或字串
  * @returns {String} 回傳自動轉換單位後的字串
  * @example
+ *
  * console.log(cfilesize(0))
  * // => '0.0 b'
  *
@@ -27,6 +28,7 @@ import dig from './dig.mjs'
  *
  * console.log(cfilesize(2000000000))
  * // => '1.9 gb'
+ *
  */
 function cfilesize(b) {
 

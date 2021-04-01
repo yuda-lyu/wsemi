@@ -9,6 +9,7 @@ import isstr from './isstr.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(isestr('1.25'))
  * // => true
  *
@@ -17,6 +18,7 @@ import isstr from './isstr.mjs'
  *
  * console.log(isestr(''))
  * // => false
+ *
  */
 function isestr(v) {
 

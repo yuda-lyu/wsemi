@@ -14,8 +14,10 @@ import isstr from './isstr.mjs'
  * @param {String} r 輸入要取代的字串
  * @returns {String} 回傳取代後字串
  * @example
+ *
  * console.log(replace('1.25abc', '5a', '0'))
  * // => '1.20bc'
+ *
  */
 function replace(c, t, r) {
 

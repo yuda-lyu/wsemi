@@ -10,8 +10,10 @@ import iser from './iser.mjs'
  * @param {*} color 輸入color資料
  * @returns {Object} 回傳漸變顏色物件
  * @example
+ *
  * console.log(genGradientColor('#000'))
  * // => {"linearGradient":{"x1":0,"x2":0,"y1":0,"y2":1},"stops":[[0,"hsla(0, 0%, 0%, 0.4)"],[1,"hsla(0, 0%, 0%, 0.9)"]]}
+ *
  */
 function genGradientColor(color) {
 

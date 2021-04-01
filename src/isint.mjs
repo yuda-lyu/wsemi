@@ -11,6 +11,7 @@ import cdbl from './cdbl.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(isint('1.25'))
  * // => false
  *
@@ -22,6 +23,7 @@ import cdbl from './cdbl.mjs'
  *
  * console.log(isint(125))
  * // => true
+ *
  */
 function isint(v) {
 

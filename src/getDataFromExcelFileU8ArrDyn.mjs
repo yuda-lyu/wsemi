@@ -17,6 +17,7 @@ import getDataFromExcelFileU8Arr from './getDataFromExcelFileU8Arr.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳數據陣列，reject回傳錯誤訊息
  * @example
  * need test in browser
+ *
  */
 async function getDataFromExcelFileU8ArrDyn(u8a, fmt = 'ltdt', useHead = false, pathItems) {
 

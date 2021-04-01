@@ -19,6 +19,7 @@ function getUAParser() {
  * @param {String} [v=null] 輸入user agent字串，預設null
  * @returns {Object} 回傳使用者瀏覽器資訊物件
  * @example
+ *
  * let ua = 'Mozilla/5.0 (compatible; Konqueror/4.1; OpenBSD) KHTML/4.1.4 (like Gecko)'
  * console.log(getUserAgent(ua))
  * // => {
@@ -29,6 +30,7 @@ function getUAParser() {
  *     engineinfor: 'KHTML4.1.4',
  *     platform: 'OpenBSDundefined'
  * }
+ *
  */
 function getUserAgent(v = null) {
 

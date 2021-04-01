@@ -13,6 +13,7 @@ import isarr from './isarr.mjs'
  * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，預設'Uint8Array'
  * @returns {String} 回傳base64字串
  * @example
+ *
  * let o = {
  *     a: 'abc',
  *     b: 12.3,
@@ -24,6 +25,7 @@ import isarr from './isarr.mjs'
  *
  * console.log(obj2str(o, ['Uint8Array', 'Uint16Array']}))
  * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::C08G"}'
+ *
  */
 function obj2str(data, ext = 'Uint8Array') {
 

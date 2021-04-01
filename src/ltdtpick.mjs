@@ -12,6 +12,7 @@ import dtpick from './dtpick.mjs'
  * @param {Array} keys 輸入要提取欄位集合的字串陣列
  * @returns {Array} 回傳提取的物件資料陣列
  * @example
+ *
  * let r = [
  *     { a: 'a123', b: 123, c: 'abc' },
  *     { a: '1b23', b: 456, c: '123XYZ' },
@@ -31,6 +32,7 @@ import dtpick from './dtpick.mjs'
  * //     { a: '1b23', c: '123XYZ' },
  * //     { a: '12c3', c: null }
  * // ]
+ *
  */
 function ltdtpick(ltdt, keys) {
 

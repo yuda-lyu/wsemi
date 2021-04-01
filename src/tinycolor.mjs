@@ -17,7 +17,9 @@ let mathRandom = Math.random
  * @param {String|Object} color 輸入顏色字串或物件
  * @returns {Object} 回傳TinyColor物件
  * @example
+ *
  * //see https://github.com/bgrins/TinyColor/blob/master/tinycolor.js
+ *
  */
 function tinycolor(color) {
 

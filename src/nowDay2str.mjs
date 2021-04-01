@@ -8,8 +8,10 @@ import ot from 'dayjs'
  * @memberOf wsemi
  * @returns {String} 回傳目前至日時間字串
  * @example
+ *
  * console.log(nowDay2str())
  * // => dayjs().format('YYYY-MM-DD') //use dayjs or moment
+ *
  */
 function nowDay2str() {
 

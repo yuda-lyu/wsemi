@@ -12,8 +12,10 @@ import strleft from './strleft.mjs'
  * @param {Integer} n 輸入刪除右邊n個字元
  * @returns {String} 回傳處理後字串
  * @example
+ *
  * console.log(strdelright('test中文', 2))
  * // => 'test'
+ *
  */
 function strdelright(c, n) {
 

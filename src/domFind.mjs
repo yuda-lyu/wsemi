@@ -8,6 +8,8 @@
  * @example
  * need test in browser
  *
+ * let ele = domFind('#id')
+ *
  */
 function domFind(query) {
     let r = document.querySelector(query)

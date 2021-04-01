@@ -17,6 +17,12 @@ import html2pic from './html2pic.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
  * @example
  * need test in browser
+ *
+ * html2picDyn(ele, { scale: 3 })
+ *     .then((b64)=>{
+ *         // => iVBORw0KGgoAAAANSU...
+ *     })
+ *
  */
 async function html2picDyn(ele, opt = {}, pathItems) {
 

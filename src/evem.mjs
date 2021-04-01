@@ -9,7 +9,15 @@ import EventEmitter from 'eventemitter3'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/evem.test.js Github}
  * @memberOf wsemi
  * @example
- * let ev = evem()
+ *
+ * let ev = wsemi.evem()
+ * ev.on('evName',function(msg){
+ *     console.log(msg)
+ *     // => {abc: 12.34}
+ * })
+ * let data = {abc:12.34}
+ * ev.emit('evName',data)
+ *
  */
 function evem() {
     return new EventEmitter()

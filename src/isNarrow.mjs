@@ -1,3 +1,4 @@
+import get from 'lodash/get'
 import isWindow from './isWindow.mjs'
 
 
@@ -11,6 +12,14 @@ import isWindow from './isWindow.mjs'
  * @returns {Boolean} 回傳是否為窄版裝置
  * @example
  * need test in browser
+ *
+ * console.log(isNarrow())
+ * // => true or false
+ *
+ * let ele = document.querySelector('#id')
+ * console.log(isNarrow(ele))
+ * // => true or false
+ *
  */
 function isNarrow(ele) {
 
@@ -28,7 +37,8 @@ function isNarrow(ele) {
     //bele
     let bele = false
     if (ele) {
-        bele = ele.clientWidth > 0 && ele.clientWidth <= rwdWidthEle
+        let clientWidth = get(ele, 'clientWidth', 0)
+        bele = clientWidth > 0 && clientWidth <= rwdWidthEle
     }
 
     let r = bwin || bele

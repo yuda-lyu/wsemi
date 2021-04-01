@@ -9,9 +9,11 @@ import isab from './isab.mjs'
  * @param {ArrayBuffer} ab 輸入ArrayBuffer
  * @returns {Unit8Array} 回傳Unit8Array
  * @example
+ *
  * let ab = (new Uint8Array([66, 97, 115])).buffer
  * console.log(ab2u8arr(ab))
  * // => new Uint8Array([66, 97, 115])
+ *
  */
 function ab2u8arr(ab) {
 

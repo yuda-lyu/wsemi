@@ -8,8 +8,10 @@ import isWindow from './isWindow.mjs'
  * @memberOf wsemi
  * @returns {Object} 回傳運行環境物件
  * @example
+ *
  * console.log(getEnv())
  * // => { isWindow: false, isWebWorker: false, isNode: true }
+ *
  */
 function getEnv() {
 

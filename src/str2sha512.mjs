@@ -15,8 +15,10 @@ import isbol from './isbol.mjs'
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
  * @returns {String} 回傳經SHA512轉換後字串
  * @example
+ *
  * console.log(str2sha512('test中文'))
  * // => 'ab43333a01571e767a2eb15460c270fa123964c121b88c73e274a211d6e2cf98b10d89220e8d04e2fc573354da93400f3255e94d445dc956e177aa4201a4fc30'
+ *
  */
 function str2sha512(str, base64 = false) {
 

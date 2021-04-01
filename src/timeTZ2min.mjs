@@ -11,8 +11,10 @@ import sepTimeTZ from './sepTimeTZ.mjs'
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳分時間字串
  * @example
+ *
  * console.log(timeTZ2min('2019-01-01T12:34:56+08:00'))
  * // => '2019-01-01T12:34'
+ *
  */
 function timeTZ2min(t) {
 

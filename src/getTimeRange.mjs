@@ -12,6 +12,7 @@ import time2min from './time2min.mjs'
  * @param {String} tend 輸入結束秒時間字串，不含時區，若不輸入則等同於開始時間字串
  * @returns {String} 回傳合併顯示時間字串
  * @example
+ *
  * console.log(getTimeRange('2019-01-01T09:00:00'))
  * // => '2019-01-01T09:00 至 無'
  *
@@ -26,6 +27,7 @@ import time2min from './time2min.mjs'
  *
  * console.log(getTimeRange('2019-01-03T09:00:00', '2019-01-01T12:00:00'))
  * // => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'
+ *
  */
 function getTimeRange(tstart, tend) {
     //可再支援輸入TZ時間

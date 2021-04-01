@@ -20,8 +20,8 @@ function parseTime(t, unit) {
     else if (unit === 'minutes') {
         e = ':00'
     }
-    else if (unit === 'seconds') {
-    }
+    // else if (unit === 'seconds') {
+    // }
     let fm = 'YYYY-MM-DDTHH:mm:ss'
     return ot(t + e, fm)
 }
@@ -36,11 +36,13 @@ function parseTime(t, unit) {
  * @param {String} [unit='days'] 輸入時間單位字串，預設為'days'
  * @returns {Object} 回傳時間物件，若非法時間則回傳null
  * @example
+ *
  * console.log(getTimeObject('2019-01-01', 'days'))
  * // => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or moment
  *
  * console.log(getTimeObject('2019-01-01T12:34:56', 'seconds'))
  * // => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
+ *
  */
 function getTimeObject(t, unit = 'days') {
 

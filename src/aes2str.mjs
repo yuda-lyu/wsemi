@@ -19,10 +19,12 @@ import isbol from './isbol.mjs'
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
  * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示
  * @example
+ *
  * let str = '53616c7465645f5f47214797ac01bc03cceb69ebced4948501ab94ca9644a6dfd277456aead4432cb9c9d74c38c42c79'
  * let key = '1234567890abcdefghijk'
  * console.log(aes2str(str, key))
  * // => 'test中文abcdefghijklmn'
+ *
  */
 function aes2str(str, key, base64 = false) {
 

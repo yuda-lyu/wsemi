@@ -10,6 +10,11 @@ import isElement from 'lodash/isElement'
  * @returns {Boolean} 回傳判斷布林值
  * @example
  * need test in browser
+ *
+ * let ele = document.querySelector('#id')
+ * console.log(isEle(ele))
+ * // => true or false
+ *
  */
 function isEle(ele) {
     return isElement(ele)

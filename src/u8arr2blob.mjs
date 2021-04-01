@@ -11,6 +11,12 @@ import isu8arr from './isu8arr.mjs'
  * @returns {Blob} 回傳Blob資料
  * @example
  * need test in browser
+ *
+ * let u8a = new Uint8Array([1, 2.3, '45', 'abc'])
+ * let bb = u8arr2blob(u8a)
+ * console.log(bb)
+ * // => Blob {size: 4, type: ""}
+ *
  */
 function u8arr2blob(u8a) {
 

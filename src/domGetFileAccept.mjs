@@ -20,7 +20,7 @@ import getFileAccept from './getFileAccept.mjs'
  * @returns {String} 回傳input file的accept欄位所用字串
  * @example
  * need test in browser
- * 
+ *
  */
 function domGetFileAccept(kind = '*') {
 

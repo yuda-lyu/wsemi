@@ -11,8 +11,10 @@ import isnum from './isnum.mjs'
  * @param {Number|String} v 輸入資料
  * @returns {String} 回傳字串
  * @example
+ *
  * console.log(cstr(2.25))
  * // => '2.25'
+ *
  */
 function cstr(v) {
 

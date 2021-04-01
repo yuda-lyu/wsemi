@@ -10,6 +10,7 @@ import o2j from './o2j.mjs'
  * @param {*} o 輸入任意資料
  * @returns {*} 回傳任意資料
  * @example
+ *
  * console.log(oo([1, '3', 'abc']))
  * // => [1, '3', 'abc']
  *
@@ -21,6 +22,7 @@ import o2j from './o2j.mjs'
  *
  * console.log(oo({ a: 12.34, b: 'abc', c: function(){} }))
  * // => { a: 12.34, b: 'abc' }
+ *
  */
 function oo(o) {
 

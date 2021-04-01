@@ -19,8 +19,10 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
  * @returns {Array} 回傳物件陣列
  * @example
+ *
  * console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))
  * // => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]
+ *
  */
 function ltdt2vrtsable(ltdt, mergerowkeys = []) {
 

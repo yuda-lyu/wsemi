@@ -11,8 +11,10 @@ import b642str from './b642str.mjs'
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {String} 回傳一般字串
  * @example
+ *
  * console.log(u8arr2str(new Uint8Array([116, 101, 115, 116, 228, 184, 173, 230, 150, 135])))
  * // => test中文
+ *
  */
 function u8arr2str(u8a) {
 

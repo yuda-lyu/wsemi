@@ -11,8 +11,10 @@ import isestr from './isestr.mjs'
  * @param {String} c 輸入字串
  * @returns {String} 回傳去除空白的字串
  * @example
+ *
  * console.log(trim(' abc 中 文 '))
  * // => 'abc 中 文'
+ *
  */
 function trim(c) {
 

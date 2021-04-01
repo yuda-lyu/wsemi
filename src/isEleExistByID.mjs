@@ -10,6 +10,10 @@ import isestr from './isestr.mjs'
  * @returns {Boolean} 回傳判斷布林值
  * @example
  * need test in browser
+ *
+ * console.log(isEleExistByID('#id'))
+ * // => true or false
+ *
  */
 function isEleExistByID(id) {
 

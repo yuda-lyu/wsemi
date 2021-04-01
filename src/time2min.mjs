@@ -10,8 +10,10 @@ import istime from './istime.mjs'
  * @param {String} t 輸入秒時間字串，不含時區
  * @returns {String} 回傳分時間字串
  * @example
+ *
  * console.log(time2min('2019-01-01T12:34:56'))
  * // => '2019-01-01T12:34'
+ *
  */
 function time2min(t) {
 

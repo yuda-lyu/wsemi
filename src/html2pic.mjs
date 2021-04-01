@@ -97,8 +97,10 @@ function svg2png(ele, scale) {
  * @example
  * need test in browser
  *
- * let b64 = await html2picDyn(ele, { scale: 3 })
- * // => iVBORw0KGgoAAAANSU...
+ * html2pic(ele, { scale: 3 })
+ *     .then((b64)=>{
+ *         // => iVBORw0KGgoAAAANSU...
+ *     })
  *
  */
 async function html2pic(ele, opt = {}) {

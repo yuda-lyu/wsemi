@@ -12,10 +12,12 @@ import j2o from './j2o.mjs'
  * @param {String} b64 輸入加密base64字串
  * @returns {*} 回傳任意物件
  * @example
+ *
  * let key = '1234567890abcdef'
  * let str = U2FsdGVkX1+yPgYSW6mKi1VqyslaSKYHKRaw8Pu4QduzHggojRZA6b/T/oB7ltXf //(is random)
  * console.log(pb642obj(str, key))
  * // => [1, '3', 'abc']
+ *
  */
 function pb642obj(b64, key) {
 

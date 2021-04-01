@@ -11,8 +11,10 @@ import isnum from './isnum.mjs'
  * @param {Number|String} v 輸入數字或字串
  * @returns {Number} 回傳數字
  * @example
+ *
  * console.log(cdbl('25'))
  * // => 25
+ *
  */
 function cdbl(v) {
 

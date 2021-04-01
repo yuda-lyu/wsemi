@@ -13,6 +13,7 @@ import isarr0 from './isarr0.mjs'
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(iser('12a5'))
  * // => false
  *
@@ -36,6 +37,7 @@ import isarr0 from './isarr0.mjs'
  *
  * console.log(iser(undefined))
  * // => true
+ *
  */
 function iser(v) {
 

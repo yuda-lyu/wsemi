@@ -10,8 +10,10 @@ import isstr from './isstr.mjs'
  * @param {String} b64 輸入base64字串
  * @returns {Uint8Array} 回傳Uint8Array
  * @example
+ *
  * console.log(b642u8arr('AQItAA=='))
  * // => new Uint8Array([1, 2.3, '45', 'abc'])
+ *
  */
 function b642u8arr(b64) {
 
@@ -28,7 +30,7 @@ function b642u8arr(b64) {
 
     //u8a
     let u8a = new Uint8Array(sigBytes)
-    for (var i = 0; i < sigBytes; i++) {
+    for (let i = 0; i < sigBytes; i++) {
         let byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
         u8a[i] = byte
     }

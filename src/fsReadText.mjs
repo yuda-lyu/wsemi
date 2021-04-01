@@ -9,6 +9,7 @@ import fs from 'fs'
  * @param {String} fn 輸入檔案名稱
  * @example
  * need test in nodejs.
+ *
  */
 function fsReadText(fn) {
     return fs.readFileSync(fn, 'utf8')

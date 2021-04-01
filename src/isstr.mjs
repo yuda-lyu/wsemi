@@ -6,6 +6,7 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(isstr(0))
  * // => false
  *
@@ -14,6 +15,7 @@
  *
  * console.log(isstr(''))
  * // => true
+ *
  */
 function isstr(v) {
 

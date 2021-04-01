@@ -10,8 +10,10 @@ import htmlEncode from './htmlEncode.mjs'
  * @memberOf wsemi
  * @param {String} c 輸入字串
  * @example
+ *
  * bodyLog('show訊息')
  * // => 由html顯示'show訊息'
+ *
  */
 function bodyLog() {
 

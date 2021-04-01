@@ -15,11 +15,13 @@ import arrat from './arrat.mjs'
  * @param {Integer} [iend=istart] 輸入結束的欄位指標整數，若不輸入則等同於istart
  * @returns {Array} 回傳提取的資料陣列
  * @example
+ *
  * console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1))
  * // => [['b'], [34.56]]
  *
  * console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1, 2))
  * // => [['b', '12.34'], [34.56, 'abc']]
+ *
  */
 function matat(mat, istart, iend) {
 

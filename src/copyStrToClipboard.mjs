@@ -9,7 +9,9 @@ import isstr from './isstr.mjs'
  * @param {String} str 輸入欲複製至剪貼簿的字串
  * @returns {String} 回傳字串，若成功則為空字串，若失敗則回傳錯誤訊息
  * @example
+ *
  * copyStrToClipboard('The Woodman(樵夫) set to work at once, and so...')
+ *
  */
 function copyStrToClipboard(str) {
     let r = ''

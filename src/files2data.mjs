@@ -13,6 +13,7 @@ import ltdtmerge from './ltdtmerge.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳File的資料物件陣列，各檔案將轉為Base64字串
  * @example
  * need test in browser
+ *
  */
 function files2data(files) {
     //若輸入Blob陣列, 不會有name, 故只能輸入File陣列

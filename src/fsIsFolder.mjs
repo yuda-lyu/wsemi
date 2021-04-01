@@ -9,6 +9,7 @@ import fs from 'fs'
  * @param {String} pah 輸入路徑字串
  * @example
  * need test in nodejs.
+ *
  * let fd = 'folder p'
  * fsIsFolder(fd)
  * // => true
@@ -16,6 +17,7 @@ import fs from 'fs'
  * let fn = 'file q'
  * fsIsFolder(fn)
  * // => false
+ *
  */
 function fsIsFolder(pah) {
 

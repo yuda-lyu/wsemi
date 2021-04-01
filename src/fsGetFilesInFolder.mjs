@@ -22,6 +22,7 @@ import fsIsFile from './fsIsFile.mjs'
  *
  * fsGetFilesInFolder(fd, null)
  * // => [ './d/a.txt', './d/ee/b.txt', './d/ee/eee/c.txt' ]
+ *
  */
 function fsGetFilesInFolder(fd, levelLimit = 1) {
 

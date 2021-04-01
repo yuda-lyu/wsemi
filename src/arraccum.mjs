@@ -12,8 +12,10 @@ import cdbl from './cdbl.mjs'
  * @param {Array} vec 輸入要被累加計算的陣列
  * @returns {Array} 回傳各元素累加後之陣列
  * @example
+ *
  * console.log(arraccum([1, 2, 3, 4]))
  * // => [1, 3, 6, 10]
+ *
  */
 function arraccum(vec) {
 

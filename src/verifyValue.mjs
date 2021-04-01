@@ -19,6 +19,7 @@ import isfun from './isfun.mjs'
  * @param {*} value 輸入任意資料
  * @returns {Object} 回傳判斷結果，屬性value為回傳資料類型的取值，屬性err為是否資料類型有錯，屬性errmsg為類型有錯時之錯誤訊息
  * @example
+ *
  * console.log(verifyValue('12a5', 'isstr'))
  * // => r.err=false
  *

@@ -17,7 +17,7 @@ import genID from './genID.mjs'
  * @param {Number} [opt.opacityIni=1] 輸入初始透明度浮點數，介於0至1之間，預設1
  * @example
  * need test in browser
- * 
+ *
  * domFadeOut(document.querySelector('#id'))
  *
  * domFadeOut(document.querySelector('#id'), { duration: 500, delay: 100, opacityIni: 0.8 })

@@ -14,8 +14,10 @@ import keysmat2ltdt from './keysmat2ltdt.mjs'
  * @param {Array} mat 輸入資料陣列
  * @returns {Array} 回傳物件陣列
  * @example
+ *
  * console.log(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]))
  * // => [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }]
+ *
  */
 function mat2ltdt(mat) {
 

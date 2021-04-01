@@ -11,6 +11,17 @@ import blob2b64 from './blob2b64.mjs'
  * @returns {Promise} 回傳Promise，resolve回傳各Blob或File的Base64資料，reject回傳錯誤訊息
  * @example
  * need test in browser
+ *
+ * let b64 = 'YWJj5ris6Kmm'
+ * let u8a = b642u8arr(b64)
+ * let bb = new Blob([u8a])
+ * let bbs = [bb]
+ * blobs2b64s(bbs)
+ *     .then(function(b64){
+ *         console.log(b64)
+ *         // => ["data:application/octet-stream;base64,YWJj5ris6Kmm"]
+ *     })
+ *
  */
 function blobs2b64s(bbs) {
 

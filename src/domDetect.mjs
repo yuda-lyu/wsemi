@@ -15,7 +15,7 @@ import isfun from './isfun.mjs'
  * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽
  * @example
  * need test in browser
- * 
+ *
  * //監聽dom
  * let de = domDetect(() => {
  *     return document.querySelector('#id')

@@ -30,6 +30,7 @@ function getFuzzball() {
  * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為分數，設定為false時回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
+ *
  * console.log(strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))
  * // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
  *
@@ -44,6 +45,7 @@ function getFuzzball() {
  *
  * console.log(strFindFuzz(['abc', 'def123', '中文測試'], 'ef'))
  * // => true
+ *
  */
 function strFindFuzz(ar, strkey, bscore = false) {
 

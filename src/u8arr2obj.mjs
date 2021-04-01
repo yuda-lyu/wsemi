@@ -28,6 +28,7 @@ function sliceU8arr(u8a, inds) {
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {Object|Array} 回傳物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，因obj2u8arr預設會把ArrayBuffer轉Uint8Array進行操作，故物件內原為ArrayBuffer者會以Uint8Array返回
  * @example
+ *
  * let u8a = new Uint8Array([
  *     64, 24, 0, 0, 0, 0, 0, 0, 91, 53, 56, 44,
  *     51, 93, 123, 34, 97, 34, 58, 91, 49, 50, 51, 44,
@@ -40,6 +41,7 @@ function sliceU8arr(u8a, inds) {
  * let data = u8arr2obj(u8a)
  * console.log(data)
  * // => { a: [ 123, 45.67, 'test中文' ], b: { c: Uint8Array [ 66, 97, 115 ] } }
+ *
  */
 function u8arr2obj(u8a) {
     let data = null

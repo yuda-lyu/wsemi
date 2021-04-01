@@ -14,6 +14,7 @@ import iser from './iser.mjs'
  * @param {Array|*} [values=''] 輸入values物件陣列或需自動展開values成為的陣列，預設''
  * @returns {Object} 回傳組合後物件
  * @example
+ *
  * console.log(arr2dt(['a', 'b']))
  * // => { 'a': '', 'b': '' }
  *
@@ -34,6 +35,7 @@ import iser from './iser.mjs'
  *
  * console.log(arr2dt(['a', 'b'], {}))
  * // => { a: {}, b: {} }
+ *
  */
 function arr2dt(keys, values = '') {
 

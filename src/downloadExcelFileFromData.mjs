@@ -16,6 +16,12 @@ import getExcelU8ArrFromData from './getExcelU8ArrFromData.mjs'
  * @example
  * need test in browser
  *
+ * let data = [
+ *     ['a','b','c'],
+ *     [1,23.45,'xyz']
+ * ]
+ * downloadExcelFileFromData('data.xlsx', 'data', data)
+ *
  */
 function downloadExcelFileFromData(cfn, csn = 'data', data) {
 

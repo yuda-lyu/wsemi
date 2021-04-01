@@ -19,6 +19,7 @@ import cdbl from './cdbl.mjs'
  * @param {Integer} mLen 輸入有效位數整數
  * @param {Integer} nBytes 輸入使用位元組整數
  * @example
+ *
  * let offset = 0
  * let isBE = true
  * let mLen = 52
@@ -31,6 +32,7 @@ import cdbl from './cdbl.mjs'
  * // >= <Buffer 42 75 10 f0 f6 30 40 00>
  * console.log(new Uint8Array(b))
  * // => Uint8Array [66, 117, 16, 240, 246, 48, 64, 0]
+ *
  */
 function bufWrite(value, buffer, offset, isBE, mLen, nBytes) {
 

@@ -22,6 +22,7 @@ import fsIsFile from './fsIsFile.mjs'
  *
  * fsGetFoldersInFolder(fd, null)
  * // => [ './d/ee', './d/ee/eee' ]
+ *
  */
 function fsGetFoldersInFolder(fd, levelLimit = 1) {
 

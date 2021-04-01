@@ -12,11 +12,13 @@ import isint from './isint.mjs'
  * @param {Integer} n 輸入要增加的月份數量整數，可為正負值
  * @returns {String} 回傳新的月時間字串
  * @example
+ *
  * console.log(addMonth('2019-01', 2))
  * // => '2019-03'
  *
  * console.log(addMonth('2018-12', -1))
  * // => '2018-11'
+ *
  */
 function addMonth(g, n) {
 

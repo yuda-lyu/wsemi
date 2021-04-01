@@ -13,8 +13,10 @@ import isestr from './isestr.mjs'
  * @param {String} url 輸入要切分的網址字串
  * @returns {Object} 回傳資訊物件
  * @example
+ *
  * console.log(urlParse('http://localhost:3000/index.html?a=12.34&b=xyz&abc=xyz123.456'))
  * // => { a: '12.34', abc: 'xyz123.456', b: 'xyz' }
+ *
  */
 function urlParse(url) {
 

@@ -13,10 +13,12 @@ import bufRead from './bufRead.mjs'
  * @param {Integer} [nBytes=8] 輸入使用位元組整數，預設8
  * @returns {Number} 回傳數字
  * @example
+ *
  * let b = new Uint8Array([66, 117, 16, 240, 246, 48, 64, 0]) //1447656645380
  * let j = bufReadDbl(b)
  * console.log(j)
  * // => 1447656645380
+ *
  */
 function bufReadDbl(buffer, offset = 0, isBE = true, mLen = 52, nBytes = 8) {
     return bufRead(buffer, offset, isBE, mLen, nBytes)

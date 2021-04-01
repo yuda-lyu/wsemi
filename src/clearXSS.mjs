@@ -16,11 +16,13 @@ import isstr from './isstr.mjs'
  * @param {Object|Array|String} obj 輸入資料
  * @returns {Object|Array|String} 輸出資料
  * @example
+ *
  * console.log(clearXSS(`><script>alert('XSS')</script>`))
  * // => `&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;`
  *
  * console.log(clearXSS(`<img src="javascript:alert('XSS')">`))
  * // => `<img src>`
+ *
  */
 function clearXSS(obj) {
 

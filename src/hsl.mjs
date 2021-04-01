@@ -13,8 +13,10 @@ import cdbl from './cdbl.mjs'
  * @param {Number} rl 輸入亮度/明度: Lightness(0~1)
  * @returns {String} 回傳顏色字串(hex)
  * @example
+ *
  * console.log(hsl(0.5, 0.5, 0.5))
  * // => '#bfaa40'
+ *
  */
 function hsl(rh, rs, rl) {
 

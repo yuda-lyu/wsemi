@@ -8,6 +8,8 @@
  * @example
  * need test in browser
  *
+ * let eles = domFinds('[name="abc"]')
+ *
  */
 function domFinds(query) {
     let r = document.querySelectorAll(query)

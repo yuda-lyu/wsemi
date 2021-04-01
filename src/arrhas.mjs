@@ -12,6 +12,7 @@ import iser from './iser.mjs'
  * @param {String|Number|Object|Boolean|Array} vhas 輸入查找字串陣列或字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], 2))
  * // => true
  *
@@ -59,6 +60,7 @@ import iser from './iser.mjs'
  *
  * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }]))
  * // => false
+ *
  */
 function arrhas(vtar, vhas) {
 

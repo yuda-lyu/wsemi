@@ -11,8 +11,10 @@ import isestr from './isestr.mjs'
  * @param {String} str 輸入一般字串
  * @returns {String} 回傳base64字串
  * @example
+ *
  * console.log(str2b64('test中文'))
  * // => 'dGVzdOS4reaWhw=='
+ *
  */
 function str2b64(str) {
 

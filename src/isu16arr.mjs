@@ -6,8 +6,10 @@
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值
  * @example
+ *
  * console.log(isu16arr(new Uint16Array(1)))
  * // => true
+ *
  */
 function isu16arr(v) {
 

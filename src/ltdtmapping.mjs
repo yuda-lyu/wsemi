@@ -13,6 +13,7 @@ import dtmapping from './dtmapping.mjs'
  * @param {*} [def=''] 輸入若無提取欄位時所給予的預設值，預設為''
  * @returns {Array} 回傳提取的物件資料陣列
  * @example
+ *
  * let r = [
  *     { a: 'a123', b: 123, c: 'abc' },
  *     { a: '1b23', b: 456, c: '123XYZ' },
@@ -32,6 +33,7 @@ import dtmapping from './dtmapping.mjs'
  * //     { a: '1b23', c: '123XYZ', x: '' },
  * //     { a: '12c3', c: null, x: '' }
  * // ]
+ *
  */
 function ltdtmapping(ltdt, keys, def = '') {
 

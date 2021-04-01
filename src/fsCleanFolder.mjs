@@ -12,6 +12,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @param {String} pah 輸入欲清空資料夾路徑字串
  * @example
  * need test in nodejs. See example in fsCopyFolder.
+ *
  */
 function fsCleanFolder(pah) {
 

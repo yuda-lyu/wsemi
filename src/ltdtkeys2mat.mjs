@@ -16,8 +16,10 @@ import o2j from './o2j.mjs'
  * @param {Array} keys 輸入字串陣列
  * @returns {Array} 回傳資料陣列
  * @example
+ *
  * console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b']))
  * // => [[12, 34.56], ['123', 'xyz']]
+ *
  */
 function ltdtkeys2mat(ltdt, keys) {
 

@@ -15,8 +15,10 @@ import isbol from './isbol.mjs'
  * @param {Boolean} [breverse=true] 輸入是否要反轉順序，預設true為由小至大，反序則為由大至小
  * @returns {Array} 回傳切分後的整數陣列
  * @example
+ *
  * console.log(sepInt(10, 3))
  * // => [3, 3, 4]
+ *
  */
 function sepInt(v, n, breverse = true) {
 

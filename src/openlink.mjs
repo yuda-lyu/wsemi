@@ -9,6 +9,10 @@ import isestr from './isestr.mjs'
  * @param {String} url
  * @example
  * need test in browser
+ *
+ * let url = 'https://www.google.com/'
+ * openLink(url)
+ *
  */
 function openLink(url) {
 

@@ -17,6 +17,7 @@ import isab from './isab.mjs'
  * @param {*} data 輸入任意資料
  * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據
  * @example
+ *
  * let data = {
  *     a: 123,
  *     b: 45.67,
@@ -35,6 +36,7 @@ import isab from './isab.mjs'
  * //     results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[Uint8Array]::0"}}',
  * //     binarys: [ Uint8Array [ 66, 97, 115 ] ]
  * // }
+ *
  */
 function obj2stru8arr(o) {
 

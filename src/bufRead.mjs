@@ -17,6 +17,7 @@ import isbol from './isbol.mjs'
  * @param {Integer} nBytes 輸入使用位元組整數
  * @returns {Number} 回傳數字
  * @example
+ *
  * let offset = 0
  * let isBE = true
  * let mLen = 52
@@ -25,6 +26,7 @@ import isbol from './isbol.mjs'
  * let j = bufRead(b, offset, isBE, mLen, nBytes)
  * console.log(j)
  * // => 1447656645380
+ *
  */
 function bufRead(buffer, offset, isBE, mLen, nBytes) {
 

@@ -11,7 +11,7 @@ import isstr from './isstr.mjs'
  * @param {*} item 輸入要插入節點、元素或文字等內容
  * @example
  * need test in browser
- * 
+ *
  * let html = '<div>abc</div>'
  * domAppend('#id',html)
  *

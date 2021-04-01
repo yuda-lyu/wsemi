@@ -13,6 +13,7 @@ import cint from './cint.mjs'
  * @param {Array} data.binarys 輸入Unit8Array陣列
  * @returns {*} 回傳任意物件
  * @example
+ *
  * let r = {
  *     results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[Uint8Array]::0"}}',
  *     binarys: [new Uint8Array([66, 97, 115])]
@@ -31,6 +32,7 @@ import cint from './cint.mjs'
  * //         de: Uint8Array [ 66, 97, 115 ]
  * //     }
  * // }
+ *
  */
 function stru8arr2obj(data) {
 

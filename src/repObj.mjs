@@ -13,11 +13,13 @@ import ispint from './ispint.mjs'
  * @param {Integer} n 輸入重複次數之正整數
  * @returns {Array} 回傳任意資料之陣列
  * @example
+ *
  * console.log(repObj({ a: 12.45, b: 'opqr' }, 2))
  * // => [{ a: 12.45, b: 'opqr' }, { a: 12.45, b: 'opqr' }]
  *
  * console.log(repObj({ a: 12.45, b: 'opqr' }, 0))
  * // => []
+ *
  */
 function repObj(o, n) {
 

@@ -10,6 +10,7 @@ import fs from 'fs'
  * @param {String} c 輸入utf-8文字數據
  * @example
  * need test in nodejs.
+ *
  */
 function fsWriteText(fn, c) {
     fs.writeFileSync(fn, c, 'utf8')

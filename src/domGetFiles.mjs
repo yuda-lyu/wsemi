@@ -13,6 +13,9 @@ import cdbl from './cdbl.mjs'
  * @example
  * need test in browser
  *
+ * let ele = document.querySelector('#id')
+ * let r = domGetFiles(ele)
+ *
  */
 function domGetFiles(ele, sizelimit = 1000) {
 

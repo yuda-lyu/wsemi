@@ -7,6 +7,7 @@
  * @returns {String} 回傳編碼後html字串
  * @example
  * need test in browser
+ *
  */
 function htmlEncode(str) {
     let ele = document.createElement('span')

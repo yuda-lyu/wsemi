@@ -12,32 +12,46 @@ import isestr from './isestr.mjs'
  * @param {*} v 輸入任意值
  * @returns {Boolean} 回傳布林值
  * @example
+ *
  * console.log(cbol(true))
  * // => true
+ *
  * console.log(cbol(false))
  * // => false
+ *
  * console.log(cbol(0))
  * // => false
+ *
  * console.log(cbol(1))
  * // => true
+ *
  * console.log(cbol('true'))
  * // => true
+ *
  * console.log(cbol('tRuE'))
  * // => true
+ *
  * console.log(cbol('TRUE'))
  * // => true
+ *
  * console.log(cbol('abc'))
  * // => false
+ *
  * console.log(cbol(''))
  * // => false
+ *
  * console.log(cbol([]))
  * // => false
+ *
  * console.log(cbol({}))
  * // => false
+ *
  * console.log(cbol(null))
  * // => false
+ *
  * console.log(cbol(undefined))
  * // => false
+ *
  */
 function cbol(v) {
 

@@ -13,8 +13,10 @@ import isearr from './isearr.mjs'
  * @param {Array} ltdt 輸入物件陣列
  * @returns {Array} 回傳不重複keys陣列
  * @example
+ *
  * console.log(getltdtkeys([{ a: 123, b: 'xyz', c: '45op', d: null }, { a: 123.456, b: 'xyz', d: '45op', e: '' }]))
  * // => ['a', 'b', 'c', 'd', 'e']
+ *
  */
 function getltdtkeys(ltdt) {
 

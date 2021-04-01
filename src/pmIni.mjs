@@ -5,7 +5,6 @@
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise
  * @example
- * need test in browser
  *
  * pmIni()
  *     .then(function() {
