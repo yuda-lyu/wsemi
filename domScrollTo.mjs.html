@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>timeTZ2expire.mjs - Documentation</title>
+    <title>domScrollTo.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">timeTZ2expire.mjs</h1>
+    <h1 class="page-title">domScrollTo.mjs</h1>
     
 
     
@@ -42,157 +42,53 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import ot from 'dayjs'
-import istimeTZ from './istimeTZ.mjs'
+            <pre class="prettyprint source linenums"><code>import { elementScrollTo } from 'seamless-scroll-polyfill'
+import isEle from './isEle.mjs'
+import isobj from './isobj.mjs'
+import isIE from './isIE.mjs'
 
 
 /**
- * 秒時間轉到期時間
+ * 前端DOM元素平滑捲動至指定位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2expire.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.js Github}
  * @memberOf wsemi
- * @param {String} t 輸入秒時間字串
- * @param {String} [tNow=null] 輸入現在秒時間字串
- * @returns {String} 回傳到期時間字串
+ * @param {Element} ele 輸入Element元素
+ * @param {Object} [opt={behavior:'smooth'}] 輸入scrollTo的設定物件，預設{behavior:'smooth'}
  * @example
+ * need test in browser
  *
- * let t
- * let tNow = '2020-10-18T12:34:56+08:00'
- * let r
- *
- * t = '2020-10-18T12:34:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: true, msg: '2秒後', err: '' }
- *
- * t = '2020-10-18T12:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: true, msg: '3分鐘後', err: '' }
- *
- * t = '2020-10-18T16:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: true, msg: '4小時後，今天16:37', err: '' }
- *
- * t = '2020-10-23T16:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: false, msg: '5天後', err: '' }
- *
- * t = '2021-04-23T16:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: false, msg: '6個月後', err: '' }
- *
- * t = '2028-04-23T16:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: false, msg: '7年後', err: '' }
- *
- * t = '2018-04-23T16:37:58+08:00'
- * r = timeTZ2expire(t, tNow)
- * console.log(r)
- * // => { today: null, msg: '', err: '時間已過' }
+ * let ele = document.querySelector('#id')
+ * domScrollTo(ele, {})
  *
  */
-function timeTZ2expire(t, tNow = null) {
+function domScrollTo(ele, opt = {}) {
 
     //check
-    if (!istimeTZ(t)) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間格式錯誤',
-        }
+    if (!isEle(ele)) {
+        return
+    }
+    if (!isobj(opt)) {
+        opt = {}
     }
 
-    //mnow
-    let mnow = ot()
-    if (istimeTZ(tNow)) {
-        mnow = ot(tNow, 'YYYY-MM-DDTHH:mm:ssZ')
+    //useOpt
+    let useOpt = { behavior: 'smooth' }
+    useOpt = { ...useOpt, ...opt }
+
+    //call
+    if (isIE()) {
+        elementScrollTo(ele, useOpt) //IE11
+    }
+    else {
+        ele.scrollTo(useOpt)
     }
 
-    //mtime
-    let mtime = ot(t, 'YYYY-MM-DDTHH:mm:ssZ')
-
-    //check
-    if (mnow > mtime) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間已過',
-        }
-    }
-
-    //day
-    let nowday = mnow.format('YYYY-MM-DD')
-    let timeday = mtime.format('YYYY-MM-DD')
-    let mnowday = ot(nowday, 'YYYY-MM-DD')
-    let mtimeday = ot(timeday, 'YYYY-MM-DD')
-
-    //diff
-    let iseconds = mtime.diff(mnow, 'seconds')
-    let iminutes = mtime.diff(mnow, 'minutes')
-    let ihours = mtime.diff(mnow, 'hours')
-    let idays = mtimeday.diff(mnowday, 'days')
-    let iweeks = mtimeday.diff(mnowday, 'weeks')
-    let imonths = mtimeday.diff(mnowday, 'months')
-    let iyears = mtimeday.diff(mnowday, 'years')
-
-    //c
-    let today
-    let c = '即將到來'
-    if (iseconds >= 0) {
-        today = true
-        c = iseconds + '秒後'
-    }
-    if (iminutes > 0) {
-        today = true
-        c = iminutes + '分鐘後'
-    }
-    if (ihours > 0) {
-        let hm = mtime.format('HH:mm')
-        if (nowday === timeday) {
-            today = true
-            c = ihours + '小時後' + '，今天' + hm
-        }
-        else {
-            today = false
-            c = ihours + '小時後' + '，明天' + hm
-        }
-    }
-    if (idays > 1) { //明天交由小時部份處理
-        today = false
-        if (idays === 2) {
-            c = '後天'
-        }
-        else {
-            c = idays + '天後'
-        }
-    }
-    if (iweeks > 0) {
-        today = false
-        c = iweeks + '周後'
-    }
-    if (imonths > 0) {
-        today = false
-        c = imonths + '個月後'
-    }
-    if (iyears > 0) {
-        today = false
-        c = iyears + '年後'
-    }
-
-    return {
-        today: today,
-        msg: c,
-        err: '',
-    }
 }
 
 
-export default timeTZ2expire
+export default domScrollTo
+
 </code></pre>
         </article>
     </section>
