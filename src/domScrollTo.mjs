@@ -1,4 +1,4 @@
-import { elementScrollTo } from 'seamless-scroll-polyfill'
+import { elementScrollTo } from 'seamless-scroll-polyfill/dist/esm/index.js'
 import isEle from './isEle.mjs'
 import isobj from './isobj.mjs'
 import isIE from './isIE.mjs'
