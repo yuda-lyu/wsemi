@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isWindow.mjs - Documentation</title>
+    <title>domScrollIntoView.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isWindow.mjs</h1>
+    <h1 class="page-title">domScrollIntoView.mjs</h1>
     
 
     
@@ -42,25 +42,53 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為瀏覽器環境
+            <pre class="prettyprint source linenums"><code>import { elementScrollIntoView } from 'seamless-scroll-polyfill'
+import isEle from './isEle.mjs'
+import isobj from './isobj.mjs'
+import isIE from './isIE.mjs'
+
+
+/**
+ * 前端平滑捲動至DOM元素
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isWindow.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollIntoView.test.js Github}
  * @memberOf wsemi
- * @returns {Boolean} 回傳判斷布林值
+ * @param {Element} ele 輸入Element元素
+ * @param {Object} [opt={behavior:'smooth'}] 輸入scrollIntoView的設定物件，預設{behavior:'smooth'}
  * @example
  * need test in browser
  *
- * console.log(isWindow())
- * // => true or false
+ * let ele = document.querySelector('#id')
+ * domScrollIntoView(ele, {})
  *
  */
-function isWindow() {
-    return typeof window !== 'undefined' &amp;&amp; typeof window.document !== 'undefined'
+function domScrollIntoView(ele, opt = {}) {
+
+    //check
+    if (!isEle(ele)) {
+        return
+    }
+    if (!isobj(opt)) {
+        opt = {}
+    }
+
+    //useOpt
+    let useOpt = { behavior: 'smooth' }
+    useOpt = { ...useOpt, ...opt }
+
+    //call
+    if (isIE()) {
+        elementScrollIntoView(ele, useOpt) //IE11
+    }
+    else {
+        ele.scrollIntoView(useOpt)
+    }
+
 }
 
 
-export default isWindow
+export default domScrollIntoView
+
 </code></pre>
         </article>
     </section>
