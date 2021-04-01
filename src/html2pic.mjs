@@ -9,6 +9,7 @@ import isestr from './isestr.mjs'
 import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import getGlobal from './getGlobal.mjs'
+import isIE from './isIE.mjs'
 
 
 function getHtml2canvas() {
@@ -138,8 +139,8 @@ async function html2pic(ele, opt = {}) {
     ele = ele.cloneNode(true)
 
     //於IE11時html2canvas無法轉svg, 得先用canvg轉
-    if (window.navigator && window.navigator.msSaveOrOpenBlob) { //IE11
-        svg2png(ele, scale)
+    if (isIE()) {
+        svg2png(ele, scale) //IE11
     }
 
     //div, 放置ele的區塊, 用絕對定位顯示, 用z-index=-1避免遮蔽原畫面, 原本為預設的長寬限制會自動取消, 故可截圖為完整畫面

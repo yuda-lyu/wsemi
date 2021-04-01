@@ -1,5 +1,6 @@
 import isestr from './isestr.mjs'
 import isWindow from './isWindow.mjs'
+import isIE from './isIE.mjs'
 
 
 /**
@@ -76,8 +77,8 @@ function downloadFileFromBlob(cfn, blob) {
     }
 
     //core
-    if (window.navigator && window.navigator.msSaveOrOpenBlob) { //IE11
-        coreIE11(cfn, blob)
+    if (isIE()) {
+        coreIE11(cfn, blob) //IE11
     }
     else {
         coreHTML5(cfn, blob)

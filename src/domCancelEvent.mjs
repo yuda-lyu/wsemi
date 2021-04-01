@@ -1,3 +1,6 @@
+import isIE from './isIE.mjs'
+
+
 /**
  * 前端DOM元素事件停止傳遞事件
  *
@@ -26,7 +29,7 @@ function domCancelEvent(e) {
 
     //try, 有些情形preventDefault是passive無法呼叫
     try {
-        if (window.event) {
+        if (isIE()) {
             e.cancelBubble = true //IE11
         }
         else {
