@@ -26,6 +26,8 @@ To view some examples for more understanding, visit examples:
 
 > **fuzzball[dynamic import]:** [ex-fuzzball-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-fuzzball-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-fuzzball-dynamic.html)]
 
+> **obj2u8arr & u8arr2obj:** [ex-tobj2u8arr-u8arr2obj.html](https://yuda-lyu.github.io/wsemi/examples/ex-tobj2u8arr-u8arr2obj.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tobj2u8arr-u8arr2obj.html)]
+
 > **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tinycolor.html)]
 
 > **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser.html)]
@@ -57,6 +59,10 @@ To view some examples for more understanding, visit examples:
 > **scrollIntoView:** [ex-scrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-scrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-scrollIntoView.html)]
 
 > **scrollTo:** [ex-scrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-scrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-scrollTo.html)]
+
+> **domDrag:** [ex-domDrag.html](https://yuda-lyu.github.io/wsemi/examples/ex-domDrag.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domDrag.html)]
+
+> **domIsVisible:** [ex-domIsVisible.html](https://yuda-lyu.github.io/wsemi/examples/ex-domIsVisible.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domIsVisible.html)]
 
 > **tesseract.js:** [ex-tesseract.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract.html)]
 
@@ -142,5 +148,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.61/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.62/dist/wsemi.umd.js"></script>
 ```
