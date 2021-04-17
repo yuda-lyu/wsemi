@@ -10,7 +10,7 @@ let mathRandom = Math.random
 /**
  * 顏色處理，修改自TinyColor
  *
- * Fork: {@link https://github.com/bgrins/TinyColor/blob/master/tinycolor.js TinyColor 1.4.1}
+ * Fork: {@link https://github.com/bgrins/TinyColor/blob/master/tinycolor.js TinyColor}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/tinycolor.test.js Github}
  * @memberOf wsemi

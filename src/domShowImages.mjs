@@ -4,6 +4,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
 import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
+import genPm from './genPm.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
@@ -73,6 +74,9 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     let one = true
     let img = null
 
+    //pm
+    let pm = genPm()
+
     //check
     if (!iseobj(opt)) {
         opt = {}
@@ -80,14 +84,16 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //img and check one
     if (!isEle(eleImg)) {
-        return Promise.reject('eleImg is not HTMLElement')
+        pm.reject('eleImg is not HTMLElement')
+        return pm
     }
     else {
         img = eleImg //預設先使用自己
     }
     if (eleGroup !== null) {
         if (!isEle(eleGroup)) {
-            return Promise.reject('eleGroup is not HTMLElement')
+            pm.reject('eleGroup is not HTMLElement')
+            return pm
         }
         else {
             one = false
@@ -100,7 +106,8 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
         let imgs = eleGroup.querySelectorAll('img')
         let n = size(imgs)
         if (n === 0) {
-            return Promise.reject('eleGroup does not contain any img')
+            pm.reject('eleGroup does not contain any img')
+            return pm
         }
         else if (n === 1) {
             one = true //eleGroup其內只有一張圖片
@@ -135,6 +142,9 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
         //destroy
         vw.destroy()
 
+        //resolve
+        pm.resolve('close')
+
     }
 
     //UseViewer
@@ -146,7 +156,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     //force show
     vw.show() //於IE11時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
 
-    return Promise.resolve('done')
+    return pm
 }
 
 

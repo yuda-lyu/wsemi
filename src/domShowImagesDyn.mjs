@@ -36,10 +36,7 @@ async function domShowImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
     await importResources(pathItems)
     // console.log('res', res)
 
-    //domShowImages
-    let r = await domShowImages(eleImg, eleGroup, opt)
-
-    return r
+    return domShowImages(eleImg, eleGroup, opt)
 }
 
 

@@ -8,7 +8,7 @@ import cdbl from './cdbl.mjs'
 /**
  * 寫入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
  *
- * Fork: {@link https://github.com/toots/buffer-browserify buffer-browserify}
+ * Fork: {@link https://github.com/toots/buffer-browserify/blob/master/buffer_ieee754.js buffer_ieee754}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWrite.test.js Github}
  * @memberOf wsemi
