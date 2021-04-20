@@ -150,5 +150,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.66/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.67/dist/wsemi.umd.js"></script>
 ```
