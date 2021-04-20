@@ -98,19 +98,31 @@ async function treeFiles(files) {
 
 
 async function treeDataTransfer(dataTransfer) {
-
-    //files, 全部瀏覽器
-    let files = await treeFiles(get(dataTransfer, 'files', []))
-
-    //entries, 非IE11瀏覽器
+    let files = []
     let entries = []
-    if (!isIE()) {
-        entries = await treeEntries(get(dataTransfer, 'items', []))
+
+    try {
+
+        //files, 全部瀏覽器
+        files = await treeFiles(get(dataTransfer, 'files', []))
+
+        //entries, 非IE11與Opera瀏覽器
+        if (!isIE()) {
+            entries = await treeEntries(get(dataTransfer, 'items', []))
+        }
+
+    }
+    catch (error) {
+        return {
+            files,
+            entries,
+            error,
+        }
     }
 
     return {
         files,
-        entries
+        entries,
     }
 }
 
