@@ -129,12 +129,8 @@ async function treeDataTransfer(dataTransfer) {
         }
 
     }
-    catch (error) {
-        return {
-            files,
-            entries,
-            error,
-        }
+    catch (err) {
+        return Promise.reject(err)
     }
 
     return {
