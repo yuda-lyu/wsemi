@@ -1,4 +1,6 @@
 import join from 'lodash/join'
+import split from 'lodash/split'
+import size from 'lodash/size'
 import dropRight from 'lodash/dropRight'
 import isestr from './isestr.mjs'
 import getFileName from './getFileName.mjs'
@@ -23,9 +25,29 @@ import getFileName from './getFileName.mjs'
  * console.log(getFileTrueName(c))
  * // => myfile.txt
  *
+ * c = 'C:\\temp\\myfile'
+ * console.log(getFileTrueName(c))
+ * // => myfile
+ *
+ * c = 'C:\\temp\\\\temp\\\\myfile.txt.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile.txt
+ *
  * c = 'C:\\temp\\'
  * console.log(getFileTrueName(c))
- * // => [empty string]
+ * // => temp
+ *
+ * c = 'C:\\temp'
+ * console.log(getFileTrueName(c))
+ * // => temp
+ *
+ * c = 'C:\\'
+ * console.log(getFileTrueName(c))
+ * // => C:\\
+ *
+ * c = 'C:'
+ * console.log(getFileTrueName(c))
+ * // => C:\\
  *
  * c = '/tmp/myfile.html'
  * console.log(getFileTrueName(c))
@@ -35,9 +57,25 @@ import getFileName from './getFileName.mjs'
  * console.log(getFileTrueName(c))
  * // => myfile.txt
  *
+ * c = '/tmp/myfile'
+ * console.log(getFileTrueName(c))
+ * // => myfile
+ *
+ * c = '//tmp////tmp//myfile.txt.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile.txt
+ *
  * c = '/tmp/'
  * console.log(getFileTrueName(c))
- * // => [empty string]
+ * // => tmp
+ *
+ * c = '/tmp'
+ * console.log(getFileTrueName(c))
+ * // => tmp
+ *
+ * c = '/'
+ * console.log(getFileTrueName(c))
+ * // => /
  *
  * c = '/foo/bar/baz/asdf/quux.html'
  * console.log(getFileTrueName(c))
@@ -46,6 +84,14 @@ import getFileName from './getFileName.mjs'
  * c = '/foo/bar/baz/asdf/quux.txt.html'
  * console.log(getFileTrueName(c))
  * // => quux.txt
+ *
+ * c = '/foo/bar/baz/asdf/quux'
+ * console.log(getFileTrueName(c))
+ * // => quux
+ *
+ * c = ''
+ * console.log(getFileTrueName(c))
+ * // => [empty string]
  *
  */
 function getFileTrueName(str) {
@@ -58,9 +104,18 @@ function getFileTrueName(str) {
     //getFileName
     let name = getFileName(str)
 
+    //s
+    let s = split(name, '.')
+
+    //check
+    if (size(s) <= 1) {
+        return name
+    }
+
     let r = ''
     try {
-        r = join(dropRight(name.split('.')), '.')
+        s = dropRight(s)
+        r = join(s, '.')
     }
     catch (err) {}
 

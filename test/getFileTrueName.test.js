@@ -36,8 +36,44 @@ describe(`getFileTrueName`, function() {
     })
 
     i++
+    cin[i] = 'C:\\temp\\\\temp\\\\myfile.txt.html'
+    cout[i] = 'myfile.txt'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
     cin[i] = 'C:\\temp\\'
-    cout[i] = ''
+    cout[i] = 'temp'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
+    cin[i] = 'C:\\temp'
+    cout[i] = 'temp'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
+    cin[i] = 'C:\\'
+    cout[i] = 'C:\\'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
+    cin[i] = 'C:'
+    cout[i] = 'C:\\'
     it(`should return ${cout[i]} when '${cin[i]}'`, function() {
         j = 0
         let r = getFileTrueName(cin[j])
@@ -72,8 +108,35 @@ describe(`getFileTrueName`, function() {
     })
 
     i++
+    cin[i] = '//tmp////tmp//myfile.txt.html'
+    cout[i] = 'myfile.txt'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
     cin[i] = '/tmp/'
-    cout[i] = ''
+    cout[i] = 'tmp'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
+    cin[i] = '/tmp'
+    cout[i] = 'tmp'
+    it(`should return ${cout[i]} when '${cin[i]}'`, function() {
+        j = 0
+        let r = getFileTrueName(cin[j])
+        assert.strict.deepStrictEqual(r, cout[j])
+    })
+
+    i++
+    cin[i] = '/'
+    cout[i] = '/'
     it(`should return ${cout[i]} when '${cin[i]}'`, function() {
         j = 0
         let r = getFileTrueName(cin[j])
@@ -127,7 +190,7 @@ describe(`getFileTrueName`, function() {
 
     i++
     cin[i] = 12
-    cout[i] = 'quux'
+    cout[i] = ''
     it(`should return ${cout[i]} when '${cin[i]}'`, function() {
         j = 0
         let r = getFileTrueName(cin[j])

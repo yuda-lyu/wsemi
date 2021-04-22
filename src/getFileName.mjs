@@ -1,4 +1,5 @@
 import isestr from './isestr.mjs'
+import getClearPathName from './getClearPathName.mjs'
 
 
 /**
@@ -16,14 +17,33 @@ import isestr from './isestr.mjs'
  * console.log(getFileName(c))
  * // => myfile.html
  *
- *
  * c = 'C:\\temp\\myfile.txt.html'
+ * console.log(getFileName(c))
+ * // => myfile.txt.html
+ *
+ * c = 'C:\\temp\\myfile'
+ * console.log(getFileName(c))
+ * // => myfile
+ *
+ * c = 'C:\\temp\\\\temp\\\\myfile.txt.html'
  * console.log(getFileName(c))
  * // => myfile.txt.html
  *
  * c = 'C:\\temp\\'
  * console.log(getFileName(c))
- * // => [empty string]
+ * // => temp
+ *
+ * c = 'C:\\temp'
+ * console.log(getFileName(c))
+ * // => temp
+ *
+ * c = 'C:\\'
+ * console.log(getFileName(c))
+ * // => C:\
+ *
+ * c = 'C:'
+ * console.log(getFileName(c))
+ * // => C:\
  *
  * c = '/tmp/myfile.html'
  * console.log(getFileName(c))
@@ -33,9 +53,25 @@ import isestr from './isestr.mjs'
  * console.log(getFileName(c))
  * // => myfile.txt.html
  *
+ * c = '/tmp/myfile'
+ * console.log(getFileName(c))
+ * // => myfile
+ *
+ * c = '//tmp////tmp//myfile.txt.html'
+ * console.log(getFileName(c))
+ * // => myfile.txt.html
+ *
  * c = '/tmp/'
  * console.log(getFileName(c))
- * // => [empty string]
+ * // => tmp
+ *
+ * c = '/tmp'
+ * console.log(getFileName(c))
+ * // => tmp
+ *
+ * c = '/'
+ * console.log(getFileName(c))
+ * // => /
  *
  * c = '/foo/bar/baz/asdf/quux.html'
  * console.log(getFileName(c))
@@ -43,7 +79,15 @@ import isestr from './isestr.mjs'
  *
  * c = '/foo/bar/baz/asdf/quux.txt.html'
  * console.log(getFileName(c))
- * // => quux.html.txt
+ * // => quux.txt.html
+ *
+ * c = '/foo/bar/baz/asdf/quux'
+ * console.log(getFileName(c))
+ * // => quux
+ *
+ * c = ''
+ * console.log(getFileName(c))
+ * // => [empty string]
  *
  */
 function getFileName(str) {
@@ -53,9 +97,17 @@ function getFileName(str) {
         return ''
     }
 
-    let r = ''
+    //getClearPathName
+    let o = getClearPathName(str)
+
+    //check
+    if (o.isRoot) {
+        return o.path
+    }
+
+    let r = o.path
     try {
-        r = str.split('\\').pop().split('/').pop()
+        r = r.split('\\').pop().split('/').pop()
     }
     catch (err) {}
 
