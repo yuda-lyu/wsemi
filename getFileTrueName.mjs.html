@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>isnbr.mjs - Documentation</title>
+    <title>getFileTrueName.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">isnbr.mjs</h1>
+    <h1 class="page-title">getFileTrueName.mjs</h1>
     
 
     
@@ -42,30 +42,77 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * 判斷是否為數字
+            <pre class="prettyprint source linenums"><code>import join from 'lodash/join'
+import dropRight from 'lodash/dropRight'
+import isestr from './isestr.mjs'
+import getFileName from './getFileName.mjs'
+
+
+/**
+ * 由檔案位置取得檔案的不含副檔名名稱
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnbr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileTrueName.test.js Github}
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值
+ * @param {string} str 輸入檔案位置字串
+ * @returns {string} 檔案不含副檔名的名稱
  * @example
  *
- * console.log(isnbr(1.25))
- * // => true
+ * let c
  *
- * console.log(isnbr('1.25'))
- * // => false
+ * c = 'C:\\temp\\myfile.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile
+ *
+ * c = 'C:\\temp\\myfile.txt.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile.txt
+ *
+ * c = 'C:\\temp\\'
+ * console.log(getFileTrueName(c))
+ * // => [empty string]
+ *
+ * c = '/tmp/myfile.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile
+ *
+ * c = '/tmp/myfile.txt.html'
+ * console.log(getFileTrueName(c))
+ * // => myfile.txt
+ *
+ * c = '/tmp/'
+ * console.log(getFileTrueName(c))
+ * // => [empty string]
+ *
+ * c = '/foo/bar/baz/asdf/quux.html'
+ * console.log(getFileTrueName(c))
+ * // => quux
+ *
+ * c = '/foo/bar/baz/asdf/quux.txt.html'
+ * console.log(getFileTrueName(c))
+ * // => quux.txt
  *
  */
-function isnbr(v) {
+function getFileTrueName(str) {
 
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Number]'
+    //check
+    if (!isestr(str)) {
+        return ''
+    }
+
+    //getFileName
+    let name = getFileName(str)
+
+    let r = ''
+    try {
+        r = join(dropRight(name.split('.')), '.')
+    }
+    catch (err) {}
+
+    return r
 }
 
 
-export default isnbr
+export default getFileTrueName
 </code></pre>
         </article>
     </section>
