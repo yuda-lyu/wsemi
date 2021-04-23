@@ -10,7 +10,10 @@ rollupFiles({
     fdSrc,
     fdTar,
     hookNameDist: () => 'wsemip',
-    nameDistType: 'kebabCase',
+    // nameDistType: 'kebabCase', //直接由hookNameDist給予
+    format: 'es', //w-package-tools需使用es
+    ext: 'mjs', //w-package-tools需使用副檔名mjs
+    bSourcemap: false,
     globals: {
         'path': 'path',
         'fs': 'fs',
