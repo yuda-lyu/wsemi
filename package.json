@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.5.71",
+  "version": "1.5.72",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -20,11 +20,10 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.6",
-    "w-package-tools": "^1.0.48"
+    "w-package-tools": "^1.0.49"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --timeout 60000 --require @babel/register",
-    "tests": "./node_modules/.bin/mocha --parallel --require @babel/register",
+    "test": "mocha --parallel --timeout 60000 --require @babel/register",
     "deploy": "gh-pages -d docs"
   },
   "repository": {

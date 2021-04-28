@@ -170,33 +170,43 @@ function interp1Stairs(ps, x, opt = {}) {
     let xMin = get(opt, 'xMin')
     if (isNumber(xMin)) {
         //外部已確保x為遞增
-        if (xMin >= ps[0].x) {
+        if (xMin > ps[0].x) {
             return {
-                err: `xMin=${xMin} >= ps[0].x=${ps[0].x}`
+                err: `xMin=${xMin} > ps[0].x=${ps[0].x}`
             }
         }
-        let p = {
-            x: xMin,
-            y: ps[0].y, //使用第一筆數據y
+        else if (xMin === ps[0].x) {
+            //不用擴充
         }
-        ps = [p, ...ps] //遞增數據得添加xMin於最前
+        else {
+            let p = {
+                x: xMin,
+                y: ps[0].y, //使用第一筆數據y
+            }
+            ps = [p, ...ps] //遞增數據得添加xMin於最前
+        }
     }
 
     //xMax, 擴充最大x值範圍
     let xMax = get(opt, 'xMax')
     if (isNumber(xMax)) {
         //外部已確保x為遞增
-        if (xMax <= ps[size(ps) - 1].x) {
+        if (xMax < ps[size(ps) - 1].x) {
             return {
-                err: `xMax=${xMax} <= ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
+                err: `xMax=${xMax} < ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
             }
         }
-        let p = {
-            x: xMax,
-            y: ps[size(ps) - 1].y, //使用最後一筆數據y
-
+        else if (xMax === ps[size(ps) - 1].x) {
+            //不用擴充
         }
-        ps = [...ps, p] //遞增數據得添加xMax於最後
+        else {
+            let p = {
+                x: xMax,
+                y: ps[size(ps) - 1].y, //使用最後一筆數據y
+
+            }
+            ps = [...ps, p] //遞增數據得添加xMax於最後
+        }
     }
 
     //checkLimit
