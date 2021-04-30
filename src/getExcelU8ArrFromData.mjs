@@ -123,9 +123,9 @@ function getExcelU8ArrFromData(data, csn = 'data') {
         u8a = bs2u8arr(wb)
 
     }
-    catch (e) {
+    catch (err) {
         return {
-            error: u8a
+            error: err
         }
     }
 

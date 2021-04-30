@@ -9,7 +9,7 @@ function init() {
         new MouseEvent('MouseEventPolyfillTest')
         return false // No need to polyfill
     }
-    catch (e) {
+    catch (err) {
         // Need to polyfill - fall through
     }
 

@@ -3,10 +3,10 @@ import get from 'lodash/get'
 import each from 'lodash/each'
 import map from 'lodash/map'
 import values from 'lodash/values'
-import join from 'lodash/join'
 import arrhas from './arrhas.mjs'
 import isbol from './isbol.mjs'
 import cstr from './cstr.mjs'
+import getCsvStrFromData from './getCsvStrFromData.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
@@ -100,29 +100,8 @@ function to_csv(workbook, valueToString) {
     //convert
     each(shs, (sh, ksh) => {
 
-        //map row
-        let res = map(sh.data, (r, kr) => {
-
-            //全部轉字串
-            r = map(r, (v) => {
-                return toStr(v)
-            })
-
-            //valueToString
-            if (valueToString) {
-                r = map(r, (v) => {
-                    return `"${v}"` //若valueToString則全部數值使用雙引號包住
-                })
-            }
-
-            return join(r, ',')
-        })
-
-        //join row
-        res = join(res, '\r\n')
-
         //save
-        shs[ksh].data = res
+        shs[ksh].data = getCsvStrFromData(sh.data, false)
 
     })
 
@@ -131,18 +110,33 @@ function to_csv(workbook, valueToString) {
 
 
 /**
- * 前端讀取Excel(*.xlsx)檔，由input file的檔案讀取excel數據出來
- * 若輸出fmt為csv格式，數據分欄符號為逗號，分行符號為[\n]
+ * 讀取Excel(*.xlsx)檔，前端由input file的檔案取得Uint8Array，後端由fs.readFileSync讀取Buffer
+ * 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設為{}
- * @param {String} [opt.fmt='ltdt'] 輸入數據輸出格式，可有'ltdt','csv','array'，預設為'ltdt'
+ * @param {String} [opt.fmt='ltdt'] 輸入數據格式，可有'ltdt','csv','array'，預設為'ltdt'
  * @param {Boolean} [opt.valueToString=true] 輸入數據是否強制轉字串布林值，預設為true
  * @returns {Array} 回傳數據陣列
  * @example
- * need test in browser
+ *
+ * // test in browser
+ * domShowInputAndGetFilesU8Arrs(kind)
+ *     .then(function(d) {
+ *         let file = d[0] //get first file
+ *         let u8a = file.u8a
+ *         let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+ *         console.log(dltdt[0].sheetname, dltdt[0].data)
+ *         // => ...
+ *     })
+ *
+ * // test in nodejs
+ * let u8a = fs.readFileSync('temp.xlsx')
+ * let r = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+ * console.log(dltdt[0].sheetname, dltdt[0].data)
+ * // => ...
  *
  */
 function getDataFromExcelFileU8Arr(u8a, opt) {
@@ -172,8 +166,8 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     try {
         workbook = getXLSX().read(u8a, { type: 'buffer' }) //Uint8Array
     }
-    catch (e) {
-        console.log('error: ', e)
+    catch (err) {
+        console.log('error: ', err)
         return {
             error: 'can not read data from u8a'
         }
@@ -192,8 +186,8 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
             r = to_csv(workbook, valueToString)
         }
     }
-    catch (e) {
-        console.log('error: ', e)
+    catch (err) {
+        console.log('error: ', err)
         return {
             error: 'can not convert data'
         }
