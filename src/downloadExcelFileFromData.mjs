@@ -1,12 +1,22 @@
+import XLSX from 'xlsx'
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
-import downloadFileFromU8Arr from './downloadFileFromU8Arr.mjs'
-import getExcelU8ArrFromData from './getExcelU8ArrFromData.mjs'
+import downloadFileFromBlob from './downloadFileFromBlob.mjs'
+import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
+import getGlobal from './getGlobal.mjs'
+import isWindow from './isWindow.mjs'
+
+
+function getXLSX() {
+    let g = getGlobal()
+    let x = XLSX || g.XLSX || g.xlsx
+    return x
+}
 
 
 /**
- * 前端下載資料成為Excel(*.xlsx)檔案
+ * 下載資料成為Excel(*.xlsx)檔案，前後端都可用
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.js Github}
  * @memberOf wsemi
@@ -14,7 +24,6 @@ import getExcelU8ArrFromData from './getExcelU8ArrFromData.mjs'
  * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'
  * @param {Array} data 輸入內容陣列
  * @example
- * need test in browser
  *
  * let data = [
  *     ['a','b','c'],
@@ -44,17 +53,31 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
         }
     }
 
-    //getExcelU8ArrFromData
-    let u8a = getExcelU8ArrFromData(data, csn)
+    //getExcelWorkbookFromData
+    let wb = getExcelWorkbookFromData(data, csn)
 
     //check
-    if (get(u8a, 'error')) {
-        console.log(u8a.error)
-        return u8a.error
+    if (get(wb, 'error')) {
+        console.log(wb.error)
+        return wb.error
     }
 
-    //downloadFileFromU8Arr
-    downloadFileFromU8Arr(cfn, u8a)
+    //check
+    if (isWindow()) {
+
+        //wbout
+        let wbout = getXLSX().write(wb, { bookType: 'xlsx', bookSST: false, type: 'array' })
+
+        //downloadFileFromBlob
+        downloadFileFromBlob(cfn, new Blob([wbout]))
+
+    }
+    else {
+
+        //writeFile
+        getXLSX().writeFile(wb, cfn)
+
+    }
 
     return 'ok'
 }

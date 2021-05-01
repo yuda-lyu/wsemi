@@ -97,11 +97,14 @@ function to_csv(workbook, valueToString) {
     //to_array
     let shs = to_array(workbook, valueToString)
 
+    //bom
+    let bom = false
+
     //convert
     each(shs, (sh, ksh) => {
 
         //save
-        shs[ksh].data = getCsvStrFromData(sh.data, false)
+        shs[ksh].data = getCsvStrFromData(sh.data, bom)
 
     })
 
@@ -110,7 +113,7 @@ function to_csv(workbook, valueToString) {
 
 
 /**
- * 讀取Excel(*.xlsx)檔，前端由input file的檔案取得Uint8Array，後端由fs.readFileSync讀取Buffer
+ * 讀取Excel(*.xlsx)檔，前後端都可用，前端由input file的檔案取得Uint8Array，後端由fs.readFileSync讀取Buffer
  * 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.js Github}

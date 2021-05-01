@@ -107,6 +107,7 @@ export { default as getDataFromExcelFileU8ArrDyn } from './getDataFromExcelFileU
 export { default as getDirName } from './getDirName.mjs'
 export { default as getEnv } from './getEnv.mjs'
 export { default as getExcelU8ArrFromData } from './getExcelU8ArrFromData.mjs'
+export { default as getExcelWorkbookFromData } from './getExcelWorkbookFromData.mjs'
 export { default as getFileAccept } from './getFileAccept.mjs'
 export { default as getFileName } from './getFileName.mjs'
 export { default as getFileTrueName } from './getFileTrueName.mjs'
