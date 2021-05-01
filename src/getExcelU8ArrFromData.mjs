@@ -62,7 +62,7 @@ function getExcelU8ArrFromData(data, csn = 'data') {
     try {
 
         //wb
-        let wb = getExcelWorkbookFromData(csn, data)
+        let wb = getExcelWorkbookFromData(data, csn)
 
         //wbout, type給binary代表回傳BinaryString(Uint8Array)
         let wbout = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' })
