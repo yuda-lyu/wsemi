@@ -52,7 +52,6 @@ describe(`pmMap`, function() {
     let r1 = '[{"call":1},{"call":2},{"resolve":2,"d":310},{"call":3},{"resolve":1,"d":340},{"call":4},{"resolve":4,"d":190},{"call":5},{"resolve":3,"d":260},{"resolve":5,"d":100},{"res":["#1","#2","#3","#4","#5"]}]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -101,7 +100,6 @@ describe(`pmMap`, function() {
     let r2 = '[{"call":1},{"resolve":1,"d":340},{"call":2},{"resolve":2,"d":310},{"call":3},{"resolve":3,"d":260},{"call":4},{"resolve":4,"d":190},{"call":5},{"resolve":5,"d":100},{"res":["#1","#2","#3","#4","#5"]}]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 
@@ -150,7 +148,6 @@ describe(`pmMap`, function() {
     let r3 = '[{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"resolve":3,"d":260},{"resolve":2,"d":310},{"resolve":1,"d":340},{"res":["#1","#2","#3","#4","#5"]}]'
     it(`should return '${r3}' when run test3'`, async function() {
         let ms = await test3()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
     })
 
@@ -200,7 +197,6 @@ describe(`pmMap`, function() {
     let r4 = '[{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"resolve":3,"d":260},{"resolve":2,"d":310},{"resolve":1,"d":340},{"res":["#1","#2","#3","#4","#5"]}]'
     it(`should return '${r4}' when run test4'`, async function() {
         let ms = await test4()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
     })
 
@@ -252,7 +248,6 @@ describe(`pmMap`, function() {
     let r5 = '[{"call":1},{"resolve":1,"d":340},{"call":2},{"resolve":2,"d":310},{"call":3},{"reject":3,"d":260},{"err":"#3"}]'
     it(`should return '${r5}' when run test5'`, async function() {
         let ms = await test5()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r5)
     })
 
@@ -308,8 +303,37 @@ describe(`pmMap`, function() {
     let r6 = '[{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"reject":3,"d":260},{"err":"#3"}]'
     it(`should return '${r6}' when run test6'`, async function() {
         let ms = await test6()
-        //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r6)
+    })
+
+    async function test7() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+            pmMap({
+                t1: 1,
+                t2: 2.345,
+                t3: 'abc',
+            }, function (v, k) {
+                return new Promise(function(resolve, reject) {
+                    resolve(`k=${k},v=${v}`)
+                })
+            },)
+                .then(function(res) {
+                    console.log('then', JSON.stringify(res))
+                    ms.push({ res })
+                    resolve(ms)
+                })
+                .catch(function(err) {
+                    console.log('catch', JSON.stringify(err))
+                    ms.push({ err })
+                    resolve(ms)
+                })
+        })
+    }
+    let r7 = '[{"res":["k=t1,v=1","k=t2,v=2.345","k=t3,v=abc"]}]'
+    it(`should return '${r7}' when run test7'`, async function() {
+        let ms = await test7()
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r7)
     })
 
 })

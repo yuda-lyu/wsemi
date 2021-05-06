@@ -9,13 +9,13 @@ import strdelleft from './strdelleft.mjs'
 
 
 /**
- * 由vall陣列找尋vfind內各元素之第1位置
+ * 對arr陣列內各字串進行關鍵字計算，計算是否含有關鍵字與程度，多關鍵字用空白區隔，必要關鍵字可於字首添加「+」，不要關鍵字可於字首添加「-」
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfilter.test.js Github}
  * @memberOf wsemi
  * @param {Array} arr 輸入要被尋找的字串陣列
  * @param {String} keywords 輸入要尋找的關鍵字字串
- * @returns {Array} 回傳所找到各元素第1位置之陣列
+ * @returns {Array} 回傳結果物件陣列
  * @example
  *
  * let arr = [

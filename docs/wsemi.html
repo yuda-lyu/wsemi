@@ -2105,7 +2105,7 @@ console.log(arrat([1, 2, 3, '4', 5, 'abc'], 1, 4))
 
 
 <div class="description usertext">
-    <p>由vall陣列找尋vfind內各元素之第1位置</p>
+    <p>對arr陣列內各字串進行關鍵字計算，計算是否含有關鍵字與程度，多關鍵字用空白區隔，必要關鍵字可於字首添加「+」，不要關鍵字可於字首添加「-」</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrfilter.test.js">Github</a></p>
 </div>
 
@@ -2314,7 +2314,7 @@ console.log(r)
 
         
 <div class="param-desc">
-    <p>回傳所找到各元素第1位置之陣列</p>
+    <p>回傳結果物件陣列</p>
 </div>
 
 
@@ -43983,7 +43983,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line317">line 317</a>
+        <a href="pmMap.mjs.html">pmMap.mjs</a>, <a href="pmMap.mjs.html#line358">line 358</a>
     </li></ul></dd>
     
 
@@ -44329,6 +44329,46 @@ topAsync().catch(() =&gt; {})</code></pre>
     // [{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"reject":3,"d":260},{"err":"#3"}]
     // resolve 2 d 310
     // resolve 1 d 340
+
+    let delay = () =&gt; {
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                resolve()
+            }, 700)
+        })
+    }
+    await delay()
+
+    async function test7() {
+        return new Promise((resolve, reject) =&gt; {
+            let ms = []
+            pmMap({
+                t1: 1,
+                t2: 2.345,
+                t3: 'abc',
+            }, function (v, k) {
+                return new Promise(function(resolve, reject) {
+                    resolve(`k=${k},v=${v}`)
+                })
+            },)
+                .then(function(res) {
+                    console.log('then', JSON.stringify(res))
+                    ms.push({ res })
+                    resolve(ms)
+                })
+                .catch(function(err) {
+                    console.log('catch', JSON.stringify(err))
+                    ms.push({ err })
+                    resolve(ms)
+                })
+        })
+    }
+    console.log('test7')
+    let r7 = await test7()
+    console.log(JSON.stringify(r7))
+    // test7
+    // then ["k=t1,v=1","k=t2,v=2.345","k=t3,v=abc"]
+    // [{"res":["k=t1,v=1","k=t2,v=2.345","k=t3,v=abc"]}]
 
 }
 topAsync().catch(() =&gt; {})</code></pre>
@@ -45095,7 +45135,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmSeries.mjs.html">pmSeries.mjs</a>, <a href="pmSeries.mjs.html#line175">line 175</a>
+        <a href="pmSeries.mjs.html">pmSeries.mjs</a>, <a href="pmSeries.mjs.html#line212">line 212</a>
     </li></ul></dd>
     
 
@@ -45135,7 +45175,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 
 
 <div class="description usertext">
-    <p>Promise的mapSeries，循序執行promise</p>
+    <p>Promise的mapSeries，循序執行Promise</p>
 <p>若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
 使用函數執行時，等同於pmMap使用函數執行且takeLimit=1，promise依序執行完畢才會調用下一個promise。
 先行產生promise時，等同於pmMap使用函數執行且takeLimit=0，或是等同於pmMap先行產生promise，各promise直接執行視各自執行時間結束。</p>
@@ -45304,6 +45344,41 @@ topAsync().catch(() =&gt; {})</code></pre>
     // then ["#1","#2","#3","#4","#5"]
     // [{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"resolve":5,"d":100},{"resolve":4,"d":190},{"resolve":3,"d":260},{"resolve":2,"d":310},{"resolve":1,"d":340},{"res":["#1","#2","#3","#4","#5"]}]
 
+    async function test4() {
+        return new Promise((resolve, reject) =&gt; {
+            let ms = []
+
+            //通過function調用產生promise, 各promise循序調用
+            pmSeries({
+                t1: 1,
+                t2: 2.345,
+                t3: 'abc',
+            }, function (v, k) {
+                return new Promise(function(resolve, reject) {
+                    resolve(`k=${k},v=${v}`)
+                })
+            })
+                .then(function(res) {
+                    console.log('then', JSON.stringify(res))
+                    ms.push({ res })
+                    resolve(ms)
+                })
+                .catch(function(err) {
+                    console.log('catch', JSON.stringify(err))
+                    ms.push({ err })
+                    resolve(ms)
+                })
+
+        })
+
+    }
+    console.log('test4')
+    let r4 = await test4()
+    console.log(JSON.stringify(r4))
+    // test4
+    // then ["k=t1,v=1","k=t2,v=2.345","k=t3,v=abc"]
+    // [{"res":["k=t1,v=1","k=t2,v=2.345","k=t3,v=abc"]}]
+
 }
 topAsync().catch(() =&gt; {})</code></pre>
         </div>
@@ -45439,7 +45514,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmThrottle.mjs.html">pmThrottle.mjs</a>, <a href="pmThrottle.mjs.html#line255">line 255</a>
+        <a href="pmThrottle.mjs.html">pmThrottle.mjs</a>, <a href="pmThrottle.mjs.html#line253">line 253</a>
     </li></ul></dd>
     
 
@@ -45479,8 +45554,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 
 
 <div class="description usertext">
-    <p>非同步函數進行防抖</p>
-<p>通過new建構，呼叫時輸入不同之非同步函數，以及其輸入參數，會推入佇列後並循序等待執行</p>
+    <p>非同步函數進行防抖，通過new建構，呼叫時輸入不同之非同步函數，以及其輸入參數，會推入佇列後並循序等待執行</p>
 <p>同時僅會執行一個佇列(非同步函數)，若前一個執行完畢，則直接呼叫最新(末)的佇列，前面的呼叫皆會自動轉為catch，回傳訊息為物件{reason:'cancelled'}</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.js">Github</a></p>
 </div>
@@ -56257,7 +56331,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Sat May 01 2021 13:28:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Thu May 06 2021 22:06:00 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -56281,7 +56355,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js@6.x/umd/index.all.js',
                 //'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.5.75/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.5.76/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
