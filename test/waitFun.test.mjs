@@ -33,7 +33,7 @@ describe(`waitFun`, function() {
     // t1 then
     // ["waiting: 1","waiting: 2","t1 then"]
     let r1 = '["waiting: 1","waiting: 2","t1 then"]'
-    it(`should return '${r1}' when run test1'`, async function() {
+    it(`should return '${r1}' when run test1`, async function() {
         let ms = await test1()
         //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
