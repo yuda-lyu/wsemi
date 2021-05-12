@@ -52,6 +52,12 @@ describe(`o2j`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return 'true' when input true`, function() {
+        let r = o2j(true)
+        let rr = 'true'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`sould return '""' when input ''`, function() {
         let r = o2j('')
         let rr = '""'

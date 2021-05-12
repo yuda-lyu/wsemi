@@ -52,6 +52,12 @@ describe(`j2o`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return true when input 'true'`, async function() {
+        let r = j2o('true')
+        let rr = true
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`sould return '' when input '""'`, function() {
         let r = j2o('""')
         let rr = ''
