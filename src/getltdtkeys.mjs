@@ -1,6 +1,5 @@
-import map from 'lodash/map'
+import each from 'lodash/each'
 import keys from 'lodash/keys'
-import flattenDeep from 'lodash/flattenDeep'
 import uniq from 'lodash/uniq'
 import isearr from './isearr.mjs'
 
@@ -25,31 +24,15 @@ function getltdtkeys(ltdt) {
         return []
     }
 
-    //keys
-    // let keys = _.chain(ltdt)
-    //     .map(function(v) {
-    //         return _.keys(v)
-    //     })
-    //     .flattenDeep()
-    //     .uniq()
-    //     .sort()
-    //     .value()
-
-    //rowkeys
-    let rowkeys = map(ltdt, function(v) {
-        return keys(v)
+    //ks
+    let ks = []
+    each(ltdt, function(v) {
+        let kst = keys(v)
+        ks = [...ks, ...kst]
+        ks = uniq(ks)
     })
 
-    //r
-    let r = flattenDeep(rowkeys)
-
-    //uniq
-    r = uniq(r)
-
-    //sort
-    r.sort()
-
-    return r
+    return ks
 }
 
 

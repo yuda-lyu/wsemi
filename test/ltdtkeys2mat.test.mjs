@@ -63,15 +63,17 @@ describe(`ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null`, function() {
+    k = 1
+    it(`sould return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null)
-        let rr = []
+        let rr = [[12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined`, function() {
+    k = 1
+    it(`sould return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined)
-        let rr = []
+        let rr = [[12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
