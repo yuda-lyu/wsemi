@@ -4,6 +4,7 @@ import map from 'lodash/map'
 import concat from 'lodash/concat'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
+import getltdtkeys from './getltdtkeys.mjs'
 import ltdtkeys2mat from './ltdtkeys2mat.mjs'
 
 
@@ -13,8 +14,8 @@ import ltdtkeys2mat from './ltdtkeys2mat.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeysheads2mat.test.js Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
- * @param {Array} keys 輸入字串陣列
- * @param {Object} kphead 輸入字典物件，內含keys對應values之物件，供keys查詢得values
+ * @param {Array} keys 輸入字串陣列，若不輸入則由ltdt提取
+ * @param {Object} kphead 輸入字典物件，內含keys對應values之物件，供keys查詢得values，若不輸入則由keys提取
  * @returns {Array} 回傳資料陣列
  * @example
  *
@@ -28,14 +29,21 @@ function ltdtkeysheads2mat(ltdt, keys, kphead) {
     if (!isearr(ltdt)) {
         return []
     }
+
+    //keys
     if (!isearr(keys)) {
-        return []
-    }
-    if (!iseobj(kphead)) {
-        return []
+        keys = getltdtkeys(ltdt)
     }
 
-    //check ltdt
+    //kphead
+    if (!iseobj(kphead)) {
+        kphead = {}
+        each(keys, (v) => {
+            kphead[v] = v
+        })
+    }
+
+    //check
     let b = false
     each(ltdt, function(v) {
         if (!iseobj(v)) {

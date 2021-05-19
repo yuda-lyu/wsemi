@@ -1,5 +1,6 @@
 import each from 'lodash/each'
 import map from 'lodash/map'
+import size from 'lodash/size'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
 import isstr from './isstr.mjs'
@@ -15,7 +16,7 @@ import getltdtkeys from './getltdtkeys.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.js Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
- * @param {Array} [keys=null] 輸入字串陣列，若不輸入則由ltdt提取，預設null
+ * @param {Array} keys 輸入字串陣列，若不輸入則由ltdt提取
  * @returns {Array} 回傳資料陣列
  * @example
  *
@@ -23,20 +24,24 @@ import getltdtkeys from './getltdtkeys.mjs'
  * // => [[12, 34.56], ['123', 'xyz']]
  *
  */
-function ltdtkeys2mat(ltdt, keys = null) {
+function ltdtkeys2mat(ltdt, keys) {
 
     //check
     if (!isearr(ltdt)) {
         return []
     }
-    if (keys === null) {
+
+    //keys
+    if (!isearr(keys)) {
         keys = getltdtkeys(ltdt)
     }
-    else if (!isearr(keys)) {
+
+    //check
+    if (size(keys) === 0) {
         return []
     }
 
-    //check ltdt
+    //check
     let b = false
     each(ltdt, function(v) {
         if (!iseobj(v)) {

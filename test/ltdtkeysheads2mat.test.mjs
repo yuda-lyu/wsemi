@@ -25,7 +25,7 @@ describe(`ltdtkeysheads2mat`, function() {
         ltdt: [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }],
         keys: ['a', 'b'],
         kphead: {},
-        out: []
+        out: [['a', 'b'], [12, 34.56], ['123', 'xyz']]
     }
     it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 2
@@ -39,7 +39,7 @@ describe(`ltdtkeysheads2mat`, function() {
         ltdt: [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }],
         keys: [],
         kphead: { a: 'c1', b: 'c2' },
-        out: []
+        out: [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]
     }
     it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 3
@@ -53,7 +53,7 @@ describe(`ltdtkeysheads2mat`, function() {
         ltdt: [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }],
         keys: [],
         kphead: {},
-        out: []
+        out: [['a', 'b'], [12, 34.56], ['123', 'xyz']]
     }
     it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].ltdt)}, ${JSON.stringify(o[k].keys)}, ${JSON.stringify(o[k].kphead)}`, function() {
         k = 4
@@ -62,63 +62,73 @@ describe(`ltdtkeysheads2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], ''`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], ''`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], '')
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], []`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], []`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], [])
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], {}`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], {}`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], {})
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], null`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], null`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], null)
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], undefined`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], undefined`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], undefined)
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ''`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ''`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '')
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], []`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], []`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], [])
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {})
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], null)
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return [] when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined`, function() {
+    k = 2
+    it(`should return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined`, function() {
         let r = ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], undefined)
-        let rr = []
+        let rr = [['a', 'b'], [12, 34.56], ['123', 'xyz']]
         assert.strict.deepStrictEqual(r, rr)
     })
 
