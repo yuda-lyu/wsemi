@@ -24,13 +24,13 @@ describe(`strmid`, function() {
 
     it(`sould return '' when input 'test中文', 2, 0`, function() {
         let r = strmid('test中文', 2, 0)
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', 2, -1`, function() {
         let r = strmid('test中文', 2, -1)
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -54,31 +54,31 @@ describe(`strmid`, function() {
 
     it(`sould return '' when input 'test中文', 2, ''`, function() {
         let r = strmid('test中文', 2, '')
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', 2, []`, function() {
         let r = strmid('test中文', 2, [])
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', 2, {}`, function() {
         let r = strmid('test中文', 2, {})
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', 2, null`, function() {
         let r = strmid('test中文', 2, null)
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`sould return '' when input 'test中文', 2, undefined`, function() {
         let r = strmid('test中文', 2, undefined)
-        let rr = ''
+        let rr = 's'
         assert.strict.deepStrictEqual(r, rr)
     })
 

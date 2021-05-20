@@ -1,6 +1,7 @@
 import isestr from './isestr.mjs'
 import isp0int from './isp0int.mjs'
 import ispint from './ispint.mjs'
+import cint from './cint.mjs'
 
 
 /**
@@ -10,7 +11,7 @@ import ispint from './ispint.mjs'
  * @memberOf wsemi
  * @param {String} c 輸入要被取的字串
  * @param {Integer} s 輸入要由第s個位置開始，為正整數
- * @param {Integer} n 輸入開始後n個字元，為正整數
+ * @param {Integer} [n=1] 輸入開始後n個字元，為正整數，預設1
  * @returns {String} 回傳處理後字串
  * @example
  *
@@ -21,7 +22,7 @@ import ispint from './ispint.mjs'
  * // => 'st中'
  *
  */
-function strmid(c, s, n) {
+function strmid(c, s, n = 1) {
 
     //check
     if (!isestr(c)) {
@@ -31,10 +32,13 @@ function strmid(c, s, n) {
         return ''
     }
     if (!ispint(n)) {
-        return ''
+        n = 1
+    }
+    else {
+        n = cint(n)
     }
 
-    return c.substring((s), (s + n))
+    return c.substring(s, (s + n))
 }
 
 export default strmid
