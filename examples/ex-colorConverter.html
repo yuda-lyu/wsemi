@@ -6,7 +6,7 @@
     
     <!-- @babel/polyfill已廢棄 -->
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
@@ -24,7 +24,7 @@
             <v-main>
                 <v-container style="margin:0px; padding:20px 30px;">
 
-                    <div style="padding:10px 0px 20px 0px; font-size:1.4rem;">color converter</div>
+                    <div style="padding:10px 0px 20px 0px; font-size:1.4rem;">Color Converter</div>
 
                     <v-row>
                         <v-col
@@ -66,9 +66,33 @@
                             ></v-text-field>
                         </v-col>
 
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hex8 color"
+                                hide-details
+                                v-model="hex8"
+                            ></v-text-field>
+                        </v-col>
+
                     </v-row>
 
                     <v-row>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="rgb color"
+                                hide-details
+                                v-model="rgb"
+                            ></v-text-field>
+                        </v-col>
 
                         <v-col
                             cols="12"
@@ -88,25 +112,37 @@
                             md="3"
                         >
                             <v-text-field 
-                                label="rgb color"
+                                label="rgba color"
                                 hide-details
-                                v-model="rgb"
+                                v-model="rgba"
                             ></v-text-field>
                         </v-col>
 
-                    </v-row>
-
-                    <v-row>
-                        
                         <v-col
                             cols="12"
                             sm="6"
                             md="3"
                         >
                             <v-text-field 
-                                label="hsv color(percentage)"
+                                label="rgba color(percentage)"
                                 hide-details
-                                v-model="hsv"
+                                v-model="rgbap"
+                            ></v-text-field>
+                        </v-col>
+
+                    </v-row>
+
+                    <v-row>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsl color"
+                                hide-details
+                                v-model="hsl"
                             ></v-text-field>
                         </v-col>
 
@@ -118,7 +154,83 @@
                             <v-text-field 
                                 label="hsl color(percentage)"
                                 hide-details
-                                v-model="hsl"
+                                v-model="hslp"
+                            ></v-text-field>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsla color"
+                                hide-details
+                                v-model="hsla"
+                            ></v-text-field>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsla color(percentage)"
+                                hide-details
+                                v-model="hslap"
+                            ></v-text-field>
+                        </v-col>
+
+                    </v-row>
+
+                    <v-row>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsv color"
+                                hide-details
+                                v-model="hsv"
+                            ></v-text-field>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsv color(percentage)"
+                                hide-details
+                                v-model="hsvp"
+                            ></v-text-field>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsva color"
+                                hide-details
+                                v-model="hsva"
+                            ></v-text-field>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            sm="6"
+                            md="3"
+                        >
+                            <v-text-field 
+                                label="hsva color(percentage)"
+                                hide-details
+                                v-model="hsvap"
                             ></v-text-field>
                         </v-col>
 
@@ -135,14 +247,21 @@
             el: '#app',
             vuetify: new Vuetify(),
             data: {
-                // rs:rrs,
-                // cs:'',
                 c:'#fff',
                 hex:'',
+                hex8:'',
                 rgb:'',
                 rgbp:'',
+                rgba:'',
+                rgbap:'',
                 hsv:'',
+                hsvp:'',
+                hsva:'',
+                hsvap:'',
                 hsl:'',
+                hslp:'',
+                hsla:'',
+                hslap:'',
             },
             computed:{
 
@@ -150,12 +269,21 @@
             methods:{
                 convert:function(){
                     let vo=this
-                    let r=wsemi.tinycolor(vo.c)
-                    vo.hex=r.toHexString()
-                    vo.rgb=r.toRgbString()
-                    vo.rgbp=r.toPercentageRgbString()
-                    vo.hsv=r.toHsvString()
-                    vo.hsl=r.toHslString()
+                    let oc=wsemi.color
+                    vo.hex=oc.toHexString(vo.c)
+                    vo.hex8=oc.toHex8String(vo.c)
+                    vo.rgb=oc.toRgbString(vo.c)
+                    vo.rgbp=oc.toRgbPString(vo.c)
+                    vo.rgba=oc.toRgbaString(vo.c)
+                    vo.rgbap=oc.toRgbaPString(vo.c)
+                    vo.hsl=oc.toHslString(vo.c)
+                    vo.hslp=oc.toHslPString(vo.c)
+                    vo.hsla=oc.toHslaString(vo.c)
+                    vo.hslap=oc.toHslaPString(vo.c)
+                    vo.hsv=oc.toHsvString(vo.c)
+                    vo.hsvp=oc.toHsvPString(vo.c)
+                    vo.hsva=oc.toHsvaString(vo.c)
+                    vo.hsvap=oc.toHsvaPString(vo.c)
                 },
             },
         })
