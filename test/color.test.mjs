@@ -4,6 +4,24 @@ import oc from '../src/color.mjs'
 
 describe(`color`, function() {
 
+    it(`should return 'rgba(205, 205, 205, 1)' when toRgbaString input '#cd'`, function() {
+        let r = oc.toRgbaString('#cd')
+        let rr = 'rgba(205, 205, 205, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rgba(102, 170, 51, 1)' when toRgbaString input '#6a3'`, function() {
+        let r = oc.toRgbaString('#6a3')
+        let rr = 'rgba(102, 170, 51, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rgba(107, 142, 35, 1)' when toRgbaString input '#6b8e23'`, function() {
+        let r = oc.toRgbaString('#6b8e23')
+        let rr = 'rgba(107, 142, 35, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return 'rgba(135, 206, 235, 1)' when toRgbaString input 'skyblue'`, function() {
         let r = oc.toRgbaString('skyblue')
         let rr = 'rgba(135, 206, 235, 1)'
@@ -292,171 +310,171 @@ describe(`color`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 1)' when toRgbaString input { r: 255, g: 150, b: 50 }`, function() {
+    it(`should return 'rgba(255, 150, 50, 1)' when toRgbaString input { r: 255, g: 150, b: 50 }`, function() {
         let r = oc.toRgbaString({ r: 255, g: 150, b: 50 })
-        let rr = 'rgba(1, 1, 0, 1)'
+        let rr = 'rgba(255, 150, 50, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 1)' when toRgbaString input { R: 255, G: 150, B: 50 }`, function() {
+    it(`should return 'rgba(255, 150, 50, 1)' when toRgbaString input { R: 255, G: 150, B: 50 }`, function() {
         let r = oc.toRgbaString({ R: 255, G: 150, B: 50 })
-        let rr = 'rgba(1, 1, 0, 1)'
+        let rr = 'rgba(255, 150, 50, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 1)' when toRgbaString input { r: '50%', g: 150, b: 50 }`, function() {
+    it(`should return 'rgba(128, 150, 50, 1)' when toRgbaString input { r: '50%', g: 150, b: 50 }`, function() {
         let r = oc.toRgbaString({ r: '50%', g: 150, b: 50 })
-        let rr = 'rgba(1, 1, 0, 1)'
+        let rr = 'rgba(128, 150, 50, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 0, 0, 1)' when toRgbaString input { r: '50%', g: '12%', b: '8%' }`, function() {
+    it(`should return 'rgba(128, 31, 20, 1)' when toRgbaString input { r: '50%', g: '12%', b: '8%' }`, function() {
         let r = oc.toRgbaString({ r: '50%', g: '12%', b: '8%' })
-        let rr = 'rgba(1, 0, 0, 1)'
+        let rr = 'rgba(128, 31, 20, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 0.1)' when toRgbaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'rgba(255, 150, 50, 0.1)' when toRgbaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ r: 255, g: 150, b: 50, a: 0.1 })
-        let rr = 'rgba(1, 1, 0, 0.1)'
+        let rr = 'rgba(255, 150, 50, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 0.1)' when toRgbaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
+    it(`should return 'rgba(255, 150, 50, 0.1)' when toRgbaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
         let r = oc.toRgbaString({ R: 255, G: 150, B: 50, A: 0.1 })
-        let rr = 'rgba(1, 1, 0, 0.1)'
+        let rr = 'rgba(255, 150, 50, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 1, 0, 0.1)' when toRgbaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'rgba(128, 150, 50, 0.1)' when toRgbaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ r: '50%', g: 150, b: 50, a: 0.1 })
-        let rr = 'rgba(1, 1, 0, 0.1)'
+        let rr = 'rgba(128, 150, 50, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(1, 0, 0, 0.1)' when toRgbaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
+    it(`should return 'rgba(128, 31, 20, 0.1)' when toRgbaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
         let r = oc.toRgbaString({ r: '50%', g: '12%', b: '8%', a: 0.1 })
-        let rr = 'rgba(1, 0, 0, 0.1)'
+        let rr = 'rgba(128, 31, 20, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 1)' when toRgbaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'rgba(34, 31, 46, 1)' when toRgbaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: 0.2, l: 0.15 })
-        let rr = 'rgba(46, 31, 31, 1)'
+        let rr = 'rgba(34, 31, 46, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 1)' when toRgbaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
+    it(`should return 'rgba(34, 31, 46, 1)' when toRgbaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
         let r = oc.toRgbaString({ H: 255, S: 0.2, L: 0.15 })
-        let rr = 'rgba(46, 31, 31, 1)'
+        let rr = 'rgba(34, 31, 46, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(23, 18, 18, 1)' when toRgbaString input { h: 255, s: '12%', l: '8%' }`, function() {
+    it(`should return 'rgba(19, 18, 23, 1)' when toRgbaString input { h: 255, s: '12%', l: '8%' }`, function() {
         let r = oc.toRgbaString({ h: 255, s: '12%', l: '8%' })
-        let rr = 'rgba(23, 18, 18, 1)'
+        let rr = 'rgba(19, 18, 23, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 1)' when toRgbaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'rgba(31, 46, 46, 1)' when toRgbaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: 0.2, l: 0.15 })
-        let rr = 'rgba(46, 31, 31, 1)'
+        let rr = 'rgba(31, 46, 46, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(23, 18, 18, 1)' when toRgbaString input { h: '50%', s: '12%', l: '8%' }`, function() {
+    it(`should return 'rgba(18, 23, 23, 1)' when toRgbaString input { h: '50%', s: '12%', l: '8%' }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: '12%', l: '8%' })
-        let rr = 'rgba(23, 18, 18, 1)'
+        let rr = 'rgba(18, 23, 23, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 0.1)' when toRgbaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'rgba(34, 31, 46, 0.1)' when toRgbaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'rgba(46, 31, 31, 0.1)'
+        let rr = 'rgba(34, 31, 46, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 0.1)' when toRgbaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
+    it(`should return 'rgba(34, 31, 46, 0.1)' when toRgbaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
         let r = oc.toRgbaString({ H: 255, S: 0.2, L: 0.15, A: 0.1 })
-        let rr = 'rgba(46, 31, 31, 0.1)'
+        let rr = 'rgba(34, 31, 46, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(23, 18, 18, 0.1)' when toRgbaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'rgba(19, 18, 23, 0.1)' when toRgbaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: '12%', l: '8%', a: 0.1 })
-        let rr = 'rgba(23, 18, 18, 0.1)'
+        let rr = 'rgba(19, 18, 23, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(46, 31, 31, 0.1)' when toRgbaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'rgba(31, 46, 46, 0.1)' when toRgbaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'rgba(46, 31, 31, 0.1)'
+        let rr = 'rgba(31, 46, 46, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(23, 18, 18, 0.1)' when toRgbaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'rgba(18, 23, 23, 0.1)' when toRgbaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: '12%', l: '8%', a: 0.1 })
-        let rr = 'rgba(23, 18, 18, 0.1)'
+        let rr = 'rgba(18, 23, 23, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 1)' when toRgbaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'rgba(33, 31, 38, 1)' when toRgbaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: 0.2, v: 0.15 })
-        let rr = 'rgba(38, 31, 31, 1)'
+        let rr = 'rgba(33, 31, 38, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 1)' when toRgbaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
+    it(`should return 'rgba(33, 31, 38, 1)' when toRgbaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
         let r = oc.toRgbaString({ H: 255, S: 0.2, V: 0.15 })
-        let rr = 'rgba(38, 31, 31, 1)'
+        let rr = 'rgba(33, 31, 38, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(20, 18, 18, 1)' when toRgbaString input { h: 255, s: '12%', v: '8%' }`, function() {
+    it(`should return 'rgba(19, 18, 20, 1)' when toRgbaString input { h: 255, s: '12%', v: '8%' }`, function() {
         let r = oc.toRgbaString({ h: 255, s: '12%', v: '8%' })
-        let rr = 'rgba(20, 18, 18, 1)'
+        let rr = 'rgba(19, 18, 20, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 1)' when toRgbaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'rgba(31, 38, 38, 1)' when toRgbaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: 0.2, v: 0.15 })
-        let rr = 'rgba(38, 31, 31, 1)'
+        let rr = 'rgba(31, 38, 38, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(20, 18, 18, 1)' when toRgbaString input { h: '50%', s: '12%', v: '8%' }`, function() {
+    it(`should return 'rgba(18, 20, 20, 1)' when toRgbaString input { h: '50%', s: '12%', v: '8%' }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: '12%', v: '8%' })
-        let rr = 'rgba(20, 18, 18, 1)'
+        let rr = 'rgba(18, 20, 20, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 0.1)' when toRgbaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'rgba(33, 31, 38, 0.1)' when toRgbaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'rgba(38, 31, 31, 0.1)'
+        let rr = 'rgba(33, 31, 38, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 0.1)' when toRgbaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
+    it(`should return 'rgba(33, 31, 38, 0.1)' when toRgbaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
         let r = oc.toRgbaString({ H: 255, S: 0.2, V: 0.15, A: 0.1 })
-        let rr = 'rgba(38, 31, 31, 0.1)'
+        let rr = 'rgba(33, 31, 38, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(20, 18, 18, 0.1)' when toRgbaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'rgba(19, 18, 20, 0.1)' when toRgbaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: 255, s: '12%', v: '8%', a: 0.1 })
-        let rr = 'rgba(20, 18, 18, 0.1)'
+        let rr = 'rgba(19, 18, 20, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(38, 31, 31, 0.1)' when toRgbaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'rgba(31, 38, 38, 0.1)' when toRgbaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'rgba(38, 31, 31, 0.1)'
+        let rr = 'rgba(31, 38, 38, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rgba(20, 18, 18, 0.1)' when toRgbaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'rgba(18, 20, 20, 0.1)' when toRgbaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toRgbaString({ h: '50%', s: '12%', v: '8%', a: 0.1 })
-        let rr = 'rgba(20, 18, 18, 0.1)'
+        let rr = 'rgba(18, 20, 20, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -688,171 +706,171 @@ describe(`color`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(29, 0.672, 0.002, 1)' when toHslaString input { r: 255, g: 150, b: 50 }`, function() {
+    it(`should return 'hsla(29, 1, 0.598, 1)' when toHslaString input { r: 255, g: 150, b: 50 }`, function() {
         let r = oc.toHslaString({ r: 255, g: 150, b: 50 })
-        let rr = 'hsla(29, 0.672, 0.002, 1)'
+        let rr = 'hsla(29, 1, 0.598, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(29, 0.672, 0.002, 1)' when toHslaString input { R: 255, G: 150, B: 50 }`, function() {
+    it(`should return 'hsla(29, 1, 0.598, 1)' when toHslaString input { R: 255, G: 150, B: 50 }`, function() {
         let r = oc.toHslaString({ R: 255, G: 150, B: 50 })
-        let rr = 'hsla(29, 0.672, 0.002, 1)'
+        let rr = 'hsla(29, 1, 0.598, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(74, 0.5, 0.002, 1)' when toHslaString input { r: '50%', g: 150, b: 50 }`, function() {
+    it(`should return 'hsla(74, 0.5, 0.392, 1)' when toHslaString input { r: '50%', g: 150, b: 50 }`, function() {
         let r = oc.toHslaString({ r: '50%', g: 150, b: 50 })
-        let rr = 'hsla(74, 0.5, 0.002, 1)'
+        let rr = 'hsla(74, 0.5, 0.392, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(6, 0.724, 0.001, 1)' when toHslaString input { r: '50%', g: '12%', b: '8%' }`, function() {
+    it(`should return 'hsla(6, 0.724, 0.29, 1)' when toHslaString input { r: '50%', g: '12%', b: '8%' }`, function() {
         let r = oc.toHslaString({ r: '50%', g: '12%', b: '8%' })
-        let rr = 'hsla(6, 0.724, 0.001, 1)'
+        let rr = 'hsla(6, 0.724, 0.29, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(29, 0.672, 0.002, 0.1)' when toHslaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'hsla(29, 1, 0.598, 0.1)' when toHslaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHslaString({ r: 255, g: 150, b: 50, a: 0.1 })
-        let rr = 'hsla(29, 0.672, 0.002, 0.1)'
+        let rr = 'hsla(29, 1, 0.598, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(29, 0.672, 0.002, 0.1)' when toHslaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
+    it(`should return 'hsla(29, 1, 0.598, 0.1)' when toHslaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
         let r = oc.toHslaString({ R: 255, G: 150, B: 50, A: 0.1 })
-        let rr = 'hsla(29, 0.672, 0.002, 0.1)'
+        let rr = 'hsla(29, 1, 0.598, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(74, 0.5, 0.002, 0.1)' when toHslaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'hsla(74, 0.5, 0.392, 0.1)' when toHslaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHslaString({ r: '50%', g: 150, b: 50, a: 0.1 })
-        let rr = 'hsla(74, 0.5, 0.002, 0.1)'
+        let rr = 'hsla(74, 0.5, 0.392, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(6, 0.724, 0.001, 0.1)' when toHslaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsla(6, 0.724, 0.29, 0.1)' when toHslaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
         let r = oc.toHslaString({ r: '50%', g: '12%', b: '8%', a: 0.1 })
-        let rr = 'hsla(6, 0.724, 0.001, 0.1)'
+        let rr = 'hsla(6, 0.724, 0.29, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 1)' when toHslaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'hsla(255, 0.2, 0.15, 1)' when toHslaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHslaString({ h: 255, s: 0.2, l: 0.15 })
-        let rr = 'hsla(1, 0.2, 0.15, 1)'
+        let rr = 'hsla(255, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 1)' when toHslaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
+    it(`should return 'hsla(255, 0.2, 0.15, 1)' when toHslaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
         let r = oc.toHslaString({ H: 255, S: 0.2, L: 0.15 })
-        let rr = 'hsla(1, 0.2, 0.15, 1)'
+        let rr = 'hsla(255, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.12, 0.08, 1)' when toHslaString input { h: 255, s: '12%', l: '8%' }`, function() {
+    it(`should return 'hsla(255, 0.12, 0.08, 1)' when toHslaString input { h: 255, s: '12%', l: '8%' }`, function() {
         let r = oc.toHslaString({ h: 255, s: '12%', l: '8%' })
-        let rr = 'hsla(1, 0.12, 0.08, 1)'
+        let rr = 'hsla(255, 0.12, 0.08, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 1)' when toHslaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'hsla(180, 0.2, 0.15, 1)' when toHslaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: 0.2, l: 0.15 })
-        let rr = 'hsla(1, 0.2, 0.15, 1)'
+        let rr = 'hsla(180, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(0, 0.12, 0.08, 1)' when toHslaString input { h: '50%', s: '12%', l: '8%' }`, function() {
+    it(`should return 'hsla(180, 0.12, 0.08, 1)' when toHslaString input { h: '50%', s: '12%', l: '8%' }`, function() {
         let r = oc.toHslaString({ h: '50%', s: '12%', l: '8%' })
-        let rr = 'hsla(0, 0.12, 0.08, 1)'
+        let rr = 'hsla(180, 0.12, 0.08, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 0.1)' when toHslaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.2, 0.15, 0.1)' when toHslaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: 255, s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'hsla(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsla(255, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 0.1)' when toHslaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.2, 0.15, 0.1)' when toHslaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
         let r = oc.toHslaString({ H: 255, S: 0.2, L: 0.15, A: 0.1 })
-        let rr = 'hsla(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsla(255, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.12, 0.08, 0.1)' when toHslaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.12, 0.08, 0.1)' when toHslaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: 255, s: '12%', l: '8%', a: 0.1 })
-        let rr = 'hsla(1, 0.12, 0.08, 0.1)'
+        let rr = 'hsla(255, 0.12, 0.08, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.2, 0.15, 0.1)' when toHslaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsla(180, 0.2, 0.15, 0.1)' when toHslaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'hsla(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsla(180, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(0, 0.12, 0.08, 0.1)' when toHslaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsla(180, 0.12, 0.08, 0.1)' when toHslaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: '12%', l: '8%', a: 0.1 })
-        let rr = 'hsla(0, 0.12, 0.08, 0.1)'
+        let rr = 'hsla(180, 0.12, 0.08, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 1)' when toHslaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'hsla(255, 0.111, 0.135, 1)' when toHslaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHslaString({ h: 255, s: 0.2, v: 0.15 })
-        let rr = 'hsla(1, 0.111, 0.135, 1)'
+        let rr = 'hsla(255, 0.111, 0.135, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 1)' when toHslaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
+    it(`should return 'hsla(255, 0.111, 0.135, 1)' when toHslaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
         let r = oc.toHslaString({ H: 255, S: 0.2, V: 0.15 })
-        let rr = 'hsla(1, 0.111, 0.135, 1)'
+        let rr = 'hsla(255, 0.111, 0.135, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.064, 0.075, 1)' when toHslaString input { h: 255, s: '12%', v: '8%' }`, function() {
+    it(`should return 'hsla(255, 0.064, 0.075, 1)' when toHslaString input { h: 255, s: '12%', v: '8%' }`, function() {
         let r = oc.toHslaString({ h: 255, s: '12%', v: '8%' })
-        let rr = 'hsla(1, 0.064, 0.075, 1)'
+        let rr = 'hsla(255, 0.064, 0.075, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 1)' when toHslaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'hsla(180, 0.111, 0.135, 1)' when toHslaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: 0.2, v: 0.15 })
-        let rr = 'hsla(1, 0.111, 0.135, 1)'
+        let rr = 'hsla(180, 0.111, 0.135, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(0, 0.064, 0.075, 1)' when toHslaString input { h: '50%', s: '12%', v: '8%' }`, function() {
+    it(`should return 'hsla(180, 0.064, 0.075, 1)' when toHslaString input { h: '50%', s: '12%', v: '8%' }`, function() {
         let r = oc.toHslaString({ h: '50%', s: '12%', v: '8%' })
-        let rr = 'hsla(0, 0.064, 0.075, 1)'
+        let rr = 'hsla(180, 0.064, 0.075, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 0.1)' when toHslaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.111, 0.135, 0.1)' when toHslaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: 255, s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'hsla(1, 0.111, 0.135, 0.1)'
+        let rr = 'hsla(255, 0.111, 0.135, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 0.1)' when toHslaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.111, 0.135, 0.1)' when toHslaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
         let r = oc.toHslaString({ H: 255, S: 0.2, V: 0.15, A: 0.1 })
-        let rr = 'hsla(1, 0.111, 0.135, 0.1)'
+        let rr = 'hsla(255, 0.111, 0.135, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.064, 0.075, 0.1)' when toHslaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsla(255, 0.064, 0.075, 0.1)' when toHslaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: 255, s: '12%', v: '8%', a: 0.1 })
-        let rr = 'hsla(1, 0.064, 0.075, 0.1)'
+        let rr = 'hsla(255, 0.064, 0.075, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(1, 0.111, 0.135, 0.1)' when toHslaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsla(180, 0.111, 0.135, 0.1)' when toHslaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'hsla(1, 0.111, 0.135, 0.1)'
+        let rr = 'hsla(180, 0.111, 0.135, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsla(0, 0.064, 0.075, 0.1)' when toHslaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsla(180, 0.064, 0.075, 0.1)' when toHslaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHslaString({ h: '50%', s: '12%', v: '8%', a: 0.1 })
-        let rr = 'hsla(0, 0.064, 0.075, 0.1)'
+        let rr = 'hsla(180, 0.064, 0.075, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -1084,171 +1102,171 @@ describe(`color`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(29, 0.804, 0.004, 1)' when toHsvaString input { r: 255, g: 150, b: 50 }`, function() {
+    it(`should return 'hsva(29, 0.804, 1, 1)' when toHsvaString input { r: 255, g: 150, b: 50 }`, function() {
         let r = oc.toHsvaString({ r: 255, g: 150, b: 50 })
-        let rr = 'hsva(29, 0.804, 0.004, 1)'
+        let rr = 'hsva(29, 0.804, 1, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(29, 0.804, 0.004, 1)' when toHsvaString input { R: 255, G: 150, B: 50 }`, function() {
+    it(`should return 'hsva(29, 0.804, 1, 1)' when toHsvaString input { R: 255, G: 150, B: 50 }`, function() {
         let r = oc.toHsvaString({ R: 255, G: 150, B: 50 })
-        let rr = 'hsva(29, 0.804, 0.004, 1)'
+        let rr = 'hsva(29, 0.804, 1, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(74, 0.667, 0.002, 1)' when toHsvaString input { r: '50%', g: 150, b: 50 }`, function() {
+    it(`should return 'hsva(74, 0.667, 0.588, 1)' when toHsvaString input { r: '50%', g: 150, b: 50 }`, function() {
         let r = oc.toHsvaString({ r: '50%', g: 150, b: 50 })
-        let rr = 'hsva(74, 0.667, 0.002, 1)'
+        let rr = 'hsva(74, 0.667, 0.588, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(6, 0.84, 0.002, 1)' when toHsvaString input { r: '50%', g: '12%', b: '8%' }`, function() {
+    it(`should return 'hsva(6, 0.84, 0.5, 1)' when toHsvaString input { r: '50%', g: '12%', b: '8%' }`, function() {
         let r = oc.toHsvaString({ r: '50%', g: '12%', b: '8%' })
-        let rr = 'hsva(6, 0.84, 0.002, 1)'
+        let rr = 'hsva(6, 0.84, 0.5, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(29, 0.804, 0.004, 0.1)' when toHsvaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'hsva(29, 0.804, 1, 0.1)' when toHsvaString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ r: 255, g: 150, b: 50, a: 0.1 })
-        let rr = 'hsva(29, 0.804, 0.004, 0.1)'
+        let rr = 'hsva(29, 0.804, 1, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(29, 0.804, 0.004, 0.1)' when toHsvaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
+    it(`should return 'hsva(29, 0.804, 1, 0.1)' when toHsvaString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
         let r = oc.toHsvaString({ R: 255, G: 150, B: 50, A: 0.1 })
-        let rr = 'hsva(29, 0.804, 0.004, 0.1)'
+        let rr = 'hsva(29, 0.804, 1, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(74, 0.667, 0.002, 0.1)' when toHsvaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return 'hsva(74, 0.667, 0.588, 0.1)' when toHsvaString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ r: '50%', g: 150, b: 50, a: 0.1 })
-        let rr = 'hsva(74, 0.667, 0.002, 0.1)'
+        let rr = 'hsva(74, 0.667, 0.588, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(6, 0.84, 0.002, 0.1)' when toHsvaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsva(6, 0.84, 0.5, 0.1)' when toHsvaString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
         let r = oc.toHsvaString({ r: '50%', g: '12%', b: '8%', a: 0.1 })
-        let rr = 'hsva(6, 0.84, 0.002, 0.1)'
+        let rr = 'hsva(6, 0.84, 0.5, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 1)' when toHsvaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'hsva(255, 0.333, 0.18, 1)' when toHsvaString input { h: 255, s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: 0.2, l: 0.15 })
-        let rr = 'hsva(1, 0.333, 0.18, 1)'
+        let rr = 'hsva(255, 0.333, 0.18, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 1)' when toHsvaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
+    it(`should return 'hsva(255, 0.333, 0.18, 1)' when toHsvaString input { H: 255, S: 0.2, L: 0.15 }`, function() {
         let r = oc.toHsvaString({ H: 255, S: 0.2, L: 0.15 })
-        let rr = 'hsva(1, 0.333, 0.18, 1)'
+        let rr = 'hsva(255, 0.333, 0.18, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.214, 0.09, 1)' when toHsvaString input { h: 255, s: '12%', l: '8%' }`, function() {
+    it(`should return 'hsva(255, 0.214, 0.09, 1)' when toHsvaString input { h: 255, s: '12%', l: '8%' }`, function() {
         let r = oc.toHsvaString({ h: 255, s: '12%', l: '8%' })
-        let rr = 'hsva(1, 0.214, 0.09, 1)'
+        let rr = 'hsva(255, 0.214, 0.09, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 1)' when toHsvaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
+    it(`should return 'hsva(180, 0.333, 0.18, 1)' when toHsvaString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: 0.2, l: 0.15 })
-        let rr = 'hsva(1, 0.333, 0.18, 1)'
+        let rr = 'hsva(180, 0.333, 0.18, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(0, 0.214, 0.09, 1)' when toHsvaString input { h: '50%', s: '12%', l: '8%' }`, function() {
+    it(`should return 'hsva(180, 0.214, 0.09, 1)' when toHsvaString input { h: '50%', s: '12%', l: '8%' }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: '12%', l: '8%' })
-        let rr = 'hsva(0, 0.214, 0.09, 1)'
+        let rr = 'hsva(180, 0.214, 0.09, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 0.1)' when toHsvaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.333, 0.18, 0.1)' when toHsvaString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'hsva(1, 0.333, 0.18, 0.1)'
+        let rr = 'hsva(255, 0.333, 0.18, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 0.1)' when toHsvaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.333, 0.18, 0.1)' when toHsvaString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
         let r = oc.toHsvaString({ H: 255, S: 0.2, L: 0.15, A: 0.1 })
-        let rr = 'hsva(1, 0.333, 0.18, 0.1)'
+        let rr = 'hsva(255, 0.333, 0.18, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.214, 0.09, 0.1)' when toHsvaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.214, 0.09, 0.1)' when toHsvaString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: '12%', l: '8%', a: 0.1 })
-        let rr = 'hsva(1, 0.214, 0.09, 0.1)'
+        let rr = 'hsva(255, 0.214, 0.09, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.333, 0.18, 0.1)' when toHsvaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsva(180, 0.333, 0.18, 0.1)' when toHsvaString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: 0.2, l: 0.15, a: 0.1 })
-        let rr = 'hsva(1, 0.333, 0.18, 0.1)'
+        let rr = 'hsva(180, 0.333, 0.18, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(0, 0.214, 0.09, 0.1)' when toHsvaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsva(180, 0.214, 0.09, 0.1)' when toHsvaString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: '12%', l: '8%', a: 0.1 })
-        let rr = 'hsva(0, 0.214, 0.09, 0.1)'
+        let rr = 'hsva(180, 0.214, 0.09, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 1)' when toHsvaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'hsva(255, 0.2, 0.15, 1)' when toHsvaString input { h: 255, s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: 0.2, v: 0.15 })
-        let rr = 'hsva(1, 0.2, 0.15, 1)'
+        let rr = 'hsva(255, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 1)' when toHsvaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
+    it(`should return 'hsva(255, 0.2, 0.15, 1)' when toHsvaString input { H: 255, S: 0.2, V: 0.15 }`, function() {
         let r = oc.toHsvaString({ H: 255, S: 0.2, V: 0.15 })
-        let rr = 'hsva(1, 0.2, 0.15, 1)'
+        let rr = 'hsva(255, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.12, 0.08, 1)' when toHsvaString input { h: 255, s: '12%', v: '8%' }`, function() {
+    it(`should return 'hsva(255, 0.12, 0.08, 1)' when toHsvaString input { h: 255, s: '12%', v: '8%' }`, function() {
         let r = oc.toHsvaString({ h: 255, s: '12%', v: '8%' })
-        let rr = 'hsva(1, 0.12, 0.08, 1)'
+        let rr = 'hsva(255, 0.12, 0.08, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 1)' when toHsvaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
+    it(`should return 'hsva(180, 0.2, 0.15, 1)' when toHsvaString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: 0.2, v: 0.15 })
-        let rr = 'hsva(1, 0.2, 0.15, 1)'
+        let rr = 'hsva(180, 0.2, 0.15, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(0, 0.12, 0.08, 1)' when toHsvaString input { h: '50%', s: '12%', v: '8%' }`, function() {
+    it(`should return 'hsva(180, 0.12, 0.08, 1)' when toHsvaString input { h: '50%', s: '12%', v: '8%' }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: '12%', v: '8%' })
-        let rr = 'hsva(0, 0.12, 0.08, 1)'
+        let rr = 'hsva(180, 0.12, 0.08, 1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 0.1)' when toHsvaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.2, 0.15, 0.1)' when toHsvaString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'hsva(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsva(255, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 0.1)' when toHsvaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.2, 0.15, 0.1)' when toHsvaString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
         let r = oc.toHsvaString({ H: 255, S: 0.2, V: 0.15, A: 0.1 })
-        let rr = 'hsva(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsva(255, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.12, 0.08, 0.1)' when toHsvaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsva(255, 0.12, 0.08, 0.1)' when toHsvaString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: 255, s: '12%', v: '8%', a: 0.1 })
-        let rr = 'hsva(1, 0.12, 0.08, 0.1)'
+        let rr = 'hsva(255, 0.12, 0.08, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(1, 0.2, 0.15, 0.1)' when toHsvaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return 'hsva(180, 0.2, 0.15, 0.1)' when toHsvaString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: 0.2, v: 0.15, a: 0.1 })
-        let rr = 'hsva(1, 0.2, 0.15, 0.1)'
+        let rr = 'hsva(180, 0.2, 0.15, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'hsva(0, 0.12, 0.08, 0.1)' when toHsvaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return 'hsva(180, 0.12, 0.08, 0.1)' when toHsvaString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHsvaString({ h: '50%', s: '12%', v: '8%', a: 0.1 })
-        let rr = 'hsva(0, 0.12, 0.08, 0.1)'
+        let rr = 'hsva(180, 0.12, 0.08, 0.1)'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -1480,171 +1498,171 @@ describe(`color`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { r: 255, g: 150, b: 50 }`, function() {
+    it(`should return '#ff9632' when toHexString input { r: 255, g: 150, b: 50 }`, function() {
         let r = oc.toHexString({ r: 255, g: 150, b: 50 })
-        let rr = '#010100'
+        let rr = '#ff9632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { R: 255, G: 150, B: 50 }`, function() {
+    it(`should return '#ff9632' when toHexString input { R: 255, G: 150, B: 50 }`, function() {
         let r = oc.toHexString({ R: 255, G: 150, B: 50 })
-        let rr = '#010100'
+        let rr = '#ff9632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { r: '50%', g: 150, b: 50 }`, function() {
+    it(`should return '#809632' when toHexString input { r: '50%', g: 150, b: 50 }`, function() {
         let r = oc.toHexString({ r: '50%', g: 150, b: 50 })
-        let rr = '#010100'
+        let rr = '#809632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010000' when toHexString input { r: '50%', g: '12%', b: '8%' }`, function() {
+    it(`should return '#801f14' when toHexString input { r: '50%', g: '12%', b: '8%' }`, function() {
         let r = oc.toHexString({ r: '50%', g: '12%', b: '8%' })
-        let rr = '#010000'
+        let rr = '#801f14'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return '#ff9632' when toHexString input { r: 255, g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHexString({ r: 255, g: 150, b: 50, a: 0.1 })
-        let rr = '#010100'
+        let rr = '#ff9632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
+    it(`should return '#ff9632' when toHexString input { R: 255, G: 150, B: 50, A: 0.1 }`, function() {
         let r = oc.toHexString({ R: 255, G: 150, B: 50, A: 0.1 })
-        let rr = '#010100'
+        let rr = '#ff9632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010100' when toHexString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
+    it(`should return '#809632' when toHexString input { r: '50%', g: 150, b: 50, a: 0.1 }`, function() {
         let r = oc.toHexString({ r: '50%', g: 150, b: 50, a: 0.1 })
-        let rr = '#010100'
+        let rr = '#809632'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#010000' when toHexString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
+    it(`should return '#801f14' when toHexString input { r: '50%', g: '12%', b: '8%', a: 0.1 }`, function() {
         let r = oc.toHexString({ r: '50%', g: '12%', b: '8%', a: 0.1 })
-        let rr = '#010000'
+        let rr = '#801f14'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { h: 255, s: 0.2, l: 0.15 }`, function() {
+    it(`should return '#221f2e' when toHexString input { h: 255, s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHexString({ h: 255, s: 0.2, l: 0.15 })
-        let rr = '#2e1f1f'
+        let rr = '#221f2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { H: 255, S: 0.2, L: 0.15 }`, function() {
+    it(`should return '#221f2e' when toHexString input { H: 255, S: 0.2, L: 0.15 }`, function() {
         let r = oc.toHexString({ H: 255, S: 0.2, L: 0.15 })
-        let rr = '#2e1f1f'
+        let rr = '#221f2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#171212' when toHexString input { h: 255, s: '12%', l: '8%' }`, function() {
+    it(`should return '#131217' when toHexString input { h: 255, s: '12%', l: '8%' }`, function() {
         let r = oc.toHexString({ h: 255, s: '12%', l: '8%' })
-        let rr = '#171212'
+        let rr = '#131217'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
+    it(`should return '#1f2e2e' when toHexString input { h: '50%', s: 0.2, l: 0.15 }`, function() {
         let r = oc.toHexString({ h: '50%', s: 0.2, l: 0.15 })
-        let rr = '#2e1f1f'
+        let rr = '#1f2e2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#171212' when toHexString input { h: '50%', s: '12%', l: '8%' }`, function() {
+    it(`should return '#121717' when toHexString input { h: '50%', s: '12%', l: '8%' }`, function() {
         let r = oc.toHexString({ h: '50%', s: '12%', l: '8%' })
-        let rr = '#171212'
+        let rr = '#121717'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return '#221f2e' when toHexString input { h: 255, s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHexString({ h: 255, s: 0.2, l: 0.15, a: 0.1 })
-        let rr = '#2e1f1f'
+        let rr = '#221f2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
+    it(`should return '#221f2e' when toHexString input { H: 255, S: 0.2, L: 0.15, A: 0.1 }`, function() {
         let r = oc.toHexString({ H: 255, S: 0.2, L: 0.15, A: 0.1 })
-        let rr = '#2e1f1f'
+        let rr = '#221f2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#171212' when toHexString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return '#131217' when toHexString input { h: 255, s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHexString({ h: 255, s: '12%', l: '8%', a: 0.1 })
-        let rr = '#171212'
+        let rr = '#131217'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#2e1f1f' when toHexString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
+    it(`should return '#1f2e2e' when toHexString input { h: '50%', s: 0.2, l: 0.15, a: 0.1 }`, function() {
         let r = oc.toHexString({ h: '50%', s: 0.2, l: 0.15, a: 0.1 })
-        let rr = '#2e1f1f'
+        let rr = '#1f2e2e'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#171212' when toHexString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
+    it(`should return '#121717' when toHexString input { h: '50%', s: '12%', l: '8%', a: 0.1 }`, function() {
         let r = oc.toHexString({ h: '50%', s: '12%', l: '8%', a: 0.1 })
-        let rr = '#171212'
+        let rr = '#121717'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { h: 255, s: 0.2, v: 0.15 }`, function() {
+    it(`should return '#211f26' when toHexString input { h: 255, s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHexString({ h: 255, s: 0.2, v: 0.15 })
-        let rr = '#261f1f'
+        let rr = '#211f26'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { H: 255, S: 0.2, V: 0.15 }`, function() {
+    it(`should return '#211f26' when toHexString input { H: 255, S: 0.2, V: 0.15 }`, function() {
         let r = oc.toHexString({ H: 255, S: 0.2, V: 0.15 })
-        let rr = '#261f1f'
+        let rr = '#211f26'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#141212' when toHexString input { h: 255, s: '12%', v: '8%' }`, function() {
+    it(`should return '#131214' when toHexString input { h: 255, s: '12%', v: '8%' }`, function() {
         let r = oc.toHexString({ h: 255, s: '12%', v: '8%' })
-        let rr = '#141212'
+        let rr = '#131214'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
+    it(`should return '#1f2626' when toHexString input { h: '50%', s: 0.2, v: 0.15 }`, function() {
         let r = oc.toHexString({ h: '50%', s: 0.2, v: 0.15 })
-        let rr = '#261f1f'
+        let rr = '#1f2626'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#141212' when toHexString input { h: '50%', s: '12%', v: '8%' }`, function() {
+    it(`should return '#121414' when toHexString input { h: '50%', s: '12%', v: '8%' }`, function() {
         let r = oc.toHexString({ h: '50%', s: '12%', v: '8%' })
-        let rr = '#141212'
+        let rr = '#121414'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return '#211f26' when toHexString input { h: 255, s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHexString({ h: 255, s: 0.2, v: 0.15, a: 0.1 })
-        let rr = '#261f1f'
+        let rr = '#211f26'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
+    it(`should return '#211f26' when toHexString input { H: 255, S: 0.2, V: 0.15, A: 0.1 }`, function() {
         let r = oc.toHexString({ H: 255, S: 0.2, V: 0.15, A: 0.1 })
-        let rr = '#261f1f'
+        let rr = '#211f26'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#141212' when toHexString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return '#131214' when toHexString input { h: 255, s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHexString({ h: 255, s: '12%', v: '8%', a: 0.1 })
-        let rr = '#141212'
+        let rr = '#131214'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#261f1f' when toHexString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
+    it(`should return '#1f2626' when toHexString input { h: '50%', s: 0.2, v: 0.15, a: 0.1 }`, function() {
         let r = oc.toHexString({ h: '50%', s: 0.2, v: 0.15, a: 0.1 })
-        let rr = '#261f1f'
+        let rr = '#1f2626'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '#141212' when toHexString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
+    it(`should return '#121414' when toHexString input { h: '50%', s: '12%', v: '8%', a: 0.1 }`, function() {
         let r = oc.toHexString({ h: '50%', s: '12%', v: '8%', a: 0.1 })
-        let rr = '#141212'
+        let rr = '#121414'
         assert.strict.deepStrictEqual(r, rr)
     })
 

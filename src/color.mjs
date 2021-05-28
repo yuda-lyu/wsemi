@@ -269,26 +269,6 @@ function strCvFromPercent(cc, defValue = 1) {
 }
 
 
-function strCvFrom0360(cc) {
-    return strCvFromLimit(cc, 360)
-}
-
-
-function strCvFromLimit(cc, limit = 360) {
-    if (!isnum(cc)) {
-        throw new Error('invalid color: value is not number')
-    }
-    cc = cdbl(cc) / limit
-    if (cc > 1) {
-        throw new Error('invalid color: value > 1')
-    }
-    else if (cc < 0) {
-        throw new Error('invalid color: value < 0')
-    }
-    return cc //回傳0~1
-}
-
-
 function strCvFrom01(cc) {
     if (!isnum(cc)) {
         throw new Error('invalid color: value is not number')
@@ -374,7 +354,7 @@ function strParseHex8(cc) {
 function strParseRgba(cc) {
     //string: rgb (255, 0, 0)
     //string: rgb (255 200 30)
-    //string: rgb ('50%', '12%', 8%)
+    //string: rgb (50%, 12%, 8%)
     //string: rgb (50% 12% 8%)
     //string: rgb 255, 0, 0
     //string: rgb 255 200 30
@@ -423,11 +403,11 @@ function strParseHsla(cc) {
     //string: hsl 320, 1, 0.5
     //string: hsl 320 1 0.5
 
-    //string: hsla (320, 100%, '50%', 0.1)
+    //string: hsla (320, 100%, 50%, 0.1)
     //string: hsla (320 100% 50% 0.1)
     //string: hsla (320, 1, 0.5, 0.1)
     //string: hsla (320 1 0.5 0.1)
-    //string: hsla 320, 100%, '50%', 0.1
+    //string: hsla 320, 100%, 50%, 0.1
     //string: hsla 320 100% 50% 0.1
     //string: hsla 320, 1, 0.5, 0.1
     //string: hsla 320 1 0.5 0.1
@@ -443,7 +423,7 @@ function strParseHsla(cc) {
 function strParseHslaCore(s) {
     s = map(s, (v, k) => {
         if (k === 0) {
-            return strCvFrom0360(v)
+            return strCvFrom0360AndPercent(v)
         }
         else if (k === 1 || k === 2) {
             return strCvFrom01AndPercent(v)
@@ -469,11 +449,11 @@ function strParseHsva(cc) {
     //string: hsv 320, 1, 0.5
     //string: hsv 320 1 0.5
 
-    //string: hsva (320, 100%, '50%', 0.1)
+    //string: hsva (320, 100%, 50%, 0.1)
     //string: hsva (320 100% 50% 0.1)
     //string: hsva (320, 1, 0.5, 0.1)
     //string: hsva (320 1 0.5 0.1)
-    //string: hsva 320, 100%, '50%', 0.1
+    //string: hsva 320, 100%, 50%, 0.1
     //string: hsva 320 100% 50% 0.1
     //string: hsva 320, 1, 0.5, 0.1
     //string: hsva 320 1 0.5 0.1
@@ -489,7 +469,7 @@ function strParseHsva(cc) {
 function strParseHsvaCore(s) {
     s = map(s, (v, k) => {
         if (k === 0) {
-            return strCvFrom0360(v)
+            return strCvFrom0360AndPercent(v)
         }
         else if (k === 1 || k === 2) {
             return strCvFrom01AndPercent(v)
@@ -568,24 +548,6 @@ function objIsHsva(co) {
 }
 
 
-function objCvFrom01AndPercent(v) {
-    let c = cstr(v)
-    return strCvFrom01AndPercent(c)
-}
-
-
-function objCvFrom0255AndPercent(v) {
-    let c = cstr(v)
-    return strCvFrom0255AndPercent(c)
-}
-
-
-function objCvFrom0360AndPercent(v) {
-    let c = cstr(v)
-    return strCvFrom0360AndPercent(c)
-}
-
-
 function objGet(o, key, def) {
     let v
     v = get(o, key, null)
@@ -608,10 +570,10 @@ function objParseRgba(co) {
     //object: { r: 255, g: 150, b: 50, a: 0.1 }
     //object: { r: '50%', g: 150, b: 50, a: 0.1 }
     //object: { r: '50%', g: '12%', b: '8%', a: 0.1 }
-    let s0 = objCvFrom0255AndPercent(objGet(co, 'r', null))
-    let s1 = objCvFrom0255AndPercent(objGet(co, 'g', null))
-    let s2 = objCvFrom0255AndPercent(objGet(co, 'b', null))
-    let s3 = objCvFrom01AndPercent(objGet(co, 'a', 1)) //alpha若無預設為1
+    let s0 = objGet(co, 'r', null)
+    let s1 = objGet(co, 'g', null)
+    let s2 = objGet(co, 'b', null)
+    let s3 = objGet(co, 'a', 1) //alpha若無預設為1
     let s = [s0, s1, s2, s3]
     s = map(s, cstr)
     return strParseRgbaCore(s)
@@ -620,17 +582,17 @@ function objParseRgba(co) {
 
 function objParseHsla(co) {
     //object: { h: 320, s: 0.2, l: 0.15 }
-    //object: { h: 320, s: '12%', l: 8% }
+    //object: { h: 320, s: '12%', l: '8%' }
     //object: { h: '50%', s: 0.2, l: 0.15 }
-    //object: { h: '50%', s: '12%', l: 8% }
+    //object: { h: '50%', s: '12%', l: '8%' }
     //object: { h: 320, s: 0.2, l: 0.15, a: 0.1 }
-    //object: { h: 320, s: '12%', l: 8%, a: 0.1 }
+    //object: { h: 320, s: '12%', l: '8%', a: 0.1 }
     //object: { h: '50%', s: 0.2, l: 0.15, a: 0.1 }
-    //object: { h: '50%', s: '12%', l: 8%, a: 0.1 }
-    let s0 = objCvFrom0360AndPercent(objGet(co, 'h', null))
-    let s1 = objCvFrom01AndPercent(objGet(co, 's', null))
-    let s2 = objCvFrom01AndPercent(objGet(co, 'l', null))
-    let s3 = objCvFrom01AndPercent(objGet(co, 'a', 1)) //alpha若無預設為1
+    //object: { h: '50%', s: '12%', l: '8%', a: 0.1 }
+    let s0 = objGet(co, 'h', null)
+    let s1 = objGet(co, 's', null)
+    let s2 = objGet(co, 'l', null)
+    let s3 = objGet(co, 'a', 1) //alpha若無預設為1
     let s = [s0, s1, s2, s3]
     s = map(s, cstr)
     return strParseHslaCore(s)
@@ -639,17 +601,17 @@ function objParseHsla(co) {
 
 function objParseHsva(co) {
     //object: { h: 320, s: 0.2, v: 0.15 }
-    //object: { h: 320, s: '12%', v: 8% }
+    //object: { h: 320, s: '12%', v: '8%' }
     //object: { h: '50%', s: 0.2, v: 0.15 }
-    //object: { h: '50%', s: '12%', v: 8% }
+    //object: { h: '50%', s: '12%', v: '8%' }
     //object: { h: 320, s: 0.2, v: 0.15, a: 0.1 }
-    //object: { h: 320, s: '12%', v: 8%, a: 0.1 }
+    //object: { h: 320, s: '12%', v: '8%', a: 0.1 }
     //object: { h: '50%', s: 0.2, v: 0.15, a: 0.1 }
-    //object: { h: '50%', s: '12%', v: 8%, a: 0.1 }
-    let s0 = objCvFrom0360AndPercent(objGet(co, 'h', null))
-    let s1 = objCvFrom01AndPercent(objGet(co, 's', null))
-    let s2 = objCvFrom01AndPercent(objGet(co, 'v', null))
-    let s3 = objCvFrom01AndPercent(objGet(co, 'a', 1)) //alpha若無預設為1
+    //object: { h: '50%', s: '12%', v: '8%', a: 0.1 }
+    let s0 = objGet(co, 'h', null)
+    let s1 = objGet(co, 's', null)
+    let s2 = objGet(co, 'v', null)
+    let s3 = objGet(co, 'a', 1) //alpha若無預設為1
     let s = [s0, s1, s2, s3]
     s = map(s, cstr)
     return strParseHsvaCore(s)
@@ -1055,203 +1017,208 @@ function mix(rgba1, w1, rgba2, w2, fmtOutput = 'toRgbString') {
 }
 
 
-function value2Percent(v) {
+function vp1(v) {
     return `${round(v * 100, 1)}%`
 }
 
 
-function valueDig(v) {
-    return round(v, 3)
+function vd0(v) {
+    return round(v, 0)
 }
 
 
-function valueDig0(v) {
-    return round(v, 0)
+function vd3(v) {
+    return round(v, 3)
 }
 
 
 function toRgb(rgba) {
     return {
-        r: rgba.r,
-        g: rgba.g,
-        b: rgba.b,
+        r: vd0(rgba.r * 255),
+        g: vd0(rgba.g * 255),
+        b: vd0(rgba.b * 255),
     }
 }
 
 
 function toRgbString(rgba) {
-    return `rgb(${valueDig0(rgba.r * 255)}, ${valueDig0(rgba.g * 255)}, ${valueDig0(rgba.b * 255)})`
+    return `rgb(${vd0(rgba.r * 255)}, ${vd0(rgba.g * 255)}, ${vd0(rgba.b * 255)})`
 }
 
 
 function toRgba(rgba) {
-    return rgba
+    return {
+        r: vd0(rgba.r * 255),
+        g: vd0(rgba.g * 255),
+        b: vd0(rgba.b * 255),
+        a: vd3(rgba.a),
+    }
 }
 
 
 function toRgbaString(rgba) {
-    return `rgba(${valueDig0(rgba.r * 255)}, ${valueDig0(rgba.g * 255)}, ${valueDig0(rgba.b * 255)}, ${valueDig(rgba.a)})`
+    return `rgba(${vd0(rgba.r * 255)}, ${vd0(rgba.g * 255)}, ${vd0(rgba.b * 255)}, ${vd3(rgba.a)})`
 }
 
 
 function toHsl(rgba) {
     let hsla = rgba2Hsla(rgba)
     return {
-        h: hsla.h * 360,
-        s: hsla.s,
-        l: hsla.l,
+        h: vd0(hsla.h * 360),
+        s: vd3(hsla.s),
+        l: vd3(hsla.l),
     }
 }
 
 
 function toHslString(rgba) {
     let hsla = rgba2Hsla(rgba)
-    return `hsl(${valueDig0(hsla.h * 360)}, ${valueDig(hsla.s)}, ${valueDig(hsla.l)})`
+    return `hsl(${vd0(hsla.h * 360)}, ${vd3(hsla.s)}, ${vd3(hsla.l)})`
 }
 
 
 function toHsla(rgba) {
     let hsla = rgba2Hsla(rgba)
     return {
-        h: hsla.h * 360,
-        s: hsla.s,
-        l: hsla.l,
-        a: hsla.a,
+        h: vd0(hsla.h * 360),
+        s: vd3(hsla.s),
+        l: vd3(hsla.l),
+        a: vd3(hsla.a),
     }
 }
 
 
 function toHslaString(rgba) {
     let hsla = rgba2Hsla(rgba)
-    return `hsla(${valueDig0(hsla.h * 360)}, ${valueDig(hsla.s)}, ${valueDig(hsla.l)}, ${valueDig(hsla.a)})`
+    return `hsla(${vd0(hsla.h * 360)}, ${vd3(hsla.s)}, ${vd3(hsla.l)}, ${vd3(hsla.a)})`
 }
 
 
 function toHsv(rgba) {
     let hsva = rgba2Hsva(rgba)
     return {
-        h: hsva.h * 360,
-        s: hsva.s,
-        v: hsva.v,
+        h: vd0(hsva.h * 360),
+        s: vd3(hsva.s),
+        v: vd3(hsva.v),
     }
 }
 
 
 function toHsvString(rgba) {
     let hsva = rgba2Hsva(rgba)
-    return `hsv(${valueDig0(hsva.h * 360)}, ${valueDig(hsva.s)}, ${valueDig(hsva.v)})`
+    return `hsv(${vd0(hsva.h * 360)}, ${vd3(hsva.s)}, ${vd3(hsva.v)})`
 }
 
 
 function toHsva(rgba) {
     let hsva = rgba2Hsva(rgba)
     return {
-        h: hsva.h * 360,
-        s: hsva.s,
-        v: hsva.v,
-        a: hsva.a,
+        h: vd0(hsva.h * 360),
+        s: vd3(hsva.s),
+        v: vd3(hsva.v),
+        a: vd3(hsva.a),
     }
 }
 
 
 function toHsvaString(rgba) {
     let hsva = rgba2Hsva(rgba)
-    return `hsva(${valueDig0(hsva.h * 360)}, ${valueDig(hsva.s)}, ${valueDig(hsva.v)}, ${valueDig(hsva.a)})`
+    return `hsva(${vd0(hsva.h * 360)}, ${vd3(hsva.s)}, ${vd3(hsva.v)}, ${vd3(hsva.a)})`
 }
 
 
 function toRgbP(rgba) {
     return {
-        r: value2Percent(rgba.r),
-        g: value2Percent(rgba.g),
-        b: value2Percent(rgba.b),
+        r: vp1(rgba.r),
+        g: vp1(rgba.g),
+        b: vp1(rgba.b),
     }
 }
 
 
 function toRgbPString(rgba) {
-    return `rgb(${value2Percent(rgba.r)}, ${value2Percent(rgba.g)}, ${value2Percent(rgba.b)})`
+    return `rgb(${vp1(rgba.r)}, ${vp1(rgba.g)}, ${vp1(rgba.b)})`
 }
 
 
 function toRgbaP(rgba) {
     return {
-        r: value2Percent(rgba.r),
-        g: value2Percent(rgba.g),
-        b: value2Percent(rgba.b),
-        a: rgba.a,
+        r: vp1(rgba.r),
+        g: vp1(rgba.g),
+        b: vp1(rgba.b),
+        a: vd3(rgba.a),
     }
 }
 
 
 function toRgbaPString(rgba) {
-    return `rgba(${value2Percent(rgba.r)}, ${value2Percent(rgba.g)}, ${value2Percent(rgba.b)}, ${valueDig(rgba.a)})`
+    return `rgba(${vp1(rgba.r)}, ${vp1(rgba.g)}, ${vp1(rgba.b)}, ${vd3(rgba.a)})`
 }
 
 
 function toHslP(rgba) {
     let hsla = rgba2Hsla(rgba)
     return {
-        h: hsla.h * 360,
-        s: value2Percent(hsla.s),
-        l: value2Percent(hsla.l),
+        h: vd0(hsla.h * 360),
+        s: vp1(hsla.s),
+        l: vp1(hsla.l),
     }
 }
 
 
 function toHslPString(rgba) {
     let hsla = rgba2Hsla(rgba)
-    return `hsl(${valueDig0(hsla.h * 360)}, ${value2Percent(hsla.s)}, ${value2Percent(hsla.l)})`
+    return `hsl(${vd0(hsla.h * 360)}, ${vp1(hsla.s)}, ${vp1(hsla.l)})`
 }
 
 
 function toHslaP(rgba) {
     let hsla = rgba2Hsla(rgba)
     return {
-        h: hsla.h * 360,
-        s: value2Percent(hsla.s),
-        l: value2Percent(hsla.l),
-        a: hsla.a,
+        h: vd0(hsla.h * 360),
+        s: vp1(hsla.s),
+        l: vp1(hsla.l),
+        a: vd3(hsla.a),
     }
 }
 
 
 function toHslaPString(rgba) {
     let hsla = rgba2Hsla(rgba)
-    return `hsla(${valueDig0(hsla.h * 360)}, ${value2Percent(hsla.s)}, ${value2Percent(hsla.l)}, ${valueDig(hsla.a)})`
+    return `hsla(${vd0(hsla.h * 360)}, ${vp1(hsla.s)}, ${vp1(hsla.l)}, ${vd3(hsla.a)})`
 }
 
 
 function toHsvP(rgba) {
     let hsva = rgba2Hsva(rgba)
     return {
-        h: hsva.h * 360,
-        s: value2Percent(hsva.s),
-        v: value2Percent(hsva.v),
+        h: vd0(hsva.h * 360),
+        s: vp1(hsva.s),
+        v: vp1(hsva.v),
     }
 }
 
 
 function toHsvPString(rgba) {
     let hsva = rgba2Hsva(rgba)
-    return `hsv(${valueDig(hsva.h * 360)}, ${value2Percent(hsva.s)}, ${value2Percent(hsva.v)})`
+    return `hsv(${vd0(hsva.h * 360)}, ${vp1(hsva.s)}, ${vp1(hsva.v)})`
 }
 
 
 function toHsvaP(rgba) {
     let hsva = rgba2Hsva(rgba)
     return {
-        h: hsva.h * 360,
-        s: value2Percent(hsva.s),
-        v: value2Percent(hsva.v),
-        a: hsva.a,
+        h: vd0(hsva.h * 360),
+        s: vp1(hsva.s),
+        v: vp1(hsva.v),
+        a: vd3(hsva.a),
     }
 }
 
 
 function toHsvaPString(rgba) {
     let hsva = rgba2Hsva(rgba)
-    return `hsva(${valueDig0(hsva.h * 360)}, ${value2Percent(hsva.s)}, ${value2Percent(hsva.v)}, ${valueDig(hsva.a)})`
+    return `hsva(${vd0(hsva.h * 360)}, ${vp1(hsva.s)}, ${vp1(hsva.v)}, ${vd3(hsva.a)})`
 }
 
 
@@ -1353,22 +1320,37 @@ let kpCv = {
  * let c
  * let r
  *
- * c = `rgb(250, 120, 50)`
+ * c = '#cd'
+ * r = oc.toRgbaString(c)
+ * console.log(r)
+ * // => rgba(205, 205, 205, 1)
+ *
+ * c = '#6a3'
+ * r = oc.toRgbaString(c)
+ * console.log(r)
+ * // => rgba(102, 170, 51, 1)
+ *
+ * c = '#6b8e23'
+ * r = oc.toRgbaString(c)
+ * console.log(r)
+ * // => rgba(107, 142, 35, 1)
+ *
+ * c = 'rgb(250, 120, 50)'
  * r = oc.toRgbaString(c)
  * console.log(r)
  * // => rgba(250, 120, 50, 1)
  *
- * c = `rgb(250, 120, 50)`
+ * c = 'rgb(250, 120, 50)'
  * r = oc.toHslaString(c)
  * console.log(r)
  * // => hsla(21, 0.952, 0.588, 1)
  *
- * c = `rgb(250, 120, 50)`
+ * c = 'rgb(250, 120, 50)'
  * r = oc.toHsvaString(c)
  * console.log(r)
  * // => hsva(21, 0.8, 0.98, 1)
  *
- * c = `rgb(250, 120, 50)`
+ * c = 'rgb(250, 120, 50)'
  * r = oc.toHexString(c)
  * console.log(r)
  * // => #fa7832
@@ -1377,6 +1359,66 @@ let kpCv = {
  * r = oc.toRgbaString(c)
  * console.log(r)
  * // => rgba(135, 206, 235, 1)
+ *
+ * c = 'hsl (320, 50%, 40%)'
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 153, g: 51, b: 119, a: 1 }
+ *
+ * c = 'hsva (320, 100%, 50%, 0.1)'
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 128, g: 0, b: 85, a: 0.1 }
+ *
+ * c = { r: 255, g: 150, b: 50 }
+ * r = oc.toHsla(c)
+ * console.log(r)
+ * // => { h: 29, s: 0.672, l: 0.002, a: 1 }
+ *
+ * c = { r: '50%', g: 150, b: 50, a: 0.1 }
+ * r = oc.toHsva(c)
+ * console.log(r)
+ * // => { h: 74, s: 0.667, v: 0.002, a: 0.1 }
+ *
+ * c = { h: 320, s: 0.2, l: 0.15 }
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 46, g: 31, b: 31, a: 1 }
+ *
+ * c = { h: 320, s: '12%', l: '8%', a: 0.1 }
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 23, g: 18, b: 18, a: 0.1 }
+ *
+ * c = { h: 320, s: 0.2, v: 0.15 }
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 38, g: 31, b: 31, a: 1 }
+ *
+ * c = { h: '50%', s: 0.2, l: 0.15 }
+ * r = oc.toHexString(c)
+ * console.log(r)
+ * // => #1f2e2e
+ *
+ * c = { h: '50%', s: 0.2, l: 0.15 }
+ * r = oc.toRgbaString(c)
+ * console.log(r)
+ * // => rgba(31, 46, 46, 1)
+ *
+ * c = { h: '50%', s: 0.2, l: 0.15 }
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 31, g: 46, b: 46, a: 1 }
+ *
+ * c = { h: 180, s: 0.2, l: 0.15 }
+ * r = oc.toHexString(c)
+ * console.log(r)
+ * // => #1f2e2e
+ *
+ * c = { h: '50%', s: '12%', v: '8%', a: 0.1 }
+ * r = oc.toRgba(c)
+ * console.log(r)
+ * // => { r: 20, g: 18, b: 18, a: 0.1 }
  *
  */
 let color = {

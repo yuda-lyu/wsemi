@@ -28,8 +28,6 @@ To view some examples for more understanding, visit examples:
 
 > **obj2u8arr & u8arr2obj:** [ex-tobj2u8arr-u8arr2obj.html](https://yuda-lyu.github.io/wsemi/examples/ex-tobj2u8arr-u8arr2obj.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tobj2u8arr-u8arr2obj.html)]
 
-> **tinycolor:** [ex-tinycolor.html](https://yuda-lyu.github.io/wsemi/examples/ex-tinycolor.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tinycolor.html)]
-
 > **colorConverter:** [ex-colorConverter.html](https://yuda-lyu.github.io/wsemi/examples/ex-colorConverter.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-colorConverter.html)]
 
 > **uaparser:** [ex-uaparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-uaparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-uaparser.html)]
@@ -152,5 +150,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.81/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.82/dist/wsemi.umd.js"></script>
 ```
