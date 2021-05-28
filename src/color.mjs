@@ -1318,6 +1318,8 @@ let kpCv = {
  * import oc from 'wsemi/src/color.mjs'
  *
  * let c
+ * let c1
+ * let c2
  * let r
  *
  * c = '#cd'
@@ -1334,6 +1336,24 @@ let kpCv = {
  * r = oc.toRgbaString(c)
  * console.log(r)
  * // => rgba(107, 142, 35, 1)
+ *
+ * c1 = '#cd'
+ * c2 = 'hsl (320, 50%, 40%)'
+ * r = oc.mix(c1, 0.5, c2, 0.5, 'toRgbString')
+ * console.log(r)
+ * // => rgb(179, 128, 162)
+ *
+ * c1 = '#cd'
+ * c2 = 'hsl (320, 50%, 40%)'
+ * r = oc.mix(c1, 0, c2, 1, 'toRgbString')
+ * console.log(r)
+ * // => rgb(153, 51, 119)
+ *
+ * c1 = 'rgb(250, 120, 50)'
+ * c2 = 'hsva (320, 100%, 50%, 0.1)'
+ * r = oc.mix(c1, 0.5, c2, 0.5, 'toRgba')
+ * console.log(r)
+ * // => { r: 189, g: 60, b: 68, a: 0.55 }
  *
  * c = 'rgb(250, 120, 50)'
  * r = oc.toRgbaString(c)

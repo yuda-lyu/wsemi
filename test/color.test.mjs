@@ -4,6 +4,30 @@ import oc from '../src/color.mjs'
 
 describe(`color`, function() {
 
+    it(`should return 'rgb(179, 128, 162)' when mix input '#cd', 0.5, 'hsl (320, 50%, 40%)', 0.5, 'toRgbString'`, function() {
+        let r = oc.mix('#cd', 0.5, 'hsl (320, 50%, 40%)', 0.5, 'toRgbString')
+        let rr = 'rgb(179, 128, 162)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rgb(153, 51, 119)' when mix input '#cd', 0, 'hsl (320, 50%, 40%)', 1, 'toRgbString'`, function() {
+        let r = oc.mix('#cd', 0, 'hsl (320, 50%, 40%)', 1, 'toRgbString')
+        let rr = 'rgb(153, 51, 119)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rgb(0, 0, 0)' when mix input '#cd', 0, 'hsl (320, 50%, 40%)', 0, 'toRgbString'`, function() {
+        let r = oc.mix('#cd', 0, 'hsl (320, 50%, 40%)', 0, 'toRgbString')
+        let rr = 'rgb(0, 0, 0)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { r: 189, g: 60, b: 68, a: 0.55 } when mix input 'rgb(250, 120, 50)', 0.5, 'hsva (320, 100%, 50%, 0.1)', 0.5, 'toRgba'`, function() {
+        let r = oc.mix('rgb(250, 120, 50)', 0.5, 'hsva (320, 100%, 50%, 0.1)', 0.5, 'toRgba')
+        let rr = { r: 189, g: 60, b: 68, a: 0.55 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return 'rgba(205, 205, 205, 1)' when toRgbaString input '#cd'`, function() {
         let r = oc.toRgbaString('#cd')
         let rr = 'rgba(205, 205, 205, 1)'
