@@ -17,6 +17,9 @@ import iser from './iser.mjs'
  * console.log(arrfind([1, 2, 3, '4', 5, 'abc'], 2))
  * // => [ 1 ]
  *
+ * console.log(arrfind([1, 2, 3, '4', 5, 'abc'], 12))
+ * // => [ -1 ]
+ *
  * console.log(arrfind([1, 2, 3, '4', 5, 'abc'], [2]))
  * // => [ 1 ]
  *
@@ -37,6 +40,9 @@ import iser from './iser.mjs'
  *
  * console.log(arrfind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
  * // => [ 4, 2 ]
+ *
+ * console.log(arrfind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [7, { x: 'xyz' }]))
+ * // => [-1, 2]
  *
  */
 function arrfind(vall, vfind) {
