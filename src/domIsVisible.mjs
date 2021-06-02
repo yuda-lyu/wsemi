@@ -105,7 +105,6 @@ function domIsVisible(ele) {
     }
 
     return pm
-
 }
 
 

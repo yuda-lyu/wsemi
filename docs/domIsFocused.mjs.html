@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>iser.mjs - Documentation</title>
+    <title>domIsFocused.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">iser.mjs</h1>
+    <h1 class="page-title">domIsFocused.mjs</h1>
     
 
     
@@ -42,69 +42,43 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isundefined from './isundefined.mjs'
-import isnull from './isnull.mjs'
-import isobj0 from './isobj0.mjs'
-import isstr0 from './isstr0.mjs'
-import isarr0 from './isarr0.mjs'
+            <pre class="prettyprint source linenums"><code>import isEle from './isEle.mjs'
 
 
 /**
- * 判斷是否為廣義無效
+ * 前端檢測DOM元素是否為聚焦狀態
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/iser.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsFocused.test.js Github}
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值
+ * @param {Element} ele 輸入Element元素
  * @example
+ * need test in browser
  *
- * console.log(iser('12a5'))
- * // => false
- *
- * console.log(iser(''))
- * // => true
- *
- * console.log(iser([]))
- * // => true
- *
- * console.log(iser([{}]))
- * // => false
- *
- * console.log(iser(['']))
- * // => false
- *
- * console.log(iser({}))
- * // => true
- *
- * console.log(iser(null))
- * // => true
- *
- * console.log(iser(undefined))
- * // => true
+ * let ele = document.querySelector('#id')
+ * console.log(domIsFocused(ele))
+ * // => true or false
  *
  */
-function iser(v) {
+function domIsFocused(ele) {
 
-    if (isundefined(v)) {
-        return true
+    //check ele
+    if (!isEle(ele)) {
+        return Promise.reject('invalid element')
     }
-    if (isnull(v)) {
-        return true
+
+    //r
+    let r = false
+    try {
+        r = (document.activeElement === ele)
     }
-    if (isobj0(v)) {
-        return true
-    }
-    if (isstr0(v)) {
-        return true
-    }
-    if (isarr0(v)) {
-        return true
-    }
-    return false
+    catch (err) {}
+
+    return r
 }
 
 
-export default iser
+export default domIsFocused
+
 </code></pre>
         </article>
     </section>
