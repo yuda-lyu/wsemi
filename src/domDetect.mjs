@@ -77,6 +77,8 @@ function domDetect(f, opt = {}) {
             let snew = {
                 offsetWidth: p.offsetWidth,
                 offsetHeight: p.offsetHeight,
+                clientWidth: p.clientWidth,
+                clientHeight: p.clientHeight,
             }
 
             //detect
