@@ -31,7 +31,7 @@ async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) 
     //若更新, 記得另有函數也使用xlsx也需要更新, 且example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js',
         ]
     }
 

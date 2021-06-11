@@ -119,14 +119,14 @@ or
 [Optional] Add script for xlsx.
 > **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js"></script>
 ```
 
 [Optional] Add link and script for viewerjs.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for html2canvas.

@@ -72,7 +72,7 @@ function main() {
                 'https://cdn.jsdelivr.net/npm/xss@1.x/dist/xss.min.js',
                 //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
                 //'https://cdn.jsdelivr.net/npm/tippy.js@6.x/umd/index.all.js',
-                //'https://cdn.jsdelivr.net/npm/xlsx@0.16.9/dist/xlsx.full.min.js',
+                //'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js',
                 'https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js',
             ] 
         }

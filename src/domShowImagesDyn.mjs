@@ -27,8 +27,8 @@ async function domShowImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.css',
-            'https://cdn.jsdelivr.net/npm/viewerjs@1.9.0/dist/viewer.min.js',
+            'https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.css',
+            'https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.js',
         ]
     }
 
