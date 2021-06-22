@@ -12,6 +12,8 @@ import iser from './iser.mjs'
 /**
  * 組合項目物件陣列成為樹狀物件
  *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeTreeObj.test.js Github}
+ * @memberOf wsemi
  * @param {Array} items 輸入項目物件陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [bindKey='id'] 輸入項目物件識別用欄位字串，預設'id'
