@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domShowInputAndGetFilesU8Arrs.mjs - Documentation</title>
+    <title>domRipple.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domShowInputAndGetFilesU8Arrs.mjs</h1>
+    <h1 class="page-title">domRipple.mjs</h1>
     
 
     
@@ -42,83 +42,80 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import size from 'lodash/size'
-import each from 'lodash/each'
-import genPm from './genPm.mjs'
-import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
-import blobs2u8arrs from './blobs2u8arrs.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import ispint from './ispint.mjs'
+import isestr from './isestr.mjs'
+import domRemove from './domRemove.mjs'
 
 
 /**
- * 前端開啟上傳視窗並讀取各檔案Uint8Array資料陣列
+ * 前端DOM元素點擊Ripple效果
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFilesU8Arrs.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRipple.test.js Github}
  * @memberOf wsemi
- * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
- * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
- * @param {Number} [sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
- * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
+ * @param {HTMLElement} ele 輸入dom
+ * @param {Object} event 輸入dom點擊事件
+ * @param {Integer} [opt.timeDuration=650] 輸入Ripple效果持續時間整數，單位ms，預設650
+ * @param {String} [opt.color='rgba(255, 255, 255, 0.4)'] 輸入Ripple顏色字串，預設'rgba(255, 255, 255, 0.4)'
  * @example
  * need test in browser
  *
+ * let ele = document.querySelector('#id')
+ * ele.addEventListener('click', (e)=>{
+ *     domRipple(e.currentTarget,e)
+ * })
+ *
  */
-function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 1000) {
+function domRipple(ele, event, opt = {}) {
 
-    //pm
-    let pm = genPm()
+    //timeDuration
+    let timeDuration = get(opt, 'timeDuration', null)
+    if (!ispint(timeDuration)) {
+        timeDuration = 650
+    }
 
-    let resfiles = []
-    domShowInputAndGetFiles(kind, multiple, sizelimit)
-        .then(function(rs) {
+    //color
+    let color = get(opt, 'color', null)
+    if (!isestr(color)) {
+        color = 'rgba(255, 255, 255, 0.4)'
+    }
 
-            //pmt
-            let pmt = genPm()
+    //更改元素style
+    ele.style.position = 'relative' //得要讓ripple的absolute能生效
+    ele.style.overflow = 'hidden' //讓ripple的效果不會溢出dom範圍
 
-            //err
-            let err = rs.err
-            if (size(err) > 0) {
-                pmt.reject(err)
-            }
-            else {
-                pmt.resolve(rs)
-            }
+    //diameter, radius
+    let diameter = Math.max(ele.clientWidth, ele.clientHeight)
+    let radius = diameter / 2
 
-            return pmt
-        })
-        .then(function(rs) {
+    //eleRipple
+    let eleRipple = document.createElement('span')
+    eleRipple.style.width = `${diameter}px`
+    eleRipple.style.height = `${diameter}px`
+    eleRipple.style.left = `${event.clientX - ele.offsetLeft - radius}px`
+    eleRipple.style.top = `${event.clientY - ele.offsetTop - radius}px`
+    eleRipple.style.transition = `all ${timeDuration / 1000}s linear`
+    eleRipple.style.position = 'absolute'
+    eleRipple.style.borderRadius = '50%'
+    eleRipple.style.transform = 'scale(0)'
+    eleRipple.style.background = color
+    ele.appendChild(eleRipple)
 
-            //files
-            let files = rs.files
+    //add effect
+    setTimeout(() => {
+        eleRipple.style.transform = 'scale(2.5)'
+        eleRipple.style.opacity = 0
+    }, 1)
 
-            //saveas
-            each(files, function(file) {
-                resfiles.push({
-                    name: file.name,
-                    size: file.size,
-                    type: file.type
-                })
-            })
+    //remove
+    setTimeout(() => {
+        domRemove(eleRipple)
+    }, timeDuration)
 
-            return blobs2u8arrs(files)
-        })
-        .then(function(u8as) {
-
-            //save Uint8Array
-            each(u8as, function(u8a, k) {
-                resfiles[k]['u8a'] = u8a
-            })
-
-            pm.resolve(resfiles)
-        })
-        .catch(function(msg) {
-            pm.reject(msg)
-        })
-
-    return pm
 }
 
 
-export default domShowInputAndGetFilesU8Arrs
+export default domRipple
 </code></pre>
         </article>
     </section>

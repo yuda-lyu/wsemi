@@ -13,6 +13,9 @@ import domFinds from './domFinds.mjs'
  * @example
  * need test in browser
  *
+ * let ele = document.querySelector('#id')
+ * domRemove(ele)
+ *
  */
 function domRemove(inp) {
 

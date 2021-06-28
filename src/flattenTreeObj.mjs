@@ -19,7 +19,7 @@ import isobj0 from './isobj0.mjs'
  * @returns {Array} 回傳節點物件陣列
  * @example
  *
- * let data1 = {
+ * let data1 = { //obj
  *     id: 1,
  *     data: '1-abc',
  *     children: [
@@ -47,7 +47,7 @@ import isobj0 from './isobj0.mjs'
  * console.log(JSON.stringify(r1))
  * // => {"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}
  *
- * let data2 = [
+ * let data2 = [ //arr
  *     {
  *         id: 1,
  *         text: '1x',
