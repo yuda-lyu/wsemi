@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domRipple</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+</head>
+<body>
+
+    <div style="padding:20px 10px;">
+        <div style="color:#62f;">1. button</div>
+        <button 
+            style="padding:20px;" 
+            onclick="wsemi.domRipple(this,event,{})"
+        >button</button>
+    </div>
+
+    <div style="padding:20px 10px;">
+        <div style="color:#62f;">2. circle button</div>
+        <button 
+            style="width:80px; height:80px; border-radius:50%;" 
+            onclick="wsemi.domRipple(this,event,{})"
+        >button</button>
+    </div>
+
+    <div style="padding:20px 10px;">
+        <div style="color:#62f;">3. div</div>
+        <div 
+            style="width:80px; padding:20px; border-radius:20px; background:rgba(155,100,255,0.3); border:1px solid #ccc; text-align:center;" 
+            onclick="wsemi.domRipple(this,event,{})"
+        >div</div>
+    </div>
+
+    <div style="padding:20px 10px;">
+        <div style="color:#62f;">4. ripple color</div>
+        <div 
+            style="width:80px; padding:20px; border-radius:20px; background:#eee; border:1px solid #ccc; text-align:center;" 
+            onclick="wsemi.domRipple(this,event,{color:'rgba(155,100,255,0.3)'})"
+        >div</div>
+    </div>
+
+</body>
+</html>
