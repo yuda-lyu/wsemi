@@ -66,6 +66,8 @@ To view some examples for more understanding, visit examples:
 
 > **domIsVisible:** [ex-domIsVisible.html](https://yuda-lyu.github.io/wsemi/examples/ex-domIsVisible.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domIsVisible.html)]
 
+> **domRipple:** [ex-domRipple.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRipple.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRipple.html)]
+
 > **tesseract.js:** [ex-tesseract.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract.html)]
 
 > **tesseract.js[dynamic import]:** [ex-tesseract-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-tesseract-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tesseract-dynamic.html)]
