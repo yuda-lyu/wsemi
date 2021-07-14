@@ -66,13 +66,10 @@ function main() {
     <script>
         let prefill = { 
             'scripts': [
-                'https://cdn.jsdelivr.net/npm/dayjs@1.x/dayjs.min.js',
-                'https://cdn.jsdelivr.net/npm/fuzzball@1.3.1/dist/fuzzball.umd.min.js',
-                'https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.23/dist/ua-parser.min.js',
-                'https://cdn.jsdelivr.net/npm/xss@1.x/dist/xss.min.js',
-                //'https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js',
-                //'https://cdn.jsdelivr.net/npm/tippy.js@6.x/umd/index.all.js',
-                //'https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js',
+                'https://cdn.jsdelivr.net/npm/dayjs@1.10.6/dayjs.min.js',
+                'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
+                'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
+                'https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js',
                 'https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js',
             ] 
         }

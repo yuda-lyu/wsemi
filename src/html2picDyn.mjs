@@ -31,7 +31,7 @@ async function html2picDyn(ele, opt = {}, pathItems) {
     if (!isearr(pathItems)) {
         pathItems = [
             'https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js',
-            'https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js',
+            'https://cdn.jsdelivr.net/npm/html2canvas@1.1.2/dist/html2canvas.min.js',
         ]
     }
 

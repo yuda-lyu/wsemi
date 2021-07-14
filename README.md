@@ -90,11 +90,11 @@ npm i wsemi
 [Optional] Add script for dayjs(or moment).
 > **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.x/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.6/dayjs.min.js"></script>
 ```
 or
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/moment@2.x/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
 <script>
   window.dayjs = moment
 </script>
@@ -103,19 +103,19 @@ or
 [Optional] Add script for fuzzball.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball@1.3.1/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.0.0/dist/fuzzball.umd.min.js"></script>
 ```
 
 [Optional] Add script for ua-parser-js.
 > **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.23/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.28/dist/ua-parser.min.js"></script>
 ```
 
 [Optional] Add script for xss.
 > **Note:** Include script when using `clearXSS` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xss@1.x/dist/xss.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xss@1.0.9/dist/xss.min.js"></script>
 ```
 
 [Optional] Add script for xlsx.
@@ -127,15 +127,15 @@ or
 [Optional] Add link and script for viewerjs.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.9.2/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.0/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.0/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for html2canvas.
 > **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.2/dist/html2canvas.min.js"></script>
 ```
 
 [Optional] Add script for htmlparser.
@@ -152,5 +152,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.87/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.5.88/dist/wsemi.umd.js"></script>
 ```
