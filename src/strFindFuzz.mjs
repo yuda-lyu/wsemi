@@ -1,4 +1,4 @@
-import fuzzball from 'fuzzball'
+import fuzzball from 'fuzzball/dist/fuzzball.umd.min.js'
 import join from 'lodash/join'
 import map from 'lodash/map'
 import mean from 'lodash/mean'
