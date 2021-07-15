@@ -13,7 +13,7 @@ import isEle from './isEle.mjs'
  * need test in browser
  *
  * let html = '<div>abc</div>'
- * domAppend(document.querySelector('id'),html)
+ * domAppend(document.querySelector('#id'),html)
  *
  */
 function domAppend(eleParent, itemChild) {

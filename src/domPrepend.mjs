@@ -12,7 +12,7 @@ import isEle from './isEle.mjs'
  * @example
  * need test in browser
  *
- * domPrepend(document.querySelector('id-parent'),document.querySelector('id-child'))
+ * domPrepend(document.querySelector('#id-parent'),document.querySelector('#id-child'))
  *
  */
 function domPrepend(eleParent, itemChild) {
