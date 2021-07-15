@@ -1,29 +1,38 @@
-import domFind from './domFind.mjs'
 import isstr from './isstr.mjs'
+import isEle from './isEle.mjs'
 
 
 /**
- * 前端找尋DOM元素並插入節點、元素或文字等
+ * 前端於DOM元素內最後處插入元素或Html文字等
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.js Github}
  * @memberOf wsemi
- * @param {String} query 輸入查詢字串
- * @param {*} item 輸入要插入節點、元素或文字等內容
+ * @param {HTMLElement} eleParent 輸入目標DOM元素
+ * @param {HTMLElement|String} itemChild 輸入要插入DOM元素或Html文字等內容
  * @example
  * need test in browser
  *
  * let html = '<div>abc</div>'
- * domAppend('#id',html)
+ * domAppend(document.querySelector('id'),html)
  *
  */
-function domAppend(query, item) {
-    let r = domFind(query)
-    if (isstr(item)) {
-        r.insertAdjacentHTML('beforeend', item) //'beforeend': 在 element 裡面，最後一個子元素之後
+function domAppend(eleParent, itemChild) {
+
+    //check
+    if (!isEle(eleParent)) {
+        return 'invalid eleParent'
+    }
+
+    if (isstr(itemChild)) {
+        eleParent.insertAdjacentHTML('beforeend', itemChild) //'beforeend': 在 element 裡面，最後一個子元素之後
+    }
+    else if (isEle(itemChild)) {
+        eleParent.appendChild(itemChild)
     }
     else {
-        r.appendChild(item)
+        return 'invalid itemChild'
     }
+
 }
 
 

@@ -19,7 +19,7 @@ function domIsFocused(ele) {
 
     //check ele
     if (!isEle(ele)) {
-        return Promise.reject('invalid element')
+        return 'invalid element'
     }
 
     //r

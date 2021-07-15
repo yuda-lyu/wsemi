@@ -143,7 +143,7 @@ async function treeDataTransfer(dataTransfer) {
 /**
  * 前端取得拖曳進指定元素的檔案陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDropFiles.test.js Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入dom元素
  * @returns {Object} 回傳物件，包含emit與off事件，emit可監聽dropIn、dropOut、getFiles，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列，並呼叫其內回調函數cb，方能繼續觸發dropOut事件

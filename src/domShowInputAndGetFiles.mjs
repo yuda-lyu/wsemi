@@ -45,7 +45,7 @@ function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 1000)
 
     //append html
     let hidehtml = `<div name="${gname}" style="position:relative; width:0px; height:0px; overflow:hidden;"><input id="${id}" type="file" accept="${acp}" ${mp} style="opacity:0; position:absolute; top:-10000px; left:-10000px;"></div>`
-    domAppend('body', hidehtml)
+    domAppend(document.querySelector('body'), hidehtml)
 
     //inp
     let inp = domFind('#' + id)
