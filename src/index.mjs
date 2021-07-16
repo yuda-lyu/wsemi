@@ -77,6 +77,8 @@ export { default as domShowInputAndGetFiles } from './domShowInputAndGetFiles.mj
 export { default as domShowInputAndGetFilesU8Arrs } from './domShowInputAndGetFilesU8Arrs.mjs'
 export { default as domTooltip } from './domTooltip.mjs'
 export { default as domTriggerEvent } from './domTriggerEvent.mjs'
+export { default as domVirtualCreate } from './domVirtualCreate.mjs'
+export { default as domVirtualCreateQueue } from './domVirtualCreateQueue.mjs'
 export { default as downloadExcelFileFromData } from './downloadExcelFileFromData.mjs'
 export { default as downloadExcelFileFromDataDyn } from './downloadExcelFileFromDataDyn.mjs'
 export { default as downloadFileFromB64 } from './downloadFileFromB64.mjs'
