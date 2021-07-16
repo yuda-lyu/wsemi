@@ -30,7 +30,7 @@ import domVirtualCreate from './domVirtualCreate.mjs'
  * let b64 = await dpq(500, 350, fun)
  *
  */
-async function domVirtualCreateQueue() {
+function domVirtualCreateQueue() {
 
     function Core() {
 

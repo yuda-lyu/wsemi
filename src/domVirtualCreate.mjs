@@ -14,7 +14,7 @@ import domRemove from './domRemove.mjs'
  * @param {Number} [w=600] 輸入目標DOM元素寬度數字，單位px，預設600
  * @param {Number} [h=400] 輸入目標DOM元素高度數字，單位px，預設400
  * @param {Function} fun 輸入處理函數，函數會傳入臨時產生的DOM元素，處理後例如產生base64圖片，並將其回傳，函數可為sync或async函數
- * @returns {*} 回傳fun處理後回傳之數據
+ * @returns {Promise} 回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
