@@ -135,7 +135,7 @@ or
 > **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.2/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.4/dist/html2canvas.min.js"></script>
 ```
 
 [Optional] Add script for htmlparser.
@@ -152,5 +152,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.0/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.1/dist/wsemi.umd.js"></script>
 ```
