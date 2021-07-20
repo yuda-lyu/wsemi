@@ -209,7 +209,6 @@ function unbindEleAndGroup(gid, eid) {
 
         //delete
         delete kpDgs[gid]
-        console.log('全部元素已解除監聽 kpDgs', 'gid', gid, kpDgs)
 
     }
 
