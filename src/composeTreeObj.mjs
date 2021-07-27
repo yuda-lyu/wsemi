@@ -55,7 +55,39 @@ import iser from './iser.mjs'
  * let r = composeTreeObj(data)
  * let cr = JSON.stringify(r)
  * console.log(cr)
- * // => [{"id":1,"text":"1-a"},{"id":2,"text":"2-b","children":[{"id":3,"text":"3-c","parentId":2,"children":[{"id":5,"text":"5-e","parentId":3}]},{"id":4,"text":"4-d","parentId":2}]},{"id":6,"text":"empty"}]
+ * // => [
+ * //   {
+ * //     "id": 1,
+ * //     "text": "1-a"
+ * //   },
+ * //   {
+ * //     "id": 2,
+ * //     "text": "2-b",
+ * //     "children": [
+ * //       {
+ * //         "id": 3,
+ * //         "text": "3-c",
+ * //         "parentId": 2,
+ * //         "children": [
+ * //           {
+ * //             "id": 5,
+ * //             "text": "5-e",
+ * //             "parentId": 3
+ * //           }
+ * //         ]
+ * //       },
+ * //       {
+ * //         "id": 4,
+ * //         "text": "4-d",
+ * //         "parentId": 2
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "id": 6,
+ * //     "text": "empty"
+ * //   }
+ * // ]
  *
  */
 function composeTreeObj(items, opt = {}) {

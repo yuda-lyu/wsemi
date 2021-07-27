@@ -20,35 +20,44 @@
 <body>
 
     <div id="panel" style="user-select:none; cursor:pointer;">
-        <div style="padding:5px;" dragtag dragindex="0">item A</div>
-        <div style="padding:5px;" dragtag dragindex="1">item B</div>
-        <div style="padding:5px;" dragtag dragindex="2">item C</div>
-        <div style="padding:5px;" dragtag dragindex="3">item D</div>
-        <div style="padding:5px;" dragtag dragindex="4">item E</div>
+        <div style="padding:5px;" draggroup="group" dragindex="0">item[0]</div>
+        <div style="padding:5px;" draggroup="group" dragindex="1">item[1]</div>
+        <div style="padding:5px;" draggroup="group" dragindex="2">item[2]</div>
+        <div style="padding:5px;" draggroup="group" dragindex="3">item[3]</div>
+        <div style="padding:5px;" draggroup="group" dragindex="4">item[4]</div>
     </div>
 
     <script>
 
-        //domDrag
-        let dd = wsemi.domDrag(document.querySelector('#panel'), { attIndex: 'dragindex', selectors: '[dragtag]' })
-        dd.on('change', function(msg) {
-            //console.log('change', msg)
-        })
-        dd.on('start', function(msg) {
-            console.log('start', msg)
-        })
-        dd.on('move', function(msg) {
-            //console.log('move', msg)
-        })
-        dd.on('enter', function(msg) {
-            console.log('enter', msg)
-        })
-        dd.on('leave', function(msg) {
-            console.log('leave', msg)
-        })
-        dd.on('drop', function(msg) {
-            console.log('drop', msg)
-        })
+        let dds = []
+        for(let i=0;i<=4;i++){
+
+            //domDrag
+            let dd = wsemi.domDrag(document.querySelector('[dragindex="'+i+'"]'), { attIndex: 'dragindex', attGroup: 'draggroup', group:'group' })
+            dd.on('change', function(msg) {
+                //console.log(i+'-change', msg)
+            })
+            dd.on('start', function(msg) {
+                console.log(i+'-start', msg)
+            })
+            dd.on('move', function(msg) {
+                //console.log(i+'-move', msg)
+            })
+            dd.on('enter', function(msg) {
+                console.log(i+'-enter', msg)
+            })
+            dd.on('leave', function(msg) {
+                console.log(i+'-leave', msg)
+            })
+            dd.on('drop', function(msg) {
+                console.log(i+'-drop', msg)
+            })
+
+            //push
+            dds.push(dd)
+            
+        }
+
     
     </script>
 
