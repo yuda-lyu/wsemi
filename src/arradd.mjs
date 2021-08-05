@@ -32,7 +32,7 @@ function core(v1, v2) {
 /**
  * 各陣列內元素相加，可輸入n個同長度陣列，若需輸入之陣列長度不同則回傳空陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arradd.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} arguments 輸入n個陣列，需同長度，其內元素皆會轉為浮點數，各陣列針對各元素進行相加總
  * @returns {Array} 回傳各元素相加後陣列

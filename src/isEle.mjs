@@ -4,7 +4,7 @@ import isElement from 'lodash/isElement'
 /**
  * 前端判斷元素是否存在
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEle.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEle.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入DOM元素
  * @returns {Boolean} 回傳判斷布林值

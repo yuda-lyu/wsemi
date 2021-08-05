@@ -11,7 +11,7 @@ import isbol from './isbol.mjs'
  * 一般字串轉AES字串
  * 使用AES-128-CBC加密，字串採用PKCS#7填充
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2aes.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2aes.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @param {String} key 輸入加密key

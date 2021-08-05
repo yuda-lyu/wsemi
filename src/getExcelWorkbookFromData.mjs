@@ -69,7 +69,7 @@ function getWB(csn, data) {
 /**
  * 由陣列數據轉成為Excel(*.xlsx)的Workbook數據
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromData.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} data 輸入內容陣列
  * @param {String} [csn='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'

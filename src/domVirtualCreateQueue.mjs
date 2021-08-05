@@ -5,7 +5,7 @@ import domVirtualCreate from './domVirtualCreate.mjs'
 /**
  * 前端產生臨時DOM元素為對象並進行客製化處理，並通過佇列管控，限定一次處理一個。初始化後將回傳封裝後的domVirtualCreate，輸入與輸出皆與其相同，詳見domVirtualCreate
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domVirtualCreateQueue.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domVirtualCreateQueue.test.mjs Github}
  * @memberOf wsemi
  * @returns {Function} 回傳domVirtualCreate函數
  * @example

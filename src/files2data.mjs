@@ -7,7 +7,7 @@ import ltdtmerge from './ltdtmerge.mjs'
 /**
  * 前端input檔案物件陣列轉資料物件陣列，各檔案將轉為Base64字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/files2data.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/files2data.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} files 輸入File陣列
  * @returns {Promise} 回傳Promise，resolve回傳File的資料物件陣列，各檔案將轉為Base64字串

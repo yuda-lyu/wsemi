@@ -7,7 +7,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 /**
  * 後端nodejs清空資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolder.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
  * @example

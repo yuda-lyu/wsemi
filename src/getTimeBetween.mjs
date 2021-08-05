@@ -7,7 +7,7 @@ import getTimeObject from './getTimeObject.mjs'
 /**
  * 輸入兩時間，單位皆為unit，由兩時間之間回傳以unit分切的時間點，回傳時間單位一樣為unit
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeBetween.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeBetween.test.mjs Github}
  * @memberOf wsemi
  * @param {String} tstart 輸入開始時間字串，不含時區
  * @param {String} tend 輸入結束時間字串，不含時區

@@ -41,7 +41,7 @@ function coreHTML5(bb) {
 /**
  * 前端Blob或input檔案物件轉ArrayBuffer資料陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blob2ab.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blob2ab.test.mjs Github}
  * @memberOf wsemi
  * @param {Blob|File} bb 輸入Blob或File
  * @returns {Promise} 回傳Promise，resolve回傳Blob或File的ArrayBuffer資料陣列，reject回傳錯誤訊息

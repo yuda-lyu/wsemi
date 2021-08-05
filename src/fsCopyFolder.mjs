@@ -6,7 +6,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
 /**
  * 後端nodejs複製資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCopyFolder.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCopyFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fpSrc 輸入來源資料夾路徑字串
  * @param {String} fpTar 輸入目的資料夾路徑字串

@@ -282,7 +282,7 @@ function interp1Blocks(ps, x) {
 /**
  * 一維數據內插
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ps 輸入一維數據，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
  * @param {Number} x 輸入要內插點的x值

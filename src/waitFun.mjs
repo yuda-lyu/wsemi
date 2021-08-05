@@ -8,7 +8,7 @@ import ispint from './ispint.mjs'
  * 等待f函數回傳true
  * 原始名稱為waitFunction，但與nodejs或travis-ci有名稱衝突，故才改為waitFun
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} f 輸入判斷用函數
  * @param {Object} opt 輸入設定物件，預設{}

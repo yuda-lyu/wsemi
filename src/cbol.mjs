@@ -7,7 +7,7 @@ import isestr from './isestr.mjs'
 /**
  * 布林值或字串轉布林值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cbol.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cbol.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意值
  * @returns {Boolean} 回傳布林值

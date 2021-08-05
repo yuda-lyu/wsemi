@@ -30,7 +30,7 @@ function parseTime(t, unit) {
 /**
  * 輸入時間字串，單位為unit，回傳解析後之時間物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeObject.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeObject.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入時間字串，不含時區
  * @param {String} [unit='days'] 輸入時間單位字串，預設為'days'

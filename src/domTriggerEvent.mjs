@@ -49,7 +49,7 @@ if (isWindow()) {
 /**
  * 前端觸發ele的eventName
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {String} eventName 輸入事件名稱字串

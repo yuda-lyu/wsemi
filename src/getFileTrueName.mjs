@@ -9,7 +9,7 @@ import getFileName from './getFileName.mjs'
 /**
  * 由檔案位置取得檔案的不含副檔名名稱
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileTrueName.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileTrueName.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案位置字串
  * @returns {string} 檔案不含副檔名的名稱

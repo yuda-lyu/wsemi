@@ -5,7 +5,7 @@ import isEle from './isEle.mjs'
 /**
  * 前端於DOM元素內最前處插入元素或Html文字等
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domPrepend.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domPrepend.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} eleParent 輸入目標DOM元素
  * @param {HTMLElement|String} itemChild 輸入要插入DOM元素或Html文字等內容

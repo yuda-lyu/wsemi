@@ -4,7 +4,7 @@ import isab from './isab.mjs'
 /**
  * ArrayBuffer轉Unit8Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ab2u8arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ab2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {ArrayBuffer} ab 輸入ArrayBuffer
  * @returns {Unit8Array} 回傳Unit8Array

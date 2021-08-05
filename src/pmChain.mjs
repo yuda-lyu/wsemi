@@ -5,7 +5,7 @@ import isarr from './isarr.mjs'
 /**
  * 傳入initial初始值並循序執行Promise陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} pms 輸入Promise陣列
  * @param {*} initial 輸入循序執行Promise陣列的初始值

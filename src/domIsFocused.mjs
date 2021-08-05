@@ -4,7 +4,7 @@ import isEle from './isEle.mjs'
 /**
  * 前端檢測DOM元素是否為聚焦狀態
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsFocused.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsFocused.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @example

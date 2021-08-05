@@ -88,7 +88,7 @@ function svg2png(ele, scale) {
 /**
  * 前端DOM元素轉圖片
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2pic.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2pic.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}

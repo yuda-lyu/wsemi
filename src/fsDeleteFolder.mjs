@@ -5,7 +5,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 /**
  * 後端nodejs刪除資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFolder.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @example

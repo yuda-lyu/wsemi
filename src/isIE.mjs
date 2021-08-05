@@ -1,7 +1,7 @@
 /**
  * 前端判斷瀏覽器是否為IE
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isIE.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isIE.test.mjs Github}
  * @memberOf wsemi
  * @returns {Boolean} 回傳判斷布林值
  * @example

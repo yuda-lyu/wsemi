@@ -8,7 +8,7 @@ import haskey from './haskey.mjs'
 /**
  * 由dt物件提取指定keys欄位出來成為新物件，僅保留有keys的欄位，若不存在欄位就不提取
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dtpick.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dtpick.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} dt 輸入資料物件
  * @param {Array} keys 輸入要提取欄位集合的字串陣列

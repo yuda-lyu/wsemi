@@ -6,7 +6,7 @@ import strright from './strright.mjs'
 /**
  * 切分秒時間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepTimeTZ.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepTimeTZ.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {Object} 回傳切分後時間物件，t為無時區秒時間，tz為時區

@@ -5,7 +5,7 @@ import isnbr from './isnbr.mjs'
 /**
  * 判斷是否為數字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnum.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnum.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值

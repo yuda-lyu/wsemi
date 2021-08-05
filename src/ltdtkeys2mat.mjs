@@ -13,7 +13,7 @@ import getltdtkeys from './getltdtkeys.mjs'
 /**
  * 由物件陣列ltdt並使用keys取值轉二維陣列mat
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} keys 輸入字串陣列，若不輸入則由ltdt提取

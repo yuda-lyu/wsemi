@@ -4,7 +4,7 @@ import bufWrite from './bufWrite.mjs'
 /**
  * 寫入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)內的浮點數資料，需先依照nBytes宣告Uint8Array或Buffer空間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWriteDbl.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWriteDbl.test.mjs Github}
  * @memberOf wsemi
  * @param {Number} value 輸入數字
  * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料

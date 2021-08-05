@@ -6,7 +6,7 @@ import cint from './cint.mjs'
 /**
  * 函數去除抖動
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
  * @example

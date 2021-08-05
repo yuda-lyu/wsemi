@@ -8,7 +8,7 @@ import isobj from './isobj.mjs'
 /**
  * 由ltdtAll陣列移除ltdtDel陣列，只會針對ltdtDel內各元素的指定key來查找
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpull.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpull.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdtAll 輸入要被刪除的物件陣列
  * @param {Array} ltdtDel 輸入要刪除的物件陣列

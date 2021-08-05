@@ -17,7 +17,7 @@ import delay from './delay.mjs'
  *
  * 可限制同時運行的非同步函數總數量(takeLimit>0)，可只取最後呼叫的非同步函數進行防抖功能(takeLast=true)，代表前面的呼叫皆自動轉為catch，而其回傳訊息為物件{reason:'cancelled'}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖

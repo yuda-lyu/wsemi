@@ -4,7 +4,7 @@ import isestr from './isestr.mjs'
 /**
  * 判斷是否為廣義無效
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEmail.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isEmail.test.mjs Github}
  * @memberOf wsemi
  * @param {String} email 輸入email字串
  * @returns {Boolean} 回傳判斷布林值

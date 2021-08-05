@@ -6,7 +6,7 @@ import sepTimeTZ from './sepTimeTZ.mjs'
 /**
  * 秒時間取至日時間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2day.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2day.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @returns {String} 回傳日時間字串

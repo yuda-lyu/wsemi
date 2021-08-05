@@ -8,7 +8,7 @@ import genID from './genID.mjs'
 /**
  * 前端DOM元素fadeOut效果
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domFadeOut.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domFadeOut.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入取得dom函數
  * @param {Object} [opt={}] 輸入設定物件，預設{}

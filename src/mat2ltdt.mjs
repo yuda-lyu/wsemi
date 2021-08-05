@@ -9,7 +9,7 @@ import keysmat2ltdt from './keysmat2ltdt.mjs'
  * 由mat第1行當head，其餘當data，轉ltdt
  * mat第1行需為字串陣列，才能當head
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/mat2ltdt.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/mat2ltdt.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} mat 輸入資料陣列
  * @returns {Array} 回傳物件陣列

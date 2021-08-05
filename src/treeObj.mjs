@@ -258,7 +258,7 @@ function traverseObj(data, f, keepSymbols = false) {
 /**
  * 遍歷物件並回傳複製物件，類似JSON.stringify，但不會序列化成為字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/treeObj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/treeObj.test.mjs Github}
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
  * @param {Function} [hookFun=null] 輸入攔截處理函數，預設null

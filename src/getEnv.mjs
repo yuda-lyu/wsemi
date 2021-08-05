@@ -4,7 +4,7 @@ import isWindow from './isWindow.mjs'
 /**
  * 取得運行環境
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getEnv.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getEnv.test.mjs Github}
  * @memberOf wsemi
  * @returns {Object} 回傳運行環境物件
  * @example

@@ -4,7 +4,7 @@ import isestr from './isestr.mjs'
 /**
  * 字串是否包含大寫英文字元
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isStrHasCapital.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isStrHasCapital.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入欲判斷的字串
  * @returns {Boolean} 回傳是否包含大寫英文字元

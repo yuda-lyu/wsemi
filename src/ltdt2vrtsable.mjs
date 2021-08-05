@@ -13,7 +13,7 @@ import getltdtkeys from './getltdtkeys.mjs'
 /**
  * 由物件陣列ltdt轉陣列vrtable(使用value,style,rowspan儲存)
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdt2vrtsable.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdt2vrtsable.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列

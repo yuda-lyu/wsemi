@@ -7,7 +7,7 @@ import isearr from './isearr.mjs'
 /**
  * 由ltdt提取不重複keys
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getltdtkeys.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getltdtkeys.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @returns {Array} 回傳不重複keys陣列

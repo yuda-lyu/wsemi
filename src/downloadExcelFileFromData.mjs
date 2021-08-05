@@ -18,7 +18,7 @@ function getXLSX() {
 /**
  * 下載資料成為Excel(*.xlsx)檔案，前後端都可用
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'

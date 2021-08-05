@@ -6,7 +6,7 @@ import ocr from './ocr.mjs'
 /**
  * 基於tesseract.js的文字辨識(OCR)，採用動態加載技術，注意瀏覽器版精度較差
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocrDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocrDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {String} img 輸入圖片網址或base64格式(以data:開頭)字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}

@@ -7,7 +7,7 @@ import cint from './cint.mjs'
 /**
  * 由字串與Unit8Array陣列轉物件，為對obj2stru8arr序列化之數據進行反序列化
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/stru8arr2obj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/stru8arr2obj.test.mjs Github}
  * @memberOf wsemi
  * @param {String} data.results 輸入待反序列化字串
  * @param {Array} data.binarys 輸入Unit8Array陣列

@@ -6,7 +6,7 @@ import domShowImages from './domShowImages.mjs'
 /**
  * 前端彈窗顯示指定元素內圖片或圖片陣列，採用動態加載技術
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImagesDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImagesDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null

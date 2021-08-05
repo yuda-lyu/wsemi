@@ -5,7 +5,7 @@ import isestr from './isestr.mjs'
 /**
  * 判斷是否為有效中華民國身份證
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserIdentify.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserIdentify.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息

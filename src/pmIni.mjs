@@ -1,7 +1,7 @@
 /**
  * 以Promise開啟鏈式
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmIni.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmIni.test.mjs Github}
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise
  * @example

@@ -7,7 +7,7 @@ import dig from './dig.mjs'
  * 數字或字串轉金融格式(百分位添加逗號)表示
  * 若輸入不是數字或字串時則回傳空字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfinancial.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfinancial.test.mjs Github}
  * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0

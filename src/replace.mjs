@@ -7,7 +7,7 @@ import isstr from './isstr.mjs'
  * 針對c查找是否含有t，並將t全部取代成r
  * 若輸入c,t,r不是字串時則回傳空字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/replace.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/replace.test.mjs Github}
  * @memberOf wsemi
  * @param {String} c 輸入要被取代的字串
  * @param {String} t 輸入要查找的字串

@@ -4,7 +4,7 @@ import isu8arr from './isu8arr.mjs'
 /**
  * Unit8Array轉BinaryString，BinaryString為UTF-16編碼
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2bs.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2bs.test.mjs Github}
  * @memberOf wsemi
  * @param {Unit8Array} u8a 輸入Unit8Array資料
  * @returns {String} 回傳BinaryString字串

@@ -6,7 +6,7 @@ import isnum from './isnum.mjs'
  * 數字或字串轉浮點數
  * 若輸入非數字則回傳0
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cdbl.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cdbl.test.mjs Github}
  * @memberOf wsemi
  * @param {Number|String} v 輸入數字或字串
  * @returns {Number} 回傳數字

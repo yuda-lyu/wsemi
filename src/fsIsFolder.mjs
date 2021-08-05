@@ -4,7 +4,7 @@ import fs from 'fs'
 /**
  * 後端nodejs判斷是否為資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFolder.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入路徑字串
  * @example

@@ -49,7 +49,7 @@ function coreHTML5(cfn, blob) {
 /**
  * 前端下載Blob資料成為檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.mjs Github}
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob

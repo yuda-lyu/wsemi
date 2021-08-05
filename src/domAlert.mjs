@@ -191,7 +191,7 @@ function addItem({ id, position, time, pm }) {
 /**
  * 前端彈出訊息視窗
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAlert.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAlert.test.mjs Github}
  * @memberOf wsemi
  * @param {String} msg 輸入彈窗訊息字串，可為html
  * @param {Object} [opt={}] 輸入設定物件，預設{}

@@ -14,7 +14,7 @@ import getFileAccept from './getFileAccept.mjs'
  * kind若需使用種類，可選為'docums', 'compress', 'image', 'data'，或複選以陣列儲存傳入
  * kind若需使用通用檔案，可使用'common'
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFileAccept.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFileAccept.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列
  * @returns {String} 回傳input file的accept欄位所用字串

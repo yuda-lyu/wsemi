@@ -5,7 +5,7 @@ import get from 'lodash/get'
 /**
  * 將Promise函式的resolve與reject皆轉為resolve
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pm2resolve.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pm2resolve.test.mjs Github}
  * @memberOf wsemi
  * @returns {Promise} 回傳Promise，皆使用resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
  * @example

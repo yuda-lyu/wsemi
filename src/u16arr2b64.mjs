@@ -6,7 +6,7 @@ import u8arr2b64 from './u8arr2b64.mjs'
 /**
  * Uint16Array轉base64字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint16Array} u16a 輸入Uint16Array
  * @returns {String} 回傳base64字串

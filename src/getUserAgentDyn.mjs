@@ -6,7 +6,7 @@ import getUserAgent from './getUserAgent.mjs'
 /**
  * 前端取得使用者瀏覽器資訊，於browser中不輸入即可自動偵測，採用動態加載技術
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgentDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgentDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {String} [v=null] 輸入user agent字串，預設null
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列

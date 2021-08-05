@@ -8,7 +8,7 @@ import isbol from './isbol.mjs'
 /**
  * 由整數v切分n個正整數，回傳切分後之整數陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} v 輸入要被切分的整數
  * @param {Integer} n 輸入要切分數量的整數

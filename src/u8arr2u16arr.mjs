@@ -4,7 +4,7 @@ import isu8arr from './isu8arr.mjs'
 /**
  * Uint8Array轉Uint16Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2u16arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2u16arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {Uint16Array} 回傳Uint16Array

@@ -8,7 +8,7 @@ import isarr0 from './isarr0.mjs'
 /**
  * 判斷是否為廣義無效
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/iser.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/iser.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值

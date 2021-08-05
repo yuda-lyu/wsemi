@@ -17,7 +17,7 @@ import queue from './queue.mjs'
  * 使用函數執行時，當takeLimit=1，等同於mapSeries，promise依序執行完畢才會調用下一個promise。
  * 使用函數執行時，當takeLimit=0，等同於先行產生promise的情形，各promise直接執行視各自執行時間結束。
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
  * @param {Function} fun 輸入循序執行值的呼叫函數

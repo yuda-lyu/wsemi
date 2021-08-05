@@ -19,7 +19,7 @@ function getHtmlparser() {
 /**
  * html轉純文字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2str.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2str.test.mjs Github}
  * @memberOf wsemi
  * @param {String} html 輸入html字串
  * @returns {String} 回傳純文字字串

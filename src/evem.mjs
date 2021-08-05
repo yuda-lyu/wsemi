@@ -6,7 +6,7 @@ import EventEmitter from 'eventemitter3'
  *
  * See: {@link https://github.com/primus/eventemitter3 eventemitter3}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/evem.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/evem.test.mjs Github}
  * @memberOf wsemi
  * @example
  *

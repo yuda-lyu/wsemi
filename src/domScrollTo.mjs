@@ -7,7 +7,7 @@ import isIE from './isIE.mjs'
 /**
  * 前端DOM元素平滑捲動至指定位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {Object} [opt={behavior:'smooth'}] 輸入scrollTo的設定物件，預設{behavior:'smooth'}

@@ -6,7 +6,7 @@ import b642u8arr from './b642u8arr.mjs'
 /**
  * 字串轉Uint8Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2u8arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @returns {Uint8Array} 回傳Uint8Array

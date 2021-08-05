@@ -94,7 +94,7 @@ import isarr from './isarr.mjs'
 /**
  * 呼叫執行檔或程式語言prog執行scp腳本
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execScript.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execScript.test.mjs Github}
  * @memberOf wsemi
  * @param {String} prog 輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收
  * @param {String|Array} scp 輸入腳本檔案位置字串或參數

@@ -5,7 +5,7 @@ import ispint from './ispint.mjs'
 /**
  * 取字串右邊n個字元
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strright.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strright.test.mjs Github}
  * @memberOf wsemi
  * @param {String} c 輸入要被取的字串
  * @param {Integer} n 輸入取右邊n個字元

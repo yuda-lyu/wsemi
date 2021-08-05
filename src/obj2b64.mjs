@@ -5,7 +5,7 @@ import str2b64 from './str2b64.mjs'
 /**
  * 任意資料轉base64字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2b64.test.mjs Github}
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
  * @returns {String} 回傳base64字串

@@ -8,7 +8,7 @@ import isundefined from './isundefined.mjs'
 /**
  * 掛勾非同步(Promise)函數，可監聽或修改Promise的輸出入訊號
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHook.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHook.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} fun 輸入非同步Promise函數
  * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽到的資訊物件，欄位有mode與data，mode可為'before'、'afterThen'、'afterCatch'字串，而data則代表非同步函數的輸入或輸出資訊。若想於cb函數修改回傳，則由cb函數的輸入修改完回傳即可。例如收到msg={mode:'before',data:'123'}，將msg.data='abc'，再return msg.data

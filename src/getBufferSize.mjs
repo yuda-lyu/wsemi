@@ -7,7 +7,7 @@ import isu16arr from './isu16arr.mjs'
 /**
  * 計算Uint8Array(Nodejs,Browser)或Buffer(Nodejs)的大小
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getBufferSize.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getBufferSize.test.mjs Github}
  * @memberOf wsemi
  * @param {Unit8Array|Buffer} buf 傳入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)
  * @returns {Integer} 回傳Uint8Array(Nodejs,Browser)或Buffer(Nodejs)的大小

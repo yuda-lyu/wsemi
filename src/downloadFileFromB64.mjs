@@ -5,7 +5,7 @@ import isWindow from './isWindow.mjs'
 /**
  * 前端下載base64資料成為檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromB64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromB64.test.mjs Github}
  * @memberOf wsemi
  * @param {String} cfn 輸入檔名字串
  * @param {String} b64 輸入base64資料字串

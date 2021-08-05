@@ -7,7 +7,7 @@ import isearr from './isearr.mjs'
 /**
  * 由keys與二維陣列mdata轉ltdt
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/keysmat2ltdt.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/keysmat2ltdt.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} keys 輸入字串陣列
  * @param {Array} mat 輸入資料陣列

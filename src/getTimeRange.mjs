@@ -6,7 +6,7 @@ import time2min from './time2min.mjs'
 /**
  * 起訖時間合併顯示，時間單位皆為秒
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeRange.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeRange.test.mjs Github}
  * @memberOf wsemi
  * @param {String} tstart 輸入開始秒時間字串，不含時區
  * @param {String} tend 輸入結束秒時間字串，不含時區，若不輸入則等同於開始時間字串

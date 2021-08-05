@@ -9,7 +9,7 @@ import domRemove from './domRemove.mjs'
 /**
  * 前端產生臨時DOM元素為對象並進行客製化處理
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domVirtualCreate.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domVirtualCreate.test.mjs Github}
  * @memberOf wsemi
  * @param {Number} [w=600] 輸入目標DOM元素寬度數字，單位px，預設600
  * @param {Number} [h=400] 輸入目標DOM元素高度數字，單位px，預設400

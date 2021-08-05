@@ -104,7 +104,7 @@ function importResource({ tagName, path, attributes = {}, func }) {
 /**
  * 前端動態引入資源如Javascript或CSS檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/importResources.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/importResources.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳注入成功的HtmlElement，reject回傳錯誤訊息

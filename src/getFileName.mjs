@@ -5,7 +5,7 @@ import getClearPathName from './getClearPathName.mjs'
 /**
  * 由檔案位置取得檔案名稱
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileName.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileName.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案位置字串
  * @returns {string} 檔案名稱

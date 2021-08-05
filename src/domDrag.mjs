@@ -544,7 +544,7 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
 /**
  * 前端DOM元素拖曳事件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}

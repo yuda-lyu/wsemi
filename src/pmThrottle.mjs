@@ -10,7 +10,7 @@ import evem from './evem.mjs'
  *
  * 同時僅會執行一個佇列(非同步函數)，若前一個執行完畢，則直接呼叫最新(末)的佇列，前面的呼叫皆會自動轉為catch，回傳訊息為物件{reason:'cancelled'}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.mjs Github}
  * @memberOf wsemi
  * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
  * @example

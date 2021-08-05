@@ -5,7 +5,7 @@ import isestr from './isestr.mjs'
 /**
  * 前端DOM元素取得屬性
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetAttr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetAttr.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入DOM元素
  * @param {String} attr 輸入欲取得屬性名稱字串

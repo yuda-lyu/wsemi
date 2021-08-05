@@ -13,7 +13,7 @@ import isfun from './isfun.mjs'
 /**
  * 驗證數值是否為指定類型
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/verifyValue.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/verifyValue.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Function} type 輸入判斷資料類型字串或判斷函式，資料類型可選為'isstr','isnum','isp0num','isn0num','isint','ispint','isp0int','isnint','isn0int','isfun'
  * @param {*} value 輸入任意資料

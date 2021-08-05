@@ -29,7 +29,7 @@ function core(mainString, targetStrings) {
 /**
  * 計算字串ar與多關鍵字陣列strkeys之相似程度
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindSimilar.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindSimilar.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number|Array} strkeys 查找ar內與多關鍵字strkeys的個別相似度

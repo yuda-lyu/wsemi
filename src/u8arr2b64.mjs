@@ -6,7 +6,7 @@ import isu8arr from './isu8arr.mjs'
 /**
  * Uint8Array轉base64字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2b64.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {String} 回傳base64字串

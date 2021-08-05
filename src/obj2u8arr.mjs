@@ -23,7 +23,7 @@ function concatU8arr(a, b) {
 /**
  * 物件或陣列資料轉Uint8Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，注意因ArrayBuffer無法直接操作(非View，只有TypedArray與DataView可操作)故預設會轉Uint8Array進行處理
  * @returns {Uint8Array} 回傳Uint8Array

@@ -1,7 +1,7 @@
 /**
  * 判斷是否為ArrayBuffer
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isab.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isab.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @returns {Boolean} 回傳判斷布林值

@@ -1,7 +1,7 @@
 /**
  * 輸入時間單位，回傳時間套件所需之解析字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeFromUnit.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeFromUnit.test.mjs Github}
  * @memberOf wsemi
  * @param {String} unit 輸入時間單位字串
  * @returns {String} 回傳時間套件所需之解析字串，當unit='seconds'時回傳不含時區格式

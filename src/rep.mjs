@@ -6,7 +6,7 @@ import isp0int from './isp0int.mjs'
 /**
  * 產生重複n次字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.mjs Github}
  * @memberOf wsemi
  * @param {String} c 輸入欲重複的字串
  * @param {Integer} n 輸入重複次數之含零正整數

@@ -7,7 +7,7 @@ import strdelright from './strdelright.mjs'
 /**
  * 清理檔案或資料夾位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getClearPathName.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getClearPathName.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案或資料夾位置字串
  * @returns {string} 清理後檔案或資料夾位置

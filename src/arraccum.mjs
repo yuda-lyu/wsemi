@@ -7,7 +7,7 @@ import cdbl from './cdbl.mjs'
 /**
  * 回傳累加後陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arraccum.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arraccum.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vec 輸入要被累加計算的陣列
  * @returns {Array} 回傳各元素累加後之陣列

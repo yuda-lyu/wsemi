@@ -14,7 +14,7 @@ function getUAParser() {
 /**
  * 取得使用者瀏覽器資訊，後端nodejs環境使用需提供user agent字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getUserAgent.test.mjs Github}
  * @memberOf wsemi
  * @param {String} [v=null] 輸入user agent字串，預設null
  * @returns {Object} 回傳使用者瀏覽器資訊物件

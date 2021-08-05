@@ -6,7 +6,7 @@ import dtpick from './dtpick.mjs'
 /**
  * 由ltdt陣列各元素物件提取指定keys欄位出來成為新的物件陣列，僅保留有keys的欄位，若不存在欄位就不提取
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpick.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpick.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入要被提取的任意資料陣列，各元素需為物件，否則提取後為空物件
  * @param {Array} keys 輸入要提取欄位集合的字串陣列

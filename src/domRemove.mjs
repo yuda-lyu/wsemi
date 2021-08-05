@@ -7,7 +7,7 @@ import domFinds from './domFinds.mjs'
 /**
  * 前端找尋DOM元素並刪除
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRemove.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRemove.test.mjs Github}
  * @memberOf wsemi
  * @param {String|HTMLElement} inp 輸入查詢字串或dom函數
  * @example

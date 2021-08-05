@@ -5,7 +5,7 @@ import isEle from './isEle.mjs'
 /**
  * 前端計算clientX與clientY是否位於DOM元素內
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsClientXYIn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsClientXYIn.test.mjs Github}
  * @memberOf wsemi
  * @param {Number} clientX 輸入點的clientX座標
  * @param {Number} clientY 輸入點的clientY座標

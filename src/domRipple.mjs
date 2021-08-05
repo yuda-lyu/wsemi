@@ -8,7 +8,7 @@ import domRemove from './domRemove.mjs'
 /**
  * 前端DOM元素點擊Ripple效果
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRipple.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRipple.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入dom
  * @param {Object} event 輸入dom點擊事件

@@ -10,7 +10,7 @@ import cint from './cint.mjs'
 /**
  * 滑鼠移入元素時彈出提示訊息
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTooltip.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTooltip.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入DOM元素
  * @param {String} content 輸入提示html訊息字串，若不給則使用ele.innerHTML

@@ -8,7 +8,7 @@ import dig from './dig.mjs'
  * 可調整檔案大小為b,kb,mb,gb，並添加單位
  * 若輸入不是數字或字串時則回傳空字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfilesize.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cfilesize.test.mjs Github}
  * @memberOf wsemi
  * @param {Number|String} b 輸入單位需為bytes的檔案大小，可為數字或字串
  * @returns {String} 回傳自動轉換單位後的字串

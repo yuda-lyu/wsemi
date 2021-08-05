@@ -10,7 +10,7 @@ import isobj0 from './isobj0.mjs'
 /**
  * 展平樹狀物件陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenTreeObj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenTreeObj.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|Object} data 輸入樹狀物件或陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}

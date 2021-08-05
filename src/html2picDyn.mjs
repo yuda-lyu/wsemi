@@ -6,7 +6,7 @@ import html2pic from './html2pic.mjs'
 /**
  * 前端html轉圖片，採用動態加載技術
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2picDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2picDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}

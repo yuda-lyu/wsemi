@@ -10,7 +10,7 @@ let radix = chars.length
  *
  * Depend on: {@link https://gist.github.com/Wind4/3baa40b26b89b686e4f2 Math.uuid.js}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genID.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genID.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [len=32] 輸入uuid長度，為正整數，預設32
  * @returns {String} 回傳uuid字串

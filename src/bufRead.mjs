@@ -8,7 +8,7 @@ import isbol from './isbol.mjs'
  *
  * Fork: {@link https://github.com/toots/buffer-browserify/blob/master/buffer_ieee754.js buffer_ieee754}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufRead.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufRead.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
  * @param {Integer} offset 輸入平移整數

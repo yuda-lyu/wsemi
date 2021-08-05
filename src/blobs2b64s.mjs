@@ -5,7 +5,7 @@ import blob2b64 from './blob2b64.mjs'
 /**
  * 前端Blob或input檔案物件陣列，逐一轉為各檔案之Base64資料
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blobs2b64s.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blobs2b64s.test.mjs Github}
  * @memberOf wsemi
  * @param {Blob|File} bbs 輸入Blob或File陣列
  * @returns {Promise} 回傳Promise，resolve回傳各Blob或File的Base64資料，reject回傳錯誤訊息

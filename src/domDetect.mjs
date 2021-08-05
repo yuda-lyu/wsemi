@@ -7,7 +7,7 @@ import isfun from './isfun.mjs'
 /**
  * 前端監聽DOM元素resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} f 輸入取得dom函數
  * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，預設20毫秒

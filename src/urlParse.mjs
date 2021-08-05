@@ -8,7 +8,7 @@ import isestr from './isestr.mjs'
 /**
  * 切分網址取得參數物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/urlParse.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/urlParse.test.mjs Github}
  * @memberOf wsemi
  * @param {String} url 輸入要切分的網址字串
  * @returns {Object} 回傳資訊物件

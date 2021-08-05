@@ -36,7 +36,7 @@ function getCsv(mat, bom = true) {
 /**
  * 由陣列數據轉成為Excel(*.csv)的字串數據
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getCsvStrFromData.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getCsvStrFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} data 輸入內容陣列
  * @param {Boolean} [bom=true] 輸入是否添加開頭BOM符號，預設true

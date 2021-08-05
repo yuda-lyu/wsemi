@@ -6,7 +6,7 @@ import str2aes from './str2aes.mjs'
 /**
  * 任意資料由key進行AES加密轉為為base64
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2pb64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2pb64.test.mjs Github}
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
  * @param {String} key 輸入加密key

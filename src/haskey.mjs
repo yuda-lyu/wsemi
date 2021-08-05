@@ -5,7 +5,7 @@ import isestr from './isestr.mjs'
 /**
  * 判斷物件是否有key屬性
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/haskey.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/haskey.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} obj 輸入物件
  * @param {String} key 輸入要查找的key字串

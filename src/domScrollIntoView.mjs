@@ -7,7 +7,7 @@ import isIE from './isIE.mjs'
 /**
  * 前端平滑捲動至DOM元素
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollIntoView.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollIntoView.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {Object} [opt={behavior:'smooth'}] 輸入scrollIntoView的設定物件，預設{behavior:'smooth'}

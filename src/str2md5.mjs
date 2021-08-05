@@ -8,7 +8,7 @@ import isbol from './isbol.mjs'
 /**
  * 一般字串轉MD5字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2md5.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2md5.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false

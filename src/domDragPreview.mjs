@@ -12,7 +12,7 @@ import domGetBoudRect from './domGetBoudRect.mjs'
 /**
  * 前端針對DOM元素拖曳時產生其預覽(拷貝)對象
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragPreview.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragPreview.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.attIdentify='dragprevid'] 輸入儲存於DOM的識別欄位名稱字串，預設'dragprevid'

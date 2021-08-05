@@ -51,7 +51,7 @@ function ckIO() {
 /**
  * 前端檢測DOM元素是否為顯示(使用者可見)狀態
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsVisible.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsVisible.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @example

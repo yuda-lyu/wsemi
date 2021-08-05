@@ -8,7 +8,7 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
 /**
  * 前端開啟上傳視窗並讀取各檔案Uint8Array資料陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFilesU8Arrs.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFilesU8Arrs.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
  * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false

@@ -6,7 +6,7 @@ import htmlEncode from './htmlEncode.mjs'
 /**
  * 前端顯示log訊息，預設插入至body
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bodyLog.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bodyLog.test.mjs Github}
  * @memberOf wsemi
  * @param {String} c 輸入字串
  * @example

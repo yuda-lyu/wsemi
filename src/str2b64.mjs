@@ -6,7 +6,7 @@ import isestr from './isestr.mjs'
 /**
  * 一般字串轉base64字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2b64.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2b64.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @returns {String} 回傳base64字串

@@ -5,7 +5,7 @@ import istimeTZ from './istimeTZ.mjs'
 /**
  * 秒時間轉到期時間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2expire.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2expire.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @param {String} [tNow=null] 輸入現在秒時間字串

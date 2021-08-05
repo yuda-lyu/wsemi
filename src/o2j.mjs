@@ -4,7 +4,7 @@ import isundefined from './isundefined.mjs'
 /**
  * 任意資料轉json文字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/o2j.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/o2j.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
  * @param {Boolean} [bFormat=false] 輸入是否格式化布林值，預設為false

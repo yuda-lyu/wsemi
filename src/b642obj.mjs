@@ -6,7 +6,7 @@ import j2o from './j2o.mjs'
 /**
  * base64字串轉物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642obj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642obj.test.mjs Github}
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {*} 回傳任意物件

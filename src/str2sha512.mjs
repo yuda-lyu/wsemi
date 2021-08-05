@@ -9,7 +9,7 @@ import isbol from './isbol.mjs'
  * 一般字串轉SHA512字串
  * Secure Hash Algorithm 512位
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha512.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha512.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false

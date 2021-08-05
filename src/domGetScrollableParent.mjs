@@ -3,7 +3,7 @@
 /**
  * 前端找尋DOM元素最近的可捲動父層
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetScrollableParent.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetScrollableParent.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入dom元素
  * @returns {Element} 回傳DOM元素

@@ -5,7 +5,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 /**
  * 後端nodejs建立資料夾
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCreateFolder.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCreateFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入資料夾路徑字串
  * @example

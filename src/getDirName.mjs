@@ -8,7 +8,7 @@ import strdelright from './strdelright.mjs'
 /**
  * 由檔案位置取得檔案所在資料夾名稱
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDirName.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDirName.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案位置字串
  * @returns {string} 檔案名稱

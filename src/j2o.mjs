@@ -4,7 +4,7 @@ import isestr from './isestr.mjs'
 /**
  * json文字轉任意資料
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/j2o.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/j2o.test.mjs Github}
  * @memberOf wsemi
  * @param {String} v 輸入json格式字串
  * @returns {*} 回傳任意資料

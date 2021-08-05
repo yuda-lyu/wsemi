@@ -14,7 +14,7 @@ function getTesseract() {
 /**
  * 基於tesseract.js的文字辨識(OCR)，注意瀏覽器版精度較差
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ocr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} img 輸入圖片網址或base64格式(以data:開頭)字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}

@@ -6,7 +6,7 @@ import cint from './cint.mjs'
 /**
  * 佇列處理器，單生產者單消費者模式，核心使用迭代器，具有消息堵塞與可限定同時處理上限數量功能
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Object} 回傳事件物件，可呼叫事件on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列

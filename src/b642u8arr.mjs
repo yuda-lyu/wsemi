@@ -5,7 +5,7 @@ import isstr from './isstr.mjs'
 /**
  * base64字串轉Uint8Array
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642u8arr.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
  * @returns {Uint8Array} 回傳Uint8Array

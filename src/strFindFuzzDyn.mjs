@@ -6,7 +6,7 @@ import strFindFuzz from './strFindFuzz.mjs'
 /**
  * 前端以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzzDyn.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzzDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分

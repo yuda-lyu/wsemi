@@ -4,7 +4,7 @@ import genPm from './genPm.mjs'
 /**
  * 前端Blob或input檔案物件轉字串
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blob2str.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blob2str.test.mjs Github}
  * @memberOf wsemi
  * @param {Blob|File} bb 輸入Blob或File
  * @returns {Promise} 回傳Promise，resolve回傳Blob或File的字串，reject回傳錯誤訊息

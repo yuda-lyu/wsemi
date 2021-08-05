@@ -5,7 +5,7 @@ import browserView from './browserView.mjs'
 /**
  * 前端瀏覽器以分頁開啟文字資料
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/browserViewFromText.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/browserViewFromText.test.mjs Github}
  * @memberOf wsemi
  * @param {String} text 輸入文字字串
  * @example

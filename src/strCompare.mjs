@@ -43,7 +43,7 @@ function core(s1, s2) {
  *
  * Fork: {@link https://github.com/aceakash/string-similarity string-similarity}
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str1 輸入欲比對之一般字串
  * @param {String} str2 輸入欲比對之一般字串

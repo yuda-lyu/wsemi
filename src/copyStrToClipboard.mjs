@@ -7,7 +7,7 @@ import domIsFocused from './domIsFocused.mjs'
 /**
  * 複製字串至剪貼簿
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/copyStrToClipboard.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/copyStrToClipboard.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入欲複製至剪貼簿的字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}

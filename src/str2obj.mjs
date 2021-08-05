@@ -6,7 +6,7 @@ import isarr from './isarr.mjs'
 /**
  * 字串轉任意資料，可支援內含Uint8Array與Uint16Array數據
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2obj.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2obj.test.mjs Github}
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
  * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，預設'Uint8Array'

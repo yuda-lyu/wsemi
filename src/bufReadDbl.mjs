@@ -4,7 +4,7 @@ import bufRead from './bufRead.mjs'
 /**
  * 讀取Uint8Array(Nodejs,Browser)或Buffer(Nodejs)內的浮點數資料
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufReadDbl.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufReadDbl.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
  * @param {Integer} [offset=0] 輸入平移整數，預設0

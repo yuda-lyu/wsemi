@@ -10,7 +10,7 @@ import haskey from './haskey.mjs'
 /**
  * 回傳陣列以key為主鍵，vnew對vold中有差異之項目
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtdiff.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtdiff.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件
  * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件

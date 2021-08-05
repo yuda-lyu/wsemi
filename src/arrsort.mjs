@@ -142,7 +142,7 @@ function sortArr(vs, returnIndex) {
 /**
  * 排序vall陣列，可針對純數字、純字串、含固定開頭字元的數字字串、物件陣列進行排列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrsort.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrsort.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
  * @param {Boolean} [returnIndex=false] 輸入是否回傳排序指標陣列，預設false

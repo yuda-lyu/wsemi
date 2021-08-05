@@ -4,7 +4,7 @@ import isu8arr from './isu8arr.mjs'
 /**
  * Uint8Array轉ArrayBuffer
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2ab.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2ab.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @returns {ArrayBuffer} 回傳ArrayBuffer

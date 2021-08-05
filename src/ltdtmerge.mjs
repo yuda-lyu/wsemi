@@ -6,7 +6,7 @@ import isarr from './isarr.mjs'
 /**
  * 針對物件陣列ltdt1與ltdt2逐一呼叫merge合併
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtmerge.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtmerge.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt1 輸入資料物件陣列
  * @param {Array} ltdt2 輸入資料物件陣列，若與ltdt1內物件有重複的欄位值，優先保留ltdt2內物件的欄位值

@@ -5,7 +5,7 @@ import istime from './istime.mjs'
 /**
  * 秒時間取至分時間
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2min.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/time2min.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串，不含時區
  * @returns {String} 回傳分時間字串

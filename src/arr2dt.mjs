@@ -8,7 +8,7 @@ import iser from './iser.mjs'
 /**
  * 結合keys與values成為物件
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arr2dt.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arr2dt.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} keys 輸入keys字串陣列
  * @param {Array|*} [values=''] 輸入values物件陣列或需自動展開values成為的陣列，預設''

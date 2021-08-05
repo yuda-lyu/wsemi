@@ -7,7 +7,7 @@ import iser from './iser.mjs'
 /**
  * 由vall陣列找尋vfind內各元素之第1位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfind.test.js Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfind.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Number|Object|Boolean|Array} vall 輸入要被尋找的任意資料陣列
  * @param {String|Number|Object|Boolean|Array} vfind 輸入要尋找的任意資料陣列
