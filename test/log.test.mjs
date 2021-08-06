@@ -1,5 +1,5 @@
 import assert from 'assert'
-import log from '../src/log.mjs'
+import log from '../from/log.mjs'
 
 
 describe(`log`, function() {
@@ -10,8 +10,8 @@ describe(`log`, function() {
         lg.init(function(v) {
             console.log(v)
             ms.push({
-                src: v.src,
-                mode: v.mode,
+                from: v.from,
+                level: v.level,
                 msg: v.msg,
             })
         })
@@ -23,9 +23,9 @@ describe(`log`, function() {
     }
 
     let r1 = [
-        { src: 'service:web', mode: 'infor', msg: '"abc"' },
-        { src: 'service:web', mode: 'error', msg: '"def"' },
-        { src: 'service:api', mode: 'infor', msg: '"xyz"' }
+        { from: 'service:web', level: 'infor', msg: '"abc"' },
+        { from: 'service:web', level: 'error', msg: '"def"' },
+        { from: 'service:api', level: 'infor', msg: '"xyz"' }
     ]
     it(`should return '${r1}' when run test1'`, function() {
         let rr = test1()
