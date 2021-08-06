@@ -13,7 +13,7 @@ import cint from './cint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳事件物件，可呼叫事件on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，而快取物件需設定欄位execFun為待執行的非同步函數、inputFun為待執行函數execFun的傳入參數組、timeExpired為過期時間整數，單位ms，預設5000。get為依照key取得目前快取值。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，回傳同get。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值。remove為直接清除key所屬快取，清除後用set重設
+ * @returns {Object} 回傳事件物件，可呼叫事件on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，而快取物件需設定欄位execFun為待執行的非同步函數、inputFun為待執行函數execFun的傳入參數組、timeExpired為過期時間整數，單位ms，預設5000。get為依照key取得目前快取值。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值。remove為直接清除key所屬快取，清除後用set重設
  * @example
  *
  * async function topAsync() {
@@ -146,7 +146,7 @@ import cint from './cint.mjs'
  *
  *             oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 }) //快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
  *             setTimeout(function() {
- *                 //第1次呼叫, 此時沒有快取只能執行取值, 會取得第1次結果(count=1)
+ *                 //第1次呼叫, 此時沒有快取只能執行取值, 因偵測週期為1000ms故得要1001ms才會回應, 會取得第1次結果(count=1)
  *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
  *                     .then(function(msg) {
  *                         console.log('fun 1st', msg)
@@ -154,7 +154,7 @@ import cint from './cint.mjs'
  *                     })
  *             }, 1)
  *             setTimeout(function() {
- *                 //第2次呼叫, 此時執行中會等待, 偵測週期為1ms, 下次偵測為1100ms, 此時會取得第1次結果(count=1)
+ *                 //第2次呼叫, 此時執行中會等待, 因偵測週期為1000ms, 故得等到下次偵測1100ms才會回應, 此時會取得第1次結果(count=1)
  *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
  *                     .then(function(msg) {
  *                         console.log('fun 2nd', msg)
@@ -162,7 +162,7 @@ import cint from './cint.mjs'
  *                     })
  *             }, 100)
  *             setTimeout(function() {
- *                 //第3次呼叫, 此時已有快取, 會取得第1次結果(count=1)
+ *                 //第3次呼叫, 此時已有快取, 故此時500ms就會先回應, 會取得第1次結果(count=1)
  *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
  *                     .then(function(msg) {
  *                         console.log('fun 3rd', msg)
@@ -196,6 +196,102 @@ import cint from './cint.mjs'
  *     // fun 4th inp1|inp2, count=2
  *     // ["call fun, count=1","inp1|inp2, count=1","fun 3rd","inp1|inp2, count=1","fun 1st","inp1|inp2, count=1","fun 2nd","inp1|inp2, count=1","call fun, count=2","inp1|inp2, count=2","fun 4th","inp1|inp2, count=2"]
  *
+ *     function test3() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             let oc = cache()
+ *
+ *             // oc.on('message', function(msg) {
+ *             //     console.log('message', msg)
+ *             // })
+ *             // oc.on('error', function(msg) {
+ *             //     console.log('error', msg)
+ *             // })
+ *
+ *             let i = 0
+ *             let j = 0
+ *             function fun(v1, v2) {
+ *                 i++
+ *                 console.log('call fun, count=' + i)
+ *                 ms.push('call fun, count=' + i)
+ *                 return new Promise(function(resolve, reject) {
+ *                     setTimeout(function() {
+ *                         j++
+ *                         ms.push(v1 + '|' + v2 + ', count=' + j)
+ *                         resolve(v1 + '|' + v2 + ', count=' + j)
+ *                     }, 300)
+ *                 })
+ *             }
+ *
+ *             oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 }) //快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+ *             setTimeout(function() {
+ *                 //第1次呼叫(延遲1ms), 此時沒有快取只能執行取值, 因偵測週期為1000ms故得要1001ms才會回應, 回應時為被強制更新(1100ms)之前, 會取得第1次結果(count=1)
+ *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                     .then(function(msg) {
+ *                         console.log('fun 1st', msg)
+ *                         ms.push('fun 1st', msg)
+ *                     })
+ *             }, 1)
+ *             setTimeout(function() {
+ *                 //第2次呼叫(延遲200ms), 此時執行中會等待, 因偵測週期為1000ms, 故得等到下次偵測1200ms才會回應, 回應時為被強制更新(1100ms)之後, 此時會取得被強制更新的結果(abc)
+ *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                     .then(function(msg) {
+ *                         console.log('fun 2nd', msg)
+ *                         ms.push('fun 2nd', msg)
+ *                     })
+ *             }, 200)
+ *             setTimeout(function() {
+ *                 //第3次呼叫, 此時已有快取, 故此時500ms就會先回應, 會取得第1次結果(count=1)
+ *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                     .then(function(msg) {
+ *                         console.log('fun 3rd', msg)
+ *                         ms.push('fun 3rd', msg)
+ *                     })
+ *             }, 500)
+ *             setTimeout(function() {
+ *                 //更新快取值(延遲1100ms), 快取值為abc, 快取時間也被更新至此時, 故會重新計算1500ms才會失效
+ *                 oc.update('fun', 'abc')
+ *                 console.log('fun update', 'abc')
+ *                 ms.push('fun update', 'abc')
+ *             }, 1100)
+ *             setTimeout(function() {
+ *                 //第4次呼叫(延遲1300ms), 此時會取得被強制更新之快取值(abc), 快取還剩1300ms才失效(也就是在2600ms失效)
+ *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                     .then(function(msg) {
+ *                         console.log('fun 4th', msg)
+ *                         ms.push('fun 4th', msg)
+ *                     })
+ *             }, 1300)
+ *             setTimeout(function() {
+ *                 //第5次呼叫(延遲2700ms), 此時被強制更新之快取值(abc)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
+ *                 oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                     .then(function(msg) {
+ *                         console.log('fun 5th', msg)
+ *                         ms.push('fun 5th', msg)
+ *                     })
+ *             }, 2700)
+ *
+ *             setTimeout(function() {
+ *                 resolve(ms)
+ *             }, 3100)
+ *
+ *         })
+ *     }
+ *     console.log('test3')
+ *     let r3 = await test3()
+ *     console.log(JSON.stringify(r3))
+ *     // test3
+ *     // call fun, count=1
+ *     // fun 3rd inp1|inp2, count=1
+ *     // fun 1st inp1|inp2, count=1
+ *     // fun update abc
+ *     // fun 2nd abc
+ *     // fun 4th abc
+ *     // call fun, count=2
+ *     // fun 5th inp1|inp2, count=2
+ *     // ["call fun, count=1","inp1|inp2, count=1","fun 3rd","inp1|inp2, count=1","fun 1st","inp1|inp2, count=1","fun update","abc","fun 2nd","abc","fun 4th","abc","call fun, count=2","inp1|inp2, count=2","fun 5th","inp1|inp2, count=2"]
+ *
  * }
  * topAsync().catch(() => {})
  *
@@ -213,6 +309,13 @@ function cache() {
     function set(key, { execFun, inputFun, timeExpired }) {
 
         //check
+        if (haskey(data, key)) {
+            //可重複設定不報錯
+            //emit('error', { fun: 'set', key, msg: 'has key' })
+            return
+        }
+
+        //check
         if (!isfun(execFun)) {
             execFun = async () => {}
         }
@@ -224,23 +327,17 @@ function cache() {
             inputFun = []
         }
 
-        //add
-        if (!haskey(data, key)) {
-            data[key] = {
-                needExec: true,
-                execFun,
-                execFunRunning: false,
-                inputFun,
-                value: null,
-                time: null,
-                timeExpired,
-            }
-            emit('message', { fun: 'set', key, timeExpired })
+        //save
+        data[key] = {
+            needExec: true,
+            execFun,
+            execFunRunning: false,
+            inputFun,
+            value: null,
+            time: null,
+            timeExpired,
         }
-        else {
-            //可重複設定不報錯
-            //emit('error', { fun: 'set', key, msg: 'has key' })
-        }
+        emit('message', { fun: 'set', key, timeExpired })
 
     }
 
@@ -252,7 +349,7 @@ function cache() {
             emit('message', { fun: 'get', key, msg: 'waiting' })
             await waitFun(() => {
                 return !data[key].execFunRunning
-            })
+            }, { timeInterval: 1000 }) //偵測週期1000ms
 
             //t
             let t = Date.now()
@@ -298,6 +395,14 @@ function cache() {
         return get(key)
     }
 
+    function update(key, value) {
+        if (haskey(data, key)) {
+            emit('message', { fun: 'updateValue', key })
+            data[key].value = value
+            data[key].time = Date.now()
+        }
+    }
+
     function clear(key) {
         if (haskey(data, key)) {
             emit('message', { fun: 'clear', key })
@@ -316,6 +421,7 @@ function cache() {
     ev.set = set
     ev.getProxy = getProxy
     ev.get = get
+    ev.update = update
     ev.clear = clear
     ev.remove = remove
 

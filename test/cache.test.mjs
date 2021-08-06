@@ -190,4 +190,104 @@ describe(`cache`, function() {
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 
+    function test3() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+
+            let oc = cache()
+
+            // oc.on('message', function(msg) {
+            //     //console.log('message', msg)
+            // })
+            // oc.on('error', function(msg) {
+            //     //console.log('error', msg)
+            // })
+
+            let i = 0
+            let j = 0
+            function fun(v1, v2) {
+                i++
+                //console.log('call fun, count=' + i)
+                ms.push('call fun, count=' + i)
+                return new Promise(function(resolve, reject) {
+                    setTimeout(function() {
+                        j++
+                        ms.push(v1 + '|' + v2 + ', count=' + j)
+                        resolve(v1 + '|' + v2 + ', count=' + j)
+                    }, 300)
+                })
+            }
+
+            oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 }) //快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            setTimeout(function() {
+                //第1次呼叫(延遲1ms), 此時沒有快取只能執行取值, 因偵測週期為1000ms故得要1001ms才會回應, 回應時為被強制更新(1100ms)之前, 會取得第1次結果(count=1)
+                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                    .then(function(msg) {
+                        //console.log('fun 1st', msg)
+                        ms.push('fun 1st', msg)
+                    })
+            }, 1)
+            setTimeout(function() {
+                //第2次呼叫(延遲200ms), 此時執行中會等待, 因偵測週期為1000ms, 故得等到下次偵測1200ms才會回應, 回應時為被強制更新(1100ms)之後, 此時會取得被強制更新的結果(abc)
+                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                    .then(function(msg) {
+                        //console.log('fun 2nd', msg)
+                        ms.push('fun 2nd', msg)
+                    })
+            }, 200)
+            setTimeout(function() {
+                //第3次呼叫, 此時已有快取, 故此時500ms就會先回應, 會取得第1次結果(count=1)
+                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                    .then(function(msg) {
+                        //console.log('fun 3rd', msg)
+                        ms.push('fun 3rd', msg)
+                    })
+            }, 500)
+            setTimeout(function() {
+                //更新快取值(延遲1100ms), 快取值為abc, 快取時間也被更新至此時, 故會重新計算1500ms才會失效
+                oc.update('fun', 'abc')
+                //console.log('fun update', 'abc')
+                ms.push('fun update', 'abc')
+            }, 1100)
+            setTimeout(function() {
+                //第4次呼叫(延遲1300ms), 此時會取得被強制更新之快取值(abc), 快取還剩1300ms才失效(也就是在2600ms失效)
+                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                    .then(function(msg) {
+                        //console.log('fun 4th', msg)
+                        ms.push('fun 4th', msg)
+                    })
+            }, 1300)
+            setTimeout(function() {
+                //第5次呼叫(延遲2700ms), 此時被強制更新之快取值(abc)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
+                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                    .then(function(msg) {
+                        //console.log('fun 5th', msg)
+                        ms.push('fun 5th', msg)
+                    })
+            }, 2700)
+
+            setTimeout(function() {
+                resolve(ms)
+            }, 3100)
+
+        })
+    }
+    // console.log('test3')
+    // test3
+    // call fun, count=1
+    // fun 3rd inp1|inp2, count=1
+    // fun 1st inp1|inp2, count=1
+    // fun update abc
+    // fun 2nd abc
+    // fun 4th abc
+    // call fun, count=2
+    // fun 5th inp1|inp2, count=2
+    // ["call fun, count=1","inp1|inp2, count=1","fun 3rd","inp1|inp2, count=1","fun 1st","inp1|inp2, count=1","fun update","abc","fun 2nd","abc","fun 4th","abc","call fun, count=2","inp1|inp2, count=2","fun 5th","inp1|inp2, count=2"]
+    let r3 = '["call fun, count=1","inp1|inp2, count=1","fun 3rd","inp1|inp2, count=1","fun 1st","inp1|inp2, count=1","fun update","abc","fun 2nd","abc","fun 4th","abc","call fun, count=2","inp1|inp2, count=2","fun 5th","inp1|inp2, count=2"]'
+    it(`should return '${r3}' when run test3'`, async function() {
+        let ms = await test3()
+        //console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
+    })
+
 })
