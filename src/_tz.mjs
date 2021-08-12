@@ -34,24 +34,36 @@ function delTZ(t) {
 }
 
 
-// function normTZ(t) {
-//     let tz
+function normTZ(t) {
+    let tz
 
-//     //Z
-//     tz = strright(t, 1)
-//     if (tz === 'Z') {
-//         t=strdelright(t, 1)
-//         return `${t}+00:00`
-//     }
+    //Z
+    tz = strright(t, 1)
+    if (tz === 'Z') {
+        t = strdelright(t, 1)
+        return `${t}+00:00`
+    }
 
-//     return t
-// }
+    return t
+}
+
+
+function sepTZ(t) {
+    let nt = normTZ(t)
+    let tn = strdelright(nt, 6)
+    let tz = strright(nt, 6)
+    return {
+        t: tn,
+        tz,
+    }
+}
 
 
 let tz = {
     checkTZ,
     delTZ,
-    // normTZ,
+    normTZ,
+    sepTZ,
 }
 
 
