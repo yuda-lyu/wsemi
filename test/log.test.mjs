@@ -1,5 +1,5 @@
 import assert from 'assert'
-import log from '../from/log.mjs'
+import log from '../src/log.mjs'
 
 
 describe(`log`, function() {
