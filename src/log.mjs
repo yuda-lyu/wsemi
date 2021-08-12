@@ -1,5 +1,5 @@
 import genID from './genID.mjs'
-import now2str from './now2str.mjs'
+import nowms2str from './nowms2str.mjs'
 import o2j from './o2j.mjs'
 import isfun from './isfun.mjs'
 
@@ -78,7 +78,7 @@ function log() {
         }
 
         //time
-        let time = now2str()
+        let time = nowms2str()
 
         //d
         let d = {
