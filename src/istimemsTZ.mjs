@@ -15,6 +15,9 @@ import isestr from './isestr.mjs'
  * console.log(istimemsTZ('2019-01-01T12:34:56.789+08:00'))
  * // => true
  *
+ * console.log(istimemsTZ('2019-01-01T12:34:56.789Z'))
+ * // => true
+ *
  * console.log(istimemsTZ('2019-01-01T12:34:56:789+08:00'))
  * // => false
  *

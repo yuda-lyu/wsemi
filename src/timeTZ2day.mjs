@@ -1,6 +1,6 @@
 import ot from 'dayjs'
 import istimeTZ from './istimeTZ.mjs'
-import sepTimeTZ from './sepTimeTZ.mjs'
+import tz from './_tz.mjs'
 
 
 /**
@@ -23,10 +23,10 @@ function timeTZ2day(t) {
         return ''
     }
 
-    //sepTimeTZ
-    let o = sepTimeTZ(t)
+    //delTZ
+    t = tz.delTZ(t)
 
-    let d = ot(o.t, 'YYYY-MM-DDTHH:mm:ss')
+    let d = ot(t, 'YYYY-MM-DDTHH:mm:ss')
     let r = d.format('YYYY-MM-DD')
 
     return r

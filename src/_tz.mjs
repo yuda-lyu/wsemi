@@ -33,9 +33,26 @@ function delTZ(t) {
     return strdelright(t, 6)
 }
 
+
+// function normTZ(t) {
+//     let tz
+
+//     //Z
+//     tz = strright(t, 1)
+//     if (tz === 'Z') {
+//         t=strdelright(t, 1)
+//         return `${t}+00:00`
+//     }
+
+//     return t
+// }
+
+
 let tz = {
     checkTZ,
     delTZ,
+    // normTZ,
 }
+
 
 export default tz
