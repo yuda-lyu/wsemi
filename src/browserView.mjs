@@ -22,11 +22,19 @@ function browserView(data, type) {
     //blob
     let blob = new Blob([data], { type })
 
-    //url
-    let url = URL.createObjectURL(blob)
+    //IE11無法支援createObjectURL
+    try {
 
-    //open
-    window.open(url)
+        //url
+        let url = window.URL.createObjectURL(blob)
+
+        //open
+        window.open(url)
+
+    }
+    catch (err) {
+        console.log('window.URL.createObjectURL is not support for IE11', err)
+    }
 
 }
 
