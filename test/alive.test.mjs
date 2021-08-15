@@ -9,33 +9,33 @@ describe(`alive`, function() {
             let ms = []
 
             let oAL = alive(1500)
-            let t = new Date()
+            let t = Date.now()
 
             let a = { data: 123 }
             let b = { data: '34.56' }
 
             setTimeout(() => {
-                //console.log(parseInt((new Date() - t)) + 'ms', 'trigger a1')
+                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a1')
                 oAL.trigger('a', a)
             }, 500)
 
             setTimeout(() => {
-                //console.log(parseInt((new Date() - t)) + 'ms', 'trigger a2')
+                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a2')
                 oAL.trigger('a', a)
             }, 1900)
 
             setTimeout(() => {
-                //console.log(parseInt((new Date() - t)) + 'ms', 'trigger b1')
+                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b1')
                 oAL.trigger('b', b)
             }, 1000)
 
             setTimeout(() => {
-                //console.log(parseInt((new Date() - t)) + 'ms', 'trigger b2')
+                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b2')
                 oAL.trigger('b', b)
             }, 3000)
 
             oAL.on('message', function({ eventName, key, data, now }) {
-                //console.log(parseInt((new Date() - t)) + 'ms', { eventName, key, data, now })
+                //console.log(parseInt((Date.now() - t)) + 'ms', { eventName, key, data, now })
                 ms.push(eventName + '|' + key)
             })
 

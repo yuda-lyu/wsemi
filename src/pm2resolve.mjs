@@ -1,5 +1,6 @@
-import genPm from './genPm.mjs'
 import get from 'lodash/get'
+import genPm from './genPm.mjs'
+import ispm from './ispm.mjs'
 
 
 /**
@@ -7,6 +8,7 @@ import get from 'lodash/get'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pm2resolve.test.mjs Github}
  * @memberOf wsemi
+ * @param {Function} fn 輸入函數，可支援async與sync函數
  * @returns {Promise} 回傳Promise，皆使用resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
  * @example
  *
@@ -130,27 +132,49 @@ import get from 'lodash/get'
 function pm2resolve(fn) {
     return function() {
         let pm = genPm()
-        fn.apply(this, arguments)
-            .then(function(msg) {
-                pm.resolve({
-                    state: 'success',
-                    msg,
-                })
+        let ret = null
+        let err = null
+        try {
+            ret = fn.apply(this, arguments)
+        }
+        catch (e) {
+            err = e
+        }
+        if (err !== null) {
+            pm.resolve({
+                state: 'error',
+                msg: err,
             })
-            .catch(function(msg) {
-                if (get(msg, 'reason') === 'cancelled') {
+        }
+        else if (ispm(ret)) {
+            ret
+                .then(function(msg) {
                     pm.resolve({
-                        state: 'cancelled',
-                        msg: '',
-                    })
-                }
-                else {
-                    pm.resolve({
-                        state: 'error',
+                        state: 'success',
                         msg,
                     })
-                }
+                })
+                .catch(function(msg) {
+                    if (get(msg, 'reason') === 'cancelled') {
+                        pm.resolve({
+                            state: 'cancelled',
+                            msg: '',
+                        })
+                    }
+                    else {
+                        pm.resolve({
+                            state: 'error',
+                            msg,
+                        })
+                    }
+                })
+        }
+        else {
+            pm.resolve({
+                state: 'success',
+                msg: ret,
             })
+        }
         return pm
     }
 }
