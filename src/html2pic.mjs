@@ -5,7 +5,6 @@ import each from 'lodash/each'
 import isNumber from 'lodash/isNumber'
 import isBoolean from 'lodash/isBoolean'
 import isEle from './isEle.mjs'
-import isestr from './isestr.mjs'
 import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import domPrepend from './domPrepend.mjs'
@@ -94,7 +93,7 @@ function svg2png(ele, scale) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1，預設1
  * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
- * @param {String} [opt.picType='image/jpeg'] 輸入輸出為base64圖片時的圖片格式，預設'image/jpeg'
+ * @param {String} [opt.picType='image/jpeg'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，預設'image/jpeg'
  * @returns {Promise} 回傳Promise，resolve為成功時的產出圖片，reject為失敗訊息
  * @example
  * need test in browser
@@ -124,8 +123,8 @@ async function html2pic(ele, opt = {}) {
 
     //picType
     let picType = get(opt, 'picType', 'image/jpeg')
-    if (!isestr(picType)) {
-        return Promise.reject('opt.picType is not effective string')
+    if (picType !== 'image/jpeg' && picType !== 'image/png') {
+        return Promise.reject('opt.picType is not image/jpeg or image/png')
     }
 
     //toBase64

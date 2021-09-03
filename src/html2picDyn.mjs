@@ -4,7 +4,7 @@ import html2pic from './html2pic.mjs'
 
 
 /**
- * 前端html轉圖片，採用動態加載技術
+ * 前端DOM元素轉圖片，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/html2picDyn.test.mjs Github}
  * @memberOf wsemi
@@ -12,7 +12,7 @@ import html2pic from './html2pic.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1，預設1
  * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
- * @param {String} [opt.picType='image/jpeg'] 輸入輸出為base64圖片時的圖片格式，預設'image/jpeg'
+ * @param {String} [opt.picType='image/jpeg'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，預設'image/jpeg'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
  * @example
@@ -38,7 +38,7 @@ async function html2picDyn(ele, opt = {}, pathItems) {
     //importResources
     await importResources(pathItems)
 
-    //getUserAgent
+    //html2pic
     let r = html2pic(ele, opt)
 
     return r

@@ -8,9 +8,11 @@
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
     <!-- 用nomodule是因IE11才需要用canvg將svg轉png -->
-    <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
+    <script _nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.4/dist/html2canvas.min.js"></script>
+    <script _src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.4/dist/html2canvas.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js"></script>
 
     <script src="../dist/wsemi.umd.js"></script>
 
@@ -55,7 +57,8 @@
     
     <script>
         function capture(){
-            wsemi.html2pic(document.querySelector('#src'), { scale: 3 })
+            //wsemi.html2pic(document.querySelector('#src'), { scale: 3 })
+            wsemi.domConvertToPic(document.querySelector('#src'), { scale: 3 })
                 .then(function(b64){
                     document.querySelector('#tarp').style.display="inline-block"
                     document.querySelector('#tar').setAttribute('src',b64)
@@ -63,6 +66,15 @@
                 .catch(function(err){
                     console.log(err)
                 })
+            // htmlToImage.toPng(document.querySelector('#src'), { pixelRatio: 3 })
+            //     .then(function (b64) {
+            //         // download(dataUrl, 'my-node.png');
+            //         document.querySelector('#tarp').style.display="inline-block"
+            //         document.querySelector('#tar').setAttribute('src',b64)
+            //     })
+            //     .catch(function(err){
+            //         console.log(err)
+            //     })
         }
     </script>
 
