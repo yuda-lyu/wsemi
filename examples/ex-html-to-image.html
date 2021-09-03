@@ -2,11 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for html2canvas by dynamic import</title>
+    <title>examples for html-to-image</title>
     
-    <!-- @babel/polyfill已廢棄 -->
-    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    <!-- @babel/polyfill已廢棄, 因html-to-image不支援IE11故不須引用 -->
+    <script nomodule _src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.15/dist/wsemi.umd.js"></script>
 
 </head>
@@ -50,14 +52,14 @@
     
     <script>
         function capture(){
-            wsemi.html2picDyn(document.querySelector('#src'), { scale: 3 })
+            wsemi.domConvertToPic(document.querySelector('#src'), { scale: 3 })
                 .then(function(b64){
                     document.querySelector('#tarp').style.display="inline-block"
                     document.querySelector('#tar').setAttribute('src',b64)
                 })
                 .catch(function(err){
-                        console.log(err)
-                    })
+                    console.log(err)
+                })
         }
     </script>
 
