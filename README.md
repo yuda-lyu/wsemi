@@ -52,6 +52,10 @@ To view some examples for more understanding, visit examples:
 
 > **html2canvas[dynamic import]:** [ex-html2canvas-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2canvas-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2canvas-dynamic.html)]
 
+> **html-to-image:** [ex-html-to-image.html](https://yuda-lyu.github.io/wsemi/examples/ex-html-to-image.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html-to-image.html)]
+
+> **html-to-image[dynamic import]:** [ex-html-to-image-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html-to-image-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html-to-image-dynamic.html)]
+
 > **htmlparser:** [ex-htmlparser.html](https://yuda-lyu.github.io/wsemi/examples/ex-htmlparser.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-htmlparser.html)]
 
 > **htmlparser[dynamic import]:** [ex-htmlparser-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-htmlparser-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-htmlparser-dynamic.html)]
@@ -135,7 +139,13 @@ or
 > **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.1.4/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.3.2/dist/html2canvas.min.js"></script>
+```
+
+[Optional] Add script for html-to-image.
+> **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
+```alias
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js"></script>
 ```
 
 [Optional] Add script for htmlparser.
@@ -152,5 +162,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.14/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.15/dist/wsemi.umd.js"></script>
 ```
