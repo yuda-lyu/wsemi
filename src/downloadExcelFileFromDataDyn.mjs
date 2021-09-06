@@ -9,9 +9,9 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromDataDyn.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
- * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'
- * @param {Array} data 輸入內容陣列
+ * @param {String} fileName 輸入檔名字串
+ * @param {String} [sheetName='data'] 輸入分頁(sheet)名稱字串，預設為'data'
+ * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve代表成功，reject回傳錯誤訊息
  * @example
@@ -24,7 +24,7 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * downloadExcelFileFromDataDyn('data.xlsx', 'data', data)
  *
  */
-async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) {
+async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, pathItems) {
 
     //pathItems
     //最新可用版本詳見: https://www.npmjs.com/package/xlsx
@@ -39,7 +39,7 @@ async function downloadExcelFileFromDataDyn(cfn, csn = 'data', data, pathItems) 
     await importResources(pathItems)
 
     //downloadExcelFileFromData
-    let r = downloadExcelFileFromData(cfn, csn, data)
+    let r = downloadExcelFileFromData(fileName, sheetName, data)
 
     if (get(r, 'error', '') !== '') {
         return Promise.reject(r.error)

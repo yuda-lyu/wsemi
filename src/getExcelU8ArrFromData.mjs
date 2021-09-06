@@ -19,7 +19,7 @@ function getXLSX() {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} data 輸入內容陣列
- * @param {String} [csn='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
+ * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
  * @example
  *
  * import fs from 'fs'
@@ -45,7 +45,7 @@ function getXLSX() {
  * fs.writeFileSync('temp.xlsx', u8a)
  *
  */
-function getExcelU8ArrFromData(data, csn = 'data') {
+function getExcelU8ArrFromData(data, sheetName = 'data') {
 
     //check
     if (!isearr(data)) {
@@ -54,15 +54,15 @@ function getExcelU8ArrFromData(data, csn = 'data') {
             error: msg
         }
     }
-    if (!isestr(csn)) {
-        csn = 'data'
+    if (!isestr(sheetName)) {
+        sheetName = 'data'
     }
 
     let u8a = null
     try {
 
         //wb
-        let wb = getExcelWorkbookFromData(data, csn)
+        let wb = getExcelWorkbookFromData(data, sheetName)
 
         //wbout, type給binary代表回傳BinaryString(Uint8Array)
         let wbout = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' })

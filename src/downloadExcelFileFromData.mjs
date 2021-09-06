@@ -1,7 +1,8 @@
 import XLSX from 'xlsx'
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
+import isEle from './isEle.mjs'
 import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
 import getGlobal from './getGlobal.mjs'
@@ -20,9 +21,9 @@ function getXLSX() {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
- * @param {String} [csn='data'] 輸入分頁(sheet)名稱字串，預設為'data'
- * @param {Array} data 輸入內容陣列
+ * @param {String} fileName 輸入檔名字串
+ * @param {String} [sheetName='data'] 輸入分頁(sheet)名稱字串，預設為'data'
+ * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)
  * @example
  *
  * let data = [
@@ -32,29 +33,29 @@ function getXLSX() {
  * downloadExcelFileFromData('data.xlsx', 'data', data)
  *
  */
-function downloadExcelFileFromData(cfn, csn = 'data', data) {
+function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
 
     //check
-    if (!isestr(cfn)) {
+    if (!isestr(fileName)) {
         let msg = 'no filename'
-        console.log(msg)
+        console.log(msg, fileName)
         return {
             error: msg
         }
     }
-    if (!isestr(csn)) {
-        csn = 'data'
+    if (!isestr(sheetName)) {
+        sheetName = 'data'
     }
-    if (!isearr(data)) {
-        let msg = 'no data'
-        console.log(msg)
+    if (!isarr(data) && !isEle(data)) {
+        let msg = 'data is not array or element'
+        console.log(msg, data)
         return {
-            error: msg
+            error: msg,
         }
     }
 
     //getExcelWorkbookFromData
-    let wb = getExcelWorkbookFromData(data, csn)
+    let wb = getExcelWorkbookFromData(data, sheetName)
 
     //check
     if (get(wb, 'error')) {
@@ -62,20 +63,23 @@ function downloadExcelFileFromData(cfn, csn = 'data', data) {
         return wb.error
     }
 
+    //xlutls
+    let xl = getXLSX()
+
     //check
     if (isWindow()) {
 
         //wbout
-        let wbout = getXLSX().write(wb, { bookType: 'xlsx', bookSST: false, type: 'array' })
+        let wbout = xl.write(wb, { bookType: 'xlsx', bookSST: false, type: 'array' })
 
         //downloadFileFromBlob
-        downloadFileFromBlob(cfn, new Blob([wbout]))
+        downloadFileFromBlob(fileName, new Blob([wbout]))
 
     }
     else {
 
         //writeFile
-        getXLSX().writeFile(wb, cfn)
+        xl.writeFile(wb, fileName)
 
     }
 

@@ -7,13 +7,13 @@ import isIE from './isIE.mjs'
  * 前端下載binary資料核心, 支援IE11
  *
  * @private
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
-function coreIE11(cfn, blob) {
+function coreIE11(fileName, blob) {
 
     //msSaveOrOpenBlob
-    window.navigator.msSaveOrOpenBlob(blob, cfn)
+    window.navigator.msSaveOrOpenBlob(blob, fileName)
 
 }
 
@@ -22,10 +22,10 @@ function coreIE11(cfn, blob) {
  * 前端下載binary資料核心, 支援HTML5瀏覽器
  *
  * @private
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  */
-function coreHTML5(cfn, blob) {
+function coreHTML5(fileName, blob) {
 
     //createObjectURL
     let url = window.URL.createObjectURL(blob)
@@ -33,7 +33,7 @@ function coreHTML5(cfn, blob) {
     //tag a
     let a = document.createElement('a')
     a.href = url
-    a.download = cfn
+    a.download = fileName
 
     //download
     document.body.appendChild(a)
@@ -51,7 +51,7 @@ function coreHTML5(cfn, blob) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {Blob} blob 輸入資料Blob
  * @example
  * need test in browser
@@ -62,7 +62,7 @@ function coreHTML5(cfn, blob) {
  * downloadFileFromBlob('icon.png',bb)
  *
  */
-function downloadFileFromBlob(cfn, blob) {
+function downloadFileFromBlob(fileName, blob) {
 
     //check
     if (!isWindow()) {
@@ -71,17 +71,17 @@ function downloadFileFromBlob(cfn, blob) {
     }
 
     //check
-    if (!isestr(cfn)) {
+    if (!isestr(fileName)) {
         console.log('no filename')
         return
     }
 
     //core
     if (isIE()) {
-        coreIE11(cfn, blob) //IE11
+        coreIE11(fileName, blob) //IE11
     }
     else {
-        coreHTML5(cfn, blob)
+        coreHTML5(fileName, blob)
     }
 
 }

@@ -7,7 +7,7 @@ import isWindow from './isWindow.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromB64.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {String} b64 輸入base64資料字串
  * @example
  * need test in browser
@@ -17,7 +17,7 @@ import isWindow from './isWindow.mjs'
  * downloadFileFromB64('icon.png',b64)
  *
  */
-function downloadFileFromB64(cfn, b64) {
+function downloadFileFromB64(fileName, b64) {
 
     //check
     if (!isWindow()) {
@@ -26,7 +26,7 @@ function downloadFileFromB64(cfn, b64) {
     }
 
     //check
-    if (!isestr(cfn)) {
+    if (!isestr(fileName)) {
         console.log('no filename')
         return
     }
@@ -34,7 +34,7 @@ function downloadFileFromB64(cfn, b64) {
     //tag a
     let a = document.createElement('a')
     a.href = b64
-    a.download = cfn
+    a.download = fileName
 
     //download
     document.body.appendChild(a)

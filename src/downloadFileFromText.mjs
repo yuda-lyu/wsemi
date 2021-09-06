@@ -10,7 +10,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromText.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {String} ccont 輸入內容字串
  * @param {Boolean} [withBOM=true] 輸入是否添加BOM，預設true
  * @example
@@ -23,7 +23,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * downloadFileFromText('data.csv',ccsv,true)
  *
  */
-function downloadFileFromText(cfn, ccont, withBOM = true) {
+function downloadFileFromText(fileName, ccont, withBOM = true) {
 
     //check
     if (!isWindow()) {
@@ -32,7 +32,7 @@ function downloadFileFromText(cfn, ccont, withBOM = true) {
     }
 
     //check
-    if (!isestr(cfn)) {
+    if (!isestr(fileName)) {
         console.log('invalid filename')
         return
     }
@@ -55,7 +55,7 @@ function downloadFileFromText(cfn, ccont, withBOM = true) {
     }
 
     //downloadFileFromBlob
-    downloadFileFromBlob(cfn, blob)
+    downloadFileFromBlob(fileName, blob)
 
 }
 

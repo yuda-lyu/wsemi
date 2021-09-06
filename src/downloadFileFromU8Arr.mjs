@@ -10,7 +10,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromU8Arr.test.mjs Github}
  * @memberOf wsemi
- * @param {String} cfn 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串
  * @param {Uint8Array} u8a 輸入Uint8Array資料
  * @example
  * need test in browser
@@ -20,7 +20,7 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  * downloadFileFromU8Arr('icon.png',u8a)
  *
  */
-function downloadFileFromU8Arr(cfn, u8a) {
+function downloadFileFromU8Arr(fileName, u8a) {
 
     //check
     if (!isWindow()) {
@@ -29,7 +29,7 @@ function downloadFileFromU8Arr(cfn, u8a) {
     }
 
     //check
-    if (!isestr(cfn)) {
+    if (!isestr(fileName)) {
         console.log('no filename')
         return
     }
@@ -42,7 +42,7 @@ function downloadFileFromU8Arr(cfn, u8a) {
     let blob = u8arr2blob(u8a)
 
     //downloadFileFromBlob
-    downloadFileFromBlob(cfn, blob)
+    downloadFileFromBlob(fileName, blob)
 
 }
 

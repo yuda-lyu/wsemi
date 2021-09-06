@@ -19,11 +19,50 @@
 </head>
 <body>
 
-    <button onclick="testXLSX()">read file(*.xlsx) from xlsx</button>
+    <div style="margin-bottom:20px;">
+
+        <div>
+
+            <button onclick="downloadTable()">download file(*.xlsx) from table</button>
+
+        </div>
+
+        <table id="tab">
+            <tbody>
+                <tr>
+                    <td>h1</td>
+                    <td>h2(中文)</td>
+                    <td>h3</td>
+                </tr>
+                <tr>
+                    <td>c11</td>
+                    <td>c12</td>
+                    <td>c13</td>
+                </tr>
+                <tr>
+                    <td>c21</td>
+                    <td>c22</td>
+                    <td>c23</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <button onclick="readAndDownloadFile()">read file(*.xlsx) and download from xlsx</button>
 
     <script>
 
-		function testXLSX() {
+		function downloadTable(){
+
+			let tab = document.querySelector("#tab")
+			console.log('tab',tab)
+			wsemi.downloadExcelFileFromDataDyn('table.xlsx', 'data', tab)
+			console.log('download table')
+
+		}
+
+		function readAndDownloadFile() {
 
 			//u8a
 			let u8a

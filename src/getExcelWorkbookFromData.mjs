@@ -1,7 +1,9 @@
 import XLSX from 'xlsx'
 import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
+import isEle from './isEle.mjs'
 import getGlobal from './getGlobal.mjs'
+import getExcelWorkbookFromWorksheet from './getExcelWorkbookFromWorksheet.mjs'
 
 
 function getXLSX() {
@@ -11,68 +13,13 @@ function getXLSX() {
 }
 
 
-function datenum(v, date1904) {
-    if (date1904) v += 1462
-    let epoch = Date.parse(v)
-    return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000)
-}
-
-
-function sheet_from_array_of_arrays(data, opts) {
-    let ws = {}
-    let range = { s: { c: 10000000, r: 10000000 }, e: { c: 0, r: 0 } }
-    for (let R = 0; R !== data.length; ++R) {
-        for (let C = 0; C !== data[R].length; ++C) {
-            if (range.s.r > R) range.s.r = R
-            if (range.s.c > C) range.s.c = C
-            if (range.e.r < R) range.e.r = R
-            if (range.e.c < C) range.e.c = C
-            let cell = { v: data[R][C] }
-            if (cell.v === null) continue
-            let cell_ref = getXLSX().utils.encode_cell({ c: C, r: R })
-
-            if (typeof cell.v === 'number') cell.t = 'n'
-            else if (typeof cell.v === 'boolean') cell.t = 'b'
-            else if (cell.v instanceof Date) {
-                cell.t = 'n'; cell.z = getXLSX().SSF._table[14]
-                cell.v = datenum(cell.v)
-            }
-            else cell.t = 's'
-
-            ws[cell_ref] = cell
-        }
-    }
-    if (range.s.c < 10000000) ws['!ref'] = getXLSX().utils.encode_range(range)
-    return ws
-}
-
-
-function getWB(csn, data) {
-
-    //Workbook
-    function Workbook() {
-        if (!(this instanceof Workbook)) return new Workbook()
-        this.SheetNames = []
-        this.Sheets = {}
-    }
-
-    //wbout
-    let wb = new Workbook()
-    let ws = sheet_from_array_of_arrays(data)
-    wb.SheetNames.push(csn)
-    wb.Sheets[csn] = ws
-
-    return wb
-}
-
-
 /**
  * 由陣列數據轉成為Excel(*.xlsx)的Workbook數據
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} data 輸入內容陣列
- * @param {String} [csn='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
+ * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)
+ * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
  * @example
  *
  * import xlsx from 'xlsx'
@@ -119,24 +66,44 @@ function getWB(csn, data) {
  * xlsx.writeFile(wb2, 'temp2.xlsx')
  *
  */
-function getExcelWorkbookFromData(data, csn = 'data') {
+function getExcelWorkbookFromData(data, sheetName = 'data') {
 
     //check
-    if (!isearr(data)) {
-        let msg = 'no data'
+    if (!isarr(data) && !isEle(data)) {
         return {
-            error: msg
+            error: 'data is not array or element',
         }
     }
-    if (!isestr(csn)) {
-        csn = 'data'
+    if (!isestr(sheetName)) {
+        sheetName = 'data'
     }
+
 
     let wb = null
     try {
 
-        //wb
-        wb = getWB(csn, data)
+        //xlutls
+        let xl = getXLSX()
+        let xlutls = xl.utils
+
+        //ws
+        let ws = null
+        if (isarr(data)) {
+
+            //ws
+            ws = xlutls.aoa_to_sheet(data)
+
+        }
+        else if (isEle(data)) {
+            console.log('data', data)
+
+            //ws
+            ws = xlutls.table_to_sheet(data)
+
+        }
+
+        //getExcelWorkbookFromWorksheet
+        wb = getExcelWorkbookFromWorksheet(ws, sheetName)
 
     }
     catch (err) {
