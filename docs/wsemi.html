@@ -21077,7 +21077,7 @@ let b64 = await dpq(500, 350, fun)</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line36">line 36</a>
+        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line46">line 46</a>
     </li></ul></dd>
     
 
@@ -21133,11 +21133,19 @@ let b64 = await dpq(500, 350, fun)</code></pre>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'downloadExcelFileFromData')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let data = [
-    ['a','b','c'],
-    [1,23.45,'xyz']
+<pre class="prettyprint"><code>let data
+
+data = [
+    ['a', 'b', 'c'],
+    [1, 23.45, 'xyz']
 ]
-downloadExcelFileFromData('data.xlsx', 'data', data)</code></pre>
+downloadExcelFileFromData('data(mat).xlsx', 'data', data)
+
+data = [
+    { x: 'a', y: 'b', z: 'c' },
+    { x: 1, y: 23.45, zzz: 'xyz' },
+]
+downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
         </div>
 
 
@@ -21277,7 +21285,7 @@ downloadExcelFileFromData('data.xlsx', 'data', data)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入內容陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入內容陣列或是DOM的table元素(Element)，內容陣列可為二維陣列(mat)或由物件組成的一維陣列(ltdt)</p></td>
         </tr>
 
     
@@ -21319,7 +21327,7 @@ downloadExcelFileFromData('data.xlsx', 'data', data)</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadExcelFileFromDataDyn.mjs.html">downloadExcelFileFromDataDyn.mjs</a>, <a href="downloadExcelFileFromDataDyn.mjs.html#line27">line 27</a>
+        <a href="downloadExcelFileFromDataDyn.mjs.html">downloadExcelFileFromDataDyn.mjs</a>, <a href="downloadExcelFileFromDataDyn.mjs.html#line35">line 35</a>
     </li></ul></dd>
     
 
@@ -21377,11 +21385,19 @@ downloadExcelFileFromData('data.xlsx', 'data', data)</code></pre>
 <div onclick="editOnline(this, 'downloadExcelFileFromDataDyn')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>need test in browser
 
-let data = [
-    ['a','b','c'],
-    [1,23.45,'xyz']
+let data
+
+data = [
+    ['a', 'b', 'c'],
+    [1, 23.45, 'xyz']
 ]
-downloadExcelFileFromDataDyn('data.xlsx', 'data', data)</code></pre>
+downloadExcelFileFromDataDyn('data(mat).xlsx', 'data', data)
+
+data = [
+    { x: 'a', y: 'b', z: 'c' },
+    { x: 1, y: 23.45, zzz: 'xyz' },
+]
+downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
         </div>
 
 
@@ -43274,7 +43290,7 @@ console.log(ltdtdiff(vOld, vNew, 'id'))
 
     
 
-    <h4 class="name" id=".ltdtkeysheads2mat"><span class="type-signature">(static) </span>ltdtkeysheads2mat<span class="signature">(ltdt, keys, kphead)</span><span class="type-signature"> → {Array}</span></h4>
+    <h4 class="name" id=".ltdtkeysheads2mat"><span class="type-signature">(static) </span>ltdtkeysheads2mat<span class="signature">(ltdt, keys<span class="signature-attributes">opt</span>, kphead<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Array}</span></h4>
 
     
 
@@ -43362,7 +43378,11 @@ console.log(ltdtdiff(vOld, vNew, 'id'))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -43387,7 +43407,19 @@ console.log(ltdtdiff(vOld, vNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入物件陣列</p></td>
@@ -43410,10 +43442,26 @@ console.log(ltdtdiff(vOld, vNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入字串陣列，若不輸入則由ltdt提取</p></td>
+            
+                <td class="default">
+                
+                    <code>[]</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入字串陣列，若不輸入則由ltdt提取，預設[]</p></td>
         </tr>
 
     
@@ -43433,10 +43481,26 @@ console.log(ltdtdiff(vOld, vNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入字典物件，內含keys對應values之物件，供keys查詢得values，若不輸入則由keys提取</p></td>
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入字典物件，內含keys對應values之物件，供keys查詢得values，若不輸入則由keys提取，預設{}</p></td>
         </tr>
 
     
@@ -63479,7 +63543,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Mon Sep 06 2021 13:21:04 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Sun Sep 19 2021 16:11:51 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -63500,7 +63564,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.16/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.17/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

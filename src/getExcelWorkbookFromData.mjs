@@ -95,7 +95,6 @@ function getExcelWorkbookFromData(data, sheetName = 'data') {
 
         }
         else if (isEle(data)) {
-            console.log('data', data)
 
             //ws
             ws = xlutls.table_to_sheet(data)

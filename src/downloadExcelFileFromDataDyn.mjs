@@ -17,11 +17,19 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * @example
  * need test in browser
  *
- * let data = [
- *     ['a','b','c'],
- *     [1,23.45,'xyz']
+ * let data
+ *
+ * data = [
+ *     ['a', 'b', 'c'],
+ *     [1, 23.45, 'xyz']
  * ]
- * downloadExcelFileFromDataDyn('data.xlsx', 'data', data)
+ * downloadExcelFileFromDataDyn('data(mat).xlsx', 'data', data)
+ *
+ * data = [
+ *     { x: 'a', y: 'b', z: 'c' },
+ *     { x: 1, y: 23.45, zzz: 'xyz' },
+ * ]
+ * downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)
  *
  */
 async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, pathItems) {

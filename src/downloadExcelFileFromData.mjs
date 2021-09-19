@@ -2,9 +2,11 @@ import XLSX from 'xlsx'
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
+import iseobj from './iseobj.mjs'
 import isEle from './isEle.mjs'
 import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
+import ltdtkeysheads2mat from './ltdtkeysheads2mat.mjs'
 import getGlobal from './getGlobal.mjs'
 import isWindow from './isWindow.mjs'
 
@@ -23,14 +25,22 @@ function getXLSX() {
  * @memberOf wsemi
  * @param {String} fileName 輸入檔名字串
  * @param {String} [sheetName='data'] 輸入分頁(sheet)名稱字串，預設為'data'
- * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)
+ * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)，內容陣列可為二維陣列(mat)或由物件組成的一維陣列(ltdt)
  * @example
  *
- * let data = [
- *     ['a','b','c'],
- *     [1,23.45,'xyz']
+ * let data
+ *
+ * data = [
+ *     ['a', 'b', 'c'],
+ *     [1, 23.45, 'xyz']
  * ]
- * downloadExcelFileFromData('data.xlsx', 'data', data)
+ * downloadExcelFileFromData('data(mat).xlsx', 'data', data)
+ *
+ * data = [
+ *     { x: 'a', y: 'b', z: 'c' },
+ *     { x: 1, y: 23.45, zzz: 'xyz' },
+ * ]
+ * downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)
  *
  */
 function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
@@ -52,6 +62,15 @@ function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
         return {
             error: msg,
         }
+    }
+
+    //check ltdt
+    //ltdtkeysheads2mat
+    if (isarr(data) && iseobj(get(data, 0, null))) {
+
+        //ltdtkeysheads2mat
+        data = ltdtkeysheads2mat(data)
+
     }
 
     //getExcelWorkbookFromData
