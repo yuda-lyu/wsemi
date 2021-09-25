@@ -34,7 +34,7 @@ function to_array(workbook, valueToString) {
         //資料轉json後, 各列會欄位名稱為依照英文A開始編號
         //不能用raw:false轉出字串數據, 長整數會被以科學記號顯示而失去精度
         //需使用defval='', 否則各列中若有無效值會跳過造成錯位
-        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A', defval: '' })
+        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A', defval: '', blankrows: true })
 
         //提取數據
         arr = map(arr, (v) => {
