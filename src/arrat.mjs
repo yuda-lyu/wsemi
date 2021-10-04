@@ -11,7 +11,7 @@ import cint from './cint.mjs'
  * 若istart與iend有效, 提取istart~iend欄位
  * 若僅istart有效, 提取istart欄位
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrat.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrAt.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
  * @param {Integer} istart 輸入起始的欄位指標整數
@@ -19,14 +19,14 @@ import cint from './cint.mjs'
  * @returns {Array} 回傳提取的任意資料陣列
  * @example
  *
- * console.log(arrat([1, 2, 3, '4', 5, 'abc'], 1))
+ * console.log(arrAt([1, 2, 3, '4', 5, 'abc'], 1))
  * // => [2]
  *
- * console.log(arrat([1, 2, 3, '4', 5, 'abc'], 1, 4))
+ * console.log(arrAt([1, 2, 3, '4', 5, 'abc'], 1, 4))
  * // => [2, 3, '4', 5]
  *
  */
-function arrat(vall, istart, iend = null) {
+function arrAt(vall, istart, iend = null) {
 
     //check
     if (!isearr(vall)) {
@@ -74,4 +74,4 @@ function arrat(vall, istart, iend = null) {
 }
 
 
-export default arrat
+export default arrAt

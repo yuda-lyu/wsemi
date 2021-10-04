@@ -11,7 +11,7 @@ import strdelleft from './strdelleft.mjs'
 /**
  * 對arr陣列內各字串進行關鍵字計算，計算是否含有關鍵字與程度，多關鍵字用空白區隔，必要關鍵字可於字首添加「+」，不要關鍵字可於字首添加「-」
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrfilter.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilter.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} arr 輸入要被尋找的字串陣列
  * @param {String} keywords 輸入要尋找的關鍵字字串
@@ -28,7 +28,7 @@ import strdelleft from './strdelleft.mjs'
  * let r = null
  *
  * kws = 'abc'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -38,7 +38,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -48,7 +48,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def 中文'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -58,7 +58,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def 中文 mnop'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -68,7 +68,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def +yet'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: false, weight: 0 },
@@ -78,7 +78,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def of module -yet'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -88,7 +88,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = '+'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: false, weight: 0 },
@@ -98,7 +98,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = '-'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: false, weight: 0 },
@@ -108,7 +108,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  * kws = 'def +'
- * r = arrfilter(arr, kws)
+ * r = arrFilter(arr, kws)
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
@@ -118,7 +118,7 @@ import strdelleft from './strdelleft.mjs'
  * // ]
  *
  */
-function arrfilter(arr, keywords) {
+function arrFilter(arr, keywords) {
 
     //check
     if (!isearr(arr)) {
@@ -204,4 +204,4 @@ function arrfilter(arr, keywords) {
 }
 
 
-export default arrfilter
+export default arrFilter

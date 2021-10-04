@@ -6,7 +6,7 @@ import isEqual from 'lodash/isEqual'
 import isearr from './isearr.mjs'
 import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
-import arrhas from './arrhas.mjs'
+import arrHas from './arrHas.mjs'
 import getltdtkeys from './getltdtkeys.mjs'
 
 
@@ -67,7 +67,7 @@ function ltdt2vrtsable(ltdt, mergerowkeys = []) {
     let qs = reverse(ws) //逆序
     let n = size(qs)
     each(tabkeys, function(key) {
-        if (arrhas(key, mergerowkeys)) {
+        if (arrHas(key, mergerowkeys)) {
             let veq = range(0, n, 0)
             let veqlast = range(0, n, 0)
             let vsum = range(1, n + 1, 0)

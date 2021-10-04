@@ -3,7 +3,7 @@ import get from 'lodash/get'
 import each from 'lodash/each'
 import map from 'lodash/map'
 import values from 'lodash/values'
-import arrhas from './arrhas.mjs'
+import arrHas from './arrHas.mjs'
 import isbol from './isbol.mjs'
 import cstr from './cstr.mjs'
 import getCsvStrFromData from './getCsvStrFromData.mjs'
@@ -148,7 +148,7 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     let fmt = get(opt, 'fmt', 'ltdt')
 
     //check
-    if (!arrhas(['ltdt', 'csv', 'array'], fmt)) {
+    if (!arrHas(['ltdt', 'csv', 'array'], fmt)) {
         return {
             error: `opt.fmt is not is not any one of 'ltdt', 'csv', 'array'`
         }

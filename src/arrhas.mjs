@@ -6,63 +6,63 @@ import iser from './iser.mjs'
 /**
  * 判斷任一字串陣列vtar內元素，是否「等於」任一字串陣列vhas內元素
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrhas.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrHas.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Number|Object|Boolean|Array} vtar 輸入被查找的字串陣列或字串
  * @param {String|Number|Object|Boolean|Array} vhas 輸入查找字串陣列或字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], 2))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], 2))
  * // => true
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], 6))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], 6))
  * // => false
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], [2]))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], [2]))
  * // => true
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], [6]))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], [6]))
  * // => false
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], ['4', 2]))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], ['4', 2]))
  * // => true
  *
- * console.log(arrhas([1, 2, 3, '4', 5, 'abc'], ['7', 6]))
+ * console.log(arrHas([1, 2, 3, '4', 5, 'abc'], ['7', 6]))
  * // => false
  *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], true))
+ * console.log(arrHas([1, true, 2, 3, '4', true, 5, 'abc'], true))
  * // => true
  *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], false))
+ * console.log(arrHas([1, true, 2, 3, '4', true, 5, 'abc'], false))
  * // => false
  *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [true]))
+ * console.log(arrHas([1, true, 2, 3, '4', true, 5, 'abc'], [true]))
  * // => true
  *
- * console.log(arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [false]))
+ * console.log(arrHas([1, true, 2, 3, '4', true, 5, 'abc'], [false]))
  * // => false
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' }))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' }))
  * // => true
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' }))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' }))
  * // => false
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }]))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }]))
  * // => true
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }]))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }]))
  * // => false
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
  * // => true
  *
- * console.log(arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }]))
+ * console.log(arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }]))
  * // => false
  *
  */
-function arrhas(vtar, vhas) {
+function arrHas(vtar, vhas) {
 
     function ck(v) {
         if (isarr(v)) {
@@ -101,4 +101,4 @@ function arrhas(vtar, vhas) {
 }
 
 
-export default arrhas
+export default arrHas

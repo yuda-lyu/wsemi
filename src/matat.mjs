@@ -1,6 +1,6 @@
 import map from 'lodash/map'
 import isearr from './isearr.mjs'
-import arrat from './arrat.mjs'
+import arrAt from './arrAt.mjs'
 
 
 /**
@@ -31,7 +31,7 @@ function matat(mat, istart, iend) {
     }
 
     let m = map(mat, function(v) {
-        return arrat(v, istart, iend)
+        return arrAt(v, istart, iend)
     })
 
     return m

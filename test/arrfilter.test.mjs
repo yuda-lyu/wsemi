@@ -1,8 +1,8 @@
 import assert from 'assert'
-import arrfilter from '../src/arrfilter.mjs'
+import arrFilter from '../src/arrFilter.mjs'
 
 
-describe(`arrfilter`, function() {
+describe(`arrFilter`, function() {
     let i = -1
     let din = {}
     let dout = {}
@@ -23,7 +23,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 0
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -38,7 +38,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 1
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -53,7 +53,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 2
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -68,7 +68,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 3
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -83,7 +83,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 3
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -98,7 +98,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 4
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -113,7 +113,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 5
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -128,7 +128,7 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 6
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -143,109 +143,109 @@ describe(`arrfilter`, function() {
     ]
     it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
         let j = 7
-        let r = arrfilter(arr, din[j])
+        let r = arrFilter(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input []`, function() {
-        let r = arrfilter([])
+        let r = arrFilter([])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], [2]`, function() {
-        let r = arrfilter([], [2])
+        let r = arrFilter([], [2])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ''`, function() {
-        let r = arrfilter('')
+        let r = arrFilter('')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input []`, function() {
-        let r = arrfilter([])
+        let r = arrFilter([])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input {}`, function() {
-        let r = arrfilter({})
+        let r = arrFilter({})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input null`, function() {
-        let r = arrfilter(null)
+        let r = arrFilter(null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input undefined`, function() {
-        let r = arrfilter(undefined)
+        let r = arrFilter(undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], ''`, function() {
-        let r = arrfilter([], '')
+        let r = arrFilter([], '')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], []`, function() {
-        let r = arrfilter([], [])
+        let r = arrFilter([], [])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], {}`, function() {
-        let r = arrfilter([], {})
+        let r = arrFilter([], {})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], null`, function() {
-        let r = arrfilter([], null)
+        let r = arrFilter([], null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input [], undefined`, function() {
-        let r = arrfilter([], undefined)
+        let r = arrFilter([], undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], ''`, function() {
-        let r = arrfilter(['abc'], '')
+        let r = arrFilter(['abc'], '')
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], []`, function() {
-        let r = arrfilter(['abc'], [])
+        let r = arrFilter(['abc'], [])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], {}`, function() {
-        let r = arrfilter(['abc'], {})
+        let r = arrFilter(['abc'], {})
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], null`, function() {
-        let r = arrfilter(['abc'], null)
+        let r = arrFilter(['abc'], null)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input ['abc'], undefined`, function() {
-        let r = arrfilter(['abc'], undefined)
+        let r = arrFilter(['abc'], undefined)
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })

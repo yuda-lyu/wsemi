@@ -53,7 +53,7 @@ async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/fuzzball@2.0.0/dist/fuzzball.umd.min.js',
+            'https://cdn.jsdelivr.net/npm/fuzzball@2.x/dist/fuzzball.umd.min.js',
         ]
     }
 

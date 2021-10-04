@@ -94,7 +94,7 @@ npm i wsemi
 [Optional] Add script for dayjs(or moment).
 > **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.6/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.x/dayjs.min.js"></script>
 ```
 or
 ```alias
@@ -107,7 +107,7 @@ or
 [Optional] Add script for fuzzball.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.0.0/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.x/dist/fuzzball.umd.min.js"></script>
 ```
 
 [Optional] Add script for ua-parser-js.
@@ -125,7 +125,7 @@ or
 [Optional] Add script for xlsx.
 > **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.17.0/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.x/dist/xlsx.full.min.js"></script>
 ```
 
 [Optional] Add link and script for viewerjs.
@@ -162,5 +162,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.18/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.19/dist/wsemi.umd.js"></script>
 ```

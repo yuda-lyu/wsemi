@@ -7,17 +7,17 @@ import cdbl from './cdbl.mjs'
 /**
  * 回傳累加後陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arraccum.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrAccum.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vec 輸入要被累加計算的陣列
  * @returns {Array} 回傳各元素累加後之陣列
  * @example
  *
- * console.log(arraccum([1, 2, 3, 4]))
+ * console.log(arrAccum([1, 2, 3, 4]))
  * // => [1, 3, 6, 10]
  *
  */
-function arraccum(vec) {
+function arrAccum(vec) {
 
     //check
     if (!isearr(vec)) {
@@ -39,4 +39,4 @@ function arraccum(vec) {
 }
 
 
-export default arraccum
+export default arrAccum

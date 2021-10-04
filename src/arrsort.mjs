@@ -8,7 +8,6 @@ import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
-import isfun from './isfun.mjs'
 import isnum from './isnum.mjs'
 import isobj from './isobj.mjs'
 import isStrHasNumber from './isStrHasNumber.mjs'
@@ -142,7 +141,7 @@ function sortArr(vs, returnIndex) {
 /**
  * 排序vall陣列，可針對純數字、純字串、含固定開頭字元的數字字串、物件陣列進行排列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrsort.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrSort.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
  * @param {Boolean} [returnIndex=false] 輸入是否回傳排序指標陣列，預設false
@@ -152,35 +151,35 @@ function sortArr(vs, returnIndex) {
  *
  * let r
  *
- * r = arrsort([1, 30, 4, 21, 100000])
+ * r = arrSort([1, 30, 4, 21, 100000])
  * console.log(r)
  * // => [ 1, 4, 21, 30, 100000 ]
  *
- * r = arrsort([1, 30, 4, 21, 100000], { returnIndex: true })
+ * r = arrSort([1, 30, 4, 21, 100000], { returnIndex: true })
  * console.log(r)
  * // => [ 0, 2, 3, 1, 4 ]
  *
- * r = arrsort(['March', 'Jan', 'Feb', 'Dec'])
+ * r = arrSort(['March', 'Jan', 'Feb', 'Dec'])
  * console.log(r)
  * // => [ 'Dec', 'Feb', 'Jan', 'March' ]
  *
- * r = arrsort(['1', '30', '  4  ', '21', '100000'])
+ * r = arrSort(['1', '30', '  4  ', '21', '100000'])
  * console.log(r)
  * // => [ '1', '  4  ', '21', '30', '100000' ]
  *
- * r = arrsort(['1', '30', '  4  ', 21, '100000'])
+ * r = arrSort(['1', '30', '  4  ', 21, '100000'])
  * console.log(r)
  * // => [ '1', '  4  ', 21, '30', '100000' ]
  *
- * r = arrsort(['abc1', 'abc30', 'abc4', 'abc21', 'abc100000'])
+ * r = arrSort(['abc1', 'abc30', 'abc4', 'abc21', 'abc100000'])
  * console.log(r)
  * // => [ 'abc1', 'abc4', 'abc21', 'abc30', 'abc100000' ]
  *
- * r = arrsort(['1a', '30c', '  4 abc ', '21d', '100000xy'])
+ * r = arrSort(['1a', '30c', '  4 abc ', '21d', '100000xy'])
  * console.log(r)
  * // => [ '  4 abc ', '100000xy', '1a', '21d', '30c' ]
  *
- * r = arrsort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 's' })
+ * r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 's' })
  * console.log(r)
  * // => [
  * //   { s: 'Dec', i: 30 },
@@ -189,7 +188,7 @@ function sortArr(vs, returnIndex) {
  * //   { s: 'March', i: 1 }
  * // ]
  *
- * r = arrsort([{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+ * r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
  * console.log(r)
  * // => [
  * //   { s: 'abc1', i: 1 },
@@ -198,7 +197,7 @@ function sortArr(vs, returnIndex) {
  * //   { s: 'abc100000', i: 30 }
  * // ]
  *
- * r = arrsort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
+ * r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
  * console.log(r)
  * // => [
  * //   { s: 'March', i: 1 },
@@ -208,7 +207,7 @@ function sortArr(vs, returnIndex) {
  * // ]
  *
  */
-function arrsort(vall, opt = {}) {
+function arrSort(vall, opt = {}) {
 
     //check
     if (!isearr(vall)) {
@@ -294,4 +293,4 @@ function arrsort(vall, opt = {}) {
 }
 
 
-export default arrsort
+export default arrSort

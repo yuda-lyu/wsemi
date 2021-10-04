@@ -1,191 +1,191 @@
 import assert from 'assert'
-import arrhas from '../src/arrhas.mjs'
+import arrHas from '../src/arrHas.mjs'
 
 
-describe(`arrhas`, function() {
+describe(`arrHas`, function() {
 
     it(`should return true when input [1, 2, 3, '4', 5, 'abc'], 2`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], 2)
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], 2)
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, 3, '4', 5, 'abc'], 6`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], 6)
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], 6)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, 2, 3, '4', 5, 'abc'], [2]`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], [2])
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], [2])
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, 3, '4', 5, 'abc'], [6]`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], [6])
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], [6])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, 2, 3, '4', 5, 'abc'], ['4', 2]`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], ['4', 2])
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], ['4', 2])
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, 3, '4', 5, 'abc'], ['7', 6]`, function() {
-        let r = arrhas([1, 2, 3, '4', 5, 'abc'], ['7', 6])
+        let r = arrHas([1, 2, 3, '4', 5, 'abc'], ['7', 6])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, true, 2, 3, '4', true, 5, 'abc'], true`, function() {
-        let r = arrhas([1, true, 2, 3, '4', true, 5, 'abc'], true)
+        let r = arrHas([1, true, 2, 3, '4', true, 5, 'abc'], true)
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, true, 2, 3, '4', true, 5, 'abc'], false`, function() {
-        let r = arrhas([1, true, 2, 3, '4', true, 5, 'abc'], false)
+        let r = arrHas([1, true, 2, 3, '4', true, 5, 'abc'], false)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, true, 2, 3, '4', true, 5, 'abc'], [true]`, function() {
-        let r = arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [true])
+        let r = arrHas([1, true, 2, 3, '4', true, 5, 'abc'], [true])
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, true, 2, 3, '4', true, 5, 'abc'], [false]`, function() {
-        let r = arrhas([1, true, 2, 3, '4', true, 5, 'abc'], [false])
+        let r = arrHas([1, true, 2, 3, '4', true, 5, 'abc'], [false])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' }`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' })
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' })
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' }`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' })
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'opqr' })
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }]`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }])
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }])
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }]`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }])
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'opqr' }])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return true when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }])
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }])
         let rr = true
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }]`, function() {
-        let r = arrhas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }])
+        let r = arrHas([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['7', { x: 'opqr' }])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ''`, function() {
-        let r = arrhas('')
+        let r = arrHas('')
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input []`, function() {
-        let r = arrhas([])
+        let r = arrHas([])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input {}`, function() {
-        let r = arrhas({})
+        let r = arrHas({})
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input null`, function() {
-        let r = arrhas(null)
+        let r = arrHas(null)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input undefined`, function() {
-        let r = arrhas(undefined)
+        let r = arrHas(undefined)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], ''`, function() {
-        let r = arrhas([], '')
+        let r = arrHas([], '')
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], []`, function() {
-        let r = arrhas([], [])
+        let r = arrHas([], [])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], {}`, function() {
-        let r = arrhas([], {})
+        let r = arrHas([], {})
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], null`, function() {
-        let r = arrhas([], null)
+        let r = arrHas([], null)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input [], undefined`, function() {
-        let r = arrhas([], undefined)
+        let r = arrHas([], undefined)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], ''`, function() {
-        let r = arrhas(['abc'], '')
+        let r = arrHas(['abc'], '')
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], []`, function() {
-        let r = arrhas(['abc'], [])
+        let r = arrHas(['abc'], [])
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], {}`, function() {
-        let r = arrhas(['abc'], {})
+        let r = arrHas(['abc'], {})
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], null`, function() {
-        let r = arrhas(['abc'], null)
+        let r = arrHas(['abc'], null)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return false when input ['abc'], undefined`, function() {
-        let r = arrhas(['abc'], undefined)
+        let r = arrHas(['abc'], undefined)
         let rr = false
         assert.strict.deepStrictEqual(r, rr)
     })
