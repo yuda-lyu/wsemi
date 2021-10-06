@@ -250,6 +250,39 @@ import haskey from './haskey.mjs'
  * //   { min: 2, max: 5, result: [ 2.2, 3.3, 4.4 ] }
  * // ]
  *
+ * let arr8 = [1.1, 2.2, 3.3, 4.4, 5.5, 6.6]
+ * let mm8 = [
+ *     {
+ *         min: 1.1,
+ *         minType: '>',
+ *         max: 2.2,
+ *         maxType: '<=',
+ *     },
+ *     {
+ *         min: 2.2,
+ *         minType: '>=',
+ *         max: 5.5,
+ *         maxType: '<',
+ *     },
+ * ]
+ * console.log(arrGroupByMaxmin(arr8, mm8))
+ * // => [
+ * //   {
+ * //     min: 1.1,
+ * //     minType: '>',
+ * //     max: 2.2,
+ * //     maxType: '<=',
+ * //     items: [ 2.2 ]
+ * //   },
+ * //   {
+ * //     min: 2.2,
+ * //     minType: '>=',
+ * //     max: 5.5,
+ * //     maxType: '<',
+ * //     items: [ 2.2, 3.3, 4.4 ]
+ * //   }
+ * // ]
+ *
  */
 function arrGroupByMaxmin(arr, maxmins, opt = {}) {
 
@@ -302,13 +335,53 @@ function arrGroupByMaxmin(arr, maxmins, opt = {}) {
         }
         if (isNumber(value)) {
             each(maxmins, (mm, kmm) => {
+
+                //rmax, rmin
                 let rmax = get(mm, keyMax, null)
                 let rmin = get(mm, keyMin, null)
+
+                //check
                 if (rmax !== null && rmin !== null) {
+
+                    //check
                     if (isnum(rmax) && isnum(rmin)) {
+
+                        //maxType in mm
+                        let maxType = get(mm, 'maxType')
+                        if (maxType !== '<=' && maxType !== '<') {
+                            maxType = '<='
+                        }
+
+                        //minType in mm
+                        let minType = get(mm, 'minType')
+                        if (minType !== '>=' && minType !== '>') {
+                            minType = '>='
+                        }
+
+                        //cdbl
                         rmax = cdbl(rmax)
                         rmin = cdbl(rmin)
-                        if (value >= rmin && value <= rmax) {
+
+                        //bmin
+                        let bmin
+                        if (minType === '>=') {
+                            bmin = value >= rmin
+                        }
+                        else {
+                            bmin = value > rmin
+                        }
+
+                        //bmax
+                        let bmax
+                        if (maxType === '<=') {
+                            bmax = value <= rmax
+                        }
+                        else {
+                            bmax = value < rmax
+                        }
+
+                        //check
+                        if (bmin && bmax) {
 
                             //check
                             if (!haskey(rs[kmm], keyItems)) {
@@ -318,16 +391,18 @@ function arrGroupByMaxmin(arr, maxmins, opt = {}) {
                             //push
                             rs[kmm][keyItems].push(v)
 
-                            return true //跳出換下1個
                         }
+
                     }
                     else {
                         // console.log(`maxmins['${kmm}'][${keyMax}] or maxmins['${kmm}'][${keyMin}] is not a number`)
                     }
+
                 }
                 else {
                     // console.log(`can not find keyMax[${keyMax}] or keyMin[${keyMin}] in element of maxmins`)
                 }
+
             })
         }
     })

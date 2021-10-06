@@ -265,6 +265,44 @@ describe(`arrGroupByMaxmin`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    let arr8 = [1.1, 2.2, 3.3, 4.4, 5.5, 6.6]
+    let mm8 = [
+        {
+            min: 1.1,
+            minType: '>',
+            max: 2.2,
+            maxType: '<=',
+        },
+        {
+            min: 2.2,
+            minType: '>=',
+            max: 5.5,
+            maxType: '<',
+        },
+    ]
+    // console.log(arrGroupByMaxmin(arr8, mm8))
+    let r8 = [
+        {
+            min: 1.1,
+            minType: '>',
+            max: 2.2,
+            maxType: '<=',
+            items: [2.2]
+        },
+        {
+            min: 2.2,
+            minType: '>=',
+            max: 5.5,
+            maxType: '<',
+            items: [2.2, 3.3, 4.4]
+        }
+    ]
+    it(`should return ${JSON.stringify(r8)} when input ${JSON.stringify(arr8)}, ${JSON.stringify(mm8)}`, function() {
+        let r = arrGroupByMaxmin(arr8, mm8)
+        let rr = r8
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input ${JSON.stringify(arr1)}, ''`, function() {
         let r = arrGroupByMaxmin(arr1, '')
         assert.strict.deepStrictEqual(r, [])

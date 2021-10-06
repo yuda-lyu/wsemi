@@ -8,6 +8,7 @@ import isnum from './isnum.mjs'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
 import cdbl from './cdbl.mjs'
+import haskey from './haskey.mjs'
 
 
 /**
@@ -21,7 +22,7 @@ import cdbl from './cdbl.mjs'
  * @param {String} [opt.keyMax='max'] 輸入maxmins內各元素中，儲存最大值欄位字串，預設'max'
  * @param {String} [opt.keyMin='min'] 輸入maxmins內各元素中，儲存最小值欄位字串，預設'min'
  * @param {String} [opt.keyValue='value'] 輸入arr內各元素中，若為物件，則儲存欲判斷數值之欄位字串，預設'value'
- * @param {String} [opt.keyResult='result'] 輸入回傳arr物件陣列中，儲存所屬maxmins元素之欄位字串，預設'result'
+ * @param {String} [opt.keyItems='items'] 輸入回傳arr物件陣列中，儲存所屬maxmins元素之欄位字串，預設'items'
  * @param {Function} [opt.beforeAddResult=null] 輸入儲存至arr物件陣列前的處理函數，預設null
  * @returns {Array} 回傳切割後的陣列
  * @example
@@ -62,14 +63,56 @@ import cdbl from './cdbl.mjs'
  *         max: 5,
  *     },
  * ]
- * console.log(arrLookupByMaxmin(arr1, mm1))
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr1, mm1), null, 2))
  * // => [
- * //   { name: 'a', value: 1.1, result: { min: 0, max: 2 } },
- * //   { name: 'b', value: 2.2, result: { min: 2, max: 5 } },
- * //   { name: 'c', value: 3.3, result: { min: 2, max: 5 } },
- * //   { name: 'd', value: 4.4, result: { min: 2, max: 5 } },
- * //   { name: 'e', value: 5.5 },
- * //   { name: 'f', value: 6.6 }
+ * //   {
+ * //     "name": "a",
+ * //     "value": 1.1,
+ * //     "items": [
+ * //       {
+ * //         "min": 0,
+ * //         "max": 2
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "value": 2.2,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "value": 3.3,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "value": 4.4,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "value": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "value": 6.6
+ * //   }
  * // ]
  *
  * let arr2 = [
@@ -108,14 +151,56 @@ import cdbl from './cdbl.mjs'
  *         rmax: 5,
  *     },
  * ]
- * console.log(arrLookupByMaxmin(arr2, mm2, { keyMin: 'rmin', keyMax: 'rmax' }))
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr2, mm2, { keyMin: 'rmin', keyMax: 'rmax' }), null, 2))
  * // => [
- * //   { name: 'a', value: 1.1, result: { rmin: 0, rmax: 2 } },
- * //   { name: 'b', value: 2.2, result: { rmin: 2, rmax: 5 } },
- * //   { name: 'c', value: 3.3, result: { rmin: 2, rmax: 5 } },
- * //   { name: 'd', value: 4.4, result: { rmin: 2, rmax: 5 } },
- * //   { name: 'e', value: 5.5 },
- * //   { name: 'f', value: 6.6 }
+ * //   {
+ * //     "name": "a",
+ * //     "value": 1.1,
+ * //     "items": [
+ * //       {
+ * //         "rmin": 0,
+ * //         "rmax": 2
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "value": 2.2,
+ * //     "items": [
+ * //       {
+ * //         "rmin": 2,
+ * //         "rmax": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "value": 3.3,
+ * //     "items": [
+ * //       {
+ * //         "rmin": 2,
+ * //         "rmax": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "value": 4.4,
+ * //     "items": [
+ * //       {
+ * //         "rmin": 2,
+ * //         "rmax": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "value": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "value": 6.6
+ * //   }
  * // ]
  *
  * let arr3 = [
@@ -154,14 +239,56 @@ import cdbl from './cdbl.mjs'
  *         max: 5,
  *     },
  * ]
- * console.log(arrLookupByMaxmin(arr3, mm3, { keyValue: 'data' }))
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr3, mm3, { keyValue: 'data' }), null, 2))
  * // => [
- * //   { name: 'a', data: 1.1, result: { min: 0, max: 2 } },
- * //   { name: 'b', data: 2.2, result: { min: 2, max: 5 } },
- * //   { name: 'c', data: 3.3, result: { min: 2, max: 5 } },
- * //   { name: 'd', data: 4.4, result: { min: 2, max: 5 } },
- * //   { name: 'e', data: 5.5 },
- * //   { name: 'f', data: 6.6 }
+ * //   {
+ * //     "name": "a",
+ * //     "data": 1.1,
+ * //     "items": [
+ * //       {
+ * //         "min": 0,
+ * //         "max": 2
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "data": 2.2,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "data": 3.3,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "data": 4.4,
+ * //     "items": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "data": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "data": 6.6
+ * //   }
  * // ]
  *
  * let arr4 = [
@@ -200,14 +327,56 @@ import cdbl from './cdbl.mjs'
  *         max: 5,
  *     },
  * ]
- * console.log(arrLookupByMaxmin(arr4, mm4, { keyResult: 'res' }))
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr4, mm4, { keyItems: 'res' }), null, 2))
  * // => [
- * //   { name: 'a', value: 1.1, res: { min: 0, max: 2 } },
- * //   { name: 'b', value: 2.2, res: { min: 2, max: 5 } },
- * //   { name: 'c', value: 3.3, res: { min: 2, max: 5 } },
- * //   { name: 'd', value: 4.4, res: { min: 2, max: 5 } },
- * //   { name: 'e', value: 5.5 },
- * //   { name: 'f', value: 6.6 }
+ * //   {
+ * //     "name": "a",
+ * //     "value": 1.1,
+ * //     "res": [
+ * //       {
+ * //         "min": 0,
+ * //         "max": 2
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "value": 2.2,
+ * //     "res": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "value": 3.3,
+ * //     "res": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "value": 4.4,
+ * //     "res": [
+ * //       {
+ * //         "min": 2,
+ * //         "max": 5
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "value": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "value": 6.6
+ * //   }
  * // ]
  *
  * let arr5 = [
@@ -248,19 +417,147 @@ import cdbl from './cdbl.mjs'
  *         max: 5,
  *     },
  * ]
- * console.log(arrLookupByMaxmin(arr5, mm5, {
- *     keyResult: 'res',
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr5, mm5, {
+ *     keyItems: 'res',
  *     beforeAddResult: (m) => {
  *         return m.name
  *     }
- * }))
+ * }), null, 2))
  * // => [
- * //   { name: 'a', value: 1.1, res: 'x1' },
- * //   { name: 'b', value: 2.2, res: 'x2' },
- * //   { name: 'c', value: 3.3, res: 'x2' },
- * //   { name: 'd', value: 4.4, res: 'x2' },
- * //   { name: 'e', value: 5.5 },
- * //   { name: 'f', value: 6.6 }
+ * //   {
+ * //     "name": "a",
+ * //     "value": 1.1,
+ * //     "res": [
+ * //       "x1"
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "value": 2.2,
+ * //     "res": [
+ * //       "x2"
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "value": 3.3,
+ * //     "res": [
+ * //       "x2"
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "value": 4.4,
+ * //     "res": [
+ * //       "x2"
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "value": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "value": 6.6
+ * //   }
+ * // ]
+ *
+ * let arr6 = [
+ *     {
+ *         name: 'a',
+ *         value: 1.1,
+ *     },
+ *     {
+ *         name: 'b',
+ *         value: 2.2,
+ *     },
+ *     {
+ *         name: 'c',
+ *         value: 3.3,
+ *     },
+ *     {
+ *         name: 'd',
+ *         value: 4.4,
+ *     },
+ *     {
+ *         name: 'e',
+ *         value: 5.5,
+ *     },
+ *     {
+ *         name: 'f',
+ *         value: 6.6,
+ *     },
+ * ]
+ * let mm6 = [
+ *     {
+ *         min: 1.1,
+ *         minType: '>',
+ *         max: 2.2,
+ *         maxType: '<=',
+ *     },
+ *     {
+ *         min: 2.2,
+ *         minType: '>=',
+ *         max: 5.5,
+ *         maxType: '<',
+ *     },
+ * ]
+ * console.log(JSON.stringify(arrLookupByMaxmin(arr6, mm6), null, 2))
+ * // => [
+ * //   {
+ * //     "name": "a",
+ * //     "value": 1.1
+ * //   },
+ * //   {
+ * //     "name": "b",
+ * //     "value": 2.2,
+ * //     "items": [
+ * //       {
+ * //         "min": 1.1,
+ * //         "minType": ">",
+ * //         "max": 2.2,
+ * //         "maxType": "<="
+ * //       },
+ * //       {
+ * //         "min": 2.2,
+ * //         "minType": ">=",
+ * //         "max": 5.5,
+ * //         "maxType": "<"
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "c",
+ * //     "value": 3.3,
+ * //     "items": [
+ * //       {
+ * //         "min": 2.2,
+ * //         "minType": ">=",
+ * //         "max": 5.5,
+ * //         "maxType": "<"
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "d",
+ * //     "value": 4.4,
+ * //     "items": [
+ * //       {
+ * //         "min": 2.2,
+ * //         "minType": ">=",
+ * //         "max": 5.5,
+ * //         "maxType": "<"
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "name": "e",
+ * //     "value": 5.5
+ * //   },
+ * //   {
+ * //     "name": "f",
+ * //     "value": 6.6
+ * //   }
  * // ]
  *
  */
@@ -284,13 +581,13 @@ function arrLookupByMaxmin(arr, maxmins, opt = {}) {
         keyValue = 'value'
     }
 
-    //keyResult for result from arr
-    let keyResult = get(opt, 'keyResult')
-    if (!isestr(keyResult)) {
-        keyResult = 'result'
+    //keyItems for items from arr
+    let keyItems = get(opt, 'keyItems')
+    if (!isestr(keyItems)) {
+        keyItems = 'items'
     }
 
-    //beforeAddResult for result from maxmins
+    //beforeAddResult for items from maxmins
     let beforeAddResult = get(opt, 'beforeAddResult', null)
 
     //check
@@ -319,32 +616,78 @@ function arrLookupByMaxmin(arr, maxmins, opt = {}) {
         }
         if (isNumber(value)) {
             each(maxmins, (mm, kmm) => {
+
+                //rmax, rmin
                 let rmax = get(mm, keyMax, null)
                 let rmin = get(mm, keyMin, null)
+
+                //check
                 if (rmax !== null && rmin !== null) {
+
+                    //check
                     if (isnum(rmax) && isnum(rmin)) {
+
+                        //maxType in mm
+                        let maxType = get(mm, 'maxType')
+                        if (maxType !== '<=' && maxType !== '<') {
+                            maxType = '<='
+                        }
+
+                        //minType in mm
+                        let minType = get(mm, 'minType')
+                        if (minType !== '>=' && minType !== '>') {
+                            minType = '>='
+                        }
+
+                        //cdbl
                         rmax = cdbl(rmax)
                         rmin = cdbl(rmin)
-                        if (value >= rmin && value <= rmax) {
+
+                        //bmin
+                        let bmin
+                        if (minType === '>=') {
+                            bmin = value >= rmin
+                        }
+                        else {
+                            bmin = value > rmin
+                        }
+
+                        //bmax
+                        let bmax
+                        if (maxType === '<=') {
+                            bmax = value <= rmax
+                        }
+                        else {
+                            bmax = value < rmax
+                        }
+
+                        //check
+                        if (bmin && bmax) {
 
                             //beforeAddResult
                             if (isfun(beforeAddResult)) {
                                 mm = beforeAddResult(mm, rs[k], k)
                             }
 
-                            //save
-                            rs[k][keyResult] = mm
+                            //check
+                            if (!haskey(rs[k], keyItems)) {
+                                rs[k][keyItems] = []
+                            }
 
-                            return true //跳出換下1個
+                            //save
+                            rs[k][keyItems].push(mm)
+
                         }
                     }
                     else {
                         // console.log(`maxmins['${kmm}'][${keyMax}] or maxmins['${kmm}'][${keyMin}] is not a number`)
                     }
+
                 }
                 else {
                     // console.log(`can not find keyMax[${keyMax}] or keyMin[${keyMin}] in element of maxmins`)
                 }
+
             })
         }
     })
