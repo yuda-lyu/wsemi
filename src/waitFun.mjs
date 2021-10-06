@@ -6,7 +6,6 @@ import ispint from './ispint.mjs'
 
 /**
  * 等待f函數回傳true
- * 原始名稱為waitFunction，但與nodejs或travis-ci有名稱衝突，故才改為waitFun
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.mjs Github}
  * @memberOf wsemi
