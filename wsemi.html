@@ -2793,7 +2793,7 @@ console.log(arrFind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [7, { x: 'xyz' }]))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrGroupByMaxmin.mjs.html">arrGroupByMaxmin.mjs</a>, <a href="arrGroupByMaxmin.mjs.html#line254">line 254</a>
+        <a href="arrGroupByMaxmin.mjs.html">arrGroupByMaxmin.mjs</a>, <a href="arrGroupByMaxmin.mjs.html#line287">line 287</a>
     </li></ul></dd>
     
 
@@ -3073,6 +3073,39 @@ console.log(arrGroupByMaxmin(arr7, mm7, { keyItems: 'result' }))
 // =&gt; [
 //   { min: 0, max: 2, result: [ 1.1 ] },
 //   { min: 2, max: 5, result: [ 2.2, 3.3, 4.4 ] }
+// ]
+
+let arr8 = [1.1, 2.2, 3.3, 4.4, 5.5, 6.6]
+let mm8 = [
+    {
+        min: 1.1,
+        minType: '&gt;',
+        max: 2.2,
+        maxType: '&lt;=',
+    },
+    {
+        min: 2.2,
+        minType: '&gt;=',
+        max: 5.5,
+        maxType: '&lt;',
+    },
+]
+console.log(arrGroupByMaxmin(arr8, mm8))
+// =&gt; [
+//   {
+//     min: 1.1,
+//     minType: '&gt;',
+//     max: 2.2,
+//     maxType: '&lt;=',
+//     items: [ 2.2 ]
+//   },
+//   {
+//     min: 2.2,
+//     minType: '&gt;=',
+//     max: 5.5,
+//     maxType: '&lt;',
+//     items: [ 2.2, 3.3, 4.4 ]
+//   }
 // ]</code></pre>
         </div>
 
@@ -3959,7 +3992,7 @@ console.log(r)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrLookupByMaxmin.mjs.html">arrLookupByMaxmin.mjs</a>, <a href="arrLookupByMaxmin.mjs.html#line267">line 267</a>
+        <a href="arrLookupByMaxmin.mjs.html">arrLookupByMaxmin.mjs</a>, <a href="arrLookupByMaxmin.mjs.html#line564">line 564</a>
     </li></ul></dd>
     
 
@@ -4051,14 +4084,56 @@ let mm1 = [
         max: 5,
     },
 ]
-console.log(arrLookupByMaxmin(arr1, mm1))
+console.log(JSON.stringify(arrLookupByMaxmin(arr1, mm1), null, 2))
 // =&gt; [
-//   { name: 'a', value: 1.1, result: { min: 0, max: 2 } },
-//   { name: 'b', value: 2.2, result: { min: 2, max: 5 } },
-//   { name: 'c', value: 3.3, result: { min: 2, max: 5 } },
-//   { name: 'd', value: 4.4, result: { min: 2, max: 5 } },
-//   { name: 'e', value: 5.5 },
-//   { name: 'f', value: 6.6 }
+//   {
+//     "name": "a",
+//     "value": 1.1,
+//     "items": [
+//       {
+//         "min": 0,
+//         "max": 2
+//       }
+//     ]
+//   },
+//   {
+//     "name": "b",
+//     "value": 2.2,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "value": 3.3,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "value": 4.4,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "value": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "value": 6.6
+//   }
 // ]
 
 let arr2 = [
@@ -4097,14 +4172,56 @@ let mm2 = [
         rmax: 5,
     },
 ]
-console.log(arrLookupByMaxmin(arr2, mm2, { keyMin: 'rmin', keyMax: 'rmax' }))
+console.log(JSON.stringify(arrLookupByMaxmin(arr2, mm2, { keyMin: 'rmin', keyMax: 'rmax' }), null, 2))
 // =&gt; [
-//   { name: 'a', value: 1.1, result: { rmin: 0, rmax: 2 } },
-//   { name: 'b', value: 2.2, result: { rmin: 2, rmax: 5 } },
-//   { name: 'c', value: 3.3, result: { rmin: 2, rmax: 5 } },
-//   { name: 'd', value: 4.4, result: { rmin: 2, rmax: 5 } },
-//   { name: 'e', value: 5.5 },
-//   { name: 'f', value: 6.6 }
+//   {
+//     "name": "a",
+//     "value": 1.1,
+//     "items": [
+//       {
+//         "rmin": 0,
+//         "rmax": 2
+//       }
+//     ]
+//   },
+//   {
+//     "name": "b",
+//     "value": 2.2,
+//     "items": [
+//       {
+//         "rmin": 2,
+//         "rmax": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "value": 3.3,
+//     "items": [
+//       {
+//         "rmin": 2,
+//         "rmax": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "value": 4.4,
+//     "items": [
+//       {
+//         "rmin": 2,
+//         "rmax": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "value": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "value": 6.6
+//   }
 // ]
 
 let arr3 = [
@@ -4143,14 +4260,56 @@ let mm3 = [
         max: 5,
     },
 ]
-console.log(arrLookupByMaxmin(arr3, mm3, { keyValue: 'data' }))
+console.log(JSON.stringify(arrLookupByMaxmin(arr3, mm3, { keyValue: 'data' }), null, 2))
 // =&gt; [
-//   { name: 'a', data: 1.1, result: { min: 0, max: 2 } },
-//   { name: 'b', data: 2.2, result: { min: 2, max: 5 } },
-//   { name: 'c', data: 3.3, result: { min: 2, max: 5 } },
-//   { name: 'd', data: 4.4, result: { min: 2, max: 5 } },
-//   { name: 'e', data: 5.5 },
-//   { name: 'f', data: 6.6 }
+//   {
+//     "name": "a",
+//     "data": 1.1,
+//     "items": [
+//       {
+//         "min": 0,
+//         "max": 2
+//       }
+//     ]
+//   },
+//   {
+//     "name": "b",
+//     "data": 2.2,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "data": 3.3,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "data": 4.4,
+//     "items": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "data": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "data": 6.6
+//   }
 // ]
 
 let arr4 = [
@@ -4189,14 +4348,56 @@ let mm4 = [
         max: 5,
     },
 ]
-console.log(arrLookupByMaxmin(arr4, mm4, { keyResult: 'res' }))
+console.log(JSON.stringify(arrLookupByMaxmin(arr4, mm4, { keyItems: 'res' }), null, 2))
 // =&gt; [
-//   { name: 'a', value: 1.1, res: { min: 0, max: 2 } },
-//   { name: 'b', value: 2.2, res: { min: 2, max: 5 } },
-//   { name: 'c', value: 3.3, res: { min: 2, max: 5 } },
-//   { name: 'd', value: 4.4, res: { min: 2, max: 5 } },
-//   { name: 'e', value: 5.5 },
-//   { name: 'f', value: 6.6 }
+//   {
+//     "name": "a",
+//     "value": 1.1,
+//     "res": [
+//       {
+//         "min": 0,
+//         "max": 2
+//       }
+//     ]
+//   },
+//   {
+//     "name": "b",
+//     "value": 2.2,
+//     "res": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "value": 3.3,
+//     "res": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "value": 4.4,
+//     "res": [
+//       {
+//         "min": 2,
+//         "max": 5
+//       }
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "value": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "value": 6.6
+//   }
 // ]
 
 let arr5 = [
@@ -4237,19 +4438,147 @@ let mm5 = [
         max: 5,
     },
 ]
-console.log(arrLookupByMaxmin(arr5, mm5, {
-    keyResult: 'res',
+console.log(JSON.stringify(arrLookupByMaxmin(arr5, mm5, {
+    keyItems: 'res',
     beforeAddResult: (m) =&gt; {
         return m.name
     }
-}))
+}), null, 2))
 // =&gt; [
-//   { name: 'a', value: 1.1, res: 'x1' },
-//   { name: 'b', value: 2.2, res: 'x2' },
-//   { name: 'c', value: 3.3, res: 'x2' },
-//   { name: 'd', value: 4.4, res: 'x2' },
-//   { name: 'e', value: 5.5 },
-//   { name: 'f', value: 6.6 }
+//   {
+//     "name": "a",
+//     "value": 1.1,
+//     "res": [
+//       "x1"
+//     ]
+//   },
+//   {
+//     "name": "b",
+//     "value": 2.2,
+//     "res": [
+//       "x2"
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "value": 3.3,
+//     "res": [
+//       "x2"
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "value": 4.4,
+//     "res": [
+//       "x2"
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "value": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "value": 6.6
+//   }
+// ]
+
+let arr6 = [
+    {
+        name: 'a',
+        value: 1.1,
+    },
+    {
+        name: 'b',
+        value: 2.2,
+    },
+    {
+        name: 'c',
+        value: 3.3,
+    },
+    {
+        name: 'd',
+        value: 4.4,
+    },
+    {
+        name: 'e',
+        value: 5.5,
+    },
+    {
+        name: 'f',
+        value: 6.6,
+    },
+]
+let mm6 = [
+    {
+        min: 1.1,
+        minType: '&gt;',
+        max: 2.2,
+        maxType: '&lt;=',
+    },
+    {
+        min: 2.2,
+        minType: '&gt;=',
+        max: 5.5,
+        maxType: '&lt;',
+    },
+]
+console.log(JSON.stringify(arrLookupByMaxmin(arr6, mm6), null, 2))
+// =&gt; [
+//   {
+//     "name": "a",
+//     "value": 1.1
+//   },
+//   {
+//     "name": "b",
+//     "value": 2.2,
+//     "items": [
+//       {
+//         "min": 1.1,
+//         "minType": "&gt;",
+//         "max": 2.2,
+//         "maxType": "&lt;="
+//       },
+//       {
+//         "min": 2.2,
+//         "minType": "&gt;=",
+//         "max": 5.5,
+//         "maxType": "&lt;"
+//       }
+//     ]
+//   },
+//   {
+//     "name": "c",
+//     "value": 3.3,
+//     "items": [
+//       {
+//         "min": 2.2,
+//         "minType": "&gt;=",
+//         "max": 5.5,
+//         "maxType": "&lt;"
+//       }
+//     ]
+//   },
+//   {
+//     "name": "d",
+//     "value": 4.4,
+//     "items": [
+//       {
+//         "min": 2.2,
+//         "minType": "&gt;=",
+//         "max": 5.5,
+//         "maxType": "&lt;"
+//       }
+//     ]
+//   },
+//   {
+//     "name": "e",
+//     "value": 5.5
+//   },
+//   {
+//     "name": "f",
+//     "value": 6.6
+//   }
 // ]</code></pre>
         </div>
 
@@ -4534,7 +4863,7 @@ console.log(arrLookupByMaxmin(arr5, mm5, {
 
         <tr>
             
-                <td class="name"><code>keyResult</code></td>
+                <td class="name"><code>keyItems</code></td>
             
 
             <td class="type">
@@ -4561,12 +4890,12 @@ console.log(arrLookupByMaxmin(arr5, mm5, {
             
                 <td class="default">
                 
-                    <code>'result'</code>
+                    <code>'items'</code>
                 
                 </td>
             
 
-            <td class="description last"><p>輸入回傳arr物件陣列中，儲存所屬maxmins元素之欄位字串，預設'result'</p></td>
+            <td class="description last"><p>輸入回傳arr物件陣列中，儲存所屬maxmins元素之欄位字串，預設'items'</p></td>
         </tr>
 
     
@@ -64796,7 +65125,7 @@ console.log(verifyValue('-12.34', 'isn0num'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line57">line 57</a>
+        <a href="waitFun.mjs.html">waitFun.mjs</a>, <a href="waitFun.mjs.html#line56">line 56</a>
     </li></ul></dd>
     
 
@@ -64836,8 +65165,7 @@ console.log(verifyValue('-12.34', 'isn0num'))
 
 
 <div class="description usertext">
-    <p>等待f函數回傳true
-原始名稱為waitFunction，但與nodejs或travis-ci有名稱衝突，故才改為waitFun</p>
+    <p>等待f函數回傳true</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.mjs">Github</a></p>
 </div>
 
@@ -65132,7 +65460,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Mon Oct 04 2021 15:31:15 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Wed Oct 06 2021 14:46:12 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -65153,7 +65481,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.19/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.20/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
