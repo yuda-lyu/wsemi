@@ -1,5 +1,6 @@
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
+import isnum from './isnum.mjs'
 
 
 /**
@@ -22,7 +23,7 @@ function haskey(obj, key) {
     if (!isobj(obj)) {
         return false
     }
-    if (!isestr(key)) {
+    if (!isestr(key) && !isnum(key)) {
         return false
     }
 
