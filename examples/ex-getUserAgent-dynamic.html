@@ -2,14 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for ua-parser-js</title>
+    <title>examples for getUserAgent(ua-parser-js) by dynamic import</title>
     
     <!-- @babel/polyfill已廢棄 -->
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.28/dist/ua-parser.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.22/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.23/dist/wsemi.umd.js"></script>
     <script>
         let log = console.log
         console.log = function(){
@@ -23,7 +21,10 @@
 
     <script>
 
-        console.log('getUserAgent',  wsemi.getUserAgent()  )
+        wsemi.getUserAgentDyn()
+            .then(function(r) {
+                console.log('getUserAgentDyn', r)
+            })
 
     </script>
 

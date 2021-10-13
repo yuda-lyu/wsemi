@@ -2,14 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <title>examples for htmlparser</title>
+    <title>examples for html2str(htmlparser) by dynamic import</title>
     
     <!-- @babel/polyfill已廢棄 -->
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.22/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.23/dist/wsemi.umd.js"></script>
   
 </head>
 <body>
@@ -39,11 +37,14 @@
         //htmlEncode for show
         document.querySelector('#h').innerHTML=wsemi.htmlEncode(h)
 
-        //html2str
-        let t=wsemi.html2str(h)
+        //html2strDyn
+        wsemi.html2strDyn(h)
+            .then(function(t){
 
-        //show result
-        document.querySelector('#t').innerHTML=t
+                //show result
+                document.querySelector('#t').innerHTML=t
+
+            })
 
     </script>
 
