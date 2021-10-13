@@ -15,53 +15,27 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/ws
 To view some examples for more understanding, visit examples:
 > **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-lodash.html)]
 
+> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
+
 > **dayjs:** [ex-dayjs.html](https://yuda-lyu.github.io/wsemi/examples/ex-dayjs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-dayjs.html)]
 
 > **dayjs:** [ex-timeTZ2expire-timeTZ2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-timeTZ2expire-timeTZ2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-timeTZ2expire-timeTZ2past.html)]
 
-> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
-
-> **fuzzball:** [ex-strFindFuzz.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzz.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzz.html)]
-
-> **fuzzball[dynamic import]:** [ex-strFindFuzz-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzz-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzz-dynamic.html)]
-
-> **obj2u8arr & u8arr2obj:** [ex-tobj2u8arr-u8arr2obj.html](https://yuda-lyu.github.io/wsemi/examples/ex-tobj2u8arr-u8arr2obj.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-tobj2u8arr-u8arr2obj.html)]
-
 > **colorConverter:** [ex-colorConverter.html](https://yuda-lyu.github.io/wsemi/examples/ex-colorConverter.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-colorConverter.html)]
 
-> **uaparser:** [ex-getUserAgent.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgent.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgent.html)]
+> **domTooltip[with popper.js]:** [ex-domTooltip.html](https://yuda-lyu.github.io/wsemi/examples/ex-domTooltip.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domTooltip.html)]
 
-> **uaparser[dynamic import]:** [ex-getUserAgent-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgent-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgent-dynamic.html)]
+> **domShowImages:** [ex-domShowImages.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImages.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImages.html)]
 
-> **xss:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
+> **domShowImagesDyn[dynamic import]:** [ex-domShowImagesDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImagesDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImagesDyn.html)]
 
-> **openlink:** [ex-openLink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openLink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openLink.html)]
+> **domConvertToPic:** [ex-domConvertToPic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPic.html)]
 
-> **tippyjs[with popper.js]:** [ex-domTooltip.html](https://yuda-lyu.github.io/wsemi/examples/ex-domTooltip.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domTooltip.html)]
+> **domConvertToPicDyn[dynamic import]:** [ex-domConvertToPicDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPicDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPicDyn.html)]
 
-> **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
+> **domScrollIntoView:** [ex-domScrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollIntoView.html)]
 
-> **xlsx[dynamic import]:** [ex-xlsx-dynamic](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx-dynamic) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx-dynamic)]
-
-> **viewerjs:** [ex-domShowImages.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImages.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImages.html)]
-
-> **viewerjs[dynamic import]:** [ex-domShowImages-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImages-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImages-dynamic.html)]
-
-> **html2canvas:** [ex-html2pic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2pic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2pic.html)]
-
-> **html2canvas[dynamic import]:** [ex-html2pic-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2pic-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2pic-dynamic.html)]
-
-> **html-to-image:** [ex-domConvertToPic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPic.html)]
-
-> **html-to-image[dynamic import]:** [ex-domConvertToPic-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPic-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPic-dynamic.html)]
-
-> **htmlparser:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
-
-> **htmlparser[dynamic import]:** [ex-html2str-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str-dynamic.html)]
-
-> **scrollIntoView:** [ex-domScrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollIntoView.html)]
-
-> **scrollTo:** [ex-domScrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollTo.html)]
+> **domScrollTo:** [ex-domScrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollTo.html)]
 
 > **domDropFiles:** [ex-domDropFiles.html](https://yuda-lyu.github.io/wsemi/examples/ex-domDropFiles.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domDropFiles.html)]
 
@@ -71,9 +45,35 @@ To view some examples for more understanding, visit examples:
 
 > **domRipple:** [ex-domRipple.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRipple.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRipple.html)]
 
-> **tesseract.js:** [ex-ocr.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocr.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocr.html)]
+> **strFindFuzz:** [ex-strFindFuzz.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzz.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzz.html)]
 
-> **tesseract.js[dynamic import]:** [ex-ocr-dynamic.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocr-dynamic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocr-dynamic.html)]
+> **strFindFuzzDyn[dynamic import]:** [ex-strFindFuzzDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzzDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzzDyn.html)]
+
+> **obj2u8arr & u8arr2obj:** [ex-obj2u8arr-u8arr2obj.html](https://yuda-lyu.github.io/wsemi/examples/ex-obj2u8arr-u8arr2obj.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-obj2u8arr-u8arr2obj.html)]
+
+> **getUserAgent:** [ex-getUserAgent.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgent.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgent.html)]
+
+> **getUserAgentDyn[dynamic import]:** [ex-getUserAgentDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgentDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgentDyn.html)]
+
+> **xss:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
+
+> **openlink:** [ex-openLink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openLink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openLink.html)]
+
+> **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
+
+> **xlsx[dynamic import]:** [ex-xlsxDyn](https://yuda-lyu.github.io/wsemi/examples/ex-xlsxDyn) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsxDyn)]
+
+> **html2pic:** [ex-html2pic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2pic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2pic.html)]
+
+> **html2picDyn[dynamic import]:** [ex-html2picDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2picDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2picDyn.html)]
+
+> **html2str:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
+
+> **html2strDyn[dynamic import]:** [ex-html2strDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2strDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2strDyn.html)]
+
+> **ocr:** [ex-ocr.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocr.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocr.html)]
+
+> **ocrDyn[dynamic import]:** [ex-ocrDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocrDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocrDyn.html)]
 
 ## Installation
 ### Using npm(ES6 module):
@@ -161,5 +161,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.23/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.24/dist/wsemi.umd.js"></script>
 ```
