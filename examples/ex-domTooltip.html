@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domTooltip</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <!-- 已打包進來故不需要引用 -->
+    <script _src="https://cdn.jsdelivr.net/npm/tippy.js@6.x/umd/index.all.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <button onmouseenter="t1(this)">tooltip from tippy.js</button>
+    <script>
+        function t1(slef){
+            wsemi.domTooltip(slef,'<b>提示</b><br>test tooltip')
+        }
+    </script>
+
+    <button onmouseenter="t2(this)">tooltip from tippy.js</button>
+    <script>
+        function t2(slef){
+            wsemi.domTooltip(slef,'<b>提示</b><br>test tooltip',{
+                theme:'light',
+            })
+        }
+    </script>
+
+</body>
+</html>

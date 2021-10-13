@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domScrollIntoView</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="margin:0px 20px 20px 0px; display:inline-block; vertical-align:top; padding:20px; border:1px solid #ddd;">
+
+        <div style="font-size:1.3rem; margin-bottom:10px;">One layer(body)</div>
+            
+        <button onclick="siv('l1-aaa')">scroll to aaa</button>
+        <button onclick="siv('l1-bbb')">scroll to bbb</button>
+        <button onclick="siv('l1-ccc')">scroll to ccc</button>
+
+        <div style="height:20px;"></div>
+
+        <div id="l1-aaa" style="display:inline-block;">aaa</div>
+
+        <div style="height:300px;"></div>
+
+        <div id="l1-bbb" style="display:inline-block;">bbb</div>
+
+        <div style="height:300px;"></div>
+
+        <div id="l1-ccc" style="display:inline-block;">ccc</div>
+
+    </div>
+
+    <div style="margin:0px 20px 20px 0px; display:inline-block; vertical-align:top; padding:20px; border:1px solid #ddd;">
+
+        <div style="font-size:1.3rem; margin-bottom:10px;">Two layer</div>
+            
+        <button onclick="siv('l2-aaa')">scroll to aaa</button>
+        <button onclick="siv('l2-bbb')">scroll to bbb</button>
+        <button onclick="siv('l2-ccc')">scroll to ccc</button>
+        <button onclick="siv('l2-ddd')">scroll to ddd</button>
+
+        <div style="height:20px;"></div>
+
+        <div style="display:inline-block; width:400px; height:400px; overflow:scroll; border:1px solid #ddd;">
+
+            <div style="width:600px;"></div>
+
+            <div id="l2-aaa" style="display:inline-block;">aaa</div>
+
+            <div style="height:300px;"></div>
+
+            <div id="l2-bbb" style="display:inline-block;">bbb</div>
+
+            <div style="height:300px;"></div>
+
+            <div id="l2-ccc" style="display:inline-block;">ccc</div>
+
+            <div style="height:300px;"></div>
+
+            <div style="width:600px; text-align:right;">
+                <div id="l2-ddd" style="display:inline-block;">ddd</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div style="margin:0px 20px 20px 0px; display:inline-block; vertical-align:top; padding:20px; border:1px solid #ddd;">
+
+        <div style="font-size:1.3rem; margin-bottom:10px;">Three layer</div>
+            
+        <button onclick="siv('l3-aaa')">scroll to aaa</button>
+        <button onclick="siv('l3-bbb')">scroll to bbb</button>
+        <button onclick="siv('l3-ccc')">scroll to ccc</button>
+        <button onclick="siv('l3-ddd')">scroll to ddd</button>
+        <button onclick="siv('l3-eee')">scroll to eee</button>
+
+        <div style="height:20px;"></div>
+
+        <div style="display:inline-block; width:400px; height:400px; overflow:scroll; border:1px solid #ddd;">
+    
+            <div style="display:inline-block; width:500px; height:500px; overflow:scroll; border:1px solid #ddd;">
+
+                <div style="width:600px;"></div>
+
+                <div id="l3-aaa" style="display:inline-block;">aaa</div>
+
+                <div style="height:300px;"></div>
+
+                <div id="l3-bbb" style="display:inline-block;">bbb</div>
+
+                <div style="height:300px;"></div>
+
+                <div id="l3-ccc" style="display:inline-block;">ccc</div>
+
+                <div style="height:300px;"></div>
+
+                <div style="width:600px; text-align:right;">
+                    <div id="l3-ddd" style="display:inline-block;">ddd</div>
+                </div>
+    
+            </div>
+
+            <div style="height:50px;"></div>
+
+            <div style="width:550px; text-align:right;">
+                <div id="l3-eee" style="display:inline-block;">eee</div>
+            </div>
+    
+        </div>
+        
+    </div>
+    
+    <div style="height:500px;"></div>
+
+    <script>
+        function siv(id){
+            let ele = document.querySelector("#"+id)
+            wsemi.domScrollIntoView(ele)
+            // ele.scrollIntoView({ behavior: "smooth" }) 
+        }
+    </script>
+
+</body>
+</html>

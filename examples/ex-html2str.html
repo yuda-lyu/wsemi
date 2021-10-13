@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for html2str(htmlparser)</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+  
+</head>
+<body>
+
+    <div style="padding:10px;">
+        <div style="margin:10px 0px;">input html:</div>
+        <pre id="h" style="border: 1px solid #ddd;"></pre>
+    </div>
+
+    <div style="padding:10px;">
+        <div style="margin:10px 0px;">output text:</div>
+        <pre id="t" style="border: 1px solid #ddd;"></pre>
+    </div>
+
+    <script>
+        
+        let h='<!DOCTYPE html>\n'
+        h+='<html>\n'
+        h+='\n'
+        h+='<body>\n'
+        h+='    <h1>My First Heading</h1>\n'
+        h+='    <p>My first paragraph.</p>\n'
+        h+='</body>\n'
+        h+='\n'
+        h+='</html>\n'
+
+        //htmlEncode for show
+        document.querySelector('#h').innerHTML=wsemi.htmlEncode(h)
+
+        //html2str
+        let t=wsemi.html2str(h)
+
+        //show result
+        document.querySelector('#t').innerHTML=t
+
+    </script>
+
+</body>
+</html>

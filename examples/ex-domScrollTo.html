@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domScrollTo</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="display:inline-block; vertical-align:top; padding:20px; border:1px solid #ddd;">
+        
+        <button onclick="siv('panel',0,0)">scroll to (0,0)</button>
+        <button onclick="siv('panel',150,0)">scroll to (150,0)</button>
+        <button onclick="siv('panel',600,300)">scroll to (600,300)</button>
+        <button onclick="siv('panel',310,230)">scroll to (310,230)</button>
+     
+        <div style="height:0px;"></div>
+
+        <div id="panel" style="display:inline-block; width:400px; height:400px; overflow:scroll; border:1px solid #ddd;">
+
+            <div style="width:600px;"></div>
+
+            <div style="display:inline-block;">aaa</div>
+
+            <div style="height:300px;"></div>
+
+            <div>
+                <div style="display:inline-block;">bbb</div>
+                <div style="display:inline-block; padding-left:200px;">ccc</div>
+            </div>
+
+            <div style="height:300px;"></div>
+
+            <div style="display:inline-block;">ddd</div>
+
+            <div style="height:300px;"></div>
+
+            <div style="width:600px; text-align:right;">
+                <div style="display:inline-block;">eee</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div style="height:500px;"></div>
+
+    <script>
+        function siv(id,top,left){
+
+            let ele = document.querySelector("#"+id)
+
+            let opt = {
+                top: top,
+                left: left,
+            }
+            wsemi.domScrollTo(ele, opt)
+
+            // let opt2 = {
+            //     top: top,
+            //     left: left,
+            //     behavior: 'smooth'
+            // }
+            // ele.scrollTo(opt2) 
+
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for strFindFuzz(fuzzball)</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fuzzball@2.x/dist/fuzzball.umd.min.js"></script>
+
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+</head>
+<body>
+
+    <script>
+
+        console.log("strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)", wsemi.strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))
+        // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+    
+        console.log("strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)", wsemi.strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true))
+        // => 82
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true)", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true))
+        // => 100
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true)", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true))
+        // => 50
+    
+        console.log("strFindFuzz(['abc', 'def123', '中文測試'], 'ef')", wsemi.strFindFuzz(['abc', 'def123', '中文測試'], 'ef'))
+        // => true
+        
+    </script>
+
+</body>
+</html>

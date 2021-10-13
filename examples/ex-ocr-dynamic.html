@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for ocr(tesseract.js) by dynamic import</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="margin-bottom:10px;">* Does not support IE11</div>
+
+    <div style="margin-bottom:20px; display:flex; border:1px solid #aaa;">
+
+        <div>
+            <button style="display:block;" onclick="uploadImg('imgEng')">upload image</button>
+            <img style="width:700px;" id="imgEng" src="" />
+        </div>
+
+        <div>
+            <button style="margin:10px 0px;" onclick="ocr('eng','imgEng','resEng')">ocrEng</button>
+            <div style="padding-right:10px;" id="resEng"></div>
+        </div>
+
+    </div>
+
+    <div style="margin-bottom:20px; display:flex; border:1px solid #aaa;">
+
+        <div>
+            <button style="display:block;" onclick="uploadImg('imgTra')">upload image</button>
+            <img style="width:700px;" id="imgTra" src="" />
+        </div>
+
+        <div>
+            <button style="margin:10px 0px;" onclick="ocr('chi_tra','imgTra','resTra')">ocrTra</button>
+            <div style="padding-right:10px;" id="resTra"></div>
+        </div>
+
+    </div>
+
+    <div style="margin-bottom:20px; display:flex; border:1px solid #aaa;">
+
+        <div>
+            <button style="display:block;" onclick="uploadImg('imgSim')">upload image</button>
+            <img style="width:700px;" id="imgSim" src="" />
+        </div>
+
+        <div>
+            <button style="margin:10px 0px;" onclick="ocr('chi_sim','imgSim','resSim')">ocrSim</button>
+            <div style="padding-right:10px;" id="resSim"></div>
+        </div>
+
+    </div>
+
+    <script>
+
+        function setSrc(id,src){
+
+            //ele
+            let ele=document.querySelector('#'+id)
+
+            //setAttribute
+            ele.setAttribute('src',src)
+
+        }
+
+        function uploadImg(tarId){
+            wsemi.domShowInputAndGetFiles()
+                .then(function(res){
+                    // console.log('res',res)
+
+                    //check
+                    if(wsemi.iseobj(res.errs)){
+                        throw new Error(res.errs)
+                    }
+
+                    //file
+                    let file=res.files[0]
+                    // console.log('file',file)
+
+                    //b64
+                    wsemi.blob2b64(file)
+                        .then(function(b64){
+                            // console.log('b64',b64)
+
+                            //setSrc
+                            setSrc(tarId,b64)
+
+                        })
+                        .catch(function(err){
+                            console.log(err)
+                        })
+
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+        }
+
+        function ocr(lang, tarEleId, resEleId){
+            let ele=document.querySelector('#'+resEleId)
+            ele.innerHTML='running...'
+            let b64=document.querySelector('#'+tarEleId).getAttribute('src')
+            wsemi.ocrDyn(b64, { lang })
+                .then(function(txt){
+                    ele.innerHTML=txt
+                })
+                .catch(function(err){
+                    console.log(err)
+                    ele.innerHTML=err
+                })
+        }
+
+        function getImg() {
+
+            let resEng = `
+        Mild Splendour of the various-vested Night!
+        Mother of wildly-working visions! haill
+        I watch thy gliding, while with watery light
+        Thy weak eye glimmers through a fleecy veil;
+        And when thou lovest thy pale orb to shroud
+        Behind the gather’d blackness lost on high;
+        And when thou dartest from the wind-rent cloud
+        Thy placid lightning o’er the awaken’d sky.
+        `
+
+            let resChiTra = `
+        齊宣王誤闖夜叉山，碰巧撞上了風姿綽約的寨主鍾無艷，二人一見鍾情。鍾情
+        於鍾無艷的狐狸精被拒愛，於是向無艷施「愛情咒」，使其臉上忽然多了塊大
+        痣，把齊宣王嚇得拔腿而逃，二人感情從此障礙重重。
+        `
+
+            let resChiSim = `
+        狐狸精化身为美女夏迎春去勾引齐王，忽男忽女的她竟同时爱上齐王和无艳，
+        硬是周旋在二人之间。齐王被狐狸精的美色所诱，但无艳仍对齐王痴心一片，
+        甘为齐王南征北战，冲锋陷阵、出生入死。无艳在迎春多番打击下多次入冷
+        宫、坐天牢仍无怨无悔，对齐王矢志不渝。
+        `
+
+            return {
+                // eng: getEng(),
+                // tra: getTra(),
+                // sim: getSim(),
+                resEng,
+                resChiTra,
+                resChiSim,
+            }
+        }
+
+        function toDataURL(url) {
+            return new Promise(function(resolve, reject) {
+                let xhr = new XMLHttpRequest()
+                xhr.onload = function() {
+                    let reader = new FileReader()
+                    reader.onloadend = function() {
+                        resolve(reader.result)
+                    }
+                    reader.readAsDataURL(xhr.response)
+                }
+                xhr.open('GET', url)
+                xhr.responseType = 'blob'
+                xhr.send()
+            })
+        }
+
+        toDataURL('https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/img/ocr/eng1.png')
+            .then(function(b64){
+    
+                //setSrc
+                setSrc('imgEng',b64)
+
+            })
+
+        toDataURL('https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/img/ocr/tra1.png')
+            .then(function(b64){
+    
+                //setSrc
+                setSrc('imgTra',b64)
+
+            })
+
+        toDataURL('https://cdn.jsdelivr.net/npm/w-demores@1.0.15/res/img/ocr/sim1.png')
+            .then(function(b64){
+    
+                //setSrc
+                setSrc('imgSim',b64)
+
+            })
+
+    </script>
+
+</body>
+</html>

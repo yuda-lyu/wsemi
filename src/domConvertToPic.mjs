@@ -83,6 +83,7 @@ async function domConvertToPic(ele, opt = {}) {
 
     //eleOut
     let eleOut = document.createElement('div')
+    eleOut.style.opacity = 0
     eleOut.style.position = 'relative'
     eleOut.appendChild(eleIn)
 
