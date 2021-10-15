@@ -15,11 +15,32 @@ import cint from './cint.mjs'
  * console.log(isn0int(0))
  * // => true
  *
+ * console.log(isn0int('0'))
+ * // => true
+ *
  * console.log(isn0int(125))
  * // => false
  *
+ * console.log(isn0int(1.25))
+ * // => false
+ *
+ * console.log(isn0int('125'))
+ * // => false
+ *
+ * console.log(isn0int('1.25'))
+ * // => false
+
  * console.log(isn0int(-125))
  * // => true
+ *
+ * console.log(isn0int(-1.25))
+ * // => false
+ *
+ * console.log(isn0int('-125'))
+ * // => true
+ *
+ * console.log(isn0int('-1.25'))
+ * // => false
  *
  */
 function isn0int(v) {

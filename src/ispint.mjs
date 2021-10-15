@@ -15,13 +15,31 @@ import cint from './cint.mjs'
  * console.log(ispint(0))
  * // => false
  *
+ * console.log(ispint('0'))
+ * // => false
+ *
  * console.log(ispint(125))
  * // => true
+ *
+ * console.log(ispint(1.25))
+ * // => false
  *
  * console.log(ispint('125'))
  * // => true
  *
- * console.log(ispint(1.25))
+ * console.log(ispint('1.25'))
+ * // => false
+
+ * console.log(ispint(-125))
+ * // => false
+ *
+ * console.log(ispint(-1.25))
+ * // => false
+ *
+ * console.log(ispint('-125'))
+ * // => false
+ *
+ * console.log(ispint('-1.25'))
  * // => false
  *
  */

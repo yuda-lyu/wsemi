@@ -15,6 +15,9 @@ import cint from './cint.mjs'
  * console.log(isp0int(0))
  * // => true
  *
+ * console.log(isp0int('0'))
+ * // => true
+ *
  * console.log(isp0int(125))
  * // => true
  *
@@ -23,6 +26,21 @@ import cint from './cint.mjs'
  *
  * console.log(isp0int('125'))
  * // => true
+ *
+ * console.log(isp0int('1.25'))
+ * // => false
+
+ * console.log(isp0int(-125))
+ * // => false
+ *
+ * console.log(isp0int(-1.25))
+ * // => false
+ *
+ * console.log(isp0int('-125'))
+ * // => false
+ *
+ * console.log(isp0int('-1.25'))
+ * // => false
  *
  */
 function isp0int(v) {

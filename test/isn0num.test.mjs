@@ -34,6 +34,11 @@ describe(`isn0num`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
+    it(`should return true when input '0'`, function() {
+        let r = isn0num('0')
+        assert.strict.deepStrictEqual(r, true)
+    })
+
     it(`should return false when input 125`, function() {
         let r = isn0num(125)
         assert.strict.deepStrictEqual(r, false)

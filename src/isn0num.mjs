@@ -15,23 +15,32 @@ import cdbl from './cdbl.mjs'
  * console.log(isn0num(0))
  * // => true
  *
+ * console.log(isn0num('0'))
+ * // => true
+ *
+ * console.log(isn0num(125))
+ * // => false
+ *
+ * console.log(isn0num(1.25))
+ * // => false
+ *
+ * console.log(isn0num('125'))
+ * // => false
+ *
+ * console.log(isn0num('1.25'))
+ * // => false
+ *
  * console.log(isn0num(-125))
  * // => true
  *
  * console.log(isn0num(-1.25))
  * // => true
  *
- * console.log(isn0num(125))
- * // => false
- *
  * console.log(isn0num('-125'))
  * // => true
  *
  * console.log(isn0num('-1.25'))
  * // => true
- *
- * console.log(isn0num('125'))
- * // => false
  *
  */
 function isn0num(v) {
