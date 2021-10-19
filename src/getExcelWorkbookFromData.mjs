@@ -97,7 +97,11 @@ function getExcelWorkbookFromData(data, sheetName = 'data') {
         else if (isEle(data)) {
 
             //ws
-            ws = xlutls.table_to_sheet(data)
+            ws = xlutls.table_to_sheet(data, {
+                raw: true,
+                // cellDates: true,
+                // dateNF: 0,
+            })
 
         }
 
