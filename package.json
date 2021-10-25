@@ -13,7 +13,7 @@
     "seamless-scroll-polyfill": "^1.2.4",
     "tesseract.js": "^2.1.5",
     "tippy.js": "^6.3.2",
-    "ua-parser-js": "^0.7.28",
+    "ua-parser-js": "^0.7.30",
     "viewerjs": "^1.10.1",
     "xlsx": "^0.17.2",
     "xss": "^1.0.10"
