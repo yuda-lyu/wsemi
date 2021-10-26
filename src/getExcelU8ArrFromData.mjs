@@ -45,7 +45,7 @@ function getXLSX() {
  * fs.writeFileSync('temp.xlsx', u8a)
  *
  */
-function getExcelU8ArrFromData(data, sheetName = 'data') {
+function getExcelU8ArrFromData(data, sheetName = 'data', opt = {}) {
 
     //check
     if (!isearr(data)) {

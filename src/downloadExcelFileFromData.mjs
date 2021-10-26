@@ -43,7 +43,7 @@ function getXLSX() {
  * downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)
  *
  */
-function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
+function downloadExcelFileFromData(fileName, sheetName = 'data', data, opt = {}) {
 
     //check
     if (!isestr(fileName)) {

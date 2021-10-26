@@ -90,10 +90,10 @@ npm i wsemi
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
 ```
 
-[Optional] Add script for dayjs(or moment).
+[Optional] Add script for `dayjs`(or `moment`).
 > **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.x/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dayjs.min.js"></script>
 ```
 or
 ```alias
@@ -103,57 +103,57 @@ or
 </script>
 ```
 
-[Optional] Add script for fuzzball.
+[Optional] Add script for `fuzzball`.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.x/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.0.2/dist/fuzzball.umd.min.js"></script>
 ```
 
-[Optional] Add script for ua-parser-js.
+[Optional] Add script for `ua-parser-js`.
 > **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@0.7.28/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.1/dist/ua-parser.min.js"></script>
 ```
 
-[Optional] Add script for xss.
+[Optional] Add script for `xss`.
 > **Note:** Include script when using `clearXSS` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xss@1.0.9/dist/xss.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xss@1.0.10/dist/xss.min.js"></script>
 ```
 
-[Optional] Add script for xlsx.
+[Optional] Add script for `xlsx`.
 > **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.x/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.17.3/dist/xlsx.full.min.js"></script>
 ```
 
-[Optional] Add link and script for viewerjs.
+[Optional] Add link and script for `viewerjs`.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.1/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.2/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.2/dist/viewer.min.js"></script>
 ```
 
-[Optional] Add script for html2canvas.
+[Optional] Add script for `html2canvas`.
 > **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
 <script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.3.2/dist/html2canvas.min.js"></script>
 ```
 
-[Optional] Add script for html-to-image.
+[Optional] Add script for `html-to-image`.
 > **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js"></script>
 ```
 
-[Optional] Add script for htmlparser.
+[Optional] Add script for `htmlparser`.
 > **Note:** Include script when using `html2str` function, and don't include script when using `html2strDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
 ```
 
-[Optional] Add script for tesseract.js. It does not support IE11.
+[Optional] Add script for `tesseract.js`. It does not support IE11.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
@@ -161,5 +161,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.26/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.27/dist/wsemi.umd.js"></script>
 ```

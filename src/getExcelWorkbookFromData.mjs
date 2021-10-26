@@ -66,7 +66,7 @@ function getXLSX() {
  * xlsx.writeFile(wb2, 'temp2.xlsx')
  *
  */
-function getExcelWorkbookFromData(data, sheetName = 'data') {
+function getExcelWorkbookFromData(data, sheetName = 'data', opt = {}) {
 
     //check
     if (!isarr(data) && !isEle(data)) {
@@ -77,7 +77,6 @@ function getExcelWorkbookFromData(data, sheetName = 'data') {
     if (!isestr(sheetName)) {
         sheetName = 'data'
     }
-
 
     let wb = null
     try {
