@@ -4,9 +4,7 @@ import arrAt from './arrAt.mjs'
 
 
 /**
- * 由二維陣列mat提取資料
- * 若istart與iend有效, 提取istart~iend欄位
- * 若僅istart有效, 提取istart欄位
+ * 由二維陣列mat提取資料。若istart與iend有效則提取istart~iend欄位，而若僅istart有效則提取istart欄位
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matat.test.mjs Github}
  * @memberOf wsemi
