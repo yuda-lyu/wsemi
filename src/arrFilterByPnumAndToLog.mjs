@@ -14,7 +14,7 @@ import arrFilterByPnum from './arrFilterByPnum.mjs'
  *
  * let arr
  *
- * arr = ['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2']
+ * arr = ['abc', '-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2', 'xyz']
  * console.log(arrFilterByPnumAndToLog(arr))
  * // => [
  * //   -0.6931471805599453,

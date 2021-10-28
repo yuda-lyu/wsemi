@@ -4,8 +4,8 @@ import arrFilterByPnum from '../src/arrFilterByPnum.mjs'
 
 describe(`arrFilterByPnum`, function() {
 
-    it(`should return [0.5, 1, 1.1, 1.1, 2.2] when input ['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2']`, function() {
-        let r = arrFilterByPnum(['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2'])
+    it(`should return [0.5, 1, 1.1, 1.1, 2.2] when input ['abc', '-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2', 'xyz']`, function() {
+        let r = arrFilterByPnum(['abc', '-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2', 'xyz'])
         let rr = [0.5, 1, 1.1, 1.1, 2.2]
         assert.strict.deepStrictEqual(r, rr)
     })
