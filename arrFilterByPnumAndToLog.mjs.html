@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>arrFind.mjs - Documentation</title>
+    <title>arrFilterByPnumAndToLog.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">arrFind.mjs</h1>
+    <h1 class="page-title">arrFilterByPnumAndToLog.mjs</h1>
     
 
     
@@ -43,93 +43,56 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import map from 'lodash/map'
-import isEqual from 'lodash/isEqual'
-import isarr from './isarr.mjs'
-import iser from './iser.mjs'
+import isearr from './isearr.mjs'
+import arrFilterByPnum from './arrFilterByPnum.mjs'
 
 
 /**
- * 由vall陣列找尋vfind內各元素之第1位置
+ * 過濾陣列內元素僅保留正數(不含0)，並且自動轉數值，再轉log10(Math.log)
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFind.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilterByPnumAndToLog.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Number|Object|Boolean|Array} vall 輸入要被尋找的任意資料陣列
- * @param {String|Number|Object|Boolean|Array} vfind 輸入要尋找的任意資料陣列
- * @returns {Array} 回傳所找到各元素第1位置之陣列
+ * @param {Array} arr 輸入原始陣列
+ * @returns {Array} 回傳新陣列
  * @example
  *
- * console.log(arrFind([1, 2, 3, '4', 5, 'abc'], 2))
- * // => [ 1 ]
+ * let arr
  *
- * console.log(arrFind([1, 2, 3, '4', 5, 'abc'], 12))
- * // => [ -1 ]
+ * arr = ['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2']
+ * console.log(arrFilterByPnumAndToLog(arr))
+ * // => [
+ * //   -0.6931471805599453,
+ * //   0,
+ * //   0.09531017980432493,
+ * //   0.09531017980432493,
+ * //   0.7884573603642703
+ * // ]
  *
- * console.log(arrFind([1, 2, 3, '4', 5, 'abc'], [2]))
- * // => [ 1 ]
- *
- * console.log(arrFind([1, 2, 3, '4', 5, 'abc'], ['4', 2]))
- * // => [ 3, 1 ]
- *
- * console.log(arrFind([1, true, 2, 3, '4', true, 5, 'abc'], true))
- * // => [ 1 ]
- *
- * console.log(arrFind([1, true, 2, 3, '4', true, 5, 'abc'], [true]))
- * // => [ 1 ]
- *
- * console.log(arrFind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], { x: 'xyz' }))
- * // => [ 2 ]
- *
- * console.log(arrFind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [{ x: 'xyz' }]))
- * // => [ 2 ]
- *
- * console.log(arrFind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], ['4', { x: 'xyz' }]))
- * // => [ 4, 2 ]
- *
- * console.log(arrFind([1, 2, { x: 'xyz' }, 3, '4', 5, 'abc'], [7, { x: 'xyz' }]))
- * // => [-1, 2]
+ * arr = ['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0']
+ * console.log(arrFilterByPnumAndToLog(arr))
+ * // => []
  *
  */
-function arrFind(vall, vfind) {
+function arrFilterByPnumAndToLog(arr) {
 
-    function ck(v) {
-        if (isarr(v)) {
-            return v
-        }
-        return [v]
-    }
-
-    //check vall, 會自動轉陣列
-    if (iser(vall)) {
-        return []
-    }
-    vall = ck(vall)
-    if (vall.length === 0) {
+    //check
+    if (!isearr(arr)) {
         return []
     }
 
-    //check vfind, 會自動轉陣列
-    if (iser(vfind)) {
-        return []
-    }
-    vfind = ck(vfind)
+    //不用cloneDeep
 
-    //map and find
-    let inds = map(vfind, function(v) {
-        let r = -1
-        for (let k = 0; k &lt; vall.length; k++) {
-            if (isEqual(vall[k], v)) {
-                r = k
-                break
-            }
-        }
-        return r
-    })
+    //arrFilterByPnum, 有使用cloneDeep
+    arr = arrFilterByPnum(arr)
 
-    return inds
+    //map
+    arr = map(arr, Math.log)
+
+    return arr
 }
 
 
-export default arrFind
+export default arrFilterByPnumAndToLog
 </code></pre>
         </article>
     </section>
