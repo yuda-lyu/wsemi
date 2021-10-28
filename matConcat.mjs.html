@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domAppend.mjs - Documentation</title>
+    <title>matConcat.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domAppend.mjs</h1>
+    <h1 class="page-title">matConcat.mjs</h1>
     
 
     
@@ -42,45 +42,95 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isstr from './isstr.mjs'
-import isEle from './isEle.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import size from 'lodash/size'
+import isarr from './isarr.mjs'
 
 
 /**
- * 前端於DOM元素內最後處插入元素或Html文字等
+ * 合併二維陣列mat1與mat2
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matConcat.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} eleParent 輸入目標DOM元素
- * @param {HTMLElement|String} itemChild 輸入要插入DOM元素或Html文字等內容
+ * @param {Array} mat 輸入要被提取的資料陣列
+ * @param {Integer} istart 輸入起始的欄位指標整數
+ * @param {Integer} [iend=istart] 輸入結束的欄位指標整數，若不輸入則等同於istart
+ * @returns {Array} 回傳提取的資料陣列
  * @example
- * need test in browser
  *
- * let html = '&lt;div>abc&lt;/div>'
- * domAppend(document.querySelector('#id'),html)
+ * let mat1
+ * let mat2
+ *
+ * mat1 = [['a', 'b'], [1.1, 2.2]]
+ * mat2 = [['c', 'd'], [10.1, 20.2]]
+ * console.log(matConcat(mat1, mat2))
+ * // => [
+ * //   [ 'a', 'b', 'c', 'd' ],
+ * //   [ 1.1, 2.2, 10.1, 20.2 ]
+ * // ]
+ *
+ * mat1 = [['a', 'b', 'c'], [1, 2, 3], [1.1, 2.2, 3.3]]
+ * mat2 = [['x', 'y'], [-10.1, -20.2]]
+ * console.log(matConcat(mat1, mat2))
+ * // => [
+ * //   [ 'a', 'b', 'c', 'x', 'y' ],
+ * //   [ 1, 2, 3, -10.1, -20.2 ],
+ * //   [ 1.1, 2.2, 3.3, null, null ]
+ * // ]
+ *
+ * mat1 = [['a', 'b'], [1.1, 2.2]]
+ * mat2 = [['x', 'y', 'z'], [-1, -2, -3], [-10.1, -20.2, -30.3]]
+ * console.log(matConcat(mat1, mat2))
+ * // => [
+ * //   [ 'a', 'b', 'x', 'y', 'z' ],
+ * //   [ 1.1, 2.2, -1, -2, -3 ],
+ * //   [ null, null, -10.1, -20.2, -30.3 ]
+ * // ]
  *
  */
-function domAppend(eleParent, itemChild) {
+function matConcat(mat1, mat2) {
 
     //check
-    if (!isEle(eleParent)) {
-        return 'invalid eleParent'
+    if (!isarr(mat1)) {
+        return []
+    }
+    if (!isarr(mat2)) {
+        return []
+    }
+    if (size(mat1) === 0 &amp;&amp; size(mat2) === 0) {
+        return []
     }
 
-    if (isstr(itemChild)) {
-        eleParent.insertAdjacentHTML('beforeend', itemChild) //'beforeend': 在 element 裡面，最後一個子元素之後
-    }
-    else if (isEle(itemChild)) {
-        eleParent.appendChild(itemChild)
-    }
-    else {
-        return 'invalid itemChild'
+    //n1, cn1, n2, cn2
+    let n1 = size(mat1)
+    let cn1 = size(get(mat1, 0, []))
+    let n2 = size(mat2)
+    let cn2 = size(get(mat2, 0, []))
+
+    //mat
+    let mat = []
+    let n = Math.max(n1, n2)
+    for (let i = 0; i &lt; n; i++) {
+        let arr = []
+        let jj = -1
+        for (let j = 0; j &lt; cn1; j++) {
+            jj++
+            let v = get(mat1, `${i}.${j}`, null)
+            arr[jj] = v
+        }
+        for (let j = 0; j &lt; cn2; j++) {
+            jj++
+            let v = get(mat2, `${i}.${j}`, null)
+            arr[jj] = v
+        }
+        mat[i] = arr
     }
 
+    return mat
 }
 
 
-export default domAppend
+export default matConcat
 </code></pre>
         </article>
     </section>
