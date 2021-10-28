@@ -6,13 +6,14 @@ import cint from './cint.mjs'
 
 
 /**
- * 判斷任一字串陣列vtar內元素，是否「等於」任一字串陣列vhas內元素
+ * 於陣列arr內指定位置ind插入新陣列items
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrInsert.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Number|Object|Boolean|Array} vtar 輸入被查找的字串陣列或字串
- * @param {String|Number|Object|Boolean|Array} vhas 輸入查找字串陣列或字串
- * @returns {Boolean} 回傳判斷布林值
+ * @param {Array} arr 輸入原始陣列
+ * @param {Integer} ind 輸入插入指標
+ * @param {String|Number|Object|Boolean|Array} items 輸入欲插入的資料或陣列，非陣列資料都會自動轉陣列再插入
+ * @returns {Array} 回傳新陣列
  * @example
  *
  * let arr = [1, 2.5, '123']
