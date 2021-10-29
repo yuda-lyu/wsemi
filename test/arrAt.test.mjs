@@ -52,4 +52,100 @@ describe(`arrAt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input [], [2]`, function() {
+        let r = arrAt([], [2])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], ''`, function() {
+        let r = arrAt([], '')
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], []`, function() {
+        let r = arrAt([], [])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], {}`, function() {
+        let r = arrAt([], {})
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], null`, function() {
+        let r = arrAt([], null)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], undefined`, function() {
+        let r = arrAt([], undefined)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], ''`, function() {
+        let r = arrAt(['abc'], '')
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], []`, function() {
+        let r = arrAt(['abc'], [])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], {}`, function() {
+        let r = arrAt(['abc'], {})
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], null`, function() {
+        let r = arrAt(['abc'], null)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ['abc'], undefined`, function() {
+        let r = arrAt(['abc'], undefined)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input ''`, function() {
+        let r = arrAt('')
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input []`, function() {
+        let r = arrAt([])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input {}`, function() {
+        let r = arrAt({})
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input null`, function() {
+        let r = arrAt(null)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input undefined`, function() {
+        let r = arrAt(undefined)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
