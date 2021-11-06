@@ -33,6 +33,33 @@ describe(`arrSep`, function() {
         assert.strict.deepStrictEqual(r, o[k])
     })
 
+    k = 2
+    o[k] = [
+        ['a', 123],
+        ['xyz', 5.678],
+        [null, 'd'],
+        [[], { x: 'x1', y: 'y1' }]
+    ]
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(arr)}, { numCount: 2 }`, function() {
+        k = 2
+        let r = arrSep(arr, { numCount: 2 })
+        assert.strict.deepStrictEqual(r, o[k])
+    })
+
+    k = 3
+    o[k] = [
+        ['a', 'd'],
+        [123, []],
+        ['xyz', { x: 'x1', y: 'y1' }],
+        [5.678],
+        [null]
+    ]
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(arr)}, { numGroup: 5 }`, function() {
+        k = 3
+        let r = arrSep(arr, { numGroup: 5 })
+        assert.strict.deepStrictEqual(r, o[k])
+    })
+
     it(`should return [] when input ${JSON.stringify(arr)}, ''`, function() {
         let r = arrSep(arr, '')
         assert.strict.deepStrictEqual(r, [])
