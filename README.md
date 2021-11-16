@@ -23,6 +23,8 @@ To view some examples for more understanding, visit examples:
 
 > **colorConverter:** [ex-colorConverter.html](https://yuda-lyu.github.io/wsemi/examples/ex-colorConverter.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-colorConverter.html)]
 
+> **blob2b64:** [ex-blob2b64.html](https://yuda-lyu.github.io/wsemi/examples/ex-blob2b64.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-blob2b64.html)]
+
 > **domTooltip[with popper.js]:** [ex-domTooltip.html](https://yuda-lyu.github.io/wsemi/examples/ex-domTooltip.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domTooltip.html)]
 
 > **domShowImages:** [ex-domShowImages.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImages.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImages.html)]

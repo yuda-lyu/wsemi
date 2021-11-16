@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for blob2b64</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="border:1px solid #aaa;">
+
+        <div style="padding:10px; display:flex; align-items:center;">
+
+            <button style="display:block; height:100px;" onclick="uploadImg()">upload image</button>
+
+            <!-- 以檔案開啟時無法使用拖曳圖片功能 -->
+            <div id="panel" style="margin-left:10px; display:flex; align-items:center; justify-content:center; width:200px; height:100px; border:1px solid #ddd;">
+                <p>drop image</p>
+            </div>
+            
+        </div>
+
+        <div id="res" style="display:none; padding:0px 10px 10px 10px;">
+            
+            <div>
+                <div>img</div>
+                <div>
+                    <img style="max-height:100%; max-width:100%;" id="imgSrc" src="" />
+                </div>
+            </div>
+
+            <div style="padding-left:10px;">
+                <div>base64</div>
+                <textarea id="imgB64" rows="25" cols="50"></textarea>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function img2b64(file){
+
+            //b64
+            wsemi.blob2b64(file)
+                .then(function(b64){
+                    // console.log('b64',b64)
+
+                    document.querySelector('#'+'res').style.display='flex'
+                    document.querySelector('#'+'imgSrc').setAttribute('src',b64)
+                    document.querySelector('#'+'imgB64').innerHTML=b64
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+
+        }
+
+        function uploadImg(){
+            wsemi.domShowInputAndGetFiles()
+                .then(function(res){
+                    // console.log('res',res)
+
+                    //check
+                    if(wsemi.iseobj(res.errs)){
+                        throw new Error(res.errs)
+                    }
+
+                    //file
+                    let file=res.files[0]
+                    console.log('file',file)
+
+                    //img2b64
+                    img2b64(file)
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+        }
+
+    </script>
+
+    <script>
+
+        //domDropFiles
+        let ele = document.querySelector('#panel')
+        let ev = wsemi.domDropFiles(ele)
+        ev.on('getFiles', ({ files, filesTree, entries, cb }) => {
+            //console.log(files, filesTree, entries)
+            
+            //file
+            let file=files[0].file
+            console.log('file',file)
+
+            //img2b64
+            img2b64(file)
+
+            cb()
+        })
+        ev.on('dropIn', function() {
+            console.log('dropIn')
+        })
+        ev.on('dropOut', function() {
+            console.log('dropOut')
+        })
+        ev.on('error', function(err) {
+            console.log('error', err)
+        })
+
+    </script>
+
+</body>
+</html>
