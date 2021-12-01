@@ -1,4 +1,6 @@
 import each from 'lodash/each'
+import map from 'lodash/map'
+import trim from 'lodash/trim'
 import isestr from './isestr.mjs'
 import split from './split.mjs'
 
@@ -28,6 +30,7 @@ function sep(c, t) {
     }
 
     let s = split(c, t)
+    s = map(s, trim)
     let r = []
     each(s, function(v) {
         if (isestr(v)) {

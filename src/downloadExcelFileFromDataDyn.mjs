@@ -39,7 +39,7 @@ async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, 
     //若更新, 記得另有函數也使用xlsx也需要更新, 且example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/xlsx@0.17.3/dist/xlsx.full.min.js',
+            'https://cdn.jsdelivr.net/npm/xlsx@0.17.4/dist/xlsx.full.min.js',
         ]
     }
 

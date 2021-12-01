@@ -126,7 +126,7 @@ or
 [Optional] Add script for `xlsx`.
 > **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.17.3/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.17.4/dist/xlsx.full.min.js"></script>
 ```
 
 [Optional] Add link and script for `viewerjs`.
@@ -163,5 +163,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.33/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.34/dist/wsemi.umd.js"></script>
 ```

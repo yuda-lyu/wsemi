@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.33",
+  "version": "1.6.34",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -12,10 +12,10 @@
     "lodash": "^4.17.21",
     "seamless-scroll-polyfill": "^1.2.4",
     "tesseract.js": "^2.1.5",
-    "tippy.js": "^6.3.5",
+    "tippy.js": "^6.3.7",
     "ua-parser-js": "^1.0.2",
     "viewerjs": "^1.10.2",
-    "xlsx": "^0.17.3",
+    "xlsx": "^0.17.4",
     "xss": "^1.0.10"
   },
   "devDependencies": {
