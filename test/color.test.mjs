@@ -1732,4 +1732,78 @@ describe(`color`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    let gradient = {
+        0: 'rgb(255, 255, 255)',
+        0.2: 'rgb(254, 178, 76)',
+        0.4: 'rgb(252, 78, 42)',
+        0.6: 'rgb(220, 58, 38)',
+        0.8: 'rgb(200, 40, 23)',
+        1: 'rgba(180, 30, 60, 0.5)',
+    }
+    let fun = oc.interp(gradient)
+
+    // console.log('fun(0)', fun(0))
+    //fun(0) rgba(255, 255, 255, 1)
+    it(`should return 'rgba(255, 255, 255, 1)' when interp(gradient) input 0`, function() {
+        let r = fun(0)
+        let rr = 'rgba(255, 255, 255, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(0.1)', fun(0.1))
+    //fun(0.1) rgba(255, 217, 166, 1)
+    it(`should return 'rgba(255, 217, 166, 1)' when interp(gradient) input 0.1`, function() {
+        let r = fun(0.1)
+        let rr = 'rgba(255, 217, 166, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(0.2)', fun(0.2))
+    //fun(0.2) rgba(254, 178, 76, 1)
+    it(`should return 'rgba(254, 178, 76, 1)' when interp(gradient) input 0.2`, function() {
+        let r = fun(0.2)
+        let rr = 'rgba(254, 178, 76, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(0.8)', fun(0.8))
+    //fun(0.8) rgba(200, 40, 23, 1)
+    it(`should return 'rgba(200, 40, 23, 1)' when interp(gradient) input 0.8`, function() {
+        let r = fun(0.8)
+        let rr = 'rgba(200, 40, 23, 1)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(0.9)', fun(0.9))
+    //fun(0.9) rgba(190, 35, 42, 0.75)
+    it(`should return 'rgba(190, 35, 42, 0.75)' when interp(gradient) input 0.9`, function() {
+        let r = fun(0.9)
+        let rr = 'rgba(190, 35, 42, 0.75)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(1)', fun(1))
+    //fun(1) rgba(180, 30, 60, 0.5)
+    it(`should return 'rgba(180, 30, 60, 0.5)' when interp(gradient) input 1`, function() {
+        let r = fun(1)
+        let rr = 'rgba(180, 30, 60, 0.5)'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(2)', fun(2))
+    //fun(2) null
+    it(`should return null when interp(gradient) input 2`, function() {
+        let r = fun(2)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    // console.log('fun(-1)', fun(-1))
+    //fun(-1) null
+    it(`should return null when interp(gradient) input -1`, function() {
+        let r = fun(-1)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
