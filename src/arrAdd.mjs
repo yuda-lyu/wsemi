@@ -1,6 +1,7 @@
 import size from 'lodash/size'
 import each from 'lodash/each'
 import isarr from './isarr.mjs'
+import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 
 
@@ -21,7 +22,18 @@ function core(v1, v2) {
 
     let r = []
     each(v1, function(v, k) {
-        let t = cdbl(v1[k]) + cdbl(v2[k])
+        let t = null
+        let b1 = isnum(v1[k])
+        let b2 = isnum(v2[k])
+        if (b1 || b2) {
+            t = 0
+        }
+        if (b1) {
+            t += cdbl(v1[k])
+        }
+        if (b2) {
+            t += cdbl(v2[k])
+        }
         r.push(t)
     })
 

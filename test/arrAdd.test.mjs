@@ -10,6 +10,18 @@ describe(`arrAdd`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [12.1, 24.1, 36.1, 48.1] when input [1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1], [11, 22, 33, 44]`, function() {
+        let r = arrAdd([1, 2, 3, 4], [0.1, 0.1, 0.1, 0.1], [11, 22, 33, 44])
+        let rr = [12.1, 24.1, 36.1, 48.1]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [1.1, 2.1, 0.1, null] when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
+        let r = arrAdd([1, '2', null, null], [0.1, 0.1, 0.1, null])
+        let rr = [1.1, 2.1, 0.1, null]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [3, 5] when input [1, 2], [2, 3]`, function() {
         let r = arrAdd([1, 2], [2, 3])
         let rr = [3, 5]
