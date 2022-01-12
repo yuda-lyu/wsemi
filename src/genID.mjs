@@ -8,8 +8,6 @@ let radix = chars.length
 /**
  * 產生隨機id
  *
- * Depend on: {@link https://gist.github.com/Wind4/3baa40b26b89b686e4f2 Math.uuid.js}
- *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genID.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [len=32] 輸入uuid長度，為正整數，預設32
