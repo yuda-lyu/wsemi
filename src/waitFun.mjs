@@ -2,6 +2,7 @@ import get from 'lodash/get'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'
+import ispm from './ispm.mjs'
 
 
 /**
@@ -9,7 +10,7 @@ import ispint from './ispint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/waitFun.test.mjs Github}
  * @memberOf wsemi
- * @param {Function} f 輸入判斷用函數
+ * @param {Function} fun 輸入判斷用函數
  * @param {Object} opt 輸入設定物件，預設{}
  * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200
  * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000
@@ -30,8 +31,8 @@ import ispint from './ispint.mjs'
  *                 return i >= 2
  *             })
  *                 .then(function() {
- *                     console.log('t1 then')
- *                     ms.push('t1 then')
+ *                     console.log('test1 then')
+ *                     ms.push('test1 then')
  *                 })
  *
  *             setTimeout(function() {
@@ -46,26 +47,70 @@ import ispint from './ispint.mjs'
  *     // test1
  *     // waiting: 1
  *     // waiting: 2
- *     // t1 then
- *     // ["waiting: 1","waiting: 2","t1 then"]
+ *     // test1 then
+ *     // ["waiting: 1","waiting: 2","test1 then"]
+ *
+ *     function test2() {
+ *         let ms = []
+ *         let i = 0
+ *
+ *         let f = () => {
+ *             return new Promise((resolve, reject) => {
+ *                 setTimeout(function() {
+ *                     i++
+ *                     console.log('waiting: ' + i)
+ *                     ms.push('waiting: ' + i)
+ *                     resolve(i >= 2)
+ *                 }, 1100)
+ *             })
+ *         }
+ *
+ *         return waitFun(f)
+ *             .then(function() {
+ *                 console.log('test2 then')
+ *                 ms.push('test2 then')
+ *                 return ms
+ *             })
+ *
+ *     }
+ *     console.log('test2')
+ *     let r2 = await test2()
+ *     console.log(JSON.stringify(r2))
+ *     // test2
+ *     // waiting: 1
+ *     // waiting: 2
+ *     // test2 then
+ *     // ["waiting: 1","waiting: 2","test2 then"]
+ *     // waiting: 3
  *
  * }
  * topAsync().catch(() => {})
  *
  */
-function waitFun(f, opt = {}) {
+async function waitFun(fun, opt = {}) {
+    let r = null
 
     //pm
     let pm = genPm()
 
     //check
-    if (!isfun(f)) {
+    if (!isfun(fun)) {
         pm.reject('waitfunction需輸入函數f')
         return pm
     }
 
+    //func
+    let func = async () => {
+        let r = fun()
+        if (ispm(r)) {
+            r = await r
+        }
+        return r
+    }
+
     //immediate call
-    if (f() === true) {
+    r = await func()
+    if (r === true) {
         pm.resolve()
         return pm
     }
@@ -84,11 +129,12 @@ function waitFun(f, opt = {}) {
 
     //setInterval
     let n = 0
-    let t = setInterval(function() {
+    let t = setInterval(async() => {
         n += 1
         //console.log('waitFun: ', n)
 
-        if (f() === true) {
+        r = await func()
+        if (r === true) {
             //console.log('resolve', n)
             clearInterval(t)
             pm.resolve()
