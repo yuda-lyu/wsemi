@@ -1,3 +1,4 @@
+import isSymbol from 'lodash/isSymbol'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 
@@ -19,11 +20,21 @@ import isnum from './isnum.mjs'
 function cstr(v) {
 
     //check
-    if (!isestr(v) && !isnum(v)) {
+    if (!isestr(v) && !isnum(v) && !isSymbol(v)) {
         return ''
     }
 
-    let r = String(v)
+    let r = ''
+    try {
+        r = String(v)
+    }
+    catch (err) {
+    }
+    try {
+        r = v.toString()
+    }
+    catch (err) {
+    }
 
     return r
 }

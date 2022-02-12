@@ -1,16 +1,14 @@
 import get from 'lodash/get'
-import each from 'lodash/each'
-import set from 'lodash/set'
-import cloneDeep from 'lodash/cloneDeep'
-import omit from 'lodash/omit'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
 import isbol from './isbol.mjs'
-import iser from './iser.mjs'
+import iseobj from './iseobj.mjs'
+import composeTreeObjByArr from './composeTreeObjByArr.mjs'
+import composeTreeObjByObj from './composeTreeObjByObj.mjs'
 
 
 /**
- * 組合項目物件陣列成為樹狀物件
+ * 組合項目物件陣列或物件成為樹狀物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeTreeObj.test.mjs Github}
  * @memberOf wsemi
@@ -23,7 +21,412 @@ import iser from './iser.mjs'
  * @returns {Array} 回傳物件陣列
  * @example
  *
- * let data = [
+ * let r
+ *
+ * let obj = {
+ *     a: 1,
+ *     b: 12.3,
+ *     c: 'abc',
+ *     d: '45-de',
+ *     x: true,
+ *     y: null,
+ *     z: function() {},
+ *     e: [],
+ *     f: [
+ *         91,
+ *         912.3,
+ *         'abc',
+ *         '945-de',
+ *         true,
+ *         null,
+ *         function() {},
+ *         [
+ *             5,
+ *             54.3,
+ *             'xyz',
+ *         ]
+ *     ],
+ *     g: {},
+ *     h: {
+ *         ga: 81,
+ *         gb: 812.3,
+ *         gc: 'abc',
+ *         gd: '845-de',
+ *         ge: [
+ *             71,
+ *             712.3,
+ *             'abc',
+ *             '745-de',
+ *             true,
+ *             null,
+ *             function() {},
+ *         ],
+ *         gf: {
+ *             gfa: 61,
+ *             gfb: 612.3,
+ *             gfc: 'abc',
+ *             gfd: '645-de',
+ *             gfe: true,
+ *             gff: null,
+ *             gfg: function() {},
+ *         },
+ *         gx: true,
+ *         gy: null,
+ *         gz: function() {},
+ *     },
+ *     i: Symbol('foo'),
+ *     [Symbol('i-sym-key-a')]: 'i-sym-value',
+ *     [Symbol('i-sym-key-b')]: {
+ *         symfa: 61,
+ *         symfb: 612.3,
+ *         symfc: 'abc',
+ *         symfd: '645-de',
+ *         symfe: true,
+ *         symff: null,
+ *         symfg: function() {},
+ *     },
+ * }
+ * r = composeTreeObj(obj)
+ * console.log(JSON.stringify(r, null, 2))
+ * // => [
+ * //   {
+ * //     "id": "a",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": 1
+ * //   },
+ * //   {
+ * //     "id": "b",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": 12.3
+ * //   },
+ * //   {
+ * //     "id": "c",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": "abc"
+ * //   },
+ * //   {
+ * //     "id": "d",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": "45-de"
+ * //   },
+ * //   {
+ * //     "id": "x",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": true
+ * //   },
+ * //   {
+ * //     "id": "y",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": null
+ * //   },
+ * //   {
+ * //     "id": "z",
+ * //     "parentId": "",
+ * //     "type": "node"
+ * //   },
+ * //   {
+ * //     "id": "e",
+ * //     "parentId": "",
+ * //     "type": "array",
+ * //     "numOfChilren": 0
+ * //   },
+ * //   {
+ * //     "id": "f",
+ * //     "parentId": "",
+ * //     "type": "array",
+ * //     "numOfChilren": 8,
+ * //     "children": [
+ * //       {
+ * //         "id": "f-0",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": 91
+ * //       },
+ * //       {
+ * //         "id": "f-1",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": 912.3
+ * //       },
+ * //       {
+ * //         "id": "f-2",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": "abc"
+ * //       },
+ * //       {
+ * //         "id": "f-3",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": "945-de"
+ * //       },
+ * //       {
+ * //         "id": "f-4",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": true
+ * //       },
+ * //       {
+ * //         "id": "f-5",
+ * //         "parentId": "f",
+ * //         "type": "node",
+ * //         "text": null
+ * //       },
+ * //       {
+ * //         "id": "f-6",
+ * //         "parentId": "f",
+ * //         "type": "node"
+ * //       },
+ * //       {
+ * //         "id": "f-7",
+ * //         "parentId": "f",
+ * //         "type": "array",
+ * //         "numOfChilren": 3,
+ * //         "children": [
+ * //           {
+ * //             "id": "f-7-0",
+ * //             "parentId": "f-7",
+ * //             "type": "node",
+ * //             "text": 5
+ * //           },
+ * //           {
+ * //             "id": "f-7-1",
+ * //             "parentId": "f-7",
+ * //             "type": "node",
+ * //             "text": 54.3
+ * //           },
+ * //           {
+ * //             "id": "f-7-2",
+ * //             "parentId": "f-7",
+ * //             "type": "node",
+ * //             "text": "xyz"
+ * //           }
+ * //         ]
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "id": "g",
+ * //     "parentId": "",
+ * //     "type": "object",
+ * //     "numOfChilren": 0
+ * //   },
+ * //   {
+ * //     "id": "h",
+ * //     "parentId": "",
+ * //     "type": "object",
+ * //     "numOfChilren": 9,
+ * //     "children": [
+ * //       {
+ * //         "id": "h-ga",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": 81
+ * //       },
+ * //       {
+ * //         "id": "h-gb",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": 812.3
+ * //       },
+ * //       {
+ * //         "id": "h-gc",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": "abc"
+ * //       },
+ * //       {
+ * //         "id": "h-gd",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": "845-de"
+ * //       },
+ * //       {
+ * //         "id": "h-ge",
+ * //         "parentId": "h",
+ * //         "type": "array",
+ * //         "numOfChilren": 7,
+ * //         "children": [
+ * //           {
+ * //             "id": "h-ge-0",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": 71
+ * //           },
+ * //           {
+ * //             "id": "h-ge-1",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": 712.3
+ * //           },
+ * //           {
+ * //             "id": "h-ge-2",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": "abc"
+ * //           },
+ * //           {
+ * //             "id": "h-ge-3",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": "745-de"
+ * //           },
+ * //           {
+ * //             "id": "h-ge-4",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": true
+ * //           },
+ * //           {
+ * //             "id": "h-ge-5",
+ * //             "parentId": "h-ge",
+ * //             "type": "node",
+ * //             "text": null
+ * //           },
+ * //           {
+ * //             "id": "h-ge-6",
+ * //             "parentId": "h-ge",
+ * //             "type": "node"
+ * //           }
+ * //         ]
+ * //       },
+ * //       {
+ * //         "id": "h-gf",
+ * //         "parentId": "h",
+ * //         "type": "object",
+ * //         "numOfChilren": 7,
+ * //         "children": [
+ * //           {
+ * //             "id": "h-gf-gfa",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": 61
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gfb",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": 612.3
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gfc",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": "abc"
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gfd",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": "645-de"
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gfe",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": true
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gff",
+ * //             "parentId": "h-gf",
+ * //             "type": "node",
+ * //             "text": null
+ * //           },
+ * //           {
+ * //             "id": "h-gf-gfg",
+ * //             "parentId": "h-gf",
+ * //             "type": "node"
+ * //           }
+ * //         ]
+ * //       },
+ * //       {
+ * //         "id": "h-gx",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": true
+ * //       },
+ * //       {
+ * //         "id": "h-gy",
+ * //         "parentId": "h",
+ * //         "type": "node",
+ * //         "text": null
+ * //       },
+ * //       {
+ * //         "id": "h-gz",
+ * //         "parentId": "h",
+ * //         "type": "node"
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "id": "i",
+ * //     "parentId": "",
+ * //     "type": "node"
+ * //   },
+ * //   {
+ * //     "id": "Symbol(i-sym-key-a)",
+ * //     "parentId": "",
+ * //     "type": "node",
+ * //     "text": "i-sym-value"
+ * //   },
+ * //   {
+ * //     "id": "Symbol(i-sym-key-b)",
+ * //     "parentId": "",
+ * //     "type": "object",
+ * //     "numOfChilren": 7,
+ * //     "children": [
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfa",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": 61
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfb",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": 612.3
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfc",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": "abc"
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfd",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": "645-de"
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfe",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": true
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symff",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node",
+ * //         "text": null
+ * //       },
+ * //       {
+ * //         "id": "Symbol(i-sym-key-b)-symfg",
+ * //         "parentId": "Symbol(i-sym-key-b)",
+ * //         "type": "node"
+ * //       }
+ * //     ]
+ * //   }
+ * // ]
+ *
+ * let arr = [
  *     {
  *         id: 1,
  *         text: '1-a',
@@ -52,9 +455,8 @@ import iser from './iser.mjs'
  *         text: 'empty',
  *     },
  * ]
- * let r = composeTreeObj(data)
- * let cr = JSON.stringify(r)
- * console.log(cr)
+ * r = composeTreeObj(arr)
+ * console.log(JSON.stringify(r, null, 2))
  * // => [
  * //   {
  * //     "id": 1,
@@ -90,12 +492,10 @@ import iser from './iser.mjs'
  * // ]
  *
  */
-function composeTreeObj(items, opt = {}) {
-    let privateLevel = '$level'
-    let privateParents = '$parents'
+function composeTreeObj(inp, opt = {}) {
 
     //check
-    if (!isearr(items)) {
+    if (!isearr(inp) && !iseobj(inp)) {
         return []
     }
 
@@ -111,10 +511,28 @@ function composeTreeObj(items, opt = {}) {
         bindParent = 'parentId'
     }
 
+    //bindText
+    let bindText = get(opt, 'bindText', null)
+    if (!isestr(bindText)) {
+        bindText = 'text'
+    }
+
     //bindChildren
     let bindChildren = get(opt, 'bindChildren', null)
     if (!isestr(bindChildren)) {
         bindChildren = 'children'
+    }
+
+    //bindType
+    let bindType = get(opt, 'bindType', null)
+    if (!isestr(bindType)) {
+        bindType = 'type'
+    }
+
+    //bindNumOfChilren
+    let bindNumOfChilren = get(opt, 'bindNumOfChilren', null)
+    if (!isestr(bindNumOfChilren)) {
+        bindNumOfChilren = 'numOfChilren'
     }
 
     //saveExtProps
@@ -123,193 +541,26 @@ function composeTreeObj(items, opt = {}) {
         saveExtProps = false
     }
 
-    function addNodeLevel(items) {
-        let r = []
-
-        //cloneDeep
-        items = cloneDeep(items)
-
-        function addNodeForTop() {
-            let _items = []
-
-            each(items, (v, k) => {
-                if (iser(v[bindParent])) {
-                    //若不存在bindParent就代表頂層, 加入至r
-                    r.push({
-                        [privateLevel]: 0,
-                        [privateParents]: [],
-                        ...v,
-                    })
-                }
-                else {
-                    //非頂層項目物件, 加入至_items
-                    _items.push(v)
-                }
-            })
-            // console.log('_items a', _items)
-            // console.log('r a', r)
-
-            //re-save
-            items = _items
-
-        }
-
-        function addNodeInParent(p) {
-            let _items = []
-
-            each(items, (v, k) => {
-                let vbp = get(v, bindParent)
-                let pbk = get(p, bindKey)
-                if (vbp && pbk && (vbp === pbk)) {
-                    //若非頂層項目物件v的bindParent, 等於所傳入的父層物件p的bindKey, 就代表找到從屬, 加入至r
-
-                    //parentIDs
-                    let parentIDs = get(p, privateParents, [])
-                    parentIDs = cloneDeep(parentIDs)
-                    parentIDs.push(p[bindKey])
-
-                    //push
-                    r.push({
-                        [privateLevel]: p[privateLevel] + 1, //level加1
-                        [privateParents]: parentIDs, //儲存父層節點的bindKey
-                        ...v,
-                    })
-
-                }
-                else {
-                    //非頂層項目物件v非隸屬於父層物件p, 加入至_items
-                    _items.push(v)
-                }
-            })
-            // console.log('_items b', _items)
-            // console.log('r b', r)
-
-            //re-save
-            items = _items
-
-        }
-
-        //addNodeForTop
-        addNodeForTop()
-
-        //check
-        if (r.length === 0) {
-            return r
-        }
-
-        //建立非頂層節點關聯
-        let i = -1
-        while (true) {
-            i += 1
-
-            //check, 存取超過陣列長度
-            if (i > r.length - 1) {
-                break
-            }
-
-            //p
-            let p = r[i]
-
-            //addNodeInParent
-            addNodeInParent(p)
-
-            //check, 若已無非頂層物件則跳出
-            if (items.length === 0) {
-                break
-            }
-
-        }
-
-        return r
-    }
-
-    function buildTree(items) {
-        let r = []
-
-        function findParent(v) {
-            for (let i = 0; i < items.length; i++) {
-                let p = items[i]
-                if (v[bindParent] === p[bindKey]) {
-                    return p
-                }
-            }
-            return null
-        }
-
-        function omitProps(v) {
-            if (saveExtProps) {
-                return v
-            }
-            return omit(v, [privateLevel, privateParents])
-        }
-
-        //填入子節點至keyChildren欄位
-        let kp = {}
-        each(items, (v, k) => { //r為依照層級高低循序建立
-            if (v[privateLevel] === 0) {
-
-                //omitProps
-                let omv = omitProps(v)
-
-                //push
-                r.push(omv)
-
-                //save kp
-                kp[v[bindKey]] = [k] //頂層節點之指標k為keys內容
-                // console.log(k, 'r', cloneDeep(r))
-
-            }
-            else {
-                // console.log(k, 'v', cloneDeep(v))
-
-                //findParent
-                let p = findParent(v)
-                // console.log(k, 'p', cloneDeep(p))
-
-                //check, 找得到父層節點才處理
-                if (p !== null) {
-
-                    //keys
-                    let keys = kp[p[bindKey]]
-                    keys = [...keys, bindChildren]
-                    // console.log(k, 'keys', cloneDeep(keys))
-
-                    let cs = get(r, keys, [])
-                    // console.log(k, 'cs1', cloneDeep(cs))
-
-                    //omitProps
-                    let omv = omitProps(v)
-
-                    //push
-                    cs.push(omv)
-
-                    //save kp
-                    kp[v[bindKey]] = [...keys, cs.length - 1]
-                    // console.log(k, 'cs2', cloneDeep(cs))
-
-                    //set
-                    set(r, keys, cs)
-                    // console.log(k, 'r', cloneDeep(r))
-
-                }
-                else {
-                    console.log(`can not find parent for ${get(v, bindParent)}`)
-                }
-
-            }
+    let r
+    if (isearr(inp)) {
+        r = composeTreeObjByArr(inp, {
+            bindKey,
+            bindParent,
+            bindChildren,
+            saveExtProps,
         })
-
-        return r
     }
-
-    //cloneDeep
-    items = cloneDeep(items)
-
-    //addNodeLevel
-    items = addNodeLevel(items)
-
-    //buildTree
-    let r = buildTree(items)
+    else if (iseobj(inp)) {
+        r = composeTreeObjByObj(inp, {
+            bindKey,
+            bindParent,
+            bindText,
+            bindChildren,
+            bindType,
+            bindNumOfChilren,
+            saveExtProps,
+        })
+    }
 
     return r
 }
