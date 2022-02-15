@@ -1,27 +1,27 @@
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
-import isbol from './isbol.mjs'
 import iseobj from './iseobj.mjs'
-import composeTreeObjByArr from './composeTreeObjByArr.mjs'
-import composeTreeObjByObj from './composeTreeObjByObj.mjs'
+import isbol from './isbol.mjs'
+import flattenObj from './flattenObj.mjs'
+import composeToTree from './composeToTree.mjs'
 
 
 /**
- * 組合項目物件陣列或物件成為樹狀物件
+ * 展開物件陣列成為樹狀陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeTreeObj.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2tree.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} items 輸入項目物件陣列
+ * @param {Object} obj 輸入項目物件
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [bindKey='id'] 輸入項目物件識別用欄位字串，預設'id'
- * @param {String} [bindParent='parentId'] 輸入項目物件內存放父節點欄位字串，預設'parentId'
+ * @param {String} [bindKey='id'] 輸入識別用欄位字串，預設'id'
+ * @param {String} [bindParent='parentId'] 輸入存放父節點欄位字串，預設'parentId'
+ * @param {String} [bindText='value'] 輸入存放值欄位字串，預設'value'
  * @param {String} [bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
+ * @param {String} [bindType='type'] 輸入存放值種類欄位字串，預設'type'
+ * @param {String} [bindNumOfChilren='numOfChilren'] 輸入存放值為物件或陣列時所屬子節點數量欄位字串，預設'numOfChilren'
  * @param {Boolean} [saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
- * @returns {Array} 回傳物件陣列
+ * @returns {Array} 回傳樹狀陣列
  * @example
- *
- * let r
  *
  * let obj = {
  *     a: 1,
@@ -86,7 +86,9 @@ import composeTreeObjByObj from './composeTreeObjByObj.mjs'
  *         symfg: function() {},
  *     },
  * }
- * r = composeTreeObj(obj)
+ *
+ * let r
+ * r = obj2tree(obj)
  * console.log(JSON.stringify(r, null, 2))
  * // => [
  * //   {
@@ -426,76 +428,11 @@ import composeTreeObjByObj from './composeTreeObjByObj.mjs'
  * //   }
  * // ]
  *
- * let arr = [
- *     {
- *         id: 1,
- *         text: '1-a',
- *     },
- *     {
- *         id: 2,
- *         text: '2-b',
- *     },
- *     {
- *         id: 3,
- *         text: '3-c',
- *         parentId: 2,
- *     },
- *     {
- *         id: 4,
- *         text: '4-d',
- *         parentId: 2,
- *     },
- *     {
- *         id: 5,
- *         text: '5-e',
- *         parentId: 3,
- *     },
- *     {
- *         id: 6,
- *         text: 'empty',
- *     },
- * ]
- * r = composeTreeObj(arr)
- * console.log(JSON.stringify(r, null, 2))
- * // => [
- * //   {
- * //     "id": 1,
- * //     "text": "1-a"
- * //   },
- * //   {
- * //     "id": 2,
- * //     "text": "2-b",
- * //     "children": [
- * //       {
- * //         "id": 3,
- * //         "text": "3-c",
- * //         "parentId": 2,
- * //         "children": [
- * //           {
- * //             "id": 5,
- * //             "text": "5-e",
- * //             "parentId": 3
- * //           }
- * //         ]
- * //       },
- * //       {
- * //         "id": 4,
- * //         "text": "4-d",
- * //         "parentId": 2
- * //       }
- * //     ]
- * //   },
- * //   {
- * //     "id": 6,
- * //     "text": "empty"
- * //   }
- * // ]
- *
  */
-function composeTreeObj(inp, opt = {}) {
+function obj2tree(obj, opt = {}) {
 
     //check
-    if (!isearr(inp) && !iseobj(inp)) {
+    if (!iseobj(obj)) {
         return []
     }
 
@@ -541,29 +478,27 @@ function composeTreeObj(inp, opt = {}) {
         saveExtProps = false
     }
 
-    let r
-    if (isearr(inp)) {
-        r = composeTreeObjByArr(inp, {
-            bindKey,
-            bindParent,
-            bindChildren,
-            saveExtProps,
-        })
-    }
-    else if (iseobj(inp)) {
-        r = composeTreeObjByObj(inp, {
-            bindKey,
-            bindParent,
-            bindText,
-            bindChildren,
-            bindType,
-            bindNumOfChilren,
-            saveExtProps,
-        })
-    }
+    //flattenObj
+    let arrObj = flattenObj(obj, {
+        bindKey,
+        bindParent,
+        bindText,
+        bindType,
+        bindNumOfChilren,
+    })
+    // console.log('arrObj', arrObj)
 
-    return r
+    //composeToTree
+    let nodes = composeToTree(arrObj, {
+        bindKey,
+        bindParent,
+        bindChildren,
+        saveExtProps,
+    })
+    // console.log('nodes', nodes)
+
+    return nodes
 }
 
 
-export default composeTreeObj
+export default obj2tree

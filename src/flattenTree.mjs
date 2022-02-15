@@ -8,9 +8,9 @@ import isobj0 from './isobj0.mjs'
 
 
 /**
- * 展平樹狀物件陣列
+ * 展平樹狀物件或陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenTreeObj.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenTree.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|Object} data 輸入樹狀物件或陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
@@ -43,7 +43,7 @@ import isobj0 from './isobj0.mjs'
  *         },
  *     ],
  * }
- * let r1 = flattenTreeObj(data1)
+ * let r1 = flattenTree(data1)
  * console.log(JSON.stringify(r1))
  * // => {"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}
  *
@@ -67,12 +67,12 @@ import isobj0 from './isobj0.mjs'
  *         text: 'empty',
  *     },
  * ]
- * let r2 = flattenTreeObj(data2)
+ * let r2 = flattenTree(data2)
  * console.log(JSON.stringify(r2))
  * // => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]
  *
  */
-function flattenTreeObj(data, opt = {}) {
+function flattenTree(data, opt = {}) {
 
     //check
     if (isarr(data)) {
@@ -155,4 +155,4 @@ function flattenTreeObj(data, opt = {}) {
 }
 
 
-export default flattenTreeObj
+export default flattenTree

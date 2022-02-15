@@ -10,9 +10,9 @@ import iser from './iser.mjs'
 
 
 /**
- * 組合項目物件陣列或物件成為樹狀物件
+ * 組合項目物件陣列成為樹狀陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeTreeObjByArr.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeToTree.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} items 輸入項目物件陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
@@ -20,7 +20,7 @@ import iser from './iser.mjs'
  * @param {String} [bindParent='parentId'] 輸入項目物件內存放父節點欄位字串，預設'parentId'
  * @param {String} [bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
  * @param {Boolean} [saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
- * @returns {Array} 回傳物件陣列
+ * @returns {Array} 回傳樹狀陣列
  * @example
  *
  * let data = [
@@ -52,7 +52,7 @@ import iser from './iser.mjs'
  *         text: 'empty',
  *     },
  * ]
- * let r = composeTreeObjByArr(data)
+ * let r = composeToTree(data)
  * let cr = JSON.stringify(r)
  * console.log(cr)
  * // => [
@@ -90,7 +90,7 @@ import iser from './iser.mjs'
  * // ]
  *
  */
-function composeTreeObjByArr(items, opt = {}) {
+function composeToTree(items, opt = {}) {
     let privateLevel = '$level'
     let privateParents = '$parents'
 
@@ -315,4 +315,4 @@ function composeTreeObjByArr(items, opt = {}) {
 }
 
 
-export default composeTreeObjByArr
+export default composeToTree
