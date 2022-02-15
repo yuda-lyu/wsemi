@@ -2,7 +2,7 @@ import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import isbol from './isbol.mjs'
-import flattenObj from './flattenObj.mjs'
+import flattenToConn from './flattenToConn.mjs'
 import composeToTree from './composeToTree.mjs'
 
 
@@ -478,8 +478,8 @@ function obj2tree(obj, opt = {}) {
         saveExtProps = false
     }
 
-    //flattenObj
-    let arrObj = flattenObj(obj, {
+    //flattenToConn
+    let arrObj = flattenToConn(obj, {
         bindKey,
         bindParent,
         bindText,
