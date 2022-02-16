@@ -4,7 +4,7 @@ import flattenTree from '../src/flattenTree.mjs'
 
 describe(`flattenTree`, function() {
 
-    let data1 = {
+    let obj = {
         id: 1,
         data: '1-abc',
         children: [
@@ -28,17 +28,16 @@ describe(`flattenTree`, function() {
             },
         ],
     }
-    let cinp1 = JSON.stringify(data1)
-    let cout1 = `{"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}`
+    let crobj = `{"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}`
 
-    it(`should return ${cout1} when input ${cinp1}`, function() {
-        let r = flattenTree(data1)
+    it(`should return ${crobj} when input ${JSON.stringify(obj)}`, function() {
+        let r = flattenTree(obj)
         r = JSON.stringify(r)
-        let rr = cout1
+        let rr = crobj
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    let data2 = [
+    let arr = [
         {
             id: 1,
             text: '1x',
@@ -58,13 +57,12 @@ describe(`flattenTree`, function() {
             text: 'empty',
         },
     ]
-    let cinp2 = JSON.stringify(data2)
-    let cout2 = `[{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]`
+    let crarr = `[{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]`
 
-    it(`should return ${cout2} when input ${cinp2}`, function() {
-        let r = flattenTree(data2)
+    it(`should return ${crarr} when input ${JSON.stringify(arr)}`, function() {
+        let r = flattenTree(arr)
         r = JSON.stringify(r)
-        let rr = cout2
+        let rr = crarr
         assert.strict.deepStrictEqual(r, rr)
     })
 

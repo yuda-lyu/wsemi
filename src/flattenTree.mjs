@@ -19,7 +19,7 @@ import isobj0 from './isobj0.mjs'
  * @returns {Array} 回傳節點物件陣列
  * @example
  *
- * let data1 = { //obj
+ * let obj = {
  *     id: 1,
  *     data: '1-abc',
  *     children: [
@@ -43,11 +43,11 @@ import isobj0 from './isobj0.mjs'
  *         },
  *     ],
  * }
- * let r1 = flattenTree(data1)
- * console.log(JSON.stringify(r1))
+ * let crobj = flattenTree(obj)
+ * console.log(JSON.stringify(crobj))
  * // => {"id":1,"data":"1-abc","children":[{"id":2,"data":"2-def"},{"id":3,"data":"3-ghi","children":[{"id":4,"data":"4-jkl"}]},{"id":5,"data":"5-mno"}],"level":0,"nk":[0]}
  *
- * let data2 = [ //arr
+ * let arr = [
  *     {
  *         id: 1,
  *         text: '1x',
@@ -67,8 +67,8 @@ import isobj0 from './isobj0.mjs'
  *         text: 'empty',
  *     },
  * ]
- * let r2 = flattenTree(data2)
- * console.log(JSON.stringify(r2))
+ * let crarr = flattenTree(arr)
+ * console.log(JSON.stringify(crarr))
  * // => [{"id":1,"text":"1x","level":0,"nk":[0]},{"id":2,"text":"2y","children":[{"id":3,"text":"3z"}],"level":0,"nk":[1]},{"id":3,"text":"3z","level":1,"nk":[1,"children",0]},{"id":4,"text":"empty","level":0,"nk":[2]}]
  *
  */

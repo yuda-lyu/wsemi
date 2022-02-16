@@ -10,11 +10,11 @@ import iser from './iser.mjs'
 
 
 /**
- * 組合項目物件陣列成為樹狀陣列
+ * 組合關聯陣列成為樹狀陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeToTree.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} items 輸入項目物件陣列
+ * @param {Array} items 輸入關聯陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [bindKey='id'] 輸入項目物件識別用欄位字串，預設'id'
  * @param {String} [bindParent='parentId'] 輸入項目物件內存放父節點欄位字串，預設'parentId'
