@@ -1,6 +1,7 @@
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
+import isearr from './isearr.mjs'
 import isbol from './isbol.mjs'
 import flattenToConn from './flattenToConn.mjs'
 import composeToTree from './composeToTree.mjs'
@@ -9,7 +10,7 @@ import composeToTree from './composeToTree.mjs'
 /**
  * 展開物件陣列成為樹狀陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2tree.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/convertToTree.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} obj 輸入項目物件
  * @param {Object} [opt={}] 輸入設定物件，預設{}
@@ -88,7 +89,7 @@ import composeToTree from './composeToTree.mjs'
  * }
  *
  * let r
- * r = obj2tree(obj)
+ * r = convertToTree(obj)
  * console.log(JSON.stringify(r, null, 2))
  * // => [
  * //   {
@@ -429,10 +430,10 @@ import composeToTree from './composeToTree.mjs'
  * // ]
  *
  */
-function obj2tree(obj, opt = {}) {
+function convertToTree(obj, opt = {}) {
 
     //check
-    if (!iseobj(obj)) {
+    if (!iseobj(obj) && !isearr(obj)) {
         return []
     }
 
@@ -501,4 +502,4 @@ function obj2tree(obj, opt = {}) {
 }
 
 
-export default obj2tree
+export default convertToTree
