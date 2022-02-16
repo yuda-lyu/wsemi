@@ -13747,7 +13747,7 @@ console.log(cr)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="convertToTree.mjs.html">convertToTree.mjs</a>, <a href="convertToTree.mjs.html#line892">line 892</a>
+        <a href="convertToTree.mjs.html">convertToTree.mjs</a>, <a href="convertToTree.mjs.html#line901">line 901</a>
     </li></ul></dd>
     
 
@@ -14330,335 +14330,344 @@ r = convertToTree(arr)
 console.log('convertToTree arr', JSON.stringify(r, null, 2))
 // =&gt; convertToTree arr [
 //   {
-//     "id": "0",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 0,
-//     "text": 91
-//   },
-//   {
-//     "id": "1",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 1,
-//     "text": 912.3
-//   },
-//   {
-//     "id": "2",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 2,
-//     "text": "abc"
-//   },
-//   {
-//     "id": "3",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 3,
-//     "text": "945-de"
-//   },
-//   {
-//     "id": "4",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 4,
-//     "text": true
-//   },
-//   {
-//     "id": "5",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 5,
-//     "text": null
-//   },
-//   {
-//     "id": "6",
-//     "parentId": "",
-//     "type": "node",
-//     "key": 6
-//   },
-//   {
-//     "id": "7",
+//     "id": "root",
 //     "parentId": "",
 //     "type": "array",
-//     "key": 7,
-//     "numOfChilren": 4,
+//     "key": "root",
+//     "numOfChilren": 9,
 //     "children": [
 //       {
-//         "id": "7-0",
-//         "parentId": "7",
+//         "id": "root-0",
+//         "parentId": "root",
 //         "type": "node",
 //         "key": 0,
-//         "text": 5
+//         "text": 91
 //       },
 //       {
-//         "id": "7-1",
-//         "parentId": "7",
+//         "id": "root-1",
+//         "parentId": "root",
 //         "type": "node",
 //         "key": 1,
-//         "text": 54.3
+//         "text": 912.3
 //       },
 //       {
-//         "id": "7-2",
-//         "parentId": "7",
+//         "id": "root-2",
+//         "parentId": "root",
 //         "type": "node",
 //         "key": 2,
-//         "text": "xyz"
+//         "text": "abc"
 //       },
 //       {
-//         "id": "7-3",
-//         "parentId": "7",
-//         "type": "object",
+//         "id": "root-3",
+//         "parentId": "root",
+//         "type": "node",
 //         "key": 3,
-//         "numOfChilren": 1,
+//         "text": "945-de"
+//       },
+//       {
+//         "id": "root-4",
+//         "parentId": "root",
+//         "type": "node",
+//         "key": 4,
+//         "text": true
+//       },
+//       {
+//         "id": "root-5",
+//         "parentId": "root",
+//         "type": "node",
+//         "key": 5,
+//         "text": null
+//       },
+//       {
+//         "id": "root-6",
+//         "parentId": "root",
+//         "type": "node",
+//         "key": 6
+//       },
+//       {
+//         "id": "root-7",
+//         "parentId": "root",
+//         "type": "array",
+//         "key": 7,
+//         "numOfChilren": 4,
 //         "children": [
 //           {
-//             "id": "7-3-gf",
-//             "parentId": "7-3",
+//             "id": "root-7-0",
+//             "parentId": "root-7",
+//             "type": "node",
+//             "key": 0,
+//             "text": 5
+//           },
+//           {
+//             "id": "root-7-1",
+//             "parentId": "root-7",
+//             "type": "node",
+//             "key": 1,
+//             "text": 54.3
+//           },
+//           {
+//             "id": "root-7-2",
+//             "parentId": "root-7",
+//             "type": "node",
+//             "key": 2,
+//             "text": "xyz"
+//           },
+//           {
+//             "id": "root-7-3",
+//             "parentId": "root-7",
 //             "type": "object",
-//             "key": "gf",
+//             "key": 3,
+//             "numOfChilren": 1,
+//             "children": [
+//               {
+//                 "id": "root-7-3-gf",
+//                 "parentId": "root-7-3",
+//                 "type": "object",
+//                 "key": "gf",
+//                 "numOfChilren": 7,
+//                 "children": [
+//                   {
+//                     "id": "root-7-3-gf-gfa",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfa",
+//                     "text": 61
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gfb",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfb",
+//                     "text": 612.3
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gfc",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfc",
+//                     "text": "abc"
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gfd",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfd",
+//                     "text": "645-de"
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gfe",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfe",
+//                     "text": true
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gff",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gff",
+//                     "text": null
+//                   },
+//                   {
+//                     "id": "root-7-3-gf-gfg",
+//                     "parentId": "root-7-3-gf",
+//                     "type": "node",
+//                     "key": "gfg"
+//                   }
+//                 ]
+//               }
+//             ]
+//           }
+//         ]
+//       },
+//       {
+//         "id": "root-8",
+//         "parentId": "root",
+//         "type": "object",
+//         "key": 8,
+//         "numOfChilren": 2,
+//         "children": [
+//           {
+//             "id": "root-8-h",
+//             "parentId": "root-8",
+//             "type": "object",
+//             "key": "h",
+//             "numOfChilren": 8,
+//             "children": [
+//               {
+//                 "id": "root-8-h-ga",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "ga",
+//                 "text": 81
+//               },
+//               {
+//                 "id": "root-8-h-gb",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gb",
+//                 "text": 812.3
+//               },
+//               {
+//                 "id": "root-8-h-gc",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gc",
+//                 "text": "abc"
+//               },
+//               {
+//                 "id": "root-8-h-gd",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gd",
+//                 "text": "845-de"
+//               },
+//               {
+//                 "id": "root-8-h-ge",
+//                 "parentId": "root-8-h",
+//                 "type": "array",
+//                 "key": "ge",
+//                 "numOfChilren": 7,
+//                 "children": [
+//                   {
+//                     "id": "root-8-h-ge-0",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 0,
+//                     "text": 71
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-1",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 1,
+//                     "text": 712.3
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-2",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 2,
+//                     "text": "abc"
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-3",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 3,
+//                     "text": "745-de"
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-4",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 4,
+//                     "text": true
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-5",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 5,
+//                     "text": null
+//                   },
+//                   {
+//                     "id": "root-8-h-ge-6",
+//                     "parentId": "root-8-h-ge",
+//                     "type": "node",
+//                     "key": 6
+//                   }
+//                 ]
+//               },
+//               {
+//                 "id": "root-8-h-gx",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gx",
+//                 "text": true
+//               },
+//               {
+//                 "id": "root-8-h-gy",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gy",
+//                 "text": null
+//               },
+//               {
+//                 "id": "root-8-h-gz",
+//                 "parentId": "root-8-h",
+//                 "type": "node",
+//                 "key": "gz"
+//               }
+//             ]
+//           },
+//           {
+//             "id": "root-8-i",
+//             "parentId": "root-8",
+//             "type": "node",
+//             "key": "i"
+//           },
+//           {
+//             "id": "root-8-Symbol(i-sym-key-a)",
+//             "parentId": "root-8",
+//             "type": "node",
+//             "text": "i-sym-value"
+//           },
+//           {
+//             "id": "root-8-Symbol(i-sym-key-b)",
+//             "parentId": "root-8",
+//             "type": "object",
 //             "numOfChilren": 7,
 //             "children": [
 //               {
-//                 "id": "7-3-gf-gfa",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfa",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfa",
+//                 "key": "symfa",
 //                 "text": 61
 //               },
 //               {
-//                 "id": "7-3-gf-gfb",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfb",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfb",
+//                 "key": "symfb",
 //                 "text": 612.3
 //               },
 //               {
-//                 "id": "7-3-gf-gfc",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfc",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfc",
+//                 "key": "symfc",
 //                 "text": "abc"
 //               },
 //               {
-//                 "id": "7-3-gf-gfd",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfd",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfd",
+//                 "key": "symfd",
 //                 "text": "645-de"
 //               },
 //               {
-//                 "id": "7-3-gf-gfe",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfe",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfe",
+//                 "key": "symfe",
 //                 "text": true
 //               },
 //               {
-//                 "id": "7-3-gf-gff",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symff",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gff",
+//                 "key": "symff",
 //                 "text": null
 //               },
 //               {
-//                 "id": "7-3-gf-gfg",
-//                 "parentId": "7-3-gf",
+//                 "id": "root-8-Symbol(i-sym-key-b)-symfg",
+//                 "parentId": "root-8-Symbol(i-sym-key-b)",
 //                 "type": "node",
-//                 "key": "gfg"
+//                 "key": "symfg"
 //               }
 //             ]
-//           }
-//         ]
-//       }
-//     ]
-//   },
-//   {
-//     "id": "8",
-//     "parentId": "",
-//     "type": "object",
-//     "key": 8,
-//     "numOfChilren": 2,
-//     "children": [
-//       {
-//         "id": "8-h",
-//         "parentId": "8",
-//         "type": "object",
-//         "key": "h",
-//         "numOfChilren": 8,
-//         "children": [
-//           {
-//             "id": "8-h-ga",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "ga",
-//             "text": 81
-//           },
-//           {
-//             "id": "8-h-gb",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gb",
-//             "text": 812.3
-//           },
-//           {
-//             "id": "8-h-gc",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gc",
-//             "text": "abc"
-//           },
-//           {
-//             "id": "8-h-gd",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gd",
-//             "text": "845-de"
-//           },
-//           {
-//             "id": "8-h-ge",
-//             "parentId": "8-h",
-//             "type": "array",
-//             "key": "ge",
-//             "numOfChilren": 7,
-//             "children": [
-//               {
-//                 "id": "8-h-ge-0",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 0,
-//                 "text": 71
-//               },
-//               {
-//                 "id": "8-h-ge-1",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 1,
-//                 "text": 712.3
-//               },
-//               {
-//                 "id": "8-h-ge-2",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 2,
-//                 "text": "abc"
-//               },
-//               {
-//                 "id": "8-h-ge-3",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 3,
-//                 "text": "745-de"
-//               },
-//               {
-//                 "id": "8-h-ge-4",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 4,
-//                 "text": true
-//               },
-//               {
-//                 "id": "8-h-ge-5",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 5,
-//                 "text": null
-//               },
-//               {
-//                 "id": "8-h-ge-6",
-//                 "parentId": "8-h-ge",
-//                 "type": "node",
-//                 "key": 6
-//               }
-//             ]
-//           },
-//           {
-//             "id": "8-h-gx",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gx",
-//             "text": true
-//           },
-//           {
-//             "id": "8-h-gy",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gy",
-//             "text": null
-//           },
-//           {
-//             "id": "8-h-gz",
-//             "parentId": "8-h",
-//             "type": "node",
-//             "key": "gz"
-//           }
-//         ]
-//       },
-//       {
-//         "id": "8-i",
-//         "parentId": "8",
-//         "type": "node",
-//         "key": "i"
-//       },
-//       {
-//         "id": "8-Symbol(i-sym-key-a)",
-//         "parentId": "8",
-//         "type": "node",
-//         "text": "i-sym-value"
-//       },
-//       {
-//         "id": "8-Symbol(i-sym-key-b)",
-//         "parentId": "8",
-//         "type": "object",
-//         "numOfChilren": 7,
-//         "children": [
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfa",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfa",
-//             "text": 61
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfb",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfb",
-//             "text": 612.3
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfc",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfc",
-//             "text": "abc"
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfd",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfd",
-//             "text": "645-de"
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfe",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfe",
-//             "text": true
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symff",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symff",
-//             "text": null
-//           },
-//           {
-//             "id": "8-Symbol(i-sym-key-b)-symfg",
-//             "parentId": "8-Symbol(i-sym-key-b)",
-//             "type": "node",
-//             "key": "symfg"
 //           }
 //         ]
 //       }
@@ -72696,7 +72705,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Wed Feb 16 2022 10:52:45 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.7</a> on Wed Feb 16 2022 15:17:25 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -72717,7 +72726,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuzzball/dist/fuzzball.umd.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.44/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.45/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
