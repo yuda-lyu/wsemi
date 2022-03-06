@@ -302,9 +302,6 @@ function composeToTree(items, opt = {}) {
         return r
     }
 
-    //cloneDeep
-    items = cloneDeep(items)
-
     //addNodeLevel
     items = addNodeLevel(items)
 

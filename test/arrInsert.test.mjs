@@ -4,6 +4,12 @@ import arrInsert from '../src/arrInsert.mjs'
 
 describe(`arrInsert`, function() {
 
+    it(`should return ['abc'] when input [], 0, 'abc'`, function() {
+        let r = arrInsert([], 0, 'abc')
+        let rr = ['abc']
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return ['abc', 1, 2.5, '123'] when input [1, 2.5, '123'], 0, 'abc'`, function() {
         let r = arrInsert([1, 2.5, '123'], 0, 'abc')
         let rr = ['abc', 1, 2.5, '123']

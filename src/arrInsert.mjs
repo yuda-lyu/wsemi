@@ -1,6 +1,5 @@
 import size from 'lodash/size'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
 import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'
 
@@ -18,6 +17,10 @@ import cint from './cint.mjs'
  *
  * let arr = [1, 2.5, '123']
  * let r
+ *
+ * r = arrInsert([], 0, 'abc')
+ * console.log(r)
+ * // => [ 'abc' ]
  *
  * r = arrInsert(arr, 0, 'abc')
  * console.log(r)
@@ -47,7 +50,7 @@ import cint from './cint.mjs'
 function arrInsert(arr, ind, items) {
 
     //check arr
-    if (!isearr(arr)) {
+    if (!isarr(arr)) {
         return []
     }
 
