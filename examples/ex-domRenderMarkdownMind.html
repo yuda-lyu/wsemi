@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domRenderMarkdownMind(markmap)</title>
+    
+    <!-- @babel/polyfill已廢棄, 因markmap不支援IE11故不須引用 -->
+    <script nomodule _src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.4.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js"></script>
+    
+    <script src="../dist/wsemi.umd.js"></script>
+
+</head>
+<body style="margin:0px; padding:0px;">
+
+    <div style="display:flex; padding:10px;">
+
+        <div>
+            <textarea id="markdown" style="width:500px; height:calc( 96vh - 4px );" oninput="rdr()">
+# markmap
+
+## Links
+
+- <https://markmap.js.org/>
+- [GitHub](https://github.com/gera2ld/markmap)
+
+## Related
+
+- [coc-markmap](https://github.com/gera2ld/coc-markmap)
+- [gatsby-remark-markmap](https://github.com/gera2ld/gatsby-remark-markmap)
+
+## Features
+
+- links
+- **inline** ~~text~~ *styles*
+- multiline
+    text
+
+            </textarea>
+        </div>
+
+        <div style="padding-left:10px;"></div>
+    
+        <div style="border:1px solid #ddd;">
+            <svg id="markmap"></svg>  
+        </div>
+    
+    </div>
+    
+    <script>
+
+        function resize(){
+            let ele = document.querySelector('#markmap')
+            ele.style.width=`${window.innerWidth-540}px`
+            ele.style.height=`${window.innerHeight*0.96}px`
+        }
+
+        function rdr(){
+            // console.log('rdr')
+
+            let ele = document.querySelector('#markmap')
+            // console.log('ele', ele)
+
+            let markdown = document.querySelector('#markdown').value
+            // console.log('markdown',markdown)
+
+            //vmm
+            if(vmm===null){
+
+                //domRenderMarkdownMind
+                vmm = wsemi.domRenderMarkdownMind(ele, markdown)
+                // console.log('vmm',vmm)
+
+            }
+            else {
+                            
+                //transMarkdown
+                let { root } = vmm.transMarkdown(markdown)
+                // console.log('root', root, 'features', features)
+                
+                //refresh(setData)
+                vmm.setData(root)
+
+                //fit
+                // vmm.fit()
+
+            }
+
+        }
+
+    </script>
+
+    <script>
+        let vmm = null
+
+        //first & addEventListener resize
+        resize()
+        window.onresize = resize
+
+        //first rdr
+        rdr()
+
+    </script>
+
+</body>
+</html>

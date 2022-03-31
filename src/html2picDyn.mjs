@@ -14,7 +14,7 @@ import html2pic from './html2pic.mjs'
  * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
  * @param {String} [opt.picType='image/jpeg'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，預設'image/jpeg'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳產出圖片，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
@@ -30,8 +30,8 @@ async function html2picDyn(ele, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js',
-            'https://cdn.jsdelivr.net/npm/html2canvas@1.3.2/dist/html2canvas.min.js',
+            'https://cdn.jsdelivr.net/npm/canvg@4.0.0/lib/umd.js',
+            'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
         ]
     }
 

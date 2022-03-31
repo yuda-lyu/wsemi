@@ -4,7 +4,7 @@ import domConvertToPic from './domConvertToPic.mjs'
 
 
 /**
- * 前端DOM元素圖片，採用動態加載技術
+ * 前端DOM元素轉圖片，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domConvertToPicDyn.test.mjs Github}
  * @memberOf wsemi
@@ -14,7 +14,7 @@ import domConvertToPic from './domConvertToPic.mjs'
  * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
  * @param {String} [opt.picType='image/png'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，使用'image/jpeg'時若無背景預設為黑色，預設'image/png'
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Promise} 回傳Promise，resolve回傳使用者瀏覽器資訊物件，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳產出圖片，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
@@ -30,7 +30,7 @@ async function domConvertToPicDyn(ele, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js',
+            'https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.js',
         ]
     }
 

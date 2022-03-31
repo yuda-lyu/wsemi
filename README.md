@@ -35,6 +35,10 @@ To view some examples for more understanding, visit examples:
 
 > **domConvertToPicDyn[dynamic import]:** [ex-domConvertToPicDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPicDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPicDyn.html)]
 
+> **domRenderMarkdownMind:** [ex-domRenderMarkdownMind.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMind.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMind.html)]
+
+> **domRenderMarkdownMindDyn[dynamic import]:** [ex-domRenderMarkdownMindDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMindDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMindDyn.html)]
+
 > **domScrollIntoView:** [ex-domScrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollIntoView.html)]
 
 > **domScrollTo:** [ex-domScrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollTo.html)]
@@ -139,14 +143,22 @@ or
 [Optional] Add script for `html2canvas`.
 > **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
 ```alias
-<script nomodule src="https://cdn.jsdelivr.net/npm/canvg@3.0.7/lib/umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.3.2/dist/html2canvas.min.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/canvg@4.0.0/lib/umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 ```
 
 [Optional] Add script for `html-to-image`.
 > **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.7.0/dist/html-to-image.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.js"></script>
+```
+
+[Optional] Add script for `markmap`.
+> **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function. markmap does not support IE11 and Safari.
+```alias
+<script src="https://cdn.jsdelivr.net/npm/d3@7.4.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js"></script>
 ```
 
 [Optional] Add script for `htmlparser`.
@@ -163,5 +175,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.47/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.48/dist/wsemi.umd.js"></script>
 ```
