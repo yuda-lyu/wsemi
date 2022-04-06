@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.48",
+  "version": "1.6.49",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -16,7 +16,7 @@
     "ua-parser-js": "^1.0.2",
     "viewerjs": "^1.10.2",
     "xlsx": "^0.17.4",
-    "xss": "^1.0.10"
+    "xss": "^1.0.11"
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.10",

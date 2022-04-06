@@ -69,12 +69,12 @@
 
                 //domRenderMarkdownMindDyn
                 wsemi.domRenderMarkdownMindDyn(ele, markdown)
-                    .then(function(res){
+                    .then((res)=>{
                         vmm = res
                         // console.log('vmm',vmm)
                         document.querySelector('#markmapLoading').style.display='none'
                     })
-                    .catch(function(err){
+                    .catch((err)=>{
                         console.log(err)
                     })
 

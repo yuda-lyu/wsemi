@@ -161,6 +161,14 @@ or
 <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js"></script>
 ```
 
+[Optional] Add link and script for `diff` and `diff2html`.
+> **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
+```alias
+<script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/css/diff2html.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/js/diff2html.min.js"></script>
+```
+
 [Optional] Add script for `htmlparser`.
 > **Note:** Include script when using `html2str` function, and don't include script when using `html2strDyn` function.
 ```alias
@@ -175,5 +183,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.48/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.49/dist/wsemi.umd.js"></script>
 ```

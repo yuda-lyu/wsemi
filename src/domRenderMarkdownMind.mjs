@@ -17,7 +17,7 @@ function getMarkmap() {
  * @param {HTMLElement} ele 輸入元素
  * @param {String} markdown 輸入markdown字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @returns {Promise} 回傳Promise，resolve回傳markmap產生結果，reject回傳錯誤訊息
+ * @returns {Object} 回傳Markmap.create後物件vmm，並於其內添加transMarkdown函數，可針對變更後之markdown重新計算取得結果內屬性root資訊，並再使用vmm.setData(root)可達到差異更新功能
  * @example
  * need test in browser
  *
@@ -44,10 +44,9 @@ function getMarkmap() {
  *   text
  *
  * `
- * domRenderMarkdownMind(ele, markdown)
- *     .then((res)=>{
- *         // => { root, features, styles, scripts }
- *     })
+ * let r = domRenderMarkdownMind(ele, markdown)
+ * console.log(r)
+ * // => { root, features, styles, scripts }
  *
  */
 function domRenderMarkdownMind(ele, markdown, opt = {}) {
