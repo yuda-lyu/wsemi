@@ -1,4 +1,4 @@
-import htmlparser from 'htmlparser'
+import htmlparser from 'htmlparser' //要能於nodejs下運行, 故不使用瀏覽器動態加載
 import each from 'lodash/each'
 import join from 'lodash/join'
 import size from 'lodash/size'

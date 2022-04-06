@@ -12,19 +12,19 @@ let ltfsSrc = getFiles(fdSrc)
 ltfsSrc = _.filter(ltfsSrc, (v) => {
     return v.substring(0, 1) !== '_'
 })
+ltfsSrc = _.filter(ltfsSrc, (v) => {
+    return v !== 'index.mjs'
+})
 ltfsSrc = _.map(ltfsSrc, (v) => {
     return v.replace('.mjs', '')
 })
-ltfsSrc = _.filter(ltfsSrc, (v) => {
-    return v.indexOf('index.mjs') < 0
-})
-console.log('size ltfsSrc', _.size(ltfsSrc))
+// console.log('size ltfsSrc', _.size(ltfsSrc))
 
 let ltfsTest = getFiles(fdTest)
 ltfsTest = _.map(ltfsTest, (v) => {
     return v.replace('.test.mjs', '')
 })
-console.log('size ltfsTest', _.size(ltfsTest))
+// console.log('size ltfsTest', _.size(ltfsTest))
 
 //diff
 let ltfs = [...ltfsSrc, ...ltfsTest]
@@ -35,7 +35,13 @@ _.each(gs, (v, k) => {
         r.push(`${k}`)
     }
 })
-console.log(r)
+if (_.size(r) === 0) {
+    console.log('matched')
+}
+else {
+    console.log(r)
+}
+
 
 //node --experimental-modules --es-module-specifier-resolution=node toolg/checkTest.mjs
 

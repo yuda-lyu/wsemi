@@ -151,13 +151,13 @@ or
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 ```
 
-[Optional] Add script for `html-to-image`.
+[Optional] Add script for `html-to-image`. It does not support IE11.
 > **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.js"></script>
 ```
 
-[Optional] Add script for `markmap`.
+[Optional] Add script for `markmap`. It does not support IE11.
 > **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function. markmap does not support IE11 and Safari.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/d3@7.4.0/dist/d3.min.js"></script>
@@ -165,7 +165,7 @@ or
 <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js"></script>
 ```
 
-[Optional] Add link and script for `diff` and `diff2html`.
+[Optional] Add link and script for `diff` and `diff2html`. It does not support IE11.
 > **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
@@ -187,5 +187,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.49/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.50/dist/wsemi.umd.js"></script>
 ```

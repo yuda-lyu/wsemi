@@ -1,4 +1,4 @@
-import tesseract from 'tesseract.js'
+import tesseract from 'tesseract.js' //要能於nodejs下運行, 故不使用瀏覽器動態加載
 import get from 'lodash/get'
 import isestr from './isestr.mjs'
 import getGlobal from './getGlobal.mjs'
