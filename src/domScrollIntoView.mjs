@@ -1,4 +1,4 @@
-import { elementScrollIntoView } from 'seamless-scroll-polyfill/dist/esm/index.js'
+import { polyfill } from 'seamless-scroll-polyfill'
 import isEle from './isEle.mjs'
 import isobj from './isobj.mjs'
 import isIE from './isIE.mjs'
@@ -34,11 +34,13 @@ function domScrollIntoView(ele, opt = {}) {
 
     //call
     if (isIE()) {
-        elementScrollIntoView(ele, useOpt) //IE11
+        polyfill() //IE11, 不確定是否有偵測不重複加載機制, 為支援IE11暫時這樣處理
+        // elementScrollIntoView(ele, useOpt) //IE11
     }
     else {
-        ele.scrollIntoView(useOpt)
+        // ele.scrollIntoView(useOpt)
     }
+    ele.scrollIntoView(useOpt)
 
 }
 
