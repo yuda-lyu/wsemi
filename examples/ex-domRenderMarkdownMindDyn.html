@@ -7,7 +7,7 @@
     <!-- @babel/polyfill已廢棄, 因markmap不支援IE11故不須引用 -->
     <script nomodule _src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.48/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.49/dist/wsemi.umd.js"></script>
 
 </head>
 <body style="margin:0px; padding:0px;">
@@ -69,12 +69,12 @@
 
                 //domRenderMarkdownMindDyn
                 wsemi.domRenderMarkdownMindDyn(ele, markdown)
-                    .then(function(res){
+                    .then((res)=>{
                         vmm = res
                         // console.log('vmm',vmm)
                         document.querySelector('#markmapLoading').style.display='none'
                     })
-                    .catch(function(err){
+                    .catch((err)=>{
                         console.log(err)
                     })
 
