@@ -26,7 +26,7 @@ function strleft(c, n) {
         return ''
     }
 
-    return c.substr(0, n)
+    return c.substring(0, n)
 }
 
 

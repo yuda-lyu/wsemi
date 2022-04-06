@@ -39,6 +39,10 @@ To view some examples for more understanding, visit examples:
 
 > **domRenderMarkdownMindDyn[dynamic import]:** [ex-domRenderMarkdownMindDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMindDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMindDyn.html)]
 
+> **domCompareText:** [ex-domCompareText.html](https://yuda-lyu.github.io/wsemi/examples/ex-domCompareText.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domCompareText.html)]
+
+> **domCompareTextDyn[dynamic import]:** [ex-domCompareTextDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domCompareTextDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domCompareTextDyn.html)]
+
 > **domScrollIntoView:** [ex-domScrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollIntoView.html)]
 
 > **domScrollTo:** [ex-domScrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollTo.html)]
