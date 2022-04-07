@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.53",
+  "version": "1.6.54",
   "description": "A support package for web developer.",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.10",
-    "w-package-tools": "^1.0.63"
+    "w-package-tools": "^1.0.65"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
