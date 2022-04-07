@@ -8,8 +8,8 @@ describe(`alive`, function() {
         return new Promise((resolve, reject) => {
             let ms = []
 
-            let oAL = alive(1500)
-            let t = Date.now()
+            let oAL = alive({ timeAlive: 1500 })
+            // let t = Date.now()
 
             let a = { data: 123 }
             let b = { data: '34.56' }

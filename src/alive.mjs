@@ -1,11 +1,12 @@
+import get from 'lodash/get'
 import each from 'lodash/each'
 import cloneDeep from 'lodash/cloneDeep'
 import size from 'lodash/size'
 import evem from './evem.mjs'
+import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
-import isnint from './isnint.mjs'
 import cint from './cint.mjs'
 
 
@@ -24,7 +25,7 @@ import cint from './cint.mjs'
  *         return new Promise((resolve, reject) => {
  *             let ms = []
  *
- *             let oAL = alive(1500)
+ *             let oAL = alive({ timeAlive: 1500 })
  *             let t = Date.now()
  *
  *             let a = { data: 123 }
@@ -81,16 +82,24 @@ import cint from './cint.mjs'
  * topAsync().catch(() => {})
  *
  */
-function alive(timeAlive = 10000) {
+function alive(opt = {}) {
     let ev = evem()
     let q = {} //queue
     let t = null //timer
 
-    //check
-    if (isnint(timeAlive)) {
+    //timeAlive
+    let timeAlive = get(opt, 'timeAlive')
+    if (!ispint(timeAlive)) {
         timeAlive = 10000
     }
     timeAlive = cint(timeAlive)
+
+    //timeDetect
+    let timeDetect = get(opt, 'timeDetect')
+    if (!ispint(timeDetect)) {
+        timeDetect = 50
+    }
+    timeDetect = cint(timeDetect)
 
     function detect() {
         if (t !== null) {
@@ -126,7 +135,7 @@ function alive(timeAlive = 10000) {
                 t = null
             }
 
-        }, 50) //50ms偵測, 啟動後跑timer, 無佇列則會停止減耗
+        }, timeDetect)
     }
 
     function trigger(key, data) {
@@ -155,17 +164,18 @@ function alive(timeAlive = 10000) {
 
     }
 
-    function get() {
+    function _get() {
         let rs = []
         each(q, (v, k) => {
             rs.push({ key: k, data: v.data })
         })
+        rs = cloneDeep(rs) //使用cloneDeep避免外部修改內部數據
         return rs
     }
 
     //save
     ev.trigger = trigger
-    ev.get = get
+    ev.get = _get
 
     return ev
 }
