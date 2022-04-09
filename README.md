@@ -116,13 +116,13 @@ or
 [Optional] Add script for `fuzzball`.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.0.2/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.1.2/dist/fuzzball.umd.min.js"></script>
 ```
 
 [Optional] Add script for `ua-parser-js`.
 > **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.1/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js"></script>
 ```
 
 [Optional] Add script for `xss`.
@@ -140,8 +140,8 @@ or
 [Optional] Add link and script for `viewerjs`.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.2/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.2/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.5/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.5/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for `html2canvas`.
