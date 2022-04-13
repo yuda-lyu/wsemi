@@ -94,7 +94,7 @@ import delay from './delay.mjs'
  *                 })
  *             setTimeout(function() {
  *                 resolve(ms)
- *             }, 650)
+ *             }, 700)
  *         })
  *     }
  *     console.log('test1')
@@ -177,7 +177,7 @@ import delay from './delay.mjs'
  *                 })
  *             setTimeout(function() {
  *                 resolve(ms)
- *             }, 650)
+ *             }, 700)
  *         })
  *     }
  *     console.log('test2')
@@ -260,7 +260,7 @@ import delay from './delay.mjs'
  *                 })
  *             setTimeout(function() {
  *                 resolve(ms)
- *             }, 650)
+ *             }, 700)
  *         })
  *     }
  *     console.log('test3')
@@ -343,7 +343,7 @@ import delay from './delay.mjs'
  *                 })
  *             setTimeout(function() {
  *                 resolve(ms)
- *             }, 650)
+ *             }, 700)
  *         })
  *     }
  *     console.log('test4')

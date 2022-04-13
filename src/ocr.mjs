@@ -152,6 +152,7 @@ async function ocr(img, opt = {}) {
 
     //createWorker
     let worker = tsr.createWorker()
+    // console.log('worker', worker)
 
     //init
     await worker.load()

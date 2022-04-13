@@ -72,7 +72,7 @@ describe(`pmQueue`, function() {
                 })
             setTimeout(function() {
                 resolve(ms)
-            }, 650)
+            }, 700)
         })
     }
     //console.log('test1')
@@ -159,7 +159,7 @@ describe(`pmQueue`, function() {
                 })
             setTimeout(function() {
                 resolve(ms)
-            }, 650)
+            }, 700)
         })
     }
     //console.log('test2')
@@ -246,7 +246,7 @@ describe(`pmQueue`, function() {
                 })
             setTimeout(function() {
                 resolve(ms)
-            }, 650)
+            }, 700)
         })
     }
     //console.log('test3')
@@ -333,7 +333,7 @@ describe(`pmQueue`, function() {
                 })
             setTimeout(function() {
                 resolve(ms)
-            }, 650)
+            }, 700)
         })
     }
     //console.log('test4')
