@@ -1,9 +1,12 @@
 import path from 'path'
 import fs from 'fs'
+import get from 'lodash/get'
 import each from 'lodash/each'
 import evem from './evem.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
+import ispint from './ispint.mjs'
+import cint from './cint.mjs'
 import j2o from './j2o.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsIsFile from './fsIsFile.mjs'
@@ -16,6 +19,8 @@ import fsIsFolder from './fsIsFolder.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEvem.test.mjs Github}
  * @memberOf wsemi
  * @param {String} [fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
+ * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，若基於檔案變更之頻率小於timeDetect，則會發生事件消失問題，單位為毫秒ms，預設為50
+ * @param {Integer} [timeRewatch=1000] 輸入偵測檔案存在時間整數，單位為毫秒ms，預設為1000
  * @example
  * need test in nodejs.
  *
@@ -46,11 +51,25 @@ import fsIsFolder from './fsIsFolder.mjs'
  * })
  *
  */
-function fsEvem(fd = './_evps') {
+function fsEvem(fd = './_evps', opt = {}) {
     let ts = []
 
     //ev
     let ev = evem()
+
+    //timeDetect
+    let timeDetect = get(opt, 'timeDetect')
+    if (!ispint(timeDetect)) {
+        timeDetect = 50
+    }
+    timeDetect = cint(timeDetect)
+
+    //timeRewatch
+    let timeRewatch = get(opt, 'timeRewatch')
+    if (!ispint(timeRewatch)) {
+        timeRewatch = 1000
+    }
+    timeRewatch = cint(timeRewatch)
 
     //check
     if (!fsIsFolder(fd)) {
@@ -79,7 +98,7 @@ function fsEvem(fd = './_evps') {
             if (fsIsFile(fp)) {
 
                 //watchFile
-                fs.watchFile(fp, { interval: 100 }, (curr, prev) => {
+                fs.watchFile(fp, { interval: timeDetect }, (curr, prev) => {
                     // console.log('fs.watchFile', curr.mtime)
 
                     //readFileSync
@@ -101,7 +120,7 @@ function fsEvem(fd = './_evps') {
 
             }
 
-        }, 1000)
+        }, timeRewatch)
 
         //push
         ts.push(t)

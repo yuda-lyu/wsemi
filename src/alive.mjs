@@ -16,6 +16,7 @@ import cint from './cint.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/alive.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
+ * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，單位為毫秒ms，預設為50
  * @returns {Object} 回傳事件物件，可呼叫事件on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單
  * @example
  *
