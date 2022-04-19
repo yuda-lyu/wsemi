@@ -1,10 +1,12 @@
 import path from 'path'
 import fs from 'fs'
+import each from 'lodash/each'
 import evem from './evem.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import j2o from './j2o.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
+import fsIsFile from './fsIsFile.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 
 
@@ -45,6 +47,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  *
  */
 function fsEvem(fd = './_evps') {
+    let ts = []
 
     //ev
     let ev = evem()
@@ -68,23 +71,40 @@ function fsEvem(fd = './_evps') {
         //     }
         // })
 
-        //watchFile
-        fs.watchFile(fp, { interval: 100 }, (curr, prev) => {
-            // console.log('fs.watchFile', curr.mtime)
-
-            //readFileSync
-            let msg = fs.readFileSync(fp, 'utf8')
+        //setInterval, 檔案可能仍位存在, 故使用timer偵測
+        let t = setInterval(() => {
+            // console.log('check fp',fp)
 
             //check
-            let _msg = j2o(msg)
-            if (iseobj(_msg)) {
-                msg = _msg
+            if (fsIsFile(fp)) {
+
+                //watchFile
+                fs.watchFile(fp, { interval: 100 }, (curr, prev) => {
+                    // console.log('fs.watchFile', curr.mtime)
+
+                    //readFileSync
+                    let msg = fs.readFileSync(fp, 'utf8')
+
+                    //check
+                    let _msg = j2o(msg)
+                    if (iseobj(_msg)) {
+                        msg = _msg
+                    }
+
+                    //cb
+                    cb(msg)
+
+                })
+
+                //clearInterval
+                clearInterval(t)
+
             }
 
-            //cb
-            cb(msg)
+        }, 1000)
 
-        })
+        //push
+        ts.push(t)
 
     }
 
@@ -104,9 +124,16 @@ function fsEvem(fd = './_evps') {
 
     }
 
+    function clear() {
+        each(ts, (t) => {
+            clearInterval(t)
+        })
+    }
+
     //save
     ev.on = watchEvent
     ev.emit = watchEmit
+    ev.clear = clear
 
     return ev
 }
