@@ -1,7 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.55",
-  "description": "A support package for web developer.",
+  "version": "1.6.56",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
@@ -30,7 +29,6 @@
     "type": "git",
     "url": "https://github.com/yuda-lyu/wsemi"
   },
-  "homepage": "https://yuda-lyu.github.io/wsemi/wsemi.html",
   "keywords": [
     "lodash",
     "color",

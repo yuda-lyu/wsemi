@@ -3,12 +3,13 @@
         "allowUnknownTags": false
     },
     "source": {
-        "include": ["src/"],
-        "includePattern": ".+\\.(js(doc|x)?|mjs)$",
+        "include": ["src/", "server/"],
+        "includePattern": ".+\\.(js(doc|x)?|mjs|vue)$",
         "excludePattern": "(node_modules/|docs)"
     },
     "plugins": [
-        "plugins/markdown"
+        "plugins/markdown",
+        "node_modules/jsdoc-vuejs"
     ],
     "opts": {
         "template": "node_modules/docdash",
