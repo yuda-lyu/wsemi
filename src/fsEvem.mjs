@@ -9,50 +9,80 @@ import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 import j2o from './j2o.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
-import fsIsFile from './fsIsFile.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
+import fsWatchFile from './fsWatchFile.mjs'
 
 
 /**
- * 後端nodejs基於fs機制提供跨程序EventEmitter
+ * 後端nodejs基於檔案內容變更機制提供跨程序EventEmitter
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEvem.test.mjs Github}
  * @memberOf wsemi
  * @param {String} [fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
- * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，若基於檔案變更之頻率小於timeDetect，則會發生事件消失問題，單位為毫秒ms，預設為50
- * @param {Integer} [timeRewatch=1000] 輸入偵測檔案存在時間整數，單位為毫秒ms，預設為1000
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Integer} [opt.timeDetect=50] 輸入偵測佇列間隔時間整數，若基於檔案變更之頻率小於timeDetect，則會發生事件消失問題，單位為毫秒ms，預設為50
+ * @param {Integer} [opt.timeRewatch=1000] 輸入偵測檔案存在時間整數，單位為毫秒ms，預設為1000
  * @example
  * need test in nodejs.
  *
- * import fsEvem from './fsEvem.mjs'
+ * // ---- g1.mjs ----
  *
- * let ev = fsEvem(`./_evps`)
-
- * setTimeout(() => {
- *     // console.log('setTimeout emit1')
- *     ev.emit('chagne', 'abc')
- * }, 1000)
+ * import fsEvem from './src/fsEvem.mjs'
  *
- * setTimeout(() => {
- *     // console.log('setTimeout emit2')
- *     ev.emit('chagne', 12.3)
- * }, 1500)
+ * let evf = fsEvem()
  *
- * setTimeout(() => {
- *     // console.log('setTimeout emit3')
- *     ev.emit('chagne', { p1: 'abc', p2: 12.3 })
- * }, 2000)
- *
- * ev.on('chagne', (msg) => {
- *     console.log('chagne', msg)
- *     // chagne abc
- *     // chagne 12.3
- *     // chagne { p1: 'abc', p2: 12.3 }
+ * evf.on('change', (msgc, msgf) => {
+ *     console.log('recv change g1', msgc)
  * })
+ *
+ * let n = 0
+ * setInterval(() => {
+ *     n++
+ *     evf.emit('change', { p1: 'abc', p2: n, p3: 'from g1' })
+ * }, 2000)
+ * // recv change g1 { p1: 'abc', p2: 1, p3: 'from g1' }
+ * // recv change g1 { p1: 'def', p2: 1, p3: 'from g2' }
+ * // recv change g1 { p1: 'abc', p2: 2, p3: 'from g1' }
+ * // recv change g1 { p1: 'def', p2: 2, p3: 'from g2' }
+ * // recv change g1 { p1: 'abc', p2: 3, p3: 'from g1' }
+ * // recv change g1 { p1: 'def', p2: 3, p3: 'from g2' }
+ * // recv change g1 { p1: 'abc', p2: 4, p3: 'from g1' }
+ * // ...
+ *
+ * //node --experimental-modules --es-module-specifier-resolution=node g1.mjs
+ *
+ * // ---- g2.mjs ----
+ *
+ * import fsEvem from './src/fsEvem.mjs'
+ *
+ * let evf = fsEvem()
+ *
+ * evf.on('change', (msgc, msgf) => {
+ *     console.log('recv change g2', msgc)
+ * })
+ *
+ * //延遲1s開始
+ * let n = 0
+ * setTimeout(() => {
+ *     setInterval(() => {
+ *         n++
+ *         evf.emit('change', { p1: 'def', p2: n, p3: 'from g2' })
+ *     }, 2000)
+ * }, 1000)
+ * // recv change g2 { p1: 'abc', p2: 1, p3: 'from g1' }
+ * // recv change g2 { p1: 'def', p2: 1, p3: 'from g2' }
+ * // recv change g2 { p1: 'abc', p2: 2, p3: 'from g1' }
+ * // recv change g2 { p1: 'def', p2: 2, p3: 'from g2' }
+ * // recv change g2 { p1: 'abc', p2: 3, p3: 'from g1' }
+ * // recv change g2 { p1: 'def', p2: 3, p3: 'from g2' }
+ * // recv change g2 { p1: 'abc', p2: 4, p3: 'from g1' }
+ * // ...
+ *
+ * //node --experimental-modules --es-module-specifier-resolution=node g2.mjs
  *
  */
 function fsEvem(fd = './_evps', opt = {}) {
-    let ts = []
+    let ws = []
 
     //ev
     let ev = evem()
@@ -82,48 +112,48 @@ function fsEvem(fd = './_evps', opt = {}) {
         let fp = path.resolve(fd, evName)
         // console.log('watchEvent fp ', fp)
 
-        // //watch
-        // fs.watch(fd, (eventType, filename) => {
-        //     console.log('fs.watch 1', eventType, filename)
-        //     if (eventType === 'change') {
-        //         console.log('fs.watch 2', eventType, filename)
-        //     }
-        // })
+        //fsWatchFile
+        let evf = fsWatchFile({
+            timeDetect,
+            timeRewatch,
+        })
 
-        //setInterval, 檔案可能仍位存在, 故使用timer偵測
-        let t = setInterval(() => {
-            // console.log('check fp',fp)
+        //監聽檔案內容變更或出現或消失事件
+        evf.on(fp, (msgFile) => {
+
+            //readFileSync
+            let msgContent = fs.readFileSync(fp, 'utf8')
 
             //check
-            if (fsIsFile(fp)) {
-
-                //watchFile
-                fs.watchFile(fp, { interval: timeDetect }, (curr, prev) => {
-                    // console.log('fs.watchFile', curr.mtime)
-
-                    //readFileSync
-                    let msg = fs.readFileSync(fp, 'utf8')
-
-                    //check
-                    let _msg = j2o(msg)
-                    if (iseobj(_msg)) {
-                        msg = _msg
-                    }
-
-                    //cb
-                    cb(msg)
-
-                })
-
-                //clearInterval
-                clearInterval(t)
-
+            let _msgContent = j2o(msgContent)
+            if (iseobj(_msgContent)) {
+                msgContent = _msgContent
             }
 
-        }, timeRewatch)
+            //cb
+            cb(msgContent, msgFile)
+
+        })
 
         //push
-        ts.push(t)
+        ws.push({
+            fp,
+            evf,
+        })
+
+    }
+
+    function unWatchEvent(evName) {
+
+        //fp
+        let fp = path.resolve(fd, evName)
+        // console.log('watchEvent fp ', fp)
+
+        each(ws, (v) => {
+            if (v.fp === fp) {
+                v.evf.clear()
+            }
+        })
 
     }
 
@@ -144,13 +174,14 @@ function fsEvem(fd = './_evps', opt = {}) {
     }
 
     function clear() {
-        each(ts, (t) => {
-            clearInterval(t)
+        each(ws, (v) => {
+            v.evf.clear()
         })
     }
 
     //save
     ev.on = watchEvent
+    ev.off = unWatchEvent
     ev.emit = watchEmit
     ev.clear = clear
 
