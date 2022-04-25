@@ -27,7 +27,7 @@ import domVirtualCreate from './domVirtualCreate.mjs'
  *     return b64
  * }
  *
- * let b64 = await dpq(500, 350, fun)
+ * let b64 = await dpq(fun, { width: 500, height: 350 })
  *
  */
 function domVirtualCreateQueue() {
@@ -37,8 +37,8 @@ function domVirtualCreateQueue() {
         //pmq
         let pmq = pmQueue(1) //因處理dom為瀏覽器當前執行緒, 無法使用web worker, 故僅限定同時處理1組
 
-        async function pushQueue(w, h, fun) {
-            return pmq(domVirtualCreate, w, h, fun)
+        async function pushQueue(fun, opt = {}) {
+            return pmq(domVirtualCreate, fun, opt)
         }
 
         return pushQueue

@@ -1,5 +1,8 @@
+import get from 'lodash/get'
+import trim from 'lodash/trim'
 import isnum from './isnum.mjs'
 import isfun from './isfun.mjs'
+import isestr from './isestr.mjs'
 import ispm from './ispm.mjs'
 import cdbl from './cdbl.mjs'
 import domPrepend from './domPrepend.mjs'
@@ -11,9 +14,11 @@ import domRemove from './domRemove.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domVirtualCreate.test.mjs Github}
  * @memberOf wsemi
- * @param {Number} [w=600] 輸入目標DOM元素寬度數字，單位px，預設600
- * @param {Number} [h=400] 輸入目標DOM元素高度數字，單位px，預設400
+
  * @param {Function} fun 輸入處理函數，函數會傳入臨時產生的DOM元素，處理後例如產生base64圖片，並將其回傳，函數可為sync或async函數
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Number|String} [opt.width=null] 輸入目標DOM元素寬度數字，單位px，預設null
+ * @param {Number|String} [opt.height=null] 輸入目標DOM元素高度數字，單位px，預設null
  * @returns {Promise} 回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息
  * @example
  * need test in browser
@@ -21,30 +26,48 @@ import domRemove from './domRemove.mjs'
  * let fun = (ele) => {
  *     return ele2pic(ele) //use sync or async fun
  * }
- * let pic = await domVirtualCreate(500, 350, fun)
+ * let pic = await domVirtualCreate(fun, { width: 500, height: 350 })
  *
  */
-async function domVirtualCreate(w = 600, h = 400, fun) {
+async function domVirtualCreate(fun, opt = {}) {
 
-    //check w,h
-    if (!isnum(w)) {
-        w = 600
-    }
-    w = cdbl(w)
-    if (!isnum(h)) {
-        h = 400
-    }
-    h = cdbl(h)
-
-    //check fun
+    //check
     if (!isfun(fun)) {
         throw new Error('invalid fun')
     }
 
+    //width
+    let width = get(opt, 'width')
+    if (isestr(width)) {
+        width = trim(width)
+    }
+    else if (isnum(width)) {
+        width = cdbl(width)
+    }
+    else {
+        width = null
+    }
+
+    //height
+    let height = get(opt, 'height')
+    if (isestr(height)) {
+        height = trim(height)
+    }
+    else if (isnum(height)) {
+        height = cdbl(height)
+    }
+    else {
+        height = null
+    }
+
     //eleTar
     let eleTar = document.createElement('div')
-    eleTar.style.width = `${w}px`
-    eleTar.style.height = `${h}px`
+    if (isnum(width)) {
+        eleTar.style.width = `${width}px`
+    }
+    if (isnum(height)) {
+        eleTar.style.height = `${height}px`
+    }
 
     //eleIn
     let eleIn = document.createElement('div')
