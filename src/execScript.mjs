@@ -153,6 +153,23 @@ function execScript(prog, args) {
         return ''
     }
 
+    //execSync
+    //execSync('"/path/to/test file/test.sh" arg1 arg2');
+    // let res = cp.execSync(`${prog} ${cmd}`)
+    // console.log('execSync res', res, res.toString(), toUtf8(res))
+
+    //execFileSync
+    //execFileSync('node', ['--version']
+    // let res = cp.execFileSync(prog, [cmd])
+    // console.log('execFileSync res', res, res.toString(), toUtf8(res))
+
+    // //spawnSync
+    // let res = cp.spawnSync(prog, [cmd])
+    // console.log('spawnSync res', res)
+    // each(res.output, (v) => {
+    //     console.log('res output', toUtf8(v))
+    // })
+
     return new Promise(function(resolve, reject) {
 
         //check
