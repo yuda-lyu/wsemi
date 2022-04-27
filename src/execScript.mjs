@@ -97,7 +97,7 @@ import isarr from './isarr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execScript.test.mjs Github}
  * @memberOf wsemi
  * @param {String} prog 輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收
- * @param {String|Array} scp 輸入腳本檔案位置字串或參數
+ * @param {String|Array} args 輸入腳本檔案位置字串或參數
  * @returns {*} 回傳任意資料
  * @example
  * //need test in nodejs
@@ -119,8 +119,8 @@ import isarr from './isarr.mjs'
  *
  * if(true){
  *     let prog = 'prog.exe'
- *     let arg = 'input'
- *     execScript(prog, arg)
+ *     let args = 'input'
+ *     execScript(prog, args)
  *         .then(function(data) {
  *             console.log('then', data)
  *         })
@@ -132,8 +132,8 @@ import isarr from './isarr.mjs'
  * if(true){
  *     let prog = 'C:\\Program Files\\7-Zip\\7z.exe'
  *     let pw = 'AbcD1234'
- *     let arg = ['a', 'aaa.7z', 'aaa.txt', '-p' + pw]
- *     execScript(prog, arg)
+ *     let args = ['a', 'aaa.7z', 'aaa.txt', '-p' + pw]
+ *     execScript(prog, args)
  *         .then(function(data) {
  *             console.log('then', data)
  *         })
