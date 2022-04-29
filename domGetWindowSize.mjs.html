@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>b642str.mjs - Documentation</title>
+    <title>domGetWindowSize.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">b642str.mjs</h1>
+    <h1 class="page-title">domGetWindowSize.mjs</h1>
     
 
     
@@ -42,38 +42,69 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import encutf8 from 'crypto-js/enc-utf8'
-import encbase64 from 'crypto-js/enc-base64'
-import isestr from './isestr.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import filter from 'lodash/filter'
+import min from 'lodash/min'
+import isNumber from 'lodash/isNumber'
+import getGlobal from './getGlobal.mjs'
 
 
 /**
- * base64字串轉一般字串
+ * 前端取得window內實際顯示寬度與高度
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642str.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetWindowSize.test.mjs Github}
  * @memberOf wsemi
- * @param {String} b64 輸入base64字串
- * @returns {String} 回傳一般字串
+ * @param {HTMLElement} ele 輸入DOM元素
+ * @returns {Object} 回傳getBoundingClientRect結果物件
  * @example
+ * need test in browser
  *
- * console.log(b642str('dGVzdOS4reaWhw=='))
- * // => 'test中文'
+ * let r = domGetWindowSize()
+ * console.log(r)
+ * // => {
+ *   width:...,
+ *   height:...,
+ * }
  *
  */
-function b642str(b64) {
+function domGetWindowSize() {
 
-    //check
-    if (!isestr(b64)) {
-        return ''
+    //getGlobal
+    let g = getGlobal()
+
+    //domGetWindowWidth
+    let domGetWindowWidth = () => {
+        let w1 = get(g, 'innerWidth')
+        let w2 = get(g, 'document.documentElement.clientWidth')
+        let w3 = get(g, 'document.body.clientWidth')
+        let ws = [w1, w2, w3]
+        ws = filter(ws, isNumber)
+        let w = min(ws)
+        return w
     }
 
-    let wa = encbase64.parse(b64)
-    let str = wa.toString(encutf8)
-    return str
+    //domGetWindowHeight
+    let domGetWindowHeight = () => {
+        let h1 = get(g, 'innerHeight')
+        let h2 = get(g, 'document.documentElement.clientHeight')
+        let h3 = get(g, 'document.body.clientHeight')
+        let hs = [h1, h2, h3]
+        hs = filter(hs, isNumber)
+        let h = min(hs)
+        return h
+    }
+
+    //s
+    let s = {
+        width: domGetWindowWidth(),
+        height: domGetWindowHeight(),
+    }
+
+    return s
 }
 
 
-export default b642str
+export default domGetWindowSize
 </code></pre>
         </article>
     </section>
