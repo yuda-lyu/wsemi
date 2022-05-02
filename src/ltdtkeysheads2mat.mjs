@@ -15,7 +15,7 @@ import ltdtkeys2mat from './ltdtkeys2mat.mjs'
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [keys=[]] 輸入字串陣列，若不輸入則由ltdt提取，預設[]
- * @param {Object} [kphead={}] 輸入字典物件，內含keys對應values之物件，供keys查詢得values，若不輸入則由keys提取，預設{}
+ * @param {Object} [kphead={}] 輸入字典物件，內含keys對應values之物件，供keys查詢得values，若不輸入則由keys提取，預設為{}
  * @returns {Array} 回傳資料陣列
  * @example
  *

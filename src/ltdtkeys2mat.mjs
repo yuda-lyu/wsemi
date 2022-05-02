@@ -16,7 +16,7 @@ import getltdtkeys from './getltdtkeys.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
- * @param {Array} keys 輸入字串陣列，若不輸入則由ltdt提取
+ * @param {Array} [keys=null] 輸入字串陣列，若不輸入則由ltdt提取，預設為null
  * @returns {Array} 回傳資料陣列
  * @example
  *
@@ -24,7 +24,7 @@ import getltdtkeys from './getltdtkeys.mjs'
  * // => [[12, 34.56], ['123', 'xyz']]
  *
  */
-function ltdtkeys2mat(ltdt, keys) {
+function ltdtkeys2mat(ltdt, keys = null) {
 
     //check
     if (!isearr(ltdt)) {
