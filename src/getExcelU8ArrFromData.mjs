@@ -1,17 +1,18 @@
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'
-import bs2u8arr from './bs2u8arr.mjs'
-import getXLSX from './_getXLSX.mjs'
+import haskey from './haskey.mjs'
 import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
+import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
 
 
 /**
- * 由陣列數據轉成為Excel(*.xlsx)的Uint8Array數據
+ * 由數據陣列或DOM的table元素轉成為Excel的Uint8Array數據陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} data 輸入內容陣列
+ * @param {Array|Element} data 輸入數據陣列或是DOM的table元素(Element)
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
+ * @returns {Array} 回傳Excel的Uint8Array數據陣列
  * @example
  *
  * import fs from 'fs'
@@ -37,7 +38,7 @@ import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
  * fs.writeFileSync('temp.xlsx', u8a)
  *
  */
-function getExcelU8ArrFromData(data, sheetName = 'data', opt = {}) {
+function getExcelU8ArrFromData(data, sheetName = 'data') {
 
     //check
     if (!isearr(data)) {
@@ -50,23 +51,23 @@ function getExcelU8ArrFromData(data, sheetName = 'data', opt = {}) {
         sheetName = 'data'
     }
 
+    //u8a
     let u8a = null
-    try {
 
-        //wb
-        let wb = getExcelWorkbookFromData(data, sheetName)
+    //getExcelWorkbookFromData
+    let wb = getExcelWorkbookFromData(data, sheetName)
 
-        //wbout, type給binary代表回傳BinaryString(Uint8Array)
-        let wbout = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' })
-
-        //BinaryString(Uint8Array) to Uint8Array
-        u8a = bs2u8arr(wbout)
-
+    //check
+    if (haskey(wb, 'error')) {
+        return wb
     }
-    catch (err) {
-        return {
-            error: err
-        }
+
+    //getExcelU8ArrFromWorkbook
+    u8a = getExcelU8ArrFromWorkbook(wb)
+
+    //check
+    if (haskey(u8a, 'error')) {
+        return u8a
     }
 
     return u8a

@@ -11,7 +11,7 @@ import getXLSX from './_getXLSX.mjs'
 
 
 /**
- * 下載資料成為Excel(*.xlsx)檔案，前後端都可用
+ * 下載資料成為Excel檔案，前後端都可用
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs Github}
  * @memberOf wsemi
@@ -49,7 +49,7 @@ function downloadExcelFileFromData(fileName, sheetName = 'data', data, opt = {})
         sheetName = 'data'
     }
     if (!isarr(data) && !isEle(data)) {
-        let msg = 'data is not array or element'
+        let msg = 'data is not an array or element'
         console.log(msg, data)
         return {
             error: msg,

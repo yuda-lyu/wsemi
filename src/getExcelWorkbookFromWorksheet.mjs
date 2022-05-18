@@ -1,15 +1,17 @@
+import isobj from './isobj.mjs'
+import isestr from './isestr.mjs'
+import createExcelWorkbook from './createExcelWorkbook.mjs'
 
 
 /**
- * 由Worksheet數據轉Workbook數據
+ * 由Excel的Worksheet物件轉為Excel的Workbook物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromWorksheet.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} sheet 輸入js-xlsx的worksheet物件
+ * @param {Object} sheet 輸入Excel的Worksheet物件
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
+ * @returns {Object} 回傳Excel的Workbook物件
  * @example
- *
- * import xlsx from 'xlsx'
  *
  * let data = [
  *     ['a', '123', 456],
@@ -17,8 +19,8 @@
  * ]
  *
  * let ws = xlsx.utils.aoa_to_sheet(data)
- * console.log('ws', ws)
- * // ws {
+ * console.log(ws)
+ * // => {
  * //   A1: { v: 'a', t: 's' },
  * //   B1: { v: '123', t: 's' },
  * //   C1: { v: 456, t: 'n' },
@@ -29,18 +31,38 @@
  * // }
  *
  * let wb = getExcelWorkbookFromWorksheet(ws)
- * console.log('wb', wb)
- * // wb Workbook {
- * //   SheetNames: [ 'data' ],
- * //   Sheets: {
- * //     data: {
- * //       A1: [Object],
- * //       B1: [Object],
- * //       C1: [Object],
- * //       B2: [Object],
- * //       C2: [Object],
- * //       D2: [Object],
- * //       '!ref': 'A1:D2'
+ * console.log(JSON.stringify(wb, null, 2))
+ * // => {
+ * //   "SheetNames": [
+ * //     "data"
+ * //   ],
+ * //   "Sheets": {
+ * //     "data": {
+ * //       "A1": {
+ * //         "v": "a",
+ * //         "t": "s"
+ * //       },
+ * //       "B1": {
+ * //         "v": "123",
+ * //         "t": "s"
+ * //       },
+ * //       "C1": {
+ * //         "v": 456,
+ * //         "t": "n"
+ * //       },
+ * //       "B2": {
+ * //         "v": "abc123",
+ * //         "t": "s"
+ * //       },
+ * //       "C2": {
+ * //         "v": "",
+ * //         "t": "s"
+ * //       },
+ * //       "D2": {
+ * //         "v": 111.222333,
+ * //         "t": "n"
+ * //       },
+ * //       "!ref": "A1:D2"
  * //     }
  * //   }
  * // }
@@ -48,15 +70,20 @@
  */
 function getExcelWorkbookFromWorksheet(sheet, sheetName = 'data') {
 
-    //Workbook
-    function Workbook() {
-        if (!(this instanceof Workbook)) return new Workbook()
-        this.SheetNames = []
-        this.Sheets = {}
+    //check
+    if (!isobj(sheet)) {
+        return {
+            error: 'sheet is not an object',
+        }
+    }
+    if (!isestr(sheetName)) {
+        sheetName = 'data'
     }
 
-    //wbout
-    let wb = new Workbook()
+    //createExcelWorkbook
+    let wb = createExcelWorkbook()
+
+    //push
     wb.SheetNames.push(sheetName)
     wb.Sheets[sheetName] = sheet
 

@@ -9,12 +9,12 @@ describe(`getExcelU8ArrFromData`, function() {
     ]
     let cdata = JSON.stringify(data)
     let u8a = getExcelU8ArrFromData(data)
-    let u8aSize = u8a.length
+    let u8aLength = u8a.length
 
-    it(`should return u8a.length=${u8aSize} when input ${cdata}`, function() {
+    it(`should return u8a.length=${u8aLength} when input ${cdata}`, function() {
         let u8a = getExcelU8ArrFromData(data)
         let r = u8a.length
-        assert.strict.deepStrictEqual(r, u8aSize)
+        assert.strict.deepStrictEqual(r, u8aLength)
     })
 
 })

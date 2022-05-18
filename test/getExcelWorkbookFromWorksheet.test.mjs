@@ -16,14 +16,14 @@ describe(`getExcelWorkbookFromWorksheet`, function() {
     let wb2 = getExcelWorkbookFromWorksheet(ws, 'tester')
     let wb2name = wb2.SheetNames[0]
 
-    it(`should return sheet.name=${wb1name} when input ${cdata}`, function() {
-        let wb = getExcelWorkbookFromWorksheet(data)
+    it(`should return sheet.name='${wb1name}' when input ${cdata}`, function() {
+        let wb = getExcelWorkbookFromWorksheet(ws)
         let r = wb.SheetNames[0]
         assert.strict.deepStrictEqual(r, wb1name)
     })
 
-    it(`should return sheet.name=${wb2name} when input ${cdata}, 'tester'`, function() {
-        let wb = getExcelWorkbookFromWorksheet(data, 'tester')
+    it(`should return sheet.name='${wb2name}' when input ${cdata}, 'tester'`, function() {
+        let wb = getExcelWorkbookFromWorksheet(ws, 'tester')
         let r = wb.SheetNames[0]
         assert.strict.deepStrictEqual(r, wb2name)
     })

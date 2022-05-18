@@ -5,7 +5,7 @@ import getDataFromExcelFileU8Arr from './getDataFromExcelFileU8Arr.mjs'
 
 
 /**
- * 前端讀取Excel(*.xlsx)檔，前端由input file的檔案取得Uint8Array，並採用動態加載技術
+ * 前端讀取Excel檔，前端由input file的檔案取得Uint8Array，並採用動態加載技術
  * 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8ArrDyn.test.mjs Github}

@@ -5,7 +5,7 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
 
 
 /**
- * 前端下載資料成為Excel(*.xlsx)檔案，採用動態加載技術
+ * 前端下載資料成為Excel檔案，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromDataDyn.test.mjs Github}
  * @memberOf wsemi
