@@ -1,4 +1,5 @@
-import fuzzball from 'fuzzball/dist/fuzzball.umd.min.js'
+import Fuse from 'fuse.js'
+import get from 'lodash/get'
 import join from 'lodash/join'
 import map from 'lodash/map'
 import mean from 'lodash/mean'
@@ -13,9 +14,9 @@ import sep from './sep.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
-function getFuzzball() {
+function getFuse() {
     let g = getGlobal()
-    let x = fuzzball || g.fuzzball
+    let x = Fuse || g.Fuse
     return x
 }
 
@@ -31,17 +32,18 @@ function getFuzzball() {
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
  *
+ * //第2參數會被空白切分成多關鍵字
  * console.log(strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))
- * // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+ * // => 31.831649831649834
  *
  * console.log(strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true))
- * // => 82
+ * // => 40.845872267054474
  *
  * console.log(strFindFuzz(['abc', 'def123', '中文測試'], 'ef', true))
  * // => 100
  *
  * console.log(strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true))
- * // => 50
+ * // => 46
  *
  * console.log(strFindFuzz(['abc', 'def123', '中文測試'], 'ef'))
  * // => true
@@ -97,9 +99,42 @@ function strFindFuzz(ar, strkey, bscore = false) {
     //keys
     let keys = sep(strkey, ' ')
 
+    //Fus
+    let Fus = getFuse()
+    // console.log('fuse', fuse)
+
+    //findKey
+    let findKey = (src, tar) => {
+
+        //options
+        let options = {
+            includeScore: true
+        }
+
+        //build
+        let fuse = new Fus([src], options)
+        // console.log('fuse', fuse)
+
+        //search
+        let r = fuse.search(tar)
+        r = get(r, 0)
+        // console.log('r', r)
+
+        //score
+        let score = get(r, 'score', 1) //完全一致為0
+        score = 1 - score
+        score *= 100
+
+        return score
+    }
+
+
     //全部關鍵字查詢所得分數
     let bs = map(keys, function(key) {
-        return getFuzzball().partial_ratio(c, key)
+        // console.log(c, key)
+        let score = findKey(c, key)
+        // console.log('score=', score, `key='${key}'`, `c='${c}'`)
+        return score
     })
 
     //bscore

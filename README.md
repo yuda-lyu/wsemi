@@ -87,7 +87,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuzzball`, `ua-parser-js`, `xss`, `xlsx`, `tesseract.js`, `htmlparser` and `tippy.js`.
+> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuse.js`, `ua-parser-js`, `xss`, `xlsx`, `tesseract.js`, `htmlparser` and `tippy.js`.
 ```alias
 npm i wsemi
 ```
@@ -113,10 +113,10 @@ or
 </script>
 ```
 
-[Optional] Add script for `fuzzball`.
+[Optional] Add script for `fuse.js`.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuzzball@2.1.2/dist/fuzzball.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
 ```
 
 [Optional] Add script for `ua-parser-js`.
@@ -187,5 +187,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.63/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.64/dist/wsemi.umd.js"></script>
 ```

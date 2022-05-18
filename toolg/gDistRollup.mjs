@@ -19,7 +19,7 @@ rollupFiles({
         'crypto': 'crypto', //因crypto-js修改使用內建crypto方式, 會偵測nodejs並使用require內建的crypto, 故需剔除
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
-        'fuzzball': 'fuzzball',
+        'fuse.js': 'fuse.js',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
         'viewerjs': 'viewerjs',
@@ -34,7 +34,7 @@ rollupFiles({
         'crypto',
         'dayjs',
         'xlsx',
-        'fuzzball',
+        'fuse.js',
         'ua-parser-js',
         'xss',
         'viewerjs',

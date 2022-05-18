@@ -1,12 +1,12 @@
 {
   "name": "wsemi",
-  "version": "1.6.63",
+  "version": "1.6.64",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.0",
     "eventemitter3": "^4.0.7",
-    "fuzzball": "^2.1.2",
+    "fuse.js": "^6.6.2",
     "htmlparser": "^1.7.7",
     "lodash": "^4.17.21",
     "seamless-scroll-polyfill": "^2.1.8",

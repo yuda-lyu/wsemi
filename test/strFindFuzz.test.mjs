@@ -4,14 +4,14 @@ import strFindFuzz from '../src/strFindFuzz.mjs'
 
 describe(`strFindFuzz`, function() {
 
-    it(`should return 82 when input 'The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true`, function() {
-        let r = strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
-        assert.strict.deepStrictEqual(r, 82)
+    it(`should return 31.831649831649834 when input 'Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true`, function() {
+        let r = strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
+        assert.strict.deepStrictEqual(r, 31.831649831649834)
     })
 
-    it(`should return 41.333333333333336 when input 'Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true`, function() {
-        let r = strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
-        assert.strict.deepStrictEqual(r, 41.333333333333336)
+    it(`should return 40.845872267054474 when input 'The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true`, function() {
+        let r = strFindFuzz('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
+        assert.strict.deepStrictEqual(r, 40.845872267054474)
     })
 
     it(`should return true when input 'abcdef123中文測試', 'ef'`, function() {
@@ -49,29 +49,29 @@ describe(`strFindFuzz`, function() {
         assert.strict.deepStrictEqual(r, 100)
     })
 
-    it(`should return 50 when input ['abc', 'def123', '中文測試'], 'efgg', true`, function() {
+    it(`should return 46 when input ['abc', 'def123', '中文測試'], 'efgg', true`, function() {
         let r = strFindFuzz(['abc', 'def123', '中文測試'], 'efgg', true)
-        assert.strict.deepStrictEqual(r, 50)
+        assert.strict.deepStrictEqual(r, 46)
     })
 
-    it(`should return 40 when input ['abc', 'def123', '中文測試'], 'efgg英', true`, function() {
+    it(`should return 0 when input ['abc', 'def123', '中文測試'], 'efgg英', true`, function() {
         let r = strFindFuzz(['abc', 'def123', '中文測試'], 'efgg英', true)
-        assert.strict.deepStrictEqual(r, 40)
+        assert.strict.deepStrictEqual(r, 0)
     })
 
-    it(`should return 25 when input ['abc', 'def123', '中文測試'], 'efgg 英', true`, function() {
+    it(`should return 23 when input ['abc', 'def123', '中文測試'], 'efgg 英', true`, function() {
         let r = strFindFuzz(['abc', 'def123', '中文測試'], 'efgg 英', true)
-        assert.strict.deepStrictEqual(r, 25)
+        assert.strict.deepStrictEqual(r, 23)
     })
 
-    it(`should return 63 when input ['abc', 'def123', '中文測試'], 'efgg中文測試', true`, function() {
+    it(`should return 58.5 when input ['abc', 'def123', '中文測試'], 'efgg中文測試', true`, function() {
         let r = strFindFuzz(['abc', 'def123', '中文測試'], 'efgg中文測試', true)
-        assert.strict.deepStrictEqual(r, 63)
+        assert.strict.deepStrictEqual(r, 58.5)
     })
 
-    it(`should return 75 when input ['abc', 'def123', '中文測試'], 'efgg 中文測試', true`, function() {
+    it(`should return 68.5 when input ['abc', 'def123', '中文測試'], 'efgg 中文測試', true`, function() {
         let r = strFindFuzz(['abc', 'def123', '中文測試'], 'efgg 中文測試', true)
-        assert.strict.deepStrictEqual(r, 75)
+        assert.strict.deepStrictEqual(r, 68.5)
     })
 
     it(`should return 0 when input ['abc', 'def123', '中文測試'], 'xyz', true`, function() {

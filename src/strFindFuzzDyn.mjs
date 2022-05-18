@@ -16,16 +16,17 @@ import strFindFuzz from './strFindFuzz.mjs'
  * @example
  * need test in browser
  *
+ * //第2參數會被空白切分成多關鍵字
  * strFindFuzzDyn('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
  *     .then(function(r) {
  *         console.log(r)
- *         // => 41.333333333333336, 第2參數會被空白切分成多關鍵字
+ *         // => 31.831649831649834
  *     })
  *
  * strFindFuzzDyn('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)', true)
  *     .then(function(r) {
  *         console.log(r)
- *         // => 82
+ *         // => 40.845872267054474
  *     })
  *
  * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef', true)
@@ -37,7 +38,7 @@ import strFindFuzz from './strFindFuzz.mjs'
  * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'efgg', true)
  *     .then(function(r) {
  *         console.log(r)
- *         // => 50
+ *         // => 46
  *     })
  *
  * strFindFuzzDyn(['abc', 'def123', '中文測試'], 'ef')
@@ -53,7 +54,7 @@ async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/fuzzball@2.1.2/dist/fuzzball.umd.min.js',
+            'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
         ]
     }
 
