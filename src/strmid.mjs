@@ -31,6 +31,7 @@ function strmid(c, s, n = 1) {
     if (!isp0int(s)) {
         return ''
     }
+
     if (!ispint(n)) {
         n = 1
     }

@@ -1,5 +1,6 @@
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
+import isp0int from './isp0int.mjs'
+import cint from './cint.mjs'
 
 
 /**
@@ -22,7 +23,14 @@ function strleft(c, n) {
     if (!isestr(c)) {
         return ''
     }
-    if (!ispint(n)) {
+    if (!isp0int(n)) {
+        return ''
+    }
+
+    n = cint(n)
+
+    //check
+    if (n === 0) {
         return ''
     }
 

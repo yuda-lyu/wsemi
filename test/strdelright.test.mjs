@@ -18,7 +18,7 @@ describe(`strdelright`, function() {
 
     it(`sould return '' when input 'test中文', 0`, function() {
         let r = strdelright('test中文', 0)
-        let rr = ''
+        let rr = 'test中文'
         assert.strict.deepStrictEqual(r, rr)
     })
 
