@@ -4,6 +4,126 @@ import round from '../src/round.mjs'
 
 describe(`round`, function() {
 
+    it(`should return 9.84 when input 9.83501, 2`, function() {
+        let r = round(9.83501, 2)
+        assert.strict.deepStrictEqual(r, 9.84)
+    })
+
+    it(`should return 9.84 when input 9.8350, 2`, function() {
+        let r = round(9.8350, 2)
+        assert.strict.deepStrictEqual(r, 9.84)
+    })
+
+    it(`should return 9.83 when input 9.82501, 2`, function() {
+        let r = round(9.82501, 2)
+        assert.strict.deepStrictEqual(r, 9.83)
+    })
+
+    it(`should return 9.83 when input 9.8250, 2`, function() {
+        let r = round(9.8250, 2)
+        assert.strict.deepStrictEqual(r, 9.83)
+    })
+
+    it(`should return 9.82 when input 9.8249, 2`, function() {
+        let r = round(9.8249, 2)
+        assert.strict.deepStrictEqual(r, 9.82)
+    })
+
+    it(`should return 12.64 when input 12.6449, 2`, function() {
+        let r = round(12.6449, 2)
+        assert.strict.deepStrictEqual(r, 12.64)
+    })
+
+    it(`should return 12.65 when input 12.645, 2`, function() {
+        let r = round(12.645, 2)
+        assert.strict.deepStrictEqual(r, 12.65)
+    })
+
+    it(`should return 12.65 when input 12.6451, 2`, function() {
+        let r = round(12.6451, 2)
+        assert.strict.deepStrictEqual(r, 12.65)
+    })
+
+    it(`should return 12.65 when input 12.65, 2`, function() {
+        let r = round(12.65, 2)
+        assert.strict.deepStrictEqual(r, 12.65)
+    })
+
+    it(`should return 12.64 when input 12.64, 2`, function() {
+        let r = round(12.64, 2)
+        assert.strict.deepStrictEqual(r, 12.64)
+    })
+
+    it(`should return 12.6 when input 12.6, 2`, function() {
+        let r = round(12.6, 2)
+        assert.strict.deepStrictEqual(r, 12.6)
+    })
+
+    it(`should return 12 when input 12, 2`, function() {
+        let r = round(12, 2)
+        assert.strict.deepStrictEqual(r, 12)
+    })
+
+    it(`should return 9.84 when input 9.83501, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(9.83501, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 9.84)
+    })
+
+    it(`should return 9.84 when input 9.8350, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(9.8350, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 9.84) //第3位5進位得9.84
+    })
+
+    it(`should return 9.83 when input 9.82501, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(9.82501, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 9.83)
+    })
+
+    it(`should return 9.82 when input 9.8250, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(9.8250, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 9.82) //第3位5捨去得9.82
+    })
+
+    it(`should return 9.82 when input 9.8249, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(9.8249, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 9.82)
+    })
+
+    it(`should return 12.64 when input 12.6449, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.6449, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.64)
+    })
+
+    it(`should return 12.64 when input 12.645, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.645, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.64) //第3位5捨去得12.64
+    })
+
+    it(`should return 12.65 when input 12.6451, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.6451, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.65)
+    })
+
+    it(`should return 12.65 when input 12.65, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.65, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.65)
+    })
+
+    it(`should return 12.64 when input 12.64, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.64, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.64)
+    })
+
+    it(`should return 12.6 when input 12.6, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12.6, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12.6)
+    })
+
+    it(`should return 12 when input 12, 2, { rounding: 'ROUND_HALF_EVEN' }`, function() {
+        let r = round(12, 2, { rounding: 'ROUND_HALF_EVEN' })
+        assert.strict.deepStrictEqual(r, 12)
+    })
+
     it(`should return '' when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)
         let r = round(ab)
@@ -101,14 +221,14 @@ describe(`round`, function() {
         assert.strict.deepStrictEqual(r, -1)
     })
 
-    it(`should return -1 when input -1.5`, function() {
+    it(`should return -2 when input -1.5`, function() {
         let r = round(-1.5)
-        assert.strict.deepStrictEqual(r, -1)
+        assert.strict.deepStrictEqual(r, -2)
     })
 
-    it(`should return -2 when input -2.5`, function() {
+    it(`should return -3 when input -2.5`, function() {
         let r = round(-2.5)
-        assert.strict.deepStrictEqual(r, -2)
+        assert.strict.deepStrictEqual(r, -3)
     })
 
     it(`should return 0 when input '0'`, function() {
@@ -146,14 +266,14 @@ describe(`round`, function() {
         assert.strict.deepStrictEqual(r, -1)
     })
 
-    it(`should return -1 when input '-1.5'`, function() {
+    it(`should return -2 when input '-1.5'`, function() {
         let r = round('-1.5')
-        assert.strict.deepStrictEqual(r, -1)
+        assert.strict.deepStrictEqual(r, -2)
     })
 
-    it(`should return -2 when input '-2.5'`, function() {
+    it(`should return -3 when input '-2.5'`, function() {
         let r = round('-2.5')
-        assert.strict.deepStrictEqual(r, -2)
+        assert.strict.deepStrictEqual(r, -3)
     })
 
     it(`should return '' when input '125abc'`, function() {
