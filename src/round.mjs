@@ -25,6 +25,9 @@ import Decimal from 'decimal.js'
  * console.log(round('1.5'))
  * // => 2
  *
+ * console.log(round(-1.5))
+ * // => -2 (四捨五入不看正負號得-2)
+ *
  * console.log(round('125abc'))
  * // => ''
  *
@@ -68,13 +71,13 @@ import Decimal from 'decimal.js'
  * // => 9.84
  *
  * console.log(round(9.8350, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.84 (第3位5進位得9.84)
+ * // => 9.84 (四捨六入五成雙, 第3位5進位得9.84)
  *
  * console.log(round(9.82501, 2, { rounding: 'ROUND_HALF_EVEN' }))
  * // => 9.83
  *
  * console.log(round(9.8250, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.82 (第3位5捨去得9.82)
+ * // => 9.82 (四捨六入五成雙, 第3位5捨去得9.82)
  *
  * console.log(round(9.8249, 2, { rounding: 'ROUND_HALF_EVEN' }))
  * // => 9.82
@@ -83,7 +86,7 @@ import Decimal from 'decimal.js'
  * // => 12.64
  *
  * console.log(round(12.645, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.64 (第3位5捨去得12.64)
+ * // => 12.64 (四捨六入五成雙, 第3位5捨去得12.64)
  *
  * console.log(round(12.6451, 2, { rounding: 'ROUND_HALF_EVEN' }))
  * // => 12.65
