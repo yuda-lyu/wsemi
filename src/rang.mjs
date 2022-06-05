@@ -1,6 +1,7 @@
-import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import cint from './cint.mjs'
+import isnum from './isnum.mjs'
+import ispint from './ispint.mjs'
 
 
 /**
@@ -18,15 +19,15 @@ import cint from './cint.mjs'
  *
  * r = rang(0, 10)
  * console.log(r)
- * // => [ 0, 10 ]
+ * // => [ 0, 5, 10 ]
  *
  * r = rang(0, 10, 3)
  * console.log(r)
- * // => [ 0, 5, 10, 15 ]
+ * // => [ 0, 3.3333333333333335, 6.666666666666667, 10 ]
  *
  * r = rang(0, 10, 4)
  * console.log(r)
- * // => [ 0, 3.3333333333333335, 6.666666666666667, 10, 13.333333333333334 ]
+ * // => [ 0, 2.5, 5, 7.5, 10 ]
  *
  */
 function rang(rStart, rEnd, num = 2) {
@@ -46,29 +47,19 @@ function rang(rStart, rEnd, num = 2) {
     rEnd = cdbl(rEnd)
 
     //check num
-    if (!isnum(num)) {
-        num = 2
+    if (!ispint(num)) {
+        num = 1
     }
     num = cint(num)
-    if (num < 2) {
-        //throw new Error('num need to >= 2')
-        num = 2
-    }
-
-    //check num===2
-    if (num === 2) {
-        return [rStart, rEnd]
-    }
 
     //dx
-    let dx = (rEnd - rStart) / (num - 1)
+    let dx = (rEnd - rStart) / num
 
     let r = rStart
     let rs = []
-    rs.push(rStart)
-    for (let i = 1; i <= num; i++) {
-        r += dx
+    for (let i = 0; i <= num; i++) {
         rs.push(r)
+        r += dx
     }
 
     return rs

@@ -4,21 +4,21 @@ import rang from '../src/rang.mjs'
 
 describe(`rang`, function() {
 
-    it(`should return [ 0, 10 ] when input 0, 10`, function() {
+    it(`should return [ 0, 5, 10 ] when input 0, 10`, function() {
         let r = rang(0, 10)
-        let rr = [0, 10]
+        let rr = [0, 5, 10]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [ 0, 5, 10, 15 ] when input 0, 10, 3`, function() {
+    it(`should return [ 0, 3.3333333333333335, 6.666666666666667, 10 ] when input 0, 10, 3`, function() {
         let r = rang(0, 10, 3)
-        let rr = [0, 5, 10, 15]
+        let rr = [0, 3.3333333333333335, 6.666666666666667, 10]
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [ 0, 3.3333333333333335, 6.666666666666667, 10, 13.333333333333334 ] when 0, 10, 4`, function() {
+    it(`should return [ 0, 2.5, 5, 7.5, 10 ] when 0, 10, 4`, function() {
         let r = rang(0, 10, 4)
-        let rr = [0, 3.3333333333333335, 6.666666666666667, 10, 13.333333333333334]
+        let rr = [0, 2.5, 5, 7.5, 10]
         assert.strict.deepStrictEqual(r, rr)
     })
 
