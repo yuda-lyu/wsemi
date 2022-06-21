@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.68",
+  "version": "1.6.69",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
