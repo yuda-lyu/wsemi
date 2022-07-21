@@ -129,7 +129,7 @@ function to_csv(workbook, valueToString) {
  *
  * // test in nodejs
  * let u8a = fs.readFileSync('temp.xlsx')
- * let r = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+ * let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
  * console.log(dltdt[0].sheetname, dltdt[0].data)
  * // => ...
  *
