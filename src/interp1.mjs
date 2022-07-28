@@ -349,12 +349,12 @@ function interp1Blocks(ps, x) {
  * x = 0
  * r = interp1(psErr, x)
  * console.log(`linear(error data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(error data): x=0 r={"err":"ps(length=0) is not effective array","ps":[{"x":"a","y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[]}
+ * // => linear(error data): x=0 r={"err":"ps(length=0) is not an effective array","ps":[{"x":"a","y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[]}
  *
  * x = 0
  * r = interp1(psEmpty, x)
  * console.log(`linear(empty data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(empty data): x=0 r={"err":"ps(length=0) is not effective array","ps":[],"psEff":[]}
+ * // => linear(empty data): x=0 r={"err":"ps(length=0) is not an effective array","ps":[],"psEff":[]}
  *
  * x = 0
  * r = interp1(psEffOne, x)
@@ -642,12 +642,12 @@ function interp1(ps, x, opt = {}) {
     //check
     if (!isarr(ps)) {
         return {
-            err: 'ps is not array'
+            err: 'ps is not an array'
         }
     }
     if (!isNumber(x)) {
         return {
-            err: 'x is not number'
+            err: 'x is not a number'
         }
     }
 
@@ -662,7 +662,7 @@ function interp1(ps, x, opt = {}) {
     //check
     if (size(psEff) === 0) {
         return {
-            err: 'ps(length=0) is not effective array',
+            err: 'ps(length=0) is not an effective array',
             ps,
             psEff,
         }

@@ -52,14 +52,14 @@ describe(`interp1`, function() {
         keyY: 'b',
     }
 
-    it(`should return { 'err': 'ps(length=0) is not effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] } when input psErr, 0`, function() {
+    it(`should return { 'err': 'ps(length=0) is not an effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] } when input psErr, 0`, function() {
         let r = interp1(psErr, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not an effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
     })
 
-    it(`should return { 'err': 'ps(length=0) is not effective array', 'ps': [], 'psEff': [] } when input psEmpty, 0`, function() {
+    it(`should return { 'err': 'ps(length=0) is not an effective array', 'ps': [], 'psEff': [] } when input psEmpty, 0`, function() {
         let r = interp1(psEmpty, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not effective array', 'ps': [], 'psEff': [] })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not an effective array', 'ps': [], 'psEff': [] })
     })
 
     it(`should return { 'err': 'ps(length=1) is one point only', 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [{ 'x': 1, 'y': 0.2 }] } when input psEffOne, 0`, function() {
@@ -342,39 +342,39 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input '1.25'`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input '1.25'`, function() {
         let r = interp1('1.25')
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input 2.25`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input 2.25`, function() {
         let r = interp1(2.25)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input ''`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input ''`, function() {
         let r = interp1('')
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'x is not number' } when input []`, function() {
+    it(`should return { 'err': 'x is not a number' } when input []`, function() {
         let r = interp1([])
-        assert.strict.deepStrictEqual(r, { 'err': 'x is not number' })
+        assert.strict.deepStrictEqual(r, { 'err': 'x is not a number' })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input {}`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input {}`, function() {
         let r = interp1({})
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input null`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input null`, function() {
         let r = interp1(null)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'ps is not array' } when input undefined`, function() {
+    it(`should return { 'err': 'ps is not an array' } when input undefined`, function() {
         let r = interp1(undefined)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
 })

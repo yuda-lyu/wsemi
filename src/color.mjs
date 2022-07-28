@@ -251,13 +251,13 @@ function strCvFromPercent(cc, defValue = 1) {
     if (cc.indexOf('%') >= 0) {
         cc = replace(cc, '%', '')
         if (!isnum(cc)) {
-            throw new Error('invalid color: value is not number')
+            throw new Error('invalid color: value is not a number')
         }
         cc = cdbl(cc) / 100 //百分比值0~100, 轉0~1分佈
     }
     else {
         if (!isnum(cc)) {
-            throw new Error('invalid color: value is not number')
+            throw new Error('invalid color: value is not a number')
         }
         cc = cdbl(cc) / defValue //基於defValue轉0~1分佈
     }
@@ -273,7 +273,7 @@ function strCvFromPercent(cc, defValue = 1) {
 
 function strCvFrom01(cc) {
     if (!isnum(cc)) {
-        throw new Error('invalid color: value is not number')
+        throw new Error('invalid color: value is not a number')
     }
     cc = cdbl(cc)
     if (cc > 1) {

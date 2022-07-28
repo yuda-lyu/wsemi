@@ -115,7 +115,7 @@ async function html2pic(ele, opt = {}) {
     //scale
     let scale = get(opt, 'scale', 1)
     if (!isNumber(scale)) {
-        return Promise.reject('opt.scale is not number')
+        return Promise.reject('opt.scale is not a number')
     }
     if (scale < 1) {
         return Promise.reject('opt.scale can not less then 1')

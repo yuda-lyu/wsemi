@@ -135,7 +135,7 @@ import isarr from './isarr.mjs'
 function pmChain(pms, initial = null) {
     if (!isarr(pms)) {
         let pm = genPm()
-        pm.reject('pms is not array')
+        pm.reject('pms is not an array')
         return pm
     }
     return pms.reduce((pm, v) => {

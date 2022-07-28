@@ -364,7 +364,7 @@ function pmMap(rs, fun, takeLimit = 0) {
 
     //check
     if (!isarr(rs) && !isobj(rs)) {
-        pm.reject('rs is not array or object')
+        pm.reject('rs is not an array or object')
         return pm
     }
 

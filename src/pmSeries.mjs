@@ -216,7 +216,7 @@ function pmSeries(rs, fun) {
 
     //check
     if (!isarr(rs) && !isobj(rs)) {
-        pm.reject('rs is not array or object')
+        pm.reject('rs is not an array or object')
         return pm
     }
 
