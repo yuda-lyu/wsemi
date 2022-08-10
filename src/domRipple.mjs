@@ -59,7 +59,6 @@ function domRipple(ele, event, opt = {}) {
     eleRipple.style.width = `${diameter}px`
     eleRipple.style.height = `${diameter}px`
     eleRipple.style.transition = `all ${timeDuration / 1000}s linear`
-    eleRipple.style.userSelect = 'none'
     eleRipple.style.position = 'absolute'
     eleRipple.style.zIndex = 1
     eleRipple.style.left = `${left}px`
@@ -68,6 +67,8 @@ function domRipple(ele, event, opt = {}) {
     eleRipple.style.transformOrigin = 'center'
     eleRipple.style.transform = 'translate(-50%,-50%) scale(0)'
     eleRipple.style.background = color
+    eleRipple.style.userSelect = 'none'
+    eleRipple.style.pointerEvents = 'none'
     ele.appendChild(eleRipple)
     // console.log('eleRipple',eleRipple)
 
