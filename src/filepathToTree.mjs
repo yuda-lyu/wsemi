@@ -49,7 +49,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
@@ -63,7 +64,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
@@ -72,6 +74,7 @@ import strdelleft from './strdelleft.mjs'
  * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0'
  * //   }
  * // }
+ *
  *
  * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
  * let r2 = filepathToTree(fps2, { delimiter: '>' })
@@ -88,7 +91,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root>aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
@@ -102,7 +106,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root>aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
@@ -112,7 +117,8 @@ import strdelleft from './strdelleft.mjs'
  * //   }
  * // }
  *
- * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
+ *
+ * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
  * let r3 = filepathToTree(fps3)
  * console.log(r3)
  * // => {
@@ -127,7 +133,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -139,7 +146,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaaa',
  * //       parentId: 'root',
  * //       text: 'aaaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -151,7 +159,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯bbb',
  * //       parentId: 'root',
  * //       text: 'bbb',
- * //       children: []
+ * //       children: [],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -160,10 +169,11 @@ import strdelleft from './strdelleft.mjs'
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯c',
+ * //       id: 'root❯c:',
  * //       parentId: 'root',
- * //       text: 'c',
- * //       children: [Array]
+ * //       text: 'c:',
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -175,7 +185,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯ccc',
  * //       parentId: 'root',
  * //       text: 'ccc',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -184,10 +195,11 @@ import strdelleft from './strdelleft.mjs'
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯d',
+ * //       id: 'root❯d:',
  * //       parentId: 'root',
- * //       text: 'd',
- * //       children: [Array]
+ * //       text: 'd:',
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -199,7 +211,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯eee',
  * //       parentId: 'root',
  * //       text: 'eee',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -211,7 +224,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯ggg',
  * //       parentId: 'root',
  * //       text: 'ggg',
- * //       children: []
+ * //       children: [],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -223,7 +237,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯中文路徑2',
  * //       parentId: 'root',
  * //       text: '中文路徑2',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -234,7 +249,8 @@ import strdelleft from './strdelleft.mjs'
  * //       numOfChilren: -1,
  * //       id: 'root❯aaa1.txt',
  * //       parentId: 'root',
- * //       text: 'aaa1.txt'
+ * //       text: 'aaa1.txt',
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -245,7 +261,8 @@ import strdelleft from './strdelleft.mjs'
  * //       numOfChilren: -1,
  * //       id: 'root❯aaa2.txt',
  * //       parentId: 'root',
- * //       text: 'aaa2.txt'
+ * //       text: 'aaa2.txt',
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
@@ -259,7 +276,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaa',
  * //       parentId: 'root',
  * //       text: 'aaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -271,7 +289,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯aaaa',
  * //       parentId: 'root',
  * //       text: 'aaaa',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -283,7 +302,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯bbb',
  * //       parentId: 'root',
  * //       text: 'bbb',
- * //       children: []
+ * //       children: [],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -292,10 +312,11 @@ import strdelleft from './strdelleft.mjs'
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯c',
+ * //       id: 'root❯c:',
  * //       parentId: 'root',
- * //       text: 'c',
- * //       children: [Array]
+ * //       text: 'c:',
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -307,7 +328,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯ccc',
  * //       parentId: 'root',
  * //       text: 'ccc',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -316,10 +338,11 @@ import strdelleft from './strdelleft.mjs'
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯d',
+ * //       id: 'root❯d:',
  * //       parentId: 'root',
- * //       text: 'd',
- * //       children: [Array]
+ * //       text: 'd:',
+ * //       children: [Array],
+ * //       data: null
  * //     },
  * //     {
  * //       ns: 2,
@@ -331,7 +354,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯eee',
  * //       parentId: 'root',
  * //       text: 'eee',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -343,7 +367,8 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯ggg',
  * //       parentId: 'root',
  * //       text: 'ggg',
- * //       children: []
+ * //       children: [],
+ * //       data: [Object]
  * //     },
  * //     {
  * //       ns: 2,
@@ -355,24 +380,25 @@ import strdelleft from './strdelleft.mjs'
  * //       id: 'root❯中文路徑2',
  * //       parentId: 'root',
  * //       text: '中文路徑2',
- * //       children: [Array]
+ * //       children: [Array],
+ * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
  * //     'root❯aaa': '0',
  * //     'root❯aaaa': '1',
  * //     'root❯bbb': '2',
- * //     'root❯c': '3',
+ * //     'root❯c:': '3',
  * //     'root❯ccc': '4',
- * //     'root❯d': '5',
+ * //     'root❯d:': '5',
  * //     'root❯eee': '6',
  * //     'root❯ggg': '7',
  * //     'root❯中文路徑2': '8',
  * //     'root❯aaaa❯bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff': '1.children.0',
  * //     'root❯aaa❯aaabbb': '0.children.0',
+ * //     'root❯c:❯hhh': '3.children.0',
  * //     'root❯ccc❯cccddd': '4.children.0',
- * //     'root❯c❯hhh': '3.children.0',
- * //     'root❯d❯中文路徑1': '5.children.0',
+ * //     'root❯d:❯中文路徑1': '5.children.0',
  * //     'root❯eee❯eeefff1': '6.children.0',
  * //     'root❯eee❯eeefff2': '6.children.1',
  * //     'root❯中文路徑2❯aaa': '8.children.0',
@@ -500,12 +526,10 @@ function filepathToTree(data, opt = {}) {
             name: r.name,
             ns,
             ss: r.ss,
-            // cfp: r.cfp,
             id: r.cfp,
             pas,
-            // pacfp,
             parentId: pacfp,
-            path: v.path,
+            data: cloneDeep(v),
         }
 
         return t
@@ -561,6 +585,12 @@ function filepathToTree(data, opt = {}) {
             //ts
             ts.push(s)
 
+            //data
+            let data = null
+            if (ks === v.ns - 1) {
+                data = v.data
+            }
+
             //id
             let id = join(ts, delimiter)
             // console.log(id, ks, v.ns - 1, 'isFolder', isFolder)
@@ -578,10 +608,11 @@ function filepathToTree(data, opt = {}) {
                         _type: 'folder',
                         type: 'array',
                         numOfChilren: -1, //無法計算
-                        id: id,
+                        id,
                         parentId: id0,
                         text: s,
                         children: [], //資料夾預先建置children
+                        data,
                     }
                 }
                 else {
@@ -592,9 +623,10 @@ function filepathToTree(data, opt = {}) {
                         _type: 'file',
                         type: 'node',
                         numOfChilren: -1, //無法計算
-                        id: id,
+                        id,
                         parentId: id0,
                         text: s,
+                        data,
                     }
                 }
             }
@@ -624,6 +656,7 @@ function filepathToTree(data, opt = {}) {
             parentId: '', //無上層id
             text: bindRoot,
             children: [], //未避免後續為最末端資料夾不能靠偵測建置, 一律改成預設建置
+            data: null,
         }
     ]
 
