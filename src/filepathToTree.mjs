@@ -40,32 +40,32 @@ import strdelleft from './strdelleft.mjs'
  * // => {
  * //   treeItems: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
@@ -75,39 +75,38 @@ import strdelleft from './strdelleft.mjs'
  * //   }
  * // }
  *
- *
  * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
  * let r2 = filepathToTree(fps2, { delimiter: '>' })
  * console.log(r2)
  * // => {
  * //   treeItems: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root>aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root>aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
@@ -118,270 +117,79 @@ import strdelleft from './strdelleft.mjs'
  * // }
  *
  *
- * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
- * let r3 = filepathToTree(fps3)
+ * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
+ * let r3 = filepathToTree(fps3, { bindRoot: '本機' })
  * console.log(r3)
  * // => {
  * //   treeItems: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaaa',
- * //       parentId: 'root',
- * //       text: 'aaaa',
+ * //       id: '本機',
+ * //       parentId: '',
+ * //       text: '本機',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯bbb',
- * //       parentId: 'root',
- * //       text: 'bbb',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯c:',
- * //       parentId: 'root',
- * //       text: 'c:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ccc',
- * //       parentId: 'root',
- * //       text: 'ccc',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯d:',
- * //       parentId: 'root',
- * //       text: 'd:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯eee',
- * //       parentId: 'root',
- * //       text: 'eee',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ggg',
- * //       parentId: 'root',
- * //       text: 'ggg',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯中文路徑2',
- * //       parentId: 'root',
- * //       text: '中文路徑2',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'file',
- * //       type: 'node',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1.txt',
- * //       parentId: 'root',
- * //       text: 'aaa1.txt',
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'file',
- * //       type: 'node',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2.txt',
- * //       parentId: 'root',
- * //       text: 'aaa2.txt',
- * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaaa',
- * //       parentId: 'root',
- * //       text: 'aaaa',
+ * //       id: '本機',
+ * //       parentId: '',
+ * //       text: '本機',
  * //       children: [Array],
  * //       data: null
- * //     },
+ * //     }
+ * //   ],
+ * //   kpPath: {
+ * //     '本機❯aaa': '0',
+ * //     '本機❯aaa❯bbb': '0.children.0',
+ * //     '本機❯aaa❯bbb❯z1.txt': '0.children.0.children.0'
+ * //   }
+ * // }
+ *
+ * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
+ * let r4 = filepathToTree(fps4)
+ * console.log(r4)
+ * // => {
+ * //   treeItems: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯bbb',
- * //       parentId: 'root',
- * //       text: 'bbb',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯c:',
- * //       parentId: 'root',
- * //       text: 'c:',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
+ * //     }
+ * //   ],
+ * //   treeItemsFolder: [
  * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       ns: 0,
+ * //       ts: [],
+ * //       parentInfors: [],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯ccc',
- * //       parentId: 'root',
- * //       text: 'ccc',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯d:',
- * //       parentId: 'root',
- * //       text: 'd:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯eee',
- * //       parentId: 'root',
- * //       text: 'eee',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ggg',
- * //       parentId: 'root',
- * //       text: 'ggg',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       ns: 2,
- * //       ts: [Array],
- * //       parentInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯中文路徑2',
- * //       parentId: 'root',
- * //       text: '中文路徑2',
- * //       children: [Array],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
@@ -626,6 +434,7 @@ function filepathToTree(data, opt = {}) {
                         id,
                         parentId: id0,
                         text: s,
+                        // children,
                         data,
                     }
                 }
@@ -821,9 +630,9 @@ function filepathToTree(data, opt = {}) {
     })
     // console.log('kpPath', kpPath)
 
-    //remove root for treeItems, treeItemsFolder
-    treeItems = get(treeItems, '0.children')
-    treeItemsFolder = get(treeItemsFolder, '0.children')
+    // //remove root for treeItems, treeItemsFolder
+    // treeItems = get(treeItems, '0.children')
+    // treeItemsFolder = get(treeItemsFolder, '0.children')
 
     return {
         treeItems,
