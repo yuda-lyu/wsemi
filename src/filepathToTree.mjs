@@ -19,7 +19,6 @@ import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
-import strdelleft from './strdelleft.mjs'
 
 
 /**
@@ -503,7 +502,8 @@ function filepathToTree(data, opt = {}) {
 
     //kpPathFd, 從上層開始建構folder, file之後再建
     let kpPathFd = {}
-    kpPathFd[bindRoot] = `0.children` //預建bindRoot故為第1個也只有1個
+    kpPathFd[bindRoot] = `0.children` //儲存自己子資料夾路徑, 預建bindRoot故為第1個也只有1個
+    kpPath[bindRoot] = `0` //儲存自己(資料夾)路徑
     for (let i = 2; i <= nsMaxFd; i++) { //有root在故從2開始
 
         //data
@@ -550,8 +550,8 @@ function filepathToTree(data, opt = {}) {
 
                 //save
                 let c = `${k}.${size(chds) - 1}`
-                kpPathFd[v.id] = `${c}.children`
-                kpPath[v.id] = c
+                kpPathFd[v.id] = `${c}.children` //儲存自己子資料夾路徑
+                kpPath[v.id] = c //儲存自己(資料夾)路徑
 
             }
 
@@ -610,8 +610,8 @@ function filepathToTree(data, opt = {}) {
 
                 //save
                 let c = `${k}.${size(chds) - 1}`
-                kpPathFl[v.id] = c
-                kpPath[v.id] = c
+                kpPathFl[v.id] = c //儲存自己檔案路徑
+                kpPath[v.id] = c //儲存自己(檔案)路徑
 
             }
 
@@ -621,14 +621,14 @@ function filepathToTree(data, opt = {}) {
     // console.log('treeItems(add file)', cloneDeep(treeItems))
     // console.log('kpPathFl', kpPathFl)
 
-    //remove root for kpPath
-    each(kpPath, (v, k) => {
-        // console.log(k, 'v1', v)
-        v = strdelleft(v, 11)
-        // console.log(k, 'v2', v)
-        kpPath[k] = v
-    })
-    // console.log('kpPath', kpPath)
+    // //remove root for kpPath
+    // each(kpPath, (v, k) => {
+    //     // console.log(k, 'v1', v)
+    //     v = strdelleft(v, 11)
+    //     // console.log(k, 'v2', v)
+    //     kpPath[k] = v
+    // })
+    // // console.log('kpPath', kpPath)
 
     // //remove root for treeItems, treeItemsFolder
     // treeItems = get(treeItems, '0.children')
