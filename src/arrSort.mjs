@@ -14,6 +14,7 @@ import isStrHasNumber from './isStrHasNumber.mjs'
 import cdbl from './cdbl.mjs'
 import strmid from './strmid.mjs'
 import strdelleft from './strdelleft.mjs'
+import getFileTrueName from './getFileTrueName.mjs'
 
 
 function getInputType(vs) {
@@ -46,12 +47,18 @@ function getInputType(vs) {
 }
 
 
-function getVirArr(vs, type) {
+function getVirArr(vs, type, opt = {}) {
     let ts = []
 
     //check
     if (type !== 'num' && type !== 'str') {
         throw new Error(`invalid type`)
+    }
+
+    //excludeExt
+    let excludeExt = get(opt, 'excludeExt')
+    if (!isbol(excludeExt)) {
+        excludeExt = false
     }
 
     if (type === 'num') {
@@ -68,12 +75,20 @@ function getVirArr(vs, type) {
     }
     else if (type === 'str') {
 
+        //st, 挑選第1個出現含數字之字串
+        let st = ''
+        each(vs, (v) => {
+            if (isStrHasNumber(v)) {
+                st = v
+                return false //跳出
+            }
+        })
+
         //偵測是否字首有共通字串
-        let s0 = get(vs, 0, '')
         let bHasPre = false
         let iHasPre = -1
-        if (isStrHasNumber(s0)) {
-            let ss = split(s0, '')
+        if (st !== '') {
+            let ss = split(st, '')
             each(ss, (sv, ksv) => {
                 let b = true
                 each(vs, (ov, kov) => {
@@ -96,7 +111,15 @@ function getVirArr(vs, type) {
 
             //剔除字首後, 產生待排序物件陣列
             ts = map(vs, (v, k) => {
+
+                //strdelleft
                 let t = strdelleft(v, iHasPre)
+
+                //excludeExt
+                if (excludeExt) {
+                    t = getFileTrueName(t)
+                }
+
                 if (isnum(t)) {
                     t = cdbl(t)
                 }
@@ -144,8 +167,10 @@ function sortArr(vs, returnIndex) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrSort.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
- * @param {Boolean} [returnIndex=false] 輸入是否回傳排序指標陣列，預設false
- * @param {String} [compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
+ * @param {String} [opt.compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
+ * @param {Boolean} [opt.excludeExt=false] 輸入當比較對象為字串時是否視為檔名要剔除副檔名布林值，預設false
  * @returns {Array} 回傳排序後陣列或指標陣列
  * @example
  *
@@ -188,13 +213,25 @@ function sortArr(vs, returnIndex) {
  * //   { s: 'March', i: 1 }
  * // ]
  *
- * r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+ * r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
  * console.log(r)
  * // => [
+ * //   { s: 'abc', i: -1 },
  * //   { s: 'abc1', i: 1 },
  * //   { s: 'abc4', i: 100000 },
  * //   { s: 'abc30', i: 4 },
  * //   { s: 'abc100000', i: 30 }
+ * // ]
+ *
+ * r = arrSort([{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's' }, { excludeExt: true })
+ * console.log(r)
+ * // => [
+ * //   { s: 'abc', i: -2 },
+ * //   { s: 'abc.txt', i: -1 },
+ * //   { s: 'abc1.txt', i: 1 },
+ * //   { s: 'abc100000.txt', i: 30 },
+ * //   { s: 'abc30.txt', i: 4 },
+ * //   { s: 'abc4.txt', i: 100000 }
  * // ]
  *
  * r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
@@ -257,7 +294,7 @@ function arrSort(vall, opt = {}) {
         if (typeTrans === 'num' || typeTrans === 'str') {
 
             //getVirArr
-            let vs = getVirArr(vallTrans, typeTrans)
+            let vs = getVirArr(vallTrans, typeTrans, opt)
 
             //sortArr
             let inds = sortArr(vs, true)
@@ -282,7 +319,7 @@ function arrSort(vall, opt = {}) {
     else if (type === 'num' || type === 'str') {
 
         //getVirArr
-        let vs = getVirArr(vall, type)
+        let vs = getVirArr(vall, type, opt)
 
         //sortArr
         rs = sortArr(vs, returnIndex)

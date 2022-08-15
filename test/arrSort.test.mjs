@@ -52,9 +52,15 @@ describe(`arrSort`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [ { s: 'abc1', i: 1 }, { s: 'abc4', i: 100000 }, { s: 'abc30', i: 4 }, { s: 'abc100000', i: 30 } ] when input [{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' }`, function() {
-        let r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
-        let rr = [{ s: 'abc1', i: 1 }, { s: 'abc4', i: 100000 }, { s: 'abc30', i: 4 }, { s: 'abc100000', i: 30 }]
+    it(`should return [ { s: 'abc', i: -1 }, { s: 'abc1', i: 1 }, { s: 'abc4', i: 100000 }, { s: 'abc30', i: 4 }, { s: 'abc100000', i: 30 } ] when input [{ s: 'abc1', i: 1, }, { s: 'abc', i: -1 }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' }`, function() {
+        let r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc', i: -1 }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+        let rr = [{ s: 'abc', i: -1 }, { s: 'abc1', i: 1 }, { s: 'abc4', i: 100000 }, { s: 'abc30', i: 4 }, { s: 'abc100000', i: 30 }]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [{ s: 'abc.txt', i: -1 }, { s: 'abc', i: -2 }, { s: 'abc1.txt', i: 1 }, { s: 'abc4.txt', i: 100000 }, { s: 'abc30.txt', i: 4 }, { s: 'abc100000.txt', i: 30 }] when input [{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's', excludeExt: true }`, function() {
+        let r = arrSort([{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's', excludeExt: true })
+        let rr = [{ s: 'abc.txt', i: -1 }, { s: 'abc', i: -2 }, { s: 'abc1.txt', i: 1 }, { s: 'abc4.txt', i: 100000 }, { s: 'abc30.txt', i: 4 }, { s: 'abc100000.txt', i: 30 }]
         assert.strict.deepStrictEqual(r, rr)
     })
 

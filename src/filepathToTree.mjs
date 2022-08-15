@@ -17,6 +17,7 @@ import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
+import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
 
 
@@ -29,12 +30,13 @@ import haskey from './haskey.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [delimiter='❯'] 輸入路徑分隔字串，預設'❯'
  * @param {String} [bindRoot='root'] 輸入臨時封裝用根目錄字串，預設'root'
+ * @param {Function} [soryItems=null] 輸入排序產生樹狀物件函數，預設null
  * @returns {Object} 回傳結果物件，其內treeItems為資料夾與檔案之樹狀物件，treeItemsFolder為僅資料夾之樹狀物件，kpPath為各項目id之取樹狀物件路徑物件
  * @example
  *
  * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
  * let r1 = filepathToTree(fps1)
- * fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
+ * //fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
  * console.log(r1)
  * // => {
  * //   treeItems: [
@@ -77,7 +79,7 @@ import haskey from './haskey.mjs'
  *
  * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
  * let r2 = filepathToTree(fps2, { delimiter: '>' })
- * fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
+ * //fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
  * console.log(r2)
  * // => {
  * //   treeItems: [
@@ -120,7 +122,7 @@ import haskey from './haskey.mjs'
  *
  * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
  * let r3 = filepathToTree(fps3, { bindRoot: '本機' })
- * fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
+ * //fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
  * console.log(r3)
  * // => {
  * //   treeItems: [
@@ -164,7 +166,7 @@ import haskey from './haskey.mjs'
  * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
  * let r4 = filepathToTree(fps4)
  * console.log(r4)
- * fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
+ * //fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
  * // => {
  * //   treeItems: [
  * //     {
@@ -258,6 +260,112 @@ import haskey from './haskey.mjs'
  * //   }
  * // }
  *
+ * let fps5 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
+ * let soryItems5 = (rs, pid, ns) => {
+ *     // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
+ *     rs = arrSort(rs, { compareKey: 'text' })
+ *     return rs
+ * }
+ * let r5 = filepathToTree(fps5, { soryItems: soryItems5 })
+ * //fs.writeFileSync('r5.json', JSON.stringify(r5), 'utf8')
+ * console.log(r5)
+ * // => {
+ * //   treeItems: [
+ * //     {
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       parentInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   treeItemsFolder: [
+ * //     {
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       parentInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   kpPath: {
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa1': '0.children.1',
+ * //     'root❯aaa2': '0.children.2',
+ * //     'root❯aaa10': '0.children.3',
+ * //     'root❯aaa❯bbb': '0.children.0.children.0',
+ * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
+ * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.1',
+ * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.2'
+ * //   }
+ * // }
+ *
+ * let fps6 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
+ * let soryItems6 = (rs, pid, ns) => {
+ *     // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
+ *     rs = arrSort(rs, { compareKey: 'text', excludeExt: true })
+ *     return rs
+ * }
+ * let r6 = filepathToTree(fps6, { soryItems: soryItems6 })
+ * //fs.writeFileSync('r6.json', JSON.stringify(r6), 'utf8')
+ * console.log(r6)
+ * // => {
+ * //   treeItems: [
+ * //     {
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       parentInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   treeItemsFolder: [
+ * //     {
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       parentInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   kpPath: {
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa1': '0.children.1',
+ * //     'root❯aaa2': '0.children.2',
+ * //     'root❯aaa10': '0.children.3',
+ * //     'root❯aaa❯bbb': '0.children.0.children.0',
+ * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
+ * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
+ * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
+ * //   }
+ * // }
+ *
  */
 function filepathToTree(data, opt = {}) {
 
@@ -277,6 +385,9 @@ function filepathToTree(data, opt = {}) {
     if (!isestr(bindRoot)) {
         bindRoot = 'root'
     }
+
+    //soryItems
+    let soryItems = get(opt, 'soryItems')
 
     //parseFp
     let parseFp = (fp) => {
@@ -457,31 +568,34 @@ function filepathToTree(data, opt = {}) {
     let vLv = values(kpLv)
     // console.log('vLv', vLv)
 
-    //treeItems
-    let treeItems = null
-    if (true) {
-        let ts = [bindRoot]
-        treeItems = [
-            {
-                ns: size(ts),
-                ts: cloneDeep(ts),
-                parentInfors: genParentIds(ts),
-                _type: 'folder',
-                type: 'array',
-                numOfChilren: -1, //無法計算
-                id: bindRoot, //給予bindRoot為主鍵
-                parentId: '', //無上層id
-                text: bindRoot,
-                children: [], //未避免後續為最末端資料夾不能靠偵測建置, 一律改成預設建置
-                data: null,
-            }
-        ]
-    }
-
     //sortBy
-    vLv = sortBy(vLv, 'ns') //用階層數排序, 少的放前
     vLv = sortBy(vLv, 'id') //用id排序
+    vLv = sortBy(vLv, 'ns') //用階層數排序, 少的放前
     // console.log('vLv', vLv)
+
+    //soryItems
+    if (isfun(soryItems)) {
+        let vLvTemp = []
+        let g1Lv = groupBy(vLv, 'ns')
+        each(g1Lv, (g1v, g1k) => {
+            let g2Lv = groupBy(g1v, 'parentId')
+            each(g2Lv, (g2v, g2k) => {
+
+                //soryItems
+                // console.log('soryItems before', map(g2v, 'text'))
+                let r = soryItems(g2v, g2k, g1k)
+                // console.log('soryItems after', map(r, 'text'))
+
+                //merge
+                vLvTemp = [
+                    ...vLvTemp,
+                    ...r,
+                ]
+
+            })
+        })
+        vLv = vLvTemp
+    }
 
     //vLvFd, vLvFl
     let vLvFd = []
@@ -507,12 +621,31 @@ function filepathToTree(data, opt = {}) {
     let nsMaxFd = max(map(vLvFd, 'ns'))
     let nsMaxFl = max(map(vLvFl, 'ns'))
 
-    //kpPath
-    let kpPath = {}
+    //treeItems
+    let treeItems = null
+    if (true) {
+        let ts = [bindRoot]
+        treeItems = [
+            {
+                ns: size(ts),
+                ts: cloneDeep(ts),
+                parentInfors: genParentIds(ts),
+                _type: 'folder',
+                type: 'array',
+                numOfChilren: -1, //無法計算
+                id: bindRoot, //給予bindRoot為主鍵
+                parentId: '', //無上層id
+                text: bindRoot,
+                children: [], //未避免後續為最末端資料夾不能靠偵測建置, 一律改成預設建置
+                data: null,
+            }
+        ]
+    }
 
-    //kpPathFd, 從上層開始建構folder, file之後再建
+    //kpPath, kpPathFd, 從上層開始建構folder, file之後再建
     let kpPathFd = {}
     kpPathFd[bindRoot] = `0.children` //儲存自己子資料夾路徑, 預建bindRoot故為第1個也只有1個
+    let kpPath = {}
     kpPath[bindRoot] = `0` //儲存自己(資料夾)路徑
     for (let i = 2; i <= nsMaxFd; i++) { //有root在故從2開始
 

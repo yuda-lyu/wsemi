@@ -11,7 +11,7 @@ import ispint from './ispint.mjs'
  * @memberOf wsemi
  * @param {Number} rStart 輸入起始數字
  * @param {Number} rEnd 輸入結束數字
- * @param {Integer} num 輸入切分數量正整數
+ * @param {Integer} [num=2] 輸入切分數量正整數，預設2
  * @returns {Boolean} 回傳判斷布林值
  * @example
  *
@@ -48,7 +48,7 @@ function rang(rStart, rEnd, num = 2) {
 
     //check num
     if (!ispint(num)) {
-        num = 1
+        num = 2
     }
     num = cint(num)
 
