@@ -6905,7 +6905,7 @@ console.log(arrSep(arr, 3))
 
     
 
-    <h4 class="name" id=".arrSort"><span class="type-signature">(static) </span>arrSort<span class="signature">(vall, returnIndex<span class="signature-attributes">opt</span>, compareKey<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Array}</span></h4>
+    <h4 class="name" id=".arrSort"><span class="type-signature">(static) </span>arrSort<span class="signature">(vall, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Array}</span></h4>
 
     
 
@@ -6917,7 +6917,7 @@ console.log(arrSep(arr, 3))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrSort.mjs.html">arrSort.mjs</a>, <a href="arrSort.mjs.html#line210">line 210</a>
+        <a href="arrSort.mjs.html">arrSort.mjs</a>, <a href="arrSort.mjs.html#line247">line 247</a>
     </li></ul></dd>
     
 
@@ -7012,13 +7012,25 @@ console.log(r)
 //   { s: 'March', i: 1 }
 // ]
 
-r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
 console.log(r)
 // =&gt; [
+//   { s: 'abc', i: -1 },
 //   { s: 'abc1', i: 1 },
 //   { s: 'abc4', i: 100000 },
 //   { s: 'abc30', i: 4 },
 //   { s: 'abc100000', i: 30 }
+// ]
+
+r = arrSort([{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's' }, { excludeExt: true })
+console.log(r)
+// =&gt; [
+//   { s: 'abc', i: -2 },
+//   { s: 'abc.txt', i: -1 },
+//   { s: 'abc1.txt', i: 1 },
+//   { s: 'abc100000.txt', i: 30 },
+//   { s: 'abc30.txt', i: 4 },
+//   { s: 'abc4.txt', i: 100000 }
 // ]
 
 r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
@@ -7098,6 +7110,68 @@ console.log(r)
 
         <tr>
             
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
                 <td class="name"><code>returnIndex</code></td>
             
 
@@ -7130,7 +7204,7 @@ console.log(r)
                 </td>
             
 
-            <td class="description last"><p>輸入是否回傳排序指標陣列，預設false</p></td>
+            <td class="description last"><p>輸入是否回傳排序指標陣列布林值，預設false</p></td>
         </tr>
 
     
@@ -7170,6 +7244,52 @@ console.log(r)
             
 
             <td class="description last"><p>輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>excludeExt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入當比較對象為字串時是否視為檔名要剔除副檔名布林值，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -31545,7 +31665,7 @@ console.log(f2c(f))
 
     
 
-    <h4 class="name" id=".filepathToTree"><span class="type-signature">(static) </span>filepathToTree<span class="signature">(data, opt<span class="signature-attributes">opt</span>, delimiter<span class="signature-attributes">opt</span>, bindRoot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
+    <h4 class="name" id=".filepathToTree"><span class="type-signature">(static) </span>filepathToTree<span class="signature">(data, opt<span class="signature-attributes">opt</span>, delimiter<span class="signature-attributes">opt</span>, bindRoot<span class="signature-attributes">opt</span>, soryItems<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -31557,7 +31677,7 @@ console.log(f2c(f))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="filepathToTree.mjs.html">filepathToTree.mjs</a>, <a href="filepathToTree.mjs.html#line262">line 262</a>
+        <a href="filepathToTree.mjs.html">filepathToTree.mjs</a>, <a href="filepathToTree.mjs.html#line370">line 370</a>
     </li></ul></dd>
     
 
@@ -31615,7 +31735,7 @@ console.log(f2c(f))
 <div onclick="editOnline(this, 'filepathToTree')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r1 = filepathToTree(fps1)
-fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
+//fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
 console.log(r1)
 // =&gt; {
 //   treeItems: [
@@ -31658,7 +31778,7 @@ console.log(r1)
 
 let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r2 = filepathToTree(fps2, { delimiter: '&gt;' })
-fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
+//fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
 console.log(r2)
 // =&gt; {
 //   treeItems: [
@@ -31701,7 +31821,7 @@ console.log(r2)
 
 let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r3 = filepathToTree(fps3, { bindRoot: '本機' })
-fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
+//fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
 console.log(r3)
 // =&gt; {
 //   treeItems: [
@@ -31745,7 +31865,7 @@ console.log(r3)
 let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
 let r4 = filepathToTree(fps4)
 console.log(r4)
-fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
+//fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
 // =&gt; {
 //   treeItems: [
 //     {
@@ -31836,6 +31956,112 @@ fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
 //     'root❯aaa❯aaabbb❯abc❯abcde❯abcdefg20.txt': '0.children.0.children.0.children.0.children.1.children.22',
 //     'root❯aaa❯aaabbb❯abc❯abcd❯abcde.txt': '0.children.0.children.0.children.0.children.0.children.0',
 //     'root❯中文路徑2❯aaa❯aaabbb❯abc❯測試.txt': '0.children.8.children.0.children.0.children.0.children.0'
+//   }
+// }
+
+let fps5 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
+let soryItems5 = (rs, pid, ns) =&gt; {
+    // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
+    rs = arrSort(rs, { compareKey: 'text' })
+    return rs
+}
+let r5 = filepathToTree(fps5, { soryItems: soryItems5 })
+//fs.writeFileSync('r5.json', JSON.stringify(r5), 'utf8')
+console.log(r5)
+// =&gt; {
+//   treeItems: [
+//     {
+//       ns: 1,
+//       ts: [Array],
+//       parentInfors: [Array],
+//       _type: 'folder',
+//       type: 'array',
+//       numOfChilren: -1,
+//       id: 'root',
+//       parentId: '',
+//       text: 'root',
+//       children: [Array],
+//       data: null
+//     }
+//   ],
+//   treeItemsFolder: [
+//     {
+//       ns: 1,
+//       ts: [Array],
+//       parentInfors: [Array],
+//       _type: 'folder',
+//       type: 'array',
+//       numOfChilren: -1,
+//       id: 'root',
+//       parentId: '',
+//       text: 'root',
+//       children: [Array],
+//       data: null
+//     }
+//   ],
+//   kpPath: {
+//     root: '0',
+//     'root❯aaa': '0.children.0',
+//     'root❯aaa1': '0.children.1',
+//     'root❯aaa2': '0.children.2',
+//     'root❯aaa10': '0.children.3',
+//     'root❯aaa❯bbb': '0.children.0.children.0',
+//     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
+//     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.1',
+//     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.2'
+//   }
+// }
+
+let fps6 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
+let soryItems6 = (rs, pid, ns) =&gt; {
+    // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
+    rs = arrSort(rs, { compareKey: 'text', excludeExt: true })
+    return rs
+}
+let r6 = filepathToTree(fps6, { soryItems: soryItems6 })
+//fs.writeFileSync('r6.json', JSON.stringify(r6), 'utf8')
+console.log(r6)
+// =&gt; {
+//   treeItems: [
+//     {
+//       ns: 1,
+//       ts: [Array],
+//       parentInfors: [Array],
+//       _type: 'folder',
+//       type: 'array',
+//       numOfChilren: -1,
+//       id: 'root',
+//       parentId: '',
+//       text: 'root',
+//       children: [Array],
+//       data: null
+//     }
+//   ],
+//   treeItemsFolder: [
+//     {
+//       ns: 1,
+//       ts: [Array],
+//       parentInfors: [Array],
+//       _type: 'folder',
+//       type: 'array',
+//       numOfChilren: -1,
+//       id: 'root',
+//       parentId: '',
+//       text: 'root',
+//       children: [Array],
+//       data: null
+//     }
+//   ],
+//   kpPath: {
+//     root: '0',
+//     'root❯aaa': '0.children.0',
+//     'root❯aaa1': '0.children.1',
+//     'root❯aaa2': '0.children.2',
+//     'root❯aaa10': '0.children.3',
+//     'root❯aaa❯bbb': '0.children.0.children.0',
+//     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
+//     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
+//     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
 //   }
 // }</code></pre>
         </div>
@@ -32018,6 +32244,45 @@ fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
             
 
             <td class="description last"><p>輸入臨時封裝用根目錄字串，預設'root'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>soryItems</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入排序產生樹狀物件函數，預設null</p></td>
         </tr>
 
     
@@ -63842,7 +64107,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 
     
 
-    <h4 class="name" id=".rang"><span class="type-signature">(static) </span>rang<span class="signature">(rStart, rEnd, num)</span><span class="type-signature"> → {Boolean}</span></h4>
+    <h4 class="name" id=".rang"><span class="type-signature">(static) </span>rang<span class="signature">(rStart, rEnd, num<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Boolean}</span></h4>
 
     
 
@@ -63941,6 +64206,8 @@ console.log(r)
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
         <th>Default</th>
@@ -63967,6 +64234,14 @@ console.log(r)
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -63995,6 +64270,14 @@ console.log(r)
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
                 <td class="default">
@@ -64022,6 +64305,16 @@ console.log(r)
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
 
             
                 <td class="default">
@@ -64031,7 +64324,7 @@ console.log(r)
                 </td>
             
 
-            <td class="description last"><p>輸入切分數量正整數</p></td>
+            <td class="description last"><p>輸入切分數量正整數，預設2</p></td>
         </tr>
 
     
@@ -76833,7 +77126,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Sun Aug 14 2022 11:06:36 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Mon Aug 15 2022 14:15:17 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -76854,7 +77147,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.10/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.75/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.76/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
