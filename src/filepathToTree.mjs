@@ -304,19 +304,19 @@ import haskey from './haskey.mjs'
  * //     root: '0',
  * //     'root❯aaa': '0.children.0',
  * //     'root❯aaa1': '0.children.1',
- * //     'root❯aaa2': '0.children.2',
- * //     'root❯aaa10': '0.children.3',
+ * //     'root❯aaa10': '0.children.2',
+ * //     'root❯aaa2': '0.children.3',
  * //     'root❯aaa❯bbb': '0.children.0.children.0',
  * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
- * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.1',
- * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.2'
+ * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
+ * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
  * //   }
  * // }
  *
  * let fps6 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
  * let soryItems6 = (rs, pid, ns) => {
  *     // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
- *     rs = arrSort(rs, { compareKey: 'text', excludeExt: true })
+ *     rs = arrSort(rs, { compareKey: 'text', localeCompare: true })
  *     return rs
  * }
  * let r6 = filepathToTree(fps6, { soryItems: soryItems6 })

@@ -1,20 +1,17 @@
 import get from 'lodash/get'
 import each from 'lodash/each'
 import map from 'lodash/map'
-import split from 'lodash/split'
 import sortBy from 'lodash/sortBy'
 import size from 'lodash/size'
+import cloneDeep from 'lodash/cloneDeep'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
 import isobj from './isobj.mjs'
-import isStrHasNumber from './isStrHasNumber.mjs'
 import cdbl from './cdbl.mjs'
-import strmid from './strmid.mjs'
-import strdelleft from './strdelleft.mjs'
-import getFileTrueName from './getFileTrueName.mjs'
+import trim from './trim.mjs'
 
 
 function getInputType(vs) {
@@ -51,16 +48,11 @@ function getVirArr(vs, type, opt = {}) {
     let ts = []
 
     //check
-    if (type !== 'num' && type !== 'str') {
-        throw new Error(`invalid type`)
+    if (type !== 'num' && type !== 'str' && type !== 'files') {
+        throw new Error(`invalid type[${type}]`)
     }
 
-    //excludeExt
-    let excludeExt = get(opt, 'excludeExt')
-    if (!isbol(excludeExt)) {
-        excludeExt = false
-    }
-
+    // console.log('getVirArr type', type)
     if (type === 'num') {
 
         //產生待排序物件陣列
@@ -73,76 +65,55 @@ function getVirArr(vs, type, opt = {}) {
         })
 
     }
-    else if (type === 'str') {
+    else if (type === 'files') {
 
-        //st, 挑選第1個出現含數字之字串
-        let st = ''
-        each(vs, (v) => {
-            if (isStrHasNumber(v)) {
-                st = v
-                return false //跳出
+        //產生待排序物件陣列
+        ts = map(vs, (v, k) => {
+            return {
+                key: k,
+                payload: v,
+                value: v,
             }
         })
 
-        //偵測是否字首有共通字串
-        let bHasPre = false
-        let iHasPre = -1
-        if (st !== '') {
-            let ss = split(st, '')
-            each(ss, (sv, ksv) => {
-                let b = true
-                each(vs, (ov, kov) => {
-                    if (strmid(ov, ksv) !== sv) {
-                        b = false
-                        return false
-                    }
-                })
-                if (b) {
-                    bHasPre = true
-                    iHasPre = ksv + 1 //ksv是位置, +1為待刪除的長度
-                }
-                else {
-                    return false
-                }
-            })
-        }
+    }
+    else if (type === 'str') {
 
-        if (bHasPre) {
+        //vst
+        let vst = map(vs, (v) => {
+            return trim(v, { excludeString: true })
+        })
 
-            //剔除字首後, 產生待排序物件陣列
-            ts = map(vs, (v, k) => {
+        //n
+        let n = 0
+        each(vst, (v) => {
+            if (isnum(v)) {
+                n++
+            }
+        })
 
-                //strdelleft
-                let t = strdelleft(v, iHasPre)
+        //bAllNum
+        let bAllNum = n === size(vst)
 
-                //excludeExt
-                if (excludeExt) {
-                    t = getFileTrueName(t)
-                }
+        //trim(剔除開頭結尾非數字之字串)後, 產生待排序物件陣列
+        ts = map(vs, (v, k) => {
+            let t = v
 
-                if (isnum(t)) {
-                    t = cdbl(t)
-                }
-                return {
-                    key: k,
-                    payload: v,
-                    value: t,
-                }
-            })
+            //bAllNum
+            if (bAllNum) {
+                // t = trim(t, { excludeString: true })
+                t = vst[k]
+            }
 
-        }
-        else {
-
-            //產生待排序物件陣列
-            ts = map(vs, (v, k) => {
-                return {
-                    key: k,
-                    payload: v,
-                    value: v,
-                }
-            })
-
-        }
+            if (isnum(t)) {
+                t = cdbl(t)
+            }
+            return {
+                key: k,
+                payload: v,
+                value: t,
+            }
+        })
 
     }
 
@@ -150,8 +121,43 @@ function getVirArr(vs, type, opt = {}) {
 }
 
 
-function sortArr(vs, returnIndex) {
+// function lcSort(vs) {
+//     return vs.slice().sort((a, b) => a.localeCompare(b))
+// }
+
+
+function lcSortByKey(vs, key) {
+
+    //slice
+    let vst = cloneDeep(vs)
+
+    //sort
+    vst.sort((a, b) => {
+
+        //localeCompare: https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/String/localeCompare
+        let r = a[key].localeCompare(b[key], 'standard', { numeric: true })
+        // console.log('a[key]', a[key], 'b[key]', b[key], 'r', r)
+
+        return r
+    })
+
+    return vst
+}
+
+
+function sortObjArr(vs, returnIndex) {
     let rs = sortBy(vs, 'value')
+    if (returnIndex) {
+        return map(rs, 'key')
+    }
+    else {
+        return map(rs, 'payload')
+    }
+}
+
+
+function sortObjArrWithLocaleCompare(vs, returnIndex) {
+    let rs = lcSortByKey(vs, 'value')
     if (returnIndex) {
         return map(rs, 'key')
     }
@@ -168,9 +174,9 @@ function sortArr(vs, returnIndex) {
  * @memberOf wsemi
  * @param {Array} vall 輸入要被提取的任意資料陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.localeCompare=false] 輸入是否使用localeCompare排序布林值，預設false
  * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
  * @param {String} [opt.compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
- * @param {Boolean} [opt.excludeExt=false] 輸入當比較對象為字串時是否視為檔名要剔除副檔名布林值，預設false
  * @returns {Array} 回傳排序後陣列或指標陣列
  * @example
  *
@@ -200,11 +206,26 @@ function sortArr(vs, returnIndex) {
  * console.log(r)
  * // => [ 'abc1', 'abc4', 'abc21', 'abc30', 'abc100000' ]
  *
- * r = arrSort(['1a', '30c', '  4 abc ', '21d', '100000xy'])
+ * r = arrSort(['1a', '30c', '  4 abc ', 'xyz', '21d', '100000xy'])
  * console.log(r)
- * // => [ '  4 abc ', '100000xy', '1a', '21d', '30c' ]
+ * // => [ '  4 abc ', '100000xy', '1a', '21d', '30c', 'xyz' ]
  *
- * r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 's' })
+ * r = arrSort(
+ *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+ *     { compareKey: 'i' }
+ * )
+ * console.log(r)
+ * // => [
+ * //   { s: 'March', i: 1 },
+ * //   { s: 'Jan', i: 4 },
+ * //   { s: 'Dec', i: 30 },
+ * //   { s: 'Feb', i: 100000 }
+ * // ]
+ *
+ * r = arrSort(
+ *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+ *     { compareKey: 's' }
+ * )
  * console.log(r)
  * // => [
  * //   { s: 'Dec', i: 30 },
@@ -213,7 +234,23 @@ function sortArr(vs, returnIndex) {
  * //   { s: 'March', i: 1 }
  * // ]
  *
- * r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+ * r = arrSort(
+ *     [{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }],
+ *     { compareKey: 's' }
+ * )
+ * console.log(r)
+ * // => [
+ * //   { s: 'abc', i: -1 },
+ * //   { s: 'abc1', i: 1 },
+ * //   { s: 'abc100000', i: 30 },
+ * //   { s: 'abc30', i: 4 },
+ * //   { s: 'abc4', i: 100000 }
+ * // ]
+ *
+ * r = arrSort(
+ *     [{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }],
+ *     { compareKey: 's', localeCompare: true }
+ * )
  * console.log(r)
  * // => [
  * //   { s: 'abc', i: -1 },
@@ -223,24 +260,32 @@ function sortArr(vs, returnIndex) {
  * //   { s: 'abc100000', i: 30 }
  * // ]
  *
- * r = arrSort([{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's' }, { excludeExt: true })
+ * r = arrSort(
+ *     [{ s: '中文1', i: 1, }, { s: '中文', i: -1, }, { s: '中文30', i: 4, }, { s: '中文4', i: 100000, }, { s: '中文100000', i: 30, }],
+ *     { compareKey: 's', localeCompare: true }
+ * )
+ * console.log(r)
+ * // => [
+ * //   { s: '中文', i: -1 },
+ * //   { s: '中文1', i: 1 },
+ * //   { s: '中文4', i: 100000 },
+ * //   { s: '中文30', i: 4 },
+ * //   { s: '中文100000', i: 30 }
+ * // ]
+ *
+ * r = arrSort(
+ *     [{ s: 'xyz.txt', i: 100, }, { s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }],
+ *     { compareKey: 's', localeCompare: true }
+ * )
  * console.log(r)
  * // => [
  * //   { s: 'abc', i: -2 },
  * //   { s: 'abc.txt', i: -1 },
  * //   { s: 'abc1.txt', i: 1 },
- * //   { s: 'abc100000.txt', i: 30 },
+ * //   { s: 'abc4.txt', i: 100000 },
  * //   { s: 'abc30.txt', i: 4 },
- * //   { s: 'abc4.txt', i: 100000 }
- * // ]
- *
- * r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
- * console.log(r)
- * // => [
- * //   { s: 'March', i: 1 },
- * //   { s: 'Jan', i: 4 },
- * //   { s: 'Dec', i: 30 },
- * //   { s: 'Feb', i: 100000 }
+ * //   { s: 'abc100000.txt', i: 30 },
+ * //   { s: 'xyz.txt', i: 100 }
  * // ]
  *
  */
@@ -256,6 +301,12 @@ function arrSort(vall, opt = {}) {
         return vall
     }
 
+    //localeCompare
+    let localeCompare = get(opt, 'localeCompare')
+    if (!isbol(localeCompare)) {
+        localeCompare = false
+    }
+
     //returnIndex
     let returnIndex = get(opt, 'returnIndex')
     if (!isbol(returnIndex)) {
@@ -265,6 +316,15 @@ function arrSort(vall, opt = {}) {
     //compareKey
     let compareKey = get(opt, 'compareKey', null)
     //檢查放後面執行階段
+
+    //sortArr localeCompare
+    let sortArr = null
+    if (localeCompare) {
+        sortArr = sortObjArrWithLocaleCompare
+    }
+    else {
+        sortArr = sortObjArr
+    }
 
     //type
     let type = getInputType(vall)
@@ -290,11 +350,19 @@ function arrSort(vall, opt = {}) {
 
         //typeTrans
         let typeTrans = getInputType(vallTrans)
+        // console.log('typeTrans', typeTrans)
 
         if (typeTrans === 'num' || typeTrans === 'str') {
 
+            //localeCompare
+            if (localeCompare) {
+                typeTrans = 'files'
+            }
+            // console.log('typeTrans', typeTrans)
+
             //getVirArr
             let vs = getVirArr(vallTrans, typeTrans, opt)
+            // console.log('obj: getVirArr vs', vs)
 
             //sortArr
             let inds = sortArr(vs, true)
@@ -318,8 +386,15 @@ function arrSort(vall, opt = {}) {
     }
     else if (type === 'num' || type === 'str') {
 
+        //localeCompare
+        if (localeCompare) {
+            type = 'files'
+        }
+        // console.log('typeTrans', typeTrans)
+
         //getVirArr
         let vs = getVirArr(vall, type, opt)
+        // console.log('num|str: getVirArr vs', vs)
 
         //sortArr
         rs = sortArr(vs, returnIndex)
