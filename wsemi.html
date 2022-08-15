@@ -6917,7 +6917,7 @@ console.log(arrSep(arr, 3))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrSort.mjs.html">arrSort.mjs</a>, <a href="arrSort.mjs.html#line247">line 247</a>
+        <a href="arrSort.mjs.html">arrSort.mjs</a>, <a href="arrSort.mjs.html#line292">line 292</a>
     </li></ul></dd>
     
 
@@ -6999,11 +6999,26 @@ r = arrSort(['abc1', 'abc30', 'abc4', 'abc21', 'abc100000'])
 console.log(r)
 // =&gt; [ 'abc1', 'abc4', 'abc21', 'abc30', 'abc100000' ]
 
-r = arrSort(['1a', '30c', '  4 abc ', '21d', '100000xy'])
+r = arrSort(['1a', '30c', '  4 abc ', 'xyz', '21d', '100000xy'])
 console.log(r)
-// =&gt; [ '  4 abc ', '100000xy', '1a', '21d', '30c' ]
+// =&gt; [ '  4 abc ', '100000xy', '1a', '21d', '30c', 'xyz' ]
 
-r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 's' })
+r = arrSort(
+    [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+    { compareKey: 'i' }
+)
+console.log(r)
+// =&gt; [
+//   { s: 'March', i: 1 },
+//   { s: 'Jan', i: 4 },
+//   { s: 'Dec', i: 30 },
+//   { s: 'Feb', i: 100000 }
+// ]
+
+r = arrSort(
+    [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+    { compareKey: 's' }
+)
 console.log(r)
 // =&gt; [
 //   { s: 'Dec', i: 30 },
@@ -7012,7 +7027,23 @@ console.log(r)
 //   { s: 'March', i: 1 }
 // ]
 
-r = arrSort([{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }], { compareKey: 's' })
+r = arrSort(
+    [{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }],
+    { compareKey: 's' }
+)
+console.log(r)
+// =&gt; [
+//   { s: 'abc', i: -1 },
+//   { s: 'abc1', i: 1 },
+//   { s: 'abc100000', i: 30 },
+//   { s: 'abc30', i: 4 },
+//   { s: 'abc4', i: 100000 }
+// ]
+
+r = arrSort(
+    [{ s: 'abc1', i: 1, }, { s: 'abc', i: -1, }, { s: 'abc30', i: 4, }, { s: 'abc4', i: 100000, }, { s: 'abc100000', i: 30, }],
+    { compareKey: 's', localeCompare: true }
+)
 console.log(r)
 // =&gt; [
 //   { s: 'abc', i: -1 },
@@ -7022,24 +7053,32 @@ console.log(r)
 //   { s: 'abc100000', i: 30 }
 // ]
 
-r = arrSort([{ s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }], { compareKey: 's' }, { excludeExt: true })
+r = arrSort(
+    [{ s: '中文1', i: 1, }, { s: '中文', i: -1, }, { s: '中文30', i: 4, }, { s: '中文4', i: 100000, }, { s: '中文100000', i: 30, }],
+    { compareKey: 's', localeCompare: true }
+)
+console.log(r)
+// =&gt; [
+//   { s: '中文', i: -1 },
+//   { s: '中文1', i: 1 },
+//   { s: '中文4', i: 100000 },
+//   { s: '中文30', i: 4 },
+//   { s: '中文100000', i: 30 }
+// ]
+
+r = arrSort(
+    [{ s: 'xyz.txt', i: 100, }, { s: 'abc1.txt', i: 1, }, { s: 'abc.txt', i: -1, }, { s: 'abc', i: -2, }, { s: 'abc30.txt', i: 4, }, { s: 'abc4.txt', i: 100000, }, { s: 'abc100000.txt', i: 30, }],
+    { compareKey: 's', localeCompare: true }
+)
 console.log(r)
 // =&gt; [
 //   { s: 'abc', i: -2 },
 //   { s: 'abc.txt', i: -1 },
 //   { s: 'abc1.txt', i: 1 },
-//   { s: 'abc100000.txt', i: 30 },
+//   { s: 'abc4.txt', i: 100000 },
 //   { s: 'abc30.txt', i: 4 },
-//   { s: 'abc4.txt', i: 100000 }
-// ]
-
-r = arrSort([{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }], { compareKey: 'i' })
-console.log(r)
-// =&gt; [
-//   { s: 'March', i: 1 },
-//   { s: 'Jan', i: 4 },
-//   { s: 'Dec', i: 30 },
-//   { s: 'Feb', i: 100000 }
+//   { s: 'abc100000.txt', i: 30 },
+//   { s: 'xyz.txt', i: 100 }
 // ]</code></pre>
         </div>
 
@@ -7172,6 +7211,45 @@ console.log(r)
 
         <tr>
             
+                <td class="name"><code>localeCompare</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否使用localeCompare排序布林值，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>returnIndex</code></td>
             
 
@@ -7244,45 +7322,6 @@ console.log(r)
             
 
             <td class="description last"><p>輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>excludeExt</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional&gt;<br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>false</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>輸入當比較對象為字串時是否視為檔名要剔除副檔名布林值，預設false</p></td>
         </tr>
 
     
@@ -32003,19 +32042,19 @@ console.log(r5)
 //     root: '0',
 //     'root❯aaa': '0.children.0',
 //     'root❯aaa1': '0.children.1',
-//     'root❯aaa2': '0.children.2',
-//     'root❯aaa10': '0.children.3',
+//     'root❯aaa10': '0.children.2',
+//     'root❯aaa2': '0.children.3',
 //     'root❯aaa❯bbb': '0.children.0.children.0',
 //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
-//     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.1',
-//     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.2'
+//     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
+//     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
 //   }
 // }
 
 let fps6 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
 let soryItems6 = (rs, pid, ns) =&gt; {
     // console.log('soryItems', 'pid=', pid, 'ns=', ns, 'rs=', rs)
-    rs = arrSort(rs, { compareKey: 'text', excludeExt: true })
+    rs = arrSort(rs, { compareKey: 'text', localeCompare: true })
     return rs
 }
 let r6 = filepathToTree(fps6, { soryItems: soryItems6 })
@@ -74637,7 +74676,7 @@ console.log('force: true', r)
 
     
 
-    <h4 class="name" id=".trim"><span class="type-signature">(static) </span>trim<span class="signature">(c)</span><span class="type-signature"> → {String}</span></h4>
+    <h4 class="name" id=".trim"><span class="type-signature">(static) </span>trim<span class="signature">(c, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {String}</span></h4>
 
     
 
@@ -74705,34 +74744,26 @@ console.log('force: true', r)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'trim')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(trim(' abc 中 文 '))
+<pre class="prettyprint"><code>console.log(trim(' abc '))
+// =&gt; 'abc'
+
+console.log(trim(' 中 文 '))
+// =&gt; '中 文'
+
+console.log(trim(' abc 中 文 '))
 // =&gt; 'abc 中 文'
 
-let tr = (c) =&gt; {
-    c = replace(c, '\r\n', '')
-    c = replace(c, '\r', '')
-    c = replace(c, '\n', '')
-    return c
-}
+console.log(trim(' abc123 '))
+// =&gt; 'abc123'
 
-let b64BOM = '77u/YSxiLCzkuK3mlocNCjEsMjMuNDUsImFiYyIsIjY3LjgiDQo='
-let b64NoBOM = 'YSxiLCzkuK3mlocNCjEsMjMuNDUsImFiYyIsIjY3LjgiDQo='
-let cBOMCor = `
-a,b,,中文
-1,23.45,"abc","67.8"
-`
+console.log(trim(' abc123 ', { excludeString: true }))
+// =&gt; '123'
 
-let cBOM = b642str(b64BOM)
-console.log(tr(cBOM) === tr(cBOMCor))
-// =&gt; false
+console.log(trim(' 123abc ', { excludeString: true }))
+// =&gt; '123'
 
-let cBOMtrim = trim(cBOM)
-console.log(tr(cBOMtrim) === tr(cBOMCor))
-// =&gt; true
-
-let cNoBOM = b642str(b64NoBOM)
-console.log(tr(cNoBOM) === tr(cBOMCor))
-// =&gt; true</code></pre>
+console.log(trim(' a3b321c ', { excludeString: true }))
+// =&gt; '3b321'</code></pre>
         </div>
 
 
@@ -74751,7 +74782,11 @@ console.log(tr(cNoBOM) === tr(cBOMCor))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -74776,10 +74811,130 @@ console.log(tr(cNoBOM) === tr(cBOMCor))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>excludeString</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否頭尾去除非數字字串布林值，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -77126,7 +77281,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Mon Aug 15 2022 14:15:17 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Mon Aug 15 2022 16:53:14 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -77147,7 +77302,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.10/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.76/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.77/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
