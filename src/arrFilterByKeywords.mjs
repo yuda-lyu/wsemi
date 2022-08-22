@@ -14,7 +14,7 @@ import strdelleft from './strdelleft.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilterByKeywords.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} arr 輸入要被尋找的字串陣列
- * @param {String} keywords 輸入要尋找的關鍵字字串
+ * @param {String|Array} keywords 輸入要尋找的關鍵字字串或陣列
  * @returns {Array} 回傳結果物件陣列
  * @example
  *
@@ -117,6 +117,26 @@ import strdelleft from './strdelleft.mjs'
  * //     { hasKeyword: false, weight: 0 }
  * // ]
  *
+ * kws = ['def', 'of', 'module', '-yet']
+ * r = arrFilterByKeywords(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 0.25 }
+ * // ]
+ *
+ * kws = ['can be', 'def']
+ * r = arrFilterByKeywords(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 0.25 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 1 }
+ * // ]
+ *
  */
 function arrFilterByKeywords(arr, keywords) {
 
@@ -126,12 +146,18 @@ function arrFilterByKeywords(arr, keywords) {
     }
 
     //check
-    if (!isestr(keywords)) {
+    if (!isestr(keywords) && !isearr(keywords)) {
         return []
     }
 
-    //kws, 用空白切分出各關鍵字
-    let kws = sep(keywords, ' ')
+    //kws
+    let kws = null
+    if (isestr(keywords)) {
+        kws = sep(keywords, ' ') //若為字串則用空白切分出各關鍵字
+    }
+    else {
+        kws = keywords //可支援關鍵字內含空白
+    }
 
     //n
     let n = size(kws)

@@ -148,6 +148,36 @@ describe(`arrFilterByKeywords`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    i++
+    din[i] = ['def', 'of', 'module', '-yet']
+    dout[i] = [
+        { hasKeyword: true, weight: 1 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: true, weight: 0.25 }
+    ]
+    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+        let j = 8
+        let r = arrFilterByKeywords(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    i++
+    din[i] = ['can be', 'def']
+    dout[i] = [
+        { hasKeyword: true, weight: 0.25 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: true, weight: 1 }
+    ]
+    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+        let j = 9
+        let r = arrFilterByKeywords(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], [2]`, function() {
         let r = arrFilterByKeywords([], [2])
         let rr = []
