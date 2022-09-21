@@ -14,6 +14,9 @@ import cdbl from './cdbl.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrMax.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入原始陣列
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
+ * @param {String} [opt.compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
  * @returns {Number|Object} 回傳最大值或判斷具有最大值之物件
  * @example
  *
