@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>composeToTree.mjs - Documentation</title>
+    <title>arrMax.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">composeToTree.mjs</h1>
+    <h1 class="page-title">arrMax.mjs</h1>
     
 
     
@@ -43,320 +43,145 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
-import each from 'lodash/each'
-import set from 'lodash/set'
-import cloneDeep from 'lodash/cloneDeep'
-import omit from 'lodash/omit'
-import isestr from './isestr.mjs'
+import map from 'lodash/map'
+import size from 'lodash/size'
 import isearr from './isearr.mjs'
+import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
-import iser from './iser.mjs'
+import isnum from './isnum.mjs'
+import cdbl from './cdbl.mjs'
 
 
 /**
- * 組合關聯陣列成為樹狀陣列
+ * 找尋陣列內元素最大值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/composeToTree.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrMax.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} items 輸入關聯陣列
- * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [bindKey='id'] 輸入項目物件識別用欄位字串，預設'id'
- * @param {String} [bindParent='parentId'] 輸入項目物件內存放父節點欄位字串，預設'parentId'
- * @param {String} [bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
- * @param {Boolean} [saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
- * @returns {Array} 回傳樹狀陣列
+ * @param {Array} vall 輸入原始陣列
+ * @returns {Number|Object} 回傳最大值或判斷具有最大值之物件
  * @example
  *
- * let data = [
- *     {
- *         id: 1,
- *         text: '1-a',
- *     },
- *     {
- *         id: 2,
- *         text: '2-b',
- *     },
- *     {
- *         id: 3,
- *         text: '3-c',
- *         parentId: 2,
- *     },
- *     {
- *         id: 4,
- *         text: '4-d',
- *         parentId: 2,
- *     },
- *     {
- *         id: 5,
- *         text: '5-e',
- *         parentId: 3,
- *     },
- *     {
- *         id: 6,
- *         text: 'empty',
- *     },
- * ]
- * let r = composeToTree(data)
- * let cr = JSON.stringify(r)
- * console.log(cr)
- * // => [
- * //   {
- * //     "id": 1,
- * //     "text": "1-a"
- * //   },
- * //   {
- * //     "id": 2,
- * //     "text": "2-b",
- * //     "children": [
- * //       {
- * //         "id": 3,
- * //         "text": "3-c",
- * //         "parentId": 2,
- * //         "children": [
- * //           {
- * //             "id": 5,
- * //             "text": "5-e",
- * //             "parentId": 3
- * //           }
- * //         ]
- * //       },
- * //       {
- * //         "id": 4,
- * //         "text": "4-d",
- * //         "parentId": 2
- * //       }
- * //     ]
- * //   },
- * //   {
- * //     "id": 6,
- * //     "text": "empty"
- * //   }
- * // ]
+ * let r
+ *
+ * r = arrMax([1, 30, 4, 100000, 21])
+ * console.log(r)
+ * // => 100000
+ *
+ * r = arrMax([1, 30, 4, 100000, 21], { returnIndex: true })
+ * console.log(r)
+ * // => 3
+ *
+ * r = arrMax(['March', 'Jan', 'Feb', 'Dec'])
+ * console.log(r)
+ * // => null
+ *
+ * r = arrMax(['1', '30', '  4  ', '100000', '21'])
+ * console.log(r)
+ * // => 100000
+ *
+ * r = arrMax(['1', '30', '  4  ', '100000', 21])
+ * console.log(r)
+ * // => 100000
+ *
+ * r = arrMax(['a1', 'b30', '  4  ', '100000', 21])
+ * console.log(r)
+ * // => 100000
+ *
+ * r = arrMax(
+ *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }],
+ *     { compareKey: 'i' }
+ * )
+ * console.log(r)
+ * // => { s: 'Feb', i: 100000 }
+ *
+ * r = arrMax(
+ *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }],
+ *     { compareKey: 's' }
+ * )
+ * console.log(r)
+ * // => null
+ *
+ * r = arrMax(
+ *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }],
+ *     { compareKey: 'i', returnIndex: true }
+ * )
+ * console.log(r)
+ * // => 2
  *
  */
-function composeToTree(items, opt = {}) {
-    let privateLevel = '$level'
-    let privateParents = '$parents'
+function arrMax(vall, opt = {}) {
 
     //check
-    if (!isearr(items)) {
-        return []
+    if (!isearr(vall)) {
+        return null
     }
 
-    //bindKey
-    let bindKey = get(opt, 'bindKey', null)
-    if (!isestr(bindKey)) {
-        bindKey = 'id'
+    //returnIndex
+    let returnIndex = get(opt, 'returnIndex')
+    if (!isbol(returnIndex)) {
+        returnIndex = false
     }
 
-    //bindParent
-    let bindParent = get(opt, 'bindParent', null)
-    if (!isestr(bindParent)) {
-        bindParent = 'parentId'
-    }
+    //compareKey
+    let compareKey = get(opt, 'compareKey', null)
 
-    //bindChildren
-    let bindChildren = get(opt, 'bindChildren', null)
-    if (!isestr(bindChildren)) {
-        bindChildren = 'children'
-    }
-
-    //saveExtProps
-    let saveExtProps = get(opt, 'saveExtProps', null)
-    if (!isbol(saveExtProps)) {
-        saveExtProps = false
-    }
-
-    function addNodeLevel(items) {
-        let r = []
-
-        //cloneDeep
-        items = cloneDeep(items)
-
-        function addNodeForTop() {
-            let _items = []
-
-            each(items, (v, k) => {
-                if (iser(v[bindParent])) {
-                    //若不存在bindParent就代表頂層, 加入至r
-                    r.push({
-                        [privateLevel]: 0,
-                        [privateParents]: [],
-                        ...v,
-                    })
-                }
-                else {
-                    //非頂層項目物件, 加入至_items
-                    _items.push(v)
-                }
-            })
-            // console.log('_items a', _items)
-            // console.log('r a', r)
-
-            //re-save
-            items = _items
-
-        }
-
-        function addNodeInParent(p) {
-            let _items = []
-
-            each(items, (v, k) => {
-                let vbp = get(v, bindParent)
-                let pbk = get(p, bindKey)
-                if (vbp &amp;&amp; pbk &amp;&amp; (vbp === pbk)) {
-                    //若非頂層項目物件v的bindParent, 等於所傳入的父層物件p的bindKey, 就代表找到從屬, 加入至r
-
-                    //parentIDs
-                    let parentIDs = get(p, privateParents, [])
-                    parentIDs = cloneDeep(parentIDs)
-                    parentIDs.push(p[bindKey])
-
-                    //push
-                    r.push({
-                        [privateLevel]: p[privateLevel] + 1, //level加1
-                        [privateParents]: parentIDs, //儲存父層節點的bindKey
-                        ...v,
-                    })
-
-                }
-                else {
-                    //非頂層項目物件v非隸屬於父層物件p, 加入至_items
-                    _items.push(v)
-                }
-            })
-            // console.log('_items b', _items)
-            // console.log('r b', r)
-
-            //re-save
-            items = _items
-
-        }
-
-        //addNodeForTop
-        addNodeForTop()
-
-        //check
-        if (r.length === 0) {
-            return r
-        }
-
-        //建立非頂層節點關聯
-        let i = -1
-        while (true) {
-            i += 1
-
-            //check, 存取超過陣列長度
-            if (i > r.length - 1) {
-                break
-            }
-
-            //p
-            let p = r[i]
-
-            //addNodeInParent
-            addNodeInParent(p)
-
-            //check, 若已無非頂層物件則跳出
-            if (items.length === 0) {
-                break
-            }
-
-        }
-
-        return r
-    }
-
-    function buildTree(items) {
-        let r = []
-
-        function findParent(v) {
-            for (let i = 0; i &lt; items.length; i++) {
-                let p = items[i]
-                if (v[bindParent] === p[bindKey]) {
-                    return p
-                }
-            }
-            return null
-        }
-
-        function omitProps(v) {
-            if (saveExtProps) {
-                return v
-            }
-            return omit(v, [privateLevel, privateParents])
-        }
-
-        //填入子節點至keyChildren欄位
-        let kp = {}
-        each(items, (v, k) => { //r為依照層級高低循序建立
-            if (v[privateLevel] === 0) {
-
-                //omitProps
-                let omv = omitProps(v)
-
-                //push
-                r.push(omv)
-
-                //save kp
-                kp[v[bindKey]] = [k] //頂層節點之指標k為keys內容
-                // console.log(k, 'r', cloneDeep(r))
-
-            }
-            else {
-                // console.log(k, 'v', cloneDeep(v))
-
-                //findParent
-                let p = findParent(v)
-                // console.log(k, 'p', cloneDeep(p))
-
-                //check, 找得到父層節點才處理
-                if (p !== null) {
-
-                    //keys
-                    let keys = kp[p[bindKey]]
-                    keys = [...keys, bindChildren]
-                    // console.log(k, 'keys', cloneDeep(keys))
-
-                    let cs = get(r, keys, [])
-                    // console.log(k, 'cs1', cloneDeep(cs))
-
-                    //omitProps
-                    let omv = omitProps(v)
-
-                    //push
-                    cs.push(omv)
-
-                    //save kp
-                    kp[v[bindKey]] = [...keys, cs.length - 1]
-                    // console.log(k, 'cs2', cloneDeep(cs))
-
-                    //set
-                    set(r, keys, cs)
-                    // console.log(k, 'r', cloneDeep(r))
-
-                }
-                else {
-                    console.log(`can not find parent for ${get(v, bindParent)}`)
-                }
-
-            }
+    //vallTrans
+    let vallTrans = vall
+    if (isestr(compareKey)) {
+        vallTrans = map(vall, (v, k) => {
+            return get(v, compareKey, '')
         })
-
-        return r
     }
 
-    //addNodeLevel
-    items = addNodeLevel(items)
+    //find
+    let ind = -1
+    let vv = null
+    for (let k = 0; k &lt; size(vallTrans); k++) {
 
-    //buildTree
-    let r = buildTree(items)
+        //v
+        let v = vallTrans[k]
+
+        //cdbl
+        if (isnum(v)) {
+            v = cdbl(v)
+        }
+        else {
+            continue
+        }
+
+        //init vv
+        if (vv === null &amp;&amp; isnum(v)) {
+            vv = v
+            continue
+        }
+
+        //cmp
+        if (vv &lt; v) {
+            vv = v
+            ind = k
+        }
+
+    }
+
+    //compareKey
+    if (isestr(compareKey) &amp;&amp; ind >= 0) {
+        vv = vall[ind]
+    }
+
+    //returnIndex
+    let r = null
+    if (returnIndex) {
+        r = ind
+    }
+    else {
+        r = vv
+    }
 
     return r
 }
 
 
-export default composeToTree
+export default arrMax
 </code></pre>
         </article>
     </section>
