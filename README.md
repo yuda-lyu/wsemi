@@ -128,7 +128,7 @@ or
 [Optional] Add script for `xss`.
 > **Note:** Include script when using `clearXSS` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xss@1.0.10/dist/xss.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js"></script>
 ```
 
 [Optional] Add script for `xlsx`.
@@ -182,10 +182,10 @@ or
 [Optional] Add script for `tesseract.js`. It does not support IE11.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@3.0.3/dist/tesseract.min.js"></script>
 ```
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.79/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.80/dist/wsemi.umd.js"></script>
 ```
