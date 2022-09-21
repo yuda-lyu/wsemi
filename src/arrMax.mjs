@@ -22,6 +22,14 @@ import cdbl from './cdbl.mjs'
  *
  * let r
  *
+ * r = arrMax([100000, 1, 30, 4, 21])
+ * console.log(r)
+ * // => 100000
+ *
+ * r = arrMax([1, 30, 4, 21, 100000])
+ * console.log(r)
+ * // => 100000
+ *
  * r = arrMax([1, 30, 4, 100000, 21])
  * console.log(r)
  * // => 100000
@@ -111,6 +119,7 @@ function arrMax(vall, opt = {}) {
         //init vv
         if (vv === null && isnum(v)) {
             vv = v
+            ind = k
             continue
         }
 
