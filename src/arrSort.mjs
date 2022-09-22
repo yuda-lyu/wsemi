@@ -211,7 +211,7 @@ function sortObjArrWithLocaleCompare(vs, returnIndex) {
  * // => [ '  4 abc ', '100000xy', '1a', '21d', '30c', 'xyz' ]
  *
  * r = arrSort(
- *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+ *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }],
  *     { compareKey: 'i' }
  * )
  * console.log(r)
@@ -223,7 +223,7 @@ function sortObjArrWithLocaleCompare(vs, returnIndex) {
  * // ]
  *
  * r = arrSort(
- *     [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }],
+ *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }],
  *     { compareKey: 's' }
  * )
  * console.log(r)

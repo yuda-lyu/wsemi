@@ -88,7 +88,7 @@ describe(`arrMax`, function() {
     })
 
     k = 9
-    oin[k] = [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }]
+    oin[k] = [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }]
     oout[k] = { s: 'Feb', i: 100000 }
     it(`should return ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}, { compareKey: 'i' }`, function() {
         k = 9
@@ -98,7 +98,7 @@ describe(`arrMax`, function() {
     })
 
     k = 10
-    oin[k] = [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }]
+    oin[k] = [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }]
     oout[k] = null
     it(`should return ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}, { compareKey: 's' }`, function() {
         k = 10
@@ -108,7 +108,7 @@ describe(`arrMax`, function() {
     })
 
     k = 11
-    oin[k] = [{ s: 'March', i: 1, }, { s: 'Jan', i: 4, }, { s: 'Feb', i: 100000, }, { s: 'Dec', i: 30, }, { s: 'Nov', i: 'a25', }]
+    oin[k] = [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }]
     oout[k] = 2
     it(`should return ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}, { compareKey: 'i', returnIndex: true }`, function() {
         k = 11
