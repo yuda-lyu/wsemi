@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>atand.mjs - Documentation</title>
+    <title>arrReduce.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -32,7 +32,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">atand.mjs</h1>
+    <h1 class="page-title">arrReduce.mjs</h1>
     
 
     
@@ -42,72 +42,142 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import size from 'lodash/size'
+import isEqual from 'lodash/isEqual'
+import isearr from './isearr.mjs'
+import isfun from './isfun.mjs'
+import isbol from './isbol.mjs'
 
 
 /**
- * 輸入浮點數計算atan角度值
+ * 找尋陣列內元素指定值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/atand.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrReduce.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} v 輸入數字或字串
- * @returns {Number} 回傳atan角度值
+ * @param {Array} vall 輸入原始陣列
+ * @param {Function} fun 輸入處理與比對函數，輸入參數為全域暫存值與現在提取值，函數比對完須回傳新的全域暫存值
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
+ * @returns {Number|Object} 回傳指定值數字或判斷具有指定值之物件
  * @example
  *
- * console.log(atand(0))
- * // => 0
+ * let r
  *
- * console.log(atand(0.5))
- * // => 26.56505117707799
+ * r = arrReduce([100000, 1, 30, 4, 21], (vTemp, vNow) => {
+ *     if (vTemp === null) {
+ *         return vNow
+ *     }
+ *     return Math.min(vTemp, vNow)
+ * })
+ * console.log(r)
+ * // => 1
  *
- * console.log(atand(0.7071067811865475))
- * // => 35.264389682754654
+ * r = arrReduce([1, 30, 4, 21, 100000], (vTemp, vNow) => {
+ *     if (vTemp === null) {
+ *         return vNow
+ *     }
+ *     return Math.max(vTemp, vNow)
+ * })
+ * console.log(r)
+ * // => 100000
  *
- * console.log(atand(0.8660254037844386))
- * // => 40.89339464913091
+ * r = arrReduce([1, 30, 4, 100000, 21], (vTemp, vNow) => {
+ *     if (vTemp === null) {
+ *         return vNow
+ *     }
+ *     return Math.max(vTemp, vNow)
+ * }, { returnIndex: true })
+ * console.log(r)
+ * // => 3
  *
- * console.log(atand(1))
- * // => 45
+ * r = arrReduce(
+ *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 25, }],
+ *     (vTemp, vNow) => {
+ *         if (vTemp === null) {
+ *             return vNow.i
+ *         }
+ *         return Math.min(vTemp, vNow.i)
+ *     },
+ * )
+ * console.log(r)
+ * // => 1
  *
- * console.log(atand(1.7320508075688767))
- * // => 59.99999999999999
+ * r = arrReduce(
+ *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 25, }],
+ *     (vTemp, vNow) => {
+ *         if (vTemp === null) {
+ *             return vNow
+ *         }
+ *         return vTemp.i &lt; vNow.i ? vNow : vTemp //max
+ *     },
+ * )
+ * console.log(r)
+ * // => { s: 'Feb', i: 100000 }
  *
- * console.log(atand(Infinity))
- * // => 90
- *
- * console.log(atand(-0.5))
- * // => -26.56505117707799
- *
- * console.log(atand(-0.7071067811865475))
- * // => -35.264389682754654
- *
- * console.log(atand(-0.8660254037844386))
- * // => -40.89339464913091
- *
- * console.log(atand(-1))
- * // => -45
- *
- * console.log(atand(-1.7320508075688767))
- * // => -59.99999999999999
- *
- * console.log(atand(-Infinity))
- * // => -90
+ * r = arrReduce(
+ *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 25, }],
+ *     (vTemp, vNow) => {
+ *         if (vTemp === null) {
+ *             return vNow
+ *         }
+ *         return vTemp.i &lt; vNow.i ? vNow : vTemp //max
+ *     },
+ *     { returnIndex: true }
+ * )
+ * console.log(r)
+ * // => 2
  *
  */
-function atand(v) {
+function arrReduce(vall, fun, opt = {}) {
 
     //check
-    if (!isnum(v)) {
+    if (!isearr(vall)) {
         return null
     }
-    v = cdbl(v)
+    if (!isfun(fun)) {
+        return null
+    }
 
-    return Math.atan(v) * 180 / Math.PI
+    //returnIndex
+    let returnIndex = get(opt, 'returnIndex')
+    if (!isbol(returnIndex)) {
+        returnIndex = false
+    }
+
+    //find
+    let ind = -1
+    let vv = null
+    for (let k = 0; k &lt; size(vall); k++) {
+
+        //v
+        let v = vall[k]
+
+        //fun
+        let r = fun(vv, v)
+
+        //update
+        if (!isEqual(vv, r)) {
+            vv = r
+            ind = k
+        }
+
+    }
+
+    //returnIndex
+    let r = null
+    if (returnIndex) {
+        r = ind
+    }
+    else {
+        r = vv
+    }
+
+    return r
 }
 
 
-export default atand
+export default arrReduce
 </code></pre>
         </article>
     </section>
