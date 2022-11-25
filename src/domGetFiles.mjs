@@ -1,3 +1,4 @@
+import get from 'lodash/get'
 import each from 'lodash/each'
 import cdbl from './cdbl.mjs'
 
@@ -28,7 +29,7 @@ function domGetFiles(ele, sizelimit = 1000) {
     //files
     let errs = {}
     let files = []
-    each(ele.files, function(file, k) {
+    each(get(ele, 'files', []), function(file, k) {
 
         //size, 單位bytes
         let size = file.size

@@ -51,27 +51,41 @@ function domShowInputAndGetFiles(kind = '*', multiple = false, sizelimit = 1000)
     let inp = domFind('#' + id)
 
     //evChange
-    function evChange() {
+    function evChange(msg) {
+        // console.log('evChange', msg)
 
         //ele
         let ele = this
 
         //domGetFiles
         let rs = domGetFiles(ele, sizelimit)
+        // console.log('domGetFiles', rs)
 
         //resolve
         pm.resolve(rs)
 
         //remove event
         inp.removeEventListener('change', evChange)
+        window.removeEventListener('focus', evCancel)
 
         //remove element
         domRemove(`[name=${gname}]`)
 
     }
 
+    //evCancel
+    function evCancel(msg) {
+        // console.log('evCancel', msg)
+        setTimeout(() => {
+            evChange(msg)
+        }, 300)
+    }
+
     //change
-    inp.addEventListener('change', evChange)
+    inp.addEventListener('change', evChange, true)
+
+    //focus, inp取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
+    window.addEventListener('focus', evCancel)
 
     //click
     domTriggerEvent(inp, 'click')

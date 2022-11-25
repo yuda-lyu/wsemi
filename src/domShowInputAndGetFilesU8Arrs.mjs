@@ -1,6 +1,8 @@
-import size from 'lodash/size'
+import get from 'lodash/get'
 import each from 'lodash/each'
+// import size from 'lodash/size'
 import genPm from './genPm.mjs'
+import iseobj from './iseobj.mjs'
 import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
 import blobs2u8arrs from './blobs2u8arrs.mjs'
 
@@ -25,26 +27,33 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit =
 
     let resfiles = []
     domShowInputAndGetFiles(kind, multiple, sizelimit)
-        .then(function(rs) {
+        .then(function(res) {
 
             //pmt
             let pmt = genPm()
 
-            //err
-            let err = rs.err
-            if (size(err) > 0) {
-                pmt.reject(err)
+            //errs
+            let errs = get(res, 'errs', {})
+            // console.log('errs', errs)
+
+            //files
+            let files = get(res, 'files', [])
+            // console.log('files', files)
+
+            //check
+            if (iseobj(errs)) {
+                pmt.reject(errs)
             }
+            // else if (size(files) === 0) { //取消上傳為無檔案, 不視為錯誤
+            //     pmt.reject('no file')
+            // }
             else {
-                pmt.resolve(rs)
+                pmt.resolve(files)
             }
 
             return pmt
         })
-        .then(function(rs) {
-
-            //files
-            let files = rs.files
+        .then(function(files) {
 
             //saveas
             each(files, function(file) {
