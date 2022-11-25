@@ -1,11 +1,11 @@
 {
   "name": "wsemi",
-  "version": "1.6.82",
+  "version": "1.6.83",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
-    "dayjs": "^1.11.5",
-    "decimal.js": "^10.4.1",
+    "dayjs": "^1.11.6",
+    "decimal.js": "^10.4.2",
     "eventemitter3": "^4.0.7",
     "fuse.js": "^6.6.2",
     "htmlparser": "^1.7.7",
@@ -13,7 +13,7 @@
     "seamless-scroll-polyfill": "^2.2.0",
     "tesseract.js": "^3.0.3",
     "tippy.js": "^6.3.7",
-    "ua-parser-js": "^1.0.2",
+    "ua-parser-js": "^1.0.32",
     "viewerjs": "^1.10.5",
     "xlsx": "^0.18.5",
     "xss": "^1.0.14"

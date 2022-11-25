@@ -35,7 +35,7 @@ import getXLSX from './_getXLSX.mjs'
  * downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)
  *
  */
-function downloadExcelFileFromData(fileName, sheetName = 'data', data, opt = {}) {
+function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
 
     //check
     if (!isestr(fileName)) {
