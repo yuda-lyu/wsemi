@@ -32,51 +32,56 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  */
 function domShowInputAndGetFiles(kind = '*', opt = {}) {
 
-    //listFoldersAndFiles, 因rollup無法編譯故得要放domShowInputAndGetFiles內
-    async function listFoldersAndFiles() {
-        async function core() {
+    // //listFoldersAndFiles, 因rollup無法編譯故得要放domShowInputAndGetFiles內, 但因所取得file無webkitRelativePath故不使用
+    // async function listFoldersAndFiles() {
+    //     async function core() {
 
-            //showDirectoryPicker
-            let dirHandle = await window.showDirectoryPicker()
-            // console.log('dirHandle', dirHandle)
+    //         //showDirectoryPicker
+    //         let dirHandle = await window.showDirectoryPicker()
+    //         // console.log('dirHandle', dirHandle)
 
-            //rs
-            let rs = []
+    //         //rs
+    //         let rs = []
 
-            //getFilesRecursively
-            async function getFilesRecursively(entry) {
-                // console.log('getFilesRecursively', entry)
-                if (entry.kind === 'file') {
-                    let file = await entry.getFile()
-                    if (file !== null) {
-                        //file.relativePath = getRelativePath(entry);
-                        rs.push(file)
-                    }
-                }
-                else if (entry.kind === 'directory') {
-                    for await (let handle of entry.values()) {
-                        await getFilesRecursively(handle)
-                    }
-                }
-            }
+    //         //getFilesRecursively
+    //         async function getFilesRecursively(entry) {
+    //             // console.log('getFilesRecursively', entry)
+    //             if (entry.kind === 'file') {
+    //                 let file = await entry.getFile()
+    //                 if (file !== null) {
+    //                     //file.relativePath = getRelativePath(entry);
+    //                     rs.push(file)
+    //                 }
+    //             }
+    //             else if (entry.kind === 'directory') {
+    //                 // let rs = await entry.resolve()
+    //                 // console.log('rs',rs)
+    //                 // await wsemi.pmSeries(rs,async (handle)=>{
+    //                 //     await getFilesRecursively(handle)
+    //                 // })
+    //                 for await (let handle of entry.values()) {
+    //                     await getFilesRecursively(handle)
+    //                 }
+    //             }
+    //         }
 
-            //recursively
-            await getFilesRecursively(dirHandle)
+    //         //recursively
+    //         await getFilesRecursively(dirHandle)
 
-            return rs
-        }
-        let r = {
-            files: [],
-            errs: {},
-        }
-        await core()
-            .then((files) => {
-                r.files = files
-            })
-            .catch(() => {
-            })
-        return r
-    }
+    //         return rs
+    //     }
+    //     let r = {
+    //         files: [],
+    //         errs: {},
+    //     }
+    //     await core()
+    //         .then((files) => {
+    //             r.files = files
+    //         })
+    //         .catch(() => {
+    //         })
+    //     return r
+    // }
 
     //multiple
     let multiple = get(opt, 'multiple')
@@ -95,10 +100,10 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
         multiple = true
     }
 
-    //check, 若啟用entireHierarchy則直接使用listFoldersAndFiles, 不再用input法觸發選擇資料夾彈窗
-    if (entireHierarchy) {
-        return listFoldersAndFiles()
-    }
+    // //check, 若啟用entireHierarchy則直接使用listFoldersAndFiles, 不再用input法觸發選擇資料夾彈窗
+    // if (entireHierarchy) {
+    //     return listFoldersAndFiles()
+    // }
 
     //sizelimit = 1000
     let sizelimit = get(opt, 'sizelimit')
@@ -158,7 +163,9 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
 
         //remove event
         inp.removeEventListener('change', evChange)
-        window.removeEventListener('focus', evCancel)
+        if (!entireHierarchy) {
+            window.removeEventListener('focus', evCancel)
+        }
 
         //remove element
         domRemove(`[name=${gname}]`)
@@ -181,8 +188,10 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
     //change
     inp.addEventListener('change', evChange, true)
 
-    //focus, inp取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
-    window.addEventListener('focus', evCancel)
+    if (!entireHierarchy) { //目前entireHierarchy有問題, 無法支援使用者取消, 待研究
+        //focus, inp取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
+        window.addEventListener('focus', evCancel)
+    }
 
     //click
     domTriggerEvent(inp, 'click')
