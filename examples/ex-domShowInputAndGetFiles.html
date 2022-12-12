@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for domShowInputAndGetFiles</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.85/dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="border:1px solid #aaa;">
+
+        <div style="padding:10px;">
+
+            <button style="display:block;" onclick="listFoldersAndFiles()">open folder</button>
+
+            <div id="res" style="">
+                
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        async function _listFoldersAndFiles() {
+            async function core() {
+
+                //showDirectoryPicker
+                let dirHandle = await window.showDirectoryPicker()
+                // console.log('dirHandle', dirHandle)
+
+                //rs
+                let rs = []
+
+                //getFilesRecursively
+                async function getFilesRecursively(entry) {
+                    // console.log('getFilesRecursively',entry)
+                    if (entry.kind === 'file') {
+                        let file = await entry.getFile()
+                        if (file !== null) {
+                            //file.relativePath = getRelativePath(entry)
+                            rs.push(file)
+                        }
+                    }
+                    else if (entry.kind === 'directory') {
+                        for await (let handle of entry.values()) {
+                            await getFilesRecursively(handle)
+                        }
+                    }
+                }
+
+                //recursively
+                await getFilesRecursively(dirHandle)
+
+                return rs
+            }
+            let r = {
+                files: [],
+                errs: {},
+            }
+            await core()
+                .then((files) => {
+                    r.files = files
+                })
+                .catch(() => {
+                })
+            return r
+        }
+
+        function listFoldersAndFiles(){
+            // wsemi.domShowInputAndGetFiles=_listFoldersAndFiles
+
+            //domShowInputAndGetFiles
+            wsemi.domShowInputAndGetFiles('*', { multiple: true, entireHierarchy: true })
+                .then(function(files){
+                    console.log('files',files)
+
+                    // document.querySelector('#'+'res').style.display='flex'
+                    // document.querySelector('#'+'imgSrc').setAttribute('src',b64)
+                    // document.querySelector('#'+'imgB64').innerHTML=b64
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+
+        }
+
+    </script>
+
+</body>
+</html>

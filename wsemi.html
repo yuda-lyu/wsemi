@@ -28966,7 +28966,7 @@ domScrollTo(ele, {})</code></pre>
 
     
 
-    <h4 class="name" id=".domShowInputAndGetFiles"><span class="type-signature">(static) </span>domShowInputAndGetFiles<span class="signature">(kind<span class="signature-attributes">opt</span>, multiple<span class="signature-attributes">opt</span>, sizelimit<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".domShowInputAndGetFiles"><span class="type-signature">(static) </span>domShowInputAndGetFiles<span class="signature">(kind<span class="signature-attributes">opt</span>, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -28978,7 +28978,7 @@ domScrollTo(ele, {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line27">line 27</a>
+        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -29114,6 +29114,68 @@ domShowInputAndGetFiles()
 
         <tr>
             
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
                 <td class="name"><code>multiple</code></td>
             
 
@@ -29153,6 +29215,45 @@ domShowInputAndGetFiles()
 
         <tr>
             
+                <td class="name"><code>entireHierarchy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>sizelimit</code></td>
             
 
@@ -29186,6 +29287,13 @@ domShowInputAndGetFiles()
             
 
             <td class="description last"><p>輸入檔案大小上線，單位mb，預設為1000mb(約1g)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -29237,7 +29345,7 @@ domShowInputAndGetFiles()
 
     
 
-    <h4 class="name" id=".domShowInputAndGetFilesU8Arrs"><span class="type-signature">(static) </span>domShowInputAndGetFilesU8Arrs<span class="signature">(kind<span class="signature-attributes">opt</span>, multiple<span class="signature-attributes">opt</span>, sizelimit<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".domShowInputAndGetFilesU8Arrs"><span class="type-signature">(static) </span>domShowInputAndGetFilesU8Arrs<span class="signature">(kind<span class="signature-attributes">opt</span>, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -29249,7 +29357,7 @@ domShowInputAndGetFiles()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domShowInputAndGetFilesU8Arrs.mjs.html">domShowInputAndGetFilesU8Arrs.mjs</a>, <a href="domShowInputAndGetFilesU8Arrs.mjs.html#line23">line 23</a>
+        <a href="domShowInputAndGetFilesU8Arrs.mjs.html">domShowInputAndGetFilesU8Arrs.mjs</a>, <a href="domShowInputAndGetFilesU8Arrs.mjs.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -29382,6 +29490,68 @@ domShowInputAndGetFiles()
 
         <tr>
             
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
                 <td class="name"><code>multiple</code></td>
             
 
@@ -29421,6 +29591,45 @@ domShowInputAndGetFiles()
 
         <tr>
             
+                <td class="name"><code>entireHierarchy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>sizelimit</code></td>
             
 
@@ -29454,6 +29663,13 @@ domShowInputAndGetFiles()
             
 
             <td class="description last"><p>輸入檔案大小上線，單位mb，預設為1000mb(約1g)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -78538,7 +78754,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Fri Nov 25 2022 14:54:38 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.10</a> on Mon Dec 12 2022 12:35:50 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -78559,7 +78775,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.6.84/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.6.85/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
