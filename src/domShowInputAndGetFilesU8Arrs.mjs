@@ -1,8 +1,10 @@
 import get from 'lodash/get'
 import each from 'lodash/each'
-// import size from 'lodash/size'
 import genPm from './genPm.mjs'
+import isbol from './isbol.mjs'
+import isnum from './isnum.mjs'
 import iseobj from './iseobj.mjs'
+import cdbl from './cdbl.mjs'
 import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
 import blobs2u8arrs from './blobs2u8arrs.mjs'
 
@@ -13,20 +15,41 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFilesU8Arrs.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
- * @param {Boolean} [multiple=false] 輸入是否可選多檔案，預設為false
- * @param {Number} [sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
+ * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
+ * @param {Number} [opt.sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
  * @example
  * need test in browser
  *
  */
-function domShowInputAndGetFilesU8Arrs(kind = '*', multiple = false, sizelimit = 1000) {
+function domShowInputAndGetFilesU8Arrs(kind = '*', opt = {}) {
+
+    //multiple
+    let multiple = get(opt, 'multiple')
+    if (!isbol(multiple)) {
+        multiple = false
+    }
+
+    //entireHierarchy
+    let entireHierarchy = get(opt, 'entireHierarchy')
+    if (!isbol(entireHierarchy)) {
+        entireHierarchy = false
+    }
+
+    //sizelimit = 1000
+    let sizelimit = get(opt, 'sizelimit')
+    if (!isnum(sizelimit)) {
+        sizelimit = 1000
+    }
+    sizelimit = cdbl(sizelimit)
 
     //pm
     let pm = genPm()
 
     let resfiles = []
-    domShowInputAndGetFiles(kind, multiple, sizelimit)
+    domShowInputAndGetFiles(kind, { multiple, entireHierarchy, sizelimit })
         .then(function(res) {
 
             //pmt

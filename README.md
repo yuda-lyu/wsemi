@@ -47,6 +47,8 @@ To view some examples for more understanding, visit examples:
 
 > **domScrollTo:** [ex-domScrollTo.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollTo.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollTo.html)]
 
+> **domShowInputAndGetFiles:** [ex-domShowInputAndGetFiles.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowInputAndGetFiles.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowInputAndGetFiles.html)]
+
 > **domDropFiles:** [ex-domDropFiles.html](https://yuda-lyu.github.io/wsemi/examples/ex-domDropFiles.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domDropFiles.html)]
 
 > **domDrag:** [ex-domDrag.html](https://yuda-lyu.github.io/wsemi/examples/ex-domDrag.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domDrag.html)]
@@ -187,5 +189,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.84/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.6.85/dist/wsemi.umd.js"></script>
 ```
