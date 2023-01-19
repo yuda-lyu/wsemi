@@ -11,6 +11,7 @@ import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
 import isobj from './isobj.mjs'
 import cdbl from './cdbl.mjs'
+import cstr from './cstr.mjs'
 import trim from './trim.mjs'
 
 
@@ -39,6 +40,14 @@ function getInputType(vs) {
     }
     else if (iobj === n) {
         type = 'obj'
+    }
+    else if (inum + istr === n) {
+        //全元素皆為數字與字串混合, 則視為字串處理
+        type = 'str'
+    }
+    else {
+        //無法識別
+        console.log('eles in array are non-homogeneous', vs)
     }
     return type
 }
@@ -72,7 +81,7 @@ function getVirArr(vs, type, opt = {}) {
             return {
                 key: k,
                 payload: v,
-                value: v,
+                value: cstr(v),
             }
         })
 
@@ -92,22 +101,23 @@ function getVirArr(vs, type, opt = {}) {
             }
         })
 
-        //bAllNum
+        //bAllNum, 判識是否全陣列皆為數字
         let bAllNum = n === size(vst)
 
         //trim(剔除開頭結尾非數字之字串)後, 產生待排序物件陣列
         ts = map(vs, (v, k) => {
             let t = v
 
-            //bAllNum
+            //若為數字則給予過濾後純數字字串
             if (bAllNum) {
                 // t = trim(t, { excludeString: true })
                 t = vst[k]
-            }
-
-            if (isnum(t)) {
                 t = cdbl(t)
             }
+            else {
+                t = cstr(t)
+            }
+
             return {
                 key: k,
                 payload: v,
@@ -201,6 +211,10 @@ function sortObjArrWithLocaleCompare(vs, returnIndex) {
  * r = arrSort(['1', '30', '  4  ', 21, '100000'])
  * console.log(r)
  * // => [ '1', '  4  ', 21, '30', '100000' ]
+ *
+ * r = arrSort([1, 2, 'abc', 5, 3, '4'])
+ * console.log(r)
+ * // => [ 1, 2, 3, '4', 5, 'abc' ]
  *
  * r = arrSort(['abc1', 'abc30', 'abc4', 'abc21', 'abc100000'])
  * console.log(r)
@@ -328,6 +342,7 @@ function arrSort(vall, opt = {}) {
 
     //type
     let type = getInputType(vall)
+    // console.log('type', type)
 
     //check
     if (type === '') {
@@ -356,6 +371,7 @@ function arrSort(vall, opt = {}) {
 
             //localeCompare
             if (localeCompare) {
+                //若使用localeCompare則視為檔案名稱排序
                 typeTrans = 'files'
             }
             // console.log('typeTrans', typeTrans)
@@ -394,7 +410,7 @@ function arrSort(vall, opt = {}) {
 
         //getVirArr
         let vs = getVirArr(vall, type, opt)
-        // console.log('num|str: getVirArr vs', vs)
+        console.log('num|str: getVirArr vs', vs)
 
         //sortArr
         rs = sortArr(vs, returnIndex)

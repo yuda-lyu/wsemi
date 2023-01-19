@@ -176,7 +176,13 @@ describe(`arrSort`, function() {
 
     it(`should return [] when input [1, 2, 3, '4', 5, 'abc'], 1`, function() {
         let r = arrSort([1, 2, 3, '4', 5, 'abc'], 1)
-        let rr = []
+        let rr = [1, 2, 3, '4', 5, 'abc']
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [1, 2, 'abc', 5, 3, '4'], 1`, function() {
+        let r = arrSort([1, 2, 'abc', 5, 3, '4'], 1)
+        let rr = [1, 2, 3, '4', 5, 'abc']
         assert.strict.deepStrictEqual(r, rr)
     })
 
