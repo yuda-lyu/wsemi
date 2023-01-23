@@ -10,7 +10,7 @@ import get from 'lodash/get'
  * @param {HTEMLEvent} e 輸入dom事件物件
  * @example
  * need test in browser
- * 
+ *
  * window.addEventListener('mousemove', (e) => {
  *   console.log(domGetPointFromEvent(e))
  * })
@@ -19,10 +19,10 @@ import get from 'lodash/get'
 function domGetPointFromEvent(e) {
 
     //check
-    let cx = get(e, 'clientX', null)
-    let cy = get(e, 'clientY', null)
-    let px = get(e, 'pageX', null)
-    let py = get(e, 'pageY', null)
+    let cx = get(e, 'clientX', null) //距離瀏覽器顯示區左上角之x座標, 代表隨捲軸改變
+    let cy = get(e, 'clientY', null) //距離瀏覽器顯示區左上角之y座標, 代表隨捲軸改變
+    let px = get(e, 'pageX', null) //距離瀏覽器內容區左上角之x座標, , 代表不隨捲軸改變
+    let py = get(e, 'pageY', null) //距離瀏覽器內容區左上角之y座標, , 代表不隨捲軸改變
     if (cx !== null && cy !== null && px !== null && py !== null) {
         return {
             clientX: cx,
