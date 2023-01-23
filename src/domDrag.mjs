@@ -11,6 +11,7 @@ import evem from './evem.mjs'
 import haskey from './haskey.mjs'
 import domGetParents from './domGetParents.mjs'
 import domGetPointFromEvent from './domGetPointFromEvent.mjs'
+import domElementsFromPoint from './domElementsFromPoint.mjs'
 import domGetAttr from './domGetAttr.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
 import domDragPreview from './domDragPreview.mjs'
@@ -71,16 +72,49 @@ function regAndGetGroupEv(gid, eid, { attIdentify, previewOpacity, previewBackgr
 }
 
 
-function findEleFromEvent(e, attGroup, gid) {
+function findEleFromEventEle(e, attGroup, gid) {
     let r = null
+
+    //domGetParents
     let ps = domGetParents(e.target)
+    // console.log('ps',ps,e)
+
+    //domGetAttr
     each(ps, (v) => {
         let attr = domGetAttr(v, attGroup)
         if (attr === gid) {
             r = v
-            return false
+            return false //跳出
         }
     })
+
+    return r
+}
+
+
+function findEleFromEventClientXY(e, attGroup, gid) {
+    let r = null
+
+    //domGetPointFromEvent
+    let p = domGetPointFromEvent(e)
+    if (!p) {
+        return r
+    }
+    // console.log('p',p)
+
+    //domElementsFromPoint
+    let ps = domElementsFromPoint(p.clientX, p.clientY)
+    // console.log('ps',ps)
+
+    //domGetAttr
+    each(ps, (v) => {
+        let attr = domGetAttr(v, attGroup)
+        if (attr === gid) {
+            r = v
+            return false //跳出
+        }
+    })
+
     return r
 }
 
@@ -163,6 +197,7 @@ function dgEvEle(ele, funs, gid, eid) {
 
         name = 'touchmove'
         let fe_touchmove = function(e) {
+            funs.dragMove({ e, name: 'touchmove' })
             //domCancelEvent(e) //不能使用domCancelEvent, 因其內使用stopPropagation會連window的touchmove無法收到訊息
             if (e.cancelable) { //window捲動中時事件為禁止取消(cancelable=false)狀態
                 e.preventDefault() //必要, 需由元素touchmove事件阻止預設拖曳行為, 否則會變成捲動螢幕, 此外由window的touchmove事件來阻止會失效
@@ -307,8 +342,8 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
         }
 
         //eleIn
-        let eleIn = findEleFromEvent(e, attGroup, gid)
-        // console.log('dragMove', 'eleIn', eleIn)
+        let eleIn = findEleFromEventEle(e, attGroup, gid)
+        // console.log('findEleFromEventEle eleIn',eleIn)
 
         //check
         if (_startInd === null) {
@@ -487,6 +522,7 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
             //console.log('dragDrop: 無_startInd')
             return
         }
+        // console.log('dragDrop', '_startInd', _startInd)
 
         function emitDrop(endInd, endEle) {
             _endInd = endInd
@@ -508,7 +544,8 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
         }
 
         //eleIn
-        let eleIn = findEleFromEvent(e, attGroup, gid)
+        let eleIn = findEleFromEventClientXY(e, attGroup, gid)
+        // console.log('findEleFromEventClientXY eleIn',eleIn)
 
         //check, 釋放時不在拖曳元素內故跳出
         if (!eleIn) {
@@ -677,7 +714,10 @@ function domDrag(ele, opt = {}) {
     let eleFuncs = {
         dragStart: (msg) => {
             evg.emit(gid + '-dragStart', msg)
-        }
+        },
+        dragMove: (msg) => {
+            evg.emit(gid + '-dragMove', msg)
+        },
     }
     let oeve = dgEvEle(ele, eleFuncs, gid, eid)
     // console.log('ele', ele, 'oeve', oeve)

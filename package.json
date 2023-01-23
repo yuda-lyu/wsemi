@@ -1,12 +1,12 @@
 {
   "name": "wsemi",
-  "version": "1.6.88",
+  "version": "1.6.89",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.7",
     "decimal.js": "^10.4.3",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "^5.0.0",
     "fuse.js": "^6.6.2",
     "htmlparser": "^1.7.7",
     "lodash": "^4.17.21",
