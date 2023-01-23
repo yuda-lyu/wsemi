@@ -9,6 +9,7 @@ import isEle from './isEle.mjs'
 import cint from './cint.mjs'
 import evem from './evem.mjs'
 import haskey from './haskey.mjs'
+import domGetParents from './domGetParents.mjs'
 import domGetPointFromEvent from './domGetPointFromEvent.mjs'
 import domGetAttr from './domGetAttr.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
@@ -72,7 +73,8 @@ function regAndGetGroupEv(gid, eid, { attIdentify, previewOpacity, previewBackgr
 
 function findEleFromEvent(e, attGroup, gid) {
     let r = null
-    each(e.path, (v) => {
+    let ps = domGetParents(e.target)
+    each(ps, (v) => {
         let attr = domGetAttr(v, attGroup)
         if (attr === gid) {
             r = v

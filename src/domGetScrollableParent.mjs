@@ -1,3 +1,4 @@
+import domGetParents from './domGetParents.mjs'
 
 
 /**
@@ -17,14 +18,6 @@ function domGetScrollableParent(ele) {
 
     let regex = /(auto|scroll)/
 
-    let parents = function (ele, ps) {
-        if (ele.parentNode === null) {
-            return ps
-        }
-
-        return parents(ele.parentNode, ps.concat([ele]))
-    }
-
     let style = function (ele, prop) {
         return getComputedStyle(ele, null).getPropertyValue(prop)
     }
@@ -43,7 +36,7 @@ function domGetScrollableParent(ele) {
     }
 
     //ps
-    let ps = parents(ele.parentNode, [])
+    let ps = domGetParents(ele)
 
     //find
     for (let i = 0; i < ps.length; i += 1) {
