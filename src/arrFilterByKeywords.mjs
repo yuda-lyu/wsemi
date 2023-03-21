@@ -73,7 +73,7 @@ import strdelleft from './strdelleft.mjs'
  * // => [
  * //     { hasKeyword: false, weight: 0 },
  * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 0.25 },
+ * //     { hasKeyword: true, weight: 1 },
  * //     { hasKeyword: false, weight: 0 }
  * // ]
  *
@@ -82,9 +82,9 @@ import strdelleft from './strdelleft.mjs'
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 1 },
  * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 0.25 }
+ * //     { hasKeyword: true, weight: 1 }
  * // ]
  *
  * kws = '+'
@@ -122,9 +122,9 @@ import strdelleft from './strdelleft.mjs'
  * console.log(r)
  * // => [
  * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 1 },
  * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 0.25 }
+ * //     { hasKeyword: true, weight: 1 }
  * // ]
  *
  * kws = ['can be', 'def']
@@ -134,6 +134,26 @@ import strdelleft from './strdelleft.mjs'
  * //     { hasKeyword: true, weight: 0.25 },
  * //     { hasKeyword: false, weight: 0 },
  * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 1 }
+ * // ]
+ *
+ * kws = ['+abc']
+ * r = arrFilterByKeywords(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: true, weight: 1 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 }
+ * // ]
+ *
+ * kws = ['-abc']
+ * r = arrFilterByKeywords(arr, kws)
+ * console.log(r)
+ * // => [
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: false, weight: 0 },
+ * //     { hasKeyword: true, weight: 1 },
  * //     { hasKeyword: true, weight: 1 }
  * // ]
  *
@@ -194,13 +214,23 @@ function arrFilterByKeywords(arr, keywords) {
                     weight = 0
                     break
                 }
+                else {
+                    b = true //找到必有關鍵字, 視為找到
+                    weight = 1
+                    break
+                }
             }
 
             //不能有關鍵字
             if (bExclude) {
                 if (bHas) {
-                    b = false //找到不能有關鍵字, 強制視為找不到
+                    b = false //找到不能有的關鍵字, 強制視為找不到
                     weight = 0
+                    break
+                }
+                else {
+                    b = true //找不到不能有關鍵字, 視為找到
+                    weight = 1
                     break
                 }
             }

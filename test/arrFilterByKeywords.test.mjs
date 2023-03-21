@@ -21,7 +21,7 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
         let j = 0
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
@@ -36,7 +36,7 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
         let j = 1
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
@@ -51,7 +51,7 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
         let j = 2
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
@@ -66,7 +66,7 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
         let j = 3
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
@@ -78,26 +78,27 @@ describe(`arrFilterByKeywords`, function() {
     dout[i] = [
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 },
-        { hasKeyword: true, weight: 0.25 },
+        { hasKeyword: true, weight: 1 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 3
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 4
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
+        // assert.strict.deepStrictEqual(`${j}-${JSON.stringify(dout[j])}`, '')
     })
 
     i++
     din[i] = 'def of module -yet'
     dout[i] = [
         { hasKeyword: true, weight: 1 },
+        { hasKeyword: true, weight: 1 },
         { hasKeyword: false, weight: 0 },
-        { hasKeyword: false, weight: 0 },
-        { hasKeyword: true, weight: 0.25 }
+        { hasKeyword: true, weight: 1 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 4
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 5
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
@@ -111,8 +112,8 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 5
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 6
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
@@ -126,8 +127,8 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 6
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 7
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
@@ -141,8 +142,8 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: false, weight: 0 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 7
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 8
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
@@ -152,12 +153,12 @@ describe(`arrFilterByKeywords`, function() {
     din[i] = ['def', 'of', 'module', '-yet']
     dout[i] = [
         { hasKeyword: true, weight: 1 },
+        { hasKeyword: true, weight: 1 },
         { hasKeyword: false, weight: 0 },
-        { hasKeyword: false, weight: 0 },
-        { hasKeyword: true, weight: 0.25 }
+        { hasKeyword: true, weight: 1 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 8
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 9
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
@@ -171,8 +172,38 @@ describe(`arrFilterByKeywords`, function() {
         { hasKeyword: false, weight: 0 },
         { hasKeyword: true, weight: 1 }
     ]
-    it(`should return ${dout[i]} when input ${arr}, ${din[i]}`, function() {
-        let j = 9
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 10
+        let r = arrFilterByKeywords(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    i++
+    din[i] = ['+abc']
+    dout[i] = [
+        { hasKeyword: true, weight: 1 },
+        { hasKeyword: true, weight: 1 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 }
+    ]
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 11
+        let r = arrFilterByKeywords(arr, din[j])
+        let rr = dout[j]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    i++
+    din[i] = ['-abc']
+    dout[i] = [
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: false, weight: 0 },
+        { hasKeyword: true, weight: 1 },
+        { hasKeyword: true, weight: 1 }
+    ]
+    it(`should return ${JSON.stringify(dout[i])} when input ${JSON.stringify(arr)}, ${JSON.stringify(din[i])}`, function() {
+        let j = 12
         let r = arrFilterByKeywords(arr, din[j])
         let rr = dout[j]
         assert.strict.deepStrictEqual(r, rr)
