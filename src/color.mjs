@@ -1355,7 +1355,6 @@ let kpCv = {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/color.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Object} color 輸入顏色字串或物件
  * @returns {Object} 回傳color物件，提供toRgbaString、toHslaString、toHsvaString、toHexString等共37種處理函數
  * @example
  *

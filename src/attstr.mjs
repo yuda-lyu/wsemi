@@ -523,11 +523,12 @@ function atAdd(composItems, addItemOrId, opt = {}) {
 /**
  * 屬性字串處理
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/color.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/attstr.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Object} color 輸入顏色字串或物件
- * @returns {Object} 回傳color物件，提供toRgbaString、toHslaString、toHsvaString、toHexString等共37種處理函數
+ * @returns {Object} 回傳attstr物件，提供parse、remove、add、combine等共4種處理函數
  * @example
+ *
+ * import at from 'wsemi/src/attstr.mjs'
  *
  * let c
  * let c1
@@ -718,12 +719,15 @@ function atAdd(composItems, addItemOrId, opt = {}) {
  * // => abc@123;def@456;ghi@789;jkl@012
  *
  */
-let attstr = {
-    parse: atParse,
-    remove: atRemove,
-    add: atAdd,
-    combine: atCombine,
+function attstr() {
+    let at = {
+        parse: atParse,
+        remove: atRemove,
+        add: atAdd,
+        combine: atCombine,
+    }
+    return at
 }
 
 
-export default attstr
+export default attstr()
