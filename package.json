@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.6.90",
+  "version": "1.6.91",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "w-package-tools": "^1.0.66"
+    "w-package-tools": "^1.0.67"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",

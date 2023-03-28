@@ -36,9 +36,30 @@ function main() {
     //modify each pre
     $('pre[class="prettyprint"]').map(function(i, v) {
 
+        //eleId
+        let eleId1 = $(v).prev().prev().prev().prev()
+        let eleId2 = $(v).prev().prev().prev() //新版docjs產生html有些id是位於前面第3個
+
         //name
-        let name = $(v).prev().prev().prev().prev().attr('id')
-        name = name.replace('.', '')
+        let name = ''
+        try {
+            name = eleId1.attr('id')
+            name = name.replace('.', '')
+        }
+        catch (err) {}
+        if (!name) {
+            try {
+                name = eleId2.attr('id')
+                name = name.replace('.', '')
+            }
+            catch (err) {}
+        }
+        // console.log('name', name)
+
+        //check
+        if (!name) {
+            return
+        }
 
         //h
         let h = $(v).html()
