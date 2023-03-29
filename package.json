@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
@@ -10,17 +10,17 @@
     "fuse.js": "^6.6.2",
     "htmlparser": "^1.7.7",
     "lodash": "^4.17.21",
-    "seamless-scroll-polyfill": "^2.2.0",
+    "seamless-scroll-polyfill": "^2.3.4",
     "tesseract.js": "^3.0.3",
     "tippy.js": "^6.3.7",
-    "ua-parser-js": "^1.0.32",
-    "viewerjs": "^1.10.5",
+    "ua-parser-js": "^1.0.34",
+    "viewerjs": "^1.11.3",
     "xlsx": "^0.18.5",
     "xss": "^1.0.14"
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "w-package-tools": "^1.0.67"
+    "w-package-tools": "^1.0.68"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
