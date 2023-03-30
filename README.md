@@ -105,7 +105,7 @@ npm i wsemi
 [Optional] Add script for `dayjs`(or `moment`).
 > **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.7/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.7/dayjs.min.js"></script>
 ```
 or
 ```alias
@@ -124,7 +124,7 @@ or
 [Optional] Add script for `ua-parser-js`.
 > **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js"></script>
 ```
 
 [Optional] Add script for `xss`.
@@ -142,8 +142,8 @@ or
 [Optional] Add link and script for `viewerjs`.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.10.5/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.10.5/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.3/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.3/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for `html2canvas`.
@@ -156,23 +156,23 @@ or
 [Optional] Add script for `html-to-image`. It does not support IE11.
 > **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 ```
 
 [Optional] Add script for `markmap`. It does not support IE11.
 > **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function. markmap does not support IE11 and Safari.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/d3@7.4.0/dist/d3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7/dist/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.3/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.14.4/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js"></script>
 ```
 
 [Optional] Add link and script for `diff` and `diff2html`. It does not support IE11.
 > **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/css/diff2html.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/js/diff2html.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/css/diff2html.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/js/diff2html.min.js"></script>
 ```
 
 [Optional] Add script for `htmlparser`.
@@ -184,10 +184,10 @@ or
 [Optional] Add script for `tesseract.js`. It does not support IE11.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@3.0.3/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js"></script>
 ```
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.1/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.2/dist/wsemi.umd.js"></script>
 ```

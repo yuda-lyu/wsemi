@@ -151,7 +151,7 @@ async function ocr(img, opt = {}) {
     // console.log('tsr', tsr)
 
     //createWorker
-    let worker = tsr.createWorker()
+    let worker = await tsr.createWorker()
     // console.log('worker', worker)
 
     //init

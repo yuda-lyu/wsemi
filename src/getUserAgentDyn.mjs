@@ -35,7 +35,7 @@ async function getUserAgentDyn(v = null, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.2/dist/ua-parser.min.js',
+            'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
         ]
     }
 

@@ -30,7 +30,7 @@ async function domConvertToPicDyn(ele, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/html-to-image@1.9.0/dist/html-to-image.js',
+            'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js',
         ]
     }
 

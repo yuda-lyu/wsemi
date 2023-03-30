@@ -31,9 +31,9 @@ async function domCompareTextDyn(ele, title, oldText, newText, opt = {}, pathIte
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js',
-            'https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/css/diff2html.min.css',
-            'https://cdn.jsdelivr.net/npm/diff2html@3.4.16/bundles/js/diff2html.min.js',
+            'https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js',
+            'https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/css/diff2html.min.css',
+            'https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/js/diff2html.min.js',
         ]
     }
 

@@ -72,7 +72,7 @@ function domCompareText(ele, title, oldText, newText, opt = {}) {
         throw new Error('invalid window.Diff2Html')
     }
 
-    //fixDiff2HtmlStyle, Diff2Html(3.4.16)有問題, 於'side-by-side'兩側欄寬度使用width:100%會額外撐開導致破版
+    //fixDiff2HtmlStyle, Diff2Html(3.4.34)有問題, 於'side-by-side'兩側欄寬度使用width:100%會額外撐開導致破版
     let fixDiff2HtmlStyle = () => {
 
         //style for fix width

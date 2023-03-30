@@ -51,9 +51,9 @@ async function domRenderMarkdownMindDyn(ele, markdown, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/d3@7.4.0/dist/d3.min.js',
-            'https://cdn.jsdelivr.net/npm/markmap-view@0.2.7/dist/index.min.js',
-            'https://cdn.jsdelivr.net/npm/markmap-lib@0.12.0/dist/browser/index.min.js',
+            'https://cdn.jsdelivr.net/npm/d3@7.8.3/dist/d3.min.js',
+            'https://cdn.jsdelivr.net/npm/markmap-view@0.14.4/dist/index.min.js',
+            'https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js',
         ]
     }
 

@@ -83,7 +83,7 @@ async function ocrDyn(img, opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
-            'https://cdn.jsdelivr.net/npm/tesseract.js@3.0.3/dist/tesseract.min.js',
+            'https://cdn.jsdelivr.net/npm/tesseract.js@4.0.3/dist/tesseract.min.js',
         ]
     }
 
