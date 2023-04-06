@@ -1,7 +1,8 @@
-import XLSX from 'xlsx'
+import * as XLSX from 'xlsx' //xlsx於vue-cli匯入時變成modulus而缺少default
 import get from 'lodash/get'
 import iseobj from './iseobj.mjs'
 import getGlobal from './getGlobal.mjs'
+// console.log('XLSX', XLSX)
 
 
 function getXLSX() {
