@@ -26,7 +26,7 @@ function getFuse() {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzz.test.mjs Github}
  * @memberOf wsemi
- * @param {Array|String} ar 輸入資料，若輸入陣列則自動join成字串
+ * @param {Array|String} arr 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分
  * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為分數，設定為false時回傳值為是否(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
@@ -49,15 +49,15 @@ function getFuse() {
  * // => true
  *
  */
-function strFindFuzz(ar, strkey, bscore = false) {
+function strFindFuzz(arr, strkey, bscore = false) {
 
     //自動將陣列轉字串
     let c = ''
-    if (isestr(ar) || isnum(ar)) {
-        c = cstr(ar)
+    if (isestr(arr) || isnum(arr)) {
+        c = cstr(arr)
     }
-    else if (isearr(ar)) {
-        c = join(ar, '')
+    else if (isearr(arr)) {
+        c = join(arr, '')
     }
     else {
         if (bscore) {

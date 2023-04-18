@@ -15,7 +15,7 @@ import strdelleft from './strdelleft.mjs'
  * @memberOf wsemi
  * @param {Array} arr 輸入要被尋找的字串陣列
  * @param {String|Array} keywords 輸入要尋找的關鍵字字串或陣列
- * @returns {Array} 回傳結果物件陣列
+ * @returns {Array} 回傳結果物件陣列，陣列內各物件包含hasKeyword與weight欄位，其中hasKeyword代表有無關鍵字為布林值，weight代表權重為浮點數，其值可大於1
  * @example
  *
  * let arr = [
@@ -240,7 +240,7 @@ function arrFilterByKeywords(arr, keywords) {
                 b = true
                 let w = 1 - k / n
                 w = w ** 2 //非線性遞減, 有第1關鍵字權重1, 只有2+3關鍵字權重也不超過第1關鍵字權重
-                weight += w
+                weight += w //權重累加可超過1
             }
 
         }
