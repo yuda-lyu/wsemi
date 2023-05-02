@@ -27,15 +27,15 @@ function domIsClientXYIn(clientX, clientY, ele) {
 
     //check
     if (!isNumber(clientX)) {
-        console.log('clientX is not Number', clientX)
+        console.log('clientX is not a number', clientX)
         return
     }
     if (!isNumber(clientY)) {
-        console.log('clientY is not Number', clientY)
+        console.log('clientY is not a number', clientY)
         return
     }
     if (!isEle(ele)) {
-        console.log('ele is not HTMLElement', ele)
+        console.log('ele is not a HTMLElement', ele)
         return
     }
 

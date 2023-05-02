@@ -35,7 +35,7 @@ function fsCleanFolder(pah) {
     //check
     if (!fsIsFolder(pah)) {
         return {
-            error: 'input path is not folder' //若存在但又不是資料夾, 則一律視為錯誤
+            error: 'input path is not a folder' //若存在但又不是資料夾, 則一律視為錯誤
         }
     }
 

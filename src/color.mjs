@@ -631,7 +631,7 @@ function parseObject(co) {
         return objParseHsva(co)
     }
     else {
-        throw new Error('color object is not rgba, hsla, hsva')
+        throw new Error('color object is not one of rgba, hsla, hsva')
     }
 }
 
@@ -875,7 +875,7 @@ function maxmin(v) {
 
 function fmtColor(rgba, fmtOutput) {
     if (!isestr(fmtOutput)) {
-        throw new Error('fmtOutput is not string')
+        throw new Error('fmtOutput is not a string')
     }
     if (kpCv[fmtOutput]) {
         rgba = kpCv[fmtOutput](rgba)
@@ -960,7 +960,7 @@ function modComplement(rgba, fmtOutput = 'toRgbString') {
 function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的色相與數量num產生分佈色
     if (!isint(num)) {
-        throw new Error('num is not integer')
+        throw new Error('num is not an integer')
     }
     num = cint(num)
     if (num <= 1) {
@@ -981,7 +981,7 @@ function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
 function spreadMonochromatic(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的飽和度與亮度與數量num產生分佈配色
     if (!isint(num)) {
-        throw new Error('num is not integer')
+        throw new Error('num is not an integer')
     }
     num = cint(num)
     if (num <= 1) {
@@ -1251,7 +1251,7 @@ function parseColor(color) {
     }
     else {
         console.log('color=', color)
-        throw new Error('color is not string or object')
+        throw new Error('color is not a string or an object')
     }
 
     //parse
@@ -1282,7 +1282,7 @@ function interp(gradient) {
 
     //check gradient
     if (!iseobj(gradient)) {
-        console.log('gradient is not effective object')
+        console.log('gradient is not an effective object')
         return (r) => {
             r = Math.min(Math.max(r, 0), 1)
             return `rgb(${r * 255},${r * 255},${r * 255})`

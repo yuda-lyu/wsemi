@@ -632,7 +632,7 @@ function domDrag(ele, opt = {}) {
 
     //check
     if (!isEle(ele)) {
-        console.log('ele is not HTMLElement', ele)
+        console.log('ele is not a HTMLElement', ele)
         return
     }
 

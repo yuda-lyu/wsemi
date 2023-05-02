@@ -11,20 +11,23 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * need test in nodejs. See example in fsCopyFolder.
  *
+ * console.log('fsDeleteFolder', fsDeleteFolder('./abc'))
+ * // fsDeleteFolder { success: 'done: ./abc' }
+ *
  */
 function fsDeleteFolder(pah) {
 
     //check
     if (!fs.existsSync(pah)) {
         return {
-            success: 'folder does not exist: ' + pah //資料夾不存在但仍算是刪除成功, 故需先判斷
+            success: 'folder does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
         }
     }
 
     //check
     if (!fsIsFolder(pah)) {
         return {
-            error: 'input path is not folder: ' + pah //若存在但又不是資料夾, 則視為錯誤
+            error: 'input path is not a folder: ' + pah //若存在但又不是資料夾, 則視為錯誤
         }
     }
 

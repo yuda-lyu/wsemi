@@ -41,7 +41,7 @@ function downloadFileFromText(fileName, ccont, withBOM = true) {
         return
     }
     if (!isbol(withBOM)) {
-        console.log('withBOM is not boolean')
+        console.log('withBOM is not a boolean')
         return
     }
 

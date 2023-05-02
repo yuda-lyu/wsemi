@@ -44,7 +44,7 @@ function to_array(workbook, valueToString) {
 
         //push
         result.push({
-            sheetname: sheetname,
+            sheetname,
             data: arr
         })
 
@@ -74,7 +74,7 @@ function to_ltdt(workbook, valueToString) {
 
         //push
         result.push({
-            sheetname: sheetname,
+            sheetname,
             data: j
         })
 
@@ -142,7 +142,7 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     //check
     if (!arrHas(['ltdt', 'csv', 'array'], fmt)) {
         return {
-            error: `opt.fmt is not is not any one of 'ltdt', 'csv', 'array'`
+            error: `opt.fmt is not one of 'ltdt', 'csv', 'array'`
         }
     }
 
@@ -152,7 +152,7 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     //check
     if (!isbol(valueToString)) {
         return {
-            error: 'opt.valueToString is not Boolean'
+            error: 'opt.valueToString is not a boolean'
         }
     }
 

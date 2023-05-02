@@ -408,7 +408,7 @@ function pmQueue(takeLimit = 0, takeLast = false) {
             if (!isfun(fun)) {
                 res = {
                     state: 'error',
-                    msg: 'fun is not function',
+                    msg: 'fun is not a function',
                 }
             }
             else {

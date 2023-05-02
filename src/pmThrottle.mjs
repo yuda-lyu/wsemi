@@ -307,7 +307,7 @@ function pmThrottle() {
                     //res
                     res = {
                         state: 'error',
-                        msg: 'fun is not function',
+                        msg: 'fun is not a function',
                     }
 
                 }
@@ -334,7 +334,7 @@ function pmThrottle() {
 
         //check
         if (!isfun(func)) {
-            console.log('func is not function')
+            console.log('func is not a function')
             return
         }
 

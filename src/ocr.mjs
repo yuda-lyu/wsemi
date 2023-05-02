@@ -137,7 +137,7 @@ async function ocr(img, opt = {}) {
     // a Buffer storing binary image
     // a base64 encoded image fits data:image\/([a-zA-Z]*);base64,([^"]*) regexp
     if (!isestr(img)) {
-        return Promise.reject('img is not effective string')
+        return Promise.reject('img is not an effective string')
     }
 
     //lang

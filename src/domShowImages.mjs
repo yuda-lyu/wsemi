@@ -84,7 +84,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //img and check one
     if (!isEle(eleImg)) {
-        pm.reject('eleImg is not HTMLElement')
+        pm.reject('eleImg is not a HTMLElement')
         return pm
     }
     else {
@@ -92,7 +92,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     }
     if (eleGroup !== null) {
         if (!isEle(eleGroup)) {
-            pm.reject('eleGroup is not HTMLElement')
+            pm.reject('eleGroup is not a HTMLElement')
             return pm
         }
         else {

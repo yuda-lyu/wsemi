@@ -62,7 +62,7 @@ function log() {
 
         //check
         if (!isfun(loggerFun)) {
-            throw new Error('loggerFun is not function')
+            throw new Error('loggerFun is not a function')
         }
 
         //save

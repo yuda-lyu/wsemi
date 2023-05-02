@@ -56,13 +56,13 @@ async function domConvertToPic(ele, opt = {}) {
     //picType
     let picType = get(opt, 'picType', 'image/png')
     if (picType !== 'image/jpeg' && picType !== 'image/png') {
-        return Promise.reject('opt.picType is not image/jpeg or image/png')
+        return Promise.reject('opt.picType is not one of image/jpeg or image/png')
     }
 
     //toBase64
     let toBase64 = get(opt, 'toBase64', true)
     if (!isBoolean(toBase64)) {
-        return Promise.reject('opt.toBase64 is not boolean')
+        return Promise.reject('opt.toBase64 is not a boolean')
     }
 
     //cloneNode
