@@ -22,6 +22,18 @@ describe(`dtmapping`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { a: '', b: '' } when input {}, ['a', 'b']`, function() {
+        let r = dtmapping({}, ['a', 'b'])
+        let rr = { a: '', b: '' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { a: '', b: '' } when input {}, ['a', 'b'], null`, function() {
+        let r = dtmapping({}, ['a', 'b'], null)
+        let rr = { a: null, b: null }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return {} when input { a: 'a123', b: 234, c: '345' }, ''`, function() {
         let r = dtmapping({ a: 'a123', b: 234, c: '345' }, '')
         let rr = {}

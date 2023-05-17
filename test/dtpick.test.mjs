@@ -22,6 +22,12 @@ describe(`dtpick`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { a: '', b: '' } when input {}, ['a', 'b']`, function() {
+        let r = dtpick({}, ['a', 'b'])
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return {} when input { a: 'a123', b: 234, c: '345' }, ''`, function() {
         let r = dtpick({ a: 'a123', b: 234, c: '345' }, '')
         let rr = {}

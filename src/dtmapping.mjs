@@ -1,6 +1,5 @@
 import each from 'lodash/each'
 import get from 'lodash/get'
-import iseobj from './iseobj.mjs'
 import isearr from './isearr.mjs'
 
 
@@ -25,9 +24,9 @@ import isearr from './isearr.mjs'
 function dtmapping(dt, keys, def = '') {
 
     //check
-    if (!iseobj(dt)) {
-        return {}
-    }
+    // if (!iseobj(dt)) { //不能跳出, 要支援對空物件與keys直接產生新物件
+    //     return {}
+    // }
     if (!isearr(keys)) {
         return {}
     }

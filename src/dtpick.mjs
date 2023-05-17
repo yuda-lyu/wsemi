@@ -25,7 +25,7 @@ import haskey from './haskey.mjs'
 function dtpick(dt, keys) {
 
     //check
-    if (!isobj(dt)) {
+    if (!isobj(dt)) { //若輸入空物件可直接回傳空物件
         return {}
     }
     if (!isearr(keys)) {
