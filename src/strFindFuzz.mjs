@@ -28,9 +28,12 @@ function getFuse() {
  * @memberOf wsemi
  * @param {Array|String} arr 輸入資料，若輸入陣列則自動join成字串
  * @param {String|Number} strkey 查找ar內是否含有關鍵字，多關鍵字係以空白區分
- * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為分數，設定為false時回傳值為是否(預設)
+ * @param {Boolean} [bscore=false] 是否回傳分數，當設定為true時回傳值為百分比數值，設定為false時回傳值為布林值(預設)
  * @returns {Boolean|Number} 輸出資料，回傳值為分數或是否
  * @example
+ *
+ * console.log(strFindFuzz('Wodooman(樵夫)', 'Wodooman(樵夫)', true))
+ * // => 100
  *
  * //第2參數會被空白切分成多關鍵字
  * console.log(strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true))

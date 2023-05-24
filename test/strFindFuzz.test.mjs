@@ -4,6 +4,11 @@ import strFindFuzz from '../src/strFindFuzz.mjs'
 
 describe(`strFindFuzz`, function() {
 
+    it(`should return 100 when input 'Wodooman(樵夫)', 'Wodooman(樵夫)', true`, function() {
+        let r = strFindFuzz('Wodooman(樵夫)', 'Wodooman(樵夫)', true)
+        assert.strict.deepStrictEqual(r, 100)
+    })
+
     it(`should return 31.831649831649834 when input 'Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true`, function() {
         let r = strFindFuzz('Wodooman(樵夫)', 'The Woodman(樵夫) set to work at once, and so...', true)
         assert.strict.deepStrictEqual(r, 31.831649831649834)
