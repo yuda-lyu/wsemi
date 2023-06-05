@@ -89,7 +89,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tesseract.js`, `htmlparser` and `tippy.js`.
+> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tesseract.js`, `htmlparser` and `tippy.js`.
 ```alias
 npm i wsemi
 ```
@@ -167,10 +167,9 @@ or
 <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js"></script>
 ```
 
-[Optional] Add link and script for `diff` and `diff2html`. It does not support IE11.
+[Optional] Add link and script for `diff2html`. It does not support IE11.
 > **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/css/diff2html.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/js/diff2html.min.js"></script>
 ```

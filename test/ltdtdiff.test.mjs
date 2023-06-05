@@ -1,363 +1,108 @@
 import assert from 'assert'
-import ltdtdiff from '../src/ltdtdiff.mjs'
+import ltdtDiff from '../src/ltdtDiff.mjs'
 
 
-describe(`ltdtdiff`, function() {
-    let k
-    let o = {}
+describe(`ltdtDiff`, function() {
+    let k = 0
+    let kp = {}
 
-    k = 1
-    o[k] = {
-        old: { id: 'pk', a: 'abc', b: 123 },
-        new: { id: 'pk', a: 'abc', b: 123 },
-        ret: {
-            infor: { pk: 'same' },
-            del: [],
-            same: [{ id: 'pk', a: 'abc', b: 123 }],
-            diff: [],
-            add: [],
-        }
+    let r1in1 = [
+        { 'cn': '1', 'v1': '0.791303871', 'v2': '0.716898185', 'v3': '0.506002098', 'v4': '0.137888903', 'v5': '', 'v6': '0.626724085' },
+        { 'cn': '2', 'v1': '0.839882385', 'v2': '0.663059856', 'v3': '0.49047221', 'v4': '0.395763265', 'v5': '0.567412025', 'v6': '0.866151835' },
+        { 'cn': '3', 'v1': '0.475514539', 'v2': '0.969205779', 'v3': '0.711250309', 'v4': '0.153847069', 'v5': '0.304927473', 'v6': '0.410092395' },
+        { 'cn': '4', 'v1': '0.486179086', 'v2': '0.481023842', 'v3': '0.467410582', 'v4': '0.42602231', 'v5': '', 'v6': '0.849701641' },
+        { 'cn': '5', 'v1': '0.697242433', 'v2': '0.67532802', 'v3': '0.174644416', 'v4': '0.045652267', 'v5': '', 'v6': '0.397104668' },
+        { 'cn': '6', 'v1': '0.259252779', 'v2': '0.566177431', 'v3': '0.679637706', 'v4': '0.377814487', 'v5': '', 'v6': '0.400248119' },
+        { 'cn': '7', 'v1': '0.263793391', 'v2': '0.167895215', 'v3': '0.794808602', 'v4': '0.107070584', 'v5': '', 'v6': '0.011822872' },
+        { 'cn': '8', 'v1': '0.360426795', 'v2': '0.014346373', 'v3': '0.000469616', 'v4': '0.4082693', 'v5': '', 'v6': '0.913806611' },
+        { 'cn': '9', 'v1': '0.167996664', 'v2': '0.711054429', 'v3': '0.363177921', 'v4': '0.206849994', 'v5': '', 'v6': '0.636855344' },
+        { 'cn': '10', 'v1': '0.324665077', 'v2': '0.973218005', 'v3': '0.883927423', 'v4': '0.176906125', 'v5': '', 'v6': '0.20087887' },
+        { 'cn': '11', 'v1': '', 'v2': '', 'v3': '', 'v4': '', 'v5': '', 'v6': '' },
+        { 'cn': '12', 'v1': '', 'v2': '', 'v3': '', 'v4': '', 'v5': '', 'v6': '' },
+        { 'cn': '13', 'v1': '0.984003751', 'v2': '0.32549507', 'v3': '0.987090751', 'v4': '0.192745589', 'v5': '', 'v6': '0.735133561' },
+        { 'cn': '14', 'v1': '0.083431884', 'v2': '0.565146092', 'v3': '0.935388666', 'v4': '0.637675154', 'v5': '', 'v6': '0.523815661' }
+    ]
+    let r1in2 = [
+        { 'cn': '1', 'v1': '0.791303871', 'v2': '0.716898185', 'v3': '0.506002098', 'v4': '0.137888903', 'v5': '', 'v6': '0.626724085' },
+        { 'cn': '2', 'v1': '0.839882385', 'v2': '0.663059856', 'v3': '0.49047221', 'v4': '0.395763265', 'v5': '', 'v6': '0.866151835' },
+        { 'cn': '3', 'v1': '0.475514539', 'v2': '0.969205779', 'v3': '0.711250309', 'v4': '0.153847069', 'v5': '0.304927473', 'v6': '0.410092395' },
+        { 'cn': '4', 'v1': '0.486179086', 'v2': '0.481023842', 'v3': '0.467410582', 'v4': '0.42602231', 'v5': '', 'v6': '0.849701641' },
+        { 'cn': '5', 'v1': '0.169724243', 'v2': '0.67532802', 'v3': '0.174644416', 'v4': '0.045652267', 'v5': '', 'v6': '0.397104668' },
+        { 'cn': '7', 'v1': '0.263793391', 'v2': '0.167895215', 'v3': '0.794808602', 'v4': '0.107070584', 'v5': '', 'v6': '0.011822872' },
+        { 'cn': '8', 'v1': '0.360426795', 'v2': '0.014346373', 'v3': '0.000469616', 'v4': '0.4082693', 'v5': '', 'v6': '0.913806611' },
+        { 'cn': '9', 'v1': '0.167996664', 'v2': '0.711054429', 'v3': '0.363173478', 'v4': '', 'v5': '0.729361837', 'v6': '0.636855344' },
+        { 'cn': '10', 'v1': '0.324665077', 'v2': '0.973218005', 'v3': '0.883927423', 'v4': '0.176906125', 'v5': '0.397795245', 'v6': '0.20087887' },
+        { 'cn': '13', 'v1': '0.984003751', 'v2': '0.32549507', 'v3': '0.987090751', 'v4': '0.192745589', 'v5': '', 'v6': '0.735133561' },
+        { 'cn': '14', 'v1': '0.083431884', 'v2': '0.565146092', 'v3': '0.935388666', 'v4': '0.637675154', 'v5': '', 'v6': '0.523815661' },
+        { 'cn': 'n1', 'v1': '0.89950443', 'v2': '0.182709318', 'v3': '0.892820757', 'v4': '0.709746901', 'v5': '', 'v6': '0.097385354' },
+        { 'cn': 'n2', 'v1': '0.061355308', 'v2': '0.314826137', 'v3': '0.855857651', 'v4': '0.653550539', 'v5': '', 'v6': '0.772500773' },
+        { 'cn': 'n3', 'v1': '0.085078711', 'v2': '0.844664253', 'v3': '0.21630142', 'v4': '0.912931341', 'v5': '', 'v6': '0.735138313' }
+    ]
+    let r1out = { 'diff': 'Index: title\n===================================================================\n--- title\n+++ title\n@@ -1,14 +1,14 @@\n 0∶1⟋1∶0.791303871⟋2∶0.716898185⟋3∶0.506002098⟋4∶0.137888903⟋5∶⟋6∶0.626724085⟋\n-0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶0.567412025⟋6∶0.866151835⟋\n+0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶⟋6∶0.866151835⟋\n 0∶3⟋1∶0.475514539⟋2∶0.969205779⟋3∶0.711250309⟋4∶0.153847069⟋5∶0.304927473⟋6∶0.410092395⟋\n 0∶4⟋1∶0.486179086⟋2∶0.481023842⟋3∶0.467410582⟋4∶0.42602231⟋5∶⟋6∶0.849701641⟋\n-0∶5⟋1∶0.697242433⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋\n-0∶6⟋1∶0.259252779⟋2∶0.566177431⟋3∶0.679637706⟋4∶0.377814487⟋5∶⟋6∶0.400248119⟋\n+0∶5⟋1∶0.169724243⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋\n 0∶7⟋1∶0.263793391⟋2∶0.167895215⟋3∶0.794808602⟋4∶0.107070584⟋5∶⟋6∶0.011822872⟋\n 0∶8⟋1∶0.360426795⟋2∶0.014346373⟋3∶0.000469616⟋4∶0.4082693⟋5∶⟋6∶0.913806611⟋\n-0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363177921⟋4∶0.206849994⟋5∶⟋6∶0.636855344⟋\n-0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶⟋6∶0.20087887⟋\n-0∶11⟋1∶⟋2∶⟋3∶⟋4∶⟋5∶⟋6∶⟋\n-0∶12⟋1∶⟋2∶⟋3∶⟋4∶⟋5∶⟋6∶⟋\n+0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363173478⟋4∶⟋5∶0.729361837⟋6∶0.636855344⟋\n+0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶0.397795245⟋6∶0.20087887⟋\n 0∶13⟋1∶0.984003751⟋2∶0.32549507⟋3∶0.987090751⟋4∶0.192745589⟋5∶⟋6∶0.735133561⟋\n 0∶14⟋1∶0.083431884⟋2∶0.565146092⟋3∶0.935388666⟋4∶0.637675154⟋5∶⟋6∶0.523815661⟋\n+0∶n1⟋1∶0.89950443⟋2∶0.182709318⟋3∶0.892820757⟋4∶0.709746901⟋5∶⟋6∶0.097385354⟋\n+0∶n2⟋1∶0.061355308⟋2∶0.314826137⟋3∶0.855857651⟋4∶0.653550539⟋5∶⟋6∶0.772500773⟋\n+0∶n3⟋1∶0.085078711⟋2∶0.844664253⟋3∶0.21630142⟋4∶0.912931341⟋5∶⟋6∶0.735138313⟋\n', 'dfrs': [{ 'p': '', 'vo': '0∶1⟋1∶0.791303871⟋2∶0.716898185⟋3∶0.506002098⟋4∶0.137888903⟋5∶⟋6∶0.626724085⟋', 'vn': '' }, { 'p': 'modify', 'vo': '0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶0.567412025⟋6∶0.866151835⟋', 'vn': '0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶⟋6∶0.866151835⟋', 'dfs': [{ 'p': '', 'vo': '1∶0.839882385', 'vn': '' }, { 'p': '', 'vo': '2∶0.663059856', 'vn': '' }, { 'p': '', 'vo': '3∶0.49047221', 'vn': '' }, { 'p': '', 'vo': '4∶0.395763265', 'vn': '' }, { 'p': 'modify', 'vo': '5∶0.567412025', 'vn': '5∶' }, { 'p': '', 'vo': '6∶0.866151835', 'vn': '' }] }, { 'p': '', 'vo': '0∶3⟋1∶0.475514539⟋2∶0.969205779⟋3∶0.711250309⟋4∶0.153847069⟋5∶0.304927473⟋6∶0.410092395⟋', 'vn': '' }, { 'p': '', 'vo': '0∶4⟋1∶0.486179086⟋2∶0.481023842⟋3∶0.467410582⟋4∶0.42602231⟋5∶⟋6∶0.849701641⟋', 'vn': '' }, { 'p': 'remove', 'vo': '0∶5⟋1∶0.697242433⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋', 'vn': '' }, { 'p': 'modify', 'vo': '0∶6⟋1∶0.259252779⟋2∶0.566177431⟋3∶0.679637706⟋4∶0.377814487⟋5∶⟋6∶0.400248119⟋', 'vn': '0∶5⟋1∶0.169724243⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋', 'dfs': [{ 'p': 'remove', 'vo': '0∶6', 'vn': '' }, { 'p': 'remove', 'vo': '1∶0.259252779', 'vn': '' }, { 'p': 'remove', 'vo': '2∶0.566177431', 'vn': '' }, { 'p': 'remove', 'vo': '3∶0.679637706', 'vn': '' }, { 'p': 'modify', 'vo': '4∶0.377814487', 'vn': '0∶5' }, { 'p': 'add', 'vo': '1∶0.169724243', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.67532802', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.174644416', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.045652267', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': 'modify', 'vo': '6∶0.400248119', 'vn': '6∶0.397104668' }] }, { 'p': '', 'vo': '0∶7⟋1∶0.263793391⟋2∶0.167895215⟋3∶0.794808602⟋4∶0.107070584⟋5∶⟋6∶0.011822872⟋', 'vn': '' }, { 'p': '', 'vo': '0∶8⟋1∶0.360426795⟋2∶0.014346373⟋3∶0.000469616⟋4∶0.4082693⟋5∶⟋6∶0.913806611⟋', 'vn': '' }, { 'p': 'remove', 'vo': '0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363177921⟋4∶0.206849994⟋5∶⟋6∶0.636855344⟋', 'vn': '' }, { 'p': 'remove', 'vo': '0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶⟋6∶0.20087887⟋', 'vn': '' }, { 'p': 'remove', 'vo': '0∶11⟋1∶⟋2∶⟋3∶⟋4∶⟋5∶⟋6∶⟋', 'vn': '' }, { 'p': 'modify', 'vo': '0∶12⟋1∶⟋2∶⟋3∶⟋4∶⟋5∶⟋6∶⟋', 'vn': '0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363173478⟋4∶⟋5∶0.729361837⟋6∶0.636855344⟋', 'dfs': [{ 'p': 'remove', 'vo': '0∶12', 'vn': '' }, { 'p': 'remove', 'vo': '1∶', 'vn': '' }, { 'p': 'remove', 'vo': '2∶', 'vn': '' }, { 'p': 'modify', 'vo': '3∶', 'vn': '0∶9' }, { 'p': 'add', 'vo': '1∶0.167996664', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.711054429', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.363173478', 'vn': '' }, { 'p': '', 'vo': '4∶', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'modify', 'vo': '6∶', 'vn': '5∶0.729361837' }, { 'p': 'add', 'vo': '6∶0.636855344', 'vn': '' }] }, { 'p': 'add', 'vo': '0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶0.397795245⟋6∶0.20087887⟋', 'vn': '' }, { 'p': '', 'vo': '0∶13⟋1∶0.984003751⟋2∶0.32549507⟋3∶0.987090751⟋4∶0.192745589⟋5∶⟋6∶0.735133561⟋', 'vn': '' }, { 'p': '', 'vo': '0∶14⟋1∶0.083431884⟋2∶0.565146092⟋3∶0.935388666⟋4∶0.637675154⟋5∶⟋6∶0.523815661⟋', 'vn': '' }, { 'p': 'add', 'vo': '0∶n1⟋1∶0.89950443⟋2∶0.182709318⟋3∶0.892820757⟋4∶0.709746901⟋5∶⟋6∶0.097385354⟋', 'vn': '' }, { 'p': 'add', 'vo': '0∶n2⟋1∶0.061355308⟋2∶0.314826137⟋3∶0.855857651⟋4∶0.653550539⟋5∶⟋6∶0.772500773⟋', 'vn': '' }, { 'p': 'add', 'vo': '0∶n3⟋1∶0.085078711⟋2∶0.844664253⟋3∶0.21630142⟋4∶0.912931341⟋5∶⟋6∶0.735138313⟋', 'vn': '' }], 'dfs': [[{ 'p': '', 'vo': '0∶1', 'vn': '' }, { 'p': '', 'vo': '1∶0.791303871', 'vn': '' }, { 'p': '', 'vo': '2∶0.716898185', 'vn': '' }, { 'p': '', 'vo': '3∶0.506002098', 'vn': '' }, { 'p': '', 'vo': '4∶0.137888903', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.626724085', 'vn': '' }], [{ 'p': '', 'vo': '1∶0.839882385', 'vn': '' }, { 'p': '', 'vo': '2∶0.663059856', 'vn': '' }, { 'p': '', 'vo': '3∶0.49047221', 'vn': '' }, { 'p': '', 'vo': '4∶0.395763265', 'vn': '' }, { 'p': 'modify', 'vo': '5∶0.567412025', 'vn': '5∶' }, { 'p': '', 'vo': '6∶0.866151835', 'vn': '' }], [{ 'p': '', 'vo': '0∶3', 'vn': '' }, { 'p': '', 'vo': '1∶0.475514539', 'vn': '' }, { 'p': '', 'vo': '2∶0.969205779', 'vn': '' }, { 'p': '', 'vo': '3∶0.711250309', 'vn': '' }, { 'p': '', 'vo': '4∶0.153847069', 'vn': '' }, { 'p': '', 'vo': '5∶0.304927473', 'vn': '' }, { 'p': '', 'vo': '6∶0.410092395', 'vn': '' }], [{ 'p': '', 'vo': '0∶4', 'vn': '' }, { 'p': '', 'vo': '1∶0.486179086', 'vn': '' }, { 'p': '', 'vo': '2∶0.481023842', 'vn': '' }, { 'p': '', 'vo': '3∶0.467410582', 'vn': '' }, { 'p': '', 'vo': '4∶0.42602231', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.849701641', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶5', 'vn': '' }, { 'p': 'remove', 'vo': '1∶0.697242433', 'vn': '' }, { 'p': 'remove', 'vo': '2∶0.67532802', 'vn': '' }, { 'p': 'remove', 'vo': '3∶0.174644416', 'vn': '' }, { 'p': 'remove', 'vo': '4∶0.045652267', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'remove', 'vo': '6∶0.397104668', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶6', 'vn': '' }, { 'p': 'remove', 'vo': '1∶0.259252779', 'vn': '' }, { 'p': 'remove', 'vo': '2∶0.566177431', 'vn': '' }, { 'p': 'remove', 'vo': '3∶0.679637706', 'vn': '' }, { 'p': 'modify', 'vo': '4∶0.377814487', 'vn': '0∶5' }, { 'p': 'add', 'vo': '1∶0.169724243', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.67532802', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.174644416', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.045652267', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': 'modify', 'vo': '6∶0.400248119', 'vn': '6∶0.397104668' }], [{ 'p': '', 'vo': '0∶7', 'vn': '' }, { 'p': '', 'vo': '1∶0.263793391', 'vn': '' }, { 'p': '', 'vo': '2∶0.167895215', 'vn': '' }, { 'p': '', 'vo': '3∶0.794808602', 'vn': '' }, { 'p': '', 'vo': '4∶0.107070584', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.011822872', 'vn': '' }], [{ 'p': '', 'vo': '0∶8', 'vn': '' }, { 'p': '', 'vo': '1∶0.360426795', 'vn': '' }, { 'p': '', 'vo': '2∶0.014346373', 'vn': '' }, { 'p': '', 'vo': '3∶0.000469616', 'vn': '' }, { 'p': '', 'vo': '4∶0.4082693', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.913806611', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶9', 'vn': '' }, { 'p': 'remove', 'vo': '1∶0.167996664', 'vn': '' }, { 'p': 'remove', 'vo': '2∶0.711054429', 'vn': '' }, { 'p': 'remove', 'vo': '3∶0.363177921', 'vn': '' }, { 'p': 'remove', 'vo': '4∶0.206849994', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'remove', 'vo': '6∶0.636855344', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶10', 'vn': '' }, { 'p': 'remove', 'vo': '1∶0.324665077', 'vn': '' }, { 'p': 'remove', 'vo': '2∶0.973218005', 'vn': '' }, { 'p': 'remove', 'vo': '3∶0.883927423', 'vn': '' }, { 'p': 'remove', 'vo': '4∶0.176906125', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'remove', 'vo': '6∶0.20087887', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶11', 'vn': '' }, { 'p': 'remove', 'vo': '1∶', 'vn': '' }, { 'p': 'remove', 'vo': '2∶', 'vn': '' }, { 'p': 'remove', 'vo': '3∶', 'vn': '' }, { 'p': 'remove', 'vo': '4∶', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'remove', 'vo': '6∶', 'vn': '' }], [{ 'p': 'remove', 'vo': '0∶12', 'vn': '' }, { 'p': 'remove', 'vo': '1∶', 'vn': '' }, { 'p': 'remove', 'vo': '2∶', 'vn': '' }, { 'p': 'modify', 'vo': '3∶', 'vn': '0∶9' }, { 'p': 'add', 'vo': '1∶0.167996664', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.711054429', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.363173478', 'vn': '' }, { 'p': '', 'vo': '4∶', 'vn': '' }, { 'p': 'remove', 'vo': '5∶', 'vn': '' }, { 'p': 'modify', 'vo': '6∶', 'vn': '5∶0.729361837' }, { 'p': 'add', 'vo': '6∶0.636855344', 'vn': '' }], [{ 'p': 'add', 'vo': '0∶10', 'vn': '' }, { 'p': 'add', 'vo': '1∶0.324665077', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.973218005', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.883927423', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.176906125', 'vn': '' }, { 'p': 'add', 'vo': '5∶0.397795245', 'vn': '' }, { 'p': 'add', 'vo': '6∶0.20087887', 'vn': '' }], [{ 'p': '', 'vo': '0∶13', 'vn': '' }, { 'p': '', 'vo': '1∶0.984003751', 'vn': '' }, { 'p': '', 'vo': '2∶0.32549507', 'vn': '' }, { 'p': '', 'vo': '3∶0.987090751', 'vn': '' }, { 'p': '', 'vo': '4∶0.192745589', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.735133561', 'vn': '' }], [{ 'p': '', 'vo': '0∶14', 'vn': '' }, { 'p': '', 'vo': '1∶0.083431884', 'vn': '' }, { 'p': '', 'vo': '2∶0.565146092', 'vn': '' }, { 'p': '', 'vo': '3∶0.935388666', 'vn': '' }, { 'p': '', 'vo': '4∶0.637675154', 'vn': '' }, { 'p': '', 'vo': '5∶', 'vn': '' }, { 'p': '', 'vo': '6∶0.523815661', 'vn': '' }], [{ 'p': 'add', 'vo': '0∶n1', 'vn': '' }, { 'p': 'add', 'vo': '1∶0.89950443', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.182709318', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.892820757', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.709746901', 'vn': '' }, { 'p': 'add', 'vo': '5∶', 'vn': '' }, { 'p': 'add', 'vo': '6∶0.097385354', 'vn': '' }], [{ 'p': 'add', 'vo': '0∶n2', 'vn': '' }, { 'p': 'add', 'vo': '1∶0.061355308', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.314826137', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.855857651', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.653550539', 'vn': '' }, { 'p': 'add', 'vo': '5∶', 'vn': '' }, { 'p': 'add', 'vo': '6∶0.772500773', 'vn': '' }], [{ 'p': 'add', 'vo': '0∶n3', 'vn': '' }, { 'p': 'add', 'vo': '1∶0.085078711', 'vn': '' }, { 'p': 'add', 'vo': '2∶0.844664253', 'vn': '' }, { 'p': 'add', 'vo': '3∶0.21630142', 'vn': '' }, { 'p': 'add', 'vo': '4∶0.912931341', 'vn': '' }, { 'p': 'add', 'vo': '5∶', 'vn': '' }, { 'p': 'add', 'vo': '6∶0.735138313', 'vn': '' }]] }
+    k++
+    kp[k] = {
+        oin1: r1in1,
+        oin2: r1in2,
+        oout: r1out,
     }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 1
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return [case:${k}] '${JSON.stringify(kp[k].oout)}' when input '${JSON.stringify(kp[k].oin1)}', '${JSON.stringify(kp[k].oin2)}'`, function() {
+        let k = 1
+        let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
+        let rr = kp[k].oout
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 2
-    o[k] = {
-        old: { id: 'pk', a: 'abc', b: 123 },
-        new: { id: 'pk', a: 'abc', b: 123 },
-        ret: { infor: {}, del: [], same: [], diff: [], add: [] }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'temp'`, function() {
-        k = 2
-        let r = ltdtdiff(o[k].old, o[k].new, 'temp')
-        let rr = o[k].ret
+    it(`sould return '' when input 'test中文', []`, function() {
+        let r = ltdtDiff('test中文', [])
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 3
-    o[k] = {
-        old: { id: 'pk', a: 'abc', b: 123 },
-        new: { id: 'pk', a: 'abc', b: 456 },
-        ret: {
-            infor: { pk: 'diff' },
-            del: [],
-            same: [],
-            diff: [{ id: 'pk', a: 'abc', b: 456 }],
-            add: [],
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 3
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return '' when input 'test中文', {}`, function() {
+        let r = ltdtDiff('test中文', {})
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 4
-    o[k] = {
-        old: { id: 'pk', a: 'abc', b: 123 },
-        new: { id: 'pk1', a: 'abc', b: 456 },
-        ret: {
-            infor: { pk: 'del', pk1: 'add' },
-            del: [{ id: 'pk', a: 'abc', b: 123 }],
-            same: [],
-            diff: [],
-            add: [{ id: 'pk1', a: 'abc', b: 456 }],
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 4
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return '' when input 'test中文', null`, function() {
+        let r = ltdtDiff('test中文', null)
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 5
-    o[k] = {
-        old: { id: 'pk', a: 'abc', b: 123 },
-        new: [{ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 123 }],
-        ret: {
-            infor: { pk: 'same', pk1: 'add' },
-            del: [],
-            same: [{ id: 'pk', a: 'abc', b: 123 }],
-            diff: [],
-            add: [{ id: 'pk1', a: 'abc', b: 123 }],
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 5
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return '' when input 'test中文', undefined`, function() {
+        let r = ltdtDiff('test中文', undefined)
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 6
-    o[k] = {
-        old: [{ id: 'pk', a: 'abc', b: 123 }, { id: 'pk2', a: 'abc', b: 123 }],
-        new: [{ id: 'pk', a: 'abc', b: 123 }, { id: 'pk1', a: 'abc', b: 123 }],
-        ret: {
-            infor: { pk: 'same', pk1: 'add', pk2: 'del' },
-            del: [{ id: 'pk2', a: 'abc', b: 123 }],
-            same: [{ id: 'pk', a: 'abc', b: 123 }],
-            diff: [],
-            add: [{ id: 'pk1', a: 'abc', b: 123 }],
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 6
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return '' when input ''`, function() {
+        let r = ltdtDiff('')
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 7
-    o[k] = {
-        old: [{ id: 'pk', a: 'abc', b: 123 }, { id: 'pk2', a: 'abc', b: 123 }],
-        new: [{ id: 'pk', a: 'abc', b: 456 }, { id: 'pk1', a: 'abc', b: 123 }],
-        ret: {
-            infor: { pk: 'diff', pk1: 'add', pk2: 'del' },
-            del: [{ id: 'pk2', a: 'abc', b: 123 }],
-            same: [],
-            diff: [{ id: 'pk', a: 'abc', b: 456 }],
-            add: [{ id: 'pk1', a: 'abc', b: 123 }],
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 7
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
+    it(`sould return '' when input []`, function() {
+        let r = ltdtDiff([])
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 8
-    o[k] = {
-        old: [{ x: 'xa', y: 'y1' }],
-        new: [{ x: 'xa', y: 'y1' }],
-        ret: {
-            infor: { xa: 'same' },
-            del: [],
-            same: [{ x: 'xa', y: 'y1' }],
-            diff: [],
-            add: []
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 8
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
+    it(`sould return '' when input {}`, function() {
+        let r = ltdtDiff({})
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 9
-    o[k] = {
-        old: [{ x: 'xa', y: 'y1' }],
-        new: [],
-        ret: {
-            infor: { xa: 'del' },
-            del: [{ x: 'xa', y: 'y1' }],
-            same: [],
-            diff: [],
-            add: []
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 9
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
+    it(`sould return '' when input null`, function() {
+        let r = ltdtDiff(null)
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    k = 10
-    o[k] = {
-        old: [],
-        new: [{ x: 'xa', y: 'y1' }],
-        ret: {
-            infor: { xa: 'add' },
-            del: [],
-            same: [],
-            diff: [],
-            add: [{ x: 'xa', y: 'y1' }]
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 10
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    k = 11
-    o[k] = {
-        old: [{ z: 'zz' }, { x: 'xa', y: 'y1' }],
-        new: [{ z: 'zz' }],
-        ret: {
-            infor: { xa: 'del' },
-            del: [{ x: 'xa', y: 'y1' }],
-            same: [],
-            diff: [],
-            add: []
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 11
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    k = 12
-    o[k] = {
-        old: [{ z: 'zz' }],
-        new: [{ z: 'zz' }, { x: 'xa', y: 'y1' }],
-        ret: {
-            infor: { xa: 'add' },
-            del: [],
-            same: [],
-            diff: [],
-            add: [{ x: 'xa', y: 'y1' }]
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 12
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    k = 13
-    o[k] = {
-        old: [{ x: 'xa', y: 'y1' }, { x: 'xb', y: 'y2' }],
-        new: [{ x: 'xa', z: 'z3' }],
-        ret: {
-            infor: { xa: 'diff', xb: 'del' },
-            del: [{ x: 'xb', y: 'y2' }],
-            same: [],
-            diff: [{ x: 'xa', z: 'z3' }],
-            add: []
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
-        k = 13
-        let r = ltdtdiff(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    k = 14
-    o[k] = {
-        old: [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }],
-        new: [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }],
-        ret: {
-            infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
-            del: [{ id: 'id-2', a: 'a2' }],
-            same: [{ id: 'id-3', a: 'a3' }],
-            diff: [{ id: 'id-1', z: 'z3' }],
-            add: [{ id: 'id-4', a: 'a4' }]
-        }
-    }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'id'`, function() {
-        k = 14
-        let r = ltdtdiff(o[k].old, o[k].new, 'id')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-
-    it(`should return {} when input ''`, function() {
-        let r = ltdtdiff('')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input []`, function() {
-        let r = ltdtdiff([])
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input {}`, function() {
-        let r = ltdtdiff({})
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input null`, function() {
-        let r = ltdtdiff(null)
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input undefined`, function() {
-        let r = ltdtdiff(undefined)
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input '', 'id'`, function() {
-        let r = ltdtdiff('', 'id')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input [], 'id'`, function() {
-        let r = ltdtdiff([], 'id')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input {}, 'id'`, function() {
-        let r = ltdtdiff({}, 'id')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input null, 'id'`, function() {
-        let r = ltdtdiff(null, 'id')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input undefined, 'id'`, function() {
-        let r = ltdtdiff(undefined, 'id')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-
-    it(`should return {} when input '', ''`, function() {
-        let r = ltdtdiff('', '')
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-
-    it(`should return {} when input '', []`, function() {
-        let r = ltdtdiff('', [])
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-
-    it(`should return {} when input '', {}`, function() {
-        let r = ltdtdiff('', {})
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-
-    it(`should return {} when input '', null`, function() {
-        let r = ltdtdiff('', null)
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return {} when input '', undefined`, function() {
-        let r = ltdtdiff('', undefined)
-        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
+    it(`sould return '' when input undefined`, function() {
+        let r = ltdtDiff(undefined)
+        let rr = {}
         assert.strict.deepStrictEqual(r, rr)
     })
 

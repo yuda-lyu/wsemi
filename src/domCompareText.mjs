@@ -3,13 +3,7 @@ import isEle from './isEle.mjs'
 import getGlobal from './getGlobal.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
-
-
-function getDiff() {
-    let g = getGlobal()
-    let x = g.Diff
-    return x
-}
+import strDiff from './strDiff.mjs'
 
 
 function getDiff2Html() {
@@ -26,19 +20,20 @@ function getDiff2Html() {
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {String} title 輸入比對標題字串
- * @param {String} oldText 輸入舊文字字串
- * @param {String} newText 輸入新文字字串
+ * @param {String} strOld 輸入舊文字字串
+ * @param {String} strNew 輸入新文字字串
  * @param {Object} [opt={}] 輸入設定物件，主要是提供給Diff2Html之設定物件，預設{}
+ * @param {String} [opt.fmt=''] 輸入比對展示模式字串，給予'side'為依照左右對應區塊展示差異，給予'line'為依照各行展示差異，預設'side'
  * @returns {Object} 回傳結果物件，內含屬性diff與html，分別代表2文字比對差異結果物件，以及轉出html文字
  * @example
  * need test in browser
  *
- * let r = domCompareText(ele, 'title', 'oldText', 'newText')
+ * let r = domCompareText(ele, 'title', 'strOld', 'strNew')
  * console.log(r)
  * // => { diff, html }
  *
  */
-function domCompareText(ele, title, oldText, newText, opt = {}) {
+function domCompareText(ele, title, strOld, strNew, opt = {}) {
 
     //check
     if (!isEle(ele)) {
@@ -53,15 +48,6 @@ function domCompareText(ele, title, oldText, newText, opt = {}) {
 
     //outputFormat
     let outputFormat = fmt === 'side' ? 'side-by-side' : 'line-by-line'
-
-    //Diff
-    let Diff = getDiff()
-    // console.log('Diff', Diff)
-
-    //check
-    if (!iseobj(Diff)) {
-        throw new Error('invalid window.Diff')
-    }
 
     //getDiff2Html
     let Diff2Html = getDiff2Html()
@@ -107,13 +93,13 @@ function domCompareText(ele, title, oldText, newText, opt = {}) {
         title = 'Text'
     }
 
-    //oldTitle, newTitle
-    let oldTitle = title
-    let newTitle = title
+    //titleOld, titleNew
+    let titleOld = title
+    let titleNew = title
 
-    //Diff.createTwoFilesPatch
-    let diff = Diff.createTwoFilesPatch(oldTitle, newTitle, oldText, newText)
-    // console.log('diff', diff)
+    //strDiff
+    let r = strDiff(strOld, strNew, { titleOld, titleNew })
+    let diff = r.diff
 
     //Diff2Html.html
     let diffHtml = Diff2Html.html(diff, {
