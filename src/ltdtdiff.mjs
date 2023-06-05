@@ -691,11 +691,11 @@ function ltdtDiff(ltdtOld, ltdtNew, opt = {}) {
     // console.log('keys', keys)
 
     //ltdtkeys2mat
-    let ltdtOld = ltdtkeys2mat(ltdtOld, keys, { empty })
-    let ltdtNew = ltdtkeys2mat(ltdtNew, keys, { empty })
+    let matOld = ltdtkeys2mat(ltdtOld, keys, { empty })
+    let matNew = ltdtkeys2mat(ltdtNew, keys, { empty })
 
     //arrDiff
-    let r = arrDiff(ltdtOld, ltdtNew, { ...opt, mode: 'matrix' })
+    let r = arrDiff(matOld, matNew, { ...opt, mode: 'matrix' })
 
     return r
 }
