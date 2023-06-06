@@ -91,7 +91,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
         strOld.push(dlm)
     })
     strOld = join(strOld, '')
-    console.log('strOld', strOld)
+    // console.log('strOld', strOld)
 
     //strNew
     let strNew = []
@@ -107,7 +107,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
         strNew.push(dlm)
     })
     strNew = join(strNew, '')
-    console.log('strNew', strNew)
+    // console.log('strNew', strNew)
 
     //strDiff
     let rt = strDiff(strOld, strNew, { ...opt, eliminateEndLine: true })
