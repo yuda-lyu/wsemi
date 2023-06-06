@@ -1,9 +1,9 @@
+import * as Diff from 'diff'
 import get from 'lodash/get'
 import isEle from './isEle.mjs'
 import getGlobal from './getGlobal.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
-import strDiff from './strDiff.mjs'
 
 
 function getDiff2Html() {
@@ -97,9 +97,9 @@ function domCompareText(ele, title, strOld, strNew, opt = {}) {
     let titleOld = title
     let titleNew = title
 
-    //strDiff
-    let r = strDiff(strOld, strNew, { titleOld, titleNew })
-    let diff = r.diff
+    //createTwoFilesPatch
+    let diff = Diff.createTwoFilesPatch(titleOld, titleNew, strOld, strNew)
+    // console.log('diff', diff)
 
     //Diff2Html.html
     let diffHtml = Diff2Html.html(diff, {
