@@ -10,6 +10,7 @@ import pseudoRandom from './pseudoRandom.mjs'
  * @memberOf wsemi
  * @param {Number} [vstart=0] 輸入範圍最小值，預設0
  * @param {Number} [vend=1] 輸入範圍最大值，預設1
+ * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
  * @returns {Number} 回傳位於指定範圍內隨機數字
  * @example
  *
@@ -17,18 +18,66 @@ import pseudoRandom from './pseudoRandom.mjs'
  *
  * r = pseudoRandomRange()
  * console.log('pseudoRandomRange', r)
- * // => 0.4170219984371215 (預設範圍為0至1)
+ * // => pseudoRandomRange 0.4170219984371215 (預設範圍為0至1)
  *
  * r = pseudoRandomRange(0, 1)
  * console.log('pseudoRandomRange(0,1)', r)
- * // => 0.5665697017684579 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+ * // => pseudoRandomRange(0,1) 0.5665697017684579 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
  *
  * r = pseudoRandomRange(12.3, 456.7)
  * console.log('pseudoRandomRange(12.3,456.7)', r)
- * // => 257.074588704668
+ * // => pseudoRandomRange(12.3,456.7) 257.074588704668
+ *
+ * r = pseudoRandomRange(null, null, 123)
+ * console.log('pseudoRandomRange(null,null,123)', r)
+ * // => pseudoRandomRange(null,null,123) 0.6964691872708499
+ *
+ * r = pseudoRandomRange(null, null, 12.3)
+ * console.log('pseudoRandomRange(null,null,12.3)', r)
+ * // => pseudoRandomRange(null,null,12.3) 0.8510874302592129
+ *
+ * r = pseudoRandomRange(null, null, 'abc')
+ * console.log('pseudoRandomRange(null,null,"abc")', r)
+ * // => pseudoRandomRange(null,null,'abc') 0.3307915215846151
+ *
+ * r = pseudoRandomRange(null, null, 'abc')
+ * console.log('pseudoRandomRange(null,null,"abc")', r)
+ * // => pseudoRandomRange(null,null,'abc') 0.3307915215846151
+ *
+ * r = pseudoRandomRange(null, null, 'def')
+ * console.log('pseudoRandomRange(null,null,"def")', r)
+ * // => pseudoRandomRange(null,null,'def') 0.5120985466055572
+ *
+ * r = pseudoRandomRange(null, null, 'BH-01:S-123')
+ * console.log('pseudoRandomRange(null,null,"BH-01:S-123")', r)
+ * // => pseudoRandomRange(null,null,'BH-01:S-123') 0.4488659054040909
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 123)
+ * console.log('pseudoRandomRange(12.3,456.7,123)', r)
+ * // => pseudoRandomRange(12.3,456.7,123) 321.81090682316574
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 12.3)
+ * console.log('pseudoRandomRange(12.3,456.7,12.3)', r)
+ * // => pseudoRandomRange(12.3,456.7,12.3) 390.52325400719417
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 'abc')
+ * console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
+ * // => pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 'abc')
+ * console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
+ * // => pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 'def')
+ * console.log('pseudoRandomRange(12.3,456.7,"def")', r)
+ * // => pseudoRandomRange(12.3,456.7,'def') 239.87659411150963
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 'BH-01:S-123')
+ * console.log('pseudoRandomRange(12.3,456.7,"BH-01:S-123")', r)
+ * // => pseudoRandomRange(12.3,456.7,'BH-01:S-123') 211.776008361578
  *
  */
-function pseudoRandomRange(vstart = 0, vend = 1) {
+function pseudoRandomRange(vstart = 0, vend = 1, seed = 'start1') {
 
     //vstart
     if (!isnum(vstart)) {
@@ -48,7 +97,7 @@ function pseudoRandomRange(vstart = 0, vend = 1) {
     }
 
     //pseudoRandom, [0,1)
-    let pr = pseudoRandom()
+    let pr = pseudoRandom(seed)
 
     //r
     let rng = vend - vstart

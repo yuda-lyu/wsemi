@@ -1,3 +1,5 @@
+import isNumber from 'lodash/isNumber'
+import cstr from './cstr.mjs'
 
 
 let _seed = 0
@@ -18,6 +20,7 @@ let _seed = 0
  * r = pseudoRandom()
  * console.log('pseudoRandom', r)
  * // => pseudoRandom [0,1)
+ *
  * r = pseudoRandom(123)
  * console.log('seed=123', r)
  * // => seed=123 0.6964691872708499
@@ -28,7 +31,19 @@ let _seed = 0
  *
  * r = pseudoRandom('abc')
  * console.log('seed=abc', r)
- * // => seed=abc 0.4488659054040909
+ * // => seed=abc 0.3307915215846151
+ *
+ * r = pseudoRandom('abc')
+ * console.log('seed=abc', r)
+ * // => seed=abc 0.3307915215846151
+ *
+ * r = pseudoRandom('def')
+ * console.log('seed=def', r)
+ * // => seed=def 0.5120985466055572
+ *
+ * r = pseudoRandom('BH-01:S-123')
+ * console.log('seed=BH-01:S-123', r)
+ * // => seed=BH-01:S-123 0.4488659054040909
  *
  */
 function pseudoRandom(seed = 'start1') {
@@ -52,9 +67,28 @@ function pseudoRandom(seed = 'start1') {
     let mt = new Array(N) /* the array for the state vector */
     let mti = N + 1 /* mti==N+1 means mt[N] is not initialized */
 
+    //str2int
+    let str2int = (str, dig = 3) => {
+        let _int = ''
+        for (let i = 0; i < str.length; i++) {
+            let c = String(str.charCodeAt(i))
+            for (let a = 0; a < dig - c.length; a++) {
+                _int += 0
+            }
+            _int += c
+        }
+        return Number(_int)
+    }
+
     /* initializes mt[N] with a seed */
     let init_genrand = (s) => {
-        mt[0] = s >>> 0
+        if (isNumber(s)) {
+            mt[0] = s >>> 0
+        }
+        else {
+            s = cstr(s)
+            mt[0] = str2int(s)
+        }
         for (mti = 1; mti < N; mti++) {
             let s = mt[mti - 1] ^ (mt[mti - 1] >>> 30)
             mt[mti] = (((((s & 0xffff0000) >>> 16) * 1812433253) << 16) + (s & 0x0000ffff) * 1812433253) + mti
