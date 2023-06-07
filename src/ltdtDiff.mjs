@@ -106,6 +106,159 @@ import arrDiff from './arrDiff.mjs'
  *
  * if (true) {
  *     ltdtOld = [
+ *         { 'hid': 'BH-01', 'sid': 'S-01', 'depth': '1-2', 'rsat': '18' },
+ *         { 'hid': 'BH-01', 'sid': 'S-02', 'depth': '5-6', 'rsat': '17.5' },
+ *         { 'hid': 'BH-01', 'sid': 'S-03', 'depth': '7-8', 'rsat': '17' },
+ *     ]
+ *     ltdtNew = [
+ *         { 'hid': 'BH-01', 'sid': 'S-01', 'depth': '1-2', 'rsat': '18' },
+ *         { 'hid': 'BH-01', 'sid': 'S-03', 'depth': '7-8', 'rsat': '17' },
+ *         { 'hid': 'BH-01', 'sid': 'S-04', 'depth': '11-12', 'rsat': '19.5' },
+ *     ]
+ *     r = ltdtDiff(ltdtOld, ltdtNew)
+ *     console.log('diff', r.diff)
+ *     // => diff [
+ *     //   { count: 1, value: '0∶BH-01⟋1∶S-01⟋2∶1-2⟋3∶18⟋\n' },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: undefined,
+ *     //     removed: true,
+ *     //     value: '0∶BH-01⟋1∶S-02⟋2∶5-6⟋3∶17.5⟋\n'
+ *     //   },
+ *     //   { count: 1, value: '0∶BH-01⟋1∶S-03⟋2∶7-8⟋3∶17⟋\n' },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: true,
+ *     //     removed: undefined,
+ *     //     value: '0∶BH-01⟋1∶S-04⟋2∶11-12⟋3∶19.5⟋\n'
+ *     //   }
+ *     // ]
+ *     for (let i = 0; i < r.dfs.length; i++) {
+ *         let df = r.dfs[i]
+ *         console.log(i, 'df', df)
+ *     }
+ *     // => 0 df {
+ *     //   hid: { p: '', k: 'hid', vo: 'BH-01', vn: '' },
+ *     //   sid: { p: '', k: 'sid', vo: 'S-01', vn: '' },
+ *     //   depth: { p: '', k: 'depth', vo: '1-2', vn: '' },
+ *     //   rsat: { p: '', k: 'rsat', vo: '18', vn: '' }
+ *     // }
+ *     // 1 df {
+ *     //   hid: { p: 'remove', k: 'hid', vo: 'BH-01', vn: '' },
+ *     //   sid: { p: 'remove', k: 'sid', vo: 'S-02', vn: '' },
+ *     //   depth: { p: 'remove', k: 'depth', vo: '5-6', vn: '' },
+ *     //   rsat: { p: 'remove', k: 'rsat', vo: '17.5', vn: '' }
+ *     // }
+ *     // 2 df {
+ *     //   hid: { p: '', k: 'hid', vo: 'BH-01', vn: '' },
+ *     //   sid: { p: '', k: 'sid', vo: 'S-03', vn: '' },
+ *     //   depth: { p: '', k: 'depth', vo: '7-8', vn: '' },
+ *     //   rsat: { p: '', k: 'rsat', vo: '17', vn: '' }
+ *     // }
+ *     // 3 df {
+ *     //   hid: { p: 'add', k: 'hid', vo: 'BH-01', vn: '' },
+ *     //   sid: { p: 'add', k: 'sid', vo: 'S-04', vn: '' },
+ *     //   depth: { p: 'add', k: 'depth', vo: '11-12', vn: '' },
+ *     //   rsat: { p: 'add', k: 'rsat', vo: '19.5', vn: '' }
+ *     // }
+ * }
+ *
+ * if (true) {
+ *     ltdtOld = [
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-1', 'depth': '0.9-1.2', 'unitWeight': 3.53, 'waterContent': 76.7, 'n': 7.672198498621583, 'Iv': 7.672198498621583 },
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-2', 'depth': '2.1-2.3', 'unitWeight': 3.83, 'waterContent': 91.3, 'n': 9.126731706783175, 'Iv': 9.126731706783175 },
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-3', 'depth': '4.4-4.6', 'unitWeight': 2.51, 'waterContent': 25.5, 'n': 2.552068908698857, 'Iv': 2.552068908698857 }
+ *     ]
+ *     ltdtNew = [
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-1A', 'depth': '0.9-1.2', 'unitWeight': 3.67, 'waterContent': 83.5, 'n': 8.347251752857119, 'Iv': 8.347251752857119 },
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-3', 'depth': '4.4-4.6', 'unitWeight': 2.51, 'waterContent': 25.5, 'n': 2.552068908698857, 'Iv': 2.552068908698857 },
+ *         { 'testId': 'GeneralPhysicalProperties', 'holeId': 'BH-1', 'sampleId': 'S-4', 'depth': '5.1-5.3', 'unitWeight': 3.13, 'waterContent': 56.6, 'n': 5.655150997918099, 'Iv': 5.655150997918099 }
+ *     ]
+ *     r = ltdtDiff(ltdtOld, ltdtNew)
+ *     console.log('diff', r.diff)
+ *     // => diff [
+ *     //   {
+ *     //     count: 2,
+ *     //     added: undefined,
+ *     //     removed: true,
+ *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-1⟋3∶0.9-1.2⟋4∶3.53⟋5∶76.7⟋6∶7.672198498621583⟋7∶7.672198498621583⟋\n' +
+ *     //       '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-2⟋3∶2.1-2.3⟋4∶3.83⟋5∶91.3⟋6∶9.126731706783175⟋7∶9.126731706783175⟋\n'
+ *     //   },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: true,
+ *     //     removed: undefined,
+ *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-1A⟋3∶0.9-1.2⟋4∶3.67⟋5∶83.5⟋6∶8.347251752857119⟋7∶8.347251752857119⟋\n'
+ *     //   },
+ *     //   {
+ *     //     count: 1,
+ *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-3⟋3∶4.4-4.6⟋4∶2.51⟋5∶25.5⟋6∶2.552068908698857⟋7∶2.552068908698857⟋\n'
+ *     //   },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: true,
+ *     //     removed: undefined,
+ *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-4⟋3∶5.1-5.3⟋4∶3.13⟋5∶56.6⟋6∶5.655150997918099⟋7∶5.655150997918099⟋\n'
+ *     //   }
+ *     // ]
+ *     for (let i = 0; i < r.dfs.length; i++) {
+ *         let df = r.dfs[i]
+ *         console.log(i, 'df', df)
+ *     }
+ *     // => 0 df {
+ *     //   testId: { p: '', k: 'testId', vo: 'GeneralPhysicalProperties', vn: '' },
+ *     //   holeId: { p: '', k: 'holeId', vo: 'BH-1', vn: '' },
+ *     //   sampleId: { p: 'modify', k: 'sampleId', vo: 'S-1', vn: 'S-1A' },
+ *     //   depth: { p: '', k: 'depth', vo: '0.9-1.2', vn: '' },
+ *     //   unitWeight: { p: 'modify', k: 'unitWeight', vo: '3.53', vn: '3.67' },
+ *     //   waterContent: { p: 'modify', k: 'waterContent', vo: '76.7', vn: '83.5' },
+ *     //   n: {
+ *     //     p: 'modify',
+ *     //     k: 'n',
+ *     //     vo: '7.672198498621583',
+ *     //     vn: '8.347251752857119'
+ *     //   },
+ *     //   Iv: {
+ *     //     p: 'modify',
+ *     //     k: 'Iv',
+ *     //     vo: '7.672198498621583',
+ *     //     vn: '8.347251752857119'
+ *     //   }
+ *     // }
+ *     // 1 df {
+ *     //   testId: { p: 'remove', k: 'testId', vo: 'GeneralPhysicalProperties', vn: '' },
+ *     //   holeId: { p: 'remove', k: 'holeId', vo: 'BH-1', vn: '' },
+ *     //   sampleId: { p: 'remove', k: 'sampleId', vo: 'S-2', vn: '' },
+ *     //   depth: { p: 'remove', k: 'depth', vo: '2.1-2.3', vn: '' },
+ *     //   unitWeight: { p: 'remove', k: 'unitWeight', vo: '3.83', vn: '' },
+ *     //   waterContent: { p: 'remove', k: 'waterContent', vo: '91.3', vn: '' },
+ *     //   n: { p: 'remove', k: 'n', vo: '9.126731706783175', vn: '' },
+ *     //   Iv: { p: 'remove', k: 'Iv', vo: '9.126731706783175', vn: '' }
+ *     // }
+ *     // 2 df {
+ *     //   testId: { p: '', k: 'testId', vo: 'GeneralPhysicalProperties', vn: '' },
+ *     //   holeId: { p: '', k: 'holeId', vo: 'BH-1', vn: '' },
+ *     //   sampleId: { p: '', k: 'sampleId', vo: 'S-3', vn: '' },
+ *     //   depth: { p: '', k: 'depth', vo: '4.4-4.6', vn: '' },
+ *     //   unitWeight: { p: '', k: 'unitWeight', vo: '2.51', vn: '' },
+ *     //   waterContent: { p: '', k: 'waterContent', vo: '25.5', vn: '' },
+ *     //   n: { p: '', k: 'n', vo: '2.552068908698857', vn: '' },
+ *     //   Iv: { p: '', k: 'Iv', vo: '2.552068908698857', vn: '' }
+ *     // }
+ *     // 3 df {
+ *     //   testId: { p: 'add', k: 'testId', vo: 'GeneralPhysicalProperties', vn: '' },
+ *     //   holeId: { p: 'add', k: 'holeId', vo: 'BH-1', vn: '' },
+ *     //   sampleId: { p: 'add', k: 'sampleId', vo: 'S-4', vn: '' },
+ *     //   depth: { p: 'add', k: 'depth', vo: '5.1-5.3', vn: '' },
+ *     //   unitWeight: { p: 'add', k: 'unitWeight', vo: '3.13', vn: '' },
+ *     //   waterContent: { p: 'add', k: 'waterContent', vo: '56.6', vn: '' },
+ *     //   n: { p: 'add', k: 'n', vo: '5.655150997918099', vn: '' },
+ *     //   Iv: { p: 'add', k: 'Iv', vo: '5.655150997918099', vn: '' }
+ *     // }
+ * }
+ *
+ * if (true) {
+ *     ltdtOld = [
  *         { 'cn': '1', 'v1': '0.791303871', 'v2': '0.716898185', 'v3': '0.506002098', 'v4': '0.137888903', 'v5': '', 'v6': '0.626724085' },
  *         { 'cn': '2', 'v1': '0.839882385', 'v2': '0.663059856', 'v3': '0.49047221', 'v4': '0.395763265', 'v5': '0.567412025', 'v6': '0.866151835' },
  *         { 'cn': '3', 'v1': '0.475514539', 'v2': '0.969205779', 'v3': '0.711250309', 'v4': '0.153847069', 'v5': '0.304927473', 'v6': '0.410092395' },
