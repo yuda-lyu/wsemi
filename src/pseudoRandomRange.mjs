@@ -38,19 +38,23 @@ import pseudoRandom from './pseudoRandom.mjs'
  *
  * r = pseudoRandomRange(null, null, 'abc')
  * console.log('pseudoRandomRange(null,null,"abc")', r)
- * // => pseudoRandomRange(null,null,'abc') 0.3307915215846151
+ * // => pseudoRandomRange(null,null,'abc') 0.6314232510048896
  *
  * r = pseudoRandomRange(null, null, 'abc')
  * console.log('pseudoRandomRange(null,null,"abc")', r)
- * // => pseudoRandomRange(null,null,'abc') 0.3307915215846151
+ * // => pseudoRandomRange(null,null,'abc') 0.6314232510048896
  *
  * r = pseudoRandomRange(null, null, 'def')
  * console.log('pseudoRandomRange(null,null,"def")', r)
- * // => pseudoRandomRange(null,null,'def') 0.5120985466055572
+ * // => pseudoRandomRange(null,null,'def') 0.9743434484116733
+ *
+ * r = pseudoRandomRange(null, null, 'BH01S123')
+ * console.log('pseudoRandomRange(null,null,"BH01S123")', r)
+ * // => pseudoRandomRange(null,null,'BH01S123') 0.007978770649060607
  *
  * r = pseudoRandomRange(null, null, 'BH-01:S-123')
  * console.log('pseudoRandomRange(null,null,"BH-01:S-123")', r)
- * // => pseudoRandomRange(null,null,'BH-01:S-123') 0.4488659054040909
+ * // => pseudoRandomRange(null,null,'BH-01:S-123') 0.9579511017072946
  *
  * r = pseudoRandomRange(12.3, 456.7, 123)
  * console.log('pseudoRandomRange(12.3,456.7,123)', r)
@@ -62,19 +66,23 @@ import pseudoRandom from './pseudoRandom.mjs'
  *
  * r = pseudoRandomRange(12.3, 456.7, 'abc')
  * console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
- * // => pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+ * // => pseudoRandomRange(12.3,456.7,'abc') 292.90449274657294
  *
  * r = pseudoRandomRange(12.3, 456.7, 'abc')
  * console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
- * // => pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+ * // => pseudoRandomRange(12.3,456.7,'abc') 292.90449274657294
  *
  * r = pseudoRandomRange(12.3, 456.7, 'def')
  * console.log('pseudoRandomRange(12.3,456.7,"def")', r)
- * // => pseudoRandomRange(12.3,456.7,'def') 239.87659411150963
+ * // => pseudoRandomRange(12.3,456.7,'def') 445.2982284741476
+ *
+ * r = pseudoRandomRange(12.3, 456.7, 'BH01S123')
+ * console.log('pseudoRandomRange(12.3,456.7,"BH01S123")', r)
+ * // => pseudoRandomRange(12.3,456.7,'BH01S123') 15.845765676442534
  *
  * r = pseudoRandomRange(12.3, 456.7, 'BH-01:S-123')
  * console.log('pseudoRandomRange(12.3,456.7,"BH-01:S-123")', r)
- * // => pseudoRandomRange(12.3,456.7,'BH-01:S-123') 211.776008361578
+ * // => pseudoRandomRange(12.3,456.7,'BH-01:S-123') 438.0134695987217
  *
  */
 function pseudoRandomRange(vstart = 0, vend = 1, seed = 'start1') {

@@ -18,27 +18,33 @@ describe(`pseudoRandomRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.3307915215846151 when input null, null, 'abc'`, function() {
+    it(`should return 0.6314232510048896 when input null, null, 'abc'`, function() {
         let r = pseudoRandomRange(null, null, 'abc')
-        let rr = 0.3307915215846151
+        let rr = 0.6314232510048896
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.3307915215846151 when input null, null, 'abc'`, function() {
+    it(`should return 0.6314232510048896 when input null, null, 'abc'`, function() {
         let r = pseudoRandomRange(null, null, 'abc')
-        let rr = 0.3307915215846151
+        let rr = 0.6314232510048896
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.5120985466055572 when input null, null, 'def'`, function() {
+    it(`should return 0.9743434484116733 when input null, null, 'def'`, function() {
         let r = pseudoRandomRange(null, null, 'def')
-        let rr = 0.5120985466055572
+        let rr = 0.9743434484116733
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.4488659054040909 when input null, null, 'BH-01:S-123'`, function() {
+    it(`should return 0.007978770649060607 when input null, null, 'BH01S123'`, function() {
+        let r = pseudoRandomRange(null, null, 'BH01S123')
+        let rr = 0.007978770649060607
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 0.9579511017072946 when input null, null, 'BH-01:S-123'`, function() {
         let r = pseudoRandomRange(null, null, 'BH-01:S-123')
-        let rr = 0.4488659054040909
+        let rr = 0.9579511017072946
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -54,27 +60,33 @@ describe(`pseudoRandomRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 159.30375219220295 when input 12.3, 456.7, 'abc'`, function() {
+    it(`should return 292.90449274657294 when input 12.3, 456.7, 'abc'`, function() {
         let r = pseudoRandomRange(12.3, 456.7, 'abc')
-        let rr = 159.30375219220295
+        let rr = 292.90449274657294
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 159.30375219220295 when input 12.3, 456.7, 'abc'`, function() {
+    it(`should return 292.90449274657294 when input 12.3, 456.7, 'abc'`, function() {
         let r = pseudoRandomRange(12.3, 456.7, 'abc')
-        let rr = 159.30375219220295
+        let rr = 292.90449274657294
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 239.87659411150963 when input 12.3, 456.7, 'def'`, function() {
+    it(`should return 445.2982284741476 when input 12.3, 456.7, 'def'`, function() {
         let r = pseudoRandomRange(12.3, 456.7, 'def')
-        let rr = 239.87659411150963
+        let rr = 445.2982284741476
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 211.776008361578 when input 12.3, 456.7, 'bh-01:s-123'`, function() {
-        let r = pseudoRandomRange(12.3, 456.7, 'bh-01:s-123')
-        let rr = 211.776008361578
+    it(`should return 15.845765676442534 when input 12.3, 456.7, 'BH01S123'`, function() {
+        let r = pseudoRandomRange(12.3, 456.7, 'BH01S123')
+        let rr = 15.845765676442534
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 438.0134695987217 when input 12.3, 456.7, 'BH-01:S-123'`, function() {
+        let r = pseudoRandomRange(12.3, 456.7, 'BH-01:S-123')
+        let rr = 438.0134695987217
         assert.strict.deepStrictEqual(r, rr)
     })
 

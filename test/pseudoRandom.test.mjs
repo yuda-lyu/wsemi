@@ -18,27 +18,33 @@ describe(`pseudoRandom`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.3307915215846151 when input 'abc(1)'`, function() {
+    it(`should return 0.6314232510048896 when input 'abc(1)'`, function() {
         let r = pseudoRandom('abc')
-        let rr = 0.3307915215846151
+        let rr = 0.6314232510048896
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.3307915215846151 when input 'abc(2)'`, function() {
+    it(`should return 0.6314232510048896 when input 'abc(2)'`, function() {
         let r = pseudoRandom('abc')
-        let rr = 0.3307915215846151
+        let rr = 0.6314232510048896
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.5120985466055572 when input 'def'`, function() {
+    it(`should return 0.9743434484116733 when input 'def'`, function() {
         let r = pseudoRandom('def')
-        let rr = 0.5120985466055572
+        let rr = 0.9743434484116733
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.4488659054040909 when input 'BH-01:S-123'`, function() {
+    it(`should return 0.007978770649060607 when input 'BH01S123'`, function() {
+        let r = pseudoRandom('BH01S123')
+        let rr = 0.007978770649060607
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 0.9579511017072946 when input 'BH-01:S-123'`, function() {
         let r = pseudoRandom('BH-01:S-123')
-        let rr = 0.4488659054040909
+        let rr = 0.9579511017072946
         assert.strict.deepStrictEqual(r, rr)
     })
 

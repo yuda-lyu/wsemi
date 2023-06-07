@@ -18,27 +18,33 @@ describe(`pseudoRandomIntRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 34 when input null, null, 'abc'`, function() {
+    it(`should return 64 when input null, null, 'abc'`, function() {
         let r = pseudoRandomIntRange(null, null, 'abc')
-        let rr = 34
+        let rr = 64
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 34 when input null, null, 'abc'`, function() {
+    it(`should return 64 when input null, null, 'abc'`, function() {
         let r = pseudoRandomIntRange(null, null, 'abc')
-        let rr = 34
+        let rr = 64
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 52 when input null, null, 'def'`, function() {
+    it(`should return 99 when input null, null, 'def'`, function() {
         let r = pseudoRandomIntRange(null, null, 'def')
-        let rr = 52
+        let rr = 99
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 46 when input null, null, 'BH-01:S-123'`, function() {
+    it(`should return 1 when input null, null, 'BH01S123'`, function() {
+        let r = pseudoRandomIntRange(null, null, 'BH01S123')
+        let rr = 1
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 97 when input null, null, 'BH-01:S-123'`, function() {
         let r = pseudoRandomIntRange(null, null, 'BH-01:S-123')
-        let rr = 46
+        let rr = 97
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -54,27 +60,27 @@ describe(`pseudoRandomIntRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 34 when input 0, 100, 'abc'`, function() {
+    it(`should return 64 when input 0, 100, 'abc'`, function() {
         let r = pseudoRandomIntRange(0, 100, 'abc')
-        let rr = 34
+        let rr = 64
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 34 when input 0, 100, 'abc'`, function() {
+    it(`should return 64 when input 0, 100, 'abc'`, function() {
         let r = pseudoRandomIntRange(0, 100, 'abc')
-        let rr = 34
+        let rr = 64
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 52 when input 0, 100, 'def'`, function() {
+    it(`should return 99 when input 0, 100, 'def'`, function() {
         let r = pseudoRandomIntRange(0, 100, 'def')
-        let rr = 52
+        let rr = 99
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 46 when input 0, 100, 'BH-01:S-123'`, function() {
+    it(`should return 97 when input 0, 100, 'BH-01:S-123'`, function() {
         let r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
-        let rr = 46
+        let rr = 97
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -90,27 +96,33 @@ describe(`pseudoRandomIntRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 1594 when input 123, 4567, 'abc'`, function() {
+    it(`should return 2930 when input 123, 4567, 'abc'`, function() {
         let r = pseudoRandomIntRange(123, 4567, 'abc')
-        let rr = 1594
+        let rr = 2930
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 1594 when input 123, 4567, 'abc'`, function() {
+    it(`should return 2930 when input 123, 4567, 'abc'`, function() {
         let r = pseudoRandomIntRange(123, 4567, 'abc')
-        let rr = 1594
+        let rr = 2930
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 2400 when input 123, 4567, 'def'`, function() {
+    it(`should return 4454 when input 123, 4567, 'def'`, function() {
         let r = pseudoRandomIntRange(123, 4567, 'def')
-        let rr = 2400
+        let rr = 4454
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 2119 when input 123, 4567, 'BH-01:S-123'`, function() {
+    it(`should return 159 when input 123, 4567, 'BH01S123'`, function() {
+        let r = pseudoRandomIntRange(123, 4567, 'BH01S123')
+        let rr = 159
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 4382 when input 123, 4567, 'BH-01:S-123'`, function() {
         let r = pseudoRandomIntRange(123, 4567, 'BH-01:S-123')
-        let rr = 2119
+        let rr = 4382
         assert.strict.deepStrictEqual(r, rr)
     })
 
