@@ -69115,7 +69115,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pseudoRandom.mjs.html">pseudoRandom.mjs</a>, <a href="pseudoRandom.mjs.html#line34">line 34</a>
+        <a href="pseudoRandom.mjs.html">pseudoRandom.mjs</a>, <a href="pseudoRandom.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -69169,6 +69169,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 r = pseudoRandom()
 console.log('pseudoRandom', r)
 // =&gt; pseudoRandom [0,1)
+
 r = pseudoRandom(123)
 console.log('seed=123', r)
 // =&gt; seed=123 0.6964691872708499
@@ -69179,7 +69180,19 @@ console.log('seed=12.3', r)
 
 r = pseudoRandom('abc')
 console.log('seed=abc', r)
-// =&gt; seed=abc 0.4488659054040909</code></pre>
+// =&gt; seed=abc 0.3307915215846151
+
+r = pseudoRandom('abc')
+console.log('seed=abc', r)
+// =&gt; seed=abc 0.3307915215846151
+
+r = pseudoRandom('def')
+console.log('seed=def', r)
+// =&gt; seed=def 0.5120985466055572
+
+r = pseudoRandom('BH-01:S-123')
+console.log('seed=BH-01:S-123', r)
+// =&gt; seed=BH-01:S-123 0.4488659054040909</code></pre>
         </div>
 
 
@@ -69306,7 +69319,7 @@ console.log('seed=abc', r)
 
     
 
-    <h4 class="name" id=".pseudoRandomIntRange"><span class="type-signature type-signature-static">(static) </span>pseudoRandomIntRange<span class="signature">(vstart<span class="signature-attributes">opt</span>, vend<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Number}</span></h4>
+    <h4 class="name" id=".pseudoRandomIntRange"><span class="type-signature type-signature-static">(static) </span>pseudoRandomIntRange<span class="signature">(vstart<span class="signature-attributes">opt</span>, vend<span class="signature-attributes">opt</span>, seed<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Integer}</span></h4>
 
     
 
@@ -69323,7 +69336,7 @@ console.log('seed=abc', r)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pseudoRandomIntRange.mjs.html">pseudoRandomIntRange.mjs</a>, <a href="pseudoRandomIntRange.mjs.html#line31">line 31</a>
+        <a href="pseudoRandomIntRange.mjs.html">pseudoRandomIntRange.mjs</a>, <a href="pseudoRandomIntRange.mjs.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -69376,15 +69389,87 @@ console.log('seed=abc', r)
 
 r = pseudoRandomIntRange()
 console.log('pseudoRandomIntRange', r)
-// =&gt; 43 (預設範圍為0至100)
+// =&gt; pseudoRandomIntRange 43 (預設範圍為0至100)
 
 r = pseudoRandomIntRange(0, 100)
 console.log('pseudoRandomIntRange(0,100)', r)
-// =&gt; 58 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+// =&gt; pseudoRandomIntRange(0,100) 58 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 r = pseudoRandomIntRange(123, 4567)
-console.log('pseudoRandomIntRange(12.3,456.7)', r)
-// =&gt; 2572</code></pre>
+console.log('pseudoRandomIntRange(123,4567)', r)
+// =&gt; pseudoRandomIntRange(123,4567) 2572
+
+r = pseudoRandomIntRange(null, null, 123)
+console.log('pseudoRandomIntRange(null,null,123)', r)
+// =&gt; pseudoRandomIntRange(null,null,123) 71
+
+r = pseudoRandomIntRange(null, null, 12.3)
+console.log('pseudoRandomIntRange(null,null,12.3)', r)
+// =&gt; pseudoRandomIntRange(null,null,12.3) 86
+
+r = pseudoRandomIntRange(null, null, 'abc')
+console.log('pseudoRandomIntRange(null,null,"abc")', r)
+// =&gt; pseudoRandomIntRange(null,null,"abc") 34
+
+r = pseudoRandomIntRange(null, null, 'abc')
+console.log('pseudoRandomIntRange(null,null,"abc")', r)
+// =&gt; pseudoRandomIntRange(null,null,"abc") 34
+
+r = pseudoRandomIntRange(null, null, 'def')
+console.log('pseudoRandomIntRange(null,null,"def")', r)
+// =&gt; pseudoRandomIntRange(null,null,"def") 52
+
+r = pseudoRandomIntRange(null, null, 'BH-01:S-123')
+console.log('pseudoRandomIntRange(null,null,"BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(null,null,"BH-01:S-123") 46
+
+r = pseudoRandomIntRange(0, 100, 123)
+console.log('pseudoRandomIntRange(0,100,123)', r)
+// =&gt; pseudoRandomIntRange(0,100,123) 71
+
+r = pseudoRandomIntRange(0, 100, 12.3)
+console.log('pseudoRandomIntRange(0,100,12.3)', r)
+// =&gt; pseudoRandomIntRange(0,100,12.3) 86
+
+r = pseudoRandomIntRange(0, 100, 'abc')
+console.log('pseudoRandomIntRange(0,100,"abc")', r)
+// =&gt; pseudoRandomIntRange(0,100,"abc") 34
+
+r = pseudoRandomIntRange(0, 100, 'abc')
+console.log('pseudoRandomIntRange(0,100,"abc")', r)
+// =&gt; pseudoRandomIntRange(0,100,"abc") 34
+
+r = pseudoRandomIntRange(0, 100, 'def')
+console.log('pseudoRandomIntRange(0,100,"def")', r)
+// =&gt; pseudoRandomIntRange(0,100,"def") 52
+
+r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
+console.log('pseudoRandomIntRange(0,100,"BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(0,100,"BH-01:S-123") 46
+
+r = pseudoRandomIntRange(123, 4567, 123)
+console.log('pseudoRandomIntRange(123,4567,123)', r)
+// =&gt; pseudoRandomIntRange(123,4567,123) 3219
+
+r = pseudoRandomIntRange(123, 4567, 12.3)
+console.log('pseudoRandomIntRange(123,4567,12.3)', r)
+// =&gt; pseudoRandomIntRange(123,4567,12.3) 3907
+
+r = pseudoRandomIntRange(123, 4567, 'abc')
+console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
+// =&gt; pseudoRandomIntRange(123,456.7,"abc") 1594
+
+r = pseudoRandomIntRange(123, 4567, 'abc')
+console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
+// =&gt; pseudoRandomIntRange(123,456.7,"abc") 1594
+
+r = pseudoRandomIntRange(123, 4567, 'def')
+console.log('pseudoRandomIntRange(123,456.7,"def")', r)
+// =&gt; pseudoRandomIntRange(123,456.7,"def") 2400
+
+r = pseudoRandomIntRange(123, 4567, 'BH-01:S-123')
+console.log('pseudoRandomIntRange(123,456.7,"BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(123,456.7,"BH-01:S-123") 2119</code></pre>
         </div>
 
 
@@ -69425,7 +69510,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">Integer</span>
 
 
 
@@ -69465,7 +69550,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">Integer</span>
 
 
 
@@ -69496,6 +69581,52 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>seed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+|
+
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'start1'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -69518,7 +69649,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
 
         
 <div class="param-desc">
-    <p>回傳位於指定範圍內隨機數字</p>
+    <p>回傳位於指定範圍內隨機整數</p>
 </div>
 
 
@@ -69529,7 +69660,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">Integer</span>
 
 
 
@@ -69545,7 +69676,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
 
     
 
-    <h4 class="name" id=".pseudoRandomRange"><span class="type-signature type-signature-static">(static) </span>pseudoRandomRange<span class="signature">(vstart<span class="signature-attributes">opt</span>, vend<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Number}</span></h4>
+    <h4 class="name" id=".pseudoRandomRange"><span class="type-signature type-signature-static">(static) </span>pseudoRandomRange<span class="signature">(vstart<span class="signature-attributes">opt</span>, vend<span class="signature-attributes">opt</span>, seed<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Number}</span></h4>
 
     
 
@@ -69562,7 +69693,7 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pseudoRandomRange.mjs.html">pseudoRandomRange.mjs</a>, <a href="pseudoRandomRange.mjs.html#line31">line 31</a>
+        <a href="pseudoRandomRange.mjs.html">pseudoRandomRange.mjs</a>, <a href="pseudoRandomRange.mjs.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -69615,15 +69746,63 @@ console.log('pseudoRandomIntRange(12.3,456.7)', r)
 
 r = pseudoRandomRange()
 console.log('pseudoRandomRange', r)
-// =&gt; 0.4170219984371215 (預設範圍為0至1)
+// =&gt; pseudoRandomRange 0.4170219984371215 (預設範圍為0至1)
 
 r = pseudoRandomRange(0, 1)
 console.log('pseudoRandomRange(0,1)', r)
-// =&gt; 0.5665697017684579 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+// =&gt; pseudoRandomRange(0,1) 0.5665697017684579 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 r = pseudoRandomRange(12.3, 456.7)
 console.log('pseudoRandomRange(12.3,456.7)', r)
-// =&gt; 257.074588704668</code></pre>
+// =&gt; pseudoRandomRange(12.3,456.7) 257.074588704668
+
+r = pseudoRandomRange(null, null, 123)
+console.log('pseudoRandomRange(null,null,123)', r)
+// =&gt; pseudoRandomRange(null,null,123) 0.6964691872708499
+
+r = pseudoRandomRange(null, null, 12.3)
+console.log('pseudoRandomRange(null,null,12.3)', r)
+// =&gt; pseudoRandomRange(null,null,12.3) 0.8510874302592129
+
+r = pseudoRandomRange(null, null, 'abc')
+console.log('pseudoRandomRange(null,null,"abc")', r)
+// =&gt; pseudoRandomRange(null,null,'abc') 0.3307915215846151
+
+r = pseudoRandomRange(null, null, 'abc')
+console.log('pseudoRandomRange(null,null,"abc")', r)
+// =&gt; pseudoRandomRange(null,null,'abc') 0.3307915215846151
+
+r = pseudoRandomRange(null, null, 'def')
+console.log('pseudoRandomRange(null,null,"def")', r)
+// =&gt; pseudoRandomRange(null,null,'def') 0.5120985466055572
+
+r = pseudoRandomRange(null, null, 'BH-01:S-123')
+console.log('pseudoRandomRange(null,null,"BH-01:S-123")', r)
+// =&gt; pseudoRandomRange(null,null,'BH-01:S-123') 0.4488659054040909
+
+r = pseudoRandomRange(12.3, 456.7, 123)
+console.log('pseudoRandomRange(12.3,456.7,123)', r)
+// =&gt; pseudoRandomRange(12.3,456.7,123) 321.81090682316574
+
+r = pseudoRandomRange(12.3, 456.7, 12.3)
+console.log('pseudoRandomRange(12.3,456.7,12.3)', r)
+// =&gt; pseudoRandomRange(12.3,456.7,12.3) 390.52325400719417
+
+r = pseudoRandomRange(12.3, 456.7, 'abc')
+console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
+// =&gt; pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+
+r = pseudoRandomRange(12.3, 456.7, 'abc')
+console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
+// =&gt; pseudoRandomRange(12.3,456.7,'abc') 159.30375219220295
+
+r = pseudoRandomRange(12.3, 456.7, 'def')
+console.log('pseudoRandomRange(12.3,456.7,"def")', r)
+// =&gt; pseudoRandomRange(12.3,456.7,'def') 239.87659411150963
+
+r = pseudoRandomRange(12.3, 456.7, 'BH-01:S-123')
+console.log('pseudoRandomRange(12.3,456.7,"BH-01:S-123")', r)
+// =&gt; pseudoRandomRange(12.3,456.7,'BH-01:S-123') 211.776008361578</code></pre>
         </div>
 
 
@@ -69732,6 +69911,52 @@ console.log('pseudoRandomRange(12.3,456.7)', r)
             
 
             <td class="description last"><p>輸入範圍最大值，預設1</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>seed</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+|
+
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'start1'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'</p></td>
         </tr>
 
     
@@ -83869,7 +84094,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Jun 07 2023 11:48:08 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Jun 07 2023 17:00:35 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -83890,7 +84115,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.9/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.10/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
