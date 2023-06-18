@@ -62,34 +62,28 @@ describe(`waitFun`, function() {
     })
 
     function test3() {
-        let ms = []
-        let i = 0
+        return new Promise((resolve, reject) => {
+            let ms = []
 
-        let f = () => {
-            return new Promise((resolve, reject) => {
-                setTimeout(function() {
-                    i++
-                    // console.log('waiting: ' + i)
-                    ms.push('waiting: ' + i)
-                    resolve(false)
-                }, 1100)
-            })
-        }
+            let i = 0
+            waitFun(function() {
+                i++
+                //console.log('waiting: ' + i)
+                ms.push('waiting: ' + i)
+                return i >= 2
+            }, { attemptNum: 1 })
+                .then(function() {
+                    //console.log('test1 then')
+                    ms.push('test1 then')
+                })
 
-        return waitFun(f, { attemptNum: 1 })
-            .then(function() {
-                // console.log('test3 then')
-                ms.push('test3 then')
-                return ms
-            })
-            .catch(function() {
-                // console.log('test3 catch')
-                ms.push('test3 catch')
-                return ms
-            })
+            setTimeout(function() {
+                resolve(ms)
+            }, 1100)
 
+        })
     }
-    let r3 = '["waiting: 1","waiting: 2","test3 catch"]'
+    let r3 = '["waiting: 1","waiting: 2","test1 then"]'
     it(`should return '${r3}' when run test3`, async function() {
         let ms = await test3()
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
