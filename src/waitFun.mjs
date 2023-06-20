@@ -142,7 +142,7 @@ async function waitFun(fun, opt = {}) {
         if (n > attemptNum) {
             //console.log('reject', n, attemptNum)
             clearInterval(t)
-            pm.reject() //已超過最大次數
+            pm.reject(`exceeded attemptNum[${attemptNum}]`) //已超過最大次數
         }
 
     }, timeInterval)
