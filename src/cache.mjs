@@ -13,7 +13,7 @@ import cint from './cint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳事件物件，可呼叫事件on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，而快取物件需設定欄位execFun為待執行的非同步函數、inputFun為待執行函數execFun的傳入參數組、timeExpired為過期時間整數，單位ms，預設5000。get為依照key取得目前快取值。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值。remove為直接清除key所屬快取，清除後用set重設
+ * @returns {Object} 回傳事件物件，可呼叫事件on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位execFun為待執行的非同步函數、inputFun為待執行函數execFun的傳入參數組、timeExpired為過期時間整數，單位ms，預設5000。get為依照key取得目前快取值。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值。remove為直接清除key所屬快取，清除後用set重設
  * @example
  *
  * async function topAsync() {
