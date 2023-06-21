@@ -1,9 +1,10 @@
+import loGet from 'lodash/get'
 import cloneDeep from 'lodash/cloneDeep'
 import evem from './evem.mjs'
 import waitFun from './waitFun.mjs'
 import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
-import isnint from './isnint.mjs'
+import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
 import cint from './cint.mjs'
 
@@ -306,7 +307,7 @@ function cache() {
         }, 1)
     }
 
-    function set(key, { execFun, inputFun, timeExpired }) {
+    function set(key, opt = {}) {
 
         //check
         if (haskey(data, key)) {
@@ -315,17 +316,24 @@ function cache() {
             return
         }
 
-        //check
+        //execFun
+        let execFun = loGet(opt, 'execFun')
         if (!isfun(execFun)) {
             execFun = async () => {}
         }
-        if (isnint(timeExpired)) {
-            timeExpired = 5000
-        }
-        timeExpired = cint(timeExpired)
+
+        //inputFun
+        let inputFun = loGet(opt, 'inputFun')
         if (!isarr(inputFun)) {
             inputFun = []
         }
+
+        //timeExpired
+        let timeExpired = loGet(opt, 'timeExpired')
+        if (!ispint(timeExpired)) {
+            timeExpired = 5000
+        }
+        timeExpired = cint(timeExpired)
 
         //save
         data[key] = {
@@ -390,8 +398,8 @@ function cache() {
         }
     }
 
-    async function getProxy(key, { execFun, inputFun, timeExpired }) {
-        set(key, { execFun, inputFun, timeExpired })
+    async function getProxy(key, opt = {}) {
+        set(key, opt)
         return get(key)
     }
 
