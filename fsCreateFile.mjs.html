@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domShowImagesDyn.mjs - Documentation</title>
+    <title>fsCreateFile.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domShowImagesDyn.mjs</h1>
+    <h1 class="page-title">fsCreateFile.mjs</h1>
     
 
     
@@ -45,49 +45,61 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isearr from './isearr.mjs'
-import importResources from './importResources.mjs'
-import domShowImages from './domShowImages.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+import fsIsFile from './fsIsFile.mjs'
 
 
 /**
- * 前端彈窗顯示指定元素內圖片或圖片陣列，採用動態加載技術
+ * 後端nodejs建立檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImagesDyn.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCreateFile.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} eleImg 輸入圖片元素
- * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
- * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
- * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Promise} 回傳Promise，resolve回傳為分數或是否，reject回傳錯誤訊息
+ * @param {String} pah 輸入檔案路徑字串
+ * @param {Buffer|TypedArray|DataView} data 輸入檔案內容資料
+ * @param {Object|String} [opt={}] 輸入寫入設定物件或字串，可給予writeFileSync設定物件，或是編碼字串(例如'utf8')，預設{}
+ * @param {String} [opt.encoding='utf8'] 輸入編碼字串，預設'utf8'
+ * @param {Integer} [opt.mode=0o666] 輸入寫入模式數字，預設0o666
+ * @param {String} [opt.flag='w'] 輸入寫入標誌字串，預設'w'
  * @example
- * need test in browser
+ * need test in nodejs.
  *
- * &lt;img src="001.jpg" onclick="domShowImagesDyn(this)">
- *
- * &lt;img src="002.jpg" onclick="domShowImagesDyn(this,this.parentElement)">
+ * console.log('fsCreateFile', fsCreateFile('./abc.txt'))
+ * // fsCreateFile { success: 'done: ./abc.txt' }
  *
  */
-async function domShowImagesDyn(eleImg, eleGroup = null, opt = {}, pathItems) {
+function fsCreateFile(pah, data, opt = {}) {
 
-    //pathItems
-    //若更新, 記得example與readme也要更新
-    if (!isearr(pathItems)) {
-        pathItems = [
-            'https://cdn.jsdelivr.net/npm/viewerjs@1.11.3/dist/viewer.min.css',
-            'https://cdn.jsdelivr.net/npm/viewerjs@1.11.3/dist/viewer.min.js',
-        ]
+    //check
+    if (fs.existsSync(pah)) {
+        return {
+            error: 'input path already exists: ' + pah //若路徑存在, 可能是資料夾、檔案或符號連結, 則一律視為錯誤
+        }
     }
 
-    //importResources
-    await importResources(pathItems)
-    // console.log('res', res)
+    //check
+    if (fsIsFile(pah)) {
+        return {
+            error: 'input file is already exists: ' + pah //若檔案存在則視為錯誤
+        }
+    }
 
-    return domShowImages(eleImg, eleGroup, opt)
+    //writeFileSync
+    try {
+        fs.writeFileSync(pah, data, opt)
+    }
+    catch (err) {
+        return {
+            error: err
+        }
+    }
+
+    return {
+        success: 'done: ' + pah
+    }
 }
 
 
-export default domShowImagesDyn
+export default fsCreateFile
 </code></pre>
         </article>
     </section>
