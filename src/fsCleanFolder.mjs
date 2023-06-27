@@ -11,7 +11,10 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
  * @example
- * need test in nodejs. See example in fsCopyFolder.
+ * need test in nodejs.
+ *
+ * console.log('fsCleanFolder', fsCleanFolder('./abc'))
+ * // fsCleanFolder { success: 'done: ./abc' }
  *
  */
 function fsCleanFolder(pah) {

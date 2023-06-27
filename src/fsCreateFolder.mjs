@@ -9,12 +9,15 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入資料夾路徑字串
  * @example
- * need test in nodejs. See example in fsCopyFolder.
+ * need test in nodejs.
+ *
+ * console.log('fsCreateFolder', fsCreateFolder('./abc'))
+ * // fsCreateFolder { success: 'done: ./abc' }
  *
  */
 function fsCreateFolder(pah) {
 
-    //check
+    //check, 需先判斷
     if (fsIsFolder(pah)) {
         return {
             success: 'input folder is already exists: ' + pah //若資料夾存在則視為成功, 故需先判斷

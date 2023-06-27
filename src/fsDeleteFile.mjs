@@ -17,7 +17,7 @@ import fsIsFile from './fsIsFile.mjs'
  */
 function fsDeleteFile(pah) {
 
-    //check
+    //check, 需先判斷
     if (!fs.existsSync(pah)) {
         return {
             success: 'file does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷

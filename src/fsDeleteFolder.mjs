@@ -9,7 +9,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @example
- * need test in nodejs. See example in fsCopyFolder.
+ * need test in nodejs.
  *
  * console.log('fsDeleteFolder', fsDeleteFolder('./abc'))
  * // fsDeleteFolder { success: 'done: ./abc' }
@@ -17,7 +17,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  */
 function fsDeleteFolder(pah) {
 
-    //check
+    //check, 需先判斷
     if (!fs.existsSync(pah)) {
         return {
             success: 'folder does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
