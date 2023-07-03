@@ -24,7 +24,6 @@ import isbol from './isbol.mjs'
 // import isu8arr from './isu8arr.mjs'
 // import isu16arr from './isu16arr.mjs'
 // import isbol from './isbol.mjs'
-// import treeObj from './src/treeObj.mjs'
 
 
 //performance for traverseObj and runObj

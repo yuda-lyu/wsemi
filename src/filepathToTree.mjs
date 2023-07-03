@@ -22,7 +22,7 @@ import haskey from './haskey.mjs'
 
 
 /**
- * 展開檔案陣列成為樹狀物件與關聯資料物件
+ * 轉換檔案路徑陣列成為樹狀物件與關聯資料物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/filepathToTree.test.mjs Github}
  * @memberOf wsemi
@@ -43,7 +43,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -58,7 +58,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -86,7 +86,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -101,7 +101,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -129,7 +129,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -144,7 +144,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -172,7 +172,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -187,7 +187,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -274,7 +274,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -289,7 +289,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -327,7 +327,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -342,7 +342,7 @@ import haskey from './haskey.mjs'
  * //     {
  * //       ns: 1,
  * //       ts: [Array],
- * //       parentInfors: [Array],
+ * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
@@ -418,7 +418,7 @@ function filepathToTree(data, opt = {}) {
     }
 
     //parseFp
-    let vdata = map(data, (v) => {
+    let vdata = map(data, (v, k) => {
 
         //check
         if (v.type !== 'folder' && v.type !== 'file') {
@@ -446,6 +446,7 @@ function filepathToTree(data, opt = {}) {
 
         //t
         let t = {
+            // ind: k,
             type: v.type,
             name: r.name,
             ns,
@@ -466,8 +467,8 @@ function filepathToTree(data, opt = {}) {
         //n
         let n = size(ts)
 
-        //parentInfors, 各父層(含自己)資訊
-        let parentInfors = []
+        //pathInfors, 各父層(含自己)資訊
+        let pathInfors = []
         for (let i = 0; i < n; i++) {
 
             //tss
@@ -481,7 +482,7 @@ function filepathToTree(data, opt = {}) {
             // console.log(id, id)
 
             //push
-            parentInfors.push({
+            pathInfors.push({
                 id,
                 name: ts[i],
             })
@@ -489,16 +490,16 @@ function filepathToTree(data, opt = {}) {
         }
 
         // //剔除root
-        // parentInfors = drop(parentInfors)
+        // pathInfors = drop(pathInfors)
 
-        return parentInfors
+        return pathInfors
     }
 
     //kpLv
     let kpLv = {}
     each(vdata, (v) => {
 
-        //update
+        //偵測各層
         let ts = [bindRoot] //由bindRoot當最上層
         let id0 = bindRoot //由bindRoot當最上層
         each(v.ss, (s, ks) => {
@@ -519,8 +520,8 @@ function filepathToTree(data, opt = {}) {
             let id = join(ts, delimiter)
             // console.log(id, ks, v.ns - 1, 'isFolder', isFolder)
 
-            //parentInfors
-            let parentInfors = genParentIds(ts)
+            //pathInfors
+            let pathInfors = genParentIds(ts)
 
             //check
             if (!haskey(kpLv, id)) {
@@ -528,7 +529,7 @@ function filepathToTree(data, opt = {}) {
                     kpLv[id] = {
                         ns: size(ts),
                         ts: cloneDeep(ts),
-                        parentInfors,
+                        pathInfors,
                         _type: 'folder',
                         type: 'array',
                         numOfChilren: -1, //無法計算
@@ -543,7 +544,7 @@ function filepathToTree(data, opt = {}) {
                     kpLv[id] = {
                         ns: size(ts),
                         ts: cloneDeep(ts),
-                        parentInfors,
+                        pathInfors,
                         _type: 'file',
                         type: 'node',
                         numOfChilren: -1, //無法計算
@@ -629,7 +630,7 @@ function filepathToTree(data, opt = {}) {
             {
                 ns: size(ts),
                 ts: cloneDeep(ts),
-                parentInfors: genParentIds(ts),
+                pathInfors: genParentIds(ts),
                 _type: 'folder',
                 type: 'array',
                 numOfChilren: -1, //無法計算

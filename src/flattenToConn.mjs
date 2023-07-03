@@ -9,10 +9,10 @@ import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import isearr from './isearr.mjs'
 import isnum from './isnum.mjs'
-import cstr from './cstr.mjs'
-import treeObj from './treeObj.mjs'
 import isobj from './isobj.mjs'
 import isarr from './isarr.mjs'
+import cstr from './cstr.mjs'
+import treeObj from './treeObj.mjs'
 
 
 /**
@@ -652,7 +652,7 @@ function flattenToConn(data, opt = {}) {
         bindNumOfChilren = 'numOfChilren'
     }
 
-    function genId(nk, k, i) {
+    function genId(nk, k) {
         nk = cloneDeep(nk)
         nk = map(nk, (v) => {
             if (isSymbol(v)) {
@@ -663,16 +663,16 @@ function flattenToConn(data, opt = {}) {
         if (isSymbol(k)) {
             k = cstr(k)
         }
-        if (isSymbol(i)) {
-            i = cstr(i)
-        }
+        // if (isSymbol(i)) {
+        //     i = cstr(i)
+        // }
         if (isestr(k) || isnum(k)) {
             nk.push(k)
         }
         let c = join(nk, '-')
-        if (isestr(i) || isnum(i)) {
-            c = `${i}-${c}`
-        }
+        // if (isestr(i) || isnum(i)) {
+        //     c = `${i}-${c}`
+        // }
         return c
     }
 
