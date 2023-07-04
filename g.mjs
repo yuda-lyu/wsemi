@@ -10,10 +10,13 @@ import treeToFilepath from './src/treeToFilepath.mjs'
 let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r1 = filepathToTree(fps1)
 //fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
-console.log(JSON.stringify(r1) + '\n\n')
+console.log(r1)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -29,6 +32,8 @@ console.log(JSON.stringify(r1) + '\n\n')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -58,10 +63,13 @@ console.log(JSON.stringify(r1) + '\n\n')
 let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r2 = filepathToTree(fps2, { delimiter: '>' })
 //fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
-console.log(JSON.stringify(r2) + '\n\n')
+console.log(r2)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -77,6 +85,8 @@ console.log(JSON.stringify(r2) + '\n\n')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -106,11 +116,13 @@ console.log(JSON.stringify(r2) + '\n\n')
 let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
 let r3 = filepathToTree(fps3, { bindRoot: '本機' })
 //fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
-console.log(JSON.stringify(r3) + '\n\n')
-fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
+console.log(r3)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -126,6 +138,8 @@ fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -154,12 +168,14 @@ fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
 
 let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
 let r4 = filepathToTree(fps4)
-console.log(JSON.stringify(r4) + '\n\n')
-fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
 //fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
+console.log(r4)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -175,6 +191,8 @@ fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -332,10 +350,13 @@ let soryItems5 = (rs, pid, ns) => {
 }
 let r5 = filepathToTree(fps5, { soryItems: soryItems5 })
 //fs.writeFileSync('r5.json', JSON.stringify(r5), 'utf8')
-console.log(JSON.stringify(r5) + '\n\n')
+console.log(r5)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -351,6 +372,8 @@ console.log(JSON.stringify(r5) + '\n\n')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -395,10 +418,13 @@ let soryItems6 = (rs, pid, ns) => {
 }
 let r6 = filepathToTree(fps6, { soryItems: soryItems6 })
 //fs.writeFileSync('r6.json', JSON.stringify(r6), 'utf8')
-console.log(JSON.stringify(r6) + '\n\n')
+console.log(r6)
+console.log('\n\n')
 // => {
 //   treeItems: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],
@@ -414,6 +440,8 @@ console.log(JSON.stringify(r6) + '\n\n')
 //   ],
 //   treeItemsFolder: [
 //     {
+//       _indOri: null,
+//       _indNormalize: null,
 //       ns: 1,
 //       ts: [Array],
 //       pathInfors: [Array],

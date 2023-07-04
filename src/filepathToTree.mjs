@@ -36,9 +36,12 @@ import haskey from './haskey.mjs'
  * let r1 = filepathToTree(fps1)
  * //fs.writeFileSync('r1.json', JSON.stringify(r1), 'utf8')
  * console.log(r1)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -54,6 +57,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -84,9 +89,12 @@ import haskey from './haskey.mjs'
  * let r2 = filepathToTree(fps2, { delimiter: '>' })
  * //fs.writeFileSync('r2.json', JSON.stringify(r2), 'utf8')
  * console.log(r2)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -102,6 +110,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -132,9 +142,12 @@ import haskey from './haskey.mjs'
  * let r3 = filepathToTree(fps3, { bindRoot: '本機' })
  * //fs.writeFileSync('r3.json', JSON.stringify(r3), 'utf8')
  * console.log(r3)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -150,6 +163,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -178,11 +193,14 @@ import haskey from './haskey.mjs'
  *
  * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
  * let r4 = filepathToTree(fps4)
- * console.log(r4)
  * //fs.writeFileSync('r4.json', JSON.stringify(r4), 'utf8')
+ * console.log(r4)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -198,6 +216,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -356,9 +376,12 @@ import haskey from './haskey.mjs'
  * let r5 = filepathToTree(fps5, { soryItems: soryItems5 })
  * //fs.writeFileSync('r5.json', JSON.stringify(r5), 'utf8')
  * console.log(r5)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -374,6 +397,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -419,9 +444,12 @@ import haskey from './haskey.mjs'
  * let r6 = filepathToTree(fps6, { soryItems: soryItems6 })
  * //fs.writeFileSync('r6.json', JSON.stringify(r6), 'utf8')
  * console.log(r6)
+ * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -437,6 +465,8 @@ import haskey from './haskey.mjs'
  * //   ],
  * //   treeItemsFolder: [
  * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
  * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
@@ -525,7 +555,7 @@ function filepathToTree(fps, opt = {}) {
     }
 
     //parseFp
-    let vfps = map(fps, (v) => {
+    let vfps = map(fps, (v, k) => {
 
         //check
         if (v.type !== 'folder' && v.type !== 'file') {
@@ -553,6 +583,7 @@ function filepathToTree(fps, opt = {}) {
 
         //t
         let t = {
+            ind: k,
             type: v.type,
             // name: r.name,
             // ns,
@@ -619,9 +650,11 @@ function filepathToTree(fps, opt = {}) {
             //ts
             ts.push(s)
 
-            //data
+            //indOri, data
+            let indOri = null
             let data = null
             if (ks === nsm1) {
+                indOri = v.ind
                 data = v.data
             }
 
@@ -636,10 +669,14 @@ function filepathToTree(fps, opt = {}) {
             if (!haskey(kpLv, id)) {
                 ind++
 
+                //indNormalize
+                let indNormalize = ind
+
                 //save
                 if (isFolder) {
                     kpLv[id] = {
-                        ind,
+                        _indOri: indOri,
+                        _indNormalize: indNormalize,
                         ns: size(ts),
                         ts: cloneDeep(ts),
                         pathInfors,
@@ -655,7 +692,8 @@ function filepathToTree(fps, opt = {}) {
                 }
                 else {
                     kpLv[id] = {
-                        ind,
+                        _indOri: indOri,
+                        _indNormalize: indNormalize,
                         ns: size(ts),
                         ts: cloneDeep(ts),
                         pathInfors,
@@ -672,6 +710,7 @@ function filepathToTree(fps, opt = {}) {
 
                 //push, 新增項目所儲存指標為ind
                 fpsNormalize.push({
+                    ...get(kpLv[id], 'data', {}), //有可能無data故得要預設為{}
                     type: kpLv[id]._type,
                     path: '/' + join(ts, '/'),
                 })
@@ -750,6 +789,8 @@ function filepathToTree(fps, opt = {}) {
         let ts = [bindRoot]
         treeItems = [
             {
+                _indOri: null,
+                _indNormalize: null,
                 ns: size(ts),
                 ts: cloneDeep(ts),
                 pathInfors: genParentIds(ts),
@@ -765,7 +806,7 @@ function filepathToTree(fps, opt = {}) {
         ]
     }
 
-    //kpPath, kpPathFd, 從上層開始建構folder, file之後再建
+    //kpPathFd, kpPath, 從上層開始建構folder, file之後再建
     let kpPathFd = {}
     kpPathFd[bindRoot] = `0.children` //儲存自己子資料夾路徑, 預建bindRoot故為第1個也只有1個
     let kpPath = {}
