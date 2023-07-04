@@ -51,10 +51,8 @@ import each from 'lodash/each'
 import map from 'lodash/map'
 import size from 'lodash/size'
 import max from 'lodash/max'
-import last from 'lodash/last'
 import values from 'lodash/values'
 import groupBy from 'lodash/groupBy'
-import take from 'lodash/take'
 import join from 'lodash/join'
 import find from 'lodash/find'
 import sortBy from 'lodash/sortBy'
@@ -73,12 +71,12 @@ import haskey from './haskey.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/filepathToTree.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} data 輸入項目陣列，每個項目需為物件，並提供path與type兩鍵值，其中type需為'folder'或'file'
+ * @param {Array} fps 輸入項目陣列，每個項目需為物件，並提供path與type兩鍵值，其中type需為'folder'或'file'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [delimiter='❯'] 輸入路徑分隔字串，預設'❯'
  * @param {String} [bindRoot='root'] 輸入臨時封裝用根目錄字串，預設'root'
  * @param {Function} [soryItems=null] 輸入排序產生樹狀物件函數，預設null
- * @returns {Object} 回傳結果物件，其內treeItems為資料夾與檔案之樹狀物件，treeItemsFolder為僅資料夾之樹狀物件，kpPath為各項目id之取樹狀物件路徑物件
+ * @returns {Object} 回傳結果物件，其內treeItems為資料夾與檔案之樹狀物件，treeItemsFolder為僅資料夾之樹狀物件，kpPath為各項目id之取樹狀物件路徑物件，fpsNormalize為重新正規化之檔案路徑陣列
  * @example
  *
  * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
@@ -121,7 +119,12 @@ import haskey from './haskey.mjs'
  * //     'root❯aaa': '0.children.0',
  * //     'root❯aaa❯bbb': '0.children.0.children.0',
  * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa' },
+ * //     { type: 'folder', path: '/root/aaa/bbb' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z1.txt' }
+ * //   ]
  * // }
  *
  * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
@@ -164,7 +167,12 @@ import haskey from './haskey.mjs'
  * //     'root>aaa': '0.children.0',
  * //     'root>aaa>bbb': '0.children.0.children.0',
  * //     'root>aaa>bbb>z1.txt': '0.children.0.children.0.children.0'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa' },
+ * //     { type: 'folder', path: '/root/aaa/bbb' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z1.txt' }
+ * //   ]
  * // }
  *
  * let fps3 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
@@ -207,7 +215,12 @@ import haskey from './haskey.mjs'
  * //     '本機❯aaa': '0.children.0',
  * //     '本機❯aaa❯bbb': '0.children.0.children.0',
  * //     '本機❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/本機/aaa' },
+ * //     { type: 'folder', path: '/本機/aaa/bbb' },
+ * //     { type: 'file', path: '/本機/aaa/bbb/z1.txt' }
+ * //   ]
  * // }
  *
  * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
@@ -304,7 +317,81 @@ import haskey from './haskey.mjs'
  * //     'root❯aaa❯aaabbb❯abc❯abcde❯abcdefg20.txt': '0.children.0.children.0.children.0.children.1.children.22',
  * //     'root❯aaa❯aaabbb❯abc❯abcd❯abcde.txt': '0.children.0.children.0.children.0.children.0.children.0',
  * //     'root❯中文路徑2❯aaa❯aaabbb❯abc❯測試.txt': '0.children.8.children.0.children.0.children.0.children.0'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa' },
+ * //     { type: 'file', path: '/root/aaa1.txt' },
+ * //     { type: 'file', path: '/root/aaa2.txt' },
+ * //     { type: 'folder', path: '/root/aaa/aaabbb' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/aaabbbccc.txt' },
+ * //     { type: 'folder', path: '/root/aaa/aaabbb/abc' },
+ * //     { type: 'folder', path: '/root/aaa/aaabbb/abc/abcd' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcd/abcde.txt' },
+ * //     { type: 'folder', path: '/root/aaa/aaabbb/abc/abcde' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdef1.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdef2.txt' },
+ * //     {
+ * //       type: 'file',
+ * //       path: '/root/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt'
+ * //     },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg01.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg02.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg03.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg04.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg05.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg06.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg07.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg08.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg09.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg10.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg11.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg12.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg13.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg14.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg15.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg16.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg17.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg18.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg19.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcde/abcdefg20.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcd1.txt' },
+ * //     { type: 'file', path: '/root/aaa/aaabbb/abc/abcd2.txt' },
+ * //     { type: 'folder', path: '/root/bbb' },
+ * //     { type: 'folder', path: '/root/ccc' },
+ * //     { type: 'folder', path: '/root/ccc/cccddd' },
+ * //     { type: 'file', path: '/root/ccc/cccddd/cccdddeee.txt' },
+ * //     { type: 'folder', path: '/root/eee' },
+ * //     { type: 'folder', path: '/root/eee/eeefff1' },
+ * //     { type: 'folder', path: '/root/eee/eeefff2' },
+ * //     { type: 'folder', path: '/root/ggg' },
+ * //     { type: 'folder', path: '/root/c:' },
+ * //     { type: 'folder', path: '/root/c:/hhh' },
+ * //     { type: 'folder', path: '/root/aaaa' },
+ * //     {
+ * //       type: 'folder',
+ * //       path: '/root/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff'
+ * //     },
+ * //     {
+ * //       type: 'file',
+ * //       path: '/root/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt'
+ * //     },
+ * //     {
+ * //       type: 'folder',
+ * //       path: '/root/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg'
+ * //     },
+ * //     {
+ * //       type: 'file',
+ * //       path: '/root/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt'
+ * //     },
+ * //     { type: 'folder', path: '/root/d:' },
+ * //     { type: 'folder', path: '/root/d:/中文路徑1' },
+ * //     { type: 'folder', path: '/root/中文路徑2' },
+ * //     { type: 'folder', path: '/root/中文路徑2/aaa' },
+ * //     { type: 'folder', path: '/root/中文路徑2/aaa/aaabbb' },
+ * //     { type: 'folder', path: '/root/中文路徑2/aaa/aaabbb/abc' },
+ * //     { type: 'file', path: '/root/中文路徑2/aaa/aaabbb/abc/測試.txt' }
+ * //   ]
  * // }
  *
  * let fps5 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
@@ -357,7 +444,17 @@ import haskey from './haskey.mjs'
  * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
  * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
  * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa1' },
+ * //     { type: 'folder', path: '/root/aaa2' },
+ * //     { type: 'folder', path: '/root/aaa10' },
+ * //     { type: 'folder', path: '/root/aaa' },
+ * //     { type: 'folder', path: '/root/aaa/bbb' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z1.txt' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z2.txt' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z10.txt' }
+ * //   ]
  * // }
  *
  * let fps6 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
@@ -410,14 +507,24 @@ import haskey from './haskey.mjs'
  * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0',
  * //     'root❯aaa❯bbb❯z2.txt': '0.children.0.children.0.children.1',
  * //     'root❯aaa❯bbb❯z10.txt': '0.children.0.children.0.children.2'
- * //   }
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa1' },
+ * //     { type: 'folder', path: '/root/aaa2' },
+ * //     { type: 'folder', path: '/root/aaa10' },
+ * //     { type: 'folder', path: '/root/aaa' },
+ * //     { type: 'folder', path: '/root/aaa/bbb' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z1.txt' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z2.txt' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z10.txt' }
+ * //   ]
  * // }
  *
  */
-function filepathToTree(data, opt = {}) {
+function filepathToTree(fps, opt = {}) {
 
     //check
-    if (!isearr(data)) {
+    if (!isearr(fps)) {
         return {}
     }
 
@@ -454,18 +561,18 @@ function filepathToTree(data, opt = {}) {
         //cfp, 組裝成字串路徑
         let cfp = join(ss, delimiter)
 
-        //name
-        let name = last(ss)
+        // //name
+        // let name = last(ss)
 
         return {
             ss,
             cfp,
-            name,
+            // name,
         }
     }
 
     //parseFp
-    let vdata = map(data, (v, k) => {
+    let vfps = map(fps, (v) => {
 
         //check
         if (v.type !== 'folder' &amp;&amp; v.type !== 'file') {
@@ -476,37 +583,36 @@ function filepathToTree(data, opt = {}) {
         let r = parseFp(v.path)
         // console.log('parseFp', v.path, r)
 
-        //ns
-        let ns = size(r.ss)
+        // //ns
+        // let ns = size(r.ss)
 
-        //pas
-        let pas = []
-        if (ns - 1 > 0) {
-            pas = take(r.s, ns - 1)
-        }
+        // //pas
+        // let pas = []
+        // if (ns - 1 > 0) {
+        //     pas = take(r.s, ns - 1)
+        // }
 
-        //pacfp
-        let pacfp = ''
-        if (size(pas) > 0) {
-            pacfp = join(pas, delimiter)
-        }
+        // //pacfp
+        // let pacfp = ''
+        // if (size(pas) > 0) {
+        //     pacfp = join(pas, delimiter)
+        // }
 
         //t
         let t = {
-            // ind: k,
             type: v.type,
-            name: r.name,
-            ns,
+            // name: r.name,
+            // ns,
             ss: r.ss,
-            id: r.cfp,
-            pas,
-            parentId: pacfp,
+            // id: r.cfp,
+            // pas,
+            // parentId: pacfp,
             data: cloneDeep(v),
         }
 
         return t
     })
-    // console.log('vdata', vdata)
+    // console.log('vfps', vfps)
 
     //genParentIds
     let genParentIds = (ts) => {
@@ -542,38 +648,45 @@ function filepathToTree(data, opt = {}) {
         return pathInfors
     }
 
-    //kpLv
+    //fpsNormalize, kpLv
+    let ind = -1
+    let fpsNormalize = []
     let kpLv = {}
-    each(vdata, (v) => {
+    each(vfps, (v) => {
 
         //偵測各層
         let ts = [bindRoot] //由bindRoot當最上層
         let id0 = bindRoot //由bindRoot當最上層
+        let nsm1 = size(v.ss) - 1
         each(v.ss, (s, ks) => {
 
             //isFolder, 當ks小於ns-1時一定為資料夾, 因有些是直接提供深層檔案沒有父層資料夾, 故得另外計算
-            let isFolder = ks &lt; v.ns - 1 || v.type === 'folder'
+            let isFolder = ks &lt; nsm1 || v.type === 'folder'
 
             //ts
             ts.push(s)
 
             //data
             let data = null
-            if (ks === v.ns - 1) {
+            if (ks === nsm1) {
                 data = v.data
             }
 
             //id
             let id = join(ts, delimiter)
-            // console.log(id, ks, v.ns - 1, 'isFolder', isFolder)
+            // console.log(id, ks, 'isFolder', isFolder)
 
             //pathInfors
             let pathInfors = genParentIds(ts)
 
             //check
             if (!haskey(kpLv, id)) {
+                ind++
+
+                //save
                 if (isFolder) {
                     kpLv[id] = {
+                        ind,
                         ns: size(ts),
                         ts: cloneDeep(ts),
                         pathInfors,
@@ -589,6 +702,7 @@ function filepathToTree(data, opt = {}) {
                 }
                 else {
                     kpLv[id] = {
+                        ind,
                         ns: size(ts),
                         ts: cloneDeep(ts),
                         pathInfors,
@@ -602,6 +716,13 @@ function filepathToTree(data, opt = {}) {
                         data,
                     }
                 }
+
+                //push, 新增項目所儲存指標為ind
+                fpsNormalize.push({
+                    type: kpLv[id]._type,
+                    path: '/' + join(ts, '/'),
+                })
+
             }
 
             //update id0
@@ -611,6 +732,7 @@ function filepathToTree(data, opt = {}) {
 
     })
     // console.log('kpLv', kpLv)
+    // console.log('fpsNormalize', fpsNormalize)
 
     //vLv
     let vLv = values(kpLv)
@@ -829,6 +951,7 @@ function filepathToTree(data, opt = {}) {
         treeItems,
         treeItemsFolder,
         kpPath,
+        fpsNormalize,
     }
 }
 
@@ -848,7 +971,7 @@ export default filepathToTree
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Mon Jul 03 2023 21:47:01 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Jul 04 2023 12:02:20 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
