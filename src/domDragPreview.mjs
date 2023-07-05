@@ -151,8 +151,9 @@ function domDragPreview(opt = {}) {
             //將shell塞入container
             container.appendChild(shell)
 
-            //將container塞入原本ele的父層內
-            node.tParent.appendChild(container)
+            //將container塞入body
+            //node.tParent.appendChild(container) //原本ele的父層可能也有relative與fixed, 故塞入原本ele的父層內可能會出錯
+            document.querySelector('body').appendChild(container)
 
             //儲存至全域
             _node = node
@@ -165,10 +166,9 @@ function domDragPreview(opt = {}) {
 
         }
 
-        core()
-        //core, 暴力try catch攔錯, 因可能原dom例如是按鈕要自我刪除故會導致出錯
+        //core, 須try catch因可能原dom例如是按鈕要自我刪除故會導致出錯
         try {
-            // core()
+            core()
         }
         catch (err) {}
 
