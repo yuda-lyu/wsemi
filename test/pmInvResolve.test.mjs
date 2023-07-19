@@ -67,10 +67,10 @@ describe(`pmInvResolve`, function() {
         let pmOut = pmInvResolve(pmInp)
         await pmOut
             .then((res) => {
-                console.log('then', res)
+                // console.log('then', res)
             })
             .catch((res) => {
-                console.log('catch', res)
+                // console.log('catch', res)
                 // catch { reason: 'cancelled' }
                 ms.push({ mode: 'catch', res })
             })
@@ -81,6 +81,34 @@ describe(`pmInvResolve`, function() {
         let ms = await test3()
         //console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
+    })
+
+    async function test4() {
+        let ms = []
+        let pmInp = genPm()
+        pmInp.resolve({
+            data: {
+                state: 'success',
+                msg: 'abc',
+            },
+        })
+        let pmOut = pmInvResolve(pmInp, { thenExtractData: true })
+        await pmOut
+            .then((res) => {
+                // console.log('test4 then', res)
+                // test4 then abc
+                ms.push({ mode: 'then', res })
+            })
+            .catch((res) => {
+                // console.log('test4 catch', res)
+            })
+        return ms
+    }
+    let r4 = '[{"mode":"then","res":"abc"}]'
+    it(`should return '${r4}' when run test4'`, async function() {
+        let ms = await test4()
+        //console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
     })
 
 })
