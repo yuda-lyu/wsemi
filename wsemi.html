@@ -67908,7 +67908,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 
     
 
-    <h4 class="name" id=".pmInvResolve"><span class="type-signature type-signature-static">(static) </span>pmInvResolve<span class="signature">(pm)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".pmInvResolve"><span class="type-signature type-signature-static">(static) </span>pmInvResolve<span class="signature">(pm, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -67925,7 +67925,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmInvResolve.mjs.html">pmInvResolve.mjs</a>, <a href="pmInvResolve.mjs.html#line70">line 70</a>
+        <a href="pmInvResolve.mjs.html">pmInvResolve.mjs</a>, <a href="pmInvResolve.mjs.html#line93">line 93</a>
     </li></ul></dd>
     
 
@@ -67983,11 +67983,11 @@ topAsync().catch(() =&gt; {})</code></pre>
     let pmOut = pmInvResolve(pmInp)
     await pmOut
         .then((res) =&gt; {
-            console.log('then', res)
-            // then abc
+            console.log('test1 then', res)
+            // test1 then abc
         })
         .catch((res) =&gt; {
-            console.log('catch', res)
+            console.log('test1 catch', res)
         })
 }
 test1()
@@ -68001,11 +68001,11 @@ async function test2() {
     let pmOut = pmInvResolve(pmInp)
     await pmOut
         .then((res) =&gt; {
-            console.log('then', res)
+            console.log('test2 then', res)
         })
         .catch((res) =&gt; {
-            console.log('catch', res)
-            // catch abc
+            console.log('test2 catch', res)
+            // test2 catch abc
         })
 }
 test2()
@@ -68019,14 +68019,34 @@ async function test3() {
     let pmOut = pmInvResolve(pmInp)
     await pmOut
         .then((res) =&gt; {
-            console.log('then', res)
+            console.log('test3 then', res)
         })
         .catch((res) =&gt; {
-            console.log('catch', res)
-            // catch { reason: 'cancelled' }
+            console.log('test3 catch', res)
+            // test3 catch { reason: 'cancelled' }
         })
 }
-test3()</code></pre>
+test3()
+
+async function test4() {
+    let pmInp = genPm()
+    pmInp.resolve({
+        data: {
+            state: 'success',
+            msg: 'abc',
+        },
+    })
+    let pmOut = pmInvResolve(pmInp, { thenExtractData: true })
+    await pmOut
+        .then((res) =&gt; {
+            console.log('test4 then', res)
+            // test4 then abc
+        })
+        .catch((res) =&gt; {
+            console.log('test4 catch', res)
+        })
+}
+test4()</code></pre>
         </div>
 
 
@@ -68045,7 +68065,11 @@ test3()</code></pre>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -68071,10 +68095,132 @@ test3()</code></pre>
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>thenExtractData</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於then提取data欄位值布林值，主要用於轉換axios取得之pm，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -85726,7 +85872,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Jul 19 2023 22:59:57 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Jul 19 2023 23:38:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -85747,7 +85893,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.18/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.19/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
