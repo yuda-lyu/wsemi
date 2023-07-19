@@ -176,6 +176,7 @@ function dgEvGroup(funs) {
 
 
 function dgEvEle(ele, funs, gid, eid) {
+    // console.log('dgEvEle', ele, gid, eid)
     let _ele_events = []
 
     function bindEleEvents() {
