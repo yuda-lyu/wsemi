@@ -55,6 +55,7 @@ import join from 'lodash/join'
 import sep from './sep.mjs'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
+import arrHas from './arrHas.mjs'
 
 
 function sepItems(composItems) {
@@ -211,7 +212,7 @@ function atParse(composItems, opt = {}) {
 }
 
 
-function atCombineS1(composItems1, composItems2) {
+function atAddS1(composItems1, composItems2) {
 
     //atParseS1
     let itp1 = atParseS1(composItems1)
@@ -229,7 +230,7 @@ function atCombineS1(composItems1, composItems2) {
 }
 
 
-function atCombineS2(composItems1, composItems2) {
+function atAddS2(composItems1, composItems2) {
 
     //atParseS2
     let itp1 = atParseS2(composItems1)
@@ -247,7 +248,7 @@ function atCombineS2(composItems1, composItems2) {
 }
 
 
-function atCombine(composItems1, composItems2, opt = {}) {
+function atAdd(composItems1, composItems2, opt = {}) {
 
     //mode
     let mode = get(opt, 'mode')
@@ -255,128 +256,68 @@ function atCombine(composItems1, composItems2, opt = {}) {
         mode = 'auto'
     }
 
+    //mode
+    if (mode === '1p') {
+        atAddS1(composItems1, composItems2)
+    }
+    else if (mode === '2p') {
+        return atAddS2(composItems1, composItems2)
+    }
+
     //indexOf
     let bc1 = composItems1.indexOf('@') >= 0
     let bc2 = composItems2.indexOf('@') >= 0
 
-    //mode
-    if (mode === '1p') {
-        atCombineS1(composItems1, composItems2)
-    }
-    else if (mode === '2p') {
-        return atCombineS2(composItems1, composItems2)
-    }
-
     if (bc1 || bc2) {
-        return atCombineS2(composItems1, composItems2)
+        return atAddS2(composItems1, composItems2)
     }
-    return atCombineS1(composItems1, composItems2)
+    return atAddS1(composItems1, composItems2)
 }
 
 
-function atItemsRemoveS1(its, removeItem) {
+function atRemoveS1(composItems1, composItems2) {
 
-    //check its
-    if (!isearr(its)) {
+    //atParseS1
+    let itp1 = atParseS1(composItems1)
+    let itp2 = atParseS1(composItems2)
+
+    //its
+    let its = []
+    each(itp1, (v) => {
+        if (!arrHas(v, itp2)) {
+            its.push(v)
+        }
+    })
+
+    //check
+    if (size(its) === 0) {
         return ''
     }
-
-    //check removeItem
-    if (!isestr(removeItem)) {
-        return atItemsMergeS1(its)
-    }
-
-    //filter
-    its = filter(its, (v) => {
-        return v !== removeItem
-    })
 
     return atItemsMergeS1(its)
 }
 
 
-function atRemoveS1(composItems, removeId) {
-
-    //check composItems
-    if (!isestr(composItems)) {
-        return ''
-    }
-
-    //check removeId
-    if (!isestr(removeId)) {
-        return composItems
-    }
-
-    //atParseS1
-    let its = atParseS1(composItems)
-
-    //check
-    if (size(its) === 0) {
-        return ''
-    }
-
-    //atItemsRemoveS1
-    its = atItemsRemoveS1(its, removeId)
-
-    return its
-}
-
-
-function atItemsRemoveS2(its, removeItem) {
-
-    //check
-    if (!isearr(its)) {
-        return ''
-    }
-
-    //check removeId
-    if (!isestr(removeItem)) {
-        return atItemsMergeS2(its)
-    }
-
-    //removeId為純id, 則提取取後面純id出來
-    let s = sep(removeItem, '@')
-    let rmTable = get(s, 0, '')
-    let rmId = get(s, 1, '')
-
-    //check rmTable and rmId
-    if (!isestr(rmTable)) {
-        console.log('atItemsRemoveS2: table of removeItem is not an effective string', removeItem)
-        return ''
-    }
-    if (!isestr(rmId)) {
-        console.log('atItemsRemoveS2: id of removeItem is not an effective string', removeItem)
-        return ''
-    }
-
-    //filter
-    its = filter(its, (v) => {
-        return (v.table !== rmTable) &amp;&amp; (v.id !== rmId)
-    })
-
-    return atItemsMergeS2(its)
-}
-
-
-function atRemoveS2(composItems, removeItem) {
-
-    //check composItems
-    if (!isestr(composItems)) {
-        return ''
-    }
+function atRemoveS2(composItems1, composItems2) {
 
     //atParseS2
-    let its = atParseS2(composItems)
+    let itp1 = atParseS2(composItems1)
+    let itp2 = atParseS2(composItems2)
+
+    //its
+    let its = []
+    each(itp1, (v) => {
+        if (!arrHas(v, itp2)) {
+            its.push(v)
+        }
+    })
 
     //check
     if (size(its) === 0) {
         return ''
     }
 
-    //atItemsRemoveS2
-    let composItemsTemp = atItemsRemoveS2(its, removeItem)
-
-    return composItemsTemp
+    return atItemsMergeS2(its)
 }
 
 
@@ -407,163 +348,13 @@ function atRemove(composItems, removeItemOrId, opt = {}) {
     }
 
     //indexOf
-    let bc = composItems.indexOf('@') >= 0
+    // let bc = composItems.indexOf('@') >= 0
     let bt = removeItemOrId.indexOf('@') >= 0
 
-    if (bc &amp;&amp; bt) {
+    if (bt) { //bc可為空字串故不一定有@
         return atRemoveS2(composItems, removeItemOrId)
     }
     return atRemoveS1(composItems, removeItemOrId)
-}
-
-
-function atItemsAddS1(its, addId) {
-
-    //check its
-    if (!isearr(its)) {
-        return ''
-    }
-
-    //check addId
-    if (!isestr(addId)) {
-        return atItemsMergeS1(its)
-    }
-
-    //push
-    if (its.indexOf(addId) &lt; 0) {
-        its.push(addId)
-    }
-
-    return atItemsMergeS1(its)
-}
-
-
-function atAddS1(composItems, addId) {
-
-    //check composItems
-    if (!isestr(composItems)) {
-        return ''
-    }
-
-    //check addId
-    if (!isestr(addId)) {
-        return composItems
-    }
-
-    //atParseS1
-    let its = atParseS1(composItems)
-
-    //check
-    if (size(its) === 0) {
-        return ''
-    }
-
-    //atItemsAddS1
-    let composItemsTemp = atItemsAddS1(its, addId)
-
-    return composItemsTemp
-}
-
-
-function atItemsAddS2(its, addItem) {
-
-    //check
-    if (!isearr(its)) {
-        return ''
-    }
-
-    //addItem為純id, 則提取取後面純id出來
-    let s = sep(addItem, '@')
-    let addTable = get(s, 0, '')
-    let addId = get(s, 1, '')
-
-    //check addTable and addId
-    if (!isestr(addTable)) {
-        console.log('atItemsAddS2: table of addItem is not an effective string', addItem)
-        return ''
-    }
-    if (!isestr(addId)) {
-        console.log('atItemsAddS2: id of addItem is not an effective string', addItem)
-        return ''
-    }
-
-    //find
-    let b = false
-    each(its, (v) => {
-        if (v === addItem) {
-            b = true
-            return false //跳出
-        }
-    })
-
-    //push
-    if (!b) {
-        its.push({
-            table: addTable,
-            id: addId,
-        })
-    }
-
-    return atItemsMergeS2(its)
-}
-
-
-function atAddS2(composItems, addItem) {
-
-    //check composItems
-    if (!isestr(composItems)) {
-        return ''
-    }
-
-    //atParseS2
-    let its = atParseS2(composItems)
-
-    //check
-    if (size(its) === 0) {
-        return ''
-    }
-
-    //atItemsAddS2
-    let composItemsTemp = atItemsAddS2(its, addItem)
-
-    return composItemsTemp
-}
-
-
-function atAdd(composItems, addItemOrId, opt = {}) {
-
-    //check composItems
-    if (!isestr(composItems)) {
-        return ''
-    }
-
-    //check addItemOrId
-    if (!isestr(addItemOrId)) {
-        return composItems
-    }
-
-    //mode
-    let mode = get(opt, 'mode')
-    if (mode !== '1p' &amp;&amp; mode !== '2p') {
-        mode = 'auto'
-    }
-
-    //mode
-    if (mode === '1p') {
-        return atAddS1(composItems, addItemOrId)
-    }
-    else if (mode === '2p') {
-        return atAddS2(composItems, addItemOrId)
-    }
-
-    //indexOf
-    let bc = composItems.indexOf('@') >= 0
-    let bt = addItemOrId.indexOf('@') >= 0
-
-    if (bc &amp;&amp; bt) {
-        return atAddS2(composItems, addItemOrId)
-    }
-    return atAddS1(composItems, addItemOrId)
 }
 
 
@@ -574,8 +365,6 @@ function atAdd(composItems, addItemOrId, opt = {}) {
  * @memberOf wsemi
  * @returns {Object} 回傳attstr物件，提供parse、remove、add、combine等共4種處理函數
  * @example
- *
- * import at from 'wsemi/src/attstr.mjs'
  *
  * let c
  * let c1
@@ -618,48 +407,83 @@ function atAdd(composItems, addItemOrId, opt = {}) {
  * //   { item: 'def@456', table: 'def', id: '456' }
  * // ]
  *
- * //combine
- * console.log('combine')
+ * c = ''
+ * r = at.parse(c)
+ * console.log(r)
+ * // => []
+ *
+ * //add
+ * console.log('add')
  *
  * c1 = 'abc123'
  * c2 = 'def456'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc123;def456
  *
  * c1 = 'abc123'
  * c2 = 'def456;ghi789'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc123;def456;ghi789
  *
  * c1 = 'abc123'
  * c2 = 'abc123'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc123
  *
  * c1 = 'abc123'
  * c2 = 'abc123;def456'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
+ * console.log(r)
+ * // => abc123;def456
+ *
+ * c1 = 'abc123;ghi789'
+ * c2 = 'abc123;def456'
+ * r = at.add(c1, c2)
+ * console.log(r)
+ * // => abc123;ghi789;def456
+ *
+ * c1 = ''
+ * c2 = 'abc123'
+ * r = at.add(c1, c2)
+ * console.log(r)
+ * // => abc123
+ *
+ * c1 = ''
+ * c2 = 'abc123;def456'
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc123;def456
  *
  * c1 = 'abc@123'
  * c2 = 'def@456'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc@123;def@456
  *
  * c1 = 'abc@123'
  * c2 = 'def@456;ghi@789'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc@123;def@456;ghi@789
  *
- * c1 = 'abc@123'
+ * c1 = 'abc@123;ghi789'
  * c2 = 'abc@123;def@456'
- * r = at.combine(c1, c2)
+ * r = at.add(c1, c2)
+ * console.log(r)
+ * // => abc@123;ghi789;def@456
+ *
+ * c1 = ''
+ * c2 = 'abc@123'
+ * r = at.add(c1, c2)
+ * console.log(r)
+ * // => abc@123
+ *
+ * c1 = ''
+ * c2 = 'abc@123;def@456'
+ * r = at.add(c1, c2)
  * console.log(r)
  * // => abc@123;def@456
  *
@@ -684,11 +508,41 @@ function atAdd(composItems, addItemOrId, opt = {}) {
  * console.log(r)
  * // => abc123
  *
+ * c1 = 'abc123'
+ * c2 = 'ghi789;jkl012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => abc123
+ *
+ * c1 = 'abc123'
+ * c2 = 'abc123;jkl012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => ''
+ *
  * c1 = 'abc123;def456'
  * c2 = 'ghi789;jkl012'
  * r = at.remove(c1, c2)
  * console.log(r)
  * // => abc123;def456
+ *
+ * c1 = 'abc123;def456'
+ * c2 = 'def456;jkl012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => abc123
+ *
+ * c1 = ''
+ * c2 = 'ghi789'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => ''
+ *
+ * c1 = ''
+ * c2 = 'ghi789;jkl012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => ''
  *
  * c1 = 'abc@123'
  * c2 = 'abc@123'
@@ -708,62 +562,41 @@ function atAdd(composItems, addItemOrId, opt = {}) {
  * console.log(r)
  * // => abc@123
  *
+ * c1 = 'abc@123'
+ * c2 = 'ghi@789;jkl@012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => abc@123
+ *
+ * c1 = 'abc@123'
+ * c2 = 'abc@123;jkl@012'
+ * r = at.remove(c1, c2)
+ * console.log(r)
+ * // => ''
+ *
  * c1 = 'abc@123;def@456'
  * c2 = 'ghi@789;jkl@012'
  * r = at.remove(c1, c2)
  * console.log(r)
  * // => abc@123;def@456
  *
- * //add
- * console.log('add')
- *
- * c1 = 'abc123'
- * c2 = 'abc123'
- * r = at.add(c1, c2)
- * console.log(r)
- * // => abc123
- *
- * c1 = 'abc123;def456'
- * c2 = 'abc123'
- * r = at.add(c1, c2)
- * console.log(r)
- * // => abc123;def456
- *
- * c1 = 'abc123'
- * c2 = 'def456'
- * r = at.add(c1, c2)
- * console.log(r)
- * // => abc123;def456
- *
- * c1 = 'abc123;def456'
- * c2 = 'ghi789;jkl012'
- * r = at.add(c1, c2)
- * console.log(r)
- * // => abc123;def456;ghi789;jkl012
- *
- * c1 = 'abc@123'
- * c2 = 'abc@123'
- * r = at.add(c1, c2)
+ * c1 = 'abc@123;def@456'
+ * c2 = 'def@456;jkl@012'
+ * r = at.remove(c1, c2)
  * console.log(r)
  * // => abc@123
  *
- * c1 = 'abc@123;def@456'
- * c2 = 'abc@123'
- * r = at.add(c1, c2)
+ * c1 = ''
+ * c2 = 'ghi@789'
+ * r = at.remove(c1, c2)
  * console.log(r)
- * // => abc@123;def@456
+ * // => ''
  *
- * c1 = 'abc@123'
- * c2 = 'def@456'
- * r = at.add(c1, c2)
- * console.log(r)
- * // => abc@123;def@456
- *
- * c1 = 'abc@123;def@456'
+ * c1 = ''
  * c2 = 'ghi@789;jkl@012'
- * r = at.add(c1, c2)
+ * r = at.remove(c1, c2)
  * console.log(r)
- * // => abc@123;def@456;ghi@789;jkl@012
+ * // => ''
  *
  */
 function attstr() {
@@ -771,7 +604,6 @@ function attstr() {
         parse: atParse,
         remove: atRemove,
         add: atAdd,
-        combine: atCombine,
     }
     return at
 }
@@ -792,7 +624,7 @@ export default attstr()
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Jul 19 2023 23:38:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Mon Jul 31 2023 14:26:08 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
