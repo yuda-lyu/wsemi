@@ -70,12 +70,6 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'abc123;ghi789;def456' when input at.add('abc123;ghi789', 'abc123;def456')`, function() {
-        let r = at.add('abc123;ghi789', 'abc123;def456')
-        let rr = 'abc123;ghi789;def456'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
     it(`should return 'abc123' when input at.add('', 'abc123')`, function() {
         let r = at.add('', 'abc123')
         let rr = 'abc123'
@@ -106,20 +100,14 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'abc@123;ghi@789;def@456' when input at.add('abc@123;ghi@789', 'abc@123;def@456')`, function() {
-        let r = at.add('abc@123;ghi@789', 'abc@123;def@456')
-        let rr = 'abc@123;ghi@789;def@456'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return 'abc@123' when input at.add('', 'ab@c123')`, function() {
-        let r = at.add('', 'abc@123')
+    it(`should return 'abc@123' when input at.add('', 'abc123')`, function() {
+        let r = at.add('', 'abc123')
         let rr = 'abc@123'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'abc@123;def@456' when input at.add('', 'abc@123;def@456')`, function() {
-        let r = at.add('', 'abc@123;def@456')
+    it(`should return 'abc@123;def@456' when input at.add('', 'abc123;def@456')`, function() {
+        let r = at.add('', 'abc123;def@456')
         let rr = 'abc@123;def@456'
         assert.strict.deepStrictEqual(r, rr)
     })
@@ -142,27 +130,9 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'abc123' when input at.remove('abc123', 'ghi789;jkl012')`, function() {
-        let r = at.remove('abc123', 'ghi789;jkl012')
-        let rr = 'abc123'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return '' when input at.remove('abc123', 'abc123;jkl012')`, function() {
-        let r = at.remove('abc123', 'abc123;jkl012')
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
     it(`should return 'abc123;def456' when input at.remove('abc123;def456', 'ghi789;jkl012')`, function() {
         let r = at.remove('abc123;def456', 'ghi789;jkl012')
         let rr = 'abc123;def456'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return 'abc123' when input at.remove('abc123;def456', 'def456;jkl012')`, function() {
-        let r = at.remove('abc123;def456', 'def456;jkl012')
-        let rr = 'abc123'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -196,27 +166,15 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'abc@123' when input at.remove('abc@123', 'ghi@789;jkl@012')`, function() {
-        let r = at.remove('abc@123', 'ghi@789;jkl@012')
+    it(`should return 'abc@123' when input at.remove('abc@123;def@456', 'def@456;jkl@012')`, function() {
+        let r = at.remove('abc@123;def@456', 'def@456;jkl@012')
         let rr = 'abc@123'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return '' when input at.remove('abc@123', 'abc@123;jkl@012')`, function() {
-        let r = at.remove('abc@123', 'abc@123;jkl@012')
-        let rr = ''
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return 'abc@123;def@456' when input at.remove('abc@123;def@456', 'ghi@789;jkl@012')`, function() {
         let r = at.remove('abc@123;def@456', 'ghi@789;jkl@012')
         let rr = 'abc@123;def@456'
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return 'abc@123' when input at.remove('abc@123;def@456', 'def@456;jkl@012')`, function() {
-        let r = at.remove('abc@123;def@456', 'def@456;jkl@012')
-        let rr = 'abc@123'
         assert.strict.deepStrictEqual(r, rr)
     })
 

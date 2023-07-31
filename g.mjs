@@ -1,80 +1,239 @@
 // import fs from 'fs'
 import genPm from './src/genPm.mjs'
-import pmInvResolve from './src/pmInvResolve.mjs'
+import at from './src/attstr.mjs'
 
 
-async function test1() {
-    let pmInp = genPm()
-    pmInp.resolve({
-        state: 'success',
-        msg: 'abc',
-    })
-    let pmOut = pmInvResolve(pmInp)
-    await pmOut
-        .then((res) => {
-            console.log('test1 then', res)
-            // test1 then abc
-        })
-        .catch((res) => {
-            console.log('test1 catch', res)
-        })
-}
-test1()
+let c
+let c1
+let c2
+let r
 
-async function test2() {
-    let pmInp = genPm()
-    pmInp.resolve({
-        state: 'error',
-        msg: 'abc',
-    })
-    let pmOut = pmInvResolve(pmInp)
-    await pmOut
-        .then((res) => {
-            console.log('test2 then', res)
-        })
-        .catch((res) => {
-            console.log('test2 catch', res)
-            // test2 catch abc
-        })
-}
-test2()
+//parse
+console.log('parse')
 
-async function test3() {
-    let pmInp = genPm()
-    pmInp.resolve({
-        state: 'cancelled',
-        msg: 'abc',
-    })
-    let pmOut = pmInvResolve(pmInp)
-    await pmOut
-        .then((res) => {
-            console.log('test3 then', res)
-        })
-        .catch((res) => {
-            console.log('test3 catch', res)
-            // test3 catch { reason: 'cancelled' }
-        })
-}
-test3()
+c = 'abc123'
+r = at.parse(c)
+console.log(r)
+// => [ 'abc123' ]
 
-async function test4() {
-    let pmInp = genPm()
-    pmInp.resolve({
-        data: {
-            state: 'success',
-            msg: 'abc',
-        },
-    })
-    let pmOut = pmInvResolve(pmInp, { thenExtractData: true })
-    await pmOut
-        .then((res) => {
-            console.log('test4 then', res)
-            // test4 then abc
-        })
-        .catch((res) => {
-            console.log('test4 catch', res)
-        })
-}
-test4()
+c = 'abc123;abc123'
+r = at.parse(c)
+console.log(r)
+// => [ 'abc123' ]
+
+c = 'abc123;def456'
+r = at.parse(c)
+console.log(r)
+// => [ 'abc123', 'def456' ]
+
+c = 'abc@123'
+r = at.parse(c)
+console.log(r)
+// => [ { item: 'abc@123', table: 'abc', id: '123' } ]
+
+c = 'abc@123;abc@123'
+r = at.parse(c)
+console.log(r)
+// => [ { item: 'abc@123', table: 'abc', id: '123' } ]
+
+c = 'abc@123;def@456'
+r = at.parse(c)
+console.log(r)
+// => [
+//   { item: 'abc@123', table: 'abc', id: '123' },
+//   { item: 'def@456', table: 'def', id: '456' }
+// ]
+
+c = ''
+r = at.parse(c)
+console.log(r)
+// => []
+
+//add
+console.log('add')
+
+c1 = 'abc123'
+c2 = 'def456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123;def456
+
+c1 = 'abc123'
+c2 = 'def456;ghi789'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123;def456;ghi789
+
+c1 = 'abc123'
+c2 = 'abc123'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123
+
+c1 = 'abc123'
+c2 = 'abc123;def456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123;def456
+
+c1 = 'abc123;ghi789'
+c2 = 'abc123;def456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123;ghi789;def456
+
+c1 = ''
+c2 = 'abc123'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123
+
+c1 = ''
+c2 = 'abc123;def456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc123;def456
+
+c1 = 'abc@123'
+c2 = 'def@456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc@123;def@456
+
+c1 = 'abc@123'
+c2 = 'def@456;ghi@789'
+r = at.add(c1, c2)
+console.log(r)
+// => abc@123;def@456;ghi@789
+
+c1 = 'abc@123;ghi789'
+c2 = 'abc@123;def@456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc@123;ghi789;def@456
+
+c1 = ''
+c2 = 'abc@123'
+r = at.add(c1, c2)
+console.log(r)
+// => abc@123
+
+c1 = ''
+c2 = 'abc@123;def@456'
+r = at.add(c1, c2)
+console.log(r)
+// => abc@123;def@456
+
+//remove
+console.log('remove')
+
+c1 = 'abc123'
+c2 = 'abc123'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = 'abc123;def456'
+c2 = 'abc123'
+r = at.remove(c1, c2)
+console.log(r)
+// => def456
+
+c1 = 'abc123'
+c2 = 'def456'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc123
+
+c1 = 'abc123'
+c2 = 'ghi789;jkl012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc123
+
+c1 = 'abc123'
+c2 = 'abc123;jkl012'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = 'abc123;def456'
+c2 = 'ghi789;jkl012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc123;def456
+
+c1 = 'abc123;def456'
+c2 = 'def456;jkl012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc123
+
+c1 = ''
+c2 = 'ghi789'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = ''
+c2 = 'ghi789;jkl012'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = 'abc@123'
+c2 = 'abc@123'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = 'abc@123;def@456'
+c2 = 'abc@123'
+r = at.remove(c1, c2)
+console.log(r)
+// => def@456
+
+c1 = 'abc@123'
+c2 = 'def@456'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc@123
+
+c1 = 'abc@123'
+c2 = 'ghi@789;jkl@012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc@123
+
+c1 = 'abc@123'
+c2 = 'abc@123;jkl@012'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = 'abc@123;def@456'
+c2 = 'ghi@789;jkl@012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc@123;def@456
+
+c1 = 'abc@123;def@456'
+c2 = 'def@456;jkl@012'
+r = at.remove(c1, c2)
+console.log(r)
+// => abc@123
+
+c1 = ''
+c2 = 'ghi@789'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
+c1 = ''
+c2 = 'ghi@789;jkl@012'
+r = at.remove(c1, c2)
+console.log(r)
+// => ''
+
 
 //node --experimental-modules --es-module-specifier-resolution=node g.mjs
