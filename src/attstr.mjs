@@ -82,6 +82,34 @@ function atItemsMergeS2(its) {
 }
 
 
+function atJoin(its) {
+
+    //check
+    if (!isearr(its)) {
+        return ''
+    }
+
+    //it0
+    let it0 = get(its, 0)
+
+    //mode
+    let table = trim(get(it0, 'table', ''))
+    let id = trim(get(it0, 'id', ''))
+    let mode = '1p'
+    if (isestr(table) && isestr(id)) {
+        mode = '2p'
+    }
+
+    if (mode === '1p') {
+        return atItemsMergeS1(its)
+    }
+    else if (mode === '2p') {
+        return atItemsMergeS2(its)
+    }
+    return ''
+}
+
+
 function atParseS1(composItems) {
 
     //check
@@ -316,7 +344,7 @@ function atRemove(composItems, removeItemOrId, opt = {}) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/attstr.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳attstr物件，提供parse、remove、add、combine等共4種處理函數
+ * @returns {Object} 回傳attstr物件，提供parse、join、remove、add共4種處理函數
  * @example
  *
  * let c
@@ -364,6 +392,39 @@ function atRemove(composItems, removeItemOrId, opt = {}) {
  * r = at.parse(c)
  * console.log(r)
  * // => []
+ *
+ * //join
+ * console.log('join')
+ *
+ * c = ['abc123']
+ * r = at.join(c)
+ * console.log(r)
+ * // => 'abc123'
+ *
+ * c = ['abc123', 'def456']
+ * r = at.join(c)
+ * console.log(r)
+ * // => 'abc123;def456'
+ *
+ * c = ['abc@123']
+ * r = at.join(c)
+ * console.log(r)
+ * // => 'abc@123'
+ *
+ * c = ['abc@123', 'def@456']
+ * r = at.join(c)
+ * console.log(r)
+ * // => 'abc@123;def@456'
+ *
+ * c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }]
+ * r = at.join(c)
+ * console.log(r)
+ * // => 'abc@123;def@456'
+ *
+ * c = []
+ * r = at.join(c)
+ * console.log(r)
+ * // => ''
  *
  * //add
  * console.log('add')
@@ -422,11 +483,11 @@ function atRemove(composItems, removeItemOrId, opt = {}) {
  * console.log(r)
  * // => abc@123;def@456;ghi@789
  *
- * c1 = 'abc@123;ghi789'
+ * c1 = 'abc@123;ghi@789'
  * c2 = 'abc@123;def@456'
  * r = at.add(c1, c2)
  * console.log(r)
- * // => abc@123;ghi789;def@456
+ * // => abc@123;ghi@789;def@456
  *
  * c1 = ''
  * c2 = 'abc@123'
@@ -555,6 +616,7 @@ function atRemove(composItems, removeItemOrId, opt = {}) {
 function attstr() {
     let at = {
         parse: atParse,
+        join: atJoin,
         remove: atRemove,
         add: atAdd,
     }

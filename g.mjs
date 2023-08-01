@@ -49,6 +49,39 @@ r = at.parse(c)
 console.log(r)
 // => []
 
+//join
+console.log('join')
+
+c = ['abc123']
+r = at.join(c)
+console.log(r)
+// => 'abc123'
+
+c = ['abc123', 'def456']
+r = at.join(c)
+console.log(r)
+// => 'abc123;def456'
+
+c = ['abc@123']
+r = at.join(c)
+console.log(r)
+// => 'abc@123'
+
+c = ['abc@123', 'def@456']
+r = at.join(c)
+console.log(r)
+// => 'abc@123;def@456'
+
+c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }]
+r = at.join(c)
+console.log(r)
+// => 'abc@123;def@456'
+
+c = []
+r = at.join(c)
+console.log(r)
+// => ''
+
 //add
 console.log('add')
 
@@ -106,11 +139,11 @@ r = at.add(c1, c2)
 console.log(r)
 // => abc@123;def@456;ghi@789
 
-c1 = 'abc@123;ghi789'
+c1 = 'abc@123;ghi@789'
 c2 = 'abc@123;def@456'
 r = at.add(c1, c2)
 console.log(r)
-// => abc@123;ghi789;def@456
+// => abc@123;ghi@789;def@456
 
 c1 = ''
 c2 = 'abc@123'

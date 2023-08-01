@@ -46,6 +46,42 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return 'abc123' when input at.join(['abc123'])`, function() {
+        let r = at.join(['abc123'])
+        let rr = 'abc123'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'abc123;def456' when input at.join(['abc123', 'def456'])`, function() {
+        let r = at.join(['abc123', 'def456'])
+        let rr = 'abc123;def456'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'abc@123' when input at.join(['abc@123'])`, function() {
+        let r = at.join(['abc@123'])
+        let rr = 'abc@123'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'abc@123;def@456' when input at.join(['abc@123', 'def@456'])`, function() {
+        let r = at.join(['abc@123', 'def@456'])
+        let rr = 'abc@123;def@456'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'abc@123;def@456' when input at.join([{ table: 'abc', id: '123' }, { table: 'def', id: '456' }])`, function() {
+        let r = at.join([{ table: 'abc', id: '123' }, { table: 'def', id: '456' }])
+        let rr = 'abc@123;def@456'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return '' when input at.join([])`, function() {
+        let r = at.join([])
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return 'abc123;def456' when input at.add('abc123', 'def456')`, function() {
         let r = at.add('abc123', 'def456')
         let rr = 'abc123;def456'
