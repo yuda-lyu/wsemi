@@ -294,7 +294,10 @@ import arrHas from './arrHas.mjs'
  * c = 'x1|abc@123|def@456,x2|ghi@789'
  * r = at2.parse(c)
  * console.log(r)
- * // => [ { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' } ]
+ * // => [
+ * //   { item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123','def@456'] },
+ * //   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
+ * // ]
  *
  */
 function attstr(opt = {}) {
@@ -478,6 +481,7 @@ function attstr(opt = {}) {
         let ids = []
         each(arrItems, (v) => {
             let s = sep(v, dlmSep)
+            // console.log(`size(s)`, size(s))
             let table = get(s, 0, '')
             table = trim(table)
             let id = get(s, 1, '')
@@ -488,18 +492,16 @@ function attstr(opt = {}) {
             else if (id === '') {
                 console.log(`atParseS2: invalid keyId[${keyId}] in composItems`, v, composItems)
             }
-            if (size(s) > 2) {
+            if (size(s) >= 3) {
                 //有2個以上id
                 s = drop(s)
                 id = s //改儲存為陣列
             }
-            else {
-                ids.push({
-                    item: v,
-                    [keyTable]: table,
-                    [keyId]: id,
-                })
-            }
+            ids.push({
+                item: v,
+                [keyTable]: table,
+                [keyId]: id,
+            })
         })
 
         return ids

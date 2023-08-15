@@ -268,9 +268,9 @@ describe(`attstr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [{ item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }] when input attstr({ dlmItem: ',', dlmSep: '|' }).parse('x1|abc@123|def@456,x2|ghi@789')`, function() {
+    it(`should return [{ item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123', 'def@456'] }, { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }] when input attstr({ dlmItem: ',', dlmSep: '|' }).parse('x1|abc@123|def@456,x2|ghi@789')`, function() {
         let r = attstr({ dlmItem: ',', dlmSep: '|' }).parse('x1|abc@123|def@456,x2|ghi@789')
-        let rr = [{ item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }]
+        let rr = [{ item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123', 'def@456'] }, { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }]
         assert.strict.deepStrictEqual(r, rr)
     })
 
