@@ -27,6 +27,8 @@ import arrHas from './arrHas.mjs'
  * let c2
  * let r
  *
+ * let at = attstr()
+ *
  * //parse
  * console.log('parse')
  *
@@ -286,6 +288,13 @@ import arrHas from './arrHas.mjs'
  * r = at.remove(c1, c2)
  * console.log(r)
  * // => ''
+ *
+ * let at2 = attstr({ dlmItem: ',', dlmSep: '|' })
+ *
+ * c = 'x1|abc@123|def@456,x2|ghi@789'
+ * r = at2.parse(c)
+ * console.log(r)
+ * // => [ { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' } ]
  *
  */
 function attstr(opt = {}) {
