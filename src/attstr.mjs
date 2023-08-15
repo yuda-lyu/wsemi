@@ -299,6 +299,16 @@ import arrHas from './arrHas.mjs'
  * //   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
  * // ]
  *
+ * let at3 = attstr({ dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
+ *
+ * c = 'x1|abc@123|def@456,x2|ghi@789'
+ * r = at3.parse(c)
+ * console.log(r)
+ * // => [
+ * //   { item: 'x1|abc@123|def@456', name: 'x1', emails: ['abc@123','def@456'] },
+ * //   { item: 'x2|ghi@789', name: 'x2', emails: 'ghi@789' }
+ * // ]
+ *
  */
 function attstr(opt = {}) {
     let dlmItem = ';'
