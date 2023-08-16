@@ -12,6 +12,7 @@ import isearr from './isearr.mjs'
 import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import arrHas from './arrHas.mjs'
+import haskey from './haskey.mjs'
 
 
 /**
@@ -432,22 +433,17 @@ function attstr(opt = {}) {
     }
 
 
-    function atJoin(its) {
+    function atJoin(its, opt = {}) {
 
         //check
         if (!isearr(its)) {
             return ''
         }
 
-        //it0
-        let it0 = get(its, 0)
-
         //mode
-        let table = trim(get(it0, keyTable, ''))
-        let id = trim(get(it0, keyId, ''))
-        let mode = '1p'
-        if (isestr(table) && isestr(id)) {
-            mode = '2p'
+        let mode = get(opt, 'mode')
+        if (mode !== '1p' && mode !== '2p') {
+            mode = 'auto'
         }
 
         if (mode === '1p') {
@@ -456,7 +452,21 @@ function attstr(opt = {}) {
         else if (mode === '2p') {
             return atItemsMergeS2(its)
         }
-        return ''
+
+        //it0
+        let it0 = get(its, 0)
+
+        //bti
+        let bti = haskey(it0, keyTable) && haskey(it0, keyId)
+        // console.log('bti', bti)
+
+        //mode='2p'
+        if (bti) {
+            return atItemsMergeS2(its)
+        }
+
+        //default
+        return atItemsMergeS1(its)
     }
 
 
@@ -531,7 +541,6 @@ function attstr(opt = {}) {
             mode = 'auto'
         }
 
-        //mode
         if (mode === '1p') {
             return atParseS1(composItems)
         }
@@ -539,12 +548,15 @@ function attstr(opt = {}) {
             return atParseS2(composItems)
         }
 
-        //indexOf
+        //bc
         let bc = composItems.indexOf(dlmSep) >= 0
 
+        //mode='2p'
         if (bc) {
             return atParseS2(composItems)
         }
+
+        //default
         return atParseS1(composItems)
     }
 
@@ -593,21 +605,23 @@ function attstr(opt = {}) {
             mode = 'auto'
         }
 
-        //mode
         if (mode === '1p') {
-            atAddS1(composItems1, composItems2)
+            return atAddS1(composItems1, composItems2)
         }
         else if (mode === '2p') {
             return atAddS2(composItems1, composItems2)
         }
 
-        //indexOf
+        //bc1, bc2
         let bc1 = composItems1.indexOf(dlmSep) >= 0
         let bc2 = composItems2.indexOf(dlmSep) >= 0
 
+        //mode='2p'
         if (bc1 || bc2) {
             return atAddS2(composItems1, composItems2)
         }
+
+        //default
         return atAddS1(composItems1, composItems2)
     }
 
@@ -676,7 +690,6 @@ function attstr(opt = {}) {
             mode = 'auto'
         }
 
-        //mode
         if (mode === '1p') {
             return atRemoveS1(composItems, removeItemOrId)
         }
@@ -684,13 +697,16 @@ function attstr(opt = {}) {
             return atRemoveS2(composItems, removeItemOrId)
         }
 
-        //indexOf
-        // let bc = composItems.indexOf(dlmSep) >= 0
+        //bt
+        // let bc = composItems.indexOf(dlmSep) >= 0 //bc可為空字串故不一定有dlmSep故不納入檢測
         let bt = removeItemOrId.indexOf(dlmSep) >= 0
 
-        if (bt) { //bc可為空字串故不一定有dlmSep
+        //mode='2p'
+        if (bt) {
             return atRemoveS2(composItems, removeItemOrId)
         }
+
+        //default
         return atRemoveS1(composItems, removeItemOrId)
     }
 

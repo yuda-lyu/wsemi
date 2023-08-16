@@ -8,7 +8,7 @@ let c1
 let c2
 let r
 
-// let at = attstr()
+let at = attstr()
 
 // //parse
 // console.log('parse')
@@ -51,38 +51,38 @@ let r
 // console.log(r)
 // // => []
 
-// //join
-// console.log('join')
+//join
+console.log('join')
 
-// c = ['abc123']
-// r = at.join(c)
-// console.log(r)
-// // => 'abc123'
+c = ['abc123']
+r = at.join(c)
+console.log(r)
+// => 'abc123'
 
-// c = ['abc123', 'def456']
-// r = at.join(c)
-// console.log(r)
-// // => 'abc123;def456'
+c = ['abc123', 'def456']
+r = at.join(c)
+console.log(r)
+// => 'abc123;def456'
 
-// c = ['abc@123']
-// r = at.join(c)
-// console.log(r)
-// // => 'abc@123'
+c = ['abc@123']
+r = at.join(c)
+console.log(r)
+// => 'abc@123'
 
-// c = ['abc@123', 'def@456']
-// r = at.join(c)
-// console.log(r)
-// // => 'abc@123;def@456'
+c = ['abc@123', 'def@456']
+r = at.join(c)
+console.log(r)
+// => 'abc@123;def@456'
 
-// c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }]
-// r = at.join(c)
-// console.log(r)
-// // => 'abc@123;def@456'
+c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }]
+r = at.join(c)
+console.log(r)
+// => 'abc@123;def@456'
 
-// c = []
-// r = at.join(c)
-// console.log(r)
-// // => ''
+c = []
+r = at.join(c)
+console.log(r)
+// => ''
 
 // //add
 // console.log('add')
@@ -270,25 +270,25 @@ let r
 // console.log(r)
 // // => ''
 
-let at2 = attstr({ dlmItem: ',', dlmSep: '|' })
+// let at2 = attstr({ dlmItem: ',', dlmSep: '|' })
 
-c = 'x1|abc@123|def@456,x2|ghi@789'
-r = at2.parse(c)
-console.log(r)
-// => [
-//   { item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123','def@456'] },
-//   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
-// ]
+// c = 'x1|abc@123|def@456,x2|ghi@789'
+// r = at2.parse(c)
+// console.log(r)
+// // => [
+// //   { item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123','def@456'] },
+// //   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
+// // ]
 
-let at3 = attstr({ dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
+// let at3 = attstr({ dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
 
-c = 'x1|abc@123|def@456,x2|ghi@789'
-r = at3.parse(c)
-console.log(r)
-// => [
-//   { item: 'x1|abc@123|def@456', name: 'x1', emails: ['abc@123','def@456'] },
-//   { item: 'x2|ghi@789', name: 'x2', emails: 'ghi@789' }
-// ]
+// c = 'x1|abc@123|def@456,x2|ghi@789'
+// r = at3.parse(c)
+// console.log(r)
+// // => [
+// //   { item: 'x1|abc@123|def@456', name: 'x1', emails: ['abc@123','def@456'] },
+// //   { item: 'x2|ghi@789', name: 'x2', emails: 'ghi@789' }
+// // ]
 
 
 //node --experimental-modules --es-module-specifier-resolution=node g.mjs
