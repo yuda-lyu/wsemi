@@ -1,12 +1,13 @@
-import trim from 'lodash/trim'
+// import trim from 'lodash/trim'
 import uniq from 'lodash/uniq'
 import get from 'lodash/get'
 import size from 'lodash/size'
 import each from 'lodash/each'
 import filter from 'lodash/filter'
 import join from 'lodash/join'
+import split from 'lodash/split'
 import drop from 'lodash/drop'
-import sep from './sep.mjs'
+// import sep from './sep.mjs'
 import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import isstr from './isstr.mjs'
@@ -354,7 +355,7 @@ function attstr(opt = {}) {
         }
 
         //arrItems
-        let arrItems = sep(composItems, dlmItem)
+        let arrItems = split(composItems, dlmItem) //須用split否則用sep會無法處理空資料問題
 
         //uniq
         arrItems = uniq(arrItems)
@@ -500,12 +501,12 @@ function attstr(opt = {}) {
         //ids
         let ids = []
         each(arrItems, (v) => {
-            let s = sep(v, dlmSep)
+            let s = split(v, dlmSep) //須用split否則用sep會無法處理空資料問題
             // console.log(`size(s)`, size(s))
             let table = get(s, 0, '')
-            table = trim(table)
+            // table = trim(table) //不使用trim避免空白被刪除
             let id = get(s, 1, '')
-            id = trim(id)
+            // id = trim(id) //不使用trim避免空白被刪除
             if (table === '') {
                 console.log(`atParseS2: invalid keyTable[${keyTable}] in composItems`, v, composItems)
             }
