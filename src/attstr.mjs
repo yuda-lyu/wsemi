@@ -397,9 +397,9 @@ function attstr(opt = {}) {
         let itsTemp = []
         each(its, (v) => {
             let table = get(v, keyTable, '')
-            console.log('table', table)
+            // console.log('table', table)
             let id = get(v, keyId, '')
-            console.log('id', id)
+            // console.log('id', id)
             if (!isestr(table)) {
                 console.log(`atItemsMergeS2: invalid keyTable[${keyTable}] in its`, v, its)
             }
