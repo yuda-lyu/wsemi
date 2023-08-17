@@ -8,6 +8,7 @@ import join from 'lodash/join'
 import split from 'lodash/split'
 import drop from 'lodash/drop'
 // import sep from './sep.mjs'
+import isbol from './isbol.mjs'
 import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import isstr from './isstr.mjs'
@@ -29,7 +30,7 @@ import haskey from './haskey.mjs'
  * let c2
  * let r
  *
- * let at = attstr()
+ * let at = attstr({ uniqItems: true })
  *
  * //parse
  * console.log('parse')
@@ -291,7 +292,7 @@ import haskey from './haskey.mjs'
  * console.log(r)
  * // => ''
  *
- * let at2 = attstr({ dlmItem: ',', dlmSep: '|' })
+ * let at2 = attstr({ uniqItems: true, dlmItem: ',', dlmSep: '|' })
  *
  * c = 'x1|abc@123|def@456,x2|ghi@789'
  * r = at2.parse(c)
@@ -301,7 +302,7 @@ import haskey from './haskey.mjs'
  * //   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
  * // ]
  *
- * let at3 = attstr({ dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
+ * let at3 = attstr({ uniqItems: true, dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
  *
  * c = 'x1|abc@123|def@456,x2|ghi@789'
  * r = at3.parse(c)
@@ -311,6 +312,31 @@ import haskey from './haskey.mjs'
  * //   { item: 'x2|ghi@789', name: 'x2', emails: 'ghi@789' }
  * // ]
  *
+ * let at4 = attstr({ uniqItems: false })
+ *
+ * c = ['abc@123', 'abc@123', 'def@456']
+ * r = at4.join(c)
+ * console.log(r)
+ * // => 'abc@123;abc@123;def@456'
+ *
+ * c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }, { table: 'def', id: '456' }]
+ * r = at4.join(c)
+ * console.log(r)
+ * // => 'abc@123;def@456;def@456'
+ *
+ *
+ * c1 = 'abc123;ghi789'
+ * c2 = 'abc123;def456'
+ * r = at4.add(c1, c2)
+ * console.log(r)
+ * // => abc123;ghi789;abc123;def456
+ *
+ * c1 = 'abc@123;ghi@789'
+ * c2 = 'abc@123;def@456'
+ * r = at4.add(c1, c2)
+ * console.log(r)
+ * // => abc@123;ghi@789;abc@123;def@456
+ *
  */
 function attstr(opt = {}) {
     let dlmItem = ';'
@@ -318,6 +344,12 @@ function attstr(opt = {}) {
     let keyTable = 'table'
     let keyId = 'id'
 
+
+    //uniqItems
+    let uniqItems = get(opt, 'uniqItems')
+    if (!isbol(uniqItems)) {
+        uniqItems = false
+    }
 
     //dlmItem
     let _dlmItem = get(opt, 'dlmItem', '')
@@ -358,7 +390,9 @@ function attstr(opt = {}) {
         let arrItems = split(composItems, dlmItem) //須用split否則用sep會無法處理空資料問題
 
         //uniq
-        arrItems = uniq(arrItems)
+        if (uniqItems) {
+            arrItems = uniq(arrItems)
+        }
 
         return arrItems
     }
@@ -372,7 +406,9 @@ function attstr(opt = {}) {
         }
 
         //uniq
-        arrItems = uniq(arrItems)
+        if (uniqItems) {
+            arrItems = uniq(arrItems)
+        }
 
         //str
         let str = join(arrItems, dlmItem)
@@ -387,7 +423,9 @@ function attstr(opt = {}) {
         its = filter(its, isestr)
 
         //uniq
-        its = uniq(its)
+        if (uniqItems) {
+            its = uniq(its)
+        }
 
         return joinItems(its)
     }
@@ -403,20 +441,21 @@ function attstr(opt = {}) {
             let id = get(v, keyId, '')
             // console.log('id', id)
             if (!isestr(table)) {
-                console.log(`atItemsMergeS2: invalid keyTable[${keyTable}] in its`, v, its)
+                // console.log(`atItemsMergeS2: invalid keyTable[${keyTable}] in its`, v, its)
             }
             if (isstr(id)) {
                 if (id === '') {
-                    console.log(`atItemsMergeS2: invalid keyId[${keyId}] in its`, v, its)
+                    // console.log(`atItemsMergeS2: invalid keyId[${keyId}] in its`, v, its)
                 }
             }
             else if (isarr(id)) {
                 if (size(id) === 0) {
-                    console.log(`atItemsMergeS2: invalid keyId[${keyId}] in its`, v, its)
+                    // console.log(`atItemsMergeS2: invalid keyId[${keyId}] in its`, v, its)
                 }
             }
             else {
-                console.log(`atItemsMergeS2: keyId[${keyId}] is not a string or an array in its`, v, its)
+                // console.log(`atItemsMergeS2: keyId[${keyId}] is not a string or an array in its`, v, its)
+                id = ''
             }
             if (isstr(id)) {
                 itsTemp.push(`${table}${dlmSep}${id}`)
@@ -508,10 +547,10 @@ function attstr(opt = {}) {
             let id = get(s, 1, '')
             // id = trim(id) //不使用trim避免空白被刪除
             if (table === '') {
-                console.log(`atParseS2: invalid keyTable[${keyTable}] in composItems`, v, composItems)
+                // console.log(`atParseS2: invalid keyTable[${keyTable}] in composItems`, v, composItems)
             }
             else if (id === '') {
-                console.log(`atParseS2: invalid keyId[${keyId}] in composItems`, v, composItems)
+                // console.log(`atParseS2: invalid keyId[${keyId}] in composItems`, v, composItems)
             }
             if (size(s) >= 3) {
                 //有2個以上id
