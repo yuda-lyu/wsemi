@@ -14,7 +14,12 @@ function main() {
     let ltfs = getFiles(fd)
 
     //pull
-    _.pull(ltfs, '_class.mjs', '_jsonType.mjs', 'index.mjs')
+    _.pull(ltfs, 'index.mjs')
+
+    //filter
+    ltfs = _.filter(ltfs, (v) => {
+        return v.substring(0, 1) !== '_'
+    })
 
     //get names
     let ns = _.map(ltfs, function(v) {

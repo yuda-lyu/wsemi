@@ -83,13 +83,17 @@ To view some examples for more understanding, visit examples:
 
 > **html2strDyn[dynamic import]:** [ex-html2strDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2strDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2strDyn.html)]
 
+> **execPyodide:** [ex-execPyodide.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodide.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodide.html)]
+
+> **execPyodideDyn[dynamic import]:** [ex-execPyodideDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodideDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodideDyn.html)]
+
 > **ocr:** [ex-ocr.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocr.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocr.html)]
 
 > **ocrDyn[dynamic import]:** [ex-ocrDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocrDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocrDyn.html)]
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tesseract.js`, `htmlparser` and `tippy.js`.
+> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `pyodide`, `tesseract.js`, `htmlparser` and `tippy.js`.
 ```alias
 npm i wsemi
 ```
@@ -180,6 +184,12 @@ or
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
 ```
 
+[Optional] Add script for `pyodide`. It does not support IE11.
+> **Note:** Include script when using `execPyodide` function, and don't include script when using `execPyodideDyn` function.
+```alias
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+```
+
 [Optional] Add script for `tesseract.js`. It does not support IE11.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
@@ -188,5 +198,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.27/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.28/dist/wsemi.umd.js"></script>
 ```

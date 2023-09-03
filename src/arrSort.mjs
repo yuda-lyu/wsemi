@@ -410,7 +410,7 @@ function arrSort(vall, opt = {}) {
 
         //getVirArr
         let vs = getVirArr(vall, type, opt)
-        console.log('num|str: getVirArr vs', vs)
+        // console.log('num|str: getVirArr vs', vs)
 
         //sortArr
         rs = sortArr(vs, returnIndex)

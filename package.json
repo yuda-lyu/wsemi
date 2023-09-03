@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.27",
+  "version": "1.7.28",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "crypto-js": "^4.1.1",
@@ -11,6 +11,7 @@
     "fuse.js": "^6.6.2",
     "htmlparser": "^1.7.7",
     "lodash": "^4.17.21",
+    "pyodide": "^0.23.4",
     "seamless-scroll-polyfill": "^2.3.4",
     "tesseract.js": "^4.1.0",
     "tippy.js": "^6.3.7",

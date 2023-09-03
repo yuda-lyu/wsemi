@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for execPyodideDyn</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.28/dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+
+</head>
+<body>
+
+    <div style="margin-bottom:10px; font-size:1.2rem;">Python scipy.interpolate.griddata</div>
+
+    <div style="margin-bottom:10px;">* Does not support IE11</div>
+
+    <div style="margin:10px; display:flex; align-items:center;">
+
+        <div style="width:100%;">
+            <div>psSrc</div>
+            <textarea id="dSrc" style="width:100%; height:200px;" oninput="rnpy()"></textarea>
+        </div>
+
+        <div style="padding-left:10px;"></div>
+            
+        <div style="width:100%;">
+            <div>psTar</div>
+            <textarea id="dTar" style="width:100%; height:200px;" oninput="rnpy()"></textarea>
+        </div>
+            
+    </div>
+
+    <div style="margin:10px; display:flex; align-items:center;">
+
+        <button style="display:block; width:150px; height:30px;" onclick="rnpy()">Run griddata</button>
+        
+        <div style="padding-left:10px;"></div>
+
+        <div id="msg"></div>
+
+    </div>
+
+    <div style="margin:10px;">
+
+        <div>result</div>
+        <textarea id="res" style="width:100%; height:200px;"></textarea>
+
+    </div>
+
+    <script>
+
+        let psSrc = [
+            [-0.1, -0.1, -0.1, 0],
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [0, 0, 1, 0],
+            [1, 0, 1, 0],
+            [1, 1, 1, 10],
+        ]
+
+        let psTar = [
+            0.1, 0.1, 0.95
+        ]
+        document.querySelector('#dSrc').value = JSON.stringify(psSrc)
+        document.querySelector('#dTar').value = JSON.stringify(psTar)
+
+    </script>
+
+    <script>
+
+        async function core(){
+            let psLocs = []
+            let psValus = []
+            for (let k = 0; k < psSrc.length; k++) {
+                let v = psSrc[k]
+                psLocs.push([v[0], v[1], v[2]])
+                psValus.push(v[3])
+            }
+            let pkgs = [
+                'scipy',
+            ]
+            let imps = [
+                'from scipy.interpolate import griddata',
+            ]
+            let inps = [
+                psLocs,
+                psValus,
+                psTar,
+            ]
+            let content = `
+ret = griddata(rIn1, rIn2, rIn3, method='linear')
+            `
+            let rs = await wsemi.execPyodideDyn({
+                pkgs,
+                imps,
+                inps,
+                content,
+            })
+            // console.log('rs', rs)
+
+            //convert Float64Array to Number
+            let _rs = []
+            for(let k=0;k<rs.length;k++){
+                let v=rs[k]
+                _rs.push(v)
+            }
+            rs = _rs
+            console.log('rs', rs)
+            
+            document.querySelector('#res').value = JSON.stringify(rs)
+        }
+
+        function rnpy(){
+            document.querySelector('#msg').innerHTML = 'running...'
+            core()
+                .catch((err)=>{
+                    console.log(err)
+                })
+                .finally(()=>{
+                    document.querySelector('#msg').innerHTML = ''
+                })
+        }
+
+    </script>
+
+</body>
+</html>

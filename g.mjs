@@ -1,319 +1,62 @@
-// import fs from 'fs'
-import genPm from './src/genPm.mjs'
-import attstr from './src/attstr.mjs'
+import execPyodide from './src/execPyodide.mjs'
+// import w from './dist/wsemi.umd.js'
+// let execPyodide = w.execPyodide
 
 
-let c
-let c1
-let c2
-let r
+async function test() {
 
-let at = attstr({ uniqItems: true })
+    let pkgs = [
+        'scipy',
+    ]
+    let imps = [
+        'from scipy.interpolate import griddata',
+    ]
+    let psSrc = [
+        [-0.1, -0.1, -0.1, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+        [0, 0, 1, 0],
+        [1, 0, 1, 0],
+        [1, 1, 1, 10],
+    ]
+    let psLocs = []
+    let psValus = []
+    for (let k = 0; k < psSrc.length; k++) {
+        let v = psSrc[k]
+        psLocs.push([v[0], v[1], v[2]])
+        psValus.push(v[3])
+    }
+    let psTar = [
+        0.1, 0.1, 0.95
+    ]
+    let inps = [
+        psLocs,
+        psValus,
+        psTar,
+    ]
+    let content = `
+ret = griddata(rIn1, rIn2, rIn3, method='linear')
+    `
+    let rs = await execPyodide({
+        pkgs,
+        imps,
+        inps,
+        content,
+    })
+    console.log('rs', rs)
 
-//parse
-console.log('parse')
+}
 
-c = 'abc123'
-r = at.parse(c)
-console.log(r)
-// => [ 'abc123' ]
-
-c = 'abc123;abc123'
-r = at.parse(c)
-console.log(r)
-// => [ 'abc123' ]
-
-c = 'abc123;def456'
-r = at.parse(c)
-console.log(r)
-// => [ 'abc123', 'def456' ]
-
-c = 'abc@123'
-r = at.parse(c)
-console.log(r)
-// => [ { item: 'abc@123', table: 'abc', id: '123' } ]
-
-c = 'abc@123;abc@123'
-r = at.parse(c)
-console.log(r)
-// => [ { item: 'abc@123', table: 'abc', id: '123' } ]
-
-c = 'abc@123;def@456'
-r = at.parse(c)
-console.log(r)
-// => [
-//   { item: 'abc@123', table: 'abc', id: '123' },
-//   { item: 'def@456', table: 'def', id: '456' }
-// ]
-
-c = ''
-r = at.parse(c)
-console.log(r)
-// => []
-
-//join
-console.log('join')
-
-c = ['abc123']
-r = at.join(c)
-console.log(r)
-// => 'abc123'
-
-c = ['abc123', 'def456']
-r = at.join(c)
-console.log(r)
-// => 'abc123;def456'
-
-c = ['abc@123']
-r = at.join(c)
-console.log(r)
-// => 'abc@123'
-
-c = ['abc@123', 'def@456']
-r = at.join(c)
-console.log(r)
-// => 'abc@123;def@456'
-
-c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }]
-r = at.join(c)
-console.log(r)
-// => 'abc@123;def@456'
-
-c = []
-r = at.join(c)
-console.log(r)
-// => ''
-
-//add
-console.log('add')
-
-c1 = 'abc123'
-c2 = 'def456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123;def456
-
-c1 = 'abc123'
-c2 = 'def456;ghi789'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123;def456;ghi789
-
-c1 = 'abc123'
-c2 = 'abc123'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123
-
-c1 = 'abc123'
-c2 = 'abc123;def456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123;def456
-
-c1 = 'abc123;ghi789'
-c2 = 'abc123;def456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123;ghi789;def456
-
-c1 = ''
-c2 = 'abc123'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123
-
-c1 = ''
-c2 = 'abc123;def456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc123;def456
-
-c1 = 'abc@123'
-c2 = 'def@456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc@123;def@456
-
-c1 = 'abc@123'
-c2 = 'def@456;ghi@789'
-r = at.add(c1, c2)
-console.log(r)
-// => abc@123;def@456;ghi@789
-
-c1 = 'abc@123;ghi@789'
-c2 = 'abc@123;def@456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc@123;ghi@789;def@456
-
-c1 = ''
-c2 = 'abc@123'
-r = at.add(c1, c2)
-console.log(r)
-// => abc@123
-
-c1 = ''
-c2 = 'abc@123;def@456'
-r = at.add(c1, c2)
-console.log(r)
-// => abc@123;def@456
-
-//remove
-console.log('remove')
-
-c1 = 'abc123'
-c2 = 'abc123'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = 'abc123;def456'
-c2 = 'abc123'
-r = at.remove(c1, c2)
-console.log(r)
-// => def456
-
-c1 = 'abc123'
-c2 = 'def456'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc123
-
-c1 = 'abc123'
-c2 = 'ghi789;jkl012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc123
-
-c1 = 'abc123'
-c2 = 'abc123;jkl012'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = 'abc123;def456'
-c2 = 'ghi789;jkl012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc123;def456
-
-c1 = 'abc123;def456'
-c2 = 'def456;jkl012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc123
-
-c1 = ''
-c2 = 'ghi789'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = ''
-c2 = 'ghi789;jkl012'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = 'abc@123'
-c2 = 'abc@123'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = 'abc@123;def@456'
-c2 = 'abc@123'
-r = at.remove(c1, c2)
-console.log(r)
-// => def@456
-
-c1 = 'abc@123'
-c2 = 'def@456'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc@123
-
-c1 = 'abc@123'
-c2 = 'ghi@789;jkl@012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc@123
-
-c1 = 'abc@123'
-c2 = 'abc@123;jkl@012'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = 'abc@123;def@456'
-c2 = 'ghi@789;jkl@012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc@123;def@456
-
-c1 = 'abc@123;def@456'
-c2 = 'def@456;jkl@012'
-r = at.remove(c1, c2)
-console.log(r)
-// => abc@123
-
-c1 = ''
-c2 = 'ghi@789'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-c1 = ''
-c2 = 'ghi@789;jkl@012'
-r = at.remove(c1, c2)
-console.log(r)
-// => ''
-
-let at2 = attstr({ uniqItems: true, dlmItem: ',', dlmSep: '|' })
-
-c = 'x1|abc@123|def@456,x2|ghi@789'
-r = at2.parse(c)
-console.log(r)
-// => [
-//   { item: 'x1|abc@123|def@456', table: 'x1', id: ['abc@123','def@456'] },
-//   { item: 'x2|ghi@789', table: 'x2', id: 'ghi@789' }
-// ]
-
-let at3 = attstr({ uniqItems: true, dlmItem: ',', dlmSep: '|', keyTable: 'name', keyId: 'emails' })
-
-c = 'x1|abc@123|def@456,x2|ghi@789'
-r = at3.parse(c)
-console.log(r)
-// => [
-//   { item: 'x1|abc@123|def@456', name: 'x1', emails: ['abc@123','def@456'] },
-//   { item: 'x2|ghi@789', name: 'x2', emails: 'ghi@789' }
-// ]
-
-let at4 = attstr({ uniqItems: false })
-
-c = ['abc@123', 'abc@123', 'def@456']
-r = at4.join(c)
-console.log(r)
-// => 'abc@123;abc@123;def@456'
-
-c = [{ table: 'abc', id: '123' }, { table: 'def', id: '456' }, { table: 'def', id: '456' }]
-r = at4.join(c)
-console.log(r)
-// => 'abc@123;def@456;def@456'
-
-
-c1 = 'abc123;ghi789'
-c2 = 'abc123;def456'
-r = at4.add(c1, c2)
-console.log(r)
-// => abc123;ghi789;abc123;def456
-
-c1 = 'abc@123;ghi@789'
-c2 = 'abc@123;def@456'
-r = at4.add(c1, c2)
-console.log(r)
-// => abc@123;ghi@789;abc@123;def@456
-
+test()
+    .catch((err) => {
+        console.log(err)
+    })
+// Loading micropip, packaging
+// Loaded packaging, micropip
+// Loading scipy, numpy, clapack
+// Loaded clapack, numpy, scipy
+// scipy already loaded from default channel
+// No new packages to load
+// rs Float64Array(1) [ 0.49999999999999933 ]
 
 //node --experimental-modules --es-module-specifier-resolution=node g.mjs

@@ -26,6 +26,7 @@ rollupFiles({
         //'tippy.js': 'tippyjs', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來, 不能使用小數點故內部引用需為tippyjs
         'tesseract.js': 'tesseractjs', //不能使用小數點故內部引用需為tesseractjs
         'htmlparser': 'htmlparser',
+        'pyodide': 'pyodide',
     },
     external: [
         'path',
@@ -41,5 +42,6 @@ rollupFiles({
         //'tippy.js',
         'tesseract.js',
         'htmlparser',
+        'pyodide',
     ],
 })
