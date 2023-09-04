@@ -130,4 +130,10 @@ describe(`getTimeRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '無起始時間' when input NaN`, function() {
+        let r = getTimeRange(NaN)
+        let rr = '無起始時間'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

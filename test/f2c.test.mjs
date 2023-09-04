@@ -48,4 +48,9 @@ describe(`f2c`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = f2c(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

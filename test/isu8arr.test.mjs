@@ -236,4 +236,9 @@ describe(`isu8arr`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isu8arr(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

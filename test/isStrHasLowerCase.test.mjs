@@ -189,4 +189,9 @@ describe(`isStrHasLowerCase`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isStrHasLowerCase(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

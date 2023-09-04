@@ -119,4 +119,9 @@ describe(`isday`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isday(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

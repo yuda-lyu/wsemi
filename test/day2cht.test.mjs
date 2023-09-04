@@ -69,4 +69,9 @@ describe(`day2cht`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = day2cht(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

@@ -301,4 +301,9 @@ describe(`timeTZ2min`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = timeTZ2min(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

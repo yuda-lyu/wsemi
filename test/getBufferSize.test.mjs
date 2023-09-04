@@ -40,4 +40,10 @@ describe(`getBufferSize`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return 0 when input NaN`, function() {
+        let r = getBufferSize(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

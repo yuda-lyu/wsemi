@@ -63,6 +63,12 @@ describe(`ltdtpick`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = ltdtpick(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], ''`, function() {
         let r = ltdtpick([], '')
         let rr = []

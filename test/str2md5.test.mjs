@@ -76,4 +76,10 @@ describe(`str2md5`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '' when input NaN`, function() {
+        let r = str2md5(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

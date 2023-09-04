@@ -124,4 +124,14 @@ describe(`isUserPW`, function() {
             })
     })
 
+    it(`should return '密碼非字串' when input NaN`, function() {
+        isUserPW(NaN)
+            .then(function() {
+                assert.strict.deepStrictEqual(1, 1)
+            })
+            .catch(function(rr) {
+                assert.strict.deepStrictEqual(rr, '密碼非字串')
+            })
+    })
+
 })

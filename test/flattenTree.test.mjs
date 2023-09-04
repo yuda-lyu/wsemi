@@ -96,4 +96,10 @@ describe(`flattenTree`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = flattenTree(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

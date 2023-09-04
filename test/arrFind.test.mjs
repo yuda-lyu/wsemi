@@ -118,6 +118,12 @@ describe(`arrFind`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrFind(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], ''`, function() {
         let r = arrFind([], '')
         let rr = []

@@ -165,4 +165,10 @@ n3|0.158739038|0.085078711|0.844664253|0.21630142|0.912931341|0.735138313
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '' when input NaN`, function() {
+        let r = strDiff(NaN)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

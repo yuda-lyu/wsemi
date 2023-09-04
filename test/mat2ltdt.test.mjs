@@ -72,4 +72,10 @@ describe(`mat2ltdt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return [] when input NaN`, function() {
+        let r = mat2ltdt(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

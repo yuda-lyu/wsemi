@@ -179,4 +179,9 @@ describe(`cscd`, function() {
         assert.strict.deepStrictEqual(r, null)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = cscd(NaN)
+        assert.strict.deepStrictEqual(r, null)
+    })
+
 })

@@ -13,7 +13,7 @@ import isstr from './isstr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSS.test.mjs Github}
  * @memberOf wsemi
- * @param {Object|Array|String} obj 輸入資料
+ * @param {String|Object|Array} inp 輸入資料
  * @returns {Object|Array|String} 輸出資料
  * @example
  *
@@ -24,7 +24,7 @@ import isstr from './isstr.mjs'
  * // => `<img src>`
  *
  */
-function clearXSS(obj) {
+function clearXSS(inp) {
 
     //ftxss
     function ftxss(c) {
@@ -54,7 +54,7 @@ function clearXSS(obj) {
     }
 
     //遍例所有屬性filterXSS
-    let t = scxss(cloneDeep(obj))
+    let t = scxss(cloneDeep(inp))
 
     return t
 }

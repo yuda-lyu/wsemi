@@ -148,6 +148,12 @@ describe(`arrProduct`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = arrProduct(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return null when input [], ''`, function() {
         let r = arrProduct([], '')
         let rr = null

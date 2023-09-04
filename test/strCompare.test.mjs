@@ -76,4 +76,10 @@ describe(`strCompare`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '' when input NaN`, function() {
+        let r = strCompare(NaN)
+        let rr = 0
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

@@ -58,4 +58,10 @@ describe(`u8arr2blob`, function() {
     //     assert.strict.deepStrictEqual(r, rr)
     // })
 
+    // it(`should return '' when input NaN`, function() {
+    //     let r = u8arr2blob(NaN)
+    //     let rr = new Blob()
+    //     assert.strict.deepStrictEqual(r, rr)
+    // })
+
 })

@@ -226,4 +226,10 @@ describe(`arrReduce`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrReduce(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

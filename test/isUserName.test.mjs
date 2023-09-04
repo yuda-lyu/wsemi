@@ -64,4 +64,14 @@ describe(`isUserName`, function() {
             })
     })
 
+    it(`should return '請填入姓名' when input NaN`, function() {
+        isUserName(NaN)
+            .then(function() {
+                assert.strict.deepStrictEqual(1, 1)
+            })
+            .catch(function(rr) {
+                assert.strict.deepStrictEqual(rr, '請填入姓名')
+            })
+    })
+
 })

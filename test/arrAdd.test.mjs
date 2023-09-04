@@ -148,6 +148,12 @@ describe(`arrAdd`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrAdd(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], ''`, function() {
         let r = arrAdd([], '')
         let rr = []

@@ -100,4 +100,9 @@ describe(`haskey`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = haskey(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

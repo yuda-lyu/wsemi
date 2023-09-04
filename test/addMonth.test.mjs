@@ -89,4 +89,9 @@ describe(`addMonth`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = addMonth(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

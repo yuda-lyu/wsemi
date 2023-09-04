@@ -3524,4 +3524,9 @@ describe(`istimems`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = istimems(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

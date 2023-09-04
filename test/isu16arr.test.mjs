@@ -242,4 +242,9 @@ describe(`isu16arr`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isu16arr(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

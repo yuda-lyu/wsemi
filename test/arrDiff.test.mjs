@@ -125,4 +125,10 @@ describe(`arrDiff`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '' when input NaN`, function() {
+        let r = arrDiff(NaN)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

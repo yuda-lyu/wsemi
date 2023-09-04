@@ -57,4 +57,10 @@ describe(`obj2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = obj2u8arr(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

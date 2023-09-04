@@ -58,6 +58,12 @@ describe(`bufRead`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return ${j} when input NaN, ${offset}, ${isBE}, ${mLen}, ${nBytes}`, function() {
+        let r = bufRead(NaN, offset, isBE, mLen, nBytes)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return ${j} when input ${b}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufRead(b, null, isBE, mLen, nBytes)
         let rr = null

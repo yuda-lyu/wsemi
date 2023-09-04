@@ -132,4 +132,10 @@ describe(`matat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return [] when input NaN`, function() {
+        let r = matat(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

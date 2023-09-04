@@ -246,4 +246,9 @@ describe(`isblob`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isblob(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

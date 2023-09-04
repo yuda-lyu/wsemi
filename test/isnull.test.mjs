@@ -154,4 +154,9 @@ describe(`isnull`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isnull(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

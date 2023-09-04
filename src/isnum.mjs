@@ -1,5 +1,6 @@
 import isestr from './isestr.mjs'
 import isnbr from './isnbr.mjs'
+import isnan from './isnan.mjs'
 
 
 /**
@@ -27,9 +28,13 @@ function isnum(v) {
     if (isestr(v)) {
         b = !isNaN(Number(v))
     }
-    else if (isnbr(v)) {
-        // b = true
-        b = !isNaN(v)
+    else if (isnbr(v)) { //注意NaN為Number, 故isnbr回傳true
+        if (isnan(v)) {
+            return false //此處判定為有效數字, 故NaN須剔除
+        }
+        else {
+            b = true
+        }
     }
 
     return b

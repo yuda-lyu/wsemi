@@ -62,6 +62,12 @@ describe(`ltdtmapping`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = ltdtmapping(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return false when input [], ''`, function() {
         let r = ltdtmapping([], '')
         let rr = []

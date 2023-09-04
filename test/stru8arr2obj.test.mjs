@@ -59,4 +59,10 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return ${cempty} when input NaN`, function() {
+        let r = stru8arr2obj(NaN)
+        let rr = empty
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

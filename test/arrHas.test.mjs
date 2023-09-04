@@ -130,6 +130,12 @@ describe(`arrHas`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = arrHas(NaN)
+        let rr = false
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return false when input [], ''`, function() {
         let r = arrHas([], '')
         let rr = false

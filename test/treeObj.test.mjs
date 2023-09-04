@@ -74,7 +74,12 @@ describe(`treeObj`, function() {
 
     it(`should return undefined when input undefined`, function() {
         let r = treeObj(undefined)
-        let rr
+        assert.strict.deepStrictEqual(r, undefined)
+    })
+
+    it(`should return undefined when input NaN`, function() {
+        let r = treeObj(NaN)
+        let rr = NaN
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -104,4 +104,14 @@ describe(`isUserIdentify`, function() {
             })
     })
 
+    it(`should return '身份證字號非有效字串' when input NaN`, function() {
+        isUserIdentify(NaN)
+            .then(function() {
+                assert.strict.deepStrictEqual(1, 1)
+            })
+            .catch(function(rr) {
+                assert.strict.deepStrictEqual(rr, '身份證字號非有效字串')
+            })
+    })
+
 })

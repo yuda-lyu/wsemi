@@ -44,4 +44,9 @@ describe(`cdbl`, function() {
         assert.strict.deepStrictEqual(r, 0)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = cdbl(NaN)
+        assert.strict.deepStrictEqual(r, 0)
+    })
+
 })

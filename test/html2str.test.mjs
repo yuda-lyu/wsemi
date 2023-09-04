@@ -95,4 +95,9 @@ describe(`html2str`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = html2str(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

@@ -3,6 +3,7 @@ import isnull from './isnull.mjs'
 import isobj0 from './isobj0.mjs'
 import isstr0 from './isstr0.mjs'
 import isarr0 from './isarr0.mjs'
+import isnan from './isnan.mjs'
 
 
 /**
@@ -38,6 +39,9 @@ import isarr0 from './isarr0.mjs'
  * console.log(iser(undefined))
  * // => true
  *
+ * console.log(iser(NaN))
+ * // => true
+ *
  */
 function iser(v) {
 
@@ -54,6 +58,9 @@ function iser(v) {
         return true
     }
     if (isarr0(v)) {
+        return true
+    }
+    if (isnan(v)) {
         return true
     }
     return false

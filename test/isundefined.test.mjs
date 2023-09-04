@@ -230,4 +230,9 @@ describe(`isundefined`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
+    it(`should return true when input NaN`, function() {
+        let r = isundefined(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

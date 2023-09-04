@@ -178,4 +178,9 @@ describe(`cosd`, function() {
         assert.strict.deepStrictEqual(r, null)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = cosd(NaN)
+        assert.strict.deepStrictEqual(r, null)
+    })
+
 })

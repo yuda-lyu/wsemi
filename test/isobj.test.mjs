@@ -154,4 +154,9 @@ describe(`isobj`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isobj(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

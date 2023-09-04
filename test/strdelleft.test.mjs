@@ -88,5 +88,10 @@ describe(`strdelleft`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return '' when input NaN`, function() {
+        let r = strdelleft(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
 
 })

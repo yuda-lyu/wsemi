@@ -178,4 +178,9 @@ describe(`sind`, function() {
         assert.strict.deepStrictEqual(r, null)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = sind(NaN)
+        assert.strict.deepStrictEqual(r, null)
+    })
+
 })

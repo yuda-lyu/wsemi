@@ -171,4 +171,10 @@ describe(`flattenToConn`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = flattenToConn(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

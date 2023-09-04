@@ -110,4 +110,10 @@ describe(`pb642obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = pb642obj(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

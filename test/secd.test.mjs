@@ -178,4 +178,9 @@ describe(`secd`, function() {
         assert.strict.deepStrictEqual(r, null)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = secd(NaN)
+        assert.strict.deepStrictEqual(r, null)
+    })
+
 })

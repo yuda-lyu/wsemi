@@ -81,4 +81,10 @@ describe(`aes2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = aes2str(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

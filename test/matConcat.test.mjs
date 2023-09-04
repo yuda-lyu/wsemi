@@ -92,4 +92,10 @@ describe(`matConcat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return [] when input NaN`, function() {
+        let r = matConcat(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

@@ -130,4 +130,10 @@ describe(`arr2dt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return {} when input NaN`, function() {
+        let r = arr2dt(NaN)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

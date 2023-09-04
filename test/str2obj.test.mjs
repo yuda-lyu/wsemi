@@ -109,4 +109,16 @@ describe(`str2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return {} when input undefined`, function() {
+        let r = str2obj(undefined)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return {} when input NaN`, function() {
+        let r = str2obj(NaN)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

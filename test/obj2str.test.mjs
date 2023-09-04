@@ -103,4 +103,10 @@ describe(`obj2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = obj2str(NaN)
+        let rr = 'null' //NaN為Number, 故JSON.stringify轉為null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

@@ -52,6 +52,12 @@ describe(`ltdtpull`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = ltdtpull(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], ''`, function() {
         let r = ltdtpull([], '')
         let rr = []

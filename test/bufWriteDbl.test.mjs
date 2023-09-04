@@ -76,6 +76,14 @@ describe(`bufWriteDbl`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should get ${k} from buffer when input NaN, ${Buffer.alloc(8)}`, function() {
+        let b = Buffer.alloc(8)
+        bufWriteDbl(NaN, b)
+        let r = new Uint8Array(b)
+        let rr = new Uint8Array(Buffer.alloc(8))
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let b = Buffer.alloc(8)
         bufWriteDbl(i, b, null, isBE, mLen, nBytes)

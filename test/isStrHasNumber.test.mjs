@@ -199,4 +199,9 @@ describe(`isStrHasNumber`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isStrHasNumber(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

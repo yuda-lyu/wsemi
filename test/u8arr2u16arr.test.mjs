@@ -54,4 +54,10 @@ describe(`u8arr2u16arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return new Uint16Array() when input NaN`, function() {
+        let r = u8arr2u16arr(NaN)
+        let rr = new Uint16Array()
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

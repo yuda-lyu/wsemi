@@ -124,4 +124,9 @@ describe(`isfun`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isfun(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

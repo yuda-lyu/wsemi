@@ -255,4 +255,10 @@ describe(`ltdt2vrtsable`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould return [] when input NaN`, function() {
+        let r = ltdt2vrtsable(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

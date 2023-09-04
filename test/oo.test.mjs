@@ -93,4 +93,10 @@ describe(`oo`, function() {
         assert.strict.deepStrictEqual(r, undefined)
     })
 
+    it(`should return undefined when input NaN`, function() {
+        let r = oo(NaN)
+        let rr = null //NaN為Number, 故o2j轉會為'null', 再j2o反轉為null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

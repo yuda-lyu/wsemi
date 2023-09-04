@@ -99,4 +99,9 @@ describe(`cfinancial`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = cfinancial(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

@@ -64,6 +64,12 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = arrNorm(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return null when input [], ''`, function() {
         let r = arrNorm([], '')
         let rr = null

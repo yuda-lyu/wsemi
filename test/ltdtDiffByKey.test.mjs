@@ -297,6 +297,12 @@ describe(`ltdtDiffByKey`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return {} when input NaN`, function() {
+        let r = ltdtDiffByKey(NaN)
+        let rr = { infor: {}, del: [], same: [], diff: [], add: [] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return {} when input '', 'id'`, function() {
         let r = ltdtDiffByKey('', 'id')
         let rr = { infor: {}, del: [], same: [], diff: [], add: [] }

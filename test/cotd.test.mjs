@@ -179,4 +179,9 @@ describe(`cotd`, function() {
         assert.strict.deepStrictEqual(r, null)
     })
 
+    it(`should return null when input NaN`, function() {
+        let r = cotd(NaN)
+        assert.strict.deepStrictEqual(r, null)
+    })
+
 })

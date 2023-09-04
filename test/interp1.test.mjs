@@ -384,4 +384,9 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
+    it(`should return { 'err': 'ps is not an array' } when input NaN`, function() {
+        let r = interp1(NaN)
+        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+    })
+
 })

@@ -64,6 +64,12 @@ describe(`bufReadDbl`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return ${j} when input NaN`, function() {
+        let r = bufReadDbl(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return ${j} when input ${b}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {
         let r = bufReadDbl(b, null, isBE, mLen, nBytes)
         let rr = null

@@ -154,4 +154,9 @@ describe(`isnbr`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isnbr(NaN)
+        assert.strict.deepStrictEqual(r, true) //NaN是Number
+    })
+
 })

@@ -58,4 +58,10 @@ describe(`obj2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = obj2b64(NaN)
+        let rr = 'bnVsbA==' //NaN為Number, 故o2j轉為'null', 而obj2b64轉則就與使用null轉回傳相同'bnVsbA=='
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

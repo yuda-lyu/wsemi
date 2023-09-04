@@ -59,4 +59,9 @@ describe(`urlParse`, function() {
         assert.strict.deepStrictEqual(r, {})
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = urlParse(NaN)
+        assert.strict.deepStrictEqual(r, {})
+    })
+
 })

@@ -176,4 +176,9 @@ describe(`clearXSS`, function() {
         assert.strict.deepStrictEqual(r, undefined)
     })
 
+    it(`should return undefined when input NaN`, function() {
+        let r = clearXSS(NaN)
+        assert.strict.deepStrictEqual(r, NaN)
+    })
+
 })

@@ -74,4 +74,9 @@ describe(`trim`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = trim(NaN)
+        assert.strict.deepStrictEqual(r, '')
+    })
+
 })

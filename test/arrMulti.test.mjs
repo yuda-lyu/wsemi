@@ -148,6 +148,12 @@ describe(`arrMulti`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrMulti(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input [], ''`, function() {
         let r = arrMulti([], '')
         let rr = []

@@ -46,4 +46,10 @@ describe(`arrFilterByPnumAndToLog`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrFilterByPnumAndToLog(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

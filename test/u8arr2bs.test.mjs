@@ -52,4 +52,10 @@ describe(`u8arr2bs`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = u8arr2bs(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

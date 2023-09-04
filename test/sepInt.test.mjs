@@ -69,4 +69,9 @@ describe(`sepInt`, function() {
         assert.strict.deepStrictEqual(r, [])
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = sepInt(NaN)
+        assert.strict.deepStrictEqual(r, [])
+    })
+
 })

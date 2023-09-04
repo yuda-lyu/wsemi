@@ -72,4 +72,10 @@ describe(`objSortBy`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return undefined when input NaN, testFun`, function() {
+        let r = objSortBy(NaN, testFun)
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

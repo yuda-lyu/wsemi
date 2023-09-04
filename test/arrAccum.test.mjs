@@ -64,4 +64,10 @@ describe(`arrAccum`, function () {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function () {
+        let r = arrAccum(NaN)
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

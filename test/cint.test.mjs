@@ -164,4 +164,9 @@ describe(`cint`, function() {
         assert.strict.deepStrictEqual(r, 0)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = cint(NaN)
+        assert.strict.deepStrictEqual(r, 0)
+    })
+
 })

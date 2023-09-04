@@ -154,4 +154,9 @@ describe(`isnint`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isnint(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

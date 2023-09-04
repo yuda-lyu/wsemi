@@ -237,4 +237,10 @@ describe(`arrMax`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [] when input NaN`, function() {
+        let r = arrMax(NaN)
+        let rr = null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

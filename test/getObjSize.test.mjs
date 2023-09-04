@@ -82,4 +82,10 @@ describe(`getObjSize`, function() {
         assert.strict.deepStrictEqual(r.int, rr)
     })
 
+    it(`should return 0 when input NaN`, function() {
+        let r = getObjSize(NaN)
+        let rr = 8 //NaN是Number故為8
+        assert.strict.deepStrictEqual(r.int, rr)
+    })
+
 })

@@ -119,4 +119,9 @@ describe(`isestr`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isestr(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

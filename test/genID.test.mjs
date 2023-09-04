@@ -39,4 +39,9 @@ describe(`genID`, function() {
         assert.strict.deepStrictEqual(r.length, 32)
     })
 
+    it(`should length eq. 32 return true when input NaN`, function() {
+        let r = genID(NaN)
+        assert.strict.deepStrictEqual(r.length, 32)
+    })
+
 })

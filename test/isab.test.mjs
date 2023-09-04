@@ -236,4 +236,9 @@ describe(`isab`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = isab(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

@@ -88,4 +88,10 @@ describe(`o2j`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = o2j(NaN)
+        let rr = 'null' //NaN是Number, 轉JSON字串會變成null
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

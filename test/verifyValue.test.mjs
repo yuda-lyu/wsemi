@@ -583,4 +583,9 @@ describe(`verifyValue`, function() {
         assert.strict.deepStrictEqual(r, q)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = verifyValue(NaN)
+        assert.strict.deepStrictEqual(r, q)
+    })
+
 })

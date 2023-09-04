@@ -69,4 +69,9 @@ describe(`cbol`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = cbol(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

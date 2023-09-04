@@ -154,4 +154,9 @@ describe(`ispnum`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input NaN`, function() {
+        let r = ispnum(NaN)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
 })

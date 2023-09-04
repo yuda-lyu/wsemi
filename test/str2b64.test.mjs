@@ -64,4 +64,10 @@ describe(`str2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return '' when input NaN`, function() {
+        let r = str2b64(NaN)
+        let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
