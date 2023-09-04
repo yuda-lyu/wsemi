@@ -80,6 +80,7 @@ async function execPyodideDyn(opt = {}, pathItems) {
     //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
         pathItems = [
+            //使用官方建議版(full): https://pyodide.org/en/stable/usage/downloading-and-deploying.html
             'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js',
         ]
     }

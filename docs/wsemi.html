@@ -49420,7 +49420,7 @@ importResources(pathItems)
 
     
 
-    <h4 class="name" id=".interp1"><span class="type-signature type-signature-static">(static) </span>interp1<span class="signature">(ps, x, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Number|Object}</span></h4>
+    <h4 class="name" id=".interp1"><span class="type-signature type-signature-static">(static) </span>interp1<span class="signature">(ps, px, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Number|Object}</span></h4>
 
     
 
@@ -49437,7 +49437,7 @@ importResources(pathItems)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interp1.mjs.html">interp1.mjs</a>, <a href="interp1.mjs.html#line640">line 640</a>
+        <a href="interp1.mjs.html">interp1.mjs</a>, <a href="interp1.mjs.html#line738">line 738</a>
     </li></ul></dd>
     
 
@@ -49522,6 +49522,8 @@ let psP = [
     { a: 4, b: 2 },
 ]
 
+let px = [0, 1, 2, 2.6, 3, 3.5, 4, 5]
+
 let opt = {
     mode: 'stairs',
 }
@@ -49555,7 +49557,7 @@ console.log(`linear(one point): x=${x}`, 'r=' + JSON.stringify(r))
 x = 0
 r = interp1(ps, x)
 console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; linear: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
 
 x = 1
 r = interp1(ps, x)
@@ -49590,12 +49592,12 @@ console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
 x = 5
 r = interp1(ps, x)
 console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; linear: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
 
 x = 0
 r = interp1(psInv, x)
 console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear(inverse data): x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; linear(inverse data): x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
 
 x = 1
 r = interp1(psInv, x)
@@ -49630,17 +49632,17 @@ console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
 x = 5
 r = interp1(psInv, x)
 console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; linear(inverse data): x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
 
 x = -1
 r = interp1(ps, x, opt)
 console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; stairs: x=-1 r={"err":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; stairs: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"xmin":1,"xmax":4}}
 
 x = 0.51
 r = interp1(ps, x, opt)
 console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; stairs: x=0.51 r={"err":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; stairs: x=0.51 r={"err":"out of x-range","msg":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"xmin":1,"xmax":4}}
 
 x = 1
 r = interp1(ps, x, opt)
@@ -49695,12 +49697,12 @@ console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
 x = 4.5
 r = interp1(ps, x, opt)
 console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; stairs: x=4.5 r={"err":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; stairs: x=4.5 r={"err":"out of x-range","msg":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"xmin":1,"xmax":4}}
 
 x = -1
 r = interp1(ps, x, optX)
 console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; stairs with x-limit: x=-1 r={"err":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+// =&gt; stairs with x-limit: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"xmin":0,"xmax":4.5}}
 
 x = 0
 r = interp1(ps, x, optX)
@@ -49785,12 +49787,12 @@ console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
 x = 4.51
 r = interp1(ps, x, optX)
 console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; stairs with x-limit: x=4.51 r={"err":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+// =&gt; stairs with x-limit: x=4.51 r={"err":"out of x-range","msg":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"xmin":0,"xmax":4.5}}
 
 x = 0
 r = interp1(psP, x, optP)
 console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear by keyX &amp; keyY: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+// =&gt; linear by keyX &amp; keyY: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
 
 x = 1
 r = interp1(psP, x, optP)
@@ -49825,7 +49827,64 @@ console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
 x = 5
 r = interp1(psP, x, optP)
 console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
-// =&gt; linear by keyX &amp; keyY: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}</code></pre>
+// =&gt; linear by keyX &amp; keyY: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
+
+r = interp1(ps, px)
+console.log(`linear: px=${JSON.stringify(px)}`, 'r=' + JSON.stringify(r, null, 2))
+// =&gt; linear: px=[0,1,2,2.6,3,3.5,4,5] r=[
+//   {
+//     "err": "out of x-range",
+//     "msg": "x[0] less than lower limit[1]",
+//     "data": {
+//       "ps": [
+//         {
+//           "x": 1,
+//           "y": 0.2
+//         },
+//         {
+//           "x": 3,
+//           "y": 1.2
+//         },
+//         {
+//           "x": 4,
+//           "y": 2
+//         }
+//       ],
+//       "x": 0,
+//       "xmin": 1,
+//       "xmax": 4
+//     }
+//   },
+//   0.2,
+//   0.7,
+//   1,
+//   1.2,
+//   1.6,
+//   2,
+//   {
+//     "err": "out of x-range",
+//     "msg": "x[5] greater than upper limit[4]",
+//     "data": {
+//       "ps": [
+//         {
+//           "x": 1,
+//           "y": 0.2
+//         },
+//         {
+//           "x": 3,
+//           "y": 1.2
+//         },
+//         {
+//           "x": 4,
+//           "y": 2
+//         }
+//       ],
+//       "x": 5,
+//       "xmin": 1,
+//       "xmax": 4
+//     }
+//   }
+// ]</code></pre>
         </div>
 
 
@@ -49896,13 +49955,16 @@ console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
 
         <tr>
             
-                <td class="name"><code>x</code></td>
+                <td class="name"><code>px</code></td>
             
 
             <td class="type">
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">Array</span>
 
 
 
@@ -49925,7 +49987,7 @@ console.log(`linear by keyX &amp; keyY: x=${x}`, 'r=' + JSON.stringify(r))
                 </td>
             
 
-            <td class="description last"><p>輸入要內插點的x值</p></td>
+            <td class="description last"><p>輸入要內插點的數值或數值陣列</p></td>
         </tr>
 
     
@@ -86922,7 +86984,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Sep 03 2023 21:59:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Mon Sep 04 2023 13:00:55 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -86943,7 +87005,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.28/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.29/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

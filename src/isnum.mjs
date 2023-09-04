@@ -28,7 +28,8 @@ function isnum(v) {
         b = !isNaN(Number(v))
     }
     else if (isnbr(v)) {
-        b = true
+        // b = true
+        b = !isNaN(v)
     }
 
     return b

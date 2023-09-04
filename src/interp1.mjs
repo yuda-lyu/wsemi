@@ -1,6 +1,7 @@
 import size from 'lodash/size'
 import get from 'lodash/get'
 import each from 'lodash/each'
+import map from 'lodash/map'
 import reverse from 'lodash/reverse'
 import toNumber from 'lodash/toNumber'
 import isNumber from 'lodash/isNumber'
@@ -13,6 +14,44 @@ let inXRange = 'in x-range'
 let outOfXRange = 'out of x-range'
 let orderList = 'order list'
 let reverseOrderList = 'reverse order list'
+
+
+function toArrayX(ps, opt = {}) {
+
+    //若無數據回傳空陣列
+    if (size(ps) <= 0) {
+        return []
+    }
+
+    //keyX
+    let keyX = get(opt, 'keyX')
+    if (!isestr(keyX)) {
+        keyX = 'x'
+    }
+
+    //rs
+    let rs = []
+    each(ps, (v) => {
+        let x = null
+        if (isnum(v)) {
+            x = toNumber(v)
+        }
+        else if (isarr(v) && size(v) >= 1) {
+            x = get(v, 0)
+        }
+        else {
+            x = get(v, keyX, null)
+        }
+        if (isnum(x)) {
+            x = toNumber(x)
+            rs.push({
+                x,
+            })
+        }
+    })
+
+    return rs
+}
 
 
 function toArrayXY(ps, opt = {}) {
@@ -285,7 +324,7 @@ function interp1Blocks(ps, x) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ps 輸入一維數據，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
- * @param {Number} x 輸入要內插點的x值
+ * @param {Number|Array} px 輸入要內插點的數值或數值陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入內插方法，可選'linear'、'stairs'、'blocks'，預設'linear'
  * @param {String} [opt.keyX='x'] 輸入若數據為物件陣列，取物件x值時的key字串，預設為'x'
@@ -331,6 +370,8 @@ function interp1Blocks(ps, x) {
  *     { a: 4, b: 2 },
  * ]
  *
+ * let px = [0, 1, 2, 2.6, 3, 3.5, 4, 5]
+ *
  * let opt = {
  *     mode: 'stairs',
  * }
@@ -364,7 +405,7 @@ function interp1Blocks(ps, x) {
  * x = 0
  * r = interp1(ps, x)
  * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(ps, x)
@@ -399,12 +440,12 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(ps, x)
  * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
  *
  * x = 0
  * r = interp1(psInv, x)
  * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(inverse data): x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear(inverse data): x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(psInv, x)
@@ -439,17 +480,17 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(psInv, x)
  * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear(inverse data): x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
  *
  * x = -1
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=-1 r={"err":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => stairs: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"xmin":1,"xmax":4}}
  *
  * x = 0.51
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=0.51 r={"err":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => stairs: x=0.51 r={"err":"out of x-range","msg":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(ps, x, opt)
@@ -504,12 +545,12 @@ function interp1Blocks(ps, x) {
  * x = 4.5
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=4.5 r={"err":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => stairs: x=4.5 r={"err":"out of x-range","msg":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"xmin":1,"xmax":4}}
  *
  * x = -1
  * r = interp1(ps, x, optX)
  * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs with x-limit: x=-1 r={"err":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+ * // => stairs with x-limit: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"xmin":0,"xmax":4.5}}
  *
  * x = 0
  * r = interp1(ps, x, optX)
@@ -594,12 +635,12 @@ function interp1Blocks(ps, x) {
  * x = 4.51
  * r = interp1(ps, x, optX)
  * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs with x-limit: x=4.51 r={"err":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"trend":"increasing sequence","xmin":0,"xmax":4.5}}
+ * // => stairs with x-limit: x=4.51 r={"err":"out of x-range","msg":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"xmin":0,"xmax":4.5}}
  *
  * x = 0
  * r = interp1(psP, x, optP)
  * console.log(`linear by keyX & keyY: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear by keyX & keyY: x=0 r={"err":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear by keyX & keyY: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(psP, x, optP)
@@ -634,25 +675,89 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(psP, x, optP)
  * console.log(`linear by keyX & keyY: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear by keyX & keyY: x=5 r={"err":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"trend":"increasing sequence","xmin":1,"xmax":4}}
+ * // => linear by keyX & keyY: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
+ *
+ * r = interp1(ps, px)
+ * console.log(`linear: px=${JSON.stringify(px)}`, 'r=' + JSON.stringify(r, null, 2))
+ * // => linear: px=[0,1,2,2.6,3,3.5,4,5] r=[
+ * //   {
+ * //     "err": "out of x-range",
+ * //     "msg": "x[0] less than lower limit[1]",
+ * //     "data": {
+ * //       "ps": [
+ * //         {
+ * //           "x": 1,
+ * //           "y": 0.2
+ * //         },
+ * //         {
+ * //           "x": 3,
+ * //           "y": 1.2
+ * //         },
+ * //         {
+ * //           "x": 4,
+ * //           "y": 2
+ * //         }
+ * //       ],
+ * //       "x": 0,
+ * //       "xmin": 1,
+ * //       "xmax": 4
+ * //     }
+ * //   },
+ * //   0.2,
+ * //   0.7,
+ * //   1,
+ * //   1.2,
+ * //   1.6,
+ * //   2,
+ * //   {
+ * //     "err": "out of x-range",
+ * //     "msg": "x[5] greater than upper limit[4]",
+ * //     "data": {
+ * //       "ps": [
+ * //         {
+ * //           "x": 1,
+ * //           "y": 0.2
+ * //         },
+ * //         {
+ * //           "x": 3,
+ * //           "y": 1.2
+ * //         },
+ * //         {
+ * //           "x": 4,
+ * //           "y": 2
+ * //         }
+ * //       ],
+ * //       "x": 5,
+ * //       "xmin": 1,
+ * //       "xmax": 4
+ * //     }
+ * //   }
+ * // ]
  *
  */
-function interp1(ps, x, opt = {}) {
+function interp1(ps, px, opt = {}) {
 
-    //check
+    //check ps
     if (!isarr(ps)) {
         return {
             err: 'ps is not an array'
         }
     }
-    if (!isNumber(x)) {
-        return {
-            err: 'x is not a number'
+
+    //check px
+    if (true) {
+        let b1 = !isnum(px)
+        let b2 = !isarr(px)
+        if (b1 && b2) {
+            return {
+                err: 'px is not a number or an array'
+            }
         }
     }
 
     //toArrayXY
     let psEff = toArrayXY(ps, opt)
+    // console.log('psEff', psEff)
 
     //check
     if (get(psEff, 'err')) {
@@ -691,29 +796,60 @@ function interp1(ps, x, opt = {}) {
         psEff = reverse(psEff)
     }
 
+    //isOne
+    let isOne = !isarr(px)
+    // console.log('isOne', isOne)
+
+    //to array
+    if (isOne) {
+        px = [px]
+    }
+
+    //toArrayX
+    let pxEff = toArrayX(px, opt)
+    // console.log('pxEff', pxEff)
+
     //mode
     let mode = get(opt, 'mode')
     if (mode !== 'linear' && mode !== 'stairs' && mode !== 'blocks') {
         mode = 'linear'
     }
 
-    try {
-        if (mode === 'linear') {
-            return interp1Linear(psEff, x)
+    //rs
+    let rs = map(pxEff, (o, ko) => {
+        let xEff = get(o, 'x')
+        // console.log(ko, o, xEff)
+        let v = null
+        try {
+            if (mode === 'linear') {
+                v = interp1Linear(psEff, xEff)
+            }
+            else if (mode === 'blocks') {
+                v = interp1Blocks(psEff, xEff)
+            }
+            else if (mode === 'stairs') {
+                v = interp1Stairs(psEff, xEff, opt)
+            }
         }
-        else if (mode === 'blocks') {
-            return interp1Blocks(psEff, x)
+        catch (err) {
+            v = {
+                err: err.toString(),
+            }
         }
-        else if (mode === 'stairs') {
-            return interp1Stairs(psEff, x, opt)
-        }
+        return v
+    })
+
+
+    //r
+    let r
+    if (isOne) {
+        r = rs[0]
     }
-    catch (err) {
-        return {
-            err: err.toString(),
-        }
+    else {
+        r = rs
     }
 
+    return r
 }
 
 export default interp1

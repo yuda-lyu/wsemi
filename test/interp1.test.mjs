@@ -37,6 +37,8 @@ describe(`interp1`, function() {
         { x: 'xyz', y: 2 },
     ]
 
+    let px = [0, 1, 2, 2.6, 3, 3.5, 4, 5]
+
     let optStairs = {
         mode: 'stairs',
     }
@@ -342,6 +344,11 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
+    it(`should return [{"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}},0.2,0.7,1,1.2,1.6,2,{"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}] when input ps, px`, function() {
+        let r = interp1(ps, px)
+        assert.strict.deepStrictEqual(r, [{ 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } }, 0.2, 0.7, 1, 1.2, 1.6, 2, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } }])
+    })
+
     it(`should return { 'err': 'ps is not an array' } when input '1.25'`, function() {
         let r = interp1('1.25')
         assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
@@ -357,9 +364,9 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
     })
 
-    it(`should return { 'err': 'x is not a number' } when input []`, function() {
+    it(`should return { 'err': 'px is not a number or an array' } when input []`, function() {
         let r = interp1([])
-        assert.strict.deepStrictEqual(r, { 'err': 'x is not a number' })
+        assert.strict.deepStrictEqual(r, { 'err': 'px is not a number or an array' })
     })
 
     it(`should return { 'err': 'ps is not an array' } when input {}`, function() {
