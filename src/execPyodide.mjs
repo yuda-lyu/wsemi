@@ -3,7 +3,9 @@ import each from 'lodash/each'
 import isarr from './isarr.mjs'
 import loadPyodide from './_loadPyodide.js'
 import getGlobal from './getGlobal.mjs'
-import pmSeries from './pmSeries.mjs'
+import haskey from './haskey.mjs'
+import waitFun from './waitFun.mjs'
+import queue from './queue.mjs'
 // console.log('loadPyodide', loadPyodide)
 
 
@@ -12,6 +14,128 @@ function getLoadPyodide() {
     let x = loadPyodide || g.loadPyodide
     // console.log('getLoadPyodide loadPyodide', x)
     return x
+}
+
+
+let state = ''
+let pyodide = null
+let micropip = null
+async function iniPyodide() {
+
+    //state
+    if (state === 'done') {
+        return
+    }
+    else if (state === 'loading') {
+        await waitFun(() => {
+            return pyodide !== null
+        })
+        return
+    }
+    state = 'loading'
+
+    //getLoadPyodide
+    let lpd = getLoadPyodide()
+    // console.log('lpd', lpd)
+
+    //lpd
+    let _pyodide = await lpd()
+    // console.log('_pyodide',_pyodide)
+
+    await _pyodide.loadPackage('micropip')
+    let _micropip = _pyodide.pyimport('micropip')
+    // console.log('_micropip',_micropip)
+
+    //save
+    pyodide = _pyodide
+    micropip = _micropip
+
+    //state
+    state = 'done'
+
+}
+
+
+let q = null
+let kp = {}
+if (true) {
+
+    //queue
+    let takeLimit = 1
+    q = queue(takeLimit)
+
+    //message
+    q.on('message', function(qs) {
+        // console.log('message', JSON.stringify(qs))
+
+        //get
+        let pkg = q.get()
+        if (!pkg) {
+            return
+        }
+        // console.log('get', pkg)
+
+        async function core() {
+
+            //loading
+            if (!haskey(kp, pkg)) {
+                kp[pkg] = 'loading'
+            }
+
+            //install and loadPackage
+            await micropip.install(pkg)
+            await pyodide.loadPackage(pkg)
+            // console.log('inst-load pkg',pkg)
+
+            //done
+            kp[pkg] = 'done'
+
+            //cb
+            q.cb()
+
+            // console.log('finish',pkg)
+        }
+        core()
+            .catch((err) => {
+                console.log(err)
+            })
+
+    })
+
+}
+
+
+function loadPkg(pkg) {
+    q.push(pkg)
+}
+
+
+async function checkPkgs(pkgs) {
+    await waitFun(() => {
+        // console.log('check pkgs',pkgs)
+        let b = true
+        each(pkgs, (pkg) => {
+            let c = get(kp, pkg)
+            if (c !== 'done') {
+                b = false
+                return false //跳出
+            }
+        })
+        return b
+    })
+}
+
+
+async function loadPkgs(pkgs) {
+
+    //loadPkg
+    each(pkgs, (pkg) => {
+        loadPkg(pkg)
+    })
+
+    //checkPkgs
+    await checkPkgs(pkgs)
+
 }
 
 
@@ -108,22 +232,11 @@ async function execPyodide(opt = {}) {
     //content, 執行Python程式碼, 例如 ret = griddata(rIn1, rIn2, rIn3, method='linear')
     let content = get(opt, 'content', '')
 
-    //getLoadPyodide
-    let lpd = getLoadPyodide()
-    // console.log('lpd', lpd)
+    //iniPyodide
+    await iniPyodide()
 
-    //lpd
-    let pyodide = await lpd()
-    // console.log(pyodide)
-
-    await pyodide.loadPackage('micropip')
-    const micropip = pyodide.pyimport('micropip')
-
-    //micropip.install and loadPackage
-    await pmSeries(pkgs, async (pkg) => {
-        await micropip.install(pkg)
-        await pyodide.loadPackage(pkg)
-    })
+    //loadPkgs
+    await loadPkgs(pkgs)
 
     //cimps
     let cimps = ''
