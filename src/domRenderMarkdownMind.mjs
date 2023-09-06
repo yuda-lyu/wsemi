@@ -4,7 +4,7 @@ import getGlobal from './getGlobal.mjs'
 
 function getMarkmap() {
     let g = getGlobal()
-    let x = g.markmap
+    let x = g.markmap //不須支持Nodejs使用, 故僅提供前端直接取markmap實例使用
     return x
 }
 

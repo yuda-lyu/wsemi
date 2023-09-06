@@ -1,3 +1,4 @@
+import path from 'path'
 // import fs from 'fs'
 // import crypto from 'crypto'
 import chokidar from 'chokidar'
@@ -10,12 +11,14 @@ import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import cint from './cint.mjs'
+import fsIsFile from './fsIsFile.mjs'
+// import fsIsFolder from './fsIsFolder.mjs'
 
 
 /**
  * 後端nodejs基於fs與crypto提供類似watchFile偵測檔案內容變更或出現或消失事件之EventEmitter
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWatchFile.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWatchFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
@@ -24,19 +27,23 @@ import cint from './cint.mjs'
  * @example
  * need test in nodejs.
  *
- * let evfl = fsWatchFile()
+ * let evfd = fsWatchFolder()
  *
- * evfl.on('./abc.json', (msg) => {
+ * evfd.on('./abc', (msg) => {
  *     console.log(msg.type, ':', msg.fp)
- *     // => add : ./abc.json
- *     // change : ./abc.json
- *     // unlink : ./abc.json
+ *     // => addDir : ./abc
+ *     // add : ./abc/temp1.txt
+ *     // unlink : ./abc/temp1.txt
+ *     // add : ./abc/temp2.json
+ *     // unlinkDir : ./abc
+ *     // unlink : ./abc/temp2.json
  * })
  *
- * // evfl.clear()
+ * // evfd.clear()
  *
  */
-function fsWatchFile(opt = {}) {
+function fsWatchFolder(opt = {}) {
+    // let ts = []
     let kpWhr = {}
 
     //ev
@@ -79,16 +86,39 @@ function fsWatchFile(opt = {}) {
 
     function watchEvent(fp, fun) {
 
-        //watch
-        let watcher = chokidar.watch(fp, {
-            // persistent: true,
-            // ignoreInitial: false,
-            usePolling: polling,
-            interval: timeInterval,
-            binaryInterval: timeBinaryInterval,
-            awaitWriteFinish: true, //須比較多延遲偵測檔案是否變更完成, 但對於連鎖驅動比較保險
-            // depth: undefined,
-        })
+        //watcher
+        let watcher = null
+
+        //gcls
+        let gcls = () => {
+            if (watcher === null) {
+                return
+            }
+            watcher.unwatch(fp)
+        }
+
+        //gnew
+        let gnew = () => {
+            //chokidar監測資料夾時, 若資料夾內有子資料夾, 且子資料夾內有檔案時, 此時無法刪除資料夾因被程序上鎖, 故只能先刪除其內檔案或先刪除子資料夾才行
+            watcher = chokidar.watch(fp, {
+                // persistent: true,
+                // ignoreInitial: false,
+                usePolling: polling,
+                interval: timeInterval,
+                binaryInterval: timeBinaryInterval,
+                awaitWriteFinish: true, //須比較多延遲偵測檔案是否變更完成, 但對於連鎖驅動比較保險
+                // depth: undefined,
+            })
+        }
+
+        //gn
+        let gn = () => {
+            gcls()
+            gnew()
+        }
+
+        //啟動chokidar.watch
+        gn()
 
         //id
         let id = genID()
@@ -98,27 +128,68 @@ function fsWatchFile(opt = {}) {
             id,
             fp,
             watcher,
+            isFile: false,
         }
 
         //on
         watcher
             .on('all', (type, rfp, stats) => {
                 // console.log(type, rfp, stats)
-                //type=add,addDir,change,unlink,unlinkDir, 注意當unlinkDir後就不會再觸發變更事件, 此處只處理file
+                //type=add,addDir,change,unlink,unlinkDir, 注意當unlinkDir後就不會再觸發變更事件, 故外層用timer重新偵測
+
+                //統一路徑格式
+                let rtfp = ''
+                if (true) {
+                    let t = rfp
+                    t = t.replace(/\\/g, '/')
+                    t = `./${t}`
+                    rtfp = t
+                }
+                // console.log('all type', type, rfp, rtfp)
+
+                //path.resolve
+                let _fp = path.resolve(fp)
+                let _rtfp = path.resolve(rtfp)
+                // console.log('_fp', _fp)
+                // console.log('_rtfp', _rtfp)
+
+                //b
+                let bfl = fsIsFile(fp)
+                // console.log(fp, 'bfl', bfl)
 
                 //check
-                if (type === 'addDir' || type === 'unlinkDir') {
+                if (bfl) {
+                    kpWhr[id].isFile = true
                     return
+                }
+
+                //check
+                if (kpWhr[id].isFile && type === 'unlink') {
+                    if (_fp === _rtfp) {
+                        kpWhr[id].isFile = false
+                        return
+                    }
                 }
 
                 //fun
                 if (isfun(fun)) {
                     fun({
-                        fp,
+                        fp: rtfp,
                         type,
                         time: now2str(),
                         stats,
                     })
+                }
+
+                //unlinkDir
+                if (type === 'unlinkDir') {
+                    if (_fp === _rtfp) {
+                        //因unlinkDir後就不會再觸發變更事件, 延遲重新啟動chokidar.watch
+                        setTimeout(() => {
+                            // console.log('call gn')
+                            gn()
+                        }, 1)
+                    }
                 }
 
             })
@@ -159,4 +230,4 @@ function fsWatchFile(opt = {}) {
     return ev
 }
 
-export default fsWatchFile
+export default fsWatchFolder

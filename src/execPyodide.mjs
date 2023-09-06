@@ -245,7 +245,7 @@ async function execPyodide(opt = {}) {
     })
     // console.log('cimps', cimps)
 
-    //cins
+    //cins, 待之後與pyodide.globals.set變數提高效能, 可能有轉型問題, 待確認
     let cins = ''
     each(inps, (v, k) => {
         cins += `rIn${k + 1} = ${JSON.stringify(v)}` + '\n'

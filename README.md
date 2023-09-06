@@ -93,7 +93,7 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `pyodide`, `tesseract.js`, `htmlparser` and `tippy.js`.
+> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `chokidar`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tippy.js`, `htmlparser`, `tesseract.js` and `pyodide`.
 ```alias
 npm i wsemi
 ```
@@ -198,5 +198,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.31/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.32/dist/wsemi.umd.js"></script>
 ```

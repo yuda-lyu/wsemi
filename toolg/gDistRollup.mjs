@@ -27,6 +27,7 @@ rollupFiles({
         'tesseract.js': 'tesseractjs', //不能使用小數點故內部引用需為tesseractjs
         'htmlparser': 'htmlparser',
         'pyodide': 'pyodide',
+        'chokidar': 'chokidar',
     },
     external: [
         'path',
@@ -43,5 +44,6 @@ rollupFiles({
         'tesseract.js',
         'htmlparser',
         'pyodide',
+        'chokidar',
     ],
 })

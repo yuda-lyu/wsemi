@@ -10,6 +10,7 @@ import cint from './cint.mjs'
 import j2o from './j2o.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
+import fsDeleteFolder from './fsDeleteFolder.mjs'
 import fsWatchFile from './fsWatchFile.mjs'
 
 
@@ -177,6 +178,7 @@ function fsEvem(fd = './_evps', opt = {}) {
         each(ws, (v) => {
             v.evf.clear()
         })
+        fsDeleteFolder(fd)
     }
 
     //save
