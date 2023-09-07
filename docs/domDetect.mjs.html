@@ -46,139 +46,16 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import get from 'lodash/get'
+import cloneDeep from 'lodash/cloneDeep'
 import ispint from './ispint.mjs'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 
 
-/**
- * 前端監聽DOM元素resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
- * @memberOf wsemi
- * @param {Function} f 輸入取得dom函數
- * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，預設20毫秒
- * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，預設1
- * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽
- * @example
- * need test in browser
- *
- * //監聽dom
- * let de = domDetect(() => {
- *     return document.querySelector('#id')
- * })
- * de.on('resize', (s) => {
- *     console.log('resize', s)
- * })
- * de.on('resizeWithWindow', (s) => {
- *     console.log('resizeWithWindow', s)
- * })
- * de.on('display', (s) => {
- *     console.log('display', s)
- * })
- *
- * //釋放監聽
- * de.clear()
- *
- */
-function domDetect(f, opt = {}) {
-
-    //timeInterval
-    let timeInterval = get(opt, 'timeInterval', null)
-    if (!ispint(timeInterval)) {
-        timeInterval = 20
-    }
-
-    //tolerancePixel
-    let tolerancePixel = get(opt, 'tolerancePixel', null)
-    if (!ispint(tolerancePixel)) {
-        tolerancePixel = 1
-    }
-
-    //ev
-    let ev = evem()
-
-    //timer, s
-    let timer
-    let s = {
-        offsetWidth: 0,
-        offsetHeight: 0,
-    }
-
-    //check
-    if (!isfun(f)) {
-        console.log('invalid f', f)
-        return null
-    }
-
-    //setInterval
-    timer = setInterval(() => {
-
-        //execute
-        let p = f()
-
-        //check
-        if (p) {
-
-            //new size
-            let snew = {
-                offsetWidth: p.offsetWidth,
-                offsetHeight: p.offsetHeight,
-                clientWidth: p.clientWidth,
-                clientHeight: p.clientHeight,
-            }
-
-            //detect
-            let bw = Math.abs(s.offsetWidth - snew.offsetWidth) > tolerancePixel
-            let bh = Math.abs(s.offsetHeight - snew.offsetHeight) > tolerancePixel
-            if (bw || bh) {
-                let sold = { ...s }
-                setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
-
-                    //detect resize
-                    if (snew.offsetWidth > 0 &amp;&amp; snew.offsetHeight > 0) {
-                        ev.emit('resize', { sold, snew, ele: p })
-                        ev.emit('resizeWithWindow', { sold, snew, ele: p, from: 'dom' })
-                    }
-
-                }, 1)
-            }
-
-            //save
-            s = snew
-
-        }
-
-
-    }, timeInterval)
-
-    //fWindowResize
-    let fWindowResize = (e) => {
-        ev.emit('resizeWithWindow', { snew: s, from: 'window' })
-    }
-    window.addEventListener('resize', fWindowResize)
-
-    //clear
-    ev.clear = () => {
-        clearInterval(timer)
-        window.removeEventListener('resize', fWindowResize)
-    }
-
-    return ev
-}
-
-
-export default domDetect
-
+// function domDetect(f, opt = {}) {
 
 //使用IntersectionObserver與ResizeObserver時, 當顯隱頻繁導致元素尚未出現需等待與過快清除時, 會導致WTextSelect下拉選單無法穩定出現內容問題
 
-
-// /**
-//  * @memberOf wsemi
-//  * @param {Function} f 輸入取得dom函數
-//  */
-// function domDetect(f, opt = {}) {
 //     let ele = null
 //     let obInts = null
 //     let obRes = null
@@ -299,7 +176,174 @@ export default domDetect
 // }
 
 
-// export default domDetect
+/**
+ * 前端監聽DOM元素resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
+ * @memberOf wsemi
+ * @param {Function} f 輸入取得dom函數
+ * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，預設20毫秒
+ * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，預設1
+ * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽
+ * @example
+ * need test in browser
+ *
+ * //監聽dom
+ * let de = domDetect(() => {
+ *     return document.querySelector('#id')
+ * })
+ * de.on('resize', (s) => {
+ *     console.log('resize', s)
+ * })
+ * de.on('resizeWithWindow', (s) => {
+ *     console.log('resizeWithWindow', s)
+ * })
+ * de.on('display', (s) => {
+ *     console.log('display', s)
+ * })
+ *
+ * //釋放監聽
+ * de.clear()
+ *
+ */
+function domDetect(f, opt = {}) {
+
+    //timeInterval
+    let timeInterval = get(opt, 'timeInterval', null)
+    if (!ispint(timeInterval)) {
+        timeInterval = 20
+    }
+
+    //tolerancePixel
+    let tolerancePixel = get(opt, 'tolerancePixel', null)
+    if (!ispint(tolerancePixel)) {
+        tolerancePixel = 1
+    }
+
+    //ev
+    let ev = evem()
+
+    //timer, st, sd, smode
+    let timer
+    let st = {
+        offsetWidth: 0,
+        offsetHeight: 0,
+        clientWidth: 0,
+        clientHeight: 0,
+    }
+    let sd = cloneDeep(st)
+    let smode = {
+        width: '',
+        height: '',
+    }
+
+    //check
+    if (!isfun(f)) {
+        console.log('invalid f', f)
+        return null
+    }
+
+    //setInterval
+    timer = setInterval(() => {
+
+        //execute
+        let p = f()
+
+        //check
+        if (p) {
+
+            //new size
+            let snew = {
+                offsetWidth: p.offsetWidth,
+                offsetHeight: p.offsetHeight,
+                clientWidth: p.clientWidth,
+                clientHeight: p.clientHeight,
+            }
+
+            //dw, dh
+            let dw = sd.offsetWidth - snew.offsetWidth
+            let dh = sd.offsetHeight - snew.offsetHeight
+
+            //bw, bh
+            let bw = Math.abs(dw) > tolerancePixel
+            let bh = Math.abs(dh) > tolerancePixel
+
+            //smode
+            let mw = ''
+            if (dw > 0) {
+                mw = 'smaller'
+            }
+            else if (dw &lt; 0) {
+                mw = 'larger'
+            }
+            let mh = ''
+            if (dh > 0) {
+                mh = 'smaller'
+            }
+            else if (dh &lt; 0) {
+                mh = 'larger'
+            }
+            smode = {
+                width: mw,
+                height: mh,
+            }
+
+            //detect
+            if (bw || bh) {
+                let sold = { ...sd }
+                setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
+
+                    //detect resize
+                    if (snew.offsetWidth > 0 &amp;&amp; snew.offsetHeight > 0) {
+                        ev.emit('resize', {
+                            sold,
+                            snew,
+                            smode,
+                            ele: p,
+                        })
+                        ev.emit('resizeWithWindow', {
+                            sold,
+                            snew,
+                            smode,
+                            ele: p,
+                            from: 'dom',
+                        })
+                    }
+
+                }, 1)
+            }
+
+            //save
+            st = sd
+            sd = snew
+
+        }
+
+
+    }, timeInterval)
+
+    //fWindowResize
+    let fWindowResize = (e) => {
+        ev.emit('resizeWithWindow', {
+            sold: st,
+            snew: sd,
+            smode,
+            from: 'window',
+        })
+    }
+    window.addEventListener('resize', fWindowResize)
+
+    //clear
+    ev.clear = () => {
+        clearInterval(timer)
+        window.removeEventListener('resize', fWindowResize)
+    }
+
+    return ev
+}
+
+
+export default domDetect
 </code></pre>
         </article>
     </section>
@@ -314,7 +358,7 @@ export default domDetect
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Sep 06 2023 21:31:45 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Sep 07 2023 13:15:55 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
