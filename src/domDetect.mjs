@@ -183,6 +183,8 @@ function domDetect(f, opt = {}) {
         offsetHeight: 0,
         clientWidth: 0,
         clientHeight: 0,
+        windowWidth: 0,
+        windowHeight: 0,
     }
     let sd = cloneDeep(st)
     let smode = {
@@ -211,6 +213,8 @@ function domDetect(f, opt = {}) {
                 offsetHeight: p.offsetHeight,
                 clientWidth: p.clientWidth,
                 clientHeight: p.clientHeight,
+                windowWidth: window.innerWidth,
+                windowHeight: window.innerHeight,
             }
 
             //dw, dh
