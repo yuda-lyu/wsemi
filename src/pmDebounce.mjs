@@ -32,11 +32,6 @@ import cint from './cint.mjs'
  * let n = 0
  * function test(rin) {
  *     console.log(i, 'ms', 'test in:', rin)
- *     // await w.delay(500)
- *     // n++
- *     // let rout = `${rin}:${n}`
- *     // console.log(i, 'ms', 'test out:', rout)
- *     // return rout
  *     return new Promise(function(resolve, reject) {
  *         setTimeout(() => {
  *             n++
