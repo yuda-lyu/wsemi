@@ -9,6 +9,9 @@ import queue from './queue.mjs'
 // console.log('loadPyodide', loadPyodide)
 
 
+//pyodide於VM上之node下執行有問題，主要是請求request無法設定head，待日後確認是否有新版並修復
+
+
 function getLoadPyodide() {
     let g = getGlobal()
     let x = loadPyodide || g.loadPyodide

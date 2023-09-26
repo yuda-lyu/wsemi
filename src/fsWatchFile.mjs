@@ -13,7 +13,7 @@ import cint from './cint.mjs'
 
 
 /**
- * 後端nodejs基於fs與crypto提供類似watchFile偵測檔案內容變更或出現或消失事件之EventEmitter
+ * 後端nodejs基於chokidar提供偵測檔案內容變更或出現或消失事件之EventEmitter
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWatchFile.test.mjs Github}
  * @memberOf wsemi
