@@ -6,9 +6,9 @@ import evem from './evem.mjs'
 
 
 /**
- * 非同步函數進行防抖，通過new建構，呼叫時輸入不同之非同步函數，以及其輸入參數，會推入佇列後並循序等待執行
+ * 非同步函數進行節流
  *
- * 同時僅會執行一個佇列(非同步函數)，若前一個執行完畢，則直接呼叫最新(末)的佇列，前面的呼叫皆會自動轉為catch，回傳訊息為物件{reason:'cancelled'}
+ * 同時會執行多個佇列(非同步函數)，但若有一個佇列先執行完畢，則其他佇列皆會自動轉為catch，回傳訊息為物件{reason:'cancelled'}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.mjs Github}
  * @memberOf wsemi
