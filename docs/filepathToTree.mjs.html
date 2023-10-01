@@ -550,6 +550,119 @@ import haskey from './haskey.mjs'
  * //   ]
  * // }
  *
+ * //先建虛擬資料夾再補建資料夾
+ * let fps7 = [
+ *     { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+ *     { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+ *     { 'type': 'folder', 'path': '/aaa/bbb', 'ext': 'ext3' },
+ * ]
+ * let r7 = filepathToTree(fps7)
+ * // fs.writeFileSync('r7.json', JSON.stringify(r7), 'utf8')
+ * console.log(r7)
+ * console.log('\n\n')
+ * // => {
+ * //   treeItems: [
+ * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       pathInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   treeItemsFolder: [
+ * //     {
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
+ * //       ts: [Array],
+ * //       pathInfors: [Array],
+ * //       _type: 'folder',
+ * //       type: 'array',
+ * //       numOfChilren: -1,
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
+ * //       data: null
+ * //     }
+ * //   ],
+ * //   kpPath: {
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa❯bbb': '0.children.0.children.0',
+ * //     'root❯aaa❯bbb❯z1.txt': '0.children.0.children.0.children.0'
+ * //   },
+ * //   fpsNormalize: [
+ * //     { type: 'folder', path: '/root/aaa', ext: 'ext1' },
+ * //     { type: 'folder', path: '/root/aaa/bbb', ext: 'ext3' },
+ * //     { type: 'file', path: '/root/aaa/bbb/z1.txt', ext: 'ext2' }
+ * //   ]
+ * // }
+ *
+ * //先建虛擬資料夾再補建檔案須報錯
+ * let fps8 = [
+ *     { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+ *     { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+ *     { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+ * ]
+ * let r8
+ * try {
+ *     r8 = filepathToTree(fps8)
+ * }
+ * catch (err) {
+ *     r8 = err.toString()
+ * }
+ * //fs.writeFileSync('r8.json', JSON.stringify(r8), 'utf8')
+ * console.log(r8)
+ * console.log('\n\n')
+ * // => Error: id[root❯aaa❯bbb] is unrecognized from a folder to file
+ *
+ * //先建檔案再補建虛擬資料夾須報錯
+ * let fps9 = [
+ *     { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+ *     { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+ *     { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+ * ]
+ * let r9
+ * try {
+ *     r9 = filepathToTree(fps9)
+ * }
+ * catch (err) {
+ *     r9 = err.toString()
+ * }
+ * //fs.writeFileSync('r9.json', JSON.stringify(r9), 'utf8')
+ * console.log(r9)
+ * console.log('\n\n')
+ * // => Error: id[root❯aaa❯bbb] is unrecognized from a file to folder
+ *
+ * //先建檔案再補建資料夾須報錯
+ * let fps10 = [
+ *     { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+ *     { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+ *     { 'type': 'folder', 'path': '/aaa/bbb', 'ext': 'ext4' },
+ *     { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+ * ]
+ * let r10
+ * try {
+ *     r10 = filepathToTree(fps10)
+ * }
+ * catch (err) {
+ *     r10 = err.toString()
+ * }
+ * //fs.writeFileSync('r10.json', JSON.stringify(r10), 'utf8')
+ * console.log(r10)
+ * console.log('\n\n')
+ * // => Error: id[root❯aaa❯bbb] is unrecognized from a file to folder
+ *
  */
 function filepathToTree(fps, opt = {}) {
 
@@ -719,9 +832,10 @@ function filepathToTree(fps, opt = {}) {
                 //indNormalize
                 let indNormalize = ind
 
-                //save
+                //r
+                let r = null
                 if (isFolder) {
-                    kpLv[id] = {
+                    r = {
                         _indOri: indOri,
                         _indNormalize: indNormalize,
                         ns: size(ts),
@@ -738,7 +852,7 @@ function filepathToTree(fps, opt = {}) {
                     }
                 }
                 else {
-                    kpLv[id] = {
+                    r = {
                         _indOri: indOri,
                         _indNormalize: indNormalize,
                         ns: size(ts),
@@ -754,13 +868,74 @@ function filepathToTree(fps, opt = {}) {
                         data,
                     }
                 }
+                kpLv[id] = r
 
                 //push, 新增項目所儲存指標為ind
                 fpsNormalize.push({
-                    ...get(kpLv[id], 'data', {}), //有可能無data故得要預設為{}
+                    ...get(kpLv[id], 'data', {}), //預先填入原始數據, 之後再複寫type與path, 因可能無data故得要預設為{}
                     type: kpLv[id]._type,
                     path: '/' + join(ts, '/'),
                 })
+
+            }
+            else {
+                //若因為給予數據未排序導致先建立虛擬資料夾時, 得偵測與更新數據
+
+                //_typeOld
+                let _typeOld = get(kpLv, `${id}._type`, '')
+
+                //isFolderOld
+                let isFolderOld = _typeOld === 'folder'
+
+                //update
+                if (!isFolderOld &amp;&amp; isFolder) {
+                    //過去已建檔案, 但現在須新建資料夾, 非預期須報錯
+                    console.log('kpLv[id]', kpLv[id])
+                    console.log('v', v)
+                    throw new Error(`id[${id}] is unrecognized from a file to folder`)
+                }
+                else if (!isFolderOld &amp;&amp; !isFolder) {
+                    //過去已建檔案, 但現在又須新建為檔案, 數據有重複, 非預期須報錯
+                    console.log('kpLv[id]', kpLv[id])
+                    console.log('v', v)
+                    throw new Error(`id[${id}] get repeat data from two files`)
+                }
+                else if (isFolderOld &amp;&amp; !isFolder) {
+                    //過去已建資料夾或虛擬資料夾, 但現在又須新建為檔案, 數據不一致, 非預期須報錯
+                    console.log('kpLv[id]', kpLv[id])
+                    console.log('v', v)
+                    throw new Error(`id[${id}] is unrecognized from a folder to file`)
+                }
+                else { //isFolderOld &amp;&amp; isFolder
+                    //過去已建資料夾但現在又須新建為資料夾, 預期上是兩次被視為虛擬資料夾
+
+                    if (iseobj(kpLv[id].data) &amp;&amp; iseobj(data)) {
+                        //因視為資料夾data已為實際data, 但又出現新data, 非預期須報錯
+                        console.log('kpLv[id]', kpLv[id])
+                        console.log('v', v)
+                        throw new Error(`id[${id}] get repeat data from two folders`)
+                    }
+                    else if (kpLv[id].data === null &amp;&amp; iseobj(data)) {
+                        //之前資料夾無data, 但出現資料夾且有data, 預期是原始數據先建置虛擬資料夾, 且後面又提供指定為資料夾數據
+
+                        //update kpLv[id]
+                        kpLv[id]._indOri = indOri
+                        kpLv[id].data = data
+
+                        //update fpsNormalize
+                        let ind = kpLv[id]._indNormalize
+                        let t = fpsNormalize[ind]
+                        fpsNormalize[ind] = {
+                            ...data,
+                            type: t.type,
+                            path: t.path,
+                        }
+
+                    }
+                    else { //kpLv[id].data !== null &amp;&amp; data === null
+                        //無data代表不須更新data
+                    }
+                }
 
             }
 
@@ -1012,7 +1187,7 @@ export default filepathToTree
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Sep 26 2023 23:05:52 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Oct 01 2023 18:47:14 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

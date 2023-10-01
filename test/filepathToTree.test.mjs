@@ -70,6 +70,77 @@ describe(`filepathToTree`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    let fps7 = [
+        { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+        { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+        { 'type': 'folder', 'path': '/aaa/bbb', 'ext': 'ext3' },
+    ]
+    let cr7 = `{"treeItems":[{"_indOri":null,"_indNormalize":null,"ns":1,"ts":["root"],"pathInfors":[{"id":"root","name":"root"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root","parentId":"","text":"root","children":[{"_indOri":0,"_indNormalize":0,"ns":2,"ts":["root","aaa"],"pathInfors":[{"id":"root","name":"root"},{"id":"root❯aaa","name":"aaa"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root❯aaa","parentId":"root","text":"aaa","children":[{"_indOri":2,"_indNormalize":1,"ns":3,"ts":["root","aaa","bbb"],"pathInfors":[{"id":"root","name":"root"},{"id":"root❯aaa","name":"aaa"},{"id":"root❯aaa❯bbb","name":"bbb"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root❯aaa❯bbb","parentId":"root❯aaa","text":"bbb","children":[{"_indOri":1,"_indNormalize":2,"ns":4,"ts":["root","aaa","bbb","z1.txt"],"pathInfors":[{"id":"root","name":"root"},{"id":"root❯aaa","name":"aaa"},{"id":"root❯aaa❯bbb","name":"bbb"},{"id":"root❯aaa❯bbb❯z1.txt","name":"z1.txt"}],"_type":"file","type":"node","numOfChilren":-1,"id":"root❯aaa❯bbb❯z1.txt","parentId":"root❯aaa❯bbb","text":"z1.txt","data":{"type":"file","path":"/aaa/bbb/z1.txt","ext":"ext2"}}],"data":{"type":"folder","path":"/aaa/bbb","ext":"ext3"}}],"data":{"type":"folder","path":"/aaa","ext":"ext1"}}],"data":null}],"treeItemsFolder":[{"_indOri":null,"_indNormalize":null,"ns":1,"ts":["root"],"pathInfors":[{"id":"root","name":"root"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root","parentId":"","text":"root","children":[{"_indOri":0,"_indNormalize":0,"ns":2,"ts":["root","aaa"],"pathInfors":[{"id":"root","name":"root"},{"id":"root❯aaa","name":"aaa"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root❯aaa","parentId":"root","text":"aaa","children":[{"_indOri":2,"_indNormalize":1,"ns":3,"ts":["root","aaa","bbb"],"pathInfors":[{"id":"root","name":"root"},{"id":"root❯aaa","name":"aaa"},{"id":"root❯aaa❯bbb","name":"bbb"}],"_type":"folder","type":"array","numOfChilren":-1,"id":"root❯aaa❯bbb","parentId":"root❯aaa","text":"bbb","children":[],"data":{"type":"folder","path":"/aaa/bbb","ext":"ext3"}}],"data":{"type":"folder","path":"/aaa","ext":"ext1"}}],"data":null}],"kpPath":{"root":"0","root❯aaa":"0.children.0","root❯aaa❯bbb":"0.children.0.children.0","root❯aaa❯bbb❯z1.txt":"0.children.0.children.0.children.0"},"fpsNormalize":[{"type":"folder","path":"/root/aaa","ext":"ext1"},{"type":"folder","path":"/root/aaa/bbb","ext":"ext3"},{"type":"file","path":"/root/aaa/bbb/z1.txt","ext":"ext2"}]}`
+    it(`should return ${cr7} when input ${JSON.stringify(fps7)}`, function() {
+        let r = filepathToTree(fps7)
+        r = JSON.stringify(r)
+        let rr = cr7
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    let fps8 = [
+        { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+        { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+        { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+    ]
+    let cr8 = `Error: id[root❯aaa❯bbb] is unrecognized from a folder to file`
+    it(`should return ${cr8} when input ${JSON.stringify(fps8)}`, function() {
+        let r = ''
+        try {
+            r = filepathToTree(fps8)
+            r = JSON.stringify(r)
+        }
+        catch (err) {
+            r = err.toString()
+        }
+        let rr = cr8
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    let fps9 = [
+        { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+        { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+        { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+    ]
+    let cr9 = `Error: id[root❯aaa❯bbb] is unrecognized from a file to folder`
+    it(`should return ${cr9} when input ${JSON.stringify(fps9)}`, function() {
+        let r = ''
+        try {
+            r = filepathToTree(fps9)
+            r = JSON.stringify(r)
+        }
+        catch (err) {
+            r = err.toString()
+        }
+        let rr = cr9
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    let fps10 = [
+        { 'type': 'folder', 'path': '/aaa', 'ext': 'ext1' },
+        { 'type': 'file', 'path': '/aaa/bbb', 'ext': 'ext3' },
+        { 'type': 'folder', 'path': '/aaa/bbb', 'ext': 'ext4' },
+        { 'type': 'file', 'path': '/aaa/bbb/z1.txt', 'ext': 'ext2' },
+    ]
+    let cr10 = `Error: id[root❯aaa❯bbb] is unrecognized from a file to folder`
+    it(`should return ${cr10} when input ${JSON.stringify(fps10)}`, function() {
+        let r = ''
+        try {
+            r = filepathToTree(fps10)
+            r = JSON.stringify(r)
+        }
+        catch (err) {
+            r = err.toString()
+        }
+        let rr = cr10
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input ''`, function() {
         let r = filepathToTree('')
         let rr = {}
