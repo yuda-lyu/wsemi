@@ -834,8 +834,11 @@ function filepathToTree(fps, opt = {}) {
             else {
                 //若因為給予數據未排序導致先建立虛擬資料夾時, 得偵測與更新數據
 
+                //r, 因id可能有「.」得使用[]預先取出物件, 再進行後續處理
+                let r = kpLv[id]
+
                 //_typeOld
-                let _typeOld = get(kpLv, `${id}._type`, '')
+                let _typeOld = get(r, '_type', '')
 
                 //isFolderOld
                 let isFolderOld = _typeOld === 'folder'
@@ -843,19 +846,19 @@ function filepathToTree(fps, opt = {}) {
                 //update
                 if (!isFolderOld && isFolder) {
                     //過去已建檔案, 但現在須新建資料夾, 非預期須報錯
-                    console.log('kpLv[id]', kpLv[id])
+                    console.log('kpLv[id]', r)
                     console.log('v', v)
                     throw new Error(`id[${id}] is unrecognized from a file to folder`)
                 }
                 else if (!isFolderOld && !isFolder) {
                     //過去已建檔案, 但現在又須新建為檔案, 數據有重複, 非預期須報錯
-                    console.log('kpLv[id]', kpLv[id])
+                    console.log('kpLv[id]', r)
                     console.log('v', v)
                     throw new Error(`id[${id}] get repeat data from two files`)
                 }
                 else if (isFolderOld && !isFolder) {
                     //過去已建資料夾或虛擬資料夾, 但現在又須新建為檔案, 數據不一致, 非預期須報錯
-                    console.log('kpLv[id]', kpLv[id])
+                    console.log('kpLv[id]', r)
                     console.log('v', v)
                     throw new Error(`id[${id}] is unrecognized from a folder to file`)
                 }
@@ -864,7 +867,7 @@ function filepathToTree(fps, opt = {}) {
 
                     if (iseobj(kpLv[id].data) && iseobj(data)) {
                         //因視為資料夾data已為實際data, 但又出現新data, 非預期須報錯
-                        console.log('kpLv[id]', kpLv[id])
+                        console.log('kpLv[id]', r)
                         console.log('v', v)
                         throw new Error(`id[${id}] get repeat data from two folders`)
                     }
