@@ -32,8 +32,9 @@ function replace(c, t, r) {
         return ''
     }
 
-    let o = new RegExp(t, 'g')
-    let rr = String(c).replace(o, r)
+    // let o = new RegExp(t, 'g')
+    // let rr = String(c).replace(o, r)
+    let rr = String(c).replaceAll(t, r)
 
     return rr
 }
