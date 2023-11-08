@@ -164,6 +164,12 @@ function getFileAccept(groupBy = '') {
             exec: 'textviwer',
         },
         {
+            name: 'geojson',
+            group: 'data',
+            acp: 'application/geo+json',
+            exec: 'textviwer',
+        },
+        {
             name: 'txt',
             group: 'data',
             acp: 'text/plain',

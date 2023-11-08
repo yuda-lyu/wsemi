@@ -43,7 +43,7 @@ function domGetFileAccept(kind = '*') {
     let data = getFileAccept()
 
     function getName(name) {
-        let rs = filter(data, { name: name })
+        let rs = filter(data, { name })
         return getAcp(rs)
     }
 
