@@ -1,5 +1,5 @@
-import size from 'lodash/size'
-import each from 'lodash/each'
+import size from 'lodash-es/size'
+import each from 'lodash-es/each'
 import isarr from './isarr.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'

@@ -1,4 +1,4 @@
-import size from 'lodash/size'
+import size from 'lodash-es/size'
 import isarr from './isarr.mjs'
 import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'

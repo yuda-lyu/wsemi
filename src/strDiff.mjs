@@ -1,8 +1,8 @@
 import * as Diff from 'diff'
-import get from 'lodash/get'
-import split from 'lodash/split'
-import take from 'lodash/take'
-import size from 'lodash/size'
+import get from 'lodash-es/get'
+import split from 'lodash-es/split'
+import take from 'lodash-es/take'
+import size from 'lodash-es/size'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
 // console.log('Diff', Diff)

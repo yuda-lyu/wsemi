@@ -1,6 +1,6 @@
-import cloneDeep from 'lodash/cloneDeep'
-import size from 'lodash/size'
-import zipObject from 'lodash/zipObject'
+import cloneDeep from 'lodash-es/cloneDeep'
+import size from 'lodash-es/size'
+import zipObject from 'lodash-es/zipObject'
 import isearr from './isearr.mjs'
 import iser from './iser.mjs'
 

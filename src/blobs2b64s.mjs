@@ -1,4 +1,4 @@
-import map from 'lodash/map'
+import map from 'lodash-es/map'
 import blob2b64 from './blob2b64.mjs'
 
 

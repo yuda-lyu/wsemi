@@ -1,4 +1,4 @@
-import map from 'lodash/map'
+import map from 'lodash-es/map'
 import o2j from './o2j.mjs'
 import htmlEncode from './htmlEncode.mjs'
 

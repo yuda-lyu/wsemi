@@ -1,4 +1,4 @@
-import isSymbol from 'lodash/isSymbol'
+import isSymbol from 'lodash-es/isSymbol'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 

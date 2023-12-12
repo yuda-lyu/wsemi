@@ -1,6 +1,6 @@
-import map from 'lodash/map'
-import each from 'lodash/each'
-import zipObject from 'lodash/zipObject'
+import map from 'lodash-es/map'
+import each from 'lodash-es/each'
+import zipObject from 'lodash-es/zipObject'
 import isearr from './isearr.mjs'
 
 

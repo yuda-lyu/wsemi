@@ -1,5 +1,5 @@
 import assert from 'assert'
-import cloneDeep from 'lodash/cloneDeep'
+import cloneDeep from 'lodash-es/cloneDeep'
 import createExcelWorkbook from '../src/createExcelWorkbook.mjs'
 import addExcelWorksheetFromData from '../src/addExcelWorksheetFromData.mjs'
 

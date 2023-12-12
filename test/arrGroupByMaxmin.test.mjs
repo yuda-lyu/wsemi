@@ -303,6 +303,184 @@ describe(`arrGroupByMaxmin`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    let arr9 = [
+        {
+            name: 'a',
+            value: 1.1,
+        },
+        {
+            name: 'b',
+            value: 2.2,
+        },
+        {
+            name: 'c',
+            value: 3.3,
+        },
+        {
+            name: 'd',
+            value: 4.4,
+        },
+        {
+            name: 'e',
+            value: 5.5,
+        },
+        {
+            name: 'f',
+            value: 6.6,
+        },
+    ]
+    let mm9 = [
+        {
+            min: 0,
+            minType: '>=',
+            max: 5,
+            maxType: '<',
+        },
+        {
+            min: 5,
+            minType: '>=',
+            max: 10,
+            maxType: '<',
+        },
+    ]
+    // console.log(arrGroupByMaxmin(arr9, mm9))
+    let r9 = [
+        {
+            'min': 0,
+            'minType': '>=',
+            'max': 5,
+            'maxType': '<',
+            'items': [
+                {
+                    'name': 'a',
+                    'value': 1.1
+                },
+                {
+                    'name': 'b',
+                    'value': 2.2
+                },
+                {
+                    'name': 'c',
+                    'value': 3.3
+                },
+                {
+                    'name': 'd',
+                    'value': 4.4
+                }
+            ]
+        },
+        {
+            'min': 5,
+            'minType': '>=',
+            'max': 10,
+            'maxType': '<',
+            'items': [
+                {
+                    'name': 'e',
+                    'value': 5.5
+                },
+                {
+                    'name': 'f',
+                    'value': 6.6
+                }
+            ]
+        }
+    ]
+    it(`should return ${JSON.stringify(r9)} when input ${JSON.stringify(arr9)}, ${JSON.stringify(mm9)}`, function() {
+        let r = arrGroupByMaxmin(arr9, mm9)
+        let rr = r9
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    let arr10 = [
+        {
+            name: 'a',
+            data: 1.1,
+        },
+        {
+            name: 'b',
+            data: 2.2,
+        },
+        {
+            name: 'c',
+            data: 3.3,
+        },
+        {
+            name: 'd',
+            data: 4.4,
+        },
+        {
+            name: 'e',
+            data: 5.5,
+        },
+        {
+            name: 'f',
+            data: 6.6,
+        },
+    ]
+    let mm10 = [
+        {
+            min: 0,
+            minType: '>=',
+            max: 5,
+            maxType: '<',
+        },
+        {
+            min: 5,
+            minType: '>=',
+            max: 10,
+            maxType: '<',
+        },
+    ]
+    // console.log(arrGroupByMaxmin(arr10, mm10, { keyValue: 'data' }))
+    let r10 = [
+        {
+            'min': 0,
+            'minType': '>=',
+            'max': 5,
+            'maxType': '<',
+            'items': [
+                {
+                    'name': 'a',
+                    'data': 1.1
+                },
+                {
+                    'name': 'b',
+                    'data': 2.2
+                },
+                {
+                    'name': 'c',
+                    'data': 3.3
+                },
+                {
+                    'name': 'd',
+                    'data': 4.4
+                }
+            ]
+        },
+        {
+            'min': 5,
+            'minType': '>=',
+            'max': 10,
+            'maxType': '<',
+            'items': [
+                {
+                    'name': 'e',
+                    'data': 5.5
+                },
+                {
+                    'name': 'f',
+                    'data': 6.6
+                }
+            ]
+        }
+    ]
+    it(`should return ${JSON.stringify(r10)} when input ${JSON.stringify(arr10)}, ${JSON.stringify(mm10)}`, function() {
+        let r = arrGroupByMaxmin(arr10, mm10, { keyValue: 'data' })
+        let rr = r10
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [] when input ${JSON.stringify(arr1)}, ''`, function() {
         let r = arrGroupByMaxmin(arr1, '')
         assert.strict.deepStrictEqual(r, [])

@@ -1,9 +1,9 @@
 //import html2canvas from 'html2canvas' //html2canvas.js沒有umd版, 故引用後會有未檢查window的殼層程式碼出現, 導致無法於nodejs環境下使用wsemi
 //import canvg from 'canvg' //因umd不引用html2canvas, 故也不引用canvg
-import get from 'lodash/get'
-import each from 'lodash/each'
-import isNumber from 'lodash/isNumber'
-import isBoolean from 'lodash/isBoolean'
+import get from 'lodash-es/get'
+import each from 'lodash-es/each'
+import isNumber from 'lodash-es/isNumber'
+import isBoolean from 'lodash-es/isBoolean'
 import isEle from './isEle.mjs'
 import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'

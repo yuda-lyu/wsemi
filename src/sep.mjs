@@ -1,6 +1,6 @@
-import each from 'lodash/each'
-import map from 'lodash/map'
-import trim from 'lodash/trim'
+import each from 'lodash-es/each'
+import map from 'lodash-es/map'
+import trim from 'lodash-es/trim'
 import isestr from './isestr.mjs'
 import split from './split.mjs'
 

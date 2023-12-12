@@ -1,5 +1,5 @@
-import get from 'lodash/get'
-import map from 'lodash/map'
+import get from 'lodash-es/get'
+import map from 'lodash-es/map'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'

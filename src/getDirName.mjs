@@ -1,4 +1,4 @@
-import size from 'lodash/size'
+import size from 'lodash-es/size'
 import isestr from './isestr.mjs'
 import getClearPathName from './getClearPathName.mjs'
 import getFileName from './getFileName.mjs'

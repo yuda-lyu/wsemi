@@ -1,5 +1,5 @@
-import get from 'lodash/get'
-import size from 'lodash/size'
+import get from 'lodash-es/get'
+import size from 'lodash-es/size'
 import isarr from './isarr.mjs'
 
 

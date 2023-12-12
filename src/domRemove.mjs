@@ -1,4 +1,4 @@
-import each from 'lodash/each'
+import each from 'lodash-es/each'
 import isEle from './isEle.mjs'
 import isestr from './isestr.mjs'
 import domFinds from './domFinds.mjs'

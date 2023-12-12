@@ -1,4 +1,4 @@
-import each from 'lodash/each'
+import each from 'lodash-es/each'
 import haskey from './haskey.mjs'
 
 

@@ -13,7 +13,6 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/ws
 
 ## Example
 To view some examples for more understanding, visit examples:
-> **lodash:** [ex-lodash.html](https://yuda-lyu.github.io/wsemi/examples/ex-lodash.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-lodash.html)]
 
 > **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
 
@@ -93,13 +92,13 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash`, `eventemitter3`, `crypto-js`, `chokidar`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tippy.js`, `htmlparser`, `tesseract.js` and `pyodide`.
+> **Note:** wsemi is mainly dependent on `lodash-es`, `eventemitter3`, `crypto-js`, `chokidar`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tippy.js`, `htmlparser`, `tesseract.js` and `pyodide`.
 ```alias
 npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash`, `crypto-js` and `tippy.js`.
+> **Note:** umd file includes with `lodash-es`, `crypto-js` and `tippy.js`.
 
 [Optional] Add script with nomodule for IE11.
 ```alias
@@ -198,5 +197,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.39/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.40/dist/wsemi.umd.js"></script>
 ```

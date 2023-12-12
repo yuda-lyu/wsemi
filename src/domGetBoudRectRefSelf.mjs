@@ -1,4 +1,4 @@
-import isNumber from 'lodash/isNumber'
+import isNumber from 'lodash-es/isNumber'
 import iseobj from './iseobj.mjs'
 import isEle from './isEle.mjs'
 import domGetBoudRect from './domGetBoudRect.mjs'

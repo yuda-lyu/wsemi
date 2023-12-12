@@ -1,5 +1,5 @@
-import join from 'lodash/join'
-import map from 'lodash/map'
+import join from 'lodash-es/join'
+import map from 'lodash-es/map'
 import strCompare from './strCompare.mjs'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'

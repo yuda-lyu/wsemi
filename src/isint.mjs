@@ -1,4 +1,4 @@
-import isInteger from 'lodash/isInteger'
+import isInteger from 'lodash-es/isInteger'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 

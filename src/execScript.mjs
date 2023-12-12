@@ -1,8 +1,8 @@
 import cp from 'child_process'
-import get from 'lodash/get'
-import filter from 'lodash/filter'
-import map from 'lodash/map'
-import join from 'lodash/join'
+import get from 'lodash-es/get'
+import filter from 'lodash-es/filter'
+import map from 'lodash-es/map'
+import join from 'lodash-es/join'
 import isarr from './isarr.mjs'
 
 

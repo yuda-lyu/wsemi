@@ -1,4 +1,4 @@
-import each from 'lodash/each'
+import each from 'lodash-es/each'
 import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import isearr from './isearr.mjs'

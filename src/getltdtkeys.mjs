@@ -1,6 +1,6 @@
-import each from 'lodash/each'
-import keys from 'lodash/keys'
-import uniq from 'lodash/uniq'
+import each from 'lodash-es/each'
+import keys from 'lodash-es/keys'
+import uniq from 'lodash-es/uniq'
 import isearr from './isearr.mjs'
 
 

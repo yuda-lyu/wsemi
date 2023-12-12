@@ -1,5 +1,5 @@
-import get from 'lodash/get'
-import cloneDeep from 'lodash/cloneDeep'
+import get from 'lodash-es/get'
+import cloneDeep from 'lodash-es/cloneDeep'
 import ispint from './ispint.mjs'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'

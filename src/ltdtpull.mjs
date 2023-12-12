@@ -1,5 +1,5 @@
-import every from 'lodash/every'
-import differenceBy from 'lodash/differenceBy'
+import every from 'lodash-es/every'
+import differenceBy from 'lodash-es/differenceBy'
 import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import isobj from './isobj.mjs'

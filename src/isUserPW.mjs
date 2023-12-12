@@ -1,4 +1,4 @@
-import join from 'lodash/join'
+import join from 'lodash-es/join'
 import genPm from './genPm.mjs'
 import isstr from './isstr.mjs'
 import binstr from './binstr.mjs'

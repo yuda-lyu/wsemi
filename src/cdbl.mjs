@@ -1,4 +1,4 @@
-import toFinite from 'lodash/toFinite'
+import toFinite from 'lodash-es/toFinite'
 import isnum from './isnum.mjs'
 
 

@@ -1,4 +1,4 @@
-// import isNaN from 'lodash/isNaN'
+// import isNaN from 'lodash-es/isNaN'
 
 
 /**

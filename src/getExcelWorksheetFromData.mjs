@@ -1,4 +1,4 @@
-import every from 'lodash/every'
+import every from 'lodash-es/every'
 import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
 import isEle from './isEle.mjs'

@@ -1,4 +1,4 @@
-import map from 'lodash/map'
+import map from 'lodash-es/map'
 import isearr from './isearr.mjs'
 import dtpick from './dtpick.mjs'
 

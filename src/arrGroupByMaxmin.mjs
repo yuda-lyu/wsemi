@@ -1,7 +1,7 @@
-import get from 'lodash/get'
-import each from 'lodash/each'
-import isNumber from 'lodash/isNumber'
-import cloneDeep from 'lodash/cloneDeep'
+import get from 'lodash-es/get'
+import each from 'lodash-es/each'
+import isNumber from 'lodash-es/isNumber'
+import cloneDeep from 'lodash-es/cloneDeep'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
@@ -280,6 +280,176 @@ import haskey from './haskey.mjs'
  * //     max: 5.5,
  * //     maxType: '<',
  * //     items: [ 2.2, 3.3, 4.4 ]
+ * //   }
+ * // ]
+ *
+ *
+ * let arr9 = [
+ *     {
+ *         name: 'a',
+ *         value: 1.1,
+ *     },
+ *     {
+ *         name: 'b',
+ *         value: 2.2,
+ *     },
+ *     {
+ *         name: 'c',
+ *         value: 3.3,
+ *     },
+ *     {
+ *         name: 'd',
+ *         value: 4.4,
+ *     },
+ *     {
+ *         name: 'e',
+ *         value: 5.5,
+ *     },
+ *     {
+ *         name: 'f',
+ *         value: 6.6,
+ *     },
+ * ]
+ * let mm9 = [
+ *     {
+ *         min: 0,
+ *         minType: '>=',
+ *         max: 5,
+ *         maxType: '<',
+ *     },
+ *     {
+ *         min: 5,
+ *         minType: '>=',
+ *         max: 10,
+ *         maxType: '<',
+ *     },
+ * ]
+ * console.log(JSON.stringify(arrGroupByMaxmin(arr9, mm9), null, 2))
+ * // => [
+ * //   {
+ * //     "min": 0,
+ * //     "minType": ">=",
+ * //     "max": 5,
+ * //     "maxType": "<",
+ * //     "items": [
+ * //       {
+ * //         "name": "a",
+ * //         "value": 1.1
+ * //       },
+ * //       {
+ * //         "name": "b",
+ * //         "value": 2.2
+ * //       },
+ * //       {
+ * //         "name": "c",
+ * //         "value": 3.3
+ * //       },
+ * //       {
+ * //         "name": "d",
+ * //         "value": 4.4
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "min": 5,
+ * //     "minType": ">=",
+ * //     "max": 10,
+ * //     "maxType": "<",
+ * //     "items": [
+ * //       {
+ * //         "name": "e",
+ * //         "value": 5.5
+ * //       },
+ * //       {
+ * //         "name": "f",
+ * //         "value": 6.6
+ * //       }
+ * //     ]
+ * //   }
+ * // ]
+ *
+ *
+ * let arr10 = [
+ *     {
+ *         name: 'a',
+ *         data: 1.1,
+ *     },
+ *     {
+ *         name: 'b',
+ *         data: 2.2,
+ *     },
+ *     {
+ *         name: 'c',
+ *         data: 3.3,
+ *     },
+ *     {
+ *         name: 'd',
+ *         data: 4.4,
+ *     },
+ *     {
+ *         name: 'e',
+ *         data: 5.5,
+ *     },
+ *     {
+ *         name: 'f',
+ *         data: 6.6,
+ *     },
+ * ]
+ * let mm10 = [
+ *     {
+ *         min: 0,
+ *         minType: '>=',
+ *         max: 5,
+ *         maxType: '<',
+ *     },
+ *     {
+ *         min: 5,
+ *         minType: '>=',
+ *         max: 10,
+ *         maxType: '<',
+ *     },
+ * ]
+ * console.log(JSON.stringify(arrGroupByMaxmin(arr10, mm10, { keyValue: 'data' }), null, 2))
+ * // => [
+ * //   {
+ * //     "min": 0,
+ * //     "minType": ">=",
+ * //     "max": 5,
+ * //     "maxType": "<",
+ * //     "items": [
+ * //       {
+ * //         "name": "a",
+ * //         "data": 1.1
+ * //       },
+ * //       {
+ * //         "name": "b",
+ * //         "data": 2.2
+ * //       },
+ * //       {
+ * //         "name": "c",
+ * //         "data": 3.3
+ * //       },
+ * //       {
+ * //         "name": "d",
+ * //         "data": 4.4
+ * //       }
+ * //     ]
+ * //   },
+ * //   {
+ * //     "min": 5,
+ * //     "minType": ">=",
+ * //     "max": 10,
+ * //     "maxType": "<",
+ * //     "items": [
+ * //       {
+ * //         "name": "e",
+ * //         "data": 5.5
+ * //       },
+ * //       {
+ * //         "name": "f",
+ * //         "data": 6.6
+ * //       }
+ * //     ]
  * //   }
  * // ]
  *

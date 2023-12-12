@@ -1,5 +1,5 @@
 import UAParser from 'ua-parser-js'
-import get from 'lodash/get'
+import get from 'lodash-es/get'
 import isstr from './isstr.mjs'
 import getGlobal from './getGlobal.mjs'
 

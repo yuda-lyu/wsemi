@@ -1,5 +1,5 @@
-import toLower from 'lodash/toLower'
-import trim from 'lodash/trim'
+import toLower from 'lodash-es/toLower'
+import trim from 'lodash-es/trim'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
 

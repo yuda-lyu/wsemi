@@ -70,7 +70,7 @@ function main() {
 
     //add script, 使用jquery操作dom與掛載codepen, 而codepen還需要提供wsemi所需js套件
     let scOper = `
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="${cdnCodepen}"></script>
     <script>

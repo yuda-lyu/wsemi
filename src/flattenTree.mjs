@@ -1,5 +1,5 @@
-import get from 'lodash/get'
-import size from 'lodash/size'
+import get from 'lodash-es/get'
+import size from 'lodash-es/size'
 import treeObj from './treeObj.mjs'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'

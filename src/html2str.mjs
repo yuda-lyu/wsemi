@@ -1,7 +1,7 @@
 import htmlparser from 'htmlparser' //要能於nodejs下運行, 故不使用瀏覽器動態加載
-import each from 'lodash/each'
-import join from 'lodash/join'
-import size from 'lodash/size'
+import each from 'lodash-es/each'
+import join from 'lodash-es/join'
+import size from 'lodash-es/size'
 import isestr from './isestr.mjs'
 import getGlobal from './getGlobal.mjs'
 

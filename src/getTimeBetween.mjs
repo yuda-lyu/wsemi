@@ -1,5 +1,5 @@
-import map from 'lodash/map'
-import times from 'lodash/times'
+import map from 'lodash-es/map'
+import times from 'lodash-es/times'
 import getTimeFromUnit from './getTimeFromUnit.mjs'
 import getTimeObject from './getTimeObject.mjs'
 

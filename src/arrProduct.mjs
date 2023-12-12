@@ -1,5 +1,5 @@
-import size from 'lodash/size'
-import sum from 'lodash/sum'
+import size from 'lodash-es/size'
+import sum from 'lodash-es/sum'
 import arrMulti from './arrMulti.mjs'
 
 

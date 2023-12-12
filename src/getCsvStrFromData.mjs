@@ -1,5 +1,5 @@
-import each from 'lodash/each'
-import join from 'lodash/join'
+import each from 'lodash-es/each'
+import join from 'lodash-es/join'
 import isstr from './isstr.mjs'
 import isearr from './isearr.mjs'
 import isbol from './isbol.mjs'

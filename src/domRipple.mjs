@@ -1,4 +1,4 @@
-import get from 'lodash/get'
+import get from 'lodash-es/get'
 import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'

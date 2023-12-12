@@ -1,5 +1,5 @@
-import get from 'lodash/get'
-import each from 'lodash/each'
+import get from 'lodash-es/get'
+import each from 'lodash-es/each'
 import genPm from './genPm.mjs'
 import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
