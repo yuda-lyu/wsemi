@@ -21,7 +21,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\temp\\myfile.txt.html'
     cout[i] = { path: 'C:\\temp\\myfile.txt.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 1
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -30,7 +30,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\temp\\myfile'
     cout[i] = { path: 'C:\\temp\\myfile', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 2
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -39,7 +39,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\temp\\\\temp\\\\myfile.txt.html'
     cout[i] = { path: 'C:\\temp\\temp\\myfile.txt.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 3
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -48,7 +48,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\temp\\'
     cout[i] = { path: 'C:\\temp', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 4
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -57,7 +57,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\temp'
     cout[i] = { path: 'C:\\temp', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 5
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -66,7 +66,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:\\'
     cout[i] = { path: 'C:\\', isRoot: true }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 6
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -75,7 +75,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'C:'
     cout[i] = { path: 'C:\\', isRoot: true }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 7
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -84,7 +84,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/tmp/myfile.html'
     cout[i] = { path: '/tmp/myfile.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 8
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -93,7 +93,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/tmp/myfile.txt.html'
     cout[i] = { path: '/tmp/myfile.txt.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 9
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -102,7 +102,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/tmp/myfile'
     cout[i] = { path: '/tmp/myfile', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 10
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -111,7 +111,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '//tmp////tmp//myfile.txt.html'
     cout[i] = { path: '/tmp/tmp/myfile.txt.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 11
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -120,7 +120,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/tmp/'
     cout[i] = { path: '/tmp', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 12
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -129,7 +129,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/tmp'
     cout[i] = { path: '/tmp', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 13
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -138,7 +138,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/'
     cout[i] = { path: '/', isRoot: true }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 14
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -147,7 +147,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/foo/bar/baz/asdf/quux.html'
     cout[i] = { path: '/foo/bar/baz/asdf/quux.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 15
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -156,7 +156,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/foo/bar/baz/asdf/quux.txt.html'
     cout[i] = { path: '/foo/bar/baz/asdf/quux.txt.html', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 16
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -165,7 +165,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '/foo/bar/baz/asdf/quux'
     cout[i] = { path: '/foo/bar/baz/asdf/quux', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 17
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -174,7 +174,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 'abc'
     cout[i] = { path: 'abc', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 18
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -183,7 +183,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '12'
     cout[i] = { path: '12', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 19
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -192,7 +192,7 @@ describe(`getClearPathName`, function() {
     cin[i] = 12
     cout[i] = { path: '', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 20
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -201,7 +201,7 @@ describe(`getClearPathName`, function() {
     cin[i] = ''
     cout[i] = { path: '', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 21
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -210,7 +210,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '[]'
     cout[i] = { path: '[]', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 22
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -219,7 +219,7 @@ describe(`getClearPathName`, function() {
     cin[i] = '{}'
     cout[i] = { path: '{}', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 23
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -228,7 +228,7 @@ describe(`getClearPathName`, function() {
     cin[i] = null
     cout[i] = { path: '', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 24
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })
@@ -237,7 +237,7 @@ describe(`getClearPathName`, function() {
     cin[i] = undefined
     cout[i] = { path: '', isRoot: false }
     it(`should return ${JSON.stringify(cout[i])} when '${cin[i]}'`, function() {
-        j = 0
+        j = 25
         let r = getClearPathName(cin[j])
         assert.strict.deepStrictEqual(r, cout[j])
     })

@@ -170,6 +170,7 @@ export { default as getExcelWorkbookFromWorksheet } from './getExcelWorkbookFrom
 export { default as getExcelWorksheetFromData } from './getExcelWorksheetFromData.mjs'
 export { default as getFileAccept } from './getFileAccept.mjs'
 export { default as getFileName } from './getFileName.mjs'
+export { default as getFileNameExt } from './getFileNameExt.mjs'
 export { default as getFileTrueName } from './getFileTrueName.mjs'
 export { default as getGlobal } from './getGlobal.mjs'
 export { default as getltdtkeys } from './getltdtkeys.mjs'
