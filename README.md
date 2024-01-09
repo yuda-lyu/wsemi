@@ -14,9 +14,9 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/ws
 ## Example
 To view some examples for more understanding, visit examples:
 
-> **cryptojs:** [ex-cryptojs.html](https://yuda-lyu.github.io/wsemi/examples/ex-cryptojs.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-cryptojs.html)]
+> **str2aes and aes2str:** [ex-str2aes-aes2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-str2aes-aes2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-str2aes-aes2str.html)]
 
-> **time expire or past:** [ex-timeTZ2expire-timeTZ2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-timeTZ2expire-timeTZ2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-timeTZ2expire-timeTZ2past.html)]
+> **timeTZ2expire and timeTZ2past:** [ex-timeTZ2expire-timeTZ2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-timeTZ2expire-timeTZ2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-timeTZ2expire-timeTZ2past.html)]
 
 > **color converter:** [ex-colorConverter.html](https://yuda-lyu.github.io/wsemi/examples/ex-colorConverter.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-colorConverter.html)]
 
