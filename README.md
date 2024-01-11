@@ -106,7 +106,7 @@ npm i wsemi
 [Optional] Add script for `dayjs`(or `moment`).
 > **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.9/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
 ```
 or
 ```alias
