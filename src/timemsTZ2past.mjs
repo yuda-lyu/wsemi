@@ -1,4 +1,5 @@
 import ot from 'dayjs'
+import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
 
 
@@ -68,6 +69,11 @@ import istimemsTZ from './istimemsTZ.mjs'
  *
  */
 function timemsTZ2past(t, tNow = null) {
+
+    //check
+    if (!isfun(ot)) {
+        throw new Error(`invalid dayjs`)
+    }
 
     //check
     if (!istimemsTZ(t)) {
@@ -151,7 +157,7 @@ function timemsTZ2past(t, tNow = null) {
     }
 
     return {
-        today: today,
+        today,
         msg: c,
         err: '',
     }

@@ -1,4 +1,5 @@
 import ot from 'dayjs'
+import isfun from './isfun.mjs'
 
 
 /**
@@ -14,6 +15,11 @@ import ot from 'dayjs'
  *
  */
 function now2strp() {
+
+    //check
+    if (!isfun(ot)) {
+        throw new Error(`invalid dayjs`)
+    }
 
     let d = ot()
     let r = d.format('YYYYMMDDHHmmss')
