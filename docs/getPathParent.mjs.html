@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>rep.mjs - Documentation</title>
+    <title>getPathParent.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">rep.mjs</h1>
+    <h1 class="page-title">getPathParent.mjs</h1>
     
 
     
@@ -45,42 +45,147 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import repeat from 'lodash-es/repeat'
+            <pre class="prettyprint source linenums"><code>import size from 'lodash-es/size'
 import isestr from './isestr.mjs'
-import isp0int from './isp0int.mjs'
+import getClearPathName from './getClearPathName.mjs'
+import getFileName from './getFileName.mjs'
+import strdelright from './strdelright.mjs'
 
 
 /**
- * 產生重複n次字串
+ * 由檔案或資料夾位置取得所在資料夾位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getPathParent.test.mjs Github}
  * @memberOf wsemi
- * @param {String} c 輸入欲重複的字串
- * @param {Integer} n 輸入重複次數之含零正整數
- * @returns {Array} 回傳任意資料之陣列
+ * @param {string} str 輸入檔案位置字串
+ * @returns {string} 檔案名稱
  * @example
  *
- * console.log(rep('abc', 2))
- * // => 'abcabc'
+ * let c
+ *
+ * c = 'C:\\temp\\myfile.html'
+ * console.log(getPathParent(c))
+ * // => C:\\temp
+ *
+ * c = 'C:\\temp\\myfile.txt.html'
+ * console.log(getPathParent(c))
+ * // => C:\\temp
+ *
+ * c = 'C:\\temp\\myfile'
+ * console.log(getPathParent(c))
+ * // => C:\\temp
+ *
+ * c = 'C:\\temp\\\\temp\\\\myfile.txt.html'
+ * console.log(getPathParent(c))
+ * // => C:\\temp\\temp
+ *
+ * c = 'C:\\temp\\'
+ * console.log(getPathParent(c))
+ * // => C:\\
+ *
+ * c = 'C:\\temp'
+ * console.log(getPathParent(c))
+ * // => C:\\
+ *
+ * c = 'C:\\'
+ * console.log(getPathParent(c))
+ * // => C:\\
+ *
+ * c = 'C:'
+ * console.log(getPathParent(c))
+ * // => C:\\
+ *
+ * c = '/tmp/myfile.html'
+ * console.log(getPathParent(c))
+ * // => /tmp
+ *
+ * c = '/tmp/myfile.txt.html'
+ * console.log(getPathParent(c))
+ * // => /tmp
+ *
+ * c = '/tmp/myfile'
+ * console.log(getPathParent(c))
+ * // => /tmp
+ *
+ * c = '//tmp////tmp//myfile.txt.html'
+ * console.log(getPathParent(c))
+ * // => /tmp/tmp
+ *
+ * c = '/tmp/'
+ * console.log(getPathParent(c))
+ * // => /
+ *
+ * c = '/tmp'
+ * console.log(getPathParent(c))
+ * // => /
+ *
+ * c = '/'
+ * console.log(getPathParent(c))
+ * // => /
+ *
+ * c = '/foo/bar/baz/asdf/quux.html'
+ * console.log(getPathParent(c))
+ * // => /foo/bar/baz/asdf
+ *
+ * c = '/foo/bar/baz/asdf/quux.txt.html'
+ * console.log(getPathParent(c))
+ * // => /foo/bar/baz/asdf
+ *
+ * c = '/foo/bar/baz/asdf/quux'
+ * console.log(getPathParent(c))
+ * // => /foo/bar/baz/asdf
+ *
+ * c = ''
+ * console.log(getPathParent(c))
+ * // => [empty string]
  *
  */
-function rep(c, n) {
+function getPathParent(str) {
 
     //check
-    if (!isestr(c)) {
-        return ''
-    }
-    if (!isp0int(n)) {
+    if (!isestr(str)) {
         return ''
     }
 
-    let r = repeat(c, n)
+    //getClearPathName
+    let o = getClearPathName(str)
+
+    //check
+    if (o.isRoot) {
+        return o.path
+    }
+
+    //use path
+    str = o.path
+
+    //getFileName
+    let name = getFileName(str)
+
+    //check
+    if (!isestr(name)) {
+        return str
+    }
+
+    //strdelright
+    let n = size(name)
+    str = strdelright(str, n)
+
+    //getClearPathName
+    let p = getClearPathName(str)
+
+    //check
+    if (p.isRoot) {
+        return p.path
+    }
+
+    //use path
+    let r = p.path
 
     return r
 }
 
 
-export default rep
+export default getPathParent
 </code></pre>
         </article>
     </section>

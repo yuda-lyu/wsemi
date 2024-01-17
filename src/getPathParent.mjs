@@ -6,9 +6,9 @@ import strdelright from './strdelright.mjs'
 
 
 /**
- * 由檔案位置取得檔案所在資料夾名稱
+ * 由檔案或資料夾位置取得所在資料夾位置
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDirName.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getPathParent.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案位置字串
  * @returns {string} 檔案名稱
@@ -17,83 +17,83 @@ import strdelright from './strdelright.mjs'
  * let c
  *
  * c = 'C:\\temp\\myfile.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\temp
  *
  * c = 'C:\\temp\\myfile.txt.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\temp
  *
  * c = 'C:\\temp\\myfile'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\temp
  *
  * c = 'C:\\temp\\\\temp\\\\myfile.txt.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\temp\\temp
  *
  * c = 'C:\\temp\\'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\
  *
  * c = 'C:\\temp'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\
  *
  * c = 'C:\\'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\
  *
  * c = 'C:'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => C:\\
  *
  * c = '/tmp/myfile.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /tmp
  *
  * c = '/tmp/myfile.txt.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /tmp
  *
  * c = '/tmp/myfile'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /tmp
  *
  * c = '//tmp////tmp//myfile.txt.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /tmp/tmp
  *
  * c = '/tmp/'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /
  *
  * c = '/tmp'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /
  *
  * c = '/'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /
  *
  * c = '/foo/bar/baz/asdf/quux.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /foo/bar/baz/asdf
  *
  * c = '/foo/bar/baz/asdf/quux.txt.html'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /foo/bar/baz/asdf
  *
  * c = '/foo/bar/baz/asdf/quux'
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => /foo/bar/baz/asdf
  *
  * c = ''
- * console.log(getDirName(c))
+ * console.log(getPathParent(c))
  * // => [empty string]
  *
  */
-function getDirName(str) {
+function getPathParent(str) {
 
     //check
     if (!isestr(str)) {
@@ -138,4 +138,4 @@ function getDirName(str) {
 }
 
 
-export default getDirName
+export default getPathParent
