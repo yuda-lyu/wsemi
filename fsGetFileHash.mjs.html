@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>blobs2u8arrs.mjs - Documentation</title>
+    <title>fsGetFileHash.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">blobs2u8arrs.mjs</h1>
+    <h1 class="page-title">fsGetFileHash.mjs</h1>
     
 
     
@@ -45,44 +45,68 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import map from 'lodash-es/map'
-import blob2u8arr from './blob2u8arr.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+import crypto from 'crypto'
+import genPm from './genPm.mjs'
+import fsIsFile from './fsIsFile.mjs'
 
 
 /**
- * 前端Blob或input檔案物件陣列，逐一轉為各檔案之Uint8Array資料陣列
+ * 後端nodejs計算檔案HASH值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/blobs2u8arrs.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFileHash.test.mjs Github}
  * @memberOf wsemi
- * @param {Blob|File} bbs 輸入Blob或File陣列
- * @returns {Promise} 回傳Promise，resolve回傳各Blob或File的Uint8Array資料陣列，reject回傳錯誤訊息
+ * @param {String} fp 輸入檔案位置
+ * @param {String} [type='sha512'] 輸入檔案位置
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息
  * @example
- * need test in browser
- *
- * let u8a = new Uint8Array([97, 98, 99, 230, 184, 172, 232, 169, 166])
- * let bb = new Blob([u8a])
- * let bbs = [bb]
- * blobs2u8arrs(bbs)
- *     .then(function(u8as){
- *         console.log(u8as)
- *         // => [Uint8Array(9)]
- *         //      0: Uint8Array(9) [97, 98, 99, 230, 184, 172, 232, 169, 166]
- *         //      length: 1
- *     })
+ * need test in nodejs.
  *
  */
-function blobs2u8arrs(bbs) {
+function fsGetFileHash(fp, type = 'sha512') {
 
-    //pms
-    let pms = map(bbs, function(bb) {
-        return blob2u8arr(bb)
-    })
+    //pm
+    let pm = genPm()
 
-    return Promise.all(pms)
+    //check
+    if (!fsIsFile(fp)) {
+        throw new Error(`路徑[${fp}]非檔案`)
+    }
+
+    try {
+
+        //createHash
+        let hash = crypto.createHash(type)
+
+        //createReadStream
+        let input = fs.createReadStream(fp)
+
+        //readable
+        input.on('readable', () => {
+            let data = input.read()
+            if (data) {
+                hash.update(data)
+            }
+            else {
+                pm.resolve(hash.digest('hex'))
+            }
+        })
+
+        //error
+        input.on('error', (err) => {
+            pm.reject(err.toString())
+        })
+
+    }
+    catch (err) {
+        pm.reject(err.toString())
+    }
+
+    return pm
 }
 
 
-export default blobs2u8arrs
+export default fsGetFileHash
 </code></pre>
         </article>
     </section>
