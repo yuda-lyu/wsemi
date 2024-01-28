@@ -32,7 +32,7 @@ describe(`cache`, function() {
                 })
             }
 
-            oc.set('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 }) //快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            oc.set('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 }) //快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
             setTimeout(function() {
                 //第1次呼叫, 此時沒有快取只能執行取值
                 oc.get('fun')
@@ -134,10 +134,10 @@ describe(`cache`, function() {
                 })
             }
 
-            oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 }) //快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 }) //快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
             setTimeout(function() {
                 //第1次呼叫, 此時沒有快取只能執行取值, 會取得第1次結果(count=1)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
                     .then(function(msg) {
                         //console.log('fun 1st', msg)
                         ms.push('fun 1st', msg)
@@ -145,7 +145,7 @@ describe(`cache`, function() {
             }, 1)
             setTimeout(function() {
                 //第2次呼叫, 此時執行中會等待, 偵測週期為1ms, 下次偵測為1100ms, 此時會取得第1次結果(count=1)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
                     .then(function(msg) {
                         //console.log('fun 2nd', msg)
                         ms.push('fun 2nd', msg)
@@ -153,7 +153,7 @@ describe(`cache`, function() {
             }, 100)
             setTimeout(function() {
                 //第3次呼叫, 此時已有快取, 會取得第1次結果(count=1)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
                     .then(function(msg) {
                         //console.log('fun 3rd', msg)
                         ms.push('fun 3rd', msg)
@@ -161,7 +161,7 @@ describe(`cache`, function() {
             }, 500)
             setTimeout(function() {
                 //第4次呼叫, 此時第1次快取(count=1)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1200 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
                     .then(function(msg) {
                         //console.log('fun 4th', msg)
                         ms.push('fun 4th', msg)
@@ -218,10 +218,10 @@ describe(`cache`, function() {
                 })
             }
 
-            oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 }) //快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 }) //快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
             setTimeout(function() {
                 //第1次呼叫(延遲1ms), 此時沒有快取只能執行取值, 因偵測週期為1000ms故得要1001ms才會回應, 回應時為被強制更新(1100ms)之前, 會取得第1次結果(count=1)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         //console.log('fun 1st', msg)
                         ms.push('fun 1st', msg)
@@ -229,7 +229,7 @@ describe(`cache`, function() {
             }, 1)
             setTimeout(function() {
                 //第2次呼叫(延遲200ms), 此時執行中會等待, 因偵測週期為1000ms, 故得等到下次偵測1200ms才會回應, 回應時為被強制更新(1100ms)之後, 此時會取得被強制更新的結果(abc)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         //console.log('fun 2nd', msg)
                         ms.push('fun 2nd', msg)
@@ -237,7 +237,7 @@ describe(`cache`, function() {
             }, 200)
             setTimeout(function() {
                 //第3次呼叫, 此時已有快取, 故此時500ms就會先回應, 會取得第1次結果(count=1)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         //console.log('fun 3rd', msg)
                         ms.push('fun 3rd', msg)
@@ -251,7 +251,7 @@ describe(`cache`, function() {
             }, 1100)
             setTimeout(function() {
                 //第4次呼叫(延遲1300ms), 此時會取得被強制更新之快取值(abc), 快取還剩1300ms才失效(也就是在2600ms失效)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         //console.log('fun 4th', msg)
                         ms.push('fun 4th', msg)
@@ -259,7 +259,7 @@ describe(`cache`, function() {
             }, 1300)
             setTimeout(function() {
                 //第5次呼叫(延遲2700ms), 此時被強制更新之快取值(abc)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
-                oc.getProxy('fun', { execFun: fun, inputFun: ['inp1', 'inp2'], timeExpired: 1500 })
+                oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         //console.log('fun 5th', msg)
                         ms.push('fun 5th', msg)
