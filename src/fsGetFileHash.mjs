@@ -23,7 +23,7 @@ function fsGetFileHash(fp, type = 'sha512') {
 
     //check
     if (!fsIsFile(fp)) {
-        throw new Error(`路徑[${fp}]非檔案`)
+        pm.reject(`路徑[${fp}]非檔案`)
     }
 
     try {
