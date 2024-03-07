@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 import each from 'lodash-es/each'
+import fsIsFolder from './fsIsFolder.mjs'
 
 
 /**
@@ -33,9 +34,19 @@ import each from 'lodash-es/each'
 function fsTreeFolder(fd, levelLimit = 1) {
     let level = 1
 
+    //check
+    if (!fsIsFolder(fd)) {
+        throw new Error(`fd[${fd}] is not a folder`)
+    }
+
     //tree
     function tree(fd) {
         let rs = []
+
+        //check
+        if (!fsIsFolder(fd)) {
+            return rs
+        }
 
         //readdirSync
         let items = fs.readdirSync(fd)
