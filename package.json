@@ -1,9 +1,9 @@
 {
   "name": "wsemi",
-  "version": "1.7.47",
+  "version": "1.7.48",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
-    "chokidar": "^3.5.3",
+    "chokidar": "^3.6.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.10",
     "decimal.js": "^10.4.3",
@@ -19,7 +19,7 @@
     "ua-parser-js": "^1.0.37",
     "viewerjs": "^1.11.6",
     "xlsx": "^0.18.5",
-    "xss": "^1.0.14"
+    "xss": "^1.0.15"
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.12",

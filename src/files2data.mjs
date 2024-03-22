@@ -1,4 +1,4 @@
-import map from 'lodash-es/map'
+import map from 'lodash-es/map.js'
 import genPm from './genPm.mjs'
 import blobs2b64s from './blobs2b64s.mjs'
 import ltdtmerge from './ltdtmerge.mjs'

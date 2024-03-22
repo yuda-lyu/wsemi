@@ -1,5 +1,5 @@
 import tesseract from 'tesseract.js' //要能於nodejs下運行, 故不使用瀏覽器動態加載
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
 import getGlobal from './getGlobal.mjs'
 

@@ -1,8 +1,8 @@
-import AES from 'crypto-js/aes'
+import AES from 'crypto-js/aes.js'
 // import encutf8 from 'crypto-js/enc-utf8'
 // import padPkcs7 from 'crypto-js/pad-pkcs7'
-import enchex from 'crypto-js/enc-hex'
-import encb64 from 'crypto-js/enc-base64'
+import enchex from 'crypto-js/enc-hex.js'
+import encb64 from 'crypto-js/enc-base64.js'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 

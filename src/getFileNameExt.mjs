@@ -1,6 +1,6 @@
-import split from 'lodash-es/split'
-import size from 'lodash-es/size'
-import last from 'lodash-es/last'
+import split from 'lodash-es/split.js'
+import size from 'lodash-es/size.js'
+import last from 'lodash-es/last.js'
 import isestr from './isestr.mjs'
 import getFileName from './getFileName.mjs'
 

@@ -1,5 +1,5 @@
-import times from 'lodash-es/times'
-import constant from 'lodash-es/constant'
+import times from 'lodash-es/times.js'
+import constant from 'lodash-es/constant.js'
 import iser from './iser.mjs'
 import ispint from './ispint.mjs'
 

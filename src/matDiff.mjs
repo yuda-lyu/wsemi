@@ -1,4 +1,4 @@
-import size from 'lodash-es/size'
+import size from 'lodash-es/size.js'
 import isarr from './isarr.mjs'
 import arrDiff from './arrDiff.mjs'
 

@@ -1,4 +1,4 @@
-import find from 'lodash-es/find'
+import find from 'lodash-es/find.js'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 

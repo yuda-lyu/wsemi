@@ -1,5 +1,5 @@
-import get from 'lodash-es/get'
-import trim from 'lodash-es/trim'
+import get from 'lodash-es/get.js'
+import trim from 'lodash-es/trim.js'
 import isnum from './isnum.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'

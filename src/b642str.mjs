@@ -1,5 +1,5 @@
-import encutf8 from 'crypto-js/enc-utf8'
-import encbase64 from 'crypto-js/enc-base64'
+import encutf8 from 'crypto-js/enc-utf8.js'
+import encbase64 from 'crypto-js/enc-base64.js'
 import isestr from './isestr.mjs'
 
 

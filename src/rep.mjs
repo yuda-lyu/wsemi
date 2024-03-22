@@ -1,4 +1,4 @@
-import repeat from 'lodash-es/repeat'
+import repeat from 'lodash-es/repeat.js'
 import isestr from './isestr.mjs'
 import isp0int from './isp0int.mjs'
 

@@ -1,5 +1,5 @@
 import * as Diff from 'diff'
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isEle from './isEle.mjs'
 import getGlobal from './getGlobal.mjs'
 import isestr from './isestr.mjs'

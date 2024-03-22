@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import each from 'lodash-es/each'
+import each from 'lodash-es/each.js'
 import fsIsFolder from './fsIsFolder.mjs'
 
 

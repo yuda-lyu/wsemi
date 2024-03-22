@@ -1,4 +1,4 @@
-import isElement from 'lodash-es/isElement'
+import isElement from 'lodash-es/isElement.js'
 
 
 /**

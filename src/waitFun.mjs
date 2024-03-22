@@ -1,4 +1,4 @@
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'

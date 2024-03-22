@@ -1,4 +1,4 @@
-import map from 'lodash-es/map'
+import map from 'lodash-es/map.js'
 import blob2u8arr from './blob2u8arr.mjs'
 
 

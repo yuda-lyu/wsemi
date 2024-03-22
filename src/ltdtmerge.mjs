@@ -1,5 +1,5 @@
-import map from 'lodash-es/map'
-import merge from 'lodash-es/merge'
+import map from 'lodash-es/map.js'
+import merge from 'lodash-es/merge.js'
 import isarr from './isarr.mjs'
 
 

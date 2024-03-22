@@ -1,6 +1,6 @@
-import MD5 from 'crypto-js/md5'
-import encb64 from 'crypto-js/enc-base64'
-import enchex from 'crypto-js/enc-hex'
+import MD5 from 'crypto-js/md5.js'
+import encb64 from 'crypto-js/enc-base64.js'
+import enchex from 'crypto-js/enc-hex.js'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 

@@ -1,7 +1,7 @@
-import get from 'lodash-es/get'
-import filter from 'lodash-es/filter'
-import min from 'lodash-es/min'
-import isNumber from 'lodash-es/isNumber'
+import get from 'lodash-es/get.js'
+import filter from 'lodash-es/filter.js'
+import min from 'lodash-es/min.js'
+import isNumber from 'lodash-es/isNumber.js'
 import getGlobal from './getGlobal.mjs'
 
 

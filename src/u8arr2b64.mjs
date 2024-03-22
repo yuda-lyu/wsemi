@@ -1,5 +1,5 @@
-import encbase64 from 'crypto-js/enc-base64'
-import libwa from 'crypto-js/lib-typedarrays'
+import encbase64 from 'crypto-js/enc-base64.js'
+import libwa from 'crypto-js/lib-typedarrays.js'
 import isu8arr from './isu8arr.mjs'
 
 

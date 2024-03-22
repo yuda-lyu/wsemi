@@ -1,7 +1,7 @@
-import join from 'lodash-es/join'
-import split from 'lodash-es/split'
-import size from 'lodash-es/size'
-import dropRight from 'lodash-es/dropRight'
+import join from 'lodash-es/join.js'
+import split from 'lodash-es/split.js'
+import size from 'lodash-es/size.js'
+import dropRight from 'lodash-es/dropRight.js'
 import isestr from './isestr.mjs'
 import getFileName from './getFileName.mjs'
 

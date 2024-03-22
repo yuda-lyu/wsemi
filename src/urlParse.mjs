@@ -1,7 +1,7 @@
-import get from 'lodash-es/get'
-import split from 'lodash-es/split'
-import map from 'lodash-es/map'
-import fromPairs from 'lodash-es/fromPairs'
+import get from 'lodash-es/get.js'
+import split from 'lodash-es/split.js'
+import map from 'lodash-es/map.js'
+import fromPairs from 'lodash-es/fromPairs.js'
 import isestr from './isestr.mjs'
 
 

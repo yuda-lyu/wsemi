@@ -1,5 +1,5 @@
-import each from 'lodash-es/each'
-import get from 'lodash-es/get'
+import each from 'lodash-es/each.js'
+import get from 'lodash-es/get.js'
 import isobj from './isobj.mjs'
 import isearr from './isearr.mjs'
 import haskey from './haskey.mjs'

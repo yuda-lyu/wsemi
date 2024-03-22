@@ -1,6 +1,6 @@
-import SHA512 from 'crypto-js/sha512'
-import encb64 from 'crypto-js/enc-base64'
-import enchex from 'crypto-js/enc-hex'
+import SHA512 from 'crypto-js/sha512.js'
+import encb64 from 'crypto-js/enc-base64.js'
+import enchex from 'crypto-js/enc-hex.js'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 

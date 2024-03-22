@@ -1,4 +1,4 @@
-import encbase64 from 'crypto-js/enc-base64'
+import encbase64 from 'crypto-js/enc-base64.js'
 import isstr from './isstr.mjs'
 
 

@@ -1,6 +1,6 @@
-import map from 'lodash-es/map'
-import each from 'lodash-es/each'
-import sortBy from 'lodash-es/sortBy'
+import map from 'lodash-es/map.js'
+import each from 'lodash-es/each.js'
+import sortBy from 'lodash-es/sortBy.js'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
 

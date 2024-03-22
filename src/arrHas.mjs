@@ -1,4 +1,4 @@
-import isEqual from 'lodash-es/isEqual'
+import isEqual from 'lodash-es/isEqual.js'
 import isarr from './isarr.mjs'
 import iser from './iser.mjs'
 

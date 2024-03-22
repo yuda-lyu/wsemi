@@ -1,6 +1,6 @@
-import get from 'lodash-es/get'
-import isBoolean from 'lodash-es/isBoolean'
-import isFunction from 'lodash-es/isFunction'
+import get from 'lodash-es/get.js'
+import isBoolean from 'lodash-es/isBoolean.js'
+import isFunction from 'lodash-es/isFunction.js'
 import evem from './evem.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
 

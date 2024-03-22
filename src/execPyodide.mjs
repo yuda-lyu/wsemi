@@ -1,5 +1,5 @@
-import get from 'lodash-es/get'
-import each from 'lodash-es/each'
+import get from 'lodash-es/get.js'
+import each from 'lodash-es/each.js'
 import isarr from './isarr.mjs'
 import loadPyodide from './_loadPyodide.js'
 import getGlobal from './getGlobal.mjs'

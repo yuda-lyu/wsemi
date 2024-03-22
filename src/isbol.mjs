@@ -1,4 +1,4 @@
-import isBoolean from 'lodash-es/isBoolean'
+import isBoolean from 'lodash-es/isBoolean.js'
 
 
 /**

@@ -1,6 +1,6 @@
-import each from 'lodash-es/each'
-import take from 'lodash-es/take'
-import tail from 'lodash-es/tail'
+import each from 'lodash-es/each.js'
+import take from 'lodash-es/take.js'
+import tail from 'lodash-es/tail.js'
 import isearr from './isearr.mjs'
 import keysmat2ltdt from './keysmat2ltdt.mjs'
 

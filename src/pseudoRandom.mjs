@@ -1,4 +1,4 @@
-import isNumber from 'lodash-es/isNumber'
+import isNumber from 'lodash-es/isNumber.js'
 import cstr from './cstr.mjs'
 import str2hint from './str2hint.mjs'
 

@@ -1,4 +1,4 @@
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isearr from './isearr.mjs'
 import importResources from './importResources.mjs'
 import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'

@@ -1,4 +1,4 @@
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isstr from './isstr.mjs'
 import isEle from './isEle.mjs'
 import domIsFocused from './domIsFocused.mjs'

@@ -1,5 +1,5 @@
-import map from 'lodash-es/map'
-import isEqual from 'lodash-es/isEqual'
+import map from 'lodash-es/map.js'
+import isEqual from 'lodash-es/isEqual.js'
 import isarr from './isarr.mjs'
 import iser from './iser.mjs'
 

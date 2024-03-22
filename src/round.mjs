@@ -1,4 +1,4 @@
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isnum from './isnum.mjs'
 import isp0int from './isp0int.mjs'
 import cdbl from './cdbl.mjs'

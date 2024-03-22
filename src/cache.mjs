@@ -1,5 +1,5 @@
-import loGet from 'lodash-es/get'
-import cloneDeep from 'lodash-es/cloneDeep'
+import loGet from 'lodash-es/get.js'
+import cloneDeep from 'lodash-es/cloneDeep.js'
 import evem from './evem.mjs'
 import waitFun from './waitFun.mjs'
 import isfun from './isfun.mjs'

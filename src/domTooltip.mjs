@@ -1,7 +1,7 @@
 import tippy from 'tippy.js'
 import 'tippy.js/dist/tippy.css'
 import 'tippy.js/themes/light.css'
-import merge from 'lodash-es/merge'
+import merge from 'lodash-es/merge.js'
 import iseobj from './iseobj.mjs'
 import isnum from './isnum.mjs'
 import cint from './cint.mjs'

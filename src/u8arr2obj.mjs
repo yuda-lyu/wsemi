@@ -1,4 +1,4 @@
-import each from 'lodash-es/each'
+import each from 'lodash-es/each.js'
 import isu8arr from './isu8arr.mjs'
 import getBufferSize from './getBufferSize.mjs'
 import bufReadDbl from './bufReadDbl.mjs'

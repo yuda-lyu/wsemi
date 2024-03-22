@@ -1,5 +1,5 @@
-import range from 'lodash-es/range'
-import at from 'lodash-es/at'
+import range from 'lodash-es/range.js'
+import at from 'lodash-es/at.js'
 import isearr from './isearr.mjs'
 import isp0int from './isp0int.mjs'
 import iser from './iser.mjs'

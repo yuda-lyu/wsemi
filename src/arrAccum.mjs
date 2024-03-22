@@ -1,4 +1,4 @@
-import each from 'lodash-es/each'
+import each from 'lodash-es/each.js'
 import isearr from './isearr.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'

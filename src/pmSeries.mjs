@@ -1,5 +1,5 @@
-import drop from 'lodash-es/drop'
-import each from 'lodash-es/each'
+import drop from 'lodash-es/drop.js'
+import each from 'lodash-es/each.js'
 import genPm from './genPm.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'

@@ -1,5 +1,5 @@
-import floor from 'lodash-es/floor'
-import reverse from 'lodash-es/reverse'
+import floor from 'lodash-es/floor.js'
+import reverse from 'lodash-es/reverse.js'
 import isint from './isint.mjs'
 import isp0int from './isp0int.mjs'
 import isbol from './isbol.mjs'

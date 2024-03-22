@@ -1,4 +1,4 @@
-import size from 'lodash-es/size'
+import size from 'lodash-es/size.js'
 import isestr from './isestr.mjs'
 import strright from './strright.mjs'
 import strdelright from './strdelright.mjs'

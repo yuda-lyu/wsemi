@@ -1,5 +1,5 @@
-import get from 'lodash-es/get'
-import isBoolean from 'lodash-es/isBoolean'
+import get from 'lodash-es/get.js'
+import isBoolean from 'lodash-es/isBoolean.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'

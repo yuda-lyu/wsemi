@@ -1,8 +1,8 @@
 //import htmlToImage from 'htmlToImage' //htmlToImage.js沒有umd版, 故引用後會有未檢查window的殼層程式碼出現, 導致無法於nodejs環境下使用wsemi
 //import canvg from 'canvg' //因htmlToImage不支援IE11與Safari，故也不引用canvg來支援IE11
-import get from 'lodash-es/get'
-import isNumber from 'lodash-es/isNumber'
-import isBoolean from 'lodash-es/isBoolean'
+import get from 'lodash-es/get.js'
+import isNumber from 'lodash-es/isNumber.js'
+import isBoolean from 'lodash-es/isBoolean.js'
 import isEle from './isEle.mjs'
 import domRemove from './domRemove.mjs'
 import domPrepend from './domPrepend.mjs'

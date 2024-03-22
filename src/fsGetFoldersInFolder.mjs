@@ -1,5 +1,5 @@
-import filter from 'lodash-es/filter'
-import map from 'lodash-es/map'
+import filter from 'lodash-es/filter.js'
+import map from 'lodash-es/map.js'
 import fsTreeFolder from './fsTreeFolder.mjs'
 import fsIsFile from './fsIsFile.mjs'
 

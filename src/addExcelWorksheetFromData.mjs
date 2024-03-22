@@ -1,4 +1,4 @@
-import get from 'lodash-es/get'
+import get from 'lodash-es/get.js'
 import isobj from './isobj.mjs'
 import iseobj from './iseobj.mjs'
 import isarr from './isarr.mjs'

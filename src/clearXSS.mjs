@@ -1,5 +1,5 @@
-import each from 'lodash-es/each'
-import cloneDeep from 'lodash-es/cloneDeep'
+import each from 'lodash-es/each.js'
+import cloneDeep from 'lodash-es/cloneDeep.js'
 import filterXSS from 'xss'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'

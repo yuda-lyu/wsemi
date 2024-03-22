@@ -1,4 +1,4 @@
-import isError from 'lodash-es/isError'
+import isError from 'lodash-es/isError.js'
 import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
 import isu8arr from './isu8arr.mjs'
