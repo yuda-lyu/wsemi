@@ -1,4 +1,4 @@
-// import trim from 'lodash-es/trim'
+// import trim from 'lodash-es/trim.js'
 import uniq from 'lodash-es/uniq.js'
 import get from 'lodash-es/get.js'
 import size from 'lodash-es/size.js'

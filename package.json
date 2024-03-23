@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0-rc.12",
-    "w-package-tools": "^1.0.73"
+    "w-package-tools": "^1.0.74"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
