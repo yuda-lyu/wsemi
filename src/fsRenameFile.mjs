@@ -26,7 +26,7 @@ function fsRenameFile(pahOld, pahNew) {
     }
 
     //check
-    if (!fs.existsSync(pahNew)) {
+    if (fs.existsSync(pahNew)) {
         return {
             error: `pahNew[${pahNew}] does exist` //pahNew存在則視為錯誤
         }
