@@ -34293,7 +34293,7 @@ ev.emit('evName',data)</code></pre>
 
     
 
-    <h4 class="name" id=".execProcess"><span class="type-signature type-signature-static">(static) </span>execProcess<span class="signature">(prog, args)</span><span class="type-signature"> → {*}</span></h4>
+    <h4 class="name" id=".execProcess"><span class="type-signature type-signature-static">(static) </span>execProcess<span class="signature">(prog, args, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -34310,7 +34310,7 @@ ev.emit('evName',data)</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line42">line 42</a>
+        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -34403,7 +34403,11 @@ if (true) {
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -34429,10 +34433,22 @@ if (true) {
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收</p></td>
         </tr>
 
     
@@ -34456,10 +34472,172 @@ if (true) {
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入腳本檔案位置字串或參數</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cbStdout</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入回調stdout函數，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cbStderr</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入回調stderr函數，預設null</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -34485,7 +34663,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳任意資料</p>
+    <p>回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息</p>
 </div>
 
 
@@ -34496,7 +34674,7 @@ if (true) {
     </dt>
     <dd>
         
-<span class="param-type">*</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -35440,7 +35618,7 @@ test()
 
     
 
-    <h4 class="name" id=".execScript"><span class="type-signature type-signature-static">(static) </span>execScript<span class="signature">(prog, args)</span><span class="type-signature"> → {*}</span></h4>
+    <h4 class="name" id=".execScript"><span class="type-signature type-signature-static">(static) </span>execScript<span class="signature">(prog, args)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -35594,7 +35772,7 @@ if(true){
 
             
 
-            <td class="description last"><p>輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收</p></td>
+            <td class="description last"><p>輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收</p></td>
         </tr>
 
     
@@ -35647,7 +35825,7 @@ if(true){
 
         
 <div class="param-desc">
-    <p>回傳任意資料</p>
+    <p>回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息</p>
 </div>
 
 
@@ -35658,7 +35836,7 @@ if(true){
     </dt>
     <dd>
         
-<span class="param-type">*</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -39786,7 +39964,7 @@ setInterval(() =&gt; {
 // recv change g1 { p1: 'abc', p2: 4, p3: 'from g1' }
 // ...
 
-//node --experimental-modules --es-module-specifier-resolution=node g1.mjs
+//node --experimental-modules g1.mjs
 
 // ---- g2.mjs ----
 
@@ -39815,7 +39993,7 @@ setTimeout(() =&gt; {
 // recv change g2 { p1: 'abc', p2: 4, p3: 'from g1' }
 // ...
 
-//node --experimental-modules --es-module-specifier-resolution=node g2.mjs</code></pre>
+//node --experimental-modules g2.mjs</code></pre>
         </div>
 
 
@@ -88925,7 +89103,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sat Mar 23 2024 15:16:14 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue May 21 2024 21:34:35 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -88946,7 +89124,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.49/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.50/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
