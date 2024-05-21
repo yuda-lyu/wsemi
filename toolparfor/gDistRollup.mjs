@@ -49,4 +49,4 @@ rollupFile({
 })
 
 
-//node --experimental-modules --es-module-specifier-resolution=node toolparfor/gDistRollup.mjs
+//node --experimental-modules toolparfor/gDistRollup.mjs

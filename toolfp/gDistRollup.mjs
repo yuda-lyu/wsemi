@@ -27,4 +27,4 @@ rollupFiles({
 })
 
 
-//node --experimental-modules --es-module-specifier-resolution=node toolfp/gDistRollup.mjs
+//node --experimental-modules toolfp/gDistRollup.mjs

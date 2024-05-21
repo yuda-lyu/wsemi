@@ -96,9 +96,9 @@ import isarr from './isarr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execScript.test.mjs Github}
  * @memberOf wsemi
- * @param {String} prog 輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收
+ * @param {String} prog 輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收
  * @param {String|Array} args 輸入腳本檔案位置字串或參數
- * @returns {*} 回傳任意資料
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
  * @example
  * //need test in nodejs
  *

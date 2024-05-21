@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.49",
+  "version": "1.7.50",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^3.6.0",
@@ -26,7 +26,7 @@
     "w-package-tools": "^1.0.75"
   },
   "scripts": {
-    "test": "mocha --parallel --timeout 60000 --experimental-modules --es-module-specifier-resolution=node",
+    "test": "mocha --parallel --timeout 60000 --experimental-modules",
     "deploy": "gh-pages -d docs"
   },
   "repository": {

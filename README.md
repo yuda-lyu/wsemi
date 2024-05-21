@@ -4,7 +4,6 @@ A support package for web developer.
 ![language](https://img.shields.io/badge/language-JavaScript-orange.svg) 
 [![npm version](http://img.shields.io/npm/v/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) 
 [![license](https://img.shields.io/npm/l/wsemi.svg?style=flat)](https://npmjs.org/package/wsemi) 
-[![gzip file size](http://img.badgesize.io/yuda-lyu/wsemi/master/dist/wsemi.umd.js.svg?compression=gzip)](https://github.com/yuda-lyu/wsemi)
 [![npm download](https://img.shields.io/npm/dt/wsemi.svg)](https://npmjs.org/package/wsemi) 
 [![npm download](https://img.shields.io/npm/dm/wsemi.svg)](https://npmjs.org/package/wsemi) 
 [![jsdelivr download](https://img.shields.io/jsdelivr/npm/hm/wsemi.svg)](https://www.jsdelivr.com/package/npm/wsemi)
@@ -196,5 +195,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.49/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.50/dist/wsemi.umd.js"></script>
 ```

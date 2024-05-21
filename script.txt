@@ -1,14 +1,14 @@
-#node --experimental-modules --es-module-specifier-resolution=node toolg/addVersion.mjs
-node --experimental-modules --es-module-specifier-resolution=node toolg/modifyReadme.mjs
+#node --experimental-modules toolg/addVersion.mjs
+node --experimental-modules toolg/modifyReadme.mjs
 
-node --experimental-modules --es-module-specifier-resolution=node toolg/gPackageIndex.mjs
+node --experimental-modules toolg/gPackageIndex.mjs
 
-node --experimental-modules --es-module-specifier-resolution=node toolg/cleanFolder.mjs
+node --experimental-modules toolg/cleanFolder.mjs
 ./node_modules/.bin/jsdoc -c .jsdoc
-node --experimental-modules --es-module-specifier-resolution=node toolg/gDocsExams.mjs
-node --experimental-modules --es-module-specifier-resolution=node toolg/gDocsEditor.mjs
+node --experimental-modules toolg/gDocsExams.mjs
+node --experimental-modules toolg/gDocsEditor.mjs
 
-node --experimental-modules --es-module-specifier-resolution=node toolg/gDistRollup.mjs
+node --experimental-modules toolg/gDistRollup.mjs
 
 git add .  -A
 git commit -m 'modify: '
@@ -18,6 +18,6 @@ npm run deploy
 
 #npm test
 
-#node --experimental-modules --es-module-specifier-resolution=node g.mjs
+#node --experimental-modules g.mjs
 
 #npm publish

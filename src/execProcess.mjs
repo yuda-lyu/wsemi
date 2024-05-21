@@ -1,3 +1,5 @@
+import get from 'lodash-es/get.js'
+import isfun from './isfun.mjs'
 import cp from 'child_process'
 import isestr from './isestr.mjs'
 
@@ -7,9 +9,12 @@ import isestr from './isestr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcess.test.mjs Github}
  * @memberOf wsemi
- * @param {String} prog 輸入執行檔或程式語言位置字串, 若為註冊系統的全域指令, 例如可直接給'Python', 腳本需自行接收呼叫引數, 並將回傳資料轉json字串後print/log到dos視窗, 即可由nodejs接收
+ * @param {String} prog 輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收
  * @param {String|Array} args 輸入腳本檔案位置字串或參數
- * @returns {*} 回傳任意資料
+ * @param {Object} [opt={}] 輸入設定物件
+ * @param {Function} [opt.cbStdout=null] 輸入回調stdout函數，預設null
+ * @param {Function} [opt.cbStderr=null] 輸入回調stderr函數，預設null
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
  * @example
  * //need test in nodejs
  *
@@ -39,7 +44,13 @@ import isestr from './isestr.mjs'
  * }
  *
  */
-function execProcess(prog, args) {
+function execProcess(prog, args, opt = {}) {
+
+    //cbStdout
+    let cbStdout = get(opt, 'cbStdout')
+
+    //cbStderr
+    let cbStderr = get(opt, 'cbStderr')
 
     function toUtf8(c) {
         try {
@@ -54,6 +65,8 @@ function execProcess(prog, args) {
 
         //exec
         let r = cp.exec(`${prog} ${args}`, (err, stdout, stderr) => {
+            // console.log('stdout', stdout)
+            // console.log('stderr', stderr)
             if (err) {
                 return reject(err)
             }
@@ -84,6 +97,22 @@ function execProcess(prog, args) {
             // console.log('close code', code)
             resolve(msg)
         })
+
+        //cbStdout
+        if (isfun(cbStdout)) {
+            r.stdout.on('data', function (data) {
+                // console.log('stdout', data)
+                cbStdout(data)
+            })
+        }
+
+        //cbStderr
+        if (isfun(cbStderr)) {
+            r.stderr.on('data', function (data) {
+                // console.log('stderr', data)
+                cbStderr(data)
+            })
+        }
 
     })
 }

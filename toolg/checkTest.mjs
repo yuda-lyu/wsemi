@@ -43,5 +43,5 @@ else {
 }
 
 
-//node --experimental-modules --es-module-specifier-resolution=node toolg/checkTest.mjs
+//node --experimental-modules toolg/checkTest.mjs
 

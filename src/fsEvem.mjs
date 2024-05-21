@@ -50,7 +50,7 @@ import fsWatchFile from './fsWatchFile.mjs'
  * // recv change g1 { p1: 'abc', p2: 4, p3: 'from g1' }
  * // ...
  *
- * //node --experimental-modules --es-module-specifier-resolution=node g1.mjs
+ * //node --experimental-modules g1.mjs
  *
  * // ---- g2.mjs ----
  *
@@ -79,7 +79,7 @@ import fsWatchFile from './fsWatchFile.mjs'
  * // recv change g2 { p1: 'abc', p2: 4, p3: 'from g1' }
  * // ...
  *
- * //node --experimental-modules --es-module-specifier-resolution=node g2.mjs
+ * //node --experimental-modules g2.mjs
  *
  */
 function fsEvem(fd = './_evps', opt = {}) {
