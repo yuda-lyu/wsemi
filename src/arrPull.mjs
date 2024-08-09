@@ -16,7 +16,16 @@ import isobj from './isobj.mjs'
  * @param {Array|Object|Number|String|Boolean} vpull 輸入要被移除的元素或陣列
  * @returns {Array} 回傳移除後陣列
  * @example
-
+ *
+ * console.log(arrPull([1, 2, 3, 4, 5, 'abc'], [1, 4]))
+ * // => [ 2, 3, 5, 'abc' ]
+ *
+ * console.log(arrPull([1, 2, 3, '4', 5, 'abc'], [1, 4]))
+ * // => [ 2, 3, '4', 5, 'abc' ]
+ *
+ * console.log(arrPull([1, 2, 3, '4', 5, 'abc'], [6, 7]))
+ * // => [ 1, 2, 3, '4', 5, 'abc' ]
+ *
  */
 function arrPull(vall, vpull) {
 

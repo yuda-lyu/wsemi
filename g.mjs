@@ -1,14 +1,10 @@
 import _ from 'lodash-es'
-// import bbb from './src/bbb.mjs'
-import arrPull from './src/arrPull.mjs'
+import arrReverse from './src/arrReverse.mjs'
 
-console.log(arrPull([1, 2, 3, 4, 5, 'abc'], [1, 4]))
-// => [ 2, 3, 5, 'abc' ]
+console.log(arrReverse([1, 2, 3, 4, 5, 'abc']))
+// => [ 'abc', 5, 4, 3, 2, 1 ]
 
-console.log(arrPull([1, 2, 3, '4', 5, 'abc'], [1, 4]))
-// => [ 2, 3, '4', 5, 'abc' ]
-
-console.log(arrPull([1, 2, 3, '4', 5, 'abc'], [6, 7]))
-// => [ 1, 2, 3, '4', 5, 'abc' ]
+console.log(arrReverse([1, 2, 3, '4', 5, 'abc']))
+// => [ 'abc', 5, '4', 3, 2, 1 ]
 
 //node --experimental-modules g.mjs
