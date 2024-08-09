@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>cdbl.mjs - Documentation</title>
+    <title>arrReverse.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">cdbl.mjs</h1>
+    <h1 class="page-title">arrReverse.mjs</h1>
     
 
     
@@ -45,38 +45,49 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import toFinite from 'lodash-es/toFinite.js'
+            <pre class="prettyprint source linenums"><code>import reverse from 'lodash-es/reverse.js'
+import cloneDeep from 'lodash-es/cloneDeep.js'
+import isearr from './isearr.mjs'
+import isstr from './isstr.mjs'
+import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
+import isobj from './isobj.mjs'
 
 
 /**
- * 數字或字串轉浮點數
- * 若輸入非數字則回傳0
+ * 反序排列陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cdbl.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrReverse.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} v 輸入數字或字串
- * @returns {Number} 回傳數字
+ * @param {Array} vsrc 輸入原始陣列
+ * @returns {Array} 回傳移除後陣列
  * @example
  *
- * console.log(cdbl('25'))
- * // => 25
+ * console.log(arrReverse([1, 2, 3, 4, 5, 'abc']))
+ * // => [ 'abc', 5, 4, 3, 2, 1 ]
+ *
+ * console.log(arrReverse([1, 2, 3, '4', 5, 'abc']))
+ * // => [ 'abc', 5, '4', 3, 2, 1 ]
  *
  */
-function cdbl(v) {
+function arrReverse(vall) {
 
     //check
-    if (!isnum(v)) {
-        return 0
+    if (!isearr(vall)) {
+        return []
     }
 
-    let r = toFinite(v)
+    //cloneDeep
+    let rs = cloneDeep(vall)
 
-    return r
+    //reverse
+    reverse(rs)
+
+    return rs
 }
 
 
-export default cdbl
+export default arrReverse
 </code></pre>
         </article>
     </section>
