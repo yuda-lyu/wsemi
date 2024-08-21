@@ -76,6 +76,10 @@ import pseudoRandom from './pseudoRandom.mjs'
  * console.log('pseudoRandomIntRange(0,100,"def")', r)
  * // => pseudoRandomIntRange(0,100,"def") 99
  *
+ * r = pseudoRandomIntRange(0, 100, 'BH01S123')
+ * console.log('pseudoRandomIntRange(0,100,"BH01S123")', r)
+ * // => pseudoRandomIntRange(0,100,"BH01S123") 1
+ *
  * r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
  * console.log('pseudoRandomIntRange(0,100,"BH-01:S-123")', r)
  * // => pseudoRandomIntRange(0,100,"BH-01:S-123") 97

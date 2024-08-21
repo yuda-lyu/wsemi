@@ -13,6 +13,7 @@ let _seed = 0
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pseudoRandom.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
+ * @param {Boolean} [returnFun=false] 輸入是否回傳產生函數布林值，預設false
  * @returns {Number} 回傳隨機數字
  * @example
  *
@@ -51,7 +52,7 @@ let _seed = 0
  * // => seed=BH01S123 0.9579511017072946
  *
  */
-function pseudoRandom(seed = 'start1') {
+function pseudoRandom(seed = 'start1', returnFun = false) {
 
     //seed
     if (seed === undefined) {
@@ -193,7 +194,15 @@ function pseudoRandom(seed = 'start1') {
 
     init_genrand(seed)
 
-    return genrand()
+    let r = null
+    if (returnFun) {
+        r = genrand
+    }
+    else {
+        r = genrand()
+    }
+
+    return r
 }
 
 

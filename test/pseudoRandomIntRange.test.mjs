@@ -78,6 +78,12 @@ describe(`pseudoRandomIntRange`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return 1 when input 0, 100, 'BH01S123'`, function() {
+        let r = pseudoRandomIntRange(0, 100, 'BH01S123')
+        let rr = 1
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return 97 when input 0, 100, 'BH-01:S-123'`, function() {
         let r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
         let rr = 97
