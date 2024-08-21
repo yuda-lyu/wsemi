@@ -177,13 +177,13 @@ function pseudoRandom(seed = 'start1', returnFun = false) {
     /* generates a random number on [0,1)-real-interval */
     let genrand = () => {
         return genrand_int32() * (1.0 / 4294967296.0)
-    /* divided by 2^32 */
+        /* divided by 2^32 */
     }
 
     // /* generates a random number on (0,1)-real-interval */
     // let genrand_real3 = () => {
     //     return (genrand_int32() + 0.5) * (1.0 / 4294967296.0)
-    // /* divided by 2^32 */
+    //     /* divided by 2^32 */
     // }
 
     // /* generates a random number on [0,1) with 53-bit resolution*/

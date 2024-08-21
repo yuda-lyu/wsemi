@@ -7,8 +7,7 @@ import Decimal from 'decimal.js'
 
 
 /**
- * 數字或字串四捨五入至指定位數(0位為整數)
- * 若輸入不是數字或字串時則回傳空字串
+ * 數字或字串四捨五入至指定位數(0位為整數)，若輸入不是數字或字串時則回傳空字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/round.test.mjs Github}
  * @memberOf wsemi
