@@ -6,7 +6,7 @@ import str2hint from './str2hint.mjs'
 let _seed = 0
 
 /**
- * 產生偽隨機數
+ * 產生偽隨機數，範圍[0,1)，代表0≦隨機數＜1
  *
  * Fork: {@link https://gist.github.com/banksean/300494 MersenneTwister}
  *
