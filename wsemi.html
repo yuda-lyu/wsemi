@@ -74109,96 +74109,96 @@ console.log('pseudoRandomIntRange', r)
 // =&gt; pseudoRandomIntRange 43 (預設範圍為0至100)
 
 r = pseudoRandomIntRange(0, 100)
-console.log('pseudoRandomIntRange(0,100)', r)
-// =&gt; pseudoRandomIntRange(0,100) 58 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+console.log('pseudoRandomIntRange(0, 100)', r)
+// =&gt; pseudoRandomIntRange(0, 100) 57 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 r = pseudoRandomIntRange(123, 4567)
-console.log('pseudoRandomIntRange(123,4567)', r)
-// =&gt; pseudoRandomIntRange(123,4567) 2572
+console.log('pseudoRandomIntRange(123, 4567)', r)
+// =&gt; pseudoRandomIntRange(123, 4567) 2571
 
 r = pseudoRandomIntRange(null, null, 123)
-console.log('pseudoRandomIntRange(null,null,123)', r)
-// =&gt; pseudoRandomIntRange(null,null,123) 71
+console.log('pseudoRandomIntRange(null, null, 123)', r)
+// =&gt; pseudoRandomIntRange(null, null, 123) 70
 
 r = pseudoRandomIntRange(null, null, 12.3)
-console.log('pseudoRandomIntRange(null,null,12.3)', r)
-// =&gt; pseudoRandomIntRange(null,null,12.3) 86
+console.log('pseudoRandomIntRange(null, null, 12.3)', r)
+// =&gt; pseudoRandomIntRange(null, null, 12.3) 85
 
 r = pseudoRandomIntRange(null, null, 'abc')
-console.log('pseudoRandomIntRange(null,null,"abc")', r)
-// =&gt; pseudoRandomIntRange(null,null,"abc") 64
+console.log('pseudoRandomIntRange(null, null, "abc")', r)
+// =&gt; pseudoRandomIntRange(null, null, "abc") 63
 
 r = pseudoRandomIntRange(null, null, 'abc')
-console.log('pseudoRandomIntRange(null,null,"abc")', r)
-// =&gt; pseudoRandomIntRange(null,null,"abc") 64
+console.log('pseudoRandomIntRange(null, null, "abc")', r)
+// =&gt; pseudoRandomIntRange(null, null, "abc") 63
 
 r = pseudoRandomIntRange(null, null, 'def')
-console.log('pseudoRandomIntRange(null,null,"def")', r)
-// =&gt; pseudoRandomIntRange(null,null,"def") 99
+console.log('pseudoRandomIntRange(null, null, "def")', r)
+// =&gt; pseudoRandomIntRange(null, null, "def") 98
 
 r = pseudoRandomIntRange(null, null, 'BH01S123')
-console.log('pseudoRandomIntRange(null,null,"BH01S123")', r)
-// =&gt; pseudoRandomIntRange(null,null,"BH01S123") 1
+console.log('pseudoRandomIntRange(null, null, "BH01S123")', r)
+// =&gt; pseudoRandomIntRange(null, null, "BH01S123") 0
 
 r = pseudoRandomIntRange(null, null, 'BH-01:S-123')
-console.log('pseudoRandomIntRange(null,null,"BH-01:S-123")', r)
-// =&gt; pseudoRandomIntRange(null,null,"BH-01:S-123") 97
+console.log('pseudoRandomIntRange(null, null, "BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(null, null, "BH-01:S-123") 96
 
 r = pseudoRandomIntRange(0, 100, 123)
-console.log('pseudoRandomIntRange(0,100,123)', r)
-// =&gt; pseudoRandomIntRange(0,100,123) 71
+console.log('pseudoRandomIntRange(0, 100, 123)', r)
+// =&gt; pseudoRandomIntRange(0, 100, 123) 70
 
 r = pseudoRandomIntRange(0, 100, 12.3)
-console.log('pseudoRandomIntRange(0,100,12.3)', r)
-// =&gt; pseudoRandomIntRange(0,100,12.3) 86
+console.log('pseudoRandomIntRange(0, 100, 12.3)', r)
+// =&gt; pseudoRandomIntRange(0, 100, 12.3) 85
 
 r = pseudoRandomIntRange(0, 100, 'abc')
-console.log('pseudoRandomIntRange(0,100,"abc")', r)
-// =&gt; pseudoRandomIntRange(0,100,"abc") 64
+console.log('pseudoRandomIntRange(0, 100, "abc")', r)
+// =&gt; pseudoRandomIntRange(0, 100, "abc") 63
 
 r = pseudoRandomIntRange(0, 100, 'abc')
-console.log('pseudoRandomIntRange(0,100,"abc")', r)
-// =&gt; pseudoRandomIntRange(0,100,"abc") 64
+console.log('pseudoRandomIntRange(0, 100, "abc")', r)
+// =&gt; pseudoRandomIntRange(0, 100, "abc") 63
 
 r = pseudoRandomIntRange(0, 100, 'def')
-console.log('pseudoRandomIntRange(0,100,"def")', r)
-// =&gt; pseudoRandomIntRange(0,100,"def") 99
+console.log('pseudoRandomIntRange(0, 100, "def")', r)
+// =&gt; pseudoRandomIntRange(0, 100, "def") 98
 
 r = pseudoRandomIntRange(0, 100, 'BH01S123')
-console.log('pseudoRandomIntRange(0,100,"BH01S123")', r)
-// =&gt; pseudoRandomIntRange(0,100,"BH01S123") 1
+console.log('pseudoRandomIntRange(0, 100, "BH01S123")', r)
+// =&gt; pseudoRandomIntRange(0, 100, "BH01S123") 0
 
 r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
-console.log('pseudoRandomIntRange(0,100,"BH-01:S-123")', r)
-// =&gt; pseudoRandomIntRange(0,100,"BH-01:S-123") 97
+console.log('pseudoRandomIntRange(0, 100, "BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(0, 100, "BH-01:S-123") 96
 
 r = pseudoRandomIntRange(123, 4567, 123)
-console.log('pseudoRandomIntRange(123,4567,123)', r)
-// =&gt; pseudoRandomIntRange(123,4567,123) 3219
+console.log('pseudoRandomIntRange(123, 4567, 123)', r)
+// =&gt; pseudoRandomIntRange(123, 4567, 123) 3218
 
 r = pseudoRandomIntRange(123, 4567, 12.3)
-console.log('pseudoRandomIntRange(123,4567,12.3)', r)
-// =&gt; pseudoRandomIntRange(123,4567,12.3) 3907
+console.log('pseudoRandomIntRange(123, 4567, 12.3)', r)
+// =&gt; pseudoRandomIntRange(123, 4567, 12.3) 3906
 
 r = pseudoRandomIntRange(123, 4567, 'abc')
-console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
-// =&gt; pseudoRandomIntRange(123,456.7,"abc") 2930
+console.log('pseudoRandomIntRange(123, 456.7, "abc")', r)
+// =&gt; pseudoRandomIntRange(123, 456.7, "abc") 2929
 
 r = pseudoRandomIntRange(123, 4567, 'abc')
-console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
-// =&gt; pseudoRandomIntRange(123,456.7,"abc") 2930
+console.log('pseudoRandomIntRange(123, 456.7, "abc")', r)
+// =&gt; pseudoRandomIntRange(123, 456.7, "abc") 2929
 
 r = pseudoRandomIntRange(123, 4567, 'def')
-console.log('pseudoRandomIntRange(123,456.7,"def")', r)
-// =&gt; pseudoRandomIntRange(123,456.7,"def") 4454
+console.log('pseudoRandomIntRange(123, 456.7, "def")', r)
+// =&gt; pseudoRandomIntRange(123, 456.7, "def") 4453
 
 r = pseudoRandomIntRange(123, 4567, 'BH01S123')
-console.log('pseudoRandomIntRange(123,456.7,"BH01S123")', r)
-// =&gt; pseudoRandomIntRange(123,456.7,"BH01S123") 159
+console.log('pseudoRandomIntRange(123, 456.7, "BH01S123")', r)
+// =&gt; pseudoRandomIntRange(123, 456.7, "BH01S123") 158
 
 r = pseudoRandomIntRange(123, 4567, 'BH-01:S-123')
-console.log('pseudoRandomIntRange(123,456.7,"BH-01:S-123")', r)
-// =&gt; pseudoRandomIntRange(123,456.7,"BH-01:S-123") 4382</code></pre>
+console.log('pseudoRandomIntRange(123, 456.7, "BH-01:S-123")', r)
+// =&gt; pseudoRandomIntRange(123, 456.7, "BH-01:S-123") 4381</code></pre>
         </div>
 
 
@@ -74478,96 +74478,96 @@ console.log('pseudoRandomIntsNdpRange', rs)
 // =&gt; pseudoRandomIntsNdpRange [ 1 ] (預設範圍為0至100)
 
 rs = pseudoRandomIntsNdpRange(0, 100)
-console.log('pseudoRandomIntsNdpRange(0,100)', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100) [ 85 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+console.log('pseudoRandomIntsNdpRange(0, 100)', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100) [ 85 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2)
-console.log('pseudoRandomIntsNdpRange(0,100)', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100) [ 59, 20 ]
+console.log('pseudoRandomIntsNdpRange(0, 100)', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100) [ 59, 20 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567)
-console.log('pseudoRandomIntsNdpRange(123,4567)', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,4567) [ 3951 ]
+console.log('pseudoRandomIntsNdpRange(123, 4567)', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 4567) [ 3951 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 123)
-console.log('pseudoRandomIntsNdpRange(null,null,2,123)', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,123) [ 94, 76 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, 123)', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, 123) [ 94, 76 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 12.3)
-console.log('pseudoRandomIntsNdpRange(null,null,2,12.3)', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,12.3) [ 69, 82 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, 12.3) [ 69, 82 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,"abc") [ 20, 28 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,"abc") [ 20, 28 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 'def')
-console.log('pseudoRandomIntsNdpRange(null,null,2,"def")', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,"def") [ 64, 34 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, "def")', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, "def") [ 64, 34 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH01S123')
-console.log('pseudoRandomIntsNdpRange(null,null,2,"BH01S123")', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,"BH01S123") [ 0, 26 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, "BH01S123") [ 0, 26 ]
 
 rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsNdpRange(null,null,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsNdpRange(null,null,2,"BH-01:S-123") [ 71, 77 ]
+console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123") [ 71, 77 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 123)
-console.log('pseudoRandomIntsNdpRange(0,100,2,123)', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,123) [ 94, 76 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, 123)', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, 123) [ 94, 76 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 12.3)
-console.log('pseudoRandomIntsNdpRange(0,100,2,12.3)', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,12.3) [ 69, 82 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, 12.3) [ 69, 82 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(0,100,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,"abc") [ 20, 28 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(0,100,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,"abc") [ 20, 28 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 'def')
-console.log('pseudoRandomIntsNdpRange(0,100,2,"def")', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,"def") [ 64, 34 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, "def")', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, "def") [ 64, 34 ]
 
 rs = pseudoRandomIntsNdpRange(0, 100, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsNdpRange(0,100,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsNdpRange(0,100,2,"BH-01:S-123") [ 71, 77 ]
+console.log('pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123") [ 71, 77 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 123)
-console.log('pseudoRandomIntsNdpRange(123,4567,2,123)', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,4567,2,123) [ 2528, 3854 ]
+console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 123)', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 4567, 2, 123) [ 2528, 3854 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)
-console.log('pseudoRandomIntsNdpRange(123,4567,2,12.3)', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,4567,2,12.3) [ 1818, 4334 ]
+console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 4567, 2, 12.3) [ 1818, 4334 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(123,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,456.7,2,"abc") [ 478, 3303 ]
+console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')
-console.log('pseudoRandomIntsNdpRange(123,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,456.7,2,"abc") [ 478, 3303 ]
+console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'def')
-console.log('pseudoRandomIntsNdpRange(123,456.7,2,"def")', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,456.7,2,"def") [ 983, 3133 ]
+console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "def")', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 456.7, 2, "def") [ 983, 3133 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH01S123')
-console.log('pseudoRandomIntsNdpRange(123,456.7,2,"BH01S123")', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,456.7,2,"BH01S123") [ 2866, 183 ]
+console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123") [ 2866, 183 ]
 
 rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsNdpRange(123,456.7,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsNdpRange(123,456.7,2,"BH-01:S-123") [ 3888, 249 ]</code></pre>
+console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123") [ 3888, 249 ]</code></pre>
         </div>
 
 
@@ -74884,99 +74884,99 @@ console.log('pseudoRandomIntsNdpRange(123,456.7,2,"BH-01:S-123")', rs)
 
 rs = pseudoRandomIntsRange()
 console.log('pseudoRandomIntsRange', rs)
-// =&gt; pseudoRandomIntsRange [ 43 ] (預設範圍為0至100)
+// =&gt; pseudoRandomIntsRange [ 42 ] (預設範圍為0至100)
 
 rs = pseudoRandomIntsRange(0, 100)
-console.log('pseudoRandomIntsRange(0,100)', rs)
-// =&gt; pseudoRandomIntsRange(0,100) [ 58 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+console.log('pseudoRandomIntsRange(0, 100)', rs)
+// =&gt; pseudoRandomIntsRange(0, 100) [ 57 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 rs = pseudoRandomIntsRange(0, 100, 2)
-console.log('pseudoRandomIntsRange(0,100)', rs)
-// =&gt; pseudoRandomIntsRange(0,100) [ 56, 94 ]
+console.log('pseudoRandomIntsRange(0, 100)', rs)
+// =&gt; pseudoRandomIntsRange(0, 100) [ 55, 93 ]
 
 rs = pseudoRandomIntsRange(123, 4567)
-console.log('pseudoRandomIntsRange(123,4567)', rs)
-// =&gt; pseudoRandomIntsRange(123,4567) [ 281 ]
+console.log('pseudoRandomIntsRange(123, 4567)', rs)
+// =&gt; pseudoRandomIntsRange(123, 4567) [ 280 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 123)
-console.log('pseudoRandomIntsRange(null,null,2,123)', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,123) [ 71, 29 ]
+console.log('pseudoRandomIntsRange(null, null, 2, 123)', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, 123) [ 70, 28 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 12.3)
-console.log('pseudoRandomIntsRange(null,null,2,12.3)', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,12.3) [ 86, 56 ]
+console.log('pseudoRandomIntsRange(null, null, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, 12.3) [ 85, 55 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 'abc')
-console.log('pseudoRandomIntsRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,"abc") [ 64, 73 ]
+console.log('pseudoRandomIntsRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, "abc") [ 63, 72 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 'abc')
-console.log('pseudoRandomIntsRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,"abc") [ 64, 73 ]
+console.log('pseudoRandomIntsRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, "abc") [ 63, 72 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 'def')
-console.log('pseudoRandomIntsRange(null,null,2,"def")', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,"def") [ 99, 66 ]
+console.log('pseudoRandomIntsRange(null, null, 2, "def")', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, "def") [ 98, 65 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 'BH01S123')
-console.log('pseudoRandomIntsRange(null,null,2,"BH01S123")', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,"BH01S123") [ 1, 57 ]
+console.log('pseudoRandomIntsRange(null, null, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, "BH01S123") [ 0, 56 ]
 
 rs = pseudoRandomIntsRange(null, null, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsRange(null,null,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsRange(null,null,2,"BH-01:S-123") [ 97, 26 ]
+console.log('pseudoRandomIntsRange(null, null, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsRange(null, null, 2, "BH-01:S-123") [ 96, 25 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 123)
-console.log('pseudoRandomIntsRange(0,100,2,123)', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,123) [ 71, 29 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, 123)', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, 123) [ 70, 28 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 12.3)
-console.log('pseudoRandomIntsRange(0,100,2,12.3)', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,12.3) [ 86, 56 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, 12.3) [ 85, 55 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 'abc')
-console.log('pseudoRandomIntsRange(0,100,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,"abc") [ 64, 73 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, "abc") [ 63, 72 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 'abc')
-console.log('pseudoRandomIntsRange(0,100,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,"abc") [ 64, 73 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, "abc") [ 63, 72 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 'def')
-console.log('pseudoRandomIntsRange(0,100,2,"def")', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,"def") [ 99, 66 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, "def")', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, "def") [ 98, 65 ]
 
 rs = pseudoRandomIntsRange(0, 100, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsRange(0,100,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsRange(0,100,2,"BH-01:S-123") [ 97, 26 ]
+console.log('pseudoRandomIntsRange(0, 100, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsRange(0, 100, 2, "BH-01:S-123") [ 96, 25 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 123)
-console.log('pseudoRandomIntsRange(123,4567,2,123)', rs)
-// =&gt; pseudoRandomIntsRange(123,4567,2,123) [ 3219, 1375 ]
+console.log('pseudoRandomIntsRange(123, 4567, 2, 123)', rs)
+// =&gt; pseudoRandomIntsRange(123, 4567, 2, 123) [ 3218, 1374 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 12.3)
-console.log('pseudoRandomIntsRange(123,4567,2,12.3)', rs)
-// =&gt; pseudoRandomIntsRange(123,4567,2,12.3) [ 3907, 2566 ]
+console.log('pseudoRandomIntsRange(123, 4567, 2, 12.3)', rs)
+// =&gt; pseudoRandomIntsRange(123, 4567, 2, 12.3) [ 3906, 2565 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 'abc')
-console.log('pseudoRandomIntsRange(123,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(123,456.7,2,"abc") [ 2930, 3306 ]
+console.log('pseudoRandomIntsRange(123, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(123, 456.7, 2, "abc") [ 2929, 3305 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 'abc')
-console.log('pseudoRandomIntsRange(123,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomIntsRange(123,456.7,2,"abc") [ 2930, 3306 ]
+console.log('pseudoRandomIntsRange(123, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomIntsRange(123, 456.7, 2, "abc") [ 2929, 3305 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 'def')
-console.log('pseudoRandomIntsRange(123,456.7,2,"def")', rs)
-// =&gt; pseudoRandomIntsRange(123,456.7,2,"def") [ 4454, 3019 ]
+console.log('pseudoRandomIntsRange(123, 456.7, 2, "def")', rs)
+// =&gt; pseudoRandomIntsRange(123, 456.7, 2, "def") [ 4453, 3018 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 'BH01S123')
-console.log('pseudoRandomIntsRange(123,456.7,2,"BH01S123")', rs)
-// =&gt; pseudoRandomIntsRange(123,456.7,2,"BH01S123") [ 159, 2629 ]
+console.log('pseudoRandomIntsRange(123, 456.7, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomIntsRange(123, 456.7, 2, "BH01S123") [ 158, 2628 ]
 
 rs = pseudoRandomIntsRange(123, 4567, 2, 'BH-01:S-123')
-console.log('pseudoRandomIntsRange(123,456.7,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomIntsRange(123,456.7,2,"BH-01:S-123") [ 4382, 1228 ]</code></pre>
+console.log('pseudoRandomIntsRange(123, 456.7, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomIntsRange(123, 456.7, 2, "BH-01:S-123") [ 4381, 1227 ]</code></pre>
         </div>
 
 
@@ -75300,64 +75300,64 @@ console.log('pseudoRandomRange(0,1)', r)
 // =&gt; pseudoRandomRange(0,1) 0.5665697017684579 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
 
 r = pseudoRandomRange(12.3, 456.7)
-console.log('pseudoRandomRange(12.3,456.7)', r)
-// =&gt; pseudoRandomRange(12.3,456.7) 257.074588704668
+console.log('pseudoRandomRange(12.3, 456.7)', r)
+// =&gt; pseudoRandomRange(12.3, 456.7) 257.074588704668
 
 r = pseudoRandomRange(null, null, 123)
-console.log('pseudoRandomRange(null,null,123)', r)
-// =&gt; pseudoRandomRange(null,null,123) 0.6964691872708499
+console.log('pseudoRandomRange(null, null, 123)', r)
+// =&gt; pseudoRandomRange(null, null, 123) 0.6964691872708499
 
 r = pseudoRandomRange(null, null, 12.3)
-console.log('pseudoRandomRange(null,null,12.3)', r)
-// =&gt; pseudoRandomRange(null,null,12.3) 0.8510874302592129
+console.log('pseudoRandomRange(null, null, 12.3)', r)
+// =&gt; pseudoRandomRange(null, null, 12.3) 0.8510874302592129
 
 r = pseudoRandomRange(null, null, 'abc')
-console.log('pseudoRandomRange(null,null,"abc")', r)
-// =&gt; pseudoRandomRange(null,null,'abc') 0.6314232510048896
+console.log('pseudoRandomRange(null, null, "abc")', r)
+// =&gt; pseudoRandomRange(null, null, 'abc') 0.6314232510048896
 
 r = pseudoRandomRange(null, null, 'abc')
-console.log('pseudoRandomRange(null,null,"abc")', r)
-// =&gt; pseudoRandomRange(null,null,'abc') 0.6314232510048896
+console.log('pseudoRandomRange(null, null, "abc")', r)
+// =&gt; pseudoRandomRange(null, null, 'abc') 0.6314232510048896
 
 r = pseudoRandomRange(null, null, 'def')
-console.log('pseudoRandomRange(null,null,"def")', r)
-// =&gt; pseudoRandomRange(null,null,'def') 0.9743434484116733
+console.log('pseudoRandomRange(null, null, "def")', r)
+// =&gt; pseudoRandomRange(null, null, 'def') 0.9743434484116733
 
 r = pseudoRandomRange(null, null, 'BH01S123')
-console.log('pseudoRandomRange(null,null,"BH01S123")', r)
-// =&gt; pseudoRandomRange(null,null,'BH01S123') 0.007978770649060607
+console.log('pseudoRandomRange(null, null, "BH01S123")', r)
+// =&gt; pseudoRandomRange(null, null, 'BH01S123') 0.007978770649060607
 
 r = pseudoRandomRange(null, null, 'BH-01:S-123')
-console.log('pseudoRandomRange(null,null,"BH-01:S-123")', r)
-// =&gt; pseudoRandomRange(null,null,'BH-01:S-123') 0.9579511017072946
+console.log('pseudoRandomRange(null, null, "BH-01:S-123")', r)
+// =&gt; pseudoRandomRange(null, null, 'BH-01:S-123') 0.9579511017072946
 
 r = pseudoRandomRange(12.3, 456.7, 123)
-console.log('pseudoRandomRange(12.3,456.7,123)', r)
-// =&gt; pseudoRandomRange(12.3,456.7,123) 321.81090682316574
+console.log('pseudoRandomRange(12.3, 456.7, 123)', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 123) 321.81090682316574
 
 r = pseudoRandomRange(12.3, 456.7, 12.3)
-console.log('pseudoRandomRange(12.3,456.7,12.3)', r)
-// =&gt; pseudoRandomRange(12.3,456.7,12.3) 390.52325400719417
+console.log('pseudoRandomRange(12.3, 456.7, 12.3)', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 12.3) 390.52325400719417
 
 r = pseudoRandomRange(12.3, 456.7, 'abc')
-console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
-// =&gt; pseudoRandomRange(12.3,456.7,'abc') 292.90449274657294
+console.log('pseudoRandomRange(12.3, 456.7,"abc")', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 'abc') 292.90449274657294
 
 r = pseudoRandomRange(12.3, 456.7, 'abc')
-console.log('pseudoRandomRange(12.3,456.7,"abc")', r)
-// =&gt; pseudoRandomRange(12.3,456.7,'abc') 292.90449274657294
+console.log('pseudoRandomRange(12.3, 456.7,"abc")', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 'abc') 292.90449274657294
 
 r = pseudoRandomRange(12.3, 456.7, 'def')
-console.log('pseudoRandomRange(12.3,456.7,"def")', r)
-// =&gt; pseudoRandomRange(12.3,456.7,'def') 445.2982284741476
+console.log('pseudoRandomRange(12.3, 456.7,"def")', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 'def') 445.2982284741476
 
 r = pseudoRandomRange(12.3, 456.7, 'BH01S123')
-console.log('pseudoRandomRange(12.3,456.7,"BH01S123")', r)
-// =&gt; pseudoRandomRange(12.3,456.7,'BH01S123') 15.845765676442534
+console.log('pseudoRandomRange(12.3, 456.7,"BH01S123")', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 'BH01S123') 15.845765676442534
 
 r = pseudoRandomRange(12.3, 456.7, 'BH-01:S-123')
-console.log('pseudoRandomRange(12.3,456.7,"BH-01:S-123")', r)
-// =&gt; pseudoRandomRange(12.3,456.7,'BH-01:S-123') 438.0134695987217</code></pre>
+console.log('pseudoRandomRange(12.3, 456.7,"BH-01:S-123")', r)
+// =&gt; pseudoRandomRange(12.3, 456.7, 'BH-01:S-123') 438.0134695987217</code></pre>
         </div>
 
 
@@ -75645,68 +75645,68 @@ console.log('pseudoRandomsRange(0,1,2)', rs)
 // =&gt; pseudoRandomsRange(0,1,2) [ 0.5507979043759406, 0.9240253241732717 ]
 
 rs = pseudoRandomsRange(12.3, 456.7)
-console.log('pseudoRandomsRange(12.3,456.7)', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7) [ 28.09080612603575 ]
+console.log('pseudoRandomsRange(12.3, 456.7)', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7) [ 28.09080612603575 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2)
-console.log('pseudoRandomsRange(12.3,456.7,2)', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2) [ 110.95376535998656, 36.822045660205184 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2)', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2) [ 110.95376535998656, 36.822045660205184 ]
 
 rs = pseudoRandomsRange(null, null, 2, 123)
-console.log('pseudoRandomsRange(null,null,2,123)', rs)
-// =&gt; pseudoRandomsRange(null,null,2,123) [ 0.6964691872708499, 0.28155276202596724 ]
+console.log('pseudoRandomsRange(null, null, 2, 123)', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 123) [ 0.6964691872708499, 0.28155276202596724 ]
 
 rs = pseudoRandomsRange(null, null, 2, 12.3)
-console.log('pseudoRandomsRange(null,null,2,12.3)', rs)
-// =&gt; pseudoRandomsRange(null,null,2,12.3) [ 0.8510874302592129, 0.5495069304015487 ]
+console.log('pseudoRandomsRange(null, null, 2, 12.3)', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 12.3) [ 0.8510874302592129, 0.5495069304015487 ]
 
 rs = pseudoRandomsRange(null, null, 2, 'abc')
-console.log('pseudoRandomsRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomsRange(null,null,2,'abc') [ 0.6314232510048896, 0.7160592079162598 ]
+console.log('pseudoRandomsRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 'abc') [ 0.6314232510048896, 0.7160592079162598 ]
 
 rs = pseudoRandomsRange(null, null, 2, 'abc')
-console.log('pseudoRandomsRange(null,null,2,"abc")', rs)
-// =&gt; pseudoRandomsRange(null,null,2,'abc') [ 0.6314232510048896, 0.7160592079162598 ]
+console.log('pseudoRandomsRange(null, null, 2, "abc")', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 'abc') [ 0.6314232510048896, 0.7160592079162598 ]
 
 rs = pseudoRandomsRange(null, null, 2, 'def')
-console.log('pseudoRandomsRange(null,null,2,"def")', rs)
-// =&gt; pseudoRandomsRange(null,null,2,'def') [ 0.9743434484116733, 0.6514900834299624 ]
+console.log('pseudoRandomsRange(null, null, 2, "def")', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 'def') [ 0.9743434484116733, 0.6514900834299624 ]
 
 rs = pseudoRandomsRange(null, null, 2, 'BH01S123')
-console.log('pseudoRandomsRange(null,null,2,"BH01S123")', rs)
-// =&gt; pseudoRandomsRange(null,null,2,'BH01S123') [ 0.007978770649060607, 0.5637312876060605 ]
+console.log('pseudoRandomsRange(null, null, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 'BH01S123') [ 0.007978770649060607, 0.5637312876060605 ]
 
 rs = pseudoRandomsRange(null, null, 2, 'BH-01:S-123')
-console.log('pseudoRandomsRange(null,null,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomsRange(null,null,2,'BH-01:S-123') [ 0.9579511017072946, 0.24845449766144156 ]
+console.log('pseudoRandomsRange(null, null, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomsRange(null, null, 2, 'BH-01:S-123') [ 0.9579511017072946, 0.24845449766144156 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 123)
-console.log('pseudoRandomsRange(12.3,456.7,2,123)', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,123) [ 321.81090682316574, 137.42204744433985 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, 123)', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 123) [ 321.81090682316574, 137.42204744433985 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 12.3)
-console.log('pseudoRandomsRange(12.3,456.7,2,12.3)', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,12.3) [ 390.52325400719417, 256.5008798704483 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, 12.3)', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 12.3) [ 390.52325400719417, 256.5008798704483 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 'abc')
-console.log('pseudoRandomsRange(12.3,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,'abc') [ 292.90449274657294, 330.51671199798585 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 'abc') [ 292.90449274657294, 330.51671199798585 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 'abc')
-console.log('pseudoRandomsRange(12.3,456.7,2,"abc")', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,'abc') [ 292.90449274657294, 330.51671199798585 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, "abc")', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 'abc') [ 292.90449274657294, 330.51671199798585 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 'def')
-console.log('pseudoRandomsRange(12.3,456.7,2,"def")', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,'def') [ 445.2982284741476, 301.8221930762753 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, "def")', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 'def') [ 445.2982284741476, 301.8221930762753 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 'BH01S123')
-console.log('pseudoRandomsRange(12.3,456.7,2,"BH01S123")', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,'BH01S123') [ 15.845765676442534, 262.82218421213327 ]
+console.log('pseudoRandomsRange(12.3, 456.7, 2, "BH01S123")', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 'BH01S123') [ 15.845765676442534, 262.82218421213327 ]
 
 rs = pseudoRandomsRange(12.3, 456.7, 2, 'BH-01:S-123')
-console.log('pseudoRandomsRange(12.3,456.7,2,"BH-01:S-123")', rs)
-// =&gt; pseudoRandomsRange(12.3,456.7,2,'BH-01:S-123') [ 438.0134695987217, 122.71317876074463 ]</code></pre>
+console.log('pseudoRandomsRange(12.3, 456.7, 2, "BH-01:S-123")', rs)
+// =&gt; pseudoRandomsRange(12.3, 456.7, 2, 'BH-01:S-123') [ 438.0134695987217, 122.71317876074463 ]</code></pre>
         </div>
 
 
@@ -76476,12 +76476,12 @@ console.log('randomIntRange', r)
 // =&gt; randomIntRange [0,100] (預設範圍為0至100)
 
 r = randomIntRange(0, 100)
-console.log('randomIntRange(0,100)', r)
-// =&gt; randomIntRange(0,100) [0,100]
+console.log('randomIntRange(0, 100)', r)
+// =&gt; randomIntRange(0, 100) [0,100]
 
 r = randomIntRange(123, 4567)
-console.log('randomIntRange(123,4567)', r)
-// =&gt; randomIntRange(123,4567) [123,4567]</code></pre>
+console.log('randomIntRange(123, 4567)', r)
+// =&gt; randomIntRange(123, 4567) [123,4567]</code></pre>
         </div>
 
 
@@ -76715,20 +76715,20 @@ console.log('randomIntsNdpRange', rs)
 // =&gt; randomIntsNdpRange [ [0,100] ] (預設範圍為0至100)
 
 rs = randomIntsNdpRange(0, 100)
-console.log('randomIntsNdpRange(0,100)', rs)
-// =&gt; randomIntsNdpRange(0,100) [ [0,100] ]
+console.log('randomIntsNdpRange(0, 100)', rs)
+// =&gt; randomIntsNdpRange(0, 100) [ [0,100] ]
 
 rs = randomIntsNdpRange(0, 100, 2)
-console.log('randomIntsNdpRange(0,100)', rs)
-// =&gt; randomIntsNdpRange(0,100,2) [ [0,100], [0,100] ]
+console.log('randomIntsNdpRange(0, 100)', rs)
+// =&gt; randomIntsNdpRange(0, 100, 2) [ [0,100], [0,100] ]
 
 rs = randomIntsNdpRange(123, 4567)
-console.log('randomIntsNdpRange(123,4567)', rs)
-// =&gt; randomIntsNdpRange(123,4567) [ [123,4567], [123,4567] ]
+console.log('randomIntsNdpRange(123, 4567)', rs)
+// =&gt; randomIntsNdpRange(123, 4567) [ [123,4567], [123,4567] ]
 
 rs = randomIntsNdpRange(123, 4567, 2)
-console.log('randomIntsNdpRange(123,4567,2)', rs)
-// =&gt; randomIntsNdpRange(123,4567,2) [ [123,4567], [123,4567] ]</code></pre>
+console.log('randomIntsNdpRange(123, 4567, 2)', rs)
+// =&gt; randomIntsNdpRange(123, 4567, 2) [ [123,4567], [123,4567] ]</code></pre>
         </div>
 
 
@@ -77002,20 +77002,20 @@ console.log('randomIntsRange', rs)
 // =&gt; randomIntsRange [ [0,100] ] (預設範圍為0至100)
 
 rs = randomIntsRange(0, 100)
-console.log('randomIntsRange(0,100)', rs)
-// =&gt; randomIntsRange(0,100) [ [0,100] ]
+console.log('randomIntsRange(0, 100)', rs)
+// =&gt; randomIntsRange(0, 100) [ [0,100] ]
 
 rs = randomIntsRange(0, 100, 2)
-console.log('randomIntsRange(0,100,2)', rs)
-// =&gt; randomIntsRange(0,100,2) [ [0,100], [0,100] ]
+console.log('randomIntsRange(0, 100, 2)', rs)
+// =&gt; randomIntsRange(0, 100, 2) [ [0,100], [0,100] ]
 
 rs = randomIntsRange(123, 4567)
-console.log('randomIntsRange(123,4567)', rs)
-// =&gt; randomIntsRange(123,4567) [ [123,4567] ]
+console.log('randomIntsRange(123, 4567)', rs)
+// =&gt; randomIntsRange(123, 4567) [ [123,4567] ]
 
 rs = randomIntsRange(123, 4567, 2)
-console.log('randomIntsRange(123,4567,2)', rs)
-// =&gt; randomIntsRange(123,4567,2) [ [123,4567], [123,4567] ]</code></pre>
+console.log('randomIntsRange(123, 4567, 2)', rs)
+// =&gt; randomIntsRange(123, 4567, 2) [ [123,4567], [123,4567] ]</code></pre>
         </div>
 
 
@@ -77293,8 +77293,8 @@ console.log('randomRange(0,1)', r)
 // =&gt; randomRange(0,1) random [0,1)
 
 r = randomRange(12.3, 456.7)
-console.log('randomRange(12.3,456.7)', r)
-// =&gt; randomRange(12.3,456.7) random [12.3,456.7)</code></pre>
+console.log('randomRange(12.3, 456.7)', r)
+// =&gt; randomRange(12.3, 456.7) random [12.3, 456.7)</code></pre>
         </div>
 
 
@@ -77536,12 +77536,12 @@ console.log('randomsRange(0,1,2)', rs)
 // =&gt; randomsRange(0,1,2) [ [0,1), [0,1) ]
 
 rs = randomsRange(12.3, 456.7)
-console.log('randomsRange(12.3,456.7)', rs)
-// =&gt; randomsRange(12.3,456.7) [ [12.3,456.7) ]
+console.log('randomsRange(12.3, 456.7)', rs)
+// =&gt; randomsRange(12.3, 456.7) [ [12.3, 456.7) ]
 
 rs = randomsRange(12.3, 456.7, 2)
-console.log('randomsRange(12.3,456.7,2)', rs)
-// =&gt; randomsRange(12.3,456.7,2) [ [12.3,456.7), [12.3,456.7) ]</code></pre>
+console.log('randomsRange(12.3, 456.7, 2)', rs)
+// =&gt; randomsRange(12.3, 456.7, 2) [ [12.3, 456.7), [12.3, 456.7) ]</code></pre>
         </div>
 
 
@@ -92194,7 +92194,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Aug 25 2024 11:44:20 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Aug 25 2024 19:42:13 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -92215,7 +92215,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.56/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.57/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
