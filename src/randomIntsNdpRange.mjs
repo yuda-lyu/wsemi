@@ -23,20 +23,20 @@ import cint from './cint.mjs'
  * // => randomIntsNdpRange [ [0,100] ] (預設範圍為0至100)
  *
  * rs = randomIntsNdpRange(0, 100)
- * console.log('randomIntsNdpRange(0,100)', rs)
- * // => randomIntsNdpRange(0,100) [ [0,100] ]
+ * console.log('randomIntsNdpRange(0, 100)', rs)
+ * // => randomIntsNdpRange(0, 100) [ [0,100] ]
  *
  * rs = randomIntsNdpRange(0, 100, 2)
- * console.log('randomIntsNdpRange(0,100)', rs)
- * // => randomIntsNdpRange(0,100,2) [ [0,100], [0,100] ]
+ * console.log('randomIntsNdpRange(0, 100)', rs)
+ * // => randomIntsNdpRange(0, 100, 2) [ [0,100], [0,100] ]
  *
  * rs = randomIntsNdpRange(123, 4567)
- * console.log('randomIntsNdpRange(123,4567)', rs)
- * // => randomIntsNdpRange(123,4567) [ [123,4567], [123,4567] ]
+ * console.log('randomIntsNdpRange(123, 4567)', rs)
+ * // => randomIntsNdpRange(123, 4567) [ [123,4567], [123,4567] ]
  *
  * rs = randomIntsNdpRange(123, 4567, 2)
- * console.log('randomIntsNdpRange(123,4567,2)', rs)
- * // => randomIntsNdpRange(123,4567,2) [ [123,4567], [123,4567] ]
+ * console.log('randomIntsNdpRange(123, 4567, 2)', rs)
+ * // => randomIntsNdpRange(123, 4567, 2) [ [123,4567], [123,4567] ]
  *
  */
 function randomIntsNdpRange(vstart = 0, vend = 100, n) {

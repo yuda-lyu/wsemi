@@ -20,12 +20,12 @@ import random from './random.mjs'
  * // => randomIntRange [0,100] (預設範圍為0至100)
  *
  * r = randomIntRange(0, 100)
- * console.log('randomIntRange(0,100)', r)
- * // => randomIntRange(0,100) [0,100]
+ * console.log('randomIntRange(0, 100)', r)
+ * // => randomIntRange(0, 100) [0,100]
  *
  * r = randomIntRange(123, 4567)
- * console.log('randomIntRange(123,4567)', r)
- * // => randomIntRange(123,4567) [123,4567]
+ * console.log('randomIntRange(123, 4567)', r)
+ * // => randomIntRange(123, 4567) [123,4567]
  *
  */
 function randomIntRange(vstart = 0, vend = 100) {
@@ -53,7 +53,7 @@ function randomIntRange(vstart = 0, vend = 100) {
     //r
     let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
     let r = pr * rng + vstart
-    r = Math.ceil(r)
+    r = Math.floor(r)
 
     return r
 }

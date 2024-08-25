@@ -22,20 +22,20 @@ import random from './random.mjs'
  * // => randomIntsRange [ [0,100] ] (預設範圍為0至100)
  *
  * rs = randomIntsRange(0, 100)
- * console.log('randomIntsRange(0,100)', rs)
- * // => randomIntsRange(0,100) [ [0,100] ]
+ * console.log('randomIntsRange(0, 100)', rs)
+ * // => randomIntsRange(0, 100) [ [0,100] ]
  *
  * rs = randomIntsRange(0, 100, 2)
- * console.log('randomIntsRange(0,100,2)', rs)
- * // => randomIntsRange(0,100,2) [ [0,100], [0,100] ]
+ * console.log('randomIntsRange(0, 100, 2)', rs)
+ * // => randomIntsRange(0, 100, 2) [ [0,100], [0,100] ]
  *
  * rs = randomIntsRange(123, 4567)
- * console.log('randomIntsRange(123,4567)', rs)
- * // => randomIntsRange(123,4567) [ [123,4567] ]
+ * console.log('randomIntsRange(123, 4567)', rs)
+ * // => randomIntsRange(123, 4567) [ [123,4567] ]
  *
  * rs = randomIntsRange(123, 4567, 2)
- * console.log('randomIntsRange(123,4567,2)', rs)
- * // => randomIntsRange(123,4567,2) [ [123,4567], [123,4567] ]
+ * console.log('randomIntsRange(123, 4567, 2)', rs)
+ * // => randomIntsRange(123, 4567, 2) [ [123,4567], [123,4567] ]
  *
  */
 function randomIntsRange(vstart = 0, vend = 100, n) {
@@ -73,7 +73,7 @@ function randomIntsRange(vstart = 0, vend = 100, n) {
         //r
         let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
         let r = pr * rng + vstart
-        r = Math.ceil(r)
+        r = Math.floor(r)
 
         //push
         rs.push(r)

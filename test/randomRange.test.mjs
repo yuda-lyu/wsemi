@@ -23,7 +23,7 @@ describe(`randomRange`, function() {
         assert.strict.deepStrictEqual(true, rr)
     })
 
-    it(`should return [12.3,456.7) when input 12.3, 456.7`, function() {
+    it(`should return [12.3, 456.7) when input 12.3, 456.7`, function() {
         let r = randomRange(12.3, 456.7)
         let rr = ck(r, 12.3, 456.7)
         assert.strict.deepStrictEqual(true, rr)

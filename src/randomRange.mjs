@@ -24,8 +24,8 @@ import random from './random.mjs'
  * // => randomRange(0,1) random [0,1)
  *
  * r = randomRange(12.3, 456.7)
- * console.log('randomRange(12.3,456.7)', r)
- * // => randomRange(12.3,456.7) random [12.3,456.7)
+ * console.log('randomRange(12.3, 456.7)', r)
+ * // => randomRange(12.3, 456.7) random [12.3, 456.7)
  *
  */
 function randomRange(vstart = 0, vend = 1) {

@@ -31,12 +31,12 @@ import random from './random.mjs'
  * // => randomsRange(0,1,2) [ [0,1), [0,1) ]
  *
  * rs = randomsRange(12.3, 456.7)
- * console.log('randomsRange(12.3,456.7)', rs)
- * // => randomsRange(12.3,456.7) [ [12.3,456.7) ]
+ * console.log('randomsRange(12.3, 456.7)', rs)
+ * // => randomsRange(12.3, 456.7) [ [12.3, 456.7) ]
  *
  * rs = randomsRange(12.3, 456.7, 2)
- * console.log('randomsRange(12.3,456.7,2)', rs)
- * // => randomsRange(12.3,456.7,2) [ [12.3,456.7), [12.3,456.7) ]
+ * console.log('randomsRange(12.3, 456.7, 2)', rs)
+ * // => randomsRange(12.3, 456.7, 2) [ [12.3, 456.7), [12.3, 456.7) ]
  *
  */
 function randomsRange(vstart = 0, vend = 1, n = 1) {

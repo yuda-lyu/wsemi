@@ -29,13 +29,13 @@ describe(`randomsRange`, function() {
         assert.strict.deepStrictEqual(true, rr)
     })
 
-    it(`should return [ [12.3,456.7) ] when input 12.3, 456.7`, function() {
+    it(`should return [ [12.3, 456.7) ] when input 12.3, 456.7`, function() {
         let r = randomsRange(12.3, 456.7)
         let rr = ck(r[0], 12.3, 456.7)
         assert.strict.deepStrictEqual(true, rr)
     })
 
-    it(`should return [ [12.3,456.7), [12.3,456.7)] when input 12.3, 456.7, 2`, function() {
+    it(`should return [ [12.3, 456.7), [12.3, 456.7)] when input 12.3, 456.7, 2`, function() {
         let r = randomsRange(12.3, 456.7, 2)
         let rr = ck(r[0], 12.3, 456.7) && ck(r[1], 12.3, 456.7)
         assert.strict.deepStrictEqual(true, rr)

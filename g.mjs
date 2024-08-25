@@ -1,18 +1,9 @@
 import _ from 'lodash-es'
-import randomIntsNdpRange from './src/randomIntsNdpRange.mjs'
-
-
-_.each(_.range(1000), (v) => {
-    let rs = randomIntsNdpRange(123, 4567)
-    let r = rs[0]
-    console.log(r)
-    if (r < 123) {
-        throw new Error(`r[${r}]<123`)
-    }
-    else if (r > 4567) {
-        throw new Error(`r[${r}]4567`)
-    }
-})
+import pseudoRandomIntRange from './src/pseudoRandomIntRange.mjs'
+import pseudoRandomIntsNdpRange from './src/pseudoRandomIntsNdpRange.mjs'
+import pseudoRandomIntsRange from './src/pseudoRandomIntsRange.mjs'
+import pseudoRandomRange from './src/pseudoRandomRange.mjs'
+import pseudoRandomsRange from './src/pseudoRandomsRange.mjs'
 
 
 //node --experimental-modules g.mjs

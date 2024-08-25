@@ -21,96 +21,96 @@ import pseudoRandom from './pseudoRandom.mjs'
  * // => pseudoRandomIntRange 43 (預設範圍為0至100)
  *
  * r = pseudoRandomIntRange(0, 100)
- * console.log('pseudoRandomIntRange(0,100)', r)
- * // => pseudoRandomIntRange(0,100) 58 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+ * console.log('pseudoRandomIntRange(0, 100)', r)
+ * // => pseudoRandomIntRange(0, 100) 57 //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
  *
  * r = pseudoRandomIntRange(123, 4567)
- * console.log('pseudoRandomIntRange(123,4567)', r)
- * // => pseudoRandomIntRange(123,4567) 2572
+ * console.log('pseudoRandomIntRange(123, 4567)', r)
+ * // => pseudoRandomIntRange(123, 4567) 2571
  *
  * r = pseudoRandomIntRange(null, null, 123)
- * console.log('pseudoRandomIntRange(null,null,123)', r)
- * // => pseudoRandomIntRange(null,null,123) 71
+ * console.log('pseudoRandomIntRange(null, null, 123)', r)
+ * // => pseudoRandomIntRange(null, null, 123) 70
  *
  * r = pseudoRandomIntRange(null, null, 12.3)
- * console.log('pseudoRandomIntRange(null,null,12.3)', r)
- * // => pseudoRandomIntRange(null,null,12.3) 86
+ * console.log('pseudoRandomIntRange(null, null, 12.3)', r)
+ * // => pseudoRandomIntRange(null, null, 12.3) 85
  *
  * r = pseudoRandomIntRange(null, null, 'abc')
- * console.log('pseudoRandomIntRange(null,null,"abc")', r)
- * // => pseudoRandomIntRange(null,null,"abc") 64
+ * console.log('pseudoRandomIntRange(null, null, "abc")', r)
+ * // => pseudoRandomIntRange(null, null, "abc") 63
  *
  * r = pseudoRandomIntRange(null, null, 'abc')
- * console.log('pseudoRandomIntRange(null,null,"abc")', r)
- * // => pseudoRandomIntRange(null,null,"abc") 64
+ * console.log('pseudoRandomIntRange(null, null, "abc")', r)
+ * // => pseudoRandomIntRange(null, null, "abc") 63
  *
  * r = pseudoRandomIntRange(null, null, 'def')
- * console.log('pseudoRandomIntRange(null,null,"def")', r)
- * // => pseudoRandomIntRange(null,null,"def") 99
+ * console.log('pseudoRandomIntRange(null, null, "def")', r)
+ * // => pseudoRandomIntRange(null, null, "def") 98
  *
  * r = pseudoRandomIntRange(null, null, 'BH01S123')
- * console.log('pseudoRandomIntRange(null,null,"BH01S123")', r)
- * // => pseudoRandomIntRange(null,null,"BH01S123") 1
+ * console.log('pseudoRandomIntRange(null, null, "BH01S123")', r)
+ * // => pseudoRandomIntRange(null, null, "BH01S123") 0
  *
  * r = pseudoRandomIntRange(null, null, 'BH-01:S-123')
- * console.log('pseudoRandomIntRange(null,null,"BH-01:S-123")', r)
- * // => pseudoRandomIntRange(null,null,"BH-01:S-123") 97
+ * console.log('pseudoRandomIntRange(null, null, "BH-01:S-123")', r)
+ * // => pseudoRandomIntRange(null, null, "BH-01:S-123") 96
  *
  * r = pseudoRandomIntRange(0, 100, 123)
- * console.log('pseudoRandomIntRange(0,100,123)', r)
- * // => pseudoRandomIntRange(0,100,123) 71
+ * console.log('pseudoRandomIntRange(0, 100, 123)', r)
+ * // => pseudoRandomIntRange(0, 100, 123) 70
  *
  * r = pseudoRandomIntRange(0, 100, 12.3)
- * console.log('pseudoRandomIntRange(0,100,12.3)', r)
- * // => pseudoRandomIntRange(0,100,12.3) 86
+ * console.log('pseudoRandomIntRange(0, 100, 12.3)', r)
+ * // => pseudoRandomIntRange(0, 100, 12.3) 85
  *
  * r = pseudoRandomIntRange(0, 100, 'abc')
- * console.log('pseudoRandomIntRange(0,100,"abc")', r)
- * // => pseudoRandomIntRange(0,100,"abc") 64
+ * console.log('pseudoRandomIntRange(0, 100, "abc")', r)
+ * // => pseudoRandomIntRange(0, 100, "abc") 63
  *
  * r = pseudoRandomIntRange(0, 100, 'abc')
- * console.log('pseudoRandomIntRange(0,100,"abc")', r)
- * // => pseudoRandomIntRange(0,100,"abc") 64
+ * console.log('pseudoRandomIntRange(0, 100, "abc")', r)
+ * // => pseudoRandomIntRange(0, 100, "abc") 63
  *
  * r = pseudoRandomIntRange(0, 100, 'def')
- * console.log('pseudoRandomIntRange(0,100,"def")', r)
- * // => pseudoRandomIntRange(0,100,"def") 99
+ * console.log('pseudoRandomIntRange(0, 100, "def")', r)
+ * // => pseudoRandomIntRange(0, 100, "def") 98
  *
  * r = pseudoRandomIntRange(0, 100, 'BH01S123')
- * console.log('pseudoRandomIntRange(0,100,"BH01S123")', r)
- * // => pseudoRandomIntRange(0,100,"BH01S123") 1
+ * console.log('pseudoRandomIntRange(0, 100, "BH01S123")', r)
+ * // => pseudoRandomIntRange(0, 100, "BH01S123") 0
  *
  * r = pseudoRandomIntRange(0, 100, 'BH-01:S-123')
- * console.log('pseudoRandomIntRange(0,100,"BH-01:S-123")', r)
- * // => pseudoRandomIntRange(0,100,"BH-01:S-123") 97
+ * console.log('pseudoRandomIntRange(0, 100, "BH-01:S-123")', r)
+ * // => pseudoRandomIntRange(0, 100, "BH-01:S-123") 96
  *
  * r = pseudoRandomIntRange(123, 4567, 123)
- * console.log('pseudoRandomIntRange(123,4567,123)', r)
- * // => pseudoRandomIntRange(123,4567,123) 3219
+ * console.log('pseudoRandomIntRange(123, 4567, 123)', r)
+ * // => pseudoRandomIntRange(123, 4567, 123) 3218
  *
  * r = pseudoRandomIntRange(123, 4567, 12.3)
- * console.log('pseudoRandomIntRange(123,4567,12.3)', r)
- * // => pseudoRandomIntRange(123,4567,12.3) 3907
+ * console.log('pseudoRandomIntRange(123, 4567, 12.3)', r)
+ * // => pseudoRandomIntRange(123, 4567, 12.3) 3906
  *
  * r = pseudoRandomIntRange(123, 4567, 'abc')
- * console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
- * // => pseudoRandomIntRange(123,456.7,"abc") 2930
+ * console.log('pseudoRandomIntRange(123, 456.7, "abc")', r)
+ * // => pseudoRandomIntRange(123, 456.7, "abc") 2929
  *
  * r = pseudoRandomIntRange(123, 4567, 'abc')
- * console.log('pseudoRandomIntRange(123,456.7,"abc")', r)
- * // => pseudoRandomIntRange(123,456.7,"abc") 2930
+ * console.log('pseudoRandomIntRange(123, 456.7, "abc")', r)
+ * // => pseudoRandomIntRange(123, 456.7, "abc") 2929
  *
  * r = pseudoRandomIntRange(123, 4567, 'def')
- * console.log('pseudoRandomIntRange(123,456.7,"def")', r)
- * // => pseudoRandomIntRange(123,456.7,"def") 4454
+ * console.log('pseudoRandomIntRange(123, 456.7, "def")', r)
+ * // => pseudoRandomIntRange(123, 456.7, "def") 4453
  *
  * r = pseudoRandomIntRange(123, 4567, 'BH01S123')
- * console.log('pseudoRandomIntRange(123,456.7,"BH01S123")', r)
- * // => pseudoRandomIntRange(123,456.7,"BH01S123") 159
+ * console.log('pseudoRandomIntRange(123, 456.7, "BH01S123")', r)
+ * // => pseudoRandomIntRange(123, 456.7, "BH01S123") 158
  *
  * r = pseudoRandomIntRange(123, 4567, 'BH-01:S-123')
- * console.log('pseudoRandomIntRange(123,456.7,"BH-01:S-123")', r)
- * // => pseudoRandomIntRange(123,456.7,"BH-01:S-123") 4382
+ * console.log('pseudoRandomIntRange(123, 456.7, "BH-01:S-123")', r)
+ * // => pseudoRandomIntRange(123, 456.7, "BH-01:S-123") 4381
  *
  */
 function pseudoRandomIntRange(vstart = 0, vend = 100, seed = 'start1') {
@@ -138,7 +138,7 @@ function pseudoRandomIntRange(vstart = 0, vend = 100, seed = 'start1') {
     //r
     let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
     let r = pr * rng + vstart
-    r = Math.ceil(r)
+    r = Math.floor(r)
 
     return r
 }

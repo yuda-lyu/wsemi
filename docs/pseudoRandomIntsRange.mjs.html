@@ -67,99 +67,99 @@ import pseudoRandom from './pseudoRandom.mjs'
  *
  * rs = pseudoRandomIntsRange()
  * console.log('pseudoRandomIntsRange', rs)
- * // => pseudoRandomIntsRange [ 43 ] (預設範圍為0至100)
+ * // => pseudoRandomIntsRange [ 42 ] (預設範圍為0至100)
  *
  * rs = pseudoRandomIntsRange(0, 100)
- * console.log('pseudoRandomIntsRange(0,100)', rs)
- * // => pseudoRandomIntsRange(0,100) [ 58 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
+ * console.log('pseudoRandomIntsRange(0, 100)', rs)
+ * // => pseudoRandomIntsRange(0, 100) [ 57 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
  *
  * rs = pseudoRandomIntsRange(0, 100, 2)
- * console.log('pseudoRandomIntsRange(0,100)', rs)
- * // => pseudoRandomIntsRange(0,100) [ 56, 94 ]
+ * console.log('pseudoRandomIntsRange(0, 100)', rs)
+ * // => pseudoRandomIntsRange(0, 100) [ 55, 93 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567)
- * console.log('pseudoRandomIntsRange(123,4567)', rs)
- * // => pseudoRandomIntsRange(123,4567) [ 281 ]
+ * console.log('pseudoRandomIntsRange(123, 4567)', rs)
+ * // => pseudoRandomIntsRange(123, 4567) [ 280 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 123)
- * console.log('pseudoRandomIntsRange(null,null,2,123)', rs)
- * // => pseudoRandomIntsRange(null,null,2,123) [ 71, 29 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, 123)', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, 123) [ 70, 28 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 12.3)
- * console.log('pseudoRandomIntsRange(null,null,2,12.3)', rs)
- * // => pseudoRandomIntsRange(null,null,2,12.3) [ 86, 56 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, 12.3)', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, 12.3) [ 85, 55 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 'abc')
- * console.log('pseudoRandomIntsRange(null,null,2,"abc")', rs)
- * // => pseudoRandomIntsRange(null,null,2,"abc") [ 64, 73 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, "abc") [ 63, 72 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 'abc')
- * console.log('pseudoRandomIntsRange(null,null,2,"abc")', rs)
- * // => pseudoRandomIntsRange(null,null,2,"abc") [ 64, 73 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, "abc") [ 63, 72 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 'def')
- * console.log('pseudoRandomIntsRange(null,null,2,"def")', rs)
- * // => pseudoRandomIntsRange(null,null,2,"def") [ 99, 66 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, "def")', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, "def") [ 98, 65 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 'BH01S123')
- * console.log('pseudoRandomIntsRange(null,null,2,"BH01S123")', rs)
- * // => pseudoRandomIntsRange(null,null,2,"BH01S123") [ 1, 57 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, "BH01S123")', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, "BH01S123") [ 0, 56 ]
  *
  * rs = pseudoRandomIntsRange(null, null, 2, 'BH-01:S-123')
- * console.log('pseudoRandomIntsRange(null,null,2,"BH-01:S-123")', rs)
- * // => pseudoRandomIntsRange(null,null,2,"BH-01:S-123") [ 97, 26 ]
+ * console.log('pseudoRandomIntsRange(null, null, 2, "BH-01:S-123")', rs)
+ * // => pseudoRandomIntsRange(null, null, 2, "BH-01:S-123") [ 96, 25 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 123)
- * console.log('pseudoRandomIntsRange(0,100,2,123)', rs)
- * // => pseudoRandomIntsRange(0,100,2,123) [ 71, 29 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, 123)', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, 123) [ 70, 28 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 12.3)
- * console.log('pseudoRandomIntsRange(0,100,2,12.3)', rs)
- * // => pseudoRandomIntsRange(0,100,2,12.3) [ 86, 56 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, 12.3)', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, 12.3) [ 85, 55 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 'abc')
- * console.log('pseudoRandomIntsRange(0,100,2,"abc")', rs)
- * // => pseudoRandomIntsRange(0,100,2,"abc") [ 64, 73 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, "abc") [ 63, 72 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 'abc')
- * console.log('pseudoRandomIntsRange(0,100,2,"abc")', rs)
- * // => pseudoRandomIntsRange(0,100,2,"abc") [ 64, 73 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, "abc") [ 63, 72 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 'def')
- * console.log('pseudoRandomIntsRange(0,100,2,"def")', rs)
- * // => pseudoRandomIntsRange(0,100,2,"def") [ 99, 66 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, "def")', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, "def") [ 98, 65 ]
  *
  * rs = pseudoRandomIntsRange(0, 100, 2, 'BH-01:S-123')
- * console.log('pseudoRandomIntsRange(0,100,2,"BH-01:S-123")', rs)
- * // => pseudoRandomIntsRange(0,100,2,"BH-01:S-123") [ 97, 26 ]
+ * console.log('pseudoRandomIntsRange(0, 100, 2, "BH-01:S-123")', rs)
+ * // => pseudoRandomIntsRange(0, 100, 2, "BH-01:S-123") [ 96, 25 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 123)
- * console.log('pseudoRandomIntsRange(123,4567,2,123)', rs)
- * // => pseudoRandomIntsRange(123,4567,2,123) [ 3219, 1375 ]
+ * console.log('pseudoRandomIntsRange(123, 4567, 2, 123)', rs)
+ * // => pseudoRandomIntsRange(123, 4567, 2, 123) [ 3218, 1374 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 12.3)
- * console.log('pseudoRandomIntsRange(123,4567,2,12.3)', rs)
- * // => pseudoRandomIntsRange(123,4567,2,12.3) [ 3907, 2566 ]
+ * console.log('pseudoRandomIntsRange(123, 4567, 2, 12.3)', rs)
+ * // => pseudoRandomIntsRange(123, 4567, 2, 12.3) [ 3906, 2565 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 'abc')
- * console.log('pseudoRandomIntsRange(123,456.7,2,"abc")', rs)
- * // => pseudoRandomIntsRange(123,456.7,2,"abc") [ 2930, 3306 ]
+ * console.log('pseudoRandomIntsRange(123, 456.7, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(123, 456.7, 2, "abc") [ 2929, 3305 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 'abc')
- * console.log('pseudoRandomIntsRange(123,456.7,2,"abc")', rs)
- * // => pseudoRandomIntsRange(123,456.7,2,"abc") [ 2930, 3306 ]
+ * console.log('pseudoRandomIntsRange(123, 456.7, 2, "abc")', rs)
+ * // => pseudoRandomIntsRange(123, 456.7, 2, "abc") [ 2929, 3305 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 'def')
- * console.log('pseudoRandomIntsRange(123,456.7,2,"def")', rs)
- * // => pseudoRandomIntsRange(123,456.7,2,"def") [ 4454, 3019 ]
+ * console.log('pseudoRandomIntsRange(123, 456.7, 2, "def")', rs)
+ * // => pseudoRandomIntsRange(123, 456.7, 2, "def") [ 4453, 3018 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 'BH01S123')
- * console.log('pseudoRandomIntsRange(123,456.7,2,"BH01S123")', rs)
- * // => pseudoRandomIntsRange(123,456.7,2,"BH01S123") [ 159, 2629 ]
+ * console.log('pseudoRandomIntsRange(123, 456.7, 2, "BH01S123")', rs)
+ * // => pseudoRandomIntsRange(123, 456.7, 2, "BH01S123") [ 158, 2628 ]
  *
  * rs = pseudoRandomIntsRange(123, 4567, 2, 'BH-01:S-123')
- * console.log('pseudoRandomIntsRange(123,456.7,2,"BH-01:S-123")', rs)
- * // => pseudoRandomIntsRange(123,456.7,2,"BH-01:S-123") [ 4382, 1228 ]
+ * console.log('pseudoRandomIntsRange(123, 456.7, 2, "BH-01:S-123")', rs)
+ * // => pseudoRandomIntsRange(123, 456.7, 2, "BH-01:S-123") [ 4381, 1227 ]
  *
  */
 function pseudoRandomIntsRange(vstart = 0, vend = 100, n, seed = 'start1') {
@@ -200,7 +200,7 @@ function pseudoRandomIntsRange(vstart = 0, vend = 100, n, seed = 'start1') {
         //r
         let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
         let r = pr * rng + vstart
-        r = Math.ceil(r)
+        r = Math.floor(r)
 
         //push
         rs.push(r)
@@ -226,7 +226,7 @@ export default pseudoRandomIntsRange
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Aug 25 2024 11:44:20 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Aug 25 2024 19:42:13 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
