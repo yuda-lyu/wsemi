@@ -2,22 +2,17 @@ import _ from 'lodash-es'
 import randomIntsNdpRange from './src/randomIntsNdpRange.mjs'
 
 
-let rs
+_.each(_.range(1000), (v) => {
+    let rs = randomIntsNdpRange(123, 4567)
+    let r = rs[0]
+    console.log(r)
+    if (r < 123) {
+        throw new Error(`r[${r}]<123`)
+    }
+    else if (r > 4567) {
+        throw new Error(`r[${r}]4567`)
+    }
+})
 
-rs = randomIntsNdpRange()
-console.log('randomIntsNdpRange', rs)
-// => randomIntsNdpRange [ [0,100] ] (預設範圍為0至100)
-
-rs = randomIntsNdpRange(0, 100)
-console.log('randomIntsNdpRange(0,100)', rs)
-// => randomIntsNdpRange(0,100) [ [0,100] ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同
-
-rs = randomIntsNdpRange(0, 100, 2)
-console.log('randomIntsNdpRange(0,100)', rs)
-// => randomIntsNdpRange(0,100) [ [0,100], [0,100] ]
-
-rs = randomIntsNdpRange(123, 4567)
-console.log('randomIntsNdpRange(123,4567)', rs)
-// => randomIntsNdpRange(123,4567) [ [123,4567], [123,4567] ]
 
 //node --experimental-modules g.mjs

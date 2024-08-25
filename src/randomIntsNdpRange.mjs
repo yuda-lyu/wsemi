@@ -1,9 +1,8 @@
-import take from 'lodash-es/take.js'
+import range from 'lodash-es/range.js'
+import sampleSize from 'lodash-es/sampleSize.js'
 import isint from './isint.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
-import arrSort from './arrSort.mjs'
-import random from './random.mjs'
 
 
 /**
@@ -66,31 +65,9 @@ function randomIntsNdpRange(vstart = 0, vend = 100, n) {
     }
 
     //rs
-    let rs = []
-    let _vstart = 0
-    let _vend = vend - vstart
-    for (let i = _vstart; i <= _vend; i++) {
+    let rs = sampleSize(range(vstart, vend + 1), n)
 
-        //random, [0,1)
-        let pr = random()
-
-        //r
-        let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
-        let r = pr * rng + vstart
-        r = Math.ceil(r)
-
-        //push
-        rs.push(r)
-
-    }
-
-    //arrSort
-    let inds = arrSort(rs, { returnIndex: true })
-
-    //take
-    inds = take(inds, n)
-
-    return inds
+    return rs
 }
 
 
