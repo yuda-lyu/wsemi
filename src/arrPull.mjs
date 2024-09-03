@@ -8,7 +8,7 @@ import isobj from './isobj.mjs'
 
 
 /**
- * 針對陣列移除元素或陣列
+ * 針對陣列移除元素或陣列內全部元素
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrPull.test.mjs Github}
  * @memberOf wsemi

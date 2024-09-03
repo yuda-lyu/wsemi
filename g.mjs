@@ -1,9 +1,14 @@
 import _ from 'lodash-es'
-import pseudoRandomIntRange from './src/pseudoRandomIntRange.mjs'
-import pseudoRandomIntsNdpRange from './src/pseudoRandomIntsNdpRange.mjs'
-import pseudoRandomIntsRange from './src/pseudoRandomIntsRange.mjs'
-import pseudoRandomRange from './src/pseudoRandomRange.mjs'
-import pseudoRandomsRange from './src/pseudoRandomsRange.mjs'
+import arrPullAt from './src/arrPullAt.mjs'
 
+
+console.log(arrPullAt([1, 2, 3, 4, 5, 'abc'], [0, 2]))
+// => [ 2, 4, 5, 'abc' ]
+
+console.log(arrPullAt([1, 2, 3, '4', 5, 'abc'], [1, 3]))
+// => [ 1, 3, 5, 'abc' ]
+
+console.log(arrPullAt([1, 2, 3, '4', 5, 'abc'], [4, 7]))
+// => [ 1, 2, 3, '4', 'abc' ]
 
 //node --experimental-modules g.mjs
