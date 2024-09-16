@@ -282,7 +282,7 @@ describe(`verifyValue`, function() {
     o[k] = {
         in1: 'abc123',
         in2: function(v) {
-            return v.substr(0, 3)
+            return v.substring(0, 3)
         },
         out: {
             err: false,

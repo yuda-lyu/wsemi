@@ -39,7 +39,7 @@ function strright(c, n) {
         i = 0
     }
 
-    return c.substr(i, n)
+    return c.substring(i, i + n)
 }
 
 
