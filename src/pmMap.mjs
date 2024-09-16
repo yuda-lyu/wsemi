@@ -436,7 +436,8 @@ function pmMap(rs, fun, takeLimit = 0) {
                 q.cb()
 
                 //end
-                if (size(ts) === rs.length) {
+                //if (size(ts) === rs.length) {
+                if (size(ts) === size(rs)) {
 
                     //resolve
                     pm.resolve(values(ts))

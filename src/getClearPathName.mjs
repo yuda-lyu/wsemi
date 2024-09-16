@@ -1,4 +1,3 @@
-import size from 'lodash-es/size.js'
 import isestr from './isestr.mjs'
 import strright from './strright.mjs'
 import strdelright from './strdelright.mjs'
@@ -119,7 +118,8 @@ function getClearPathName(str) {
     }
     else if (strright(str, 1) === '/') {
         let r = strdelright(str, 1)
-        if (size(r) === 0) { //若為根目錄
+        //if (size(r) === 0) { //若為根目錄
+        if (r.length === 0) { //若為根目錄
             return {
                 path: str,
                 isRoot: true,

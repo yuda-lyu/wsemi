@@ -1,4 +1,3 @@
-import size from 'lodash-es/size.js'
 import isestr from './isestr.mjs'
 import getClearPathName from './getClearPathName.mjs'
 import getFileName from './getFileName.mjs'
@@ -120,7 +119,8 @@ function getPathParent(str) {
     }
 
     //strdelright
-    let n = size(name)
+    //let n = size(name)
+    let n = name.length
     str = strdelright(str, n)
 
     //getClearPathName

@@ -313,7 +313,8 @@ function strExtract4(arr, tar = 'rgba') {
 
 function strParseHex8(cc) {
     cc = strdelleft(cc, 1) //刪除#
-    let n = size(cc)
+    // let n = size(cc)
+    let n = cc.length
     if (n === 2) {
         cc = `${cc}${cc}${cc}ff`
     }
@@ -333,7 +334,8 @@ function strParseHex8(cc) {
         throw new Error('invalid hex color')
     }
     function gvhex(c) {
-        if (size(c) !== 2) {
+        //if (size(c) !== 2) {
+        if (c.length !== 2) {
             throw new Error('hex.length of color is not equal to 2')
         }
         c = parseInt(c, 16)
@@ -836,10 +838,12 @@ function hsva2Rgba(hsva) {
 function value2Hex(v) {
     //輸入0~1轉出hex
     let hex = Math.round(v * 255).toString(16)
-    if (size(hex) === 1) {
+    //if (size(hex) === 1) {
+    if (hex.length === 1) {
         return `0${hex}`
     }
-    else if (size(hex) === 2) {
+    //else if (size(hex) === 2) {
+    else if (hex.length === 2) {
         return hex
     }
     else {

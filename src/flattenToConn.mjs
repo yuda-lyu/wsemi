@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import map from 'lodash-es/map.js'
 import join from 'lodash-es/join.js'
 import size from 'lodash-es/size.js'
+import keys from 'lodash-es/keys.js'
 import isNumber from 'lodash-es/isNumber.js'
 import isSymbol from 'lodash-es/isSymbol.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
@@ -715,7 +716,13 @@ function flattenToConn(data, opt = {}) {
 
         //bindNumOfChilren
         if (isobj(value) || isarr(value)) {
-            let numOfChilren = size(value)
+            let numOfChilren = null
+            if (isobj(value)) {
+                numOfChilren = size(keys(value))
+            }
+            else if (isarr(value)) {
+                numOfChilren = size(value)
+            }
             node[bindNumOfChilren] = numOfChilren
         }
 

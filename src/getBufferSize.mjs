@@ -25,9 +25,7 @@ import isu16arr from './isu16arr.mjs'
 function getBufferSize(buf) {
 
     //check
-    if (isab(buf) || isblob(buf) || isu8arr(buf) || isu16arr(buf)) {
-    }
-    else {
+    if (!(isab(buf) || isblob(buf) || isu8arr(buf) || isu16arr(buf))) {
         return null
     }
 
