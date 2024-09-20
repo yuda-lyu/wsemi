@@ -18,9 +18,9 @@ import haskey from './haskey.mjs'
  * @returns {Object} 回傳比對結果物件
  * @example
  *
- * let vOld = [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }]
- * let vNew = [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }]
- * console.log(ltdtDiffByKey(vOld, vNew, 'id'))
+ * let ltdtOld = [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }]
+ * let ltdtNew = [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }]
+ * console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
  * // => {
  * //     infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
  * //     del: [ { id: 'id-2', a: 'a2' } ],
