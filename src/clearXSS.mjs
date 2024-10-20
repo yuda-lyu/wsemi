@@ -3,7 +3,7 @@ import cloneDeep from 'lodash-es/cloneDeep.js'
 import filterXSS from 'xss'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
-import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
 
 
 /**
@@ -45,7 +45,7 @@ function clearXSS(inp) {
             })
             return o
         }
-        else if (isstr(o)) {
+        else if (isestr(o)) {
             return ftxss(o)
         }
         else {
