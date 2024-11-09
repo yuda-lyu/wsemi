@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.62",
+  "version": "1.7.63",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^3.6.0",
@@ -10,6 +10,7 @@
     "diff": "^5.2.0",
     "eventemitter3": "^5.0.1",
     "fuse.js": "^6.6.2",
+    "he": "^1.2.0",
     "htmlparser": "^1.7.7",
     "lodash-es": "^4.17.21",
     "pyodide": "^0.24.1",
