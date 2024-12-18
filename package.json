@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.63",
+  "version": "1.7.64",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^3.6.0",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "cheerio": "^1.0.0",
-    "w-package-tools": "^1.0.80"
+    "w-package-tools": "^1.0.82"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000 --experimental-modules",

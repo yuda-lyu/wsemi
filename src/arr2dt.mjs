@@ -2,7 +2,6 @@ import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
 import zipObject from 'lodash-es/zipObject.js'
 import isearr from './isearr.mjs'
-import iser from './iser.mjs'
 
 
 /**

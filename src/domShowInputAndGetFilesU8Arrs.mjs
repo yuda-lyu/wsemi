@@ -23,6 +23,9 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  * @example
  * need test in browser
  *
+ * domShowInputAndGetFilesU8Arrs()
+ *     .then((res)=>{})
+ *
  */
 function domShowInputAndGetFilesU8Arrs(kind = '*', opt = {}) {
 

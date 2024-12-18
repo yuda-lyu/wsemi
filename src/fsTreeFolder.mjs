@@ -5,7 +5,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 
 
 /**
- * 列舉指定資料夾下的全部檔案或資料夾
+ * 後端nodejs列舉指定資料夾下的全部檔案或資料夾
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsTreeFolder.test.mjs Github}
  * @memberOf wsemi
@@ -15,13 +15,17 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * //need test in nodejs
  *
- * fsTreeFolder(fd)
+ * let rs
+ *
+ * rs = fsTreeFolder(fd)
+ * console.log(rs)
  * // => [
  * //   { isFolder: false, level: 1, path: './d/a.txt', name: 'a.txt' },
  * //   { isFolder: true, level: 1, path: './d/ee', name: 'ee' }
  * // ]
  *
- * fsTreeFolder(fd, null)
+ * rs = fsTreeFolder(fd, null)
+ * console.log(rs)
  * // => [
  * //   { isFolder: false, level: 1, path: './d/a.txt', name: 'a.txt' },
  * //   { isFolder: true, level: 1, path: './d/ee', name: 'ee' },
