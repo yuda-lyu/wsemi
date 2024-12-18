@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>arrFilterByPnumAndToLog.mjs - Documentation</title>
+    <title>fsGetFilesWithHashInFolder.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">arrFilterByPnumAndToLog.mjs</h1>
+    <h1 class="page-title">fsGetFilesWithHashInFolder.mjs</h1>
     
 
     
@@ -45,57 +45,86 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import map from 'lodash-es/map.js'
-import isearr from './isearr.mjs'
-import arrFilterByPnum from './arrFilterByPnum.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
+import map from 'lodash-es/map.js'
+import isestr from './isestr.mjs'
+import fsIsFolder from './fsIsFolder.mjs'
+import fsGetFilesInFolder from './fsGetFilesInFolder.mjs'
+import fsGetFileHash from './fsGetFileHash.mjs'
 
 
 /**
- * 過濾陣列內元素僅保留正數(不含0)，並且自動轉數值，再轉log10(Math.log)
+ * 後端nodejs列舉指定資料夾下的全部檔案與對應HASH值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilterByPnumAndToLog.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFilesWithHashInFolder.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} arr 輸入原始陣列
- * @returns {Array} 回傳新陣列
+ * @param {String} fd 輸入欲列舉的資料夾字串
+ * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.type='md5'] 輸入計算HASH方法，預設'md5'
+ * @returns {Array} 回傳列舉檔案陣列
  * @example
+ * //need test in nodejs
  *
- * let arr
+ * let rs
  *
- * arr = ['abc', '-2.2', '-1.1', -1.1, -1, -0.5, 0, '0', 0.5, 1, 1.1, '1.1', '2.2', 'xyz']
- * console.log(arrFilterByPnumAndToLog(arr))
+ * rs = fsGetFilesWithHashInFolder(fd, 1, { type: 'md5' })
+ * console.log(rs)
  * // => [
- * //   -0.6931471805599453,
- * //   0,
- * //   0.09531017980432493,
- * //   0.09531017980432493,
- * //   0.7884573603642703
+ * //   { level: 1, path: './d/a.txt', name: 'a.txt', hashType: 'md5', hash: '{HASH值}' },
+ * //   { level: 1, path: './d/za.json', name: 'za.json', hashType: 'md5', hash: '{HASH值}' }
  * // ]
  *
- * arr = ['-2.2', '-1.1', -1.1, -1, -0.5, 0, '0']
- * console.log(arrFilterByPnumAndToLog(arr))
- * // => []
+ * rs = fsGetFilesWithHashInFolder(fd, null, { type: 'md5' })
+ * console.log(rs)
+ * // => [
+ * //   { level: 1, path: './d/a.txt', name: 'a.txt', hashType: 'md5', hash: '{HASH值}'  },
+ * //   { level: 1, path: './d/za.json', name: 'za.json', hashType: 'md5', hash: '{HASH值}' },
+ * //   { level: 2, path: './d/ee/b.txt', name: 'b.txt', hashType: 'md5', hash: '{HASH值}' },
+ * //   { level: 2, path: './d/ee/zb.json', name: 'zb.json', hashType: 'md5', hash: '{HASH值}' },
+ * //   { level: 3, path: './d/ee/eee/c.txt', name: 'c.txt', hashType: 'md5', hash: '{HASH值}' },
+ * //   { level: 3, path: './d/ee/eee/zc.json', name: 'zc.json', hashType: 'md5', hash: '{HASH值}' }
+ * // ]
  *
  */
-function arrFilterByPnumAndToLog(arr) {
+function fsGetFilesWithHashInFolder(fd, levelLimit = 1, opt = {}) {
 
-    //check
-    if (!isearr(arr)) {
-        return []
+    //type
+    let type = get(opt, 'type', '')
+    if (!isestr(type)) {
+        type = 'md5'
     }
 
-    //不用cloneDeep
+    //check
+    if (!fsIsFolder(fd)) {
+        throw new Error(`fd[${fd}] is not a folder`)
+    }
 
-    //arrFilterByPnum, 有使用cloneDeep
-    arr = arrFilterByPnum(arr)
+    //fps
+    let fps = fsGetFilesInFolder(fd, levelLimit)
+    fps = map(fps, (v) => {
 
-    //map
-    arr = map(arr, Math.log)
+        //ph
+        let ph = get(v, 'path', '')
 
-    return arr
+        //hash
+        v.hashType = type
+        v.hash = ''
+        if (isestr(ph)) {
+            v.hash = fsGetFileHash(ph, {
+                type,
+                mode: 'sync',
+            })
+        }
+
+        return v
+    })
+
+    return fps
 }
 
 
-export default arrFilterByPnumAndToLog
+export default fsGetFilesWithHashInFolder
 </code></pre>
         </article>
     </section>
