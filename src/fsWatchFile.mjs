@@ -21,6 +21,7 @@ import cint from './cint.mjs'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @returns {Object} 回傳物件，包含on、off、clear函數，on為進行監聽，須輸入檔案位置fp與接收函數fun，off為停止監聽，須輸入檔案位置fp，clear為停止全部監聽，不須輸入
  * @example
  * need test in nodejs.
  *

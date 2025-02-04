@@ -29005,7 +29005,7 @@ console.log(domIsFocused(ele))
 
     
 
-    <h4 class="name" id=".domIsVisible"><span class="type-signature type-signature-static">(static) </span>domIsVisible<span class="signature">(ele)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domIsVisible"><span class="type-signature type-signature-static">(static) </span>domIsVisible<span class="signature">(ele, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise|Object}</span></h4>
 
     
 
@@ -29022,7 +29022,7 @@ console.log(domIsFocused(ele))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domIsVisible.mjs.html">domIsVisible.mjs</a>, <a href="domIsVisible.mjs.html#line71">line 71</a>
+        <a href="domIsVisible.mjs.html">domIsVisible.mjs</a>, <a href="domIsVisible.mjs.html#line85">line 85</a>
     </li></ul></dd>
     
 
@@ -29074,14 +29074,23 @@ console.log(domIsFocused(ele))
 <pre class="prettyprint"><code>need test in browser
 
 let ele = document.querySelector('#id')
-domIsVisible(ele)
+
+domIsVisible(ele, { mode: 'promise' })
     .then(function(visible){
         console.log(visible)
         // =&gt; true or false
     })
     .catch(function(err){
         console.log(err)
-    })</code></pre>
+    })
+
+let ev = domIsVisible(ele, { mode: 'event' })
+ev.create()
+ev.on('visible',(visible) =&gt; {
+    console.log(visible)
+    // =&gt; true or false
+})
+// ev.dispose()</code></pre>
         </div>
 
 
@@ -29100,7 +29109,11 @@ domIsVisible(ele)
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -29126,10 +29139,132 @@ domIsVisible(ele)
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入Element元素</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'promise'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入模式字串，可使用'promise'與'event'，給予'promise'代表一次性偵測並回傳Promise，給予'event'代表持續性偵測並回傳EventEmitter，預設'promise'</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -29151,6 +29286,32 @@ domIsVisible(ele)
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳物件，給予'promise'時回傳Promise，resolve回傳顯示與否布林值，reject回傳錯誤訊息，給予'event'時回傳物件，可使用create、on、dispose函數，create代表開啟偵測並直至出現元素，on代表監聽'visible'事件可得元素顯隱變化，dispose代表中止偵測</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+|
+
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -43509,7 +43670,7 @@ console.log(rs)
 
     
 
-    <h4 class="name" id=".fsWatchFile"><span class="type-signature type-signature-static">(static) </span>fsWatchFile<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsWatchFile"><span class="type-signature type-signature-static">(static) </span>fsWatchFile<span class="signature">(opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -43526,7 +43687,7 @@ console.log(rs)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsWatchFile.mjs.html">fsWatchFile.mjs</a>, <a href="fsWatchFile.mjs.html#line39">line 39</a>
+        <a href="fsWatchFile.mjs.html">fsWatchFile.mjs</a>, <a href="fsWatchFile.mjs.html#line40">line 40</a>
     </li></ul></dd>
     
 
@@ -43826,6 +43987,29 @@ evfl.on('./abc.json', (msg) =&gt; {
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳物件，包含on、off、clear函數，on為進行監聽，須輸入檔案位置fp與接收函數fun，off為停止監聽，須輸入檔案位置fp，clear為停止全部監聽，不須輸入</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -51880,7 +52064,7 @@ console.log(c)
 
     
 
-    <h4 class="name" id=".html2strDyn"><span class="type-signature type-signature-async, static">(async, static) </span>html2strDyn<span class="signature">(html, pathItems)</span><span class="type-signature"> → {String}</span></h4>
+    <h4 class="name" id=".html2strDyn"><span class="type-signature type-signature-async, static">(async, static) </span>html2strDyn<span class="signature">(html, pathItems)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -52076,7 +52260,7 @@ console.log(c)
 
         
 <div class="param-desc">
-    <p>回傳純文字字串</p>
+    <p>回傳Promise，resolve回傳純文字字串，reject回傳錯誤訊息</p>
 </div>
 
 
@@ -52087,7 +52271,7 @@ console.log(c)
     </dt>
     <dd>
         
-<span class="param-type">String</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -93382,7 +93566,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Wed Dec 18 2024 23:41:19 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Feb 04 2025 22:11:52 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -93403,7 +93587,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.64/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.65/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

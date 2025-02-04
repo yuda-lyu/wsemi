@@ -1,6 +1,8 @@
+import get from 'lodash-es/get.js'
 import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
 import genPm from './genPm.mjs'
+import evem from './evem.mjs'
 
 
 function ckIOb() {
@@ -54,11 +56,15 @@ function ckIO() {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsVisible.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.mode='promise'] 輸入模式字串，可使用'promise'與'event'，給予'promise'代表一次性偵測並回傳Promise，給予'event'代表持續性偵測並回傳EventEmitter，預設'promise'
+ * @returns {Promise|Object} 回傳物件，給予'promise'時回傳Promise，resolve回傳顯示與否布林值，reject回傳錯誤訊息，給予'event'時回傳物件，可使用create、on、dispose函數，create代表開啟偵測並直至出現元素，on代表監聽'visible'事件可得元素顯隱變化，dispose代表中止偵測
  * @example
  * need test in browser
  *
  * let ele = document.querySelector('#id')
- * domIsVisible(ele)
+ *
+ * domIsVisible(ele, { mode: 'promise' })
  *     .then(function(visible){
  *         console.log(visible)
  *         // => true or false
@@ -67,8 +73,16 @@ function ckIO() {
  *         console.log(err)
  *     })
  *
+ * let ev = domIsVisible(ele, { mode: 'event' })
+ * ev.create()
+ * ev.on('visible',(visible) => {
+ *     console.log(visible)
+ *     // => true or false
+ * })
+ * // ev.dispose()
+ *
  */
-function domIsVisible(ele) {
+function domIsVisible(ele, opt = {}) {
 
     //check ele
     if (!isEle(ele)) {
@@ -80,31 +94,119 @@ function domIsVisible(ele) {
         return Promise.reject('invalid IntersectionObserver')
     }
 
-    //pm
-    let pm = genPm()
+    //mode
+    let mode = get(opt, 'mode', '')
+    if (mode !== 'promise' && mode !== 'event') {
+        mode = 'promise'
+    }
 
-    try {
+    //corePm
+    let corePm = () => {
+
+        //pm
+        let pm = genPm()
+
+        try {
+
+            //ob
+            let ob = new IntersectionObserver((entries) => {
+
+                //resolve
+                pm.resolve(entries[0].isIntersecting)
+
+                //disconnect
+                ob.disconnect()
+
+            })
+
+            //observe
+            ob.observe(ele)
+
+        }
+        catch (err) {
+            pm.reject(err)
+        }
+
+        return pm
+    }
+
+    //coreEv
+    let coreEv = () => {
+
+        //ev
+        let ev = evem()
+
+        //watching
+        let watching = false
 
         //ob
         let ob = new IntersectionObserver((entries) => {
-
-            //resolve
-            pm.resolve(entries[0].isIntersecting)
-
-            //disconnect
-            ob.disconnect()
-
+            let b = entries[0].isIntersecting
+            // console.log(ele, 'visible', b)
+            ev.emit('visible', b)
         })
 
         //observe
-        ob.observe(ele)
+        let observe = (ele) => {
+            let b = false
 
-    }
-    catch (err) {
-        pm.reject(err)
+            //check
+            if (!isEle(ele)) {
+                return b
+            }
+
+            //observe
+            try {
+                ob.observe(ele)
+                b = true
+            }
+            catch (err) {
+            // console.log('observe catch', err)
+            }
+
+            return b
+        }
+
+        //dispose
+        let dispose = () => {
+            let b = false
+            try {
+                ob.disconnect()
+                b = true
+            }
+            catch (err) {
+            // console.log('disconnect catch', err)
+            }
+            return b
+        }
+
+        //create
+        let create = () => {
+            let t = setInterval(() => {
+                watching = observe(ele)
+                if (watching) {
+                    clearInterval(t)
+                }
+            }, 50)
+        }
+
+        //save
+        ev.create = create
+        ev.dispose = dispose
+
+        return ev
     }
 
-    return pm
+    //r
+    let r = null
+    if (mode === 'promise') {
+        r = corePm()
+    }
+    else if (mode === 'event') {
+        r = coreEv()
+    }
+
+    return r
 }
 
 

@@ -10,7 +10,7 @@ import html2str from './html2str.mjs'
  * @memberOf wsemi
  * @param {String} html 輸入html字串
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {String} 回傳純文字字串
+ * @returns {Promise} 回傳Promise，resolve回傳純文字字串，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
