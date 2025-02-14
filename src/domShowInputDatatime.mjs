@@ -17,6 +17,7 @@ import domFind from './domFind.mjs'
  * @memberOf wsemi
  * @param {String} [time=''] 輸入時間字串，可不提供，時間視窗預設為今日，預設為''
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Element} [opt.eleRef=null] 輸入觸發點擊Element元素，若不給則使用document.activeElement取得，預設為null
  * @param {String} [opt.type='datetime-local'] 輸入時間類型字串，可選為'datetime-local'與'date'，預設為'datetime-local'
  * @returns {Promise} 回傳Promise，resolve為選擇新時間，無reject
  * @example
@@ -46,7 +47,11 @@ function domShowInputDatatime(time, opt = {}) {
     }
 
     //eleRef
-    let eleRef = document.activeElement
+    let eleRef = get(opt, 'eleRef', null)
+    if (!isEle(eleRef)) {
+        eleRef = document.activeElement
+    }
+    // console.log('eleRef', eleRef)
 
     //pm
     let pm = genPm()
