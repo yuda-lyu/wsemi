@@ -47,7 +47,7 @@ if (isWindow()) {
 
 
 /**
- * 前端觸發ele的eventName
+ * 前端觸發ele基於MouseEvent的eventName
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.mjs Github}
  * @memberOf wsemi

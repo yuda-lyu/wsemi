@@ -100,10 +100,10 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
         multiple = true
     }
 
-    // //check, 若啟用entireHierarchy則直接使用listFoldersAndFiles, 不再用input法觸發選擇資料夾彈窗
-    // if (entireHierarchy) {
-    //     return listFoldersAndFiles()
-    // }
+    //check, 若啟用entireHierarchy則直接使用listFoldersAndFiles, 不再用input法觸發選擇資料夾彈窗
+    if (entireHierarchy) {
+        // return listFoldersAndFiles() //因listFoldersAndFiles所取得file無webkitRelativePath故不使用
+    }
 
     //sizelimit = 1000
     let sizelimit = get(opt, 'sizelimit')
@@ -140,8 +140,10 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
     //inp
     let inp = domFind('#' + id)
 
-    //evChange
+    //bTrigger
     let bTrigger = false
+
+    //evChange
     function evChange(msg) {
         // console.log('evChange', msg)
 
@@ -161,15 +163,15 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
         //resolve
         pm.resolve(rs)
 
-        //remove event
-        inp.removeEventListener('change', evChange)
+        //removeEventListener
+        inp.removeEventListener('change', evChange, true) //removeEventListener時也需要給予同用useCapture值
         if (!entireHierarchy) {
             window.removeEventListener('focus', evCancel)
         }
 
         //remove element
         domRemove(`[name=${gname}]`)
-        // console.log('domRemove', domRemove)
+        // console.log('domRemove')
 
     }
 
@@ -186,9 +188,10 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
     }
 
     //change
-    inp.addEventListener('change', evChange, true)
+    inp.addEventListener('change', evChange, true) //有給予useCapture, removeEventListener時也需要給予同用useCapture值
 
-    if (!entireHierarchy) { //目前entireHierarchy有問題, 無法支援使用者取消, 待研究
+    //addEventListener
+    if (!entireHierarchy) {
         //focus, inp取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
         window.addEventListener('focus', evCancel)
     }
