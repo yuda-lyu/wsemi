@@ -27,7 +27,10 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  *     .then((res)=>{})
  *
  */
-function domShowInputAndGetFilesU8Arrs(kind = '*', opt = {}) {
+function domShowInputAndGetFilesU8Arrs(opt = {}) {
+
+    //kind
+    let kind = get(opt, 'kind', '*')
 
     //multiple
     let multiple = get(opt, 'multiple')
@@ -52,7 +55,7 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', opt = {}) {
     let pm = genPm()
 
     let resfiles = []
-    domShowInputAndGetFiles(kind, { multiple, entireHierarchy, sizeMbLimit })
+    domShowInputAndGetFiles({ kind, multiple, entireHierarchy, sizeMbLimit })
         .then(function(res) {
 
             //pmt

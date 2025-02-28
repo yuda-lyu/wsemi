@@ -118,7 +118,7 @@ function to_csv(workbook, valueToString) {
  * @example
  *
  * // test in browser
- * domShowInputAndGetFilesU8Arrs(kind)
+ * domShowInputAndGetFilesU8Arrs()
  *     .then(function(d) {
  *         let file = d[0] //get first file
  *         let u8a = file.u8a

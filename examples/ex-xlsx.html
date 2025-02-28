@@ -66,9 +66,7 @@
 
         function readAndDownloadFile(){
 
-            let kind = 'xlsx'
-            //kind = 'common'
-            wsemi.domShowInputAndGetFilesU8Arrs(kind)
+            wsemi.domShowInputAndGetFilesU8Arrs({ kind: 'xlsx' })
                 .then(function(d) {
 
                     //get first file

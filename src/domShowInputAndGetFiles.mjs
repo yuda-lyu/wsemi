@@ -30,7 +30,7 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  *     .then((files)=>{})
  *
  */
-function domShowInputAndGetFiles(kind = '*', opt = {}) {
+function domShowInputAndGetFiles(opt = {}) {
 
     // //listFoldersAndFiles, 因rollup無法編譯故得要放domShowInputAndGetFiles內, 但因所取得file無webkitRelativePath故不使用
     // async function listFoldersAndFiles() {
@@ -82,6 +82,9 @@ function domShowInputAndGetFiles(kind = '*', opt = {}) {
     //         })
     //     return r
     // }
+
+    //kind
+    let kind = get(opt, 'kind', '*')
 
     //multiple
     let multiple = get(opt, 'multiple')
