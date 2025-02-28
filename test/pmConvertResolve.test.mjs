@@ -127,4 +127,39 @@ describe(`pmConvertResolve`, function() {
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
     })
 
+    async function test4() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+
+            async function fun1(p1, p2) {
+                ms.push('resolve fun1: ' + p1 + ', ' + p2)
+                return 'fun1: ' + p1 + ', ' + p2
+            }
+
+            pmConvertResolve(fun1)('abc', 'def')
+                .then((msg) => {
+                    //console.log('t1 then: ', msg)
+                    ms.push({ mode: 't1 then', msg })
+                })
+                .catch((msg) => {
+                    //console.log('t1 catch: ', msg)
+                    ms.push({ mode: 't1 catch', msg })
+                })
+                .finally(() => {
+                    resolve(ms)
+                })
+
+        })
+    }
+    // console.log('test4')
+    // test4
+    // t1 then:  { state: 'success', msg: 'fun1: abc, def' }
+    // ["resolve fun1: abc, def",{"mode":"t1 then","msg":{"state":"success","msg":"fun1: abc, def"}}]
+    let r4 = '["resolve fun1: abc, def",{"mode":"t1 then","msg":{"state":"success","msg":"fun1: abc, def"}}]'
+    it(`should return '${r1}' when run test4'`, async function() {
+        let ms = await test4()
+        //console.log(JSON.stringify(ms))
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
+    })
+
 })

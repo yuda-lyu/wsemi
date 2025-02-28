@@ -9,7 +9,7 @@ import cdbl from './cdbl.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFiles.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
- * @param {Number} [sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+ * @param {Number} [sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
  * @returns {Array} 回傳檔案陣列
  * @example
  * need test in browser
@@ -18,12 +18,12 @@ import cdbl from './cdbl.mjs'
  * let r = domGetFiles(ele)
  *
  */
-function domGetFiles(ele, sizelimit = 1000) {
+function domGetFiles(ele, sizeMbLimit = 1000) {
 
     //check
-    sizelimit = cdbl(sizelimit)
-    if (sizelimit <= 0) {
-        sizelimit = 1000
+    sizeMbLimit = cdbl(sizeMbLimit)
+    if (sizeMbLimit <= 0) {
+        sizeMbLimit = 1000
     }
 
     //files
@@ -31,14 +31,17 @@ function domGetFiles(ele, sizelimit = 1000) {
     let files = []
     each(get(ele, 'files', []), function(file, k) {
 
-        //size, 單位bytes
-        let size = file.size
+        //sizeB, 單位bytes
+        let sizeB = file.size
+
+        //sizeMb
+        let sizeMb = sizeB / 1024 / 1024
 
         //check
-        if (size / 1024 / 1024 > sizelimit) { //轉mb
+        if (sizeMb > sizeMbLimit) {
 
             //push err
-            errs[k] = `檔案大小超過上限${sizelimit}mb`
+            errs[k] = `file size[${sizeMb}]mb > ${sizeMbLimit}mb`
 
         }
 

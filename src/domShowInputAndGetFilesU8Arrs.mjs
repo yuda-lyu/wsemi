@@ -18,7 +18,7 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
   * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
- * @param {Number} [opt.sizelimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+ * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
  * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
  * @example
  * need test in browser
@@ -41,18 +41,18 @@ function domShowInputAndGetFilesU8Arrs(kind = '*', opt = {}) {
         entireHierarchy = false
     }
 
-    //sizelimit = 1000
-    let sizelimit = get(opt, 'sizelimit')
-    if (!isnum(sizelimit)) {
-        sizelimit = 1000
+    //sizeMbLimit = 1000
+    let sizeMbLimit = get(opt, 'sizeMbLimit')
+    if (!isnum(sizeMbLimit)) {
+        sizeMbLimit = 1000
     }
-    sizelimit = cdbl(sizelimit)
+    sizeMbLimit = cdbl(sizeMbLimit)
 
     //pm
     let pm = genPm()
 
     let resfiles = []
-    domShowInputAndGetFiles(kind, { multiple, entireHierarchy, sizelimit })
+    domShowInputAndGetFiles(kind, { multiple, entireHierarchy, sizeMbLimit })
         .then(function(res) {
 
             //pmt

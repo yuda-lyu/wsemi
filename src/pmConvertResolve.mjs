@@ -126,6 +126,37 @@ import ispm from './ispm.mjs'
  *     // t1 then:  { state: 'success', msg: 'fun1: abc, def' }
  *     // ["resolve fun1: abc, def",{"mode":"t1 then","msg":{"state":"success","msg":"fun1: abc, def"}}]
  *
+ *     async function test4() {
+ *         return new Promise((resolve, reject) => {
+ *             let ms = []
+ *
+ *             async function fun1(p1, p2) {
+ *                 console.log('resolve fun1: ' + p1 + ', ' + p2)
+ *                 return 'fun1: ' + p1 + ', ' + p2
+ *             }
+ *
+ *             pmConvertResolve(fun1)('abc', 'def')
+ *                 .then((msg) => {
+ *                     console.log('t1 then: ', msg)
+ *                     ms.push({ mode: 't1 then', msg })
+ *                 })
+ *                 .catch((msg) => {
+ *                     console.log('t1 catch: ', msg)
+ *                     ms.push({ mode: 't1 catch', msg })
+ *                 })
+ *                 .finally(() => {
+ *                     resolve(ms)
+ *                 })
+ *
+ *         })
+ *     }
+ *     console.log('test4')
+ *     let r4 = await test4()
+ *     console.log(JSON.stringify(r4))
+ *     // test4
+ *     // t1 then:  { state: 'success', msg: 'fun1: abc, def' }
+ *     // ["resolve fun1: abc, def",{"mode":"t1 then","msg":{"state":"success","msg":"fun1: abc, def"}}]
+ *
  * }
  * topAsync().catch(() => {})
  *
