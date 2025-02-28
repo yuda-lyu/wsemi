@@ -9,7 +9,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.68/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.69/dist/wsemi.umd.js"></script>
     <script>
         let log = console.log
         console.log = function(){
@@ -66,9 +66,7 @@
 
         function readAndDownloadFile(){
 
-            let kind = 'xlsx'
-            //kind = 'common'
-            wsemi.domShowInputAndGetFilesU8Arrs(kind)
+            wsemi.domShowInputAndGetFilesU8Arrs({ kind: 'xlsx' })
                 .then(function(d) {
 
                     //get first file
