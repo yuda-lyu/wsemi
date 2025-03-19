@@ -66,6 +66,8 @@ To view some examples for more understanding, visit examples:
 
 > **xss:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
 
+> **clearXSSDyn[dynamic import]:** [ex-clearXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSSDyn.html)]
+
 > **openlink:** [ex-openLink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openLink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openLink.html)]
 
 > **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
