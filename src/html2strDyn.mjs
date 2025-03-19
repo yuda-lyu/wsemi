@@ -44,9 +44,8 @@ import html2str from './html2str.mjs'
 async function html2strDyn(html, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
             'https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js',
         ]
     }

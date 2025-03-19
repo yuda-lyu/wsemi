@@ -15,6 +15,7 @@ rollupFiles({
         //因html2canvas沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
         'path': 'path',
         'fs': 'fs',
+        'process': 'process',
         'child_process': 'child_process',
         'crypto': 'crypto', //因crypto-js修改使用內建crypto方式, 會偵測nodejs並使用require內建的crypto, 故需剔除
         'dayjs': 'dayjs',
@@ -32,6 +33,7 @@ rollupFiles({
     external: [
         'path',
         'fs',
+        'process',
         'child_process',
         'crypto',
         'dayjs',

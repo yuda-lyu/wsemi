@@ -14,7 +14,7 @@ import execPyodide from './execPyodide.mjs'
  * @param {Array} [opt.inps=[]] 輸入輸入數據陣列，例如為[123,'abc']等，預設[]
  * @param {String} [opt.content=''] 輸入執行程式核心字串，若要使用inps則使用'rIn數字'，數字由1至inps的長度n，回傳使用'ret'接收，例如ret = fun(rIn1,rIn2,...rInn)，預設''
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Number|String|Boolean|Array|Object} 回傳運算結果資料
+ * @returns {Promise} 回傳Promise，resolve回傳運算結果資料，reject回傳錯誤訊息
  * @example
  *
  * async function test() {
@@ -77,9 +77,8 @@ import execPyodide from './execPyodide.mjs'
 async function execPyodideDyn(opt = {}, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
             //使用官方建議版(full): https://pyodide.org/en/stable/usage/downloading-and-deploying.html
             'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js',
         ]

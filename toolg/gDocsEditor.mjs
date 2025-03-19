@@ -76,10 +76,10 @@ function main() {
     <script>
         let prefill = { 
             'scripts': [
-                'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js',
-                'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
-                'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
-                'https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js',
+                'https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js',
+                'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
+                'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
+                'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
                 'https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js',
             ] 
         }

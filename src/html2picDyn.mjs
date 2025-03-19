@@ -27,9 +27,8 @@ import html2pic from './html2pic.mjs'
 async function html2picDyn(ele, opt = {}, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
             'https://cdn.jsdelivr.net/npm/canvg@4.0.0/lib/umd.js',
             'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
         ]

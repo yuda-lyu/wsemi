@@ -10,7 +10,7 @@ import isWindow from './isWindow.mjs'
  * @example
  *
  * console.log(getEnv())
- * // => { isWindow: false, isWebWorker: false, isNode: true }
+ * // => { isBrowser: false, isWebWorker: false, isNode: true }
  *
  */
 function getEnv() {
@@ -32,10 +32,11 @@ function getEnv() {
 
     //此處沒偵測nodejs的Worker Threads
 
+    //r
     let r = {
         isBrowser,
         isWebWorker,
-        isNode
+        isNode,
     }
 
     return r

@@ -42,14 +42,14 @@ import arrDiff from './arrDiff.mjs'
  *     // => diff [
  *     //   {
  *     //     count: 2,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶1⟋1∶a⟋2∶0.506002098⟋\n0∶2⟋1∶b⟋2∶0.506002098⟋\n'
  *     //   },
  *     //   {
  *     //     count: 2,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶t1⟋1∶ta⟋2∶0.506002098⟋\n0∶t2⟋1∶tb⟋2∶0.506002098⟋\n'
  *     //   }
  *     // ]
@@ -58,15 +58,15 @@ import arrDiff from './arrDiff.mjs'
  *         console.log(i, 'df', df)
  *     }
  *     // => 0 df [
- *     //   { p: 'modify', k: 0, vo: '1', vn: 't1' },
- *     //   { p: 'modify', k: 1, vo: 'a', vn: 'ta' },
- *     //   { p: '', k: 2, vo: '0.506002098', vn: '' }
- *     // ]
- *     // 1 df [
- *     //   { p: 'modify', k: 0, vo: '2', vn: 't2' },
- *     //   { p: 'modify', k: 1, vo: 'b', vn: 'tb' },
- *     //   { p: '', k: 2, vo: '0.506002098', vn: '' }
- *     // ]
+ *     //   cn: { p: 'modify', k: 'cn', vo: '1', vn: 't1' },
+ *     //   v1: { p: 'modify', k: 'v1', vo: 'a', vn: 'ta' },
+ *     //   v2: { p: '', k: 'v2', vo: '0.506002098', vn: '' }
+ *     // }
+ *     // 1 df {
+ *     //   cn: { p: 'modify', k: 'cn', vo: '2', vn: 't2' },
+ *     //   v1: { p: 'modify', k: 'v1', vo: 'b', vn: 'tb' },
+ *     //   v2: { p: '', k: 'v2', vo: '0.506002098', vn: '' }
+ *     // }
  * }
  *
  * if (true) {
@@ -81,14 +81,14 @@ import arrDiff from './arrDiff.mjs'
  *     // => diff [
  *     //   {
  *     //     count: 1,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶1⟋1∶⟋2∶0.506002098⟋3∶∗empty∗⟋\n'
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶1⟋1∶∗empty∗⟋2∶0.506002098⟋3∶⟋\n'
  *     //   }
  *     // ]
@@ -97,11 +97,11 @@ import arrDiff from './arrDiff.mjs'
  *         console.log(i, 'df', df)
  *     }
  *     // => 0 df [
- *     //   { p: '', k: 'cn', vo: '1', vn: '' },
- *     //   { p: 'modify', k: 'v1', vo: '', vn: '∗empty∗' },
- *     //   { p: '', k: 'v3', vo: '0.506002098', vn: '' },
- *     //   { p: 'modify', k: 'v2', vo: '∗empty∗', vn: '' }
- *     // ]
+ *     //   cn: { p: '', k: 'cn', vo: '1', vn: '' },
+ *     //   v1: { p: 'modify', k: 'v1', vo: '', vn: '∗empty∗' },
+ *     //   v3: { p: '', k: 'v3', vo: '0.506002098', vn: '' },
+ *     //   v2: { p: 'modify', k: 'v2', vo: '∗empty∗', vn: '' }
+ *     // }
  * }
  *
  * if (true) {
@@ -118,18 +118,28 @@ import arrDiff from './arrDiff.mjs'
  *     r = ltdtDiff(ltdtOld, ltdtNew)
  *     console.log('diff', r.diff)
  *     // => diff [
- *     //   { count: 1, value: '0∶BH-01⟋1∶S-01⟋2∶1-2⟋3∶18⟋\n' },
  *     //   {
  *     //     count: 1,
- *     //     added: undefined,
+ *     //     added: false,
+ *     //     removed: false,
+ *     //     value: '0∶BH-01⟋1∶S-01⟋2∶1-2⟋3∶18⟋\n'
+ *     //   },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶BH-01⟋1∶S-02⟋2∶5-6⟋3∶17.5⟋\n'
  *     //   },
- *     //   { count: 1, value: '0∶BH-01⟋1∶S-03⟋2∶7-8⟋3∶17⟋\n' },
+ *     //   {
+ *     //     count: 1,
+ *     //     added: false,
+ *     //     removed: false,
+ *     //     value: '0∶BH-01⟋1∶S-03⟋2∶7-8⟋3∶17⟋\n'
+ *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶BH-01⟋1∶S-04⟋2∶11-12⟋3∶19.5⟋\n'
  *     //   }
  *     // ]
@@ -179,7 +189,7 @@ import arrDiff from './arrDiff.mjs'
  *     // => diff [
  *     //   {
  *     //     count: 2,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-1⟋3∶0.9-1.2⟋4∶3.53⟋5∶76.7⟋6∶7.672198498621583⟋7∶7.672198498621583⟋\n' +
  *     //       '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-2⟋3∶2.1-2.3⟋4∶3.83⟋5∶91.3⟋6∶9.126731706783175⟋7∶9.126731706783175⟋\n'
@@ -187,17 +197,19 @@ import arrDiff from './arrDiff.mjs'
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-1A⟋3∶0.9-1.2⟋4∶3.67⟋5∶83.5⟋6∶8.347251752857119⟋7∶8.347251752857119⟋\n'
  *     //   },
  *     //   {
  *     //     count: 1,
+ *     //     added: false,
+ *     //     removed: false,
  *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-3⟋3∶4.4-4.6⟋4∶2.51⟋5∶25.5⟋6∶2.552068908698857⟋7∶2.552068908698857⟋\n'
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶GeneralPhysicalProperties⟋1∶BH-1⟋2∶S-4⟋3∶5.1-5.3⟋4∶3.13⟋5∶56.6⟋6∶5.655150997918099⟋7∶5.655150997918099⟋\n'
  *     //   }
  *     // ]
@@ -295,28 +307,32 @@ import arrDiff from './arrDiff.mjs'
  *     // => diff [
  *     //   {
  *     //     count: 1,
+ *     //     added: false,
+ *     //     removed: false,
  *     //     value: '0∶1⟋1∶0.791303871⟋2∶0.716898185⟋3∶0.506002098⟋4∶0.137888903⟋5∶⟋6∶0.626724085⟋\n'
  *     //   },
  *     //   {
  *     //     count: 1,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶0.567412025⟋6∶0.866151835⟋\n'
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶2⟋1∶0.839882385⟋2∶0.663059856⟋3∶0.49047221⟋4∶0.395763265⟋5∶⟋6∶0.866151835⟋\n'
  *     //   },
  *     //   {
  *     //     count: 2,
+ *     //     added: false,
+ *     //     removed: false,
  *     //     value: '0∶3⟋1∶0.475514539⟋2∶0.969205779⟋3∶0.711250309⟋4∶0.153847069⟋5∶0.304927473⟋6∶0.410092395⟋\n' +
  *     //       '0∶4⟋1∶0.486179086⟋2∶0.481023842⟋3∶0.467410582⟋4∶0.42602231⟋5∶⟋6∶0.849701641⟋\n'
  *     //   },
  *     //   {
  *     //     count: 2,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶5⟋1∶0.697242433⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋\n' +
  *     //       '0∶6⟋1∶0.259252779⟋2∶0.566177431⟋3∶0.679637706⟋4∶0.377814487⟋5∶⟋6∶0.400248119⟋\n'
@@ -324,17 +340,19 @@ import arrDiff from './arrDiff.mjs'
  *     //   {
  *     //     count: 1,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶5⟋1∶0.169724243⟋2∶0.67532802⟋3∶0.174644416⟋4∶0.045652267⟋5∶⟋6∶0.397104668⟋\n'
  *     //   },
  *     //   {
  *     //     count: 2,
+ *     //     added: false,
+ *     //     removed: false,
  *     //     value: '0∶7⟋1∶0.263793391⟋2∶0.167895215⟋3∶0.794808602⟋4∶0.107070584⟋5∶⟋6∶0.011822872⟋\n' +
  *     //       '0∶8⟋1∶0.360426795⟋2∶0.014346373⟋3∶0.000469616⟋4∶0.4082693⟋5∶⟋6∶0.913806611⟋\n'
  *     //   },
  *     //   {
  *     //     count: 4,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363177921⟋4∶0.206849994⟋5∶⟋6∶0.636855344⟋\n' +
  *     //       '0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶⟋6∶0.20087887⟋\n' +
@@ -344,19 +362,21 @@ import arrDiff from './arrDiff.mjs'
  *     //   {
  *     //     count: 2,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶9⟋1∶0.167996664⟋2∶0.711054429⟋3∶0.363173478⟋4∶⟋5∶0.729361837⟋6∶0.636855344⟋\n' +
  *     //       '0∶10⟋1∶0.324665077⟋2∶0.973218005⟋3∶0.883927423⟋4∶0.176906125⟋5∶0.397795245⟋6∶0.20087887⟋\n'
  *     //   },
  *     //   {
  *     //     count: 2,
+ *     //     added: false,
+ *     //     removed: false,
  *     //     value: '0∶13⟋1∶0.984003751⟋2∶0.32549507⟋3∶0.987090751⟋4∶0.192745589⟋5∶⟋6∶0.735133561⟋\n' +
  *     //       '0∶14⟋1∶0.083431884⟋2∶0.565146092⟋3∶0.935388666⟋4∶0.637675154⟋5∶⟋6∶0.523815661⟋\n'
  *     //   },
  *     //   {
  *     //     count: 3,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶n1⟋1∶0.89950443⟋2∶0.182709318⟋3∶0.892820757⟋4∶0.709746901⟋5∶⟋6∶0.097385354⟋\n' +
  *     //       '0∶n2⟋1∶0.061355308⟋2∶0.314826137⟋3∶0.855857651⟋4∶0.653550539⟋5∶⟋6∶0.772500773⟋\n' +
  *     //       '0∶n3⟋1∶0.085078711⟋2∶0.844664253⟋3∶0.21630142⟋4∶0.912931341⟋5∶⟋6∶0.735138313⟋\n'
@@ -559,7 +579,7 @@ import arrDiff from './arrDiff.mjs'
  *     // => diff [
  *     //   {
  *     //     count: 14,
- *     //     added: undefined,
+ *     //     added: false,
  *     //     removed: true,
  *     //     value: '0∶1⟋1∶0.701731713⟋2∶0.791303871⟋3∶0.716898185⟋4∶0.506002098⟋5∶0.137888903⟋6∶⟋7∶0.626724085⟋8∶∗empty∗⟋\n' +
  *     //       '0∶2⟋1∶0.944311349⟋2∶0.839882385⟋3∶0.663059856⟋4∶0.49047221⟋5∶0.395763265⟋6∶0.567412025⟋7∶0.866151835⟋8∶∗empty∗⟋\n' +
@@ -579,7 +599,7 @@ import arrDiff from './arrDiff.mjs'
  *     //   {
  *     //     count: 14,
  *     //     added: true,
- *     //     removed: undefined,
+ *     //     removed: false,
  *     //     value: '0∶1⟋1∶∗empty∗⟋2∶0.791303871⟋3∶0.716898185⟋4∶0.506002098⟋5∶0.137888903⟋6∶⟋7∶0.626724085⟋8∶⟋\n' +
  *     //       '0∶2⟋1∶∗empty∗⟋2∶0.183988239⟋3∶0.663059856⟋4∶0.49047221⟋5∶0.395763265⟋6∶⟋7∶0.866151835⟋8∶⟋\n' +
  *     //       '0∶3⟋1∶∗empty∗⟋2∶0.475514539⟋3∶0.969205779⟋4∶0.711250309⟋5∶0.153847069⟋6∶0.304927473⟋7∶0.410092395⟋8∶⟋\n' +

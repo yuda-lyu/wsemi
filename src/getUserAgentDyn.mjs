@@ -32,10 +32,9 @@ import getUserAgent from './getUserAgent.mjs'
 async function getUserAgentDyn(v = null, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
-            'https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js',
+        pathItems = [ //若有更新版本須全專案取代
+            'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
         ]
     }
 

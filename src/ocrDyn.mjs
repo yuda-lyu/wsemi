@@ -13,7 +13,7 @@ import ocr from './ocr.mjs'
  * @param {String} [opt.lang='eng'] 輸入辨識語系字串，可輸入'eng'、'chi_tra'、'chi_sim'等，多語系可用「+」合併，預設'eng+chi_tra+chi_sim'
  * @param {String} [opt.whitelist=undefined] 輸入白名單字串，可指定輸入只辨識之字元，預設undefined
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Object} 回傳辨識結果物件
+ * @returns {Promise} 回傳Promise，resolve回傳辨識結果物件，reject回傳錯誤訊息
  * @example
  *
  * let resEng = `
@@ -80,9 +80,8 @@ import ocr from './ocr.mjs'
 async function ocrDyn(img, opt = {}, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
             'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.2/dist/tesseract.min.js',
         ]
     }

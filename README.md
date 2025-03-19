@@ -90,7 +90,6 @@ To view some examples for more understanding, visit examples:
 
 ## Installation
 ### Using npm(ES6 module):
-> **Note:** wsemi is mainly dependent on `lodash-es`, `eventemitter3`, `crypto-js`, `chokidar`, `dayjs`, `diff`, `fuse.js`, `decimal.js`,`ua-parser-js`, `xss`, `xlsx`, `tippy.js`, `htmlparser`, `tesseract.js` and `pyodide`.
 ```alias
 npm i wsemi
 ```
@@ -103,35 +102,27 @@ npm i wsemi
 <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
 ```
 
-[Optional] Add script for `dayjs`(or `moment`).
-> **Note:** Include script when using some function of time. If include `moment`, need set `moment` to `window.dayjs` (ex: `window.dayjs = moment`), and put it before include script for wsemi.umd.js.
+[Optional] Add script for `dayjs`.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
-```
-or
-```alias
-<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
-<script>
-  window.dayjs = moment
-</script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
 ```
 
 [Optional] Add script for `fuse.js`.
 > **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js"></script>
 ```
 
 [Optional] Add script for `ua-parser-js`.
 > **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.34/dist/ua-parser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js"></script>
 ```
 
 [Optional] Add script for `xss`.
-> **Note:** Include script when using `clearXSS` function.
+> **Note:** Include script when using `clearXSS` function, and don't include script when using `clearXSSDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
 ```
 
 [Optional] Add script for `xlsx`.
@@ -143,8 +134,8 @@ or
 [Optional] Add link and script for `viewerjs`.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.5/dist/viewer.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.5/dist/viewer.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for `html2canvas`.
@@ -195,5 +186,5 @@ or
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.70/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.71/dist/wsemi.umd.js"></script>
 ```

@@ -1,9 +1,17 @@
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
-import filterXSS from 'xss'
+import xss from 'xss'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
+import getGlobal from './getGlobal.mjs'
+
+
+function getFilterXSS() {
+    let g = getGlobal()
+    let x = xss || g.Tesseract
+    return x
+}
 
 
 /**
@@ -25,6 +33,9 @@ import isestr from './isestr.mjs'
  *
  */
 function clearXSS(inp) {
+
+    //filterXSS
+    let filterXSS = getFilterXSS()
 
     //ftxss
     function ftxss(c) {

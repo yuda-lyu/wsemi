@@ -7,9 +7,9 @@
     <!-- @babel/polyfill已廢棄 -->
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/xss@1.0.14/dist/xss.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.70/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.71/dist/wsemi.umd.js"></script>
     <script>
         let log = console.log
         console.log = function(){
@@ -22,8 +22,11 @@
 <body>
 
     <script>
-        console.log("clearXSS('<img src=\"javascript:alert('XSS')\">')",  wsemi.clearXSS('<img src="javascript:alert(\'XSS\')">')  )
-        console.log("clearXSS('<img src=\"http://888.888.com/999.png\" onerror=\"alert('XSS')\">')",  wsemi.clearXSS('<img src="http://888.888.com/999.png" onerror="alert(\'XSS\')">')  )
+        let r
+        r = wsemi.clearXSS('<img src="javascript:alert(\'XSS\')">')
+        console.log("clearXSS('<img src=\"javascript:alert('XSS')\">')",r)
+        r = wsemi.clearXSS('<img src="http://888.888.com/999.png" onerror="alert(\'XSS\')">')
+        console.log("clearXSS('<img src=\"http://888.888.com/999.png\" onerror=\"alert('XSS')\">')",r)
     </script>
 
 </body>

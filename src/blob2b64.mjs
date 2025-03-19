@@ -31,22 +31,21 @@ function blob2b64(bb) {
 
     //onload
     reader.onload = function () {
-
-        //resolve
         pm.resolve(reader.result)
-
     }
 
     //onerror
     reader.onerror = function (err) {
-
-        //reject
         pm.reject(err)
-
     }
 
     //readAsDataURL
-    reader.readAsDataURL(bb)
+    try {
+        reader.readAsDataURL(bb)
+    }
+    catch (err) {
+        pm.reject('cancel')
+    }
 
     return pm
 }

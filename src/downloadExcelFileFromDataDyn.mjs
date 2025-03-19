@@ -35,10 +35,9 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
 async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, pathItems) {
 
     //pathItems
-    //最新可用版本詳見: https://www.npmjs.com/package/xlsx
-    //若更新, 記得另有函數也使用xlsx也需要更新, 且example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
+            //最新可用版本詳見: https://www.npmjs.com/package/xlsx
             'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
         ]
     }

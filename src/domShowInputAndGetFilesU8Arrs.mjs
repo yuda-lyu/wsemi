@@ -14,12 +14,12 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputAndGetFilesU8Arrs.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Array} [kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
   * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String|Array} [opt.kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
  * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
  * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
- * @returns {Promise} 回傳Promise，resolve為各檔案的Uint8Array資料陣列，reject為錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳各檔案的Uint8Array資料陣列，reject回傳錯誤訊息
  * @example
  * need test in browser
  *

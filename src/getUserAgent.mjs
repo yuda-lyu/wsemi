@@ -1,4 +1,4 @@
-import UAParser from 'ua-parser-js'
+import { UAParser } from 'ua-parser-js'
 import get from 'lodash-es/get.js'
 import isstr from './isstr.mjs'
 import getGlobal from './getGlobal.mjs'
@@ -36,12 +36,12 @@ function getUserAgent(v = null) {
 
     //parser
     let parser
-    let U = getUAParser()
+    let Upr = getUAParser()
     if (isstr(v)) {
-        parser = new U(v)
+        parser = new Upr(v)
     }
     else {
-        parser = new U()
+        parser = new Upr()
     }
 
     let oua = parser.getResult()

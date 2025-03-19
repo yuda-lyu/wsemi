@@ -48,9 +48,8 @@ import domRenderMarkdownMind from './domRenderMarkdownMind.mjs'
 async function domRenderMarkdownMindDyn(ele, markdown, opt = {}, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
+        pathItems = [ //若有更新版本須全專案取代
             'https://cdn.jsdelivr.net/npm/d3@7.8.3/dist/d3.min.js',
             'https://cdn.jsdelivr.net/npm/markmap-view@0.14.4/dist/index.min.js',
             'https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js',

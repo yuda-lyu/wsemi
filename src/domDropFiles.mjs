@@ -8,7 +8,7 @@ import genPm from './genPm.mjs'
 import isIE from './isIE.mjs'
 
 
-async function readFilePromise(entry) {
+function readFilePromise(entry) {
     let pm = genPm()
     try {
         entry.file(pm.resolve, pm.reject)
@@ -20,7 +20,7 @@ async function readFilePromise(entry) {
 }
 
 
-async function readEntriesPromise(directoryReader) {
+function readEntriesPromise(directoryReader) {
     let pm = genPm()
     try {
         directoryReader.readEntries(pm.resolve, pm.reject)
@@ -85,12 +85,13 @@ async function treeEntries(items) {
 
     //its
     let its = []
-    for (let i = 0; i < items.length; i++) {
-        let item = items[i].webkitGetAsEntry()
-        if (item) {
-            its.push(item)
+    each(items, (item) => {
+        let it = item.webkitGetAsEntry()
+        if (it) {
+            its.push(it)
         }
-    }
+    })
+    // console.log('its', its)
 
     //treeItems
     let r = await treeItems(its)
@@ -122,10 +123,15 @@ async function treeDataTransfer(dataTransfer) {
 
         //files, 全部瀏覽器
         files = await treeFiles(get(dataTransfer, 'files', []))
+        // console.log('files', files)
 
         //entries, 非IE11與Opera瀏覽器
         if (!isIE()) {
             entries = await treeEntries(get(dataTransfer, 'items', []))
+                .catch((err) => {
+                    console.log(err) //本機瀏覽html模式時也會報錯[EncodingError]: A URI supplied to the API was malformed, or the resulting Data URL has exceeded the URL length limitations for Data URLs.
+                })
+            // console.log('entries', entries)
         }
 
     }
@@ -221,6 +227,7 @@ function domDropFiles(ele) {
         //treeDataTransfer
         treeDataTransfer(e.dataTransfer)
             .then((r) => {
+                // console.log('r', r)
 
                 //filesTree
                 let filesTree = filter(r.entries, { type: 'file' })
@@ -231,7 +238,7 @@ function domDropFiles(ele) {
                     files: r.files,
                     filesTree,
                     entries: r.entries,
-                    cb
+                    cb,
                 })
 
             })
@@ -248,6 +255,8 @@ function domDropFiles(ele) {
         ele.removeEventListener('dragleave', dgDragout, false)
         ele.removeEventListener('drop', dgDrop, false)
     }
+
+    //save
     ev.off = off
 
     return ev

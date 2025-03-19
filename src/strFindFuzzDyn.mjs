@@ -51,10 +51,9 @@ import strFindFuzz from './strFindFuzz.mjs'
 async function strFindFuzzDyn(ar, strkey, bscore = false, pathItems) {
 
     //pathItems
-    //若更新, 記得example與readme也要更新
     if (!isearr(pathItems)) {
-        pathItems = [
-            'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js',
+        pathItems = [ //若有更新版本須全專案取代
+            'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
         ]
     }
 

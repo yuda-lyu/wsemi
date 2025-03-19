@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for clearXSSDyn(xss)</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
+
+    <script src="../dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+</head>
+<body>
+
+    <script>
+        let core = async () => {
+            let r
+            r = await wsemi.clearXSSDyn('<img src="javascript:alert(\'XSS\')">')
+            console.log("clearXSSDyn('<img src=\"javascript:alert('XSS')\">')",r)
+            r = await wsemi.clearXSSDyn('<img src="http://888.888.com/999.png" onerror="alert(\'XSS\')">')
+            console.log("clearXSSDyn('<img src=\"http://888.888.com/999.png\" onerror=\"alert('XSS')\">')",r)
+        }
+        core()
+            .then((res)=>{
+                // console.log('clearXSSDyn',res)
+            })
+            .catch((err)=>{
+                console.log(err)
+            })
+
+    </script>
+
+</body>
+</html>
