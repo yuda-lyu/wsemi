@@ -7,7 +7,7 @@
     <!-- @babel/polyfill已廢棄 -->
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.70/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.71/dist/wsemi.umd.js"></script>
 
 </head>
 <body>
@@ -16,13 +16,13 @@
 
         <div style="padding:10px; display:flex; align-items:center;">
 
-            <button style="display:block; width:150px; height:100px;" onclick="uploadImg()">upload file</button>
+            <button style="display:block; width:150px; height:100px;" onclick="uploadImg()">upload image file</button>
 
             <div style="padding:5px;"></div>
 
-            <!-- 以檔案開啟時無法使用拖曳圖片功能 -->
+            <!-- 以檔案開啟時無法使用拖曳功能 -->
             <div id="panel" style="display:flex; align-items:center; justify-content:center; width:100%; height:100px; border:1px solid #ddd;">
-                <p>drop file</p>
+                <p>drop image file</p>
             </div>
             
         </div>
@@ -75,6 +75,13 @@
                         throw new Error(res.errs)
                     }
 
+                    //check
+                    if(res.files.length===0){
+                        console.log('can not get files by domShowInputAndGetFiles')
+                        return
+                    }
+                    // console.log('files',res.files)
+
                     //file
                     let file=res.files[0]
                     console.log('file',file)
@@ -96,8 +103,15 @@
         let ele = document.querySelector('#panel')
         let ev = wsemi.domDropFiles(ele)
         ev.on('getFiles', ({ files, filesTree, entries, cb }) => {
-            //console.log(files, filesTree, entries)
+            // console.log('files', files, 'filesTree', filesTree, 'entries', entries)
             
+            //check
+            if(files.length===0){
+                console.log('can not get files by domDropFiles')
+                return
+            }
+            // console.log('files',files)
+
             //file
             let file=files[0].file
             console.log('file',file)
