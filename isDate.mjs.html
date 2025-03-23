@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domGetWindowSize.mjs - Documentation</title>
+    <title>isDate.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domGetWindowSize.mjs</h1>
+    <h1 class="page-title">isDate.mjs</h1>
     
 
     
@@ -45,68 +45,197 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
-import filter from 'lodash-es/filter.js'
-import min from 'lodash-es/min.js'
-import isNumber from 'lodash-es/isNumber.js'
-import getGlobal from './getGlobal.mjs'
+            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
+import isnum from './isnum.mjs'
+import cdbl from './cdbl.mjs'
 
 
 /**
- * 前端取得window內實際顯示寬度與高度
+ * 判斷是否為時間(Date)
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetWindowSize.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isDate.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳window內實際顯示寬度與高度物件
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
  * @example
- * need test in browser
  *
- * let r = domGetWindowSize()
- * console.log(r)
- * // => {
- *   width:...,
- *   height:...,
- * }
+ * let c
+ *
+ * c = '2019-01-01T12:34:56:7891+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:7891+08:00 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.7891+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.7891+08:00 true 2019-01-01T04:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56:789+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789+08:00 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.789+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.789+08:00 true 2019-01-01T04:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56:78+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:78+08:00 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.78+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.78+08:00 true 2019-01-01T04:34:56.780Z
+ *
+ * c = '2019-01-01T12:34:56+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56+08:00 true 2019-01-01T04:34:56.000Z
+ *
+ * c = '2019-01-01T12:34+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34+08:00 true 2019-01-01T04:34:00.000Z
+ *
+ * c = '2019-01-01T12+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12+08:00 false Invalid Date
+ *
+ * c = '2019-01-01+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01+08:00 false Invalid Date
+ *
+ * c = '2019-01+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01+08:00 false Invalid Date
+ *
+ * c = '2019+08:00'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019+08:00 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56:7891Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:7891Z false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.7891Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.7891Z true 2019-01-01T12:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56:789Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.789Z true 2019-01-01T12:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56.789Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789Z false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56:78Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:78Z false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.78Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.78Z true 2019-01-01T12:34:56.780Z
+ *
+ * c = '2019-01-01T12:34:56Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56Z true 2019-01-01T12:34:56.000Z
+ *
+ * c = '2019-01-01T12:34Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34Z true 2019-01-01T12:34:00.000Z
+ *
+ * c = '2019-01-01T12Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12Z false Invalid Date
+ *
+ * c = '2019-01-01Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01Z true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019-01Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01Z true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019Z'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019Z true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019-01-01T12:34:56:7891'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:7891 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.7891'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.7891 true 2019-01-01T04:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56:789'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.789'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.789 true 2019-01-01T04:34:56.789Z
+ *
+ * c = '2019-01-01T12:34:56:78'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:78 false Invalid Date
+ *
+ * c = '2019-01-01T12:34:56.78'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56.78 true 2019-01-01T04:34:56.780Z
+ *
+ * c = '2019-01-01T12:34:56'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56 true 2019-01-01T04:34:56.000Z
+ *
+ * c = '2019-01-01T12:34'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34 true 2019-01-01T04:34:00.000Z
+ *
+ * c = '2019-01-01T12'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12 false Invalid Date
+ *
+ * c = '2019-01-01'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01 true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019-01'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01 true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019 true 2019-01-01T00:00:00.000Z
+ *
+ * c = '2019-01-01T12:34:56A'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56A false Invalid Date
+ *
+ * c = '1256'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789+08:00 false Invalid Date
+ *
+ * c = '1.25'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789+08:00 false Invalid Date
+ *
+ * c = '-1.25'
+ * console.log(c, isDate(c), new Date(c))
+ * // => 2019-01-01T12:34:56:789+08:00 false Invalid Date
  *
  */
-function domGetWindowSize() {
-
-    //getGlobal
-    let g = getGlobal()
-
-    //domGetWindowWidth
-    let domGetWindowWidth = () => {
-        let w1 = get(g, 'innerWidth')
-        let w2 = get(g, 'document.documentElement.clientWidth')
-        let w3 = get(g, 'document.body.clientWidth')
-        let ws = [w1, w2, w3]
-        ws = filter(ws, isNumber)
-        let w = min(ws)
-        return w
+function isDate(v) {
+    let t = v
+    if (isestr(v)) {
+        t = new Date(v)
     }
-
-    //domGetWindowHeight
-    let domGetWindowHeight = () => {
-        let h1 = get(g, 'innerHeight')
-        let h2 = get(g, 'document.documentElement.clientHeight')
-        let h3 = get(g, 'document.body.clientHeight')
-        let hs = [h1, h2, h3]
-        hs = filter(hs, isNumber)
-        let h = min(hs)
-        return h
+    if (isnum(v)) {
+        t = cdbl(v)
+        t = new Date(v)
     }
-
-    //s
-    let s = {
-        width: domGetWindowWidth(),
-        height: domGetWindowHeight(),
-    }
-
-    return s
+    return t instanceof Date &amp;&amp; !isNaN(t)
 }
 
 
-export default domGetWindowSize
+export default isDate
 </code></pre>
         </article>
     </section>
