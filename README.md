@@ -64,7 +64,7 @@ To view some examples for more understanding, visit examples:
 
 > **getUserAgentDyn[dynamic import]:** [ex-getUserAgentDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgentDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgentDyn.html)]
 
-> **xss:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
+> **clearXSS:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
 
 > **clearXSSDyn[dynamic import]:** [ex-clearXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSSDyn.html)]
 
@@ -188,5 +188,5 @@ npm i wsemi
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.71/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.72/dist/wsemi.umd.js"></script>
 ```
