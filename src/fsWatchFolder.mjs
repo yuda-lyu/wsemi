@@ -1,53 +1,141 @@
 import path from 'path'
-// import fs from 'fs'
-// import crypto from 'crypto'
+import fs from 'fs'
+import events from 'events'
 import chokidar from 'chokidar'
 import get from 'lodash-es/get.js'
-import each from 'lodash-es/each.js'
-import genID from './genID.mjs'
-import now2str from './now2str.mjs'
-import evem from './evem.mjs'
 import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
-import isfun from './isfun.mjs'
 import cint from './cint.mjs'
-import fsIsFile from './fsIsFile.mjs'
-// import fsIsFolder from './fsIsFolder.mjs'
+import fsIsFolder from './fsIsFolder.mjs'
 
 
 /**
- * 後端nodejs基於chokidar提供偵測資料夾內檔案變更或出現或消失事件之EventEmitter
+ * 後端nodejs基於chokidar提供偵測資料夾內檔案變更或出現或消失事件
+ *
+ * 因使用chokidar，變更至少要3秒才能監測，不適用於頻繁觸發事件之工作
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWatchFolder.test.mjs Github}
  * @memberOf wsemi
+ * @param {String} fd 輸入偵測資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change事件，clear為停止全部監聽，不須輸入
  * @example
  * need test in nodejs.
  *
- * let evfd = fsWatchFolder()
+ * import getFileName from './src/getFileName.mjs'
+ * import fsDeleteFile from './src/fsDeleteFile.mjs'
+ * import fsRenameFile from './src/fsRenameFile.mjs'
+ * import fsCreateFolder from './src/fsCreateFolder.mjs'
+ * import fsDeleteFolder from './src/fsDeleteFolder.mjs'
+ * import fsRenameFolder from './src/fsRenameFolder.mjs'
+ * import fsWatchFolder from './src/fsWatchFolder.mjs'
  *
- * evfd.on('./abc', (msg) => {
- *     console.log(msg.type, ':', msg.fp)
- *     // => addDir : ./abc
- *     // add : ./abc/temp1.txt
- *     // unlink : ./abc/temp1.txt
- *     // add : ./abc/temp2.json
- *     // unlinkDir : ./abc
- *     // unlink : ./abc/temp2.json
- * })
+ * let test = async () => {
+ *     return new Promise((resolve, reject) => {
+ *         let ms = []
  *
- * // evfd.clear()
+ *         let fp = './_test_for_fsWatchFolder'
+ *
+ *         fsDeleteFolder(fp)
+ *
+ *         let ev = fsWatchFolder(fp)
+ *         ev.on('change', (msg) => {
+ *             console.log(msg.type, getFileName(msg.fp))
+ *             ms.push({ type: msg.type, fp: getFileName(msg.fp) })
+ *         })
+ *
+ *         setTimeout(() => {
+ *             fsCreateFolder(fp)
+ *         }, 1)
+ *
+ *         setTimeout(() => {
+ *             fs.writeFileSync(`${fp}/abc.txt`, 'abc', 'utf8')
+ *         }, 3000)
+ *
+ *         setTimeout(() => {
+ *             fsRenameFile(`${fp}/abc.txt`, `${fp}/abc.txt` + '.tmp')
+ *         }, 6000)
+ *
+ *         setTimeout(() => {
+ *             fsRenameFile(`${fp}/abc.txt` + '.tmp', `${fp}/abc.txt`)
+ *         }, 9000)
+ *
+ *         setTimeout(() => {
+ *             fs.writeFileSync(`${fp}/abc.txt`, 'def', 'utf8')
+ *         }, 12000)
+ *
+ *         setTimeout(() => {
+ *             fsCreateFolder(`${fp}/test-fd`)
+ *         }, 15000)
+ *
+ *         setTimeout(() => {
+ *             fsRenameFolder(`${fp}/test-fd`, `${fp}/test-fd` + '-tmp')
+ *         }, 18000)
+ *
+ *         setTimeout(() => {
+ *             fsRenameFolder(`${fp}/test-fd` + '-tmp', `${fp}/test-fd`)
+ *         }, 21000)
+ *
+ *         setTimeout(() => {
+ *             fsDeleteFile(`${fp}/abc.txt`)
+ *         }, 24000)
+ *
+ *         setTimeout(() => {
+ *             fsDeleteFolder(`${fp}/test-fd`)
+ *         }, 27000)
+ *
+ *         setTimeout(() => {
+ *             fsDeleteFolder(fp)
+ *         }, 30000)
+ *
+ *         setTimeout(() => {
+ *             ev.clear()
+ *             console.log('ms', ms)
+ *             resolve(ms)
+ *         }, 33000)
+ *
+ *     })
+ * }
+ * test()
+ *     .catch(() => {})
+ * // addDir _test_for_fsWatchFolder
+ * // add abc.txt
+ * // unlink abc.txt
+ * // add abc.txt.tmp
+ * // unlink abc.txt.tmp
+ * // add abc.txt
+ * // change abc.txt
+ * // addDir test-fd
+ * // unlinkDir test-fd
+ * // addDir test-fd-tmp
+ * // unlinkDir test-fd-tmp
+ * // addDir test-fd
+ * // unlink abc.txt
+ * // unlinkDir test-fd
+ * // unlinkDir _test_for_fsWatchFolder
+ * // ms [
+ * //   { type: 'addDir', fp: '_test_for_fsWatchFolder' },
+ * //   { type: 'add', fp: 'abc.txt' },
+ * //   { type: 'unlink', fp: 'abc.txt' },
+ * //   { type: 'add', fp: 'abc.txt.tmp' },
+ * //   { type: 'unlink', fp: 'abc.txt.tmp' },
+ * //   { type: 'add', fp: 'abc.txt' },
+ * //   { type: 'change', fp: 'abc.txt' },
+ * //   { type: 'addDir', fp: 'test-fd' },
+ * //   { type: 'unlinkDir', fp: 'test-fd' },
+ * //   { type: 'addDir', fp: 'test-fd-tmp' },
+ * //   { type: 'unlinkDir', fp: 'test-fd-tmp' },
+ * //   { type: 'addDir', fp: 'test-fd' },
+ * //   { type: 'unlink', fp: 'abc.txt' },
+ * //   { type: 'unlinkDir', fp: 'test-fd' },
+ * //   { type: 'unlinkDir', fp: '_test_for_fsWatchFolder' }
+ * // ]
  *
  */
-function fsWatchFolder(opt = {}) {
-    // let ts = []
-    let kpWhr = {}
-
-    //ev
-    let ev = evem()
+function fsWatchFolder(fd, opt = {}) {
 
     //polling
     let polling = get(opt, 'polling')
@@ -69,162 +157,113 @@ function fsWatchFolder(opt = {}) {
     }
     timeBinaryInterval = cint(timeBinaryInterval)
 
-    // function getTag(fp) {
-    //     let tag = ''
-    //     try {
+    //ev
+    let ev = new events.EventEmitter()
 
-    //         //readFileSync
-    //         let bin = fs.readFileSync(fp)
+    //fpSpe
+    let fpSpe = fd
 
-    //         //tag
-    //         tag = crypto.createHash('md5').update(bin).digest('base64')
+    //timer
+    let watcher = null
+    let t = setInterval(() => {
 
-    //     }
-    //     catch (err) {}
-    //     return tag
-    // }
+        //check
+        if (watcher !== null) {
 
-    function watchEvent(fp, fun) {
+            //check, 若watcher已成功監聽fd, 但更名fd時會無法觸發
+            if (!fsIsFolder(fpSpe)) {
+                //因監聽觸發狀態不能unWatch, 故要延遲呼叫
+
+                //stats
+                let stats = fs.fstatSync
+
+                //emit
+                ev.emit('change', {
+                    type: 'unlinkDir',
+                    fp: path.resolve(fpSpe),
+                    stats,
+                })
+
+                setTimeout(() => {
+                    unWatch()
+                }, 1)
+            }
+
+            return
+        }
+
+        //check
+        if (!fsIsFolder(fpSpe)) {
+            return
+        }
 
         //watcher
-        let watcher = null
-
-        //gcls
-        let gcls = () => {
-            if (watcher === null) {
-                return
-            }
-            watcher.unwatch(fp)
-        }
-
-        //gnew
-        let gnew = () => {
-            //chokidar監測資料夾時, 若資料夾內有子資料夾, 且子資料夾內有檔案時, 此時無法刪除資料夾因被程序上鎖, 故只能先刪除其內檔案或先刪除子資料夾才行
-            watcher = chokidar.watch(fp, {
-                // persistent: true,
-                // ignoreInitial: false,
-                usePolling: polling,
-                interval: timeInterval,
-                binaryInterval: timeBinaryInterval,
-                awaitWriteFinish: true, //須比較多延遲偵測檔案是否變更完成, 但對於連鎖驅動比較保險
-                // depth: undefined,
-            })
-        }
-
-        //gn
-        let gn = () => {
-            gcls()
-            gnew()
-        }
-
-        //啟動chokidar.watch
-        gn()
-
-        //id
-        let id = genID()
-
-        //save
-        kpWhr[id] = {
-            id,
-            fp,
-            watcher,
-            isFile: false,
-        }
+        watcher = chokidar.watch(fpSpe, {
+            // persistent: true,
+            // ignoreInitial: false,
+            usePolling: polling,
+            interval: timeInterval,
+            binaryInterval: timeBinaryInterval,
+            awaitWriteFinish: true, //須比較多延遲偵測檔案是否變更完成, 但對於連鎖驅動比較保險
+            // depth: undefined,
+        })
 
         //on
         watcher
-            .on('all', (type, rfp, stats) => {
-                // console.log(type, rfp, stats)
-                //type=add,addDir,change,unlink,unlinkDir, 注意當unlinkDir後就不會再觸發變更事件, 故外層用timer重新偵測
+            .on('all', (type, fp, stats) => {
+                // console.log(type, fp, stats)
+                //type=add,unlink,change,addDir,unlinkDir
+                //注意當unlinkDir原本監聽的fd後, 就不會再觸發變更事件, 故外層用timer重新偵測
 
-                //統一路徑格式
-                let rtfp = ''
-                if (true) {
-                    let t = rfp
-                    t = t.replace(/\\/g, '/')
-                    t = `./${t}`
-                    rtfp = t
-                }
-                // console.log('all type', type, rfp, rtfp)
+                //fp
+                fp = path.resolve(fp)
 
-                //path.resolve
-                let _fp = path.resolve(fp)
-                let _rtfp = path.resolve(rtfp)
-                // console.log('_fp', _fp)
-                // console.log('_rtfp', _rtfp)
-
-                //b
-                let bfl = fsIsFile(fp)
-                // console.log(fp, 'bfl', bfl)
+                //emit
+                ev.emit('change', { type, fp, stats })
 
                 //check
-                if (bfl) {
-                    kpWhr[id].isFile = true
-                    return
-                }
-
-                //check
-                if (kpWhr[id].isFile && type === 'unlink') {
-                    if (_fp === _rtfp) {
-                        kpWhr[id].isFile = false
-                        return
-                    }
-                }
-
-                //fun
-                if (isfun(fun)) {
-                    fun({
-                        fp: rtfp,
-                        type,
-                        time: now2str(),
-                        stats,
-                    })
-                }
-
-                //unlinkDir
-                if (type === 'unlinkDir') {
-                    if (_fp === _rtfp) {
-                        //因unlinkDir後就不會再觸發變更事件, 延遲重新啟動chokidar.watch
-                        setTimeout(() => {
-                            // console.log('call gn')
-                            gn()
-                        }, 1)
-                    }
+                if (type === 'unlinkDir' && path.resolve(fpSpe) === fp) {
+                    //因監聽觸發狀態不能unWatch, 故要延遲呼叫
+                    setTimeout(() => {
+                        unWatch()
+                    }, 1)
                 }
 
             })
 
-    }
 
-    function unWatchEventCore(v, k) {
-        v.watcher.close()
+    }, timeInterval)
+
+    //unWatch
+    let unWatch = () => {
+        // console.log('call unWatch')
+        if (watcher === null) {
+            return
+        }
+        try {
+            watcher.unwatch(fpSpe)
+        }
+        catch (err) {
+            console.log(err)
+        }
+        watcher.close()
             // .then(() => {})
             .catch((err) => {
                 console.log(err)
-                console.log('watcher.close error', v.fp)
             })
             .finally(() => {
-                delete kpWhr[k]
+                watcher = null
+                // console.log('watcher=null')
             })
     }
 
-    function unWatchEvent(fp) {
-        each(kpWhr, (v, k) => {
-            if (v.fp === fp) {
-                unWatchEventCore(v, k)
-            }
-        })
-    }
-
-    function clear() {
-        each(kpWhr, (v, k) => {
-            unWatchEventCore(v, k)
-        })
+    //clear
+    let clear = () => {
+        unWatch()
+        clearInterval(t)
     }
 
     //save
-    ev.on = watchEvent
-    ev.off = unWatchEvent
     ev.clear = clear
 
     return ev

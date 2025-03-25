@@ -1,166 +1,105 @@
+import fs from 'fs'
 import _ from 'lodash-es'
-import isDate from './src/isDate.mjs'
+import fsDeleteFile from './src/fsDeleteFile.mjs'
+import fsCreateFolder from './src/fsCreateFolder.mjs'
+import fsDeleteFolder from './src/fsDeleteFolder.mjs'
+import fsTask from './src/fsTask.mjs'
 
-let c
 
-c = '2019-01-01T12:34:56:7891+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:7891+08:00 false Invalid Date
+let test = async () => {
+    return new Promise((resolve, reject) => {
+        let ms = []
 
-c = '2019-01-01T12:34:56.7891+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.7891+08:00 true 2019-01-01T04:34:56.789Z
+        fsDeleteFolder('./_tkfs')
 
-c = '2019-01-01T12:34:56:789+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789+08:00 false Invalid Date
+        let fp = './_test_for_fsTask'
+        fsDeleteFolder(fp)
 
-c = '2019-01-01T12:34:56.789+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.789+08:00 true 2019-01-01T04:34:56.789Z
+        let ev = fsTask(fp, { timeInterval: 500 })
+        ev.on('change', (msg) => {
+            console.log(msg.type, msg.fn)
 
-c = '2019-01-01T12:34:56:78+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:78+08:00 false Invalid Date
+            //content
+            let c = ''
+            try {
+                c = fs.readFileSync(msg.fp, 'utf8')
+            }
+            catch (err) {}
 
-c = '2019-01-01T12:34:56.78+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.78+08:00 true 2019-01-01T04:34:56.780Z
+            if ((msg.type === 'add' || msg.type === 'diff') && (msg.fn === 'abc.txt')) {
+                console.log(`task[${msg.fn}]`, `content[${c}]`, 'calculating')
+                ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'calculating' })
+                setTimeout(() => {
+                    console.log(`task[${msg.fn}]`, `content[${c}]`, 'finish')
+                    ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'finish' })
+                    msg.pm.resolve()
+                }, 2000)
+            }
+            else if (msg.type === 'del') {
+                console.log(`task[${msg.fn}]`, 'remove result')
+                ms.push({ type: msg.type, fp: msg.fn, mode: 'remove-result' })
+                msg.pm.resolve()
+            }
+            else {
+                console.log(`task[${msg.fn}]`, `content[${c}]`, 'skip')
+                ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'skip' })
+                msg.pm.resolve()
+            }
 
-c = '2019-01-01T12:34:56+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56+08:00 true 2019-01-01T04:34:56.000Z
+        })
 
-c = '2019-01-01T12:34+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34+08:00 true 2019-01-01T04:34:00.000Z
+        setTimeout(() => {
+            fsCreateFolder(fp)
+        }, 1)
 
-c = '2019-01-01T12+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12+08:00 false Invalid Date
+        setTimeout(() => {
+            fs.writeFileSync(`${fp}/abc.txt`, 'abc', 'utf8')
+        }, 3000)
 
-c = '2019-01-01+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01+08:00 false Invalid Date
+        setTimeout(() => {
+            fs.writeFileSync(`${fp}/abc.txt`, 'mnop', 'utf8')
+            fs.writeFileSync(`${fp}/def.txt`, 'def', 'utf8')
+        }, 6000)
 
-c = '2019-01+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01+08:00 false Invalid Date
+        setTimeout(() => {
+            fsDeleteFile(`${fp}/abc.txt`)
+        }, 9000)
 
-c = '2019+08:00'
-console.log(c, isDate(c), new Date(c))
-// => 2019+08:00 false Invalid Date
+        setTimeout(() => {
+            fsDeleteFolder(fp)
+        }, 12000)
 
-c = '2019-01-01T12:34:56:7891Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:7891Z false Invalid Date
+        setTimeout(() => {
+            ev.clear()
+            fsDeleteFolder('./_tkfs')
+            console.log('ms', ms)
+            resolve(ms)
+        }, 15000)
 
-c = '2019-01-01T12:34:56.7891Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.7891Z true 2019-01-01T12:34:56.789Z
-
-c = '2019-01-01T12:34:56:789Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.789Z true 2019-01-01T12:34:56.789Z
-
-c = '2019-01-01T12:34:56.789Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789Z false Invalid Date
-
-c = '2019-01-01T12:34:56:78Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:78Z false Invalid Date
-
-c = '2019-01-01T12:34:56.78Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.78Z true 2019-01-01T12:34:56.780Z
-
-c = '2019-01-01T12:34:56Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56Z true 2019-01-01T12:34:56.000Z
-
-c = '2019-01-01T12:34Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34Z true 2019-01-01T12:34:00.000Z
-
-c = '2019-01-01T12Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12Z false Invalid Date
-
-c = '2019-01-01Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01Z true 2019-01-01T00:00:00.000Z
-
-c = '2019-01Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01Z true 2019-01-01T00:00:00.000Z
-
-c = '2019Z'
-console.log(c, isDate(c), new Date(c))
-// => 2019Z true 2019-01-01T00:00:00.000Z
-
-c = '2019-01-01T12:34:56:7891'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:7891 false Invalid Date
-
-c = '2019-01-01T12:34:56.7891'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.7891 true 2019-01-01T04:34:56.789Z
-
-c = '2019-01-01T12:34:56:789'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789 false Invalid Date
-
-c = '2019-01-01T12:34:56.789'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.789 true 2019-01-01T04:34:56.789Z
-
-c = '2019-01-01T12:34:56:78'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:78 false Invalid Date
-
-c = '2019-01-01T12:34:56.78'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56.78 true 2019-01-01T04:34:56.780Z
-
-c = '2019-01-01T12:34:56'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56 true 2019-01-01T04:34:56.000Z
-
-c = '2019-01-01T12:34'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34 true 2019-01-01T04:34:00.000Z
-
-c = '2019-01-01T12'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12 false Invalid Date
-
-c = '2019-01-01'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01 true 2019-01-01T00:00:00.000Z
-
-c = '2019-01'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01 true 2019-01-01T00:00:00.000Z
-
-c = '2019'
-console.log(c, isDate(c), new Date(c))
-// => 2019 true 2019-01-01T00:00:00.000Z
-
-c = '2019-01-01T12:34:56A'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56A false Invalid Date
-
-c = '1256'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789+08:00 false Invalid Date
-
-c = '1.25'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789+08:00 false Invalid Date
-
-c = '-1.25'
-console.log(c, isDate(c), new Date(c))
-// => 2019-01-01T12:34:56:789+08:00 false Invalid Date
+    })
+}
+test()
+    .catch(() => {})
+// add abc.txt
+// task[abc.txt] content[abc] calculating
+// task[abc.txt] content[abc] finish
+// diff abc.txt
+// task[abc.txt] content[mnop] calculating
+// task[abc.txt] content[mnop] finish
+// add def.txt
+// task[def.txt] content[def] skip
+// del abc.txt
+// task[abc.txt] remove result
+// del def.txt
+// task[def.txt] remove result
+// ms [
+//   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'calculating' },
+//   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'finish' },
+//   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'calculating' },
+//   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'finish' },
+//   { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
+//   { type: 'del', fp: 'abc.txt', mode: 'remove-result' },
+//   { type: 'del', fp: 'def.txt', mode: 'remove-result' }
+// ]
 
 //node --experimental-modules g.mjs

@@ -592,7 +592,7 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
  * @param {String} [opt.attIndex='dragindex'] 輸入預覽元素順序指標之屬性名稱字串，預設'dragindex'
  * @param {String} [opt.attGroup='draggroup'] 輸入預覽元素群組之屬性名稱字串，預設'draggroup'
  * @param {String} [opt.group='group'] 輸入預覽元素群組字串，預設'group'
- * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位ms，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
+ * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
  * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，預設0.4
  * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，預設0.2
  * @param {String} [opt.previewBackground='white'] 輸入預覽元素背景顏色字串，預設'white'

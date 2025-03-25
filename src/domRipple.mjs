@@ -12,7 +12,7 @@ import domRemove from './domRemove.mjs'
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入dom
  * @param {Object} event 輸入dom點擊事件
- * @param {Integer} [opt.timeDuration=1000] 輸入Ripple效果持續時間整數，單位ms，預設1000
+ * @param {Integer} [opt.timeDuration=1000] 輸入Ripple效果持續時間整數，單位為毫秒ms，預設1000
  * @param {String} [opt.color='rgba(255, 255, 255, 0.5)'] 輸入Ripple顏色字串，預設'rgba(255, 255, 255, 0.5)'
  * @example
  * need test in browser

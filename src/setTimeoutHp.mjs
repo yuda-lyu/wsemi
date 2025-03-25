@@ -9,7 +9,7 @@ import getTimeHp from './getTimeHp.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/setTimeoutHp.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} fun 輸入調用函數
- * @param {Integer} interval 輸入時間間隔正整數，單位ms，預設1
+ * @param {Integer} interval 輸入時間間隔正整數，單位為毫秒ms，預設1
  * @returns {Function} 回傳停止函數，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
  * @example
  *

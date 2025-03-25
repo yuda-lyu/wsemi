@@ -20,7 +20,7 @@ import treeObj from './treeObj.mjs'
  * @returns {Array} 回傳檔案路徑陣列，每個項目為物件並提供path與type兩鍵值，其中type為'folder'或'file'
  * @example
  *
- * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
+ * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
  * let r1 = filepathToTree(fps1)
  * console.log('r1.treeItems', r1.treeItems)
  * // => r1.treeItems [
@@ -43,11 +43,11 @@ import treeObj from './treeObj.mjs'
  * console.log('rfps1', rfps1)
  * // => rfps1 [
  * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/bbb' },
- * //   { type: 'file', path: '/aaa/bbb/z1.txt' }
+ * //   { type: 'folder', path: '/aaa/mmm' },
+ * //   { type: 'file', path: '/aaa/mmm/z1.txt' }
  * // ]
  *
- * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaabbb' }, { 'type': 'file', 'path': '/aaa/aaabbb.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/aaabbbccc.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaabbb/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/bbb' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaabbb/abc/測試.txt' }]
+ * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaammm' }, { 'type': 'file', 'path': '/aaa/aaammm.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/aaammmccc.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/mmm' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaammm/abc/測試.txt' }]
  * let r2 = filepathToTree(fps2, { delimiter: '>' })
  * console.log('r2.treeItems', r2.treeItems)
  * // => r2.treeItems [
@@ -77,59 +77,59 @@ import treeObj from './treeObj.mjs'
  * console.log('rfps2', rfps2)
  * // rfps2 [
  * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/aaabbb' },
- * //   { type: 'folder', path: '/aaa/aaabbb/abc' },
- * //   { type: 'folder', path: '/aaa/aaabbb/abc/abcd' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcd/abcde.txt' },
- * //   { type: 'folder', path: '/aaa/aaabbb/abc/abcde' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdef1.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdef2.txt' },
+ * //   { type: 'folder', path: '/aaa/aaammm' },
+ * //   { type: 'folder', path: '/aaa/aaammm/abc' },
+ * //   { type: 'folder', path: '/aaa/aaammm/abc/abcd' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcd/abcde.txt' },
+ * //   { type: 'folder', path: '/aaa/aaammm/abc/abcde' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdef1.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdef2.txt' },
  * //   {
  * //     type: 'file',
- * //     path: '/aaa/aaabbb/abc/abcde/abcdef3 aaa bbb ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt'
+ * //     path: '/aaa/aaammm/abc/abcde/abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt'
  * //   },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg01.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg02.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg03.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg04.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg05.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg06.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg07.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg08.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg09.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg10.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg11.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg12.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg13.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg14.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg15.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg16.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg17.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg18.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg19.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcde/abcdefg20.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcd1.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/abc/abcd2.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb/aaabbbccc.txt' },
- * //   { type: 'file', path: '/aaa/aaabbb.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg01.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg02.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg03.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg04.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg05.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg06.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg07.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg08.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg09.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg10.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg11.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg12.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg13.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg14.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg15.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg16.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg17.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg18.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg19.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg20.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcd1.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/abc/abcd2.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm/aaammmccc.txt' },
+ * //   { type: 'file', path: '/aaa/aaammm.txt' },
  * //   { type: 'folder', path: '/aaaa' },
  * //   {
  * //     type: 'folder',
- * //     path: '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff'
+ * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff'
  * //   },
  * //   {
  * //     type: 'folder',
- * //     path: '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg'
+ * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg'
  * //   },
  * //   {
  * //     type: 'file',
- * //     path: '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt'
+ * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt'
  * //   },
  * //   {
  * //     type: 'file',
- * //     path: '/aaaa/bbbbbb cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt'
+ * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt'
  * //   },
- * //   { type: 'folder', path: '/bbb' },
+ * //   { type: 'folder', path: '/mmm' },
  * //   { type: 'folder', path: '/c:' },
  * //   { type: 'folder', path: '/c:/hhh' },
  * //   { type: 'folder', path: '/ccc' },
@@ -143,14 +143,14 @@ import treeObj from './treeObj.mjs'
  * //   { type: 'folder', path: '/ggg' },
  * //   { type: 'folder', path: '/中文路徑2' },
  * //   { type: 'folder', path: '/中文路徑2/aaa' },
- * //   { type: 'folder', path: '/中文路徑2/aaa/aaabbb' },
- * //   { type: 'folder', path: '/中文路徑2/aaa/aaabbb/abc' },
- * //   { type: 'file', path: '/中文路徑2/aaa/aaabbb/abc/測試.txt' },
+ * //   { type: 'folder', path: '/中文路徑2/aaa/aaammm' },
+ * //   { type: 'folder', path: '/中文路徑2/aaa/aaammm/abc' },
+ * //   { type: 'file', path: '/中文路徑2/aaa/aaammm/abc/測試.txt' },
  * //   { type: 'file', path: '/aaa1.txt' },
  * //   { type: 'file', path: '/aaa2.txt' }
  * // ]
  *
- * let fps3 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z2.txt' }, { 'type': 'file', 'path': '/aaa/bbb/z10.txt' }]
+ * let fps3 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }, { 'type': 'file', 'path': '/aaa/mmm/z2.txt' }, { 'type': 'file', 'path': '/aaa/mmm/z10.txt' }]
  * let r3 = filepathToTree(fps3)
  * console.log('r3.treeItems', r3.treeItems)
  * // => r3.treeItems [
@@ -173,16 +173,16 @@ import treeObj from './treeObj.mjs'
  * console.log('rfps3', rfps3)
  * // => rfps3 [
  * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/bbb' },
- * //   { type: 'file', path: '/aaa/bbb/z1.txt' },
- * //   { type: 'file', path: '/aaa/bbb/z10.txt' },
- * //   { type: 'file', path: '/aaa/bbb/z2.txt' },
+ * //   { type: 'folder', path: '/aaa/mmm' },
+ * //   { type: 'file', path: '/aaa/mmm/z1.txt' },
+ * //   { type: 'file', path: '/aaa/mmm/z10.txt' },
+ * //   { type: 'file', path: '/aaa/mmm/z2.txt' },
  * //   { type: 'folder', path: '/aaa1' },
  * //   { type: 'folder', path: '/aaa10' },
  * //   { type: 'folder', path: '/aaa2' }
  * // ]
  *
- * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
+ * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
  * let r4 = filepathToTree(fps4)
  * console.log('r4.treeItems', r4.treeItems)
  * // => r1.treeItems [
@@ -205,11 +205,11 @@ import treeObj from './treeObj.mjs'
  * console.log('rfps4', rfps4)
  * // => rfps4 [
  * //   { type: 'folder', path: '>aaa' },
- * //   { type: 'folder', path: '>aaa>bbb' },
- * //   { type: 'file', path: '>aaa>bbb>z1.txt' }
+ * //   { type: 'folder', path: '>aaa>mmm' },
+ * //   { type: 'file', path: '>aaa>mmm>z1.txt' }
  * // ]
  *
- * let fps5 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/bbb/z1.txt' }]
+ * let fps5 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
  * let r5 = filepathToTree(fps5, { bindRoot: 'ROOT' })
  * console.log('r5.treeItems', r5.treeItems)
  * // => r5.treeItems [
@@ -232,8 +232,8 @@ import treeObj from './treeObj.mjs'
  * console.log('rfps5', rfps5)
  * // => rfps5 [
  * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/bbb' },
- * //   { type: 'file', path: '/aaa/bbb/z1.txt' }
+ * //   { type: 'folder', path: '/aaa/mmm' },
+ * //   { type: 'file', path: '/aaa/mmm/z1.txt' }
  * // ]
  *
  */

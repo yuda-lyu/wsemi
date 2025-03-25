@@ -8,7 +8,7 @@ import pmHook from './pmHook.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHookReject.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} fun 輸入非同步Promise函數
- * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'aaa'，將msg='bbb'再return msg即可
+ * @param {Function} [cb=()=>{}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'abc'，將msg='def'再return msg即可
  * @returns {Promise} 回傳為Promise，resolve為回傳成功結果，reject為回傳失敗訊息
  * @example
  *

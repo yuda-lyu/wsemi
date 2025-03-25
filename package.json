@@ -1,9 +1,9 @@
 {
   "name": "wsemi",
-  "version": "1.7.72",
+  "version": "1.7.73",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
-    "chokidar": "^3.6.0",
+    "chokidar": "^4.0.3",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "decimal.js": "^10.5.0",

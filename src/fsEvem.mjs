@@ -1,190 +1,214 @@
 import path from 'path'
 import fs from 'fs'
+import events from 'events'
 import get from 'lodash-es/get.js'
-import each from 'lodash-es/each.js'
-import evem from './evem.mjs'
+import now2str from './now2str.mjs'
+import haskey from './haskey.mjs'
+import isbol from './isbol.mjs'
+import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 import j2o from './j2o.mjs'
+import o2j from './o2j.mjs'
+import getFileTrueName from './getFileTrueName.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsDeleteFolder from './fsDeleteFolder.mjs'
-import fsWatchFile from './fsWatchFile.mjs'
+import fsWatchFolder from './fsWatchFolder.mjs'
 
 
 /**
- * 後端nodejs基於檔案內容變更機制提供跨程序EventEmitter
+ * 後端nodejs跨程序事件發布與訂閱，主要為通過檔案內容變更與監測進行傳遞事件
+ *
+ * 因使用chokidar，變更至少要3秒才能監測，不適用於頻繁觸發事件之工作
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEvem.test.mjs Github}
  * @memberOf wsemi
- * @param {String} [fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [opt.timeDetect=50] 輸入偵測佇列間隔時間整數，若基於檔案變更之頻率小於timeDetect，則會發生事件消失問題，單位為毫秒ms，預設為50
- * @param {Integer} [opt.timeRewatch=1000] 輸入偵測檔案存在時間整數，單位為毫秒ms，預設為1000
+ * @param {String} [opt.fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
+ * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
+ * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
+ * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽指定事件，clear為停止全部監聽，不須輸入
  * @example
  * need test in nodejs.
  *
- * // ---- g1.mjs ----
- *
+ * import fsDeleteFolder from './src/fsDeleteFolder.mjs'
  * import fsEvem from './src/fsEvem.mjs'
  *
- * let evf = fsEvem()
+ * let test = async () => {
+ *     return new Promise((resolve, reject) => {
+ *         let ms = []
  *
- * evf.on('change', (msgc, msgf) => {
- *     console.log('recv change g1', msgc)
- * })
+ *         fsDeleteFolder('./_evps')
  *
- * let n = 0
- * setInterval(() => {
- *     n++
- *     evf.emit('change', { p1: 'abc', p2: n, p3: 'from g1' })
- * }, 2000)
- * // recv change g1 { p1: 'abc', p2: 1, p3: 'from g1' }
- * // recv change g1 { p1: 'def', p2: 1, p3: 'from g2' }
- * // recv change g1 { p1: 'abc', p2: 2, p3: 'from g1' }
- * // recv change g1 { p1: 'def', p2: 2, p3: 'from g2' }
- * // recv change g1 { p1: 'abc', p2: 3, p3: 'from g1' }
- * // recv change g1 { p1: 'def', p2: 3, p3: 'from g2' }
- * // recv change g1 { p1: 'abc', p2: 4, p3: 'from g1' }
- * // ...
+ *         let ev = fsEvem()
  *
- * //node --experimental-modules g1.mjs
+ *         ev.on('conut', (msg) => {
+ *             console.log('conut', msg)
+ *             ms.push(msg)
+ *         })
  *
- * // ---- g2.mjs ----
+ *         let n = 0
+ *         let t = setInterval(() => {
+ *             n++
+ *             ev.emit('conut', n)
+ *             if (n >= 3) {
+ *                 clearTimeout(t)
+ *             }
+ *         }, 3000)
  *
- * import fsEvem from './src/fsEvem.mjs'
+ *         setTimeout(() => {
+ *             ev.clear()
+ *             console.log('ms', ms)
+ *             resolve(ms)
+ *         }, 12000)
  *
- * let evf = fsEvem()
- *
- * evf.on('change', (msgc, msgf) => {
- *     console.log('recv change g2', msgc)
- * })
- *
- * //延遲1s開始
- * let n = 0
- * setTimeout(() => {
- *     setInterval(() => {
- *         n++
- *         evf.emit('change', { p1: 'def', p2: n, p3: 'from g2' })
- *     }, 2000)
- * }, 1000)
- * // recv change g2 { p1: 'abc', p2: 1, p3: 'from g1' }
- * // recv change g2 { p1: 'def', p2: 1, p3: 'from g2' }
- * // recv change g2 { p1: 'abc', p2: 2, p3: 'from g1' }
- * // recv change g2 { p1: 'def', p2: 2, p3: 'from g2' }
- * // recv change g2 { p1: 'abc', p2: 3, p3: 'from g1' }
- * // recv change g2 { p1: 'def', p2: 3, p3: 'from g2' }
- * // recv change g2 { p1: 'abc', p2: 4, p3: 'from g1' }
- * // ...
- *
- * //node --experimental-modules g2.mjs
+ *     })
+ * }
+ * test()
+ *     .catch(() => {})
+ * // conut 1
+ * // conut 2
+ * // conut 3
+ * // ms [ 1, 2, 3 ]
  *
  */
-function fsEvem(fd = './_evps', opt = {}) {
-    let ws = []
+function fsEvem(opt = {}) {
 
-    //ev
-    let ev = evem()
-
-    //timeDetect
-    let timeDetect = get(opt, 'timeDetect')
-    if (!ispint(timeDetect)) {
-        timeDetect = 50
+    //fd
+    let fd = get(opt, 'fd')
+    if (!isestr(fd)) {
+        fd = './_evps'
     }
-    timeDetect = cint(timeDetect)
 
-    //timeRewatch
-    let timeRewatch = get(opt, 'timeRewatch')
-    if (!ispint(timeRewatch)) {
-        timeRewatch = 1000
+    //polling
+    let polling = get(opt, 'polling')
+    if (!isbol(polling)) {
+        polling = false
     }
-    timeRewatch = cint(timeRewatch)
+
+    //timeInterval
+    let timeInterval = get(opt, 'timeInterval')
+    if (!ispint(timeInterval)) {
+        timeInterval = 100
+    }
+    timeInterval = cint(timeInterval)
+
+    //timeBinaryInterval
+    let timeBinaryInterval = get(opt, 'timeBinaryInterval')
+    if (!ispint(timeBinaryInterval)) {
+        timeBinaryInterval = 300
+    }
+    timeBinaryInterval = cint(timeBinaryInterval)
+
+    //keySys
+    let keySys = get(opt, 'keySys')
+    if (!isestr(keySys)) {
+        keySys = '[::pkg_content::]'
+    }
 
     //check
     if (!fsIsFolder(fd)) {
         fsCreateFolder(fd)
     }
 
-    function watchEvent(evName, cb) {
-
-        //fp
-        let fp = path.resolve(fd, evName)
-        // console.log('watchEvent fp ', fp)
-
-        //fsWatchFile
-        let evf = fsWatchFile({
-            timeDetect,
-            timeRewatch,
-        })
-
-        //監聽檔案內容變更或出現或消失事件
-        evf.on(fp, (msgFile) => {
-
-            //readFileSync
-            let msgContent = fs.readFileSync(fp, 'utf8')
-
-            //check
-            let _msgContent = j2o(msgContent)
-            if (iseobj(_msgContent)) {
-                msgContent = _msgContent
-            }
-
-            //cb
-            cb(msgContent, msgFile)
-
-        })
-
-        //push
-        ws.push({
-            fp,
-            evf,
-        })
-
-    }
-
-    function unWatchEvent(evName) {
-
-        //fp
-        let fp = path.resolve(fd, evName)
-        // console.log('watchEvent fp ', fp)
-
-        each(ws, (v) => {
-            if (v.fp === fp) {
-                v.evf.clear()
-            }
-        })
-
-    }
-
-    function watchEmit(evName, msg) {
+    //writeEventFile
+    let writeEventFile = (evName, msg) => {
+        // console.log('writeEventFile', evName, msg)
 
         //fp
         let fp = path.resolve(fd, evName)
         // console.log('watchEmit fp ', fp)
 
         //check
-        if (!isestr(msg)) {
-            msg = JSON.stringify(msg)
+        if (isstr(msg)) {
+            //不用處理
+        }
+        else {
+            msg = o2j(msg)
         }
 
         //writeFileSync
         fs.writeFileSync(fp, msg, 'utf8')
+        // console.log('writeFileSync', fp, msg)
 
     }
 
-    function clear() {
-        each(ws, (v) => {
-            v.evf.clear()
-        })
+    //evl
+    let evl = fsWatchFolder(fd, {
+        polling,
+        timeInterval,
+        timeBinaryInterval,
+    })
+
+    //change
+    evl.on('change', (msg) => {
+        // console.log('fsWatchFolder change', msg.type, msg.fp)
+
+        //check
+        if (msg.type !== 'add' && msg.type !== 'change') {
+            return
+        }
+        // console.log('msg.type', msg.type)
+
+        //evName
+        let evName = getFileTrueName(msg.fp)
+        // console.log('evName', evName)
+
+        //content
+        let content = ''
+        try {
+            content = fs.readFileSync(msg.fp, 'utf8')
+            content = j2o(content)
+        }
+        catch (err) {}
+        // console.log(evName, content)
+
+        //check
+        if (!iseobj(content)) {
+            return
+        }
+
+        //emit
+        ev.emit(evName, { [keySys]: content })
+
+    })
+
+    //clear
+    let clear = () => {
+        evl.clear()
         fsDeleteFolder(fd)
     }
 
+    //ev
+    let ev = new events.EventEmitter()
+    let emt = ev.emit
+    ev.emit = function (evName, msg) { //攔截emit與額外處理, 因使用this記得須維持使用funtion
+        // console.log('攔截ev.emit', evName, msg)
+        let b = false
+        if (iseobj(msg)) {
+            b = haskey(msg, keySys)
+        }
+        if (b) {
+            // console.log('攔截回call', evName, msg)
+            let value = get(msg, keySys, null)
+            let pkg = get(value, 'pkg', '')
+            let time = get(value, 'time', '')
+            return emt.call(this, evName, pkg, time)
+        }
+        else {
+            // console.log('攔截不回call改寫檔', evName, msg)
+            writeEventFile(evName, {
+                pkg: msg,
+                time: now2str(),
+            })
+        }
+    }
+
     //save
-    ev.on = watchEvent
-    ev.off = unWatchEvent
-    ev.emit = watchEmit
     ev.clear = clear
 
     return ev

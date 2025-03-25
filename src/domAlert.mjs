@@ -198,7 +198,7 @@ function addItem({ id, position, time, pm }) {
  * @param {String} [opt.type='success'] 輸入訊息種類字串，可使用'success'、'warning'、'error'，預設'success'
  * @param {String} [opt.icon=''] 輸入圖標字串，可為html，預設依照type給予指定圖標，指定圖標詳見程式碼
  * @param {String} [opt.position='top-right'] 輸入位置字串，可使用'top-right'、'top-left'、'bottom-right'、'bottom-left'，預設'top-right'
- * @param {Number} [opt.time=4000] 輸入顯示時間長度數字，單位ms，預設4000
+ * @param {Number} [opt.time=4000] 輸入顯示時間長度數字，單位為毫秒ms，預設4000
  * @param {Object} [opt.paddingStyle={top:14,right:26,bottom:14,left:14}] 輸入內寬設定物件，可輸入top、bottom、left、right，單位為px，預設{top:14,right:26,bottom:14,left:14}
  * @param {String} [opt.textColor='#000'] 輸入文字顏色字串，預設'#000'
  * @param {String} [opt.backgroundColor='#fff'] 輸入背景顏色字串，預設'#fff'
