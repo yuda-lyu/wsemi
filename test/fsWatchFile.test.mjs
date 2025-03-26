@@ -12,7 +12,7 @@ describe(`fsWatchFile`, function() {
         return new Promise((resolve, reject) => {
             let ms = []
 
-            let fp = './_test_for_fsWatchFile.txt'
+            let fp = './_test_fsWatchFile.txt'
 
             fsDeleteFile(fp)
 
@@ -52,17 +52,17 @@ describe(`fsWatchFile`, function() {
     }
     // test()
     //     .catch(() => {})
-    // add _test_for_fsWatchFile.txt
-    // unlink _test_for_fsWatchFile.txt
-    // add _test_for_fsWatchFile.txt
-    // change _test_for_fsWatchFile.txt
-    // unlink _test_for_fsWatchFile.txt
+    // add _test_fsWatchFile.txt
+    // unlink _test_fsWatchFile.txt
+    // add _test_fsWatchFile.txt
+    // change _test_fsWatchFile.txt
+    // unlink _test_fsWatchFile.txt
     let ms = [
-        { type: 'add', fp: '_test_for_fsWatchFile.txt' },
-        { type: 'unlink', fp: '_test_for_fsWatchFile.txt' },
-        { type: 'add', fp: '_test_for_fsWatchFile.txt' },
-        { type: 'change', fp: '_test_for_fsWatchFile.txt' },
-        { type: 'unlink', fp: '_test_for_fsWatchFile.txt' }
+        { type: 'add', fp: '_test_fsWatchFile.txt' },
+        { type: 'unlink', fp: '_test_fsWatchFile.txt' },
+        { type: 'add', fp: '_test_fsWatchFile.txt' },
+        { type: 'change', fp: '_test_fsWatchFile.txt' },
+        { type: 'unlink', fp: '_test_fsWatchFile.txt' }
     ]
 
     it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {

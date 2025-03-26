@@ -37,7 +37,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  *     return new Promise((resolve, reject) => {
  *         let ms = []
  *
- *         let fp = './_test_for_fsWatchFolder'
+ *         let fp = './_test_fsWatchFolder'
  *
  *         fsDeleteFolder(fp)
  *
@@ -101,7 +101,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * }
  * test()
  *     .catch(() => {})
- * // addDir _test_for_fsWatchFolder
+ * // addDir _test_fsWatchFolder
  * // add abc.txt
  * // unlink abc.txt
  * // add abc.txt.tmp
@@ -115,9 +115,9 @@ import fsIsFolder from './fsIsFolder.mjs'
  * // addDir test-fd
  * // unlink abc.txt
  * // unlinkDir test-fd
- * // unlinkDir _test_for_fsWatchFolder
+ * // unlinkDir _test_fsWatchFolder
  * // ms [
- * //   { type: 'addDir', fp: '_test_for_fsWatchFolder' },
+ * //   { type: 'addDir', fp: '_test_fsWatchFolder' },
  * //   { type: 'add', fp: 'abc.txt' },
  * //   { type: 'unlink', fp: 'abc.txt' },
  * //   { type: 'add', fp: 'abc.txt.tmp' },
@@ -131,7 +131,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * //   { type: 'addDir', fp: 'test-fd' },
  * //   { type: 'unlink', fp: 'abc.txt' },
  * //   { type: 'unlinkDir', fp: 'test-fd' },
- * //   { type: 'unlinkDir', fp: '_test_for_fsWatchFolder' }
+ * //   { type: 'unlinkDir', fp: '_test_fsWatchFolder' }
  * // ]
  *
  */

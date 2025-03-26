@@ -15,7 +15,7 @@ describe(`fsWatchFolder`, function() {
         return new Promise((resolve, reject) => {
             let ms = []
 
-            let fp = './_test_for_fsWatchFolder'
+            let fp = './_test_fsWatchFolder'
 
             fsDeleteFolder(fp)
 
@@ -79,7 +79,7 @@ describe(`fsWatchFolder`, function() {
     }
     // test()
     //     .catch(() => {})
-    // addDir _test_for_fsWatchFolder
+    // addDir _test_fsWatchFolder
     // add abc.txt
     // unlink abc.txt
     // add abc.txt.tmp
@@ -93,9 +93,9 @@ describe(`fsWatchFolder`, function() {
     // addDir test-fd
     // unlink abc.txt
     // unlinkDir test-fd
-    // unlinkDir _test_for_fsWatchFolder
+    // unlinkDir _test_fsWatchFolder
     let ms = [
-        { type: 'addDir', fp: '_test_for_fsWatchFolder' },
+        { type: 'addDir', fp: '_test_fsWatchFolder' },
         { type: 'add', fp: 'abc.txt' },
         { type: 'unlink', fp: 'abc.txt' },
         { type: 'add', fp: 'abc.txt.tmp' },
@@ -109,7 +109,7 @@ describe(`fsWatchFolder`, function() {
         { type: 'addDir', fp: 'test-fd' },
         { type: 'unlink', fp: 'abc.txt' },
         { type: 'unlinkDir', fp: 'test-fd' },
-        { type: 'unlinkDir', fp: '_test_for_fsWatchFolder' }
+        { type: 'unlinkDir', fp: '_test_fsWatchFolder' }
     ]
 
     it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
