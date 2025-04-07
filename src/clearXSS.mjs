@@ -9,10 +9,9 @@ import getGlobal from './getGlobal.mjs'
 
 function getFilterXSS() {
     let g = getGlobal()
-    let x = xss || g.Tesseract
+    let x = xss || g.xss
     return x
 }
-
 
 /**
  * 清除xss攻擊語法

@@ -153,6 +153,7 @@ export { default as fsGetFilesWithHashInFolder } from './fsGetFilesWithHashInFol
 export { default as fsGetFoldersInFolder } from './fsGetFoldersInFolder.mjs'
 export { default as fsIsFile } from './fsIsFile.mjs'
 export { default as fsIsFolder } from './fsIsFolder.mjs'
+export { default as fsMergeFiles } from './fsMergeFiles.mjs'
 export { default as fsReadText } from './fsReadText.mjs'
 export { default as fsRenameFile } from './fsRenameFile.mjs'
 export { default as fsRenameFolder } from './fsRenameFolder.mjs'
