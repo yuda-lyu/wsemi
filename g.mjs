@@ -1,56 +1,83 @@
 import fs from 'fs'
 import _ from 'lodash-es'
+import fsIsFile from './src/fsIsFile.mjs'
 import fsCreateFolder from './src/fsCreateFolder.mjs'
 import fsDeleteFolder from './src/fsDeleteFolder.mjs'
-import fsMergeFiles from './src/fsMergeFiles.mjs'
+import fsCopyFile from './src/fsCopyFile.mjs'
 
 
-let test = async () => {
+let testSync = async () => {
     let ms = []
 
-    let fdt = './_test_fsMergeFiles'
-    fsCreateFolder(fdt) //創建任務資料夾
+    let fpSrc = './_test_fsCopyFile_src'
+    let fpTar = './_test_fsCopyFile_tar'
+    fsCreateFolder(fpSrc)
+    fsCreateFolder(fpTar)
 
-    fs.writeFileSync(`${fdt}/t1.txt`, 'abc', 'utf8')
-    fs.writeFileSync(`${fdt}/t2.txt`, 'def', 'utf8')
-    fs.writeFileSync(`${fdt}/t3.txt`, '中文', 'utf8')
-    fs.writeFileSync(`${fdt}/t4.txt`, '測 試', 'utf8')
-    fs.writeFileSync(`${fdt}/t5.txt`, '&*#$%', 'utf8')
+    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
 
-    let fn = '合併檔案.txt'
-    let fpsIn = [
-        `${fdt}/t1.txt`,
-        `${fdt}/t2.txt`,
-        `${fdt}/t3.txt`,
-        `${fdt}/t4.txt`,
-        `${fdt}/t5.txt`,
-    ]
-    let fpOut = `${fdt}/m.txt`
-    await fsMergeFiles(fn, fpsIn, fpOut)
+    let rc = fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`)
+    ms.push({ 'sync-copy-file': rc })
+
+    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
+    ms.push({ 'sync-is-file': b1 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let testAsync = async () => {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFile_src'
+    let fpTar = './_test_fsCopyFile_tar'
+    fsCreateFolder(fpSrc)
+    fsCreateFolder(fpTar)
+
+    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+
+    await fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`, { useSync: false })
         .then((res) => {
-            console.log('res', res)
-            ms.push(res)
+            // console.log('res', res)
+            ms.push({ 'async-copy-folder': res })
         })
         .catch((err) => {
             console.log('err', err)
         })
 
-    let c = fs.readFileSync(fpOut, 'utf8')
-    console.log('c', c)
-    ms.push({ content: c })
+    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
+    ms.push({ 'async-is-file': b1 })
 
-    fsDeleteFolder(fdt) //最終階段清除任務資料夾
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
 
+    // console.log('ms', ms)
+    return ms
+}
+
+let test = async () => {
+    let ms = []
+    let msSync = await testSync()
+    ms = [...ms, ...msSync]
+    let msAsync = await testAsync()
+    ms = [...ms, ...msAsync]
     console.log('ms', ms)
     return ms
 }
 test()
     .catch(() => {})
-// res { filename: '合併檔案.txt', path: './_test_fsMergeFiles/m.txt' }
-// c abcdef中文測 試&*#$%
-// ms [
-//   { filename: '合併檔案.txt', path: './_test_fsMergeFiles/m.txt' },
-//   { content: 'abcdef中文測 試&*#$%' }
+// => ms [
+//   {
+//     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//   },
+//   { 'sync-is-file': true },
+//   {
+//     'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//   },
+//   { 'async-is-file': true }
 // ]
 
 //node --experimental-modules g.mjs

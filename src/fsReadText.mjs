@@ -7,6 +7,7 @@ import fs from 'fs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadText.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fn 輸入檔案名稱
+ * @returns {String} 回傳檔案內容字串
  * @example
  * need test in nodejs.
  *

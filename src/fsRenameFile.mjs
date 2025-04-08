@@ -9,6 +9,7 @@ import fsIsFile from './fsIsFile.mjs'
  * @memberOf wsemi
  * @param {String} pahOld 輸入檔案原本路徑字串
  * @param {String} pahNew 輸入檔案更名路徑字串
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
  * @example
  * need test in nodejs.
  *

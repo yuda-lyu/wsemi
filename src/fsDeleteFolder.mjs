@@ -8,6 +8,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲刪除資料夾路徑字串
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
  * @example
  * need test in nodejs.
  *

@@ -13,6 +13,7 @@ import fsIsFile from './fsIsFile.mjs'
  * @param {String} [opt.encoding='utf8'] 輸入編碼字串，預設'utf8'
  * @param {Integer} [opt.mode=0o666] 輸入寫入模式數字，預設0o666
  * @param {String} [opt.flag='w'] 輸入寫入標誌字串，預設'w'
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
  * @example
  * need test in nodejs.
  *

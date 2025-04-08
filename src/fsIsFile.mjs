@@ -7,6 +7,7 @@ import fs from 'fs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFile.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入路徑字串
+ * @returns {Boolean} 回傳是否布林值
  * @example
  * need test in nodejs.
  *

@@ -8,6 +8,7 @@ import fsIsFile from './fsIsFile.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFile.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入路徑字串
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
  * @example
  * need test in nodejs.
  *
