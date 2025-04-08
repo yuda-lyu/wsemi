@@ -39782,7 +39782,7 @@ console.log(JSON.stringify(crarr))
 
     
 
-    <h4 class="name" id=".fsCleanFolder"><span class="type-signature type-signature-static">(static) </span>fsCleanFolder<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsCleanFolder"><span class="type-signature type-signature-static">(static) </span>fsCleanFolder<span class="signature">(pah)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -39799,7 +39799,7 @@ console.log(JSON.stringify(crarr))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCleanFolder.mjs.html">fsCleanFolder.mjs</a>, <a href="fsCleanFolder.mjs.html#line20">line 20</a>
+        <a href="fsCleanFolder.mjs.html">fsCleanFolder.mjs</a>, <a href="fsCleanFolder.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -39921,6 +39921,29 @@ console.log('fsCleanFolder', fsCleanFolder('./abc'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -39929,7 +39952,7 @@ console.log('fsCleanFolder', fsCleanFolder('./abc'))
 
     
 
-    <h4 class="name" id=".fsCopyFile"><span class="type-signature type-signature-static">(static) </span>fsCopyFile<span class="signature">(fpSrc, fpTar)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsCopyFile"><span class="type-signature type-signature-static">(static) </span>fsCopyFile<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object|Promise}</span></h4>
 
     
 
@@ -39946,7 +39969,7 @@ console.log('fsCleanFolder', fsCleanFolder('./abc'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCopyFile.mjs.html">fsCopyFile.mjs</a>, <a href="fsCopyFile.mjs.html#line18">line 18</a>
+        <a href="fsCopyFile.mjs.html">fsCopyFile.mjs</a>, <a href="fsCopyFile.mjs.html#line172">line 172</a>
     </li></ul></dd>
     
 
@@ -39997,8 +40020,79 @@ console.log('fsCleanFolder', fsCleanFolder('./abc'))
 <div onclick="editOnline(this, 'fsCopyFile')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>need test in nodejs.
 
-console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
-// fsCopyFile { success: 'done: ./def.txt' }</code></pre>
+let testSync = async () =&gt; {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFile_src'
+    let fpTar = './_test_fsCopyFile_tar'
+    fsCreateFolder(fpSrc)
+    fsCreateFolder(fpTar)
+
+    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+
+    let rc = fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`)
+    ms.push({ 'sync-copy-file': rc })
+
+    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
+    ms.push({ 'sync-is-file': b1 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let testAsync = async () =&gt; {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFile_src'
+    let fpTar = './_test_fsCopyFile_tar'
+    fsCreateFolder(fpSrc)
+    fsCreateFolder(fpTar)
+
+    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+
+    await fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`, { useSync: false })
+        .then((res) =&gt; {
+            // console.log('res', res)
+            ms.push({ 'async-copy-folder': res })
+        })
+        .catch((err) =&gt; {
+            console.log('err', err)
+        })
+
+    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
+    ms.push({ 'async-is-file': b1 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let test = async () =&gt; {
+    let ms = []
+    let msSync = await testSync()
+    ms = [...ms, ...msSync]
+    let msAsync = await testAsync()
+    ms = [...ms, ...msAsync]
+    console.log('ms', ms)
+    return ms
+}
+test()
+    .catch(() =&gt; {})
+// =&gt; ms [
+//   {
+//     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//   },
+//   { 'sync-is-file': true },
+//   {
+//     'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//   },
+//   { 'async-is-file': true }
+// ]</code></pre>
         </div>
 
 
@@ -40017,7 +40111,11 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -40043,10 +40141,22 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入來源資料夾路徑字串</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入來源檔案路徑字串</p></td>
         </tr>
 
     
@@ -40067,10 +40177,132 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入目的資料夾路徑字串</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入目的檔案路徑字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useSync</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否使用同步函數布林值，預設true</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -40092,6 +40324,32 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，不觸發reject</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -40100,7 +40358,7 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
 
     
 
-    <h4 class="name" id=".fsCopyFolder"><span class="type-signature type-signature-static">(static) </span>fsCopyFolder<span class="signature">(fpSrc, fpTar)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsCopyFolder"><span class="type-signature type-signature-static">(static) </span>fsCopyFolder<span class="signature">(fpSrc, fpTar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object|Promise}</span></h4>
 
     
 
@@ -40117,7 +40375,7 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCopyFolder.mjs.html">fsCopyFolder.mjs</a>, <a href="fsCopyFolder.mjs.html#line53">line 53</a>
+        <a href="fsCopyFolder.mjs.html">fsCopyFolder.mjs</a>, <a href="fsCopyFolder.mjs.html#line266">line 266</a>
     </li></ul></dd>
     
 
@@ -40168,42 +40426,93 @@ console.log('fsCopyFile', fsCopyFile('./abc.txt', './def.txt'))
 <div onclick="editOnline(this, 'fsCopyFolder')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>need test in nodejs.
 
-import fs from 'fs'
-import fsCreateFolder from './src/fsCreateFolder.mjs'
-import fsCleanFolder from './src/fsCleanFolder.mjs'
-import fsDeleteFolder from './src/fsDeleteFolder.mjs'
-import fsCopyFolder from './src/fsCopyFolder.mjs'
+let testSync = async () =&gt; {
+    let ms = []
 
-console.log('fsCreateFolder', fsCreateFolder('./d/dd/ddd'))
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
 
-fs.writeFileSync('./d/a.txt', 'd-a', 'utf8')
-fs.writeFileSync('./d/dd/b.txt', 'd-b', 'utf8')
-fs.writeFileSync('./d/dd/ddd/c.txt', 'd-c', 'utf8')
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
 
-console.log('fsCleanFolder', fsCleanFolder('./d'))
+    fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
 
-console.log('fsCreateFolder 1', fsCreateFolder('./d/ee/eee'))
+    let rc = fsCopyFolder(fpSrc, fpTar)
+    ms.push({ 'sync-copy-folder': rc })
 
-fs.writeFileSync('./d/a.txt', 'e-a', 'utf8')
-fs.writeFileSync('./d/ee/b.txt', 'e-b', 'utf8')
-fs.writeFileSync('./d/ee/eee/c.txt', 'e-c', 'utf8')
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'sync-is-folder': b1 })
+    let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'sync-is-file': b2 })
 
-console.log('fsDeleteFolder', fsDeleteFolder('./d'))
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
 
-console.log('fsCreateFolder 2', fsCreateFolder('./d/ff/fff'))
+    // console.log('ms', ms)
+    return ms
+}
 
-fs.writeFileSync('./d/a.txt', 'f-a', 'utf8')
-fs.writeFileSync('./d/ff/b.txt', 'f-b', 'utf8')
-fs.writeFileSync('./d/ff/fff/c.txt', 'f-c', 'utf8')
+let testAsync = async () =&gt; {
+    let ms = []
 
-console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
 
-// fsCreateFolder { success: 'done: ./d/dd/ddd' }
-// fsCleanFolder { success: 'done: ./d' }
-// fsCreateFolder 1 { success: 'done: ./d/ee/eee' }
-// fsDeleteFolder { success: 'done: ./d' }
-// fsCreateFolder 2 { success: 'done: ./d/ff/fff' }
-// fsCopyFolder { success: 'done: ./e' }</code></pre>
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+
+    fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    await fsCopyFolder(fpSrc, fpTar, { useSync: false })
+        .then((res) =&gt; {
+            // console.log('res', res)
+            ms.push({ 'async-copy-folder': res })
+        })
+        .catch((err) =&gt; {
+            console.log('err', err)
+        })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'async-is-folder': b1 })
+    let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'async-is-file': b2 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let test = async () =&gt; {
+    let ms = []
+    let msSync = await testSync()
+    ms = [...ms, ...msSync]
+    let msAsync = await testAsync()
+    ms = [...ms, ...msAsync]
+    console.log('ms', ms)
+    return ms
+}
+test()
+    .catch(() =&gt; {})
+// =&gt; ms [
+//   { 'sync-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' } },
+//   { 'sync-is-folder': true },
+//   { 'sync-is-file': true },
+//   {
+//     'async-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
+//   },
+//   { 'async-is-folder': true },
+//   { 'async-is-file': true }
+// ]</code></pre>
         </div>
 
 
@@ -40222,7 +40531,11 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -40248,7 +40561,19 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入來源資料夾路徑字串</p></td>
@@ -40272,10 +40597,132 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入目的資料夾路徑字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useSync</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否使用同步函數布林值，預設true</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -40297,6 +40744,32 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，不觸發reject</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -40305,7 +40778,7 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
 
     
 
-    <h4 class="name" id=".fsCreateFile"><span class="type-signature type-signature-static">(static) </span>fsCreateFile<span class="signature">(pah, data, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsCreateFile"><span class="type-signature type-signature-static">(static) </span>fsCreateFile<span class="signature">(pah, data, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -40322,7 +40795,7 @@ console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCreateFile.mjs.html">fsCreateFile.mjs</a>, <a href="fsCreateFile.mjs.html#line23">line 23</a>
+        <a href="fsCreateFile.mjs.html">fsCreateFile.mjs</a>, <a href="fsCreateFile.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -40695,6 +41168,29 @@ console.log('fsCreateFile', fsCreateFile('./abc.txt'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -40703,7 +41199,7 @@ console.log('fsCreateFile', fsCreateFile('./abc.txt'))
 
     
 
-    <h4 class="name" id=".fsCreateFolder"><span class="type-signature type-signature-static">(static) </span>fsCreateFolder<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsCreateFolder"><span class="type-signature type-signature-static">(static) </span>fsCreateFolder<span class="signature">(pah)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -40720,7 +41216,7 @@ console.log('fsCreateFile', fsCreateFile('./abc.txt'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCreateFolder.mjs.html">fsCreateFolder.mjs</a>, <a href="fsCreateFolder.mjs.html#line18">line 18</a>
+        <a href="fsCreateFolder.mjs.html">fsCreateFolder.mjs</a>, <a href="fsCreateFolder.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -40842,6 +41338,29 @@ console.log('fsCreateFolder', fsCreateFolder('./abc'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -40850,7 +41369,7 @@ console.log('fsCreateFolder', fsCreateFolder('./abc'))
 
     
 
-    <h4 class="name" id=".fsDeleteFile"><span class="type-signature type-signature-static">(static) </span>fsDeleteFile<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsDeleteFile"><span class="type-signature type-signature-static">(static) </span>fsDeleteFile<span class="signature">(pah)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -40867,7 +41386,7 @@ console.log('fsCreateFolder', fsCreateFolder('./abc'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsDeleteFile.mjs.html">fsDeleteFile.mjs</a>, <a href="fsDeleteFile.mjs.html#line18">line 18</a>
+        <a href="fsDeleteFile.mjs.html">fsDeleteFile.mjs</a>, <a href="fsDeleteFile.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -40989,6 +41508,29 @@ console.log('fsDeleteFile', fsDeleteFile('./abc.txt'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -40997,7 +41539,7 @@ console.log('fsDeleteFile', fsDeleteFile('./abc.txt'))
 
     
 
-    <h4 class="name" id=".fsDeleteFolder"><span class="type-signature type-signature-static">(static) </span>fsDeleteFolder<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsDeleteFolder"><span class="type-signature type-signature-static">(static) </span>fsDeleteFolder<span class="signature">(pah)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -41014,7 +41556,7 @@ console.log('fsDeleteFile', fsDeleteFile('./abc.txt'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsDeleteFolder.mjs.html">fsDeleteFolder.mjs</a>, <a href="fsDeleteFolder.mjs.html#line18">line 18</a>
+        <a href="fsDeleteFolder.mjs.html">fsDeleteFolder.mjs</a>, <a href="fsDeleteFolder.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -41136,6 +41678,29 @@ console.log('fsDeleteFolder', fsDeleteFolder('./abc'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -42753,7 +43318,7 @@ console.log(rs)
 
     
 
-    <h4 class="name" id=".fsIsFile"><span class="type-signature type-signature-static">(static) </span>fsIsFile<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsIsFile"><span class="type-signature type-signature-static">(static) </span>fsIsFile<span class="signature">(pah)</span><span class="type-signature"> → {Boolean}</span></h4>
 
     
 
@@ -42770,7 +43335,7 @@ console.log(rs)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsIsFile.mjs.html">fsIsFile.mjs</a>, <a href="fsIsFile.mjs.html#line22">line 22</a>
+        <a href="fsIsFile.mjs.html">fsIsFile.mjs</a>, <a href="fsIsFile.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -42897,6 +43462,29 @@ fsIsFile(fn)
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳是否布林值</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -42905,7 +43493,7 @@ fsIsFile(fn)
 
     
 
-    <h4 class="name" id=".fsIsFolder"><span class="type-signature type-signature-static">(static) </span>fsIsFolder<span class="signature">(pah)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsIsFolder"><span class="type-signature type-signature-static">(static) </span>fsIsFolder<span class="signature">(pah)</span><span class="type-signature"> → {Boolean}</span></h4>
 
     
 
@@ -42922,7 +43510,7 @@ fsIsFile(fn)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsIsFolder.mjs.html">fsIsFolder.mjs</a>, <a href="fsIsFolder.mjs.html#line22">line 22</a>
+        <a href="fsIsFolder.mjs.html">fsIsFolder.mjs</a>, <a href="fsIsFolder.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -43049,6 +43637,29 @@ fsIsFolder(fn)
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳是否布林值</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -43325,7 +43936,7 @@ test()
 
     
 
-    <h4 class="name" id=".fsReadText"><span class="type-signature type-signature-static">(static) </span>fsReadText<span class="signature">(fn)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsReadText"><span class="type-signature type-signature-static">(static) </span>fsReadText<span class="signature">(fn)</span><span class="type-signature"> → {String}</span></h4>
 
     
 
@@ -43342,7 +43953,7 @@ test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsReadText.mjs.html">fsReadText.mjs</a>, <a href="fsReadText.mjs.html#line14">line 14</a>
+        <a href="fsReadText.mjs.html">fsReadText.mjs</a>, <a href="fsReadText.mjs.html#line15">line 15</a>
     </li></ul></dd>
     
 
@@ -43461,6 +44072,29 @@ test()
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳檔案內容字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -43469,7 +44103,7 @@ test()
 
     
 
-    <h4 class="name" id=".fsRenameFile"><span class="type-signature type-signature-static">(static) </span>fsRenameFile<span class="signature">(pahOld, pahNew)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsRenameFile"><span class="type-signature type-signature-static">(static) </span>fsRenameFile<span class="signature">(pahOld, pahNew)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -43486,7 +44120,7 @@ test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsRenameFile.mjs.html">fsRenameFile.mjs</a>, <a href="fsRenameFile.mjs.html#line19">line 19</a>
+        <a href="fsRenameFile.mjs.html">fsRenameFile.mjs</a>, <a href="fsRenameFile.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -43632,6 +44266,29 @@ console.log('fsRenameFile', fsRenameFile('./abc.txt', './def.txt'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -43640,7 +44297,7 @@ console.log('fsRenameFile', fsRenameFile('./abc.txt', './def.txt'))
 
     
 
-    <h4 class="name" id=".fsRenameFolder"><span class="type-signature type-signature-static">(static) </span>fsRenameFolder<span class="signature">(pahOld, pahNew)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".fsRenameFolder"><span class="type-signature type-signature-static">(static) </span>fsRenameFolder<span class="signature">(pahOld, pahNew)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -43657,7 +44314,7 @@ console.log('fsRenameFile', fsRenameFile('./abc.txt', './def.txt'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsRenameFolder.mjs.html">fsRenameFolder.mjs</a>, <a href="fsRenameFolder.mjs.html#line19">line 19</a>
+        <a href="fsRenameFolder.mjs.html">fsRenameFolder.mjs</a>, <a href="fsRenameFolder.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -43803,6 +44460,29 @@ console.log('fsRenameFolder', fsRenameFolder('./abc', './def'))
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -95637,7 +96317,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Mon Apr 07 2025 19:27:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Apr 08 2025 20:18:08 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -95658,7 +96338,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.75/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.76/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

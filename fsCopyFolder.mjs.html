@@ -47,57 +47,20 @@
         <article>
             <pre class="prettyprint source linenums"><code>import path from 'path'
 import fs from 'fs'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
+import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 
 
-/**
- * 後端nodejs複製資料夾
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCopyFolder.test.mjs Github}
- * @memberOf wsemi
- * @param {String} fpSrc 輸入來源資料夾路徑字串
- * @param {String} fpTar 輸入目的資料夾路徑字串
- * @example
- * need test in nodejs.
- *
- * import fs from 'fs'
- * import fsCreateFolder from './src/fsCreateFolder.mjs'
- * import fsCleanFolder from './src/fsCleanFolder.mjs'
- * import fsDeleteFolder from './src/fsDeleteFolder.mjs'
- * import fsCopyFolder from './src/fsCopyFolder.mjs'
- *
- * console.log('fsCreateFolder', fsCreateFolder('./d/dd/ddd'))
- *
- * fs.writeFileSync('./d/a.txt', 'd-a', 'utf8')
- * fs.writeFileSync('./d/dd/b.txt', 'd-b', 'utf8')
- * fs.writeFileSync('./d/dd/ddd/c.txt', 'd-c', 'utf8')
- *
- * console.log('fsCleanFolder', fsCleanFolder('./d'))
- *
- * console.log('fsCreateFolder 1', fsCreateFolder('./d/ee/eee'))
- *
- * fs.writeFileSync('./d/a.txt', 'e-a', 'utf8')
- * fs.writeFileSync('./d/ee/b.txt', 'e-b', 'utf8')
- * fs.writeFileSync('./d/ee/eee/c.txt', 'e-c', 'utf8')
- *
- * console.log('fsDeleteFolder', fsDeleteFolder('./d'))
- *
- * console.log('fsCreateFolder 2', fsCreateFolder('./d/ff/fff'))
- *
- * fs.writeFileSync('./d/a.txt', 'f-a', 'utf8')
- * fs.writeFileSync('./d/ff/b.txt', 'f-b', 'utf8')
- * fs.writeFileSync('./d/ff/fff/c.txt', 'f-c', 'utf8')
- *
- * console.log('fsCopyFolder', fsCopyFolder('./d', './e'))
- *
- * // fsCreateFolder { success: 'done: ./d/dd/ddd' }
- * // fsCleanFolder { success: 'done: ./d' }
- * // fsCreateFolder 1 { success: 'done: ./d/ee/eee' }
- * // fsDeleteFolder { success: 'done: ./d' }
- * // fsCreateFolder 2 { success: 'done: ./d/ff/fff' }
- * // fsCopyFolder { success: 'done: ./e' }
- */
-function fsCopyFolder(fpSrc, fpTar) {
+function fsCopyFolderSync(fpSrc, fpTar) {
+
+    //check
+    if (!fsIsFolder(fpSrc)) {
+        return {
+            error: `fpSrc[${fpSrc}] is not a folder`
+        }
+    }
 
     //複製資料夾
     try {
@@ -153,6 +116,220 @@ function fsCopyFolder(fpSrc, fpTar) {
 }
 
 
+async function fsCopyFolderAsync(fpSrc, fpTar) {
+
+    //check
+    if (!fsIsFolder(fpSrc)) {
+        return {
+            error: `fpSrc[${fpSrc}] is not a folder`
+        }
+    }
+
+    //fsCopyFolderAsyncCore
+    let fsCopyFolderAsyncCore = async (fpSrc, fpTar) => {
+
+        //讀取來源資料夾內容
+        let entries = fs.readdirSync(fpSrc)
+        // console.log('entries', entries)
+
+        for (let entry of entries) {
+            // console.log('entry', entry)
+
+            //fpSrcTemp
+            let fpSrcTemp = path.join(fpSrc, entry)
+            // console.log('fpSrcTemp', fpSrcTemp)
+
+            //fpTarTemp
+            let fpTarTemp = path.join(fpTar, entry)
+            // console.log('fpTarTemp', fpTarTemp)
+
+            //current
+            let current = fs.lstatSync(fpSrcTemp)
+            // console.log('current', current)
+
+            //遍歷
+            if (current.isDirectory()) {
+
+                //fsCreateFolder
+                fsCreateFolder(fpTarTemp)
+                // console.log('fsCreateFolder', fpTarTemp)
+
+                //fsCopyFolderAsyncCore, 遞迴複製子資料夾
+                await fsCopyFolderAsyncCore(fpSrcTemp, fpTarTemp)
+
+            }
+            else if (current.isSymbolicLink()) {
+
+                //symlinkSync
+                let symlink = fs.readlinkSync(fpSrcTemp)
+                fs.symlinkSync(symlink, fpTarTemp)
+
+            }
+            else {
+
+                //使用串流方式複製檔案
+                await new Promise((resolve, reject) => {
+
+                    //streamRead, streanWrite
+                    let streamRead = fs.createReadStream(fpSrcTemp)
+                    let streanWrite = fs.createWriteStream(fpTarTemp)
+
+                    //on
+                    streamRead.on('error', reject)
+                    streanWrite.on('error', reject)
+                    streanWrite.on('finish', resolve)
+
+                    //pipe
+                    streamRead.pipe(streanWrite)
+
+                })
+
+            }
+
+        }
+
+    }
+
+    //fsCopyFolderAsyncCore
+    let r = null
+    await fsCopyFolderAsyncCore(fpSrc, fpTar)
+        .then(() => {
+            r = {
+                success: 'done: ' + fpTar
+            }
+        })
+        .catch((err) => {
+            r = {
+                error: err
+            }
+        })
+
+    return r
+}
+
+
+/**
+ * 後端nodejs複製資料夾
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCopyFolder.test.mjs Github}
+ * @memberOf wsemi
+ * @param {String} fpSrc 輸入來源資料夾路徑字串
+ * @param {String} fpTar 輸入目的資料夾路徑字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.useSync=true] 輸入是否使用同步函數布林值，預設true
+ * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，不觸發reject
+ * @example
+ * need test in nodejs.
+ *
+ * let testSync = async () => {
+ *     let ms = []
+ *
+ *     let fpSrc = './_test_fsCopyFolder_src'
+ *     let fpTar = './_test_fsCopyFolder_tar'
+ *     fsCreateFolder(fpSrc)
+ *
+ *     fsCreateFolder(`${fpSrc}/lay1/lay2`)
+ *     fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+ *
+ *     fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+ *
+ *     let rc = fsCopyFolder(fpSrc, fpTar)
+ *     ms.push({ 'sync-copy-folder': rc })
+ *
+ *     let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+ *     ms.push({ 'sync-is-folder': b1 })
+ *     let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+ *     ms.push({ 'sync-is-file': b2 })
+ *
+ *     fsDeleteFolder(fpSrc)
+ *     fsDeleteFolder(fpTar)
+ *
+ *     // console.log('ms', ms)
+ *     return ms
+ * }
+ *
+ * let testAsync = async () => {
+ *     let ms = []
+ *
+ *     let fpSrc = './_test_fsCopyFolder_src'
+ *     let fpTar = './_test_fsCopyFolder_tar'
+ *     fsCreateFolder(fpSrc)
+ *
+ *     fsCreateFolder(`${fpSrc}/lay1/lay2`)
+ *     fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+ *
+ *     fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+ *     fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+ *
+ *     await fsCopyFolder(fpSrc, fpTar, { useSync: false })
+ *         .then((res) => {
+ *             // console.log('res', res)
+ *             ms.push({ 'async-copy-folder': res })
+ *         })
+ *         .catch((err) => {
+ *             console.log('err', err)
+ *         })
+ *
+ *     let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+ *     ms.push({ 'async-is-folder': b1 })
+ *     let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+ *     ms.push({ 'async-is-file': b2 })
+ *
+ *     fsDeleteFolder(fpSrc)
+ *     fsDeleteFolder(fpTar)
+ *
+ *     // console.log('ms', ms)
+ *     return ms
+ * }
+ *
+ * let test = async () => {
+ *     let ms = []
+ *     let msSync = await testSync()
+ *     ms = [...ms, ...msSync]
+ *     let msAsync = await testAsync()
+ *     ms = [...ms, ...msAsync]
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ *     .catch(() => {})
+ * // => ms [
+ * //   { 'sync-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' } },
+ * //   { 'sync-is-folder': true },
+ * //   { 'sync-is-file': true },
+ * //   {
+ * //     'async-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
+ * //   },
+ * //   { 'async-is-folder': true },
+ * //   { 'async-is-file': true }
+ * // ]
+ *
+ */
+function fsCopyFolder(fpSrc, fpTar, opt = {}) {
+
+    //useSync
+    let useSync = get(opt, 'useSync', '')
+    if (!isbol(useSync)) {
+        useSync = true
+    }
+
+    let r = ''
+    if (useSync) {
+        r = fsCopyFolderSync(fpSrc, fpTar)
+    }
+    else {
+        r = fsCopyFolderAsync(fpSrc, fpTar)
+    }
+
+    return r
+}
+
+
 export default fsCopyFolder
 </code></pre>
         </article>
@@ -168,7 +345,7 @@ export default fsCopyFolder
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Mon Apr 07 2025 19:27:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Apr 08 2025 20:18:07 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
