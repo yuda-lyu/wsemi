@@ -1,7 +1,9 @@
+import path from 'path'
 import fs from 'fs'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import fsIsFile from './fsIsFile.mjs'
+import fsCreateFolder from './fsCreateFolder.mjs'
 
 
 function fsCopyFileSync(fpSrc, fpTar) {
@@ -15,6 +17,9 @@ function fsCopyFileSync(fpSrc, fpTar) {
 
     //複製檔案
     try {
+
+        //fsCreateFolder
+        fsCreateFolder(path.dirname(fpTar))
 
         //copyFileSync
         fs.copyFileSync(fpSrc, fpTar)
@@ -43,6 +48,9 @@ async function fsCopyFileAsync(fpSrc, fpTar) {
 
     //fsCopyFileAsyncCore
     let fsCopyFileAsyncCore = async (fpSrc, fpTar) => {
+
+        //fsCreateFolder
+        fsCreateFolder(path.dirname(fpTar))
 
         //使用串流方式複製檔案
         await new Promise((resolve, reject) => {

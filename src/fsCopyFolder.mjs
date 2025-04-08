@@ -104,8 +104,7 @@ async function fsCopyFolderAsync(fpSrc, fpTar) {
             if (current.isDirectory()) {
 
                 //fsCreateFolder
-                fsCreateFolder(fpTarTemp)
-                // console.log('fsCreateFolder', fpTarTemp)
+                fsCreateFolder(path.dirname(fpTarTemp))
 
                 //fsCopyFolderAsyncCore, 遞迴複製子資料夾
                 await fsCopyFolderAsyncCore(fpSrcTemp, fpTarTemp)
@@ -119,6 +118,9 @@ async function fsCopyFolderAsync(fpSrc, fpTar) {
 
             }
             else {
+
+                //fsCreateFolder
+                fsCreateFolder(path.dirname(fpTarTemp))
 
                 //使用串流方式複製檔案
                 await new Promise((resolve, reject) => {
