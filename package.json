@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.7.77",
+  "version": "1.7.78",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^4.0.3",

@@ -1,26 +1,112 @@
 import fs from 'fs'
 import _ from 'lodash-es'
 import fsIsFile from './src/fsIsFile.mjs'
+import fsIsFolder from './src/fsIsFolder.mjs'
 import fsCreateFolder from './src/fsCreateFolder.mjs'
 import fsDeleteFolder from './src/fsDeleteFolder.mjs'
-import fsCopyFile from './src/fsCopyFile.mjs'
+import fsCopyFolder from './src/fsCopyFolder.mjs'
 
+
+let testSyncEmpty = async () => {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
+
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+
+    // fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    let rc = fsCopyFolder(fpSrc, fpTar)
+    ms.push({ 'sync-empty-copy-folder': rc })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'sync-empty-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'sync-empty-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'sync-empty-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'sync-empty-is-file-2': b4 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
 
 let testSync = async () => {
     let ms = []
 
-    let fpSrc = './_test_fsCopyFile_src'
-    let fpTar = './_test_fsCopyFile_tar'
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
     fsCreateFolder(fpSrc)
-    fsCreateFolder(fpTar)
 
-    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
 
-    let rc = fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`)
-    ms.push({ 'sync-copy-file': rc })
+    fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
 
-    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
-    ms.push({ 'sync-is-file': b1 })
+    let rc = fsCopyFolder(fpSrc, fpTar)
+    ms.push({ 'sync-copy-folder': rc })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'sync-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'sync-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'sync-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'sync-is-file-2': b4 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let testAsyncEmpty = async () => {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
+
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+
+    // fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    await fsCopyFolder(fpSrc, fpTar, { useSync: false })
+        .then((res) => {
+            // console.log('res', res)
+            ms.push({ 'async-empty-copy-folder': res })
+        })
+        .catch((err) => {
+            console.log('err', err)
+        })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'async-empty-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'async-empty-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'async-empty-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'async-empty-is-file-2': b4 })
 
     fsDeleteFolder(fpSrc)
     fsDeleteFolder(fpTar)
@@ -32,14 +118,19 @@ let testSync = async () => {
 let testAsync = async () => {
     let ms = []
 
-    let fpSrc = './_test_fsCopyFile_src'
-    let fpTar = './_test_fsCopyFile_tar'
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
     fsCreateFolder(fpSrc)
-    fsCreateFolder(fpTar)
 
-    fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
 
-    await fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`, { useSync: false })
+    fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    await fsCopyFolder(fpSrc, fpTar, { useSync: false })
         .then((res) => {
             // console.log('res', res)
             ms.push({ 'async-copy-folder': res })
@@ -48,8 +139,14 @@ let testAsync = async () => {
             console.log('err', err)
         })
 
-    let b1 = fsIsFile(`${fpTar}/_t1.txt`)
-    ms.push({ 'async-is-file': b1 })
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'async-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'async-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'async-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'async-is-file-2': b4 })
 
     fsDeleteFolder(fpSrc)
     fsDeleteFolder(fpTar)
@@ -60,10 +157,10 @@ let testAsync = async () => {
 
 let test = async () => {
     let ms = []
-    let msSync = await testSync()
-    ms = [...ms, ...msSync]
-    let msAsync = await testAsync()
-    ms = [...ms, ...msAsync]
+    ms = [...ms, ...await testSyncEmpty()]
+    ms = [...ms, ...await testSync()]
+    ms = [...ms, ...await testAsyncEmpty()]
+    ms = [...ms, ...await testAsync()]
     console.log('ms', ms)
     return ms
 }
@@ -71,13 +168,32 @@ test()
     .catch(() => {})
 // => ms [
 //   {
-//     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//     'sync-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
 //   },
-//   { 'sync-is-file': true },
+//   { 'sync-empty-is-folder-1': true },
+//   { 'sync-empty-is-folder-2': true },
+//   { 'sync-empty-is-file-1': false },
+//   { 'sync-empty-is-file-2': false },
+//   { 'sync-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' } },
+//   { 'sync-is-folder-1': true },
+//   { 'sync-is-folder-2': true },
+//   { 'sync-is-file-1': true },
+//   { 'sync-is-file-2': true },
 //   {
-//     'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+//     'async-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
 //   },
-//   { 'async-is-file': true }
+//   { 'async-empty-is-folder-1': true },
+//   { 'async-empty-is-folder-2': true },
+//   { 'async-empty-is-file-1': false },
+//   { 'async-empty-is-file-2': false },
+//   {
+//     'async-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
+//   },
+//   { 'async-is-folder-1': true },
+//   { 'async-is-folder-2': true },
+//   { 'async-is-file-1': true },
+//   { 'async-is-file-2': true }
 // ]
+
 
 //node --experimental-modules g.mjs

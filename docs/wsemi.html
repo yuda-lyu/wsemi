@@ -40375,7 +40375,7 @@ test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsCopyFolder.mjs.html">fsCopyFolder.mjs</a>, <a href="fsCopyFolder.mjs.html#line268">line 268</a>
+        <a href="fsCopyFolder.mjs.html">fsCopyFolder.mjs</a>, <a href="fsCopyFolder.mjs.html#line368">line 368</a>
     </li></ul></dd>
     
 
@@ -40426,6 +40426,40 @@ test()
 <div onclick="editOnline(this, 'fsCopyFolder')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>need test in nodejs.
 
+let testSyncEmpty = async () =&gt; {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
+
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+
+    // fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    let rc = fsCopyFolder(fpSrc, fpTar)
+    ms.push({ 'sync-empty-copy-folder': rc })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'sync-empty-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'sync-empty-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'sync-empty-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'sync-empty-is-file-2': b4 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
 let testSync = async () =&gt; {
     let ms = []
 
@@ -40445,9 +40479,53 @@ let testSync = async () =&gt; {
     ms.push({ 'sync-copy-folder': rc })
 
     let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
-    ms.push({ 'sync-is-folder': b1 })
-    let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
-    ms.push({ 'sync-is-file': b2 })
+    ms.push({ 'sync-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'sync-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'sync-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'sync-is-file-2': b4 })
+
+    fsDeleteFolder(fpSrc)
+    fsDeleteFolder(fpTar)
+
+    // console.log('ms', ms)
+    return ms
+}
+
+let testAsyncEmpty = async () =&gt; {
+    let ms = []
+
+    let fpSrc = './_test_fsCopyFolder_src'
+    let fpTar = './_test_fsCopyFolder_tar'
+    fsCreateFolder(fpSrc)
+
+    fsCreateFolder(`${fpSrc}/lay1/lay2`)
+    fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+
+    // fs.writeFileSync(`${fpSrc}/lay1/t1.txt`, 'abc', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/t2.txt`, 'def', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/t3.txt`, '中文', 'utf8')
+    // fs.writeFileSync(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`, '測 試', 'utf8')
+
+    await fsCopyFolder(fpSrc, fpTar, { useSync: false })
+        .then((res) =&gt; {
+            // console.log('res', res)
+            ms.push({ 'async-empty-copy-folder': res })
+        })
+        .catch((err) =&gt; {
+            console.log('err', err)
+        })
+
+    let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+    ms.push({ 'async-empty-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'async-empty-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'async-empty-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'async-empty-is-file-2': b4 })
 
     fsDeleteFolder(fpSrc)
     fsDeleteFolder(fpTar)
@@ -40481,9 +40559,13 @@ let testAsync = async () =&gt; {
         })
 
     let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
-    ms.push({ 'async-is-folder': b1 })
-    let b2 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
-    ms.push({ 'async-is-file': b2 })
+    ms.push({ 'async-is-folder-1': b1 })
+    let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+    ms.push({ 'async-is-folder-2': b2 })
+    let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+    ms.push({ 'async-is-file-1': b3 })
+    let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+    ms.push({ 'async-is-file-2': b4 })
 
     fsDeleteFolder(fpSrc)
     fsDeleteFolder(fpTar)
@@ -40494,24 +40576,42 @@ let testAsync = async () =&gt; {
 
 let test = async () =&gt; {
     let ms = []
-    let msSync = await testSync()
-    ms = [...ms, ...msSync]
-    let msAsync = await testAsync()
-    ms = [...ms, ...msAsync]
+    ms = [...ms, ...await testSyncEmpty()]
+    ms = [...ms, ...await testSync()]
+    ms = [...ms, ...await testAsyncEmpty()]
+    ms = [...ms, ...await testAsync()]
     console.log('ms', ms)
     return ms
 }
 test()
     .catch(() =&gt; {})
 // =&gt; ms [
+//   {
+//     'sync-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
+//   },
+//   { 'sync-empty-is-folder-1': true },
+//   { 'sync-empty-is-folder-2': true },
+//   { 'sync-empty-is-file-1': false },
+//   { 'sync-empty-is-file-2': false },
 //   { 'sync-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' } },
-//   { 'sync-is-folder': true },
-//   { 'sync-is-file': true },
+//   { 'sync-is-folder-1': true },
+//   { 'sync-is-folder-2': true },
+//   { 'sync-is-file-1': true },
+//   { 'sync-is-file-2': true },
+//   {
+//     'async-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
+//   },
+//   { 'async-empty-is-folder-1': true },
+//   { 'async-empty-is-folder-2': true },
+//   { 'async-empty-is-file-1': false },
+//   { 'async-empty-is-file-2': false },
 //   {
 //     'async-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
 //   },
-//   { 'async-is-folder': true },
-//   { 'async-is-file': true }
+//   { 'async-is-folder-1': true },
+//   { 'async-is-folder-2': true },
+//   { 'async-is-file-1': true },
+//   { 'async-is-file-2': true }
 // ]</code></pre>
         </div>
 
@@ -96317,7 +96417,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Apr 08 2025 20:45:23 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Apr 10 2025 13:14:32 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -96338,7 +96438,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.77/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.78/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
