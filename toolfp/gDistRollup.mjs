@@ -18,11 +18,13 @@ rollupFiles({
         'path': 'path',
         'fs': 'fs',
         'child_process': 'child_process',
+        'iconv-lite': 'iconv-lite',
     },
     external: [
         'path',
         'fs',
         'child_process',
+        'iconv-lite',
     ],
 })
 
