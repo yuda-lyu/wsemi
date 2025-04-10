@@ -15,6 +15,7 @@ rollupFiles({
         //因html2canvas沒有umd版, 且被rollup剔除打包還是會有未檢查window導致無法運行於nodejs的錯誤, 故不安裝此套件改用dyn引用
         'path': 'path',
         'fs': 'fs',
+        'events': 'events',
         'process': 'process',
         'child_process': 'child_process',
         'iconv-lite': 'iconv-lite',
@@ -34,6 +35,7 @@ rollupFiles({
     external: [
         'path',
         'fs',
+        'events',
         'process',
         'child_process',
         'iconv-lite',

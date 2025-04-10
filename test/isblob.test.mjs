@@ -5,14 +5,6 @@ import isblob from '../src/isblob.mjs'
 describe(`isblob`, function() {
 
     //nodejs沒有Blob，只有瀏覽器才有
-    it(`need test in browser`, function() {
-        assert.strict.deepStrictEqual(1, 1)
-    })
-    // it(`should return true when input new Blob(1)`, function() {
-    //     let bb = new Blob('a')
-    //     let r = isblob(bb)
-    //     assert.strict.deepStrictEqual(r, true)
-    // })
 
     it(`should return false when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)

@@ -12,7 +12,6 @@
  *
  */
 function isab(v) {
-
     let c = Object.prototype.toString.call(v)
     return c === '[object ArrayBuffer]'
 }

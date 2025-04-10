@@ -12,7 +12,6 @@
  *
  */
 function isu8arr(v) {
-
     let c = Object.prototype.toString.call(v)
     return c === '[object Uint8Array]'
 }

@@ -8,6 +8,8 @@ node --experimental-modules toolg/cleanFolder.mjs
 node --experimental-modules toolg/gDocsExams.mjs
 node --experimental-modules toolg/gDocsEditor.mjs
 
+node --experimental-modules toolfp/gDistRollup.mjs
+node --experimental-modules toolparfor/gDistRollup.mjs
 node --experimental-modules toolg/gDistRollup.mjs
 
 git add .  -A

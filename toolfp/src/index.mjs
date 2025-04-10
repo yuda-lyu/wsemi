@@ -1,5 +1,6 @@
 export { default as evem } from '../../src/evem.mjs'
 export { default as fsCleanFolder } from '../../src/fsCleanFolder.mjs'
+export { default as fsCopyFile } from '../../src/fsCopyFile.mjs'
 export { default as fsCopyFolder } from '../../src/fsCopyFolder.mjs'
 export { default as fsCreateFolder } from '../../src/fsCreateFolder.mjs'
 export { default as fsDeleteFolder } from '../../src/fsDeleteFolder.mjs'

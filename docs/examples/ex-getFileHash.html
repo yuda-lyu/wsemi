@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for getFileHash</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.80/dist/wsemi.umd.js"></script>
+
+</head>
+<body>
+
+    <div style="border:1px solid #aaa;">
+
+        <div style="padding:10px; display:flex; align-items:center;">
+
+            <button style="display:block; width:150px; height:100px;" onclick="uploadFile()">upload file</button>
+
+            <div style="padding:5px;"></div>
+
+            <!-- 以檔案開啟時無法使用拖曳功能 -->
+            <div id="panel" style="display:flex; align-items:center; justify-content:center; width:100%; height:100px; border:1px solid #ddd;">
+                <p>drop file</p>
+            </div>
+            
+        </div>
+
+        <div id="res" style="display:none; padding:0px 10px 10px 10px;">
+            
+            <div style="">
+                <div>hash</div>
+                <input type="text" id="txtHash" style="width:100%; box-sizing:border-box;">
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function file2hash(file){
+
+            //hash
+            wsemi.getFileHash(file)
+                .then(function(hash){
+                    console.log('hash',hash)
+
+                    document.querySelector('#'+'res').style.display='block'
+                    document.querySelector('#'+'txtHash').value=hash
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+
+        }
+
+        function uploadFile(){
+            wsemi.domShowInputAndGetFiles()
+                .then(function(res){
+                    // console.log('res',res)
+
+                    //check
+                    if(wsemi.iseobj(res.errs)){
+                        throw new Error(res.errs)
+                    }
+
+                    //check
+                    if(res.files.length===0){
+                        console.log('can not get files by domShowInputAndGetFiles')
+                        return
+                    }
+                    // console.log('files',res.files)
+
+                    //file
+                    let file=res.files[0]
+                    console.log('file',file)
+
+                    //file2hash
+                    file2hash(file)
+
+                })
+                .catch(function(err){
+                    console.log(err)
+                })
+        }
+
+    </script>
+
+    <script>
+
+        //domDropFiles
+        let ele = document.querySelector('#panel')
+        let ev = wsemi.domDropFiles(ele)
+        ev.on('getFiles', ({ files, filesTree, entries, cb }) => {
+            // console.log('files', files, 'filesTree', filesTree, 'entries', entries)
+            
+            //check
+            if(files.length===0){
+                console.log('can not get files by domDropFiles')
+                return
+            }
+            // console.log('files',files)
+
+            //file
+            let file=files[0].file
+            console.log('file',file)
+
+            //file2hash
+            file2hash(file)
+
+            cb()
+        })
+        ev.on('dropIn', function() {
+            console.log('dropIn')
+        })
+        ev.on('dropOut', function() {
+            console.log('dropOut')
+        })
+        ev.on('error', function(err) {
+            console.log('error', err)
+        })
+
+    </script>
+
+</body>
+</html>

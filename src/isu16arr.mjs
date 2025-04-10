@@ -12,7 +12,6 @@
  *
  */
 function isu16arr(v) {
-
     let c = Object.prototype.toString.call(v)
     return c === '[object Uint16Array]'
 }
