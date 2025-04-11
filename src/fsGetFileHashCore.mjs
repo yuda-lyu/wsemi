@@ -1,11 +1,11 @@
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
-import fsIsFile from './fsIsFile.mjs'
+import fsIsFileCore from './fsIsFileCore.mjs'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 
 
-function fsGetFileHashAsync(fp, type = 'sha512', opt = {}) {
+function fsGetFileHashCoreAsync(fp, type = 'sha512', opt = {}) {
 
     //fs, crypto
     let fs = get(opt, 'fs')
@@ -15,7 +15,7 @@ function fsGetFileHashAsync(fp, type = 'sha512', opt = {}) {
     let pm = genPm()
 
     //check
-    if (!fsIsFile(fp)) {
+    if (!fsIsFileCore(fp, { fs })) {
         pm.reject(`fp[${fp}] is not a file`)
         return pm
     }
@@ -53,14 +53,14 @@ function fsGetFileHashAsync(fp, type = 'sha512', opt = {}) {
 }
 
 
-function fsGetFileHashSync(fp, type = 'sha512', opt = {}) {
+function fsGetFileHashCoreSync(fp, type = 'sha512', opt = {}) {
 
     //fs, crypto
     let fs = get(opt, 'fs')
     let crypto = get(opt, 'crypto')
 
     //check
-    if (!fsIsFile(fp)) {
+    if (!fsIsFileCore(fp, { fs })) {
         throw new Error(`fp[${fp}] is not a file`)
     }
 
@@ -110,10 +110,10 @@ function fsGetFileHashCore(fp, opt = {}) {
 
     let r = ''
     if (useSync) {
-        r = fsGetFileHashSync(fp, type, { fs, crypto })
+        r = fsGetFileHashCoreSync(fp, type, { fs, crypto })
     }
     else {
-        r = fsGetFileHashAsync(fp, type, { fs, crypto })
+        r = fsGetFileHashCoreAsync(fp, type, { fs, crypto })
     }
 
     return r
