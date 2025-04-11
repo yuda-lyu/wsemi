@@ -1,4 +1,5 @@
 import fs from 'fs'
+import fsIsFolderCore from './fsIsFolderCore.mjs'
 
 
 /**
@@ -11,31 +12,35 @@ import fs from 'fs'
  * @example
  * need test in nodejs.
  *
- * let fd = 'folder p'
- * fsIsFolder(fd)
- * // => true
+ * let test = () => {
  *
- * let fn = 'file q'
- * fsIsFolder(fn)
- * // => false
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsIsFolder'
+ *
+ *     let b1 = fsIsFolder(fdt)
+ *     console.log('fsIsFolder(before)', b1)
+ *     ms.push({ 'fsIsFolder(before)': b1 })
+ *
+ *     fsCreateFolder(fdt)
+ *
+ *     let b2 = fsIsFolder(fdt)
+ *     console.log('fsIsFolder(after)', b2)
+ *     ms.push({ 'fsIsFolder(after)': b2 })
+ *
+ *     fsDeleteFolder(fdt)
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsIsFolder(before) false
+ * // fsIsFolder(after) true
+ * // ms [ { 'fsIsFolder(before)': false }, { 'fsIsFolder(after)': true } ]
  *
  */
 function fsIsFolder(pah) {
-
-    //check
-    if (!fs.existsSync(pah)) {
-        return false
-    }
-
-    //check
-    if (fs.lstatSync(pah).isFile()) {
-        return false
-    }
-    if (fs.lstatSync(pah).isSymbolicLink()) {
-        return false
-    }
-
-    return true
+    return fsIsFolderCore(pah, { fs })
 }
 
 

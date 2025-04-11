@@ -7,6 +7,9 @@ import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 
 
+//crypto-js沒有支援chunk或stream機制, 無法處理大量資料
+
+
 /**
  * 一般字串轉AES字串
  * 使用AES-128-CBC加密，字串採用PKCS#7填充

@@ -19,7 +19,7 @@ rollupFiles({
         'process': 'process',
         'child_process': 'child_process',
         'iconv-lite': 'iconv-lite',
-        'crypto': 'crypto', //因crypto-js修改使用內建crypto方式, 會偵測nodejs並使用require內建的crypto, 故需剔除
+        'crypto': 'crypto',
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuse.js': 'Fuse',

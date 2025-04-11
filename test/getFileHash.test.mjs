@@ -1,48 +1,58 @@
+import fs from 'fs'
 import assert from 'assert'
+import fsCreateFolder from '../src/fsCreateFolder.mjs'
+import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
+import fsWriteText from '../src/fsWriteText.mjs'
 import getFileHash from '../src/getFileHash.mjs'
 
 
 describe(`getFileHash`, function() {
 
-    //nodejs沒有Blob或File，只有瀏覽器才有
+    let test = async () => {
 
-    it(`should return 'inp is not a Blob or File' when input new ArrayBuffer(1)`, async() => {
-        let r = ''
-        await getFileHash(new ArrayBuffer(1))
-            .catch((err) => {
-                r = err
-            })
-        let rr = 'inp is not a Blob or File'
-        assert.strict.deepStrictEqual(r, rr)
-    })
+        let ms = []
 
-    it(`should return 'inp is not a Blob or File' when input null`, async() => {
-        let r = ''
-        await getFileHash(null)
-            .catch((err) => {
-                r = err
-            })
-        let rr = 'inp is not a Blob or File'
-        assert.strict.deepStrictEqual(r, rr)
-    })
+        let fdt = './_test_getFileHash'
+        fsCreateFolder(fdt) //創建臨時任務資料夾
 
-    it(`should return 'inp is not a Blob or File' when input undefined`, async() => {
-        let r = ''
-        await getFileHash(undefined)
-            .catch((err) => {
-                r = err
-            })
-        let rr = 'inp is not a Blob or File'
-        assert.strict.deepStrictEqual(r, rr)
-    })
+        let fn = 't1.txt'
+        let fp = `${fdt}/abc/${fn}`
 
-    it(`should return 'inp is not a Blob or File' when input NaN`, async() => {
-        let r = ''
-        await getFileHash(NaN)
-            .catch((err) => {
-                r = err
-            })
-        let rr = 'inp is not a Blob or File'
+        fsWriteText(fp, 'xyz')
+
+        let bb = new Blob([fs.readFileSync(fp)])
+
+        let h1 = await getFileHash(bb)
+        // console.log('getFileHash(sha512)', h1)
+        ms.push({ 'getFileHash(sha512)': h1 })
+
+        let h3 = await getFileHash(bb, { type: 'sha256' })
+        // console.log('getFileHash(sha256)', h3)
+        ms.push({ 'getFileHash(sha256)': h3 })
+
+        fsDeleteFolder(fdt) //刪除臨時任務資料夾
+
+        // console.log('ms', ms)
+        return ms
+    }
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
+    // getFileHash(sha512) 4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728
+    // getFileHash(sha256) 3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282
+    let ms = [
+        {
+            'getFileHash(sha512)': '4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728'
+        },
+        {
+            'getFileHash(sha256)': '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
+        }
+    ]
+
+    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+        let r = await test()
+        let rr = ms
         assert.strict.deepStrictEqual(r, rr)
     })
 

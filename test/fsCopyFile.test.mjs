@@ -46,8 +46,8 @@ describe(`fsCopyFile`, function() {
                 // console.log('res', res)
                 ms.push({ 'async-copy-folder': res })
             })
-            .catch((err) => {
-                console.log('err', err)
+            .catch(() => {
+                // console.log('err', err)
             })
 
         let b1 = fsIsFile(`${fpTar}/_t1.txt`)
@@ -69,8 +69,10 @@ describe(`fsCopyFile`, function() {
         // console.log('ms', ms)
         return ms
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     let ms = [
         {
             'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }

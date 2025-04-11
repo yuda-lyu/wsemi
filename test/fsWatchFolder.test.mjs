@@ -77,8 +77,10 @@ describe(`fsWatchFolder`, function() {
 
         })
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     // addDir _test_fsWatchFolder
     // add abc.txt
     // unlink abc.txt

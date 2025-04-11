@@ -1,7 +1,6 @@
-import filter from 'lodash-es/filter.js'
-import map from 'lodash-es/map.js'
-import fsIsFolder from './fsIsFolder.mjs'
-import fsTreeFolder from './fsTreeFolder.mjs'
+import path from 'path'
+import fs from 'fs'
+import fsGetFoldersInFolderCore from './fsGetFoldersInFolderCore.mjs'
 
 
 /**
@@ -15,44 +14,66 @@ import fsTreeFolder from './fsTreeFolder.mjs'
  * @example
  * //need test in nodejs
  *
- * let rs
+ * let test = () => {
  *
- * rs = fsGetFoldersInFolder(fd)
- * console.log(rs)
- * // => [
- * //   { level: 1, path: './a', name: 'a' },
- * //   { level: 1, path: './za', name: 'za' }
- * // ]
+ *     let ms = []
  *
- * rs = fsGetFoldersInFolder(fd, null)
- * console.log(rs)
- * // => [
- * //   { level: 1, path: './a', name: 'a' },
- * //   { level: 1, path: './za', name: 'za' },
- * //   { level: 2, path: './a/b', name: 'b' },
- * //   { level: 2, path: './a/zb', name: 'zb' },
- * //   { level: 3, path: './a/b/c', name: 'c' },
- * //   { level: 3, path: './a/b/zc', name: 'zc' }
+ *     let t = '_test_fsGetFoldersInFolder'
+ *     let fdt = './_test_fsGetFoldersInFolder'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let ftpath = (v) => {
+ *         // console.log(v, 'v.path', v.path)
+ *         let ss = _.split(v.path, t)
+ *         // console.log('ss', ss)
+ *         let p = ss[1]
+ *         p = p.replaceAll('\\', '/')
+ *         p = `.${p}`
+ *         // console.log('p', p)
+ *         v.path = p
+ *         return v
+ *     }
+ *
+ *     let ftpaths = (vs) => {
+ *         return _.map(_.cloneDeep(vs), ftpath)
+ *     }
+ *
+ *     fsWriteText(`${fdt}/z1.txt`, 'z1')
+ *     fsWriteText(`${fdt}/abc/z2.txt`, 'z2')
+ *     fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
+ *     fsCreateFolder(`${fdt}/mno/pqr`)
+ *
+ *     let r1 = fsGetFoldersInFolder(fdt, 1)
+ *     console.log('fsGetFoldersInFolder(levelLimit=1)', ftpaths(r1))
+ *     ms.push({ 'fsGetFoldersInFolder(evelLimit=1)': ftpaths(r1) })
+ *
+ *     let rall = fsGetFoldersInFolder(fdt, null)
+ *     console.log('fsGetFoldersInFolder(levelLimit=null)', ftpaths(rall))
+ *     ms.push({ 'fsGetFoldersInFolder(evelLimit=null)': ftpaths(rall) })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', JSON.stringify(ms))
+ *     return ms
+ * }
+ * test()
+ * // fsGetFoldersInFolder(levelLimit=1) [
+ * //   { level: 1, path: './abc', name: 'abc' },
+ * //   { level: 1, path: './def', name: 'def' },
+ * //   { level: 1, path: './mno', name: 'mno' }
  * // ]
+ * // fsGetFoldersInFolder(levelLimit=null) [
+ * //   { level: 1, path: './abc', name: 'abc' },
+ * //   { level: 1, path: './def', name: 'def' },
+ * //   { level: 2, path: './def/ijk', name: 'ijk' },
+ * //   { level: 1, path: './mno', name: 'mno' },
+ * //   { level: 2, path: './mno/pqr', name: 'pqr' }
+ * // ]
+ * // ms [{"fsGetFoldersInFolder(evelLimit=1)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":1,"path":"./mno","name":"mno"}]},{"fsGetFoldersInFolder(evelLimit=null)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":2,"path":"./def/ijk","name":"ijk"},{"level":1,"path":"./mno","name":"mno"},{"level":2,"path":"./mno/pqr","name":"pqr"}]}]
  *
  */
 function fsGetFoldersInFolder(fd, levelLimit = 1) {
-
-    //check
-    if (!fsIsFolder(fd)) {
-        throw new Error(`fd[${fd}] is not a folder`)
-    }
-
-    //fps
-    let fps = []
-    fps = fsTreeFolder(fd, levelLimit)
-    fps = filter(fps, { isFolder: true })
-    fps = map(fps, (v) => {
-        delete v.isFolder
-        return v
-    })
-
-    return fps
+    return fsGetFoldersInFolderCore(fd, levelLimit, { path, fs })
 }
 
 

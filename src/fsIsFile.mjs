@@ -1,4 +1,5 @@
 import fs from 'fs'
+import fsIsFileCore from './fsIsFileCore.mjs'
 
 
 /**
@@ -11,31 +12,41 @@ import fs from 'fs'
  * @example
  * need test in nodejs.
  *
- * let fd = 'folder p'
- * fsIsFile(fd)
- * // => false
+ * let test = () => {
  *
- * let fn = 'file q'
- * fsIsFile(fn)
- * // => true
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsIsFile'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 't1.txt'
+ *     let fp = `${fdt}/${fn}`
+ *
+ *     let b1 = fsIsFile(fp)
+ *     console.log('fsIsFile(before)', b1)
+ *     ms.push({ 'fsIsFile(before)': b1 })
+ *
+ *     fsCreateFile(fp, 'abc', { encoding: 'utf8' })
+ *
+ *     let b2 = fsIsFile(fp)
+ *     console.log('fsIsFile(after)', b2)
+ *     ms.push({ 'fsIsFile(after)': b2 })
+ *
+ *     fsDeleteFile(fdt)
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsIsFile(before) false
+ * // fsIsFile(after) true
+ * // ms [ { 'fsIsFile(before)': false }, { 'fsIsFile(after)': true } ]
  *
  */
 function fsIsFile(pah) {
-
-    //check
-    if (!fs.existsSync(pah)) {
-        return false
-    }
-
-    //check
-    if (fs.lstatSync(pah).isDirectory()) {
-        return false
-    }
-    if (fs.lstatSync(pah).isSymbolicLink()) {
-        return false
-    }
-
-    return true
+    return fsIsFileCore(pah, { fs })
 }
 
 

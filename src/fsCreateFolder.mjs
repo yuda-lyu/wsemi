@@ -1,5 +1,5 @@
 import fs from 'fs'
-import fsIsFolder from './fsIsFolder.mjs'
+import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
 
 /**
@@ -12,39 +12,38 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsCreateFolder', fsCreateFolder('./abc'))
- * // fsCreateFolder { success: 'done: ./abc' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsCreateFolder'
+ *
+ *     let b1 = fsIsFolder(fdt)
+ *     console.log('fsCreateFolder(before)', b1)
+ *     ms.push({ 'fsCreateFolder(before)': b1 })
+ *
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let b2 = fsIsFolder(fdt)
+ *     console.log('fsCreateFolder(after)', b2)
+ *     ms.push({ 'fsCreateFolder(after)': b2 })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsCreateFolder(before) false
+ * // fsCreateFolder(after) true
+ * // ms [
+ * //   { 'fsCreateFolder(before)': false },
+ * //   { 'fsCreateFolder(after)': true }
+ * // ]
  *
  */
 function fsCreateFolder(pah) {
-
-    //check, 需先判斷
-    if (fsIsFolder(pah)) {
-        return {
-            success: 'input folder is already exists: ' + pah //若資料夾存在則視為成功, 故需先判斷
-        }
-    }
-
-    //check
-    if (fs.existsSync(pah)) {
-        return {
-            error: 'input path already exists: ' + pah //若存在但又不是資料夾, 可能是檔案或符號連結, 則一律視為錯誤
-        }
-    }
-
-    //mkdirSync
-    try {
-        fs.mkdirSync(pah, { recursive: true }) //不存在則自動建立
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pah
-    }
+    return fsCreateFolderCore(pah, { fs })
 }
 
 

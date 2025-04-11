@@ -68,8 +68,10 @@ import fsWatchFolder from './fsWatchFolder.mjs'
  *
  *     })
  * }
- * test()
- *     .catch(() => {})
+ * await test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
  * // conut 1
  * // conut 2
  * // conut 3

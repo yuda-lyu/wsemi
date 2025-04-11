@@ -2,6 +2,9 @@ import encbase64 from 'crypto-js/enc-base64.js'
 import isstr from './isstr.mjs'
 
 
+//crypto-js沒有支援chunk或stream機制, 無法處理大量資料
+
+
 /**
  * base64字串轉Uint8Array
  *

@@ -1,5 +1,5 @@
 import fs from 'fs'
-import fsIsFile from './fsIsFile.mjs'
+import fsDeleteFileCore from './fsDeleteFileCore.mjs'
 
 
 /**
@@ -12,39 +12,42 @@ import fsIsFile from './fsIsFile.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsDeleteFile', fsDeleteFile('./abc.txt'))
- * // fsDeleteFile { success: 'done: ./abc.txt' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsDeleteFile'
+ *
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 'abc.txt'
+ *     let fp = `${fdt}/${fn}`
+ *
+ *     fsCreateFile(fp, 'abc', { encoding: 'utf8' })
+ *
+ *     let b1 = fsIsFile(fp)
+ *     console.log('fsDeleteFile(before)', b1)
+ *     ms.push({ 'fsDeleteFile(before)': b1 })
+ *
+ *     fsDeleteFile(fp)
+ *
+ *     let b2 = fsIsFile(fp)
+ *     console.log('fsDeleteFile(after)', b2)
+ *     ms.push({ 'fsDeleteFile(after)': b2 })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsDeleteFile(before) true
+ * // fsDeleteFile(after) false
+ * // ms [ { 'fsDeleteFile(before)': true }, { 'fsDeleteFile(after)': false } ]
  *
  */
 function fsDeleteFile(pah) {
-
-    //check, 需先判斷
-    if (!fs.existsSync(pah)) {
-        return {
-            success: 'file does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
-        }
-    }
-
-    //check
-    if (!fsIsFile(pah)) {
-        return {
-            error: 'input path is not a file: ' + pah //若存在但又不是檔案, 則視為錯誤
-        }
-    }
-
-    //unlinkSync
-    try {
-        fs.unlinkSync(pah)
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pah
-    }
+    return fsDeleteFileCore(pah, { fs })
 }
 
 

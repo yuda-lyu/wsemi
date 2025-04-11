@@ -50,8 +50,10 @@ describe(`fsWatchFile`, function() {
 
         })
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     // add _test_fsWatchFile.txt
     // unlink _test_fsWatchFile.txt
     // add _test_fsWatchFile.txt

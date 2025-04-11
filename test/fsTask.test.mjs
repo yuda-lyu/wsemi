@@ -128,8 +128,10 @@ describe(`fsTask`, function() {
 
         })
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     // add abc.txt
     // task[abc.txt] content[abc] calculating
     // task[abc.txt] content[abc] save-result

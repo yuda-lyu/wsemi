@@ -1,92 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import get from 'lodash-es/get.js'
-import isbol from './isbol.mjs'
-import fsIsFile from './fsIsFile.mjs'
-import fsCreateFolder from './fsCreateFolder.mjs'
-
-
-function fsCopyFileSync(fpSrc, fpTar) {
-
-    //check
-    if (!fsIsFile(fpSrc)) {
-        return {
-            error: `fpSrc[${fpSrc}] is not a file`
-        }
-    }
-
-    //複製檔案
-    try {
-
-        //fsCreateFolder
-        fsCreateFolder(path.dirname(fpTar))
-
-        //copyFileSync
-        fs.copyFileSync(fpSrc, fpTar)
-
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + fpTar
-    }
-}
-
-
-async function fsCopyFileAsync(fpSrc, fpTar) {
-
-    //check
-    if (!fsIsFile(fpSrc)) {
-        return {
-            error: `fpSrc[${fpSrc}] is not a file`
-        }
-    }
-
-    //fsCopyFileAsyncCore
-    let fsCopyFileAsyncCore = async (fpSrc, fpTar) => {
-
-        //fsCreateFolder
-        fsCreateFolder(path.dirname(fpTar))
-
-        //使用串流方式複製檔案
-        await new Promise((resolve, reject) => {
-
-            //streamRead, streanWrite
-            let streamRead = fs.createReadStream(fpSrc)
-            let streanWrite = fs.createWriteStream(fpTar)
-
-            //on
-            streamRead.on('error', reject)
-            streanWrite.on('error', reject)
-            streanWrite.on('finish', resolve)
-
-            //pipe
-            streamRead.pipe(streanWrite)
-
-        })
-
-    }
-
-    //fsCopyFileAsyncCore
-    let r = null
-    await fsCopyFileAsyncCore(fpSrc, fpTar)
-        .then(() => {
-            r = {
-                success: 'done: ' + fpTar
-            }
-        })
-        .catch((err) => {
-            r = {
-                error: err
-            }
-        })
-
-    return r
-}
+import fsCopyFileCore from './fsCopyFileCore.mjs'
 
 
 /**
@@ -163,8 +77,10 @@ async function fsCopyFileAsync(fpSrc, fpTar) {
  *     console.log('ms', ms)
  *     return ms
  * }
- * test()
- *     .catch(() => {})
+ * await test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
  * // => ms [
  * //   {
  * //     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
@@ -178,22 +94,7 @@ async function fsCopyFileAsync(fpSrc, fpTar) {
  *
  */
 function fsCopyFile(fpSrc, fpTar, opt = {}) {
-
-    //useSync
-    let useSync = get(opt, 'useSync', '')
-    if (!isbol(useSync)) {
-        useSync = true
-    }
-
-    let r = ''
-    if (useSync) {
-        r = fsCopyFileSync(fpSrc, fpTar)
-    }
-    else {
-        r = fsCopyFileAsync(fpSrc, fpTar)
-    }
-
-    return r
+    return fsCopyFileCore(fpSrc, fpTar, { path, fs, ...opt })
 }
 
 

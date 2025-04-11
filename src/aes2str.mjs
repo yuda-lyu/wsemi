@@ -1,11 +1,12 @@
 import AES from 'crypto-js/aes.js'
-// import encutf8 from 'crypto-js/enc-utf8.js'
-// import padPkcs7 from 'crypto-js/pad-pkcs7.js'
 import encutf8 from 'crypto-js/enc-utf8.js'
 import encb64 from 'crypto-js/enc-base64.js'
 import enchex from 'crypto-js/enc-hex.js'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
+
+
+//crypto-js沒有支援chunk或stream機制, 無法處理大量資料
 
 
 /**

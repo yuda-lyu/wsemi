@@ -1,5 +1,5 @@
 import fs from 'fs'
-import fsIsFile from './fsIsFile.mjs'
+import fsRenameFileCore from './fsRenameFileCore.mjs'
 
 
 /**
@@ -13,39 +13,63 @@ import fsIsFile from './fsIsFile.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsRenameFile', fsRenameFile('./abc.txt', './def.txt'))
- * // fsRenameFile { success: 'done: ./def.txt' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsRenameFile'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 't1.txt'
+ *     let fpSrc = `${fdt}/abc/${fn}`
+ *     let fpTar = `${fdt}/def/ijk/${fn}`
+ *
+ *     fsWriteText(fpSrc, 'xyz')
+ *
+ *     let b1 = fsIsFile(fpSrc)
+ *     console.log('fsRenameFile(src)(before)', b1)
+ *     ms.push({ 'fsRenameFile(src)(before)': b1 })
+ *
+ *     let b2 = fsIsFile(fpTar)
+ *     console.log('fsRenameFile(tar)(before)', b2)
+ *     ms.push({ 'fsRenameFile(tar)(before)': b2 })
+ *
+ *     let r = fsRenameFile(fpSrc, fpTar)
+ *     console.log('fsRenameFile', r)
+ *     ms.push({ 'fsRenameFile': r })
+ *
+ *     let b3 = fsIsFile(fpSrc)
+ *     console.log('fsRenameFile(src)(after)', b3)
+ *     ms.push({ 'fsRenameFile(src)(after)': b3 })
+ *
+ *     let b4 = fsIsFile(fpTar)
+ *     console.log('fsRenameFile(tar)(after)', b4)
+ *     ms.push({ 'fsRenameFile(tar)(after)': b4 })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsRenameFile(src)(before) true
+ * // fsRenameFile(tar)(before) false
+ * // fsRenameFile { success: 'done: ./_test_fsRenameFile/def/ijk/t1.txt' }
+ * // fsRenameFile(src)(after) false
+ * // fsRenameFile(tar)(after) true
+ * // ms [
+ * //   { 'fsRenameFile(src)(before)': true },
+ * //   { 'fsRenameFile(tar)(before)': false },
+ * //   {
+ * //     fsRenameFile: { success: 'done: ./_test_fsRenameFile/def/ijk/t1.txt' }
+ * //   },
+ * //   { 'fsRenameFile(src)(after)': false },
+ * //   { 'fsRenameFile(tar)(after)': true }
+ * // ]
  *
  */
 function fsRenameFile(pahOld, pahNew) {
-
-    //check
-    if (!fsIsFile(pahOld)) {
-        return {
-            error: `pahOld[${pahOld}] is not a file` //pahOld不是檔案則視為錯誤
-        }
-    }
-
-    //check
-    if (fs.existsSync(pahNew)) {
-        return {
-            error: `pahNew[${pahNew}] does exist` //pahNew存在則視為錯誤
-        }
-    }
-
-    //renameSync
-    try {
-        fs.renameSync(pahOld, pahNew)
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pahNew
-    }
+    return fsRenameFileCore(pahOld, pahNew, { fs })
 }
 
 

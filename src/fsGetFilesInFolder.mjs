@@ -1,7 +1,6 @@
-import filter from 'lodash-es/filter.js'
-import map from 'lodash-es/map.js'
-import fsTreeFolder from './fsTreeFolder.mjs'
-import fsIsFolder from './fsIsFolder.mjs'
+import path from 'path'
+import fs from 'fs'
+import fsGetFilesInFolderCore from './fsGetFilesInFolderCore.mjs'
 
 
 /**
@@ -15,44 +14,60 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * //need test in nodejs
  *
- * let rs
+ * let test = () => {
  *
- * rs = fsGetFilesInFolder(fd)
- * console.log(rs)
- * // => [
- * //   { level: 1, path: './d/a.txt', name: 'a.txt' },
- * //   { level: 1, path: './d/za.json', name: 'za.json' }
- * // ]
+ *     let ms = []
  *
- * rs = fsGetFilesInFolder(fd, null)
- * console.log(rs)
- * // => [
- * //   { level: 1, path: './d/a.txt', name: 'a.txt' },
- * //   { level: 1, path: './d/za.json', name: 'za.json' },
- * //   { level: 2, path: './d/ee/b.txt', name: 'b.txt' },
- * //   { level: 2, path: './d/ee/zb.json', name: 'zb.json' },
- * //   { level: 3, path: './d/ee/eee/c.txt', name: 'c.txt' },
- * //   { level: 3, path: './d/ee/eee/zc.json', name: 'zc.json' }
+ *     let t = '_test_fsGetFilesInFolder'
+ *     let fdt = './_test_fsGetFilesInFolder'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let ftpath = (v) => {
+ *         // console.log(v, 'v.path', v.path)
+ *         let ss = _.split(v.path, t)
+ *         // console.log('ss', ss)
+ *         let p = ss[1]
+ *         p = p.replaceAll('\\', '/')
+ *         p = `.${p}`
+ *         // console.log('p', p)
+ *         v.path = p
+ *         return v
+ *     }
+ *
+ *     let ftpaths = (vs) => {
+ *         return _.map(_.cloneDeep(vs), ftpath)
+ *     }
+ *
+ *     fsWriteText(`${fdt}/z1.txt`, 'z1')
+ *     fsWriteText(`${fdt}/abc/z2.txt`, 'z2')
+ *     fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
+ *     fsCreateFolder(`${fdt}/mno/pqr`)
+ *
+ *     let r1 = fsGetFilesInFolder(fdt, 1)
+ *     console.log('fsGetFilesInFolder(levelLimit=1)', ftpaths(r1))
+ *     ms.push({ 'fsGetFilesInFolder(evelLimit=1)': ftpaths(r1) })
+ *
+ *     let rall = fsGetFilesInFolder(fdt, null)
+ *     console.log('fsGetFilesInFolder(levelLimit=null)', ftpaths(rall))
+ *     ms.push({ 'fsGetFilesInFolder(evelLimit=null)': ftpaths(rall) })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', JSON.stringify(ms))
+ *     return ms
+ * }
+ * test()
+ * // fsGetFilesInFolder(levelLimit=1) [ { level: 1, path: './z1.txt', name: 'z1.txt' } ]
+ * // fsGetFilesInFolder(levelLimit=null) [
+ * //   { level: 2, path: './abc/z2.txt', name: 'z2.txt' },
+ * //   { level: 3, path: './def/ijk/z3.txt', name: 'z3.txt' },
+ * //   { level: 1, path: './z1.txt', name: 'z1.txt' }
  * // ]
+ * // ms [{"fsGetFilesInFolder(evelLimit=1)":[{"level":1,"path":"./z1.txt","name":"z1.txt"}]},{"fsGetFilesInFolder(evelLimit=null)":[{"level":2,"path":"./abc/z2.txt","name":"z2.txt"},{"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt"},{"level":1,"path":"./z1.txt","name":"z1.txt"}]}]
  *
  */
 function fsGetFilesInFolder(fd, levelLimit = 1) {
-
-    //check
-    if (!fsIsFolder(fd)) {
-        throw new Error(`fd[${fd}] is not a folder`)
-    }
-
-    //fps
-    let fps = []
-    fps = fsTreeFolder(fd, levelLimit)
-    fps = filter(fps, { isFolder: false })
-    fps = map(fps, (v) => {
-        delete v.isFolder
-        return v
-    })
-
-    return fps
+    return fsGetFilesInFolderCore(fd, levelLimit, { path, fs })
 }
 
 

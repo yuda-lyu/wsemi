@@ -1,166 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import get from 'lodash-es/get.js'
-import isbol from './isbol.mjs'
-import fsIsFolder from './fsIsFolder.mjs'
-import fsCreateFolder from './fsCreateFolder.mjs'
-
-
-function fsCopyFolderSync(fpSrc, fpTar) {
-
-    //check
-    if (!fsIsFolder(fpSrc)) {
-        return {
-            error: `fpSrc[${fpSrc}] is not a folder`
-        }
-    }
-
-    //複製資料夾
-    try {
-
-        fs.readdirSync(fpSrc).forEach(function(file) {
-
-            //fpSrcTemp, fpTarTemp
-            let fpSrcTemp = fpSrc + '/' + file
-            let fpTarTemp = fpTar + '/' + file
-
-            //current
-            let current = fs.lstatSync(fpSrcTemp)
-
-            //proc
-            if (current.isDirectory()) {
-
-                //fsCreateFolder
-                fsCreateFolder(fpTarTemp)
-
-                //fsCopyFolder
-                fsCopyFolder(fpSrcTemp, fpTarTemp)
-
-            }
-            else if (current.isSymbolicLink()) {
-
-                //symlinkSync
-                let symlink = fs.readlinkSync(fpSrcTemp)
-                fs.symlinkSync(symlink, fpTarTemp)
-
-            }
-            else {
-
-                //fsCreateFolder
-                fsCreateFolder(path.dirname(fpTarTemp))
-
-                //copyFileSync
-                fs.copyFileSync(fpSrcTemp, fpTarTemp)
-
-            }
-
-        })
-
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + fpTar
-    }
-}
-
-
-async function fsCopyFolderAsync(fpSrc, fpTar) {
-
-    //check
-    if (!fsIsFolder(fpSrc)) {
-        return {
-            error: `fpSrc[${fpSrc}] is not a folder`
-        }
-    }
-
-    //fsCopyFolderAsyncCore
-    let fsCopyFolderAsyncCore = async (fpSrc, fpTar) => {
-
-        //讀取來源資料夾內容
-        let entries = fs.readdirSync(fpSrc)
-        // console.log('entries', entries)
-
-        for (let entry of entries) {
-            // console.log('entry', entry)
-
-            //fpSrcTemp
-            let fpSrcTemp = path.join(fpSrc, entry)
-            // console.log('fpSrcTemp', fpSrcTemp)
-
-            //fpTarTemp
-            let fpTarTemp = path.join(fpTar, entry)
-            // console.log('fpTarTemp', fpTarTemp)
-
-            //current
-            let current = fs.lstatSync(fpSrcTemp)
-            // console.log('current', current)
-
-            //遍歷
-            if (current.isDirectory()) {
-
-                //fsCreateFolder
-                fsCreateFolder(fpTarTemp)
-
-                //fsCopyFolderAsyncCore, 遞迴複製子資料夾
-                await fsCopyFolderAsyncCore(fpSrcTemp, fpTarTemp)
-
-            }
-            else if (current.isSymbolicLink()) {
-
-                //symlinkSync
-                let symlink = fs.readlinkSync(fpSrcTemp)
-                fs.symlinkSync(symlink, fpTarTemp)
-
-            }
-            else {
-
-                //fsCreateFolder
-                fsCreateFolder(path.dirname(fpTarTemp))
-
-                //使用串流方式複製檔案
-                await new Promise((resolve, reject) => {
-
-                    //streamRead, streanWrite
-                    let streamRead = fs.createReadStream(fpSrcTemp)
-                    let streanWrite = fs.createWriteStream(fpTarTemp)
-
-                    //on
-                    streamRead.on('error', reject)
-                    streanWrite.on('error', reject)
-                    streanWrite.on('finish', resolve)
-
-                    //pipe
-                    streamRead.pipe(streanWrite)
-
-                })
-
-            }
-
-        }
-
-    }
-
-    //fsCopyFolderAsyncCore
-    let r = null
-    await fsCopyFolderAsyncCore(fpSrc, fpTar)
-        .then(() => {
-            r = {
-                success: 'done: ' + fpTar
-            }
-        })
-        .catch((err) => {
-            r = {
-                error: err
-            }
-        })
-
-    return r
-}
+import fsCopyFolderCore from './fsCopyFolderCore.mjs'
 
 
 /**
@@ -333,8 +173,10 @@ async function fsCopyFolderAsync(fpSrc, fpTar) {
  *     console.log('ms', ms)
  *     return ms
  * }
- * test()
- *     .catch(() => {})
+ * await test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
  * // => ms [
  * //   {
  * //     'sync-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }
@@ -366,22 +208,7 @@ async function fsCopyFolderAsync(fpSrc, fpTar) {
  *
  */
 function fsCopyFolder(fpSrc, fpTar, opt = {}) {
-
-    //useSync
-    let useSync = get(opt, 'useSync', '')
-    if (!isbol(useSync)) {
-        useSync = true
-    }
-
-    let r = ''
-    if (useSync) {
-        r = fsCopyFolderSync(fpSrc, fpTar)
-    }
-    else {
-        r = fsCopyFolderAsync(fpSrc, fpTar)
-    }
-
-    return r
+    return fsCopyFolderCore(fpSrc, fpTar, { path, fs, ...opt })
 }
 
 

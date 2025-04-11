@@ -3,6 +3,9 @@ import libwa from 'crypto-js/lib-typedarrays.js'
 import isu8arr from './isu8arr.mjs'
 
 
+//crypto-js沒有支援chunk或stream機制, 無法處理大量資料
+
+
 /**
  * Uint8Array轉base64字串
  *

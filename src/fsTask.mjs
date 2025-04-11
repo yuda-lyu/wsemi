@@ -159,8 +159,10 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
  *
  *     })
  * }
- * test()
- *     .catch(() => {})
+ * await test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
  * // add abc.txt
  * // task[abc.txt] content[abc] calculating
  * // task[abc.txt] content[abc] save-result
@@ -249,7 +251,7 @@ function fsTask(fd, opt = {}) {
     }
 
     //calcHash
-    let calcHash = () => {
+    let calcHash = async () => {
 
         //kpHash
         let kpHash = {}
@@ -260,7 +262,7 @@ function fsTask(fd, opt = {}) {
         }
 
         //fsGetFilesWithHashInFolder
-        let fps = fsGetFilesWithHashInFolder(fd, levelLimit, { type: typeHash })
+        let fps = await fsGetFilesWithHashInFolder(fd, levelLimit, { type: typeHash })
         // console.log('fps', fps)
 
         //push
@@ -272,7 +274,7 @@ function fsTask(fd, opt = {}) {
     }
 
     //compareHashAndEmitOne
-    let compareHashAndEmitOne = () => {
+    let compareHashAndEmitOne = async () => {
 
         //check
         if (lock === true) {
@@ -285,34 +287,8 @@ function fsTask(fd, opt = {}) {
         // console.log('kpHashsOld', kpHashsOld)
 
         //kpHashNew
-        let kpHashNew = calcHash()
+        let kpHashNew = await calcHash()
         // console.log('kpHashNew', kpHashNew)
-
-        // //getObKpState
-        // let kpState = getObKpState(kpHashNew)
-        // // console.log('kpState', kpState)
-
-        // //_getObState
-        // let _getObState = (fp) => {
-        //     let state = get(kpState, fp, 'none')
-        //     return state //可能為none, doing, finish
-        // }
-
-        // //check state
-        // if (true) {
-        //     let b = false
-        //     each(kpHashNew, (_, path) => {
-        //         let state = _getObState(path)
-        //         if (state === 'doing') {
-        //             // console.log(`state of path[${path}] is ${state}`)
-        //             b = true
-        //             return false //跳出
-        //         }
-        //     })
-        //     if (b) {
-        //         return
-        //     }
-        // }
 
         //hsOld
         let hsOld = map(kpHashsOld, (hash, path) => {
@@ -345,7 +321,7 @@ function fsTask(fd, opt = {}) {
 
             // //states
             // let state = _getObState(k)
-            // // console.log('state', state)
+            // console.log('state', state)
 
             //hashOld
             let hashOld = get(kpHashsOld, k, '')
@@ -630,118 +606,9 @@ function fsTask(fd, opt = {}) {
 
         //compareHashAndEmitOne
         compareHashAndEmitOne()
+            .catch(() => {})
 
     }, timeInterval)
-
-    // // let rs = []
-    // each(fps, (v) => {
-
-    //     //default
-    //     if (!haskey(kpHash, v.path)) {
-    //         kpHash[v.path] = ''
-    //     }
-
-    //     //hash_ori
-    //     let hash_ori = get(kpHash, v.path, '')
-
-    //     //hash_new
-    //     let hash_new = get(v, 'hash', '')
-
-    //     //check
-    //     if (!isestr(hash_new)) {
-    //         return true //跳出換下一個
-    //     }
-
-    //     //check
-    //     if (hash_ori === hash_new) {
-    //         return true //跳出換下一個
-    //     }
-
-    //     //save
-    //     kpHash[v.path] = hash_new
-
-    //     // //push
-    //     // rs.push(v.path)
-
-    //     //emit
-
-    // })
-    // console.log('size(rs)', size(rs))
-
-    // //core
-    // let t = null
-    // let b = false
-    // let kpHash = {}
-    // let core = () => {
-
-    //     //check
-    //     if (b) {
-    //         return
-    //     }
-
-    //     //lock
-    //     b = true
-
-    //     //compareHashAndEmitOne
-    //     compareHashAndEmitOne()
-
-    //     // //check
-    //     // if (!fsIsFolder(fd)) {
-    //     //     console.log(`fd[${fd}] does not exist`)
-    //     //     return
-    //     // }
-
-    //     // //fsGetFilesWithHashInFolder
-    //     // let fps = fsGetFilesWithHashInFolder(fd, levelLimit, { type: typeHash })
-    //     // // console.log('fps', fps)
-
-    //     // // let rs = []
-    //     // each(fps, (v) => {
-
-    //     //     //default
-    //     //     if (!haskey(kpHash, v.path)) {
-    //     //         kpHash[v.path] = ''
-    //     //     }
-
-    //     //     //hash_ori
-    //     //     let hash_ori = get(kpHash, v.path, '')
-
-    //     //     //hash_new
-    //     //     let hash_new = get(v, 'hash', '')
-
-    //     //     //check
-    //     //     if (!isestr(hash_new)) {
-    //     //         return true //跳出換下一個
-    //     //     }
-
-    //     //     //check
-    //     //     if (hash_ori === hash_new) {
-    //     //         return true //跳出換下一個
-    //     //     }
-
-    //     //     //save
-    //     //     kpHash[v.path] = hash_new
-
-    //     //     // //push
-    //     //     // rs.push(v.path)
-
-    //     //     //emit
-
-    //     // })
-    //     // // console.log('size(rs)', size(rs))
-
-    //     // //check
-    //     // if (size(rs) > 0) {
-
-    //     //     //emit
-    //     //     ev.emit('change', rs)
-
-    //     // }
-
-    //     //unlock
-    //     b = false
-
-    // }
 
     //clear
     let clear = () => {

@@ -1,7 +1,6 @@
+import path from 'path'
 import fs from 'fs'
-import fsDeleteFolder from './fsDeleteFolder.mjs'
-import fsCreateFolder from './fsCreateFolder.mjs'
-import fsIsFolder from './fsIsFolder.mjs'
+import fsCleanFolderCore from './fsCleanFolderCore.mjs'
 
 
 /**
@@ -14,61 +13,82 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsCleanFolder', fsCleanFolder('./abc'))
- * // fsCleanFolder { success: 'done: ./abc' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsCleanFolder'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     fsCreateFolder(`${fdt}/abc1`)
+ *     fsCreateFolder(`${fdt}/def1/def2/def3`)
+ *     fsCreateFile(`${fdt}/zzz.txt`, 'zzz')
+ *     fsCreateFile(`${fdt}/def1/def2/def3/def3.txt`, 'def')
+ *
+ *     let b1 = fsIsFile(`${fdt}/zzz.txt`)
+ *     console.log('fsIsFile1(before)', b1)
+ *     ms.push({ 'fsIsFile1(before)': b1 })
+ *
+ *     let b2 = fsIsFile(`${fdt}/def1/def2/def3/def3.txt`)
+ *     console.log('fsIsFile2(before)', b2)
+ *     ms.push({ 'fsIsFile2(before)': b2 })
+ *
+ *     let b3 = fsIsFolder(`${fdt}/abc1`)
+ *     console.log('fsIsFolder1(before)', b3)
+ *     ms.push({ 'fsIsFolder1(before)': b3 })
+ *
+ *     let b4 = fsIsFolder(`${fdt}/def1/def2/def3`)
+ *     console.log('fsIsFolder2(before)', b4)
+ *     ms.push({ 'fsIsFolder2(before)': b4 })
+ *
+ *     let r = fsCleanFolder(fdt)
+ *     ms.push({ 'fsCleanFolder': r })
+ *
+ *     let b5 = fsIsFile(`${fdt}/zzz.txt`)
+ *     console.log('fsIsFile1(after)', b5)
+ *     ms.push({ 'fsIsFile1(after)': b5 })
+ *
+ *     let b6 = fsIsFile(`${fdt}/def1/def2/def3/def3.txt`)
+ *     console.log('fsIsFile2(after)', b6)
+ *     ms.push({ 'fsIsFile2(after)': b6 })
+ *
+ *     let b7 = fsIsFolder(`${fdt}/abc1`)
+ *     console.log('fsIsFolder1(after)', b7)
+ *     ms.push({ 'fsIsFolder1(after)': b7 })
+ *
+ *     let b8 = fsIsFolder(`${fdt}/def1/def2/def3`)
+ *     console.log('fsIsFolder2(after)', b8)
+ *     ms.push({ 'fsIsFolder2(after)': b8 })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsIsFile1(before) true
+ * // fsIsFile2(before) true
+ * // fsIsFolder1(before) true
+ * // fsIsFolder2(before) true
+ * // fsIsFile1(after) false
+ * // fsIsFile2(after) false
+ * // fsIsFolder1(after) false
+ * // fsIsFolder2(after) false
+ * // ms [
+ * //   { 'fsIsFile1(before)': true },
+ * //   { 'fsIsFile2(before)': true },
+ * //   { 'fsIsFolder1(before)': true },
+ * //   { 'fsIsFolder2(before)': true },
+ * //   { fsCleanFolder: { success: 'done: ./_test_fsCleanFolder' } },
+ * //   { 'fsIsFile1(after)': false },
+ * //   { 'fsIsFile2(after)': false },
+ * //   { 'fsIsFolder1(after)': false },
+ * //   { 'fsIsFolder2(after)': false }
+ * // ]
  *
  */
 function fsCleanFolder(pah) {
-
-    //check
-    if (!fs.existsSync(pah)) {
-
-        //fsCreateFolder
-        let r = fsCreateFolder(pah) //若不存在則自動建立, 故先執行
-
-        //check
-        if (r.error) {
-            return r.error
-        }
-
-        return {
-            success: 'done: ' + pah
-        }
-    }
-
-    //check
-    if (!fsIsFolder(pah)) {
-        return {
-            error: 'input path is not a folder' //若存在但又不是資料夾, 則一律視為錯誤
-        }
-    }
-
-    //刪除資料夾內的全部資料夾與檔案
-    try {
-        fs.readdirSync(pah).forEach(function(file) {
-            let curPath = pah + '/' + file
-            if (fs.lstatSync(curPath).isDirectory()) {
-                fsDeleteFolder(curPath)
-            }
-            else {
-                try {
-                    fs.unlinkSync(curPath)
-                }
-                catch (err) {
-                //
-                }
-            }
-        })
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pah
-    }
+    return fsCleanFolderCore(pah, { path, fs })
 }
 
 

@@ -46,8 +46,10 @@ describe(`fsMergeFiles`, function() {
         // console.log('ms', ms)
         return ms
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     let ms = [
         { filename: '合併檔案.txt', path: './_test_fsMergeFiles/m.txt' },
         { content: 'abcdef中文測 試&*#$%' }

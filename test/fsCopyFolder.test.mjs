@@ -1,10 +1,10 @@
 import fs from 'fs'
 import assert from 'assert'
+import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsIsFile from '../src/fsIsFile.mjs'
 import fsIsFolder from '../src/fsIsFolder.mjs'
-import fsCreateFolder from '../src/fsCreateFolder.mjs'
-import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsCopyFolder from '../src/fsCopyFolder.mjs'
+import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 
 
 describe(`fsCopyFolder`, function() {
@@ -163,11 +163,13 @@ describe(`fsCopyFolder`, function() {
         ms = [...ms, ...await testSync()]
         ms = [...ms, ...await testAsyncEmpty()]
         ms = [...ms, ...await testAsync()]
-        console.log('ms', ms)
+        // console.log('ms', ms)
         return ms
     }
-    // test()
-    //     .catch(() => {})
+    // await test()
+    //     .catch((err) => {
+    //         console.log(err)
+    //     })
     let ms = [
         {
             'sync-empty-copy-folder': { success: 'done: ./_test_fsCopyFolder_tar' }

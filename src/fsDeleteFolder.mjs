@@ -1,5 +1,5 @@
 import fs from 'fs'
-import fsIsFolder from './fsIsFolder.mjs'
+import fsDeleteFolderCore from './fsDeleteFolderCore.mjs'
 
 
 /**
@@ -12,62 +12,66 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsDeleteFolder', fsDeleteFolder('./abc'))
- * // fsDeleteFolder { success: 'done: ./abc' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsDeleteFolder'
+ *
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let rfl = fsCreateFile(`${fdt}/abc/abc.txt`, 'abc', { encoding: 'utf8' })
+ *     console.log('rfl', rfl)
+ *     ms.push({ 'fsCreateFile(before)': rfl })
+ *
+ *     let rfd = fsCreateFolder(`${fdt}/def/mno`)
+ *     console.log('rfd', rfd)
+ *     ms.push({ 'fsCreateFolder(before)': rfd })
+ *
+ *     let b1 = fsIsFile(`${fdt}/abc/abc.txt`)
+ *     console.log('fsIsFile(before)', b1)
+ *     ms.push({ 'fsIsFile(before)': b1 })
+ *
+ *     let b2 = fsIsFolder(`${fdt}/def/mno`)
+ *     console.log('fsIsFolder(before)', b2)
+ *     ms.push({ 'fsIsFolder(before)': b2 })
+ *
+ *     fsDeleteFolder(fdt)
+ *
+ *     let b3 = fsIsFile(`${fdt}/abc/abc.txt`)
+ *     console.log('fsIsFile(after)', b3)
+ *     ms.push({ 'fsIsFile(after)': b3 })
+ *
+ *     let b4 = fsIsFolder(`${fdt}/def/mno`)
+ *     console.log('fsIsFolder(after)', b4)
+ *     ms.push({ 'fsIsFolder(after)': b4 })
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // rfl { success: 'done: ./_test_fsDeleteFolder/abc/abc.txt' }
+ * // rfd { success: 'done: ./_test_fsDeleteFolder/def/mno' }
+ * // fsIsFile(before) true
+ * // fsIsFolder(before) true
+ * // fsIsFile(after) false
+ * // fsIsFolder(after) false
+ * // ms [
+ * //   {
+ * //     'fsCreateFile(before)': { success: 'done: ./_test_fsDeleteFolder/abc/abc.txt' }
+ * //   },
+ * //   {
+ * //     'fsCreateFolder(before)': { success: 'done: ./_test_fsDeleteFolder/def/mno' }
+ * //   },
+ * //   { 'fsIsFile(before)': true },
+ * //   { 'fsIsFolder(before)': true },
+ * //   { 'fsIsFile(after)': false },
+ * //   { 'fsIsFolder(after)': false }
+ * // ]
  *
  */
 function fsDeleteFolder(pah) {
-
-    //check, 需先判斷
-    if (!fs.existsSync(pah)) {
-        return {
-            success: 'folder does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
-        }
-    }
-
-    //check
-    if (!fsIsFolder(pah)) {
-        return {
-            error: 'input path is not a folder: ' + pah //若存在但又不是資料夾, 則視為錯誤
-        }
-    }
-
-    //刪除資料夾內的全部資料夾與檔案
-    try {
-        fs.readdirSync(pah).forEach(function(file) {
-            let curPath = pah + '/' + file
-            if (fs.lstatSync(curPath).isDirectory()) {
-                fsDeleteFolder(curPath)
-            }
-            else {
-                try {
-                    fs.unlinkSync(curPath)
-                }
-                catch (err) {
-                    //
-                }
-            }
-        })
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    //刪除自己
-    try {
-        fs.rmdirSync(pah)
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pah
-    }
+    return fsDeleteFolderCore(pah, { fs })
 }
 
 

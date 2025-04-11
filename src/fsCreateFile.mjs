@@ -1,5 +1,5 @@
 import fs from 'fs'
-import fsIsFile from './fsIsFile.mjs'
+import fsCreateFileCore from './fsCreateFileCore.mjs'
 
 
 /**
@@ -17,39 +17,52 @@ import fsIsFile from './fsIsFile.mjs'
  * @example
  * need test in nodejs.
  *
- * console.log('fsCreateFile', fsCreateFile('./abc.txt'))
- * // fsCreateFile { success: 'done: ./abc.txt' }
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsCreateFile'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 't1.txt'
+ *     let fp = `${fdt}/abc/${fn}`
+ *
+ *     let b1 = fsIsFile(fp)
+ *     console.log('fsCreateFile(before)', b1)
+ *     ms.push({ 'fsCreateFile(before)': b1 })
+ *
+ *     let b2 = fsCreateFile(fp, 'abc', { encoding: 'utf8' })
+ *     console.log('fsCreateFile', b2)
+ *     ms.push({ 'fsCreateFile': b2 })
+ *
+ *     let b3 = fsIsFile(fp)
+ *     console.log('fsCreateFile(after)', b3)
+ *     ms.push({ 'fsCreateFile(after)': b3 })
+ *
+ *     let c = fs.readFileSync(fp, 'utf8')
+ *     console.log('readFileSync', c)
+ *     ms.push({ 'readFileSync': c })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsCreateFile(before) false
+ * // fsCreateFile { success: 'done: ./_test_fsCreateFile/abc/t1.txt' }
+ * // fsCreateFile(after) true
+ * // readFileSync abc
+ * // ms [
+ * //   { 'fsCreateFile(before)': false },
+ * //   { fsCreateFile: { success: 'done: ./_test_fsCreateFile/abc/t1.txt' } },
+ * //   { 'fsCreateFile(after)': true },
+ * //   { readFileSync: 'abc' }
+ * // ]
  *
  */
 function fsCreateFile(pah, data, opt = {}) {
-
-    //check
-    if (fs.existsSync(pah)) {
-        return {
-            error: 'input path already exists: ' + pah //若路徑存在, 可能是資料夾、檔案或符號連結, 則一律視為錯誤
-        }
-    }
-
-    //check
-    if (fsIsFile(pah)) {
-        return {
-            error: 'input file is already exists: ' + pah //若檔案存在則視為錯誤
-        }
-    }
-
-    //writeFileSync
-    try {
-        fs.writeFileSync(pah, data, opt)
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return {
-        success: 'done: ' + pah
-    }
+    return fsCreateFileCore(pah, data, { fs, ...opt })
 }
 
 

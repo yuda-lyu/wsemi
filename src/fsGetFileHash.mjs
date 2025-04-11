@@ -1,70 +1,6 @@
 import fs from 'fs'
 import crypto from 'crypto'
-import get from 'lodash-es/get.js'
-import genPm from './genPm.mjs'
-import fsIsFile from './fsIsFile.mjs'
-import isestr from './isestr.mjs'
-import isbol from './isbol.mjs'
-
-
-function fsGetFileHashAsync(fp, type = 'sha512') {
-
-    //pm
-    let pm = genPm()
-
-    //check
-    if (!fsIsFile(fp)) {
-        pm.reject(`fp[${fp}] is not a file`)
-    }
-
-    try {
-
-        //createHash
-        let hash = crypto.createHash(type)
-
-        //createReadStream
-        let input = fs.createReadStream(fp)
-
-        //readable
-        input.on('readable', () => {
-            let data = input.read()
-            if (data) {
-                hash.update(data)
-            }
-            else {
-                pm.resolve(hash.digest('hex'))
-            }
-        })
-
-        //error
-        input.on('error', (err) => {
-            pm.reject(err.toString())
-        })
-
-    }
-    catch (err) {
-        pm.reject(err.toString())
-    }
-
-    return pm
-}
-
-
-function fsGetFileHashSync(fp, type = 'sha512') {
-
-    //check
-    if (!fsIsFile(fp)) {
-        throw new Error(`fp[${fp}] is not a file`)
-    }
-
-    //r
-    let buffer = fs.readFileSync(fp)
-    let hash = crypto.createHash(type)
-    hash.update(buffer, 'utf8')
-    let r = hash.digest('hex')
-
-    return r
-}
+import fsGetFileHashCore from './fsGetFileHashCore.mjs'
 
 
 /**
@@ -72,7 +8,7 @@ function fsGetFileHashSync(fp, type = 'sha512') {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFileHash.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fp 輸入檔案位置
+ * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='sha512'] 輸入計算HASH方法，預設'sha512'
  * @param {Boolean} [opt.useSync=true] 輸入是否使用同步函數布林值，預設true
@@ -81,46 +17,65 @@ function fsGetFileHashSync(fp, type = 'sha512') {
  * @example
  * need test in nodejs.
  *
- * let r
+ * let test = async () => {
  *
- * r = fsGetFileHash(fp, {
- *   type: 'sha512',
- *   useSync: true,
- * })
- * console.log(r)
- * // => '{HASH值}'
+ *     let ms = []
  *
- * r = await fsGetFileHash(fp, {
- *   type: 'sha512',
- *   useSync: false,
- * })
- * console.log(r)
- * // => '{HASH值}'
+ *     let fdt = './_test_fsGetFileHash'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 't1.txt'
+ *     let fp = `${fdt}/abc/${fn}`
+ *
+ *     fsWriteText(fp, 'xyz')
+ *
+ *     let h1 = fsGetFileHash(fp)
+ *     console.log('fsGetFileHash(sha512)(sync)', h1)
+ *     ms.push({ 'fsGetFileHash(sha512)(sync)': h1 })
+ *
+ *     let h2 = await fsGetFileHash(fp, { useSync: false })
+ *     console.log('fsGetFileHash(sha512)(async)', h2)
+ *     ms.push({ 'fsGetFileHash(sha512)(async)': h2 })
+ *
+ *     let h3 = fsGetFileHash(fp, { type: 'sha256' })
+ *     console.log('fsGetFileHash(sha256)(sync)', h3)
+ *     ms.push({ 'fsGetFileHash(sha256)(sync)': h3 })
+ *
+ *     let h4 = await fsGetFileHash(fp, { useSync: false, type: 'sha256' })
+ *     console.log('fsGetFileHash(sha256)(async)', h4)
+ *     ms.push({ 'fsGetFileHash(sha256)(async)': h4 })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * await test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
+ * // fsGetFileHash(sha512)(sync) 4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728
+ * // fsGetFileHash(sha512)(async) 4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728
+ * // fsGetFileHash(sha256)(sync) 3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282
+ * // fsGetFileHash(sha256)(async) 3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282
+ * // ms [
+ * //   {
+ * //     'fsGetFileHash(sha512)(sync)': '4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728'
+ * //   },
+ * //   {
+ * //     'fsGetFileHash(sha512)(async)': '4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728'
+ * //   },
+ * //   {
+ * //     'fsGetFileHash(sha256)(sync)': '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
+ * //   },
+ * //   {
+ * //     'fsGetFileHash(sha256)(async)': '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
+ * //   }
+ * // ]
  *
  */
 function fsGetFileHash(fp, opt = {}) {
-
-    //type
-    let type = get(opt, 'type', '')
-    if (!isestr(type)) {
-        type = 'sha512'
-    }
-
-    //useSync
-    let useSync = get(opt, 'useSync', '')
-    if (!isbol(useSync)) {
-        useSync = true
-    }
-
-    let r = ''
-    if (useSync) {
-        r = fsGetFileHashSync(fp, type)
-    }
-    else {
-        r = fsGetFileHashAsync(fp, type)
-    }
-
-    return r
+    return fsGetFileHashCore(fp, { fs, crypto, ...opt })
 }
 
 

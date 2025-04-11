@@ -1,7 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import each from 'lodash-es/each.js'
-import fsIsFolder from './fsIsFolder.mjs'
+import fsTreeFolderCore from './fsTreeFolderCore.mjs'
 
 
 /**
@@ -15,97 +14,75 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @example
  * //need test in nodejs
  *
- * let rs
+ * let test = () => {
  *
- * rs = fsTreeFolder(fd)
- * console.log(rs)
- * // => [
- * //   { isFolder: false, level: 1, path: './d/a.txt', name: 'a.txt' },
- * //   { isFolder: true, level: 1, path: './d/ee', name: 'ee' }
- * // ]
+ *     let ms = []
  *
- * rs = fsTreeFolder(fd, null)
- * console.log(rs)
- * // => [
- * //   { isFolder: false, level: 1, path: './d/a.txt', name: 'a.txt' },
- * //   { isFolder: true, level: 1, path: './d/ee', name: 'ee' },
- * //   { isFolder: false, level: 2, path: './d/ee/b.txt', name: 'b.txt' },
- * //   { isFolder: true, level: 2, path: './d/ee/eee', name: 'eee' },
- * //   { isFolder: false, level: 3, path: './d/ee/eee/c.txt', name: 'c.txt' }
+ *     let t = '_test_fsTreeFolder'
+ *     let fdt = './_test_fsTreeFolder'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let ftpath = (v) => {
+ *         // console.log(v, 'v.path', v.path)
+ *         let ss = _.split(v.path, t)
+ *         // console.log('ss', ss)
+ *         let p = ss[1]
+ *         p = p.replaceAll('\\', '/')
+ *         p = `.${p}`
+ *         // console.log('p', p)
+ *         v.path = p
+ *         return v
+ *     }
+ *
+ *     let ftpaths = (vs) => {
+ *         return _.map(_.cloneDeep(vs), ftpath)
+ *     }
+ *
+ *     fsWriteText(`${fdt}/z1.txt`, 'z1')
+ *     fsWriteText(`${fdt}/abc/z2.txt`, 'z2')
+ *     fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
+ *     fsCreateFolder(`${fdt}/mno/pqr`)
+ *
+ *     let r1 = fsTreeFolder(fdt, 1)
+ *     console.log('fsTreeFolder(levelLimit=1)', ftpaths(r1))
+ *     ms.push({ 'fsTreeFolder(evelLimit=1)': ftpaths(r1) })
+ *
+ *     let rall = fsTreeFolder(fdt, null)
+ *     console.log('fsTreeFolder(levelLimit=null)', ftpaths(rall))
+ *     ms.push({ 'fsTreeFolder(evelLimit=null)': ftpaths(rall) })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', JSON.stringify(ms))
+ *     return ms
+ * }
+ * test()
+ * // fsTreeFolder(levelLimit=1) [
+ * //   { isFolder: true, level: 1, path: './abc', name: 'abc' },
+ * //   { isFolder: true, level: 1, path: './def', name: 'def' },
+ * //   { isFolder: true, level: 1, path: './mno', name: 'mno' },
+ * //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
  * // ]
+ * // fsTreeFolder(levelLimit=null) [
+ * //   { isFolder: true, level: 1, path: './abc', name: 'abc' },
+ * //   { isFolder: false, level: 2, path: './abc/z2.txt', name: 'z2.txt' },
+ * //   { isFolder: true, level: 1, path: './def', name: 'def' },
+ * //   { isFolder: true, level: 2, path: './def/ijk', name: 'ijk' },
+ * //   {
+ * //     isFolder: false,
+ * //     level: 3,
+ * //     path: './def/ijk/z3.txt',
+ * //     name: 'z3.txt'
+ * //   },
+ * //   { isFolder: true, level: 1, path: './mno', name: 'mno' },
+ * //   { isFolder: true, level: 2, path: './mno/pqr', name: 'pqr' },
+ * //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
+ * // ]
+ * // ms [{"fsTreeFolder(evelLimit=1)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]},{"fsTreeFolder(evelLimit=null)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":false,"level":2,"path":"./abc/z2.txt","name":"z2.txt"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":2,"path":"./def/ijk","name":"ijk"},{"isFolder":false,"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":true,"level":2,"path":"./mno/pqr","name":"pqr"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]}]
  *
  */
 function fsTreeFolder(fd, levelLimit = 1) {
-    let level = 1
-
-    //check
-    if (!fsIsFolder(fd)) {
-        throw new Error(`fd[${fd}] is not a folder`)
-    }
-
-    //tree
-    function tree(fd) {
-        let rs = []
-
-        //check
-        if (!fsIsFolder(fd)) {
-            return rs
-        }
-
-        //readdirSync
-        let items = fs.readdirSync(fd)
-
-        //each
-        each(items, function(item) {
-
-            //fp
-            let fp = path.resolve(fd, item)
-
-            //stat
-            let stat = null
-            try {
-                stat = fs.statSync(fp)
-            }
-            catch (err) {}
-
-            //proc
-            if (stat && stat.isDirectory()) {
-
-                //push
-                rs.push({
-                    isFolder: true,
-                    level,
-                    path: fp,
-                    name: path.basename(fp),
-                })
-
-                //tree
-                level += 1
-                if (level <= levelLimit || levelLimit === null) {
-                    rs = rs.concat(tree(fp))
-                }
-
-                level -= 1
-
-            }
-            else {
-
-                //push
-                rs.push({
-                    isFolder: false,
-                    level,
-                    path: fp,
-                    name: path.basename(fp),
-                })
-
-            }
-
-        })
-
-        return rs
-    }
-
-    return tree(fd)
+    return fsTreeFolderCore(fd, levelLimit, { path, fs })
 }
 
 

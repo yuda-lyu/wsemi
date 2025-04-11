@@ -1113,7 +1113,7 @@ function filepathToTree(fps, opt = {}) {
     //     // console.log(k, 'v2', v)
     //     kpPath[k] = v
     // })
-    // // console.log('kpPath', kpPath)
+    // console.log('kpPath', kpPath)
 
     // //remove root for treeItems, treeItemsFolder
     // treeItems = get(treeItems, '0.children')
