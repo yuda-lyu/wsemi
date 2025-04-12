@@ -188,5 +188,5 @@ npm i wsemi
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.85/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.86/dist/wsemi.umd.js"></script>
 ```

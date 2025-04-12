@@ -9,7 +9,7 @@ import isarr from './isarr.mjs'
  * @memberOf wsemi
  * @param {Array} pms 輸入Promise陣列
  * @param {*} initial 輸入循序執行Promise陣列的初始值
- * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
+ * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *
  * async function topAsync() {

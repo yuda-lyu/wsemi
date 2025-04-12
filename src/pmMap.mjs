@@ -22,7 +22,7 @@ import queue from './queue.mjs'
  * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
  * @param {Function} fun 輸入循序執行值的呼叫函數
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Promise} 回傳Promise，resolve為成功結果，reject為失敗結果
+ * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *
  * async function topAsync() {

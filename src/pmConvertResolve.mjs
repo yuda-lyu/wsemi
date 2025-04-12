@@ -10,7 +10,7 @@ import ispm from './ispm.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmConvertResolve.test.mjs Github}
  * @memberOf wsemi
  * @param {Function} fn 輸入函數，可支援async與sync函數
- * @returns {Promise} 回傳Promise，皆使用resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
+ * @returns {Promise} 回傳Promise，resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
  * @example
  *
  * async function topAsync() {

@@ -27,33 +27,55 @@
             
         </div>
 
-        <div id="res" style="display:none; padding:0px 10px 10px 10px;">
-            
-            <div style="">
-                <div>hash</div>
-                <input type="text" id="txtHash" style="width:100%; box-sizing:border-box;">
-            </div>
+        <div id="pnl_xxhash64" style="display:none; padding:10px;">
+            <div id="msg_xxhash64" style="padding:2px;">calculating xxhash64...</div>
+            <input type="text" id="txt_xxhash64" style="display:none; width:100%; box-sizing:border-box;">
+            <div id="time_xxhash64" style="display:none; padding:2px;"></div>
+        </div>
 
+        <div id="pnl_sha256" style="display:none; padding:10px;">
+            <div id="msg_sha256" style="padding:2px;">calculating sha256...</div>
+            <input type="text" id="txt_sha256" style="display:none; width:100%; box-sizing:border-box;">
+            <div id="time_sha256" style="display:none; padding:2px;"></div>
+        </div>
+
+        <div id="pnl_sha512" style="display:none; padding:10px;">
+            <div id="msg_sha512" style="padding:2px;">calculating sha512...</div>
+            <input type="text" id="txt_sha512" style="display:none; width:100%; box-sizing:border-box;">
+            <div id="time_sha512" style="display:none; padding:2px;"></div>
         </div>
 
     </div>
 
     <script>
 
-        function file2hash(file){
+        async function file2hash(file){
 
-            //hash
-            wsemi.getFileHash(file)
-                .then(function(hash){
-                    console.log('hash',hash)
+            let calcdsp = async (type) => {
 
-                    document.querySelector('#'+'res').style.display='block'
-                    document.querySelector('#'+'txtHash').value=hash
+                document.querySelector(`#pnl_${type}`).style.display = 'block'
+                document.querySelector(`#msg_${type}`).style.display = 'block'
 
-                })
-                .catch(function(err){
-                    console.log(err)
-                })
+                let start = performance.now()
+                let hash = await wsemi.getFileHash(file,{type})
+                    .catch(function(err){
+                        console.log(err)
+                    })
+                let end = performance.now()
+                let time = ((end - start)/1000).toFixed(2)
+                console.log('hash',hash)
+
+                document.querySelector(`#msg_${type}`).innerText = type
+                document.querySelector(`#txt_${type}`).style.display = 'block'
+                document.querySelector(`#txt_${type}`).value = hash
+                document.querySelector(`#time_${type}`).style.display = 'block'
+                document.querySelector(`#time_${type}`).innerText = `time cost: ${time}s`
+
+            }
+
+            await calcdsp('xxhash64')
+            await calcdsp('sha256')
+            await calcdsp('sha512')
 
         }
 
@@ -80,6 +102,7 @@
 
                     //file2hash
                     file2hash(file)
+                        .catch(()=>{})
 
                 })
                 .catch(function(err){
@@ -110,6 +133,7 @@
 
             //file2hash
             file2hash(file)
+                .catch(()=>{})
 
             cb()
         })

@@ -6,7 +6,7 @@ import fsWriteText from '../src/fsWriteText.mjs'
 import getFileHash from '../src/getFileHash.mjs'
 
 
-describe(`getFileHash`, function() {
+describe(`getFileHash`, async function() {
 
     let test = async () => {
 
@@ -20,15 +20,28 @@ describe(`getFileHash`, function() {
 
         fsWriteText(fp, 'xyz')
 
-        let bb = new Blob([fs.readFileSync(fp)])
+        let ab = fs.readFileSync(fp)
+        let bb = new Blob([ab])
 
         let h1 = await getFileHash(bb)
         // console.log('getFileHash(sha512)', h1)
         ms.push({ 'getFileHash(sha512)': h1 })
 
-        let h3 = await getFileHash(bb, { type: 'sha256' })
-        // console.log('getFileHash(sha256)', h3)
-        ms.push({ 'getFileHash(sha256)': h3 })
+        let h2 = await getFileHash(bb, { type: 'sha256' })
+        // console.log('getFileHash(sha256)', h2)
+        ms.push({ 'getFileHash(sha256)': h2 })
+
+        let h3 = await getFileHash(bb, { type: 'xxhash64' })
+        // console.log('getFileHash(xxhash64)', h3)
+        ms.push({ 'getFileHash(xxhash64)': h3 })
+
+        let h4 = await getFileHash(bb, { type: 'xxhash64', chunkSize: 16 * 1024 * 1024 })
+        // console.log('getFileHash(xxhash64,chunkSize=16mb)', h4)
+        ms.push({ 'getFileHash(xxhash64,chunkSize=16mb)': h4 })
+
+        let h5 = await getFileHash(bb, { type: 'xxhash64', chunkSize: 4 * 1024 * 1024 })
+        // console.log('getFileHash(xxhash64,chunkSize=4mb)', h5)
+        ms.push({ 'getFileHash(xxhash64,chunkSize=4mb)': h5 })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -41,13 +54,19 @@ describe(`getFileHash`, function() {
     //     })
     // getFileHash(sha512) 4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728
     // getFileHash(sha256) 3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282
+    // getFileHash(xxhash64) feba48465b833ca1
+    // getFileHash(xxhash64,chunkSize=16mb) feba48465b833ca1
+    // getFileHash(xxhash64,chunkSize=4mb) feba48465b833ca1
     let ms = [
         {
             'getFileHash(sha512)': '4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728'
         },
         {
             'getFileHash(sha256)': '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
-        }
+        },
+        { 'getFileHash(xxhash64)': 'feba48465b833ca1' },
+        { 'getFileHash(xxhash64,chunkSize=16mb)': 'feba48465b833ca1' },
+        { 'getFileHash(xxhash64,chunkSize=4mb)': 'feba48465b833ca1' }
     ]
 
     it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {

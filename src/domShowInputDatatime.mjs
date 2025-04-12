@@ -19,7 +19,7 @@ import domFind from './domFind.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Element} [opt.eleRef=null] 輸入觸發點擊Element元素，若不給則使用document.activeElement取得，預設為null
  * @param {String} [opt.type='datetime-local'] 輸入時間類型字串，可選為'datetime-local'與'date'，預設為'datetime-local'
- * @returns {Promise} 回傳Promise，resolve為選擇新時間，無reject
+ * @returns {Promise} 回傳Promise，resolve回傳選擇新時間，無reject
  * @example
  * need test in browser
  *

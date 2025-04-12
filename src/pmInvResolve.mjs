@@ -12,7 +12,7 @@ import isbol from './isbol.mjs'
  * @param {Promise} pm 輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.thenExtractData=false] 輸入是否於then提取data欄位值布林值，主要用於轉換axios取得之pm，預設false
- * @returns {Promise} 回傳Promise，皆使用resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
+ * @returns {Promise} 回傳Promise，resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
  * @example
  *
  * async function test1() {

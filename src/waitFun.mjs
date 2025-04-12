@@ -14,7 +14,7 @@ import ispm from './ispm.mjs'
  * @param {Object} opt 輸入設定物件，預設{}
  * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200
  * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000
- * @returns {Promise} 回傳Promise，resolve為空代表f函數回傳true或超過最大嘗試次數，reject為錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true或超過最大嘗試次數，reject回傳錯誤訊息
  * @example
  *
  * async function topAsync() {

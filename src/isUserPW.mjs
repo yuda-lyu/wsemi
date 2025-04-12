@@ -13,7 +13,7 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserPW.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
- * @returns {Promise} 回傳Promise，resolve為空代表有效，reject為錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳為空代表有效，reject回傳錯誤訊息
  * @example
  * need test in browser
  *

@@ -26,7 +26,7 @@ function getHtmlToImage() {
  * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1，預設1
  * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
  * @param {String} [opt.picType='image/png'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，使用'image/jpeg'時若無背景預設為黑色，預設'image/png'
- * @returns {Promise} 回傳Promise，resolve為成功時的產出圖片，reject為失敗訊息
+ * @returns {Promise} 回傳Promise，resolve回傳產出圖片，reject為失敗訊息
  * @example
  * need test in browser
  *
