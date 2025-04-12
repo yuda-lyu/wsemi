@@ -20,12 +20,16 @@ describe(`fsGetFileXxHash`, async function() {
         fsWriteText(fp, 'xyz')
 
         let h1 = await fsGetFileXxHash(fp)
-        // console.log('fsGetFileXxHash(sha512)', h1)
-        ms.push({ 'fsGetFileXxHash(sha512)': h1 })
+        // console.log('fsGetFileXxHash(64mb)', h1)
+        ms.push({ 'fsGetFileXxHash(64mb)': h1 })
 
-        let h2 = await fsGetFileXxHash(fp, { type: 'sha256' })
-        // console.log('fsGetFileXxHash(sha256)', h2)
-        ms.push({ 'fsGetFileXxHash(sha256)': h2 })
+        let h2 = await fsGetFileXxHash(fp, { chunkSize: 16 * 1024 * 1024 })
+        // console.log('fsGetFileXxHash(16mb)', h2)
+        ms.push({ 'fsGetFileXxHash(16mb)': h2 })
+
+        let h3 = await fsGetFileXxHash(fp, { chunkSize: 4 * 1024 * 1024 })
+        // console.log('fsGetFileXxHash(4mb)', h3)
+        ms.push({ 'fsGetFileXxHash(4mb)': h3 })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -36,15 +40,13 @@ describe(`fsGetFileXxHash`, async function() {
     //     .catch((err) => {
     //         console.log(err)
     //     })
-    // fsGetFileXxHash(sha512) 4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728
-    // fsGetFileXxHash(sha256) 3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282
+    // fsGetFileXxHash(64mb) feba48465b833ca1
+    // fsGetFileXxHash(16mb) feba48465b833ca1
+    // fsGetFileXxHash(4mb) feba48465b833ca1
     let ms = [
-        {
-            'fsGetFileXxHash(sha512)': '4a3ed8147e37876adc8f76328e5abcc1b470e6acfc18efea0135f983604953a58e183c1a6086e91ba3e821d926f5fdeb37761c7ca0328a963f5e92870675b728'
-        },
-        {
-            'fsGetFileXxHash(sha256)': '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
-        }
+        { 'fsGetFileXxHash(64mb)': 'feba48465b833ca1' },
+        { 'fsGetFileXxHash(16mb)': 'feba48465b833ca1' },
+        { 'fsGetFileXxHash(4mb)': 'feba48465b833ca1' }
     ]
 
     it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {

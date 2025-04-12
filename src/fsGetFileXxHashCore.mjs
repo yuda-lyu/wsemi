@@ -9,7 +9,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 /**
  * 後端nodejs計算檔案xxHash64值
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFileHashCore.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFileXxHashCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
