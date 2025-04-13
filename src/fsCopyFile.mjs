@@ -83,13 +83,13 @@ import fsCopyFileCore from './fsCopyFileCore.mjs'
  *     })
  * // => ms [
  * //   {
- * //     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+ * //     'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/abc/_t1.txt' }
  * //   },
- * //   { 'sync-is-file': true },
+ * //   { 'sync-is-file': false },
  * //   {
- * //     'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+ * //     'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/abc/_t1.txt' }
  * //   },
- * //   { 'async-is-file': true }
+ * //   { 'async-is-file': false }
  * // ]
  *
  */

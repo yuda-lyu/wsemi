@@ -16,9 +16,9 @@ describe(`fsCopyFile`, function() {
         fsCreateFolder(fpSrc)
         fsCreateFolder(fpTar)
 
-        fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+        fs.writeFileSync(`${fpSrc}/t1.txt`, 'content', 'utf8')
 
-        let rc = fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`)
+        let rc = fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/abc/_t1.txt`)
         ms.push({ 'sync-copy-file': rc })
 
         let b1 = fsIsFile(`${fpTar}/_t1.txt`)
@@ -39,9 +39,9 @@ describe(`fsCopyFile`, function() {
         fsCreateFolder(fpSrc)
         fsCreateFolder(fpTar)
 
-        fs.writeFileSync(`${fpSrc}/t1.txt`, 'abc', 'utf8')
+        fs.writeFileSync(`${fpSrc}/t1.txt`, 'content', 'utf8')
 
-        await fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/_t1.txt`, { useSync: false })
+        await fsCopyFile(`${fpSrc}/t1.txt`, `${fpTar}/abc/_t1.txt`, { useSync: false })
             .then((res) => {
                 // console.log('res', res)
                 ms.push({ 'async-copy-folder': res })
@@ -66,7 +66,7 @@ describe(`fsCopyFile`, function() {
         ms = [...ms, ...msSync]
         let msAsync = await testAsync()
         ms = [...ms, ...msAsync]
-        // console.log('ms', ms)
+        console.log('ms', ms)
         return ms
     }
     // await test()
@@ -75,13 +75,13 @@ describe(`fsCopyFile`, function() {
     //     })
     let ms = [
         {
-            'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+            'sync-copy-file': { success: 'done: ./_test_fsCopyFile_tar/abc/_t1.txt' }
         },
-        { 'sync-is-file': true },
+        { 'sync-is-file': false },
         {
-            'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/_t1.txt' }
+            'async-copy-folder': { success: 'done: ./_test_fsCopyFile_tar/abc/_t1.txt' }
         },
-        { 'async-is-file': true }
+        { 'async-is-file': false }
     ]
 
     it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
