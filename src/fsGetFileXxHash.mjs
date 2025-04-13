@@ -1,5 +1,4 @@
 import fs from 'fs'
-import crypto from 'crypto'
 import fsGetFileXxHashCore from './fsGetFileXxHashCore.mjs'
 
 
@@ -59,7 +58,7 @@ import fsGetFileXxHashCore from './fsGetFileXxHashCore.mjs'
  *
  */
 function fsGetFileXxHash(fp, opt = {}) {
-    return fsGetFileXxHashCore(fp, { fs, crypto, ...opt })
+    return fsGetFileXxHashCore(fp, { fs, ...opt })
 }
 
 
