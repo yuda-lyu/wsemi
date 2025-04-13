@@ -11,12 +11,12 @@ describe(`waitFun`, function() {
             let i = 0
             waitFun(function() {
                 i++
-                //console.log('waiting: ' + i)
+                // console.log('waiting: ' + i)
                 ms.push('waiting: ' + i)
                 return i >= 2
             })
                 .then(function() {
-                    //console.log('test1 then')
+                    // console.log('test1 then')
                     ms.push('test1 then')
                 })
 

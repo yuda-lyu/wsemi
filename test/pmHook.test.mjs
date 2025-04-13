@@ -18,7 +18,7 @@ describe(`pmHook`, function() {
 
             //針對before修改輸入
             let pmr = pmHook(pm, (msg) => {
-                //console.log('cb', msg)
+                // console.log('cb', msg)
                 if (msg.mode === 'before') {
                     //arguments有兩個輸入故得分開改
                     msg.data[0] = '[modify input a]' + msg.data[0]
@@ -29,11 +29,11 @@ describe(`pmHook`, function() {
 
             pmr('t1', 12.3)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(function() {
@@ -42,7 +42,7 @@ describe(`pmHook`, function() {
 
         })
     }
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // cb { mode: 'before', data: [Arguments] { '0': 't1', '1': 12.3 } }
     // cb {
@@ -54,7 +54,7 @@ describe(`pmHook`, function() {
     let r1 = '["resolve: v1=[modify input a]t1, v2=[modify input b]12.3","t1 then: resolve: v1=[modify input a]t1, v2=[modify input b]12.3"]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -72,7 +72,7 @@ describe(`pmHook`, function() {
 
             //針對afterThen修改輸出
             let pmr = pmHook(pm, (msg) => {
-                //console.log('cb', msg)
+                // console.log('cb', msg)
                 if (msg.mode === 'afterThen') {
                     //arguments有兩個輸入故得分開改
                     msg.data = '[modify output]' + msg.data
@@ -82,11 +82,11 @@ describe(`pmHook`, function() {
 
             pmr('t1', 12.3)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(function() {
@@ -95,7 +95,7 @@ describe(`pmHook`, function() {
 
         })
     }
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // cb { mode: 'before', data: [Arguments] { '0': 't1', '1': 12.3 } }
     // cb { mode: 'afterThen', data: 'resolve: v1=t1, v2=12.3' }
@@ -104,7 +104,7 @@ describe(`pmHook`, function() {
     let r2 = '["resolve: v1=t1, v2=12.3","t1 then: [modify output]resolve: v1=t1, v2=12.3"]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 
@@ -122,7 +122,7 @@ describe(`pmHook`, function() {
 
             //針對afterThen修改輸出, 但因使用reject故改不到
             let pmr = pmHook(pm, (msg) => {
-                //console.log('cb', msg)
+                // console.log('cb', msg)
                 if (msg.mode === 'afterThen') {
                     //arguments有兩個輸入故得分開改
                     msg.data = '[modify output]' + msg.data
@@ -132,11 +132,11 @@ describe(`pmHook`, function() {
 
             pmr('t1', 12.3)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(function() {
@@ -145,7 +145,7 @@ describe(`pmHook`, function() {
 
         })
     }
-    //console.log('test3')
+    // console.log('test3')
     // test3
     // cb { mode: 'before', data: [Arguments] { '0': 't1', '1': 12.3 } }
     // cb { mode: 'afterCatch', data: 'reject: v1=t1, v2=12.3' }
@@ -154,7 +154,7 @@ describe(`pmHook`, function() {
     let r3 = '["reject: v1=t1, v2=12.3","t1 catch: reject: v1=t1, v2=12.3"]'
     it(`should return '${r3}' when run test3'`, async function() {
         let ms = await test3()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
     })
 
@@ -172,7 +172,7 @@ describe(`pmHook`, function() {
 
             //針對afterCatch修改輸出
             let pmr = pmHook(pm, (msg) => {
-                //console.log('cb', msg)
+                // console.log('cb', msg)
                 if (msg.mode === 'afterCatch') {
                     //arguments有兩個輸入故得分開改
                     msg.data = '[modify output]' + msg.data
@@ -182,11 +182,11 @@ describe(`pmHook`, function() {
 
             pmr('t1', 12.3)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(function() {
@@ -195,7 +195,7 @@ describe(`pmHook`, function() {
 
         })
     }
-    //console.log('test4')
+    // console.log('test4')
     // test4
     // cb { mode: 'before', data: [Arguments] { '0': 't1', '1': 12.3 } }
     // cb { mode: 'afterCatch', data: 'reject: v1=t1, v2=12.3' }
@@ -204,7 +204,7 @@ describe(`pmHook`, function() {
     let r4 = '["reject: v1=t1, v2=12.3","t1 catch: [modify output]reject: v1=t1, v2=12.3"]'
     it(`should return '${r4}' when run test4'`, async function() {
         let ms = await test4()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
     })
 
@@ -222,7 +222,7 @@ describe(`pmHook`, function() {
 
             //針對afterThen修改輸出
             let pmr = pmHook(pm, (msg) => {
-                //console.log('cb', msg)
+                // console.log('cb', msg)
                 if (msg.mode === 'afterThen') {
                     //arguments有兩個輸入故得分開改
                     msg.data = '[modify output]' + msg.data
@@ -232,11 +232,11 @@ describe(`pmHook`, function() {
 
             pmr()
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(function() {
@@ -245,7 +245,7 @@ describe(`pmHook`, function() {
 
         })
     }
-    //console.log('test5')
+    // console.log('test5')
     // test5
     // cb { mode: 'before', data: [Arguments] {} }
     // cb { mode: 'afterThen', data: 'resolve' }
@@ -254,7 +254,7 @@ describe(`pmHook`, function() {
     let r5 = '["resolve","t1 then: [modify output]resolve"]'
     it(`should return '${r5}' when run test5'`, async function() {
         let ms = await test5()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r5)
     })
 

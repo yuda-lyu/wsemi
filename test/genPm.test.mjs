@@ -19,11 +19,11 @@ describe('genPm', function() {
 
             fn('abc')
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(() => {
@@ -32,14 +32,14 @@ describe('genPm', function() {
 
         })
     }
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // t1 then resolve: abc
     // ["resolve: abc","t1 then: resolve: abc"]
     let r1 = '["resolve: abc","t1 then: resolve: abc"]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -58,11 +58,11 @@ describe('genPm', function() {
 
             fn('abc')
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + msg)
                 })
                 .finally(() => {
@@ -71,14 +71,14 @@ describe('genPm', function() {
 
         })
     }
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // t1 catch reject: abc
     // ["reject: abc","t1 catch: reject: abc"]
     let r2 = '["reject: abc","t1 catch: reject: abc"]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 

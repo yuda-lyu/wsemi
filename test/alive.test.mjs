@@ -15,27 +15,27 @@ describe(`alive`, function() {
             let b = { data: '34.56' }
 
             setTimeout(() => {
-                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a1')
+                // console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a1')
                 oAL.trigger('a', a)
             }, 500)
 
             setTimeout(() => {
-                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a2')
+                // console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a2')
                 oAL.trigger('a', a)
             }, 1900)
 
             setTimeout(() => {
-                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b1')
+                // console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b1')
                 oAL.trigger('b', b)
             }, 1000)
 
             setTimeout(() => {
-                //console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b2')
+                // console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b2')
                 oAL.trigger('b', b)
             }, 3000)
 
             oAL.on('message', function({ eventName, key, data, now }) {
-                //console.log(parseInt((Date.now() - t)) + 'ms', { eventName, key, data, now })
+                // console.log(parseInt((Date.now() - t)) + 'ms', { eventName, key, data, now })
                 ms.push(eventName + '|' + key)
             })
 
@@ -45,7 +45,7 @@ describe(`alive`, function() {
 
         })
     }
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // 503ms trigger a1
     // 508ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }
@@ -61,7 +61,7 @@ describe(`alive`, function() {
     let r1 = '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 

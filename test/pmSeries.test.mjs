@@ -12,22 +12,22 @@ describe(`pmSeries`, function() {
             pmSeries([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
                 })
             })
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
@@ -49,16 +49,16 @@ describe(`pmSeries`, function() {
             pmSeries([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
                         if (v === 3) {
-                            //console.log('reject', v, 'd', d)
+                            // console.log('reject', v, 'd', d)
                             ms.push({ reject: v, d })
                             reject('#' + v)
                         }
                         else {
-                            //console.log('resolve', v, 'd', d)
+                            // console.log('resolve', v, 'd', d)
                             ms.push({ resolve: v, d })
                             resolve('#' + v)
                         }
@@ -66,12 +66,12 @@ describe(`pmSeries`, function() {
                 })
             })
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
@@ -93,10 +93,10 @@ describe(`pmSeries`, function() {
             let rs = [1, 2, 3, 4, 5].map(function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
@@ -104,12 +104,12 @@ describe(`pmSeries`, function() {
             })
             pmSeries(rs, null)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
@@ -138,12 +138,12 @@ describe(`pmSeries`, function() {
                 })
             })
                 .then(function(res) {
-                    console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })

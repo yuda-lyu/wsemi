@@ -13,7 +13,7 @@ describe(`pmThrottle`, function() {
             let fun = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
-                        //console.log('resolve: ' + name)
+                        // console.log('resolve: ' + name)
                         resolve('resolve: ' + name + ', t: ' + t)
                     }, t)
                 })
@@ -21,40 +21,40 @@ describe(`pmThrottle`, function() {
 
             pmt(fun, 't1', 150)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun, 't2', 100)
                 .then(function(msg) {
-                    //console.log('t2 then', msg)
+                    // console.log('t2 then', msg)
                     ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t2 catch', msg)
+                    // console.log('t2 catch', msg)
                     ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun, 't3', 50)
                 .then(function(msg) {
-                    //console.log('t3 then', msg)
+                    // console.log('t3 then', msg)
                     ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t3 catch', msg)
+                    // console.log('t3 catch', msg)
                     ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
 
             setTimeout(() => {
                 pmt(fun, 't4', 50)
                     .then((msg) => {
-                        //console.log('t4 then', msg)
+                        // console.log('t4 then', msg)
                         ms.push('t4 then: ' + msg)
                     })
                     .catch((msg) => {
-                        //console.log('t4 catch', msg)
+                        // console.log('t4 catch', msg)
                         ms.push('t4 catch: ' + 'reason ' + msg.reason)
                     })
                     .finally(() => {
@@ -64,7 +64,7 @@ describe(`pmThrottle`, function() {
 
         })
     }
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // t1 catch { reason: 'cancelled' }
     // t2 catch { reason: 'cancelled' }
@@ -76,7 +76,7 @@ describe(`pmThrottle`, function() {
     let r1 = '["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: resolve: t3, t: 50","t4 then: resolve: t4, t: 50"]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -89,7 +89,7 @@ describe(`pmThrottle`, function() {
             let fun1 = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
-                        //console.log('fun1 resolve: ' + name + ', t: ' + t)
+                        // console.log('fun1 resolve: ' + name + ', t: ' + t)
                         resolve('fun1 resolve: ' + name + ', t: ' + t)
                     }, t)
                 })
@@ -98,7 +98,7 @@ describe(`pmThrottle`, function() {
             let fun2 = function (name, t) {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
-                        //console.log('fun2 resolve: ' + name + ', t: ' + t)
+                        // console.log('fun2 resolve: ' + name + ', t: ' + t)
                         resolve('fun2 resolve: ' + name + ', t: ' + t)
                     }, t)
                 })
@@ -107,40 +107,40 @@ describe(`pmThrottle`, function() {
             //測試不同函數fun1與fun2
             pmt(fun1, 't1', 150)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun2, 't2', 100)
                 .then(function(msg) {
-                    //console.log('t2 then', msg)
+                    // console.log('t2 then', msg)
                     ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t2 catch', msg)
+                    // console.log('t2 catch', msg)
                     ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun2, 't3', 50)
                 .then(function(msg) {
-                    //console.log('t3 then', msg)
+                    // console.log('t3 then', msg)
                     ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t3 catch', msg)
+                    // console.log('t3 catch', msg)
                     ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
 
             setTimeout(() => {
                 pmt(fun1, 't4', 50)
                     .then((msg) => {
-                        //console.log('t4 then', msg)
+                        // console.log('t4 then', msg)
                         ms.push('t4 then: ' + msg)
                     })
                     .catch((msg) => {
-                        //console.log('t4 catch', msg)
+                        // console.log('t4 catch', msg)
                         ms.push('t4 catch: ' + 'reason ' + msg.reason)
                     })
                     .finally(() => {
@@ -150,7 +150,7 @@ describe(`pmThrottle`, function() {
 
         })
     }
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // t1 catch { reason: 'cancelled' }
     // t2 catch { reason: 'cancelled' }
@@ -162,7 +162,7 @@ describe(`pmThrottle`, function() {
     let r2 = '["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: fun2 resolve: t3, t: 50","t4 then: fun1 resolve: t4, t: 50"]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 
@@ -177,7 +177,7 @@ describe(`pmThrottle`, function() {
                 return new Promise(function(resolve, reject) {
                     setTimeout(() => {
                         i++
-                        //console.log('resolve: ' + i)
+                        // console.log('resolve: ' + i)
                         resolve('resolve: ' + i)
                     }, 100)
                 })
@@ -186,40 +186,40 @@ describe(`pmThrottle`, function() {
             //測試無輸入參數
             pmt(fun)
                 .then(function(msg) {
-                    //console.log('t1 then', msg)
+                    // console.log('t1 then', msg)
                     ms.push('t1 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t1 catch', msg)
+                    // console.log('t1 catch', msg)
                     ms.push('t1 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun)
                 .then(function(msg) {
-                    //console.log('t2 then', msg)
+                    // console.log('t2 then', msg)
                     ms.push('t2 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t2 catch', msg)
+                    // console.log('t2 catch', msg)
                     ms.push('t2 catch: ' + 'reason ' + msg.reason)
                 })
             pmt(fun)
                 .then(function(msg) {
-                    //console.log('t3 then', msg)
+                    // console.log('t3 then', msg)
                     ms.push('t3 then: ' + msg)
                 })
                 .catch(function(msg) {
-                    //console.log('t3 catch', msg)
+                    // console.log('t3 catch', msg)
                     ms.push('t3 catch: ' + 'reason ' + msg.reason)
                 })
 
             setTimeout(() => {
                 pmt(fun)
                     .then((msg) => {
-                        //console.log('t4 then', msg)
+                        // console.log('t4 then', msg)
                         ms.push('t4 then: ' + msg)
                     })
                     .catch((msg) => {
-                        //console.log('t4 catch', msg)
+                        // console.log('t4 catch', msg)
                         ms.push('t4 catch: ' + 'reason ' + msg.reason)
                     })
                     .finally(() => {
@@ -229,7 +229,7 @@ describe(`pmThrottle`, function() {
 
         })
     }
-    //console.log('test3')
+    // console.log('test3')
     // test3
     // t1 catch { reason: 'cancelled' }
     // t2 catch { reason: 'cancelled' }
@@ -241,7 +241,7 @@ describe(`pmThrottle`, function() {
     let r3 = '["t1 catch: reason cancelled","t2 catch: reason cancelled","t3 then: resolve: 1","t4 then: resolve: 2"]'
     it(`should return '${r3}' when run test3'`, async function() {
         let ms = await test3()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
     })
 

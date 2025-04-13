@@ -11,22 +11,22 @@ describe(`pmMap`, function() {
             pmMap([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
                 })
             }, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
@@ -35,7 +35,7 @@ describe(`pmMap`, function() {
     //cost: (1)340, (2)310, (3)260, (4)190, (5)100
     //1core: call 2(0) -> resolve 2(310) -> call 3(310) -> resolve 3(310+260=570)
     //2core: call 1(0) -> resolve 1(340) -> call 4(340) -> resolve 4(340+190=530) -> call 5(530) -> resolve 5(340+190+100=630)
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // call 1
     // call 2
@@ -62,28 +62,28 @@ describe(`pmMap`, function() {
             pmMap([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
                 })
             }, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
         })
     }
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // call 1
     // resolve 1 d 340
@@ -110,28 +110,28 @@ describe(`pmMap`, function() {
             pmMap([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
                 })
             }, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
         })
     }
-    //console.log('test3')
+    // console.log('test3')
     // test3
     // call 1
     // call 2
@@ -158,10 +158,10 @@ describe(`pmMap`, function() {
             let rs = [1, 2, 3, 4, 5].map(function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
-                        //console.log('resolve', v, 'd', d)
+                        // console.log('resolve', v, 'd', d)
                         ms.push({ resolve: v, d })
                         resolve('#' + v)
                     }, d)
@@ -169,18 +169,18 @@ describe(`pmMap`, function() {
             })
             pmMap(rs, null, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
         })
     }
-    //console.log('test4')
+    // console.log('test4')
     // test4
     // call 1
     // call 2
@@ -207,16 +207,16 @@ describe(`pmMap`, function() {
             pmMap([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
                         if (v === 3) {
-                            //console.log('reject', v, 'd', d)
+                            // console.log('reject', v, 'd', d)
                             ms.push({ reject: v, d })
                             reject('#' + v)
                         }
                         else {
-                            //console.log('resolve', v, 'd', d)
+                            // console.log('resolve', v, 'd', d)
                             ms.push({ resolve: v, d })
                             resolve('#' + v)
                         }
@@ -224,18 +224,18 @@ describe(`pmMap`, function() {
                 })
             }, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
         })
     }
-    //console.log('test5')
+    // console.log('test5')
     // test5
     // call 1
     // resolve 1 d 340
@@ -258,16 +258,16 @@ describe(`pmMap`, function() {
             pmMap([1, 2, 3, 4, 5], function (v, k) {
                 return new Promise(function(resolve, reject) {
                     let d = 400 - ((v ** 2) * 10 + 50)
-                    //console.log('call', v)
+                    // console.log('call', v)
                     ms.push({ call: v })
                     setTimeout(function() {
                         if (v === 3) {
-                            //console.log('reject', v, 'd', d)
+                            // console.log('reject', v, 'd', d)
                             ms.push({ reject: v, d })
                             reject('#' + v)
                         }
                         else {
-                            //console.log('resolve', v, 'd', d)
+                            // console.log('resolve', v, 'd', d)
                             ms.push({ resolve: v, d })
                             resolve('#' + v)
                         }
@@ -275,18 +275,18 @@ describe(`pmMap`, function() {
                 })
             }, takeLimit)
                 .then(function(res) {
-                    //console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    //console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })
         })
     }
-    //console.log('test6')
+    // console.log('test6')
     // test6
     // call 1
     // call 2
@@ -319,12 +319,12 @@ describe(`pmMap`, function() {
                 })
             },)
                 .then(function(res) {
-                    console.log('then', JSON.stringify(res))
+                    // console.log('then', JSON.stringify(res))
                     ms.push({ res })
                     resolve(ms)
                 })
                 .catch(function(err) {
-                    console.log('catch', JSON.stringify(err))
+                    // console.log('catch', JSON.stringify(err))
                     ms.push({ err })
                     resolve(ms)
                 })

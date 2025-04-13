@@ -14,7 +14,7 @@ describe(`debounce`, function() {
             function core(name) {
                 i++
                 ms.push({ name, i })
-                //console.log({ name, i })
+                // console.log({ name, i })
             }
 
             setTimeout(function() {
@@ -47,14 +47,14 @@ describe(`debounce`, function() {
             }, 800)
         })
     }
-    //console.log('test1')
+    // console.log('test1')
     // test1
     // { name: 'E', i: 1 }
     // [{"name":"E","i":1}]
     let r1 = '[{"name":"E","i":1}]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -68,7 +68,7 @@ describe(`debounce`, function() {
             function core(name) {
                 i++
                 ms.push({ name, i })
-                //console.log({ name, i })
+                // console.log({ name, i })
             }
 
             setTimeout(function() {
@@ -101,7 +101,7 @@ describe(`debounce`, function() {
             }, 1400)
         })
     }
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // { name: 'C', i: 1 }
     // { name: 'E', i: 2 }
@@ -109,7 +109,7 @@ describe(`debounce`, function() {
     let r2 = '[{"name":"C","i":1},{"name":"E","i":2}]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 

@@ -15,6 +15,7 @@ describe(`fsCopyFolder`, function() {
         let fpSrc = './_test_fsCopyFolder_src'
         let fpTar = './_test_fsCopyFolder_tar'
         fsCreateFolder(fpSrc)
+        fsDeleteFolder(fpTar)
 
         fsCreateFolder(`${fpSrc}/lay1/lay2`)
         fsCreateFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
@@ -27,13 +28,13 @@ describe(`fsCopyFolder`, function() {
         let rc = fsCopyFolder(fpSrc, fpTar)
         ms.push({ 'sync-empty-copy-folder': rc })
 
-        let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+        let b1 = fsIsFolder(`${fpTar}/lay1/lay2/lay3`)
         ms.push({ 'sync-empty-is-folder-1': b1 })
-        let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+        let b2 = fsIsFolder(`${fpTar}/lay1/lay2/lay3/lay4`)
         ms.push({ 'sync-empty-is-folder-2': b2 })
-        let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+        let b3 = fsIsFile(`${fpTar}/lay1/lay2/lay3/t3.txt`)
         ms.push({ 'sync-empty-is-file-1': b3 })
-        let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+        let b4 = fsIsFile(`${fpTar}/lay1/lay2/lay3/lay4/t4.txt`)
         ms.push({ 'sync-empty-is-file-2': b4 })
 
         fsDeleteFolder(fpSrc)
@@ -61,13 +62,13 @@ describe(`fsCopyFolder`, function() {
         let rc = fsCopyFolder(fpSrc, fpTar)
         ms.push({ 'sync-copy-folder': rc })
 
-        let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+        let b1 = fsIsFolder(`${fpTar}/lay1/lay2/lay3`)
         ms.push({ 'sync-is-folder-1': b1 })
-        let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+        let b2 = fsIsFolder(`${fpTar}/lay1/lay2/lay3/lay4`)
         ms.push({ 'sync-is-folder-2': b2 })
-        let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+        let b3 = fsIsFile(`${fpTar}/lay1/lay2/lay3/t3.txt`)
         ms.push({ 'sync-is-file-1': b3 })
-        let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+        let b4 = fsIsFile(`${fpTar}/lay1/lay2/lay3/lay4/t4.txt`)
         ms.push({ 'sync-is-file-2': b4 })
 
         fsDeleteFolder(fpSrc)
@@ -101,13 +102,13 @@ describe(`fsCopyFolder`, function() {
                 // console.log('err', err)
             })
 
-        let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+        let b1 = fsIsFolder(`${fpTar}/lay1/lay2/lay3`)
         ms.push({ 'async-empty-is-folder-1': b1 })
-        let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+        let b2 = fsIsFolder(`${fpTar}/lay1/lay2/lay3/lay4`)
         ms.push({ 'async-empty-is-folder-2': b2 })
-        let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+        let b3 = fsIsFile(`${fpTar}/lay1/lay2/lay3/t3.txt`)
         ms.push({ 'async-empty-is-file-1': b3 })
-        let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+        let b4 = fsIsFile(`${fpTar}/lay1/lay2/lay3/lay4/t4.txt`)
         ms.push({ 'async-empty-is-file-2': b4 })
 
         fsDeleteFolder(fpSrc)
@@ -141,13 +142,13 @@ describe(`fsCopyFolder`, function() {
                 // console.log('err', err)
             })
 
-        let b1 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3`)
+        let b1 = fsIsFolder(`${fpTar}/lay1/lay2/lay3`)
         ms.push({ 'async-is-folder-1': b1 })
-        let b2 = fsIsFolder(`${fpSrc}/lay1/lay2/lay3/lay4`)
+        let b2 = fsIsFolder(`${fpTar}/lay1/lay2/lay3/lay4`)
         ms.push({ 'async-is-folder-2': b2 })
-        let b3 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/lay4/t4.txt`)
+        let b3 = fsIsFile(`${fpTar}/lay1/lay2/lay3/t3.txt`)
         ms.push({ 'async-is-file-1': b3 })
-        let b4 = fsIsFile(`${fpSrc}/lay1/lay2/lay3/t3.txt`)
+        let b4 = fsIsFile(`${fpTar}/lay1/lay2/lay3/lay4/t4.txt`)
         ms.push({ 'async-is-file-2': b4 })
 
         fsDeleteFolder(fpSrc)

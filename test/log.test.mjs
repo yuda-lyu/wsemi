@@ -29,7 +29,7 @@ describe(`log`, function() {
     ]
     it(`should return '${r1}' when run test1'`, function() {
         let rr = test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(rr, r1)
     })
 

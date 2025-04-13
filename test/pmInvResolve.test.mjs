@@ -27,7 +27,7 @@ describe(`pmInvResolve`, function() {
     let r1 = '[{"mode":"then","res":"abc"}]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
@@ -53,7 +53,7 @@ describe(`pmInvResolve`, function() {
     let r2 = '[{"mode":"catch","res":"abc"}]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test2()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 
@@ -79,7 +79,7 @@ describe(`pmInvResolve`, function() {
     let r3 = '[{"mode":"catch","res":{"reason":"cancelled"}}]'
     it(`should return '${r1}' when run test3'`, async function() {
         let ms = await test3()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
     })
 
@@ -107,7 +107,7 @@ describe(`pmInvResolve`, function() {
     let r4 = '[{"mode":"then","res":"abc"}]'
     it(`should return '${r4}' when run test4'`, async function() {
         let ms = await test4()
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
     })
 

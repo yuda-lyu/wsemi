@@ -14,7 +14,7 @@ describe(`queue`, function() {
 
             //message
             q.on('message', function(qs) {
-                //console.log('message', JSON.stringify(qs))
+                // console.log('message', JSON.stringify(qs))
 
                 //ms
                 ms.push(JSON.parse(JSON.stringify(qs)))
@@ -24,10 +24,10 @@ describe(`queue`, function() {
                 if (!v) {
                     return
                 }
-                //console.log('get', v)
+                // console.log('get', v)
 
                 setTimeout(function() {
-                    //console.log('cb', v)
+                    // console.log('cb', v)
 
                     //cb
                     q.cb()
@@ -43,7 +43,7 @@ describe(`queue`, function() {
 
             //queues push 1~5
             setTimeout(function() {
-                //console.log('queues push 1~5')
+                // console.log('queues push 1~5')
                 let t = setInterval(function() {
                     n += 1
                     q.push('$' + n)
@@ -55,7 +55,7 @@ describe(`queue`, function() {
 
             //queues push 6~10 by delay 1s
             setTimeout(function() {
-                //console.log('queues push 6~10')
+                // console.log('queues push 6~10')
                 let t = setInterval(function() {
                     n += 1
                     q.push('$' + n)
@@ -68,7 +68,7 @@ describe(`queue`, function() {
         })
     }
 
-    //console.log('test1')
+    // console.log('test1')
     // queues push 1~5
     // message ["$1"]
     // get $1
@@ -105,11 +105,11 @@ describe(`queue`, function() {
     let r1 = '[["$1"],["$2"],["$3","$4","$5","$6","$7","$8","$9","$10"],["$4","$5","$6","$7","$8","$9","$10"],["$5","$6","$7","$8","$9","$10"],["$6","$7","$8","$9","$10"],["$7","$8","$9","$10"],["$8","$9","$10"],["$9","$10"],["$10"]]'
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test(2, 1000) //takeLimit=2, timeCallBack=1000ms
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
     })
 
-    //console.log('test2')
+    // console.log('test2')
     // test2
     // queues push 1~5
     // message ["$1"]
@@ -147,7 +147,7 @@ describe(`queue`, function() {
     let r2 = '[["$1"],["$2"],["$3"],["$4"],["$5"],["$6"],["$7"],["$8"],["$9"],["$10"]]'
     it(`should return '${r2}' when run test2'`, async function() {
         let ms = await test(0, 500) //takeLimit=0, timeCallBack=500ms
-        //console.log(JSON.stringify(ms))
+        // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
     })
 

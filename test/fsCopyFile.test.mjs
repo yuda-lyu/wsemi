@@ -66,7 +66,7 @@ describe(`fsCopyFile`, function() {
         ms = [...ms, ...msSync]
         let msAsync = await testAsync()
         ms = [...ms, ...msAsync]
-        console.log('ms', ms)
+        // console.log('ms', ms)
         return ms
     }
     // await test()
