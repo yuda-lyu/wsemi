@@ -86,16 +86,16 @@ function execProcess(prog, args, opt = {}) {
             }
             catch (err) {}
 
+            //stderr, 若stderr與stdout同時有, 則先添加stderr再添加stdout
+            if (isestr(stderr)) {
+                // console.log('stderr', stderr)
+                msg += stderr
+            }
+
             //stdout
             if (isestr(stdout)) {
                 // console.log('stdout', stdout)
                 msg += stdout
-            }
-
-            //stderr
-            if (isestr(stderr)) {
-                // console.log('stderr', stderr)
-                msg += stderr
             }
 
         })
@@ -114,7 +114,7 @@ function execProcess(prog, args, opt = {}) {
         //cbStdout
         if (isfun(cbStdout)) {
             r.stdout.on('data', function (data) {
-                data = iconv.decode(data, 'big5')
+                data = iconv.decode(data, codeCmd)
                 // console.log('stdout', data)
                 cbStdout(data)
             })
@@ -123,7 +123,7 @@ function execProcess(prog, args, opt = {}) {
         //cbStderr
         if (isfun(cbStderr)) {
             r.stderr.on('data', function (data) {
-                data = iconv.decode(data, 'big5')
+                data = iconv.decode(data, codeCmd)
                 // console.log('stderr', data)
                 cbStderr(data)
             })

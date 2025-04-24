@@ -43,5 +43,5 @@ else {
 }
 
 
-//node --experimental-modules toolg/checkTest.mjs
+//node toolg/checkTest.mjs
 

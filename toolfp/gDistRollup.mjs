@@ -29,4 +29,4 @@ rollupFiles({
 })
 
 
-//node --experimental-modules toolfp/gDistRollup.mjs
+//node toolfp/gDistRollup.mjs

@@ -12,9 +12,7 @@
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/g.mjs",
-            "runtimeArgs": [
-                "--experimental-modules",
-            ]
+            "runtimeArgs": []
         }
     ]
 }

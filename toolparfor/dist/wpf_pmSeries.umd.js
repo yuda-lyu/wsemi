@@ -1,5 +1,5 @@
 /*!
- * wpf_pmSeries v1.7.88
+ * wpf_pmSeries v1.7.89
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */

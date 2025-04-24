@@ -68,23 +68,22 @@ function execScript(prog, args) {
 
         //spawnSync
         let res = cp.spawnSync(prog, args, { encoding: 'utf8' })
-        // console.log('spawnSync res', res)
-        // let r = filter(res.output, (v) => {
-        //     return v !== null
-        // })
-        // r = map(r, (v) => {
-        //     return toUtf8(v)
-        // })
-        // let cstdout = join(r, '')
-        // let cstderr = get(res, 'error.message')
-        // console.log('stdout', cstdout)
-        // console.log('stderr', cstderr)
-        if (res.stderr) {
-            // reject(cstderr)
+        // console.log('res', res)
+
+        //resolve, reject
+        if (res.stdout) {
+            let c = ''
+            if (res.stderr) {
+                c += res.stderr
+            }
+            c += res.stdout
+            resolve(c)
+        }
+        else if (res.stderr) {
             reject(res.stderr)
         }
         else {
-            // resolve(cstdout)
+            //若res.stdout與res.stderr皆為空字串
             resolve(res.stdout)
         }
 

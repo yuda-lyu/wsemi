@@ -51,4 +51,4 @@ rollupFile({
 })
 
 
-//node --experimental-modules toolparfor/gDistRollup.mjs
+//node toolparfor/gDistRollup.mjs
