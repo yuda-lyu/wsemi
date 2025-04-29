@@ -1,34 +1,157 @@
 import fs from 'fs'
 import _ from 'lodash-es'
-import obj2u8arr from './src/obj2u8arr.mjs'
-import u8arr2obj from './src/u8arr2obj.mjs'
-import str2aes from './src/str2aes.mjs'
-import aes2str from './src/aes2str.mjs'
+import fsDeleteFile from './src/fsDeleteFile.mjs'
+import fsCreateFolder from './src/fsCreateFolder.mjs'
+import fsDeleteFolder from './src/fsDeleteFolder.mjs'
+import fsTask from './src/fsTask.mjs'
 
+let test = async () => {
+    return new Promise((resolve, reject) => {
+        let ms = []
 
-let inp = {
-    browsername: 'Chrome',
-    browserversion: '135.0.0.0',
-    cpuarchitecture: 'amd64',
-    devicetype: '',
-    engineinfor: 'Blink135.0.0.0',
-    ip: '223.26.109.157',
-    platform: 'Windows10',
+        let fpc = './_tkfs'
+        fsDeleteFolder(fpc) //預先清除fsTask持久化數據資料夾
+
+        let fpt = './_test_fsTask'
+        fsDeleteFolder(fpt) //預先清除任務資料夾
+
+        let fpr = './_test_fsTask_result'
+        fsCreateFolder(fpr) //創建結果資料夾
+
+        let ev = fsTask(fpt, { timeInterval: 500 })
+        ev.on('change', (msg) => {
+            console.log(msg.type, msg.fn)
+
+            //content
+            let c = ''
+            try {
+                c = fs.readFileSync(msg.fp, 'utf8')
+            }
+            catch (err) {}
+
+            if (msg.fn === 'abc.txt') {
+                //僅針對abc.txt任務
+
+                if (msg.type === 'add' || msg.type === 'diff') {
+                    //針對新增或變更任務
+
+                    console.log(`task[${msg.fn}]`, `content[${c}]`, 'calculating')
+                    ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'calculating' })
+
+                    //模擬計算延遲
+                    setTimeout(() => {
+
+                        //模擬計算完儲存結果
+                        fs.writeFileSync(`${fpr}/res1.json`, 'res1', 'utf8')
+                        fs.writeFileSync(`${fpr}/res2.json`, 'res2', 'utf8')
+
+                        //使用setResult紀錄完成分析後之關聯結果檔
+                        ev.setResult(msg.fp, msg.hash, [
+                            {
+                                type: 'file',
+                                path: `${fpr}/res1.json`,
+                            },
+                            {
+                                type: 'file',
+                                path: `${fpr}/res2.json`,
+                            },
+                        ])
+
+                        console.log(`task[${msg.fn}]`, `content[${c}]`, 'save-result')
+                        ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'save-result' })
+
+                        msg.pm.resolve()
+                    }, 2000)
+
+                }
+                else { //msg.type === 'del'
+                    //針對任務刪除
+
+                    console.log(`task[${msg.fn}]`, 'remove-task')
+                    ms.push({ type: msg.type, fp: msg.fn, mode: 'remove-task' })
+
+                    //刪除任務時, 自動刪除關聯結果檔
+                    let rrs = ev.getAndEliminateResult(msg.fp, msg.hash)
+                    // console.log('rrs', rrs)
+                    for (let k = 0; k < rrs.length; k++) {
+                        fsDeleteFile(rrs[k].path)
+                    }
+
+                    console.log(`task[${msg.fn}]`, 'remove-result')
+                    ms.push({ type: msg.type, fp: msg.fn, mode: 'remove-result' })
+
+                    msg.pm.resolve()
+                }
+
+            }
+            else {
+                //針對其他任務
+
+                console.log(`task[${msg.fn}]`, `content[${c}]`, 'skip')
+                ms.push({ type: msg.type, fp: msg.fn, content: c, mode: 'skip' })
+                msg.pm.resolve()
+            }
+
+        })
+
+        setTimeout(() => {
+            fsCreateFolder(fpt)
+        }, 1)
+
+        setTimeout(() => {
+            fs.writeFileSync(`${fpt}/abc.txt`, 'abc', 'utf8')
+        }, 3000)
+
+        setTimeout(() => {
+            fs.writeFileSync(`${fpt}/abc.txt`, 'mnop', 'utf8')
+            fs.writeFileSync(`${fpt}/def.txt`, 'def', 'utf8')
+        }, 6000)
+
+        setTimeout(() => {
+            fsDeleteFile(`${fpt}/abc.txt`)
+        }, 9000)
+
+        setTimeout(() => {
+            fsDeleteFolder(fpt) //最終階段清除任務資料夾
+        }, 12000)
+
+        setTimeout(() => {
+            ev.clear() //結束後中止ev
+            fsDeleteFolder(fpc) //結束後清除fsTask持久化數據資料夾
+            fsDeleteFolder(fpr) //結束後清除結果資料夾
+            console.log('ms', ms)
+            resolve(ms)
+        }, 15000)
+
+    })
 }
-let inp2 = JSON.stringify(inp)
-console.log('inp2', inp2)
-let inp3 = str2aes(inp2, 'frliq')
-console.log('inp3', inp3)
-let inp4 = {
-    sct: inp3
-}
-console.log('inp4', inp4)
-let u8a = obj2u8arr(inp4)
-let out1 = u8arr2obj(u8a)
-let out2 = aes2str(out1.sct, 'frliq')
-let out3 = JSON.parse(out2)
-console.log('inp', inp)
-console.log('out3', out3)
+await test()
+    .catch((err) => {
+        console.log(err)
+    })
+// add abc.txt
+// task[abc.txt] content[abc] calculating
+// task[abc.txt] content[abc] save-result
+// add def.txt
+// task[def.txt] content[def] skip
+// diff abc.txt
+// task[abc.txt] content[mnop] calculating
+// task[abc.txt] content[mnop] save-result
+// del abc.txt
+// task[abc.txt] remove-task
+// task[abc.txt] remove-result
+// del def.txt
+// task[def.txt] content[] skip
+// ms [
+//   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'calculating' },
+//   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'save-result' },
+//   { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
+//   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'calculating' },
+//   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'save-result' },
+//   { type: 'del', fp: 'abc.txt', mode: 'remove-task' },
+//   { type: 'del', fp: 'abc.txt', mode: 'remove-result' },
+//   { type: 'del', fp: 'def.txt', content: '', mode: 'skip' }
+// ]
 
 
 //node g.mjs

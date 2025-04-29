@@ -1,9 +1,8 @@
-import each from 'lodash-es/each.js'
-import find from 'lodash-es/find.js'
-import isEqual from 'lodash-es/isEqual.js'
+import get from 'lodash-es/get.js'
+import filter from 'lodash-es/filter.js'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
-import iser from './iser.mjs'
+import isbol from './isbol.mjs'
 import haskey from './haskey.mjs'
 
 
@@ -15,6 +14,8 @@ import haskey from './haskey.mjs'
  * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件
  * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件
  * @param {String} key 輸入比對的主鍵key值字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.withInfor=true] 輸入是否提供infor資訊布林值，不提供可再加速，預設true
  * @returns {Object} 回傳比對結果物件
  * @example
  *
@@ -22,29 +23,46 @@ import haskey from './haskey.mjs'
  * let ltdtNew = [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }]
  * console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
  * // => {
- * //     infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
- * //     del: [ { id: 'id-2', a: 'a2' } ],
- * //     same: [ { id: 'id-3', a: 'a3' } ],
- * //     diff: [ { id: 'id-1', z: 'z3' } ],
- * //     add: [ { id: 'id-4', a: 'a4' } ]
+ * //   del: [ { id: 'id-2', a: 'a2' } ],
+ * //   add: [ { id: 'id-4', a: 'a4' } ],
+ * //   same: [ { id: 'id-3', a: 'a3' } ],
+ * //   diff: [ { id: 'id-1', z: 'z3' } ],
+ * //   infor: { 'id-2': 'del', 'id-4': 'add', 'id-1': 'diff', 'id-3': 'same' }
  * // }
  *
  */
-function ltdtDiffByKey(ltdtOld, ltdtNew, key) {
+function ltdtDiffByKey(ltdtOld, ltdtNew, key, opt = {}) {
 
-    //def
-    let def = {
-        infor: {},
+    // //def
+    // let def = {
+    //     infor: {},
+    //     del: [],
+    //     same: [],
+    //     diff: [],
+    //     add: [],
+    // }
+
+    //withInfor
+    let withInfor = get(opt, 'withInfor')
+    if (!isbol(withInfor)) {
+        withInfor = true
+    }
+
+    //defult
+    let r = {
         del: [],
+        add: [],
         same: [],
         diff: [],
-        add: [],
     }
 
     //check
     if (!isestr(key)) {
         console.log('invalid key')
-        return def
+        if (withInfor) {
+            r.infor = {}
+        }
+        return r
     }
 
     //to array
@@ -55,75 +73,58 @@ function ltdtDiffByKey(ltdtOld, ltdtNew, key) {
         ltdtNew = [ltdtNew]
     }
 
-    // //check obj and key, 可能有空陣列情形
-    // let haveKey = 0
-    // each(ltdtOld, function(v) {
-    //     if (haskey(v, key)) {
-    //         haveKey = 1
-    //     }
-    // })
-    // if (haveKey === 0) {
-    //     return def
-    // }
-    // each(ltdtNew, function(v) {
-    //     if (haskey(v, key)) {
-    //         haveKey = 2
-    //     }
-    // })
-    // if (haveKey === 1) {
-    //     return def
-    // }
+    //filter
+    ltdtOld = filter(ltdtOld, (v) => {
+        return haskey(v, key)
+    })
+    ltdtNew = filter(ltdtNew, (v) => {
+        return haskey(v, key)
+    })
 
-    //tInfor, tDel, tDiff, tSame
-    let tInfor = {}
-    let tDel = []
-    let tDiff = []
-    let tSame = []
-    each(ltdtOld, function(v) {
-        if (haskey(v, key)) { //v需存在key
-            let q = {
-                [key]: v[key]
-            }
-            let o = find(ltdtNew, q)
-            if (iser(o)) {
-                tDel.push(v) //vold需刪去之項目
-                tInfor[v[key]] = 'del'
+    //mapNew
+    let mapNew = new Map(ltdtNew.map(item => [item[key], item]))
+
+    //處理存在於ltdtOld中的項目
+    for (let dtOld of ltdtOld) {
+        let dtNew = mapNew.get(dtOld[key])
+        if (!dtNew) {
+            r.del.push(dtOld)
+        }
+        else {
+            let isEqual = JSON.stringify(dtOld) === JSON.stringify(dtNew)
+            if (isEqual) {
+                r.same.push(dtNew)
             }
             else {
-                if (isEqual(v, o)) {
-                    tSame.push(o) //vsame與vold有同樣之項目
-                    tInfor[o[key]] = 'same'
-                }
-                else {
-                    tDiff.push(o) //vsame對vold有變更之項目
-                    tInfor[o[key]] = 'diff'
-                }
+                r.diff.push(dtNew)
             }
+            // 處理過的從 mapNew 移除，剩下的才是新增
+            mapNew.delete(dtOld[key])
         }
-    })
-
-    //vadd
-    let vadd = []
-    each(ltdtNew, function(v) {
-        if (haskey(v, key)) { //v需存在key
-            let q = {
-                [key]: v[key]
-            }
-            let o = find(ltdtOld, q)
-            if (iser(o)) {
-                vadd.push(v) //vsame對vold有新增之項目
-                tInfor[v[key]] = 'add'
-            }
-        }
-    })
-
-    return {
-        infor: tInfor,
-        del: tDel,
-        same: tSame,
-        diff: tDiff,
-        add: vadd,
     }
+
+    //剩下的就是add
+    r.add = Array.from(mapNew.values())
+
+    //withInfor
+    if (withInfor) {
+        let infor = {}
+        for (let v of r.del) {
+            infor[v[key]] = 'del'
+        }
+        for (let v of r.add) {
+            infor[v[key]] = 'add'
+        }
+        for (let v of r.diff) {
+            infor[v[key]] = 'diff'
+        }
+        for (let v of r.same) {
+            infor[v[key]] = 'same'
+        }
+        r.infor = infor
+    }
+
+    return r
 }
 
 

@@ -135,11 +135,11 @@ describe(`fsTask`, function() {
     // add abc.txt
     // task[abc.txt] content[abc] calculating
     // task[abc.txt] content[abc] save-result
+    // add def.txt
+    // task[def.txt] content[def] skip
     // diff abc.txt
     // task[abc.txt] content[mnop] calculating
     // task[abc.txt] content[mnop] save-result
-    // add def.txt
-    // task[def.txt] content[def] skip
     // del abc.txt
     // task[abc.txt] remove-task
     // task[abc.txt] remove-result
@@ -148,9 +148,9 @@ describe(`fsTask`, function() {
     let ms = [
         { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'calculating' },
         { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'save-result' },
+        { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
         { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'calculating' },
         { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'save-result' },
-        { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
         { type: 'del', fp: 'abc.txt', mode: 'remove-task' },
         { type: 'del', fp: 'abc.txt', mode: 'remove-result' },
         { type: 'del', fp: 'def.txt', content: '', mode: 'skip' }

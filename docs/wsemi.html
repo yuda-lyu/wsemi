@@ -50697,11 +50697,11 @@ await test()
 // add abc.txt
 // task[abc.txt] content[abc] calculating
 // task[abc.txt] content[abc] save-result
+// add def.txt
+// task[def.txt] content[def] skip
 // diff abc.txt
 // task[abc.txt] content[mnop] calculating
 // task[abc.txt] content[mnop] save-result
-// add def.txt
-// task[def.txt] content[def] skip
 // del abc.txt
 // task[abc.txt] remove-task
 // task[abc.txt] remove-result
@@ -50710,9 +50710,9 @@ await test()
 // ms [
 //   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'calculating' },
 //   { type: 'add', fp: 'abc.txt', content: 'abc', mode: 'save-result' },
+//   { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
 //   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'calculating' },
 //   { type: 'diff', fp: 'abc.txt', content: 'mnop', mode: 'save-result' },
-//   { type: 'add', fp: 'def.txt', content: 'def', mode: 'skip' },
 //   { type: 'del', fp: 'abc.txt', mode: 'remove-task' },
 //   { type: 'del', fp: 'abc.txt', mode: 'remove-result' },
 //   { type: 'del', fp: 'def.txt', content: '', mode: 'skip' }
@@ -74491,7 +74491,7 @@ if (true) {
 
     
 
-    <h4 class="name" id=".ltdtDiffByKey"><span class="type-signature type-signature-static">(static) </span>ltdtDiffByKey<span class="signature">(ltdtOld, ltdtNew, key)</span><span class="type-signature"> → {Object}</span></h4>
+    <h4 class="name" id=".ltdtDiffByKey"><span class="type-signature type-signature-static">(static) </span>ltdtDiffByKey<span class="signature">(ltdtOld, ltdtNew, key, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -74508,7 +74508,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtDiffByKey.mjs.html">ltdtDiffByKey.mjs</a>, <a href="ltdtDiffByKey.mjs.html#line33">line 33</a>
+        <a href="ltdtDiffByKey.mjs.html">ltdtDiffByKey.mjs</a>, <a href="ltdtDiffByKey.mjs.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -74561,11 +74561,11 @@ if (true) {
 let ltdtNew = [{ id: 'id-1', z: 'z3' }, { id: 'id-3', a: 'a3' }, { id: 'id-4', a: 'a4' }]
 console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
 // =&gt; {
-//     infor: { 'id-1': 'diff', 'id-2': 'del', 'id-3': 'same', 'id-4': 'add' },
-//     del: [ { id: 'id-2', a: 'a2' } ],
-//     same: [ { id: 'id-3', a: 'a3' } ],
-//     diff: [ { id: 'id-1', z: 'z3' } ],
-//     add: [ { id: 'id-4', a: 'a4' } ]
+//   del: [ { id: 'id-2', a: 'a2' } ],
+//   add: [ { id: 'id-4', a: 'a4' } ],
+//   same: [ { id: 'id-3', a: 'a3' } ],
+//   diff: [ { id: 'id-1', z: 'z3' } ],
+//   infor: { 'id-2': 'del', 'id-4': 'add', 'id-1': 'diff', 'id-3': 'same' }
 // }</code></pre>
         </div>
 
@@ -74585,7 +74585,11 @@ console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -74614,7 +74618,19 @@ console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入舊的物件陣列或物件</p></td>
@@ -74641,7 +74657,19 @@ console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入新的物件陣列或物件</p></td>
@@ -74665,10 +74693,132 @@ console.log(ltdtDiffByKey(ltdtOld, ltdtNew, 'id'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入比對的主鍵key值字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>withInfor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>true</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否提供infor資訊布林值，不提供可再加速，預設true</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -104062,7 +104212,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Apr 24 2025 10:50:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Apr 29 2025 22:27:41 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -104083,7 +104233,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.89/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.7.90/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
