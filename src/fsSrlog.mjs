@@ -104,6 +104,9 @@ function fsSrlog(opt = {}) {
             if (isobj(v) || isarr(v)) {
                 t = JSON.stringify(v)
             }
+            else if (isbol(v)) {
+                t = v ? 'true' : 'false'
+            }
             else {
                 t = cstr(v)
             }
