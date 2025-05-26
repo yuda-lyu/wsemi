@@ -40,7 +40,7 @@ describe(`fsIsFile`, function() {
     // fsIsFile(after) true
     let ms = [{ 'fsIsFile(before)': false }, { 'fsIsFile(after)': true }]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)

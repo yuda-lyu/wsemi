@@ -74,7 +74,7 @@ describe(`fsTreeFolder`, function() {
     // ]
     let ms = [{ 'fsTreeFolder(evelLimit=1)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsTreeFolder(evelLimit=null)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': false, 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 2, 'path': './def/ijk', 'name': 'ijk' }, { 'isFolder': false, 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': true, 'level': 2, 'path': './mno/pqr', 'name': 'pqr' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)

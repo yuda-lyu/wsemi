@@ -33,7 +33,7 @@ describe(`fsIsFolder`, function() {
     // fsIsFolder(after) true
     let ms = [{ 'fsIsFolder(before)': false }, { 'fsIsFolder(after)': true }]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)

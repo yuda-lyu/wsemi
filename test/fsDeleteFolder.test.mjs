@@ -65,7 +65,7 @@ describe(`fsDeleteFolder`, function() {
         { 'fsIsFolder(after)': false }
     ]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)

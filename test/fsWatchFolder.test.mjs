@@ -114,7 +114,7 @@ describe(`fsWatchFolder`, function() {
         { type: 'unlinkDir', fp: '_test_fsWatchFolder' }
     ]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = await test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)

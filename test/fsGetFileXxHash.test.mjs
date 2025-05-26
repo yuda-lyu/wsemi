@@ -49,7 +49,7 @@ describe(`fsGetFileXxHash`, async function() {
         { 'fsGetFileXxHash(4mb)': 'feba48465b833ca1' }
     ]
 
-    it(`should return '${JSON.stringify(ms)}' when run test'`, async function() {
+    it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = await test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
