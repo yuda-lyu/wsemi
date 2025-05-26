@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>fsGetFilesWithHashInFolder.mjs - Documentation</title>
+    <title>fsSrlog.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">fsGetFilesWithHashInFolder.mjs</h1>
+    <h1 class="page-title">fsSrlog.mjs</h1>
     
 
     
@@ -47,110 +47,257 @@
         <article>
             <pre class="prettyprint source linenums"><code>import path from 'path'
 import fs from 'fs'
-import crypto from 'crypto'
-import fsGetFilesWithHashInFolderCore from './fsGetFilesWithHashInFolderCore.mjs'
+import ot from 'dayjs'
+import get from 'lodash-es/get.js'
+import each from 'lodash-es/each.js'
+import map from 'lodash-es/map.js'
+import join from 'lodash-es/join.js'
+import trim from 'lodash-es/trim.js'
+import isestr from './isestr.mjs'
+import isbol from './isbol.mjs'
+import isobj from './isobj.mjs'
+import isarr from './isarr.mjs'
+import cstr from './cstr.mjs'
+import now2str from './now2str.mjs'
+import sep from './sep.mjs'
+import strleft from './strleft.mjs'
+import strright from './strright.mjs'
+import strdelleft from './strdelleft.mjs'
+import strdelright from './strdelright.mjs'
+import fsIsFolder from './fsIsFolder.mjs'
+import fsCreateFolder from './fsCreateFolder.mjs'
 
 
 /**
- * 後端nodejs列舉指定資料夾下的全部檔案與對應HASH值
+ * 後端顯示與紀錄log訊息
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFilesWithHashInFolder.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsSrlog.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fd 輸入欲列舉的資料夾字串
- * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='md5'] 輸入計算HASH方法，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息
+ * @param {String} [opt.fdSys=path.resolve()] 輸入工作路徑字串，若useLocRela=true時取代用，預設path.resolve()
+ * @param {String} [opt.fdLog='./syslog'] 輸入儲存log檔案之資料夾位置字串，預設'./syslog'
+ * @param {String} [opt.dlm='ꓹ'] 輸入分隔log參數字串，預設'ꓹ'
+ * @param {Boolean} [opt.useTime=true] 輸入是否給予紀錄時間布林值，預設true
+ * @param {Boolean} [opt.useLoc=true] 輸入是否紀錄觸發程式碼位置布林值，預設true
+ * @param {Boolean} [opt.useLocRela=true] 輸入當useLoc=true時，是否紀錄觸發程式碼位置改用相對工作路徑之位置布林值，預設true
+ * @returns {Function} 回傳log函數，比照console.log使用
  * @example
- * //need test in nodejs
+ * need test in nodejs.
  *
- * let test = async () => {
- *
- *     let ms = []
- *
- *     let t = '_test_fsGetFilesWithHashInFolder'
- *     let fdt = './_test_fsGetFilesWithHashInFolder'
- *     fsCreateFolder(fdt) //創建臨時任務資料夾
- *
- *     let ftpath = (v) => {
- *         // console.log(v, 'v.path', v.path)
- *         let ss = _.split(v.path, t)
- *         // console.log('ss', ss)
- *         let p = ss[1]
- *         p = p.replaceAll('\\', '/')
- *         p = `.${p}`
- *         // console.log('p', p)
- *         v.path = p
- *         return v
- *     }
- *
- *     let ftpaths = (vs) => {
- *         return _.map(_.cloneDeep(vs), ftpath)
- *     }
- *
- *     fsWriteText(`${fdt}/z1.txt`, 'z1')
- *     fsWriteText(`${fdt}/abc/z2.txt`, 'z2')
- *     fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
- *     fsCreateFolder(`${fdt}/mno/pqr`)
- *
- *     let r1 = await fsGetFilesWithHashInFolder(fdt, 1)
- *     console.log('fsGetFilesWithHashInFolder(levelLimit=1)', ftpaths(r1))
- *     ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=1)': ftpaths(r1) })
- *
- *     let rall = await fsGetFilesWithHashInFolder(fdt, null)
- *     console.log('fsGetFilesWithHashInFolder(levelLimit=null)', ftpaths(rall))
- *     ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=null)': ftpaths(rall) })
- *
- *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
- *
- *     console.log('ms', JSON.stringify(ms))
- *     return ms
+ * let opt = {
+ *     useTime: false,
  * }
- * await test()
- *     .catch((err) => {
- *         console.log(err)
- *     })
- * // fsGetFilesWithHashInFolder(levelLimit=1) [
- * //   {
- * //     level: 1,
- * //     path: './z1.txt',
- * //     name: 'z1.txt',
- * //     hashType: 'md5',
- * //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
- * //   }
- * // ]
- * // fsGetFilesWithHashInFolder(levelLimit=null) [
- * //   {
- * //     level: 2,
- * //     path: './abc/z2.txt',
- * //     name: 'z2.txt',
- * //     hashType: 'md5',
- * //     hash: '5cb7e380d019de63c643aef55b8534d0'
- * //   },
- * //   {
- * //     level: 3,
- * //     path: './def/ijk/z3.txt',
- * //     name: 'z3.txt',
- * //     hashType: 'md5',
- * //     hash: 'a61d1457beb4684e254ce60379c8ae7b'
- * //   },
- * //   {
- * //     level: 1,
- * //     path: './z1.txt',
- * //     name: 'z1.txt',
- * //     hashType: 'md5',
- * //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
- * //   }
- * // ]
- * // ms [{"fsGetFilesWithHashInFolder(evelLimit=1)":[{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]},{"fsGetFilesWithHashInFolder(evelLimit=null)":[{"level":2,"path":"./abc/z2.txt","name":"z2.txt","hashType":"md5","hash":"5cb7e380d019de63c643aef55b8534d0"},{"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt","hashType":"md5","hash":"a61d1457beb4684e254ce60379c8ae7b"},{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]}]
+ * let srlog = fsSrlog(opt)
+ * srlog('abc', 123, 4.56, { xyz: ['a', 'bc', true, { xy: 'z' }] })
  *
  */
-async function fsGetFilesWithHashInFolder(fd, levelLimit = 1, opt = {}) {
-    return fsGetFilesWithHashInFolderCore(fd, levelLimit, { path, fs, crypto, ...opt })
+function fsSrlog(opt = {}) {
+
+    //fdSys
+    let fdSys = get(opt, 'fdSys', '')
+    if (!isestr(fdSys)) {
+        fdSys = path.resolve()
+        fdSys = fdSys.replaceAll('\\', '/')
+    }
+
+    //fdLog
+    let fdLog = get(opt, 'fdLog', '')
+    if (!isestr(fdLog)) {
+        fdLog = `./syslog`
+    }
+    if (!fsIsFolder(fdLog)) {
+        fsCreateFolder(fdLog)
+    }
+
+    //dlm
+    let dlm = get(opt, 'dlm', '')
+    if (!isestr(dlm)) {
+        dlm = 'ꓹ' //用特殊符號取代逗號, 供切分資料之需求
+    }
+
+    //useTime
+    let useTime = get(opt, 'useTime', null)
+    if (!isbol(useTime)) {
+        useTime = true
+    }
+
+    //useLoc
+    let useLoc = get(opt, 'useLoc', null)
+    if (!isbol(useLoc)) {
+        useLoc = true
+    }
+
+    //useLocRela
+    let useLocRela = get(opt, 'useLocRela', null)
+    if (!isbol(useLocRela)) {
+        useLocRela = true
+    }
+
+    //gneFp
+    let gneFp = () => {
+        let cdday = ot().format('YYYY-MM-DD')
+        let fp = `${fdLog}/${cdday}.log`
+        return fp
+    }
+
+    async function core(time, loc, ...args) {
+
+        //fp
+        let fp = gneFp()
+
+        //cargs
+        let cargs = map(args, (v) => {
+            let t = ''
+            if (isobj(v) || isarr(v)) {
+                t = JSON.stringify(v)
+            }
+            else {
+                t = cstr(v)
+            }
+            return t
+        })
+
+        //appendFileSync
+        let c = ''
+        if (useTime) {
+            c = `[${time}]\n`
+            fs.appendFileSync(fp, c, 'utf8')
+        }
+        if (useLoc) {
+            c = `[${loc}]\n`
+            fs.appendFileSync(fp, c, 'utf8')
+        }
+        if (true) {
+            c = `${join(cargs, `${dlm} `)}\n\n`
+            fs.appendFileSync(fp, c, 'utf8')
+        }
+
+    }
+
+    function srlog(...args) {
+        // console.log(...args)
+
+        //time
+        let time = ''
+        if (useTime) {
+            time = now2str()
+        }
+
+        //locInfor, locInforRela
+        let locInfor = ''
+        let locInforRela = ''
+        let stackLines = []
+        if (useLoc) {
+
+            //e
+            let e = new Error()
+
+            //stackLines
+            stackLines = sep(e.stack, '\n')
+            // console.log('stackLines', stackLines)
+
+            //locInfor
+            each(stackLines, (s) => {
+
+                //trim
+                s = trim(s)
+
+                //check
+                if (s.indexOf(`file:`) &lt; 0) { //沒有file資訊則跳出
+                    return true //跳出換下一個
+                }
+                if (s.indexOf('fsSrlog.mjs') >= 0) { //為srlog則跳出
+                    return true //跳出換下一個
+                }
+
+                //ss, 依照空白切分
+                let ss = sep(s, ' ')
+
+                //尋找file:
+                each(ss, (v) => {
+                    if (v.indexOf('file:') >= 0) {
+                        locInfor = v
+                        return false //跳出
+                    }
+                })
+
+                //check
+                if (isestr(locInfor)) {
+                    return false //跳出
+                }
+
+            })
+
+            //清理locInfor, locInforRela
+            if (isestr(locInfor)) {
+
+                //locInfor
+                if (strleft(locInfor, 1) === '(') {
+                    locInfor = strdelleft(locInfor, 1)
+                }
+                if (strright(locInfor, 1) === ')') {
+                    locInfor = strdelright(locInfor, 1)
+                }
+                try {
+                    locInfor = decodeURIComponent(locInfor)
+                }
+                catch (err) {
+                    console.log(err)
+                }
+
+                //locInforRela
+                locInforRela = locInfor.replace(fdSys, '')
+                locInforRela = strdelleft(locInforRela, 8)
+
+            }
+            else {
+                console.log('stackLines', stackLines)
+                throw new Error(`can not parse stackLines`)
+            }
+            // console.log('locInfor', locInfor)
+            // console.log('locInforRela', locInforRela)
+
+        }
+
+        //ags
+        let ags = []
+        if (useTime) {
+            ags = [
+                ...ags,
+                `[${time}]`
+            ]
+        }
+        let loc = ''
+        if (useLoc) {
+            loc = locInfor
+            if (useLocRela) {
+                loc = locInforRela
+            }
+            ags = [
+                ...ags,
+                `[${loc}]`
+            ]
+        }
+        if (true) {
+            ags = [
+                ...ags,
+                ...args
+            ]
+        }
+
+        //show log
+        console.log(...ags)
+
+        //save log
+        core(time, loc, ...args)
+
+    }
+
+    return srlog
 }
 
 
-export default fsGetFilesWithHashInFolder
+export default fsSrlog
 </code></pre>
         </article>
     </section>
