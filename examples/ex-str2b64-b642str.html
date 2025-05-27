@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for str2b64, b642str</title>
+    
+    <!-- @babel/polyfill已廢棄 -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.7.92/dist/wsemi.umd.js"></script>
+
+</head>
+<body style="margin:0px; padding:0px;">
+
+    <div style="padding:30px;">
+        <div style="display:flex;">
+
+            <div style="flex:1;">
+
+                <div>
+                    string
+                </div>
+
+                <textarea id="ta_str" style="width:100%; height:600px; box-sizing:border-box;" oninput="cv_str2b64()"></textarea>
+                    
+            </div>
+
+            <div style="padding-left:20px;"></div>
+
+            <div style="flex:1;">
+
+                <div>
+                    base64
+                </div>
+
+                <textarea id="ta_b64" style="width:100%; height:600px; box-sizing:border-box;" oninput="cv_b642str()"></textarea>
+                    
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+
+        let _str='abc'
+        let _b64=''
+
+        document.querySelector('#ta_str').value=_str
+        document.querySelector('#ta_b64').value=_b64
+
+    </script>
+    
+    <script>
+
+        function cv_str2b64(){
+
+            let ori = document.querySelector('#ta_str').value
+            // console.log('ori', ori)
+
+            let tar = ''
+            try{
+                tar = wsemi.str2b64(ori)
+            }
+            catch(err){
+                console.log(err)
+            }
+            // console.log('tar', tar)
+
+            document.querySelector('#ta_b64').value = tar
+
+        }
+
+        function cv_b642str(){
+
+            let ori = document.querySelector('#ta_b64').value
+            // console.log('ori', ori)
+
+            let tar = ''
+            try{
+                tar = wsemi.b642str(ori)
+            }
+            catch(err){
+                console.log(err)
+            }
+            // console.log('tar', tar)
+
+            document.querySelector('#ta_str').value = tar
+
+        }
+
+        //first 
+        cv_str2b64()
+
+    </script>
+
+</body>
+</html>
