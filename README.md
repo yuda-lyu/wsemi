@@ -14,13 +14,15 @@ To view documentation or get support, visit [docs](https://yuda-lyu.github.io/ws
 ## Example
 To view some examples for more understanding, visit examples:
 
+> **blob2b64:** [ex-blob2b64.html](https://yuda-lyu.github.io/wsemi/examples/ex-blob2b64.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-blob2b64.html)]
+
+> **str2b64 and b642str:** [ex-str2b64-b642str.html](https://yuda-lyu.github.io/wsemi/examples/ex-str2b64-b642str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-str2b64-b642str.html)]
+
 > **str2aes and aes2str:** [ex-str2aes-aes2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-str2aes-aes2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-str2aes-aes2str.html)]
 
 > **timeTZ2expire and timeTZ2past:** [ex-timeTZ2expire-timeTZ2past.html](https://yuda-lyu.github.io/wsemi/examples/ex-timeTZ2expire-timeTZ2past.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-timeTZ2expire-timeTZ2past.html)]
 
 > **color converter:** [ex-colorConverter.html](https://yuda-lyu.github.io/wsemi/examples/ex-colorConverter.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-colorConverter.html)]
-
-> **blob2b64:** [ex-blob2b64.html](https://yuda-lyu.github.io/wsemi/examples/ex-blob2b64.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-blob2b64.html)]
 
 > **domTooltip:** [ex-domTooltip.html](https://yuda-lyu.github.io/wsemi/examples/ex-domTooltip.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domTooltip.html)]
 

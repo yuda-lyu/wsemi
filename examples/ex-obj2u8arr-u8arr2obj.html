@@ -26,6 +26,31 @@
 
     <script>
         
+        function core(name, ab){
+
+            let obj = {
+                a: 12,
+                b: 34.56,
+                c: 'test中文',
+                d: {
+                    name: name,
+                    u8a: new Uint8Array([66, 97, 115]),
+                    ab: ab,
+                },
+            }
+            console.log('obj',obj) //可發現obj.d.ab是ArrayBuffer
+
+            let u8a = wsemi.obj2u8arr(obj) //全部轉Uint8Array
+            console.log('u8a',u8a)
+
+            let _obj = wsemi.u8arr2obj(u8a)
+            console.log('_obj',_obj) //可發現_obj.d.ab已是Uint8Array
+
+            //原本blob是轉ArrayBuffer. 經過obj2u8arr會自動採Uint8Array操作與儲存. 故可直接使用downloadFileFromU8Arr
+            wsemi.downloadFileFromU8Arr(name, _obj.d.ab)
+
+        }
+
         function cvSamll(){
 
             //u8a
@@ -67,31 +92,6 @@
                         })
 
                 })
-
-        }
-
-        function core(name, ab){
-
-            let obj = {
-                a: 12,
-                b: 34.56,
-                c: 'test中文',
-                d: {
-                    name: name,
-                    u8a: new Uint8Array([66, 97, 115]),
-                    ab: ab,
-                },
-            }
-            console.log('obj',obj) //可發現obj.d.ab是ArrayBuffer
-
-            let u8a = wsemi.obj2u8arr(obj) //全部轉Uint8Array
-            console.log('u8a',u8a)
-
-            let _obj = wsemi.u8arr2obj(u8a)
-            console.log('_obj',_obj) //可發現_obj.d.ab已是Uint8Array
-
-            //原本blob是轉ArrayBuffer. 經過obj2u8arr會自動採Uint8Array操作與儲存. 故可直接使用downloadFileFromU8Arr
-            wsemi.downloadFileFromU8Arr(name, _obj.d.ab)
 
         }
 

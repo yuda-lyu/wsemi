@@ -8,22 +8,38 @@
     <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
     
     <script src="../dist/wsemi.umd.js"></script>
-  
+
 </head>
-<body>
+<body style="margin:0px; padding:0px;">
 
-    <div style="padding:10px;">
-        <div style="margin:10px 0px;">input html:</div>
-        <pre id="h" style="border: 1px solid #ddd;"></pre>
-    </div>
+    <div style="padding:30px;">
 
-    <div style="padding:10px;">
-        <div style="margin:10px 0px;">output text:</div>
-        <pre id="t" style="border: 1px solid #ddd;"></pre>
+        <div>
+
+            <div>
+                html(source)
+            </div>
+
+            <textarea id="ta_html" style="width:100%; height:200px; box-sizing:border-box;" oninput="cv_html2str()"></textarea>
+                
+        </div>
+
+        <div style="padding-top:20px;"></div>
+
+        <div>
+
+            <div>
+                text(target)
+            </div>
+
+            <textarea id="ta_str" style="width:100%; height:200px; box-sizing:border-box;" _oninput=""></textarea>
+                
+        </div>
+
     </div>
 
     <script>
-        
+
         let h='<!DOCTYPE html>\n'
         h+='<html>\n'
         h+='\n'
@@ -34,17 +50,38 @@
         h+='\n'
         h+='</html>\n'
 
-        //htmlEncode for show
-        document.querySelector('#h').innerHTML=wsemi.htmlEncode(h)
+        let _html=h
+        let _str=''
 
-        //html2strDyn
-        wsemi.html2strDyn(h)
-            .then(function(t){
+        document.querySelector('#ta_html').value=_html
+        document.querySelector('#ta_str').value=_str
 
-                //show result
-                document.querySelector('#t').innerHTML=t
+    </script>
+    
+    <script>
 
-            })
+        function cv_html2str(){
+
+            let ori = document.querySelector('#ta_html').value
+            // console.log('ori', ori)
+                
+            let tar = ''
+            wsemi.html2strDyn(ori)
+                .then(function(res){
+                    tar = res
+                })
+                .catch((err)=>{
+                    console.log(err)
+                })
+                .finally(()=>{
+                    // console.log('tar', tar)
+                    document.querySelector('#ta_str').value = tar
+                })
+
+        }
+
+        //first 
+        cv_html2str()
 
     </script>
 
