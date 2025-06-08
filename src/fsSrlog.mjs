@@ -52,6 +52,7 @@ function fsSrlog(opt = {}) {
         fdSys = path.resolve()
         fdSys = fdSys.replaceAll('\\', '/')
     }
+    // console.log('fdSys', fdSys)
 
     //fdLog
     let fdLog = get(opt, 'fdLog', '')
@@ -201,9 +202,15 @@ function fsSrlog(opt = {}) {
                     console.log(err)
                 }
 
+                // console.log('locInfor', locInfor, locInfor.length)
+                // console.log('fdSys', fdSys, fdSys.length)
+
                 //locInforRela
-                locInforRela = locInfor.replace(fdSys, '')
-                locInforRela = strdelleft(locInforRela, 8)
+                locInforRela = locInfor
+                locInforRela = strdelleft(locInforRela, 8) //去除「file:///」
+                // console.log('locInforRela(strdelleft)', locInforRela)
+                locInforRela = locInforRela.replace(fdSys, '')
+                // console.log('locInforRela(replace)', locInforRela)
 
             }
             else {
