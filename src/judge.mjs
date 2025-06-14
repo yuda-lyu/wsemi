@@ -136,18 +136,27 @@ function judge(x1, op, x2, opt = {}) {
     }
 
     if (op === '===') {
+        if (x1 === x2) { //預先判斷可加速
+            return true
+        }
         return eq(x1, x2)
     }
     else if (op === '!==') {
         return neq(x1, x2)
     }
     else if (op === '>=') {
+        if (x1 === x2) { //預先判斷可加速
+            return true
+        }
         return gte(x1, x2)
     }
     else if (op === '>') {
         return gt(x1, x2)
     }
     else if (op === '<=') {
+        if (x1 === x2) { //預先判斷可加速
+            return true
+        }
         return lte(x1, x2)
     }
     else if (op === '<') {
