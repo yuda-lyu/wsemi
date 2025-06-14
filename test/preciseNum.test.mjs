@@ -40,6 +40,42 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return 0 when input 0, { returnDigit: true }`, function() {
+        let r = preciseNum(0, { returnDigit: true })
+        let rr = 0
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 0 when input 1, { returnDigit: true }`, function() {
+        let r = preciseNum(1, { returnDigit: true })
+        let rr = 0
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 1 when input 0.3, { returnDigit: true }`, function() {
+        let r = preciseNum(0.3, { returnDigit: true })
+        let rr = 1
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 1 when input 0.1 + 0.2, { returnDigit: true }`, function() {
+        let r = preciseNum(0.1 + 0.2, { returnDigit: true })
+        let rr = 1
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 2 when input 4.67 + 7.12 + 94.4, { returnDigit: true }`, function() {
+        let r = preciseNum(4.67 + 7.12 + 94.4, { returnDigit: true })
+        let rr = 2
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 2 when input 94.4 + 7.12 + 4.67, { returnDigit: true }`, function() {
+        let r = preciseNum(94.4 + 7.12 + 4.67, { returnDigit: true })
+        let rr = 2
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return '-0.3' when input -0.3`, function() {
         let r = preciseNum(-0.3)
         let rr = '-0.3'
