@@ -86443,7 +86443,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 
     
 
-    <h4 class="name" id=".preciseNum"><span class="type-signature type-signature-static">(static) </span>preciseNum<span class="signature">(v)</span><span class="type-signature"> → {String}</span></h4>
+    <h4 class="name" id=".preciseNum"><span class="type-signature type-signature-static">(static) </span>preciseNum<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {String}</span></h4>
 
     
 
@@ -86460,7 +86460,7 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="preciseNum.mjs.html">preciseNum.mjs</a>, <a href="preciseNum.mjs.html#line29">line 29</a>
+        <a href="preciseNum.mjs.html">preciseNum.mjs</a>, <a href="preciseNum.mjs.html#line57">line 57</a>
     </li></ul></dd>
     
 
@@ -86509,7 +86509,13 @@ topAsync().catch(() =&gt; {})</code></pre>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'preciseNum')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>console.log(`preciseNum(0.3)`, preciseNum(0.3))
+<pre class="prettyprint"><code>console.log(`preciseNum(0)`, preciseNum(0))
+// =&gt; preciseNum(0) 0
+
+console.log(`preciseNum(1)`, preciseNum(1))
+// =&gt; preciseNum(1) 1
+
+console.log(`preciseNum(0.3)`, preciseNum(0.3))
 // =&gt; preciseNum(0.3) 0.3
 
 console.log(`preciseNum(0.1 + 0.2)`, preciseNum(0.1 + 0.2))
@@ -86519,7 +86525,25 @@ console.log(`preciseNum(4.67 + 7.12 + 94.4)`, preciseNum(4.67 + 7.12 + 94.4))
 // =&gt; preciseNum(4.67 + 7.12 + 94.4) 106.19
 
 console.log(`preciseNum(94.4 + 7.12 + 4.67)`, preciseNum(94.4 + 7.12 + 4.67))
-// =&gt; preciseNum(94.4 + 7.12 + 4.67) 106.19</code></pre>
+// =&gt; preciseNum(94.4 + 7.12 + 4.67) 106.19
+
+console.log(`preciseNum(0, { returnDigit: true })`, preciseNum(0, { returnDigit: true }))
+// =&gt; preciseNum(0, { returnDigit: true })) 0
+
+console.log(`preciseNum(1, { returnDigit: true })`, preciseNum(1, { returnDigit: true }))
+// =&gt; preciseNum(1, { returnDigit: true })) 0
+
+console.log(`preciseNum(0.3, { returnDigit: true })`, preciseNum(0.3, { returnDigit: true }))
+// =&gt; preciseNum(0.3, { returnDigit: true })) 1
+
+console.log(`preciseNum(0.1 + 0.2, { returnDigit: true })`, preciseNum(0.1 + 0.2, { returnDigit: true }))
+// =&gt; preciseNum(0.1 + 0.2, { returnDigit: true })) 1
+
+console.log(`preciseNum(4.67 + 7.12 + 94.4, { returnDigit: true })`, preciseNum(4.67 + 7.12 + 94.4, { returnDigit: true }))
+// =&gt; preciseNum(4.67 + 7.12 + 94.4, { returnDigit: true })) 2
+
+console.log(`preciseNum(94.4 + 7.12 + 4.67, { returnDigit: true })`, preciseNum(94.4 + 7.12 + 4.67, { returnDigit: true }))
+// =&gt; preciseNum(94.4 + 7.12 + 4.67, { returnDigit: true })) 2</code></pre>
         </div>
 
 
@@ -86538,7 +86562,11 @@ console.log(`preciseNum(94.4 + 7.12 + 4.67)`, preciseNum(94.4 + 7.12 + 4.67))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -86567,10 +86595,132 @@ console.log(`preciseNum(94.4 + 7.12 + 4.67)`, preciseNum(94.4 + 7.12 + 4.67))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入數字字串或數字</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>returnDigit</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否回傳小數位數布林值，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -105462,7 +105612,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sat Jun 14 2025 16:14:04 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sat Jun 14 2025 19:23:53 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -105483,7 +105633,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.7.94/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.8.0/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
