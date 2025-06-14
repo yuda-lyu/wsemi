@@ -1,7 +1,6 @@
 import get from 'lodash-es/get.js'
 import isnum from './isnum.mjs'
 import isp0int from './isp0int.mjs'
-import cdbl from './cdbl.mjs'
 import cint from './cint.mjs'
 import Decimal from 'decimal.js'
 
@@ -122,16 +121,18 @@ function round(v, idig = 0, opt = {}) {
         return ''
     }
 
-    v = cdbl(v)
+    //cdbl
+    // v = cdbl(v) //decimal也支援數字字串輸入, 不使用cdbl可加速
 
     //clone
     let Dec = Decimal.clone()
 
-    //set
+    //指定處理方式
     //Decimal.ROUND_HALF_EVEN: 四捨六入五成雙
     //Decimal.ROUND_HALF_UP: 四捨五入
     Dec.set({ rounding: Decimal[rounding] })
 
+    //處理
     let r = new Dec(v).toDecimalPlaces(idig).toNumber()
 
     return r
