@@ -13,6 +13,12 @@ import dig from './dig.mjs'
  * @returns {String} 回傳數字字串
  * @example
  *
+ * console.log(`preciseNum(0)`, preciseNum(0))
+ * // => preciseNum(0) 0
+ *
+ * console.log(`preciseNum(1)`, preciseNum(1))
+ * // => preciseNum(1) 1
+ *
  * console.log(`preciseNum(0.3)`, preciseNum(0.3))
  * // => preciseNum(0.3) 0.3
  *
@@ -35,7 +41,7 @@ function preciseNum(v) {
 
     //check,
     if (isint(v)) {
-        return cstr(v)
+        return cstr(v) //不能用cint, 得要回傳數字字串
     }
 
     //eps

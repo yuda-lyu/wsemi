@@ -4,6 +4,18 @@ import preciseNum from '../src/preciseNum.mjs'
 
 describe(`preciseNum`, function() {
 
+    it(`should return '0' when input 0`, function() {
+        let r = preciseNum(0)
+        let rr = '0'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return '1' when input 1`, function() {
+        let r = preciseNum(1)
+        let rr = '1'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return '0.3' when input 0.3`, function() {
         let r = preciseNum(0.3)
         let rr = '0.3'
