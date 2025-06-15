@@ -81,147 +81,147 @@ let norm = (v) => {
  * rmax = -3.11
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin -4.66 rmax -3.11 r { tickNum: 3, tickInterval: 0.8, tickPositions: [ -4.7, -3.9, -3.1 ] }
+ * // => rmin -4.66 rmax -3.11 r { tickNum: 3, tickInterval: 0.8, tickPositions: [ -4.7, -3.9, -3.1 ], tickDig: 1 }
  *
  * // 0~0.9
  * rmin = 0
  * rmax = 0.9
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0 rmax 0.9 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+ * // => rmin 0 rmax 0.9 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
  *
  * // 0~1
  * rmin = 0
  * rmax = 1
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+ * // => rmin 0 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
  *
  * // 0~99
  * rmin = 0
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0~100
  * rmin = 0
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0.1~0.9
  * rmin = 0.1
  * rmax = 0.9
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.1 rmax 0.9 r { tickNum: 3, tickInterval: 0.4, tickPositions: [ 0.1, 0.5, 0.9 ] }
+ * // => rmin 0.1 rmax 0.9 r { tickNum: 3, tickInterval: 0.4, tickPositions: [ 0.1, 0.5, 0.9 ], tickDig: 1 }
  *
  * // 0.1~1
  * rmin = 0.1
  * rmax = 1
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.1 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+ * // => rmin 0.1 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
  *
  * // 0.1~99
  * rmin = 0.1
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.1 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0.1 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0.1~100
  * rmin = 0.1
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.1 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0.1 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0.1~100.1
  * rmin = 0.1
  * rmax = 100.1
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.1 rmax 100.1 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ] }
+ * // => rmin 0.1 rmax 100.1 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
  *
  * // 0.89~0.9
  * rmin = 0.89
  * rmax = 0.9
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.89 rmax 0.9 r { tickNum: 3, tickInterval: 0.01, tickPositions: [ 0.88, 0.89, 0.9 ] }
+ * // => rmin 0.89 rmax 0.9 r { tickNum: 3, tickInterval: 0.01, tickPositions: [ 0.88, 0.89, 0.9 ], tickDig: 1 }
  *
  * // 0.89~1
  * rmin = 0.89
  * rmax = 1
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.89 rmax 1 r { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.8, 0.9, 1 ] }
+ * // => rmin 0.89 rmax 1 r { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.8, 0.9, 1 ], tickDig: 1 }
  *
  * // 0.89~99
  * rmin = 0.89
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.89 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0.89 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0.89~100
  * rmin = 0.89
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.89 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+ * // => rmin 0.89 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
  *
  * // 0.89~100.89
  * rmin = 0.89
  * rmax = 100.89
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 0.89 rmax 100.89 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ] }
+ * // => rmin 0.89 rmax 100.89 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
  *
  * // 50.89~99
  * rmin = 50.89
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 50.89 rmax 99 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ] }
+ * // => rmin 50.89 rmax 99 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
  *
  * // 50.89~100
  * rmin = 50.89
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 50.89 rmax 100 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ] }
+ * // => rmin 50.89 rmax 100 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
  *
  * // 90.89~99
  * rmin = 90.89
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 90.89 rmax 99 r { tickNum: 4, tickInterval: 3, tickPositions: [ 90, 93, 96, 99 ] }
+ * // => rmin 90.89 rmax 99 r { tickNum: 4, tickInterval: 3, tickPositions: [ 90, 93, 96, 99 ], tickDig: 0 }
  *
  * // 90.89~100
  * rmin = 90.89
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 90.89 rmax 100 r { tickNum: 3, tickInterval: 5, tickPositions: [ 90, 95, 100 ] }
+ * // => rmin 90.89 rmax 100 r { tickNum: 3, tickInterval: 5, tickPositions: [ 90, 95, 100 ], tickDig: 0 }
  *
  * // 98.9~99
  * rmin = 98.9
  * rmax = 99
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 98.9 rmax 99 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ] }
+ * // => rmin 98.9 rmax 99 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }
  *
  * // 98.9~100
  * rmin = 98.9
  * rmax = 100
  * r = estimateTicks(rmin, rmax)
  * console.log('rmin', rmin, 'rmax', rmax, 'r', r)
- * // => rmin 98.9 rmax 100 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ] }
+ * // => rmin 98.9 rmax 100 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }
  *
  */
 function estimateTicks(rmin, rmax, opt = {}) {
@@ -247,10 +247,14 @@ function estimateTicks(rmin, rmax, opt = {}) {
         else {
             tickInterval = Math.abs(rmin / 10)
         }
+        let tickDig = preciseNum(tickInterval, { returnDigit: true })
+        // console.log('tickDig', tickDig)
+        tickInterval = round(tickInterval, tickDig)
         return {
             tickNum: 3,
             tickInterval,
             tickPositions: [rmin - tickInterval, rmin, rmin + tickInterval],
+            tickDig,
         }
     }
 
@@ -308,6 +312,11 @@ function estimateTicks(rmin, rmax, opt = {}) {
         each(testIdgs, (idg) => {
             // console.log('idg', idg)
 
+            //idgTrue
+            let idgTrue = idg - irat
+            idgTrue = Math.max(idgTrue, 0)
+            // console.log('idgTrue', idgTrue)
+
             //間距取指定位數之大值
             let testTickInterval = ceil(yIntrv, idg)
             // console.log('testTickInterval', testTickInterval)
@@ -359,7 +368,7 @@ function estimateTicks(rmin, rmax, opt = {}) {
 
                 //tickIntervalTrue
                 let tickIntervalTrue = rat * tickInterval
-                tickIntervalTrue = round(tickIntervalTrue, idg - irat)
+                tickIntervalTrue = round(tickIntervalTrue, idgTrue)
                 // console.log('tickIntervalTrue', tickIntervalTrue)
 
                 each(testCenters, (rngCenter) => {
@@ -376,7 +385,7 @@ function estimateTicks(rmin, rmax, opt = {}) {
                             v = round(v, idg)
                             tickPositions.push(v)
                             let vTrue = rat * v
-                            vTrue = round(vTrue, idg - irat)
+                            vTrue = round(vTrue, idgTrue)
                             tickPositionsTrue.push(vTrue)
                         }
                     }
@@ -471,9 +480,11 @@ function estimateTicks(rmin, rmax, opt = {}) {
                         fitness,
                         idg,
                         tickNum,
+                        _tickDig: idg,
                         // __tickInterval: yIntrv,
                         _tickInterval: tickInterval,
                         _tickPositions: tickPositions,
+                        tickDig: idgTrue,
                         tickInterval: tickIntervalTrue,
                         tickPositions: tickPositionsTrue,
                     }
@@ -503,6 +514,7 @@ function estimateTicks(rmin, rmax, opt = {}) {
         tickNum: tk.tickNum,
         tickInterval: tk.tickInterval,
         tickPositions: tk.tickPositions,
+        tickDig: tk.tickDig,
     }
 }
 

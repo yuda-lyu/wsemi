@@ -14,7 +14,7 @@ import dig from './dig.mjs'
  * @param {String|Number} v 輸入數字字串或數字
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnDigit=false] 輸入是否回傳小數位數布林值，預設false
- * @returns {String} 回傳數字字串
+ * @returns {String} 回傳數字字串，若returnDigit=true則回傳小數位數整數
  * @example
  *
  * console.log(`preciseNum(0)`, preciseNum(0))
