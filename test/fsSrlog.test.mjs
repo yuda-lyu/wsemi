@@ -34,14 +34,22 @@ describe(`fsSrlog`, function() {
         return _.trim(c)
     }
 
-    let t = `[/test/fsSrlog.test.mjs:27:9]
+    //for windows
+    let t1 = `[/test/fsSrlog.test.mjs:27:9]
 abcꓹ 123ꓹ 4.56ꓹ {"xyz":["a","bc",true,{"xy":"z"}]}`
-    t = _.trim(t)
+    t1 = _.trim(t1)
 
-    it(`should return '${t}' when run test`, async function() {
+    //for github
+    let t2 = `[home/runner/work/wsemi/wsemi/test/fsSrlog.test.mjs:27:9]
+abcꓹ 123ꓹ 4.56ꓹ {"xyz":["a","bc",true,{"xy":"z"}]}`
+    t2 = _.trim(t2)
+
+    it(`should return '${t1}' when run test`, async function() {
         let r = test()
-        let rr = t
-        assert.strict.deepStrictEqual(r, rr)
+        let rr1 = t1
+        let rr2 = t2
+        let b = r === rr1 || r === rr2
+        assert.strict.deepStrictEqual(b, true)
     })
 
 })
