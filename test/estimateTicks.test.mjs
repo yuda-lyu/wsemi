@@ -130,7 +130,37 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input ''`, function() {
+    it(`should return { tickNum: 3, tickInterval: 1, tickPositions: [ -1, 0, 1 ] } when input 0, 0`, function() {
+        let r = estimateTicks(0, 0)
+        let rr = { tickNum: 3, tickInterval: 1, tickPositions: [-1, 0, 1] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.9, 1, 1.1 ] } when input 1, 1`, function() {
+        let r = estimateTicks(1, 1)
+        let rr = { tickNum: 3, tickInterval: 0.1, tickPositions: [0.9, 1, 1.1] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { tickNum: 3, tickInterval: 0.1, tickPositions: [ -1.1, -1, -0.9 ] } when input -1, -1`, function() {
+        let r = estimateTicks(-1, -1)
+        let rr = { tickNum: 3, tickInterval: 0.1, tickPositions: [-1.1, -1, -0.9] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rmin[1] > rmax[-1]' when input 1, -1`, function() {
+        let r = ''
+        try {
+            r = estimateTicks(1, -1)
+        }
+        catch (err) {
+            r = err.message
+        }
+        let rr = 'rmin[1] > rmax[-1]'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'rmin is not a number' when input ''`, function() {
         let r = ''
         try {
             r = estimateTicks('')
@@ -142,7 +172,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input false`, function() {
+    it(`should return 'rmin is not a number' when input false`, function() {
         let r = ''
         try {
             r = estimateTicks(false)
@@ -154,7 +184,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input []`, function() {
+    it(`should return 'rmin is not a number' when input []`, function() {
         let r = ''
         try {
             r = estimateTicks([])
@@ -166,7 +196,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input {}`, function() {
+    it(`should return 'rmin is not a number' when input {}`, function() {
         let r = ''
         try {
             r = estimateTicks({})
@@ -178,7 +208,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input null`, function() {
+    it(`should return 'rmin is not a number' when input null`, function() {
         let r = ''
         try {
             r = estimateTicks(null)
@@ -190,7 +220,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input undefined`, function() {
+    it(`should return 'rmin is not a number' when input undefined`, function() {
         let r = ''
         try {
             r = estimateTicks(undefined)
@@ -202,7 +232,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input NaN`, function() {
+    it(`should return 'rmin is not a number' when input NaN`, function() {
         let r = ''
         try {
             r = estimateTicks(NaN)

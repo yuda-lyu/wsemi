@@ -100,7 +100,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input ''`, function() {
+    it(`should return 'v is not a number' when input ''`, function() {
         let r = ''
         try {
             r = preciseNum('')
@@ -112,7 +112,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input false`, function() {
+    it(`should return 'v is not a number' when input false`, function() {
         let r = ''
         try {
             r = preciseNum(false)
@@ -124,7 +124,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input []`, function() {
+    it(`should return 'v is not a number' when input []`, function() {
         let r = ''
         try {
             r = preciseNum([])
@@ -136,7 +136,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input {}`, function() {
+    it(`should return 'v is not a number' when input {}`, function() {
         let r = ''
         try {
             r = preciseNum({})
@@ -148,7 +148,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input null`, function() {
+    it(`should return 'v is not a number' when input null`, function() {
         let r = ''
         try {
             r = preciseNum(null)
@@ -160,7 +160,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input undefined`, function() {
+    it(`should return 'v is not a number' when input undefined`, function() {
         let r = ''
         try {
             r = preciseNum(undefined)
@@ -172,7 +172,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '' when input NaN`, function() {
+    it(`should return 'v is not a number' when input NaN`, function() {
         let r = ''
         try {
             r = preciseNum(NaN)

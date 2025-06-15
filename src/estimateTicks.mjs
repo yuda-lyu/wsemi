@@ -65,8 +65,8 @@ let norm = (v) => {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/./blob/master/test/estimateTicks.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} v 輸入數字或字串
- * @param {Integer} [idig=0] 輸入指定位數整數，預設0
+ * @param {Number|String} rmin 輸入數字或字串
+ * @param {Number|String} rmax 輸入數字或字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Array} [opt.testTickNums=[3, 4, 5]] 輸入可供測試刻度數量陣列，預設[3, 4, 5]
  * @returns {Object} 回傳繪圖刻度物件，包含刻度數量tickNum、刻度間距tickInterval、刻度位置tickPositions
@@ -230,10 +230,33 @@ function estimateTicks(rmin, rmax, opt = {}) {
     if (!isnum(rmin)) {
         throw new Error(`rmin is not a number`)
     }
+    rmin = cdbl(rmin)
 
     //check rmax
     if (!isnum(rmax)) {
         throw new Error(`rmax is not a number`)
+    }
+    rmax = cdbl(rmax)
+
+    //check rmin=rmax
+    if (rmin === rmax) {
+        let tickInterval = null
+        if (rmin === 0) {
+            tickInterval = 1
+        }
+        else {
+            tickInterval = Math.abs(rmin / 10)
+        }
+        return {
+            tickNum: 3,
+            tickInterval,
+            tickPositions: [rmin - tickInterval, rmin, rmin + tickInterval],
+        }
+    }
+
+    //check rmin>rmax
+    if (rmin > rmax) {
+        throw new Error(`rmin[${rmin}] > rmax[${rmax}]`)
     }
 
     //testTickNums
@@ -242,8 +265,8 @@ function estimateTicks(rmin, rmax, opt = {}) {
         testTickNums = [3, 4, 5]
     }
 
-    let vmin = cdbl(rmin)
-    let vmax = cdbl(rmax)
+    let vmin = rmin
+    let vmax = rmax
     // console.log('vmin', vmin)
     // console.log('vmax', vmax)
 
