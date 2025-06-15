@@ -35748,7 +35748,7 @@ console.log(dtpick({ a: 'a123', b: 234, c: '345' }, ['a', 'b', 'x']))
 
     
 
-    <h4 class="name" id=".estimateTicks"><span class="type-signature type-signature-static">(static) </span>estimateTicks<span class="signature">(v, idig<span class="signature-attributes">opt</span>, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
+    <h4 class="name" id=".estimateTicks"><span class="type-signature type-signature-static">(static) </span>estimateTicks<span class="signature">(rmin, rmax, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Object}</span></h4>
 
     
 
@@ -35823,147 +35823,147 @@ rmin = -4.66
 rmax = -3.11
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin -4.66 rmax -3.11 r { tickNum: 3, tickInterval: 0.8, tickPositions: [ -4.7, -3.9, -3.1 ] }
+// =&gt; rmin -4.66 rmax -3.11 r { tickNum: 3, tickInterval: 0.8, tickPositions: [ -4.7, -3.9, -3.1 ], tickDig: 1 }
 
 // 0~0.9
 rmin = 0
 rmax = 0.9
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0 rmax 0.9 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+// =&gt; rmin 0 rmax 0.9 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
 
 // 0~1
 rmin = 0
 rmax = 1
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+// =&gt; rmin 0 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
 
 // 0~99
 rmin = 0
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0~100
 rmin = 0
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0.1~0.9
 rmin = 0.1
 rmax = 0.9
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.1 rmax 0.9 r { tickNum: 3, tickInterval: 0.4, tickPositions: [ 0.1, 0.5, 0.9 ] }
+// =&gt; rmin 0.1 rmax 0.9 r { tickNum: 3, tickInterval: 0.4, tickPositions: [ 0.1, 0.5, 0.9 ], tickDig: 1 }
 
 // 0.1~1
 rmin = 0.1
 rmax = 1
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.1 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ] }
+// =&gt; rmin 0.1 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
 
 // 0.1~99
 rmin = 0.1
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.1 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0.1 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0.1~100
 rmin = 0.1
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.1 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0.1 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0.1~100.1
 rmin = 0.1
 rmax = 100.1
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.1 rmax 100.1 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ] }
+// =&gt; rmin 0.1 rmax 100.1 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
 
 // 0.89~0.9
 rmin = 0.89
 rmax = 0.9
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.89 rmax 0.9 r { tickNum: 3, tickInterval: 0.01, tickPositions: [ 0.88, 0.89, 0.9 ] }
+// =&gt; rmin 0.89 rmax 0.9 r { tickNum: 3, tickInterval: 0.01, tickPositions: [ 0.88, 0.89, 0.9 ], tickDig: 1 }
 
 // 0.89~1
 rmin = 0.89
 rmax = 1
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.89 rmax 1 r { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.8, 0.9, 1 ] }
+// =&gt; rmin 0.89 rmax 1 r { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.8, 0.9, 1 ], tickDig: 1 }
 
 // 0.89~99
 rmin = 0.89
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.89 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0.89 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0.89~100
 rmin = 0.89
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.89 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ] }
+// =&gt; rmin 0.89 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
 
 // 0.89~100.89
 rmin = 0.89
 rmax = 100.89
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 0.89 rmax 100.89 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ] }
+// =&gt; rmin 0.89 rmax 100.89 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
 
 // 50.89~99
 rmin = 50.89
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 50.89 rmax 99 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ] }
+// =&gt; rmin 50.89 rmax 99 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
 
 // 50.89~100
 rmin = 50.89
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 50.89 rmax 100 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ] }
+// =&gt; rmin 50.89 rmax 100 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
 
 // 90.89~99
 rmin = 90.89
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 90.89 rmax 99 r { tickNum: 4, tickInterval: 3, tickPositions: [ 90, 93, 96, 99 ] }
+// =&gt; rmin 90.89 rmax 99 r { tickNum: 4, tickInterval: 3, tickPositions: [ 90, 93, 96, 99 ], tickDig: 0 }
 
 // 90.89~100
 rmin = 90.89
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 90.89 rmax 100 r { tickNum: 3, tickInterval: 5, tickPositions: [ 90, 95, 100 ] }
+// =&gt; rmin 90.89 rmax 100 r { tickNum: 3, tickInterval: 5, tickPositions: [ 90, 95, 100 ], tickDig: 0 }
 
 // 98.9~99
 rmin = 98.9
 rmax = 99
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 98.9 rmax 99 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ] }
+// =&gt; rmin 98.9 rmax 99 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }
 
 // 98.9~100
 rmin = 98.9
 rmax = 100
 r = estimateTicks(rmin, rmax)
 console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// =&gt; rmin 98.9 rmax 100 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ] }</code></pre>
+// =&gt; rmin 98.9 rmax 100 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }</code></pre>
         </div>
 
 
@@ -35998,7 +35998,7 @@ console.log('rmin', rmin, 'rmax', rmax, 'r', r)
 
         <tr>
             
-                <td class="name"><code>v</code></td>
+                <td class="name"><code>rmin</code></td>
             
 
             <td class="type">
@@ -36037,13 +36037,16 @@ console.log('rmin', rmin, 'rmax', rmax, 'r', r)
 
         <tr>
             
-                <td class="name"><code>idig</code></td>
+                <td class="name"><code>rmax</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Integer</span>
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -36052,8 +36055,6 @@ console.log('rmin', rmin, 'rmax', rmax, 'r', r)
 
             
                 <td class="attributes">
-                
-                    &lt;optional&gt;<br>
                 
 
                 
@@ -36065,12 +36066,10 @@ console.log('rmin', rmin, 'rmax', rmax, 'r', r)
             
                 <td class="default">
                 
-                    <code>0</code>
-                
                 </td>
             
 
-            <td class="description last"><p>輸入指定位數整數，預設0</p></td>
+            <td class="description last"><p>輸入數字或字串</p></td>
         </tr>
 
     
@@ -87775,7 +87774,7 @@ console.log(`preciseNum(94.4 + 7.12 + 4.67, { returnDigit: true })`, preciseNum(
 
         
 <div class="param-desc">
-    <p>回傳數字字串</p>
+    <p>回傳數字字串，若returnDigit=true則回傳小數位數整數</p>
 </div>
 
 
@@ -106641,7 +106640,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Jun 15 2025 15:45:46 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Sun Jun 15 2025 16:20:21 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -106662,7 +106661,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.8.1/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.8.2/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
