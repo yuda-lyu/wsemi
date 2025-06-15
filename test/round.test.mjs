@@ -246,8 +246,8 @@ describe(`round`, function() {
         assert.strict.deepStrictEqual(r, -125)
     })
 
-    it(`should return 1.25 when input '1.25'`, function() {
-        let r = round('1')
+    it(`should return 1 when input '1.25'`, function() {
+        let r = round('1.25')
         assert.strict.deepStrictEqual(r, 1)
     })
 

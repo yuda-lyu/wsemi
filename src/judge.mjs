@@ -1,8 +1,8 @@
+import Decimal from 'decimal.js'
 import get from 'lodash-es/get.js'
 import isnum from './isnum.mjs'
 import isbol from './isbol.mjs'
 import preciseNum from './preciseNum.mjs'
-import Decimal from 'decimal.js'
 
 
 function gte(x1, x2) {

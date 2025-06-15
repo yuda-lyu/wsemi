@@ -1,12 +1,12 @@
+import Decimal from 'decimal.js'
 import get from 'lodash-es/get.js'
 import isnum from './isnum.mjs'
 import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'
-import Decimal from 'decimal.js'
 
 
 /**
- * 數字或字串四捨五入至指定位數(0位為整數)，若輸入不是數字或字串時則回傳空字串
+ * 數字或字串四捨五入至指定位數(0位為整數)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/round.test.mjs Github}
  * @memberOf wsemi
@@ -14,7 +14,7 @@ import Decimal from 'decimal.js'
  * @param {Integer} [idig=0] 輸入指定位數整數，預設0
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.rounding='ROUND_HALF_UP'] 輸入取捨方式，可選'ROUND_HALF_UP'代表四捨五入或'ROUND_HALF_EVEN'代表四捨六入五成雙，預設'ROUND_HALF_UP'
- * @returns {Number} 回傳四捨五入的整數
+ * @returns {Number} 回傳四捨五入的數字
  * @example
  *
  * console.log(round(1.5))
@@ -124,16 +124,8 @@ function round(v, idig = 0, opt = {}) {
     //cdbl
     // v = cdbl(v) //decimal也支援數字字串輸入, 不使用cdbl可加速
 
-    //clone
-    let Dec = Decimal.clone()
-
-    //指定處理方式
-    //Decimal.ROUND_HALF_EVEN: 四捨六入五成雙
-    //Decimal.ROUND_HALF_UP: 四捨五入
-    Dec.set({ rounding: Decimal[rounding] })
-
-    //處理
-    let r = new Dec(v).toDecimalPlaces(idig).toNumber()
+    //r
+    let r = new Decimal(v).toDecimalPlaces(idig, Decimal[rounding]).toNumber()
 
     return r
 }

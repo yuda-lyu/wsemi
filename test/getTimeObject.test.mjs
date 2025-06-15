@@ -220,7 +220,7 @@ describe(`getTimeObject`, function() {
     })
 
     it(`should return 1.25 when input '1.25'`, function() {
-        let r = getTimeObject('1')
+        let r = getTimeObject('1.25')
         assert.strict.deepStrictEqual(r, null)
     })
 
