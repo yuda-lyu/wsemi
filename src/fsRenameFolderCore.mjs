@@ -34,7 +34,7 @@ function fsRenameFolderCore(pahOld, pahNew, opt = {}) {
     //check
     if (fs.existsSync(pahNew)) {
         return {
-            error: `pahNew[${pahNew}] does exist` //pahNew存在則視為錯誤
+            error: `pahNew[${pahNew}] already exists` //pahNew存在則視為錯誤
         }
     }
 
