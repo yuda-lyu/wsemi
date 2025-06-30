@@ -6,158 +6,45 @@ import fsCreateFolder from './src/fsCreateFolder.mjs'
 import fsDeleteFolder from './src/fsDeleteFolder.mjs'
 import fsSrlog from './src/fsSrlog.mjs'
 import dig from './src/dig.mjs'
-import estimateTicks from './src/estimateTicks.mjs'
+import fsBuildWriteStreamText from './src/fsBuildWriteStreamText.mjs'
 
+let test = async () => {
 
-let rmin = null
-let rmax = null
-let r = null
+    let ms = []
 
-// -4.66~-3.11
-rmin = -4.66
-rmax = -3.11
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin -4.66 rmax -3.11 r { tickNum: 3, tickInterval: 0.8, tickPositions: [ -4.7, -3.9, -3.1 ], tickDig: 1 }
+    let fdt = './_test_fsBuildWriteStreamText'
+    fsCreateFolder(fdt) //創建臨時任務資料夾
 
-// 0~0.9
-rmin = 0
-rmax = 0.9
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0 rmax 0.9 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
+    let fn = 't1.txt'
+    let fp = `${fdt}/${fn}`
 
-// 0~1
-rmin = 0
-rmax = 1
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
+    let bdw = fsBuildWriteStreamText()
 
-// 0~99
-rmin = 0
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
+    let pm = bdw.create(fp)
+    ms.push({ 'create': '' })
 
-// 0~100
-rmin = 0
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
+    bdw.write('abc')
+    ms.push({ 'write': 'abc' })
+    bdw.write('中文')
+    ms.push({ 'write': '中文' })
+    bdw.end()
 
-// 0.1~0.9
-rmin = 0.1
-rmax = 0.9
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.1 rmax 0.9 r { tickNum: 3, tickInterval: 0.4, tickPositions: [ 0.1, 0.5, 0.9 ], tickDig: 1 }
+    await pm
 
-// 0.1~1
-rmin = 0.1
-rmax = 1
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.1 rmax 1 r { tickNum: 3, tickInterval: 0.5, tickPositions: [ 0, 0.5, 1 ], tickDig: 1 }
+    let c = fs.readFileSync(fp, 'utf8')
+    ms.push({ 'readFileSync': c })
 
-// 0.1~99
-rmin = 0.1
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.1 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
+    fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
-// 0.1~100
-rmin = 0.1
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.1 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
-
-// 0.1~100.1
-rmin = 0.1
-rmax = 100.1
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.1 rmax 100.1 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
-
-// 0.89~0.9
-rmin = 0.89
-rmax = 0.9
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.89 rmax 0.9 r { tickNum: 3, tickInterval: 0.01, tickPositions: [ 0.88, 0.89, 0.9 ], tickDig: 1 }
-
-// 0.89~1
-rmin = 0.89
-rmax = 1
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.89 rmax 1 r { tickNum: 3, tickInterval: 0.1, tickPositions: [ 0.8, 0.9, 1 ], tickDig: 1 }
-
-// 0.89~99
-rmin = 0.89
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.89 rmax 99 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
-
-// 0.89~100
-rmin = 0.89
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.89 rmax 100 r { tickNum: 3, tickInterval: 50, tickPositions: [ 0, 50, 100 ], tickDig: 0 }
-
-// 0.89~100.89
-rmin = 0.89
-rmax = 100.89
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 0.89 rmax 100.89 r { tickNum: 4, tickInterval: 34, tickPositions: [ 0, 34, 68, 102 ], tickDig: 0 }
-
-// 50.89~99
-rmin = 50.89
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 50.89 rmax 99 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
-
-// 50.89~100
-rmin = 50.89
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 50.89 rmax 100 r { tickNum: 3, tickInterval: 25, tickPositions: [ 50, 75, 100 ], tickDig: 0 }
-
-// 90.89~99
-rmin = 90.89
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 90.89 rmax 99 r { tickNum: 4, tickInterval: 3, tickPositions: [ 90, 93, 96, 99 ], tickDig: 0 }
-
-// 90.89~100
-rmin = 90.89
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 90.89 rmax 100 r { tickNum: 3, tickInterval: 5, tickPositions: [ 90, 95, 100 ], tickDig: 0 }
-
-// 98.9~99
-rmin = 98.9
-rmax = 99
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 98.9 rmax 99 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }
-
-// 98.9~100
-rmin = 98.9
-rmax = 100
-r = estimateTicks(rmin, rmax)
-console.log('rmin', rmin, 'rmax', rmax, 'r', r)
-// => rmin 98.9 rmax 100 r { tickNum: 3, tickInterval: 1, tickPositions: [ 98, 99, 100 ], tickDig: 0 }
+    console.log('ms', ms)
+    return ms
+}
+await test()
+// ms [
+//   { create: '' },
+//   { write: 'abc' },
+//   { write: '中文' },
+//   { readFileSync: 'abc\n中文\n' }
+// ]
 
 //node g.mjs
