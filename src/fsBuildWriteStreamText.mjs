@@ -64,11 +64,14 @@ function fsBuildWriteStreamText() {
         let pm = genPm()
 
         //createWriteStream
-        stream = fs.createWriteStream(fp, { flags: 'a', encoding: 'utf8' })
+        stream = fs.createWriteStream(fp, { flags: 'w', encoding: 'utf8' })
 
+        //finish
         stream.on('finish', () => {
             pm.resolve()
         })
+
+        //error
         stream.on('error', (err) => {
             pm.reject(err)
         })
