@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>getFileNameExt.mjs - Documentation</title>
+    <title>fsDownloadFileCore.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">getFileNameExt.mjs</h1>
+    <h1 class="page-title">fsDownloadFileCore.mjs</h1>
     
 
     
@@ -45,130 +45,105 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import split from 'lodash-es/split.js'
-import size from 'lodash-es/size.js'
-import last from 'lodash-es/last.js'
+            <pre class="prettyprint source linenums"><code>// import fs from 'fs'
+import get from 'lodash-es/get.js'
+import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
+import getPathParent from './getPathParent.mjs'
 import getFileName from './getFileName.mjs'
+import fsIsFolderCore from './fsIsFolderCore.mjs'
+import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
 
 /**
- * 由檔案位置取得檔案的副檔名
+ * 後端nodejs下載網址成為檔案
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileNameExt.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFileCore.test.mjs Github}
  * @memberOf wsemi
- * @param {string} str 輸入檔案位置字串
- * @returns {string} 檔案的副檔名
+ * @param {String} urlIn 輸入下載網址字串
+ * @param {String} fpOut 輸入儲存檔案路徑字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.fs=null] 輸入fs，預設null
+ * @returns {Promise} 回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息
  * @example
+ * //need test in nodejs
  *
- * let c
- *
- * c = 'C:\\temp\\myfile.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = 'C:\\temp\\myfile.txt.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = 'C:\\temp\\myfile'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = 'C:\\temp\\\\temp\\\\myfile.txt.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = 'C:\\temp\\'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = 'C:\\temp'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = 'C:\\'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = 'C:'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = '/tmp/myfile.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = '/tmp/myfile.txt.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = '/tmp/myfile'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = '//tmp////tmp//myfile.txt.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = '/tmp/'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = '/tmp'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = '/'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = '/foo/bar/baz/asdf/quux.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = '/foo/bar/baz/asdf/quux.txt.html'
- * console.log(getFileNameExt(c))
- * // => html
- *
- * c = '/foo/bar/baz/asdf/quux'
- * console.log(getFileNameExt(c))
- * // => [empty string]
- *
- * c = ''
- * console.log(getFileNameExt(c))
- * // => [empty string]
+ * //see fsDownloadFile
  *
  */
-function getFileNameExt(str) {
+async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
+    let errTemp = ''
 
-    //check
-    if (!isestr(str)) {
-        return ''
+    //fs
+    let fs = get(opt, 'fs')
+
+    //Readable
+    let Readable = get(opt, 'Readable')
+
+    //check urlIn
+    if (!isestr(urlIn)) {
+        throw new Error(`urlIn in not an effective string`)
     }
+
+    //getPathParent
+    let fdOut = getPathParent(fpOut)
+    // console.log('fdOut', fdOut)
 
     //getFileName
-    let name = getFileName(str)
-
-    //s
-    let s = split(name, '.')
+    let fnOut = get(opt, 'fnOut', '')
+    if (!isestr(fnOut)) {
+        fnOut = getFileName(fpOut)
+    }
 
     //check
-    if (size(s) &lt;= 1) {
-        return ''
+    if (!fsIsFolderCore(fdOut, { fs })) {
+        fsCreateFolderCore(fdOut, { fs })
     }
 
-    let r = ''
+    //pm
+    let pm = genPm()
+
+    //攔截錯誤, 注意stream是非同步故try catch是無法攔截的, 須各自監聽read與write串流的error事件處理, 此處是攔截串流以外的錯誤
     try {
-        r = last(s)
-    }
-    catch (err) {}
 
-    return r
+        //fetch
+        let res = await fetch(urlIn)
+        if (!res.ok) {
+            pm.reject(res.statusText)
+            return pm
+        }
+
+        //streamWrite
+        let streamWrite = fs.createWriteStream(fpOut)
+
+        //streamNode
+        let streamNode = Readable.fromWeb(res.body)
+
+        //pipe
+        streamNode.pipe(streamWrite)
+
+        //finish
+        streamWrite.on('finish', () => {
+            pm.resolve(fpOut)
+        })
+
+        //error, 若有error則不會觸發finish
+        streamWrite.on('error', (err) => {
+            errTemp = err.message
+            pm.reject(errTemp)
+        })
+
+    }
+    catch (err) {
+        errTemp = err.message
+        pm.reject(errTemp)
+    }
+
+    return pm
 }
 
 
-export default getFileNameExt
+export default fsDownloadFileCore
 </code></pre>
         </article>
     </section>
