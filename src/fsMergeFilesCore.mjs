@@ -2,7 +2,9 @@
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
+import isestr from './isestr.mjs'
 import getPathParent from './getPathParent.mjs'
+import getFileName from './getFileName.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
@@ -17,6 +19,8 @@ import fsDeleteFileCore from './fsDeleteFileCore.mjs'
  * @param {String} fn 輸入實際檔名字串
  * @param {Array} fpsIn 輸入合併前各切片檔案路徑陣列
  * @param {String} fpOut 輸入合併後檔案路徑字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
  * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息
  * @example
  * //need test in nodejs
@@ -24,7 +28,7 @@ import fsDeleteFileCore from './fsDeleteFileCore.mjs'
  * //see fsMergeFiles
  *
  */
-async function fsMergeFilesCore(fn, fpsIn, fpOut, opt = {}) {
+async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     let errTemp = ''
 
     //fs
@@ -36,11 +40,17 @@ async function fsMergeFilesCore(fn, fpsIn, fpOut, opt = {}) {
     }
 
     //getPathParent
-    let fd = getPathParent(fpOut)
+    let fdOut = getPathParent(fpOut)
+
+    //getFileName
+    let fnOut = get(opt, 'fnOut', '')
+    if (!isestr(fnOut)) {
+        fnOut = getFileName(fpOut)
+    }
 
     //check
-    if (!fsIsFolderCore(fd, { fs })) {
-        fsCreateFolderCore(fd, { fs })
+    if (!fsIsFolderCore(fdOut, { fs })) {
+        fsCreateFolderCore(fdOut, { fs })
     }
 
     //pm
@@ -119,7 +129,7 @@ async function fsMergeFilesCore(fn, fpsIn, fpOut, opt = {}) {
 
             //r
             let r = {
-                filename: fn,
+                filename: fnOut,
                 path: fpOut,
             }
             // let s = fs.statSync(fpOut)

@@ -7,9 +7,10 @@ import fsMergeFilesCore from './fsMergeFilesCore.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsMergeFiles.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fn 輸入實際檔名字串
  * @param {Array} fpsIn 輸入合併前各切片檔案路徑陣列
  * @param {String} fpOut 輸入合併後檔案路徑字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
  * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息
  * @example
  * //need test in nodejs
@@ -26,7 +27,7 @@ import fsMergeFilesCore from './fsMergeFilesCore.mjs'
  *     fs.writeFileSync(`${fdt}/t4.txt`, '測 試', 'utf8')
  *     fs.writeFileSync(`${fdt}/t5.txt`, '&*#$%', 'utf8')
  *
- *     let fn = '合併檔案.txt'
+ *     let fnOut = '合併檔案.txt'
  *     let fpsIn = [
  *         `${fdt}/t1.txt`,
  *         `${fdt}/t2.txt`,
@@ -35,7 +36,7 @@ import fsMergeFilesCore from './fsMergeFilesCore.mjs'
  *         `${fdt}/t5.txt`,
  *     ]
  *     let fpOut = `${fdt}/m.txt`
- *     await fsMergeFiles(fn, fpsIn, fpOut)
+ *     await fsMergeFiles(fpsIn, fpOut, { fnOut })
  *         .then((res) => {
  *             console.log('res', res)
  *             ms.push(res)
@@ -70,8 +71,8 @@ import fsMergeFilesCore from './fsMergeFilesCore.mjs'
  * // ]
  *
  */
-async function fsMergeFiles(fn, fpsIn, fpOut) {
-    return fsMergeFilesCore(fn, fpsIn, fpOut, { fs })
+async function fsMergeFiles(fpsIn, fpOut, opt = {}) {
+    return fsMergeFilesCore(fpsIn, fpOut, { fs, ...opt })
 }
 
 

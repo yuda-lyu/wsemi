@@ -19,7 +19,7 @@ describe(`fsMergeFiles`, function() {
         fs.writeFileSync(`${fdt}/t4.txt`, '測 試', 'utf8')
         fs.writeFileSync(`${fdt}/t5.txt`, '&*#$%', 'utf8')
 
-        let fn = '合併檔案.txt'
+        let fnOut = '合併檔案.txt'
         let fpsIn = [
             `${fdt}/t1.txt`,
             `${fdt}/t2.txt`,
@@ -28,7 +28,7 @@ describe(`fsMergeFiles`, function() {
             `${fdt}/t5.txt`,
         ]
         let fpOut = `${fdt}/m.txt`
-        await fsMergeFiles(fn, fpsIn, fpOut)
+        await fsMergeFiles(fpsIn, fpOut, { fnOut })
             .then((res) => {
                 // console.log('res', res)
                 ms.push(res)

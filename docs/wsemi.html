@@ -51352,7 +51352,7 @@ test()
 
     
 
-    <h4 class="name" id=".fsMergeFiles"><span class="type-signature type-signature-async, static">(async, static) </span>fsMergeFiles<span class="signature">(fn, fpsIn, fpOut)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".fsMergeFiles"><span class="type-signature type-signature-async, static">(async, static) </span>fsMergeFiles<span class="signature">(fpsIn, fpOut, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -51369,7 +51369,7 @@ test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsMergeFiles.mjs.html">fsMergeFiles.mjs</a>, <a href="fsMergeFiles.mjs.html#line73">line 73</a>
+        <a href="fsMergeFiles.mjs.html">fsMergeFiles.mjs</a>, <a href="fsMergeFiles.mjs.html#line74">line 74</a>
     </li></ul></dd>
     
 
@@ -51432,7 +51432,7 @@ let test = async () =&gt; {
     fs.writeFileSync(`${fdt}/t4.txt`, '測 試', 'utf8')
     fs.writeFileSync(`${fdt}/t5.txt`, '&amp;*#$%', 'utf8')
 
-    let fn = '合併檔案.txt'
+    let fnOut = '合併檔案.txt'
     let fpsIn = [
         `${fdt}/t1.txt`,
         `${fdt}/t2.txt`,
@@ -51441,7 +51441,7 @@ let test = async () =&gt; {
         `${fdt}/t5.txt`,
     ]
     let fpOut = `${fdt}/m.txt`
-    await fsMergeFiles(fn, fpsIn, fpOut)
+    await fsMergeFiles(fpsIn, fpOut, { fnOut })
         .then((res) =&gt; {
             console.log('res', res)
             ms.push(res)
@@ -51492,7 +51492,11 @@ await test()
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -51500,30 +51504,6 @@ await test()
     </thead>
 
     <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>fn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>輸入實際檔名字串</p></td>
-        </tr>
-
     
 
         <tr>
@@ -51542,7 +51522,19 @@ await test()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入合併前各切片檔案路徑陣列</p></td>
@@ -51566,10 +51558,132 @@ await test()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入合併後檔案路徑字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fnOut</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>getFileName(fpOut)</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -51622,7 +51736,7 @@ await test()
 
     
 
-    <h4 class="name" id=".fsMergeFilesCore"><span class="type-signature type-signature-async, static">(async, static) </span>fsMergeFilesCore<span class="signature">(fn, fpsIn, fpOut)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".fsMergeFilesCore"><span class="type-signature type-signature-async, static">(async, static) </span>fsMergeFilesCore<span class="signature">(fn, fpsIn, fpOut, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -51639,7 +51753,7 @@ await test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsMergeFilesCore.mjs.html">fsMergeFilesCore.mjs</a>, <a href="fsMergeFilesCore.mjs.html#line27">line 27</a>
+        <a href="fsMergeFilesCore.mjs.html">fsMergeFilesCore.mjs</a>, <a href="fsMergeFilesCore.mjs.html#line31">line 31</a>
     </li></ul></dd>
     
 
@@ -51709,7 +51823,11 @@ await test()
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -51735,7 +51853,19 @@ await test()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入實際檔名字串</p></td>
@@ -51759,7 +51889,19 @@ await test()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入合併前各切片檔案路徑陣列</p></td>
@@ -51783,10 +51925,132 @@ await test()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入合併後檔案路徑字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>fnOut</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional&gt;<br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>getFileName(fpOut)</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -108233,7 +108497,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Tue Jul 01 2025 14:48:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.2</a> on Thu Jul 03 2025 13:31:14 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -108254,7 +108518,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.8.5/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.8.6/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)
