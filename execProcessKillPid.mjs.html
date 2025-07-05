@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domTriggerEvent.mjs - Documentation</title>
+    <title>execProcessKillPid.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domTriggerEvent.mjs</h1>
+    <h1 class="page-title">execProcessKillPid.mjs</h1>
     
 
     
@@ -45,84 +45,45 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isWindow from './isWindow.mjs'
-
-
-function init() {
-    //MouseEvent polyfill
-    //https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/MouseEvent#Polyfill
-
-    try {
-        new MouseEvent('MouseEventPolyfillTest')
-        return false // No need to polyfill
-    }
-    catch (err) {
-        // Need to polyfill - fall through
-    }
-
-    // Polyfills DOM4 MouseEvent
-    let MouseEventPolyfill = function (eventType, params) {
-        params = params || { bubbles: false, cancelable: false }
-        let mouseEvent = document.createEvent('MouseEvent')
-        mouseEvent.initMouseEvent(eventType,
-            params.bubbles,
-            params.cancelable,
-            window,
-            0,
-            params.screenX || 0,
-            params.screenY || 0,
-            params.clientX || 0,
-            params.clientY || 0,
-            params.ctrlKey || false,
-            params.altKey || false,
-            params.shiftKey || false,
-            params.metaKey || false,
-            params.button || 0,
-            params.relatedTarget || null
-        )
-
-        return mouseEvent
-    }
-
-    MouseEventPolyfill.prototype = Event.prototype
-
-    window.MouseEvent = MouseEventPolyfill
-}
-if (isWindow()) {
-    init()
-}
+            <pre class="prettyprint source linenums"><code>import cstr from './cstr.mjs'
+import execProcess from './execProcess.mjs'
 
 
 /**
- * 前端觸發ele基於MouseEvent的eventName
+ * Windows下強制關閉指定PID程序
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessKillPid.test.mjs Github}
  * @memberOf wsemi
- * @param {Element} ele 輸入Element元素
- * @param {String} eventName 輸入事件名稱字串
+ * @param {String} pid 輸入程序pid字串
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
  * @example
- * need test in browser
+ * //need test in nodejs
  *
- * let ele = document.querySelector('#id')
- * domTriggerEvent(ele, 'click')
+ * if (true) {
+ *     let pid = 123456
+ *     execProcessKillPid(pid)
+ *         .then(function(data) {
+ *             console.log('then', data)
+ *         })
+ *         .catch(function(data) {
+ *             console.log('catch', data)
+ *         })
+ * }
  *
  */
-function domTriggerEvent(ele, eventName) {
+async function execProcessKillPid(pid) {
 
-    //event
-    let event = new MouseEvent(eventName, {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true
-    })
+    //execProcess, 執行windows指令taskkill去中止pid, 須使用mode='execFile'避免出現初始瞬發訊息無法攔截
+    let cmd = 'taskkill'
+    let args = ['/pid', cstr(pid), '/T', '/F']
+    let r = await execProcess(cmd, args, { mode: 'execFile' })
+    // console.log('r', r)
 
-    //dispatchEvent
-    ele.dispatchEvent(event)
-
+    return r
 }
 
 
-export default domTriggerEvent
+export default execProcessKillPid
 </code></pre>
         </article>
     </section>
