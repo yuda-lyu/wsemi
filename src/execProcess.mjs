@@ -64,8 +64,6 @@ function execProcess(prog, args, opt = {}) {
     // spawn: 非同步執行命令，適合處理大量資料或長時間執行的程式，輸出以串流方式處理。spawnSync 為 spawn 的同步版本。
     // exec: 在 shell 中非同步執行命令，輸出被緩衝，適合輸出量較小的情況。execSync 為 exec 的同步版本。
     // execFile: 直接執行可執行檔案，不經過 shell，非同步執行，適合執行已知的可執行檔案。execFileSync 為 execFile 的同步版本。
-    //注意:
-    // spawn與exec會於taskkill瞬間觸發stdout時攔截不到, 故只能用execFile調用taskkill
     let mode = get(opt, 'mode')
     if (mode !== 'spawn' && mode !== 'exec' && mode !== 'execFile') {
         mode = 'spawn'
