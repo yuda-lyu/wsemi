@@ -6,6 +6,8 @@ import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
 import genPm from './genPm.mjs'
+import strleft from './strleft.mjs'
+import strright from './strright.mjs'
 
 
 /**
@@ -98,7 +100,12 @@ function execProcess(prog, args, opt = {}) {
     //r
     let r = null
     if (mode === 'spawn') {
-        r = cp.spawn(prog, args, { encoding: codeCmd, shell: false })
+        let cr = strleft(prog, 1)
+        let cl = strright(prog, 1)
+        if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
+            throw new Error('prog of spawn doens not need to add quotes')
+        }
+        r = cp.spawn(prog, args, { encoding: codeCmd, shell: false }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
     }
     else if (mode === 'exec') {
         let cpre = ''
@@ -122,7 +129,7 @@ function execProcess(prog, args, opt = {}) {
         let cdata = data.toString().trim()
 
         //megre
-        cmsg += cdata
+        cmsg += cdata + '\n'
 
         //cbStdout
         if (isfun(cbStdout)) {
@@ -139,11 +146,11 @@ function execProcess(prog, args, opt = {}) {
         let cdata = data.toString().trim()
 
         //megre
-        cerr += cdata
+        cerr += cdata + '\n'
 
         //cbStderr
         if (isfun(cbStderr)) {
-            cbStderr(data)
+            cbStderr(cdata)
         }
 
     })

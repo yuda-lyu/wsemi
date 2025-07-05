@@ -6,7 +6,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
 
-function fsCopyFileSyncCore(fpSrc, fpTar, opt = {}) {
+function fsCopyFileCoreSync(fpSrc, fpTar, opt = {}) {
 
     //path, fs
     let path = get(opt, 'path')
@@ -127,7 +127,7 @@ function fsCopyFileCore(fpSrc, fpTar, opt = {}) {
 
     let r = ''
     if (useSync) {
-        r = fsCopyFileSyncCore(fpSrc, fpTar, { path, fs })
+        r = fsCopyFileCoreSync(fpSrc, fpTar, { path, fs })
     }
     else {
         r = fsCopyFileCoreAsync(fpSrc, fpTar, { path, fs })
