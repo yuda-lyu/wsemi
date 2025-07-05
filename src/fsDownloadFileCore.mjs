@@ -17,6 +17,7 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
  * @param {String} fpOut 輸入儲存檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fs=null] 輸入fs，預設null
+ * @param {String} [opt.Readable=null] 輸入Readable，預設null
  * @returns {Promise} 回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息
  * @example
  * //need test in nodejs

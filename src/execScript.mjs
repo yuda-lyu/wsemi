@@ -55,6 +55,7 @@ import isarr from './isarr.mjs'
  *
  */
 function execScript(prog, args) {
+    console.log('標注為廢棄, 請改用execProcess')
     return new Promise(function(resolve, reject) {
 
         //check

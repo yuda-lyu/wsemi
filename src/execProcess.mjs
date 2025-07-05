@@ -1,8 +1,11 @@
 import cp from 'child_process'
-import iconv from 'iconv-lite'
+// import iconv from 'iconv-lite'
 import get from 'lodash-es/get.js'
+import isearr from './isearr.mjs'
+import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
+import genPm from './genPm.mjs'
 
 
 /**
@@ -48,6 +51,25 @@ import isestr from './isestr.mjs'
  */
 function execProcess(prog, args, opt = {}) {
 
+    //check
+    if (!isearr(args) && !isestr(args)) {
+        throw new Error(`args is not an effective array or string`)
+    }
+    if (isestr(args)) {
+        args = [args]
+    }
+
+    //mode
+    // spawn: 非同步執行命令，適合處理大量資料或長時間執行的程式，輸出以串流方式處理。spawnSync 為 spawn 的同步版本。
+    // exec: 在 shell 中非同步執行命令，輸出被緩衝，適合輸出量較小的情況。execSync 為 exec 的同步版本。
+    // execFile: 直接執行可執行檔案，不經過 shell，非同步執行，適合執行已知的可執行檔案。execFileSync 為 execFile 的同步版本。
+    //注意:
+    // spawn與exec會於taskkill瞬間觸發stdout時攔截不到, 故只能用execFile調用taskkill
+    let mode = get(opt, 'mode')
+    if (mode !== 'spawn' && mode !== 'exec' && mode !== 'execFile') {
+        mode = 'spawn'
+    }
+
     //cbStdout
     let cbStdout = get(opt, 'cbStdout')
 
@@ -57,80 +79,198 @@ function execProcess(prog, args, opt = {}) {
     //codeCmd
     let codeCmd = get(opt, 'codeCmd')
     if (!isestr(codeCmd)) {
-        codeCmd = 'big5'
+        codeCmd = 'utf8'
     }
 
-    return new Promise(function(resolve, reject) {
-        let msg = ''
+    //useChcp
+    let useChcp = get(opt, 'useChcp')
+    if (!isbol(useChcp)) {
+        useChcp = false
+    }
 
-        //spawn: 非同步執行命令，適合處理大量資料或長時間執行的程式，輸出以串流方式處理。spawnSync 為 spawn 的同步版本。
-        //exec: 在 shell 中非同步執行命令，輸出被緩衝，適合輸出量較小的情況。execSync 為 exec 的同步版本。
-        //execFile: 直接執行可執行檔案，不經過 shell，非同步執行，適合執行已知的可執行檔案。execFileSync 為 execFile 的同步版本。
+    //pm
+    let pm = genPm()
 
-        //exec
-        //不能用同步版execSync, 須提供cpu控制權給調用端, 才能驅動例如偵測檔案等進行額外顯示
-        //執行程序時會使用當前作業系統語系, 故回傳時得要依照當前語系進行指定解碼, 才不會有亂碼
-        let r = cp.exec(`${prog} ${args}`, { encoding: 'buffer' }, (err, stdout, stderr) => {
-            // console.log('stdout', stdout)
-            // console.log('stderr', stderr)
-            if (err) {
-                return reject(err)
-            }
+    //cmsg, cerr
+    let cmsg = ''
+    let cerr = ''
 
-            try {
-                stdout = iconv.decode(stdout, codeCmd)
-            }
-            catch (err) {}
-            try {
-                stderr = iconv.decode(stderr, codeCmd)
-            }
-            catch (err) {}
+    //r
+    let r = null
+    if (mode === 'spawn') {
+        r = cp.spawn(prog, args, { encoding: codeCmd, shell: false })
+    }
+    else if (mode === 'exec') {
+        let cpre = ''
+        if (useChcp) {
+            cpre = `cmd /c chcp 65001>nul &&`
+        }
+        r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, { encoding: codeCmd })
+    }
+    else if (mode === 'execFile') {
+        r = cp.execFile(prog, args, { encoding: codeCmd })
+    }
+    else {
+        throw new Error(`invalid mode[${mode}]`)
+    }
 
-            //stderr, 若stderr與stdout同時有, 則先添加stderr再添加stdout
-            if (isestr(stderr)) {
-                // console.log('stderr', stderr)
-                msg += stderr
-            }
+    //stdout data
+    r.stdout.on('data', data => {
+        // console.log('stdout chunk:', data.toString().trim())
 
-            //stdout
-            if (isestr(stdout)) {
-                // console.log('stdout', stdout)
-                msg += stdout
-            }
+        //cdata
+        let cdata = data.toString().trim()
 
-        })
-
-        // //exit, 會比close先觸發
-        // r.on('exit', (code) => {
-        //     // console.log('exit code', code)
-        // })
-
-        //close
-        r.on('close', (code) => {
-            // console.log('close code', code)
-            resolve(msg)
-        })
+        //megre
+        cmsg += cdata
 
         //cbStdout
         if (isfun(cbStdout)) {
-            r.stdout.on('data', function (data) {
-                data = iconv.decode(data, codeCmd)
-                // console.log('stdout', data)
-                cbStdout(data)
-            })
-        }
-
-        //cbStderr
-        if (isfun(cbStderr)) {
-            r.stderr.on('data', function (data) {
-                data = iconv.decode(data, codeCmd)
-                // console.log('stderr', data)
-                cbStderr(data)
-            })
+            cbStdout(cdata)
         }
 
     })
+
+    //stderr data
+    r.stderr.on('data', data => {
+        // console.error('stderr chunk:', data.toString().trim())
+
+        //cdata
+        let cdata = data.toString().trim()
+
+        //megre
+        cerr += cdata
+
+        //cbStderr
+        if (isfun(cbStderr)) {
+            cbStderr(data)
+        }
+
+    })
+
+    // //exit, 會比close先觸發故不使用
+    // r.on('exit', (code) => {
+    //     // console.log('exit code', code)
+    // })
+
+    //close
+    r.on('close', code => {
+        // console.log('close code', code)
+        // if (code !== 0) {
+        //     pm.reject(`code=${code} and stderr='${cerr}'`)
+        // }
+        // else if(isestr(cerr)){
+        //     pm.reject(cerr)
+        // }
+        if (isestr(cerr)) {
+            pm.reject(cerr)
+        }
+        else {
+            pm.resolve(cmsg)
+        }
+    })
+
+    //error
+    r.on('error', (err) => {
+        pm.reject(err)
+    })
+
+    return pm
 }
+
+
+// function execProcess2(prog, args, opt = {}) {
+
+//     //cbStdout
+//     let cbStdout = get(opt, 'cbStdout')
+
+//     //cbStderr
+//     let cbStderr = get(opt, 'cbStderr')
+
+//     //codeCmd
+//     let codeCmd = get(opt, 'codeCmd')
+//     if (!isestr(codeCmd)) {
+//         codeCmd = 'big5'
+//     }
+
+//     return new Promise(function(resolve, reject) {
+//         let msg = ''
+
+//         //spawn: 非同步執行命令，適合處理大量資料或長時間執行的程式，輸出以串流方式處理。spawnSync 為 spawn 的同步版本。
+//         //exec: 在 shell 中非同步執行命令，輸出被緩衝，適合輸出量較小的情況。execSync 為 exec 的同步版本。
+//         //execFile: 直接執行可執行檔案，不經過 shell，非同步執行，適合執行已知的可執行檔案。execFileSync 為 execFile 的同步版本。
+
+//         //exec
+//         //不能用同步版execSync, 須提供cpu控制權給調用端, 才能驅動例如偵測檔案等進行額外顯示
+//         //執行程序時會使用當前作業系統語系, 故回傳時得要依照當前語系進行指定解碼, 才不會有亂碼
+//         let r = cp.exec(`${prog} ${args}`, { encoding: 'buffer' }, (err, stdout, stderr) => {
+
+//             //check
+//             if (err) {
+//                 // console.log('err',err)
+//                 // err = iconv.decode(err, codeCmd) //err是當前作業系統語系且編碼過, 若出現err則編碼為big5而非buffer, 故不能decode
+//                 // console.log('err(decode)',err)
+//                 return reject(err)
+//             }
+
+//             try {
+//                 // console.log('stdout', stdout)
+//                 stdout = iconv.decode(stdout, codeCmd)
+//                 // console.log('stdout(decode)', stdout)
+//             }
+//             catch (err) {}
+//             try {
+//                 // console.log('stderr', stderr)
+//                 stderr = iconv.decode(stderr, codeCmd)
+//                 // console.log('stderr(decode)', stderr)
+//             }
+//             catch (err) {}
+
+//             //stderr, 若stderr與stdout同時有, 則先添加stderr再添加stdout
+//             if (isestr(stderr)) {
+//                 // console.log('stderr', stderr)
+//                 msg += stderr
+//             }
+
+//             //stdout
+//             if (isestr(stdout)) {
+//                 // console.log('stdout', stdout)
+//                 msg += stdout
+//             }
+
+//         })
+
+//         // //exit, 會比close先觸發
+//         // r.on('exit', (code) => {
+//         //     // console.log('exit code', code)
+//         // })
+
+//         //close
+//         r.on('close', (code) => {
+//             // console.log('close code', code)
+//             resolve(msg)
+//         })
+
+//         //cbStdout
+//         if (isfun(cbStdout)) {
+//             r.stdout.on('data', function (data) {
+//                 data = iconv.decode(data, codeCmd)
+//                 // console.log('stdout', data)
+//                 cbStdout(data)
+//             })
+//         }
+
+//         //cbStderr
+//         if (isfun(cbStderr)) {
+//             r.stderr.on('data', function (data) {
+//                 data = iconv.decode(data, codeCmd)
+//                 // console.log('stderr', data)
+//                 cbStderr(data)
+//             })
+//         }
+
+//     })
+// }
 
 
 export default execProcess
