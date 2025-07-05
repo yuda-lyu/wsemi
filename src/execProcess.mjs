@@ -1,5 +1,4 @@
 import cp from 'child_process'
-// import iconv from 'iconv-lite'
 import get from 'lodash-es/get.js'
 import isearr from './isearr.mjs'
 import isbol from './isbol.mjs'
@@ -71,6 +70,7 @@ function execProcess(prog, args, opt = {}) {
     if (mode !== 'spawn' && mode !== 'exec' && mode !== 'execFile') {
         mode = 'spawn'
     }
+    // console.log('mode',mode)
 
     //cbStdout
     let cbStdout = get(opt, 'cbStdout')
@@ -100,6 +100,7 @@ function execProcess(prog, args, opt = {}) {
     //r
     let r = null
     if (mode === 'spawn') {
+        // console.log('mode',mode)
         let cr = strleft(prog, 1)
         let cl = strright(prog, 1)
         if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
@@ -108,13 +109,16 @@ function execProcess(prog, args, opt = {}) {
         r = cp.spawn(prog, args, { encoding: codeCmd, shell: false }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
     }
     else if (mode === 'exec') {
+        // console.log('mode',mode)
         let cpre = ''
         if (useChcp) {
             cpre = `cmd /c chcp 65001>nul &&`
         }
+        // console.log(`${cpre} ${prog} ${args.join(' ')} & exit`)
         r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, { encoding: codeCmd })
     }
     else if (mode === 'execFile') {
+        // console.log('mode',mode)
         r = cp.execFile(prog, args, { encoding: codeCmd })
     }
     else {
