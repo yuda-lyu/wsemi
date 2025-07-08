@@ -3,12 +3,11 @@ import genPm from './genPm.mjs'
 
 
 /**
- * 使用stream寫入utf-8文字至檔案
+ * 使用stream寫入utf8文字至檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsBuildWriteStreamText.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fp 輸入檔案名稱
- * @param {String} c 輸入utf-8文字數據
+ * @returns {Object} 回傳函數物件，提供creat、write、end函數，create代表創建stream，可輸入fp為檔案路徑字串，write代表寫入字串，輸入c為字串(預設為行)，end代表結束stream，無輸入
  * @example
  * need test in nodejs.
  *
@@ -86,7 +85,13 @@ function fsBuildWriteStreamText() {
 
     //end
     let end = () => {
+        let pmm = genPm()
+        stream.on('close', () => {
+            //close事件才代表檔案可刪除
+            pmm.resolve()
+        })
         stream.end() //發出flush與close
+        return pmm
     }
 
     //r
