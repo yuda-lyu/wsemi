@@ -13,7 +13,7 @@ import delay from './delay.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [nMax=200] 輸入使用快取版之總嘗試次數整數，超過則報錯，預設200
  * @param {Integer} [nTrigger=3] 輸入嘗試指定次數整數，若嘗試指定次數之後皆無快取則須自動執行get用以取得快取，預設3
- * @returns {Object} 回傳事件物件，可呼叫事件get、getByCache，get為封裝後封裝原本非同步函數，getByCache為提供取用快取版之非同步函數，若有快取則優先使用，若超過指定次數則自動執行get使能取得快取
+ * @returns {Object} 回傳事件物件，可呼叫事件get、getFromCache，get為封裝後封裝原本非同步函數，getFromCache為提供取用快取版之非同步函數，若有快取則優先使用，若超過指定次數則自動執行get使能取得快取
  * @example
  *
  * let test1 = async () => {
@@ -26,7 +26,7 @@ import delay from './delay.mjs'
  *
  *     let bc = cacheBd(fun)
  *     let execFun = bc.get
- *     let execFunCache = bc.getByCache
+ *     let execFunCache = bc.getFromCache
  *
  *     let pm1 = execFunCache(123, 'abc') //pm1執行取得快取, 因無快取將持續等待
  *     pm1
@@ -72,7 +72,7 @@ import delay from './delay.mjs'
  *
  *     let bc = cacheBd(fun)
  *     let execFun = bc.get
- *     let execFunCache = bc.getByCache
+ *     let execFunCache = bc.getFromCache
  *
  *     setTimeout(() => {
  *         console.log('pm1 exec..')
@@ -126,7 +126,7 @@ import delay from './delay.mjs'
  *
  *     let bc = cacheBd(fun)
  *     let execFun = bc.get
- *     let execFunCache = bc.getByCache
+ *     let execFunCache = bc.getFromCache
  *
  *     setTimeout(() => {
  *         console.log('pm1 exec..')
@@ -201,8 +201,8 @@ function cacheBd(fun, opt = {}) {
         return cc
     }
 
-    //_getByCache, 提供取用快取版之非同步函數, 若有快取則優先使用, 若超過指定次數則執行get使能取得快取
-    let _getByCache = async(...inputs) => {
+    //_getFromCache, 提供取用快取版之非同步函數, 若有快取則優先使用, 若超過指定次數則執行get使能取得快取
+    let _getFromCache = async(...inputs) => {
         for (let i = 1; i <= nMax; i++) {
 
             //exec
@@ -229,7 +229,7 @@ function cacheBd(fun, opt = {}) {
 
     return {
         get: _get,
-        getByCache: _getByCache,
+        getFromCache: _getFromCache,
     }
 }
 

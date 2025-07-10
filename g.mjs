@@ -21,7 +21,7 @@ let test1 = async () => {
 
     let bc = cacheBd(fun)
     let execFun = bc.get
-    let execFunCache = bc.getByCache
+    let execFunCache = bc.getFromCache
 
     let pm1 = execFunCache(123, 'abc') //pm1執行取得快取, 因無快取將持續等待
     pm1
@@ -68,7 +68,7 @@ let test2 = async () => {
 
     let bc = cacheBd(fun)
     let execFun = bc.get
-    let execFunCache = bc.getByCache
+    let execFunCache = bc.getFromCache
 
     setTimeout(() => {
         console.log('pm1 exec..')
@@ -123,7 +123,7 @@ let test3 = async () => {
 
     let bc = cacheBd(fun)
     let execFun = bc.get
-    let execFunCache = bc.getByCache
+    let execFunCache = bc.getFromCache
 
     setTimeout(() => {
         console.log('pm1 exec..')
