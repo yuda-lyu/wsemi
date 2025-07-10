@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>treeToFilepath.mjs - Documentation</title>
+    <title>cacheBd.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">treeToFilepath.mjs</h1>
+    <h1 class="page-title">cacheBd.mjs</h1>
     
 
     
@@ -46,317 +46,242 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
-import map from 'lodash-es/map.js'
-import join from 'lodash-es/join.js'
-import size from 'lodash-es/size.js'
-import drop from 'lodash-es/drop.js'
-import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
-import treeObj from './treeObj.mjs'
+import ispint from './ispint.mjs'
+import cint from './cint.mjs'
+import delay from './delay.mjs'
 
 
 /**
- * 轉換為樹狀物件成檔案路徑陣列
+ * 封裝非同步函數與再提供使用快取版
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/treeToFilepath.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cacheBd.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} treeItems 輸入樹狀物件陣列，每個須提供pathInfors、_type鍵值，其中pathInfors為各所屬(含自己)階層節點資訊，_type需為'folder'或'file'，詳見filepathToTree轉出treeItems
+ * @param {Function} fun 輸入非同步函數
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [delimiter='/'] 輸入路徑分隔字串，預設'/'
- * @param {String} [bindRoot='root'] 輸入臨時封裝用根目錄字串，詳見filepathToTree內設定，預設'root'
- * @returns {Array} 回傳檔案路徑陣列，每個項目為物件並提供path與type兩鍵值，其中type為'folder'或'file'
+ * @param {Integer} [nMax=200] 輸入使用快取版之總嘗試次數整數，超過則報錯，預設200
+ * @param {Integer} [nTrigger=3] 輸入嘗試指定次數整數，若嘗試指定次數之後皆無快取則須自動執行get用以取得快取，預設3
+ * @returns {Object} 回傳事件物件，可呼叫事件get、getByCache，get為封裝後封裝原本非同步函數，getByCache為提供取用快取版之非同步函數，若有快取則優先使用，若超過指定次數則自動執行get使能取得快取
  * @example
  *
- * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
- * let r1 = filepathToTree(fps1)
- * console.log('r1.treeItems', r1.treeItems)
- * // => r1.treeItems [
- * //   {
- * //     ns: 1,
- * //     ts: [ 'root' ],
- * //     pathInfors: [ [Object] ],
- * //     _type: 'folder',
- * //     type: 'array',
- * //     numOfChilren: -1,
- * //     id: 'root',
- * //     parentId: '',
- * //     text: 'root',
- * //     children: [ [Object] ],
- * //     data: null
- * //   }
+ * let test1 = async () => {
+ *     let ms = []
+ *
+ *     let fun = async(p1, p2) => {
+ *         await delay(300)
+ *         return `${p1}:${p2}`
+ *     }
+ *
+ *     let bc = cacheBd(fun)
+ *     let execFun = bc.get
+ *     let execFunCache = bc.getByCache
+ *
+ *     let pm1 = execFunCache(123, 'abc') //pm1執行取得快取, 因無快取將持續等待
+ *     pm1
+ *         .then((res) => {
+ *             // console.log('res', res)
+ *             ms.push({ result: `pm1-${res}` })
+ *         })
+ *
+ *     let pm2 = execFun(4.56, 'def') //pm2執行原本函數與使用輸入, 會最先回傳, 且更新快取給等待或之後取得快取使用
+ *     pm2
+ *         .then((res) => {
+ *             // console.log('res', res)
+ *             ms.push({ result: `pm2-${res}` })
+ *         })
+ *
+ *     let pm3 = execFunCache(78.9, 'xyz') //pm3執行取得快取, 因已有快取將直接取得快取
+ *     pm3
+ *         .then((res) => {
+ *             // console.log('res', res)
+ *             ms.push({ result: `pm3-${res}` })
+ *         })
+ *
+ *     await Promise.all([pm1, pm2, pm3])
+ *     // console.log('rs', rs)
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * await test1()
+ * // ms [
+ * //   { result: 'pm2-4.56:def' },
+ * //   { result: 'pm1-4.56:def' },
+ * //   { result: 'pm3-4.56:def' }
  * // ]
  *
- * let rfps1 = treeToFilepath(r1.treeItems, {})
- * console.log('rfps1', rfps1)
- * // => rfps1 [
- * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/mmm' },
- * //   { type: 'file', path: '/aaa/mmm/z1.txt' }
+ * let test2 = async () => {
+ *     let ms = []
+ *
+ *     let fun = async(p1, p2) => {
+ *         await delay(300)
+ *         return `${p1}:${p2}`
+ *     }
+ *
+ *     let bc = cacheBd(fun)
+ *     let execFun = bc.get
+ *     let execFunCache = bc.getByCache
+ *
+ *     setTimeout(() => {
+ *         console.log('pm1 exec..')
+ *         let pm1 = execFunCache(123, 'abc') //pm1執行取得快取, 因無快取將持續等待
+ *         pm1
+ *             .then((res) => {
+ *                 console.log('pm1 then', res)
+ *                 ms.push({ result: `pm1-${res}` })
+ *             })
+ *     }, 1)
+ *
+ *     setTimeout(() => {
+ *         console.log('pm2 exec..')
+ *         let pm2 = execFun(4.56, 'def') //1000ms後, pm2執行原本函數與使用輸入, 會最先回傳, 且更新快取給等待或之後取得快取使用
+ *         pm2
+ *             .then((res) => {
+ *                 console.log('pm2 then', res)
+ *                 ms.push({ result: `pm2-${res}` })
+ *             })
+ *     }, 1000)
+ *
+ *     setTimeout(() => {
+ *         console.log('pm3 exec..')
+ *         let pm3 = execFunCache(78.9, 'xyz') //pm3執行取得快取, 因已有快取將直接取得快取
+ *         pm3
+ *             .then((res) => {
+ *                 console.log('pm3 then', res)
+ *                 ms.push({ result: `pm3-${res}` })
+ *             })
+ *     }, 3000)
+ *
+ *     await delay(5000)
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * await test2()
+ * // ms [
+ * //   { result: 'pm2-4.56:def' },
+ * //   { result: 'pm1-4.56:def' },
+ * //   { result: 'pm3-4.56:def' }
  * // ]
  *
- * let fps2 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa1.txt' }, { 'type': 'file', 'path': '/aaa2.txt' }, { 'type': 'folder', 'path': '/aaa/aaammm' }, { 'type': 'file', 'path': '/aaa/aaammm.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/aaammmccc.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd/abcde.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef1.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef2.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg01.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg02.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg03.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg04.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg05.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg06.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg07.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg08.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg09.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg10.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg11.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg12.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg13.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg14.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg15.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg16.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg17.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg18.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg19.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcde/abcdefg20.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd1.txt' }, { 'type': 'file', 'path': '/aaa/aaammm/abc/abcd2.txt' }, { 'type': 'folder', 'path': '/mmm' }, { 'type': 'file', 'path': '/ccc/cccddd/cccdddeee.txt' }, { 'type': 'folder', 'path': '/eee' }, { 'type': 'folder', 'path': '/eee/eeefff1' }, { 'type': 'folder', 'path': '/eee/eeefff2' }, { 'type': 'folder', 'path': '/ggg/' }, { 'type': 'folder', 'path': 'c:\\\\hhh' }, { 'type': 'folder', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff' }, { 'type': 'file', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt' }, { 'type': 'file', 'path': '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt' }, { 'type': 'folder', 'path': 'd:\\\\中文路徑1' }, { 'type': 'folder', 'path': '/中文路徑2' }, { 'type': 'file', 'path': '/中文路徑2/aaa/aaammm/abc/測試.txt' }]
- * let r2 = filepathToTree(fps2, { delimiter: '>' })
- * console.log('r2.treeItems', r2.treeItems)
- * // => r2.treeItems [
- * //   {
- * //     ns: 1,
- * //     ts: [ 'root' ],
- * //     pathInfors: [ [Object] ],
- * //     _type: 'folder',
- * //     type: 'array',
- * //     numOfChilren: -1,
- * //     id: 'root',
- * //     parentId: '',
- * //     text: 'root',
- * //     children: [
- * //       [Object], [Object],
- * //       [Object], [Object],
- * //       [Object], [Object],
- * //       [Object], [Object],
- * //       [Object], [Object],
- * //       [Object]
- * //     ],
- * //     data: null
- * //   }
- * // ]
+ * let test3 = async () => {
+ *     let ms = []
  *
- * let rfps2 = treeToFilepath(r2.treeItems, {})
- * console.log('rfps2', rfps2)
- * // rfps2 [
- * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/aaammm' },
- * //   { type: 'folder', path: '/aaa/aaammm/abc' },
- * //   { type: 'folder', path: '/aaa/aaammm/abc/abcd' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcd/abcde.txt' },
- * //   { type: 'folder', path: '/aaa/aaammm/abc/abcde' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdef1.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdef2.txt' },
- * //   {
- * //     type: 'file',
- * //     path: '/aaa/aaammm/abc/abcde/abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt'
- * //   },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg01.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg02.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg03.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg04.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg05.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg06.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg07.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg08.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg09.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg10.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg11.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg12.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg13.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg14.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg15.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg16.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg17.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg18.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg19.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcde/abcdefg20.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcd1.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/abc/abcd2.txt' },
- * //   { type: 'file', path: '/aaa/aaammm/aaammmccc.txt' },
- * //   { type: 'file', path: '/aaa/aaammm.txt' },
- * //   { type: 'folder', path: '/aaaa' },
- * //   {
- * //     type: 'folder',
- * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff'
- * //   },
- * //   {
- * //     type: 'folder',
- * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg'
- * //   },
- * //   {
- * //     type: 'file',
- * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/ggg/hhh.txt'
- * //   },
- * //   {
- * //     type: 'file',
- * //     path: '/aaaa/mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff/gfedcba.txt'
- * //   },
- * //   { type: 'folder', path: '/mmm' },
- * //   { type: 'folder', path: '/c:' },
- * //   { type: 'folder', path: '/c:/hhh' },
- * //   { type: 'folder', path: '/ccc' },
- * //   { type: 'folder', path: '/ccc/cccddd' },
- * //   { type: 'file', path: '/ccc/cccddd/cccdddeee.txt' },
- * //   { type: 'folder', path: '/d:' },
- * //   { type: 'folder', path: '/d:/中文路徑1' },
- * //   { type: 'folder', path: '/eee' },
- * //   { type: 'folder', path: '/eee/eeefff1' },
- * //   { type: 'folder', path: '/eee/eeefff2' },
- * //   { type: 'folder', path: '/ggg' },
- * //   { type: 'folder', path: '/中文路徑2' },
- * //   { type: 'folder', path: '/中文路徑2/aaa' },
- * //   { type: 'folder', path: '/中文路徑2/aaa/aaammm' },
- * //   { type: 'folder', path: '/中文路徑2/aaa/aaammm/abc' },
- * //   { type: 'file', path: '/中文路徑2/aaa/aaammm/abc/測試.txt' },
- * //   { type: 'file', path: '/aaa1.txt' },
- * //   { type: 'file', path: '/aaa2.txt' }
- * // ]
+ *     let fun = async(p1, p2) => {
+ *         await delay(300)
+ *         return `${p1}:${p2}`
+ *     }
  *
- * let fps3 = [{ 'type': 'folder', 'path': '/aaa1' }, { 'type': 'folder', 'path': '/aaa2' }, { 'type': 'folder', 'path': '/aaa10' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }, { 'type': 'file', 'path': '/aaa/mmm/z2.txt' }, { 'type': 'file', 'path': '/aaa/mmm/z10.txt' }]
- * let r3 = filepathToTree(fps3)
- * console.log('r3.treeItems', r3.treeItems)
- * // => r3.treeItems [
- * //   {
- * //     ns: 1,
- * //     ts: [ 'root' ],
- * //     pathInfors: [ [Object] ],
- * //     _type: 'folder',
- * //     type: 'array',
- * //     numOfChilren: -1,
- * //     id: 'root',
- * //     parentId: '',
- * //     text: 'root',
- * //     children: [ [Object], [Object], [Object], [Object] ],
- * //     data: null
- * //   }
- * // ]
+ *     let bc = cacheBd(fun)
+ *     let execFun = bc.get
+ *     let execFunCache = bc.getByCache
  *
- * let rfps3 = treeToFilepath(r3.treeItems, {})
- * console.log('rfps3', rfps3)
- * // => rfps3 [
- * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/mmm' },
- * //   { type: 'file', path: '/aaa/mmm/z1.txt' },
- * //   { type: 'file', path: '/aaa/mmm/z10.txt' },
- * //   { type: 'file', path: '/aaa/mmm/z2.txt' },
- * //   { type: 'folder', path: '/aaa1' },
- * //   { type: 'folder', path: '/aaa10' },
- * //   { type: 'folder', path: '/aaa2' }
- * // ]
+ *     setTimeout(() => {
+ *         console.log('pm1 exec..')
+ *         let pm1 = execFunCache(123, 'abc') //pm1執行取得快取, 因無快取將持續等待, 3000ms將執行get與自己的輸入, 並最先回傳
+ *         pm1
+ *             .then((res) => {
+ *                 console.log('pm1 then', res)
+ *                 ms.push({ result: `pm1-${res}` })
+ *             })
+ *     }, 1)
  *
- * let fps4 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
- * let r4 = filepathToTree(fps4)
- * console.log('r4.treeItems', r4.treeItems)
- * // => r1.treeItems [
- * //   {
- * //     ns: 1,
- * //     ts: [ 'root' ],
- * //     pathInfors: [ [Object] ],
- * //     _type: 'folder',
- * //     type: 'array',
- * //     numOfChilren: -1,
- * //     id: 'root',
- * //     parentId: '',
- * //     text: 'root',
- * //     children: [ [Object] ],
- * //     data: null
- * //   }
- * // ]
+ *     setTimeout(() => {
+ *         console.log('pm2 exec..')
+ *         let pm2 = execFun(4.56, 'def') //3500ms後, pm2執行原本函數與使用輸入, 計算完畢則會覆蓋快取, 此快取將再給等待或之後取得快取使用
+ *         pm2
+ *             .then((res) => {
+ *                 console.log('pm2 then', res)
+ *                 ms.push({ result: `pm2-${res}` })
+ *             })
+ *     }, 3500)
  *
- * let rfps4 = treeToFilepath(r4.treeItems, { delimiter: '>' })
- * console.log('rfps4', rfps4)
- * // => rfps4 [
- * //   { type: 'folder', path: '>aaa' },
- * //   { type: 'folder', path: '>aaa>mmm' },
- * //   { type: 'file', path: '>aaa>mmm>z1.txt' }
- * // ]
+ *     setTimeout(() => {
+ *         console.log('pm3 exec..')
+ *         let pm3 = execFunCache(78.9, 'xyz') //pm3執行取得快取, 因已有快取將直接取得快取
+ *         pm3
+ *             .then((res) => {
+ *                 console.log('pm3 then', res)
+ *                 ms.push({ result: `pm3-${res}` })
+ *             })
+ *     }, 4500)
  *
- * let fps5 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
- * let r5 = filepathToTree(fps5, { bindRoot: 'ROOT' })
- * console.log('r5.treeItems', r5.treeItems)
- * // => r5.treeItems [
- * //   {
- * //     ns: 1,
- * //     ts: [ 'ROOT' ],
- * //     pathInfors: [ [Object] ],
- * //     _type: 'folder',
- * //     type: 'array',
- * //     numOfChilren: -1,
- * //     id: 'ROOT',
- * //     parentId: '',
- * //     text: 'ROOT',
- * //     children: [ [Object] ],
- * //     data: null
- * //   }
- * // ]
+ *     await delay(6500)
  *
- * let rfps5 = treeToFilepath(r5.treeItems, { bindRoot: 'ROOT' })
- * console.log('rfps5', rfps5)
- * // => rfps5 [
- * //   { type: 'folder', path: '/aaa' },
- * //   { type: 'folder', path: '/aaa/mmm' },
- * //   { type: 'file', path: '/aaa/mmm/z1.txt' }
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * await test3()
+ * // ms [
+ * //   { result: 'pm1-123:abc' },
+ * //   { result: 'pm2-4.56:def' },
+ * //   { result: 'pm3-4.56:def' }
  * // ]
  *
  */
-function treeToFilepath(data, opt = {}) {
+function cacheBd(fun, opt = {}) {
 
-    //check
-    if (!isearr(data)) {
-        return []
+    //nMax
+    let nMax = get(opt, 'nMax')
+    if (!ispint(nMax)) {
+        nMax = 200
+    }
+    nMax = cint(nMax)
+
+    //nTrigger
+    let nTrigger = get(opt, 'nTrigger')
+    if (!ispint(nTrigger)) {
+        nTrigger = 3
+    }
+    nTrigger = cint(nTrigger)
+
+    //快取
+    let cc = null
+
+    //函數執行狀態
+    let lock = false
+
+    //_get, 封裝原本非同步函數
+    let _get = async(...inputs) => {
+        lock = true
+        cc = await fun(...inputs) //若發生錯誤則向外報錯
+        lock = false
+        return cc
     }
 
-    //delimiter
-    let delimiter = get(opt, 'delimiter')
-    if (!isestr(delimiter)) {
-        delimiter = '/'
+    //_getByCache, 提供取用快取版之非同步函數, 若有快取則優先使用, 若超過指定次數則執行get使能取得快取
+    let _getByCache = async(...inputs) => {
+        for (let i = 1; i &lt;= nMax; i++) {
+
+            //exec
+            if (i > nTrigger &amp;&amp; !lock) {
+                // console.log('執行get使能取得快取...')
+                await _get(...inputs)
+                    .catch(() => {}) //取得快取時不向外報錯
+            }
+
+            //check
+            if (cc !== null) {
+                break
+            }
+
+            //delay
+            await delay(1000) //偵測週期1000ms
+
+        }
+        if (cc === null) {
+            throw new Error(`exceeded nMax[${nMax}]`)
+        }
+        return cc
     }
 
-    //bindRoot
-    let bindRoot = get(opt, 'bindRoot')
-    if (!isestr(bindRoot)) {
-        bindRoot = 'root'
+    return {
+        get: _get,
+        getByCache: _getByCache,
     }
-
-    //nodes
-    let nodes = []
-    treeObj(data, (value, key, nk) => {
-        // console.log('nk:', nk, 'key:', key, 'value:', value)
-
-        //type
-        let type = get(value, '_type', '')
-        if (type !== 'folder' &amp;&amp; type !== 'file') {
-            return value
-        }
-
-        //pathInfors
-        let pathInfors = get(value, 'pathInfors', [])
-
-        //texts
-        let texts = map(pathInfors, 'name')
-
-        //text0
-        let text0 = get(texts, 0, '')
-
-        //bText0EqRoot
-        let bText0EqRoot = text0 === bindRoot
-
-        //check, 只有一層時text0為bindRoot, 則不儲存
-        if (size(texts) === 1 &amp;&amp; bText0EqRoot) {
-            return value
-        }
-
-        //剔除最上層bindRoot
-        if (bText0EqRoot) {
-            texts = drop(texts)
-        }
-
-        //path
-        let path = delimiter + join(texts, delimiter)
-
-        //node
-        let node = {
-            type,
-            path,
-        }
-
-        //push
-        nodes.push(node)
-
-        return value
-    }, { force: true })
-    // console.log('nodes', nodes)
-
-    return nodes
 }
 
 
-export default treeToFilepath
+export default cacheBd
 </code></pre>
         </article>
     </section>
