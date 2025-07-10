@@ -10,7 +10,7 @@ import cint from './cint.mjs'
 
 
 /**
- * 非同步函數快取
+ * 非同步函數快取，通過指定key代表函數與其輸入進行執行並快取，快取可設定失效時間，超過失效時間則重新執行與再更新快取
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi

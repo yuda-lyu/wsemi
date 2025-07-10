@@ -4,7 +4,7 @@ import cint from './cint.mjs'
 
 
 /**
- * 佇列處理器，單生產者單消費者模式，核心使用迭代器，具有消息堵塞與可限定同時處理上限數量功能
+ * 佇列處理器，單生產者單消費者模式，具有消息堵塞與可限定同時處理上限數量功能
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.mjs Github}
  * @memberOf wsemi

@@ -114,47 +114,6 @@ import cint from './cint.mjs'
  */
 function pmDebounce(ms = 300) {
 
-    // function ClsDebounceEasy(ms) { //簡易法, 因執行階段中無法儲存推入任務會被視為強制取消, 不合需求
-
-    //     //timer
-    //     let t = null
-
-    //     //pm
-    //     let pm = Promise.resolve()
-
-    //     //run
-    //     let run = (func, ...input) => {
-
-    //         //clearTimeout
-    //         clearTimeout(t)
-
-    //         // console.log('call fun')
-    //         return new Promise((resolve, reject) => {
-    //             // console.log('call in Promise', ...input, ms)
-
-    //             //setTimeout
-    //             t = setTimeout(async () => {
-    //                 // console.log('exec fun start', ...input, ms)
-
-    //                 try {
-    //                     let res = func(...input)
-    //                     if (ispm(res)) {
-    //                         res = await pm
-    //                     }
-    //                     resolve(res)
-    //                 }
-    //                 catch (err) {
-    //                     reject(err)
-    //                 }
-    //                 // console.log('exec fun end')
-
-    //             }, ms)
-    //         })
-    //     }
-
-    //     return run
-    // }
-
     function ClsDebounce(ms) {
         let q = [] //queue
         let t = null //timer
@@ -166,12 +125,6 @@ function pmDebounce(ms = 300) {
             ms = 300
         }
         ms = cint(ms)
-
-        // //_tNow
-        // let _tNow = Date.now()
-        // let getIt = () => {
-        //     return Date.now() - _tNow
-        // }
 
         function detect() {
 

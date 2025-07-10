@@ -326,7 +326,7 @@ function pmThrottle() {
                 t = null
             }
 
-        }, 10) //10ms偵測, 啟動後跑timer, 無佇列則會停止減耗
+        }, 20) //20ms偵測, 啟動後跑timer, 無佇列則會停止減耗
     }
 
     function run(func, ...input) {

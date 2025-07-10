@@ -5,6 +5,7 @@ import genPm from './genPm.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
+import ispm from './ispm.mjs'
 import queue from './queue.mjs'
 
 
@@ -20,7 +21,7 @@ import queue from './queue.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
- * @param {Function} fun 輸入循序執行值的呼叫函數
+ * @param {Function} fun 輸入循序執行值的呼叫async函數
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
@@ -405,6 +406,12 @@ function pmMap(rs, fun, takeLimit = 0) {
                 uv = v.value.v
             }
             pmm = fun(uv, uk)
+
+            //check
+            if (!ispm(pmm)) {
+                throw new Error(`return of fun is not a promise`)
+            }
+
         }
         else {
             pmm = v.value

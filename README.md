@@ -99,11 +99,10 @@ npm i wsemi
 ```
 
 ### In a browser(UMD module):
-> **Note:** umd file includes with `lodash-es`, `crypto-js` and `tippy.js`.
 
-[Optional] Add script with nomodule for IE11.
+[Necessary] Add script for wsemi.
 ```alias
-<script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.13/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -138,32 +137,31 @@ npm i wsemi
 [Optional] Add link and script for `viewerjs`.
 > **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
 ```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for `html2canvas`.
-> **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function. Use canvg with nomodule for IE11.
+> **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function.
 ```alias
-<script nomodule src="https://cdn.jsdelivr.net/npm/canvg@4.0.0/lib/umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 ```
 
-[Optional] Add script for `html-to-image`. It does not support IE11.
-> **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function. html-to-image does not support IE11 and Safari.
+[Optional] Add script for `html-to-image`.
+> **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 ```
 
-[Optional] Add script for `markmap`. It does not support IE11.
-> **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function. markmap does not support IE11 and Safari.
+[Optional] Add script for `markmap`.
+> **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/d3@7.8.3/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.14.4/dist/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js"></script>
 ```
 
-[Optional] Add link and script for `diff2html`. It does not support IE11.
+[Optional] Add link and script for `diff2html`.
 > **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
 ```alias
 <link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/css/diff2html.min.css" rel="stylesheet" />
@@ -176,19 +174,14 @@ npm i wsemi
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
 ```
 
-[Optional] Add script for `pyodide`. It does not support IE11.
+[Optional] Add script for `pyodide`.
 > **Note:** Include script when using `execPyodide` function, and don't include script when using `execPyodideDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
 ```
 
-[Optional] Add script for `tesseract.js`. It does not support IE11.
+[Optional] Add script for `tesseract.js`.
 > **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.2/dist/tesseract.min.js"></script>
-```
-
-[Necessary] Add script for wsemi.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.12/dist/wsemi.umd.js"></script>
 ```
