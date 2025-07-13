@@ -5,7 +5,9 @@ import delay from './delay.mjs'
 
 
 /**
- * 封裝非同步函數與再提供使用快取版
+ * 非同步函數快取，封裝指定非同步函數與再提供取用快取版
+ *
+ * get須定期或高執行率，getFromCache雖能自己自動調用，但僅第1次取得後數據就無法更新，此會導致一直取得舊數據
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cacheBd.test.mjs Github}
  * @memberOf wsemi
