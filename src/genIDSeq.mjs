@@ -10,7 +10,7 @@ import { v7 as uuidv7 } from 'uuid'
  * @example
  *
  * console.log(genIDSeq())
- * // => Is1NyImU3A9fyqFyYBWuJu4ivXXcGZAb (is random)
+ * // => 01980453-935d-700e-a331-633e52a16055 (is random)
  *
  */
 function genIDSeq() {

@@ -102,7 +102,7 @@ npm i wsemi
 
 [Necessary] Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.15/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.16/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
