@@ -25,22 +25,16 @@ import strright from './strright.mjs'
  * //need test in nodejs
  *
  * if (true) {
- *     let prog = 'prog.exe'
- *     let args = 'input'
- *     execProcess(prog, args)
- *         .then(function(data) {
- *             console.log('then', data)
- *         })
- *         .catch(function(data) {
- *             console.log('catch', data)
- *         })
+ *     let prog = 'taskkill'
+ *     let args = ['/pid', '{pid}', '/T', '/F']
+ *     let r = await execProcess(prog, args) //預設spawn
  * }
  *
  * if (true) {
- *     let prog = `"C:\\Program Files\\7-Zip\\7z.exe"`
+ *     let prog = `C:\\Program Files\\7-Zip\\7z.exe`
  *     let pw = 'AbcD1234'
- *     let args = `a aaa.7z aaa.txt -p${pw}`
- *     execProcess(prog, args)
+ *     let args = `a abc.7z abc.txt -p${pw}`
+ *     execProcess(prog, args, { mode: 'execFile' })
  *         .then(function(data) {
  *             console.log('then', data)
  *         })
