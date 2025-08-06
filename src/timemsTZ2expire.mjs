@@ -139,7 +139,7 @@ function timemsTZ2expire(t, tNow = null) {
             c = ihours + '小時後' + '，明天' + hm
         }
     }
-    if (idays > 1) { //明天交由小時部份處理
+    if (idays > 1) {
         today = false
         if (idays === 2) {
             c = '後天'

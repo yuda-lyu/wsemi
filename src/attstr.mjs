@@ -351,6 +351,7 @@ function attstr(opt = {}) {
         uniqItems = false
     }
 
+
     //dlmItem
     let _dlmItem = get(opt, 'dlmItem', '')
     if (isestr(_dlmItem)) {
@@ -376,6 +377,13 @@ function attstr(opt = {}) {
     let _keyId = get(opt, 'keyId', '')
     if (isestr(_keyId)) {
         keyId = _keyId
+    }
+
+
+    //modeDef
+    let modeDef = get(opt, 'mode')
+    if (modeDef !== '1p' && modeDef !== '2p') {
+        modeDef = 'auto'
     }
 
 
@@ -483,7 +491,7 @@ function attstr(opt = {}) {
         //mode
         let mode = get(opt, 'mode')
         if (mode !== '1p' && mode !== '2p') {
-            mode = 'auto'
+            mode = modeDef
         }
 
         if (mode === '1p') {
@@ -578,7 +586,7 @@ function attstr(opt = {}) {
         //mode
         let mode = get(opt, 'mode')
         if (mode !== '1p' && mode !== '2p') {
-            mode = 'auto'
+            mode = modeDef
         }
 
         if (mode === '1p') {
@@ -642,7 +650,7 @@ function attstr(opt = {}) {
         //mode
         let mode = get(opt, 'mode')
         if (mode !== '1p' && mode !== '2p') {
-            mode = 'auto'
+            mode = modeDef
         }
 
         if (mode === '1p') {
@@ -727,7 +735,7 @@ function attstr(opt = {}) {
         //mode
         let mode = get(opt, 'mode')
         if (mode !== '1p' && mode !== '2p') {
-            mode = 'auto'
+            mode = modeDef
         }
 
         if (mode === '1p') {
