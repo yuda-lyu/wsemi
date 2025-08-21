@@ -21,7 +21,7 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
 
 
 /**
- * 後端nodejs偵測指定資料夾下之檔案變化，僅偵測新增與變更檔案，不偵測刪除檔案
+ * 後端nodejs偵測指定資料夾下之檔案變化
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsTask.test.mjs Github}
  * @memberOf wsemi
