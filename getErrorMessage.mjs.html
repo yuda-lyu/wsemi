@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>fsRenameFolder.mjs - Documentation</title>
+    <title>getErrorMessage.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">fsRenameFolder.mjs</h1>
+    <h1 class="page-title">getErrorMessage.mjs</h1>
     
 
     
@@ -45,106 +45,190 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import fs from 'fs'
-import fsRenameFolderCore from './fsRenameFolderCore.mjs'
+            <pre class="prettyprint source linenums"><code>import isErr from './isErr.mjs'
+import isobj from './isobj.mjs'
+import isarr from './isarr.mjs'
+import isstr from './isstr.mjs'
+import cstr from './cstr.mjs'
+import haskey from './haskey.mjs'
 
 
 /**
- * 後端nodejs重新命名資料夾
+ * 提取Error內Message訊息
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsRenameFolder.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getErrorMessage.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pahOld 輸入資料夾原本路徑字串
- * @param {String} pahNew 輸入資料夾更名路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @param {Error} err 傳入錯誤訊息
+ * @returns {String} 回傳錯誤訊息的message字串
  * @example
- * need test in nodejs.
  *
- * let test = () => {
- *
- *     let ms = []
- *
- *     let fdt = './_test_fsRenameFolder'
- *     fsCreateFolder(fdt) //創建臨時任務資料夾
- *
- *     let fn = 't1.txt'
- *     let fdSrc = `${fdt}/abc`
- *     let fpSrc = `${fdt}/abc/${fn}`
- *     let fdTar = `${fdt}/def/abc`
- *     let fpTar = `${fdt}/def/abc/${fn}`
- *
- *     fsWriteText(fpSrc, 'xyz')
- *
- *     let b1 = fsIsFile(fpSrc)
- *     console.log('fsIsFile(before)', b1)
- *     ms.push({ 'fsIsFile(before)': b1 })
- *
- *     let b2 = fsIsFolder(fdSrc)
- *     console.log('fsIsFolder(before)', b2)
- *     ms.push({ 'fsIsFolder(before)': b2 })
- *
- *     let b3 = fsIsFile(fpTar)
- *     console.log('fsIsFile(before)', b3)
- *     ms.push({ 'fsIsFile(before)': b3 })
- *
- *     let b4 = fsIsFolder(fdTar)
- *     console.log('fsIsFolder(before)', b4)
- *     ms.push({ 'fsIsFolder(before)': b4 })
- *
- *     let r = fsRenameFolder(fdSrc, fdTar)
- *     console.log('fsRenameFolder', r)
- *     ms.push({ 'fsRenameFolder': r })
- *
- *     let b5 = fsIsFile(fpSrc)
- *     console.log('fsIsFile(after)', b5)
- *     ms.push({ 'fsIsFile(after)': b5 })
- *
- *     let b6 = fsIsFolder(fdSrc)
- *     console.log('fsIsFolder(after)', b6)
- *     ms.push({ 'fsIsFolder(after)': b6 })
- *
- *     let b7 = fsIsFile(fpTar)
- *     console.log('fsIsFile(after)', b7)
- *     ms.push({ 'fsIsFile(after)': b7 })
- *
- *     let b8 = fsIsFolder(fdTar)
- *     console.log('fsIsFolder(after)', b8)
- *     ms.push({ 'fsIsFolder(after)': b8 })
- *
- *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
- *
- *     console.log('ms', ms)
- *     return ms
+ * try {
+ *     throw new Error('something wrong')
  * }
- * test()
- * // fsIsFile(before) true
- * // fsIsFolder(before) true
- * // fsIsFile(before) false
- * // fsIsFolder(before) false
- * // fsRenameFolder { success: 'done: ./_test_fsRenameFolder/def/abc' }
- * // fsIsFile(after) false
- * // fsIsFolder(after) false
- * // fsIsFile(after) true
- * // fsIsFolder(after) true
- * // ms [
- * //   { 'fsIsFile(before)': true },
- * //   { 'fsIsFolder(before)': true },
- * //   { 'fsIsFile(before)': false },
- * //   { 'fsIsFolder(before)': false },
- * //   { fsRenameFolder: { success: 'done: ./_test_fsRenameFolder/def/abc' } },
- * //   { 'fsIsFile(after)': false },
- * //   { 'fsIsFolder(after)': false },
- * //   { 'fsIsFile(after)': true },
- * //   { 'fsIsFolder(after)': true }
- * // ]
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => something wrong
+ *
+ * try {
+ *     throw new Error()
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => ''
+ *
+ * try {
+ *     throw new TypeError('wrong type')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => wrong type
+ *
+ * try {
+ *     throw new RangeError('range bad')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => range bad
+ *
+ * try {
+ *     throw new ReferenceError('ref bad')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => ref bad
+ *
+ * try {
+ *     throw new SyntaxError('syntax bad')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => syntax bad
+ *
+ * try {
+ *     throw new URIError('uri bad')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => uri bad
+ *
+ * try {
+ *     throw new AggregateError([new Error('e1'), 'e2'], 'outer')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => outer
+ *
+ * try {
+ *     throw new Error('top', { cause: new Error('root cause') })
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => top
+ *
+ * try {
+ *     throw new DOMException('operation was aborted.', 'AbortError')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => operation was aborted.
+ *
+ * try {
+ *     throw fs.readFileSync('definitely_not_exists_1234567890.txt')
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => ENOENT: no such file or directory, open ...
+ *
+ * let test1 = async() => {
+ *     return Promise.reject('promise reject')
+ * }
+ * try {
+ *     await test1()
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => promise reject
+ *
+ * let test2 = async() => {
+ *     throw new Error('something wrong')
+ * }
+ * try {
+ *     await test2()
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => something wrong
+ *
+ * let test3 = async() => {
+ *     throw new Error()
+ * }
+ * try {
+ *     await test3()
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => ''
+ *
+ * let test4 = async() => {
+ *     throw new TypeError('wrong type')
+ * }
+ * try {
+ *     await test4()
+ * }
+ * catch (err) {
+ *     console.log(getErrorMessage(err))
+ * }
+ * // => wrong type
  *
  */
-function fsRenameFolder(pahOld, pahNew) {
-    return fsRenameFolderCore(pahOld, pahNew, { fs })
+function getErrorMessage(err) {
+
+    let errMsg = ''
+    if (isErr(err)) { //err instanceof Error
+        // console.log(`instanceof(err)`)
+        errMsg = err.message
+    }
+    else if (isstr(err)) {
+        // console.log(`isstr(err)`)
+        return err
+    }
+    else if (isobj(err)) {
+        // console.log(`isobj(err)`)
+        if (haskey(err, 'message')) {
+            return err.message
+        }
+        else {
+            return JSON.stringify(err)
+        }
+    }
+    else if (isarr(err)) {
+        // console.log(`isarr(err)`)
+        return JSON.stringify(err)
+    }
+    else {
+        // console.log(`cstr(err)`)
+        errMsg = cstr(err)
+    }
+
+    return errMsg
 }
 
 
-export default fsRenameFolder
+export default getErrorMessage
 </code></pre>
         </article>
     </section>
