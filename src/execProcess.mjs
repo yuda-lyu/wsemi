@@ -98,7 +98,11 @@ function execProcess(prog, args, opt = {}) {
         if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
             throw new Error('prog of spawn doens not need to add quotes')
         }
-        r = cp.spawn(prog, args, { encoding: codeCmd, shell: false }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
+        r = cp.spawn(prog, args, {
+            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+            encoding: codeCmd,
+            shell: false,
+        }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
     }
     else if (mode === 'exec') {
         // console.log('mode',mode)
@@ -107,11 +111,17 @@ function execProcess(prog, args, opt = {}) {
             cpre = `cmd /c chcp 65001>nul &&`
         }
         // console.log(`${cpre} ${prog} ${args.join(' ')} & exit`)
-        r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, { encoding: codeCmd })
+        r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, {
+            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+            encoding: codeCmd,
+        })
     }
     else if (mode === 'execFile') {
         // console.log('mode',mode)
-        r = cp.execFile(prog, args, { encoding: codeCmd })
+        r = cp.execFile(prog, args, {
+            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+            encoding: codeCmd,
+        })
     }
     else {
         throw new Error(`invalid mode[${mode}]`)
