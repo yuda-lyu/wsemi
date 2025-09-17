@@ -14,7 +14,7 @@ import fsGetFileHashCore from './fsGetFileHashCore.mjs'
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='md5'] 輸入計算HASH方法，預設'md5'
+ * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息
  * @example
  * //need test in nodejs

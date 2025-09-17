@@ -28,7 +28,7 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
- * @param {String} [opt.type='md5'] 輸入計算HASH方法，預設'md5'
+ * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
  * @returns {Object} 回傳事件物件，包含run、stop函數，on可進行監聽指定事件，run為啟動偵測函數，stop為停止偵測函數
  * @example

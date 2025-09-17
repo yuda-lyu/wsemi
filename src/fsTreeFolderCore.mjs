@@ -1,7 +1,7 @@
-// import path from 'path'
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
+import ispint from './ispint.mjs'
+import cint from './cint.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 
 
@@ -29,6 +29,14 @@ function fsTreeFolderCore(fd, levelLimit = 1, opt = {}) {
     //check
     if (!fsIsFolderCore(fd, { fs })) {
         throw new Error(`fd[${fd}] is not a folder`)
+    }
+
+    //check
+    if (levelLimit !== null && ispint(levelLimit)) {
+        levelLimit = cint(levelLimit)
+        if (levelLimit < 1) {
+            levelLimit = 1
+        }
     }
 
     //tree

@@ -43,7 +43,7 @@ import cdbl from './cdbl.mjs'
  * @memberOf wsemi
  * @param {Blob|File} inp 輸入檔案Blob或File
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='sha512'] 輸入計算HASH方法，預設'sha512'
+ * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
  * @returns {Promise} 回傳Promise，此時若成功則resolve代表檔案HASH值，若失敗則reject錯誤訊息
  * @example
  *

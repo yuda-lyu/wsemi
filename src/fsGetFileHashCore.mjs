@@ -15,8 +15,8 @@ import fsGetFileXxHashCore from './fsGetFileXxHashCore.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='sha512'] 輸入計算HASH方法，預設'sha512'
- * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法為'xxhash64'時，使用切片長度數字，單位位元，預設64*1024*1024(64mb)
+ * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
+ * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法字串為'xxhash64'時，使用切片長度數字，單位位元，預設64*1024*1024(64mb)
  * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject代表回傳錯誤訊息
  * @example
  * need test in nodejs.

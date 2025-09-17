@@ -20,8 +20,8 @@ import getFileXxHash from './getFileXxHash.mjs'
  * @memberOf wsemi
  * @param {Blob|File} inp 輸入檔案Blob或File
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='sha512'] 輸入計算HASH方法，預設'sha512'
- * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法為'xxhash64'時，使用切片長度數字，單位位元，預設64*1024*1024(64mb)
+ * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
+ * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法字串為'xxhash64'時，使用切片長度數字，單位位元，預設64*1024*1024(64mb)
  * @returns {Promise} 回傳Promise，此時若成功則resolve代表檔案HASH值，若失敗則reject錯誤訊息
  * @example
  *

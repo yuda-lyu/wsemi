@@ -1,4 +1,3 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'

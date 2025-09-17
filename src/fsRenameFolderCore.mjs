@@ -1,4 +1,3 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import getPathParent from './getPathParent.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'

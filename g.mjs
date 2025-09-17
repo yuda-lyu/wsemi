@@ -1,143 +1,277 @@
 import fs from 'fs'
 import _ from 'lodash-es'
 import ot from 'dayjs'
+import fsIsFile from './src/fsIsFile.mjs'
 import fsDeleteFile from './src/fsDeleteFile.mjs'
+import fsIsFolder from './src/fsIsFolder.mjs'
+import fsCleanFolder from './src/fsCleanFolder.mjs'
 import fsCreateFolder from './src/fsCreateFolder.mjs'
 import fsDeleteFolder from './src/fsDeleteFolder.mjs'
-import genPm from './src/genPm.mjs'
-import getErrorMessage from './src/getErrorMessage.mjs'
+import fsWriteText from './src/fsWriteText.mjs'
+import fsSyncFolder from './src/fsSyncFolder.mjs'
 
 
-try {
-    throw new Error('something wrong')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => something wrong
+let test = async () => {
 
-try {
-    throw new Error()
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => ''
+    let ms = []
 
-try {
-    throw new TypeError('wrong type')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => wrong type
+    let fdt = './_test_fsSyncFolder'
+    fsCreateFolder(fdt) //創建臨時任務資料夾
 
-try {
-    throw new RangeError('range bad')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => range bad
+    let fdSrc = `${fdt}/src`
+    let fdTar = `${fdt}/tar`
 
-try {
-    throw new ReferenceError('ref bad')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => ref bad
+    let fp
+    let stage
+    let b
 
-try {
-    throw new SyntaxError('syntax bad')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => syntax bad
+    if (true) {
 
-try {
-    throw new URIError('uri bad')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => uri bad
+        fp = `${fdTar}/t0.txt`
+        fsWriteText(fp, 't0')
 
-try {
-    throw new AggregateError([new Error('e1'), 'e2'], 'outer')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => outer
+        fp = `${fdTar}/abc/t1.txt`
+        fsWriteText(fp, 'abc-t1')
 
-try {
-    throw new Error('top', { cause: new Error('root cause') })
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => top
+        fp = `${fdTar}/abc/t2.txt`
+        fsWriteText(fp, 'abc-t2')
 
-try {
-    throw new DOMException('operation was aborted.', 'AbortError')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => operation was aborted.
+        fp = `${fdTar}/def/xyz/t3.txt`
+        fsWriteText(fp, 'def-xyz-t3')
 
-try {
-    throw fs.readFileSync('definitely_not_exists_1234567890.txt')
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => ENOENT: no such file or directory, open ...
+    }
 
-let test1 = async() => {
-    return Promise.reject('promise reject')
-}
-try {
-    await test1()
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => promise reject
+    if (true) {
 
-let test2 = async() => {
-    throw new Error('something wrong')
-}
-try {
-    await test2()
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => something wrong
+        //檔案內容變更
+        fp = `${fdSrc}/t0.txt`
+        fsWriteText(fp, 't0-mod')
 
-let test3 = async() => {
-    throw new Error()
-}
-try {
-    await test3()
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => ''
+        //未變更
+        fp = `${fdSrc}/abc/t1.txt`
+        fsWriteText(fp, 'abc-t1')
 
-let test4 = async() => {
-    throw new TypeError('wrong type')
+        //檔案新增
+        fp = `${fdSrc}/abc/t1-add.txt`
+        fsWriteText(fp, 'abc-t1-add')
+
+        //檔案刪除
+        // fp = `${fdSrc}/abc/t2.txt`
+        // fsWriteText(fp, 'abc-t2')
+
+        //資料夾刪除, 檔案刪除
+        // fp = `${fdSrc}/def/xyz/t3.txt`
+        // fsWriteText(fp, 'def-xyz-t3')
+
+        //資料夾新增, 檔案新增
+        fp = `${fdSrc}/def/xyz-add/t3.txt`
+        fsWriteText(fp, 'def-xyz-add-t3')
+
+    }
+
+    stage = 'before'
+
+    fp = `${fdTar}/t0.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/abc`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/abc/t1.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/abc/t2.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/def`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/def/xyz`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/def/xyz/t3.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    await fsSyncFolder(fdSrc, fdTar)
+
+    stage = 'after'
+
+    fp = `${fdTar}/t0.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/abc`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/abc/t1.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/abc/t1-add.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/abc/t2.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b) //b=false
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/def`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/def/xyz`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b }) //b=false
+
+    fp = `${fdTar}/def/xyz-add`
+    b = fsIsFolder(fp)
+    console.log(stage, fp, 'fsIsFolder', b)
+    ms.push({ stage, fp, fsIsFolder: b })
+
+    fp = `${fdTar}/def/xyz/t3.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b) //b=false
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fp = `${fdTar}/def/xyz-add/t3.txt`
+    b = fsIsFile(fp)
+    console.log(stage, fp, 'fsIsFile', b)
+    ms.push({ stage, fp, fsIsFile: b })
+
+    fsDeleteFolder(fdt) //刪除臨時任務資料夾
+
+    console.log('ms', JSON.stringify(ms, null, 2))
+    return ms
 }
-try {
-    await test4()
-}
-catch (err) {
-    console.log(getErrorMessage(err))
-}
-// => wrong type
+await test()
+    .catch((err) => {
+        console.log(err)
+    })
+// before ./_test_fsSyncFolder/tar/t0.txt fsIsFile true
+// before ./_test_fsSyncFolder/tar/abc fsIsFolder true
+// before ./_test_fsSyncFolder/tar/abc/t1.txt fsIsFile true
+// before ./_test_fsSyncFolder/tar/abc/t2.txt fsIsFile true
+// before ./_test_fsSyncFolder/tar/def fsIsFolder true
+// before ./_test_fsSyncFolder/tar/def/xyz fsIsFolder true
+// before ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile true
+// after ./_test_fsSyncFolder/tar/t0.txt fsIsFile true
+// after ./_test_fsSyncFolder/tar/abc fsIsFolder true
+// after ./_test_fsSyncFolder/tar/abc/t1.txt fsIsFile true
+// after ./_test_fsSyncFolder/tar/abc/t1-add.txt fsIsFile true
+// after ./_test_fsSyncFolder/tar/abc/t2.txt fsIsFile false
+// after ./_test_fsSyncFolder/tar/def fsIsFolder true
+// after ./_test_fsSyncFolder/tar/def/xyz fsIsFolder false
+// after ./_test_fsSyncFolder/tar/def/xyz-add fsIsFolder true
+// after ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile false
+// after ./_test_fsSyncFolder/tar/def/xyz-add/t3.txt fsIsFile true
+// ms [
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/t0.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/abc",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/abc/t1.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/abc/t2.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/def",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "before",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz/t3.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/t0.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/abc",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/abc/t1.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/abc/t1-add.txt",
+//     "fsIsFile": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/abc/t2.txt",
+//     "fsIsFile": false
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/def",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz",
+//     "fsIsFolder": false
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz-add",
+//     "fsIsFolder": true
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz/t3.txt",
+//     "fsIsFile": false
+//   },
+//   {
+//     "stage": "after",
+//     "fp": "./_test_fsSyncFolder/tar/def/xyz-add/t3.txt",
+//     "fsIsFile": true
+//   }
+// ]
 
 //node g.mjs
