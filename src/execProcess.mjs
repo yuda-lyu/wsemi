@@ -1,12 +1,13 @@
 import cp from 'child_process'
 import get from 'lodash-es/get.js'
+import genPm from './genPm.mjs'
 import isearr from './isearr.mjs'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
-import genPm from './genPm.mjs'
 import strleft from './strleft.mjs'
 import strright from './strright.mjs'
+import arrHas from './arrHas.mjs'
 
 
 /**
@@ -85,56 +86,71 @@ function execProcess(prog, args, opt = {}) {
     //pm
     let pm = genPm()
 
-    //cmsg, cerr
-    let cmsg = ''
-    let cerr = ''
+    //check
+    if (!arrHas(mode, ['spawn', 'exec', 'execFile'])) {
+        pm.reject(`invalid mode[${mode}]`)
+        return pm
+    }
 
-    //r
+    //r, cmsg
     let r = null
-    if (mode === 'spawn') {
-        // console.log('mode',mode)
-        let cr = strleft(prog, 1)
-        let cl = strright(prog, 1)
-        if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
-            throw new Error('prog of spawn doens not need to add quotes')
+    let cmsg = ''
+    // let cout = ''
+    // let cerr = ''
+    try {
+        if (mode === 'spawn') {
+            // console.log('mode',mode)
+            let cr = strleft(prog, 1)
+            let cl = strright(prog, 1)
+            if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
+                throw new Error('prog of spawn doens not need to add quotes')
+            }
+            r = cp.spawn(prog, args, {
+                windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+                // encoding: codeCmd, //spawn無encoding, 因輸出是buffer無法指定, encoding只能用於exec/execFile
+                shell: false,
+            }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
         }
-        r = cp.spawn(prog, args, {
-            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
-            encoding: codeCmd,
-            shell: false,
-        }) //spwan的prog與args內檔案, 都不需要用單/雙引號括住, 已內建處理機制, 額外添加單/雙引號會導致錯誤
-    }
-    else if (mode === 'exec') {
-        // console.log('mode',mode)
-        let cpre = ''
-        if (useChcp) {
-            cpre = `cmd /c chcp 65001>nul &&`
+        else if (mode === 'exec') {
+            // console.log('mode',mode)
+            let cpre = ''
+            if (useChcp) {
+                cpre = `cmd /c chcp 65001>nul &&`
+            }
+            // console.log(`${cpre} ${prog} ${args.join(' ')} & exit`)
+            r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, {
+                windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+                encoding: codeCmd,
+            })
         }
-        // console.log(`${cpre} ${prog} ${args.join(' ')} & exit`)
-        r = cp.exec(`${cpre} ${prog} ${args.join(' ')} & exit`, {
-            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
-            encoding: codeCmd,
-        })
+        else if (mode === 'execFile') {
+            // console.log('mode',mode)
+            r = cp.execFile(prog, args, {
+                windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+                encoding: codeCmd,
+            })
+        }
     }
-    else if (mode === 'execFile') {
-        // console.log('mode',mode)
-        r = cp.execFile(prog, args, {
-            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
-            encoding: codeCmd,
-        })
-    }
-    else {
-        throw new Error(`invalid mode[${mode}]`)
+    catch (err) {
+        pm.reject(err)
+        return pm
     }
 
     //stdout data
     r.stdout.on('data', (data) => {
-        // console.log('stdout chunk:', data.toString().trim())
+        // console.log('stdout chunk:', data.toString())
 
         //cdata
-        let cdata = data.toString().trim()
+        let cdata = ''
+        if (mode === 'spawn') {
+            cdata = data.toString(codeCmd)
+        }
+        else {
+            cdata = data.toString()
+        }
 
         //megre
+        // cout += cdata + '\n'
         cmsg += cdata + '\n'
 
         //cbStdout
@@ -144,15 +160,22 @@ function execProcess(prog, args, opt = {}) {
 
     })
 
-    //stderr data
+    //stderr data, 太多程式把warning或log輸出到stderr, 已無法視為有err發生
     r.stderr.on('data', (data) => {
-        // console.error('stderr chunk:', data.toString().trim())
+        // console.error('stderr chunk:', data.toString())
 
         //cdata
-        let cdata = data.toString().trim()
+        let cdata = ''
+        if (mode === 'spawn') {
+            cdata = data.toString(codeCmd)
+        }
+        else {
+            cdata = data.toString()
+        }
 
         //megre
-        cerr += cdata + '\n'
+        // cerr += cdata + '\n'
+        cmsg += cdata + '\n'
 
         //cbStderr
         if (isfun(cbStderr)) {
@@ -169,14 +192,8 @@ function execProcess(prog, args, opt = {}) {
     //close
     r.on('close', (code) => {
         // console.log('close code', code)
-        // if (code !== 0) {
-        //     pm.reject(`code=${code} and stderr='${cerr}'`)
-        // }
-        // else if(isestr(cerr)){
-        //     pm.reject(cerr)
-        // }
-        if (isestr(cerr)) {
-            pm.reject(cerr)
+        if (code !== 0) {
+            pm.reject(`code[${code}]:\n${cmsg}`)
         }
         else {
             pm.resolve(cmsg)

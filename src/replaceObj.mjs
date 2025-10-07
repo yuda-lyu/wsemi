@@ -1,7 +1,9 @@
 import each from 'lodash-es/each.js'
-import isstr from './isstr.mjs'
+import isobj from './isobj.mjs'
+import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
+import cstr from './cstr.mjs'
 import replace from './replace.mjs'
 
 
@@ -29,17 +31,17 @@ function replaceObj(c, o) {
         return ''
     }
 
-    //check obj value(replace string)
-    let b = false
+    //自動轉換
     each(o, function(v, k) {
-        if (!isstr(v)) { //允許空字串
-            b = true
+        if (isobj(v) || isarr(v)) { //允許空字串
+            v = JSON.stringify(v)
+        }
+        else {
+            v = cstr(v)
         }
     })
-    if (b) {
-        return ''
-    }
 
+    //replace
     each(o, function(v, k) {
         c = replace(c, k, v)
     })
