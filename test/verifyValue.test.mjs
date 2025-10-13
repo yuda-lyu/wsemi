@@ -518,6 +518,75 @@ describe(`verifyValue`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    k = 33
+    o[k] = {
+        in1: 23.45,
+        in2: 'custom',
+        funCustom: (v) => {
+            let max = 100
+            if (v > max) {
+                return {
+                    err: true,
+                    errmsg: `>${max}`,
+                    value: max,
+                }
+            }
+            else {
+                return {
+                    err: false,
+                    errmsg: '',
+                    value: v,
+                }
+            }
+        },
+        out: {
+            err: false,
+            errmsg: '',
+            value: 23.45,
+        }
+    }
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}, {funCustom}`, function() {
+        let k = 33
+        let r = verifyValue(o[k].in1, o[k].in2, { funCustom: o[k].funCustom })
+        let rr = o[k].out
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    k = 34
+    o[k] = {
+        in1: 123.45,
+        in2: 'custom',
+        funCustom: (v) => {
+            let max = 100
+            if (v > max) {
+                return {
+                    err: true,
+                    errmsg: `>${max}`,
+                    value: max,
+                }
+            }
+            else {
+                return {
+                    err: false,
+                    errmsg: '',
+                    value: v,
+                }
+            }
+        },
+        out: {
+            err: true,
+            errmsg: '>100',
+            value: 100,
+        }
+    }
+    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in1)}, ${JSON.stringify(o[k].in2)}, {funCustom}`, function() {
+        let k = 34
+        let r = verifyValue(o[k].in1, o[k].in2, { funCustom: o[k].funCustom })
+        let rr = o[k].out
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+
     let q = {
         err: true,
         errmsg: '需要指定驗證類型',

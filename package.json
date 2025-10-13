@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.22",
+  "version": "1.8.23",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^4.0.3",
@@ -18,7 +18,7 @@
     "seamless-scroll-polyfill": "^2.3.4",
     "tesseract.js": "^4.1.2",
     "tippy.js": "^6.3.7",
-    "ua-parser-js": "^2.0.5",
+    "ua-parser-js": "^2.0.6",
     "uuid": "^13.0.0",
     "viewerjs": "^1.11.7",
     "xlsx": "^0.18.5",

@@ -1,4 +1,7 @@
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
+import isestr from './isestr.mjs'
 import isnum from './isnum.mjs'
 import isp0num from './isp0num.mjs'
 import isn0num from './isn0num.mjs'
@@ -48,7 +51,7 @@ import isfun from './isfun.mjs'
  * // => r.err=false
  *
  */
-function verifyValue(value, type) {
+function verifyValue(value, type, opt = {}) {
 
     let err = false
     let errmsg = ''
@@ -115,6 +118,25 @@ function verifyValue(value, type) {
             value = 0
         }
     }
+    else if (type === 'custom') {
+        let funCustom = get(opt, 'funCustom')
+        if (!isfun(funCustom)) {
+            throw new Error(`invalid opt.funCustom when type='custom'`)
+        }
+        let r = funCustom(value)
+        if (!isbol(r.err)) {
+            throw new Error(`invalid return.err for type='custom'`)
+        }
+        if (r.err && !isestr(r.errmsg)) {
+            throw new Error(`invalid return.errmsg when return.err=true for type='custom'`)
+        }
+        if (!isnum(r.value) & !isstr(r.value)) {
+            throw new Error(`invalid return.value for type='custom'`)
+        }
+        err = r.err
+        errmsg = r.errmsg
+        value = r.value
+    }
     else if (isfun(type)) {
         let f = type
         value = f(value)
@@ -132,9 +154,9 @@ function verifyValue(value, type) {
         value = null
     }
     let r = {
-        value: value,
-        err: err,
-        errmsg: errmsg,
+        value,
+        err,
+        errmsg,
     }
     return r
 }
