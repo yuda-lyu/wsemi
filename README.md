@@ -107,7 +107,7 @@ npm i wsemi
 
 [Optional] Add script for `dayjs`.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.18/dayjs.min.js"></script>
 ```
 
 [Optional] Add script for `fuse.js`.

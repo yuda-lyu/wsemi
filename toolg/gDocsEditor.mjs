@@ -76,7 +76,7 @@ function main() {
     <script>
         let prefill = { 
             'scripts': [
-                'https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js',
+                'https://cdn.jsdelivr.net/npm/dayjs@1.11.18/dayjs.min.js',
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
