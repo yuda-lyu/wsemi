@@ -93,6 +93,7 @@ To view some examples for more understanding, visit examples:
 > **ocrDyn[dynamic import]:** [ex-ocrDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocrDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocrDyn.html)]
 
 ## Installation
+
 ### Using npm(ES6 module):
 ```alias
 npm i wsemi
@@ -100,7 +101,7 @@ npm i wsemi
 
 ### In a browser(UMD module):
 
-[Necessary] Add script for wsemi.
+Add script for wsemi.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.23/dist/wsemi.umd.js"></script>
 ```
