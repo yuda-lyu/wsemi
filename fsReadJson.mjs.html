@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>domGetScrollableParent.mjs - Documentation</title>
+    <title>fsReadJson.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">domGetScrollableParent.mjs</h1>
+    <h1 class="page-title">fsReadJson.mjs</h1>
     
 
     
@@ -45,58 +45,82 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import domGetParents from './domGetParents.mjs'
+            <pre class="prettyprint source linenums"><code>import fs from 'fs'
+import fsReadTextCore from './fsReadTextCore.mjs'
 
 
 /**
- * 前端找尋DOM元素最近的可捲動父層
+ * 後端nodejs由檔案讀取JSON格式文字成為物件或陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetScrollableParent.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadJson.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} ele 輸入dom元素
- * @returns {Element} 回傳DOM元素
+ * @param {String} fp 輸入JSON檔案名稱
+ * @returns {Object|Array} 回傳物件或陣列
  * @example
- * need test in browser
+ * need test in nodejs.
  *
- * let eleScrollableParent = domGetScrollableParent(document.querySelector('#id'))
+ * let test = () => {
+ *
+ *     let ms = []
+ *
+ *     let fdt = './_test_fsReadJson'
+ *     fsCreateFolder(fdt) //創建臨時任務資料夾
+ *
+ *     let fn = 't1.json'
+ *     let fp = `${fdt}/${fn}`
+ *
+ *     fsWriteText(fp, JSON.stringify({ str: '測試中文', val: 123.45, int: 5 }))
+ *
+ *     let r = fsReadJson(fp)
+ *     console.log('fsReadJson', r)
+ *     ms.push({ 'fsReadJson': JSON.stringify(r) })
+ *
+ *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
+ *
+ *     console.log('ms', ms)
+ *     return ms
+ * }
+ * test()
+ * // fsReadJson { success: { str: '測試中文', val: 123.45, int: 5 } }
+ * // ms [ { fsReadJson: '{"success":{"str":"測試中文","val":123.45,"int":5}}' } ]
  *
  */
-function domGetScrollableParent(ele) {
+function fsReadJson(fp) {
+    let errTemp = null
 
-    let regex = /(auto|scroll)/
-
-    let style = function (ele, prop) {
-        return getComputedStyle(ele, null).getPropertyValue(prop)
-    }
-
-    let overflow = function (ele) {
-        return style(ele, 'overflow') + style(ele, 'overflow-y') + style(ele, 'overflow-x')
-    }
-
-    let scroll = function (ele) {
-        return regex.test(overflow(ele))
-    }
+    //rj
+    let rj = fsReadTextCore(fp, { fs })
 
     //check
-    if (!(ele instanceof HTMLElement || ele instanceof SVGElement)) {
-        return
+    if (rj.error) {
+        return rj
     }
 
-    //ps
-    let ps = domGetParents(ele)
+    //j
+    let j = rj.success
 
-    //find
-    for (let i = 0; i &lt; ps.length; i += 1) {
-        if (scroll(ps[i])) {
-            return ps[i]
+    //parse
+    let r = null
+    try {
+        r = JSON.parse(j)
+    }
+    catch (err) {
+        // console.log(err)
+        errTemp = err
+    }
+
+    if (errTemp !== null) {
+        return {
+            error: errTemp,
         }
     }
-
-    return document.scrollingElement || document.documentElement
+    return {
+        success: r,
+    }
 }
 
 
-export default domGetScrollableParent
+export default fsReadJson
 </code></pre>
         </article>
     </section>
