@@ -3,7 +3,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
 
 
 /**
- * 寫入utf-8文字至檔案
+ * 後端nodejs寫入utf-8文字至檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWriteText.test.mjs Github}
  * @memberOf wsemi
@@ -26,7 +26,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  *     console.log('fsWriteText(before)', b1)
  *     ms.push({ 'fsWriteText(before)': b1 })
  *
- *     let b2 = fsWriteText(fp, 'abc', { encoding: 'utf8' })
+ *     let b2 = fsWriteText(fp, 'abc')
  *     console.log('fsWriteText', b2)
  *     ms.push({ 'fsWriteText': b2 })
  *

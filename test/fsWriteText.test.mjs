@@ -22,7 +22,7 @@ describe(`fsWriteText`, function() {
         // console.log('fsWriteText(before)', b1)
         ms.push({ 'fsWriteText(before)': b1 })
 
-        let b2 = fsWriteText(fp, 'abc', { encoding: 'utf8' })
+        let b2 = fsWriteText(fp, 'abc')
         // console.log('fsWriteText', b2)
         ms.push({ 'fsWriteText': b2 })
 

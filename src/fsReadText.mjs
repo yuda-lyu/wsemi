@@ -26,7 +26,7 @@ import fsReadTextCore from './fsReadTextCore.mjs'
  *     console.log('fsIsFile(before)', b1)
  *     ms.push({ 'fsIsFile(before)': b1 })
  *
- *     let rw = fsWriteText(fp, 'abc', { encoding: 'utf8' })
+ *     let rw = fsWriteText(fp, 'abc')
  *     console.log('fsWriteText', rw)
  *     ms.push({ 'fsWriteText': rw })
  *
@@ -34,7 +34,7 @@ import fsReadTextCore from './fsReadTextCore.mjs'
  *     console.log('fsIsFile(after)', b2)
  *     ms.push({ 'fsIsFile(after)': b2 })
  *
- *     let rr = fsReadText(fp, 'abc', { encoding: 'utf8' })
+ *     let rr = fsReadText(fp, 'abc')
  *     console.log('fsReadText', rr)
  *     ms.push({ 'fsReadText': rr })
  *

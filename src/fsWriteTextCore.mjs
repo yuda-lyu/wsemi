@@ -6,7 +6,7 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
 
 /**
- * 寫入utf-8文字至檔案
+ * 後端nodejs寫入utf-8文字至檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWriteTextCore.test.mjs Github}
  * @memberOf wsemi
