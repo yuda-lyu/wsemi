@@ -1,3 +1,4 @@
+import size from 'lodash-es/size.js'
 import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
@@ -123,7 +124,7 @@ function debounce(ms = 300) {
     function ClsDebounce(ms) {
         let q = [] //queue
         let t = null //timer
-        let tLast = null
+        let tLast = Date.now() //先初始化, 之後由每次run覆蓋
 
         //ms
         if (!ispint(ms)) {
@@ -138,22 +139,31 @@ function debounce(ms = 300) {
             t = setInterval(() => {
             //console.log('q', q)
 
+                //check
+                if (size(q) === 0) {
+                    clearInterval(t)
+                    t = null
+                    return
+                }
+
+                //tDiff
                 let tDiff = Date.now() - tLast
+
+                //check
                 if (tDiff > ms) { //超過指定延時則呼叫指定func
 
                     //取最後的任務與清空佇列
                     let m = q.pop()
                     q = []
 
-                    //執行最後的任務
-                    m.func(...m.input)
+                    //執行最後任務, 不論成功失敗都須持續執行至無佇列
+                    try {
+                        m.func(...m.input) //有可能為sync或async, async時不await, 須持續執行至無佇列
+                    }
+                    catch (err) {
+                        console.log('m.func catch', err)
+                    }
 
-                }
-
-                //clear
-                if (q.length === 0) {
-                    clearInterval(t)
-                    t = null
                 }
 
             }, 10) //10ms偵測, 啟動後跑timer, 無佇列則會停止減耗
