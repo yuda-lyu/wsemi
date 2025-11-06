@@ -9,9 +9,6 @@ import getGlobal from './getGlobal.mjs'
 function getHtmlparser() {
     let g = getGlobal()
     let x = htmlparser || g.htmlparser || g.Tautologistics.NodeHtmlParser
-    // if (x.default) {
-    //     x = x.default
-    // }
     return x
 }
 

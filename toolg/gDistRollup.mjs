@@ -25,7 +25,6 @@ rollupFiles({
         'fuse.js': 'Fuse',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        'viewerjs': 'viewerjs',
         //'tippy.js': 'tippyjs', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來, 不能使用小數點故內部引用需為tippyjs
         'tesseract.js': 'tesseractjs', //不能使用小數點故內部引用需為tesseractjs
         'htmlparser': 'htmlparser',
@@ -45,7 +44,6 @@ rollupFiles({
         'fuse.js',
         'ua-parser-js',
         'xss',
-        'viewerjs',
         //'tippy.js', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來
         'tesseract.js',
         'htmlparser',

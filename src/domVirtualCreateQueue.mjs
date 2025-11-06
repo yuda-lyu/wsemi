@@ -20,9 +20,9 @@ import domVirtualCreate from './domVirtualCreate.mjs'
  *     let highchartsOpt = {...} //給予highcharts設定物件
  *     window.Highcharts.chart(ele, highchartsOpt)
  *
- *     //html2picDyn, 預設轉出base64
+ *     //domConvertToPicDyn, 預設轉出base64
  *     let html2canvasOpt = { scale: 3 } //放大3倍, 提高解析度
- *     b64 = await html2picDyn(ele, html2canvasOpt)
+ *     b64 = await domConvertToPicDyn(ele, html2canvasOpt)
  *
  *     return b64
  * }

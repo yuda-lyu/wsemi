@@ -76,10 +76,6 @@ To view some examples for more understanding, visit examples:
 
 > **xlsx[dynamic import]:** [ex-xlsxDyn](https://yuda-lyu.github.io/wsemi/examples/ex-xlsxDyn) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsxDyn)]
 
-> **html2pic:** [ex-html2pic.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2pic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2pic.html)]
-
-> **html2picDyn[dynamic import]:** [ex-html2picDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2picDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2picDyn.html)]
-
 > **html2str:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
 
 > **html2strDyn[dynamic import]:** [ex-html2strDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2strDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2strDyn.html)]
@@ -103,7 +99,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.25/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.26/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -142,16 +138,10 @@ Add script for wsemi.
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.js"></script>
 ```
 
-[Optional] Add script for `html2canvas`.
-> **Note:** Include script when using `html2pic` function, and don't include script when using `html2picDyn` function.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-```
-
-[Optional] Add script for `html-to-image`.
+[Optional] Add script for `@zumer/snapdom`.
 > **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zumer/snapdom@1.9.14/dist/snapdom.min.js"></script>
 ```
 
 [Optional] Add script for `markmap`.

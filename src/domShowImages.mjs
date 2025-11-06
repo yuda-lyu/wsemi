@@ -1,4 +1,3 @@
-import Viewer from 'viewerjs'
 import merge from 'lodash-es/merge.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
@@ -6,6 +5,13 @@ import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
 import genPm from './genPm.mjs'
 import getGlobal from './getGlobal.mjs'
+
+
+function getViewer() {
+    let g = getGlobal()
+    let x = g.Viewer
+    return x
+}
 
 
 function optOne() {
@@ -45,16 +51,6 @@ function optMuti() {
     r.toolbar.prev = 4
     r.toolbar.next = 4
     return r
-}
-
-
-function getViewer() {
-    let g = getGlobal()
-    let x = Viewer || g.Viewer
-    // if (x.default) {
-    //     x = x.default
-    // }
-    return x
 }
 
 

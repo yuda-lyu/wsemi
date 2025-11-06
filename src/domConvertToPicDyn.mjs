@@ -29,7 +29,7 @@ async function domConvertToPicDyn(ele, opt = {}, pathItems) {
     //pathItems
     if (!isearr(pathItems)) {
         pathItems = [ //若有更新版本須全專案取代
-            'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js',
+            'https://cdn.jsdelivr.net/npm/@zumer/snapdom@1.9.14/dist/snapdom.min.js',
         ]
     }
 

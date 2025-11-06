@@ -1,17 +1,16 @@
-//import htmlToImage from 'htmlToImage' //htmlToImage.js沒有umd版, 故引用後會有未檢查window的殼層程式碼出現, 導致無法於nodejs環境下使用wsemi
-//import canvg from 'canvg' //因htmlToImage不支援IE11與Safari，故也不引用canvg來支援IE11
 import get from 'lodash-es/get.js'
-import isNumber from 'lodash-es/isNumber.js'
-import isBoolean from 'lodash-es/isBoolean.js'
 import isEle from './isEle.mjs'
+import isnum from './isnum.mjs'
+import isbol from './isbol.mjs'
+import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import domPrepend from './domPrepend.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
-function getHtmlToImage() {
+function getSnapdom() {
     let g = getGlobal()
-    let x = g.htmlToImage
+    let x = g.snapdom
     return x
 }
 
@@ -45,24 +44,25 @@ async function domConvertToPic(ele, opt = {}) {
     }
 
     //scale
-    let scale = get(opt, 'scale', 1)
-    if (!isNumber(scale)) {
-        return Promise.reject('opt.scale is not a number')
+    let scale = get(opt, 'scale', null)
+    if (!isnum(scale)) {
+        scale = 1
     }
+    scale = cdbl(scale)
     if (scale < 1) {
         return Promise.reject('opt.scale can not less then 1')
     }
 
     //picType
-    let picType = get(opt, 'picType', 'image/png')
-    if (picType !== 'image/jpeg' && picType !== 'image/png') {
-        return Promise.reject('opt.picType is not one of image/jpeg or image/png')
+    let picType = get(opt, 'picType', null)
+    if (picType !== 'image/jpg' && picType !== 'image/jpeg' && picType !== 'image/png' && picType !== 'svg') {
+        picType = 'image/png'
     }
 
     //toBase64
-    let toBase64 = get(opt, 'toBase64', true)
-    if (!isBoolean(toBase64)) {
-        return Promise.reject('opt.toBase64 is not a boolean')
+    let toBase64 = get(opt, 'toBase64', null)
+    if (!isbol(toBase64)) {
+        toBase64 = true
     }
 
     //cloneNode
@@ -91,25 +91,27 @@ async function domConvertToPic(ele, opt = {}) {
     let body = document.querySelector('body')
     domPrepend(body, eleOut)
 
-    //getHtmlToImage
-    let hi = getHtmlToImage()
+    //getSnapdom
+    let snapdom = getSnapdom()
 
     //pic
-    let pic
     let optCv = {
-        pixelRatio: scale, //anti-aliasing
-        quality: 0.95, //for jpg
+        scale, //anti-aliasing
+        quality: 1, //for jpg
+        cache: 'disabled', //禁用快取
+    }
+    let pic
+    if (picType === 'image/jpg' || picType === 'image/jpeg') {
+        pic = await snapdom.toJpg(eleIn, optCv)
+    }
+    else if (picType === 'image/png') {
+        pic = await snapdom.toPng(eleIn, optCv)
+    }
+    else if (picType === 'svg') {
+        pic = await snapdom.toSvg(eleIn, optCv)
     }
     if (toBase64) {
-        if (picType === 'image/jpeg') {
-            pic = await hi.toJpeg(eleIn, optCv)
-        }
-        else if (picType === 'image/png') {
-            pic = await hi.toPng(eleIn, optCv)
-        }
-    }
-    else { //toCanvas
-        pic = await hi.toCanvas(eleIn, optCv)
+        pic = get(pic, 'src', '')
     }
 
     //remove

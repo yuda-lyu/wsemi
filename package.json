@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.25",
+  "version": "1.8.26",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^4.0.3",
@@ -20,7 +20,6 @@
     "tippy.js": "^6.3.7",
     "ua-parser-js": "^2.0.6",
     "uuid": "^13.0.0",
-    "viewerjs": "^1.11.7",
     "xlsx": "^0.18.5",
     "xss": "^1.0.15",
     "xxhash-wasm": "^1.1.0"
