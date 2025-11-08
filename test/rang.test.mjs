@@ -10,6 +10,12 @@ describe(`rang`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] when input 0, 10, 10`, function() {
+        let r = rang(0, 10, 10)
+        let rr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [ 0, 3.3333333333333335, 6.666666666666667, 10 ] when input 0, 10, 3`, function() {
         let r = rang(0, 10, 3)
         let rr = [0, 3.3333333333333335, 6.666666666666667, 10]

@@ -21,6 +21,10 @@ import ispint from './ispint.mjs'
  * console.log(r)
  * // => [ 0, 5, 10 ]
  *
+ * r = rang(0, 10, 10)
+ * console.log(r)
+ * // => [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+ *
  * r = rang(0, 10, 3)
  * console.log(r)
  * // => [ 0, 3.3333333333333335, 6.666666666666667, 10 ]
@@ -51,6 +55,9 @@ function rang(rStart, rEnd, num = 2) {
         num = 2
     }
     num = cint(num)
+    if (num <= 0) {
+        throw new Error(`num[${num}] <= 0`)
+    }
 
     //dx
     let dx = (rEnd - rStart) / num
