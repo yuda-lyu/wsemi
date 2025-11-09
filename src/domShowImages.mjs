@@ -196,8 +196,8 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     //vw
     let vw = new UseViewer(img, useOpt)
 
-    //force show
-    vw.show() //於IE11時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
+    //執行函數直接顯示
+    vw.show()
 
     return pm
 }
