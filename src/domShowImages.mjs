@@ -126,7 +126,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
         //因hide事件會被hide繼續調用而產生無限迴圈, 故需通過bHide紀錄是否強制隱藏狀態來避免此問題
         if (!bHide) {
             bHide = true
-            vw.hide(true)
+            vw.hide(true) //立即關閉不用淡出動畫
         }
 
     }
@@ -151,6 +151,15 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //force show
     vw.show() //於IE11時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
+
+    //點擊或輕觸背景關閉, 避免被視為輕點拖曳被視為拖曳
+    let r = vw.viewer
+    r.querySelector('.viewer-backdrop')?.addEventListener('click', () => {
+        vw.hide(true) //立即關閉不用淡出動畫
+    })
+    r.querySelector('.viewer-backdrop')?.addEventListener('touchend', () => {
+        vw.hide(true) //立即關閉不用淡出動畫
+    }, { passive: true })
 
     return pm
 }

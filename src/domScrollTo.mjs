@@ -5,11 +5,7 @@ import isIE from './isIE.mjs'
 
 
 /**
- * 前端DOM元素平滑捲動至指定位置。
- *
- * 在多層DOM中用scrollIntoView捲動可能失效，此時需針對指定元素取得offsetTop，並由父層scrollTo到指定元素。
- *
- * 需注意指定元素取得offsetTop是針對可定位之父層，若無定位則為body。若發現可定位父層非可捲動父層，可將該父層給予position:relative，此可將父層轉為可定位元素，進而使可定位父層等同於可捲動父層，進而使指定元素取得之offsetTop可用於父層scrollTo。
+ * 前端DOM平滑捲動至元素，讓捲動容器元素，捲動到特定座標(left或top)位置
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.mjs Github}
  * @memberOf wsemi
@@ -19,7 +15,7 @@ import isIE from './isIE.mjs'
  * need test in browser
  *
  * let ele = document.querySelector('#id')
- * domScrollTo(ele, {})
+ * domScrollTo(ele, { left: 0, top: 100 })
  *
  */
 function domScrollTo(ele, opt = {}) {

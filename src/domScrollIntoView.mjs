@@ -5,7 +5,7 @@ import isIE from './isIE.mjs'
 
 
 /**
- * 前端平滑捲動至DOM元素
+ * 前端DOM平滑捲動至元素，讓指定元素出現在可視範圍中，為自動捲動父容器
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollIntoView.test.mjs Github}
  * @memberOf wsemi
