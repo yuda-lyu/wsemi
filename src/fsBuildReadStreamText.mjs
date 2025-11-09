@@ -1,5 +1,5 @@
 import fs from 'fs'
-import readline from 'readline'
+import readline from 'readline' //已是nodejs內建函數, rollup為舊版無法偵測故會提示
 import fsIsFile from './fsIsFile.mjs'
 import evem from './evem.mjs'
 

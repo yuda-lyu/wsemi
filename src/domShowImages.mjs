@@ -117,13 +117,60 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     }
     useOpt = merge(useOpt, cloneDeep(opt))
 
+    //shown
+    useOpt.shown = function () {
+        // console.log('shown')
+
+        // let core = async() => {
+
+        //     //ele
+        //     let ele = null
+
+        //     //shown執行時未必有vw.viewer, 得須等待再掛載監聽
+        //     await waitFun(() => {
+        //         ele = vw.viewer
+        //         let b = isEle(ele)
+        //         return b
+        //     })
+        //     // console.log('ele', ele)
+
+        //     ele.addEventListener('click', () => {
+        //         // console.log('backdrop click')
+        //         // vw.hide(true) //立即關閉不用淡出動畫
+        //     })
+        //     ele.addEventListener('touchend', () => {
+        //         // console.log('backdrop touchend')
+        //         // vw.hide(true) //立即關閉不用淡出動畫
+        //     }, { passive: true })
+
+        //     // ele.addEventListener('click', () => {
+        //     //     console.log('backdrop click')
+        //     // })
+        //     // ele.addEventListener('touchstart', () => {
+        //     //     console.log('backdrop touchstart')
+        //     // }, { passive: true })
+        //     // ele.addEventListener('touchmove', () => {
+        //     //     console.log('backdrop touchmove')
+        //     // }, { passive: true })
+        //     // ele.addEventListener('touchend', () => {
+        //     //     console.log('backdrop touchend')
+        //     // }, { passive: true })
+
+        // }
+        // core()
+        //     .catch((err) => {
+        //         console.log(err)
+        //     })
+
+    }
+
     //hide
     let bHide = false
     useOpt.hide = function () {
-        //console.log('hide')
+        // console.log('hide')
 
-        //隱藏時因有transition會淡出, 但此時又點擊圖片要顯示時, 因會點到半透明背景而使點擊失效, 故通過強制hide(true)使能馬上再次點擊顯示圖片
         //因hide事件會被hide繼續調用而產生無限迴圈, 故需通過bHide紀錄是否強制隱藏狀態來避免此問題
+        //隱藏時因有transition會淡出, 但此時又點擊圖片要顯示時, 因會點到半透明背景而使點擊失效, 故通過強制vw.hide(true)使能馬上再次點擊顯示圖片
         if (!bHide) {
             bHide = true
             vw.hide(true) //立即關閉不用淡出動畫
@@ -151,15 +198,6 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //force show
     vw.show() //於IE11時viewerjs會無法自動偵測並於當次點擊顯示, 故使用show強制顯示
-
-    //點擊或輕觸背景關閉, 避免被視為輕點拖曳被視為拖曳
-    let r = vw.viewer
-    r.querySelector('.viewer-backdrop')?.addEventListener('click', () => {
-        vw.hide(true) //立即關閉不用淡出動畫
-    })
-    r.querySelector('.viewer-backdrop')?.addEventListener('touchend', () => {
-        vw.hide(true) //立即關閉不用淡出動畫
-    }, { passive: true })
 
     return pm
 }
