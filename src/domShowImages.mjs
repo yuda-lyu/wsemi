@@ -4,6 +4,7 @@ import size from 'lodash-es/size.js'
 import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
 import genPm from './genPm.mjs'
+import waitFun from './waitFun.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
@@ -119,55 +120,75 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //shown
     useOpt.shown = function () {
-        // console.log('shown')
+        console.log('shown')
 
-        // let core = async() => {
+        let core = async() => {
 
-        //     //ele
-        //     let ele = null
+            //ele
+            let ele = null
 
-        //     //shown執行時未必有vw.viewer, 得須等待再掛載監聽
-        //     await waitFun(() => {
-        //         ele = vw.viewer
-        //         let b = isEle(ele)
-        //         return b
-        //     })
-        //     // console.log('ele', ele)
+            //shown執行時未必有vw.viewer, 得須等待再掛載監聽
+            await waitFun(() => {
+                ele = vw.viewer
+                let b = isEle(ele)
+                return b
+            })
+            // console.log('ele', ele)
 
-        //     ele.addEventListener('click', () => {
-        //         // console.log('backdrop click')
-        //         // vw.hide(true) //立即關閉不用淡出動畫
-        //     })
-        //     ele.addEventListener('touchend', () => {
-        //         // console.log('backdrop touchend')
-        //         // vw.hide(true) //立即關閉不用淡出動畫
-        //     }, { passive: true })
+            //點擊
+            ele.addEventListener('click', () => {
+                console.log('click')
+                vw.hide(true) //立即關閉不用淡出動畫
+            })
 
-        //     // ele.addEventListener('click', () => {
-        //     //     console.log('backdrop click')
-        //     // })
-        //     // ele.addEventListener('touchstart', () => {
-        //     //     console.log('backdrop touchstart')
-        //     // }, { passive: true })
-        //     // ele.addEventListener('touchmove', () => {
-        //     //     console.log('backdrop touchmove')
-        //     // }, { passive: true })
-        //     // ele.addEventListener('touchend', () => {
-        //     //     console.log('backdrop touchend')
-        //     // }, { passive: true })
+            //輕點
+            let bTouch = false
+            let x = 0
+            let y = 0
+            let disLim = 8
+            ele.addEventListener('touchstart', (ev) => {
+                // console.log('touchstart', ev)
+                let t = ev.touches[0]
+                x = t.clientX
+                y = t.clientY
+                bTouch = true
+            }, { passive: true })
+            // ele.addEventListener('touchmove', () => {
+            //     console.log('touchmove')
+            // }, { passive: true })
+            ele.addEventListener('touchend', (ev) => {
+                // console.log('touchend', ev)
+                if (bTouch) {
+                    let t = ev.changedTouches[0]
+                    let dx = Math.abs(t.clientX - x)
+                    let dy = Math.abs(t.clientY - y)
+                    if (dx < disLim && dy < disLim) {
+                        console.log('click(from touch)')
+                        vw.hide(true) //立即關閉不用淡出動畫
+                    }
+                    else {
+                        console.log('drag')
+                    }
+                    bTouch = false
+                }
+            }, { passive: true })
+            ele.addEventListener('touchcancel', (ev) => {
+                // console.log('touchcancel', ev)
+                bTouch = false
+            })
 
-        // }
-        // core()
-        //     .catch((err) => {
-        //         console.log(err)
-        //     })
+        }
+        core()
+            .catch((err) => {
+                console.log(err)
+            })
 
     }
 
     //hide
     let bHide = false
     useOpt.hide = function () {
-        // console.log('hide')
+        console.log('hide')
 
         //因hide事件會被hide繼續調用而產生無限迴圈, 故需通過bHide紀錄是否強制隱藏狀態來避免此問題
         //隱藏時因有transition會淡出, 但此時又點擊圖片要顯示時, 因會點到半透明背景而使點擊失效, 故通過強制vw.hide(true)使能馬上再次點擊顯示圖片
