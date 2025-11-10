@@ -5,6 +5,7 @@ import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
 import genPm from './genPm.mjs'
 import waitFun from './waitFun.mjs'
+import domGetParents from './domGetParents.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
@@ -120,7 +121,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //shown
     useOpt.shown = function () {
-        console.log('shown')
+        // console.log('shown')
 
         let core = async() => {
 
@@ -135,46 +136,121 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
             })
             // console.log('ele', ele)
 
-            //點擊
-            ele.addEventListener('click', () => {
-                console.log('click')
-                vw.hide(true) //立即關閉不用淡出動畫
-            })
+            // let img = ele.querySelector('img')
+            // console.log('img', img)
+
+            //isOnBackdrop
+            let isOnBackdrop = (clientX, clientY) => {
+
+                //eles
+                let eles = document.elementsFromPoint(clientX, clientY)
+                // console.log('eles', eles)
+
+                //img
+                let img = eles.find(el =>
+                    el.tagName === 'IMG'
+                )
+                // console.log('img', img)
+
+                //check
+                if (!isEle(img)) {
+                    return true
+                }
+
+                //b, 若img的class含有viewer-move, 代表點擊在viewer.js的img上
+                let b = img?.classList?.contains('viewer-move')
+
+                return !b
+            }
+
+            // //點擊
+            // ele.addEventListener('click', () => {
+            //     // console.log('click')
+
+            //     //check
+            //     if (isOnBackdrop(x, y)) {
+            //         console.log('vw.hide(from click)')
+            //         vw.hide(true) //立即關閉不用淡出動畫
+            //     }
+
+            // })
 
             //輕點
             let bTouch = false
             let x = 0
             let y = 0
-            let disLim = 8
+            let dis = 0
+            let disLim = 4
             ele.addEventListener('touchstart', (ev) => {
                 // console.log('touchstart', ev)
+
+                //update
                 let t = ev.touches[0]
                 x = t.clientX
                 y = t.clientY
-                bTouch = true
+
+                //check
+                if (isOnBackdrop(x, y)) {
+                    bTouch = true
+                }
+
             }, { passive: true })
-            // ele.addEventListener('touchmove', () => {
-            //     console.log('touchmove')
-            // }, { passive: true })
+            ele.addEventListener('touchmove', (ev) => {
+                // console.log('touchmove', ev)
+
+                //check
+                if (!bTouch) {
+                    return
+                }
+
+                //dx, dy
+                let t = ev.touches[0]
+                let _x = t.clientX
+                let _y = t.clientY
+                let dx = _x - x
+                let dy = _y - y
+
+                //d
+                let d = Math.sqrt(dx * dx + dy * dy)
+
+                //累加移動距離
+                dis += d
+                // console.log('update dis', dx, dy, d, dis)
+
+                //update
+                x = t.clientX
+                y = t.clientY
+
+            }, { passive: true })
             ele.addEventListener('touchend', (ev) => {
                 // console.log('touchend', ev)
-                if (bTouch) {
-                    let t = ev.changedTouches[0]
-                    let dx = Math.abs(t.clientX - x)
-                    let dy = Math.abs(t.clientY - y)
-                    if (dx < disLim && dy < disLim) {
-                        console.log('click(from touch)')
-                        vw.hide(true) //立即關閉不用淡出動畫
-                    }
-                    else {
-                        console.log('drag')
-                    }
-                    bTouch = false
+
+                //check
+                if (!bTouch) {
+                    return
                 }
+
+                //check
+                if (dis < disLim) {
+                    // console.log('vw.hide(from touch)')
+                    vw.hide(true) //立即關閉不用淡出動畫
+                }
+                else {
+                    // console.log('drag')
+                }
+
+                //reset
+                bTouch = false
+                dis = 0
+
             }, { passive: true })
             ele.addEventListener('touchcancel', (ev) => {
                 // console.log('touchcancel', ev)
+
+                //reset
                 bTouch = false
+                dis = 0
+
             })
 
         }
@@ -188,7 +264,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     //hide
     let bHide = false
     useOpt.hide = function () {
-        console.log('hide')
+        // console.log('hide')
 
         //因hide事件會被hide繼續調用而產生無限迴圈, 故需通過bHide紀錄是否強制隱藏狀態來避免此問題
         //隱藏時因有transition會淡出, 但此時又點擊圖片要顯示時, 因會點到半透明背景而使點擊失效, 故通過強制vw.hide(true)使能馬上再次點擊顯示圖片
