@@ -5,7 +5,6 @@ import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
 import genPm from './genPm.mjs'
 import waitFun from './waitFun.mjs'
-import domGetParents from './domGetParents.mjs'
 import getGlobal from './getGlobal.mjs'
 
 
