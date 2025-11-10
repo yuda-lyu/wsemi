@@ -1,8 +1,11 @@
+import get from 'lodash-es/get.js'
 import merge from 'lodash-es/merge.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
 import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
+import isp0int from './isp0int.mjs'
+import cint from './cint.mjs'
 import genPm from './genPm.mjs'
 import waitFun from './waitFun.mjs'
 import getGlobal from './getGlobal.mjs'
@@ -69,6 +72,7 @@ function optMuti() {
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
+ * @param {Integer} [opt.disTouchMoveToHide=4] 輸入手機touch觸發移動距離視為可隱藏整數，單位px，預設4
  * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息
  * @example
  * need test in browser
@@ -88,6 +92,13 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     if (!iseobj(opt)) {
         opt = {}
     }
+
+    //disTouchMoveToHide
+    let disTouchMoveToHide = get(opt, 'disTouchMoveToHide', null)
+    if (!isp0int(disTouchMoveToHide)) {
+        disTouchMoveToHide = 4
+    }
+    disTouchMoveToHide = cint(disTouchMoveToHide)
 
     //img and check one
     if (!isEle(eleImg)) {
@@ -177,7 +188,6 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
             let x = 0
             let y = 0
             let dis = 0
-            let disLim = 12
             ele.addEventListener('touchstart', (ev) => {
                 // console.log('touchstart', ev)
 
@@ -228,7 +238,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                 }
 
                 //check
-                if (dis < disLim) {
+                if (dis < disTouchMoveToHide) {
                     // console.log('vw.hide(from touch)')
 
                     //若點擊可顯示viewer.js圖片, 須阻止後續合成click觸發, 否則於手機會造成觸發WebKit的tap highlight, 使用者體驗不佳
