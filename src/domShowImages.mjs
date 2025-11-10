@@ -14,6 +14,12 @@ function getViewer() {
     return x
 }
 
+//viewer.js工具指定值:
+// 0: 隱藏
+// 1: 永遠顯示
+// 2: 螢幕寬度 ≥ 768px 才顯示
+// 3: 螢幕寬度 ≥ 992px 才顯示
+// 4: 螢幕寬度 ≥ 1200px 才顯示
 
 function optOne() {
     return {
@@ -56,7 +62,7 @@ function optMuti() {
 
 
 /**
- * 前端彈窗顯示指定元素內圖片或圖片陣列
+ * 前端呼叫viewer.js顯示指定元素內圖片或圖片陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImages.test.mjs Github}
  * @memberOf wsemi
@@ -171,7 +177,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
             let x = 0
             let y = 0
             let dis = 0
-            let disLim = 8
+            let disLim = 12
             ele.addEventListener('touchstart', (ev) => {
                 // console.log('touchstart', ev)
 
