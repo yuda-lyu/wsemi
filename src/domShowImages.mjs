@@ -171,7 +171,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
             let x = 0
             let y = 0
             let dis = 0
-            let disLim = 4
+            let disLim = 8
             ele.addEventListener('touchstart', (ev) => {
                 // console.log('touchstart', ev)
 

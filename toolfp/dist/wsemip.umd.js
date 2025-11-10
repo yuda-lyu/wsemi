@@ -1,5 +1,5 @@
 /*!
- * wsemip v1.8.31
+ * wsemip v1.8.32
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */
