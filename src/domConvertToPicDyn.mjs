@@ -4,7 +4,7 @@ import domConvertToPic from './domConvertToPic.mjs'
 
 
 /**
- * 前端DOM元素轉圖片，採用動態加載技術
+ * 前端針對DOM元素轉圖片，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domConvertToPicDyn.test.mjs Github}
  * @memberOf wsemi

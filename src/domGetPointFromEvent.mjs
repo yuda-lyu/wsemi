@@ -3,7 +3,7 @@ import get from 'lodash-es/get.js'
 
 
 /**
- * 前端DOM元素事件取得使用者滑鼠或第一觸控點座標
+ * 前端針對DOM元素事件取得使用者滑鼠或第一觸控點座標
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetPointFromEvent.test.mjs Github}
  * @memberOf wsemi

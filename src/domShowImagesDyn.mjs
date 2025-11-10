@@ -12,12 +12,11 @@ import domShowImages from './domShowImages.mjs'
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
  * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
- * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
  * <img src="001.jpg" onclick="domShowImagesDyn(this)">
- *
  * <img src="002.jpg" onclick="domShowImagesDyn(this,this.parentElement)">
  *
  */

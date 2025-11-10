@@ -161,7 +161,7 @@ function domIsVisible(ele, opt = {}) {
                 b = true
             }
             catch (err) {
-            // console.log('observe catch', err)
+                // console.log(err)
             }
 
             return b
@@ -175,7 +175,7 @@ function domIsVisible(ele, opt = {}) {
                 b = true
             }
             catch (err) {
-            // console.log('disconnect catch', err)
+                // console.log(err)
             }
             return b
         }

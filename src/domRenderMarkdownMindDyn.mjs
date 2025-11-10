@@ -4,7 +4,7 @@ import domRenderMarkdownMind from './domRenderMarkdownMind.mjs'
 
 
 /**
- * 前端DOM上展示由markdown轉出的心智圖，採用動態加載技術
+ * 前端針對指定DOM上展示由markdown轉出的心智圖，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRenderMarkdownMindDyn.test.mjs Github}
  * @memberOf wsemi

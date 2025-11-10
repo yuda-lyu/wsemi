@@ -14,7 +14,7 @@ function getDiff2Html() {
 
 
 /**
- * 前端DOM上展示2文字差異比對資訊
+ * 前端針對指定DOM上展示2文字差異比對資訊
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domCompareText.test.mjs Github}
  * @memberOf wsemi

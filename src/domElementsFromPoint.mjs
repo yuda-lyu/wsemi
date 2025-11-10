@@ -1,7 +1,7 @@
 
 
 /**
- * 前端DOM元素事件內座標(clientX, clientY)取得DOM元素陣列
+ * 前端針對DOM元素事件內座標(clientX, clientY)取得DOM元素陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domElementsFromPoint.test.mjs Github}
  * @memberOf wsemi

@@ -119,8 +119,8 @@ function domShowInputDatatime(time, opt = {}) {
     //bTrigger
     let bTrigger = false
 
-    //Trigger
-    function Trigger() {
+    //trigger
+    function trigger() {
 
         //check, 因可能change與focusout皆會觸發, 故通過bTrigger只觸發1次
         if (bTrigger) {
@@ -178,8 +178,8 @@ function domShowInputDatatime(time, opt = {}) {
             console.log(err)
         }
 
-        //Trigger
-        Trigger()
+        //trigger
+        trigger()
 
     }
 
@@ -189,7 +189,7 @@ function domShowInputDatatime(time, opt = {}) {
 
         //setTimeout, picker取消時靠觸發元素的focusout事件來得知, focusout會比change觸發還快, 故得要延遲觸發
         setTimeout(() => {
-            Trigger()
+            trigger()
         }, 50) //不能給1, 觸發時間最小可能為20ms, 手速過快, 可能會導致focusout仍比change還快觸發, 導致無法接收與處理change事件
 
     }

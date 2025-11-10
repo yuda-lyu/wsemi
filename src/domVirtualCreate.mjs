@@ -88,7 +88,7 @@ async function domVirtualCreate(fun, opt = {}) {
     elePanel.style.zIndex = -1
     elePanel.appendChild(eleOut)
 
-    //domPrepend, 主要是配合html2canvas截圖機制, 只能塞入至body內最前
+    //domPrepend, 插入最前盡量被遮蔽
     let body = document.querySelector('body')
     domPrepend(body, elePanel)
 

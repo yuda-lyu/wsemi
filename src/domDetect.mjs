@@ -130,7 +130,7 @@ import isfun from './isfun.mjs'
 
 
 /**
- * 前端監聽DOM元素resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
+ * 前端針對DOM元素監聽resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
  * @memberOf wsemi

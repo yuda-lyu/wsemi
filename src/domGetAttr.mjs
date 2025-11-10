@@ -3,7 +3,7 @@ import isestr from './isestr.mjs'
 
 
 /**
- * 前端DOM元素取得屬性
+ * 前端針對DOM元素取得屬性
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domGetAttr.test.mjs Github}
  * @memberOf wsemi

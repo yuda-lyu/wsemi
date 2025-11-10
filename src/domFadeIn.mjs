@@ -6,7 +6,7 @@ import genID from './genID.mjs'
 
 
 /**
- * 前端DOM元素fadeIn效果
+ * 前端針對DOM元素執行淡入效果
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domFadeIn.test.mjs Github}
  * @memberOf wsemi
@@ -64,29 +64,37 @@ function domFadeIn(ele, opt = {}) {
     //set tag
     ele.setAttribute('dom-fade-tag', tag)
 
-    //timer
+    //延遲觸發
     setTimeout(() => {
         let t = setInterval(() => {
 
-            //check tag
-            let tagTemp = ele.getAttribute('dom-fade-tag')
-            if (tagTemp !== tag) {
-                clearInterval(t) //只停掉timer, 由後續觸發的timer控制
+            try {
+
+                //check tag
+                let tagTemp = ele.getAttribute('dom-fade-tag')
+                if (tagTemp !== tag) {
+                    clearInterval(t)
+                }
+
+                //update
+                ele.style.opacity = useOpacity
+
+                //clear
+                if (useOpacity >= 1) {
+                    clearInterval(t)
+                    ele.removeAttribute('dom-fade-tag')
+                }
+
+                //add
+                useOpacity += s
+                if (useOpacity > 1) {
+                    useOpacity = 1
+                }
+
             }
-
-            //update
-            ele.style.opacity = useOpacity
-
-            //clear
-            if (useOpacity >= 1) {
+            catch (err) {
+                console.log(err)
                 clearInterval(t)
-                ele.removeAttribute('dom-fade-tag')
-            }
-
-            //add
-            useOpacity += s
-            if (useOpacity > 1) {
-                useOpacity = 1
             }
 
         }, ss)

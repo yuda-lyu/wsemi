@@ -16,7 +16,7 @@ function getSnapdom() {
 
 
 /**
- * 前端DOM元素轉圖片
+ * 前端針對DOM元素轉圖片
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domConvertToPic.test.mjs Github}
  * @memberOf wsemi

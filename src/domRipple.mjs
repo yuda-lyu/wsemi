@@ -6,7 +6,7 @@ import domRemove from './domRemove.mjs'
 
 
 /**
- * 前端DOM元素點擊Ripple效果
+ * 前端針對DOM元素設定點擊Ripple效果
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRipple.test.mjs Github}
  * @memberOf wsemi

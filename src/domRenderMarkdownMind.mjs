@@ -10,7 +10,7 @@ function getMarkmap() {
 
 
 /**
- * 前端DOM上展示由markdown轉出的心智圖
+ * 前端針對指定DOM上展示由markdown轉出的心智圖
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRenderMarkdownMind.test.mjs Github}
  * @memberOf wsemi

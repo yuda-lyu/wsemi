@@ -582,7 +582,7 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
 
 
 /**
- * 前端DOM元素拖曳事件
+ * 前端針對DOM元素設定監聽拖曳事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.mjs Github}
  * @memberOf wsemi

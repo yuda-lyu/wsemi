@@ -5,7 +5,7 @@ import isIE from './isIE.mjs'
 
 
 /**
- * 前端DOM平滑捲動至元素，讓捲動容器元素，捲動到特定座標(left或top)位置
+ * 前端平滑捲動至元素，讓捲動容器元素，捲動到特定座標(left或top)位置
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.mjs Github}
  * @memberOf wsemi

@@ -114,6 +114,7 @@ export { default as domRenderMarkdownMindDyn } from './domRenderMarkdownMindDyn.
 export { default as domRipple } from './domRipple.mjs'
 export { default as domScrollIntoView } from './domScrollIntoView.mjs'
 export { default as domScrollTo } from './domScrollTo.mjs'
+export { default as domSetAttr } from './domSetAttr.mjs'
 export { default as domShowImages } from './domShowImages.mjs'
 export { default as domShowImagesDyn } from './domShowImagesDyn.mjs'
 export { default as domShowInputAndGetFiles } from './domShowInputAndGetFiles.mjs'

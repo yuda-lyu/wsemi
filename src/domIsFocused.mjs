@@ -27,7 +27,9 @@ function domIsFocused(ele) {
     try {
         r = (document.activeElement === ele)
     }
-    catch (err) {}
+    catch (err) {
+        console.log(err)
+    }
 
     return r
 }

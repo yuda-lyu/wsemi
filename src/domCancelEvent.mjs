@@ -2,7 +2,7 @@ import isIE from './isIE.mjs'
 
 
 /**
- * 前端DOM元素事件停止傳遞事件
+ * 前端針對DOM元素事件設定停止傳遞事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domCancelEvent.test.mjs Github}
  * @memberOf wsemi

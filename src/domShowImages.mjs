@@ -63,9 +63,13 @@ function optMuti() {
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
+ * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息
  * @example
+ * need test in browser
+ *
  * <img src="001.jpg" onclick="domShowImages(this)">
  * <img src="002.jpg" onclick="domShowImages(this,this.parentElement)">
+ *
  */
 async function domShowImages(eleImg, eleGroup = null, opt = {}) {
     let one = true
@@ -162,19 +166,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                 return !b
             }
 
-            // //點擊
-            // ele.addEventListener('click', () => {
-            //     // console.log('click')
-
-            //     //check
-            //     if (isOnBackdrop(x, y)) {
-            //         console.log('vw.hide(from click)')
-            //         vw.hide(true) //立即關閉不用淡出動畫
-            //     }
-
-            // })
-
-            //輕點
+            //偵測輕點
             let bTouch = false
             let x = 0
             let y = 0
@@ -193,7 +185,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                     bTouch = true
                 }
 
-            }, { passive: true })
+            }, { passive: false })
             ele.addEventListener('touchmove', (ev) => {
                 // console.log('touchmove', ev)
 
@@ -220,7 +212,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                 x = t.clientX
                 y = t.clientY
 
-            }, { passive: true })
+            }, { passive: false })
             ele.addEventListener('touchend', (ev) => {
                 // console.log('touchend', ev)
 
@@ -232,7 +224,13 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                 //check
                 if (dis < disLim) {
                     // console.log('vw.hide(from touch)')
+
+                    //若點擊可顯示viewer.js圖片, 須阻止後續合成click觸發, 否則於手機會造成觸發WebKit的tap highlight, 使用者體驗不佳
+                    ev.preventDefault()
+                    ev.stopPropagation()
+
                     vw.hide(true) //立即關閉不用淡出動畫
+
                 }
                 else {
                     // console.log('drag')
@@ -242,7 +240,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
                 bTouch = false
                 dis = 0
 
-            }, { passive: true })
+            }, { passive: false }) //必須使用passive=false否則無法cancel
             ele.addEventListener('touchcancel', (ev) => {
                 // console.log('touchcancel', ev)
 

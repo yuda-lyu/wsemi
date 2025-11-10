@@ -6,7 +6,7 @@ import domCancelEvent from './domCancelEvent.mjs'
 
 
 /**
- * 前端監聽指定panel與bar的DOM元素，可偵測滾輪與拖曳bar事件
+ * 前端針對指定panel與bar的DOM元素監聽滾輪與拖曳bar事件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragBarAndScroll.test.mjs Github}
  * @memberOf wsemi

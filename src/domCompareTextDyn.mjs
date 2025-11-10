@@ -4,7 +4,7 @@ import domCompareText from './domCompareText.mjs'
 
 
 /**
- * 前端DOM上展示2文字差異比對資訊，採用動態加載技術
+ * 前端針對指定DOM上展示2文字差異比對資訊，採用動態加載技術
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domCompareTextDyn.test.mjs Github}
  * @memberOf wsemi
