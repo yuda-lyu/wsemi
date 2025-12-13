@@ -11,18 +11,10 @@ import isearr from './isearr.mjs'
 import cstr from './cstr.mjs'
 import binstr from './binstr.mjs'
 import sep from './sep.mjs'
-import getGlobal from './getGlobal.mjs'
-
-
-function getFuse() {
-    let g = getGlobal()
-    let x = Fuse || g.Fuse
-    return x
-}
 
 
 /**
- * 以空白分切strkey做為關鍵字，查詢字串陣列ar是否含有相似關鍵字
+ * 針對字串陣列模糊比對，以空白分切strkey做為關鍵字，查詢字串陣列arr內各字串是否含有相似關鍵字，或與關鍵字之相似度
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strFindFuzz.test.mjs Github}
  * @memberOf wsemi
@@ -102,10 +94,6 @@ function strFindFuzz(arr, strkey, bscore = false) {
     //keys
     let keys = sep(strkey, ' ')
 
-    //Fus
-    let Fus = getFuse()
-    // console.log('fuse', fuse)
-
     //findKey
     let findKey = (src, tar) => {
 
@@ -115,7 +103,7 @@ function strFindFuzz(arr, strkey, bscore = false) {
         }
 
         //build
-        let fuse = new Fus([src], options)
+        let fuse = new Fuse([src], options)
         // console.log('fuse', fuse)
 
         //search
