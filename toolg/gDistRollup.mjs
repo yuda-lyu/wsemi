@@ -23,11 +23,16 @@ rollupFiles({
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         'fuse.js': 'Fuse',
+        'diff': 'diff',
+        'diff2html': 'diff2html',
+        'html-to-text': 'html-to-text',
+        'he': 'he',
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        //'tippy.js': 'tippyjs', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來, 不能使用小數點故內部引用需為tippyjs
+        // 'tippy.js': 'tippyjs', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來, 不能使用小數點故內部引用需為tippyjs
+        // 'hash-wasm': 'hash-wasm', //因計算hash重要, 故需直接打包近來
+        // 'xxhash-wasm': 'xxhash-wasm', //因計算hash重要, 故需直接打包近來
         'tesseract.js': 'tesseractjs', //不能使用小數點故內部引用需為tesseractjs
-        'htmlparser': 'htmlparser',
         'pyodide': 'pyodide',
         'chokidar': 'chokidar',
     },
@@ -43,11 +48,16 @@ rollupFiles({
         'dayjs',
         'xlsx',
         'fuse.js',
+        'diff',
+        'diff2html',
+        'html-to-text',
+        'he',
         'ua-parser-js',
         'xss',
-        //'tippy.js', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來
+        // 'tippy.js', //因需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需直接打包近來
+        // 'hash-wasm', //因計算hash重要, 故需直接打包近來
+        // 'xxhash-wasm', //因計算hash重要, 故需直接打包近來
         'tesseract.js',
-        'htmlparser',
         'pyodide',
         'chokidar',
     ],

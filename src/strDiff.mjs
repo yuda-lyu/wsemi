@@ -1,22 +1,21 @@
-import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
 import split from 'lodash-es/split.js'
 import take from 'lodash-es/take.js'
 import size from 'lodash-es/size.js'
+import getDiff from './_getDiff.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
-// console.log('Diff', Diff)
 
 
 /**
- * 比對新舊文字差異處
+ * 比對新舊文字差異
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strDiff.test.mjs Github}
  * @memberOf wsemi
  * @param {String} strOld 輸入原始文字字串
  * @param {String} strNew 輸入更新文字字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Boolean} [opt.eliminateEndLine=false] 輸入是否清除diff最後解析結果布林值，通常為處理數據時因各列有自動添加換行符號，導致diff會多出額外比對結果故須清除。預設false
+ * @param {Boolean} [opt.useNormNewline=true] 輸入是否正規化換行符號布林值，預設true
  * @returns {Object} 回傳比對結果物件，包含diff與dfs鍵值，diff為比對原始結果字串，dfs為依照各列比對結果陣列
  * @example
  *
@@ -275,14 +274,22 @@ function strDiff(strOld, strNew, opt = {}) {
         return {}
     }
 
-    //eliminateEndLine
-    let eliminateEndLine = get(opt, 'eliminateEndLine')
-    if (!isbol(eliminateEndLine)) {
-        eliminateEndLine = false
+    //useNormNewline
+    let useNormNewline = get(opt, 'useNormNewline')
+    if (!isbol(useNormNewline)) {
+        useNormNewline = true
     }
 
-    // console.log('strDiff strOld', strOld)
-    // console.log('strDiff strNew', strNew)
+    //統一換行符號, 避免多行文字因換行而有差異
+    if (useNormNewline) {
+        strOld = strOld.replaceAll('\r\n', '\n')
+        strOld = strOld.replaceAll('\r', '\n')
+        strNew = strNew.replaceAll('\r\n', '\n')
+        strNew = strNew.replaceAll('\r', '\n')
+    }
+
+    //Diff
+    let Diff = getDiff()
 
     //diffLines
     let diff = Diff.diffLines(strOld, strNew)
@@ -408,7 +415,7 @@ function strDiff(strOld, strNew, opt = {}) {
             let icNew = 0 //new出現連續可合併列數
             let icNewState = false
             let icNewStart = -1
-            let icNewEnd = -1
+            // let icNewEnd = -1
             for (let j = k; j <= icOldEnd + icOld; j++) {
                 let dfOld = get(dfsOld, j, null)
                 let dfNew = get(dfsNew, j, null)
@@ -421,7 +428,7 @@ function strDiff(strOld, strNew, opt = {}) {
                     icNewState = true
                     icNew++
                     if (icNewState) {
-                        icNewEnd = j
+                        // icNewEnd = j
                     }
                 }
                 else if (icNewState) {

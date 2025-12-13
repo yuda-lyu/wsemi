@@ -1,16 +1,8 @@
-import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
+import getDiff from './_getDiff.mjs'
+import getDiff2Html from './_getDiff2Html.mjs'
 import isEle from './isEle.mjs'
-import getGlobal from './getGlobal.mjs'
 import isestr from './isestr.mjs'
-import iseobj from './iseobj.mjs'
-
-
-function getDiff2Html() {
-    let g = getGlobal()
-    let x = g.Diff2Html
-    return x
-}
 
 
 /**
@@ -49,44 +41,41 @@ function domCompareText(ele, title, strOld, strNew, opt = {}) {
     //outputFormat
     let outputFormat = fmt === 'side' ? 'side-by-side' : 'line-by-line'
 
-    //getDiff2Html
+    //Diff
+    let Diff = getDiff()
+
+    //Diff2Html
     let Diff2Html = getDiff2Html()
-    // console.log('Diff2Html', Diff2Html)
 
-    //check
-    if (!iseobj(Diff2Html)) {
-        throw new Error('invalid window.Diff2Html')
-    }
+    // //fixDiff2HtmlStyle, Diff2Html(3.4.34)有問題, 於'side-by-side'兩側欄寬度使用width:100%會額外撐開導致破版
+    // let fixDiff2HtmlStyle = () => {
 
-    //fixDiff2HtmlStyle, Diff2Html(3.4.34)有問題, 於'side-by-side'兩側欄寬度使用width:100%會額外撐開導致破版
-    let fixDiff2HtmlStyle = () => {
+    //     //style for fix width
+    //     let s = `
+    //       .d2h-code-side-line {
+    //         width: inherit !important;
+    //       }
+    //     `
 
-        //style for fix width
-        let s = `
-          .d2h-code-side-line {
-            width: inherit !important;
-          }
-        `
+    //     //cst
+    //     let id = 'fix-d2h-line-width'
+    //     let cst = document.querySelector(`#${id}`)
+    //     // console.log('cst', cst)
 
-        //cst
-        let id = 'fix-d2h-line-width'
-        let cst = document.querySelector(`#${id}`)
-        // console.log('cst', cst)
+    //     //check
+    //     if (isEle(cst)) {
+    //         // console.log('already injected style')
+    //         return
+    //     }
 
-        //check
-        if (isEle(cst)) {
-            // console.log('already injected style')
-            return
-        }
+    //     //inject style
+    //     let st = document.createElement('style')
+    //     st.id = id
+    //     st.textContent = s
+    //     document.head.append(st)
 
-        //inject style
-        let st = document.createElement('style')
-        st.id = id
-        st.textContent = s
-        document.head.append(st)
-
-    }
-    fixDiff2HtmlStyle()
+    // }
+    // fixDiff2HtmlStyle()
 
     //title
     if (!isestr(title)) {
@@ -101,7 +90,7 @@ function domCompareText(ele, title, strOld, strNew, opt = {}) {
     let diff = Diff.createTwoFilesPatch(titleOld, titleNew, strOld, strNew)
     // console.log('diff', diff)
 
-    //Diff2Html.html
+    //html
     let diffHtml = Diff2Html.html(diff, {
         drawFileList: true,
         matching: 'lines',

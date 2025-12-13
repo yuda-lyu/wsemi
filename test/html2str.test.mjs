@@ -18,85 +18,87 @@ describe(`html2str`, function() {
 </body>
 
 </html>`
-    let r1 = '\n\n\n\n    My First Heading\n    My first paragraph.\n\n\n'
+    let r1 = `MY FIRST HEADING
 
-    it(`should return '${replace(r1, '\n', '')}' when input '${replace(h1, '\n', '')}'`, function() {
-        let r = html2str(h1)
+My first paragraph.`
+
+    it(`should return '${replace(r1, '\n', '')}' when input '${replace(h1, '\n', '')}'`, async function() {
+        let r = await html2str(h1)
         assert.strict.deepStrictEqual(r, r1)
     })
 
-    it(`should return true when input true`, function() {
-        let r = html2str(true)
+    it(`should return true when input true`, async function() {
+        let r = await html2str(true)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input false`, function() {
-        let r = html2str(false)
+    it(`should return false when input false`, async function() {
+        let r = await html2str(false)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input 0`, function() {
-        let r = html2str(0)
+    it(`should return false when input 0`, async function() {
+        let r = await html2str(0)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return true when input 1`, function() {
-        let r = html2str(1)
+    it(`should return true when input 1`, async function() {
+        let r = await html2str(1)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return true when input '1'`, function() {
-        let r = html2str('1')
+    it(`should return true when input '1'`, async function() {
+        let r = await html2str('1')
         assert.strict.deepStrictEqual(r, '1')
     })
 
-    it(`should return true when input 'true'`, function() {
-        let r = html2str('true')
+    it(`should return true when input 'true'`, async function() {
+        let r = await html2str('true')
         assert.strict.deepStrictEqual(r, 'true')
     })
 
-    it(`should return true when input 'tRuE'`, function() {
-        let r = html2str('tRuE')
+    it(`should return true when input 'tRuE'`, async function() {
+        let r = await html2str('tRuE')
         assert.strict.deepStrictEqual(r, 'tRuE')
     })
 
-    it(`should return true when input 'TRUE'`, function() {
-        let r = html2str('TRUE')
+    it(`should return true when input 'TRUE'`, async function() {
+        let r = await html2str('TRUE')
         assert.strict.deepStrictEqual(r, 'TRUE')
     })
 
-    it(`should return false when input 'abc'`, function() {
-        let r = html2str('abc')
+    it(`should return false when input 'abc'`, async function() {
+        let r = await html2str('abc')
         assert.strict.deepStrictEqual(r, 'abc')
     })
 
-    it(`should return false when input ''`, function() {
-        let r = html2str('')
+    it(`should return false when input ''`, async function() {
+        let r = await html2str('')
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input []`, function() {
-        let r = html2str([])
+    it(`should return false when input []`, async function() {
+        let r = await html2str([])
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input {}`, function() {
-        let r = html2str({})
+    it(`should return false when input {}`, async function() {
+        let r = await html2str({})
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input null`, function() {
-        let r = html2str(null)
+    it(`should return false when input null`, async function() {
+        let r = await html2str(null)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input undefined`, function() {
-        let r = html2str(undefined)
+    it(`should return false when input undefined`, async function() {
+        let r = await html2str(undefined)
         assert.strict.deepStrictEqual(r, '')
     })
 
-    it(`should return false when input NaN`, function() {
-        let r = html2str(NaN)
+    it(`should return false when input NaN`, async function() {
+        let r = await html2str(NaN)
         assert.strict.deepStrictEqual(r, '')
     })
 

@@ -4,12 +4,12 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <title>examples for html2str(htmlparser)</title>
     
-    <!-- @babel/polyfill已廢棄 -->
-    <script nomodule src="https://cdn.jsdelivr.net/npm/@babel/polyfill@7.12.1/dist/polyfill.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.34/dist/wsemi.umd.js"></script>
+    <script type="module"> 
+        import {htmlToText} from 'https://cdn.jsdelivr.net/npm/html-to-text@9.0.5/+esm' 
+        window.ht = {htmlToText}
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.35/dist/wsemi.umd.js"></script>
 
 </head>
 <body style="margin:0px; padding:0px;">
@@ -19,7 +19,7 @@
         <div>
 
             <div>
-                html(source)
+                html(input)
             </div>
 
             <textarea id="ta_html" style="width:100%; height:200px; box-sizing:border-box;" oninput="cv_html2str()"></textarea>
@@ -31,10 +31,10 @@
         <div>
 
             <div>
-                text(target)
+                text(output)
             </div>
 
-            <textarea id="ta_str" style="width:100%; height:200px; box-sizing:border-box;" _oninput=""></textarea>
+            <textarea id="ta_txt" style="width:100%; height:200px; box-sizing:border-box;" _oninput=""></textarea>
                 
         </div>
 
@@ -56,7 +56,7 @@
         let _str=''
 
         document.querySelector('#ta_html').value=_html
-        document.querySelector('#ta_str').value=_str
+        document.querySelector('#ta_txt').value=_str
 
     </script>
     
@@ -64,19 +64,17 @@
 
         function cv_html2str(){
 
-            let ori = document.querySelector('#ta_html').value
-            // console.log('ori', ori)
+            let inp = document.querySelector('#ta_html').value
+            // console.log('inp', inp)
 
-            let tar = ''
-            try{
-                tar = wsemi.html2str(ori)
-            }
-            catch(err){
-                console.log(err)
-            }
-            // console.log('tar', tar)
-
-            document.querySelector('#ta_str').value = tar
+            wsemi.html2str(inp)
+                .then((tar)=>{
+                    console.log('tar', tar)
+                    document.querySelector('#ta_txt').value = tar
+                })
+                .catch((err)=>{
+                    console.log(err)
+                })
 
         }
 

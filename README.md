@@ -32,15 +32,11 @@ To view some examples for more understanding, visit examples:
 
 > **domConvertToPic:** [ex-domConvertToPic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPic.html)]
 
-> **domConvertToPicDyn[dynamic import]:** [ex-domConvertToPicDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPicDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPicDyn.html)]
-
 > **domRenderMarkdownMind:** [ex-domRenderMarkdownMind.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMind.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMind.html)]
 
 > **domRenderMarkdownMindDyn[dynamic import]:** [ex-domRenderMarkdownMindDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMindDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMindDyn.html)]
 
 > **domCompareText:** [ex-domCompareText.html](https://yuda-lyu.github.io/wsemi/examples/ex-domCompareText.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domCompareText.html)]
-
-> **domCompareTextDyn[dynamic import]:** [ex-domCompareTextDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domCompareTextDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domCompareTextDyn.html)]
 
 > **domScrollIntoView:** [ex-domScrollIntoView.html](https://yuda-lyu.github.io/wsemi/examples/ex-domScrollIntoView.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domScrollIntoView.html)]
 
@@ -78,8 +74,6 @@ To view some examples for more understanding, visit examples:
 
 > **html2str:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
 
-> **html2strDyn[dynamic import]:** [ex-html2strDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2strDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2strDyn.html)]
-
 > **execPyodide:** [ex-execPyodide.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodide.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodide.html)]
 
 > **execPyodideDyn[dynamic import]:** [ex-execPyodideDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodideDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodideDyn.html)]
@@ -99,7 +93,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.34/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.35/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -139,7 +133,7 @@ Add script for wsemi.
 ```
 
 [Optional] Add script for `@zumer/snapdom`.
-> **Note:** Include script when using `domConvertToPic` function, and don't include script when using `domConvertToPicDyn` function.
+> **Note:** Include script when using `domConvertToPic` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/@zumer/snapdom@1.9.14/dist/snapdom.min.js"></script>
 ```
@@ -152,15 +146,8 @@ Add script for wsemi.
 <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.14.4/dist/browser/index.min.js"></script>
 ```
 
-[Optional] Add link and script for `diff2html`.
-> **Note:** Include script when using `domCompareText` function, and don't include script when using `domCompareTextDyn` function.
-```alias
-<link href="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/css/diff2html.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/diff2html@3.4.34/bundles/js/diff2html.min.js"></script>
-```
-
 [Optional] Add script for `htmlparser`.
-> **Note:** Include script when using `html2str` function, and don't include script when using `html2strDyn` function.
+> **Note:** Include script when using `html2str` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
 ```
