@@ -1,5 +1,5 @@
+import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
-import getDiff from './_getDiff.mjs'
 import getDiff2Html from './_getDiff2Html.mjs'
 import isEle from './isEle.mjs'
 import isestr from './isestr.mjs'
@@ -41,8 +41,8 @@ function domCompareText(ele, title, strOld, strNew, opt = {}) {
     //outputFormat
     let outputFormat = fmt === 'side' ? 'side-by-side' : 'line-by-line'
 
-    //Diff
-    let Diff = getDiff()
+    // //Diff
+    // let Diff = getDiff()
 
     //Diff2Html
     let Diff2Html = getDiff2Html()

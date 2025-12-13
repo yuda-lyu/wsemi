@@ -137,7 +137,7 @@ describe(`getErrorMessage`, function() {
     })
 
 
-    it(`should return 'bbb' when throw fs.readFileSync('definitely_not_exists_1234567890.txt')`, async() => {
+    it(`should return 'ENOENT: no such file or directory, open' when throw fs.readFileSync('definitely_not_exists_1234567890.txt')`, async() => {
         let r
         try {
             throw fs.readFileSync('definitely_not_exists_1234567890.txt')

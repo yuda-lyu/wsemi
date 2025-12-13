@@ -54,8 +54,6 @@ To view some examples for more understanding, visit examples:
 
 > **strFindFuzz:** [ex-strFindFuzz.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzz.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzz.html)]
 
-> **strFindFuzzDyn[dynamic import]:** [ex-strFindFuzzDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-strFindFuzzDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-strFindFuzzDyn.html)]
-
 > **obj2u8arr & u8arr2obj:** [ex-obj2u8arr-u8arr2obj.html](https://yuda-lyu.github.io/wsemi/examples/ex-obj2u8arr-u8arr2obj.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-obj2u8arr-u8arr2obj.html)]
 
 > **getUserAgent:** [ex-getUserAgent.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgent.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgent.html)]
@@ -93,7 +91,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.35/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.36/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -102,7 +100,7 @@ Add script for wsemi.
 ```
 
 [Optional] Add script for `fuse.js`.
-> **Note:** Include script when using `strFindFuzz` function, and don't include script when using `strFindFuzzDyn` function.
+> **Note:** Include script when using `strFindFuzz` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js"></script>
 ```

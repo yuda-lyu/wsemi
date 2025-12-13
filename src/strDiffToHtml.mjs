@@ -1,8 +1,8 @@
+import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import split from 'lodash-es/split.js'
 import trim from 'lodash-es/trim.js'
-import getDiff from './_getDiff.mjs'
 import getDiff2Html from './_getDiff2Html.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
@@ -109,8 +109,8 @@ function strDiffToHtml(strOld, strNew, opt = {}) {
         strNew = strNew.replaceAll('\r', '\n')
     }
 
-    //Diff
-    let Diff = getDiff()
+    // //Diff
+    // let Diff = getDiff()
 
     //Diff2Html
     let Diff2Html = getDiff2Html()

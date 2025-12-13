@@ -1,8 +1,8 @@
+import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
 import split from 'lodash-es/split.js'
 import take from 'lodash-es/take.js'
 import size from 'lodash-es/size.js'
-import getDiff from './_getDiff.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
 
@@ -288,8 +288,8 @@ function strDiff(strOld, strNew, opt = {}) {
         strNew = strNew.replaceAll('\r', '\n')
     }
 
-    //Diff
-    let Diff = getDiff()
+    // //Diff
+    // let Diff = getDiff()
 
     //diffLines
     let diff = Diff.diffLines(strOld, strNew)
