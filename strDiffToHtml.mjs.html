@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>bufWriteDbl.mjs - Documentation</title>
+    <title>strDiffToHtml.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">bufWriteDbl.mjs</h1>
+    <h1 class="page-title">strDiffToHtml.mjs</h1>
     
 
     
@@ -45,38 +45,169 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import bufWrite from './bufWrite.mjs'
+            <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
+import each from 'lodash-es/each.js'
+import split from 'lodash-es/split.js'
+import trim from 'lodash-es/trim.js'
+import getDiff from './_getDiff.mjs'
+import getDiff2Html from './_getDiff2Html.mjs'
+import isstr from './isstr.mjs'
+import isbol from './isbol.mjs'
 
 
 /**
- * 寫入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)內的浮點數資料，需先依照nBytes宣告Uint8Array或Buffer空間
+ * 比對新舊文字差異，並轉成html呈現
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWriteDbl.test.mjs Github}
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strDiffToHtml.test.mjs Github}
  * @memberOf wsemi
- * @param {Number} value 輸入數字
- * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
- * @param {Integer} [offset=0] 輸入平移整數，預設0
- * @param {Boolean} [isBE=true] 輸入是否為大端序Big-Endian，預設true
- * @param {Integer} [mLen=52] 輸入有效位數整數，預設52
- * @param {Integer} [nBytes=8] 輸入使用位元組整數，預設8
- * @returns {Number} 回傳數字
+ * @param {String} strOld 輸入原始文字字串
+ * @param {String} strNew 輸入更新文字字串
+ * @param {String} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.useNormNewline=true] 輸入是否正規化換行符號布林值，預設true
+ * @returns {Object} 回傳比對結果html
  * @example
  *
- * let i = 1447656645380 //new Uint8Array([66, 117, 16, 240, 246, 48, 64, 0])
- * let b = Buffer.alloc(8)
- * bufWriteDbl(i, b)
- * console.log(b)
- * // >= &lt;Buffer 42 75 10 f0 f6 30 40 00>
- * console.log(new Uint8Array(b))
- * // => Uint8Array [66, 117, 16, 240, 246, 48, 64, 0]
+ *
+ * let r
+ * let sOld
+ * let sNew
+ *
+ * r = strDiffToHtml('test中文', 'test')
+ * console.log(r)
+ * // => &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">test&lt;del style="color:#f26; background:#ffefd5;">中文&lt;/del>&lt;/span>
+ * // &lt;/div>
+ * // &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">+&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">test&lt;/span>
+ * // &lt;/div>
+ *
+ * r = strDiffToHtml('test中文', 'tet中英文')
+ * console.log(r)
+ * // => &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">te&lt;del style="color:#f26; background:#ffefd5;">s&lt;/del>t中文&lt;/span>
+ * // &lt;/div>
+ * // &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">+&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">tet中&lt;ins style="color:#090; background:#e4fed1;">英&lt;/ins>文&lt;/span>
+ * // &lt;/div>
+ *
+ * r = strDiffToHtml('test中文', '')
+ * console.log(r)
+ * // => &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">test中文&lt;/span>
+ * // &lt;/div>
+ *
+ * r = strDiffToHtml('', 'test中文')
+ * console.log(r)
+ * // => &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">+&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">test中文&lt;/span>
+ * // &lt;/div>
+ *
+ * sOld = `This is a long text used for testing.
+ * It contains multiple sentences that will be modified.`
+ * sNew = `This is a long text used for testing.
+ * This section has been replaced completely.`
+ * r = strDiffToHtml(sOld, sNew)
+ * console.log(r)
+ * // => &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">&amp;nbsp;&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">This is a long text used for testing.&lt;/span>
+ * // &lt;/div>
+ * // &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">&lt;del style="color:#f26; background:#ffefd5;">It&lt;/del> c&lt;del style="color:#f26; background:#ffefd5;">on&lt;/del>t&lt;del style="color:#f26; background:#ffefd5;">a&lt;/del>ins &lt;del style="color:#f26; background:#ffefd5;">multipl&lt;/del>e&lt;del style="color:#f26; background:#ffefd5;"> s&lt;/del>en&lt;del style="color:#f26; background:#ffefd5;">t&lt;/del>e&lt;del style="color:#f26; background:#ffefd5;">n&lt;/del>ce&lt;del style="color:#f26; background:#ffefd5;">s&lt;/del> &lt;del style="color:#f26; background:#ffefd5;">that wi&lt;/del>l&lt;del style="color:#f26; background:#ffefd5;">l b&lt;/del>e&lt;del style="color:#f26; background:#ffefd5;"> modifi&lt;/del>e&lt;del style="color:#f26; background:#ffefd5;">d&lt;/del>.&lt;/span>
+ * // &lt;/div>
+ * // &lt;div class="d2h-code-line">
+ * //     &lt;span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">+&lt;/span>
+ * //     &lt;span class="d2h-code-line-ctn">&lt;ins style="color:#090; background:#e4fed1;">This&lt;/ins> &lt;ins style="color:#090; background:#e4fed1;">se&lt;/ins>cti&lt;ins style="color:#090; background:#e4fed1;">o&lt;/ins>n&lt;ins style="color:#090; background:#e4fed1;"> ha&lt;/ins>s &lt;ins style="color:#090; background:#e4fed1;">b&lt;/ins>een&lt;ins style="color:#090; background:#e4fed1;"> r&lt;/ins>e&lt;ins style="color:#090; background:#e4fed1;">pla&lt;/ins>ce&lt;ins style="color:#090; background:#e4fed1;">d&lt;/ins> &lt;ins style="color:#090; background:#e4fed1;">comp&lt;/ins>le&lt;ins style="color:#090; background:#e4fed1;">t&lt;/ins>e&lt;ins style="color:#090; background:#e4fed1;">ly&lt;/ins>.&lt;/span>
+ * // &lt;/div>
+ *
  *
  */
-function bufWriteDbl(value, buffer, offset = 0, isBE = true, mLen = 52, nBytes = 8) {
-    return bufWrite(value, buffer, offset, isBE, mLen, nBytes)
+function strDiffToHtml(strOld, strNew, opt = {}) {
+
+    //check
+    if (!isstr(strOld)) {
+        return ''
+    }
+    if (!isstr(strNew)) {
+        return ''
+    }
+    if (strOld === '' &amp;&amp; strNew === '') {
+        return ''
+    }
+
+    //useNormNewline
+    let useNormNewline = get(opt, 'useNormNewline')
+    if (!isbol(useNormNewline)) {
+        useNormNewline = true
+    }
+
+    //統一換行符號, 避免多行文字因換行而有差異
+    if (useNormNewline) {
+        strOld = strOld.replaceAll('\r\n', '\n')
+        strOld = strOld.replaceAll('\r', '\n')
+        strNew = strNew.replaceAll('\r\n', '\n')
+        strNew = strNew.replaceAll('\r', '\n')
+    }
+
+    //Diff
+    let Diff = getDiff()
+
+    //Diff2Html
+    let Diff2Html = getDiff2Html()
+
+    //createTwoFilesPatch
+    let diff = Diff.createTwoFilesPatch('file', 'file', strOld, strNew)
+
+    //html
+    let h = Diff2Html.html(diff,
+        {
+            drawFileList: false,
+            matching: 'none',
+            diffStyle: 'char',
+            outputFormat: 'line-by-line',
+        }
+    )
+
+    //清理
+    let s = split(h, '\n')
+    let t = ``
+    let b = false
+    each(s, (v) => {
+        // srlog(v)
+        if (trim(v) === `&lt;div class="d2h-code-line">`) {
+            b = true
+        }
+        if (v.indexOf(`class="d2h-code-line-prefix"`) >= 0) {
+            v = v.replaceAll(`class="d2h-code-line-prefix"`, `class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;"`)
+        }
+        if (v.indexOf(`&lt;del>`) >= 0) {
+            v = v.replaceAll(`&lt;del>`, `&lt;del style="color:#f26; background:#ffefd5;">`)
+        }
+        if (v.indexOf(`&lt;ins>`) >= 0) {
+            v = v.replaceAll(`&lt;ins>`, `&lt;ins style="color:#090; background:#e4fed1;">`)
+        }
+        if (b) {
+            t += v + '\n'
+        }
+        if (b &amp;&amp; trim(v) === `&lt;/div>`) {
+            b = false
+        }
+    })
+    h = t
+
+    return h
 }
 
 
-export default bufWriteDbl
+export default strDiffToHtml
+
 </code></pre>
         </article>
     </section>
