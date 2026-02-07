@@ -1,7 +1,9 @@
+import get from 'lodash-es/get.js'
 import join from 'lodash-es/join.js'
-import genPm from './genPm.mjs'
-import isstr from './isstr.mjs'
-import binstr from './binstr.mjs'
+import isbol from './isbol.mjs'
+import isestr from './isestr.mjs'
+import ispint from './ispint.mjs'
+import cint from './cint.mjs'
 import isStrHasCapital from './isStrHasCapital.mjs'
 import isStrHasLowerCase from './isStrHasLowerCase.mjs'
 import isStrHasNumber from './isStrHasNumber.mjs'
@@ -24,42 +26,81 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  *     })
  *
  */
-function isUserPW(v) {
-
-    let pm = genPm()
-
-    //check
-    if (!isstr(v)) {
-        pm.reject('密碼非字串')
-        return pm
-    }
-
+async function isUserPW(v, opt = {}) {
     let err = []
 
-    if (v.length < 8) {
-        err.push('長度須大於8個字元')
-    }
-    if (v.length > 30) {
-        err.push('長度須小於30個字元')
-    }
-    if (!isStrHasCapital(v) || !isStrHasLowerCase(v) || !isStrHasNumber(v)) {
-        err.push('須包含大寫、小寫英文與數字各1個字元')
-    }
-    if (binstr(v, ['<', '>'])) {
-        err.push('不能使用特殊符號(<,>)')
-    }
-    if (binstr(v, ['select', 'insert', 'update', 'delete'])) {
-        err.push('不能使用指令(select,insert,update,delete)')
+    //useKeyForError
+    let useKeyForError = get(opt, 'useKeyForError', null)
+    if (!isbol(useKeyForError)) {
+        useKeyForError = false
     }
 
+    //check
+    if (!isestr(v)) {
+        if (useKeyForError) {
+            err.push('keyInvalidPassword')
+        }
+        else {
+            err.push('密碼非有效字串')
+        }
+    }
+
+    //check
     if (err.length > 0) {
-        pm.reject(join(err, '，'))
-    }
-    else {
-        pm.resolve()
+        throw new Error(join(err, ', '))
     }
 
-    return pm
+    //numLenMin
+    let numLenMin = get(opt, 'numLenMin', '')
+    if (!ispint(numLenMin)) {
+        numLenMin = 8
+    }
+    numLenMin = cint(numLenMin)
+
+    //numLenMax
+    let numLenMax = get(opt, 'numLenMax', '')
+    if (!ispint(numLenMax)) {
+        numLenMax = 30
+    }
+    numLenMax = cint(numLenMax)
+
+    //isStrHasSymbol
+    let isStrHasSymbol = (password) => {
+        let syms = '!@#$%^&*()-_=+[]{}|;:,.?~'
+        return [...password].some(ch => syms.includes(ch))
+    }
+
+    if (v.length < numLenMin) {
+        if (useKeyForError) {
+            err.push('keyLimNumLenMin')
+        }
+        else {
+            err.push(`密碼長度須大於${numLenMin}個字元`)
+        }
+    }
+    if (v.length > numLenMax) {
+        if (useKeyForError) {
+            err.push('keyLimNumLenMax')
+        }
+        else {
+            err.push(`密碼長度須小於${numLenMax}個字元`)
+        }
+    }
+    if (!isStrHasCapital(v) || !isStrHasLowerCase(v) || !isStrHasNumber(v) || !isStrHasSymbol(v)) {
+        if (useKeyForError) {
+            err.push('keyLimCombination')
+        }
+        else {
+            err.push('須包含大寫、小寫英文、數字、特殊符號各1個字元')
+        }
+    }
+
+    //check
+    if (err.length > 0) {
+        throw new Error(join(err, ', '))
+    }
+
+    return true
 }
 
 

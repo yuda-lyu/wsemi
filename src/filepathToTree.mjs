@@ -40,42 +40,43 @@ import haskey from './haskey.mjs'
  * // => {
  * //   treeItems: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯aaa❯mmm': '0.children.0',
- * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa❯mmm': '0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0.children.0'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa' },
@@ -93,31 +94,16 @@ import haskey from './haskey.mjs'
  * //   treeItems: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯bbb',
- * //       parentId: 'root',
- * //       text: 'bbb',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
  * //     }
@@ -125,40 +111,26 @@ import haskey from './haskey.mjs'
  * //   treeItemsFolder: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯bbb',
- * //       parentId: 'root',
- * //       text: 'bbb',
- * //       children: [],
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
+ * //       children: [Array],
  * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯bbb': '1',
- * //     'root❯aaa❯za.txt': '0.children.0',
- * //     'root❯bbb❯zb.txt': '1.children.0'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯bbb': '0.children.1',
+ * //     'root❯aaa❯za.txt': '0.children.0.children.0',
+ * //     'root❯bbb❯zb.txt': '0.children.1.children.0'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa' },
@@ -176,42 +148,43 @@ import haskey from './haskey.mjs'
  * // => {
  * //   treeItems: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root>aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root>aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root>aaa': '0',
- * //     'root>aaa>mmm': '0.children.0',
- * //     'root>aaa>mmm>z1.txt': '0.children.0.children.0'
+ * //     root: '0',
+ * //     'root>aaa': '0.children.0',
+ * //     'root>aaa>mmm': '0.children.0.children.0',
+ * //     'root>aaa>mmm>z1.txt': '0.children.0.children.0.children.0'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa' },
@@ -281,364 +254,97 @@ import haskey from './haskey.mjs'
  * // => {
  * //   treeItems: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
  * //       _indOri: null,
- * //       _indNormalize: 45,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaaa',
- * //       parentId: 'root',
- * //       text: 'aaaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 43,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯c:',
- * //       parentId: 'root',
- * //       text: 'c:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 36,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ccc',
- * //       parentId: 'root',
- * //       text: 'ccc',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 50,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯d:',
- * //       parentId: 'root',
- * //       text: 'd:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: 34,
- * //       _indNormalize: 39,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯eee',
- * //       parentId: 'root',
- * //       text: 'eee',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 37,
- * //       _indNormalize: 42,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ggg',
- * //       parentId: 'root',
- * //       text: 'ggg',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 32,
- * //       _indNormalize: 35,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯mmm',
- * //       parentId: 'root',
- * //       text: 'mmm',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 43,
- * //       _indNormalize: 52,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯中文路徑2',
- * //       parentId: 'root',
- * //       text: '中文路徑2',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 1,
- * //       _indNormalize: 1,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'file',
- * //       type: 'node',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1.txt',
- * //       parentId: 'root',
- * //       text: 'aaa1.txt',
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 2,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'file',
- * //       type: 'node',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2.txt',
- * //       parentId: 'root',
- * //       text: 'aaa2.txt',
- * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
  * //       _indOri: null,
- * //       _indNormalize: 45,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaaa',
- * //       parentId: 'root',
- * //       text: 'aaaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 43,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯c:',
- * //       parentId: 'root',
- * //       text: 'c:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 36,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ccc',
- * //       parentId: 'root',
- * //       text: 'ccc',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: null,
- * //       _indNormalize: 50,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯d:',
- * //       parentId: 'root',
- * //       text: 'd:',
- * //       children: [Array],
- * //       data: null
- * //     },
- * //     {
- * //       _indOri: 34,
- * //       _indNormalize: 39,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯eee',
- * //       parentId: 'root',
- * //       text: 'eee',
- * //       children: [Array],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 37,
- * //       _indNormalize: 42,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯ggg',
- * //       parentId: 'root',
- * //       text: 'ggg',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 32,
- * //       _indNormalize: 35,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯mmm',
- * //       parentId: 'root',
- * //       text: 'mmm',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 43,
- * //       _indNormalize: 52,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯中文路徑2',
- * //       parentId: 'root',
- * //       text: '中文路徑2',
- * //       children: [Array],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯aaaa': '1',
- * //     'root❯c:': '2',
- * //     'root❯ccc': '3',
- * //     'root❯d:': '4',
- * //     'root❯eee': '5',
- * //     'root❯ggg': '6',
- * //     'root❯mmm': '7',
- * //     'root❯中文路徑2': '8',
- * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff': '1.children.0',
- * //     'root❯aaa❯aaammm': '0.children.0',
- * //     'root❯c:❯hhh': '2.children.0',
- * //     'root❯ccc❯cccddd': '3.children.0',
- * //     'root❯d:❯中文路徑1': '4.children.0',
- * //     'root❯eee❯eeefff1': '5.children.0',
- * //     'root❯eee❯eeefff2': '5.children.1',
- * //     'root❯中文路徑2❯aaa': '8.children.0',
- * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯ggg': '1.children.0.children.0',
- * //     'root❯aaa❯aaammm❯abc': '0.children.0.children.0',
- * //     'root❯中文路徑2❯aaa❯aaammm': '8.children.0.children.0',
- * //     'root❯aaa❯aaammm❯abc❯abcd': '0.children.0.children.0.children.0',
- * //     'root❯aaa❯aaammm❯abc❯abcde': '0.children.0.children.0.children.1',
- * //     'root❯中文路徑2❯aaa❯aaammm❯abc': '8.children.0.children.0.children.0',
- * //     'root❯aaa1.txt': '9',
- * //     'root❯aaa2.txt': '10',
- * //     'root❯aaa❯aaammm.txt': '0.children.1',
- * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯gfedcba.txt': '1.children.0.children.1',
- * //     'root❯aaa❯aaammm❯aaammmccc.txt': '0.children.0.children.1',
- * //     'root❯ccc❯cccddd❯cccdddeee.txt': '3.children.0.children.0',
- * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯ggg❯hhh.txt': '1.children.0.children.0.children.0',
- * //     'root❯aaa❯aaammm❯abc❯abcd1.txt': '0.children.0.children.0.children.2',
- * //     'root❯aaa❯aaammm❯abc❯abcd2.txt': '0.children.0.children.0.children.3',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef1.txt': '0.children.0.children.0.children.1.children.0',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef2.txt': '0.children.0.children.0.children.1.children.1',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt': '0.children.0.children.0.children.1.children.2',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg01.txt': '0.children.0.children.0.children.1.children.3',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg02.txt': '0.children.0.children.0.children.1.children.4',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg03.txt': '0.children.0.children.0.children.1.children.5',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg04.txt': '0.children.0.children.0.children.1.children.6',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg05.txt': '0.children.0.children.0.children.1.children.7',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg06.txt': '0.children.0.children.0.children.1.children.8',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg07.txt': '0.children.0.children.0.children.1.children.9',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg08.txt': '0.children.0.children.0.children.1.children.10',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg09.txt': '0.children.0.children.0.children.1.children.11',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg10.txt': '0.children.0.children.0.children.1.children.12',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg11.txt': '0.children.0.children.0.children.1.children.13',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg12.txt': '0.children.0.children.0.children.1.children.14',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg13.txt': '0.children.0.children.0.children.1.children.15',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg14.txt': '0.children.0.children.0.children.1.children.16',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg15.txt': '0.children.0.children.0.children.1.children.17',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg16.txt': '0.children.0.children.0.children.1.children.18',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg17.txt': '0.children.0.children.0.children.1.children.19',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg18.txt': '0.children.0.children.0.children.1.children.20',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg19.txt': '0.children.0.children.0.children.1.children.21',
- * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg20.txt': '0.children.0.children.0.children.1.children.22',
- * //     'root❯aaa❯aaammm❯abc❯abcd❯abcde.txt': '0.children.0.children.0.children.0.children.0',
- * //     'root❯中文路徑2❯aaa❯aaammm❯abc❯測試.txt': '8.children.0.children.0.children.0.children.0'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaaa': '0.children.1',
+ * //     'root❯c:': '0.children.2',
+ * //     'root❯ccc': '0.children.3',
+ * //     'root❯d:': '0.children.4',
+ * //     'root❯eee': '0.children.5',
+ * //     'root❯ggg': '0.children.6',
+ * //     'root❯mmm': '0.children.7',
+ * //     'root❯中文路徑2': '0.children.8',
+ * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff': '0.children.1.children.0',
+ * //     'root❯aaa❯aaammm': '0.children.0.children.0',
+ * //     'root❯c:❯hhh': '0.children.2.children.0',
+ * //     'root❯ccc❯cccddd': '0.children.3.children.0',
+ * //     'root❯d:❯中文路徑1': '0.children.4.children.0',
+ * //     'root❯eee❯eeefff1': '0.children.5.children.0',
+ * //     'root❯eee❯eeefff2': '0.children.5.children.1',
+ * //     'root❯中文路徑2❯aaa': '0.children.8.children.0',
+ * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯ggg': '0.children.1.children.0.children.0',
+ * //     'root❯aaa❯aaammm❯abc': '0.children.0.children.0.children.0',
+ * //     'root❯中文路徑2❯aaa❯aaammm': '0.children.8.children.0.children.0',
+ * //     'root❯aaa❯aaammm❯abc❯abcd': '0.children.0.children.0.children.0.children.0',
+ * //     'root❯aaa❯aaammm❯abc❯abcde': '0.children.0.children.0.children.0.children.1',
+ * //     'root❯中文路徑2❯aaa❯aaammm❯abc': '0.children.8.children.0.children.0.children.0',
+ * //     'root❯aaa1.txt': '0.children.9',
+ * //     'root❯aaa2.txt': '0.children.10',
+ * //     'root❯aaa❯aaammm.txt': '0.children.0.children.1',
+ * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯gfedcba.txt': '0.children.1.children.0.children.1',
+ * //     'root❯aaa❯aaammm❯aaammmccc.txt': '0.children.0.children.0.children.1',
+ * //     'root❯ccc❯cccddd❯cccdddeee.txt': '0.children.3.children.0.children.0',
+ * //     'root❯aaaa❯mmmmmm cccccccccccc ddd dd ddd ddd ddd eeeeeeeeeeee ffff❯ggg❯hhh.txt': '0.children.1.children.0.children.0.children.0',
+ * //     'root❯aaa❯aaammm❯abc❯abcd1.txt': '0.children.0.children.0.children.0.children.2',
+ * //     'root❯aaa❯aaammm❯abc❯abcd2.txt': '0.children.0.children.0.children.0.children.3',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef1.txt': '0.children.0.children.0.children.0.children.1.children.0',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef2.txt': '0.children.0.children.0.children.0.children.1.children.1',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdef3 aaa mmm ccc dddddd eeeeeee fffffffffff ggggggggggggg.txt': '0.children.0.children.0.children.0.children.1.children.2',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg01.txt': '0.children.0.children.0.children.0.children.1.children.3',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg02.txt': '0.children.0.children.0.children.0.children.1.children.4',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg03.txt': '0.children.0.children.0.children.0.children.1.children.5',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg04.txt': '0.children.0.children.0.children.0.children.1.children.6',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg05.txt': '0.children.0.children.0.children.0.children.1.children.7',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg06.txt': '0.children.0.children.0.children.0.children.1.children.8',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg07.txt': '0.children.0.children.0.children.0.children.1.children.9',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg08.txt': '0.children.0.children.0.children.0.children.1.children.10',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg09.txt': '0.children.0.children.0.children.0.children.1.children.11',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg10.txt': '0.children.0.children.0.children.0.children.1.children.12',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg11.txt': '0.children.0.children.0.children.0.children.1.children.13',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg12.txt': '0.children.0.children.0.children.0.children.1.children.14',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg13.txt': '0.children.0.children.0.children.0.children.1.children.15',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg14.txt': '0.children.0.children.0.children.0.children.1.children.16',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg15.txt': '0.children.0.children.0.children.0.children.1.children.17',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg16.txt': '0.children.0.children.0.children.0.children.1.children.18',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg17.txt': '0.children.0.children.0.children.0.children.1.children.19',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg18.txt': '0.children.0.children.0.children.0.children.1.children.20',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg19.txt': '0.children.0.children.0.children.0.children.1.children.21',
+ * //     'root❯aaa❯aaammm❯abc❯abcde❯abcdefg20.txt': '0.children.0.children.0.children.0.children.1.children.22',
+ * //     'root❯aaa❯aaammm❯abc❯abcd❯abcde.txt': '0.children.0.children.0.children.0.children.0.children.0',
+ * //     'root❯中文路徑2❯aaa❯aaammm❯abc❯測試.txt': '0.children.8.children.0.children.0.children.0.children.0'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa' },
@@ -730,136 +436,47 @@ import haskey from './haskey.mjs'
  * //   treeItems: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 3,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1',
- * //       parentId: 'root',
- * //       text: 'aaa1',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 2,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa10',
- * //       parentId: 'root',
- * //       text: 'aaa10',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 1,
- * //       _indNormalize: 1,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2',
- * //       parentId: 'root',
- * //       text: 'aaa2',
- * //       children: [],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 3,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1',
- * //       parentId: 'root',
- * //       text: 'aaa1',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 2,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa10',
- * //       parentId: 'root',
- * //       text: 'aaa10',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 1,
- * //       _indNormalize: 1,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2',
- * //       parentId: 'root',
- * //       text: 'aaa2',
- * //       children: [],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯aaa1': '1',
- * //     'root❯aaa10': '2',
- * //     'root❯aaa2': '3',
- * //     'root❯aaa❯mmm': '0.children.0',
- * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0',
- * //     'root❯aaa❯mmm❯z2.txt': '0.children.0.children.1',
- * //     'root❯aaa❯mmm❯z10.txt': '0.children.0.children.2'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa1': '0.children.1',
+ * //     'root❯aaa10': '0.children.2',
+ * //     'root❯aaa2': '0.children.3',
+ * //     'root❯aaa❯mmm': '0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z2.txt': '0.children.0.children.0.children.1',
+ * //     'root❯aaa❯mmm❯z10.txt': '0.children.0.children.0.children.2'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa1' },
@@ -887,136 +504,47 @@ import haskey from './haskey.mjs'
  * //   treeItems: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 3,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1',
- * //       parentId: 'root',
- * //       text: 'aaa1',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 1,
- * //       _indNormalize: 1,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2',
- * //       parentId: 'root',
- * //       text: 'aaa2',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 2,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa10',
- * //       parentId: 'root',
- * //       text: 'aaa10',
- * //       children: [],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
  * //       _indOri: null,
- * //       _indNormalize: 3,
- * //       ns: 2,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
  * //       data: null
- * //     },
- * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa1',
- * //       parentId: 'root',
- * //       text: 'aaa1',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 1,
- * //       _indNormalize: 1,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa2',
- * //       parentId: 'root',
- * //       text: 'aaa2',
- * //       children: [],
- * //       data: [Object]
- * //     },
- * //     {
- * //       _indOri: 2,
- * //       _indNormalize: 2,
- * //       ns: 2,
- * //       ts: [Array],
- * //       pathInfors: [Array],
- * //       _type: 'folder',
- * //       type: 'array',
- * //       numOfChilren: -1,
- * //       id: 'root❯aaa10',
- * //       parentId: 'root',
- * //       text: 'aaa10',
- * //       children: [],
- * //       data: [Object]
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯aaa1': '1',
- * //     'root❯aaa2': '2',
- * //     'root❯aaa10': '3',
- * //     'root❯aaa❯mmm': '0.children.0',
- * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0',
- * //     'root❯aaa❯mmm❯z2.txt': '0.children.0.children.1',
- * //     'root❯aaa❯mmm❯z10.txt': '0.children.0.children.2'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa1': '0.children.1',
+ * //     'root❯aaa2': '0.children.2',
+ * //     'root❯aaa10': '0.children.3',
+ * //     'root❯aaa❯mmm': '0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z2.txt': '0.children.0.children.0.children.1',
+ * //     'root❯aaa❯mmm❯z10.txt': '0.children.0.children.0.children.2'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa1' },
@@ -1037,48 +565,49 @@ import haskey from './haskey.mjs'
  *     { 'type': 'folder', 'path': '/aaa/mmm', 'ext': 'ext3' },
  * ]
  * let r8 = filepathToTree(fps8)
- * // fs.writeFileSync('r8.json', JSON.stringify(r8), 'utf8')
+ * fs.writeFileSync('r8.json', JSON.stringify(r8), 'utf8')
  * console.log(r8)
  * console.log('\n\n')
  * // => {
  * //   treeItems: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   treeItemsFolder: [
  * //     {
- * //       _indOri: 0,
- * //       _indNormalize: 0,
- * //       ns: 2,
+ * //       _indOri: null,
+ * //       _indNormalize: null,
+ * //       ns: 1,
  * //       ts: [Array],
  * //       pathInfors: [Array],
  * //       _type: 'folder',
  * //       type: 'array',
  * //       numOfChilren: -1,
- * //       id: 'root❯aaa',
- * //       parentId: 'root',
- * //       text: 'aaa',
+ * //       id: 'root',
+ * //       parentId: '',
+ * //       text: 'root',
  * //       children: [Array],
- * //       data: [Object]
+ * //       data: null
  * //     }
  * //   ],
  * //   kpPath: {
- * //     'root❯aaa': '0',
- * //     'root❯aaa❯mmm': '0.children.0',
- * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0'
+ * //     root: '0',
+ * //     'root❯aaa': '0.children.0',
+ * //     'root❯aaa❯mmm': '0.children.0.children.0',
+ * //     'root❯aaa❯mmm❯z1.txt': '0.children.0.children.0.children.0'
  * //   },
  * //   fpsNormalize: [
  * //     { type: 'folder', path: '/root/aaa', ext: 'ext1' },
@@ -1282,10 +811,30 @@ function filepathToTree(fps, opt = {}) {
     let kpLv = {}
     each(vfps, (v) => {
 
-        //偵測各層
-        let ts = [bindRootTemp] //先由root當最上層
-        let id0 = bindRootTemp //先由root當最上層
+        //ts
+        let ts = null
+        // if (useBindRoot) {
+        //     ts = [bindRootTemp] //先由root當最上層
+        // }
+        // else {
+        //     ts = []
+        // }
+        ts = [bindRootTemp] //先由root當最上層
+
+        //id0
+        let id0 = null
+        // if (useBindRoot) {
+        //     id0 = bindRootTemp //先由root當最上層
+        // }
+        // else {
+        //     id0 = ''
+        // }
+        id0 = bindRootTemp //先由root當最上層
+
+        //nsm1
         let nsm1 = size(v.ss) - 1
+
+        //偵測各層
         each(v.ss, (s, ks) => {
 
             //isFolder, 當ks小於ns-1時一定為資料夾, 因有些是直接提供深層檔案沒有父層資料夾, 故得另外計算
@@ -1637,54 +1186,162 @@ function filepathToTree(fps, opt = {}) {
     // console.log('treeItems(add file)', cloneDeep(treeItems))
     // console.log('kpPathFl', kpPathFl)
 
-    // //remove root for kpPath
-    // each(kpPath, (v, k) => {
-    //     // console.log(k, 'v1', v)
-    //     v = strdelleft(v, 11)
-    //     // console.log(k, 'v2', v)
-    //     kpPath[k] = v
-    // })
-    // console.log('kpPath', kpPath)
+    // //check
+    // if (!useBindRoot) {
 
-    // //remove root for treeItems, treeItemsFolder
-    // treeItems = get(treeItems, '0.children')
-    // treeItemsFolder = get(treeItemsFolder, '0.children')
+    //     //取root的children當作最上層, 但其內id相關(id,parentId,pathInfors,ts)皆有bindRootTemp
+    //     treeItems = get(treeItems, '0.children', [])
+    //     treeItemsFolder = get(treeItemsFolder, '0.children', [])
 
-    //check
-    if (!useBindRoot) {
+    //     // // kpPath
+    //     // let _kpPath = {}
+    //     // each(kpPath, (v, k) => {
+    //     //     // console.log(k, v)
 
-        //取root的children當作最上層
-        treeItems = get(treeItems, '0.children', [])
-        treeItemsFolder = get(treeItemsFolder, '0.children', [])
+    //     //     //不保留root
+    //     //     if (k === bindRootTemp) {
+    //     //         return true //跳出換下一個
+    //     //     }
 
-        //把'0.children.'前綴移掉, 移除root本身
-        let _kpPath = {}
-        each(kpPath, (v, k) => {
-            // console.log(k, v)
+    //     //     //刪除前綴
+    //     //     if (isestr(v) && v.startsWith('0.children.')) {
+    //     //         _kpPath[k] = v.slice('0.children.'.length)
+    //     //         return true //跳出換下一個
+    //     //     }
 
-            //不保留root
-            if (k === bindRootTemp) {
-                return true //跳出換下一個
-            }
+    //     //     //save
+    //     //     _kpPath[k] = v
 
-            if (isestr(v) && v.startsWith('0.children.')) {
-                _kpPath[k] = v.slice('0.children.'.length)
-                return true //跳出換下一個
-            }
+    //     // })
+    //     // kpPath = _kpPath
 
-            if (v === '0.children') {
-                throw new Error('理論上不會出現')
-            }
-            if (v === '0') {
-                throw new Error('理論上不會出現')
-            }
+    //     //rootPrefix
+    //     let rootPrefix = `${bindRootTemp}${delimiter}`
 
-            //save
-            _kpPath[k] = v
+    //     let stripId = (id) => {
 
-        })
-        kpPath = _kpPath
-    }
+    //         //check
+    //         if (!isestr(id)) {
+    //             return id
+    //         }
+
+    //         //root自己
+    //         if (id === bindRootTemp) {
+    //             throw new Error(`非預期錯誤: 應該已剔除root`)
+    //         }
+
+    //         //移除開頭rootPrefix
+    //         if (id.startsWith(rootPrefix)) {
+    //             return id.slice(rootPrefix.length)
+    //         }
+
+    //         return id
+    //     }
+
+    //     let stripTs = (ts) => {
+
+    //         //check
+    //         if (!isarr(ts)) {
+    //             return ts
+    //         }
+
+    //         //移除開頭的root
+    //         if (ts.length > 0 && ts[0] === bindRootTemp) {
+    //             return ts.slice(1)
+    //         }
+
+    //         return ts
+    //     }
+
+    //     let stripPathInfors = (pathInfors) => {
+
+    //         //check
+    //         if (!isarr(pathInfors)) {
+    //             return pathInfors
+    //         }
+
+    //         //移除開頭的root
+    //         let pinf = pathInfors
+    //         if (pinf.length > 0 && get(pinf, '0.id') === bindRootTemp) {
+    //             pinf = pinf.slice(1)
+    //         }
+
+    //         //修正每筆id
+    //         return pinf.map((p) => {
+    //             let pp = { ...p }
+    //             if (isestr(pp.id)) {
+    //                 pp.id = stripId(pp.id)
+    //             }
+    //             return pp
+    //         })
+    //     }
+
+    //     let normalizeNode = (node) => {
+
+    //         //check
+    //         if (!node || typeof node !== 'object') {
+    //             return node
+    //         }
+
+    //         // copy（避免意外改到外部引用）
+    //         let n = { ...node }
+
+    //         // strip fields
+    //         if (isestr(n.id)) n.id = stripId(n.id)
+    //         if (isestr(n.parentId)) n.parentId = stripId(n.parentId)
+
+    //         if (isarr(n.ts)) n.ts = stripTs(n.ts)
+    //         if (isarr(n.pathInfors)) n.pathInfors = stripPathInfors(n.pathInfors)
+
+    //         // ns 依照 ts 重算（若沒有 ts 就保留原值）
+    //         if (isarr(n.ts)) n.ns = n.ts.length
+
+    //         // children recursive
+    //         if (isarr(n.children)) {
+    //             n.children = n.children.map(normalizeNode)
+
+    //             // 防護：若你的資料來源有異常導致 children 出現空 id，可在這裡過濾掉
+    //             // （正常情況不會發生）
+    //             n.children = n.children.filter((c) => !isestr(c.id) || c.id !== '')
+    //         }
+
+    //         return n
+    //     }
+
+    //     // normalize treeItems / treeItemsFolder
+    //     treeItems = treeItems.map(normalizeNode)
+    //     treeItemsFolder = treeItemsFolder.map(normalizeNode)
+
+    //     // --- kpPath：同時處理 key 與 value ---
+    //     let _kpPath = {}
+    //     each(kpPath, (v, k) => {
+
+    //         // 不保留 root
+    //         if (k === bindRootTemp) {
+    //             return true
+    //         }
+
+    //         // key 去 root 化（只去開頭那段）
+    //         let kk = stripId(k)
+
+    //         // 若 key 變空（代表原本就是 root），跳過
+    //         if (isestr(kk) && kk === '') {
+    //             return true
+    //         }
+
+    //         // value 去掉 0.children. 前綴（你原本的邏輯）
+    //         if (isestr(v) && v.startsWith('0.children.')) {
+    //             _kpPath[kk] = v.slice('0.children.'.length)
+    //             return true
+    //         }
+
+    //         // save
+    //         _kpPath[kk] = v
+    //         return true
+    //     })
+    //     kpPath = _kpPath
+
+    // }
 
     return {
         treeItems,
