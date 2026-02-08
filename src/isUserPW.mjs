@@ -1,4 +1,5 @@
 import get from 'lodash-es/get.js'
+import size from 'lodash-es/size.js'
 import join from 'lodash-es/join.js'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
@@ -10,7 +11,7 @@ import isStrHasNumber from './isStrHasNumber.mjs'
 
 
 /**
- * 判斷是否為有效user password
+ * 判斷是否為有效使用者密碼
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isUserPW.test.mjs Github}
  * @memberOf wsemi
@@ -19,7 +20,7 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  * @example
  * need test in browser
  *
- * isUserPW('Asdf1234')
+ * isUserPW('Asdf%1234')
  *     .then(function() {
  *         console.log('then')
  *         //code here
@@ -35,6 +36,12 @@ async function isUserPW(v, opt = {}) {
         useKeyForError = false
     }
 
+    //useOnlyOneError
+    let useOnlyOneError = get(opt, 'useOnlyOneError', null)
+    if (!isbol(useOnlyOneError)) {
+        useOnlyOneError = false
+    }
+
     //check
     if (!isestr(v)) {
         if (useKeyForError) {
@@ -46,8 +53,8 @@ async function isUserPW(v, opt = {}) {
     }
 
     //check
-    if (err.length > 0) {
-        throw new Error(join(err, ', '))
+    if (size(err) > 0) {
+        throw new Error(err[0])
     }
 
     //numLenMin
@@ -78,6 +85,10 @@ async function isUserPW(v, opt = {}) {
             err.push(`密碼長度須大於${numLenMin}個字元`)
         }
     }
+    if (useOnlyOneError && size(err) > 0) {
+        throw new Error(err[0])
+    }
+
     if (v.length > numLenMax) {
         if (useKeyForError) {
             err.push('keyLimNumLenMax')
@@ -86,17 +97,24 @@ async function isUserPW(v, opt = {}) {
             err.push(`密碼長度須小於${numLenMax}個字元`)
         }
     }
+    if (useOnlyOneError && size(err) > 0) {
+        throw new Error(err[0])
+    }
+
     if (!isStrHasCapital(v) || !isStrHasLowerCase(v) || !isStrHasNumber(v) || !isStrHasSymbol(v)) {
         if (useKeyForError) {
             err.push('keyLimCombination')
         }
         else {
-            err.push('須包含大寫、小寫英文、數字、特殊符號各1個字元')
+            err.push('密碼須包含大寫、小寫英文、數字、特殊符號各1個字元')
         }
+    }
+    if (useOnlyOneError && size(err) > 0) {
+        throw new Error(err[0])
     }
 
     //check
-    if (err.length > 0) {
+    if (size(err) > 0) {
         throw new Error(join(err, ', '))
     }
 
