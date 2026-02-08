@@ -4,10 +4,10 @@ import isUserPW from '../src/isUserPW.mjs'
 
 describe(`isUserPW`, function() {
 
-    it(`should return '' when input 'Asdf%1234'`, async function() {
+    it(`should return true when input 'Asdf%1234'`, function() {
         let r = null
         try {
-            r = await isUserPW('Asdf%1234')
+            r = isUserPW('Asdf%1234')
         }
         catch (err) {
             r = err.message
@@ -16,10 +16,22 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '12345678'`, async function() {
+    it(`should return '密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456'`, function() {
         let r = null
         try {
-            r = await isUserPW('12345678')
+            r = isUserPW('123456')
+        }
+        catch (err) {
+            r = err.message
+        }
+        let rr = `密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '12345678'`, function() {
+        let r = null
+        try {
+            r = isUserPW('12345678')
         }
         catch (err) {
             r = err.message
@@ -28,10 +40,10 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input 'abcdefgh'`, async function() {
+    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input 'abcdefgh'`, function() {
         let r = null
         try {
-            r = await isUserPW('abcdefgh')
+            r = isUserPW('abcdefgh')
         }
         catch (err) {
             r = err.message
@@ -40,10 +52,10 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input 'asdf1234'`, async function() {
+    it(`should return '密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input 'asdf1234'`, function() {
         let r = null
         try {
-            r = await isUserPW('asdf1234')
+            r = isUserPW('asdf1234')
         }
         catch (err) {
             r = err.message
@@ -52,46 +64,34 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼長度須小於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456789012345678901234567890a'`, async function() {
+    it(`should return '密碼長度須小於等於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456789012345678901234567890a'`, function() {
         let r = null
         try {
-            r = await isUserPW('123456789012345678901234567890a')
+            r = isUserPW('123456789012345678901234567890a')
         }
         catch (err) {
             r = err.message
         }
-        let rr = `密碼長度須小於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
+        let rr = `密碼長度須小於等於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '長度須大於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input ''`, async function() {
+    it(`should return '密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input ''`, function() {
         let r = null
         try {
-            r = await isUserPW('')
+            r = isUserPW('')
         }
         catch (err) {
             r = err.message
         }
-        let rr = `密碼非有效字串`
+        let rr = `密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼非有效字串' when input []`, async function() {
+    it(`should return '密碼非有效字串' when input []`, function() {
         let r = null
         try {
-            r = await isUserPW([])
-        }
-        catch (err) {
-            r = err.message
-        }
-        let rr = `密碼非有效字串`
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`should return '密碼非有效字串' when input {}`, async function() {
-        let r = null
-        try {
-            r = await isUserPW({})
+            r = isUserPW([])
         }
         catch (err) {
             r = err.message
@@ -100,10 +100,10 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼非有效字串' when input null`, async function() {
+    it(`should return '密碼非有效字串' when input {}`, function() {
         let r = null
         try {
-            r = await isUserPW(null)
+            r = isUserPW({})
         }
         catch (err) {
             r = err.message
@@ -112,10 +112,10 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼非有效字串' when input undefined`, async function() {
+    it(`should return '密碼非有效字串' when input null`, function() {
         let r = null
         try {
-            r = await isUserPW(undefined)
+            r = isUserPW(null)
         }
         catch (err) {
             r = err.message
@@ -124,10 +124,22 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼非有效字串' when input NaN`, async function() {
+    it(`should return '密碼非有效字串' when input undefined`, function() {
         let r = null
         try {
-            r = await isUserPW(NaN)
+            r = isUserPW(undefined)
+        }
+        catch (err) {
+            r = err.message
+        }
+        let rr = `密碼非有效字串`
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return '密碼非有效字串' when input NaN`, function() {
+        let r = null
+        try {
+            r = isUserPW(NaN)
         }
         catch (err) {
             r = err.message
