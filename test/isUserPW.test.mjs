@@ -16,7 +16,7 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456'`, function() {
+    it(`should return '密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456'`, function() {
         let r = null
         try {
             r = isUserPW('123456')
@@ -24,7 +24,7 @@ describe(`isUserPW`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = `密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
+        let rr = `密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -64,7 +64,7 @@ describe(`isUserPW`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼長度須小於等於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456789012345678901234567890a'`, function() {
+    it(`should return '密碼長度須小於等於30個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input '123456789012345678901234567890a'`, function() {
         let r = null
         try {
             r = isUserPW('123456789012345678901234567890a')
@@ -72,11 +72,11 @@ describe(`isUserPW`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = `密碼長度須小於等於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
+        let rr = `密碼長度須小於等於30個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return '密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input ''`, function() {
+    it(`should return '密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元' when input ''`, function() {
         let r = null
         try {
             r = isUserPW('')
@@ -84,7 +84,7 @@ describe(`isUserPW`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = `密碼長度須大於等於8個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
+        let rr = `密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元`
         assert.strict.deepStrictEqual(r, rr)
     })
 

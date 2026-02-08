@@ -1,6 +1,5 @@
 import get from 'lodash-es/get.js'
 import size from 'lodash-es/size.js'
-import join from 'lodash-es/join.js'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
 import ispint from './ispint.mjs'
@@ -18,13 +17,71 @@ import isStrHasNumber from './isStrHasNumber.mjs'
  * @param {String} pw 輸入密碼字串
  * @returns {Boolean} 回傳判斷布林值
  * @example
- * need test in browser
  *
- * isUserPW('Asdf%1234')
- *     .then(function() {
- *         console.log('then')
- *         //code here
- *     })
+ * let r = null
+ *
+ * try {
+ *     r = isUserPW('Asdf%1234')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => true
+ *
+ * try {
+ *     r = isUserPW('123456')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
+ *
+ * try {
+ *     r = isUserPW('12345678')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
+ *
+ * try {
+ *     r = isUserPW('abcdefgh')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
+ *
+ * try {
+ *     r = isUserPW('asdf1234')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
+ *
+ * try {
+ *     r = isUserPW('123456789012345678901234567890a')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼長度須小於等於30個字元, 密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
+ *
+ * try {
+ *     r = isUserPW('')
+ * }
+ * catch (err) {
+ *     r = err.message
+ * }
+ * console.log(r)
+ * // => 密碼長度須大於等於8個字元,密碼須包含大寫、小寫英文、數字、特殊符號各1個字元
  *
  */
 function isUserPW(pw, opt = {}) {
@@ -147,7 +204,7 @@ function isUserPW(pw, opt = {}) {
 
     //check
     if (size(err) > 0) {
-        throw new Error(join(err, ', '))
+        throw new Error(err)
     }
 
     return true
