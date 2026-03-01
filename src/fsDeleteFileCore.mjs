@@ -1,5 +1,5 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
+import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 
 
@@ -22,7 +22,7 @@ function fsDeleteFileCore(pah, opt = {}) {
     let fs = get(opt, 'fs')
 
     //check, 需先判斷
-    if (!fs.existsSync(pah)) {
+    if (!fsExistsCore(pah, { fs })) {
         return {
             success: 'file does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
         }

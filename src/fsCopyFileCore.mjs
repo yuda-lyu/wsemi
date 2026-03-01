@@ -1,5 +1,3 @@
-// import path from 'path'
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'

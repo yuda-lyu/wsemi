@@ -1,4 +1,5 @@
 import get from 'lodash-es/get.js'
+import fsExistsCore from './fsExistsCore.mjs'
 
 
 /**
@@ -20,7 +21,7 @@ function fsIsFolderCore(pah, opt = {}) {
     let fs = get(opt, 'fs')
 
     //check
-    if (!fs.existsSync(pah)) {
+    if (!fsExistsCore(pah, { fs })) {
         return false
     }
 

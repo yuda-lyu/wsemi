@@ -1,7 +1,7 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
-import fsCreateFolderCore from './fsCreateFolderCore.mjs'
+import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
+import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
 
 /**
@@ -24,7 +24,7 @@ function fsCleanFolderCore(pah, opt = {}) {
     let fs = get(opt, 'fs')
 
     //check
-    if (!fs.existsSync(pah)) {
+    if (!fsExistsCore(pah, { fs })) {
 
         //fsCreateFolderCore
         let r = fsCreateFolderCore(pah, { fs }) //若不存在則自動建立, 故先執行

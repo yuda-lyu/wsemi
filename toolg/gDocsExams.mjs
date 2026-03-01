@@ -18,7 +18,10 @@ function main() {
     let cdn = `<script src="https://cdn.jsdelivr.net/npm/wsemi@${pks.version}/dist/wsemi.umd.js"></script>`
 
     //mkdirSync
-    if (!fs.existsSync(fdTar)) {
+    try {
+        fs.statSync(fdTar)
+    }
+    catch {
         fs.mkdirSync(fdTar)
     }
 

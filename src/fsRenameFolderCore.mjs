@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import getPathParent from './getPathParent.mjs'
+import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 
@@ -31,7 +32,7 @@ function fsRenameFolderCore(pahOld, pahNew, opt = {}) {
     }
 
     //check
-    if (fs.existsSync(pahNew)) {
+    if (fsExistsCore(pahNew, { fs })) {
         return {
             error: `pahNew[${pahNew}] already exists` //pahNew存在則視為錯誤
         }

@@ -1,8 +1,8 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 import delay from './delay.mjs'
+import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 
 
@@ -35,7 +35,7 @@ async function fsDeleteFolderSafeCore(pah, opt = {}) {
     let fs = get(opt, 'fs', null)
 
     //check, 需先判斷
-    if (!fs.existsSync(pah)) {
+    if (!fsExistsCore(pah, { fs })) {
         // return {
         //     success: 'folder does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
         // }

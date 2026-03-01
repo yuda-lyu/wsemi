@@ -1,7 +1,7 @@
-// import fs from 'fs'
 import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
 import getPathParent from './getPathParent.mjs'
+import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
@@ -37,7 +37,7 @@ function fsCreateFileCore(pah, data = '', opt = {}) {
     }
 
     //check
-    if (fs.existsSync(pah)) {
+    if (fsExistsCore(pah, { fs })) {
         return {
             error: 'input path already exists: ' + pah //若路徑存在, 可能是資料夾、檔案或符號連結, 則一律視為錯誤
         }
