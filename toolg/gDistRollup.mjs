@@ -20,6 +20,7 @@ rollupFiles({
         'process': 'process',
         'child_process': 'child_process',
         'crypto': 'crypto',
+        'chokidar': 'chokidar',
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
         // 'fuse.js': 'Fuse', //因計算字串模糊比對重要, 故需要直接打包
@@ -32,9 +33,6 @@ rollupFiles({
         // 'tippy.js': 'tippyjs', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需要直接打包, 不能使用小數點故內部引用需為tippyjs
         // 'hash-wasm': 'hash-wasm', //因計算hash重要, 故需要直接打包
         // 'xxhash-wasm': 'xxhash-wasm', //因計算hash重要, 故需要直接打包
-        'tesseract.js': 'tesseractjs', //不能使用小數點故內部引用需為tesseractjs
-        'pyodide': 'pyodide',
-        'chokidar': 'chokidar',
     },
     external: [
         'path',
@@ -45,6 +43,7 @@ rollupFiles({
         'process',
         'child_process',
         'crypto',
+        'chokidar',
         'dayjs',
         'xlsx',
         // 'fuse.js', //因計算字串模糊比對重要, 故需要直接打包
@@ -57,8 +56,5 @@ rollupFiles({
         // 'tippy.js', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需要直接打包
         // 'hash-wasm', //因計算hash重要, 故需要直接打包
         // 'xxhash-wasm', //因計算hash重要, 故需要直接打包
-        'tesseract.js',
-        'pyodide',
-        'chokidar',
     ],
 })

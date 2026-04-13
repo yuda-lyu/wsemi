@@ -38,7 +38,7 @@ async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, 
     if (!isearr(pathItems)) {
         pathItems = [ //若有更新版本須全專案取代
             //最新可用版本詳見: https://www.npmjs.com/package/xlsx
-            'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+            'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
         ]
     }
 

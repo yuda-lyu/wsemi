@@ -72,14 +72,6 @@ To view some examples for more understanding, visit examples:
 
 > **html2str:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
 
-> **execPyodide:** [ex-execPyodide.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodide.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodide.html)]
-
-> **execPyodideDyn[dynamic import]:** [ex-execPyodideDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-execPyodideDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-execPyodideDyn.html)]
-
-> **ocr:** [ex-ocr.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocr.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocr.html)]
-
-> **ocrDyn[dynamic import]:** [ex-ocrDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-ocrDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-ocrDyn.html)]
-
 ## Installation
 
 ### Using npm(ES6 module):
@@ -91,7 +83,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.45/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.46/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -120,7 +112,7 @@ Add script for wsemi.
 [Optional] Add script for `xlsx`.
 > **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 ```
 
 [Optional] Add link and script for `viewerjs`.
@@ -148,16 +140,4 @@ Add script for wsemi.
 > **Note:** Include script when using `html2str` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
-```
-
-[Optional] Add script for `pyodide`.
-> **Note:** Include script when using `execPyodide` function, and don't include script when using `execPyodideDyn` function.
-```alias
-<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
-```
-
-[Optional] Add script for `tesseract.js`.
-> **Note:** Include script when using `ocr` function, and don't include script when using `ocrDyn` function.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.2/dist/tesseract.min.js"></script>
 ```
