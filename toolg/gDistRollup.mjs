@@ -23,16 +23,16 @@ rollupFiles({
         'chokidar': 'chokidar',
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
-        // 'fuse.js': 'Fuse', //因計算字串模糊比對重要, 故需要直接打包
-        // 'diff': 'diff', //因計算數據差異重要, 故需要直接打包
-        'diff2html': 'diff2html',
+        // 'fuse.js': 'Fuse', //因計算字串模糊比對重要, 故須打包
+        // 'diff': 'diff', //因計算數據差異重要, 故須打包
+        // 'diff2html': 'diff2html', //因後端須執行產製差異報告, 故須打包
         'html-to-text': 'html-to-text',
-        // 'he': 'he', //因前端bodyLog須使用htmlEncode, 執行得添加額外script增加複雜度, 故需要直接打包
+        // 'he': 'he', //因前端bodyLog須使用htmlEncode, 執行得添加額外script增加複雜度, 故須打包
         'ua-parser-js': 'UAParser',
         'xss': 'filterXSS',
-        // 'tippy.js': 'tippyjs', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需要直接打包, 不能使用小數點故內部引用需為tippyjs
-        // 'hash-wasm': 'hash-wasm', //因計算hash重要, 故需要直接打包
-        // 'xxhash-wasm': 'xxhash-wasm', //因計算hash重要, 故需要直接打包
+        // 'tippy.js': 'tippyjs', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故須打包, 不能使用小數點故內部引用需為tippyjs
+        // 'hash-wasm': 'hash-wasm', //因計算hash重要, 故須打包
+        // 'xxhash-wasm': 'xxhash-wasm', //因計算hash重要, 故須打包
     },
     external: [
         'path',
@@ -46,15 +46,15 @@ rollupFiles({
         'chokidar',
         'dayjs',
         'xlsx',
-        // 'fuse.js', //因計算字串模糊比對重要, 故需要直接打包
-        // 'diff', //因計算數據差異重要, 故需要直接打包
-        'diff2html',
+        // 'fuse.js', //因計算字串模糊比對重要, 故須打包
+        // 'diff', //因計算數據差異重要, 故須打包
+        // 'diff2html', //因後端須執行產製差異報告, 故須打包
         'html-to-text',
-        // 'he', //因前端bodyLog須使用htmlEncode, 執行得添加額外script增加複雜度, 故需要直接打包
+        // 'he', //因前端bodyLog須使用htmlEncode, 執行得添加額外script增加複雜度, 故須打包
         'ua-parser-js',
         'xss',
-        // 'tippy.js', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故需要直接打包
-        // 'hash-wasm', //因計算hash重要, 故需要直接打包
-        // 'xxhash-wasm', //因計算hash重要, 故需要直接打包
+        // 'tippy.js', //因前端需要滑鼠移入就顯示, 若採動態加載會有時間差, 故須打包
+        // 'hash-wasm', //因計算hash重要, 故須打包
+        // 'xxhash-wasm', //因計算hash重要, 故須打包
     ],
 })

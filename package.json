@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.47",
+  "version": "1.8.48",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^5.0.0",
@@ -18,7 +18,7 @@
     "seamless-scroll-polyfill": "^2.3.4",
     "tippy.js": "^6.3.7",
     "ua-parser-js": "^2.0.9",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "xss": "^1.0.15",
     "xxhash-wasm": "^1.1.0"
