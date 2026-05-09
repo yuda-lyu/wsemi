@@ -44,4 +44,29 @@ describe(`cstr`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return '0' when input 0n`, function() {
+        let r = cstr(0n)
+        assert.strict.deepStrictEqual(r, '0')
+    })
+
+    it(`should return '123' when input 123n`, function() {
+        let r = cstr(123n)
+        assert.strict.deepStrictEqual(r, '123')
+    })
+
+    it(`should return '-123' when input -123n`, function() {
+        let r = cstr(-123n)
+        assert.strict.deepStrictEqual(r, '-123')
+    })
+
+    it(`should return '9007199254740993' when input BigInt超過Number.MAX_SAFE_INTEGER`, function() {
+        let r = cstr(BigInt('9007199254740993'))
+        assert.strict.deepStrictEqual(r, '9007199254740993')
+    })
+
+    it(`should return '123' when input Object(123n) (boxed BigInt)`, function() {
+        let r = cstr(Object(123n))
+        assert.strict.deepStrictEqual(r, '123')
+    })
+
 })
