@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>bs2u8arr.mjs - Documentation</title>
+    <title>isbigint.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">bs2u8arr.mjs</h1>
+    <h1 class="page-title">isbigint.mjs</h1>
     
 
     
@@ -45,40 +45,43 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
-
-
-/**
- * BinaryString轉Unit8Array，BinaryString為UTF-16編碼
+            <pre class="prettyprint source linenums"><code>/**
+ * 判斷是否為BigInt
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.mjs Github}
+ * BigInt為ES2020新增之原生型別，typeof值為'bigint'，與Number(typeof 'number')互不相容。
+ * 由於BigInt與Number無法直接做混合算術運算(`1n + 1`、`Math.floor(1n)` 皆擲TypeError)，
+ * 故本函式獨立於isnum/isnbr，提供BigInt之專屬判斷。常見場景如金融API回傳之大整數識別碼
+ * (Binance orderId/algoId常超過Number.MAX_SAFE_INTEGER即2^53-1)。
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isbigint.test.mjs Github}
  * @memberOf wsemi
- * @param {String} bs 輸入BinaryString字串
- * @returns {Unit8Array} 回傳Unit8Array資料
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
  * @example
  *
- * console.log(bs2u8arr('abc'))
- * // => new Uint8Array([97, 98, 99])
+ * console.log(isbigint(123n))
+ * // => true
+ *
+ * console.log(isbigint(BigInt(123)))
+ * // => true
+ *
+ * console.log(isbigint(BigInt('9007199254740993')))
+ * // => true
+ *
+ * console.log(isbigint(123))
+ * // => false
+ *
+ * console.log(isbigint('123'))
+ * // => false
  *
  */
-function bs2u8arr(str) {
-
-    //check
-    if (!isestr(str)) {
-        return new Uint8Array()
-    }
-
-    let l = str.length
-    let u8a = new Uint8Array(l)
-    for (let i = 0; i &lt; l; i++) {
-        u8a[i] = str.charCodeAt(i)
-    }
-
-    return u8a
+function isbigint(v) {
+    let c = Object.prototype.toString.call(v)
+    return c === '[object BigInt]'
 }
 
 
-export default bs2u8arr
+export default isbigint
 </code></pre>
         </article>
     </section>
