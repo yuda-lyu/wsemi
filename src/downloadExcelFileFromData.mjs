@@ -90,7 +90,22 @@ function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
     else {
 
         //writeFile
-        xl.writeFile(wb, fileName)
+        //注意: 本檔本身保持dual-env(前後端都可用), 故不於檔頂端import fs (避免破壞browser webpack/Vue dev編譯)
+        //後果: 若Node ESM環境「單獨深度import此檔」(import x from 'wsemi/src/downloadExcelFileFromData.mjs'),
+        //會走xlsx ESM build (xlsx.mjs), 其內部_fs未注入故xl.writeFile會擲「cannot save file」
+        //解法: 改用「import完整wsemi」(import { downloadExcelFileFromData } from 'wsemi' 或 import wsemi from 'wsemi'),
+        //該路徑走package.json main指向的UMD bundle, UMD內走xlsx CJS build, fs會自動載入, writeFile即可運作
+        try {
+            xl.writeFile(wb, fileName)
+        }
+        catch (err) {
+            let msg = `xl.writeFile failed: ${get(err, 'message', err)}. ` +
+                `提示: 若於Node ESM環境單獨深度import此檔, xlsx ESM build的_fs未注入會擲此錯; ` +
+                `請改用 import { downloadExcelFileFromData } from 'wsemi' (走package main的UMD bundle, xlsx CJS自動載fs), ` +
+                `或於app entry手動呼叫 XLSX.set_fs(fs) 注入fs`
+            console.log(msg)
+            return msg
+        }
 
     }
 
