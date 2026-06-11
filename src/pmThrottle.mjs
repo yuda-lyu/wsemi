@@ -6,7 +6,7 @@ import evem from './evem.mjs'
 
 
 /**
- * 非同步函數進行節流
+ * 非同步(Promise)函數進行節流
  *
  * 同時會執行多個佇列(非同步函數)，但若有一個佇列先執行完畢，則其他佇列皆會自動轉為catch，回傳訊息為物件{reason:'cancelled'}
  *
