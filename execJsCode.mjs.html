@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>getExcelU8ArrFromWorkbook.mjs - Documentation</title>
+    <title>execJsCode.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">getExcelU8ArrFromWorkbook.mjs</h1>
+    <h1 class="page-title">execJsCode.mjs</h1>
     
 
     
@@ -45,86 +45,72 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
-import isobj from './isobj.mjs'
-import iseobj from './iseobj.mjs'
-import isarr from './isarr.mjs'
-import bs2u8arr from './bs2u8arr.mjs'
-import getXLSX from './_getXLSX.mjs'
+            <pre class="prettyprint source linenums"><code>import path from 'path'
+import { pathToFileURL } from 'url'
+import isfun from './isfun.mjs'
 
 
 /**
- * 由Excel的Workbook物件轉成為Excel的Uint8Array數據陣列
+ * 後端nodejs動態載入並執行指定mjs檔之default匯出函數
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromWorkbook.test.mjs Github}
+ * 該mjs須export default一個函數(可為async或sync)，opt將整包傳入該函數作為其輸入參數，並回傳該函數之執行結果
+ *
+ * fpJsCode為相對於專案根(process.cwd())之路徑字串，例如'./d06_p1Factors/genP1Factors_rp.mjs'，因觸發腳本由專案根執行故cwd即為專案根，path.resolve(fpJsCode)以cwd為基準解析成絕對路徑。Windows下動態import絕對路徑須轉file:// URL(否則'd:'被當成protocol而擲ERR_UNSUPPORTED_ESM_URL_SCHEME)，內部已用pathToFileURL處理
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execJsCode.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} wb 輸入Excel的Workbook物件
- * @returns {Array} 回傳Excel的Uint8Array數據陣列
+ * @param {String} fpJsCode 輸入待執行mjs檔之路徑字串，相對於專案根(process.cwd())解析
+ * @param {Object} [opt={}] 輸入設定物件，將整包傳入目標mjs之default函數作為其輸入參數，預設{}
+ * @returns {Promise} 回傳Promise，resolve回傳目標mjs之default函數執行結果，reject回傳錯誤訊息(如檔案不存在、無default匯出、或目標函數內部拋錯)
  * @example
+ * //need test in nodejs
  *
- * let data = [
- *     ['a', '123', 456],
- *     [null, 'abc123', '', 111.222333],
- * ]
+ * //假設有檔案 ./myCode.mjs 內容為:
+ * //   async function run(opt) {
+ * //       return { sum: opt.a + opt.b }
+ * //   }
+ * //   export default run
  *
- * let wb = getExcelWorkbookFromData(data)
- * let u8a = getExcelU8ArrFromWorkbook(wb)
- * console.log(u8a)
- * // => Uint8Array(15997) [
- * //    80,  75,   3,   4,  20,   0,   0,   0,   0,   0,   0,   0,
- * //    0,   0, 164,   1, 132, 184, 181,   2,   0,   0, 181,   2,
- * //    0,   0,  26,   0,   0,   0, 120, 108,  47,  95, 114, 101,
- * //  108, 115,  47, 119, 111, 114, 107,  98, 111, 111, 107,  46,
- * //  120, 109, 108,  46, 114, 101, 108, 115,  60,  63, 120, 109,
- * //  108,  32, 118, 101, 114, 115, 105, 111, 110,  61,  34,  49,
- * //   46,  48,  34,  32, 101, 110,  99, 111, 100, 105, 110, 103,
- * //   61,  34,  85,  84,  70,  45,  56,  34,  32, 115, 116,  97,
- * //  110, 100,  97, 108,
- * //  ... 15897 more items
- * // ]
+ * if (true) {
+ *     let r = await execJsCode('./myCode.mjs', { a: 3, b: 4 })
+ *     console.log(r)
+ *     // => { sum: 7 }
+ * }
+ *
+ * if (true) {
+ *     execJsCode('./myCode.mjs', { a: 1, b: 2 })
+ *         .then(function(data) {
+ *             console.log('then', data)
+ *             // => then { sum: 3 }
+ *         })
+ *         .catch(function(err) {
+ *             console.log('catch', err)
+ *         })
+ * }
  *
  */
-function getExcelU8ArrFromWorkbook(wb) {
+async function execJsCode(fpJsCode, opt = {}) {
 
-    //check
-    if (!iseobj(wb)) {
-        return {
-            error: 'wb is not an effective object',
-        }
-    }
-    if (!isarr(get(wb, 'SheetNames'))) {
-        return {
-            error: 'wb.SheetNames is not an array',
-        }
-    }
-    if (!isobj(get(wb, 'Sheets'))) {
-        return {
-            error: 'wb.Sheets is not an object',
-        }
+    //轉絕對路徑
+    fpJsCode = path.resolve(fpJsCode)
+
+    //func, 使用動態import(Windows 須 pathToFileURL)
+    let mod = await import(pathToFileURL(fpJsCode).href)
+    let func = mod.default
+
+    //check, 目標檔須 export default 一個函數
+    if (!isfun(func)) {
+        throw new Error(`the default export of [${fpJsCode}] is not a function`)
     }
 
-    //u8a
-    let u8a = null
-    try {
+    //執行
+    let r = await func(opt)
 
-        //bswb, type給binary代表回傳BinaryString(Uint8Array)
-        let bswb = getXLSX().write(wb, { bookType: 'xlsx', type: 'binary' })
-
-        //BinaryString(Uint8Array) to Uint8Array
-        u8a = bs2u8arr(bswb)
-
-    }
-    catch (err) {
-        return {
-            error: err
-        }
-    }
-
-    return u8a
+    return r
 }
 
 
-export default getExcelU8ArrFromWorkbook
+export default execJsCode
 </code></pre>
         </article>
     </section>
