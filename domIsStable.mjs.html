@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>downloadFileFromB64.mjs - Documentation</title>
+    <title>domIsStable.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">downloadFileFromB64.mjs</h1>
+    <h1 class="page-title">domIsStable.mjs</h1>
     
 
     
@@ -45,53 +45,226 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import isestr from './isestr.mjs'
-import isWindow from './isWindow.mjs'
+            <pre class="prettyprint source linenums"><code>
+import get from 'lodash-es/get.js'
+import isfun from './isfun.mjs'
+import isEle from './isEle.mjs'
+import evem from './evem.mjs'
+import genPm from './genPm.mjs'
+import delay from './delay.mjs'
 
 
 /**
- * 前端下載base64資料成為檔案
+ * 前端偵測DOM元素(及其子元素)是否已穩定
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromB64.test.mjs Github}
- * @memberOf wsemi
- * @param {String} fileName 輸入檔名字串
- * @param {String} b64 輸入base64資料字串
- * @example
- * need test in browser
- *
- * //icon.png to base64
- * let b64='iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACGklEQVQ4T6WTzWsTQRjGZ/YrEk1oofYgglURCqHb0QrBdLfNQQTPag9V624Sowh6FLz5F3hRqBSym1TsJWDx4EVESXdjWojYTdkqilAEL1ZaMGubNrMzsoGUxqyN4Nzm/fjx8jzvC8F/Ptipfz6eOhxyN8MR4+myX60vwJDGu0M8fwi9ydmWlJgAAB6gFBdQMWf/CfEFWLJ6D1JKSICfhXVXHpzTMovSNRUI9CV6Pf1tN6QNsCSnrjA1/ArvZ3uAS5OU4klkTn/6OJwI1SC5jszsg78CluQJ0aXccWRqsxTcZ5bj33vtg6urY/m86zUtjiTOMRBUxYJWakJaJrBGlVt1R8iefje14SdYeSjNC8H6DdHQH7UBrNjVXsByFwYNfXIvZyxJvQPB1hPRnFn36nYmeB9TEMvCI6KhP98LUJGUSxhC+5ShN2zdAVjDikwBQ1FRM5uA+ejlcBcXoP1FrdqMVWR1lKWgFjH1hRZA5YzS7wrswMlCJu8lykPpIBfESQAIwBtCpqlLRUqOQ4IXBt7mvrQAvE9FVu862HkYK+U3LVm9SAn5wLCQIQCcQHPZZ35WtrhQjqd7eLw9tsb1ad3uioKM7OOGfbJyc53ty3aRr0mW1GaaArZN4AWskdRRSPFZQpljkGGmICGQQpqCDFkh2/QFKnXYRA/y+fztsPOzGt3C9YZQgX18VPjxqxSx884/3UKnC92d/w3GFd4RMMe9pgAAAABJRU5ErkJggg=='
- * downloadFileFromB64('icon.png',b64)
- *
+ * @memberOf w-component-vue
+ * @param {Element} ele 輸入Element元素
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} [opt.mode='promise'] 輸入模式字串，可使用'promise'與'event'，'promise'代表一次性偵測並回傳Promise(resolve回傳當前是否穩定布林值)，'event'代表持續性偵測並回傳EventEmitter，預設'promise'
+ * @param {Number} [opt.tolerance=0] 輸入位置容許誤差數字，單位px，預設0表示須完全相同
+ * @param {Number} [opt.timeDiff=100] 輸入位置前後比對之時間差數字，單位ms，預設100
+ * @param {Number} [opt.timeDetect=50] 輸入event模式輪詢偵測間隔數字，單位ms，預設50
+ * @returns {Promise|Object} 回傳物件，給予'promise'時回傳Promise(resolve回傳當前是否穩定布林值，reject回傳錯誤訊息)，給予'event'時回傳EventEmitter，可使用create、on、dispose函數
  */
-function downloadFileFromB64(fileName, b64) {
+function domIsStable(ele, opt = {}) {
 
-    //check
-    if (!isWindow()) {
-        console.log('no window')
-        return
+    //check ele
+    if (!isEle(ele)) {
+        return Promise.reject('invalid element')
     }
 
-    //check
-    if (!isestr(fileName)) {
-        console.log('no filename')
-        return
+    //check getBoundingClientRect
+    if (!isfun(ele.getBoundingClientRect)) {
+        return Promise.reject('invalid element.getBoundingClientRect')
     }
 
-    //tag a
-    let a = document.createElement('a')
-    a.href = b64
-    a.download = fileName
+    //mode
+    let mode = get(opt, 'mode', '')
+    if (mode !== 'promise' &amp;&amp; mode !== 'event') {
+        mode = 'promise'
+    }
 
-    //download
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    //tolerance, 位置容許誤差(px)
+    let tolerance = get(opt, 'tolerance', 0)
 
+    //timeDiff, 位置前後比對的時間差(ms)
+    let timeDiff = get(opt, 'timeDiff', 100)
+
+    //timeDetect, 偵測時間差(ms)
+    let timeDetect = get(opt, 'timeDetect', 50)
+
+    //getRect: 取螢幕位置與尺寸(getBoundingClientRect的left/top會反映transform位移)
+    let getRect = () => {
+        let r = ele.getBoundingClientRect()
+        return { x: r.left, y: r.top, w: r.width, h: r.height }
+    }
+
+    //sameRect: 兩次位置/尺寸是否在誤差內相同
+    let sameRect = (a, b) => {
+        return !!a &amp;&amp; !!b &amp;&amp;
+            Math.abs(a.x - b.x) &lt;= tolerance &amp;&amp;
+            Math.abs(a.y - b.y) &lt;= tolerance &amp;&amp;
+            Math.abs(a.w - b.w) &lt;= tolerance &amp;&amp;
+            Math.abs(a.h - b.h) &lt;= tolerance
+    }
+
+    //getAnims: 取得進行中的動畫(含子樹), 不支援getAnimations時退化為空陣列
+    let getAnims = () => {
+        try {
+            return ele.getAnimations({ subtree: true })
+        }
+        catch (err) {
+            return []
+        }
+    }
+
+    //core
+    let core = async () => {
+
+        //pm
+        let pm = genPm()
+
+        try {
+
+            //bRect, getBoundingClientRect間隔timeDetect前後比對位置是否無變化
+            let r1 = getRect()
+            await delay(timeDiff)
+            let r2 = getRect()
+            let bRect = sameRect(r1, r2)
+
+            //bAnim, 用getAnimations().finished確認動畫也都結束(空陣列allSettled立即過)
+            await Promise.allSettled(getAnims().map((a) => a.finished))
+            let bAnim = getAnims().length === 0
+
+            //b
+            let b = bRect &amp;&amp; bAnim
+
+            //resolve, b=true代表皆無變化才視為穩定
+            pm.resolve(b)
+
+        }
+        catch (err) {
+            pm.reject(err)
+        }
+
+        return pm
+    }
+
+    //corePm
+    let corePm = core
+
+    //coreEv
+    let coreEv = () => {
+
+        //ev
+        let ev = evem()
+
+        //watching
+        let watching = false
+
+        //timerCreate, timerQuery
+        let timerCreate = null
+        let timerQuery = null
+
+        //stop
+        let stop = false
+
+        //observe
+        let observe = (ele) => {
+            let b = false
+
+            //check
+            if (!isEle(ele)) {
+                return b
+            }
+
+            //observe
+            try {
+
+                let bLock = false
+                let bLast = false
+                timerQuery = setInterval(() => {
+                    if (stop) {
+                        clearInterval(timerQuery)
+                        return
+                    }
+                    if (bLock) {
+                        return
+                    }
+                    bLock = true
+                    core()
+                        .then((bNow) => {
+                            if (stop) {
+                                return
+                            }
+                            if (bLast !== bNow) {
+                                bLast = bNow
+                                ev.emit('stable', bNow)
+                            }
+                        })
+                        .catch(() => {
+                            // console.log(err)
+                        })
+                        .finally(() => {
+                            bLock = false
+                        })
+                }, timeDetect)
+
+                b = true
+            }
+            catch (err) {
+                // console.log(err)
+            }
+
+            return b
+        }
+
+        //create
+        let create = () => {
+            timerCreate = setInterval(() => {
+                watching = observe(ele)
+                if (watching) {
+                    clearInterval(timerCreate)
+                }
+            }, 50)
+        }
+
+        //dispose
+        let dispose = () => {
+            let b = false
+            try {
+                clearInterval(timerCreate)
+                clearInterval(timerQuery)
+                stop = true
+                b = true
+            }
+            catch (err) {
+                // console.log(err)
+            }
+            return b
+        }
+
+        //save
+        ev.create = create
+        ev.dispose = dispose
+
+        return ev
+    }
+
+    //r
+    let r = null
+    if (mode === 'promise') {
+        r = corePm()
+    }
+    else if (mode === 'event') {
+        r = coreEv()
+    }
+
+    return r
 }
 
 
-export default downloadFileFromB64
+export default domIsStable
 </code></pre>
         </article>
     </section>
