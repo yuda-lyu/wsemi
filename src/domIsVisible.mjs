@@ -139,8 +139,17 @@ function domIsVisible(ele, opt = {}) {
         //watching
         let watching = false
 
+        //timerCreate
+        let timerCreate = null
+
+        //stop
+        let stop = false
+
         //ob
         let ob = new IntersectionObserver((entries) => {
+            if (stop) {
+                return
+            }
             let b = entries[0].isIntersecting
             // console.log(ele, 'visible', b)
             ev.emit('visible', b)
@@ -167,27 +176,33 @@ function domIsVisible(ele, opt = {}) {
             return b
         }
 
+        //create
+        let create = () => {
+            timerCreate = setInterval(() => {
+                if (stop) {
+                    clearInterval(timerCreate)
+                    return
+                }
+                watching = observe(ele)
+                if (watching) {
+                    clearInterval(timerCreate)
+                }
+            }, 50)
+        }
+
         //dispose
         let dispose = () => {
             let b = false
             try {
+                clearInterval(timerCreate)
                 ob.disconnect()
+                stop = true
                 b = true
             }
             catch (err) {
                 // console.log(err)
             }
             return b
-        }
-
-        //create
-        let create = () => {
-            let t = setInterval(() => {
-                watching = observe(ele)
-                if (watching) {
-                    clearInterval(t)
-                }
-            }, 50)
         }
 
         //save
