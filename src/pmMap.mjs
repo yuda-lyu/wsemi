@@ -369,6 +369,12 @@ function pmMap(rs, fun, takeLimit = 0) {
         return pm
     }
 
+    //check
+    if (size(rs) === 0) {
+        pm.resolve([]) //對空集合立即resolve([]), 因物件輸入會先轉換成[{k, v}]陣列處理, 最終透過values(ts)皆回傳陣列, 故須resolve([])
+        return pm
+    }
+
     //object rs to array
     let useObj = false
     if (isobj(rs)) {

@@ -336,4 +336,52 @@ describe(`pmMap`, function() {
         assert.strict.deepStrictEqual(JSON.stringify(ms), r7)
     })
 
+    async function test8() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+            pmMap([], function(v, k) {
+                return new Promise(function(resolve, reject) {
+                    resolve(v)
+                })
+            })
+                .then(function(res) {
+                    ms.push({ res })
+                    resolve(ms)
+                })
+                .catch(function(err) {
+                    ms.push({ err })
+                    resolve(ms)
+                })
+        })
+    }
+    let r8 = '[{"res":[]}]'
+    it(`should return '${r8}' when run test8 with empty array`, async function() {
+        let ms = await test8()
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r8)
+    })
+
+    async function test9() {
+        return new Promise((resolve, reject) => {
+            let ms = []
+            pmMap({}, function(v, k) {
+                return new Promise(function(resolve, reject) {
+                    resolve(v)
+                })
+            })
+                .then(function(res) {
+                    ms.push({ res })
+                    resolve(ms)
+                })
+                .catch(function(err) {
+                    ms.push({ err })
+                    resolve(ms)
+                })
+        })
+    }
+    let r9 = '[{"res":[]}]'
+    it(`should return '${r9}' when run test9 with empty object`, async function() {
+        let ms = await test9()
+        assert.strict.deepStrictEqual(JSON.stringify(ms), r9)
+    })
+
 })
