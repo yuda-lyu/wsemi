@@ -889,6 +889,42 @@ let fts = [
         exec: ''
     },
     {
+        name: 'vtp',
+        group: '',
+        acp: 'model/vtp',
+        exec: ''
+    },
+    {
+        name: 'vtk',
+        group: '',
+        acp: 'model/vtk',
+        exec: ''
+    },
+    {
+        name: 'vtu',
+        group: '',
+        acp: 'model/vtu',
+        exec: ''
+    },
+    {
+        name: 'vti',
+        group: '',
+        acp: 'model/vti',
+        exec: ''
+    },
+    {
+        name: 'vts',
+        group: '',
+        acp: 'model/vts',
+        exec: ''
+    },
+    {
+        name: 'vtr',
+        group: '',
+        acp: 'model/vtr',
+        exec: ''
+    },
+    {
         name: 'ics',
         group: '',
         acp: 'text/calendar',
