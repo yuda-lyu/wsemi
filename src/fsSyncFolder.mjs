@@ -13,7 +13,7 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve代表同步成功，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject代表回傳錯誤訊息
  * @example
  * //need test in nodejs
  *
@@ -30,6 +30,7 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  *     let fp
  *     let stage
  *     let b
+ *     let bSync
  *
  *     if (true) {
  *
@@ -112,7 +113,11 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  *     console.log(stage, fp, 'fsIsFile', b)
  *     ms.push({ stage, fp, fsIsFile: b })
  *
- *     await fsSyncFolder(fdSrc, fdTar)
+ *     stage = 'sync'
+ *
+ *     bSync = await fsSyncFolder(fdSrc, fdTar)
+ *     console.log(stage, 'bSync', bSync)
+ *     ms.push({ stage, bSync }) //bSync=true, 有差異故需同步
  *
  *     stage = 'after'
  *
@@ -166,6 +171,12 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  *     console.log(stage, fp, 'fsIsFile', b)
  *     ms.push({ stage, fp, fsIsFile: b })
  *
+ *     stage = 'sync-again'
+ *
+ *     bSync = await fsSyncFolder(fdSrc, fdTar)
+ *     console.log(stage, 'bSync', bSync)
+ *     ms.push({ stage, bSync }) //bSync=false, 已無差異故無須同步
+ *
  *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
  *
  *     console.log('ms', JSON.stringify(ms, null, 2))
@@ -182,6 +193,7 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * // before ./_test_fsSyncFolder/tar/def fsIsFolder true
  * // before ./_test_fsSyncFolder/tar/def/xyz fsIsFolder true
  * // before ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile true
+ * // sync bSync true
  * // after ./_test_fsSyncFolder/tar/t0.txt fsIsFile true
  * // after ./_test_fsSyncFolder/tar/abc fsIsFolder true
  * // after ./_test_fsSyncFolder/tar/abc/t1.txt fsIsFile true
@@ -192,6 +204,7 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * // after ./_test_fsSyncFolder/tar/def/xyz-add fsIsFolder true
  * // after ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile false
  * // after ./_test_fsSyncFolder/tar/def/xyz-add/t3.txt fsIsFile true
+ * // sync-again bSync false
  * // ms [
  * //   {
  * //     "stage": "before",
@@ -227,6 +240,10 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * //     "stage": "before",
  * //     "fp": "./_test_fsSyncFolder/tar/def/xyz/t3.txt",
  * //     "fsIsFile": true
+ * //   },
+ * //   {
+ * //     "stage": "sync",
+ * //     "bSync": true
  * //   },
  * //   {
  * //     "stage": "after",
@@ -277,6 +294,10 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * //     "stage": "after",
  * //     "fp": "./_test_fsSyncFolder/tar/def/xyz-add/t3.txt",
  * //     "fsIsFile": true
+ * //   },
+ * //   {
+ * //     "stage": "sync-again",
+ * //     "bSync": false
  * //   }
  * // ]
  *

@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import map from 'lodash-es/map.js'
+import size from 'lodash-es/size.js'
 import isestr from './isestr.mjs'
 import strleft from './strleft.mjs'
 import strdelleft from './strdelleft.mjs'
@@ -22,7 +23,7 @@ import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve代表同步成功，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject代表回傳錯誤訊息
  * @example
  * //need test in nodejs
  *
@@ -48,10 +49,14 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
         throw new Error(`fdSrc[${fdSrc}] is not a folder`)
     }
 
+    //b
+    let b = false
+
     //check
     if (!fsIsFolderCore(fdTar, { fs })) {
         await fsCopyFolderCore(fdSrc, fdTar, { path, fs, useSync: false })
-        return
+        b = true
+        return b
     }
 
     //dlm, ndlm
@@ -102,6 +107,9 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
     //   same: [ {...} ],
     //   diff: [ {...} ],
 
+    //b, 有任一刪除, 新增或變更, 代表需進行同步
+    b = size(r.del) > 0 || size(r.add) > 0 || size(r.diff) > 0
+
     //先針對fdTar內刪除已消失之資料夾
     await pmSeries(r.del, async(v) => {
         if (v.isFolder) {
@@ -130,6 +138,7 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
         }
     })
 
+    return b
 }
 
 

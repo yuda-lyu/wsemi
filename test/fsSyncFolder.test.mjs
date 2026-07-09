@@ -22,6 +22,7 @@ describe(`fsSyncFolder`, function() {
         let fp
         let stage
         let b
+        let bSync
 
         if (true) {
 
@@ -104,7 +105,11 @@ describe(`fsSyncFolder`, function() {
         // console.log(stage, fp, 'fsIsFile', b)
         ms.push({ stage, fp, fsIsFile: b })
 
-        await fsSyncFolder(fdSrc, fdTar)
+        stage = 'sync'
+
+        bSync = await fsSyncFolder(fdSrc, fdTar)
+        // console.log(stage, 'bSync', bSync)
+        ms.push({ stage, bSync }) //bSync=true, 有差異故需同步
 
         stage = 'after'
 
@@ -158,6 +163,12 @@ describe(`fsSyncFolder`, function() {
         // console.log(stage, fp, 'fsIsFile', b)
         ms.push({ stage, fp, fsIsFile: b })
 
+        stage = 'sync-again'
+
+        bSync = await fsSyncFolder(fdSrc, fdTar)
+        // console.log(stage, 'bSync', bSync)
+        ms.push({ stage, bSync }) //bSync=false, 已無差異故無須同步
+
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
         // console.log('ms', JSON.stringify(ms, null, 2))
@@ -174,6 +185,7 @@ describe(`fsSyncFolder`, function() {
     // before ./_test_fsSyncFolder/tar/def fsIsFolder true
     // before ./_test_fsSyncFolder/tar/def/xyz fsIsFolder true
     // before ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile true
+    // sync bSync true
     // after ./_test_fsSyncFolder/tar/t0.txt fsIsFile true
     // after ./_test_fsSyncFolder/tar/abc fsIsFolder true
     // after ./_test_fsSyncFolder/tar/abc/t1.txt fsIsFile true
@@ -184,6 +196,7 @@ describe(`fsSyncFolder`, function() {
     // after ./_test_fsSyncFolder/tar/def/xyz-add fsIsFolder true
     // after ./_test_fsSyncFolder/tar/def/xyz/t3.txt fsIsFile false
     // after ./_test_fsSyncFolder/tar/def/xyz-add/t3.txt fsIsFile true
+    // sync-again bSync false
     // ms [
     //   {
     //     "stage": "before",
@@ -219,6 +232,10 @@ describe(`fsSyncFolder`, function() {
     //     "stage": "before",
     //     "fp": "./_test_fsSyncFolder/tar/def/xyz/t3.txt",
     //     "fsIsFile": true
+    //   },
+    //   {
+    //     "stage": "sync",
+    //     "bSync": true
     //   },
     //   {
     //     "stage": "after",
@@ -269,6 +286,10 @@ describe(`fsSyncFolder`, function() {
     //     "stage": "after",
     //     "fp": "./_test_fsSyncFolder/tar/def/xyz-add/t3.txt",
     //     "fsIsFile": true
+    //   },
+    //   {
+    //     "stage": "sync-again",
+    //     "bSync": false
     //   }
     // ]
     let ms = [
@@ -306,6 +327,10 @@ describe(`fsSyncFolder`, function() {
             'stage': 'before',
             'fp': './_test_fsSyncFolder/tar/def/xyz/t3.txt',
             'fsIsFile': true
+        },
+        {
+            'stage': 'sync',
+            'bSync': true
         },
         {
             'stage': 'after',
@@ -356,6 +381,10 @@ describe(`fsSyncFolder`, function() {
             'stage': 'after',
             'fp': './_test_fsSyncFolder/tar/def/xyz-add/t3.txt',
             'fsIsFile': true
+        },
+        {
+            'stage': 'sync-again',
+            'bSync': false
         }
     ]
 
