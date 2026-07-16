@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.64",
+  "version": "1.8.65",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "chokidar": "^5.0.0",
@@ -10,7 +10,7 @@
     "diff": "^9.0.0",
     "diff2html": "^3.4.56",
     "eventemitter3": "^5.0.4",
-    "fuse.js": "^7.4.2",
+    "fuse.js": "^7.5.0",
     "hash-wasm": "^4.12.0",
     "he": "^1.2.0",
     "html-to-text": "^10.0.0",

@@ -21,6 +21,7 @@ rollupFiles({
         'process': 'process',
         'child_process': 'child_process',
         'crypto': 'crypto',
+        'tree-kill': 'treeKill', //tree-kill頂層即存取child_process.spawn, 打包進來會於瀏覽器載入時就throw使wsemi變空物件, 故須external(Node專用, 前端不會呼叫execProcessKillPid)
         'chokidar': 'chokidar',
         'dayjs': 'dayjs',
         'xlsx': 'XLSX',
@@ -45,6 +46,7 @@ rollupFiles({
         'process',
         'child_process',
         'crypto',
+        'tree-kill', //tree-kill頂層即存取child_process.spawn, 須external避免瀏覽器載入throw
         'chokidar',
         'dayjs',
         'xlsx',
