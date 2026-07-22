@@ -1,5 +1,5 @@
 /*!
- * wsemi v1.8.65
+ * wsemi v1.8.66
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */
