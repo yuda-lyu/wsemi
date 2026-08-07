@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>round.mjs - Documentation</title>
+    <title>Global - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,153 +35,1537 @@
 
 <div id="main">
     
-    <h1 class="page-title">round.mjs</h1>
+    <h1 class="page-title">Global</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>import Decimal from 'decimal.js'
-import get from 'lodash-es/get.js'
-import isnum from './isnum.mjs'
-import isp0int from './isp0int.mjs'
-import cint from './cint.mjs'
+        <h2>
+        
+            
+        
+        </h2>
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+
+<dl class="details">
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
 
 
-/**
- * 數字或字串四捨五入至指定位數(0位為整數)
- *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/round.test.mjs Github}
- * @memberOf wsemi
- * @param {Number|String} v 輸入數字或字串
- * @param {Integer} [idig=0] 輸入指定位數整數，預設0
- * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.rounding='ROUND_HALF_UP'] 輸入取捨方式，可選'ROUND_HALF_UP'代表四捨五入或'ROUND_HALF_EVEN'代表四捨六入五成雙，預設'ROUND_HALF_UP'
- * @returns {Number} 回傳四捨五入的數字
- * @example
- *
- * console.log(round(1.5))
- * // => 2
- *
- * console.log(round('1.5'))
- * // => 2
- *
- * console.log(round(-1.5))
- * // => -2 (四捨五入不看正負號得-2)
- *
- * console.log(round('125abc'))
- * // => ''
- *
- * console.log(round(9.83501, 2))
- * // => 9.84
- *
- * console.log(round(9.8350, 2))
- * // => 9.84
- *
- * console.log(round(9.82501, 2))
- * // => 9.83
- *
- * console.log(round(9.8250, 2))
- * // => 9.83
- *
- * console.log(round(9.8249, 2))
- * // => 9.82
- *
- * console.log(round(12.6449, 2))
- * // => 12.64
- *
- * console.log(round(12.645, 2))
- * // => 12.65
- *
- * console.log(round(12.6451, 2))
- * // => 12.65
- *
- * console.log(round(12.65, 2))
- * // => 12.65
- *
- * console.log(round(12.64, 2))
- * // => 12.64
- *
- * console.log(round(12.6, 2))
- * // => 12.6
- *
- * console.log(round(12, 2))
- * // => 12
- *
- * console.log(round(9.83501, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.84
- *
- * console.log(round(9.8350, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.84 (四捨六入五成雙, 第3位5進位得9.84)
- *
- * console.log(round(9.82501, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.83
- *
- * console.log(round(9.8250, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.82 (四捨六入五成雙, 第3位5捨去得9.82)
- *
- * console.log(round(9.8249, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 9.82
- *
- * console.log(round(12.6449, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.64
- *
- * console.log(round(12.645, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.64 (四捨六入五成雙, 第3位5捨去得12.64)
- *
- * console.log(round(12.6451, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.65
- *
- * console.log(round(12.65, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.65
- *
- * console.log(round(12.64, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.64
- *
- * console.log(round(12.6, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12.6
- *
- * console.log(round(12, 2, { rounding: 'ROUND_HALF_EVEN' }))
- * // => 12
- *
- */
-function round(v, idig = 0, opt = {}) {
-
-    //idig
-    if (!isp0int(idig)) {
-        idig = 0
-    }
-    idig = cint(idig)
-
-    //rounding
-    let rounding = get(opt, 'rounding', '')
-    if (rounding !== 'ROUND_HALF_UP' &amp;&amp; rounding !== 'ROUND_HALF_EVEN') {
-        rounding = 'ROUND_HALF_UP'
-    }
-
-    //check
-    if (!isnum(v)) {
-        return ''
-    }
-
-    //cdbl
-    // v = cdbl(v) //decimal也支援數字字串輸入, 不使用cdbl可加速
-
-    //r
-    let r = new Decimal(v).toDecimalPlaces(idig, Decimal[rounding]).toNumber()
-
-    return r
-}
 
 
-export default round
-</code></pre>
-        </article>
-    </section>
+            
+
+            
+        
+        </div>
+    
+
+    
+
+    
+
+    
+    
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="buildSpawnArgs"><span class="type-signature"></span>buildSpawnArgs<span class="signature">(command, args)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>將command + args轉為Windows安全的spawn參數
+策略優先順序:</p>
+<ol>
+<li>.exe → 直接spawn</li>
+<li>.cmd → 解析JS入口, 用node直接執行(繞過cmd.exe, 支援多行參數)</li>
+<li>.cmd但無法解析JS入口 → 透過cmd.exe /d /s /c執行(fallback, 不支援多行參數)</li>
+</ol></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line170">line 170</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>command</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入執行檔名稱字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入參數陣列</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳spawn參數物件, 內含file, args, opt</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="buildValidator"><span class="type-signature"></span>buildValidator<span class="signature">(rule)</span><span class="type-signature"> &rarr; {function|null}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>建立驗證函式
+支援'nonempty', 'json', 'min:100'或自訂函式, 多規則可用逗號串接</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line252">line 252</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>rule</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入驗證規則字串或自訂函式</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳驗證函式, 無有效規則回傳null</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">function</span>
+|
+
+<span class="param-type">null</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="escapeWinArg"><span class="type-signature"></span>escapeWinArg<span class="signature">(arg)</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>轉義cmd.exe的單一參數(cross-spawn escapeArgument邏輯)
+參考: https://qntm.org/cmd</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line90">line 90</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>arg</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入參數字串</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳轉義後參數字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="escapeWinCmd"><span class="type-signature"></span>escapeWinCmd<span class="signature">(cmd)</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>轉義cmd.exe的命令部分</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line114">line 114</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cmd</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入命令字串</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳轉義後命令字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="execCliOnce"><span class="type-signature"></span>execCliOnce<span class="signature">(command, args<span class="signature-attributes">opt</span>, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>單次非同步呼叫(內部使用, 不含重試邏輯)</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line316">line 316</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>command</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入執行檔名稱字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>[]</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入參數陣列</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳Promise, resolve回傳結果物件</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="parseJsEntryFromCmd"><span class="type-signature"></span>parseJsEntryFromCmd<span class="signature">(cmdPath)</span><span class="type-signature"> &rarr; {String|null}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>從.cmd shim中解析出實際入口檔案路徑(可能為JS, 亦可能為原生.exe)
+npm全域安裝的.cmd格式固定, 末行為:
+... &quot;%_prog%&quot;  &quot;%dp0%\node_modules...\entry&quot; %*
+入口可能為.js / .cjs / .mjs / 無副檔名 / .exe(如opencode的bin/opencode.exe),
+故一律抓引號內node_modules後的相對路徑, 再以fsIsFile驗證實體檔存在
+(只匹配.js會讓無副檔名入口落入cmd.exe fallback, 破壞多行prompt)
+回傳後由buildSpawnArgs依副檔名決定: .exe直接spawn, 其餘交給node</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line131">line 131</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cmdPath</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入.cmd檔案路徑字串</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳入口檔案路徑字串, 無法解析回傳null</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+|
+
+<span class="param-type">null</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="resolveCommand"><span class="type-signature"></span>resolveCommand<span class="signature">(cmd)</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>用where指令找到命令的實際路徑(.cmd / .exe)</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line35">line 35</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cmd</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入命令字串</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳解析後之命令路徑字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="truncate"><span class="type-signature"></span>truncate<span class="signature">(str, maxLen)</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+    
+    <dt class="tag-description">Description:</dt>
+    <dd class="tag-description"><ul class="dummy"><li><p>字串超長裁切並標註原長度
+供CLI包裝層輸出截斷用</p></li></ul></dd>
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line224">line 224</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5 class="h5-parameters">Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maxLen</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>輸入最大長度非負整數</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳裁切後字串</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
