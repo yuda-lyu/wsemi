@@ -110,6 +110,86 @@ describe(`execCli`, function() {
         assert.strict.deepStrictEqual(cerr.includes('errmsg'), true)
     })
 
+    it(`should not change env behavior when opt.env is not provided`, async function() {
+        let r = await execCli(nodeBin, ['-e', 'process.stdout.write(String(process.env.ENVTEST_FOO))'])
+        assert.strict.deepStrictEqual(r.ok, true)
+        assert.strict.deepStrictEqual(r.stdout, 'undefined')
+    })
+
+    it(`should inject opt.env into child process`, async function() {
+        let r = await execCli(nodeBin, ['-e', 'process.stdout.write(process.env.ENVTEST_FOO)'], { env: { ENVTEST_FOO: 'BAR中文' } })
+        assert.strict.deepStrictEqual(r.ok, true)
+        assert.strict.deepStrictEqual(r.stdout, 'BAR中文')
+    })
+
+    it(`should not pollute parent process.env when opt.env is injected`, async function() {
+        await execCli(nodeBin, ['-e', 'process.stdout.write("ok")'], { env: { ENVTEST_FOO: 'BAR' } })
+        assert.strict.deepStrictEqual(process.env.ENVTEST_FOO, undefined)
+    })
+
+    it(`should keep inherited env vars when opt.env is injected`, async function() {
+        //注入不應清空繼承環境, 否則Windows下子進程連PATH都拿不到
+        let r = await execCli(nodeBin, ['-e', 'process.stdout.write(JSON.stringify(Object.keys(process.env).length > 3))'], { env: { ENVTEST_FOO: 'BAR' } })
+        assert.strict.deepStrictEqual(r.ok, true)
+        assert.strict.deepStrictEqual(r.stdout, 'true')
+    })
+
+    it(`should fallback to no injection when opt.env is not an object`, async function() {
+        let r = await execCli(nodeBin, ['-e', 'process.stdout.write("ok")'], { env: 'not-an-object' })
+        assert.strict.deepStrictEqual(r.ok, true)
+        assert.strict.deepStrictEqual(r.stdout, 'ok')
+    })
+
+    it(`should keep opt.env injection stable across parallel calls with retries`, async function() {
+        //3路並行各帶不同值, 以validate強制失敗走重試路徑, 用onStdout側錄每次attempt實得值
+        //改process.env之作法於重試階段(await delay之後)必被其他並行路污染, opt.env須全數正確
+        let seen = { A: [], B: [], C: [] }
+        await Promise.all(['A', 'B', 'C'].map((v) => execCli(
+            nodeBin, ['-e', 'process.stdout.write(process.env.ENVTEST_KEY)'],
+            {
+                env: { ENVTEST_KEY: v },
+                validate: () => false, //強制每次attempt失敗以觸發重試
+                maxRetries: 1,
+                retryDelayMs: 100,
+                onStdout: (chunk) => {
+                    seen[v].push(String(chunk).trim())
+                },
+            }
+        )))
+        // console.log('seen', JSON.stringify(seen))
+        //每路含重試共2次attempt, 實得值皆須等於該路自己的注入值
+        for (let v of ['A', 'B', 'C']) {
+            assert.strict.deepStrictEqual(seen[v].length >= 2, true)
+            assert.strict.deepStrictEqual(seen[v].every((s) => s === v), true)
+        }
+    })
+
+    it(`should treat undefined value in opt.env as removing the variable`, async function() {
+        //值為undefined代表移除該變數, 可遮蔽繼承值; 以PYTHONIOENCODING(execCli必注入)驗證
+        let sc = 'process.stdout.write(JSON.stringify("PYTHONIOENCODING" in process.env))'
+        let r1 = await execCli(nodeBin, ['-e', sc])
+        assert.strict.deepStrictEqual(r1.stdout, 'true')
+        let r2 = await execCli(nodeBin, ['-e', sc], { env: { PYTHONIOENCODING: undefined } })
+        assert.strict.deepStrictEqual(r2.stdout, 'false')
+    })
+
+    it(`should let opt.env override PYTHONIOENCODING`, async function() {
+        let r = await execCli(nodeBin, ['-e', 'process.stdout.write(process.env.PYTHONIOENCODING)'], { env: { PYTHONIOENCODING: 'ascii' } })
+        assert.strict.deepStrictEqual(r.ok, true)
+        assert.strict.deepStrictEqual(r.stdout, 'ascii')
+    })
+
+    if (process.platform === 'win32') {
+        it(`should override same-name env var with different case on Windows`, async function() {
+            //Windows環境變數大小寫不敏感: 呼叫端傳Path須能覆蓋繼承之PATH, 不可兩鍵並存致注入靜默失效
+            let sc = 'const ks=Object.keys(process.env).filter((k)=>k.toLowerCase()==="path");process.stdout.write(JSON.stringify(ks.map((k)=>process.env[k])))'
+            let r = await execCli(nodeBin, ['-e', sc], { env: { Path: 'C:\\envtest-injected' } })
+            // console.log('case r', JSON.stringify(r.stdout))
+            assert.strict.deepStrictEqual(r.ok, true)
+            assert.strict.deepStrictEqual(JSON.parse(r.stdout), ['C:\\envtest-injected'])
+        })
+    }
+
     it(`should pass validate 'nonempty' when stdout has content`, async function() {
         let r = await execCli(nodeBin, ['-e', 'process.stdout.write("abc")'], { validate: 'nonempty' })
         assert.strict.deepStrictEqual(r.ok, true)
