@@ -13,6 +13,7 @@ import ispint from './ispint.mjs'
 import isp0int from './isp0int.mjs'
 import strleft from './strleft.mjs'
 import strdelleft from './strdelleft.mjs'
+import strTruncate from './strTruncate.mjs'
 import fsIsFile from './fsIsFile.mjs'
 import fsReadText from './fsReadText.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
@@ -213,32 +214,9 @@ function buildSpawnArgs(command, args) {
 }
 
 
-/**
- * 字串超長裁切並標註原長度
- * 供CLI包裝層輸出截斷用
- *
- * @param {String} str 輸入字串
- * @param {Integer} maxLen 輸入最大長度非負整數
- * @returns {String} 回傳裁切後字串
- */
-function truncate(str, maxLen) {
-
-    //check
-    if (!isestr(str)) {
-        return ''
-    }
-    if (!isp0int(maxLen)) {
-        return str
-    }
-
-    maxLen = cint(maxLen)
-
-    //check
-    if (str.length <= maxLen) {
-        return str
-    }
-
-    return strleft(str, maxLen) + `...(truncated, total ${str.length} chars)`
+//optTruncate, 供strTruncate裁切失敗結果之stdout與stderr時, 於刪節號後標註原始總長度
+let optTruncate = {
+    funWithMsg: (str) => `(truncated, total ${str.length} chars)`,
 }
 
 
@@ -411,8 +389,8 @@ function execCliOnce(command, args = [], opt = {}) {
             settled = true
             pm.resolve({
                 ok: false,
-                stdout: truncate(stdout, 500),
-                stderr: truncate(stderr, 500),
+                stdout: strTruncate(stdout, 500, optTruncate),
+                stderr: strTruncate(stderr, 500, optTruncate),
                 code: null,
                 error: `TIMEOUT after ${timeoutMs / 1000}s(子進程未能結束)`,
                 durationMs: Date.now() - startTime,
@@ -465,8 +443,8 @@ function execCliOnce(command, args = [], opt = {}) {
         if (timedOut) {
             pm.resolve({
                 ok: false,
-                stdout: truncate(stdout, 500),
-                stderr: truncate(stderr, 500),
+                stdout: strTruncate(stdout, 500, optTruncate),
+                stderr: strTruncate(stderr, 500, optTruncate),
                 code,
                 error: `TIMEOUT after ${timeoutMs / 1000}s`,
                 durationMs,
@@ -479,8 +457,8 @@ function execCliOnce(command, args = [], opt = {}) {
         if (code !== 0) {
             pm.resolve({
                 ok: false,
-                stdout: truncate(stdout, 500),
-                stderr: truncate(stderr, 1000),
+                stdout: strTruncate(stdout, 500, optTruncate),
+                stderr: strTruncate(stderr, 1000, optTruncate),
                 code,
                 error: signal ? `Signal: ${signal}` : `Exit code ${code}`,
                 durationMs,
@@ -493,8 +471,8 @@ function execCliOnce(command, args = [], opt = {}) {
         if (validator && !validator(stdout)) {
             pm.resolve({
                 ok: false,
-                stdout: truncate(stdout, 500),
-                stderr: truncate(stderr, 500),
+                stdout: strTruncate(stdout, 500, optTruncate),
+                stderr: strTruncate(stderr, 500, optTruncate),
                 code: 0,
                 error: 'OUTPUT_VALIDATION_FAILED',
                 durationMs,
@@ -717,5 +695,4 @@ async function execCli(command, args = [], opt = {}) {
 }
 
 
-export { truncate }
 export default execCli

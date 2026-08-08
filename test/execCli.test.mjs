@@ -1,5 +1,5 @@
 import assert from 'assert'
-import execCli, { truncate } from '../src/execCli.mjs'
+import execCli from '../src/execCli.mjs'
 
 
 describe(`execCli`, function() {
@@ -275,31 +275,6 @@ describe(`execCli`, function() {
         // console.log('maxBuffer len', r.stdout.length)
         assert.strict.deepStrictEqual(r.ok, true)
         assert.strict.deepStrictEqual(r.stdout.length < 2000, true)
-    })
-
-})
-
-
-describe(`execCli.truncate`, function() {
-
-    it(`should return '' when input is not an effective string`, function() {
-        assert.strict.deepStrictEqual(truncate(null, 10), '')
-        assert.strict.deepStrictEqual(truncate('', 10), '')
-        assert.strict.deepStrictEqual(truncate(123, 10), '')
-    })
-
-    it(`should return original string when it is not longer than maxLen`, function() {
-        assert.strict.deepStrictEqual(truncate('abc', 10), 'abc')
-        assert.strict.deepStrictEqual(truncate('abcde', 5), 'abcde')
-    })
-
-    it(`should cut and mark total length when string is longer than maxLen`, function() {
-        assert.strict.deepStrictEqual(truncate('abcdefghij', 3), 'abc...(truncated, total 10 chars)')
-    })
-
-    it(`should return original string when maxLen is invalid`, function() {
-        assert.strict.deepStrictEqual(truncate('abcdefghij', -1), 'abcdefghij')
-        assert.strict.deepStrictEqual(truncate('abcdefghij', null), 'abcdefghij')
     })
 
 })
