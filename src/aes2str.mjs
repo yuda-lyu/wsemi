@@ -10,15 +10,16 @@ import isbol from './isbol.mjs'
 
 
 /**
- * 一般字串轉AES字串
- * 使用AES-128-CBC加密，字串採用PKCS#7填充
+ * AES字串轉一般字串
+ * 為str2aes之解密函數，使用AES-128-CBC解密，字串採用PKCS#7填充
+ * str與base64須與加密時str2aes所用之設定相同，否則解不出原文而回傳空字串
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/aes2str.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str 輸入一般字串
- * @param {String} key 輸入加密key
- * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
- * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示
+ * @param {String} str 輸入AES加密字串，非有效字串時回傳空字串
+ * @param {String} key 輸入加密key，非有效字串時回傳空字串
+ * @param {Boolean} [base64=false] 輸入來源字串是否為base64格式，須與加密時str2aes所用之設定相同，非布林值時回退為false，預設為false
+ * @returns {String} 回傳經AES解密後字串，str或key非有效字串時回傳空字串
  * @example
  *
  * let str = '53616c7465645f5f47214797ac01bc03cceb69ebced4948501ab94ca9644a6dfd277456aead4432cb9c9d74c38c42c79'
@@ -36,8 +37,10 @@ function aes2str(str, key, base64 = false) {
     if (!isestr(key)) {
         return ''
     }
+
+    //check
     if (!isbol(base64)) {
-        return ''
+        base64 = false
     }
 
     let c = ''

@@ -27,6 +27,22 @@ describe(`aes2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`sould fallback base64 to false when base64 is an invalid type`, function() {
+        //base64非布林值時回退為false, 即視來源為hex, 結果須等同明確傳false
+        for (let v of ['', [], {}, null, 1]) {
+            let r = aes2str(o[1], key, v)
+            assert.strict.deepStrictEqual(r, str)
+        }
+    })
+
+    it(`should return '' when key is an invalid type`, function() {
+        assert.strict.deepStrictEqual(aes2str(o[1], ''), '')
+        assert.strict.deepStrictEqual(aes2str(o[1], []), '')
+        assert.strict.deepStrictEqual(aes2str(o[1], {}), '')
+        assert.strict.deepStrictEqual(aes2str(o[1], null), '')
+        assert.strict.deepStrictEqual(aes2str(o[1], undefined), '')
+    })
+
     it(`should return '' when input 12.34`, function() {
         let r = aes2str(12.34)
         let rr = ''

@@ -1,8 +1,4 @@
-import SHA512 from 'crypto-js/sha512.js'
-import encb64 from 'crypto-js/enc-base64.js'
-import enchex from 'crypto-js/enc-hex.js'
-import isestr from './isestr.mjs'
-import isbol from './isbol.mjs'
+import str2sha from './str2sha.mjs'
 
 
 //crypto-js沒有支援chunk或stream機制, 無法處理大量資料
@@ -12,11 +8,13 @@ import isbol from './isbol.mjs'
  * 一般字串轉SHA512字串
  * Secure Hash Algorithm 512位
  *
+ * 內部調用str2sha並固定n為512
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha512.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str 輸入一般字串
- * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
- * @returns {String} 回傳經SHA512轉換後字串
+ * @param {String} str 輸入一般字串，非有效字串時回傳空字串
+ * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
+ * @returns {String} 回傳經SHA512轉換後字串，str非有效字串時回傳空字串
  * @example
  *
  * console.log(str2sha512('test中文'))
@@ -24,25 +22,7 @@ import isbol from './isbol.mjs'
  *
  */
 function str2sha512(str, base64 = false) {
-
-    //check
-    if (!isestr(str)) {
-        return ''
-    }
-    if (!isbol(base64)) {
-        return ''
-    }
-
-    let o = SHA512(str)
-    let c = ''
-    if (base64) {
-        c = o.toString(encb64)
-    }
-    else {
-        c = o.toString(enchex)
-    }
-
-    return c
+    return str2sha(str, 512, base64)
 }
 
 

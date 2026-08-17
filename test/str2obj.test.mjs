@@ -31,6 +31,27 @@ describe(`str2obj`, function() {
     })
 
 
+    it(`should fallback ext to 'Uint8Array' when ext is an invalid type`, function() {
+        //ext非字串亦非陣列時回退為預設之'Uint8Array', 結果須等同未給ext
+        let rr = str2obj(co1)
+        for (let v of [null, undefined, 12.34, {}, true, NaN]) {
+            let r = str2obj(co1, v)
+            assert.strict.deepStrictEqual(r, rr)
+        }
+    })
+
+    it(`should treat string ext the same as single-element array ext`, function() {
+        //回退值與isstr分支轉出之型別須一致, 皆為陣列, 故二者結果須相同
+        assert.strict.deepStrictEqual(str2obj(co1, 'Uint8Array'), str2obj(co1, ['Uint8Array']))
+        assert.strict.deepStrictEqual(str2obj(co2, 'Uint16Array'), str2obj(co2, ['Uint16Array']))
+    })
+
+    it(`should not decode Uint8Array when ext only contains Uint16Array`, function() {
+        //ext為'Uint16Array'時不可因字串子字串搜尋而誤將Uint8Array一併解碼
+        let r = str2obj(co1, 'Uint16Array')
+        assert.strict.deepStrictEqual(r.u8a, '[Uint8Array]::QmFz')
+    })
+
     it(`should return [1, '3', 'abc'] when input [1,"3","abc"]`, function() {
         let r = str2obj('[1,"3","abc"]')
         let rr = [1, '3', 'abc']

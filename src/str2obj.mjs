@@ -9,8 +9,8 @@ import isarr from './isarr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2obj.test.mjs Github}
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
- * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，預設'Uint8Array'
- * @returns {String} 回傳base64字串
+ * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，非字串亦非陣列時回退為'Uint8Array'，預設'Uint8Array'
+ * @returns {Object} 回傳轉換後資料，data無法解析為JSON時回傳空物件
  * @example
  *
  * console.log(str2obj('{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":{"0":11,"1":79,"2":6}}'))
@@ -32,7 +32,8 @@ import isarr from './isarr.mjs'
  */
 function str2obj(data, ext = 'Uint8Array') {
 
-    //ext
+    //ext, 無效時回退預設值
+    //回退值須為陣列而非字串, 以與isstr分支轉出之型別一致, 否則後續ext.indexOf將由陣列比對變為字串子字串搜尋
     if (isstr(ext)) {
         ext = [ext]
     }
@@ -40,8 +41,7 @@ function str2obj(data, ext = 'Uint8Array') {
         //none
     }
     else {
-        //ext error
-        return {}
+        ext = ['Uint8Array']
     }
 
     //replacer

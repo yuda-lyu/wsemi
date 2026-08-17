@@ -9,9 +9,9 @@ import isarr from './isarr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2str.test.mjs Github}
  * @memberOf wsemi
- * @param {*} data 輸入任意資料
- * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，預設'Uint8Array'
- * @returns {String} 回傳base64字串
+ * @param {*} data 輸入任意資料，為undefined時回傳空字串
+ * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，非字串亦非陣列時回退為'Uint8Array'，預設'Uint8Array'
+ * @returns {String} 回傳轉換後字串，data為undefined或無法轉為JSON時回傳空字串
  * @example
  *
  * let o = {
@@ -34,7 +34,8 @@ function obj2str(data, ext = 'Uint8Array') {
         return ''
     }
 
-    //ext
+    //ext, 無效時回退預設值
+    //回退值須為陣列而非字串, 以與isstr分支轉出之型別一致, 否則後續ext.indexOf將由陣列比對變為字串子字串搜尋
     if (isstr(ext)) {
         ext = [ext]
     }
@@ -42,8 +43,7 @@ function obj2str(data, ext = 'Uint8Array') {
         //none
     }
     else {
-        //ext error
-        return ''
+        ext = ['Uint8Array']
     }
 
     //replacer

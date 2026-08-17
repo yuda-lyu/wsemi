@@ -16,27 +16,33 @@ describe(`str2md5`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', ''`, function() {
+    it(`sould fallback base64 to false when input 'test中文', ''`, function() {
         let r = str2md5('test中文', '')
-        let rr = ''
+        let rr = '5393554e94bf0eb6436f240a4fd71282'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', []`, function() {
+    it(`sould fallback base64 to false when input 'test中文', []`, function() {
         let r = str2md5('test中文', [])
-        let rr = ''
+        let rr = '5393554e94bf0eb6436f240a4fd71282'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
+    it(`sould fallback base64 to false when input 'test中文', {}`, function() {
         let r = str2md5('test中文', {})
-        let rr = ''
+        let rr = '5393554e94bf0eb6436f240a4fd71282'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
+    it(`sould fallback base64 to false when input 'test中文', null`, function() {
         let r = str2md5('test中文', null)
-        let rr = ''
+        let rr = '5393554e94bf0eb6436f240a4fd71282'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`sould fallback base64 to false when input 'test中文', 1`, function() {
+        let r = str2md5('test中文', 1)
+        let rr = '5393554e94bf0eb6436f240a4fd71282'
         assert.strict.deepStrictEqual(r, rr)
     })
 

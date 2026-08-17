@@ -18,6 +18,23 @@ describe(`str2aes`, function() {
         assert.strict.deepStrictEqual(r.length, rr)
     })
 
+    it(`sould fallback base64 to false when base64 is an invalid type`, function() {
+        //base64非布林值時回退為false, 即輸出hex(96字元), 而非base64(64字元)
+        //AES每次加密含隨機salt故密文不固定, 以長度辨別輸出格式
+        for (let v of ['', [], {}, null, 1]) {
+            let r = str2aes(str, key, v)
+            assert.strict.deepStrictEqual(r.length, 96)
+        }
+    })
+
+    it(`should return '' when key is an invalid type`, function() {
+        assert.strict.deepStrictEqual(str2aes(str, ''), '')
+        assert.strict.deepStrictEqual(str2aes(str, []), '')
+        assert.strict.deepStrictEqual(str2aes(str, {}), '')
+        assert.strict.deepStrictEqual(str2aes(str, null), '')
+        assert.strict.deepStrictEqual(str2aes(str, undefined), '')
+    })
+
     it(`should return '' when input 12.34`, function() {
         let r = str2aes(12.34)
         let rr = ''

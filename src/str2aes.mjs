@@ -16,10 +16,10 @@ import isbol from './isbol.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2aes.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str 輸入一般字串
- * @param {String} key 輸入加密key
- * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
- * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示
+ * @param {String} str 輸入一般字串，非有效字串時回傳空字串
+ * @param {String} key 輸入加密key，非有效字串時回傳空字串
+ * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
+ * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示，str或key非有效字串時回傳空字串
  * @example
  *
  * let str = 'test中文abcdefghijklmn'
@@ -62,8 +62,10 @@ function str2aes(str, key, base64 = false) {
     if (!isestr(key)) {
         return ''
     }
+
+    //check
     if (!isbol(base64)) {
-        return ''
+        base64 = false
     }
 
     let o = AES.encrypt(str, key)

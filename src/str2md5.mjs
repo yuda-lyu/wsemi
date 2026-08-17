@@ -13,9 +13,9 @@ import isbol from './isbol.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2md5.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str 輸入一般字串
- * @param {Boolean} [base64=false] 輸入是否轉為base64字串，預設為false
- * @returns {String} 回傳經MD5轉換後字串
+ * @param {String} str 輸入一般字串，非有效字串時回傳空字串
+ * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
+ * @returns {String} 回傳經MD5轉換後字串，str非有效字串時回傳空字串
  * @example
  *
  * console.log(str2md5('test中文'))
@@ -28,8 +28,10 @@ function str2md5(str, base64 = false) {
     if (!isestr(str)) {
         return ''
     }
+
+    //check
     if (!isbol(base64)) {
-        return ''
+        base64 = false
     }
 
     let o = MD5(str)
