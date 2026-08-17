@@ -168,6 +168,7 @@ function domShowInputAndGetFiles(opt = {}) {
 
         //removeEventListener
         inp.removeEventListener('change', evChange, true) //removeEventListener時也需要給予同用useCapture值
+        inp.removeEventListener('cancel', evCancelNative, true)
         if (!entireHierarchy) {
             window.removeEventListener('focus', evCancel)
         }
@@ -178,24 +179,39 @@ function domShowInputAndGetFiles(opt = {}) {
 
     }
 
-    //evCancel
+    //evCancelNative, 現代瀏覽器(Chrome113+/Firefox91+/Safari16.4+)於取消選檔時觸發input之cancel事件, 為決定性訊號
+    function evCancelNative(msg) {
+        // console.log('evCancelNative', msg)
+        //check, 已trigger代表change已處理
+        if (bTrigger) {
+            return
+        }
+        evChange.call(inp, msg) //以inp為this, files為空故resolve空files
+    }
+
+    //evCancel, 舊瀏覽器之備援偵測
     function evCancel(msg) {
         // console.log('evCancel', msg)
         //setTimeout, 因不論有無上傳, window的focus事件都會觸發且會比change還快, 故須延遲偵測bTrigger
+        //延遲須夠長: 選檔時change可能比focus晚逾300ms(實測於Windows/Chrome可穩定重現), 過短會誤判為取消,
+        //搶先resolve空陣列並移除input, 造成「有選檔但讀不到」; 真取消時多等待並無感, 故取1500ms
         setTimeout(() => {
             //check, 尚未trigger代表為cancel
             if (!bTrigger) {
-                evChange(msg)
+                evChange.call(inp, msg) //以inp為this, files為空故resolve空files
             }
-        }, 300)
+        }, 1500)
     }
 
     //change
     inp.addEventListener('change', evChange, true) //有給予useCapture, removeEventListener時也需要給予同用useCapture值
 
+    //cancel, 取消選檔之主要偵測
+    inp.addEventListener('cancel', evCancelNative, true)
+
     //addEventListener
     if (!entireHierarchy) {
-        //focus, inp取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
+        //focus, 舊瀏覽器(無input cancel事件)取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
         window.addEventListener('focus', evCancel)
     }
 

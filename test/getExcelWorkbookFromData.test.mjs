@@ -8,21 +8,25 @@ describe(`getExcelWorkbookFromData`, function() {
         [null, 'abc123', '', 111.222333],
     ]
     let cdata = JSON.stringify(data)
-    let wb1 = getExcelWorkbookFromData(data)
-    let wb1name = wb1.SheetNames[0]
-    let wb2 = getExcelWorkbookFromData(data, 'tester')
-    let wb2name = wb2.SheetNames[0]
 
-    it(`should return sheet.name=${wb1name} when input ${cdata}`, function() {
+    it(`should return sheet.name='data' when input ${cdata}`, function() {
         let wb = getExcelWorkbookFromData(data)
-        let r = wb.SheetNames[0]
-        assert.strict.deepStrictEqual(r, wb1name)
+        let r = wb.sheets[0].name
+        assert.strict.deepStrictEqual(r, 'data')
+        assert.strict.deepStrictEqual(wb.sheets[0].rows, data)
     })
 
-    it(`should return sheet.name=${wb2name} when input ${cdata}, 'tester'`, function() {
+    it(`should return sheet.name='tester' when input ${cdata}, 'tester'`, function() {
         let wb = getExcelWorkbookFromData(data, 'tester')
-        let r = wb.SheetNames[0]
-        assert.strict.deepStrictEqual(r, wb2name)
+        let r = wb.sheets[0].name
+        assert.strict.deepStrictEqual(r, 'tester')
+    })
+
+    it(`should return error object when data is not an array (element not supported anymore)`, function() {
+        for (let v of [null, undefined, 123, 'abc', {}]) {
+            let r = getExcelWorkbookFromData(v)
+            assert.strict.deepStrictEqual(r.error, 'data is not an array')
+        }
     })
 
 })

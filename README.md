@@ -68,8 +68,6 @@ To view some examples for more understanding, visit examples:
 
 > **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
 
-> **xlsx[dynamic import]:** [ex-xlsxDyn](https://yuda-lyu.github.io/wsemi/examples/ex-xlsxDyn) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsxDyn)]
-
 > **html2str:** [ex-html2str.html](https://yuda-lyu.github.io/wsemi/examples/ex-html2str.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-html2str.html)]
 
 ## Installation
@@ -83,7 +81,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.72/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.73/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -107,12 +105,6 @@ Add script for wsemi.
 > **Note:** Include script when using `clearXSS` function, and don't include script when using `clearXSSDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
-```
-
-[Optional] Add script for `xlsx`.
-> **Note:** Include script when using `downloadExcelFileFromData` or `getDataFromExcelFileU8Arr` function, and don't include script when using `downloadExcelFileFromDataDyn` or `getDataFromExcelFileU8ArrDyn` function.
-```alias
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 ```
 
 [Optional] Add link and script for `viewerjs`.

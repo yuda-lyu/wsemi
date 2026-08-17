@@ -1,22 +1,21 @@
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
-import isEle from './isEle.mjs'
 import haskey from './haskey.mjs'
 import getExcelWorksheetFromData from './getExcelWorksheetFromData.mjs'
 import getExcelWorkbookFromWorksheet from './getExcelWorkbookFromWorksheet.mjs'
 
 
 /**
- * 由數據陣列或DOM的table元素轉成為Excel的Workbook物件
+ * 由數據陣列轉成為Excel的Workbook物件
+ *
+ * Workbook物件格式為{ sheets: [{ name, rows }] }，數據陣列可為二維陣列(mat)或物件陣列(ltdt)，見getExcelWorksheetFromData
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {Array|Element} data 輸入數據陣列或是DOM的table元素(Element)
+ * @param {Array} data 輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
- * @returns {Object} 回傳Excel的Workbook物件
+ * @returns {Object} 回傳Excel的Workbook物件，data非陣列時回傳{ error }物件
  * @example
- *
- * import xlsx from 'xlsx'
  *
  * let data = [
  *     ['a', '123', 456],
@@ -24,48 +23,20 @@ import getExcelWorkbookFromWorksheet from './getExcelWorkbookFromWorksheet.mjs'
  * ]
  *
  * let wb1 = getExcelWorkbookFromData(data)
- * console.log(wb1)
- * // => Workbook {
- * //      SheetNames: [ 'data' ],
- * //      Sheets: {
- * //        data: {
- * //          A1: [Object],
- * //          B1: [Object],
- * //          C1: [Object],
- * //          B2: [Object],
- * //          C2: [Object],
- * //          D2: [Object],
- * //          '!ref': 'A1:D2'
- * //        }
- * //      }
- * //    }
- * xlsx.writeFile(wb1, 'temp1.xlsx')
+ * console.log(wb1.sheets[0].name)
+ * // => data
  *
  * let wb2 = getExcelWorkbookFromData(data, 'tester')
- * console.log(wb2)
- * // => Workbook {
- * //      SheetNames: [ 'tester' ],
- * //      Sheets: {
- * //        data: {
- * //          A1: [Object],
- * //          B1: [Object],
- * //          C1: [Object],
- * //          B2: [Object],
- * //          C2: [Object],
- * //          D2: [Object],
- * //          '!ref': 'A1:D2'
- * //        }
- * //      }
- * //    }
- * xlsx.writeFile(wb2, 'temp2.xlsx')
+ * console.log(wb2.sheets[0].name)
+ * // => tester
  *
  */
 function getExcelWorkbookFromData(data, sheetName = 'data') {
 
     //check
-    if (!isarr(data) && !isEle(data)) {
+    if (!isarr(data)) {
         return {
-            error: 'data is not an array or element',
+            error: 'data is not an array',
         }
     }
     if (!isestr(sheetName)) {

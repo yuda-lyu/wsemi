@@ -1,16 +1,20 @@
+import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
+import get from 'lodash-es/get.js'
 import createExcelWorkbook from './createExcelWorkbook.mjs'
 
 
 /**
  * 由Excel的Worksheet物件轉為Excel的Workbook物件
  *
+ * Worksheet物件格式為{ rows }(見getExcelWorksheetFromData)，Workbook物件格式為{ sheets: [{ name, rows }] }
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromWorksheet.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} sheet 輸入Excel的Worksheet物件
+ * @param {Object} sheet 輸入Excel的Worksheet物件，須含rows二維值陣列
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
- * @returns {Object} 回傳Excel的Workbook物件
+ * @returns {Object} 回傳Excel的Workbook物件，sheet無效時回傳{ error }物件
  * @example
  *
  * let data = [
@@ -18,54 +22,15 @@ import createExcelWorkbook from './createExcelWorkbook.mjs'
  *     [null, 'abc123', '', 111.222333],
  * ]
  *
- * let ws = xlsx.utils.aoa_to_sheet(data)
- * console.log(ws)
- * // => {
- * //   A1: { v: 'a', t: 's' },
- * //   B1: { v: '123', t: 's' },
- * //   C1: { v: 456, t: 'n' },
- * //   B2: { v: 'abc123', t: 's' },
- * //   C2: { v: '', t: 's' },
- * //   D2: { v: 111.222333, t: 'n' },
- * //   '!ref': 'A1:D2'
- * // }
+ * let ws = getExcelWorksheetFromData(data)
  *
- * let wb = getExcelWorkbookFromWorksheet(ws)
- * console.log(JSON.stringify(wb, null, 2))
- * // => {
- * //   "SheetNames": [
- * //     "data"
- * //   ],
- * //   "Sheets": {
- * //     "data": {
- * //       "A1": {
- * //         "v": "a",
- * //         "t": "s"
- * //       },
- * //       "B1": {
- * //         "v": "123",
- * //         "t": "s"
- * //       },
- * //       "C1": {
- * //         "v": 456,
- * //         "t": "n"
- * //       },
- * //       "B2": {
- * //         "v": "abc123",
- * //         "t": "s"
- * //       },
- * //       "C2": {
- * //         "v": "",
- * //         "t": "s"
- * //       },
- * //       "D2": {
- * //         "v": 111.222333,
- * //         "t": "n"
- * //       },
- * //       "!ref": "A1:D2"
- * //     }
- * //   }
- * // }
+ * let wb1 = getExcelWorkbookFromWorksheet(ws)
+ * console.log(wb1.sheets[0].name)
+ * // => data
+ *
+ * let wb2 = getExcelWorkbookFromWorksheet(ws, 'tester')
+ * console.log(wb2.sheets[0].name)
+ * // => tester
  *
  */
 function getExcelWorkbookFromWorksheet(sheet, sheetName = 'data') {
@@ -76,6 +41,11 @@ function getExcelWorkbookFromWorksheet(sheet, sheetName = 'data') {
             error: 'sheet is not an object',
         }
     }
+    if (!isarr(get(sheet, 'rows'))) {
+        return {
+            error: 'sheet.rows is not an array',
+        }
+    }
     if (!isestr(sheetName)) {
         sheetName = 'data'
     }
@@ -83,9 +53,8 @@ function getExcelWorkbookFromWorksheet(sheet, sheetName = 'data') {
     //createExcelWorkbook
     let wb = createExcelWorkbook()
 
-    //push
-    wb.SheetNames.push(sheetName)
-    wb.Sheets[sheetName] = sheet
+    //push, 展開sheet後以sheetName覆蓋名稱
+    wb.sheets.push({ ...sheet, name: sheetName })
 
     return wb
 }

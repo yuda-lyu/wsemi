@@ -1,20 +1,22 @@
 import get from 'lodash-es/get.js'
-import isobj from './isobj.mjs'
-import iseobj from './iseobj.mjs'
 import isarr from './isarr.mjs'
+import iseobj from './iseobj.mjs'
+import isestr from './isestr.mjs'
 import haskey from './haskey.mjs'
 import getExcelWorksheetFromData from './getExcelWorksheetFromData.mjs'
 
 
 /**
- * 由數據陣列或DOM的table元素轉成Excel的Worksheet物件，並加入至Excel的Workbook物件
+ * 由數據陣列轉成為Excel的Worksheet物件並添加至Workbook物件
+ *
+ * Workbook物件格式為{ sheets: [{ name, rows }] }(見createExcelWorkbook)，數據陣列可為二維陣列(mat)或物件陣列(ltdt)，見getExcelWorksheetFromData
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/addExcelWorksheetFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} wb 輸入Excel的Workbook物件
- * @param {Array|Element} data 輸入數據陣列或是DOM的table元素(Element)
+ * @param {Array} data 輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
- * @returns {Object} 回傳Excel的Workbook物件
+ * @returns {Object} 回傳添加分頁後的Workbook物件，輸入無效時回傳{ error }物件
  * @example
  *
  * let data = [
@@ -24,44 +26,11 @@ import getExcelWorksheetFromData from './getExcelWorksheetFromData.mjs'
  *
  * let wb = createExcelWorkbook()
  * console.log(wb)
- * // => Workbook { SheetNames: [], Sheets: {} }
+ * // => { sheets: [] }
  *
  * wb = addExcelWorksheetFromData(wb, data, 'tester')
- * console.log(JSON.stringify(wb, null, 2))
- * // => {
- * //   "SheetNames": [
- * //     "tester"
- * //   ],
- * //   "Sheets": {
- * //     "tester": {
- * //       "A1": {
- * //         "v": "a",
- * //         "t": "s"
- * //       },
- * //       "B1": {
- * //         "v": "123",
- * //         "t": "s"
- * //       },
- * //       "C1": {
- * //         "v": 456,
- * //         "t": "n"
- * //       },
- * //       "B2": {
- * //         "v": "abc123",
- * //         "t": "s"
- * //       },
- * //       "C2": {
- * //         "v": "",
- * //         "t": "s"
- * //       },
- * //       "D2": {
- * //         "v": 111.222333,
- * //         "t": "n"
- * //       },
- * //       "!ref": "A1:D2"
- * //     }
- * //   }
- * // }
+ * console.log(JSON.stringify(wb))
+ * // => {"sheets":[{"rows":[["a","123",456],[null,"abc123","",111.222333]],"name":"tester"}]}
  *
  */
 function addExcelWorksheetFromData(wb, data, sheetName = 'data') {
@@ -72,15 +41,13 @@ function addExcelWorksheetFromData(wb, data, sheetName = 'data') {
             error: 'wb is not an effective object',
         }
     }
-    if (!isarr(get(wb, 'SheetNames'))) {
+    if (!isarr(get(wb, 'sheets'))) {
         return {
-            error: 'wb.SheetNames is not an array',
+            error: 'wb.sheets is not an array',
         }
     }
-    if (!isobj(get(wb, 'Sheets'))) {
-        return {
-            error: 'wb.Sheets is not an object',
-        }
+    if (!isestr(sheetName)) {
+        sheetName = 'data'
     }
 
     //getExcelWorksheetFromData
@@ -91,9 +58,8 @@ function addExcelWorksheetFromData(wb, data, sheetName = 'data') {
         return ws
     }
 
-    //push
-    wb.SheetNames.push(sheetName)
-    wb.Sheets[sheetName] = ws
+    //push, 展開ws後以sheetName覆蓋名稱
+    wb.sheets.push({ ...ws, name: sheetName })
 
     return wb
 }

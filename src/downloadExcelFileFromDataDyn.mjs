@@ -1,18 +1,20 @@
 import get from 'lodash-es/get.js'
-import isearr from './isearr.mjs'
-import importResources from './importResources.mjs'
 import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
 
 
 /**
- * 前端下載資料成為Excel檔案，採用動態加載技術
+ * 前端下載資料成為Excel檔案
+ *
+ * 本函數為相容舊版之保留函數：舊版採動態加載CDN之SheetJS(xlsx)，現Excel引擎已改為hucre並直接打包進wsemi，無需再動態加載
+ * 內部直接委派downloadExcelFileFromData，pathItems參數保留簽名相容但已不使用
+ * 與downloadExcelFileFromData之差異僅在錯誤處理：本函數以reject回傳錯誤訊息，非resolve回傳{ error }物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromDataDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fileName 輸入檔名字串
  * @param {String} [sheetName='data'] 輸入分頁(sheet)名稱字串，預設為'data'
- * @param {Array|Element} data 輸入內容陣列或是DOM的table元素(Element)
- * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
+ * @param {Array} data 輸入內容陣列，可為二維陣列(mat)或由物件組成的一維陣列(ltdt)
+ * @param {String|Object|Array} [pathItems=undefined] 輸入資源字串、字串陣列、物件、物件陣列，已不使用，僅保留簽名相容
  * @returns {Promise} 回傳Promise，resolve代表成功，reject回傳錯誤訊息
  * @example
  * need test in browser
@@ -32,21 +34,10 @@ import downloadExcelFileFromData from './downloadExcelFileFromData.mjs'
  * downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)
  *
  */
-async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, pathItems) {
-
-    //pathItems
-    if (!isearr(pathItems)) {
-        pathItems = [ //若有更新版本須全專案取代
-            //最新可用版本詳見: https://www.npmjs.com/package/xlsx
-            'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
-        ]
-    }
-
-    //importResources
-    await importResources(pathItems)
+async function downloadExcelFileFromDataDyn(fileName, sheetName = 'data', data, pathItems) { // eslint-disable-line no-unused-vars
 
     //downloadExcelFileFromData
-    let r = downloadExcelFileFromData(fileName, sheetName, data)
+    let r = await downloadExcelFileFromData(fileName, sheetName, data)
 
     if (get(r, 'error', '') !== '') {
         return Promise.reject(r.error)

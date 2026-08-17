@@ -515,14 +515,15 @@ console.log(ab2u8arr(ab))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列或DOM的table元素轉成Excel的Worksheet物件，並加入至Excel的Workbook物件</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列轉成為Excel的Worksheet物件並添加至Workbook物件</p>
+<p>Workbook物件格式為{ sheets: [{ name, rows }] }(見createExcelWorkbook)，數據陣列可為二維陣列(mat)或物件陣列(ltdt)，見getExcelWorksheetFromData</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/addExcelWorksheetFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addExcelWorksheetFromData.mjs.html">addExcelWorksheetFromData.mjs</a>, <a href="addExcelWorksheetFromData.mjs.html#line67">line 67</a>
+        <a href="addExcelWorksheetFromData.mjs.html">addExcelWorksheetFromData.mjs</a>, <a href="addExcelWorksheetFromData.mjs.html#line36">line 36</a>
     </li></ul></dd>
     
 
@@ -578,44 +579,11 @@ console.log(ab2u8arr(ab))
 
 let wb = createExcelWorkbook()
 console.log(wb)
-// =&gt; Workbook { SheetNames: [], Sheets: {} }
+// =&gt; { sheets: [] }
 
 wb = addExcelWorksheetFromData(wb, data, 'tester')
-console.log(JSON.stringify(wb, null, 2))
-// =&gt; {
-//   "SheetNames": [
-//     "tester"
-//   ],
-//   "Sheets": {
-//     "tester": {
-//       "A1": {
-//         "v": "a",
-//         "t": "s"
-//       },
-//       "B1": {
-//         "v": "123",
-//         "t": "s"
-//       },
-//       "C1": {
-//         "v": 456,
-//         "t": "n"
-//       },
-//       "B2": {
-//         "v": "abc123",
-//         "t": "s"
-//       },
-//       "C2": {
-//         "v": "",
-//         "t": "s"
-//       },
-//       "D2": {
-//         "v": 111.222333,
-//         "t": "n"
-//       },
-//       "!ref": "A1:D2"
-//     }
-//   }
-// }</code></pre>
+console.log(JSON.stringify(wb))
+// =&gt; {"sheets":[{"rows":[["a","123",456],[null,"abc123","",111.222333]],"name":"tester"}]}</code></pre>
         </div>
 
 
@@ -693,9 +661,6 @@ console.log(JSON.stringify(wb, null, 2))
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -718,7 +683,7 @@ console.log(JSON.stringify(wb, null, 2))
                 </td>
             
 
-            <td class="description last"><p>輸入數據陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)</p></td>
         </tr>
 
     
@@ -784,7 +749,7 @@ console.log(JSON.stringify(wb, null, 2))
 
         
 <div class="param-desc">
-    <p>回傳Excel的Workbook物件</p>
+    <p>回傳添加分頁後的Workbook物件，輸入無效時回傳{ error }物件</p>
 </div>
 
 
@@ -20645,7 +20610,8 @@ console.log(cotd(720))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>創建Excel的Workbook物件</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>產生Excel的Workbook空物件</p>
+<p>Workbook物件格式為{ sheets: [] }，各分頁為{ name, rows }物件，可交由addExcelWorksheetFromData添加分頁、getExcelU8ArrFromWorkbook輸出檔案</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/createExcelWorkbook.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -20703,7 +20669,7 @@ console.log(cotd(720))
 <div onclick="editOnline(this, 'createExcelWorkbook')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>let wb = createExcelWorkbook()
 console.log(wb)
-// =&gt; Workbook { SheetNames: [], Sheets: {} }</code></pre>
+// =&gt; { sheets: [] }</code></pre>
         </div>
 
 
@@ -34664,7 +34630,7 @@ let b64 = await dpq(fun, { width: 500, height: 350 })</code></pre>
 
     
 
-    <h4 class="name" id=".downloadExcelFileFromData"><span class="type-signature type-signature-static">(static) </span>downloadExcelFileFromData<span class="signature">(fileName, sheetName<span class="signature-attributes">opt</span>, data)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".downloadExcelFileFromData"><span class="type-signature type-signature-async, static">(async, static) </span>downloadExcelFileFromData<span class="signature">(fileName, sheetName<span class="signature-attributes">opt</span>, data)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -34675,13 +34641,14 @@ let b64 = await dpq(fun, { width: 500, height: 350 })</code></pre>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>下載資料成為Excel檔案，前後端都可用</p>
+<p>本函數為async function，前端觸發瀏覽器下載，後端寫入檔案(fileName可含路徑)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line38">line 38</a>
+        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -34736,13 +34703,13 @@ data = [
     ['a', 'b', 'c'],
     [1, 23.45, 'xyz']
 ]
-downloadExcelFileFromData('data(mat).xlsx', 'data', data)
+await downloadExcelFileFromData('data(mat).xlsx', 'data', data)
 
 data = [
     { x: 'a', y: 'b', z: 'c' },
     { x: 1, y: 23.45, zzz: 'xyz' },
 ]
-downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
+await downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
         </div>
 
 
@@ -34806,7 +34773,7 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入檔名字串</p></td>
+            <td class="description last"><p>輸入檔名字串，後端可含路徑</p></td>
         </tr>
 
     
@@ -34860,9 +34827,6 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -34885,7 +34849,7 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入內容陣列或是DOM的table元素(Element)，內容陣列可為二維陣列(mat)或由物件組成的一維陣列(ltdt)</p></td>
+            <td class="description last"><p>輸入內容陣列，可為二維陣列(mat)或由物件組成的一維陣列(ltdt)</p></td>
         </tr>
 
     
@@ -34907,6 +34871,29 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳Promise，resolve代表已觸發下載或寫檔完成，輸入無效或轉換失敗時resolve回傳{ error }物件</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -34915,7 +34902,7 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
 
     
 
-    <h4 class="name" id=".downloadExcelFileFromDataDyn"><span class="type-signature type-signature-async, static">(async, static) </span>downloadExcelFileFromDataDyn<span class="signature">(fileName, sheetName<span class="signature-attributes">opt</span>, data, pathItems)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".downloadExcelFileFromDataDyn"><span class="type-signature type-signature-async, static">(async, static) </span>downloadExcelFileFromDataDyn<span class="signature">(fileName, sheetName<span class="signature-attributes">opt</span>, data, pathItems<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -34925,14 +34912,17 @@ downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>前端下載資料成為Excel檔案，採用動態加載技術</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>前端下載資料成為Excel檔案</p>
+<p>本函數為相容舊版之保留函數：舊版採動態加載CDN之SheetJS(xlsx)，現Excel引擎已改為hucre並直接打包進wsemi，無需再動態加載
+內部直接委派downloadExcelFileFromData，pathItems參數保留簽名相容但已不使用
+與downloadExcelFileFromData之差異僅在錯誤處理：本函數以reject回傳錯誤訊息，非resolve回傳{ error }物件</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromDataDyn.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadExcelFileFromDataDyn.mjs.html">downloadExcelFileFromDataDyn.mjs</a>, <a href="downloadExcelFileFromDataDyn.mjs.html#line35">line 35</a>
+        <a href="downloadExcelFileFromDataDyn.mjs.html">downloadExcelFileFromDataDyn.mjs</a>, <a href="downloadExcelFileFromDataDyn.mjs.html#line37">line 37</a>
     </li></ul></dd>
     
 
@@ -35113,9 +35103,6 @@ downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -35138,7 +35125,7 @@ downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入內容陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入內容陣列，可為二維陣列(mat)或由物件組成的一維陣列(ltdt)</p></td>
         </tr>
 
     
@@ -35167,6 +35154,8 @@ downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
             
                 <td class="attributes">
                 
+                    &lt;optional&gt;<br>
+                
 
                 
 
@@ -35180,7 +35169,7 @@ downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入資源字串、字串陣列、物件、物件陣列</p></td>
+            <td class="description last"><p>輸入資源字串、字串陣列、物件、物件陣列，已不使用，僅保留簽名相容</p></td>
         </tr>
 
     
@@ -62797,7 +62786,7 @@ fs.writeFileSync('temp.csv', c, 'utf8')</code></pre>
 
     
 
-    <h4 class="name" id=".getDataFromExcelFileU8Arr"><span class="type-signature type-signature-static">(static) </span>getDataFromExcelFileU8Arr<span class="signature">(u8a, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Array}</span></h4>
+    <h4 class="name" id=".getDataFromExcelFileU8Arr"><span class="type-signature type-signature-async, static">(async, static) </span>getDataFromExcelFileU8Arr<span class="signature">(u8a, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -62809,13 +62798,16 @@ fs.writeFileSync('temp.csv', c, 'utf8')</code></pre>
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>讀取Excel檔，前後端都可用，前端由input file的檔案取得Uint8Array，後端由fs.readFileSync讀取Buffer
 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析</p>
+<p>本函數為async function
+fmt='ltdt'時以首列為表頭轉物件陣列：空cell為略鍵、空字串cell保留鍵且值為''、全空列跳過、空表頭之欄位跳過、重複表頭後者覆蓋前者
+fmt='array'與'csv'時保留全部列(含全空列)，空cell一律轉''</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line137">line 137</a>
+        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line164">line 164</a>
     </li></ul></dd>
     
 
@@ -62866,17 +62858,17 @@ fs.writeFileSync('temp.csv', c, 'utf8')</code></pre>
 <div onclick="editOnline(this, 'getDataFromExcelFileU8Arr')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
 <pre class="prettyprint"><code>// test in browser
 domShowInputAndGetFilesU8Arrs()
-    .then(function(d) {
+    .then(async function(d) {
         let file = d[0] //get first file
         let u8a = file.u8a
-        let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+        let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
         console.log(dltdt[0].sheetname, dltdt[0].data)
         // =&gt; ...
     })
 
 // test in nodejs
 let u8a = fs.readFileSync('temp.xlsx')
-let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
 console.log(dltdt[0].sheetname, dltdt[0].data)
 // =&gt; ...</code></pre>
         </div>
@@ -63118,7 +63110,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 
         
 <div class="param-desc">
-    <p>回傳數據陣列</p>
+    <p>回傳Promise，resolve回傳數據陣列，輸入無效或解析失敗時resolve回傳{ error }物件</p>
 </div>
 
 
@@ -63129,7 +63121,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -63145,7 +63137,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 
     
 
-    <h4 class="name" id=".getDataFromExcelFileU8ArrDyn"><span class="type-signature type-signature-async, static">(async, static) </span>getDataFromExcelFileU8ArrDyn<span class="signature">(u8a, opt<span class="signature-attributes">opt</span>, pathItems)</span><span class="type-signature"> → {Promise}</span></h4>
+    <h4 class="name" id=".getDataFromExcelFileU8ArrDyn"><span class="type-signature type-signature-async, static">(async, static) </span>getDataFromExcelFileU8ArrDyn<span class="signature">(u8a, opt<span class="signature-attributes">opt</span>, pathItems<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -63155,15 +63147,18 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>前端讀取Excel檔，前端由input file的檔案取得Uint8Array，並採用動態加載技術
+    <dd class="tag-description"><ul class="dummy"><li><p>前端讀取Excel檔，前端由input file的檔案取得Uint8Array
 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析</p>
+<p>本函數為相容舊版之保留函數：舊版採動態加載CDN之SheetJS(xlsx)，現Excel引擎已改為hucre並直接打包進wsemi，無需再動態加載
+內部直接委派getDataFromExcelFileU8Arr，pathItems參數保留簽名相容但已不使用
+與getDataFromExcelFileU8Arr之差異僅在錯誤處理：本函數以reject回傳錯誤訊息，非resolve回傳{ error }物件</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8ArrDyn.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getDataFromExcelFileU8ArrDyn.mjs.html">getDataFromExcelFileU8ArrDyn.mjs</a>, <a href="getDataFromExcelFileU8ArrDyn.mjs.html#line23">line 23</a>
+        <a href="getDataFromExcelFileU8ArrDyn.mjs.html">getDataFromExcelFileU8ArrDyn.mjs</a>, <a href="getDataFromExcelFileU8ArrDyn.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -63455,6 +63450,8 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
             
                 <td class="attributes">
                 
+                    &lt;optional&gt;<br>
+                
 
                 
 
@@ -63468,7 +63465,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
                 </td>
             
 
-            <td class="description last"><p>輸入資源字串、字串陣列、物件、物件陣列</p></td>
+            <td class="description last"><p>輸入資源字串、字串陣列、物件、物件陣列，已不使用，僅保留簽名相容</p></td>
         </tr>
 
     
@@ -63936,7 +63933,7 @@ catch (err) {
 
     
 
-    <h4 class="name" id=".getExcelU8ArrFromData"><span class="type-signature type-signature-static">(static) </span>getExcelU8ArrFromData<span class="signature">(data, sheetName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Array}</span></h4>
+    <h4 class="name" id=".getExcelU8ArrFromData"><span class="type-signature type-signature-async, static">(async, static) </span>getExcelU8ArrFromData<span class="signature">(data, sheetName<span class="signature-attributes">opt</span>)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -63946,14 +63943,16 @@ catch (err) {
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列或DOM的table元素轉成為Excel的Uint8Array數據陣列</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列轉成為Excel檔案的Uint8Array數據</p>
+<p>數據陣列可為二維陣列(mat)或物件陣列(ltdt)，見getExcelWorksheetFromData
+本函數為async function，前後端都可用</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getExcelU8ArrFromData.mjs.html">getExcelU8ArrFromData.mjs</a>, <a href="getExcelU8ArrFromData.mjs.html#line41">line 41</a>
+        <a href="getExcelU8ArrFromData.mjs.html">getExcelU8ArrFromData.mjs</a>, <a href="getExcelU8ArrFromData.mjs.html#line44">line 44</a>
     </li></ul></dd>
     
 
@@ -64002,27 +64001,28 @@ catch (err) {
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'getExcelU8ArrFromData')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>import fs from 'fs'
+<pre class="prettyprint"><code>//need test in nodejs
 
-let data = [
-    ['a', '123', 456],
-    [null, 'abc123', '', 111.222333],
-]
-let u8a = getExcelU8ArrFromData(data)
-console.log(u8a)
-// =&gt; Uint8Array(14720) [
-//     80,  75,   3,   4,  10,   0,   0,   0,   0,   0, 202,  99,
-//     50,  82, 214, 146, 124,  17,  90,   1,   0,   0,  90,   1,
-//      0,   0,  17,   0,   0,   0, 100, 111,  99,  80, 114, 111,
-//    112, 115,  47,  99, 111, 114, 101,  46, 120, 109, 108,  60,
-//     63, 120, 109, 108,  32, 118, 101, 114, 115, 105, 111, 110,
-//     61,  34,  49,  46,  48,  34,  32, 101, 110,  99, 111, 100,
-//    105, 110, 103,  61,  34,  85,  84,  70,  45,  56,  34,  32,
-//    115, 116,  97, 110, 100,  97, 108, 111, 110, 101,  61,  34,
-//    121, 101, 115,  34,
-//    ... 14620 more items
-//  ]
-fs.writeFileSync('temp.xlsx', u8a)</code></pre>
+async function test() {
+
+    let data = [
+        ['a', '123', 456],
+        [null, 'abc123', '', 111.222333],
+    ]
+
+    let u8a = await getExcelU8ArrFromData(data, 'mysheet')
+    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])
+    // =&gt; true 80 75 (xlsx為zip容器, 開頭必為'PK')
+
+    let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
+    console.log(r[0].sheetname, JSON.stringify(r[0].data))
+    // =&gt; mysheet [["a","123","456",""],["","abc123","","111.222333"]]
+
+}
+test()
+    .catch((err) =&gt; {
+        console.log(err)
+    })</code></pre>
         </div>
 
 
@@ -64064,9 +64064,6 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -64089,7 +64086,7 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入數據陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)</p></td>
         </tr>
 
     
@@ -64155,7 +64152,7 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳Excel的Uint8Array數據陣列</p>
+    <p>回傳Promise，resolve回傳Excel檔案的Uint8Array數據，輸入無效或轉換失敗時resolve回傳{ error }物件</p>
 </div>
 
 
@@ -64166,7 +64163,7 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -64182,7 +64179,7 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
 
     
 
-    <h4 class="name" id=".getExcelU8ArrFromWorkbook"><span class="type-signature type-signature-static">(static) </span>getExcelU8ArrFromWorkbook<span class="signature">(wb)</span><span class="type-signature"> → {Array}</span></h4>
+    <h4 class="name" id=".getExcelU8ArrFromWorkbook"><span class="type-signature type-signature-async, static">(async, static) </span>getExcelU8ArrFromWorkbook<span class="signature">(wb)</span><span class="type-signature"> → {Promise}</span></h4>
 
     
 
@@ -64192,14 +64189,16 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由Excel的Workbook物件轉成為Excel的Uint8Array數據陣列</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由Excel的Workbook物件轉成為Excel檔案的Uint8Array數據</p>
+<p>Workbook物件格式為{ sheets: [{ name, rows }] }(見createExcelWorkbook/getExcelWorkbookFromData)
+本函數為async function，前後端都可用</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromWorkbook.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getExcelU8ArrFromWorkbook.mjs.html">getExcelU8ArrFromWorkbook.mjs</a>, <a href="getExcelU8ArrFromWorkbook.mjs.html#line40">line 40</a>
+        <a href="getExcelU8ArrFromWorkbook.mjs.html">getExcelU8ArrFromWorkbook.mjs</a>, <a href="getExcelU8ArrFromWorkbook.mjs.html#line39">line 39</a>
     </li></ul></dd>
     
 
@@ -64248,26 +64247,25 @@ fs.writeFileSync('temp.xlsx', u8a)</code></pre>
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'getExcelU8ArrFromWorkbook')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>let data = [
-    ['a', '123', 456],
-    [null, 'abc123', '', 111.222333],
-]
+<pre class="prettyprint"><code>//need test in nodejs
 
-let wb = getExcelWorkbookFromData(data)
-let u8a = getExcelU8ArrFromWorkbook(wb)
-console.log(u8a)
-// =&gt; Uint8Array(15997) [
-//    80,  75,   3,   4,  20,   0,   0,   0,   0,   0,   0,   0,
-//    0,   0, 164,   1, 132, 184, 181,   2,   0,   0, 181,   2,
-//    0,   0,  26,   0,   0,   0, 120, 108,  47,  95, 114, 101,
-//  108, 115,  47, 119, 111, 114, 107,  98, 111, 111, 107,  46,
-//  120, 109, 108,  46, 114, 101, 108, 115,  60,  63, 120, 109,
-//  108,  32, 118, 101, 114, 115, 105, 111, 110,  61,  34,  49,
-//   46,  48,  34,  32, 101, 110,  99, 111, 100, 105, 110, 103,
-//   61,  34,  85,  84,  70,  45,  56,  34,  32, 115, 116,  97,
-//  110, 100,  97, 108,
-//  ... 15897 more items
-// ]</code></pre>
+async function test() {
+
+    let data = [
+        ['a', '123', 456],
+        [null, 'abc123', '', 111.222333],
+    ]
+
+    let wb = getExcelWorkbookFromData(data)
+    let u8a = await getExcelU8ArrFromWorkbook(wb)
+    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])
+    // =&gt; true 80 75 (xlsx為zip容器, 開頭必為'PK')
+
+}
+test()
+    .catch((err) =&gt; {
+        console.log(err)
+    })</code></pre>
         </div>
 
 
@@ -64341,7 +64339,7 @@ console.log(u8a)
 
         
 <div class="param-desc">
-    <p>回傳Excel的Uint8Array數據陣列</p>
+    <p>回傳Promise，resolve回傳Excel檔案的Uint8Array數據，wb無效或轉換失敗時resolve回傳{ error }物件</p>
 </div>
 
 
@@ -64352,7 +64350,7 @@ console.log(u8a)
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">Promise</span>
 
 
 
@@ -64378,14 +64376,15 @@ console.log(u8a)
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列或DOM的table元素轉成為Excel的Workbook物件</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列轉成為Excel的Workbook物件</p>
+<p>Workbook物件格式為{ sheets: [{ name, rows }] }，數據陣列可為二維陣列(mat)或物件陣列(ltdt)，見getExcelWorksheetFromData</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getExcelWorkbookFromData.mjs.html">getExcelWorkbookFromData.mjs</a>, <a href="getExcelWorkbookFromData.mjs.html#line63">line 63</a>
+        <a href="getExcelWorkbookFromData.mjs.html">getExcelWorkbookFromData.mjs</a>, <a href="getExcelWorkbookFromData.mjs.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -64434,48 +64433,18 @@ console.log(u8a)
     
     <div style="position:relative;">
 <div onclick="editOnline(this, 'getExcelWorkbookFromData')" style="position:absolute; right:16px; bottom:12px; font-size:9pt; color:#fff; cursor:pointer; padding-bottom:3px; border-bottom:1px solid #fff;">Try in Codepen</div>
-<pre class="prettyprint"><code>import xlsx from 'xlsx'
-
-let data = [
+<pre class="prettyprint"><code>let data = [
     ['a', '123', 456],
     [null, 'abc123', '', 111.222333],
 ]
 
 let wb1 = getExcelWorkbookFromData(data)
-console.log(wb1)
-// =&gt; Workbook {
-//      SheetNames: [ 'data' ],
-//      Sheets: {
-//        data: {
-//          A1: [Object],
-//          B1: [Object],
-//          C1: [Object],
-//          B2: [Object],
-//          C2: [Object],
-//          D2: [Object],
-//          '!ref': 'A1:D2'
-//        }
-//      }
-//    }
-xlsx.writeFile(wb1, 'temp1.xlsx')
+console.log(wb1.sheets[0].name)
+// =&gt; data
 
 let wb2 = getExcelWorkbookFromData(data, 'tester')
-console.log(wb2)
-// =&gt; Workbook {
-//      SheetNames: [ 'tester' ],
-//      Sheets: {
-//        data: {
-//          A1: [Object],
-//          B1: [Object],
-//          C1: [Object],
-//          B2: [Object],
-//          C2: [Object],
-//          D2: [Object],
-//          '!ref': 'A1:D2'
-//        }
-//      }
-//    }
-xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
+console.log(wb2.sheets[0].name)
+// =&gt; tester</code></pre>
         </div>
 
 
@@ -64517,9 +64486,6 @@ xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -64542,7 +64508,7 @@ xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入數據陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)</p></td>
         </tr>
 
     
@@ -64608,7 +64574,7 @@ xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳Excel的Workbook物件</p>
+    <p>回傳Excel的Workbook物件，data非陣列時回傳{ error }物件</p>
 </div>
 
 
@@ -64646,13 +64612,14 @@ xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由Excel的Worksheet物件轉為Excel的Workbook物件</p>
+<p>Worksheet物件格式為{ rows }(見getExcelWorksheetFromData)，Workbook物件格式為{ sheets: [{ name, rows }] }</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorkbookFromWorksheet.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getExcelWorkbookFromWorksheet.mjs.html">getExcelWorkbookFromWorksheet.mjs</a>, <a href="getExcelWorkbookFromWorksheet.mjs.html#line71">line 71</a>
+        <a href="getExcelWorkbookFromWorksheet.mjs.html">getExcelWorkbookFromWorksheet.mjs</a>, <a href="getExcelWorkbookFromWorksheet.mjs.html#line36">line 36</a>
     </li></ul></dd>
     
 
@@ -64706,54 +64673,15 @@ xlsx.writeFile(wb2, 'temp2.xlsx')</code></pre>
     [null, 'abc123', '', 111.222333],
 ]
 
-let ws = xlsx.utils.aoa_to_sheet(data)
-console.log(ws)
-// =&gt; {
-//   A1: { v: 'a', t: 's' },
-//   B1: { v: '123', t: 's' },
-//   C1: { v: 456, t: 'n' },
-//   B2: { v: 'abc123', t: 's' },
-//   C2: { v: '', t: 's' },
-//   D2: { v: 111.222333, t: 'n' },
-//   '!ref': 'A1:D2'
-// }
+let ws = getExcelWorksheetFromData(data)
 
-let wb = getExcelWorkbookFromWorksheet(ws)
-console.log(JSON.stringify(wb, null, 2))
-// =&gt; {
-//   "SheetNames": [
-//     "data"
-//   ],
-//   "Sheets": {
-//     "data": {
-//       "A1": {
-//         "v": "a",
-//         "t": "s"
-//       },
-//       "B1": {
-//         "v": "123",
-//         "t": "s"
-//       },
-//       "C1": {
-//         "v": 456,
-//         "t": "n"
-//       },
-//       "B2": {
-//         "v": "abc123",
-//         "t": "s"
-//       },
-//       "C2": {
-//         "v": "",
-//         "t": "s"
-//       },
-//       "D2": {
-//         "v": 111.222333,
-//         "t": "n"
-//       },
-//       "!ref": "A1:D2"
-//     }
-//   }
-// }</code></pre>
+let wb1 = getExcelWorkbookFromWorksheet(ws)
+console.log(wb1.sheets[0].name)
+// =&gt; data
+
+let wb2 = getExcelWorkbookFromWorksheet(ws, 'tester')
+console.log(wb2.sheets[0].name)
+// =&gt; tester</code></pre>
         </div>
 
 
@@ -64817,7 +64745,7 @@ console.log(JSON.stringify(wb, null, 2))
                 </td>
             
 
-            <td class="description last"><p>輸入Excel的Worksheet物件</p></td>
+            <td class="description last"><p>輸入Excel的Worksheet物件，須含rows二維值陣列</p></td>
         </tr>
 
     
@@ -64883,7 +64811,7 @@ console.log(JSON.stringify(wb, null, 2))
 
         
 <div class="param-desc">
-    <p>回傳Excel的Workbook物件</p>
+    <p>回傳Excel的Workbook物件，sheet無效時回傳{ error }物件</p>
 </div>
 
 
@@ -64920,14 +64848,16 @@ console.log(JSON.stringify(wb, null, 2))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列或DOM的table元素轉成為Excel的Worksheet物件</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由數據陣列轉成為Excel的Worksheet物件</p>
+<p>Worksheet物件格式為{ rows }，rows為二維值陣列，不含分頁名稱，名稱由getExcelWorkbookFromWorksheet或addExcelWorksheetFromData給予
+數據陣列可為二維陣列(mat)或物件陣列(ltdt)，ltdt會以各物件之鍵作為表頭自動轉為mat</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorksheetFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getExcelWorksheetFromData.mjs.html">getExcelWorksheetFromData.mjs</a>, <a href="getExcelWorksheetFromData.mjs.html#line59">line 59</a>
+        <a href="getExcelWorksheetFromData.mjs.html">getExcelWorksheetFromData.mjs</a>, <a href="getExcelWorksheetFromData.mjs.html#line46">line 46</a>
     </li></ul></dd>
     
 
@@ -64982,15 +64912,9 @@ console.log(JSON.stringify(wb, null, 2))
 ]
 
 let ws1 = getExcelWorksheetFromData(mat)
-console.log('ws1', ws1)
-// =&gt; ws1 {
-//   A1: { v: 'a', t: 's' },
-//   B1: { v: '123', t: 's' },
-//   C1: { v: 456, t: 'n' },
-//   B2: { v: 'abc123', t: 's' },
-//   C2: { v: '', t: 's' },
-//   D2: { v: 111.222333, t: 'n' },
-//   '!ref': 'A1:D2'
+console.log(ws1)
+// =&gt; {
+//   rows: [ [ 'a', '123', 456 ], [ null, 'abc123', '', 111.222333 ] ]
 // }
 
 let ltdt = [
@@ -64999,21 +64923,13 @@ let ltdt = [
 ]
 
 let ws2 = getExcelWorksheetFromData(ltdt)
-console.log('ws2', ws2)
-// =&gt; ws2 {
-//   A1: { v: 'x', t: 's' },
-//   B1: { v: 'y', t: 's' },
-//   C1: { v: 'z', t: 's' },
-//   D1: { v: 'a', t: 's' },
-//   A2: { v: 'a', t: 's' },
-//   B2: { v: '123', t: 's' },
-//   C2: { v: 456, t: 'n' },
-//   D2: { v: '', t: 's' },
-//   A3: { v: 'null', t: 's' },
-//   B3: { v: 'abc123', t: 's' },
-//   C3: { v: '', t: 's' },
-//   D3: { v: 111.222333, t: 'n' },
-//   '!ref': 'A1:D3'
+console.log(ws2)
+// =&gt; {
+//   rows: [
+//     [ 'x', 'y', 'z', 'a' ],
+//     [ 'a', '123', 456, '' ],
+//     [ 'null', 'abc123', '', 111.222333 ]
+//   ]
 // }</code></pre>
         </div>
 
@@ -65052,9 +64968,6 @@ console.log('ws2', ws2)
             
                 
 <span class="param-type">Array</span>
-|
-
-<span class="param-type">Element</span>
 
 
 
@@ -65065,7 +64978,7 @@ console.log('ws2', ws2)
 
             
 
-            <td class="description last"><p>輸入數據陣列或是DOM的table元素(Element)</p></td>
+            <td class="description last"><p>輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)</p></td>
         </tr>
 
     
@@ -65091,7 +65004,7 @@ console.log('ws2', ws2)
 
         
 <div class="param-desc">
-    <p>回傳Excel的Worksheet物件</p>
+    <p>回傳Excel的Worksheet物件，data非陣列時回傳{ error }物件</p>
 </div>
 
 
@@ -94712,14 +94625,15 @@ topAsync().catch(() =&gt; {})</code></pre>
     <dd class="tag-description"><ul class="dummy"><li><p>為Promise添加逾時限制</p>
 <p>以Promise.race令pm與計時器競速，pm先完成則原樣回傳其resolve或reject之結果，逾時則reject一個Error
 該Error之message為'timeout[ms數ms]'(有label時置於前綴)，並帶有code為'TIMEOUT'與timeout為逾時毫秒數等欄位，供呼叫端辨別為逾時而非pm自身之錯誤
-注意JavaScript無法中止已啟動之Promise，逾時僅代表不再等待其結果，pm內之工作仍會繼續執行至自然結束，若需一併中止內部工作(如子進程)須由pm自行處理</p>
+注意JavaScript無法中止已啟動之Promise，逾時僅代表不再等待其結果，pm內之工作仍會繼續執行至自然結束，若需一併中止內部工作(如子進程)須由pm自行處理
+本函數為async function，參數錯誤亦以reject傳出而非同步throw，故可與逾時錯誤一併由.catch或try/catch接住</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/pmTimeout.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pmTimeout.mjs.html">pmTimeout.mjs</a>, <a href="pmTimeout.mjs.html#line66">line 66</a>
+        <a href="pmTimeout.mjs.html">pmTimeout.mjs</a>, <a href="pmTimeout.mjs.html#line67">line 67</a>
     </li></ul></dd>
     
 
@@ -94872,7 +94786,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入Promise物件，非Promise時擲出錯誤'invalid pm'</p></td>
+            <td class="description last"><p>輸入Promise物件，非Promise時reject錯誤'invalid pm'</p></td>
         </tr>
 
     
@@ -94908,7 +94822,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘擲出錯誤'invalid ms[ms數]'</p></td>
+            <td class="description last"><p>輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘reject錯誤'invalid ms[ms數]'</p></td>
         </tr>
 
     
@@ -114935,7 +114849,7 @@ topAsync().catch(() =&gt; {})</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Aug 17 2026 20:04:51 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Aug 17 2026 22:13:57 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
@@ -114956,7 +114870,7 @@ topAsync().catch(() =&gt; {})</code></pre>
                 'https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js',
                 'https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js',
                 'https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js',
-                'https://cdn.jsdelivr.net/npm/wsemi@1.8.72/dist/wsemi.umd.js',
+                'https://cdn.jsdelivr.net/npm/wsemi@1.8.73/dist/wsemi.umd.js',
             ] 
         }
         prefill = JSON.stringify(prefill)

@@ -11,11 +11,12 @@ import isp0int from './isp0int.mjs'
  * 以Promise.race令pm與計時器競速，pm先完成則原樣回傳其resolve或reject之結果，逾時則reject一個Error
  * 該Error之message為'timeout[ms數ms]'(有label時置於前綴)，並帶有code為'TIMEOUT'與timeout為逾時毫秒數等欄位，供呼叫端辨別為逾時而非pm自身之錯誤
  * 注意JavaScript無法中止已啟動之Promise，逾時僅代表不再等待其結果，pm內之工作仍會繼續執行至自然結束，若需一併中止內部工作(如子進程)須由pm自行處理
+ * 本函數為async function，參數錯誤亦以reject傳出而非同步throw，故可與逾時錯誤一併由.catch或try/catch接住
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmTimeout.test.mjs Github}
  * @memberOf wsemi
- * @param {Promise} pm 輸入Promise物件，非Promise時擲出錯誤'invalid pm'
- * @param {Integer} ms 輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘擲出錯誤'invalid ms[ms數]'
+ * @param {Promise} pm 輸入Promise物件，非Promise時reject錯誤'invalid pm'
+ * @param {Integer} ms 輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘reject錯誤'invalid ms[ms數]'
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.label=''] 輸入識別字串，將置於逾時錯誤訊息之前綴以利辨識來源，非有效字串時回退為空字串，預設''
  * @returns {Promise} 回傳Promise，pm先完成則resolve或reject其結果，逾時則reject一個code為'TIMEOUT'之Error
@@ -65,7 +66,8 @@ import isp0int from './isp0int.mjs'
  */
 async function pmTimeout(pm, ms, opt = {}) {
 
-    //check, pm與ms給錯視為程式撰寫錯誤而擲出錯誤
+    //check, pm與ms給錯視為程式撰寫錯誤
+    //本函數為async function, 故此處throw會轉為reject傳出, 與pm*家族之錯誤傳遞管道一致(見pmSeries/pmChain)
     if (!ispm(pm)) {
         throw new Error(`invalid pm`)
     }

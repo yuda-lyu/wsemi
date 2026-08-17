@@ -1,18 +1,19 @@
 import every from 'lodash-es/every.js'
 import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
-import isEle from './isEle.mjs'
 import ltdtkeysheads2mat from './ltdtkeysheads2mat.mjs'
-import getXLSX from './_getXLSX.mjs'
 
 
 /**
- * 由數據陣列或DOM的table元素轉成為Excel的Worksheet物件
+ * 由數據陣列轉成為Excel的Worksheet物件
+ *
+ * Worksheet物件格式為{ rows }，rows為二維值陣列，不含分頁名稱，名稱由getExcelWorkbookFromWorksheet或addExcelWorksheetFromData給予
+ * 數據陣列可為二維陣列(mat)或物件陣列(ltdt)，ltdt會以各物件之鍵作為表頭自動轉為mat
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelWorksheetFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {Array|Element} data 輸入數據陣列或是DOM的table元素(Element)
- * @returns {Object} 回傳Excel的Worksheet物件
+ * @param {Array} data 輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)
+ * @returns {Object} 回傳Excel的Worksheet物件，data非陣列時回傳{ error }物件
  * @example
  *
  * let mat = [
@@ -21,15 +22,9 @@ import getXLSX from './_getXLSX.mjs'
  * ]
  *
  * let ws1 = getExcelWorksheetFromData(mat)
- * console.log('ws1', ws1)
- * // => ws1 {
- * //   A1: { v: 'a', t: 's' },
- * //   B1: { v: '123', t: 's' },
- * //   C1: { v: 456, t: 'n' },
- * //   B2: { v: 'abc123', t: 's' },
- * //   C2: { v: '', t: 's' },
- * //   D2: { v: 111.222333, t: 'n' },
- * //   '!ref': 'A1:D2'
+ * console.log(ws1)
+ * // => {
+ * //   rows: [ [ 'a', '123', 456 ], [ null, 'abc123', '', 111.222333 ] ]
  * // }
  *
  * let ltdt = [
@@ -38,30 +33,22 @@ import getXLSX from './_getXLSX.mjs'
  * ]
  *
  * let ws2 = getExcelWorksheetFromData(ltdt)
- * console.log('ws2', ws2)
- * // => ws2 {
- * //   A1: { v: 'x', t: 's' },
- * //   B1: { v: 'y', t: 's' },
- * //   C1: { v: 'z', t: 's' },
- * //   D1: { v: 'a', t: 's' },
- * //   A2: { v: 'a', t: 's' },
- * //   B2: { v: '123', t: 's' },
- * //   C2: { v: 456, t: 'n' },
- * //   D2: { v: '', t: 's' },
- * //   A3: { v: 'null', t: 's' },
- * //   B3: { v: 'abc123', t: 's' },
- * //   C3: { v: '', t: 's' },
- * //   D3: { v: 111.222333, t: 'n' },
- * //   '!ref': 'A1:D3'
+ * console.log(ws2)
+ * // => {
+ * //   rows: [
+ * //     [ 'x', 'y', 'z', 'a' ],
+ * //     [ 'a', '123', 456, '' ],
+ * //     [ 'null', 'abc123', '', 111.222333 ]
+ * //   ]
  * // }
  *
  */
 function getExcelWorksheetFromData(data) {
 
     //check
-    if (!isarr(data) && !isEle(data)) {
+    if (!isarr(data)) {
         return {
-            error: 'data is not an array or element',
+            error: 'data is not an array',
         }
     }
 
@@ -69,31 +56,15 @@ function getExcelWorksheetFromData(data) {
     let ws = null
     try {
 
-        //xlutls
-        let xl = getXLSX()
-        let xlutls = xl.utils
-
-        if (isarr(data)) {
-
-            //check ltdt
-            let b = every(data, iseobj)
-            if (b) {
-                data = ltdtkeysheads2mat(data)
-            }
-
-            //ws
-            ws = xlutls.aoa_to_sheet(data)
-
+        //check ltdt, 全元素皆為物件時視為ltdt, 以鍵作表頭轉mat
+        let b = every(data, iseobj)
+        if (b) {
+            data = ltdtkeysheads2mat(data)
         }
-        else if (isEle(data)) {
 
-            //ws
-            ws = xlutls.table_to_sheet(data, {
-                raw: true,
-                // cellDates: true,
-                // dateNF: 0,
-            })
-
+        //ws
+        ws = {
+            rows: data,
         }
 
     }

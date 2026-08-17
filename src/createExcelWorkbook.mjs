@@ -1,7 +1,7 @@
-
-
 /**
- * 創建Excel的Workbook物件
+ * 產生Excel的Workbook空物件
+ *
+ * Workbook物件格式為{ sheets: [] }，各分頁為{ name, rows }物件，可交由addExcelWorksheetFromData添加分頁、getExcelU8ArrFromWorkbook輸出檔案
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/createExcelWorkbook.test.mjs Github}
  * @memberOf wsemi
@@ -10,20 +10,15 @@
  *
  * let wb = createExcelWorkbook()
  * console.log(wb)
- * // => Workbook { SheetNames: [], Sheets: {} }
+ * // => { sheets: [] }
  *
  */
 function createExcelWorkbook() {
 
-    //Workbook
-    function Workbook() {
-        if (!(this instanceof Workbook)) return new Workbook()
-        this.SheetNames = []
-        this.Sheets = {}
-    }
-
     //wb
-    let wb = new Workbook()
+    let wb = {
+        sheets: [],
+    }
 
     return wb
 }

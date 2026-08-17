@@ -6,7 +6,7 @@ describe(`createExcelWorkbook`, function() {
 
     //  let wb = createExcelWorkbook()
     //  console.log(wb)
-    let wb = { SheetNames: [], Sheets: {} }
+    let wb = { sheets: [] }
 
     it(`should return ${JSON.stringify(wb)} when input undefined`, function() {
         let r = createExcelWorkbook()

@@ -45,15 +45,15 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import get from 'lodash-es/get.js'
+            <pre class="prettyprint source linenums"><code>import { readXlsx } from 'hucre/xlsx'
+import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
-import values from 'lodash-es/values.js'
+import every from 'lodash-es/every.js'
 import arrHas from './arrHas.mjs'
 import isbol from './isbol.mjs'
 import cstr from './cstr.mjs'
 import getCsvStrFromData from './getCsvStrFromData.mjs'
-import getXLSX from './_getXLSX.mjs'
 
 
 function toStr(v) {
@@ -64,34 +64,28 @@ function toStr(v) {
 }
 
 
-function to_array(workbook, valueToString) {
+function to_array(sheets, valueToString) {
     let result = []
 
-    workbook.SheetNames.forEach(function (sheetname) {
+    each(sheets, (sheet) => {
 
-        //sheet_to_json
-        //資料轉json後, 各列會欄位名稱為依照英文A開始編號
-        //不能用raw:false轉出字串數據, 長整數會被以科學記號顯示而失去精度
-        //需使用defval='', 否則各列中若有無效值會跳過造成錯位
-        let arr = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname], { header: 'A', defval: '', blankrows: true })
-
-        //提取數據
-        arr = map(arr, (v) => {
-            return values(v)
-        })
-
-        //valueToString
-        if (valueToString) {
-            arr = map(arr, (v) => {
-                return map(v, (vv) => {
-                    return toStr(vv)
-                })
+        //rows為稠密矩形二維值陣列(每列同長), 空cell與補位為null, 一律轉''避免呼叫端取到null
+        //含全空列(等同sheet_to_json之blankrows:true), 避免各列因空列被跳過造成錯位
+        let arr = map(sheet.rows, (row) => {
+            return map(row, (v) => {
+                if (v === null) {
+                    return ''
+                }
+                if (valueToString) {
+                    return toStr(v)
+                }
+                return v
             })
-        }
+        })
 
         //push
         result.push({
-            sheetname,
+            sheetname: sheet.name,
             data: arr
         })
 
@@ -101,27 +95,56 @@ function to_array(workbook, valueToString) {
 }
 
 
-function to_ltdt(workbook, valueToString) {
+function to_ltdt(sheets, valueToString) {
     let result = []
 
-    workbook.SheetNames.forEach(function (sheetname) {
+    each(sheets, (sheet) => {
 
-        //sheet_to_json
-        let j = getXLSX().utils.sheet_to_json(workbook.Sheets[sheetname])
+        let rows = sheet.rows
 
-        //valueToString
-        if (valueToString) {
-            j = map(j, (v) => {
-                each(v, (vv, kk) => {
-                    v[kk] = toStr(vv)
-                })
-                return v
+        //heads, 首列為表頭, 空表頭(null或'')之欄位跳過; 重複表頭後者覆蓋前者
+        let heads = map(get(rows, 0, []), (v) => {
+            if (v === null || v === '') {
+                return null
+            }
+            return toStr(v)
+        })
+
+        //j
+        let j = []
+        for (let i = 1; i &lt; rows.length; i++) {
+            let row = rows[i]
+
+            //跳過全空列(等同sheet_to_json預設之blankrows:false)
+            let bBlank = every(row, (v) => {
+                return v === null
             })
+            if (bBlank) {
+                continue
+            }
+
+            //dt, 空cell(null)為略鍵, 空字串cell('')為實體cell故保留鍵
+            let dt = {}
+            for (let c = 0; c &lt; heads.length; c++) {
+                if (heads[c] === null) {
+                    continue
+                }
+                let v = get(row, c, null)
+                if (v === null) {
+                    continue
+                }
+                if (valueToString) {
+                    v = toStr(v)
+                }
+                dt[heads[c]] = v
+            }
+            j.push(dt)
+
         }
 
         //push
         result.push({
-            sheetname,
+            sheetname: sheet.name,
             data: j
         })
 
@@ -131,10 +154,10 @@ function to_ltdt(workbook, valueToString) {
 }
 
 
-function to_csv(workbook, valueToString) {
+function to_csv(sheets, valueToString) {
 
     //to_array
-    let shs = to_array(workbook, valueToString)
+    let shs = to_array(sheets, valueToString)
 
     //bom
     let bom = false
@@ -155,33 +178,37 @@ function to_csv(workbook, valueToString) {
  * 讀取Excel檔，前後端都可用，前端由input file的檔案取得Uint8Array，後端由fs.readFileSync讀取Buffer
  * 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析
  *
+ * 本函數為async function
+ * fmt='ltdt'時以首列為表頭轉物件陣列：空cell為略鍵、空字串cell保留鍵且值為''、全空列跳過、空表頭之欄位跳過、重複表頭後者覆蓋前者
+ * fmt='array'與'csv'時保留全部列(含全空列)，空cell一律轉''
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入file資料，格式需為Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設為{}
  * @param {String} [opt.fmt='ltdt'] 輸入數據格式，可有'ltdt','csv','array'，預設為'ltdt'
  * @param {Boolean} [opt.valueToString=true] 輸入數據是否強制轉字串布林值，預設為true
- * @returns {Array} 回傳數據陣列
+ * @returns {Promise} 回傳Promise，resolve回傳數據陣列，輸入無效或解析失敗時resolve回傳{ error }物件
  * @example
  *
  * // test in browser
  * domShowInputAndGetFilesU8Arrs()
- *     .then(function(d) {
+ *     .then(async function(d) {
  *         let file = d[0] //get first file
  *         let u8a = file.u8a
- *         let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+ *         let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
  *         console.log(dltdt[0].sheetname, dltdt[0].data)
  *         // => ...
  *     })
  *
  * // test in nodejs
  * let u8a = fs.readFileSync('temp.xlsx')
- * let dltdt = getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+ * let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
  * console.log(dltdt[0].sheetname, dltdt[0].data)
  * // => ...
  *
  */
-function getDataFromExcelFileU8Arr(u8a, opt) {
+async function getDataFromExcelFileU8Arr(u8a, opt) {
 
     //fmt
     let fmt = get(opt, 'fmt', 'ltdt')
@@ -206,7 +233,7 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     //workbook
     let workbook
     try {
-        workbook = getXLSX().read(u8a, { type: 'buffer' }) //Uint8Array
+        workbook = await readXlsx(u8a) //Uint8Array
     }
     catch (err) {
         console.log('error: ', err)
@@ -219,13 +246,13 @@ function getDataFromExcelFileU8Arr(u8a, opt) {
     let r = null
     try {
         if (fmt === 'ltdt') {
-            r = to_ltdt(workbook, valueToString)
+            r = to_ltdt(workbook.sheets, valueToString)
         }
         else if (fmt === 'array') {
-            r = to_array(workbook, valueToString)
+            r = to_array(workbook.sheets, valueToString)
         }
         else if (fmt === 'csv') {
-            r = to_csv(workbook, valueToString)
+            r = to_csv(workbook.sheets, valueToString)
         }
     }
     catch (err) {
@@ -254,7 +281,7 @@ export default getDataFromExcelFileU8Arr
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Aug 17 2026 20:04:51 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Aug 17 2026 22:13:57 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
