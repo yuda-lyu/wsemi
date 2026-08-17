@@ -3,10 +3,8 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <title>examples for xlsx</title>
-    
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.72/dist/wsemi.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.73/dist/wsemi.umd.js"></script>
     <script>
         let log = console.log
         console.log = function(){
@@ -22,29 +20,11 @@
 
         <div>
 
-            <button onclick="downloadTable()">download file(*.xlsx) from table</button>
+            <button onclick="downloadMat()">download file(*.xlsx) from mat</button>
+
+            <button onclick="downloadLtdt()">download file(*.xlsx) from ltdt</button>
 
         </div>
-
-        <table id="tab">
-            <tbody>
-                <tr>
-                    <td>h1</td>
-                    <td>h2(中文)</td>
-                    <td>h3</td>
-                </tr>
-                <tr>
-                    <td>c11</td>
-                    <td>c12</td>
-                    <td>c13</td>
-                </tr>
-                <tr>
-                    <td>c21</td>
-                    <td>c22</td>
-                    <td>c23</td>
-                </tr>
-            </tbody>
-        </table>
 
     </div>
 
@@ -52,19 +32,39 @@
 
     <script>
 
-        function downloadTable(){
+        async function downloadMat(){
 
-            let tab = document.querySelector("#tab")
-            console.log('tab',tab)
-            wsemi.downloadExcelFileFromData('table.xlsx', 'data', tab)
-            console.log('download table')
+            let mat = [
+                ['h1', 'h2(中文)', 'h3'],
+                ['c11', 'c12', 'c13'],
+                ['c21', 'c22', 'c23'],
+            ]
+            await wsemi.downloadExcelFileFromData('data(mat).xlsx', 'data', mat)
+            console.log('download mat')
+
+        }
+
+        async function downloadLtdt(){
+
+            let ltdt = [
+                { x: 'a', y: '123', z: 456 },
+                { x: 'b', y: '中文', z: 789 },
+            ]
+            await wsemi.downloadExcelFileFromData('data(ltdt).xlsx', 'data', ltdt)
+            console.log('download ltdt')
 
         }
 
         function readAndDownloadFile(){
 
             wsemi.domShowInputAndGetFilesU8Arrs({ kind: 'xlsx' })
-                .then(function(d) {
+                .then(async function(d) {
+
+                    //check, 取消選檔時resolve空陣列, 不視為錯誤
+                    if (!d || d.length === 0) {
+                        console.log('no file selected')
+                        return
+                    }
 
                     //get first file
                     let file = d[0]
@@ -78,7 +78,7 @@
                     console.log('download u8a')
 
                     //dcsv
-                    let dcsv = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'csv' })
+                    let dcsv = await wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'csv' })
                     dcsv = dcsv[0]
                     console.log('get csv', dcsv.sheetname, dcsv.data)
 
@@ -87,7 +87,7 @@
                     console.log('download csv')
 
                     //dltdt
-                    let dltdt = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+                    let dltdt = await wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
                     dltdt = dltdt[0]
                     console.log('get dltdt', dltdt.sheetname, dltdt.data)
 
@@ -96,12 +96,12 @@
                     console.log('download json(from dltdt)')
 
                     //darray
-                    let darray = wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
+                    let darray = await wsemi.getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
                     darray = darray[0]
                     console.log('get array', darray.sheetname, darray.data)
 
                     //download array
-                    wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray.data)
+                    await wsemi.downloadExcelFileFromData('temp.array.xlsx', 'data', darray.data)
                     console.log('download array')
 
                 })
@@ -112,6 +112,6 @@
         }
 
     </script>
-  
+
 </body>
 </html>
