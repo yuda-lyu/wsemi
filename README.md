@@ -81,7 +81,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.73/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.74/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -112,12 +112,6 @@ Add script for wsemi.
 ```alias
 <link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.js"></script>
-```
-
-[Optional] Add script for `@zumer/snapdom`.
-> **Note:** Include script when using `domConvertToPic` function.
-```alias
-<script src="https://cdn.jsdelivr.net/npm/@zumer/snapdom@1.9.14/dist/snapdom.min.js"></script>
 ```
 
 [Optional] Add script for `markmap`.

@@ -25,6 +25,7 @@ rollupFiles({
         'chokidar': 'chokidar',
         'dayjs': 'dayjs',
         // 'hucre': 'hucre', //取代xlsx(SheetJS), 零依賴純ESM且體積小, 故須打包, 前端UMD不需外掛script
+        // '@zumer/snapdom': 'snapdom', //DOM轉圖供下載, 故須打包, 前端UMD不需外掛script
         // 'fuse.js': 'Fuse', //因計算字串模糊比對重要, 故須打包
         // 'diff': 'diff', //因計算數據差異重要, 故須打包
         // 'diff2html': 'diff2html', //因後端須執行產製差異報告, 故須打包
@@ -50,6 +51,7 @@ rollupFiles({
         'chokidar',
         'dayjs',
         // 'hucre', //取代xlsx(SheetJS), 故須打包
+        // '@zumer/snapdom', //DOM轉圖供下載, 故須打包
         // 'fuse.js', //因計算字串模糊比對重要, 故須打包
         // 'diff', //因計算數據差異重要, 故須打包
         // 'diff2html', //因後端須執行產製差異報告, 故須打包

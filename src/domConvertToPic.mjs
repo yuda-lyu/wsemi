@@ -1,3 +1,4 @@
+import { snapdom } from '@zumer/snapdom'
 import get from 'lodash-es/get.js'
 import isEle from './isEle.mjs'
 import isnum from './isnum.mjs'
@@ -5,14 +6,6 @@ import isbol from './isbol.mjs'
 import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import domPrepend from './domPrepend.mjs'
-import getGlobal from './getGlobal.mjs'
-
-
-function getSnapdom() {
-    let g = getGlobal()
-    let x = g.snapdom
-    return x
-}
 
 
 /**
@@ -90,9 +83,6 @@ async function domConvertToPic(ele, opt = {}) {
     //domPrepend, 塞入至body內最前
     let body = document.querySelector('body')
     domPrepend(body, eleOut)
-
-    //getSnapdom
-    let snapdom = getSnapdom()
 
     //pic
     let optCv = {
