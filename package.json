@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.74",
+  "version": "1.8.75",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "@zumer/snapdom": "^1.9.14",
@@ -22,6 +22,7 @@
     "tree-kill": "^1.2.2",
     "ua-parser-js": "^2.0.10",
     "uuid": "^14.0.1",
+    "viewerjs": "^1.11.8",
     "xss": "^1.0.15",
     "xxhash-wasm": "^1.1.0"
   },

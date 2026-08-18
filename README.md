@@ -81,7 +81,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.74/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.8.75/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -105,13 +105,6 @@ Add script for wsemi.
 > **Note:** Include script when using `clearXSS` function, and don't include script when using `clearXSSDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
-```
-
-[Optional] Add link and script for `viewerjs`.
-> **Note:** Include script when using `domShowImages` function, and don't include script when using `domShowImagesDyn` function.
-```alias
-<link href="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/viewerjs@1.11.7/dist/viewer.min.js"></script>
 ```
 
 [Optional] Add script for `markmap`.

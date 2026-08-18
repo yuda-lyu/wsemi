@@ -1,3 +1,5 @@
+import Viewer from 'viewerjs'
+import 'viewerjs/dist/viewer.css'
 import get from 'lodash-es/get.js'
 import merge from 'lodash-es/merge.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
@@ -8,14 +10,6 @@ import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'
 import genPm from './genPm.mjs'
 import waitFun from './waitFun.mjs'
-import getGlobal from './getGlobal.mjs'
-
-
-function getViewer() {
-    let g = getGlobal()
-    let x = g.Viewer
-    return x
-}
 
 //viewer.js工具指定值:
 // 0: 隱藏
@@ -300,11 +294,8 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     }
 
-    //UseViewer
-    let UseViewer = getViewer()
-
     //vw
-    let vw = new UseViewer(img, useOpt)
+    let vw = new Viewer(img, useOpt)
 
     //執行函數直接顯示
     vw.show()
