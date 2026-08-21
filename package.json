@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.78",
+  "version": "1.8.79",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "@zumer/snapdom": "^1.9.14",
@@ -27,7 +27,7 @@
     "xxhash-wasm": "^1.1.0"
   },
   "devDependencies": {
-    "w-package-tools": "^1.1.14"
+    "w-package-tools": "^1.1.15"
   },
   "scripts": {
     "test": "mocha --parallel --timeout 60000",
