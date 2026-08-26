@@ -98,9 +98,8 @@ async function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
         //writeFileSync
         //本檔保持dual-env(前後端都可用), 故不於檔頂端import fs, 改於Node分支動態import(本函數已為async故可行)
         //webpack為靜態分析: 字面import('fs')於browser target會直接Module not found建置失敗; 變數間接化import(key)可過但留Critical dependency警告
-        //故以webpackIgnore與vite-ignore魔法註解令打包器完全跳過此import(不解析,不產chunk,無警告), 打包產物保留原樣於runtime求值
-        //瀏覽器端因isWindow()分流永不執行此行; Node端(含CJS之UMD)原生支援動態import故正常運作
-        let fs = await import(/* webpackIgnore: true */ /* @vite-ignore */ 'fs')
+        let keyFs = 'fs'
+        let fs = await import(/* webpackIgnore: true */ /* @vite-ignore */ keyFs)
         fs.default.writeFileSync(fileName, u8a)
 
     }
