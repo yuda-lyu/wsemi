@@ -520,7 +520,7 @@ describe(`cache`, function() {
     })
 
     async function test9() {
-        //cacheError: 預設true失敗快取undefined(見test5); false時失敗不快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行, error事件仍發出
+        //useCacheError: 預設true失敗快取undefined(見test5); false時失敗不快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行, error事件仍發出
         let oc = cache()
 
         let errs = []
@@ -543,7 +543,7 @@ describe(`cache`, function() {
             })
         }
 
-        oc.set('fun', { fun, inputs: [], timeExpired: 30000, cacheError: false })
+        oc.set('fun', { fun, inputs: [], timeExpired: 30000, useCacheError: false })
 
         //第1次執行失敗: 執行者與等待中之併發呼叫皆收到reject
         let pm1 = oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
@@ -563,7 +563,7 @@ describe(`cache`, function() {
 
         return { rs: [r1, r2, r3, r4, r5], n, errs }
     }
-    it(`should rethrow and not cache failures when cacheError=false when run test9'`, async function() {
+    it(`should rethrow and not cache failures when useCacheError=false when run test9'`, async function() {
         let r = await test9()
         assert.strict.deepStrictEqual(r, { rs: ['err:down1', 'err:down1', 'err:down2', 'ok:up3', 'ok:up3'], n: 3, errs: ['fun:down1', 'fun:down2'] })
     })
