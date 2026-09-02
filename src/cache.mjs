@@ -2,6 +2,7 @@ import loGet from 'lodash-es/get.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'
+import isbol from './isbol.mjs'
 import haskey from './haskey.mjs'
 import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
@@ -13,7 +14,7 @@ import cint from './cint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、cacheError為函數執行失敗時是否快取，預設true，失敗時快取值為undefined並保留整個timeExpired，若設定false則失敗不快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get重新執行。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，於函數執行中呼叫時以update之值為準，不被執行結果覆寫。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設
+ * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、cacheError為函數執行失敗時是否快取，預設true，失敗時快取值為undefined並保留整個timeExpired，若設定false則失敗不快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get重新執行、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，於函數執行中呼叫時以update之值為準，不被執行結果覆寫。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設
  * @example
  *
  * async function topAsync() {
@@ -415,6 +416,41 @@ import cint from './cint.mjs'
  *     // test6
  *     // {"rs":["err:down1","err:down1","err:down2","ok:up3","ok:up3"],"n":3,"errs":["fun:down1","fun:down2"]}
  *
+ *     async function test7() {
+ *         //useCloneDeep: 預設true回傳複製值, 呼叫端修改不影響快取; 設false則直接回傳快取內之值(為同一參照), 可省去大量數據之複製開銷, 但呼叫端須自行確保不修改
+ *         let oc = cache()
+ *
+ *         let fun = async () => {
+ *             return { a: 1 }
+ *         }
+ *
+ *         //預設true
+ *         oc.set('clone', { fun, inputs: [], timeExpired: 30000 })
+ *         let v1 = await oc.get('clone')
+ *         v1.a = 2 //修改所取得之值
+ *         let v2 = await oc.get('clone') //快取未受影響
+ *
+ *         //get傳入useCloneDeep=false
+ *         oc.set('noclone', { fun, inputs: [], timeExpired: 30000 })
+ *         let v3 = await oc.get('noclone', { useCloneDeep: false })
+ *         let v4 = await oc.get('noclone', { useCloneDeep: false })
+ *
+ *         //set時設定useCloneDeep=false, get未指定則沿用set之設定
+ *         oc.set('setnoclone', { fun, inputs: [], timeExpired: 30000, useCloneDeep: false })
+ *         let v5 = await oc.get('setnoclone')
+ *         let v6 = await oc.get('setnoclone')
+ *
+ *         //get之設定可覆寫set之設定
+ *         let v7 = await oc.get('setnoclone', { useCloneDeep: true })
+ *
+ *         return { v2, sameNoclone: v3 === v4, sameSetnoclone: v5 === v6, sameOverride: v5 === v7 }
+ *     }
+ *     console.log('test7')
+ *     let r7 = await test7()
+ *     console.log(JSON.stringify(r7))
+ *     // test7
+ *     // {"v2":{"a":1},"sameNoclone":true,"sameSetnoclone":true,"sameOverride":false}
+ *
  * }
  * topAsync().catch(() => {})
  *
@@ -469,6 +505,12 @@ function cache() {
             cacheError = true
         }
 
+        //useCloneDeep
+        let useCloneDeep = loGet(opt, 'useCloneDeep')
+        if (!isbol(useCloneDeep)) {
+            useCloneDeep = true
+        }
+
         //save
         data[key] = {
             needExec: true,
@@ -481,20 +523,27 @@ function cache() {
             timeExpired,
             timeFrom,
             cacheError,
+            useCloneDeep,
         }
-        emit('message', { fun: 'set', key, timeExpired, timeFrom, cacheError })
+        emit('message', { fun: 'set', key, timeExpired, timeFrom, cacheError, useCloneDeep })
 
     }
 
-    async function get(key) {
+    async function get(key, opt = {}) {
         if (haskey(data, key)) {
             let d = data[key] //取物件參照, 執行中若遭remove仍可正常收尾
+
+            //useCloneDeep, 未指定時沿用set時之設定
+            let useCloneDeep = loGet(opt, 'useCloneDeep')
+            if (!isbol(useCloneDeep)) {
+                useCloneDeep = d.useCloneDeep
+            }
 
             //若執行中則共用執行中之promise, 待其執行完畢即一併取得結果, 不輪詢
             if (d.pm) {
                 emit('message', { fun: 'get', key, msg: 'waiting' })
                 await d.pm
-                return cloneDeep(d.value)
+                return (useCloneDeep) ? cloneDeep(d.value) : d.value
             }
 
             //t
@@ -550,7 +599,7 @@ function cache() {
                 emit('message', { fun: 'get', key, msg: 'use cache' })
             }
 
-            return cloneDeep(d.value) //若為物件可能受外部調用而被修改到快取區的記憶體, 故得要用cloneDeep複製才回傳
+            return (useCloneDeep) ? cloneDeep(d.value) : d.value //若為物件可能受外部調用而被修改到快取區的記憶體, 故預設得用cloneDeep複製才回傳, 而useCloneDeep為false時直接回傳快取內之值, 由呼叫端自行確保不修改
         }
         else {
             emit('error', { fun: 'get', key, msg: 'invalid key' })
@@ -560,7 +609,7 @@ function cache() {
 
     async function getProxy(key, opt = {}) {
         set(key, opt)
-        return get(key)
+        return get(key, opt) //opt一併傳給get, 使useCloneDeep等取值設定於getProxy亦可生效
     }
 
     function update(key, value) {

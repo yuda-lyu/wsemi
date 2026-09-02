@@ -568,4 +568,75 @@ describe(`cache`, function() {
         assert.strict.deepStrictEqual(r, { rs: ['err:down1', 'err:down1', 'err:down2', 'ok:up3', 'ok:up3'], n: 3, errs: ['fun:down1', 'fun:down2'] })
     })
 
+    async function test10() {
+        //useCloneDeep: 預設true回傳複製值, 設false則直接回傳快取內之值(同一參照); set可設定該key之預設, get可覆寫該次呼叫; 取快取與等待執行中之promise兩條取值路徑皆須遵守
+        let oc = cache()
+
+        let fun = () => {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    resolve({ a: 1 })
+                }, 100)
+            })
+        }
+
+        //預設true: 修改所取得之值不影響快取
+        oc.set('def', { fun, inputs: [], timeExpired: 30000 })
+        let d1 = await oc.get('def')
+        d1.a = 2
+        let d2 = await oc.get('def')
+        let defIsolated = (d2.a === 1) && (d1 !== d2)
+
+        //get傳入false: 取快取路徑為同一參照
+        oc.set('getFalse', { fun, inputs: [], timeExpired: 30000 })
+        await oc.get('getFalse') //先執行取值使其有快取
+        let g1 = await oc.get('getFalse', { useCloneDeep: false })
+        let g2 = await oc.get('getFalse', { useCloneDeep: false })
+        let getFalseSame = (g1 === g2)
+
+        //set設定false, get未指定則沿用
+        oc.set('setFalse', { fun, inputs: [], timeExpired: 30000, useCloneDeep: false })
+        await oc.get('setFalse')
+        let s1 = await oc.get('setFalse')
+        let s2 = await oc.get('setFalse')
+        let setFalseSame = (s1 === s2)
+
+        //get之設定可覆寫set之設定
+        let s3 = await oc.get('setFalse', { useCloneDeep: true })
+        let overrideCloned = (s1 !== s3) && (s3.a === 1)
+
+        //get傳入無效值則沿用set之設定
+        let s4 = await oc.get('setFalse', { useCloneDeep: 'abc' })
+        let invalidUseSet = (s1 === s4)
+
+        //等待執行中之promise路徑(第2處cloneDeep): 預設true時各呼叫者所得為各自複製值
+        oc.set('waitTrue', { fun, inputs: [], timeExpired: 30000 })
+        let pmT1 = oc.get('waitTrue')
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        let pmT2 = oc.get('waitTrue')
+        let w1 = await pmT1
+        let w2 = await pmT2
+        let waitTrueIsolated = (w1 !== w2) && (w1.a === 1) && (w2.a === 1)
+
+        //等待執行中之promise路徑: useCloneDeep為false時所得為同一參照
+        oc.set('waitFalse', { fun, inputs: [], timeExpired: 30000, useCloneDeep: false })
+        let pmF1 = oc.get('waitFalse')
+        await new Promise((resolve) => setTimeout(resolve, 10))
+        let pmF2 = oc.get('waitFalse', { useCloneDeep: false })
+        let f1 = await pmF1
+        let f2 = await pmF2
+        let waitFalseSame = (f1 === f2)
+
+        //getProxy會將opt一併傳給get, 故useCloneDeep於getProxy亦生效
+        let p1 = await oc.getProxy('proxy', { fun, inputs: [], timeExpired: 30000, useCloneDeep: false })
+        let p2 = await oc.getProxy('proxy', { fun, inputs: [], timeExpired: 30000, useCloneDeep: false })
+        let proxySame = (p1 === p2)
+
+        return { defIsolated, getFalseSame, setFalseSame, overrideCloned, invalidUseSet, waitTrueIsolated, waitFalseSame, proxySame }
+    }
+    it(`should clone returned value only when useCloneDeep is true when run test10'`, async function() {
+        let r = await test10()
+        assert.strict.deepStrictEqual(r, { defIsolated: true, getFalseSame: true, setFalseSame: true, overrideCloned: true, invalidUseSet: true, waitTrueIsolated: true, waitFalseSame: true, proxySame: true })
+    })
+
 })

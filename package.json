@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.81",
+  "version": "1.8.82",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "@zumer/snapdom": "^2.24.15",
