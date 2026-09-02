@@ -61,7 +61,7 @@ import cint from './cint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheError為函數執行失敗時是否快取，預設true，失敗時快取值為undefined並保留整個timeExpired，若設定false則失敗不快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get重新執行、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，於函數執行中呼叫時以update之值為準，不被執行結果覆寫。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設
+ * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheWhenError為函數執行失敗時是否仍寫入快取，預設false，失敗不寫入快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get會重新執行，故呼叫端需自行catch，若設定true則失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired，呼叫端不會收到錯誤而是取得undefined、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，於函數執行中呼叫時以update之值為準，不被執行結果覆寫。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設
  * @example
  *
  * async function topAsync() {
@@ -102,6 +102,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 1st', msg)
  *                         ms.push('fun 1st', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 1st error', err)
+ *                         ms.push('fun 1st error', String(err))
+ *                     })
  *             }, 1)
  *             setTimeout(function() {
  *                 //第2次呼叫(50ms), 此時第1次呼叫還沒完成(要到300ms), 故get會共用執行中的promise等待, 於第1次執行完畢(300ms)時一併取得第1次結果(count=1)
@@ -109,6 +113,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 2nd', msg)
  *                         ms.push('fun 2nd', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 2nd error', err)
+ *                         ms.push('fun 2nd error', String(err))
  *                     })
  *             }, 50)
  *             setTimeout(function() {
@@ -118,6 +126,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 3rd', msg)
  *                         ms.push('fun 3rd', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 3rd error', err)
+ *                         ms.push('fun 3rd error', String(err))
+ *                     })
  *             }, 250)
  *             setTimeout(function() {
  *                 //第4次呼叫(500ms), 此時第1次呼叫已結束(300ms), 且第1次快取(count=1)未過期(要到1200ms), 故get可拿到第1次計算的快取(count=1)
@@ -125,6 +137,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 4th', msg)
  *                         ms.push('fun 4th', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 4th error', err)
+ *                         ms.push('fun 4th error', String(err))
  *                     })
  *             }, 500)
  *             setTimeout(function() {
@@ -134,6 +150,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 5th', msg)
  *                         ms.push('fun 5th', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 5th error', err)
+ *                         ms.push('fun 5th error', String(err))
+ *                     })
  *             }, 1300)
  *             setTimeout(function() {
  *                 //第6次呼叫(1600ms), 此時第2次執行剛好結束(1600ms), 若尚未結束則共用執行中的promise等待, 若已結束則直接拿快取, 皆會取得第2次結果(count=2)
@@ -141,6 +161,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 6th', msg)
  *                         ms.push('fun 6th', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 6th error', err)
+ *                         ms.push('fun 6th error', String(err))
  *                     })
  *             }, 1600)
  *
@@ -192,13 +216,22 @@ import cint from './cint.mjs'
  *                 })
  *             }
  *
- *             oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 }) //首次getProxy即註冊並執行取值(0~300ms), 快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+ *             //首次getProxy即註冊並執行取值(0~300ms), 快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+ *             //因useCacheWhenError預設false, 函數執行失敗時get與getProxy會reject, 故此種不取值之呼叫仍須接catch, 否則會產生unhandled rejection
+ *             oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
+ *                 .catch(function(err) {
+ *                     console.log('getProxy error', err)
+ *                 })
  *             setTimeout(function() {
  *                 //第1次呼叫(1ms), 此時首次getProxy執行中, 會共用執行中的promise等待, 於300ms取得第1次結果(count=1)
  *                 oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
  *                     .then(function(msg) {
  *                         console.log('fun 1st', msg)
  *                         ms.push('fun 1st', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 1st error', err)
+ *                         ms.push('fun 1st error', String(err))
  *                     })
  *             }, 1)
  *             setTimeout(function() {
@@ -208,6 +241,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 2nd', msg)
  *                         ms.push('fun 2nd', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 2nd error', err)
+ *                         ms.push('fun 2nd error', String(err))
+ *                     })
  *             }, 100)
  *             setTimeout(function() {
  *                 //第3次呼叫(500ms), 此時已有快取, 直接取得第1次結果(count=1)
@@ -216,6 +253,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 3rd', msg)
  *                         ms.push('fun 3rd', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 3rd error', err)
+ *                         ms.push('fun 3rd error', String(err))
+ *                     })
  *             }, 500)
  *             setTimeout(function() {
  *                 //第4次呼叫(1300ms), 此時第1次快取(count=1)已失效(1200ms), 會重新呼叫函數取值(1300~1600ms), 取得第2次結果(count=2)
@@ -223,6 +264,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 4th', msg)
  *                         ms.push('fun 4th', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 4th error', err)
+ *                         ms.push('fun 4th error', String(err))
  *                     })
  *             }, 1300)
  *
@@ -272,13 +317,22 @@ import cint from './cint.mjs'
  *                 })
  *             }
  *
- *             oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 }) //首次getProxy即註冊並執行取值(0~300ms), 快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留1200ms
+ *             //首次getProxy即註冊並執行取值(0~300ms), 快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留1200ms
+ *             //因useCacheWhenError預設false, 函數執行失敗時get與getProxy會reject, 故此種不取值之呼叫仍須接catch, 否則會產生unhandled rejection
+ *             oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
+ *                 .catch(function(err) {
+ *                     console.log('getProxy error', err)
+ *                 })
  *             setTimeout(function() {
  *                 //第1次呼叫(延遲1ms), 此時首次getProxy執行中, 會共用執行中的promise等待, 於300ms取得第1次結果(count=1)
  *                 oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
  *                     .then(function(msg) {
  *                         console.log('fun 1st', msg)
  *                         ms.push('fun 1st', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 1st error', err)
+ *                         ms.push('fun 1st error', String(err))
  *                     })
  *             }, 1)
  *             setTimeout(function() {
@@ -288,6 +342,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 2nd', msg)
  *                         ms.push('fun 2nd', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 2nd error', err)
+ *                         ms.push('fun 2nd error', String(err))
+ *                     })
  *             }, 200)
  *             setTimeout(function() {
  *                 //第3次呼叫(500ms), 此時已有快取, 直接取得第1次結果(count=1)
@@ -295,6 +353,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 3rd', msg)
  *                         ms.push('fun 3rd', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 3rd error', err)
+ *                         ms.push('fun 3rd error', String(err))
  *                     })
  *             }, 500)
  *             setTimeout(function() {
@@ -310,6 +372,10 @@ import cint from './cint.mjs'
  *                         console.log('fun 4th', msg)
  *                         ms.push('fun 4th', msg)
  *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 4th error', err)
+ *                         ms.push('fun 4th error', String(err))
+ *                     })
  *             }, 1300)
  *             setTimeout(function() {
  *                 //第5次呼叫(延遲2700ms), 此時被強制更新之快取值(abc)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
@@ -317,6 +383,10 @@ import cint from './cint.mjs'
  *                     .then(function(msg) {
  *                         console.log('fun 5th', msg)
  *                         ms.push('fun 5th', msg)
+ *                     })
+ *                     .catch(function(err) {
+ *                         console.log('fun 5th error', err)
+ *                         ms.push('fun 5th error', String(err))
  *                     })
  *             }, 2700)
  *
@@ -414,7 +484,7 @@ import cint from './cint.mjs'
  *     // {"v1":"count=1","v2":"count=2","v3":"count=1","v4":"count=1"}
  *
  *     async function test6() {
- *         //useCacheError: 預設true失敗快取undefined; false時失敗不快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行, error事件仍發出
+ *         //useCacheWhenError: 預設false則失敗不寫入快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行; 設true則失敗仍寫入快取(值為undefined)並保留整個timeExpired, 呼叫端取得undefined而非收到錯誤; 兩者error事件皆發出
  *         let oc = cache()
  *
  *         let errs = []
@@ -437,7 +507,7 @@ import cint from './cint.mjs'
  *             })
  *         }
  *
- *         oc.set('fun', { fun, inputs: [], timeExpired: 30000, useCacheError: false })
+ *         oc.set('fun', { fun, inputs: [], timeExpired: 30000 }) //預設useCacheWhenError=false
  *
  *         //第1次執行失敗: 執行者與等待中之併發呼叫皆收到reject
  *         let pm1 = oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
@@ -446,22 +516,32 @@ import cint from './cint.mjs'
  *         let r1 = await pm1
  *         let r2 = await pm2
  *
- *         //第2次執行仍失敗(失敗不快取故重新執行)
+ *         //第2次執行仍失敗(失敗不寫入快取故重新執行)
  *         let r3 = await oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
  *
  *         //第3次執行成功並快取
  *         let r4 = await oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
  *         let r5 = await oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
  *
+ *         //useCacheWhenError=true時, 失敗不拋錯而是取得undefined, 且快取整個timeExpired故不重新執行
+ *         let m = 0
+ *         let funErr = async () => {
+ *             m++
+ *             throw new Error('always down')
+ *         }
+ *         oc.set('funErr', { fun: funErr, inputs: [], timeExpired: 30000, useCacheWhenError: true })
+ *         let c1 = await oc.get('funErr').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
+ *         let c2 = await oc.get('funErr').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
+ *
  *         await new Promise((resolve) => setTimeout(resolve, 50)) //error事件以timer脫勾發送, 稍待
  *
- *         return { rs: [r1, r2, r3, r4, r5], n, errs }
+ *         return { rs: [r1, r2, r3, r4, r5], n, cs: [c1, c2], m, errs }
  *     }
  *     console.log('test6')
  *     let r6 = await test6()
  *     console.log(JSON.stringify(r6))
  *     // test6
- *     // {"rs":["err:down1","err:down1","err:down2","ok:up3","ok:up3"],"n":3,"errs":["fun:down1","fun:down2"]}
+ *     // {"rs":["err:down1","err:down1","err:down2","ok:up3","ok:up3"],"n":3,"cs":["ok:undefined","ok:undefined"],"m":1,"errs":["fun:down1","fun:down2","funErr:always down"]}
  *
  *     async function test7() {
  *         //useCloneDeep: 預設true回傳複製值, 呼叫端修改不影響快取; 設false則直接回傳快取內之值(為同一參照), 可省去大量數據之複製開銷, 但呼叫端須自行確保不修改
@@ -546,10 +626,10 @@ function cache() {
             timeFrom = 'start'
         }
 
-        //useCacheError
-        let useCacheError = loGet(opt, 'useCacheError')
-        if (!isbol(useCacheError)) {
-            useCacheError = true
+        //useCacheWhenError
+        let useCacheWhenError = loGet(opt, 'useCacheWhenError')
+        if (!isbol(useCacheWhenError)) {
+            useCacheWhenError = false
         }
 
         //useCloneDeep
@@ -569,10 +649,10 @@ function cache() {
             time: null,
             timeExpired,
             timeFrom,
-            useCacheError,
+            useCacheWhenError,
             useCloneDeep,
         }
-        emit('message', { fun: 'set', key, timeExpired, timeFrom, useCacheError, useCloneDeep })
+        emit('message', { fun: 'set', key, timeExpired, timeFrom, useCacheWhenError, useCloneDeep })
 
     }
 
@@ -625,14 +705,14 @@ function cache() {
                         }
                         catch (err) {
                             emit('error', { fun: 'get', key, msg: err })
-                            if (!d.useCacheError) {
-                                //失敗不快取: 值與時間不動, 下次get重新執行, 錯誤拋給執行者與等待中之併發呼叫
+                            if (!d.useCacheWhenError) {
+                                //失敗不寫入快取: 值與時間不動, 下次get重新執行, 錯誤拋給執行者與等待中之併發呼叫
                                 if (d.gen === gen) {
                                     d.needExec = true
                                 }
                                 throw err
                             }
-                            v = undefined //失敗快取: 值為undefined並保留整個timeExpired
+                            v = undefined //失敗仍寫入快取: 值為undefined並保留整個timeExpired
                         }
                         if (d.gen === gen) {
                             d.value = v
@@ -719,7 +799,7 @@ export default cache
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 02 2026 15:53:18 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 02 2026 16:53:07 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

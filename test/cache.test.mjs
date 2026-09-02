@@ -40,6 +40,9 @@ describe(`cache`, function() {
                         // console.log('fun 1st', msg)
                         ms.push('fun 1st', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 1st error', String(err))
+                    })
             }, 1)
             setTimeout(function() {
                 //第2次呼叫(50ms), 此時第1次呼叫還沒完成(要到300ms), 故get會共用執行中的promise等待, 於第1次執行完畢(300ms)時一併取得第1次結果(count=1)
@@ -47,6 +50,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 2nd', msg)
                         ms.push('fun 2nd', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 2nd error', String(err))
                     })
             }, 50)
             setTimeout(function() {
@@ -56,6 +62,9 @@ describe(`cache`, function() {
                         // console.log('fun 3rd', msg)
                         ms.push('fun 3rd', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 3rd error', String(err))
+                    })
             }, 250)
             setTimeout(function() {
                 //第4次呼叫(500ms), 此時第1次呼叫已結束(300ms), 且第1次快取(count=1)未過期(要到1200ms), 故get可拿到第1次計算的快取(count=1)
@@ -63,6 +72,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 4th', msg)
                         ms.push('fun 4th', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 4th error', String(err))
                     })
             }, 500)
             setTimeout(function() {
@@ -72,6 +84,9 @@ describe(`cache`, function() {
                         // console.log('fun 5th', msg)
                         ms.push('fun 5th', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 5th error', String(err))
+                    })
             }, 1300)
             setTimeout(function() {
                 //第6次呼叫(1600ms), 此時第2次執行剛好結束(1600ms), 若尚未結束則共用執行中的promise等待, 若已結束則直接拿快取, 皆會取得第2次結果(count=2)
@@ -79,6 +94,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 6th', msg)
                         ms.push('fun 6th', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 6th error', String(err))
                     })
             }, 1600)
 
@@ -134,13 +152,21 @@ describe(`cache`, function() {
                 })
             }
 
-            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 }) //首次getProxy即註冊並執行取值(0~300ms), 快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            //首次getProxy即註冊並執行取值(0~300ms), 快取1200ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留800ms
+            //因useCacheWhenError預設false, 函數執行失敗時get與getProxy會reject, 故此種不取值之呼叫仍須接catch, 否則會產生unhandled rejection
+            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
+                .catch(function(err) {
+                    ms.push('getProxy error', String(err))
+                })
             setTimeout(function() {
                 //第1次呼叫(1ms), 此時首次getProxy執行中, 會共用執行中的promise等待, 於300ms取得第1次結果(count=1)
                 oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1200 })
                     .then(function(msg) {
                         // console.log('fun 1st', msg)
                         ms.push('fun 1st', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 1st error', String(err))
                     })
             }, 1)
             setTimeout(function() {
@@ -150,6 +176,9 @@ describe(`cache`, function() {
                         // console.log('fun 2nd', msg)
                         ms.push('fun 2nd', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 2nd error', String(err))
+                    })
             }, 100)
             setTimeout(function() {
                 //第3次呼叫(500ms), 此時已有快取, 直接取得第1次結果(count=1)
@@ -158,6 +187,9 @@ describe(`cache`, function() {
                         // console.log('fun 3rd', msg)
                         ms.push('fun 3rd', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 3rd error', String(err))
+                    })
             }, 500)
             setTimeout(function() {
                 //第4次呼叫(1300ms), 此時第1次快取(count=1)已失效(1200ms), 會重新呼叫函數取值(1300~1600ms), 取得第2次結果(count=2)
@@ -165,6 +197,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 4th', msg)
                         ms.push('fun 4th', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 4th error', String(err))
                     })
             }, 1300)
 
@@ -218,13 +253,21 @@ describe(`cache`, function() {
                 })
             }
 
-            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 }) //首次getProxy即註冊並執行取值(0~300ms), 快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留1200ms
+            //首次getProxy即註冊並執行取值(0~300ms), 快取1500ms, 但第1次執行就需要300ms, 故執行完畢後只會再保留1200ms
+            //因useCacheWhenError預設false, 函數執行失敗時get與getProxy會reject, 故此種不取值之呼叫仍須接catch, 否則會產生unhandled rejection
+            oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
+                .catch(function(err) {
+                    ms.push('getProxy error', String(err))
+                })
             setTimeout(function() {
                 //第1次呼叫(延遲1ms), 此時首次getProxy執行中, 會共用執行中的promise等待, 於300ms取得第1次結果(count=1)
                 oc.getProxy('fun', { fun, inputs: ['inp1', 'inp2'], timeExpired: 1500 })
                     .then(function(msg) {
                         // console.log('fun 1st', msg)
                         ms.push('fun 1st', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 1st error', String(err))
                     })
             }, 1)
             setTimeout(function() {
@@ -234,6 +277,9 @@ describe(`cache`, function() {
                         // console.log('fun 2nd', msg)
                         ms.push('fun 2nd', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 2nd error', String(err))
+                    })
             }, 200)
             setTimeout(function() {
                 //第3次呼叫(延遲500ms), 此時已有快取, 直接取得第1次結果(count=1)
@@ -241,6 +287,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 3rd', msg)
                         ms.push('fun 3rd', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 3rd error', String(err))
                     })
             }, 500)
             setTimeout(function() {
@@ -256,6 +305,9 @@ describe(`cache`, function() {
                         // console.log('fun 4th', msg)
                         ms.push('fun 4th', msg)
                     })
+                    .catch(function(err) {
+                        ms.push('fun 4th error', String(err))
+                    })
             }, 1300)
             setTimeout(function() {
                 //第5次呼叫(延遲2700ms), 此時被強制更新之快取值(abc)已失效, 會重新呼叫函數取值, 取得第2次結果(count=2)
@@ -263,6 +315,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         // console.log('fun 5th', msg)
                         ms.push('fun 5th', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 5th error', String(err))
                     })
             }, 2700)
 
@@ -317,9 +372,15 @@ describe(`cache`, function() {
                 .then(function(msg) {
                     ms.push('fun 1st', msg)
                 })
+                .catch(function(err) {
+                    ms.push('fun 1st error', String(err))
+                })
             oc.get('fun')
                 .then(function(msg) {
                     ms.push('fun 2nd', msg)
+                })
+                .catch(function(err) {
+                    ms.push('fun 2nd error', String(err))
                 })
             setTimeout(function() {
                 //第3次呼叫(100ms), 此時執行中, 共用執行中的promise, 於300ms時回應
@@ -327,6 +388,9 @@ describe(`cache`, function() {
                     .then(function(msg) {
                         dt3 = Date.now() - t0
                         ms.push('fun 3rd', msg)
+                    })
+                    .catch(function(err) {
+                        ms.push('fun 3rd error', String(err))
                     })
             }, 100)
 
@@ -344,7 +408,7 @@ describe(`cache`, function() {
     })
 
     async function test5() {
-        //fun失敗型態: 同步拋錯, reject, 回傳非promise; 皆不可使key卡死, 失敗時值為undefined並發出error事件, 之後clear可重新執行
+        //fun失敗型態: 同步拋錯, reject, 回傳非promise; 皆不可使key卡死; 此處以useCacheWhenError=true測失敗仍寫入快取之路徑(失敗時值為undefined並發出error事件), 之後clear可重新執行; 預設之失敗不寫入快取路徑見test9
         let oc = cache()
 
         let errs = []
@@ -359,6 +423,7 @@ describe(`cache`, function() {
             },
             inputs: [],
             timeExpired: 30000,
+            useCacheWhenError: true,
         })
         let v1 = await oc.get('throw') //失敗, undefined
         let v2 = await oc.get('throw') //快取中之undefined, 不卡死不重跑
@@ -370,6 +435,7 @@ describe(`cache`, function() {
             },
             inputs: [],
             timeExpired: 30000,
+            useCacheWhenError: true,
         })
         let v3 = await oc.get('reject')
         let v4 = await oc.get('reject')
@@ -395,6 +461,7 @@ describe(`cache`, function() {
             },
             inputs: [],
             timeExpired: 30000,
+            useCacheWhenError: true,
         })
         let v7 = await oc.get('recover')
         oc.clear('recover')
@@ -404,7 +471,7 @@ describe(`cache`, function() {
 
         return { vs: [v1, v2, v3, v4, v5, v6, v7, v8], n, errs }
     }
-    it(`should return undefined on failures without sticking when run test5'`, async function() {
+    it(`should return undefined on failures without sticking when useCacheWhenError=true when run test5'`, async function() {
         let r = await test5()
         assert.strict.deepStrictEqual(r.vs, [undefined, undefined, undefined, undefined, 3, 3, undefined, 'up'])
         assert.strict.deepStrictEqual(r.n, 2)
@@ -520,7 +587,7 @@ describe(`cache`, function() {
     })
 
     async function test9() {
-        //useCacheError: 預設true失敗快取undefined(見test5); false時失敗不快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行, error事件仍發出
+        //useCacheWhenError: 預設false則失敗不寫入快取, 錯誤拋給執行者與等待中之併發呼叫, 下次get重新執行, error事件仍發出; 設true則失敗仍寫入快取見test5; 此處不傳useCacheWhenError以驗證其預設為false
         let oc = cache()
 
         let errs = []
@@ -543,7 +610,7 @@ describe(`cache`, function() {
             })
         }
 
-        oc.set('fun', { fun, inputs: [], timeExpired: 30000, useCacheError: false })
+        oc.set('fun', { fun, inputs: [], timeExpired: 30000 }) //不傳useCacheWhenError, 預設為false
 
         //第1次執行失敗: 執行者與等待中之併發呼叫皆收到reject
         let pm1 = oc.get('fun').then((v) => 'ok:' + v).catch((e) => 'err:' + e.message)
@@ -563,7 +630,7 @@ describe(`cache`, function() {
 
         return { rs: [r1, r2, r3, r4, r5], n, errs }
     }
-    it(`should rethrow and not cache failures when useCacheError=false when run test9'`, async function() {
+    it(`should rethrow and not cache failures by default (useCacheWhenError=false) when run test9'`, async function() {
         let r = await test9()
         assert.strict.deepStrictEqual(r, { rs: ['err:down1', 'err:down1', 'err:down2', 'ok:up3', 'ok:up3'], n: 3, errs: ['fun:down1', 'fun:down2'] })
     })
