@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>execCliSession.mjs - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav >
+    
+    
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="wsemi.html">wsemi</a><ul class='methods'><li data-type='method'><a href="wsemi.html#.ab2blob">ab2blob</a></li><li data-type='method'><a href="wsemi.html#.ab2u8arr">ab2u8arr</a></li><li data-type='method'><a href="wsemi.html#.addExcelWorksheetFromData">addExcelWorksheetFromData</a></li><li data-type='method'><a href="wsemi.html#.addMonth">addMonth</a></li><li data-type='method'><a href="wsemi.html#.aes2str">aes2str</a></li><li data-type='method'><a href="wsemi.html#.alive">alive</a></li><li data-type='method'><a href="wsemi.html#.arr2dt">arr2dt</a></li><li data-type='method'><a href="wsemi.html#.arrAccum">arrAccum</a></li><li data-type='method'><a href="wsemi.html#.arrAdd">arrAdd</a></li><li data-type='method'><a href="wsemi.html#.arrAt">arrAt</a></li><li data-type='method'><a href="wsemi.html#.arrDiff">arrDiff</a></li><li data-type='method'><a href="wsemi.html#.arrFilterByKeywords">arrFilterByKeywords</a></li><li data-type='method'><a href="wsemi.html#.arrFilterByNum">arrFilterByNum</a></li><li data-type='method'><a href="wsemi.html#.arrFilterByPnum">arrFilterByPnum</a></li><li data-type='method'><a href="wsemi.html#.arrFilterByPnumAndToLog">arrFilterByPnumAndToLog</a></li><li data-type='method'><a href="wsemi.html#.arrFind">arrFind</a></li><li data-type='method'><a href="wsemi.html#.arrGroupByMaxmin">arrGroupByMaxmin</a></li><li data-type='method'><a href="wsemi.html#.arrHas">arrHas</a></li><li data-type='method'><a href="wsemi.html#.arrInsert">arrInsert</a></li><li data-type='method'><a href="wsemi.html#.arrLookupByMaxmin">arrLookupByMaxmin</a></li><li data-type='method'><a href="wsemi.html#.arrMax">arrMax</a></li><li data-type='method'><a href="wsemi.html#.arrMin">arrMin</a></li><li data-type='method'><a href="wsemi.html#.arrMulti">arrMulti</a></li><li data-type='method'><a href="wsemi.html#.arrNorm">arrNorm</a></li><li data-type='method'><a href="wsemi.html#.arrProduct">arrProduct</a></li><li data-type='method'><a href="wsemi.html#.arrPull">arrPull</a></li><li data-type='method'><a href="wsemi.html#.arrPullAt">arrPullAt</a></li><li data-type='method'><a href="wsemi.html#.arrReduce">arrReduce</a></li><li data-type='method'><a href="wsemi.html#.arrReverse">arrReverse</a></li><li data-type='method'><a href="wsemi.html#.arrSep">arrSep</a></li><li data-type='method'><a href="wsemi.html#.arrSort">arrSort</a></li><li data-type='method'><a href="wsemi.html#.asind">asind</a></li><li data-type='method'><a href="wsemi.html#.atan2d">atan2d</a></li><li data-type='method'><a href="wsemi.html#.atand">atand</a></li><li data-type='method'><a href="wsemi.html#.attstr">attstr</a></li><li data-type='method'><a href="wsemi.html#.b642obj">b642obj</a></li><li data-type='method'><a href="wsemi.html#.b642str">b642str</a></li><li data-type='method'><a href="wsemi.html#.b642u16arr">b642u16arr</a></li><li data-type='method'><a href="wsemi.html#.b642u8arr">b642u8arr</a></li><li data-type='method'><a href="wsemi.html#.binstr">binstr</a></li><li data-type='method'><a href="wsemi.html#.blob2ab">blob2ab</a></li><li data-type='method'><a href="wsemi.html#.blob2b64">blob2b64</a></li><li data-type='method'><a href="wsemi.html#.blob2str">blob2str</a></li><li data-type='method'><a href="wsemi.html#.blob2u8arr">blob2u8arr</a></li><li data-type='method'><a href="wsemi.html#.blobs2b64s">blobs2b64s</a></li><li data-type='method'><a href="wsemi.html#.blobs2u8arrs">blobs2u8arrs</a></li><li data-type='method'><a href="wsemi.html#.bodyLog">bodyLog</a></li><li data-type='method'><a href="wsemi.html#.browserView">browserView</a></li><li data-type='method'><a href="wsemi.html#.browserViewFromBlob">browserViewFromBlob</a></li><li data-type='method'><a href="wsemi.html#.browserViewFromText">browserViewFromText</a></li><li data-type='method'><a href="wsemi.html#.browserViewFromU8arr">browserViewFromU8arr</a></li><li data-type='method'><a href="wsemi.html#.bs2u8arr">bs2u8arr</a></li><li data-type='method'><a href="wsemi.html#.bufRead">bufRead</a></li><li data-type='method'><a href="wsemi.html#.bufReadDbl">bufReadDbl</a></li><li data-type='method'><a href="wsemi.html#.bufWrite">bufWrite</a></li><li data-type='method'><a href="wsemi.html#.bufWriteDbl">bufWriteDbl</a></li><li data-type='method'><a href="wsemi.html#.cache">cache</a></li><li data-type='method'><a href="wsemi.html#.cacheBd">cacheBd</a></li><li data-type='method'><a href="wsemi.html#.cacheSt">cacheSt</a></li><li data-type='method'><a href="wsemi.html#.cbol">cbol</a></li><li data-type='method'><a href="wsemi.html#.cdbl">cdbl</a></li><li data-type='method'><a href="wsemi.html#.ceil">ceil</a></li><li data-type='method'><a href="wsemi.html#.cfilesize">cfilesize</a></li><li data-type='method'><a href="wsemi.html#.cfinancial">cfinancial</a></li><li data-type='method'><a href="wsemi.html#.cint">cint</a></li><li data-type='method'><a href="wsemi.html#.clearXSS">clearXSS</a></li><li data-type='method'><a href="wsemi.html#.clearXSSDyn">clearXSSDyn</a></li><li data-type='method'><a href="wsemi.html#.color">color</a></li><li data-type='method'><a href="wsemi.html#.composeToTree">composeToTree</a></li><li data-type='method'><a href="wsemi.html#.convertToTree">convertToTree</a></li><li data-type='method'><a href="wsemi.html#.copyStrToClipboard">copyStrToClipboard</a></li><li data-type='method'><a href="wsemi.html#.cosd">cosd</a></li><li data-type='method'><a href="wsemi.html#.cotd">cotd</a></li><li data-type='method'><a href="wsemi.html#.createExcelWorkbook">createExcelWorkbook</a></li><li data-type='method'><a href="wsemi.html#.cscd">cscd</a></li><li data-type='method'><a href="wsemi.html#.cstr">cstr</a></li><li data-type='method'><a href="wsemi.html#.day2cht">day2cht</a></li><li data-type='method'><a href="wsemi.html#.debounce">debounce</a></li><li data-type='method'><a href="wsemi.html#.delay">delay</a></li><li data-type='method'><a href="wsemi.html#.dig">dig</a></li><li data-type='method'><a href="wsemi.html#.digExp">digExp</a></li><li data-type='method'><a href="wsemi.html#.domAlert">domAlert</a></li><li data-type='method'><a href="wsemi.html#.domAppend">domAppend</a></li><li data-type='method'><a href="wsemi.html#.domCancelEvent">domCancelEvent</a></li><li data-type='method'><a href="wsemi.html#.domCompareText">domCompareText</a></li><li data-type='method'><a href="wsemi.html#.domConvertToPic">domConvertToPic</a></li><li data-type='method'><a href="wsemi.html#.domConvertToPicDyn">domConvertToPicDyn</a></li><li data-type='method'><a href="wsemi.html#.domDetect">domDetect</a></li><li data-type='method'><a href="wsemi.html#.domDrag">domDrag</a></li><li data-type='method'><a href="wsemi.html#.domDragBarAndScroll">domDragBarAndScroll</a></li><li data-type='method'><a href="wsemi.html#.domDragPreview">domDragPreview</a></li><li data-type='method'><a href="wsemi.html#.domDropFiles">domDropFiles</a></li><li data-type='method'><a href="wsemi.html#.domElementsFromPoint">domElementsFromPoint</a></li><li data-type='method'><a href="wsemi.html#.domFadeIn">domFadeIn</a></li><li data-type='method'><a href="wsemi.html#.domFadeOut">domFadeOut</a></li><li data-type='method'><a href="wsemi.html#.domFind">domFind</a></li><li data-type='method'><a href="wsemi.html#.domFinds">domFinds</a></li><li data-type='method'><a href="wsemi.html#.domGetAttr">domGetAttr</a></li><li data-type='method'><a href="wsemi.html#.domGetBoudRect">domGetBoudRect</a></li><li data-type='method'><a href="wsemi.html#.domGetBoudRectRefSelf">domGetBoudRectRefSelf</a></li><li data-type='method'><a href="wsemi.html#.domGetFileAccept">domGetFileAccept</a></li><li data-type='method'><a href="wsemi.html#.domGetFiles">domGetFiles</a></li><li data-type='method'><a href="wsemi.html#.domGetParents">domGetParents</a></li><li data-type='method'><a href="wsemi.html#.domGetPointFromEvent">domGetPointFromEvent</a></li><li data-type='method'><a href="wsemi.html#.domGetScrollableParent">domGetScrollableParent</a></li><li data-type='method'><a href="wsemi.html#.domGetWindowSize">domGetWindowSize</a></li><li data-type='method'><a href="wsemi.html#.domIsClientXYIn">domIsClientXYIn</a></li><li data-type='method'><a href="wsemi.html#.domIsFocused">domIsFocused</a></li><li data-type='method'><a href="wsemi.html#.domIsVisible">domIsVisible</a></li><li data-type='method'><a href="wsemi.html#.domPrepend">domPrepend</a></li><li data-type='method'><a href="wsemi.html#.domRemove">domRemove</a></li><li data-type='method'><a href="wsemi.html#.domRenderMarkdownMind">domRenderMarkdownMind</a></li><li data-type='method'><a href="wsemi.html#.domRenderMarkdownMindDyn">domRenderMarkdownMindDyn</a></li><li data-type='method'><a href="wsemi.html#.domRipple">domRipple</a></li><li data-type='method'><a href="wsemi.html#.domScrollIntoView">domScrollIntoView</a></li><li data-type='method'><a href="wsemi.html#.domScrollTo">domScrollTo</a></li><li data-type='method'><a href="wsemi.html#.domSetAttr">domSetAttr</a></li><li data-type='method'><a href="wsemi.html#.domShowImages">domShowImages</a></li><li data-type='method'><a href="wsemi.html#.domShowImagesDyn">domShowImagesDyn</a></li><li data-type='method'><a href="wsemi.html#.domShowInputAndGetFiles">domShowInputAndGetFiles</a></li><li data-type='method'><a href="wsemi.html#.domShowInputAndGetFilesU8Arrs">domShowInputAndGetFilesU8Arrs</a></li><li data-type='method'><a href="wsemi.html#.domShowInputDatatime">domShowInputDatatime</a></li><li data-type='method'><a href="wsemi.html#.domTooltip">domTooltip</a></li><li data-type='method'><a href="wsemi.html#.domTriggerEvent">domTriggerEvent</a></li><li data-type='method'><a href="wsemi.html#.domVirtualCreate">domVirtualCreate</a></li><li data-type='method'><a href="wsemi.html#.domVirtualCreateQueue">domVirtualCreateQueue</a></li><li data-type='method'><a href="wsemi.html#.downloadExcelFileFromData">downloadExcelFileFromData</a></li><li data-type='method'><a href="wsemi.html#.downloadExcelFileFromDataDyn">downloadExcelFileFromDataDyn</a></li><li data-type='method'><a href="wsemi.html#.downloadFileFromB64">downloadFileFromB64</a></li><li data-type='method'><a href="wsemi.html#.downloadFileFromBlob">downloadFileFromBlob</a></li><li data-type='method'><a href="wsemi.html#.downloadFileFromText">downloadFileFromText</a></li><li data-type='method'><a href="wsemi.html#.downloadFileFromU8Arr">downloadFileFromU8Arr</a></li><li data-type='method'><a href="wsemi.html#.dtmapping">dtmapping</a></li><li data-type='method'><a href="wsemi.html#.dtpick">dtpick</a></li><li data-type='method'><a href="wsemi.html#.estimateTicks">estimateTicks</a></li><li data-type='method'><a href="wsemi.html#.evem">evem</a></li><li data-type='method'><a href="wsemi.html#.execCli">execCli</a></li><li data-type='method'><a href="wsemi.html#.execCliJsonRpc">execCliJsonRpc</a></li><li data-type='method'><a href="wsemi.html#.execCliSession">execCliSession</a></li><li data-type='method'><a href="wsemi.html#.execJsCode">execJsCode</a></li><li data-type='method'><a href="wsemi.html#.execProcess">execProcess</a></li><li data-type='method'><a href="wsemi.html#.execProcessKillPid">execProcessKillPid</a></li><li data-type='method'><a href="wsemi.html#.filepathToTree">filepathToTree</a></li><li data-type='method'><a href="wsemi.html#.files2data">files2data</a></li><li data-type='method'><a href="wsemi.html#.flattenToConn">flattenToConn</a></li><li data-type='method'><a href="wsemi.html#.flattenTree">flattenTree</a></li><li data-type='method'><a href="wsemi.html#.floor">floor</a></li><li data-type='method'><a href="wsemi.html#.fsBuildReadStreamText">fsBuildReadStreamText</a></li><li data-type='method'><a href="wsemi.html#.fsBuildWriteStreamText">fsBuildWriteStreamText</a></li><li data-type='method'><a href="wsemi.html#.fsCleanFolder">fsCleanFolder</a></li><li data-type='method'><a href="wsemi.html#.fsCleanFolderCore">fsCleanFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsCopyFile">fsCopyFile</a></li><li data-type='method'><a href="wsemi.html#.fsCopyFileCore">fsCopyFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsCopyFolder">fsCopyFolder</a></li><li data-type='method'><a href="wsemi.html#.fsCopyFolderCore">fsCopyFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsCreateFile">fsCreateFile</a></li><li data-type='method'><a href="wsemi.html#.fsCreateFileCore">fsCreateFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsCreateFolder">fsCreateFolder</a></li><li data-type='method'><a href="wsemi.html#.fsCreateFolderCore">fsCreateFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFile">fsDeleteFile</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFileCore">fsDeleteFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFileSafe">fsDeleteFileSafe</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFileSafeCore">fsDeleteFileSafeCore</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFolder">fsDeleteFolder</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFolderCore">fsDeleteFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFolderSafe">fsDeleteFolderSafe</a></li><li data-type='method'><a href="wsemi.html#.fsDeleteFolderSafeCore">fsDeleteFolderSafeCore</a></li><li data-type='method'><a href="wsemi.html#.fsDownloadFile">fsDownloadFile</a></li><li data-type='method'><a href="wsemi.html#.fsDownloadFileCore">fsDownloadFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsEvem">fsEvem</a></li><li data-type='method'><a href="wsemi.html#.fsExists">fsExists</a></li><li data-type='method'><a href="wsemi.html#.fsExistsCore">fsExistsCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileBasicHash">fsGetFileBasicHash</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileBasicHashCore">fsGetFileBasicHashCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileHash">fsGetFileHash</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileHashCore">fsGetFileHashCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileXxHash">fsGetFileXxHash</a></li><li data-type='method'><a href="wsemi.html#.fsGetFileXxHashCore">fsGetFileXxHashCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFilesInFolder">fsGetFilesInFolder</a></li><li data-type='method'><a href="wsemi.html#.fsGetFilesInFolderCore">fsGetFilesInFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFilesWithHashInFolder">fsGetFilesWithHashInFolder</a></li><li data-type='method'><a href="wsemi.html#.fsGetFilesWithHashInFolderCore">fsGetFilesWithHashInFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFolderBasicHash">fsGetFolderBasicHash</a></li><li data-type='method'><a href="wsemi.html#.fsGetFolderBasicHashCore">fsGetFolderBasicHashCore</a></li><li data-type='method'><a href="wsemi.html#.fsGetFoldersInFolder">fsGetFoldersInFolder</a></li><li data-type='method'><a href="wsemi.html#.fsGetFoldersInFolderCore">fsGetFoldersInFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsIsFile">fsIsFile</a></li><li data-type='method'><a href="wsemi.html#.fsIsFileCore">fsIsFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsIsFolder">fsIsFolder</a></li><li data-type='method'><a href="wsemi.html#.fsIsFolderCore">fsIsFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsMergeFiles">fsMergeFiles</a></li><li data-type='method'><a href="wsemi.html#.fsMergeFilesCore">fsMergeFilesCore</a></li><li data-type='method'><a href="wsemi.html#.fsReadJson">fsReadJson</a></li><li data-type='method'><a href="wsemi.html#.fsReadText">fsReadText</a></li><li data-type='method'><a href="wsemi.html#.fsReadTextCore">fsReadTextCore</a></li><li data-type='method'><a href="wsemi.html#.fsRenameFile">fsRenameFile</a></li><li data-type='method'><a href="wsemi.html#.fsRenameFileCore">fsRenameFileCore</a></li><li data-type='method'><a href="wsemi.html#.fsRenameFolder">fsRenameFolder</a></li><li data-type='method'><a href="wsemi.html#.fsRenameFolderCore">fsRenameFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsSrlog">fsSrlog</a></li><li data-type='method'><a href="wsemi.html#.fsSyncFolder">fsSyncFolder</a></li><li data-type='method'><a href="wsemi.html#.fsSyncFolderCore">fsSyncFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsTask">fsTask</a></li><li data-type='method'><a href="wsemi.html#.fsTaskCp">fsTaskCp</a></li><li data-type='method'><a href="wsemi.html#.fsTreeFolder">fsTreeFolder</a></li><li data-type='method'><a href="wsemi.html#.fsTreeFolderCore">fsTreeFolderCore</a></li><li data-type='method'><a href="wsemi.html#.fsTreeFolderWithHash">fsTreeFolderWithHash</a></li><li data-type='method'><a href="wsemi.html#.fsTreeFolderWithHashCore">fsTreeFolderWithHashCore</a></li><li data-type='method'><a href="wsemi.html#.fsWatchFile">fsWatchFile</a></li><li data-type='method'><a href="wsemi.html#.fsWatchFolder">fsWatchFolder</a></li><li data-type='method'><a href="wsemi.html#.fsWriteJson">fsWriteJson</a></li><li data-type='method'><a href="wsemi.html#.fsWriteText">fsWriteText</a></li><li data-type='method'><a href="wsemi.html#.fsWriteTextCore">fsWriteTextCore</a></li><li data-type='method'><a href="wsemi.html#.genGradientColor">genGradientColor</a></li><li data-type='method'><a href="wsemi.html#.genID">genID</a></li><li data-type='method'><a href="wsemi.html#.genIDSeq">genIDSeq</a></li><li data-type='method'><a href="wsemi.html#.genPm">genPm</a></li><li data-type='method'><a href="wsemi.html#.getBufferSize">getBufferSize</a></li><li data-type='method'><a href="wsemi.html#.getClearPathName">getClearPathName</a></li><li data-type='method'><a href="wsemi.html#.getCsvStrFromData">getCsvStrFromData</a></li><li data-type='method'><a href="wsemi.html#.getDataFromExcelFileU8Arr">getDataFromExcelFileU8Arr</a></li><li data-type='method'><a href="wsemi.html#.getDataFromExcelFileU8ArrDyn">getDataFromExcelFileU8ArrDyn</a></li><li data-type='method'><a href="wsemi.html#.getEnv">getEnv</a></li><li data-type='method'><a href="wsemi.html#.getErrorMessage">getErrorMessage</a></li><li data-type='method'><a href="wsemi.html#.getExcelU8ArrFromData">getExcelU8ArrFromData</a></li><li data-type='method'><a href="wsemi.html#.getExcelU8ArrFromWorkbook">getExcelU8ArrFromWorkbook</a></li><li data-type='method'><a href="wsemi.html#.getExcelWorkbookFromData">getExcelWorkbookFromData</a></li><li data-type='method'><a href="wsemi.html#.getExcelWorkbookFromWorksheet">getExcelWorkbookFromWorksheet</a></li><li data-type='method'><a href="wsemi.html#.getExcelWorksheetFromData">getExcelWorksheetFromData</a></li><li data-type='method'><a href="wsemi.html#.getFileAccept">getFileAccept</a></li><li data-type='method'><a href="wsemi.html#.getFileBasicHash">getFileBasicHash</a></li><li data-type='method'><a href="wsemi.html#.getFileHash">getFileHash</a></li><li data-type='method'><a href="wsemi.html#.getFileName">getFileName</a></li><li data-type='method'><a href="wsemi.html#.getFileNameExt">getFileNameExt</a></li><li data-type='method'><a href="wsemi.html#.getFileTrueName">getFileTrueName</a></li><li data-type='method'><a href="wsemi.html#.getFileType">getFileType</a></li><li data-type='method'><a href="wsemi.html#.getFileXxHash">getFileXxHash</a></li><li data-type='method'><a href="wsemi.html#.getGlobal">getGlobal</a></li><li data-type='method'><a href="wsemi.html#.getObjSize">getObjSize</a></li><li data-type='method'><a href="wsemi.html#.getPathParent">getPathParent</a></li><li data-type='method'><a href="wsemi.html#.getTimeBetween">getTimeBetween</a></li><li data-type='method'><a href="wsemi.html#.getTimeFromUnit">getTimeFromUnit</a></li><li data-type='method'><a href="wsemi.html#.getTimeHp">getTimeHp</a></li><li data-type='method'><a href="wsemi.html#.getTimeObject">getTimeObject</a></li><li data-type='method'><a href="wsemi.html#.getTimeRange">getTimeRange</a></li><li data-type='method'><a href="wsemi.html#.getUserAgent">getUserAgent</a></li><li data-type='method'><a href="wsemi.html#.getUserAgentDyn">getUserAgentDyn</a></li><li data-type='method'><a href="wsemi.html#.getltdtkeys">getltdtkeys</a></li><li data-type='method'><a href="wsemi.html#.haskey">haskey</a></li><li data-type='method'><a href="wsemi.html#.html2str">html2str</a></li><li data-type='method'><a href="wsemi.html#.htmlDecode">htmlDecode</a></li><li data-type='method'><a href="wsemi.html#.htmlEncode">htmlEncode</a></li><li data-type='method'><a href="wsemi.html#.importResources">importResources</a></li><li data-type='method'><a href="wsemi.html#.interp1">interp1</a></li><li data-type='method'><a href="wsemi.html#.isDate">isDate</a></li><li data-type='method'><a href="wsemi.html#.isDev">isDev</a></li><li data-type='method'><a href="wsemi.html#.isEle">isEle</a></li><li data-type='method'><a href="wsemi.html#.isEleExistByID">isEleExistByID</a></li><li data-type='method'><a href="wsemi.html#.isEmail">isEmail</a></li><li data-type='method'><a href="wsemi.html#.isErr">isErr</a></li><li data-type='method'><a href="wsemi.html#.isIE">isIE</a></li><li data-type='method'><a href="wsemi.html#.isNarrow">isNarrow</a></li><li data-type='method'><a href="wsemi.html#.isStrHasCapital">isStrHasCapital</a></li><li data-type='method'><a href="wsemi.html#.isStrHasLetter">isStrHasLetter</a></li><li data-type='method'><a href="wsemi.html#.isStrHasLowerCase">isStrHasLowerCase</a></li><li data-type='method'><a href="wsemi.html#.isStrHasNumber">isStrHasNumber</a></li><li data-type='method'><a href="wsemi.html#.isStrHasSpace">isStrHasSpace</a></li><li data-type='method'><a href="wsemi.html#.isStrHasSymbol">isStrHasSymbol</a></li><li data-type='method'><a href="wsemi.html#.isUserIdentify">isUserIdentify</a></li><li data-type='method'><a href="wsemi.html#.isUserName">isUserName</a></li><li data-type='method'><a href="wsemi.html#.isUserPw">isUserPw</a></li><li data-type='method'><a href="wsemi.html#.isWindow">isWindow</a></li><li data-type='method'><a href="wsemi.html#.isab">isab</a></li><li data-type='method'><a href="wsemi.html#.isarr">isarr</a></li><li data-type='method'><a href="wsemi.html#.isarr0">isarr0</a></li><li data-type='method'><a href="wsemi.html#.isbigint">isbigint</a></li><li data-type='method'><a href="wsemi.html#.isblob">isblob</a></li><li data-type='method'><a href="wsemi.html#.isbol">isbol</a></li><li data-type='method'><a href="wsemi.html#.isday">isday</a></li><li data-type='method'><a href="wsemi.html#.isearr">isearr</a></li><li data-type='method'><a href="wsemi.html#.iseobj">iseobj</a></li><li data-type='method'><a href="wsemi.html#.iser">iser</a></li><li data-type='method'><a href="wsemi.html#.isernot">isernot</a></li><li data-type='method'><a href="wsemi.html#.isestr">isestr</a></li><li data-type='method'><a href="wsemi.html#.isfile">isfile</a></li><li data-type='method'><a href="wsemi.html#.isfun">isfun</a></li><li data-type='method'><a href="wsemi.html#.isint">isint</a></li><li data-type='method'><a href="wsemi.html#.ismonth">ismonth</a></li><li data-type='method'><a href="wsemi.html#.isn0int">isn0int</a></li><li data-type='method'><a href="wsemi.html#.isn0num">isn0num</a></li><li data-type='method'><a href="wsemi.html#.isnan">isnan</a></li><li data-type='method'><a href="wsemi.html#.isnbr">isnbr</a></li><li data-type='method'><a href="wsemi.html#.isnint">isnint</a></li><li data-type='method'><a href="wsemi.html#.isnnum">isnnum</a></li><li data-type='method'><a href="wsemi.html#.isnull">isnull</a></li><li data-type='method'><a href="wsemi.html#.isnum">isnum</a></li><li data-type='method'><a href="wsemi.html#.isobj">isobj</a></li><li data-type='method'><a href="wsemi.html#.isobj0">isobj0</a></li><li data-type='method'><a href="wsemi.html#.isp0int">isp0int</a></li><li data-type='method'><a href="wsemi.html#.isp0num">isp0num</a></li><li data-type='method'><a href="wsemi.html#.ispint">ispint</a></li><li data-type='method'><a href="wsemi.html#.ispm">ispm</a></li><li data-type='method'><a href="wsemi.html#.ispnum">ispnum</a></li><li data-type='method'><a href="wsemi.html#.isstr">isstr</a></li><li data-type='method'><a href="wsemi.html#.isstr0">isstr0</a></li><li data-type='method'><a href="wsemi.html#.istime">istime</a></li><li data-type='method'><a href="wsemi.html#.istimeTZ">istimeTZ</a></li><li data-type='method'><a href="wsemi.html#.istimems">istimems</a></li><li data-type='method'><a href="wsemi.html#.istimemsTZ">istimemsTZ</a></li><li data-type='method'><a href="wsemi.html#.isu16arr">isu16arr</a></li><li data-type='method'><a href="wsemi.html#.isu8arr">isu8arr</a></li><li data-type='method'><a href="wsemi.html#.isundefined">isundefined</a></li><li data-type='method'><a href="wsemi.html#.j2o">j2o</a></li><li data-type='method'><a href="wsemi.html#.judge">judge</a></li><li data-type='method'><a href="wsemi.html#.keysmat2ltdt">keysmat2ltdt</a></li><li data-type='method'><a href="wsemi.html#.ltdt2vrtsable">ltdt2vrtsable</a></li><li data-type='method'><a href="wsemi.html#.ltdtDiff">ltdtDiff</a></li><li data-type='method'><a href="wsemi.html#.ltdtDiffByKey">ltdtDiffByKey</a></li><li data-type='method'><a href="wsemi.html#.ltdtkeys2mat">ltdtkeys2mat</a></li><li data-type='method'><a href="wsemi.html#.ltdtkeysheads2mat">ltdtkeysheads2mat</a></li><li data-type='method'><a href="wsemi.html#.ltdtmapping">ltdtmapping</a></li><li data-type='method'><a href="wsemi.html#.ltdtmerge">ltdtmerge</a></li><li data-type='method'><a href="wsemi.html#.ltdtpick">ltdtpick</a></li><li data-type='method'><a href="wsemi.html#.ltdtpull">ltdtpull</a></li><li data-type='method'><a href="wsemi.html#.mat2ltdt">mat2ltdt</a></li><li data-type='method'><a href="wsemi.html#.matConcat">matConcat</a></li><li data-type='method'><a href="wsemi.html#.matDiff">matDiff</a></li><li data-type='method'><a href="wsemi.html#.matat">matat</a></li><li data-type='method'><a href="wsemi.html#.now2str">now2str</a></li><li data-type='method'><a href="wsemi.html#.now2strp">now2strp</a></li><li data-type='method'><a href="wsemi.html#.nowDay2str">nowDay2str</a></li><li data-type='method'><a href="wsemi.html#.nowms2str">nowms2str</a></li><li data-type='method'><a href="wsemi.html#.nowms2strp">nowms2strp</a></li><li data-type='method'><a href="wsemi.html#.o2j">o2j</a></li><li data-type='method'><a href="wsemi.html#.obj2b64">obj2b64</a></li><li data-type='method'><a href="wsemi.html#.obj2pb64">obj2pb64</a></li><li data-type='method'><a href="wsemi.html#.obj2str">obj2str</a></li><li data-type='method'><a href="wsemi.html#.obj2stru8arr">obj2stru8arr</a></li><li data-type='method'><a href="wsemi.html#.obj2u8arr">obj2u8arr</a></li><li data-type='method'><a href="wsemi.html#.objSortBy">objSortBy</a></li><li data-type='method'><a href="wsemi.html#.objSortByKeys">objSortByKeys</a></li><li data-type='method'><a href="wsemi.html#.oo">oo</a></li><li data-type='method'><a href="wsemi.html#.openLink">openLink</a></li><li data-type='method'><a href="wsemi.html#.pb642obj">pb642obj</a></li><li data-type='method'><a href="wsemi.html#.pmChain">pmChain</a></li><li data-type='method'><a href="wsemi.html#.pmConvertResolve">pmConvertResolve</a></li><li data-type='method'><a href="wsemi.html#.pmDebounce">pmDebounce</a></li><li data-type='method'><a href="wsemi.html#.pmHook">pmHook</a></li><li data-type='method'><a href="wsemi.html#.pmHookReject">pmHookReject</a></li><li data-type='method'><a href="wsemi.html#.pmIni">pmIni</a></li><li data-type='method'><a href="wsemi.html#.pmInvResolve">pmInvResolve</a></li><li data-type='method'><a href="wsemi.html#.pmKeyMutex">pmKeyMutex</a></li><li data-type='method'><a href="wsemi.html#.pmMap">pmMap</a></li><li data-type='method'><a href="wsemi.html#.pmQueue">pmQueue</a></li><li data-type='method'><a href="wsemi.html#.pmSeries">pmSeries</a></li><li data-type='method'><a href="wsemi.html#.pmThrottle">pmThrottle</a></li><li data-type='method'><a href="wsemi.html#.pmTimeout">pmTimeout</a></li><li data-type='method'><a href="wsemi.html#.preciseNum">preciseNum</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandom">pseudoRandom</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandomIntRange">pseudoRandomIntRange</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandomIntsNdpRange">pseudoRandomIntsNdpRange</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandomIntsRange">pseudoRandomIntsRange</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandomRange">pseudoRandomRange</a></li><li data-type='method'><a href="wsemi.html#.pseudoRandomsRange">pseudoRandomsRange</a></li><li data-type='method'><a href="wsemi.html#.queue">queue</a></li><li data-type='method'><a href="wsemi.html#.random">random</a></li><li data-type='method'><a href="wsemi.html#.randomIntRange">randomIntRange</a></li><li data-type='method'><a href="wsemi.html#.randomIntsNdpRange">randomIntsNdpRange</a></li><li data-type='method'><a href="wsemi.html#.randomIntsRange">randomIntsRange</a></li><li data-type='method'><a href="wsemi.html#.randomRange">randomRange</a></li><li data-type='method'><a href="wsemi.html#.randomsRange">randomsRange</a></li><li data-type='method'><a href="wsemi.html#.rang">rang</a></li><li data-type='method'><a href="wsemi.html#.rep">rep</a></li><li data-type='method'><a href="wsemi.html#.repObj">repObj</a></li><li data-type='method'><a href="wsemi.html#.replace">replace</a></li><li data-type='method'><a href="wsemi.html#.replaceObj">replaceObj</a></li><li data-type='method'><a href="wsemi.html#.replacePlus">replacePlus</a></li><li data-type='method'><a href="wsemi.html#.round">round</a></li><li data-type='method'><a href="wsemi.html#.secd">secd</a></li><li data-type='method'><a href="wsemi.html#.sep">sep</a></li><li data-type='method'><a href="wsemi.html#.sepInt">sepInt</a></li><li data-type='method'><a href="wsemi.html#.setIntervalHp">setIntervalHp</a></li><li data-type='method'><a href="wsemi.html#.setTimeoutHp">setTimeoutHp</a></li><li data-type='method'><a href="wsemi.html#.sind">sind</a></li><li data-type='method'><a href="wsemi.html#.split">split</a></li><li data-type='method'><a href="wsemi.html#.str2aes">str2aes</a></li><li data-type='method'><a href="wsemi.html#.str2b64">str2b64</a></li><li data-type='method'><a href="wsemi.html#.str2hint">str2hint</a></li><li data-type='method'><a href="wsemi.html#.str2md5">str2md5</a></li><li data-type='method'><a href="wsemi.html#.str2obj">str2obj</a></li><li data-type='method'><a href="wsemi.html#.str2sha">str2sha</a></li><li data-type='method'><a href="wsemi.html#.str2sha512">str2sha512</a></li><li data-type='method'><a href="wsemi.html#.str2u8arr">str2u8arr</a></li><li data-type='method'><a href="wsemi.html#.strCompare">strCompare</a></li><li data-type='method'><a href="wsemi.html#.strCompareForVersion">strCompareForVersion</a></li><li data-type='method'><a href="wsemi.html#.strDiff">strDiff</a></li><li data-type='method'><a href="wsemi.html#.strDiffToHtml">strDiffToHtml</a></li><li data-type='method'><a href="wsemi.html#.strFindFuzz">strFindFuzz</a></li><li data-type='method'><a href="wsemi.html#.strFindSimilar">strFindSimilar</a></li><li data-type='method'><a href="wsemi.html#.strTruncate">strTruncate</a></li><li data-type='method'><a href="wsemi.html#.strdelleft">strdelleft</a></li><li data-type='method'><a href="wsemi.html#.strdelright">strdelright</a></li><li data-type='method'><a href="wsemi.html#.strleft">strleft</a></li><li data-type='method'><a href="wsemi.html#.strmid">strmid</a></li><li data-type='method'><a href="wsemi.html#.strright">strright</a></li><li data-type='method'><a href="wsemi.html#.stru8arr2obj">stru8arr2obj</a></li><li data-type='method'><a href="wsemi.html#.tand">tand</a></li><li data-type='method'><a href="wsemi.html#.time2day">time2day</a></li><li data-type='method'><a href="wsemi.html#.time2hour">time2hour</a></li><li data-type='method'><a href="wsemi.html#.time2min">time2min</a></li><li data-type='method'><a href="wsemi.html#.timeTZ2day">timeTZ2day</a></li><li data-type='method'><a href="wsemi.html#.timeTZ2expire">timeTZ2expire</a></li><li data-type='method'><a href="wsemi.html#.timeTZ2hour">timeTZ2hour</a></li><li data-type='method'><a href="wsemi.html#.timeTZ2min">timeTZ2min</a></li><li data-type='method'><a href="wsemi.html#.timeTZ2past">timeTZ2past</a></li><li data-type='method'><a href="wsemi.html#.timems2day">timems2day</a></li><li data-type='method'><a href="wsemi.html#.timems2hour">timems2hour</a></li><li data-type='method'><a href="wsemi.html#.timems2min">timems2min</a></li><li data-type='method'><a href="wsemi.html#.timems2time">timems2time</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2day">timemsTZ2day</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2expire">timemsTZ2expire</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2hour">timemsTZ2hour</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2min">timemsTZ2min</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2past">timemsTZ2past</a></li><li data-type='method'><a href="wsemi.html#.timemsTZ2time">timemsTZ2time</a></li><li data-type='method'><a href="wsemi.html#.treeObj">treeObj</a></li><li data-type='method'><a href="wsemi.html#.treeToFilepath">treeToFilepath</a></li><li data-type='method'><a href="wsemi.html#.trim">trim</a></li><li data-type='method'><a href="wsemi.html#.u16arr2b64">u16arr2b64</a></li><li data-type='method'><a href="wsemi.html#.u16arr2u8arr">u16arr2u8arr</a></li><li data-type='method'><a href="wsemi.html#.u8arr2ab">u8arr2ab</a></li><li data-type='method'><a href="wsemi.html#.u8arr2b64">u8arr2b64</a></li><li data-type='method'><a href="wsemi.html#.u8arr2blob">u8arr2blob</a></li><li data-type='method'><a href="wsemi.html#.u8arr2bs">u8arr2bs</a></li><li data-type='method'><a href="wsemi.html#.u8arr2obj">u8arr2obj</a></li><li data-type='method'><a href="wsemi.html#.u8arr2str">u8arr2str</a></li><li data-type='method'><a href="wsemi.html#.u8arr2u16arr">u8arr2u16arr</a></li><li data-type='method'><a href="wsemi.html#.urlParse">urlParse</a></li><li data-type='method'><a href="wsemi.html#.verifyValue">verifyValue</a></li><li data-type='method'><a href="wsemi.html#.waitFun">waitFun</a></li></ul></li></ul><h3>Global</h3><ul><li><a href="global.html#buildSpawnArgs">buildSpawnArgs</a></li><li><a href="global.html#buildSpawnEnv">buildSpawnEnv</a></li><li><a href="global.html#buildValidator">buildValidator</a></li><li><a href="global.html#escapeWinArg">escapeWinArg</a></li><li><a href="global.html#escapeWinCmd">escapeWinCmd</a></li><li><a href="global.html#execCliOnce">execCliOnce</a></li><li><a href="global.html#parseJsEntryFromCmd">parseJsEntryFromCmd</a></li><li><a href="global.html#parseVersion">parseVersion</a></li><li><a href="global.html#resolveCommand">resolveCommand</a></li></ul>
+    
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">execCliSession.mjs</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { spawn } from 'child_process'
+import get from 'lodash-es/get.js'
+import genPm from './genPm.mjs'
+import isfun from './isfun.mjs'
+import isarr from './isarr.mjs'
+import isobj from './isobj.mjs'
+import isestr from './isestr.mjs'
+import ispint from './ispint.mjs'
+import isp0int from './isp0int.mjs'
+import execProcessKillPid from './execProcessKillPid.mjs'
+import execCliCore from './execCliCore.mjs'
+
+
+//buildSpawnArgs, buildSpawnEnv, 共用核心
+let { buildSpawnArgs, buildSpawnEnv } = execCliCore
+
+
+/**
+ * 建立互動式stdio工作階段(session)，用於stdio協定型之長駐CLI(如MCP之stdio伺服器、codex app-server等一行一則JSON之程式)，與execCli「寫完input即關閉stdin並等待結束」之一次性契約不同，本函數維持stdin開啟，由呼叫端逐次write，直到呼叫stop()才關閉stdin並等待子進程自行退出，逾寬限期則以execProcessKillPid樹殺
+ * Windows下npm全域安裝之命令為.cmd批次檔，內部經execCliCore.buildSpawnArgs解析為以node執行其JS入口，不使用shell:true，故樹殺可確實涵蓋子孫程序
+ * 本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliSession.test.mjs Github}
+ * @memberOf wsemi
+ * @param {String} command 輸入執行檔名稱字串，可為註冊系統的全域指令或執行檔路徑
+ * @param {Array} [args=[]] 輸入參數字串陣列，預設[]
+ * @param {Object} [opt={}] 輸入設定物件
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()
+ * @param {Object} [opt.env=undefined] 輸入本次額外注入之環境變數物件，語意同execCli，預設undefined
+ * @param {Number} [opt.timeoutMs=null] 輸入整體逾時毫秒正整數，逾時即樹殺並於結果標timeout:true，預設null代表不限制(工作階段為長駐，不沿用execCli之120000)
+ * @param {Number} [opt.exitGraceMs=2000] 輸入stop()關閉stdin後等待子進程自行退出之寬限毫秒非負整數，逾期即樹殺，預設2000
+ * @param {Number} [opt.killWaitMs=3000] 輸入樹殺後等待exit事件之上限毫秒非負整數，逾期仍未退出則於結果標exited:false並結束等待，預設3000
+ * @param {Number} [opt.stderrKeep=4000] 輸入stderr保留尾端字元數非負整數，預設4000
+ * @param {Function} [opt.onLine=undefined] 輸入stdout逐行回調函數，格式為(line)=>{}，line不含換行(\\r\\n與\\n皆視為換行)，子進程結束時殘餘之不完整行亦會發出，預設undefined
+ * @param {Function} [opt.onStdout=undefined] 輸入stdout原始片段回調函數，格式為(chunk)=>{}，已經UTF-8跨chunk解碼，供非行式協定(如LSP之Content-Length分幀)自行分幀，預設undefined
+ * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
+ * @param {Function} [opt.onExit=undefined] 輸入子進程結束回調函數，格式為(result)=>{}，result同stop()之回傳，預設undefined
+ * @returns {Object} 回傳工作階段物件s，內含pid(子進程pid，spawn失敗為null)、exited(是否已結束布林值)、write(str)(寫入stdin，回傳Promise，resolve為是否寫入成功布林值，子進程已結束時靜默resolve(false))、writeLine(str)(補換行後寫入)、stop()(關閉stdin並等待結束，回傳Promise，resolve回傳結果物件，內含code、signal、exited、timeout、killed、error、stderr、durationMs、pid；多次呼叫回傳同一Promise)
+ * @example
+ * //need test in nodejs
+ *
+ * async function test() {
+ *
+ *     let nodeBin = process.execPath
+ *
+ *     //逐行回顯程式, 收到EOF即結束
+ *     let sc = `
+ *         let rl = require('readline').createInterface({ input: process.stdin })
+ *         rl.on('line', (l) => process.stdout.write('echo:' + l + '\\n'))
+ *         rl.on('close', () => process.exit(0))
+ *     `
+ *
+ *     let lines = []
+ *     let s = execCliSession(nodeBin, ['-e', sc], {
+ *         onLine: (line) => {
+ *             lines.push(line)
+ *         },
+ *     })
+ *     await s.writeLine('abc')
+ *     await s.writeLine('中文')
+ *     let r = await s.stop() //關閉stdin, 子進程收到EOF自行退出
+ *     console.log(lines, r.code, r.exited, r.killed)
+ *     // => [ 'echo:abc', 'echo:中文' ] 0 true false
+ *
+ *     //不理會EOF之程式, stop()逾寬限期即樹殺
+ *     let s2 = execCliSession(nodeBin, ['-e', 'setInterval(() => {}, 1000)'], { exitGraceMs: 300 })
+ *     let r2 = await s2.stop()
+ *     console.log(r2.exited, r2.killed)
+ *     // => true true
+ *
+ * }
+ * test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
+ *
+ */
+function execCliSession(command, args = [], opt = {}) {
+
+    //args
+    if (!isarr(args)) {
+        args = []
+    }
+
+    //opt
+    if (!isobj(opt)) {
+        opt = {}
+    }
+
+    //cwd
+    let cwd = get(opt, 'cwd')
+    if (!isestr(cwd)) {
+        cwd = process.cwd()
+    }
+
+    //envExtra
+    let envExtra = get(opt, 'env')
+    if (!isobj(envExtra)) {
+        envExtra = undefined
+    }
+
+    //timeoutMs, 預設null不限制
+    let timeoutMs = get(opt, 'timeoutMs')
+    if (!ispint(timeoutMs)) {
+        timeoutMs = null
+    }
+
+    //exitGraceMs
+    let exitGraceMs = get(opt, 'exitGraceMs')
+    if (!isp0int(exitGraceMs)) {
+        exitGraceMs = 2000
+    }
+
+    //killWaitMs
+    let killWaitMs = get(opt, 'killWaitMs')
+    if (!isp0int(killWaitMs)) {
+        killWaitMs = 3000
+    }
+
+    //stderrKeep
+    let stderrKeep = get(opt, 'stderrKeep')
+    if (!isp0int(stderrKeep)) {
+        stderrKeep = 4000
+    }
+
+    //callbacks
+    let onLine = get(opt, 'onLine')
+    let onStdout = get(opt, 'onStdout')
+    let onStderr = get(opt, 'onStderr')
+    let onExit = get(opt, 'onExit')
+
+    //startTime
+    let startTime = Date.now()
+
+    //state
+    let settled = false
+    let result = null
+    let timedOut = false
+    let killed = false
+    let stopping = false
+    let stderrTail = ''
+    let lineBuf = ''
+    let timer = null
+    let graceTimer = null
+    let killTimer = null
+    let pmExit = genPm() //子進程結束(或確認無法結束)時resolve
+    let pmStop = null
+
+    //s
+    let s = {
+        pid: null,
+        exited: false,
+        write: null,
+        writeLine: null,
+        stop: null,
+    }
+
+    //settle, 只執行一次: 整理結果, 標記exited, 觸發onExit, 喚醒stop()
+    let settle = (r) => {
+        if (settled) {
+            return
+        }
+        settled = true
+        clearTimeout(timer)
+        clearTimeout(graceTimer)
+        clearTimeout(killTimer)
+        result = {
+            code: null,
+            signal: null,
+            exited: true,
+            timeout: timedOut,
+            killed,
+            error: '',
+            stderr: stderrTail,
+            durationMs: Date.now() - startTime,
+            pid: s.pid,
+            ...r,
+        }
+        s.exited = true
+        if (isfun(onExit)) {
+            onExit(result)
+        }
+        pmExit.resolve(result)
+    }
+
+    //stopNoProc, 未能spawn時之stop
+    let stopNoProc = () => {
+        if (pmStop) {
+            return pmStop
+        }
+        pmStop = genPm()
+        pmExit.then((r) => {
+            pmStop.resolve(r)
+        })
+        return pmStop
+    }
+
+    //command必填字串: 不spawn, 以timer脫勾後settle使onExit於本函數回傳後才觸發
+    if (!isestr(command)) {
+        s.write = async () => false
+        s.writeLine = async () => false
+        s.stop = stopNoProc
+        setTimeout(() => {
+            settle({ error: 'command 須為非空字串' })
+        }, 1)
+        return s
+    }
+
+    //spawn
+    let sp = buildSpawnArgs(command, args)
+    let proc
+    try {
+        proc = spawn(sp.file, sp.args, {
+            cwd,
+            stdio: ['pipe', 'pipe', 'pipe'],
+            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+            env: buildSpawnEnv(envExtra),
+            ...sp.opt,
+        })
+    }
+    catch (err) {
+        //spawn同步拋錯(如參數無效EINVAL)
+        s.write = async () => false
+        s.writeLine = async () => false
+        s.stop = stopNoProc
+        setTimeout(() => {
+            settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` })
+        }, 1)
+        return s
+    }
+    s.pid = proc.pid || null
+
+    //TextDecoder, 跨chunk邊界正確解碼UTF-8, 避免多位元組中文字元被切成亂碼(U+FFFD)
+    let stdoutDecoder = new TextDecoder('utf-8')
+    let stderrDecoder = new TextDecoder('utf-8')
+
+    //emitLines, 以\n切行, 去尾端\r, 殘餘保留至下次; flush時把殘餘不完整行一併發出
+    let emitLines = (str, flush) => {
+        lineBuf += str
+        let idx = lineBuf.indexOf('\n')
+        while (idx >= 0) {
+            let line = lineBuf.slice(0, idx)
+            lineBuf = lineBuf.slice(idx + 1)
+            if (line.endsWith('\r')) {
+                line = line.slice(0, -1)
+            }
+            if (isfun(onLine)) {
+                onLine(line)
+            }
+            idx = lineBuf.indexOf('\n')
+        }
+        if (flush &amp;&amp; lineBuf !== '') {
+            let line = lineBuf
+            lineBuf = ''
+            if (line.endsWith('\r')) {
+                line = line.slice(0, -1)
+            }
+            if (isfun(onLine)) {
+                onLine(line)
+            }
+        }
+    }
+
+    //appendStderr, 保留尾端stderrKeep字元
+    let appendStderr = (str) => {
+        if (stderrKeep === 0) {
+            stderrTail = ''
+            return
+        }
+        stderrTail = (stderrTail + str).slice(-stderrKeep)
+    }
+
+    //stdout data
+    proc.stdout.on('data', (chunk) => {
+        let str = stdoutDecoder.decode(chunk, { stream: true })
+        if (!str) {
+            return
+        }
+        if (isfun(onStdout)) {
+            onStdout(str)
+        }
+        emitLines(str, false)
+    })
+
+    //stderr data
+    proc.stderr.on('data', (chunk) => {
+        let str = stderrDecoder.decode(chunk, { stream: true })
+        if (!str) {
+            return
+        }
+        if (isfun(onStderr)) {
+            onStderr(str)
+        }
+        appendStderr(str)
+    })
+
+    //stdin, 子進程提早關閉stdin時write/end會觸發EPIPE, 需listen'error'才不會拋unhandled event
+    proc.stdin.on('error', () => {})
+
+    //kill, 樹殺並等待exit, 逾killWaitMs仍未退出則以exited:false結束等待
+    let kill = (errorIfStuck) => {
+        killed = true
+        execProcessKillPid(proc.pid)
+            .catch(() => {}) //pid可能已結束, 忽略error
+        killTimer = setTimeout(() => {
+            if (settled) {
+                return
+            }
+            settle({ code: null, exited: false, error: errorIfStuck })
+        }, killWaitMs)
+    }
+
+    //timer, 整體逾時
+    if (timeoutMs !== null) {
+        timer = setTimeout(() => {
+            if (settled) {
+                return
+            }
+            timedOut = true
+            kill(`TIMEOUT after ${timeoutMs / 1000}s(子進程未能結束)`)
+        }, timeoutMs)
+    }
+
+    //error, 監聽(例如執行spawn本身)錯誤訊息, 可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等
+    proc.on('error', (err) => {
+        settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` })
+    })
+
+    //close
+    proc.on('close', (code, signal) => {
+        if (settled) {
+            return
+        }
+
+        //flush decoder殘餘與不完整行
+        let fOut = stdoutDecoder.decode()
+        if (fOut) {
+            if (isfun(onStdout)) {
+                onStdout(fOut)
+            }
+            emitLines(fOut, false)
+        }
+        emitLines('', true)
+        let fErr = stderrDecoder.decode()
+        if (fErr) {
+            if (isfun(onStderr)) {
+                onStderr(fErr)
+            }
+            appendStderr(fErr)
+        }
+
+        //error, 自行stop()所致之樹殺不視為錯誤
+        let error = ''
+        if (timedOut) {
+            error = `TIMEOUT after ${timeoutMs / 1000}s`
+        }
+        else if (!killed) {
+            if (signal) {
+                error = `Signal: ${signal}`
+            }
+            else if (code !== 0) {
+                error = `Exit code ${code}`
+            }
+        }
+
+        settle({ code, signal, error })
+    })
+
+    //write
+    s.write = (str) => {
+        let pm = genPm()
+        if (settled || stopping || proc.stdin.destroyed || !proc.stdin.writable) {
+            pm.resolve(false)
+            return pm
+        }
+        try {
+            proc.stdin.write(String(str), 'utf8', (err) => {
+                pm.resolve(!err)
+            })
+        }
+        catch {
+            pm.resolve(false)
+        }
+        return pm
+    }
+
+    //writeLine
+    s.writeLine = (str) => {
+        return s.write(String(str) + '\n')
+    }
+
+    //stop, 關閉stdin → 等exitGraceMs → 未退出即樹殺 → 等exit; 多次呼叫回傳同一Promise
+    s.stop = () => {
+        if (pmStop) {
+            return pmStop
+        }
+        pmStop = genPm()
+        if (settled) {
+            pmStop.resolve(result)
+            return pmStop
+        }
+        stopping = true
+        try {
+            proc.stdin.end()
+        }
+        catch {}
+        graceTimer = setTimeout(() => {
+            if (settled) {
+                return
+            }
+            kill('STOP_TIMEOUT(子進程未能結束)')
+        }, exitGraceMs)
+        pmExit.then((r) => {
+            pmStop.resolve(r)
+        })
+        return pmStop
+    }
+
+    return s
+}
+
+
+export default execCliSession
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Sep 05 2026 17:59:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+
+
+</body>
+</html>
