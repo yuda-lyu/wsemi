@@ -1,5 +1,5 @@
 /*!
- * wpf v1.8.85
+ * wpf v1.8.86
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */
