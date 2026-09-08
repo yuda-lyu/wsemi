@@ -14,7 +14,7 @@ import cint from './cint.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.timeExpire=1800000] 輸入TTL過期時間整數，單位為毫秒ms，key寫入超過此時間後將被內部偵測週期自動刪除，預設30分鐘(1800000ms)
  * @param {Integer} [opt.timeDetect=2000] 輸入TTL偵測週期整數，單位為毫秒ms，預設2000
- * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件
+ * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  *
  * let test1 = async () => {
@@ -106,7 +106,7 @@ function cacheSt(opt = {}) {
     }
     timeDetect = cint(timeDetect)
 
-    let ev = evem()
+    let ev = evem({ type: 'safe' }) //detect事件於setInterval內派發, 其餘於呼叫端同步堆疊或await之後派發且監聽器可能為async, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
 
     let _gs = {}
 

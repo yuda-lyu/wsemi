@@ -9,7 +9,7 @@ import cint from './cint.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/queue.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
- * @returns {Object} 回傳事件物件，可呼叫函數on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列
+ * @returns {Object} 回傳事件物件，可呼叫函數on、push、get、cb、clear。on為監聽事件，需自行監聽message事件，push為加入最新佇列消息，get為回傳當前最早佇列消息，cb為於message事件內回調使迭代器可取得下一個佇列消息，clear為清空佇列。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  *
  * async function topAsync() {
@@ -168,7 +168,7 @@ function queue(takeLimit = 0) {
     takeLimit = cint(takeLimit)
 
     //ev
-    let ev = evem()
+    let ev = evem({ type: 'safe' }) //message監聽器通常為async, 其reject不得殺行程, 由evem預設政策重發error事件
 
     //get, like iterator
     function get() {

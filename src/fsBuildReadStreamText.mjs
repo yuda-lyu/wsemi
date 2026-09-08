@@ -10,7 +10,7 @@ import evem from './evem.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsBuildReadStreamText.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入讀取檔案路徑字串
- * @returns {EventEmitter} 回傳EventEmitter，可監聽create、line、close事件，line事件接收讀入各列字串
+ * @returns {EventEmitter} 回傳EventEmitter，可監聽create、line、close事件，line事件接收讀入各列字串。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * need test in nodejs.
  *
@@ -68,7 +68,7 @@ function fsBuildReadStreamText(fp) {
     }
 
     //ev
-    let ev = evem()
+    let ev = evem({ type: 'safe' }) //line/close事件於readline與stream回呼內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
 
     //stream
     let stream = fs.createReadStream(fp, { encoding: 'utf8' })

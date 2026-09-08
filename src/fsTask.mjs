@@ -30,7 +30,7 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
- * @returns {Object} 回傳事件物件，包含run、stop函數，on可進行監聽指定事件，run為啟動偵測函數，stop為停止偵測函數
+ * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為evem之safe型：change監聽器拋錯或async reject不會使行程崩潰，會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
  *
@@ -220,7 +220,7 @@ function fsTask(fd, opt = {}) {
     fsCreateFolder(fdStorage)
 
     //ev
-    let ev = evem()
+    let ev = evem({ type: 'safe' }) //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 由evem預設政策reject pm並重發error事件
 
     //lock
     let lock = false
@@ -375,6 +375,9 @@ function fsTask(fd, opt = {}) {
                     //writeObHash
                     writeObHash(kpHashsModify)
 
+                })
+                .catch(() => {
+                    //任務失敗(呼叫端reject pm, 或監聽器出錯致evem預設政策reject pm), 不更新紀錄檔; 無此catch則reject會成為unhandledRejection
                 })
                 .finally(() => {
 
@@ -601,12 +604,22 @@ function fsTask(fd, opt = {}) {
 
     }
 
-    //timer
+    //timer, 以busy防止掃描重疊: lock於await calcHash之後才取得, 掃描慢於timeInterval時多輪會同時通過lock檢查而對同一檔重複派工(實測300檔×50KB、20ms下同一檔於pm未settle期間被派工4次)
+    let busy = false
     let t = setInterval(() => {
+
+        //check
+        if (busy) {
+            return
+        }
+        busy = true
 
         //compareHashAndEmitOne
         compareHashAndEmitOne()
             .catch(() => {})
+            .finally(() => {
+                busy = false
+            })
 
     }, timeInterval)
 

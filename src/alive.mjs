@@ -17,7 +17,7 @@ import cint from './cint.mjs'
  * @memberOf wsemi
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
  * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，單位為毫秒ms，預設為50
- * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單
+ * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  *
  * async function topAsync() {
@@ -84,7 +84,7 @@ import cint from './cint.mjs'
  *
  */
 function alive(opt = {}) {
-    let ev = evem()
+    let ev = evem({ type: 'safe' }) //message事件於timer內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
     let q = {} //queue
     let t = null //timer
 

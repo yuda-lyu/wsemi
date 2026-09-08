@@ -22,7 +22,7 @@ import fsWatchFile from './fsWatchFile.mjs'
  * @param {String} fdSrc 輸入來源端更新紀錄之資料夾路徑字串
  * @param {String} fdTar 輸入偵測端已紀錄之資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態
+ * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為evem之safe型：監聽器拋錯或async reject不會使行程崩潰，change監聽器出錯會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
  *
@@ -321,7 +321,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //紀錄檔案變更至fpHashSrc, 供buildTar偵測驅動使用
 
         //ev
-        let ev = evem()
+        let ev = evem({ type: 'safe' }) //set/remove於呼叫端同步派發(不帶pm), 監聽器出錯不得回拋至set/remove而中斷紀錄流程, 由evem預設政策重發error事件
 
         //_set
         let _set = (fp, hash) => {
@@ -350,7 +350,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //讀取對方紀錄fpHashSrc, 讀取自己備份紀錄fpHashTar, 偵測差異後emit觸發事件使用
 
         //ev
-        let ev = evem()
+        let ev = evem({ type: 'safe' }) //事件於watcher回呼內派發(change並帶pm), 監聽器出錯不得殺行程, 由evem預設政策reject pm並重發error事件
 
         //dbc
         let dbc = debounce(300)
