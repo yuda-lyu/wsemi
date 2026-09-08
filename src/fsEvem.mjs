@@ -1,6 +1,5 @@
 import path from 'path'
 import fs from 'fs'
-import events from 'events'
 import get from 'lodash-es/get.js'
 import now2str from './now2str.mjs'
 import haskey from './haskey.mjs'
@@ -17,6 +16,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsDeleteFolder from './fsDeleteFolder.mjs'
 import fsWatchFolder from './fsWatchFolder.mjs'
+import evem from './evem.mjs'
 
 
 /**
@@ -31,7 +31,7 @@ import fsWatchFolder from './fsWatchFolder.mjs'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
- * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽指定事件，clear為停止全部監聽，不須輸入
+ * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為evem之safe型，事件於watcher回呼內派發，監聽器拋錯或async reject不會使行程崩潰，會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'
  * @example
  * need test in nodejs.
  *
@@ -185,8 +185,17 @@ function fsEvem(opt = {}) {
         fsDeleteFolder(fd)
     }
 
-    //ev
-    let ev = new events.EventEmitter()
+    //ev, 事件於fsWatchFolder之change回呼內派發, 監聽器出錯不得殺行程; 因下方攔截ev.emit改為寫檔廣播, 不可用evem預設政策(其重發error會經攔截後之emit而寫檔廣播至各程序), 改自訂政策以原生emit於本程序派發error
+    let ev = evem({
+        type: 'safe',
+        funGetListenerError: (name, err, args) => {
+            if (ev.listenerCount('error') === 0) {
+                console.error(`[wsemi fsEvem] listener of '${String(name)}' threw and no 'error' listener is registered:`, err)
+                return
+            }
+            emt.call(ev, 'error', { fun: 'listener', name, msg: err, args })
+        },
+    })
     let emt = ev.emit
     ev.emit = function (evName, msg) { //攔截emit與額外處理, 因使用this記得須維持使用funtion
         // console.log('攔截ev.emit', evName, msg)

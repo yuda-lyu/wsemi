@@ -1,4 +1,6 @@
 import fs from 'fs'
+import path from 'path'
+import { execSync } from 'child_process'
 import assert from 'assert'
 import cache from '../src/cache.mjs'
 import alive from '../src/alive.mjs'
@@ -7,15 +9,18 @@ import fsBuildReadStreamText from '../src/fsBuildReadStreamText.mjs'
 import fsTask from '../src/fsTask.mjs'
 import fsTaskCp from '../src/fsTaskCp.mjs'
 import queue from '../src/queue.mjs'
+import fsWatchFile from '../src/fsWatchFile.mjs'
+import fsWatchFolder from '../src/fsWatchFolder.mjs'
+import fsEvem from '../src/fsEvem.mjs'
 
 
-//整合測試: src內以evem({ type: 'safe' })建立事件物件之7個模組, 監聽器拋錯或async reject時
+//整合測試: src內以evem({ type: 'safe' })建立事件物件之10個模組, 監聽器拋錯或async reject時
 //  (1) 不得產生uncaughtException/unhandledRejection(行程不死)
 //  (2) 以error事件回報{ fun: 'listener', name, msg, args }
 //  (3) 同事件其他監聽器不受影響, 模組後續流程仍正常(含事件帶pm者之pm被reject而不懸置)
 describe(`evem safe integration (src modules)`, function() {
 
-    this.timeout(30000)
+    this.timeout(60000)
 
     let delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
     let waitFor = async (fn, ms = 5000, step = 50) => {
@@ -37,7 +42,7 @@ describe(`evem safe integration (src modules)`, function() {
     let onUnhandled = () => {
         nUnhandled += 1
     }
-    let fds = ['./_test_evemSafe_rs', './_test_evemSafe_fsTask', './_test_evemSafe_fsTask_storage', './_test_evemSafe_tcpSrc', './_test_evemSafe_tcpTar']
+    let fds = ['./_test_evemSafe_rs', './_test_evemSafe_fsTask', './_test_evemSafe_fsTask_storage', './_test_evemSafe_tcpSrc', './_test_evemSafe_tcpTar', './_test_evemSafe_wf', './_test_evemSafe_wfd', './_test_evemSafe_evps', './_test_evemSafe_werr']
     before(function() {
         process.on('uncaughtException', onUncaught)
         process.on('unhandledRejection', onUnhandled)
@@ -243,6 +248,124 @@ describe(`evem safe integration (src modules)`, function() {
         // console.log('race changes', changes)
         assert.strict.deepStrictEqual(changes.length >= 1, true)
         assert.strict.deepStrictEqual(changes.length, 1, `pm 未 settle 期間不得重複派工, got ${JSON.stringify(changes)}`)
+    })
+
+    it(`fsWatchFile: change listener throwing inside chokidar callback → error event, other listener still gets change`, async function() {
+        let fd = './_test_evemSafe_wf'
+        fs.mkdirSync(fd, { recursive: true })
+        let fp = `${fd}/t.txt`
+        fs.writeFileSync(fp, 'v1', 'utf8')
+        let ev = fsWatchFile(fp, { timeInterval: 50 })
+        let { errs, fn } = collector()
+        let got = []
+        ev.on('error', fn)
+        ev.on('change', () => {
+            throw new Error('boom')
+        })
+        ev.on('change', (m) => {
+            got.push(m.type)
+        })
+        await waitFor(() => got.includes('add'), 8000) //watcher就緒後之初始add
+        fs.writeFileSync(fp, 'v2', 'utf8')
+        await waitFor(() => got.includes('change'), 10000)
+        ev.clear()
+        await delay(300)
+        assert.strict.deepStrictEqual(got.includes('add') && got.includes('change'), true, `got=${JSON.stringify(got)}`)
+        assert.strict.deepStrictEqual(errs.length, got.length)
+        assert.strict.deepStrictEqual(errs.every((e) => e.name === 'change' && e.msg === 'boom'), true)
+    })
+
+    it(`fsWatchFolder: change listener throwing inside chokidar callback and inside timer-synthesized unlinkDir → error events; synthesized unlinkDir carries stats undefined`, async function() {
+        let fd = './_test_evemSafe_wfd'
+        fs.mkdirSync(fd, { recursive: true })
+        let ev = fsWatchFolder(fd, { timeInterval: 50 })
+        let { errs, fn } = collector()
+        let got = []
+        ev.on('error', fn)
+        ev.on('change', () => {
+            throw new Error('boom')
+        })
+        ev.on('change', (m) => {
+            got.push({ type: m.type, hasStats: Object.prototype.hasOwnProperty.call(m, 'stats'), statsType: typeof m.stats })
+        })
+        await waitFor(() => got.some((g) => g.type === 'addDir'), 8000)
+        fs.writeFileSync(`${fd}/t.txt`, 'v1', 'utf8')
+        await waitFor(() => got.some((g) => g.type === 'add'), 10000)
+        fs.rmSync(fd, { recursive: true, force: true }) //刪除受監聽資料夾本身 → 由timer合成unlinkDir
+        await waitFor(() => got.some((g) => g.type === 'unlinkDir' && g.hasStats), 10000)
+        ev.clear()
+        await delay(300)
+        let u = got.find((g) => g.type === 'unlinkDir' && g.hasStats)
+        assert.strict.deepStrictEqual(u, { type: 'unlinkDir', hasStats: true, statsType: 'undefined' }, `got=${JSON.stringify(got)}`) //原碼誤塞fs.fstatSync函數(statsType='function')
+        assert.strict.deepStrictEqual(errs.length, got.length)
+        assert.strict.deepStrictEqual(errs.every((e) => e.name === 'change' && e.msg === 'boom'), true)
+    })
+
+    it(`fsEvem: listener throwing inside watcher callback → local error event (not broadcast as event file), other listener still gets message`, async function() {
+        let fd = './_test_evemSafe_evps'
+        let ev = fsEvem({ fd, timeInterval: 50 })
+        let { errs, fn } = collector()
+        let got = []
+        ev.on('error', fn)
+        ev.on('ping', () => {
+            throw new Error('boom')
+        })
+        ev.on('ping', (m) => {
+            got.push(m)
+        })
+        await delay(500) //待watcher就緒
+        ev.emit('ping', { n: 1 })
+        await waitFor(() => got.length >= 1 && errs.length >= 1, 10000)
+        await delay(300)
+        let files = fs.readdirSync(fd)
+        ev.clear()
+        await delay(300)
+        assert.strict.deepStrictEqual(got, [{ n: 1 }])
+        assert.strict.deepStrictEqual(errs, [{ name: 'ping', msg: 'boom' }])
+        assert.strict.deepStrictEqual(files.includes('error'), false, `listener error 不得寫成事件檔廣播, files=${JSON.stringify(files)}`)
+    })
+
+    it(`fsWatchFolder: chokidar watcher error (EPERM on a permission-denied subfolder) → error { fun: 'watcher' } instead of crash [windows only]`, async function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let fd = './_test_evemSafe_werr'
+        let fdDeny = `${fd}/deny`
+        let user = process.env.USERNAME
+        let restore = () => {
+            try {
+                execSync(`icacls "${path.resolve(fdDeny)}" /remove:d "${user}"`, { stdio: 'ignore' })
+            }
+            catch (e) {}
+            fs.rmSync(fd, { recursive: true, force: true })
+        }
+        restore()
+        fs.mkdirSync(fdDeny, { recursive: true })
+        fs.writeFileSync(`${fdDeny}/x.txt`, 'x', 'utf8')
+        execSync(`icacls "${path.resolve(fdDeny)}" /deny "${user}:(OI)(CI)F"`, { stdio: 'ignore' })
+        let denied = false
+        try {
+            fs.readdirSync(fdDeny)
+        }
+        catch (e) {
+            denied = true
+        }
+        if (!denied) {
+            restore()
+            this.skip() //環境無法製造拒絕存取(如以管理員執行)
+        }
+        let errs = []
+        let ev = fsWatchFolder(fd, { timeInterval: 50 })
+        ev.on('change', () => {})
+        ev.on('error', (e) => {
+            errs.push({ fun: e.fun, code: e.msg && e.msg.code })
+        })
+        await waitFor(() => errs.length >= 1, 10000)
+        ev.clear()
+        await delay(300)
+        restore()
+        assert.strict.deepStrictEqual(errs.length >= 1, true)
+        assert.strict.deepStrictEqual(errs[0], { fun: 'watcher', code: 'EPERM' })
     })
 
     it(`hygiene: no uncaughtException or unhandledRejection leaked from any module above`, async function() {

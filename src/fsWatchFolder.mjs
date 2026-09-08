@@ -1,12 +1,11 @@
 import path from 'path'
-import fs from 'fs'
-import events from 'events'
 import chokidar from 'chokidar'
 import get from 'lodash-es/get.js'
 import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
 import cint from './cint.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
+import evem from './evem.mjs'
 
 
 /**
@@ -21,7 +20,7 @@ import fsIsFolder from './fsIsFolder.mjs'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
- * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change事件，clear為停止全部監聽，不須輸入
+ * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如資料夾內含無權限之子資料夾EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為evem之safe型，change於watcher回呼或timer內派發，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
  * @example
  * need test in nodejs.
  *
@@ -160,7 +159,7 @@ function fsWatchFolder(fd, opt = {}) {
     timeBinaryInterval = cint(timeBinaryInterval)
 
     //ev
-    let ev = new events.EventEmitter()
+    let ev = evem({ type: 'safe' }) //change事件於chokidar回呼或setInterval內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
 
     //fpSpe
     let fpSpe = fd
@@ -176,14 +175,11 @@ function fsWatchFolder(fd, opt = {}) {
             if (!fsIsFolder(fpSpe)) {
                 //因監聽觸發狀態不能unWatch, 故要延遲呼叫
 
-                //stats
-                let stats = fs.fstatSync
-
-                //emit
+                //emit, 資料夾已消失無法stat, stats比照chokidar之unlinkDir給undefined(原碼誤將fs.fstatSync函數本身塞入)
                 ev.emit('change', {
                     type: 'unlinkDir',
                     fp: path.resolve(fpSpe),
-                    stats,
+                    stats: undefined,
                 })
 
                 setTimeout(() => {
@@ -231,6 +227,10 @@ function fsWatchFolder(fd, opt = {}) {
                     }, 1)
                 }
 
+            })
+            .on('error', (err) => {
+                //chokidar之FSWatcher為nodejs原生EventEmitter, 其對非ENOENT/ENOTDIR之錯誤(如EPERM、EACCES)會emit('error'), 無監聽者即throw殺行程, 故轉為ev之error事件
+                ev.emit('error', { fun: 'watcher', msg: err })
             })
 
 

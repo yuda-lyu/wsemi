@@ -209,7 +209,7 @@ function genSafe(funGetListenerError) {
  *
  * type='basic'(預設)為原生eventemitter3實例, 與既往行為完全相同: 監聽器拋錯會原樣外拋(同步emit時傳回emit呼叫端, 於timer/stream/watcher等非同步派發時即為uncaughtException; async監聽器reject即為unhandledRejection), 於nodejs兩者皆會使整個行程崩潰且emit端無法try catch
  *
- * type='safe'為攔截監聽器錯誤之實例, 適用於上述非同步派發或監聽器可能為async之情境(wsemi內cache、alive、cacheSt、fsBuildReadStreamText、fsTask、fsTaskCp、queue皆已明示採用): 於on/once/addListener註冊時包裝監聽器, 同步拋錯與async reject皆改交由opt.funGetListenerError處置, off/removeListener以原函數反查包裝函數移除, 對應用端透明
+ * type='safe'為攔截監聽器錯誤之實例, 適用於上述非同步派發或監聽器可能為async之情境(wsemi內cache、alive、cacheSt、fsBuildReadStreamText、fsTask、fsTaskCp、queue、fsWatchFile、fsWatchFolder、fsEvem皆已明示採用): 於on/once/addListener註冊時包裝監聽器, 同步拋錯與async reject皆改交由opt.funGetListenerError處置, off/removeListener以原函數反查包裝函數移除, 對應用端透明
  *
  * 未提供opt.funGetListenerError時採預設政策: 事件參數args[0].pm若為promise-like且可reject(具then與reject)則先reject(使模組流程不懸置), 再於同一實例emit('error', { fun: 'listener', name, msg: err, args }); error監聽器自身出錯(避免無限遞迴)或實例上無任何error監聽者(否則錯誤無聲消失)則改以console.error留痕。需自訂處置(如記log、reject特定pm、依事件名分流)者自行傳入funGetListenerError, 其同步拋錯或async reject皆被吞掉不外溢。listeners()回傳原函數; 移除監聽器後快取隨之清理
  *

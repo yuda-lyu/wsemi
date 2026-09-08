@@ -355,12 +355,9 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //dbc
         let dbc = debounce(300)
 
-        //core
+        //core, 回傳pmm(外部任務執行狀態), 來源無紀錄則回傳'no src'; 原碼另建一個永不settle之外層pm回傳, 無人await故無害但為死碼, 已移除
         let core = async (msg) => {
             // console.log('core', msg)
-
-            //pm
-            let pm = genPm()
 
             //kpSrc
             let kpSrc = readKpObSrc()
@@ -368,8 +365,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
             //check
             if (!iseobj(kpSrc)) {
                 //來源無紀錄檔案, 故不偵測
-                pm.resolve('no src')
-                return pm
+                return 'no src'
             }
 
             //kpTar
@@ -399,7 +395,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
             //emit
             ev.emit('change', { kpSrc, kpTar, kpCmp: r, pm: pmm })
 
-            return pm
+            return pmm
         }
 
         //evFile

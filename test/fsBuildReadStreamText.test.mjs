@@ -24,7 +24,10 @@ def123xyz
 `, 'utf8')
 
         let ev = fsBuildReadStreamText(fp)
-        ms.push({ 'create': '' })
+
+        ev.on('create', () => { //create於回傳ev後延後派發, 呼叫端可監聽且必先於line與close
+            ms.push({ 'create': '' })
+        })
 
         ev.on('line', (line) => {
             // console.log('line', line)
@@ -63,6 +66,33 @@ def123xyz
         let r = await test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should emit error { fun: 'stream' } then close (not crash) when file disappears before stream opens`, async function() {
+        let fdt = './_test_fsBuildReadStreamText_err'
+        fsCreateFolder(fdt)
+        let fp = `${fdt}/t.txt`
+        fs.writeFileSync(fp, 'a\nb\n', 'utf8')
+        let got = []
+        let ev = fsBuildReadStreamText(fp) //fsIsFile通過
+        ev.on('create', () => {
+            got.push('create')
+        })
+        ev.on('error', (e) => {
+            got.push(`error:${e.fun}:${e.msg && e.msg.code}`)
+        })
+        ev.on('line', () => {
+            got.push('line')
+        })
+        let pm = genPm()
+        ev.on('close', () => {
+            got.push('close')
+            pm.resolve()
+        })
+        fs.unlinkSync(fp) //stream之open為非同步, 此刻刪檔使open得ENOENT
+        await pm
+        fsDeleteFolder(fdt)
+        assert.strict.deepStrictEqual(got, ['create', 'error:stream:ENOENT', 'close'])
     })
 
 })
