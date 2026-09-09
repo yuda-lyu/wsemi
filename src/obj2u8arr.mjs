@@ -1,12 +1,26 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import isbol from './isbol.mjs'
-import isarr from './isarr.mjs'
+import isarr1 from './isarr1.mjs'
+import isab from './isab.mjs'
 import iseobj from './iseobj.mjs'
 import getBufferSize from './getBufferSize.mjs'
 import obj2stru8arr from './obj2stru8arr.mjs'
 import str2u8arr from './str2u8arr.mjs'
 import bufWriteDbl from './bufWriteDbl.mjs'
+
+
+//toU8arrView, 取得逐位元組之Uint8Array視圖
+//注意不可用new Uint8Array(typedArray), 那是「逐元素」轉換, 每個元素會被截斷為uint8; 對Uint8Array兩者恰好相同, 對Uint16Array則會遺失高位元組(如Uint16Array([300])得[44]而非[44,1])
+function toU8arrView(b) {
+    if (isab(b)) {
+        return new Uint8Array(b) //ArrayBuffer本身即位元組來源, 此處為位元組視圖非逐元素轉換
+    }
+    if (ArrayBuffer.isView(b)) {
+        return new Uint8Array(b.buffer, b.byteOffset, b.byteLength)
+    }
+    return new Uint8Array(0)
+}
 
 
 // function concatU8arr(a, b) { //處理大檔時Nodejs記憶體會不足
@@ -16,8 +30,8 @@ function concatU8arr(a, b) {
     let ia = getBufferSize(a)
     let ib = getBufferSize(b)
     let tmp = new Uint8Array(ia + ib)
-    tmp.set(new Uint8Array(a), 0)
-    tmp.set(new Uint8Array(b), ia)
+    tmp.set(toU8arrView(a), 0)
+    tmp.set(toU8arrView(b), ia)
     return tmp
 }
 
@@ -29,7 +43,7 @@ function concatU8arr(a, b) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.mjs Github}
  * @memberOf wsemi
- * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，但僅Uint8Array能無損往返，另二者皆有代價：ArrayBuffer因無法直接操作(非View，只有TypedArray與DataView可操作)故轉Uint8Array處理，數值不變但型別遺失；Uint16Array於分塊打包時各元素會被截斷為8位元且尾端以0補足位元組長度，如Uint16Array([2,300])會返回Uint8Array([2,44,0,0])，故含Uint16Array之資料請自行先轉Uint8Array再輸入
+ * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，三者皆以逐位元組方式打包，並由標記記錄原型別，故u8arr2obj可原型別原數值還原
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效物件或陣列、或序列化失敗(如含BigInt、循環參照)時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
@@ -62,7 +76,7 @@ function concatU8arr(a, b) {
  */
 function obj2u8arr(data, opt = {}) {
     let bs = []
-    let r = []
+    let r = new Uint8Array()
 
     //returnWithStateAndMsg
     let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
@@ -83,8 +97,8 @@ function obj2u8arr(data, opt = {}) {
         }
     }
 
-    //check, 陣列只判「是陣列且長度大於0」, 不可用isearr, 因isearr於長度為1時會額外檢查該元素是否有效, 使['']、[null]這類單元素陣列被整個拒絕, 而['','a']卻可通過, 造成同型輸入因長度而結果不同
-    if (!(isarr(data) && data.length > 0) && !iseobj(data)) {
+    //check, 陣列以isarr1判「是陣列且長度大於0」, 不可用isearr, 因isearr於長度為1時會額外檢查該元素是否有效, 使['']、[null]這類單元素陣列被整個拒絕, 而['','a']卻可通過, 造成同型輸入因長度而結果不同
+    if (!isarr1(data) && !iseobj(data)) {
         return retError('invalid data, data is not an effective object or a non-empty array')
     }
 

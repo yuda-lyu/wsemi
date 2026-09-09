@@ -3,6 +3,9 @@ import isbol from './isbol.mjs'
 import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
+import isu8arr from './isu8arr.mjs'
+import isu16arr from './isu16arr.mjs'
+import isab from './isab.mjs'
 
 
 /**
@@ -89,7 +92,30 @@ function stru8arr2obj(data, opt = {}) {
     }
 
     //reMark, 標記須完整匹配整個字串(錨定^與$), 否則應用字串內只要夾雜標記文字即被誤判為二進位參照; 索引直接取自捕獲組, 不再以replace去頭後交cint推算(殘留文字會被cint吃成0而取到錯誤之binary)
-    let reMark = /^\[BlazeFor(?:Uint8Array|Uint16Array|ArrayBuffer)\]::(\d+)$/
+    let reMark = /^\[BlazeFor(Uint8Array|Uint16Array|ArrayBuffer)\]::(\d+)$/
+
+    //restoreBin, 依標記所記之原型別還原二進位
+    //經obj2u8arr打包者, binarys內為切出之原始位元組Uint8Array, 須依型別重建; 未經打包者(直接呼叫obj2stru8arr)binarys內即為原物件, 已是該型別故原樣回傳
+    let restoreBin = (type, id, b) => {
+        if (type === 'Uint16Array' && !isu16arr(b)) {
+            if (!isu8arr(b)) {
+                throw new Error(`binarys[${id}] can not be restored to Uint16Array`)
+            }
+            if (b.byteLength % 2 !== 0) {
+                throw new Error(`binarys[${id}] byteLength[${b.byteLength}] is not even, can not be restored to Uint16Array`)
+            }
+            //Uint16Array之視圖要求byteOffset對齊且長度相符, 不符者複製一份以取得對齊之buffer
+            let bb = (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) ? b : new Uint8Array(b)
+            return new Uint16Array(bb.buffer)
+        }
+        if (type === 'ArrayBuffer' && !isab(b)) {
+            if (!isu8arr(b)) {
+                throw new Error(`binarys[${id}] can not be restored to ArrayBuffer`)
+            }
+            return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
+        }
+        return b
+    }
 
     //reEsced, 編碼端對「與標記格式完整相同之應用字串」前置了跳脫記號, 此處剝掉一層還原; 允許重複跳脫故以*涵蓋多層
     let tagEsc = '[BlazeForPreventEscape]'
@@ -118,12 +144,12 @@ function stru8arr2obj(data, opt = {}) {
             }
 
             //id, 須做界線檢查; 標記格式正確但索引不存在, 只可能為封包損毀或results與binarys不匹配, 故視為壞封包直接拋錯交由外層catch, 不可回undefined(reviver回undefined會使該鍵消失、陣列元素變null)而靜默毀損
-            let id = Number(m[1])
+            let id = Number(m[2])
             if (id >= binarys.length) {
                 throw new Error(`binary index out of range[${id}], binarys.length[${binarys.length}]`)
             }
 
-            return binarys[id]
+            return restoreBin(m[1], id, binarys[id])
         })
 
     }

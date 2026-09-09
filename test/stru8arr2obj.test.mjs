@@ -143,6 +143,34 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should keep binarys untouched when they already are of the marker type`, function() {
+        //直接呼叫obj2stru8arr者binarys內即為原物件, 已是該型別故不重建
+        let u16 = new Uint16Array([300, 400])
+        let ab = new Uint8Array([5, 6]).buffer
+        let r = stru8arr2obj({ results: '{"a":"[BlazeForUint16Array]::0","b":"[BlazeForArrayBuffer]::1"}', binarys: [u16, ab] })
+        let rr = { a: u16, b: ab }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should rebuild Uint16Array from raw bytes according to the marker type`, function() {
+        //經obj2u8arr打包者binarys內為切出之原始位元組, 須依標記型別重建
+        let r = stru8arr2obj({ results: '{"a":"[BlazeForUint16Array]::0"}', binarys: [new Uint8Array([44, 1, 144, 1])] })
+        let rr = { a: new Uint16Array([300, 400]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should rebuild ArrayBuffer from raw bytes according to the marker type`, function() {
+        let r = stru8arr2obj({ results: '{"a":"[BlazeForArrayBuffer]::0"}', binarys: [new Uint8Array([5, 6])] })
+        let rr = { a: new Uint8Array([5, 6]).buffer }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should treat an odd byteLength as a broken packet when the marker says Uint16Array`, function() {
+        let r = stru8arr2obj({ results: '{"a":"[BlazeForUint16Array]::0"}', binarys: [new Uint8Array([1, 2, 3])] }, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('is not even') >= 0, true, `msg 應標明位元組長度非偶數, got ${r.msg}`)
+    })
+
     it(`should unescape an escaped marker back to the original application string`, function() {
         let B = [new Uint8Array([7])]
         let r = stru8arr2obj({ results: '{"t":"[BlazeForPreventEscape][BlazeForUint8Array]::0"}', binarys: B })

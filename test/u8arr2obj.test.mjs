@@ -129,6 +129,40 @@ describe(`u8arr2obj`, function() {
         }
     })
 
+    it(`should round-trip Uint16Array with its original type and values (element > 255 must not be truncated)`, function() {
+        //原以new Uint8Array(u16a)逐元素打包, 300會被截為44且尾端補零; 改為逐位元組打包後由標記型別還原
+        let o = { v: new Uint16Array([2, 300, 65535]) }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip ArrayBuffer with its original type`, function() {
+        let o = { v: new Uint8Array([9, 8, 7]).buffer }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip a mix of Uint8Array, Uint16Array and ArrayBuffer`, function() {
+        let o = {
+            a: new Uint8Array([1, 2]),
+            b: new Uint16Array([300, 400]),
+            c: new Uint8Array([5]).buffer,
+            d: 'x',
+        }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip zero-length Uint16Array and ArrayBuffer`, function() {
+        let o = { a: new Uint16Array(0), b: new ArrayBuffer(0), c: new Uint8Array(0) }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should round-trip a zero-length binary (block length must be 0, not null)`, function() {
         let o = { a: new Uint8Array(0), b: new Uint8Array([9]) }
         let r = u8arr2obj(obj2u8arr(o))
