@@ -168,4 +168,28 @@ describe(`ltdtkeysheads2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input a valid ltdt with returnWithStateAndMsg`, function() {
+        //opt為第4參數, 因第2、3參數keys與kphead為既有參數
+        let r = ltdtkeysheads2mat([{ a: 1, b: 2 }], [], {}, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: [['a', 'b'], [1, 2]] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = ltdtkeysheads2mat(NaN, [], {}, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid ltdt' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } when any element is not an effective object with returnWithStateAndMsg`, function() {
+        let r = ltdtkeysheads2mat([{ a: 1 }, NaN], [], {}, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = ltdtkeysheads2mat([{ a: 1, b: 2 }], [], {}, { returnWithStateAndMsg: 'yes' })
+        let rr = [['a', 'b'], [1, 2]]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

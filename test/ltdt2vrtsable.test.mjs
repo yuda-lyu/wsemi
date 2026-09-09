@@ -261,4 +261,36 @@ describe(`ltdt2vrtsable`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input a valid ltdt with returnWithStateAndMsg`, function() {
+        //opt為第3參數, 因第2參數mergerowkeys為既有參數
+        let ltdt = [{ a: 1, b: 2 }]
+        let r = ltdt2vrtsable(ltdt, [], { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: ltdt2vrtsable(ltdt) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = ltdt2vrtsable(NaN, [], { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid ltdt' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid mergerowkeys' } when mergerowkeys is not an array with returnWithStateAndMsg`, function() {
+        let r = ltdt2vrtsable([{ a: 1 }], NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid mergerowkeys' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } when any element is not an effective object with returnWithStateAndMsg`, function() {
+        let r = ltdt2vrtsable([{ a: 1 }, NaN], [], { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let ltdt = [{ a: 1, b: 2 }]
+        let r = ltdt2vrtsable(ltdt, [], { returnWithStateAndMsg: 'yes' })
+        let rr = ltdt2vrtsable(ltdt)
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

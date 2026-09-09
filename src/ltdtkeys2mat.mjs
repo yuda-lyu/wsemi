@@ -21,7 +21,8 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @param {Array} [keys=null] 輸入字串陣列，若不輸入則由ltdt提取，預設為null
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String|Number|Array|Object} [opt.empty=''] 輸入若無鍵值時給予之預設值，預設''
- * @returns {Array} 回傳資料陣列
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Array|Object} 回傳資料陣列，ltdt無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b']))
@@ -30,9 +31,28 @@ import getltdtkeys from './getltdtkeys.mjs'
  */
 function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
 
-    //check
+    //returnWithStateAndMsg, 本函數原就有opt參數(opt.empty), 故併入同一opt而非新增參數
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return []
+        }
+    }
+
+    //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨
     if (!isearr(ltdt)) {
-        return []
+        return retError('invalid ltdt')
     }
 
     //keys
@@ -42,7 +62,7 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
 
     //check
     if (size(keys) === 0) {
-        return []
+        return retError('invalid keys, can not extract any key from ltdt')
     }
 
     //check
@@ -53,7 +73,7 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
         }
     })
     if (b) {
-        return []
+        return retError('invalid ltdt, every element must be an effective object')
     }
 
     //empty
@@ -77,7 +97,15 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
         mat.push(r)
     })
 
-    return mat
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: mat,
+        }
+    }
+    else {
+        return mat
+    }
 }
 
 

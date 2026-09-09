@@ -3,6 +3,8 @@ import reverse from 'lodash-es/reverse.js'
 import size from 'lodash-es/size.js'
 import range from 'lodash-es/range.js'
 import isEqual from 'lodash-es/isEqual.js'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import isearr from './isearr.mjs'
 import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
@@ -17,21 +19,42 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
- * @returns {Array} 回傳物件陣列
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Array|Object} 回傳物件陣列，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))
  * // => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]
  *
  */
-function ltdt2vrtsable(ltdt, mergerowkeys = []) {
+function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
 
-    //check
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return []
+        }
+    }
+
+    //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨
     if (!isearr(ltdt)) {
-        return []
+        return retError('invalid ltdt')
     }
     if (!isarr(mergerowkeys)) {
-        return []
+        return retError('invalid mergerowkeys')
     }
 
     //check ltdt
@@ -42,7 +65,7 @@ function ltdt2vrtsable(ltdt, mergerowkeys = []) {
         }
     })
     if (b) {
-        return []
+        return retError('invalid ltdt, every element must be an effective object')
     }
 
     //tabkeys
@@ -100,7 +123,15 @@ function ltdt2vrtsable(ltdt, mergerowkeys = []) {
     })
     let tabrows = reverse(qs) //轉回正序
 
-    return tabrows
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: tabrows,
+        }
+    }
+    else {
+        return tabrows
+    }
 }
 
 

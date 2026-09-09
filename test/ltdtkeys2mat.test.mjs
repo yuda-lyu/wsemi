@@ -103,4 +103,34 @@ describe(`ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input a valid ltdt with returnWithStateAndMsg`, function() {
+        //本函數原就有opt參數(opt.empty), returnWithStateAndMsg併入同一opt而非新增參數
+        let r = ltdtkeys2mat([{ a: 1, b: 2 }], null, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: [[1, 2]] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep opt.empty working together with returnWithStateAndMsg`, function() {
+        let r = ltdtkeys2mat([{ a: 1 }], ['a', 'z'], { empty: 'X', returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: [[1, 'X']] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = ltdtkeys2mat(NaN, null, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid ltdt' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } when any element is not an effective object with returnWithStateAndMsg`, function() {
+        let r = ltdtkeys2mat([{ a: 1 }, NaN], ['a'], { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = ltdtkeys2mat([{ a: 1, b: 2 }], null, { returnWithStateAndMsg: 'yes' })
+        let rr = [[1, 2]]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
