@@ -173,4 +173,41 @@ describe(`str2sha`, function() {
         assert.strict.deepStrictEqual(rsUniq.length, ns.length)
     })
 
+    it(`should return { state: 'success', msg } when input 'abc' and 256 with returnWithStateAndMsg`, function() {
+        //opt為第4參數, 因第2、3參數n與base64為既有參數
+        let r = str2sha('abc', 256, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: str2sha('abc', 256) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid str' } when str is not a string with returnWithStateAndMsg`, function() {
+        let r = str2sha(NaN, 256, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid str' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } instead of throwing when n is invalid with returnWithStateAndMsg`, function() {
+        //預設模式維持拋錯之既有契約, 僅opt-in模式改以error狀態回報
+        let r = str2sha('abc', 999, false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('invalid n[999]') >= 0, true, `msg 應標明無效之n, got ${r.msg}`)
+    })
+
+    it(`should return { state: 'error' } instead of throwing when n is not a positive integer with returnWithStateAndMsg`, function() {
+        let r = str2sha('abc', 'x', false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+    })
+
+    it(`should still throw when n is invalid by default`, function() {
+        //預設模式之既有行為不得改變
+        assert.throws(() => str2sha('abc', 999))
+        assert.throws(() => str2sha('abc', 'x'))
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = str2sha('abc', 256, false, { returnWithStateAndMsg: 'yes' })
+        let rr = str2sha('abc', 256)
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

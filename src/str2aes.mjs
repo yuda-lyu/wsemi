@@ -3,6 +3,7 @@ import AES from 'crypto-js/aes.js'
 // import padPkcs7 from 'crypto-js/pad-pkcs7.js'
 import enchex from 'crypto-js/enc-hex.js'
 import encb64 from 'crypto-js/enc-base64.js'
+import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 
@@ -19,7 +20,9 @@ import isbol from './isbol.mjs'
  * @param {String} str 輸入一般字串，非有效字串時回傳空字串
  * @param {String} key 輸入加密key，非有效字串時回傳空字串
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
- * @returns {String} 回傳經AES轉換後字串，採Hex/base64顯示，str或key非有效字串時回傳空字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {String|Object} 回傳經AES轉換後字串，採Hex/base64顯示，str或key非有效字串時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let str = 'test中文abcdefghijklmn'
@@ -31,7 +34,7 @@ import isbol from './isbol.mjs'
  * // => U2FsdGVkX19c7rKkQ38SfqZLaQEKzLD0PhXzzdYeGbngewsPmzS8PcOwHQIsf2Zo (is random)
  *
  */
-function str2aes(str, key, base64 = false) {
+function str2aes(str, key, base64 = false, opt = {}) {
     // let str='123abc中文'
     // let key='123'
     // let iv='abc'
@@ -55,12 +58,31 @@ function str2aes(str, key, base64 = false) {
     // console.log('output', r)
     // //可固定輸出: DJ5FkpmWJPA/GJRB3/WYRQ==
 
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return ''
+        }
+    }
+
     //check
     if (!isestr(str)) {
-        return ''
+        return retError('invalid str')
     }
     if (!isestr(key)) {
-        return ''
+        return retError('invalid key')
     }
 
     //check
@@ -68,18 +90,32 @@ function str2aes(str, key, base64 = false) {
         base64 = false
     }
 
-    let o = AES.encrypt(str, key)
+    //c, 須攔截非預期錯誤(如crypto-js對過大資料拋錯), 否則會外拋至呼叫端
     let c = ''
-    if (base64) {
-        c = o.toString()
+    try {
+        let o = AES.encrypt(str, key)
+        if (base64) {
+            c = o.toString()
+        }
+        else {
+            let b64 = o.toString()
+            let e64 = encb64.parse(b64)
+            c = e64.toString(enchex)
+        }
     }
-    else {
-        let b64 = o.toString()
-        let e64 = encb64.parse(b64)
-        c = e64.toString(enchex)
+    catch (err) {
+        return retError(err.toString())
     }
 
-    return c
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: c,
+        }
+    }
+    else {
+        return c
+    }
 }
 
 export default str2aes

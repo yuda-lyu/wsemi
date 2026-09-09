@@ -100,4 +100,29 @@ describe(`str2hint`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input 'abc' with returnWithStateAndMsg`, function() {
+        let r = str2hint('abc', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 807794786 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'success', msg: 0 } when input '' with returnWithStateAndMsg`, function() {
+        //空字串為合法輸入, 對應0, 不可視為失敗
+        let r = str2hint('', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 0 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = str2hint(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid str' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = str2hint('abc', { returnWithStateAndMsg: 'yes' })
+        let rr = 807794786
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

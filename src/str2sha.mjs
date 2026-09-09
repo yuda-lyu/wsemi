@@ -5,6 +5,7 @@ import SHA384 from 'crypto-js/sha384.js'
 import SHA512 from 'crypto-js/sha512.js'
 import encb64 from 'crypto-js/enc-base64.js'
 import enchex from 'crypto-js/enc-hex.js'
+import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
 import ispint from './ispint.mjs'
@@ -38,9 +39,11 @@ let kpSha = {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串，非有效字串時回傳空字串
- * @param {Number} n 輸入演算法位數，僅可為1、224、256、384、512，其餘一律擲出錯誤
+ * @param {Number} n 輸入演算法位數，僅可為1、224、256、384、512，其餘一律擲出錯誤，但opt.returnWithStateAndMsg為true時改以error狀態回報而不擲出
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
- * @returns {String} 回傳經SHA-n轉換後字串，str非有效字串時回傳空字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {String|Object} 回傳經SHA-n轉換後字串，str非有效字串時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(str2sha('test中文', 1))
@@ -78,22 +81,48 @@ let kpSha = {
  * }
  *
  */
-function str2sha(str, n, base64 = false) {
+function str2sha(str, n, base64 = false, opt = {}) {
+
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return ''
+        }
+    }
 
     //check
     if (!isestr(str)) {
-        return ''
+        return retError('invalid str')
     }
 
     //check n, 須為正整數
     //此檢核須置於haskey之前: haskey內部為key in obj而含原型鏈, 'toString'等鍵會誤判為存在
+    //n無效屬呼叫端之程式錯誤, 預設模式維持拋錯之既有契約; 僅returnWithStateAndMsg時改以error狀態回報, 以與該模式「不拋錯」之語意一致
     if (!ispint(n)) {
+        if (returnWithStateAndMsg) {
+            return retError('n is not a positive integer')
+        }
         throw new Error(`n is not a positive integer`)
     }
     n = cint(n)
 
     //check n, 須為kpSha內可用之n
     if (!haskey(kpSha, n)) {
+        if (returnWithStateAndMsg) {
+            return retError(`invalid n[${n}]`)
+        }
         throw new Error(`invalid n[${n}]`)
     }
 
@@ -102,18 +131,31 @@ function str2sha(str, n, base64 = false) {
         base64 = false
     }
 
-    let fnSha = kpSha[n]
-
-    let o = fnSha(str)
+    //c, 須攔截非預期錯誤(如crypto-js對過大資料拋錯), 否則會外拋至呼叫端
     let c = ''
-    if (base64) {
-        c = o.toString(encb64)
+    try {
+        let fnSha = kpSha[n]
+        let o = fnSha(str)
+        if (base64) {
+            c = o.toString(encb64)
+        }
+        else {
+            c = o.toString(enchex)
+        }
+    }
+    catch (err) {
+        return retError(err.toString())
+    }
+
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: c,
+        }
     }
     else {
-        c = o.toString(enchex)
+        return c
     }
-
-    return c
 }
 
 

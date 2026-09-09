@@ -95,4 +95,28 @@ describe(`str2aes`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input a string and a key with returnWithStateAndMsg`, function() {
+        //opt為第4參數, 因第2、3參數key與base64為既有參數; AES帶隨機salt故每次結果不同, 只驗狀態
+        let r = str2aes('abc', 'k', false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'success')
+        assert.strict.deepStrictEqual(typeof r.msg === 'string' && r.msg.length > 0, true)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid str' } when str is not a string with returnWithStateAndMsg`, function() {
+        let r = str2aes(NaN, 'k', false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid str' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+        let r = str2aes('abc', NaN, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid key' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = str2aes('abc', 'k', false, { returnWithStateAndMsg: 'yes' })
+        assert.strict.deepStrictEqual(typeof r === 'string' && r.length > 0, true)
+    })
+
 })

@@ -1,3 +1,5 @@
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
 
 
@@ -7,7 +9,9 @@ import isstr from './isstr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2hint.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
- * @returns {String} 回傳轉換後整數
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Integer|Object} 回傳轉換後整數，輸入非字串時回傳null，輸入空字串時回傳0；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(str2hint('abc'))
@@ -26,14 +30,41 @@ import isstr from './isstr.mjs'
  * // => null
  *
  */
-function str2hint(str) {
+function str2hint(str, opt = {}) {
+
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retSuccess
+    let retSuccess = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'success',
+                msg,
+            }
+        }
+        else {
+            return msg
+        }
+    }
 
     //check
     if (!isstr(str)) {
-        return null
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg: 'invalid str',
+            }
+        }
+        else {
+            return null
+        }
     }
     if (str === '') {
-        return 0
+        return retSuccess(0) //空字串為合法輸入, 對應0, 非失敗
     }
 
     // let _int = ''
@@ -58,7 +89,7 @@ function str2hint(str) {
         0
     )
     // console.log(i)
-    return i
+    return retSuccess(i)
 }
 
 

@@ -1,5 +1,6 @@
 import assert from 'assert'
 import aes2str from '../src/aes2str.mjs'
+import str2aes from '../src/str2aes.mjs'
 
 
 describe(`aes2str`, function() {
@@ -100,6 +101,45 @@ describe(`aes2str`, function() {
     it(`should return '' when input NaN`, function() {
         let r = aes2str(NaN)
         let rr = ''
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'success', msg: 'abc' } when decrypted with the right key with returnWithStateAndMsg`, function() {
+        let enc = str2aes('abc', 'k')
+        let r = aes2str(enc, 'k', false, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 'abc' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid str' } when str is not a string with returnWithStateAndMsg`, function() {
+        let r = aes2str(NaN, 'k', false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid str' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+        let r = aes2str('abc', NaN, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid key' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } when decrypted with a wrong key with returnWithStateAndMsg`, function() {
+        //原碼於key錯誤時回空字串, 與「明文本就是空字串」無從分辨; 因str2aes已擋下空字串輸入, 故成功路徑之明文必非空
+        let enc = str2aes('abc', 'k')
+        let r = aes2str(enc, 'wrong-key', false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.length > 0, true, `msg 應說明解密失敗, got ${r.msg}`)
+    })
+
+    it(`should return { state: 'error' } when str is not a valid cipher text with returnWithStateAndMsg`, function() {
+        let r = aes2str('not-hex-at-all', 'k', false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let enc = str2aes('abc', 'k')
+        let r = aes2str(enc, 'k', false, { returnWithStateAndMsg: 'yes' })
+        let rr = 'abc'
         assert.strict.deepStrictEqual(r, rr)
     })
 
