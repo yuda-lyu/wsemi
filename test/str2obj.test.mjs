@@ -16,7 +16,7 @@ describe(`str2obj`, function() {
         u16a: new Uint16Array([11, 79, 6]),
     }
     let co1 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz"}'
-    let co2 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::C08G"}'
+    let co2 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}'
 
     it(`should return ${JSON.stringify(o1)} when input ${co1}`, function() {
         let r = str2obj(co1)

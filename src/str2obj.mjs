@@ -21,12 +21,12 @@ import isarr from './isarr.mjs'
  * // =>   u16a: { '0': 11, '1': 79, '2': 6 }
  * // => }
  *
- * console.log(str2obj('{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint8Array]::C08G"}', ['Uint8Array', 'Uint16Array']}))
+ * console.log(str2obj('{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}', ['Uint8Array', 'Uint16Array']}))
  * // => {
  * // =>   a: 'abc',
  * // =>   b: 12.3,
  * // =>   u8a: Uint8Array [ 66, 97, 115 ],
- * // =>   u16a: Uint8Array [ 11, 79, 6 ]
+ * // =>   u16a: Uint16Array [ 11, 79, 6 ]
  * // => }
  *
  */

@@ -1,12 +1,13 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isu16arr from './isu16arr.mjs'
-import u16arr2u8arr from './u16arr2u8arr.mjs'
 import u8arr2b64 from './u8arr2b64.mjs'
 
 
 /**
  * Uint16Array轉base64字串
+ *
+ * 以逐位元組(little-endian)方式編碼，故各元素之高位元組不會遺失；不可經u16arr2u8arr轉換，該函數為逐元素轉換會將大於255之元素截斷
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u16arr2b64.test.mjs Github}
  * @memberOf wsemi
@@ -16,8 +17,8 @@ import u8arr2b64 from './u8arr2b64.mjs'
  * @returns {String|Object} 回傳base64字串，輸入非Uint16Array時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
- * console.log(u16arr2b64(new Uint16Array([1, 2.3, '45', 'abc'])))
- * // => 'AQItAA=='
+ * console.log(u16arr2b64(new Uint16Array([11, 79, 6])))
+ * // => 'CwBPAAYA'
  *
  * console.log(u16arr2b64('abc', { returnWithStateAndMsg: true }))
  * // => { state: 'error', msg: 'invalid u16a' }
@@ -50,13 +51,13 @@ function u16arr2b64(u16a, opt = {}) {
     }
 
     //b64, 內部一律以returnWithStateAndMsg取狀態, 逐一判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端
-    let b64 = null
+    let b64 = ''
     try {
-        let ru8a = u16arr2u8arr(u16a, { returnWithStateAndMsg: true })
-        if (ru8a.state === 'error') {
-            return retError(`u16arr2u8arr: ${ru8a.msg}`)
-        }
-        let rb64 = u8arr2b64(ru8a.msg, { returnWithStateAndMsg: true })
+
+        //u8a, 取逐位元組視圖, 不可用u16arr2u8arr(逐元素轉換會截斷大於255之元素)
+        let u8a = new Uint8Array(u16a.buffer, u16a.byteOffset, u16a.byteLength)
+
+        let rb64 = u8arr2b64(u8a, { returnWithStateAndMsg: true })
         if (rb64.state === 'error') {
             return retError(`u8arr2b64: ${rb64.msg}`)
         }

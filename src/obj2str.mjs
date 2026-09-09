@@ -24,7 +24,7 @@ import isarr from './isarr.mjs'
  * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":{"0":11,"1":79,"2":6}}'
  *
  * console.log(obj2str(o, ['Uint8Array', 'Uint16Array']}))
- * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::C08G"}'
+ * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}'
  *
  */
 function obj2str(data, ext = 'Uint8Array') {

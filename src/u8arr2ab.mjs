@@ -11,7 +11,7 @@ import isu8arr from './isu8arr.mjs'
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {ArrayBuffer|Object} 回傳ArrayBuffer，輸入非Uint8Array時回傳空ArrayBuffer；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {ArrayBuffer|Object} 回傳ArrayBuffer，僅含該Uint8Array所視之範圍(依byteOffset與byteLength切出)而非其底層buffer全部，故輸入為大buffer之視圖(如nodejs之Buffer)時不會夾帶無關資料；輸入非Uint8Array時回傳空ArrayBuffer；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(u8arr2ab(new Uint8Array([66, 97, 115])))
@@ -48,9 +48,10 @@ function u8arr2ab(u8a, opt = {}) {
     }
 
     //ab, 須攔截非預期錯誤, 否則會外拋至呼叫端
+    //不可直接回u8a.buffer, 因Uint8Array可能只是大buffer之一段視圖(如nodejs之Buffer.from小資料會共用64KB pool), 直接回底層buffer會夾帶無關記憶體
     let ab = null
     try {
-        ab = u8a.buffer
+        ab = u8a.buffer.slice(u8a.byteOffset, u8a.byteOffset + u8a.byteLength)
     }
     catch (err) {
         return retError(err.toString())

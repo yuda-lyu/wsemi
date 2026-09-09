@@ -12,7 +12,7 @@ describe(`obj2str`, function() {
         u16a: new Uint16Array([11, 79, 6]),
     }
     let co1 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":{"0":11,"1":79,"2":6}}'
-    let co2 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::C08G"}'
+    let co2 = '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}'
 
     it(`should return ${co1} when input ${JSON.stringify(o)}`, function() {
         let r = obj2str(o)
@@ -140,8 +140,8 @@ describe(`obj2str`, function() {
 
     it(`should escape a string that looks like the Uint16Array marker even when ext is Uint8Array only`, function() {
         //跳脫不依ext分流, 否則以不同ext編碼/解碼時會不對稱
-        let r = obj2str({ t: '[Uint16Array]::C08G' })
-        let rr = '{"t":"[BlazeForPreventEscape][Uint16Array]::C08G"}'
+        let r = obj2str({ t: '[Uint16Array]::CwBPAAYA' })
+        let rr = '{"t":"[BlazeForPreventEscape][Uint16Array]::CwBPAAYA"}'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -154,7 +154,7 @@ describe(`obj2str`, function() {
     it(`should round-trip application strings that collide with the marker`, function() {
         let o2 = {
             t1: '[Uint8Array]::QmFz',
-            t2: '[Uint16Array]::C08G',
+            t2: '[Uint16Array]::CwBPAAYA',
             t3: '[Uint8Array]::not-base64!!',
             t4: 'note: [Uint8Array]::QmFz',
             t5: '[BlazeForPreventEscape][Uint8Array]::QmFz',
