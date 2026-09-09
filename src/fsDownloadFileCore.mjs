@@ -83,13 +83,13 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
 
         //error, 若有error則不會觸發finish
         streamWrite.on('error', (err) => {
-            errTemp = err.message
+            errTemp = err.message //待確認用err.toString()還是err.message更佳 bbb
             pm.reject(errTemp)
         })
 
     }
     catch (err) {
-        errTemp = err.message
+        errTemp = err.message //待確認用err.toString()還是err.message更佳 bbb
         pm.reject(errTemp)
     }
 

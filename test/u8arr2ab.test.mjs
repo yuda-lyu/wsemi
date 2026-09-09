@@ -59,4 +59,24 @@ describe(`u8arr2ab`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg: u8a.buffer } when input new Uint8Array([66, 97, 115]) with returnWithStateAndMsg`, function() {
+        let u8a = new Uint8Array([66, 97, 115])
+        let r = u8arr2ab(u8a, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: u8a.buffer }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid u8a' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = u8arr2ab(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid u8a' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return u8a.buffer when input new Uint8Array([66, 97, 115]) with invalid returnWithStateAndMsg`, function() {
+        let u8a = new Uint8Array([66, 97, 115])
+        let r = u8arr2ab(u8a, { returnWithStateAndMsg: 'yes' })
+        let rr = u8a.buffer
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

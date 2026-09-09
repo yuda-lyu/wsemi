@@ -58,4 +58,22 @@ describe(`u8arr2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg: 'test中文' } when input utf8 Uint8Array with returnWithStateAndMsg`, function() {
+        let r = u8arr2str(new Uint8Array([116, 101, 115, 116, 228, 184, 173, 230, 150, 135]), { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 'test中文' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid u8a' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = u8arr2str(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid u8a' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return 'test中文' when input utf8 Uint8Array with invalid returnWithStateAndMsg`, function() {
+        let r = u8arr2str(new Uint8Array([116, 101, 115, 116, 228, 184, 173, 230, 150, 135]), { returnWithStateAndMsg: 'yes' })
+        let rr = 'test中文'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

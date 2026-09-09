@@ -224,7 +224,7 @@ function execCliSession(command, args = [], opt = {}) {
         s.writeLine = async () => false
         s.stop = stopNoProc
         setTimeout(() => {
-            settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` })
+            settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` }) //待確認用err.toString()還是err.message更佳 bbb
         }, 1)
         return s
     }
@@ -323,7 +323,7 @@ function execCliSession(command, args = [], opt = {}) {
 
     //error, 監聽(例如執行spawn本身)錯誤訊息, 可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等
     proc.on('error', (err) => {
-        settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` })
+        settle({ error: `${err.code || 'UNKNOWN'}: ${err.message}` }) //待確認用err.toString()還是err.message更佳 bbb
     })
 
     //close

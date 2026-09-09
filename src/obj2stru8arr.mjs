@@ -1,6 +1,10 @@
 import isError from 'lodash-es/isError.js'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
+import isarr from './isarr.mjs'
+import isarr0 from './isarr0.mjs'
 import isu8arr from './isu8arr.mjs'
 import isu16arr from './isu16arr.mjs'
 import isab from './isab.mjs'
@@ -14,8 +18,10 @@ import isab from './isab.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.mjs Github}
  * @memberOf wsemi
- * @param {*} data 輸入任意資料
- * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據
+ * @param {Object|Array} data 輸入物件或陣列資料
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let data = {
@@ -33,25 +39,52 @@ import isab from './isab.mjs'
  * let r = obj2stru8arr(data)
  * console.log(r)
  * // => {
- * //     results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[Uint8Array]::0"}}',
+ * //     results: '{"a":123,"b":45.67,"c":"l1-測試中文","d":{"da":123,"db":45.67,"dc":"l2-測試中文","dd":["a","xyz",321,76.54],"de":"[BlazeForUint8Array]::0"}}',
  * //     binarys: [ Uint8Array [ 66, 97, 115 ] ]
  * // }
  *
+ * console.log(obj2stru8arr({ id: 1n }, { returnWithStateAndMsg: true }))
+ * // => {
+ * //     state: 'error',
+ * //     msg: 'TypeError: Do not know how to serialize a BigInt'
+ * // }
+ *
  */
-function obj2stru8arr(o) {
+function obj2stru8arr(o, opt = {}) {
 
-    //check
-    if (!isobj(o)) {
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retEmpty, 失敗時之空回傳值
+    let retEmpty = () => {
         return {
             results: '',
             binarys: []
         }
     }
-    if (isobj0(o)) {
-        return {
-            results: '',
-            binarys: []
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
         }
+        else {
+            return retEmpty()
+        }
+    }
+
+    //check, 物件與陣列皆支援(obj2u8arr之輸入契約為物件或陣列, 解碼端stru8arr2obj亦原就能還原陣列)
+    if (!isobj(o) && !isarr(o)) {
+        return retError('invalid data, data is not an object or array')
+    }
+    if (isobj0(o) || isarr0(o)) {
+        return retError('invalid data, data is an empty object or empty array')
     }
 
     let r = ''
@@ -64,19 +97,19 @@ function obj2stru8arr(o) {
             //console.log(key, value)
             if (isu8arr(value)) {
                 i += 1
-                let id = `[Uint8Array]::${i}`
+                let id = `[BlazeForUint8Array]::${i}`
                 bs.push(value)
                 return id
             }
             else if (isu16arr(value)) {
                 i += 1
-                let id = `[Uint16Array]::${i}`
+                let id = `[BlazeForUint16Array]::${i}`
                 bs.push(value)
                 return id
             }
             else if (isab(value)) {
                 i += 1
-                let id = `[ArrayBuffer]::${i}`
+                let id = `[BlazeForArrayBuffer]::${i}`
                 bs.push(value)
                 return id
             }
@@ -92,13 +125,13 @@ function obj2stru8arr(o) {
         //     //console.log(key, value)
         //     if (isu8arr(value)) {
         //         i += 1
-        //         let id = `[Uint8Array]::${i}`
+        //         let id = `[BlazeForUint8Array]::${i}`
         //         bs.push(value)
         //         return id
         //     }
         //     else if (isu16arr(value)) {
         //         i += 1
-        //         let id = `[Uint16Array]::${i}`
+        //         let id = `[BlazeForUint16Array]::${i}`
         //         bs.push(value)
         //         return id
         //     }
@@ -109,11 +142,25 @@ function obj2stru8arr(o) {
         // r = JSON.stringify(t)
 
     }
-    catch (err) { }
+    catch (err) {
+        //JSON.stringify拋錯(如含BigInt、循環參照)時, bs可能已被推入部份數據, 故一律回乾淨之空值
+        return retError(err.toString())
+    }
 
-    return {
-        results: r,
-        binarys: bs
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: {
+                results: r,
+                binarys: bs
+            },
+        }
+    }
+    else {
+        return {
+            results: r,
+            binarys: bs
+        }
     }
 }
 

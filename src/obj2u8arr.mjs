@@ -1,4 +1,6 @@
+import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
+import isbol from './isbol.mjs'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
 import getBufferSize from './getBufferSize.mjs'
@@ -26,7 +28,9 @@ function concatU8arr(a, b) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，注意因ArrayBuffer無法直接操作(非View，只有TypedArray與DataView可操作)故預設會轉Uint8Array進行處理
- * @returns {Uint8Array} 回傳Uint8Array
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效物件或陣列、或序列化失敗(如含BigInt、循環參照)時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let data = {
@@ -38,23 +42,48 @@ function concatU8arr(a, b) {
  * let u8a = obj2u8arr(data)
  * console.log(u8a)
  * // => Uint8Array [
- * //     64,  24,   0,   0,   0,  0,  0,   0,  91,  53,  56,  44,
+ * //     64,  24,   0,   0,   0,  0,  0,   0,  91,  54,  54,  44,
  * //     51,  93, 123,  34,  97, 34, 58,  91,  49,  50,  51,  44,
  * //     52,  53,  46,  54,  55, 44, 34, 116, 101, 115, 116, 228,
  * //    184, 173, 230, 150, 135, 34, 93,  44,  34,  98,  34,  58,
- * //    123,  34,  99,  34,  58, 34, 91,  85, 105, 110, 116,  56,
- * //     65, 114, 114,  97, 121, 93, 58,  58,  48,  34, 125, 125,
- * //     66,  97, 115
+ * //    123,  34,  99,  34,  58, 34, 91,  66, 108,  97, 122, 101,
+ * //     70, 111, 114,  85, 105, 110, 116, 56,  65, 114, 114,  97,
+ * //    121,  93,  58,  58,  48, 34, 125, 125,  66,  97, 115
  * // ]
  *
+ * console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
+ * // => {
+ * //     state: 'error',
+ * //     msg: 'obj2stru8arr: TypeError: Do not know how to serialize a BigInt'
+ * // }
+ *
  */
-function obj2u8arr(data) {
+function obj2u8arr(data, opt = {}) {
     let bs = []
     let r = []
 
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return new Uint8Array()
+        }
+    }
+
     //check
     if (!isearr(data) && !iseobj(data)) {
-        return null
+        return retError('invalid data, data is not an effective object or effective array')
     }
 
     //addBin
@@ -67,8 +96,12 @@ function obj2u8arr(data) {
 
     try {
 
-        //obj2stru8arr
-        let sb = obj2stru8arr(data) //序列化數據, 分別為無Uint8Array序列化字串(results), 以及各Uint8Array數據(binarys)
+        //obj2stru8arr, 內部一律取狀態, 逐一判識後才把ret交給下一步; 序列化失敗時不得續產出封包(否則會編出一個結構合法但內容為空之封包, 解碼端無從辨識), 錯誤訊息前置來源函數名以利分辨是哪一步出錯
+        let rsb = obj2stru8arr(data, { returnWithStateAndMsg: true }) //序列化數據, 分別為無Uint8Array序列化字串(results), 以及各Uint8Array數據(binarys)
+        if (rsb.state === 'error') {
+            return retError(`obj2stru8arr: ${rsb.msg}`)
+        }
+        let sb = rsb.msg
         //console.log('sb', sb)
 
         //sb.results
@@ -105,10 +138,18 @@ function obj2u8arr(data) {
 
     }
     catch (err) {
-        return null
+        return retError(err.toString())
     }
 
-    return r
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: r,
+        }
+    }
+    else {
+        return r
+    }
 }
 
 

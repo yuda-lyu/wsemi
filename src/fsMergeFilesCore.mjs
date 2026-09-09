@@ -76,7 +76,7 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
         streamWrite.on('error', (err) => {
             // console.log(`merge filename[${filename}] err`, err)
             errWrite = err
-            errTemp = err.message
+            errTemp = err.message //待確認用err.toString()還是err.message更佳 bbb
             pmWrite.reject(err)
             pm.reject(errTemp)
         })
