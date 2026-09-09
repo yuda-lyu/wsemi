@@ -94,4 +94,29 @@ describe(`o2j`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input { a: 1 } with returnWithStateAndMsg`, function() {
+        //opt為第3參數, 因第2參數bFormat為既有參數
+        let r = o2j({ a: 1 }, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: '{"a":1}' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid v' } when input undefined with returnWithStateAndMsg`, function() {
+        let r = o2j(undefined, false, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid v' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: <TypeError> } when input an object with BigInt with returnWithStateAndMsg`, function() {
+        let r = o2j({ id: 1n }, false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為序列化錯誤, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = o2j({ a: 1 }, false, { returnWithStateAndMsg: 'yes' })
+        let rr = '{"a":1}'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

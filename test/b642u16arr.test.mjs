@@ -81,4 +81,28 @@ describe(`b642u16arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input 'CwBPAAYA' with returnWithStateAndMsg`, function() {
+        let r = b642u16arr('CwBPAAYA', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: new Uint16Array([11, 79, 6]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid b64' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = b642u16arr(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid b64' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: <not even> } when the decoded byte length is odd with returnWithStateAndMsg`, function() {
+        let r = b642u16arr('QQ==', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('is not even') >= 0, true, `msg 應標明位元組長度非偶數, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = b642u16arr('CwBPAAYA', { returnWithStateAndMsg: 'yes' })
+        let rr = new Uint16Array([11, 79, 6])
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

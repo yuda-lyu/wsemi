@@ -122,4 +122,28 @@ describe(`obj2pb64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input { a: 1 } and a key with returnWithStateAndMsg`, function() {
+        //opt為第3參數, 因第2參數key為既有參數; AES帶隨機salt故每次結果不同, 只驗狀態與可解回
+        let r = obj2pb64({ a: 1 }, 'k', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'success')
+        assert.strict.deepStrictEqual(typeof r.msg === 'string' && r.msg.length > 0, true)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid data' } when input undefined with returnWithStateAndMsg`, function() {
+        let r = obj2pb64(undefined, 'k', { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid data' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+        let r = obj2pb64({ a: 1 }, NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid key' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = obj2pb64({ a: 1 }, 'k', { returnWithStateAndMsg: 'yes' })
+        assert.strict.deepStrictEqual(typeof r === 'string' && r.length > 0, true)
+    })
+
 })

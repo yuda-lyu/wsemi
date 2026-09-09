@@ -70,4 +70,22 @@ describe(`str2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg: 'YWJj' } when input 'abc' with returnWithStateAndMsg`, function() {
+        let r = str2b64('abc', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 'YWJj' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = str2b64(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid str' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = str2b64('abc', { returnWithStateAndMsg: 'yes' })
+        let rr = 'YWJj'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

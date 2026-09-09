@@ -1,4 +1,6 @@
+import get from 'lodash-es/get.js'
 import cv from './_jsonType.mjs'
+import isbol from './isbol.mjs'
 import isundefined from './isundefined.mjs'
 import isstr from './isstr.mjs'
 import isarr from './isarr.mjs'
@@ -11,7 +13,9 @@ import isarr from './isarr.mjs'
  * @memberOf wsemi
  * @param {*} data 輸入任意資料，為undefined時回傳空字串
  * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，非字串亦非陣列時回退為'Uint8Array'，預設'Uint8Array'
- * @returns {String} 回傳轉換後字串，data為undefined或無法轉為JSON時回傳空字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {String|Object} 回傳轉換後字串，data為undefined或無法轉為JSON時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let o = {
@@ -27,11 +31,30 @@ import isarr from './isarr.mjs'
  * // => '{"a":"abc","b":12.3,"u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}'
  *
  */
-function obj2str(data, ext = 'Uint8Array') {
+function obj2str(data, ext = 'Uint8Array', opt = {}) {
+
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return ''
+        }
+    }
 
     //check
     if (isundefined(data)) {
-        return ''
+        return retError('invalid data')
     }
 
     //ext, 無效時回退預設值
@@ -61,16 +84,24 @@ function obj2str(data, ext = 'Uint8Array') {
         return v
     }
 
+    //s, 序列化失敗(如含BigInt、循環參照)原為catch吞掉回'', 與「本就轉出空字串」無從分辨
     let s = ''
     try {
         s = JSON.stringify(data, replacer)
     }
     catch (err) {
-        s = ''
+        return retError(err.toString())
     }
 
-
-    return s
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: s,
+        }
+    }
+    else {
+        return s
+    }
 }
 
 

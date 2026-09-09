@@ -88,4 +88,29 @@ describe(`j2o`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input '{"a":1}' with returnWithStateAndMsg`, function() {
+        let r = j2o('{"a":1}', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: { a: 1 } }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid v' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = j2o(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid v' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: <SyntaxError> } when input is not a valid json with returnWithStateAndMsg`, function() {
+        //原碼catch吞掉解析錯誤而回{}, 與「輸入本就是{}」無從分辨
+        let r = j2o('not-json', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = j2o('{"a":1}', { returnWithStateAndMsg: 'yes' })
+        let rr = { a: 1 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

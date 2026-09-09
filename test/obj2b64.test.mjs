@@ -64,4 +64,23 @@ describe(`obj2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input { a: 1 } with returnWithStateAndMsg`, function() {
+        let r = obj2b64({ a: 1 }, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: 'eyJhIjoxfQ==' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'o2j: invalid v' } when input undefined with returnWithStateAndMsg`, function() {
+        //內部呼叫之錯誤須前置來源函數名, 供辨識是哪一步出錯
+        let r = obj2b64(undefined, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'o2j: invalid v' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = obj2b64({ a: 1 }, { returnWithStateAndMsg: 'yes' })
+        let rr = 'eyJhIjoxfQ=='
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

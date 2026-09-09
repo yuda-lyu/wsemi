@@ -61,4 +61,22 @@ describe(`ab2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input an ArrayBuffer with returnWithStateAndMsg`, function() {
+        let r = ab2u8arr(new Uint8Array([66, 97, 115]).buffer, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: new Uint8Array([66, 97, 115]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid ab' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = ab2u8arr(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid ab' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = ab2u8arr(new Uint8Array([66, 97, 115]).buffer, { returnWithStateAndMsg: 'yes' })
+        let rr = new Uint8Array([66, 97, 115])
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

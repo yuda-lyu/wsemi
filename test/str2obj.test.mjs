@@ -142,6 +142,32 @@ describe(`str2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input '{"a":1}' with returnWithStateAndMsg`, function() {
+        //opt為第3參數, 因第2參數ext為既有參數
+        let r = str2obj('{"a":1}', 'Uint8Array', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: { a: 1 } }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid data' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = str2obj(NaN, 'Uint8Array', { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid data' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: <SyntaxError> } when input is not a valid json with returnWithStateAndMsg`, function() {
+        //原碼catch吞掉解析錯誤而回{}, 與「輸入本就是{}」無從分辨
+        let r = str2obj('not-json', 'Uint8Array', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = str2obj('{"a":1}', 'Uint8Array', { returnWithStateAndMsg: 'yes' })
+        let rr = { a: 1 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should keep a string whose base64 tail is invalid (instead of decoding it into garbage bytes)`, function() {
         //原以strleft前綴比對且不驗base64字元集, 非法base64會被靜默解成垃圾位元組
         let r = str2obj('{"t":"[Uint8Array]::not-base64!!"}')

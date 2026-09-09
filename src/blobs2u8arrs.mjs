@@ -32,6 +32,11 @@ function blobs2u8arrs(bbs) {
         return Promise.reject('invalid bbs')
     }
 
+    //check, 空陣列為合法輸入且對應空結果, 行為與下方Promise.all([])相同, 此處明示以與上方之非陣列拒絕區隔
+    if (bbs.length === 0) {
+        return Promise.resolve([])
+    }
+
     //pms
     let pms = map(bbs, function(bb) {
         return blob2u8arr(bb)

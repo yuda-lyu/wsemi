@@ -90,4 +90,29 @@ describe(`b642obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when input a valid base64 with returnWithStateAndMsg`, function() {
+        let r = b642obj('eyJhIjoxfQ==', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: { a: 1 } }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid b64' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = b642obj(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid b64' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'j2o: <SyntaxError>' } when the decoded text is not a valid json with returnWithStateAndMsg`, function() {
+        //內部呼叫之錯誤須前置來源函數名
+        let r = b642obj('bm90LWpzb24=', { returnWithStateAndMsg: true }) //'not-json'之base64
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('j2o: ') === 0, true, `msg 應標明來源函數, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = b642obj('eyJhIjoxfQ==', { returnWithStateAndMsg: 'yes' })
+        let rr = { a: 1 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

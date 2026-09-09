@@ -116,4 +116,38 @@ describe(`pb642obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when decrypted with the right key with returnWithStateAndMsg`, function() {
+        let b64 = obj2pb64({ a: 1 }, 'k')
+        let r = pb642obj(b64, 'k', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: { a: 1 } }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid b64' } when b64 is not a string with returnWithStateAndMsg`, function() {
+        let r = pb642obj(NaN, 'k', { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid b64' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+        let r = pb642obj('abc', NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid key' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error' } when decrypted with a wrong key with returnWithStateAndMsg`, function() {
+        //原碼於key錯誤時回undefined, 與「原本存的就是undefined」無從分辨
+        let b64 = obj2pb64({ a: 1 }, 'k')
+        let r = pb642obj(b64, 'wrong-key', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.length > 0, true, `msg 應說明解密失敗, got ${r.msg}`)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let b64 = obj2pb64({ a: 1 }, 'k')
+        let r = pb642obj(b64, 'k', { returnWithStateAndMsg: 'yes' })
+        let rr = { a: 1 }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
