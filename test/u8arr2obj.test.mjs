@@ -121,6 +121,21 @@ describe(`u8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should round-trip single-element arrays whose only element is an empty value`, function() {
+        //同一筆資料不得因陣列長度不同而可編/不可編
+        for (let o of [[''], [null], [0], [false], ['', 'a'], [null, 1]]) {
+            let r = u8arr2obj(obj2u8arr(o))
+            assert.strict.deepStrictEqual(r, o, `${JSON.stringify(o)} 應原樣往返`)
+        }
+    })
+
+    it(`should round-trip a zero-length binary (block length must be 0, not null)`, function() {
+        let o = { a: new Uint8Array(0), b: new Uint8Array([9]) }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [1, 2, 3] when input a packet encoded from an array`, function() {
         //陣列亦為obj2u8arr之支援輸入, 須能原樣round-trip
         let r = u8arr2obj(obj2u8arr([1, 2, 3]))

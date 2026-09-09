@@ -96,10 +96,18 @@ describe(`obj2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data, data is not an effective object or effective array' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data, data is not an effective object or a non-empty array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = obj2u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data, data is not an effective object or effective array' }
+        let rr = { state: 'error', msg: 'invalid data, data is not an effective object or a non-empty array' }
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should encode a single-element array whose only element is an empty value`, function() {
+        //不可用isearr判斷: 其於長度為1時會額外檢查該元素是否有效, 使單元素陣列因元素為空值而被整個拒絕
+        for (let o of [[''], [null], [0], [false]]) {
+            let r = obj2u8arr(o)
+            assert.strict.deepStrictEqual(r.length > 0, true, `${JSON.stringify(o)} 應可編碼, got ${JSON.stringify(Array.from(r))}`)
+        }
     })
 
     it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: <Error>' } when input data has a throwing getter`, function() {

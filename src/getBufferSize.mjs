@@ -1,4 +1,5 @@
 import isab from './isab.mjs'
+import isnum from './isnum.mjs'
 import isblob from './isblob.mjs'
 import isu8arr from './isu8arr.mjs'
 import isu16arr from './isu16arr.mjs'
@@ -21,6 +22,9 @@ import isu16arr from './isu16arr.mjs'
  * console.log(getBufferSize(buf))
  * // => 8
  *
+ * console.log(getBufferSize(new Uint8Array(0)))
+ * // => 0
+ *
  */
 function getBufferSize(buf) {
 
@@ -29,9 +33,9 @@ function getBufferSize(buf) {
         return null
     }
 
-    //byteLength
+    //byteLength, 須以isnum判存在而非以真值判斷, 否則長度0之buffer會因0為假而逐層落空最終回null
     try {
-        if (buf.byteLength) {
+        if (isnum(buf.byteLength)) {
             return buf.byteLength
         }
     }
@@ -39,7 +43,7 @@ function getBufferSize(buf) {
 
     //length
     try {
-        if (buf.length) {
+        if (isnum(buf.length)) {
             return buf.length
         }
     }
@@ -47,7 +51,7 @@ function getBufferSize(buf) {
 
     //size
     try {
-        if (buf.size) {
+        if (isnum(buf.size)) {
             return buf.size
         }
     }

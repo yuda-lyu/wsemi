@@ -48,6 +48,10 @@ function obj2str(data, ext = 'Uint8Array') {
 
     //replacer
     function replacer(k, v) {
+
+        //escape, 須先於二進位轉換套用, 否則剛產生之標記字串會被再次跳脫; 只對字串生效故二進位不受影響
+        v = cv.escape(v)
+
         if (ext.indexOf('Uint8Array') >= 0) {
             v = cv.u8arr2b64(v)
         }

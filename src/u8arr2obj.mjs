@@ -30,7 +30,7 @@ function sliceU8arr(u8a, inds) {
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Object|Array} 回傳物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，因obj2u8arr預設會把ArrayBuffer轉Uint8Array進行操作，故物件內原為ArrayBuffer者會以Uint8Array返回；輸入非Uint8Array或封包損毀時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據一律以Uint8Array返回：原為ArrayBuffer者數值不變僅型別改變；原為Uint16Array者因obj2u8arr打包時各元素已被截斷為8位元且尾端補零，返回值與原值不同(詳見obj2u8arr之說明)；輸入非Uint8Array或封包損毀時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let u8a = new Uint8Array([

@@ -131,4 +131,39 @@ describe(`obj2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should escape an application string that is exactly the marker`, function() {
+        //應用字串與標記同形時須前置跳脫記號, 否則str2obj會把它還原成二進位
+        let r = obj2str({ t: '[Uint8Array]::QmFz' })
+        let rr = '{"t":"[BlazeForPreventEscape][Uint8Array]::QmFz"}'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should escape a string that looks like the Uint16Array marker even when ext is Uint8Array only`, function() {
+        //跳脫不依ext分流, 否則以不同ext編碼/解碼時會不對稱
+        let r = obj2str({ t: '[Uint16Array]::C08G' })
+        let rr = '{"t":"[BlazeForPreventEscape][Uint16Array]::C08G"}'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should NOT escape a string that merely starts with the marker but has an invalid base64 tail`, function() {
+        let r = obj2str({ t: '[Uint8Array]::not-base64!!' })
+        let rr = '{"t":"[Uint8Array]::not-base64!!"}'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip application strings that collide with the marker`, function() {
+        let o2 = {
+            t1: '[Uint8Array]::QmFz',
+            t2: '[Uint16Array]::C08G',
+            t3: '[Uint8Array]::not-base64!!',
+            t4: 'note: [Uint8Array]::QmFz',
+            t5: '[BlazeForPreventEscape][Uint8Array]::QmFz',
+            t6: '[BlazeForPreventEscape]',
+            u8a: new Uint8Array([66, 97, 115]),
+        }
+        let r = str2obj(obj2str(o2, ['Uint8Array', 'Uint16Array']), ['Uint8Array', 'Uint16Array'])
+        let rr = o2
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

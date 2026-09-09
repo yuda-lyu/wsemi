@@ -1,7 +1,7 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import isbol from './isbol.mjs'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
 import getBufferSize from './getBufferSize.mjs'
 import obj2stru8arr from './obj2stru8arr.mjs'
@@ -25,9 +25,11 @@ function concatU8arr(a, b) {
 /**
  * 物件或陣列資料轉Uint8Array
  *
+ * 因底層以JSON.stringify序列化，下列型別會靜默失真且不會拋錯，須由呼叫端自行避免：NaN與Infinity轉為null；值為undefined、函數或Symbol者該鍵會消失；Map、Set、RegExp轉為{}；Date轉為ISO字串；稀疏陣列之空洞補為null；超出Number精度之大整數會失精。另BigInt與循環參照會使序列化失敗，回傳空Uint8Array
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.mjs Github}
  * @memberOf wsemi
- * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，注意因ArrayBuffer無法直接操作(非View，只有TypedArray與DataView可操作)故預設會轉Uint8Array進行處理
+ * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，但僅Uint8Array能無損往返，另二者皆有代價：ArrayBuffer因無法直接操作(非View，只有TypedArray與DataView可操作)故轉Uint8Array處理，數值不變但型別遺失；Uint16Array於分塊打包時各元素會被截斷為8位元且尾端以0補足位元組長度，如Uint16Array([2,300])會返回Uint8Array([2,44,0,0])，故含Uint16Array之資料請自行先轉Uint8Array再輸入
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效物件或陣列、或序列化失敗(如含BigInt、循環參照)時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
@@ -81,9 +83,9 @@ function obj2u8arr(data, opt = {}) {
         }
     }
 
-    //check
-    if (!isearr(data) && !iseobj(data)) {
-        return retError('invalid data, data is not an effective object or effective array')
+    //check, 陣列只判「是陣列且長度大於0」, 不可用isearr, 因isearr於長度為1時會額外檢查該元素是否有效, 使['']、[null]這類單元素陣列被整個拒絕, 而['','a']卻可通過, 造成同型輸入因長度而結果不同
+    if (!(isarr(data) && data.length > 0) && !iseobj(data)) {
+        return retError('invalid data, data is not an effective object or a non-empty array')
     }
 
     //addBin

@@ -52,6 +52,10 @@ function str2obj(data, ext = 'Uint8Array') {
         if (ext.indexOf('Uint16Array') >= 0) {
             v = cv.b642u16arr(v)
         }
+
+        //unescape, 須後於二進位還原套用, 已還原為二進位者非字串故不受影響
+        v = cv.unescape(v)
+
         return v
     }
 

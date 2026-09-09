@@ -142,4 +142,35 @@ describe(`str2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should keep a string whose base64 tail is invalid (instead of decoding it into garbage bytes)`, function() {
+        //原以strleft前綴比對且不驗base64字元集, 非法base64會被靜默解成垃圾位元組
+        let r = str2obj('{"t":"[Uint8Array]::not-base64!!"}')
+        let rr = { t: '[Uint8Array]::not-base64!!' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep a string that merely contains the marker text`, function() {
+        let r = str2obj('{"t":"note: [Uint8Array]::QmFz"}')
+        let rr = { t: 'note: [Uint8Array]::QmFz' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should unescape an escaped marker back to the original application string`, function() {
+        let r = str2obj('{"t":"[BlazeForPreventEscape][Uint8Array]::QmFz"}')
+        let rr = { t: '[Uint8Array]::QmFz' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should strip only one escape layer when the string is escaped twice`, function() {
+        let r = str2obj('{"t":"[BlazeForPreventEscape][BlazeForPreventEscape][Uint8Array]::QmFz"}')
+        let rr = { t: '[BlazeForPreventEscape][Uint8Array]::QmFz' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should still decode a bare marker into a binary`, function() {
+        let r = str2obj('{"t":"[Uint8Array]::QmFz"}')
+        let rr = { t: new Uint8Array([66, 97, 115]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

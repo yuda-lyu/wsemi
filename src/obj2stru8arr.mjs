@@ -17,6 +17,8 @@ import isab from './isab.mjs'
  *
  * 通過JSON序列化物件內非Unit8Array數據成為字串，另分拆Unit8Array數據出來回傳，兩者間通過指標關聯，主要為避免序列化大型Unit8Array數據造成效能或記憶體不足問題
  *
+ * 因以JSON.stringify序列化，下列型別會靜默失真且不會拋錯，須由呼叫端自行避免：NaN與Infinity轉為null；值為undefined、函數或Symbol者該鍵會消失(若為唯一鍵則results為'{}')；Map、Set、RegExp轉為{}；Date轉為ISO字串；稀疏陣列之空洞補為null；超出Number精度之大整數會失精。另Error物件由本函數以toString轉為字串
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Object|Array} data 輸入物件或陣列資料
