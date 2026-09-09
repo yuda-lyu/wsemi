@@ -159,4 +159,54 @@ describe(`ispint`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return true when input Infinity by default`, function() {
+        let r = ispint(Infinity)
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Number.MAX_SAFE_INTEGER + 1 by default`, function() {
+        let r = ispint(Number.MAX_SAFE_INTEGER + 1)
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return false when input 0 and opt.useLimitSafe=true`, function() {
+        let r = ispint(0, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return true when input 125 and opt.useLimitSafe=true`, function() {
+        let r = ispint(125, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Number.MAX_SAFE_INTEGER and opt.useLimitSafe=true`, function() {
+        let r = ispint(Number.MAX_SAFE_INTEGER, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return false when input Number.MAX_SAFE_INTEGER + 1 and opt.useLimitSafe=true`, function() {
+        let r = ispint(Number.MAX_SAFE_INTEGER + 1, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input Infinity and opt.useLimitSafe=true`, function() {
+        let r = ispint(Infinity, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input -Infinity and opt.useLimitSafe=true`, function() {
+        let r = ispint(-Infinity, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input '1e400' and opt.useLimitSafe=true`, function() {
+        let r = ispint('1e400', { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return true when input Infinity and opt.useLimitSafe='true'`, function() {
+        let r = ispint(Infinity, { useLimitSafe: 'true' })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
 })

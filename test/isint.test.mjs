@@ -129,4 +129,79 @@ describe(`isint`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return true when input Infinity by default`, function() {
+        let r = isint(Infinity)
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Number.MAX_SAFE_INTEGER + 1 by default`, function() {
+        let r = isint(Number.MAX_SAFE_INTEGER + 1)
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input 125 and opt.useLimitSafe=true`, function() {
+        let r = isint(125, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Number.MAX_SAFE_INTEGER and opt.useLimitSafe=true`, function() {
+        let r = isint(Number.MAX_SAFE_INTEGER, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Number.MIN_SAFE_INTEGER and opt.useLimitSafe=true`, function() {
+        let r = isint(Number.MIN_SAFE_INTEGER, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return false when input Number.MAX_SAFE_INTEGER + 1 and opt.useLimitSafe=true`, function() {
+        let r = isint(Number.MAX_SAFE_INTEGER + 1, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input Number.MIN_SAFE_INTEGER - 2 and opt.useLimitSafe=true`, function() {
+        let r = isint(Number.MIN_SAFE_INTEGER - 2, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input 1e308 and opt.useLimitSafe=true`, function() {
+        let r = isint(1e308, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input Infinity and opt.useLimitSafe=true`, function() {
+        let r = isint(Infinity, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input -Infinity and opt.useLimitSafe=true`, function() {
+        let r = isint(-Infinity, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input '1e400' and opt.useLimitSafe=true`, function() {
+        let r = isint('1e400', { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input 1.25 and opt.useLimitSafe=true`, function() {
+        let r = isint(1.25, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input NaN and opt.useLimitSafe=true`, function() {
+        let r = isint(NaN, { useLimitSafe: true })
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return true when input Infinity and opt.useLimitSafe='true'`, function() {
+        let r = isint(Infinity, { useLimitSafe: 'true' })
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input Infinity and opt=null`, function() {
+        let r = isint(Infinity, null)
+        assert.strict.deepStrictEqual(r, true)
+    })
+
 })
