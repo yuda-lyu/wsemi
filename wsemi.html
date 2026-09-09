@@ -15088,7 +15088,7 @@ await test3()
 
     
 
-    <h4 class="name" id=".cint"><span class="type-signature type-signature-static">(static) </span>cint<span class="signature">(v)</span><span class="type-signature"> &rarr; {Integer}</span></h4>
+    <h4 class="name" id=".cint"><span class="type-signature type-signature-static">(static) </span>cint<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Integer}</span></h4>
 
     
 
@@ -15106,7 +15106,7 @@ await test3()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cint.mjs.html">cint.mjs</a>, <a href="cint.mjs.html#line23">line 23</a>
+        <a href="cint.mjs.html">cint.mjs</a>, <a href="cint.mjs.html#line52">line 52</a>
     </li></ul></dd>
     
 
@@ -15153,7 +15153,7 @@ await test3()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(cint('1.5'))// => 2console.log(cint('-1.5'))// => -1</code></pre>
+    <pre class="prettyprint"><code>console.log(cint('1.5'))// => 2console.log(cint('-1.5'))// => -1console.log(cint(Infinity))// => 1.7976931348623157e+308console.log(cint(Infinity, { useClampSafe: true }))// => 9007199254740991console.log(cint(-Infinity, { useClampSafe: true }))// => -9007199254740991try {    cint(Infinity, { useLimitSafe: true })}catch (err) {    console.log(err.message)    // => v[1.7976931348623157e+308] is not a safe integer}console.log(cint(Infinity, { useLimitSafe: true, returnWithStateAndMsg: true }))// => { state: 'error', msg: 'v[1.7976931348623157e+308] is not a safe integer' }console.log(cint('1.5', { returnWithStateAndMsg: true }))// => { state: 'success', msg: 2 }</code></pre>
 
 
 
@@ -15171,7 +15171,11 @@ await test3()
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -15200,10 +15204,212 @@ await test3()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入數字或字串</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useClampSafe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否鉗制至安全整數範圍布林值，若為true則四捨五入後之整數超出安全整數範圍時取邊界值，大於Number.MAX_SAFE_INTEGER者取Number.MAX_SAFE_INTEGER、小於Number.MIN_SAFE_INTEGER者取Number.MIN_SAFE_INTEGER，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>useLimitSafe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否限制須為安全整數布林值，若為true則四捨五入後之整數超出安全整數範圍(即Number.isSafeInteger為false，含Infinity、-Infinity與絕對值大於Number.MAX_SAFE_INTEGER者)時視為錯誤，預設false。與opt.useClampSafe同時為true時因已先鉗制至安全整數範圍故不會觸發</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>returnWithStateAndMsg</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false。預設false時錯誤仍以拋出錯誤表達，行為不變</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -15229,7 +15435,7 @@ await test3()
 
         
 <div class="param-desc">
-    <p>回傳四捨五入後整數</p>
+    <p>回傳四捨五入後整數；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
 </div>
 
 
@@ -69294,7 +69500,7 @@ console.log(isbigint('123'))
 
     
 
-    <h4 class="name" id=".isint"><span class="type-signature type-signature-static">(static) </span>isint<span class="signature">(v)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".isint"><span class="type-signature type-signature-static">(static) </span>isint<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -69311,7 +69517,7 @@ console.log(isbigint('123'))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isint.mjs.html">isint.mjs</a>, <a href="isint.mjs.html#line28">line 28</a>
+        <a href="isint.mjs.html">isint.mjs</a>, <a href="isint.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -69358,7 +69564,7 @@ console.log(isbigint('123'))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(isint('1.25'))// => falseconsole.log(isint('125'))// => trueconsole.log(isint(1.25))// => falseconsole.log(isint(125))// => true</code></pre>
+    <pre class="prettyprint"><code>console.log(isint('1.25'))// => falseconsole.log(isint('125'))// => trueconsole.log(isint(1.25))// => falseconsole.log(isint(125))// => trueconsole.log(isint(Infinity))// => trueconsole.log(isint(Infinity, { useLimitSafe: true }))// => false</code></pre>
 
 
 
@@ -69376,7 +69582,11 @@ console.log(isbigint('123'))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -69402,10 +69612,132 @@ console.log(isbigint('123'))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入任意資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useLimitSafe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否限制須為安全整數布林值，若為true則超出安全整數範圍者(即Number.isSafeInteger為false，含Infinity、-Infinity與絕對值大於Number.MAX_SAFE_INTEGER者)判定為false，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -71270,7 +71602,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
 
     
 
-    <h4 class="name" id=".isp0int"><span class="type-signature type-signature-static">(static) </span>isp0int<span class="signature">(v)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".isp0int"><span class="type-signature type-signature-static">(static) </span>isp0int<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -71288,7 +71620,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isp0int.mjs.html">isp0int.mjs</a>, <a href="isp0int.mjs.html#line46">line 46</a>
+        <a href="isp0int.mjs.html">isp0int.mjs</a>, <a href="isp0int.mjs.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -71353,7 +71685,11 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -71379,10 +71715,132 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入任意資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useLimitSafe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否限制須為安全整數布林值，原樣傳遞給isint，若為true則超出安全整數範圍者(即Number.isSafeInteger為false，含Infinity、-Infinity與絕對值大於Number.MAX_SAFE_INTEGER者)判定為false，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -71600,7 +72058,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
 
     
 
-    <h4 class="name" id=".ispint"><span class="type-signature type-signature-static">(static) </span>ispint<span class="signature">(v)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".ispint"><span class="type-signature type-signature-static">(static) </span>ispint<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -71618,7 +72076,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ispint.mjs.html">ispint.mjs</a>, <a href="ispint.mjs.html#line46">line 46</a>
+        <a href="ispint.mjs.html">ispint.mjs</a>, <a href="ispint.mjs.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -71683,7 +72141,11 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -71709,10 +72171,132 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入任意資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useLimitSafe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否限制須為安全整數布林值，原樣傳遞給isint，若為true則超出安全整數範圍者(即Number.isSafeInteger為false，含Infinity、-Infinity與絕對值大於Number.MAX_SAFE_INTEGER者)判定為false，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -106648,7 +107232,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 09 2026 17:54:05 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 09 2026 18:30:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
