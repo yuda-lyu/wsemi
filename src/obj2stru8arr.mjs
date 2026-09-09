@@ -3,6 +3,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
+import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
 import isarr0 from './isarr0.mjs'
 import isu8arr from './isu8arr.mjs'
@@ -21,7 +22,7 @@ import isab from './isab.mjs'
  * @param {Object|Array} data 輸入物件或陣列資料
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據；二進位數據於results內以'[BlazeForUint8Array]::<i>'一類標記代表，應用字串若恰與標記格式完整相同則會被前置'[BlazeForPreventEscape]'跳脫，供解碼端還原時區分；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let data = {
@@ -87,6 +88,10 @@ function obj2stru8arr(o, opt = {}) {
         return retError('invalid data, data is an empty object or empty array')
     }
 
+    //reNeedEsc, 應用字串若與標記格式完整相同(或已是跳脫過之外觀), 須前置跳脫記號, 否則解碼端會誤判為二進位參照; 允許重複跳脫故以*涵蓋多層
+    let tagEsc = '[BlazeForPreventEscape]'
+    let reNeedEsc = /^(?:\[BlazeForPreventEscape\])*\[BlazeFor(?:Uint8Array|Uint16Array|ArrayBuffer)\]::\d+$/
+
     let r = ''
     let bs = []
     try {
@@ -116,6 +121,12 @@ function obj2stru8arr(o, opt = {}) {
             if (isError(value)) {
                 value = value.toString()
             }
+
+            //跳脫, 以首字元'['(charCode 91)快篩, 避免對每個字串都跑regex
+            if (isestr(value) && value.charCodeAt(0) === 91 && reNeedEsc.test(value)) {
+                return tagEsc + value
+            }
+
             return value
         })
 

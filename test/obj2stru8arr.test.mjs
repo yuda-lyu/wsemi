@@ -113,6 +113,43 @@ describe(`obj2stru8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should escape an application string that is exactly the marker`, function() {
+        //應用字串與標記同形時須前置跳脫記號, 否則解碼端無從區分
+        let r = obj2stru8arr({ t: '[BlazeForUint8Array]::0', bin: new Uint8Array([7]) })
+        let rr = {
+            results: '{"t":"[BlazeForPreventEscape][BlazeForUint8Array]::0","bin":"[BlazeForUint8Array]::0"}',
+            binarys: [new Uint8Array([7])],
+        }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should escape an application string that already looks escaped (escaping is repeatable)`, function() {
+        let r = obj2stru8arr({ t: '[BlazeForPreventEscape][BlazeForUint8Array]::0' })
+        let rr = {
+            results: '{"t":"[BlazeForPreventEscape][BlazeForPreventEscape][BlazeForUint8Array]::0"}',
+            binarys: [],
+        }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should NOT escape an application string that merely contains the marker text`, function() {
+        let r = obj2stru8arr({ t: 'note: [BlazeForUint8Array]::0 xxx' })
+        let rr = {
+            results: '{"t":"note: [BlazeForUint8Array]::0 xxx"}',
+            binarys: [],
+        }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should NOT escape a lone escape tag`, function() {
+        let r = obj2stru8arr({ t: '[BlazeForPreventEscape]' })
+        let rr = {
+            results: '{"t":"[BlazeForPreventEscape]"}',
+            binarys: [],
+        }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return { results: '["a","[BlazeForUint8Array]::0"]', binarys: [ Uint8Array [ 66 ] ] } when input ['a', new Uint8Array([66])]`, function() {
         let r = obj2stru8arr(['a', new Uint8Array([66])])
         let rr = { results: '["a","[BlazeForUint8Array]::0"]', binarys: [new Uint8Array([66])] }

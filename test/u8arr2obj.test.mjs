@@ -77,6 +77,50 @@ describe(`u8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should round-trip application strings that merely contain the marker text`, function() {
+        //端到端: 應用資料含標記文字者, 編碼再解碼須原樣一致
+        let o = {
+            t1: 'note: [BlazeForUint8Array]::0 xxx',
+            t2: 'see [BlazeForUint8Array]::0',
+            t3: '[BlazeForUint8Array]::0a',
+            arr: ['a', 'x [BlazeForUint8Array]::0 y', 'c'],
+            bin: new Uint8Array([65, 66]),
+        }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip application strings that are exactly the marker (encoder escaping)`, function() {
+        //端到端: 應用字串與標記同形者, 經編碼端跳脫後須原樣解回, 不得被換成旁邊的binary
+        let o = {
+            t1: '[BlazeForUint8Array]::0',
+            t2: '[BlazeForUint8Array]::1',
+            t3: '[BlazeForArrayBuffer]::0',
+            t4: '[BlazeForPreventEscape][BlazeForUint8Array]::0',
+            t5: '[BlazeForPreventEscape]',
+            a: new Uint8Array([7]),
+            b: new Uint8Array([8]),
+        }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip an array containing a string that is exactly the marker`, function() {
+        let o = ['[BlazeForUint8Array]::0', new Uint8Array([5]), 'z']
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should round-trip an application string containing the marker text when there is no binary at all`, function() {
+        let o = { t: 'note: [BlazeForUint8Array]::0 xxx' }
+        let r = u8arr2obj(obj2u8arr(o))
+        let rr = o
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [1, 2, 3] when input a packet encoded from an array`, function() {
         //陣列亦為obj2u8arr之支援輸入, 須能原樣round-trip
         let r = u8arr2obj(obj2u8arr([1, 2, 3]))

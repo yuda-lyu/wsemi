@@ -84,6 +84,86 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should keep an application string that merely contains the marker text (exact match only)`, function() {
+        //標記須完整匹配整個字串值, 夾雜標記文字之應用字串不得被誤判為二進位參照
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"note: [BlazeForUint8Array]::0 xxx"}', binarys: B })
+        let rr = { t: 'note: [BlazeForUint8Array]::0 xxx' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep an application string that ends with the marker text`, function() {
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"see [BlazeForUint8Array]::0"}', binarys: B })
+        let rr = { t: 'see [BlazeForUint8Array]::0' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep array elements that merely contain the marker text (not turn them into null)`, function() {
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"arr":["a","x [BlazeForUint8Array]::0 y","c"]}', binarys: B })
+        let rr = { arr: ['a', 'x [BlazeForUint8Array]::0 y', 'c'] }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep a string whose marker suffix is not a pure integer`, function() {
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::0a"}', binarys: B })
+        let rr = { t: '[BlazeForUint8Array]::0a' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should restore the binary when the whole string is exactly the marker and the index is in range`, function() {
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::0"}', binarys: B })
+        let rr = { t: new Uint8Array([66]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should treat an out-of-range index as a broken packet (return {} instead of dropping the key)`, function() {
+        //標記格式正確但索引不存在, 只可能為封包損毀或results與binarys不匹配, 不可靜默刪鍵
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::1","other":1}', binarys: B })
+        let rr = {}
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: <out of range> } for an out-of-range index with returnWithStateAndMsg`, function() {
+        let B = [new Uint8Array([66])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::1"}', binarys: B }, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.indexOf('binary index out of range[1]') >= 0, true, `msg 應標明越界索引, got ${r.msg}`)
+    })
+
+    it(`should treat a bare marker as a binary reference (application strings are escaped by the encoder instead)`, function() {
+        //本函數層級中裸標記即定義為二進位參照; 應用字串與標記同形之情況由編碼端前置跳脫記號區分, 見下一條
+        let B = [new Uint8Array([7])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::0"}', binarys: B })
+        let rr = { t: new Uint8Array([7]) }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should unescape an escaped marker back to the original application string`, function() {
+        let B = [new Uint8Array([7])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForPreventEscape][BlazeForUint8Array]::0"}', binarys: B })
+        let rr = { t: '[BlazeForUint8Array]::0' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should strip only one escape layer when the string is escaped twice`, function() {
+        let B = [new Uint8Array([7])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForPreventEscape][BlazeForPreventEscape][BlazeForUint8Array]::0"}', binarys: B })
+        let rr = { t: '[BlazeForPreventEscape][BlazeForUint8Array]::0' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep a lone escape tag untouched`, function() {
+        let B = [new Uint8Array([7])]
+        let r = stru8arr2obj({ results: '{"t":"[BlazeForPreventEscape]"}', binarys: B })
+        let rr = { t: '[BlazeForPreventEscape]' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
     it(`should return [1, 2, 3] when input results is an array`, function() {
         let r = stru8arr2obj({ results: '[1,2,3]', binarys: [] })
         let rr = [1, 2, 3]
