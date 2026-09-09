@@ -1,4 +1,5 @@
 import genPm from './genPm.mjs'
+import isblob from './isblob.mjs'
 import isWindow from './isWindow.mjs'
 
 
@@ -7,27 +8,35 @@ function coreOthers(bb) {
     //pm
     let pm = genPm()
 
-    //reader
-    let reader = new FileReader()
+    //reader與readAsArrayBuffer皆須納入try, 否則會同步拋錯而非reject, 呼叫端之catch將完全接不到
+    try {
 
-    //onload
-    reader.onload = function() {
+        //reader
+        let reader = new FileReader()
 
-        //ab
-        let ab = reader.result //event.target.result
+        //onload
+        reader.onload = function() {
 
-        //resolve
-        pm.resolve(ab)
+            //ab
+            let ab = reader.result //event.target.result
+
+            //resolve
+            pm.resolve(ab)
+
+        }
+
+        //onerror
+        reader.onerror = function (err) {
+            pm.reject(err)
+        }
+
+        //readAsArrayBuffer
+        reader.readAsArrayBuffer(bb)
 
     }
-
-    //onerror
-    reader.onerror = function (err) {
+    catch (err) {
         pm.reject(err)
     }
-
-    //readAsArrayBuffer
-    reader.readAsArrayBuffer(bb)
 
     return pm
 }
@@ -61,6 +70,11 @@ function coreHTML5(bb) {
  *
  */
 function blob2ab(bb) {
+
+    //check, 輸入無效屬呼叫端錯誤, 須先於環境檢查回報, 否則於瀏覽器外一律得到no window而無從分辨
+    if (!isblob(bb)) {
+        return Promise.reject('invalid bb')
+    }
 
     //check
     if (!isWindow()) {

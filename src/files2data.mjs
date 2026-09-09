@@ -1,4 +1,5 @@
 import map from 'lodash-es/map.js'
+import isarr from './isarr.mjs'
 import genPm from './genPm.mjs'
 import blobs2b64s from './blobs2b64s.mjs'
 import ltdtmerge from './ltdtmerge.mjs'
@@ -17,6 +18,11 @@ import ltdtmerge from './ltdtmerge.mjs'
  */
 function files2data(files) {
     //若輸入Blob陣列, 不會有name, 故只能輸入File陣列
+
+    //check, 非陣列時lodash之map會得[], 最終靜默resolve [], 使無效輸入被當成功; 訊息須指明本函數之參數名而非下游之bbs
+    if (!isarr(files)) {
+        return Promise.reject('invalid files')
+    }
 
     //pm
     let pm = genPm()
@@ -45,6 +51,10 @@ function files2data(files) {
             //resolve
             pm.resolve(rs)
 
+        })
+        .catch(function(err) {
+            //原碼無此catch, blobs2b64s一旦reject則pm永不settle, 呼叫端await會永久掛住, 且該rejection無人接
+            pm.reject(err)
         })
 
     return pm

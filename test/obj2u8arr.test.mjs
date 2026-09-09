@@ -1,5 +1,6 @@
 import assert from 'assert'
 import obj2u8arr from '../src/obj2u8arr.mjs'
+import u8arr2obj from '../src/u8arr2obj.mjs'
 
 
 describe(`obj2u8arr`, function() {
@@ -100,6 +101,34 @@ describe(`obj2u8arr`, function() {
         let r = obj2u8arr(NaN, { returnWithStateAndMsg: true })
         let rr = { state: 'error', msg: 'invalid data, data is not an effective object or a non-empty array' }
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep every block intact when merging many blocks`, function() {
+        //各分塊內容互異, 確認合併後之偏移量正確
+        let n = 64
+        let o = {}
+        for (let i = 0; i < n; i++) {
+            o[`b${i}`] = new Uint8Array([i % 256, (i * 7) % 256, (i * 13) % 256])
+        }
+        let r = u8arr2obj(obj2u8arr(o))
+        assert.strict.deepStrictEqual(r, o)
+    })
+
+    it(`should merge many blocks in linear time (not quadratic)`, function() {
+        //原以逐次concatU8arr合併, 每次都重新配置並複製已累積全部, 總計為O(n^2); 須先算總長一次配置後依偏移寫入
+        //實測(4MB): 修前1024塊約484ms、4096塊約1938ms; 修後皆為個位數ms, 故200ms之門檻對修後有數十倍餘裕
+        this.timeout(60000)
+        let n = 1024
+        let sz = 4096
+        let o = {}
+        for (let i = 0; i < n; i++) {
+            o[`b${i}`] = new Uint8Array(sz)
+        }
+        let t0 = Date.now()
+        let r = obj2u8arr(o)
+        let ms = Date.now() - t0
+        assert.strict.deepStrictEqual(r.length > n * sz, true)
+        assert.strict.deepStrictEqual(ms < 200, true, `${n}個分塊之合併應為線性, 實測 ${ms} ms`)
     })
 
     it(`should encode a single-element array whose only element is an empty value`, function() {

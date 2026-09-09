@@ -1,4 +1,6 @@
 import genPm from './genPm.mjs'
+import isblob from './isblob.mjs'
+import isWindow from './isWindow.mjs'
 
 
 /**
@@ -24,30 +26,47 @@ import genPm from './genPm.mjs'
  */
 function blob2str(bb) {
 
+    //check, 輸入無效屬呼叫端錯誤, 須先於環境檢查回報, 否則於瀏覽器外一律得到no window而無從分辨
+    if (!isblob(bb)) {
+        return Promise.reject('invalid bb')
+    }
+
+    //check, 原碼未做此檢查而直接new FileReader(), 於非瀏覽器會同步拋錯而非reject, 呼叫端之catch將完全接不到
+    if (!isWindow()) {
+        return Promise.reject('no window')
+    }
+
     //pm
     let pm = genPm()
 
-    //reader
-    let reader = new FileReader()
+    try {
 
-    //onload
-    reader.onload = function () {
+        //reader
+        let reader = new FileReader()
 
-        //resolve
-        pm.resolve(reader.result)
+        //onload
+        reader.onload = function () {
+
+            //resolve
+            pm.resolve(reader.result)
+
+        }
+
+        //onerror
+        reader.onerror = function (err) {
+
+            //reject
+            pm.reject(err)
+
+        }
+
+        //readAsText
+        reader.readAsText(bb)
 
     }
-
-    //onerror
-    reader.onerror = function (err) {
-
-        //reject
+    catch (err) {
         pm.reject(err)
-
     }
-
-    //readAsText
-    reader.readAsText(bb)
 
     return pm
 }

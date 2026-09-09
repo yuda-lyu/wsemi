@@ -26,13 +26,26 @@ function toU8arrView(b) {
 // function concatU8arr(a, b) { //處理大檔時Nodejs記憶體會不足
 //     return Uint8Array.from([...a, ...b])
 // }
-function concatU8arr(a, b) {
-    let ia = getBufferSize(a)
-    let ib = getBufferSize(b)
-    let tmp = new Uint8Array(ia + ib)
-    tmp.set(toU8arrView(a), 0)
-    tmp.set(toU8arrView(b), ia)
-    return tmp
+//mergeU8arrs, 合併各分塊為單一Uint8Array
+//不可逐次兩兩concat, 那會每次重新配置並複製已累積之全部, 總計為O(n^2)且峰值記憶體為結果之2倍(舊新陣列並存); 改為先算總長一次配置後依偏移量寫入, 為O(n)且峰值記憶體為1倍
+function mergeU8arrs(bs) {
+
+    //n, 總長度
+    let n = 0
+    each(bs, (b) => {
+        n += getBufferSize(b)
+    })
+
+    //r
+    let r = new Uint8Array(n)
+    let i = 0
+    each(bs, (b) => {
+        let v = toU8arrView(b)
+        r.set(v, i)
+        i += v.length
+    })
+
+    return r
 }
 
 
@@ -148,9 +161,7 @@ function obj2u8arr(data, opt = {}) {
         })
 
         //flatten
-        each(bs, (b) => {
-            r = concatU8arr(r, b) //合併各二進位數據
-        })
+        r = mergeU8arrs(bs) //合併各二進位數據
 
     }
     catch (err) {
