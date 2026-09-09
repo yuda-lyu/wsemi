@@ -65,6 +65,8 @@ function b642u8arr(b64, opt = {}) {
         return retError('invalid b64')
     }
 
+    //注意: Nodejs 25起原生內建Uint8Array.fromBase64, 待升版後再改用
+
     //b64c, 先剝除ASCII空白再驗證; 底層crypto-js對字母表外之字元查表得undefined並當成0位元, 不剝不驗則空白與非法字元皆會靜默解出錯誤位元組
     let b64c = b64.replace(reWhitespace, '')
 

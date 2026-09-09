@@ -1,4 +1,6 @@
 import ot from 'dayjs'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import istimeTZ from './istimeTZ.mjs'
 import tz from './_tz.mjs'
 
@@ -9,27 +11,65 @@ import tz from './_tz.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2day.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
- * @returns {String} 回傳日時間字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {String|Object} 回傳日時間字串，t非有效秒時間字串或轉換失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(timeTZ2day('2019-01-01T12:34:56+08:00'))
  * // => '2019-01-01'
  *
  */
-function timeTZ2day(t) {
+function timeTZ2day(t, opt = {}) {
+
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError
+    let retError = (msg) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return ''
+        }
+    }
 
     //check
     if (!istimeTZ(t)) {
-        return ''
+        return retError('invalid t')
     }
 
-    //delTZ
-    t = tz.delTZ(t)
+    //r, 須攔截非預期錯誤(如delTZ或dayjs解析格式化異常), 否則會外拋至呼叫端
+    let r = ''
+    try {
 
-    let d = ot(t, 'YYYY-MM-DDTHH:mm:ss')
-    let r = d.format('YYYY-MM-DD')
+        //delTZ
+        t = tz.delTZ(t)
 
-    return r
+        let d = ot(t, 'YYYY-MM-DDTHH:mm:ss')
+        r = d.format('YYYY-MM-DD')
+
+    }
+    catch (err) {
+        return retError(err.toString())
+    }
+
+    if (returnWithStateAndMsg) {
+        return {
+            state: 'success',
+            msg: r,
+        }
+    }
+    else {
+        return r
+    }
 }
 
 

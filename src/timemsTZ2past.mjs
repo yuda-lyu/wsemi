@@ -1,4 +1,6 @@
 import ot from 'dayjs'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
 
@@ -10,7 +12,9 @@ import istimemsTZ from './istimemsTZ.mjs'
  * @memberOf wsemi
  * @param {String} t 輸入毫秒時間字串
  * @param {String} [tNow=null] 輸入現在毫秒時間字串
- * @returns {String} 回傳過去時間字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Object} 回傳物件，含today、msg、err三欄位；t非有效毫秒時間字串時回傳{ today: null, msg: '', err: '時間格式錯誤' }，時間未到時回傳{ today: null, msg: '', err: '時間未到' }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，其中時間未到屬算得之結果故state仍為'success'
  * @example
  *
  * let t
@@ -68,21 +72,8 @@ import istimemsTZ from './istimemsTZ.mjs'
  * // => { today: null, msg: '', err: '時間未到' }
  *
  */
-function timemsTZ2past(t, tNow = null) {
-
-    //check
-    if (!isfun(ot)) {
-        throw new Error(`invalid dayjs`)
-    }
-
-    //check
-    if (!istimemsTZ(t)) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間格式錯誤',
-        }
-    }
+//core, 實際計算; 抽為獨立函數以便由呼叫端統一以try catch攔截非預期錯誤, 而不必將整段運算內縮
+function core(t, tNow) {
 
     //mnow
     let mnow = ot()
@@ -161,6 +152,67 @@ function timemsTZ2past(t, tNow = null) {
         msg: c,
         err: '',
     }
+}
+
+
+function timemsTZ2past(t, tNow = null, opt = {}) {
+
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retSuccess, 算得之結果(含err為'時間未到'者)皆屬成功, 該err為業務結果而非轉換失敗
+    let retSuccess = (v) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'success',
+                msg: v,
+            }
+        }
+        else {
+            return v
+        }
+    }
+
+    //retError, 預設模式沿用既有之{ today, msg, err }失敗形狀與其中文說明, 不改變既有行為
+    let retError = (msg, errText) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return {
+                today: null,
+                msg: '',
+                err: errText,
+            }
+        }
+    }
+
+    //check
+    if (!isfun(ot)) {
+        throw new Error(`invalid dayjs`)
+    }
+
+    //check
+    if (!istimemsTZ(t)) {
+        return retError('invalid t', '時間格式錯誤')
+    }
+
+    //r, 須攔截非預期錯誤(如dayjs解析或格式化異常), 否則會外拋至呼叫端
+    let r = null
+    try {
+        r = core(t, tNow)
+    }
+    catch (err) {
+        return retError(err.toString(), '時間轉換失敗')
+    }
+
+    return retSuccess(r)
 }
 
 

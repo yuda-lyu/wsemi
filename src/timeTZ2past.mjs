@@ -1,3 +1,5 @@
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import istimeTZ from './istimeTZ.mjs'
 import timemsTZ2past from './timemsTZ2past.mjs'
 import tz from './_tz.mjs'
@@ -17,7 +19,9 @@ function addms(t) {
  * @memberOf wsemi
  * @param {String} t 輸入秒時間字串
  * @param {String} [tNow=null] 輸入現在秒時間字串
- * @returns {String} 回傳過去時間字串
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @returns {Object} 回傳物件，含today、msg、err三欄位；t非有效秒時間字串時回傳{ today: null, msg: '', err: '時間格式錯誤' }，時間未到時回傳{ today: null, msg: '', err: '時間未到' }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，其中時間未到屬算得之結果故state仍為'success'
  * @example
  *
  * let t
@@ -70,23 +74,47 @@ function addms(t) {
  * // => { today: null, msg: '', err: '時間未到' }
  *
  */
-function timeTZ2past(t, tNow = null) {
+function timeTZ2past(t, tNow = null, opt = {}) {
 
-    //check
-    if (!istimeTZ(t)) {
-        return {
-            today: null,
-            msg: '',
-            err: '時間格式錯誤',
+    //returnWithStateAndMsg
+    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    if (!isbol(returnWithStateAndMsg)) {
+        returnWithStateAndMsg = false
+    }
+
+    //retError, 預設模式沿用既有之{ today, msg, err }失敗形狀與其中文說明, 不改變既有行為
+    let retError = (msg, errText) => {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'error',
+                msg,
+            }
+        }
+        else {
+            return {
+                today: null,
+                msg: '',
+                err: errText,
+            }
         }
     }
 
-    //addms
-    t = addms(t)
-    tNow = addms(tNow)
+    //check
+    if (!istimeTZ(t)) {
+        return retError('invalid t', '時間格式錯誤')
+    }
 
-    //timemsTZ2past
-    return timemsTZ2past(t, tNow)
+    //addms, 須攔截非預期錯誤, 否則會外拋至呼叫端
+    try {
+        t = addms(t)
+        tNow = addms(tNow)
+    }
+    catch (err) {
+        return retError(err.toString(), '時間轉換失敗')
+    }
+
+    //timemsTZ2past, opt原樣傳遞, 兩種模式之回傳形狀皆由其產生
+    return timemsTZ2past(t, tNow, opt)
 }
 
 

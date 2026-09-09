@@ -2141,4 +2141,21 @@ describe(`timemsTZ2time`, function() {
         assert.strict.deepStrictEqual(r, '')
     })
 
+    it(`should return { state: 'success', msg } when input a valid time with returnWithStateAndMsg`, function() {
+        let r = timemsTZ2time('2019-01-02T03:04:05.678+08:00', { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: '2019-01-02T03:04:05' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = timemsTZ2time(NaN, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid t' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = timemsTZ2time('2019-01-02T03:04:05.678+08:00', { returnWithStateAndMsg: 'yes' })
+        assert.strict.deepStrictEqual(r, '2019-01-02T03:04:05')
+    })
+
 })

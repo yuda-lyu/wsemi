@@ -65,4 +65,29 @@ describe(`timemsTZ2past`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should return { state: 'success', msg } when the time is computed with returnWithStateAndMsg`, function() {
+        //opt為第3參數, 因第2參數tNow為既有參數
+        let r = timemsTZ2past('2010-01-02T03:04:05.678+08:00', tNow, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'success')
+        assert.strict.deepStrictEqual(r.msg, timemsTZ2past('2010-01-02T03:04:05.678+08:00', tNow))
+    })
+
+    it(`should treat 時間未到 as success (it is a computed result, not a failure) with returnWithStateAndMsg`, function() {
+        let r = timemsTZ2past('2023-04-13T08:31:54.987+08:00', tNow, { returnWithStateAndMsg: true })
+        let rr = { state: 'success', msg: { today: null, msg: '', err: '時間未到' } }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+        let r = timemsTZ2past(NaN, tNow, { returnWithStateAndMsg: true })
+        let rr = { state: 'error', msg: 'invalid t' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
+        let r = timemsTZ2past('2023-04-13T08:31:54.987+08:00', tNow, { returnWithStateAndMsg: 'yes' })
+        let rr = { today: null, msg: '', err: '時間未到' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })
