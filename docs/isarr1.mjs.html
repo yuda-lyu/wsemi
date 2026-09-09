@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>arrFilterByKeywords.mjs - Documentation</title>
+    <title>isarr1.mjs - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -35,7 +35,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">arrFilterByKeywords.mjs</h1>
+    <h1 class="page-title">isarr1.mjs</h1>
     
 
     
@@ -45,269 +45,43 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import map from 'lodash-es/map.js'
-import size from 'lodash-es/size.js'
-import trim from 'lodash-es/trim.js'
-import isearr from './isearr.mjs'
-import isestr from './isestr.mjs'
-import sep from './sep.mjs'
-import strleft from './strleft.mjs'
-import strdelleft from './strdelleft.mjs'
+            <pre class="prettyprint source linenums"><code>import isarr from './isarr.mjs'
 
 
 /**
- * 對arr陣列內各字串進行關鍵字計算，計算是否含有關鍵字與程度，多關鍵字用空白區隔，必要關鍵字可於字首添加「+」，不要關鍵字可於字首添加「-」
+ * 判斷是否為有內容陣列，即長度至少為1之陣列
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilterByKeywords.test.mjs Github}
+ * 與isearr之差異：isearr於長度為1時會額外檢查該元素是否為有效值，故['']、[null]會判為false；本函數只看長度，故皆判為true
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isarr1.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} arr 輸入要被尋找的字串陣列
- * @param {String|Array} keywords 輸入要尋找的關鍵字字串或陣列
- * @returns {Array} 回傳結果物件陣列，陣列內各物件包含hasKeyword與weight欄位，其中hasKeyword代表有無關鍵字為布林值，weight代表權重為浮點數，其值可大於1
+ * @param {*} v 輸入任意資料
+ * @returns {Boolean} 回傳判斷布林值
  * @example
  *
- * let arr = [
- *     'abc def xyz',
- *     '測試abc中文mnop',
- *     'Instead of creating yet another opinionated application',
- *     'Node.js module which can be integrated into a larger application',
- * ]
- * let kws = null
- * let r = null
+ * console.log(isarr1([]))
+ * // => false
  *
- * kws = 'abc'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
+ * console.log(isarr1([{}]))
+ * // => true
  *
- * kws = 'def'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = 'def 中文'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 0.25 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = 'def 中文 mnop'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 0.5555555555555557 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = 'def +yet'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = 'def of module -yet'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 1 }
- * // ]
- *
- * kws = '+'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = '-'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = 'def +'
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = ['def', 'of', 'module', '-yet']
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 1 }
- * // ]
- *
- * kws = ['can be', 'def']
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 0.25 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 1 }
- * // ]
- *
- * kws = ['+abc']
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 }
- * // ]
- *
- * kws = ['-abc']
- * r = arrFilterByKeywords(arr, kws)
- * console.log(r)
- * // => [
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: false, weight: 0 },
- * //     { hasKeyword: true, weight: 1 },
- * //     { hasKeyword: true, weight: 1 }
- * // ]
+ * console.log(isarr1(['']))
+ * // => true
  *
  */
-function arrFilterByKeywords(arr, keywords) {
+function isarr1(v) {
 
-    //check
-    if (!isearr(arr)) {
-        return []
-    }
-
-    //check
-    if (!isestr(keywords) &amp;&amp; !isearr(keywords)) {
-        return []
-    }
-
-    //kws
-    let kws = null
-    if (isestr(keywords)) {
-        kws = sep(keywords, ' ') //若為字串則用空白切分出各關鍵字
-    }
-    else {
-        kws = keywords //可支援關鍵字內含空白
-    }
-
-    //n
-    let n = size(kws)
-
-    function core(c) {
-
-        //for
-        let b = false
-        let weight = 0
-        for (let k = 0; k &lt; n; k++) {
-            let kw = kws[k]
-
-            //ekw
-            let ekw = kw
-            let bInclude = strleft(kw, 1) === '+'
-            let bExclude = strleft(kw, 1) === '-'
-            if (bInclude || bExclude) {
-                ekw = strdelleft(kw, 1)
-            }
-
-            //check
-            if (trim(ekw) === '') {
-                continue
-            }
-
-            //bHas
-            let bHas = c.indexOf(ekw) >= 0
-            // console.log('c', c, ':ekw', ekw, ':bHas', bHas)
-
-            //必有關鍵字
-            if (bInclude) {
-                if (!bHas) {
-                    b = false //若無必有關鍵字, 強制視為找不到
-                    weight = 0
-                    break
-                }
-                else {
-                    b = true //找到必有關鍵字, 視為找到
-                    weight = 1
-                    break
-                }
-            }
-
-            //不能有關鍵字
-            if (bExclude) {
-                if (bHas) {
-                    b = false //找到不能有的關鍵字, 強制視為找不到
-                    weight = 0
-                    break
-                }
-                else {
-                    b = true //找不到不能有關鍵字, 視為找到
-                    weight = 1
-                    break
-                }
-            }
-
-            //含有關建字則依照順序給予權重
-            if (bHas) {
-                b = true
-                let w = 1 - k / n
-                w = w ** 2 //非線性遞減, 有第1關鍵字權重1, 只有2+3關鍵字權重也不超過第1關鍵字權重
-                weight += w //權重累加可超過1
-            }
-
+    if (isarr(v)) {
+        if (v.length >= 1) {
+            return true
         }
-
-        return {
-            hasKeyword: b,
-            weight,
-        }
+        return false
     }
-
-    //rs
-    let rs = map(arr, (c) => {
-        return core(c)
-    })
-
-    return rs
+    return false
 }
 
 
-export default arrFilterByKeywords
+export default isarr1
 </code></pre>
         </article>
     </section>
@@ -322,7 +96,7 @@ export default arrFilterByKeywords
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 09 2026 17:54:04 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 09 2026 17:54:05 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
