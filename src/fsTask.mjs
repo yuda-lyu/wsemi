@@ -4,6 +4,7 @@ import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import evem from './evem.mjs'
+import _evemEmit from './_evemEmit.mjs'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import ispint from './ispint.mjs'
@@ -30,7 +31,7 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
- * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為evem之safe型：change監聽器拋錯或async reject不會使行程崩潰，會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }
+ * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
  *
@@ -220,7 +221,7 @@ function fsTask(fd, opt = {}) {
     fsCreateFolder(fdStorage)
 
     //ev
-    let ev = evem({ type: 'safe' }) //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 由evem預設政策reject pm並重發error事件
+    let ev = evem() //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 由evem預設政策reject pm並重發error事件
 
     //lock
     let lock = false
@@ -359,8 +360,14 @@ function fsTask(fd, opt = {}) {
             //pm
             let pm = genPm()
 
-            //emit
-            ev.emit('change', { type, fp, fn, hash, pm })
+            //emit, 於setInterval輪詢之回呼內派發且帶pm
+            //  監聽器同步拋錯時須先reject該pm再通報, 否則lock不釋放而使後續change永不派發
+            _evemEmit(ev, 'change', [{ type, fp, fn, hash, pm }], {
+                tag: 'fsTask',
+                funSettle: (err) => {
+                    pm.reject(err)
+                },
+            })
 
             //wait
             pm

@@ -3,6 +3,7 @@ import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
 import evem from './evem.mjs'
+import _evemEmit from './_evemEmit.mjs'
 import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
@@ -17,7 +18,7 @@ import cint from './cint.mjs'
  * @memberOf wsemi
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
  * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，單位為毫秒ms，預設為50
- * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
+ * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
  *
  * async function topAsync() {
@@ -84,7 +85,7 @@ import cint from './cint.mjs'
  *
  */
 function alive(opt = {}) {
-    let ev = evem({ type: 'safe' }) //message事件於timer內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //message事件於timer內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
     let q = {} //queue
     let t = null //timer
 
@@ -125,7 +126,7 @@ function alive(opt = {}) {
                     delete q[key]
 
                     //emit leave
-                    ev.emit('message', { eventName: 'leave', key, data: r.data, now: size(q) })
+                    _evemEmit(ev, 'message', [{ eventName: 'leave', key, data: r.data, now: size(q) }], { tag: 'alive' })
 
                 }
             })
@@ -152,7 +153,7 @@ function alive(opt = {}) {
             setTimeout(() => { //因需判斷是否為新單元故需放於update前, 而emit內可能會被存取q, 故需要用setTimeout脫勾使q為被更新資訊, 才能正確取得當前單元數量
 
                 //emit enter
-                ev.emit('message', { eventName: 'enter', key, data, now: size(q) })
+                _evemEmit(ev, 'message', [{ eventName: 'enter', key, data, now: size(q) }], { tag: 'alive' })
 
             }, 1)
         }

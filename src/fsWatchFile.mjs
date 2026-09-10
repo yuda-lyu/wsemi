@@ -6,6 +6,7 @@ import isbol from './isbol.mjs'
 import cint from './cint.mjs'
 import fsIsFile from './fsIsFile.mjs'
 import evem from './evem.mjs'
+import _evemEmit from './_evemEmit.mjs'
 
 
 /**
@@ -20,7 +21,7 @@ import evem from './evem.mjs'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
- * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如無權限EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為evem之safe型，change於watcher回呼內派發，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
+ * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如無權限EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
  * @example
  * need test in nodejs.
  *
@@ -112,7 +113,7 @@ function fsWatchFile(fp, opt = {}) {
     timeBinaryInterval = cint(timeBinaryInterval)
 
     //ev
-    let ev = evem({ type: 'safe' }) //change事件於chokidar回呼內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //change事件於chokidar回呼內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
 
     //fpSpe
     let fpSpe = fp
@@ -153,12 +154,12 @@ function fsWatchFile(fp, opt = {}) {
                 fp = path.resolve(fp)
 
                 //emit
-                ev.emit('change', { type, fp, stats })
+                _evemEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFile' })
 
             })
             .on('error', (err) => {
                 //chokidar之FSWatcher為nodejs原生EventEmitter, 其對非ENOENT/ENOTDIR之錯誤(如EPERM、EACCES)會emit('error'), 無監聽者即throw殺行程, 故轉為ev之error事件
-                ev.emit('error', { fun: 'watcher', msg: err })
+                _evemEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFile' })
             })
 
 

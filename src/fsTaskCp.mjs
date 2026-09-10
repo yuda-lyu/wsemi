@@ -2,6 +2,7 @@ import fs from 'fs'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import evem from './evem.mjs'
+import _evemEmit from './_evemEmit.mjs'
 import genPm from './genPm.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
@@ -22,7 +23,7 @@ import fsWatchFile from './fsWatchFile.mjs'
  * @param {String} fdSrc 輸入來源端更新紀錄之資料夾路徑字串
  * @param {String} fdTar 輸入偵測端已紀錄之資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為evem之safe型：監聽器拋錯或async reject不會使行程崩潰，change監聽器出錯會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }
+ * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
  *
@@ -321,18 +322,18 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //紀錄檔案變更至fpHashSrc, 供buildTar偵測驅動使用
 
         //ev
-        let ev = evem({ type: 'safe' }) //set/remove於呼叫端同步派發(不帶pm), 監聽器出錯不得回拋至set/remove而中斷紀錄流程, 由evem預設政策重發error事件
+        let ev = evem() //set/remove於呼叫端同步派發(不帶pm), 監聽器出錯不得回拋至set/remove而中斷紀錄流程, 由evem預設政策重發error事件
 
         //_set
         let _set = (fp, hash) => {
             setObSrc(fp, hash)
-            ev.emit('set', { type: 'set', fp, hash })
+            _evemEmit(ev, 'set', [{ type: 'set', fp, hash }], { tag: 'fsTaskCp' }) //監聽器出錯不得回拋至set而中斷紀錄流程
         }
 
         //_remove
         let _remove = (fp) => {
             removeObSrc(fp)
-            ev.emit('remove', { type: 'remove', fp })
+            _evemEmit(ev, 'remove', [{ type: 'remove', fp }], { tag: 'fsTaskCp' }) //同上
         }
 
         //save
@@ -350,7 +351,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //讀取對方紀錄fpHashSrc, 讀取自己備份紀錄fpHashTar, 偵測差異後emit觸發事件使用
 
         //ev
-        let ev = evem({ type: 'safe' }) //事件於watcher回呼內派發(change並帶pm), 監聽器出錯不得殺行程, 由evem預設政策reject pm並重發error事件
+        let ev = evem() //事件於watcher回呼內派發(change並帶pm), 監聽器出錯不得殺行程, 由evem預設政策reject pm並重發error事件
 
         //dbc
         let dbc = debounce(300)
@@ -392,8 +393,13 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
                     //執行任務失敗, 不更新紀錄檔
                 })
 
-            //emit
-            ev.emit('change', { kpSrc, kpTar, kpCmp: r, pm: pmm })
+            //emit, 於watcher回呼內派發且帶pm, 監聽器同步拋錯時須先reject該pm再通報, 否則呼叫端之流程懸置
+            _evemEmit(ev, 'change', [{ kpSrc, kpTar, kpCmp: r, pm: pmm }], {
+                tag: 'fsTaskCp',
+                funSettle: (err) => {
+                    pmm.reject(err)
+                },
+            })
 
             return pmm
         }

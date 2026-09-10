@@ -14,10 +14,15 @@ import fsWatchFolder from '../src/fsWatchFolder.mjs'
 import fsEvem from '../src/fsEvem.mjs'
 
 
-//整合測試: src內以evem({ type: 'safe' })建立事件物件之10個模組, 監聽器拋錯或async reject時
-//  (1) 不得產生uncaughtException/unhandledRejection(行程不死)
-//  (2) 以error事件回報{ fun: 'listener', name, msg, args }
-//  (3) 同事件其他監聽器不受影響, 模組後續流程仍正常(含事件帶pm者之pm被reject而不懸置)
+//整合測試: src內以evem()建立事件物件之10個模組, 於timer、stream、watcher等回呼內派發事件時
+//  (1) 監聽器之同步拋錯不得產生uncaughtException(行程不死), 由各模組於派發處以_evemEmit攔截
+//  (2) 以error事件回報{ fun: 'listener', name, msg, args }, 無error監聽者則console.error
+//  (3) 模組後續流程仍正常(含事件帶pm者之pm被reject而不懸置)
+//
+//  註: emitter本身為原生eventemitter3且不做包裝, 故依EventEmitter規範
+//      —— 同一次派發中先拋錯之監聽器會中止該次派發, 其後之監聽器不再被呼叫;
+//      故下方各測試將「正常監聽器」註冊於「拋錯監聽器」之前。
+//      async監聽器之reject不被攔截(emit不觀察回傳值), 須由監聽器自行處理。
 describe(`evem safe integration (src modules)`, function() {
 
     this.timeout(60000)
@@ -89,11 +94,11 @@ describe(`evem safe integration (src modules)`, function() {
         let { errs, fn } = collector()
         let ok = []
         oAL.on('error', fn)
-        oAL.on('message', () => {
-            throw new Error('boom')
-        })
         oAL.on('message', (m) => {
             ok.push(m.eventName)
+        })
+        oAL.on('message', () => {
+            throw new Error('boom')
         })
         oAL.trigger('a', { x: 1 })
         await waitFor(() => ok.length >= 2, 3000)
@@ -101,21 +106,31 @@ describe(`evem safe integration (src modules)`, function() {
         assert.strict.deepStrictEqual(errs.map((e) => e.name), ['message', 'message'])
     })
 
-    it(`cacheSt: detect listener throwing inside setInterval and set listener rejecting → error events`, async function() {
+    it(`cacheSt: detect listener throwing inside setInterval → error events; an async listener handling its own rejection does not leak`, async function() {
         let cs = cacheSt({ timeExpire: 10000, timeDetect: 30 })
         let { errs, fn } = collector()
+        let selfHandled = []
         cs.on('error', fn)
         cs.on('detect', () => {
             throw new Error('boom')
         })
+
+        //async監聽器須自行處理其錯誤: emit為同步且不觀察監聽器回傳值, 此為EventEmitter之規範語意
         cs.on('set', async () => {
-            throw new Error('async-boom')
+            try {
+                throw new Error('async-boom')
+            }
+            catch (err) {
+                selfHandled.push(err.message)
+            }
         })
+
         await cs.set('k', 1)
-        await waitFor(() => errs.filter((e) => e.name === 'detect').length >= 2 && errs.some((e) => e.name === 'set'), 3000)
+        await waitFor(() => errs.filter((e) => e.name === 'detect').length >= 2 && selfHandled.length >= 1, 3000)
         cs.clear()
         assert.strict.deepStrictEqual(errs.filter((e) => e.name === 'detect').length >= 2, true)
-        assert.strict.deepStrictEqual(errs.filter((e) => e.name === 'set'), [{ name: 'set', msg: 'async-boom' }])
+        assert.strict.deepStrictEqual(selfHandled, ['async-boom'])
+        assert.strict.deepStrictEqual(errs.filter((e) => e.name === 'set'), []) //async之錯誤不經error事件回報
     })
 
     it(`fsBuildReadStreamText: line listener throwing inside readline callback → error per line, other listener and close still fire`, async function() {
@@ -127,32 +142,45 @@ describe(`evem safe integration (src modules)`, function() {
         let { errs, fn } = collector()
         let lines = []
         ev.on('error', fn)
-        ev.on('line', () => {
-            throw new Error('boom')
-        })
         ev.on('line', (l) => {
             lines.push(l)
+        })
+        ev.on('line', () => {
+            throw new Error('boom')
         })
         await new Promise((resolve) => ev.on('close', resolve))
         assert.strict.deepStrictEqual(lines, ['a', '中文', 'c'])
         assert.strict.deepStrictEqual(errs.map((e) => e.name), ['line', 'line', 'line'])
     })
 
-    it(`queue: async message listener rejecting → error event, other listener still gets the queue`, async function() {
+    it(`queue: an async message listener handling its own rejection does not leak; a later sync throw is reported`, async function() {
         let q = queue(0)
         let { errs, fn } = collector()
         let got = []
+        let selfHandled = []
         q.on('error', fn)
-        q.on('message', async () => {
-            throw new Error('async-boom')
-        })
-        q.on('message', (qs) => {
+
+        //async監聽器自理其錯誤, 此為規範下之正確寫法(wsemi內pmQueue即以pm2resolve為之)
+        q.on('message', async (qs) => {
             got.push(qs.length)
+            try {
+                throw new Error('async-boom')
+            }
+            catch (err) {
+                selfHandled.push(err.message)
+            }
         })
+
+        //同步拋錯者由派發處攔截並以error事件回報
+        q.on('message', () => {
+            throw new Error('sync-boom')
+        })
+
         q.push('x')
-        await waitFor(() => errs.length >= 1 && got.length >= 1, 3000)
+        await waitFor(() => errs.length >= 1 && selfHandled.length >= 1, 3000)
         assert.strict.deepStrictEqual(got, [1])
-        assert.strict.deepStrictEqual(errs, [{ name: 'message', msg: 'async-boom' }])
+        assert.strict.deepStrictEqual(selfHandled, ['async-boom'])
+        assert.strict.deepStrictEqual(errs, [{ name: 'message', msg: 'sync-boom' }])
     })
 
     it(`fsTask: change listener throwing (never resolving msg.pm) → pm rejected by policy so lock releases and next change still fires; error events`, async function() {
@@ -196,11 +224,11 @@ describe(`evem safe integration (src modules)`, function() {
         let sets = []
         let changes = []
         otkSrc.on('error', cSrc.fn)
-        otkSrc.on('set', () => {
-            throw new Error('src-boom')
-        })
         otkSrc.on('set', (m) => {
             sets.push(m.fp)
+        })
+        otkSrc.on('set', () => {
+            throw new Error('src-boom')
         })
         otkTar.on('error', cTar.fn)
         otkTar.on('change', (msg) => {
@@ -259,11 +287,11 @@ describe(`evem safe integration (src modules)`, function() {
         let { errs, fn } = collector()
         let got = []
         ev.on('error', fn)
-        ev.on('change', () => {
-            throw new Error('boom')
-        })
         ev.on('change', (m) => {
             got.push(m.type)
+        })
+        ev.on('change', () => {
+            throw new Error('boom')
         })
         await waitFor(() => got.includes('add'), 8000) //watcher就緒後之初始add
         fs.writeFileSync(fp, 'v2', 'utf8')
@@ -282,11 +310,11 @@ describe(`evem safe integration (src modules)`, function() {
         let { errs, fn } = collector()
         let got = []
         ev.on('error', fn)
-        ev.on('change', () => {
-            throw new Error('boom')
-        })
         ev.on('change', (m) => {
             got.push({ type: m.type, hasStats: Object.prototype.hasOwnProperty.call(m, 'stats'), statsType: typeof m.stats })
+        })
+        ev.on('change', () => {
+            throw new Error('boom')
         })
         await waitFor(() => got.some((g) => g.type === 'addDir'), 8000)
         fs.writeFileSync(`${fd}/t.txt`, 'v1', 'utf8')
@@ -307,11 +335,11 @@ describe(`evem safe integration (src modules)`, function() {
         let { errs, fn } = collector()
         let got = []
         ev.on('error', fn)
-        ev.on('ping', () => {
-            throw new Error('boom')
-        })
         ev.on('ping', (m) => {
             got.push(m)
+        })
+        ev.on('ping', () => {
+            throw new Error('boom')
         })
         await delay(500) //待watcher就緒
         ev.emit('ping', { n: 1 })

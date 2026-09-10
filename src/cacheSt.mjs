@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import evem from './evem.mjs'
+import _evemEmit from './_evemEmit.mjs'
 import waitFun from './waitFun.mjs'
 import haskey from './haskey.mjs'
 import ispint from './ispint.mjs'
@@ -14,7 +15,7 @@ import cint from './cint.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.timeExpire=1800000] 輸入TTL過期時間整數，單位為毫秒ms，key寫入超過此時間後將被內部偵測週期自動刪除，預設30分鐘(1800000ms)
  * @param {Integer} [opt.timeDetect=2000] 輸入TTL偵測週期整數，單位為毫秒ms，預設2000
- * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。事件物件為evem之safe型，監聽器拋錯或async reject不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }
+ * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
  *
  * let test1 = async () => {
@@ -106,7 +107,7 @@ function cacheSt(opt = {}) {
     }
     timeDetect = cint(timeDetect)
 
-    let ev = evem({ type: 'safe' }) //detect事件於setInterval內派發, 其餘於呼叫端同步堆疊或await之後派發且監聽器可能為async, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //detect事件於setInterval內派發, 其餘於呼叫端同步堆疊或await之後派發且監聽器可能為async, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
 
     let _gs = {}
 
@@ -116,28 +117,28 @@ function cacheSt(opt = {}) {
             value,
         }
         let msg = `set: ${key}`
-        ev.emit('set', { state: 'success', msg })
+        _evemEmit(ev, 'set', [{ state: 'success', msg }], { tag: 'cacheSt' })
     }
 
     let _get = async (key) => {
         let r = _gs[key]
         let value = r === undefined ? null : r.value
         let msg = `get: ${key}`
-        ev.emit('get', { state: 'success', msg })
+        _evemEmit(ev, 'get', [{ state: 'success', msg }], { tag: 'cacheSt' })
         return value
     }
 
     let _check = async (key) => {
         let exist = haskey(_gs, key)
         let msg = `check: ${key} = ${exist}`
-        ev.emit('check', { state: 'success', msg })
+        _evemEmit(ev, 'check', [{ state: 'success', msg }], { tag: 'cacheSt' })
         return exist
     }
 
     let _checkWithSet = (key) => {
         if (haskey(_gs, key)) {
             let msg = `checkWithSet: key in use: ${key}`
-            ev.emit('checkWithSet', { state: 'error', msg })
+            _evemEmit(ev, 'checkWithSet', [{ state: 'error', msg }], { tag: 'cacheSt' })
             return false
         }
         _gs[key] = {
@@ -145,12 +146,12 @@ function cacheSt(opt = {}) {
             value: true,
         }
         let msg = `checkWithSet: ${key}`
-        ev.emit('checkWithSet', { state: 'success', msg })
+        _evemEmit(ev, 'checkWithSet', [{ state: 'success', msg }], { tag: 'cacheSt' })
         return true
     }
 
     let _setWithFree = async (keys, fn) => {
-        ev.emit('setWithFree', { state: 'start' })
+        _evemEmit(ev, 'setWithFree', [{ state: 'start' }], { tag: 'cacheSt' })
         let _ks = []
         for (let key of keys) {
             if (_checkWithSet(key)) {
@@ -162,19 +163,19 @@ function cacheSt(opt = {}) {
                     delete _gs[k]
                 }
                 let msg = `setWithFree: key in use: ${key}`
-                ev.emit('setWithFree', { state: 'error', msg })
+                _evemEmit(ev, 'setWithFree', [{ state: 'error', msg }], { tag: 'cacheSt' })
                 return Promise.reject(msg)
             }
         }
         try {
             let r = await fn()
             let msg = `setWithFree: ${keys.join(', ')}`
-            ev.emit('setWithFree', { state: 'success', msg })
+            _evemEmit(ev, 'setWithFree', [{ state: 'success', msg }], { tag: 'cacheSt' })
             return r
         }
         catch (err) {
             let msg = `setWithFree: fn threw: ${(err && err.message) || err}`
-            ev.emit('setWithFree', { state: 'error', msg })
+            _evemEmit(ev, 'setWithFree', [{ state: 'error', msg }], { tag: 'cacheSt' })
             throw err
         }
         finally {
@@ -187,7 +188,7 @@ function cacheSt(opt = {}) {
     let _del = async (key) => {
         delete _gs[key]
         let msg = `del: ${key}`
-        ev.emit('del', { state: 'success', msg })
+        _evemEmit(ev, 'del', [{ state: 'success', msg }], { tag: 'cacheSt' })
     }
 
     let _waitExist = async (key, optWait = {}) => {
@@ -204,7 +205,7 @@ function cacheSt(opt = {}) {
         }
         timeInterval = cint(timeInterval)
 
-        ev.emit('waitExist', { state: 'start' })
+        _evemEmit(ev, 'waitExist', [{ state: 'start' }], { tag: 'cacheSt' })
 
         //waitFun 達 attemptNum 會 reject 'exceeded attemptNum[N]', 須包 catch 才能拋出自家較明確之 timeout 訊息
         try {
@@ -212,12 +213,12 @@ function cacheSt(opt = {}) {
         }
         catch (e) {
             let msg = `waitExist timeout (${attemptNum * timeInterval}ms): ${key}`
-            ev.emit('waitExist', { state: 'error', msg })
+            _evemEmit(ev, 'waitExist', [{ state: 'error', msg }], { tag: 'cacheSt' })
             return Promise.reject(msg)
         }
 
         let msg = `waitExist resolved: ${key}`
-        ev.emit('waitExist', { state: 'success', msg })
+        _evemEmit(ev, 'waitExist', [{ state: 'success', msg }], { tag: 'cacheSt' })
 
     }
 
@@ -235,7 +236,7 @@ function cacheSt(opt = {}) {
         }
         timeInterval = cint(timeInterval)
 
-        ev.emit('waitNotExist', { state: 'start' })
+        _evemEmit(ev, 'waitNotExist', [{ state: 'start' }], { tag: 'cacheSt' })
 
         //同 _waitExist, 包 catch 才能拋出自家較明確之 timeout 訊息
         try {
@@ -243,18 +244,18 @@ function cacheSt(opt = {}) {
         }
         catch (e) {
             let msg = `waitNotExist timeout (${attemptNum * timeInterval}ms): ${key}`
-            ev.emit('waitNotExist', { state: 'error', msg })
+            _evemEmit(ev, 'waitNotExist', [{ state: 'error', msg }], { tag: 'cacheSt' })
             return Promise.reject(msg)
         }
 
         let msg = `waitNotExist resolved: ${key}`
-        ev.emit('waitNotExist', { state: 'success', msg })
+        _evemEmit(ev, 'waitNotExist', [{ state: 'success', msg }], { tag: 'cacheSt' })
 
     }
 
     let t = setInterval(() => {
 
-        ev.emit('detect', { state: 'start' })
+        _evemEmit(ev, 'detect', [{ state: 'start' }], { tag: 'cacheSt' })
 
         let now = Date.now()
         for (let key of Object.keys(_gs)) {
@@ -264,7 +265,7 @@ function cacheSt(opt = {}) {
             }
         }
 
-        ev.emit('detect', { state: 'finish' })
+        _evemEmit(ev, 'detect', [{ state: 'finish' }], { tag: 'cacheSt' })
 
     }, timeDetect)
 
