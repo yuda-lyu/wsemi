@@ -3,8 +3,9 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
+import cst from './_const.mjs'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import ispint from './ispint.mjs'
@@ -216,12 +217,13 @@ function fsTask(fd, opt = {}) {
         timeInterval = 60 * 1000 //1min
     }
     timeInterval = cint(timeInterval)
+    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //fsCreateFolder
     fsCreateFolder(fdStorage)
 
     //ev
-    let ev = evem() //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 由evem預設政策reject pm並重發error事件
+    let ev = evem() //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 故派發處以evEmit攔截並先reject pm
 
     //lock
     let lock = false
@@ -362,7 +364,7 @@ function fsTask(fd, opt = {}) {
 
             //emit, 於setInterval輪詢之回呼內派發且帶pm
             //  監聽器同步拋錯時須先reject該pm再通報, 否則lock不釋放而使後續change永不派發
-            _evemEmit(ev, 'change', [{ type, fp, fn, hash, pm }], {
+            evEmit(ev, 'change', [{ type, fp, fn, hash, pm }], {
                 tag: 'fsTask',
                 funSettle: (err) => {
                     pm.reject(err)

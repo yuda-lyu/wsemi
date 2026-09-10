@@ -17,7 +17,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 import fsDeleteFolder from './fsDeleteFolder.mjs'
 import fsWatchFolder from './fsWatchFolder.mjs'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 
 
 /**
@@ -204,7 +204,7 @@ function fsEvem(opt = {}) {
             //本地派發, 事件源於fsWatchFolder之change回呼故監聽器同步拋錯須於此攔截
             //  funEmit須指定為原生emt: 通報之error若走覆寫後之ev.emit會被寫成事件檔而廣播至各程序
             let self = this
-            return _evemEmit(ev, evName, [pkg, time], {
+            return evEmit(ev, evName, [pkg, time], {
                 tag: 'fsEvem',
                 funEmit: (nm, ...a) => {
                     return emt.call(self, nm, ...a)

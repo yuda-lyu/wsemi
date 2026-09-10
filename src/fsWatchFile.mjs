@@ -5,8 +5,9 @@ import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
 import cint from './cint.mjs'
 import fsIsFile from './fsIsFile.mjs'
+import cst from './_const.mjs'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 
 
 /**
@@ -104,6 +105,7 @@ function fsWatchFile(fp, opt = {}) {
         timeInterval = 100
     }
     timeInterval = cint(timeInterval)
+    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //timeBinaryInterval
     let timeBinaryInterval = get(opt, 'timeBinaryInterval')
@@ -113,7 +115,7 @@ function fsWatchFile(fp, opt = {}) {
     timeBinaryInterval = cint(timeBinaryInterval)
 
     //ev
-    let ev = evem() //change事件於chokidar回呼內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //change事件於chokidar回呼內派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
 
     //fpSpe
     let fpSpe = fp
@@ -154,12 +156,12 @@ function fsWatchFile(fp, opt = {}) {
                 fp = path.resolve(fp)
 
                 //emit
-                _evemEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFile' })
+                evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFile' })
 
             })
             .on('error', (err) => {
                 //chokidar之FSWatcher為nodejs原生EventEmitter, 其對非ENOENT/ENOTDIR之錯誤(如EPERM、EACCES)會emit('error'), 無監聽者即throw殺行程, 故轉為ev之error事件
-                _evemEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFile' })
+                evEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFile' })
             })
 
 

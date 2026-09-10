@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import genPm from './genPm.mjs'
 import isnum from './isnum.mjs'
 
@@ -22,6 +23,7 @@ function delay(ms = 10) {
     if (!isnum(ms)) {
         ms = 10
     }
+    ms = Math.min(ms, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     let pm = genPm()
     setTimeout(function() {

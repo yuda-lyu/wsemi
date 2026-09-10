@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import { spawn } from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
@@ -476,6 +477,7 @@ async function execCli(command, args = [], opt = {}) {
     else {
         onceOpt.timeoutMs = cint(timeoutMs)
     }
+    onceOpt.timeoutMs = Math.min(onceOpt.timeoutMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //maxBuffer: 正整數, 無效回退預設10MB
     let maxBuffer = get(onceOpt, 'maxBuffer', null)

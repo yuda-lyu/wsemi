@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import ispm from './ispm.mjs'
@@ -76,6 +77,9 @@ async function pmTimeout(pm, ms, opt = {}) {
     if (!isp0int(ms)) {
         throw new Error(`invalid ms[${ms}]`)
     }
+
+    //夾至計時器上限, 見_const.mjs
+    ms = Math.min(ms, cst.TIMER_TIME_MAX)
 
     //label
     let label = get(opt, 'label', null)

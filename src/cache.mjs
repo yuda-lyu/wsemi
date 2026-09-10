@@ -1,7 +1,7 @@
 import loGet from 'lodash-es/get.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmitDelay from './evEmitDelay.mjs'
 import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
 import haskey from './haskey.mjs'
@@ -537,13 +537,11 @@ import cint from './cint.mjs'
  *
  */
 function cache() {
-    let ev = evem() //事件以timer脫勾派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //事件以timer脫勾派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
     let data = {} //快取資料
 
     function emit(mode, data) {
-        setTimeout(() => { //用timer脫勾
-            _evemEmit(ev, mode, [data], { tag: 'cache' }) //於timer內派發, 監聽器同步拋錯須於此攔截, 否則即為uncaughtException
-        }, 1)
+        evEmitDelay(ev, mode, [data], { tag: 'cache' }) //用timer脫勾, 並於該新堆疊內攔截監聽器之同步拋錯
     }
 
     function set(key, opt = {}) {

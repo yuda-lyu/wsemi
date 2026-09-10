@@ -5,8 +5,9 @@ import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
 import cint from './cint.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
+import cst from './_const.mjs'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 
 
 /**
@@ -151,6 +152,7 @@ function fsWatchFolder(fd, opt = {}) {
         timeInterval = 100
     }
     timeInterval = cint(timeInterval)
+    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //timeBinaryInterval
     let timeBinaryInterval = get(opt, 'timeBinaryInterval')
@@ -160,7 +162,7 @@ function fsWatchFolder(fd, opt = {}) {
     timeBinaryInterval = cint(timeBinaryInterval)
 
     //ev
-    let ev = evem() //change事件於chokidar回呼或setInterval內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //change事件於chokidar回呼或setInterval內派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
 
     //fpSpe
     let fpSpe = fd
@@ -177,7 +179,7 @@ function fsWatchFolder(fd, opt = {}) {
                 //因監聽觸發狀態不能unWatch, 故要延遲呼叫
 
                 //emit, 資料夾已消失無法stat, stats比照chokidar之unlinkDir給undefined(原碼誤將fs.fstatSync函數本身塞入)
-                _evemEmit(ev, 'change', [{
+                evEmit(ev, 'change', [{
                     type: 'unlinkDir',
                     fp: path.resolve(fpSpe),
                     stats: undefined,
@@ -218,7 +220,7 @@ function fsWatchFolder(fd, opt = {}) {
                 fp = path.resolve(fp)
 
                 //emit
-                _evemEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder' })
+                evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder' })
 
                 //check
                 if (type === 'unlinkDir' && path.resolve(fpSpe) === fp) {
@@ -231,7 +233,7 @@ function fsWatchFolder(fd, opt = {}) {
             })
             .on('error', (err) => {
                 //chokidar之FSWatcher為nodejs原生EventEmitter, 其對非ENOENT/ENOTDIR之錯誤(如EPERM、EACCES)會emit('error'), 無監聽者即throw殺行程, 故轉為ev之error事件
-                _evemEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFolder' })
+                evEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFolder' })
             })
 
 

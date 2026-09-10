@@ -2,7 +2,7 @@ import fs from 'fs'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 import genPm from './genPm.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
@@ -322,18 +322,18 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //紀錄檔案變更至fpHashSrc, 供buildTar偵測驅動使用
 
         //ev
-        let ev = evem() //set/remove於呼叫端同步派發(不帶pm), 監聽器出錯不得回拋至set/remove而中斷紀錄流程, 由evem預設政策重發error事件
+        let ev = evem() //set/remove於呼叫端同步派發(不帶pm), 監聽器出錯不得回拋至set/remove而中斷紀錄流程, 故派發處以evEmit攔截
 
         //_set
         let _set = (fp, hash) => {
             setObSrc(fp, hash)
-            _evemEmit(ev, 'set', [{ type: 'set', fp, hash }], { tag: 'fsTaskCp' }) //監聽器出錯不得回拋至set而中斷紀錄流程
+            evEmit(ev, 'set', [{ type: 'set', fp, hash }], { tag: 'fsTaskCp' }) //監聽器出錯不得回拋至set而中斷紀錄流程
         }
 
         //_remove
         let _remove = (fp) => {
             removeObSrc(fp)
-            _evemEmit(ev, 'remove', [{ type: 'remove', fp }], { tag: 'fsTaskCp' }) //同上
+            evEmit(ev, 'remove', [{ type: 'remove', fp }], { tag: 'fsTaskCp' }) //同上
         }
 
         //save
@@ -351,7 +351,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //讀取對方紀錄fpHashSrc, 讀取自己備份紀錄fpHashTar, 偵測差異後emit觸發事件使用
 
         //ev
-        let ev = evem() //事件於watcher回呼內派發(change並帶pm), 監聽器出錯不得殺行程, 由evem預設政策reject pm並重發error事件
+        let ev = evem() //事件於watcher回呼內派發(change並帶pm), 監聽器出錯不得殺行程, 故派發處以evEmit攔截並先reject pm
 
         //dbc
         let dbc = debounce(300)
@@ -394,7 +394,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
                 })
 
             //emit, 於watcher回呼內派發且帶pm, 監聽器同步拋錯時須先reject該pm再通報, 否則呼叫端之流程懸置
-            _evemEmit(ev, 'change', [{ kpSrc, kpTar, kpCmp: r, pm: pmm }], {
+            evEmit(ev, 'change', [{ kpSrc, kpTar, kpCmp: r, pm: pmm }], {
                 tag: 'fsTaskCp',
                 funSettle: (err) => {
                     pmm.reject(err)

@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import { spawn } from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
@@ -104,18 +105,23 @@ function execCliSession(command, args = [], opt = {}) {
     if (!ispint(timeoutMs)) {
         timeoutMs = null
     }
+    else {
+        timeoutMs = Math.min(timeoutMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    }
 
     //exitGraceMs
     let exitGraceMs = get(opt, 'exitGraceMs')
     if (!isp0int(exitGraceMs)) {
         exitGraceMs = 2000
     }
+    exitGraceMs = Math.min(exitGraceMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //killWaitMs
     let killWaitMs = get(opt, 'killWaitMs')
     if (!isp0int(killWaitMs)) {
         killWaitMs = 3000
     }
+    killWaitMs = Math.min(killWaitMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //stderrKeep
     let stderrKeep = get(opt, 'stderrKeep')

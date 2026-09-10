@@ -2,7 +2,7 @@ import fs from 'fs'
 import readline from 'readline' //已是nodejs內建函數, rollup為舊版無法偵測故會提示
 import fsIsFile from './fsIsFile.mjs'
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 
 
 /**
@@ -78,19 +78,19 @@ function fsBuildReadStreamText(fp) {
     }
 
     //ev
-    let ev = evem() //line/close事件於readline與stream回呼內派發, 監聽器出錯不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //line/close事件於readline與stream回呼內派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
 
     //stream
     let stream = fs.createReadStream(fp, { encoding: 'utf8' })
 
     //stream error, 底層stream之error(如open時檔案已消失ENOENT、無權限EACCES)無人監聽會殺行程, readline亦不轉發, 故轉為ev之error事件; stream出錯後會自行destroy並派發close
     stream.on('error', (err) => {
-        _evemEmit(ev, 'error', [{ fun: 'stream', msg: err }], { tag: 'fsBuildReadStreamText' })
+        evEmit(ev, 'error', [{ fun: 'stream', msg: err }], { tag: 'fsBuildReadStreamText' })
     })
 
     //create, 須延後至呼叫端取得ev並註冊監聽器後才派發(同步emit時呼叫端尚未取得ev, 永遠監聽不到); nextTick早於任何I/O回呼, 而stream之open與read皆為非同步I/O, 故create必先於error、line與close
     process.nextTick(() => {
-        _evemEmit(ev, 'create', [], { tag: 'fsBuildReadStreamText' })
+        evEmit(ev, 'create', [], { tag: 'fsBuildReadStreamText' })
     })
 
     //rl
@@ -102,7 +102,7 @@ function fsBuildReadStreamText(fp) {
     //rl line
     rl.on('line', (line) => {
         // console.log(`line`,line)
-        _evemEmit(ev, 'line', [line], { tag: 'fsBuildReadStreamText' })
+        evEmit(ev, 'line', [line], { tag: 'fsBuildReadStreamText' })
     })
 
     //rl error, 新版nodejs(實測v24)之readline會將input之error再於Interface上emit('error'), 無監聽者同樣殺行程; 同一錯誤已由stream.on('error')轉發, 此處僅吸收避免重複派發
@@ -116,7 +116,7 @@ function fsBuildReadStreamText(fp) {
     //stream close
     stream.on('close', () => {
         //stream close事件才代表檔案可刪除
-        _evemEmit(ev, 'close', [], { tag: 'fsBuildReadStreamText' })
+        evEmit(ev, 'close', [], { tag: 'fsBuildReadStreamText' })
     })
 
     // //stream end

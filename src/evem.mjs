@@ -15,7 +15,7 @@ import EventEmitter from 'eventemitter3'
  * 之行為偏離規範(事件名型別別名、以異物移除、once自動移除等), 使封裝層自身成為「調用方拿到非預期」之來源。
  *
  * 若模組於timer、stream、watcher等回呼內派發事件, 監聽器之同步拋錯即成uncaughtException而殺行程 ——
- * 該情形屬「派發位置」之問題而非emitter契約之問題, 應於派發處自行以try catch攔截(wsemi內部以_evemEmit為之)。
+ * 該情形屬「派發位置」之問題而非emitter契約之問題, 應於派發處自行以try catch攔截(wsemi提供evEmit與evEmitDelay為之)。
  *
  * See: {@link https://github.com/primus/eventemitter3 eventemitter3}
  *

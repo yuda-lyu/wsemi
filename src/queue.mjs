@@ -1,5 +1,5 @@
 import evem from './evem.mjs'
-import _evemEmit from './_evemEmit.mjs'
+import evEmit from './evEmit.mjs'
 import isnint from './isnint.mjs'
 import cint from './cint.mjs'
 
@@ -169,7 +169,7 @@ function queue(takeLimit = 0) {
     takeLimit = cint(takeLimit)
 
     //ev
-    let ev = evem() //message監聽器通常為async, 其reject不得殺行程, 由evem預設政策重發error事件
+    let ev = evem() //message監聽器通常為async, 其reject須由監聽器自行處理; 同步拋錯則由派發處以evEmit攔截
 
     //get, like iterator
     function get() {
@@ -203,7 +203,7 @@ function queue(takeLimit = 0) {
 
         //emit
         if (qs.length > 0) {
-            _evemEmit(ev, 'message', [qs], { tag: 'queue' })
+            evEmit(ev, 'message', [qs], { tag: 'queue' })
         }
 
     }
@@ -217,7 +217,7 @@ function queue(takeLimit = 0) {
 
         //emit
         if (takeLimit <= 0 || takeNow < takeLimit) {
-            _evemEmit(ev, 'message', [qs], { tag: 'queue' })
+            evEmit(ev, 'message', [qs], { tag: 'queue' })
         }
 
     }

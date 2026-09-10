@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import cp from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
@@ -90,6 +91,9 @@ function execProcess(prog, args, opt = {}) {
     let timeout = get(opt, 'timeout')
     if (!isnum(timeout) || timeout <= 0) {
         timeout = null
+    }
+    else {
+        timeout = Math.min(timeout, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
     }
 
     //pm

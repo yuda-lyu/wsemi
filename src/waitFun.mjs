@@ -1,3 +1,4 @@
+import cst from './_const.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
@@ -126,6 +127,7 @@ async function waitFun(fun, opt = {}) {
     if (!ispint(timeInterval)) {
         timeInterval = 1000
     }
+    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
     //setInterval
     let n = 0
