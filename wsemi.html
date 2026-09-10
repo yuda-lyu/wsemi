@@ -57130,7 +57130,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 
     
 
-    <h4 class="name" id=".getErrorMessage"><span class="type-signature type-signature-static">(static) </span>getErrorMessage<span class="signature">(err)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    <h4 class="name" id=".getErrorMessage"><span class="type-signature type-signature-static">(static) </span>getErrorMessage<span class="signature">(err, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
 
     
 
@@ -57140,14 +57140,16 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>提取Error內Message訊息</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>提取Error內Message訊息
+err接受任意輸入，於任何err下皆不拋出錯誤且回傳值必為字串
+此不拋錯之保證不涵蓋opt，因opt係呼叫端自備之設定物件，其讀取比照本套件慣例不另包try</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getErrorMessage.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getErrorMessage.mjs.html">getErrorMessage.mjs</a>, <a href="getErrorMessage.mjs.html#line151">line 151</a>
+        <a href="getErrorMessage.mjs.html">getErrorMessage.mjs</a>, <a href="getErrorMessage.mjs.html#line487">line 487</a>
     </li></ul></dd>
     
 
@@ -57194,7 +57196,175 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>try {    throw new Error('something wrong')}catch (err) {    console.log(getErrorMessage(err))}// => something wrongtry {    throw new Error()}catch (err) {    console.log(getErrorMessage(err))}// => ''try {    throw new TypeError('wrong type')}catch (err) {    console.log(getErrorMessage(err))}// => wrong typetry {    throw new RangeError('range bad')}catch (err) {    console.log(getErrorMessage(err))}// => range badtry {    throw new ReferenceError('ref bad')}catch (err) {    console.log(getErrorMessage(err))}// => ref badtry {    throw new SyntaxError('syntax bad')}catch (err) {    console.log(getErrorMessage(err))}// => syntax badtry {    throw new URIError('uri bad')}catch (err) {    console.log(getErrorMessage(err))}// => uri badtry {    throw new AggregateError([new Error('e1'), 'e2'], 'outer')}catch (err) {    console.log(getErrorMessage(err))}// => outertry {    throw new Error('top', { cause: new Error('root cause') })}catch (err) {    console.log(getErrorMessage(err))}// => toptry {    throw new DOMException('operation was aborted.', 'AbortError')}catch (err) {    console.log(getErrorMessage(err))}// => operation was aborted.try {    throw fs.readFileSync('definitely_not_exists_1234567890.txt')}catch (err) {    console.log(getErrorMessage(err))}// => ENOENT: no such file or directory, open ...let test1 = async() => {    return Promise.reject('promise reject')}try {    await test1()}catch (err) {    console.log(getErrorMessage(err))}// => promise rejectlet test2 = async() => {    throw new Error('something wrong')}try {    await test2()}catch (err) {    console.log(getErrorMessage(err))}// => something wronglet test3 = async() => {    throw new Error()}try {    await test3()}catch (err) {    console.log(getErrorMessage(err))}// => ''let test4 = async() => {    throw new TypeError('wrong type')}try {    await test4()}catch (err) {    console.log(getErrorMessage(err))}// => wrong type</code></pre>
+    <pre class="prettyprint"><code>try {
+    throw new Error('something wrong')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => something wrong
+
+try {
+    throw new Error()
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => ''
+
+try {
+    throw new TypeError('wrong type')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => wrong type
+
+try {
+    throw new RangeError('range bad')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => range bad
+
+try {
+    throw new ReferenceError('ref bad')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => ref bad
+
+try {
+    throw new SyntaxError('syntax bad')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => syntax bad
+
+try {
+    throw new URIError('uri bad')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => uri bad
+
+try {
+    throw new AggregateError([new Error('e1'), 'e2'], 'outer')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => outer
+
+try {
+    throw new AggregateError([new Error('e1'), new Error('e2')], 'outer')
+}
+catch (err) {
+    console.log(getErrorMessage(err, { useAggregate: true }))
+}
+// => outer [e1; e2]
+
+try {
+    throw new Error('top', { cause: new Error('root cause') })
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => top
+
+try {
+    throw new Error('top', { cause: new Error('root cause') })
+}
+catch (err) {
+    console.log(getErrorMessage(err, { useCause: true }))
+}
+// => top &lt;- root cause
+
+try {
+    throw new Error('', { cause: new Error('root only') })
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => root only
+
+try {
+    throw new DOMException('operation was aborted.', 'AbortError')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => operation was aborted.
+
+try {
+    fs.readFileSync('definitely_not_exists_1234567890.txt')
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => ENOENT: no such file or directory, open ...
+
+let o = { a: 1 }
+o.self = o
+console.log(getErrorMessage(o))
+// => {"a":1,"self":"[Circular]"}
+
+console.log(getErrorMessage({ v: 10n }))
+// => {"v":"10"}
+
+console.log(getErrorMessage({ message: 123 }))
+// => 123
+
+console.log(getErrorMessage(/ab/g))
+// => /ab/g
+
+let test1 = async() => {
+    return Promise.reject('promise reject')
+}
+try {
+    await test1()
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => promise reject
+
+let test2 = async() => {
+    throw new Error('something wrong')
+}
+try {
+    await test2()
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => something wrong
+
+let test3 = async() => {
+    throw new Error()
+}
+try {
+    await test3()
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => ''
+
+let test4 = async() => {
+    throw new TypeError('wrong type')
+}
+try {
+    await test4()
+}
+catch (err) {
+    console.log(getErrorMessage(err))
+}
+// => wrong type</code></pre>
 
 
 
@@ -57212,7 +57382,11 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -57230,7 +57404,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
             <td class="type">
             
                 
-<span class="param-type">Error</span>
+<span class="param-type">*</span>
 
 
 
@@ -57238,10 +57412,292 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>傳入錯誤訊息</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>傳入任意錯誤資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>useCause</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否串接cause鏈布林值，若為true則將各層cause之訊息以' &lt;- '串接，預設false。惟外層message為空字串時，不論本項為何皆取cause，因該情形下無其他資訊來源</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>useAggregate</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否附加AggregateError之errors各項訊息布林值，若為true則以'; '串接後置於方括號內，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>levelCauseMax</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>8</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入cause鏈與errors之最大展開層數正整數，預設8</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>levelJsonMax</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>6</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入序列化之最大巢狀深度正整數，超過者以'[Deep]'表示，預設6</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>lengthMessageMax</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>0</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入回傳字串之最大長度正整數，超過者截斷並以'...'標記，該標記計入本上限內，預設0代表不限制長度</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -57267,7 +57723,7 @@ console.log(dltdt[0].sheetname, dltdt[0].data)
 
         
 <div class="param-desc">
-    <p>回傳錯誤訊息的message字串</p>
+    <p>回傳錯誤訊息字串。無法提取時回傳空字串。序列化時循環參照處以'[Circular]'表示、BigInt轉為字串，此二標記不做跳脫，應用資料內若恰有相同字串將無法分辨</p>
 </div>
 
 
@@ -107232,7 +107688,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Sep 09 2026 18:30:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Sep 10 2026 13:30:27 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
