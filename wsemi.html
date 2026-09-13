@@ -178,7 +178,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execCliCore.mjs.html">execCliCore.mjs</a>, <a href="execCliCore.mjs.html#line264">line 264</a>
+        <a href="execCliCore.mjs.html">execCliCore.mjs</a>, <a href="execCliCore.mjs.html#line265">line 265</a>
     </li></ul></dd>
     
 
@@ -36823,7 +36823,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line52">line 52</a>
+        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line61">line 61</a>
     </li></ul></dd>
     
 
@@ -36870,7 +36870,32 @@ if (true) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>//need test in nodejsif (true) {    let prog = 'taskkill'    let args = ['/pid', '{pid}', '/T', '/F']    let r = await execProcess(prog, args) //預設spawn}if (true) {    let prog = `C:\\Program Files\\7-Zip\\7z.exe`    let pw = 'AbcD1234'    let args = `a abc.7z abc.txt -p${pw}`    execProcess(prog, args, { mode: 'execFile' })        .then(function(data) {            console.log('then', data)        })        .catch(function(data) {            console.log('catch', data)        })}</code></pre>
+    <pre class="prettyprint"><code>//need test in nodejs
+
+if (true) {
+    let prog = 'taskkill'
+    let args = ['/pid', '{pid}', '/T', '/F']
+    let r = await execProcess(prog, args) //預設spawn
+}
+
+if (true) {
+    //Windows原生指令輸出為系統字碼頁(中文系統為big5), 給codeCmd:'auto'可自動判定, 或直接給'big5'
+    let r = await execProcess('tasklist', ['/FI', 'IMAGENAME eq node.exe'], { codeCmd: 'auto' })
+}
+
+if (true) {
+    //execFile與spawn之args須為陣列, 每個元素為一個參數; 給字串會被當成單一參數而失敗
+    let prog = `C:\\Program Files\\7-Zip\\7z.exe`
+    let pw = 'AbcD1234'
+    let args = ['a', 'abc.7z', 'abc.txt', `-p${pw}`]
+    execProcess(prog, args, { mode: 'execFile' })
+        .then(function(data) {
+            console.log('then', data)
+        })
+        .catch(function(data) {
+            console.log('catch', data)
+        })
+}</code></pre>
 
 
 
@@ -37042,6 +37067,46 @@ if (true) {
 
         <tr>
             
+                <td class="name"><code>mode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'spawn'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入執行模式字串，可選'spawn'、'exec'、'execFile'，預設'spawn'。'spawn'不經shell直接執行，輸出以串流處理，適合大量輸出或長時間執行，prog與args不需也不可加引號；'exec'經shell執行，prog與args以空白串接成指令字串，適合須用到shell語法之情形，陣列型args之元素含空白且未含雙引號者會自動以雙引號包住，prog含空白亦同，已含雙引號者視為呼叫端自行處理而原樣串接，字串型args視為呼叫端已自組之指令列，原樣串接不加引號；'execFile'不經shell直接執行可執行檔，args須為陣列，給字串會被當成單一參數。三種模式之stdout與stderr皆以Buffer接收後走同一條解碼路徑</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
                 <td class="name"><code>cbStdout</code></td>
             
 
@@ -37075,7 +37140,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入回調stdout函數，預設null</p></td>
+            <td class="description last"><p>輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準</p></td>
         </tr>
 
     
@@ -37115,7 +37180,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入回調stderr函數，預設null</p></td>
+            <td class="description last"><p>輸入回調stderr函數，預設null，行為同cbStdout</p></td>
         </tr>
 
     
@@ -37150,12 +37215,52 @@ if (true) {
             
                 <td class="default">
                 
-                    <code>'big5'</code>
+                    <code>'utf8'</code>
                 
                 </td>
             
 
-            <td class="description last"><p>輸入讀回程序的stdout與stderr回應的解碼字串，為當前作業系統語系，預設'big5'</p></td>
+            <td class="description last"><p>輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>useChcp</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'</p></td>
         </tr>
 
     
@@ -37228,7 +37333,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息，離開碼非0時為<code>code[N]:\n訊息</code>，逾時為<code>timeout[Nms]:\n訊息</code></p>
 </div>
 
 
@@ -43960,13 +44065,14 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>後端nodejs下載網址成為檔案</p>
+<p>下載內容先寫入暫存檔<code>${fpOut}.download</code>，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔，下次呼叫自然重新下載。回應帶content-length且未經內容編碼(gzip等會自動解壓，該標頭為壓縮後大小故不核對)時，改名前會核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串<code>failed to download url[urlIn] to file[fpOut]: 原因</code>，並清除暫存檔。同一fpOut之併發下載由呼叫端自行避免</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFile.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsDownloadFile.mjs.html">fsDownloadFile.mjs</a>, <a href="fsDownloadFile.mjs.html#line59">line 59</a>
+        <a href="fsDownloadFile.mjs.html">fsDownloadFile.mjs</a>, <a href="fsDownloadFile.mjs.html#line62">line 62</a>
     </li></ul></dd>
     
 
@@ -44110,7 +44216,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息字串</p>
 </div>
 
 
@@ -44148,13 +44254,14 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>後端nodejs下載網址成為檔案</p>
-<p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFileCore.test.mjs">Github</a></p></li></ul></dd>
+<p>下載內容先寫入暫存檔<code>${fpOut}.download</code>，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔。回應帶content-length且未經內容編碼與分塊傳輸時，改名前核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串<code>failed to download url[urlIn] to file[fpOut]: 原因</code>並清除暫存檔。同一fpOut之併發下載由呼叫端自行避免</p>
+<p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFile.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsDownloadFileCore.mjs.html">fsDownloadFileCore.mjs</a>, <a href="fsDownloadFileCore.mjs.html#line28">line 28</a>
+        <a href="fsDownloadFileCore.mjs.html">fsDownloadFileCore.mjs</a>, <a href="fsDownloadFileCore.mjs.html#line32">line 32</a>
     </li></ul></dd>
     
 
@@ -44201,7 +44308,9 @@ if (true) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>//need test in nodejs//see fsDownloadFile</code></pre>
+    <pre class="prettyprint"><code>//need test in nodejs
+
+//see fsDownloadFile</code></pre>
 
 
 
@@ -44376,7 +44485,7 @@ if (true) {
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Object</span>
 
 
 
@@ -44416,7 +44525,7 @@ if (true) {
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">function</span>
 
 
 
@@ -44443,7 +44552,47 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入Readable，預設null</p></td>
+            <td class="description last"><p>輸入stream之Readable，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pipeline</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入stream/promises之pipeline，預設null</p></td>
         </tr>
 
     
@@ -44476,7 +44625,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息字串</p>
 </div>
 
 
@@ -108472,7 +108621,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Sep 10 2026 19:14:06 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sun Sep 13 2026 20:54:28 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
