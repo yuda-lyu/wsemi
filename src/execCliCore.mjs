@@ -212,6 +212,7 @@ function buildSpawnArgs(command, args = []) {
 /**
  * 建立子進程之環境變數物件: 以process.env為底, 加入PYTHONIOENCODING=utf-8, 再併入envExtra(同名以envExtra為準)
  * 每次呼叫重新求值且不動本進程process.env, 故並行調用可各自帶不同值
+ * PYTHONIOENCODING對一般python直譯器有效(sys.stdout.encoding變utf-8); 對PyInstaller打包之exe無效, 其以隔離模式嵌入直譯器且文件明載刻意忽略PYTHONIOENCODING與PYTHONUTF8, 該類程式須於打包時以-X utf8_mode=1指定, 或由本進程以execProcess之codeCmd('auto'或系統字碼頁)解碼其輸出
  * Windows下環境變數大小寫不敏感但JS物件鍵敏感, 故併入前先移除大小寫不同之同名既有鍵, 否則呼叫端傳Path而process.env為PATH時兩鍵並存且Windows取原值, 注入靜默失效
  * 此刪除僅限win32: POSIX環境變數大小寫敏感, Path與PATH為兩個獨立變數, 誤刪即退化
  *

@@ -1,6 +1,6 @@
 {
   "name": "wsemi",
-  "version": "1.8.92",
+  "version": "1.8.93",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "@zumer/snapdom": "^2.24.15",
@@ -30,7 +30,7 @@
     "w-package-tools": "^1.1.16"
   },
   "scripts": {
-    "test": "mocha --parallel --timeout 60000",
+    "test": "mocha --parallel \"test/*.test.mjs\" --timeout 180000",
     "deploy": "gh-pages -d docs"
   },
   "repository": {

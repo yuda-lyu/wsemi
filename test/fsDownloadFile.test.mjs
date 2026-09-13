@@ -1,8 +1,190 @@
 import fs from 'fs'
+import http from 'http'
+import zlib from 'zlib'
 import assert from 'assert'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsDownloadFile from '../src/fsDownloadFile.mjs'
+
+
+describe(`fsDownloadFile with a local server`, function() {
+
+    //本機HTTP服務, 不依賴外網; port固定8000以上, test目錄內其他測試未使用port
+    let port = 8801
+    let fdt = './_test_fsDownloadFileLocal'
+    let server = null
+    let body = Buffer.from(Array.from({ length: 300000 }, (v, i) => i % 251))
+    let gz = zlib.gzipSync(body)
+    let url = (p) => {
+        return `http://127.0.0.1:${port}${p}`
+    }
+    let leftovers = (fp) => {
+        return [fs.existsSync(fp), fs.existsSync(`${fp}.download`)]
+    }
+    let delay = (ms) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms)
+        })
+    }
+
+    before(async function() {
+        fsCreateFolder(fdt)
+        server = http.createServer((req, res) => {
+            if (req.url === '/ok.bin') {
+                res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': String(body.length) })
+                res.end(body)
+            }
+            else if (req.url === '/nolen.bin') {
+                res.writeHead(200, { 'content-type': 'application/octet-stream' }) //chunked, 無content-length
+                res.end(body)
+            }
+            else if (req.url === '/gz.bin') {
+                res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-encoding': 'gzip', 'content-length': String(gz.length) })
+                res.end(gz)
+            }
+            else if (req.url === '/abort.bin') {
+                res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-length': '1000000' })
+                res.write(body.subarray(0, 200000))
+                setTimeout(() => {
+                    res.socket.destroy() //送出部分內容後斷線
+                }, 100)
+            }
+            else {
+                res.writeHead(404, { 'content-type': 'text/plain' })
+                res.end('not found')
+            }
+        })
+        await new Promise((resolve) => {
+            server.listen(port, '127.0.0.1', resolve)
+        })
+    })
+
+    after(async function() {
+        await new Promise((resolve) => {
+            server.close(resolve)
+        })
+        fsDeleteFolder(fdt)
+    })
+
+    it(`should download a response with content-length, byte for byte, leaving no temp file`, async function() {
+        let fp = `${fdt}/ok.bin`
+        let r = await fsDownloadFile(url('/ok.bin'), fp)
+        assert.strict.deepStrictEqual(r, fp)
+        assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
+        assert.strict.deepStrictEqual(leftovers(fp), [true, false])
+    })
+
+    it(`should download a chunked response without content-length`, async function() {
+        let fp = `${fdt}/nolen.bin`
+        await fsDownloadFile(url('/nolen.bin'), fp)
+        assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
+        assert.strict.deepStrictEqual(leftovers(fp), [true, false])
+    })
+
+    it(`should download a gzip response whose content-length is the compressed size`, async function() {
+        //fetch自動解壓, content-length為壓縮後大小, 不得據此判為截斷
+        let fp = `${fdt}/gz.bin`
+        await fsDownloadFile(url('/gz.bin'), fp)
+        assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
+        assert.strict.deepStrictEqual(leftovers(fp), [true, false])
+    })
+
+    it(`should reject and leave no file when the connection drops mid-stream, without an uncaught exception`, async function() {
+        let uncaught = []
+        let h = (e) => {
+            uncaught.push(String(e))
+        }
+        process.on('uncaughtException', h)
+        let fp = `${fdt}/abort.bin`
+        let err = null
+        try {
+            await fsDownloadFile(url('/abort.bin'), fp)
+        }
+        catch (e) {
+            err = e
+        }
+        await delay(50)
+        process.removeListener('uncaughtException', h)
+        assert.strict.deepStrictEqual(typeof err === 'string', true)
+        assert.strict.deepStrictEqual(err.includes(url('/abort.bin')) && err.includes(fp), true, err)
+        assert.strict.deepStrictEqual(leftovers(fp), [false, false])
+        assert.strict.deepStrictEqual(uncaught, [])
+    })
+
+    it(`should reject with the status when the response is not ok`, async function() {
+        let fp = `${fdt}/missing.bin`
+        let err = null
+        try {
+            await fsDownloadFile(url('/missing.bin'), fp)
+        }
+        catch (e) {
+            err = e
+        }
+        assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('status[404]'), true, err)
+        assert.strict.deepStrictEqual(leftovers(fp), [false, false])
+    })
+
+    it(`should reject with the cause when the connection is refused`, async function() {
+        let fp = `${fdt}/refused.bin`
+        let err = null
+        try {
+            await fsDownloadFile('http://127.0.0.1:1/refused.bin', fp)
+        }
+        catch (e) {
+            err = e
+        }
+        assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('fetch failed') && err.includes(fp), true, err)
+        assert.strict.deepStrictEqual(leftovers(fp), [false, false])
+    })
+
+    it(`should reject when the received size differs from content-length`, async function() {
+        //以假fetch回傳content-length大於實際內容之Response, 驗大小核對分支; 真實HTTP/1.1下undici會先以terminated報錯, 此分支為後備
+        let fetchOrig = globalThis.fetch
+        globalThis.fetch = async () => {
+            return new Response(body.subarray(0, 300), { status: 200, headers: { 'content-length': '1000' } })
+        }
+        let fp = `${fdt}/mismatch.bin`
+        let err = null
+        try {
+            await fsDownloadFile('http://fake.invalid/mismatch.bin', fp)
+        }
+        catch (e) {
+            err = e
+        }
+        finally {
+            globalThis.fetch = fetchOrig
+        }
+        assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('size mismatch') && err.includes('content-length[1000]') && err.includes('received[300]'), true, err)
+        assert.strict.deepStrictEqual(leftovers(fp), [false, false])
+    })
+
+    it(`should replace an existing file at fpOut`, async function() {
+        let fp = `${fdt}/replace.bin`
+        fs.writeFileSync(fp, 'old')
+        await fsDownloadFile(url('/ok.bin'), fp)
+        assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
+        assert.strict.deepStrictEqual(leftovers(fp), [true, false])
+    })
+
+    it(`should create missing parent folders`, async function() {
+        let fp = `${fdt}/sub/deep/ok.bin`
+        let r = await fsDownloadFile(url('/ok.bin'), fp)
+        assert.strict.deepStrictEqual(r, fp)
+        assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
+    })
+
+    it(`should reject with an Error when urlIn is not an effective string`, async function() {
+        let err = null
+        try {
+            await fsDownloadFile('', `${fdt}/x.bin`)
+        }
+        catch (e) {
+            err = e
+        }
+        assert.strict.deepStrictEqual(err instanceof Error, true)
+    })
+
+})
 
 
 describe(`fsDownloadFile`, function() {
