@@ -20,4 +20,10 @@ describe('blob2ab', function() {
         assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'no window' })
     })
 
+    it('should accept a File as input, passing the input check like a Blob', async function() {
+        //input type=file取得者為File; 通過輸入檢查後於nodejs得no window, 不得為invalid bb
+        let r = await getRes(() => blob2ab(new File([new Uint8Array([1, 2, 3])], 'a.txt')))
+        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'no window' })
+    })
+
 })

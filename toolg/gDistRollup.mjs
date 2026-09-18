@@ -18,6 +18,7 @@ rollupFiles({
         'events': 'events',
         'url': 'url',
         'stream': 'stream',
+        'stream/promises': 'streamPromises', //fsDownloadFile注入pipeline用, Node專用; 不列則rollup只能猜全域名為promises
         'process': 'process',
         'child_process': 'child_process',
         'crypto': 'crypto',
@@ -45,6 +46,7 @@ rollupFiles({
         'events',
         'url',
         'stream',
+        'stream/promises',
         'process',
         'child_process',
         'crypto',

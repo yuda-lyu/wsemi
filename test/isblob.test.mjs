@@ -4,7 +4,34 @@ import isblob from '../src/isblob.mjs'
 
 describe(`isblob`, function() {
 
-    //nodejs沒有Blob，只有瀏覽器才有
+    //nodejs 18以上有Blob, 20以上有File
+
+    it(`should return true when input new Blob`, function() {
+        let r = isblob(new Blob([new Uint8Array([1, 2, 3])]))
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input new File, as File is a subtype of Blob`, function() {
+        //input type=file取得者皆為File, 其標籤為[object File]而非[object Blob]
+        let f = new File([new Uint8Array([1, 2, 3])], 'a.txt')
+        assert.strict.deepStrictEqual(Object.prototype.toString.call(f), '[object File]')
+        assert.strict.deepStrictEqual(isblob(f), true)
+    })
+
+    it(`should return true for other Blob subclasses by instanceof`, function() {
+        class MyBlob extends Blob {
+            get [Symbol.toStringTag]() {
+                return 'MyBlob'
+            }
+        }
+        let r = isblob(new MyBlob([new Uint8Array([1])]))
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return false for a plain object faking blob members`, function() {
+        let r = isblob({ size: 3, type: '', slice: () => {}, arrayBuffer: () => {} })
+        assert.strict.deepStrictEqual(r, false)
+    })
 
     it(`should return false when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)

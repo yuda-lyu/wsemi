@@ -4,7 +4,17 @@ import isfile from '../src/isfile.mjs'
 
 describe(`isfile`, function() {
 
-    //nodejs沒有File，只有瀏覽器才有
+    //nodejs 20以上有File
+
+    it(`should return true when input new File`, function() {
+        let r = isfile(new File([new Uint8Array([1, 2, 3])], 'a.txt'))
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return false when input new Blob, as isfile stays strict`, function() {
+        let r = isfile(new Blob([new Uint8Array([1, 2, 3])]))
+        assert.strict.deepStrictEqual(r, false)
+    })
 
     it(`should return false when input new ArrayBuffer(1)`, function() {
         let ab = new ArrayBuffer(1)
