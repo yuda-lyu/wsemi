@@ -22413,7 +22413,7 @@ domConvertToPicDyn(ele, { scale: 3 })
 
     
 
-    <h4 class="name" id=".domDragBarAndScroll"><span class="type-signature type-signature-static">(static) </span>domDragBarAndScroll<span class="signature">(panel, bar, opt<span class="signature-attributes">opt</span>, getHeighRatio<span class="signature-attributes">opt</span>, getWidthRatio<span class="signature-attributes">opt</span>, stopScrollPropagationForPanel<span class="signature-attributes">opt</span>, stopTouchDragPropagationForPanel<span class="signature-attributes">opt</span>, useTouchDragForPanel<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".domDragBarAndScroll"><span class="type-signature type-signature-static">(static) </span>domDragBarAndScroll<span class="signature">(panel, bar, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -22424,13 +22424,18 @@ domConvertToPicDyn(ele, { scale: 3 })
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對指定panel與bar的DOM元素監聽滾輪與拖曳bar事件</p>
+<p>同時只服務一條通道(bar滑鼠、bar觸控、panel觸控)，pressBar與freeBar恆成對，dragBar只出現於兩者之間。bar位於panel之內時，bar上起手之觸控只由bar通道處理，不因冒泡而重複發事件。bar通道發絕對座標，panel觸控通道發經比例縮放之相對位移，兩者語義不同</p>
+<p>滑鼠僅主鍵可上鎖；拖出瀏覽器視窗外放開時收不到mouseup，回到視窗內移動時以buttons為0自我解鎖(以<code>new MouseEvent</code>合成mousemove時須自行給buttons，其預設值0會被視為已放開)。bar與window之mouseup刻意不判來源與按鍵，作為觸控通道遺失touchend時的最後救援。已上鎖時再按下主鍵視為接手，先替既有之鎖補發freeBar再發pressBar</p>
+<p>觸控以起手那一指之identifier鎖定，其餘手指之落下、移動與放開皆不影響本次拖曳，手勢被系統中斷(touchcancel)時只解鎖不定值。起手元素於拖曳途中被移出DOM時(如消費端重繪bar之內容)，瀏覽器不再把後續之touchmove與touchend送達bar，鎖因而殘留；下一次touchstart時以touches驗證起手指是否仍在，不在即視為殘鎖，先補發freeBar再重新上鎖。事件未帶足觸點資訊時(合成事件)，有identifier者改自touches比對，無identifier者取第一點，無從判斷時一律採解鎖側</p>
+<p>呼叫端須自備樣式：bar需<code>user-select:none</code>避免拖曳時選取文字，觸控場景另需<code>touch-action</code>避免瀏覽器接手捲動。拖曳期間勿重繪或移除bar內之元素，起手元素一旦脫離DOM，當次觸控拖曳即中斷(下一次觸控會自行復原)</p>
+<p>已知限制：同一panel掛兩個實例時一次滾輪會各發一次scrollPanel；單指輕點bar時瀏覽器另會補發相容滑鼠事件，故pressBar與freeBar各發兩次；拖曳中呼叫clear只停止而不補發freeBar</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domDragBarAndScroll.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domDragBarAndScroll.mjs.html">domDragBarAndScroll.mjs</a>, <a href="domDragBarAndScroll.mjs.html#line39">line 39</a>
+        <a href="domDragBarAndScroll.mjs.html">domDragBarAndScroll.mjs</a>, <a href="domDragBarAndScroll.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -22477,7 +22482,20 @@ domConvertToPicDyn(ele, { scale: 3 })
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browser//監聽domlet divPanel = document.querySelector('#id_panel')let divBar = document.querySelector('#id_bar')let getHeighRatio = () => 0.9let das = domDragBarAndScroll(divPanel, divBar, { getHeighRatio, stopScrollPropagationForPanel: true, stopTouchDragPropagationForPanel: true })das.on('scrollPanel', () => {})das.on('pressBar', () => {})das.on('dragBar', () => {})das.on('freeBar', () => {})//釋放監聽das.clear()</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+//監聽dom
+let divPanel = document.querySelector('#id_panel')
+let divBar = document.querySelector('#id_bar')
+let getHeighRatio = () => 0.9
+let das = domDragBarAndScroll(divPanel, divBar, { getHeighRatio, stopScrollPropagationForPanel: true, stopTouchDragPropagationForPanel: true })
+das.on('scrollPanel', () => {})
+das.on('pressBar', () => {})
+das.on('dragBar', () => {})
+das.on('freeBar', () => {})
+
+//釋放監聽
+das.clear()</code></pre>
 
 
 
@@ -22616,9 +22634,32 @@ domConvertToPicDyn(ele, { scale: 3 })
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，預設{}</p></td>
-        </tr>
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
 
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
@@ -22823,6 +22864,13 @@ domConvertToPicDyn(ele, { scale: 3 })
     </tbody>
 </table>
 
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
 
 
 
@@ -22842,7 +22890,7 @@ domConvertToPicDyn(ele, { scale: 3 })
 
         
 <div class="param-desc">
-    <p>回傳物件，可使用on與clear函數，on可監聽pressBar、dragBar、freeBar事件，clear為釋放監聽</p>
+    <p>回傳物件，可使用on與clear函數，on可監聽scrollPanel、pressBar、dragBar、freeBar事件，clear為釋放監聽。scrollPanel帶{ratioY,ratioX}為該軸之滾動方向(1、-1或0)，pressBar與dragBar帶{clientY,clientX}，freeBar不帶參數</p>
 </div>
 
 
@@ -109069,7 +109117,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Sep 18 2026 15:55:55 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Sep 22 2026 10:23:35 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
