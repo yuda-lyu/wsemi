@@ -1,4 +1,3 @@
-import isFunction from 'lodash-es/isFunction.js'
 import size from 'lodash-es/size.js'
 import get from 'lodash-es/get.js'
 import range from 'lodash-es/range.js'
@@ -6,6 +5,7 @@ import cloneDeep from 'lodash-es/cloneDeep.js'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isbol from './isbol.mjs'
+import isfun from './isfun.mjs'
 
 
 //performance for traverseObj and runObj
@@ -356,7 +356,7 @@ function traverseObj(data, f, keepSymbols = false) {
 function treeObj(data, hookFun = null, opt = {}) {
 
     //hookFun
-    if (!isFunction(hookFun)) {
+    if (!isfun(hookFun)) {
         hookFun = (value) => {
             return value
         }

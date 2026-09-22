@@ -1,5 +1,10 @@
+import isFunction from 'lodash-es/isFunction.js'
+
+
 /**
  * 判斷是否為函數
+ *
+ * 委派lodash之isFunction，一般函數、箭頭函數、async函數、generator函數與class皆為true；async generator函數(async function*)於lodash 4判為false，屬其已知限制
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isfun.test.mjs Github}
  * @memberOf wsemi
@@ -15,8 +20,7 @@
  *
  */
 function isfun(v) {
-    let c = Object.prototype.toString.call(v)
-    return c === '[object Function]' || c === '[object AsyncFunction]'
+    return isFunction(v)
 }
 
 

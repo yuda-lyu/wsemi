@@ -19,6 +19,33 @@ describe(`isfun`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
+    it(`should return true when input () => {}`, function() {
+        let r = isfun(() => {})
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input async function() {}`, function() {
+        let r = isfun(async function() {})
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input function* () {}`, function() {
+        //改委派lodash之isFunction後generator函數亦為函數; 原以toString標籤判定之實作漏掉此類
+        let r = isfun(function* () {})
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input class {}`, function() {
+        let r = isfun(class {})
+        assert.strict.deepStrictEqual(r, true)
+    })
+
+    it(`should return true when input a bound function`, function() {
+        let f = function() {}
+        let r = isfun(f.bind(null))
+        assert.strict.deepStrictEqual(r, true)
+    })
+
     it(`should return false when input '1.25'`, function() {
         let r = isfun('1.25')
         assert.strict.deepStrictEqual(r, false)

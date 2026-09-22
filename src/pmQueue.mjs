@@ -1,10 +1,10 @@
 import get from 'lodash-es/get.js'
-import isBoolean from 'lodash-es/isBoolean.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import queue from './queue.mjs'
 import isfun from './isfun.mjs'
+import isbol from './isbol.mjs'
 import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'
 import delay from './delay.mjs'
@@ -374,7 +374,7 @@ function pmQueue(takeLimit = 0, takeLast = false) {
         takeLimit = cint(takeLimit)
 
         //takeLast
-        if (!isBoolean(takeLast)) {
+        if (!isbol(takeLast)) {
             takeLast = false
         }
 
