@@ -21503,7 +21503,7 @@ domConvertToPicDyn(ele, { scale: 3 })
 
     
 
-    <h4 class="name" id=".domDetect"><span class="type-signature type-signature-static">(static) </span>domDetect<span class="signature">(f)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".domDetect"><span class="type-signature type-signature-static">(static) </span>domDetect<span class="signature">(f, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -21514,13 +21514,17 @@ domConvertToPicDyn(ele, { scale: 3 })
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對DOM元素監聽resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件</p>
+<p>瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以offsetWidth、offsetHeight與比較基準之差超過容許誤差即發出，比較基準為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出</p>
+<p>元素可取不到、中途消失或重建為新節點：取不到、不在頁面中或尺寸為0時，於DOM變動時重新以f取得元素並改觀察之。行內元素(display:inline)ResizeObserver不回報，該偵測器改以定期量測</p>
+<p>事件內容：sold為比較基準(上次發出事件時之尺寸)，snew為本次量測，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，ele為元素；from為'window'之事件其snew為最新量測，其中視窗尺寸取事件當下之值</p>
+<p>已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domDetect.mjs.html">domDetect.mjs</a>, <a href="domDetect.mjs.html#line162">line 162</a>
+        <a href="domDetect.mjs.html">domDetect.mjs</a>, <a href="domDetect.mjs.html#line561">line 561</a>
     </li></ul></dd>
     
 
@@ -21567,7 +21571,21 @@ domConvertToPicDyn(ele, { scale: 3 })
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browser//監聽domlet de = domDetect(() => {    return document.querySelector('#id')})de.on('resize', (s) => {    console.log('resize', s)})de.on('resizeWithWindow', (s) => {    console.log('resizeWithWindow', s)})de.on('display', (s) => {    console.log('display', s)})//釋放監聽de.clear()</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+//監聽dom
+let de = domDetect(() => {
+    return document.querySelector('#id')
+})
+de.on('resize', (s) => {
+    console.log('resize', s)
+})
+de.on('resizeWithWindow', (s) => {
+    console.log('resizeWithWindow', s)
+})
+
+//釋放監聽
+de.clear()</code></pre>
 
 
 
@@ -21630,14 +21648,117 @@ domConvertToPicDyn(ele, { scale: 3 })
                 </td>
             
 
-            <td class="description last"><p>輸入取得dom函數</p></td>
+            <td class="description last"><p>輸入取得dom函數，可回傳null表示目前取不到</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>opt.timeInterval</code></td>
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>mode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>''</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入偵測模式字串，給'polling'則強制使用定期輪詢，預設''</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>timeInterval</code></td>
             
 
             <td class="type">
@@ -21670,14 +21791,14 @@ domConvertToPicDyn(ele, { scale: 3 })
                 </td>
             
 
-            <td class="description last"><p>輸入定期偵測時間整數，預設20毫秒</p></td>
+            <td class="description last"><p>輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，預設20</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>opt.tolerancePixel</code></td>
+                <td class="name"><code>tolerancePixel</code></td>
             
 
             <td class="type">
@@ -21710,7 +21831,94 @@ domConvertToPicDyn(ele, { scale: 3 })
                 </td>
             
 
-            <td class="description last"><p>輸入容許誤差整數，單位px，預設1</p></td>
+            <td class="description last"><p>輸入容許誤差整數，單位px，可給0表示任何變化皆發出，預設1</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sync</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於ResizeObserver回呼內同步發出事件布林值，true時使用端可於瀏覽器繪製前更新版面(例如圖表重繪)，僅ResizeObserver模式有效，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>watchIdentity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入元素可見時是否仍於DOM變動時重新取得元素布林值，f可能於舊元素仍可見時改回傳另一元素者給true，僅ResizeObserver模式有效，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -21736,7 +21944,7 @@ domConvertToPicDyn(ele, { scale: 3 })
 
         
 <div class="param-desc">
-    <p>回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽</p>
+    <p>回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件</p>
 </div>
 
 
@@ -109511,7 +109719,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Sep 22 2026 16:32:43 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Fri Sep 25 2026 14:59:12 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
