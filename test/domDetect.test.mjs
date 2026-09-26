@@ -90,7 +90,8 @@ function mkEnv(o = {}) {
             env.listeners = env.listeners.filter((l) => !(l.type === type && l.fn === fn))
         },
         getComputedStyle: (e) => {
-            return { display: e.display }
+            //未插入DOM之元素取不到計算後樣式, display為空字串, 與瀏覽器一致
+            return { display: e.isConnected ? e.display : '' }
         },
     }
     env.document = { documentElement: { name: 'html' } }
@@ -297,6 +298,21 @@ describe(`domDetect`, function() {
         env.fireRO(el)
         await sleep(10)
         assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetHeight, m.smode.width, m.smode.height]), [[40, 'larger', 'larger'], [60, '', 'larger']])
+    })
+
+    it(`should give no direction for an axis within the tolerance when the other axis triggers`, async function() {
+        //寬先+1px(未超過容許誤差, 不發出), 之後高+20px觸發發出: 寬之方向須為空, 否則依方向判斷變寬或變窄之使用端會誤動作
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        env.fireRO(el)
+        el.size(301, 40)
+        env.fireRO(el)
+        el.size(301, 60)
+        env.fireRO(el)
+        await sleep(10)
+        assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.snew.offsetHeight, m.smode.width, m.smode.height]), [[300, 40, 'larger', 'larger'], [301, 60, '', 'larger']])
+        assert.strict.deepStrictEqual([r.resize[1].sold.offsetWidth, r.resize[1].sold.offsetHeight], [300, 40])
     })
 
     //--- 發出時點與清除 ---
@@ -528,6 +544,160 @@ describe(`domDetect`, function() {
         await sleep(10)
         assert.strict.deepStrictEqual(ws(r), [27, 137, 200])
         assert.strict.deepStrictEqual([n, nStopped], [2, 2])
+    })
+
+    it(`should measure an inline element that was taken before being connected`, async function() {
+        //Vue指令之bind時序: 元素於插入DOM前即建立偵測器, 此時取不到display而判為非行內; 插入後須於DOM變動時重判為行內並改定期量測
+        let env = mkEnv()
+        let el = new Ele(27, 18, { display: 'inline', connected: false })
+        let r = env.dd(() => el, { timeInterval: 5 })
+        await sleep(30)
+        el.isConnected = true
+        env.fireMO()
+        await sleep(30)
+        el.size(137, 18)
+        await sleep(30)
+        assert.strict.deepStrictEqual(ws(r), [27, 137])
+    })
+
+    it(`should resume measuring an inline element after it is removed and inserted again`, async function() {
+        //如keep-alive: 行內元素移出DOM時定期量測量到尺寸0並判為非行內而停止, 插回後須於DOM變動時重判為行內並恢復定期量測
+        let env = mkEnv()
+        let el = new Ele(27, 18, { display: 'inline' })
+        let r = env.dd(() => el, { timeInterval: 5 })
+        await sleep(30)
+        el.isConnected = false
+        el.size(0, 0)
+        await sleep(30)
+        el.isConnected = true
+        el.size(27, 18)
+        env.fireMO()
+        await sleep(30)
+        el.size(137, 18)
+        await sleep(30)
+        assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+    })
+
+    it(`should keep measuring an inline element while it hides itself, and pick up the size once shown`, async function() {
+        //如v-show: 行內元素自身設display:none時取得之display為none而非inline, 若因此停止定期量測, 顯示後行內元素ResizeObserver又不回報即永不量測
+        let env = mkEnv()
+        let el = new Ele(27, 18, { display: 'inline' })
+        let r = env.dd(() => el, { timeInterval: 5 })
+        await sleep(30)
+        el.display = 'none'
+        el.size(0, 0)
+        await sleep(30)
+        el.display = 'inline'
+        el.size(27, 18)
+        await sleep(30)
+        el.size(137, 18)
+        await sleep(30)
+        assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+    })
+
+    it(`should resume an inline element that was hidden, removed and inserted again while hidden`, async function() {
+        //隱藏期間移出(不在頁面中而停止量測)再插回時仍為隱藏, 須依曾判定為行內而恢復定期量測
+        let env = mkEnv()
+        let el = new Ele(27, 18, { display: 'inline' })
+        let r = env.dd(() => el, { timeInterval: 5 })
+        await sleep(30)
+        el.display = 'none'
+        el.size(0, 0)
+        await sleep(30)
+        el.isConnected = false
+        await sleep(30)
+        el.isConnected = true
+        env.fireMO()
+        await sleep(30)
+        el.display = 'inline'
+        el.size(27, 18)
+        await sleep(30)
+        el.size(137, 18)
+        await sleep(30)
+        assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+    })
+
+    it(`should not poll a hidden element that was never measured as inline`, async function() {
+        //區塊元素自身隱藏時不定期量測(如v-show隱藏之元件), 顯示時由ResizeObserver回報
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el, { timeInterval: 5 })
+        env.fireRO(el)
+        el.display = 'none'
+        el.size(0, 0)
+        env.fireRO(el)
+        el.display = 'block'
+        el.size(300, 40)
+        await sleep(30)
+        let n = r.resize.length
+        env.fireRO(el)
+        await sleep(10)
+        assert.strict.deepStrictEqual([n, ws(r)], [1, [300, 300]])
+    })
+
+    it(`should not carry the inline state over to a replacement element`, async function() {
+        //是否曾為行內只屬於當時之元素; 換成隱藏之新節點時不得沿用而定期量測
+        let env = mkEnv()
+        let a = new Ele(27, 18, { display: 'inline' })
+        let cur = a
+        let r = env.dd(() => cur, { timeInterval: 5 })
+        await sleep(30)
+        let b = new Ele(0, 0, { display: 'none' })
+        cur = b
+        await sleep(30)
+        b.display = 'block'
+        b.size(300, 40)
+        await sleep(30)
+        let n = r.resize.length
+        env.fireRO(b)
+        await sleep(10)
+        assert.strict.deepStrictEqual([n, ws(r)], [1, [27, 300]])
+    })
+
+    it(`should give no direction on window events after a change within the tolerance`, async function() {
+        //元素+1px未超過容許誤差而不發出, 其後之視窗事件不得帶出該方向
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        env.fireRO(el)
+        await sleep(10)
+        el.size(301, 40)
+        env.fireRO(el)
+        await sleep(10)
+        env.resizeWindow(1000, 800)
+        let w = r.rww.filter((m) => m.from === 'window')
+        assert.strict.deepStrictEqual(w.map((m) => [m.snew.offsetWidth, m.smode]), [[301, { width: '', height: '' }]])
+    })
+
+    it(`should give no direction on window events after a change of the border box only`, async function() {
+        //只改padding時只有border-box之觀察器回報, 發出後無第二次回報可把方向歸零; 其後之視窗事件不得帶出該方向
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        env.fireRO(el)
+        await sleep(10)
+        el.size(340, 40, 300, 40)
+        env.fireRO(el, 'border-box')
+        await sleep(10)
+        env.resizeWindow(1000, 800)
+        let w = r.rww.filter((m) => m.from === 'window')
+        assert.strict.deepStrictEqual(ws(r), [300, 340])
+        assert.strict.deepStrictEqual(w.map((m) => m.smode), [{ width: '', height: '' }])
+    })
+
+    it(`should carry the comparison baseline as sold on window events`, async function() {
+        //sold為比較基準(上次發出事件時之尺寸), 視窗事件與dom事件同義; 未超過容許誤差之最新量測只出現於snew
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        env.fireRO(el)
+        await sleep(10)
+        el.size(301, 40)
+        env.fireRO(el)
+        await sleep(10)
+        env.resizeWindow(1000, 800)
+        let w = r.rww.filter((m) => m.from === 'window')
+        assert.strict.deepStrictEqual(w.map((m) => [m.sold.offsetWidth, m.snew.offsetWidth]), [[300, 301]])
     })
 
     it(`should carry the current window size in resizeWithWindow from the window`, async function() {

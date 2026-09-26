@@ -1,5 +1,5 @@
 /*!
- * wpf v1.9.4
+ * wpf v1.9.5
  * (c) 2018-2021 yuda-lyu(semisphere)
  * Released under the MIT License.
  */

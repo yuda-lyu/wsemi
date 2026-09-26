@@ -5,135 +5,12 @@ import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 
 
-//2020年曾以IntersectionObserver與ResizeObserver實作(即下方註解舊碼), 因下列實作缺陷致WTextSelect下拉選單不穩而改為輪詢:
+//2020年曾以IntersectionObserver與ResizeObserver實作(詳細請查git紀錄), 因實作缺陷致WTextSelect下拉選單不穩而改為輪詢:
 //1.元素尺寸為0(隱藏或移出DOM)時仍發出resize, 使用端讀到高度0而算錯版面
 //2.clear未防空值, 元素尚未取得即clear時拋錯, 且已建立之觀察器與已排定之事件未解除
 //3.觀察器只綁首次取得之元素, 元素被換成新節點後即失去偵測
-//現以ResizeObserver偵測尺寸, 並以共用MutationObserver於[元素取不到、不在頁面中或尺寸為0]時重新取得元素, 逐一對應上述缺陷; 無ResizeObserver或MutationObserver時退回輪詢
 
-
-// function domDetect(f, opt = {}) {
-
-//使用IntersectionObserver與ResizeObserver時, 當顯隱頻繁導致元素尚未出現需等待與過快清除時, 會導致WTextSelect下拉選單無法穩定出現內容問題
-
-//     let ele = null
-//     let obInts = null
-//     let obRes = null
-
-//     //tolerancePixel
-//     let tolerancePixel = get(opt, 'tolerancePixel', null)
-//     if (!ispint(tolerancePixel)) {
-//         tolerancePixel = 1
-//     }
-
-//     //ev
-//     let ev = evem()
-
-//     //timer, sold
-//     let timer
-//     let sold = {
-//         offsetWidth: 0,
-//         offsetHeight: 0,
-//     }
-
-//     //check
-//     if (!isfun(f)) {
-//         console.log('invalid f', f)
-//         return ev
-//     }
-
-//     //check
-//     if (!window.IntersectionObserver) {
-//         console.log('invalid IntersectionObserver')
-//         return ev
-//     }
-
-//     //check
-//     if (!window.ResizeObserver) {
-//         console.log('invalid ResizeObserver')
-//         return ev
-//     }
-
-//     //setInterval
-//     timer = setInterval(() => {
-
-//         //execute
-//         let eleTemp = f()
-
-//         //check
-//         if (eleTemp) {
-
-//             //save
-//             ele = eleTemp
-
-//             //obInts
-//             if (!obInts) {
-//                 obInts = new window.IntersectionObserver((entries) => {
-//                     let entry = entries[0]
-
-//                     setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
-//                         ev.emit('display', { mode: entry.isIntersecting ? 'show' : 'hide', ele })
-//                     }, 1)
-
-//                 })
-//                 obInts.observe(ele)
-//             }
-
-//             //obRes
-//             if (!obRes) {
-//                 obRes = new window.ResizeObserver((entries) => {
-//                     // let entry = entries[0]
-
-//                     //new size
-//                     let snew = {
-//                         offsetWidth: ele.offsetWidth,
-//                         offsetHeight: ele.offsetHeight,
-//                     }
-
-//                     //save sold
-//                     let soldt = { ...sold }
-
-//                     //tolerancePixel
-//                     let bw = Math.abs(sold.offsetWidth - snew.offsetWidth) > tolerancePixel
-//                     let bh = Math.abs(sold.offsetHeight - snew.offsetHeight) > tolerancePixel
-
-//                     if (bw || bh) {
-//                         setTimeout(() => { //emit觸發事件為同步, 用setTimeout脫勾
-//                             ev.emit('resize', { sold: soldt, snew, ele })
-//                             ev.emit('resizeWithWindow', { sold: soldt, snew, ele, from: 'dom' })
-//                         }, 1)
-//                     }
-
-//                     //save
-//                     sold = snew
-
-//                 })
-//                 obRes.observe(ele)
-//             }
-
-//             //clearInterval
-//             clearInterval(timer)
-
-//         }
-
-//     }, 10)
-
-//     //fWindowResize
-//     let fWindowResize = (e) => {
-//         ev.emit('resizeWithWindow', { snew: sold, from: 'window' })
-//     }
-//     window.addEventListener('resize', fWindowResize)
-
-//     //clear
-//     ev.clear = () => {
-//         obInts.unobserve(ele)
-//         obRes.unobserve(ele)
-//         clearInterval(timer) //若一直沒偵測到元素故也需要強制中止timer
-//         window.removeEventListener('resize', fWindowResize)
-//     }
-
-//     return ev
-// }
+//現已恢復並用以ResizeObserver偵測尺寸, 並以共用MutationObserver於[元素取不到、不在頁面中或尺寸為0]時重新取得元素, 逐一對應上述缺陷; 無ResizeObserver或MutationObserver時退回輪詢
 
 
 //waiting, 等待重新取得元素之偵測器; mo, 共用之MutationObserver, 僅於有偵測器等待時啟用
@@ -229,15 +106,10 @@ function createCore(ev, opt) {
     //sync, 於ResizeObserver回呼內同步發出事件(繪製前), 供須於同一幀更新版面之使用端(例如圖表重繪); 預設以setTimeout脫勾
     let sync = get(opt, 'sync', false) === true
 
-    //cleared, st, sd, sb, smode, timers
+    //cleared, sd, sb, timers
     let cleared = false
-    let st = sizeZero() //前次量測
     let sd = sizeZero() //最新量測
     let sb = sizeZero() //比較基準, 上次發出事件時之尺寸
-    let smode = {
-        width: '',
-        height: '',
-    }
     let timers = new Set()
 
     //emit
@@ -290,14 +162,7 @@ function createCore(ev, opt) {
         let bw = Math.abs(dw) > tolerancePixel
         let bh = Math.abs(dh) > tolerancePixel
 
-        //smode
-        smode = {
-            width: dw > 0 ? 'smaller' : (dw < 0 ? 'larger' : ''),
-            height: dh > 0 ? 'smaller' : (dh < 0 ? 'larger' : ''),
-        }
-
         //save
-        st = sd
         sd = snew
 
         //check
@@ -308,7 +173,12 @@ function createCore(ev, opt) {
         //sold, sb
         let sold = sb
         sb = snew
-        let sm = { ...smode }
+
+        //sm, 方向只於該軸超過容許誤差時給: 容許誤差內之差值視同未變化(不發事件), 若仍給方向, 另一軸觸發之事件會帶出該軸之殘餘方向
+        let sm = {
+            width: bw ? (dw > 0 ? 'smaller' : 'larger') : '',
+            height: bh ? (dh > 0 ? 'smaller' : 'larger') : '',
+        }
 
         //emit
         if (allowSync && sync) {
@@ -324,6 +194,7 @@ function createCore(ev, opt) {
     }
 
     //fWindowResize, 視窗尺寸取當下值, 否則元素尺寸未變時會一直帶著上次量測時之視窗尺寸
+    //  sold為比較基準, 與dom事件同義; 任何超過容許誤差之變化皆已立即更新比較基準, 故最新量測與比較基準之差必在容許誤差內, 方向恆為空
     let fWindowResize = (e) => {
         if (cleared) {
             return
@@ -334,9 +205,12 @@ function createCore(ev, opt) {
             windowHeight: window.innerHeight,
         }
         ev.emit('resizeWithWindow', {
-            sold: st,
+            sold: sb,
             snew: sd,
-            smode,
+            smode: {
+                width: '',
+                height: '',
+            },
             from: 'window',
         })
     }
@@ -409,23 +283,34 @@ function domDetectByObserver(f, opt = {}) {
     let ev = evem()
     let core = createCore(ev, opt)
 
-    //ele, timerInline, roBorder, roContent
+    //ele, timerInline, inlineConn, eleInline, roBorder, roContent
     let ele = null
     let timerInline = null
+    let inlineConn = false //上次判定是否為行內時元素是否在頁面中
+    let eleInline = false //目前元素是否曾判定為行內, 換成新節點時歸零
     let roBorder = null
     let roContent = null
 
     //syncInline, 非替換之行內元素ResizeObserver不回報(規範明定), 取得之元素為display:inline時改以定期量測, 不為inline時停止
+    //  元素自身隱藏(display:none, 如v-show)時看不出顯示後之型別: 曾判定為行內者持續定期量測, 否則顯示時ResizeObserver會回報; 不在頁面中時display為空字串, 停止量測, 待插入頁面時(onDomChange)重判
     let syncInline = () => {
-        let inline = false
+        let display = ''
         if (ele) {
             try {
-                inline = window.getComputedStyle(ele).display === 'inline'
+                display = window.getComputedStyle(ele).display
             }
             catch (err) {
-                inline = false
+                display = ''
             }
         }
+        inlineConn = !!(ele && ele.isConnected)
+        if (display === 'inline') {
+            eleInline = true
+        }
+        else if (display !== 'none' && display !== '') {
+            eleInline = false
+        }
+        let inline = display === 'inline' || (display === 'none' && eleInline)
         if (inline && timerInline === null) {
             timerInline = setInterval(onResize, timeInterval)
         }
@@ -450,6 +335,7 @@ function domDetectByObserver(f, opt = {}) {
             roContent.unobserve(ele)
         }
         ele = p
+        eleInline = false
         if (ele) {
             roBorder.observe(ele, { box: 'border-box' })
             roContent.observe(ele)
@@ -473,8 +359,13 @@ function domDetectByObserver(f, opt = {}) {
     }
 
     //onDomChange, 僅重新取得元素不量測, 避免強制重排版; 換新節點後由ResizeObserver之首次回報觸發check
+    //  元素插入或移出頁面時重判是否為行內: 不在頁面中之元素取不到display而判為非行內(如Vue指令之bind時元素尚未插入, 或行內元素移出後定期量測已停止), 行內元素ResizeObserver又不回報, 不於插入後重判則永不量測
+    //  僅於在頁面與否改變時重判, 等待中之其他DOM變動不重複讀取樣式
     let onDomChange = () => {
         retarget()
+        if (ele && ele.isConnected !== inlineConn) {
+            syncInline()
+        }
         updateWaiting()
     }
 
@@ -524,11 +415,11 @@ function domDetectByObserver(f, opt = {}) {
  *
  * 瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以offsetWidth、offsetHeight與比較基準之差超過容許誤差即發出，比較基準為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出
  *
- * 元素可取不到、中途消失或重建為新節點：取不到、不在頁面中或尺寸為0時，於DOM變動時重新以f取得元素並改觀察之。行內元素(display:inline)ResizeObserver不回報，該偵測器改以定期量測
+ * 元素可取不到、中途消失或重建為新節點：取不到、不在頁面中或尺寸為0時，於DOM變動時重新以f取得元素並改觀察之。行內元素(display:inline)ResizeObserver不回報，該偵測器改以定期量測，元素自身隱藏(display:none，如v-show)期間亦持續，顯示後即可量得；是否為行內於取得元素、ResizeObserver回報、定期量測及元素插入或移出頁面時判定
  *
- * 事件內容：sold為比較基準(上次發出事件時之尺寸)，snew為本次量測，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，ele為元素；from為'window'之事件其snew為最新量測，其中視窗尺寸取事件當下之值
+ * 事件內容：sold為比較基準(上次發出事件時之尺寸)，snew為本次量測，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，僅該軸之差超過容許誤差時給方向，否則為''，ele為元素；from為'window'之事件無ele，其snew為最新量測，其中視窗尺寸取事件當下之值，其smode寬與高恆為''(視窗事件不代表元素尺寸變化，且最新量測與比較基準之差必在容許誤差內)
  *
- * 已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出
+ * 已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，行內元素自取得起即自身為display:none(未曾以行內顯示過)、之後僅以style或class改為顯示者不會開始量測，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
  * @memberOf wsemi
