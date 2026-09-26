@@ -1,588 +1,583 @@
-import each from 'lodash-es/each.js'
 import get from 'lodash-es/get.js'
-import pull from 'lodash-es/pull.js'
-import cloneDeep from 'lodash-es/cloneDeep.js'
 import isNumber from 'lodash-es/isNumber.js'
 import genID from './genID.mjs'
 import isestr from './isestr.mjs'
+import isnum from './isnum.mjs'
+import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
 import cint from './cint.mjs'
 import evem from './evem.mjs'
-import haskey from './haskey.mjs'
-import domGetParents from './domGetParents.mjs'
-import domGetPointFromEvent from './domGetPointFromEvent.mjs'
-import domElementsFromPoint from './domElementsFromPoint.mjs'
-import domGetAttr from './domGetAttr.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
 import domDragPreview from './domDragPreview.mjs'
+import optNum from './_optNum.mjs'
 
 
-let kpDgs = {}
+//kpDgs, 各群組: 群組字串 → { gid, members: Map(元素→實例), isActive, drag, teardown }; 用Map使任何字串皆可為群組名, 不與物件原型之鍵衝突
+//  成員表以元素為鍵: 命中判定直接查表, 不讀屬性, 故預覽之拷貝、已解除之元素自然不在表中; 事件依元素查目前之實例送達, 宿主重繪後之新實例即收到後續事件
+let kpDgs = new Map()
+
+//active, 目前拖曳中之群組, 同時只有一個拖曳(跨群組亦同)
+let active = null
+
+//touchEndAt, 最近一次觸控拖曳因手指放開而結束之時間; 觸控輕點後瀏覽器補發之相容滑鼠事件於COMPAT_MOUSE_MS內不起手(無sourceCapabilities可判定時)
+let touchEndAt = -Infinity
+let COMPAT_MOUSE_MS = 800
 
 
-function regAndGetGroupEv(gid, eid, { attIdentify, previewOpacity, previewBackground, previewBorderWidth, previewBorderColor }) {
+function now() {
+    return (typeof performance !== 'undefined' && isfun(performance.now)) ? performance.now() : Date.now()
+}
 
-    //create
-    if (!haskey(kpDgs, gid)) {
 
-        //evg
-        let evg = evem()
-
-        //oevg
-        let funs = {
-            dragMove: (msg) => {
-                evg.emit(gid + '-dragMove', msg)
-            },
-            dragDrop: (msg) => {
-                evg.emit(gid + '-dragDrop', msg)
-            },
-        }
-        let oevg = dgEvGroup(funs)
-        // console.log('oevg', oevg)
-
-        //bind
-        oevg.bind()
-
-        //domDragPreview
-        let pv = domDragPreview({
-            attIdentify,
-            containerOpacity: previewOpacity,
-            containerBackground: previewBackground,
-            containerBorderWidth: previewBorderWidth,
-            containerBorderColor: previewBorderColor,
-        })
-
-        //init
-        kpDgs[gid] = {
-            eleIds: [],
-            evg,
-            oevg,
-            pv,
-            isInit: false,
-            isActive: true,
-        }
-
+//attr, 讀屬性; 熱路徑不經domGetAttr, 因其isEle(lodash isElement)對DOM物件每次約數µs
+function attr(ele, k) {
+    try {
+        return ele.getAttribute(k)
     }
-
-    //push eid
-    kpDgs[gid].eleIds.push(eid)
-
-    //return evg
-    return kpDgs[gid].evg
-}
-
-
-function findEleFromEventEle(e, attGroup, gid) {
-    let r = null
-
-    //domGetParents
-    let ps = domGetParents(e.target)
-    // console.log('ps',ps,e)
-
-    //domGetAttr
-    each(ps, (v) => {
-        let attr = domGetAttr(v, attGroup)
-        if (attr === gid) {
-            r = v
-            return false //跳出
-        }
-    })
-
-    return r
-}
-
-
-function findEleFromEventClientXY(e, attGroup, gid) {
-    let r = null
-
-    //domGetPointFromEvent
-    let p = domGetPointFromEvent(e)
-    if (!p) {
-        return r
+    catch (err) {
+        return null
     }
-    // console.log('p',p)
-
-    //domElementsFromPoint
-    let ps = domElementsFromPoint(p.clientX, p.clientY)
-    // console.log('ps',ps)
-
-    //domGetAttr
-    each(ps, (v) => {
-        let attr = domGetAttr(v, attGroup)
-        if (attr === gid) {
-            r = v
-            return false //跳出
-        }
-    })
-
-    return r
 }
 
 
+//getIndex, 元素之順序指標(四捨五入為整數); 未帶指標或非有限數字者為null, 不可作為拖曳起點或落點
 function getIndex(ele, attIndex) {
-    let kitem = domGetAttr(ele, attIndex)
-    kitem = cint(kitem)
-    return kitem
+    let s = attr(ele, attIndex)
+    if (!isnum(s) || !Number.isFinite(Number(s))) {
+        return null
+    }
+    return cint(s)
 }
 
 
-function dgEvGroup(funs) {
-    let _window_events = []
-
-    function bindWindowEvents() {
-        let name
-
-        name = 'mousemove'
-        let fw_mousemove = function(e) {
-            funs.dragMove({ e, name: 'mousemove' })
-        }
-        window.addEventListener(name, fw_mousemove)
-        _window_events.push({ ele: window, name, f: fw_mousemove })
-
-        name = 'mouseup'
-        let fw_mouseup = function(e) {
-            funs.dragDrop({ e, name: 'mouseup' })
-        }
-        window.addEventListener(name, fw_mouseup)
-        _window_events.push({ ele: window, name, f: fw_mouseup })
-
-        name = 'touchmove'
-        let fw_touchmove = function(e) {
-            funs.dragMove({ e, name: 'touchmove' })
-        }
-        window.addEventListener(name, fw_touchmove)
-        _window_events.push({ ele: window, name, f: fw_touchmove })
-
-        name = 'touchend'
-        let fw_touchend = function(e) {
-            funs.dragDrop({ e, name: 'touchend' })
-        }
-        window.addEventListener(name, fw_touchend)
-        _window_events.push({ ele: window, name, f: fw_touchend })
-
+//findTouch, 於觸點清單內找指定手指; id為null(合成事件未帶identifier)時清單須恰一筆
+function findTouch(list, id) {
+    let n = get(list, 'length', 0)
+    if (id === null) {
+        return n === 1 ? list[0] : null
     }
-
-    function unbindWindowEvents() {
-        each(_window_events, ({ ele, name, f }) => {
-            ele.removeEventListener(name, f)
-        })
+    for (let i = 0; i < n; i++) {
+        if (get(list[i], 'identifier', null) === id) {
+            return list[i]
+        }
     }
+    return null
+}
 
-    return {
-        bind: bindWindowEvents,
-        unbind: unbindWindowEvents,
+
+//toPoint, 取clientX/Y, 非數字者回傳null
+function toPoint(o) {
+    let x = get(o, 'clientX', null)
+    let y = get(o, 'clientY', null)
+    if (!isNumber(x) || !isNumber(y)) {
+        return null
+    }
+    return { clientX: x, clientY: y }
+}
+
+
+//listen, 掛監聽並回傳移除函數(帶相同options)
+function listen(target, name, fun, options) {
+    target.addEventListener(name, fun, options)
+    return () => {
+        target.removeEventListener(name, fun, options)
     }
 }
 
 
-function dgEvEle(ele, funs, gid, eid) {
-    // console.log('dgEvEle', ele, gid, eid)
-    let _ele_events = []
-
-    function bindEleEvents() {
-        let name
-
-        name = 'mousedown'
-        let fe_mousedown = function(e) {
-            funs.dragStart({ e, ele, name: 'mousedown' })
+//runAll, 依登記之相反順序呼叫
+function runAll(offs) {
+    while (offs.length > 0) {
+        let f = offs.pop()
+        try {
+            f()
         }
-        ele.addEventListener(name, fe_mousedown, false)
-        _ele_events.push({ ele, name, f: fe_mousedown })
-
-        name = 'touchstart'
-        let fe_touchstart = function(e) {
-            funs.dragStart({ e, ele, name: 'touchstart' })
-        }
-        ele.addEventListener(name, fe_touchstart, false)
-        _ele_events.push({ ele, name, f: fe_touchstart })
-
-        name = 'touchmove'
-        let fe_touchmove = function(e) {
-            funs.dragMove({ e, name: 'touchmove' })
-            //domCancelEvent(e) //不能使用domCancelEvent, 因其內使用stopPropagation會連window的touchmove無法收到訊息
-            if (e.cancelable) { //window捲動中時事件為禁止取消(cancelable=false)狀態
-                e.preventDefault() //必要, 需由元素touchmove事件阻止預設拖曳行為, 否則會變成捲動螢幕, 此外由window的touchmove事件來阻止會失效
-            }
-        }
-        ele.addEventListener(name, fe_touchmove, false)
-        _ele_events.push({ ele, name, f: fe_touchmove })
-
-    }
-
-    function unbindEleEvents() {
-        each(_ele_events, ({ ele, name, f }) => {
-            ele.removeEventListener(name, f)
-        })
-    }
-
-    return {
-        bind: bindEleEvents,
-        unbind: unbindEleEvents,
+        catch (err) {}
     }
 }
 
 
-function unbindEleAndGroup(gid, eid) {
-
-    //dg
-    let dg = kpDgs[gid]
-
-    //cloneDeep
-    let eleIds = cloneDeep(dg.eleIds)
-
-    //pull
-    pull(eleIds, eid)
-
-    //save
-    dg.eleIds = eleIds
-
-    //check
-    if (eleIds.length === 0) { //全部元素已解除監聽
-
-        //unbind
-        dg.oevg.unbind()
-
-        //clear
-        dg.pv.clear()
-
-        //delete
-        delete kpDgs[gid]
-
+//deliver, 送達事件至元素目前之實例, 先change後該事件(同原本之順序); 無實例(已解除且未重建)則不發; change之監聽器內解除該實例時不再送該事件
+function deliver(g, ele, mode, build) {
+    let inst = ele ? g.members.get(ele) : null
+    if (!inst) {
+        return
     }
-
+    let msg = build(inst)
+    inst.ev.emit('change', { mode, ...msg })
+    if (g.members.get(ele) !== inst) {
+        return
+    }
+    inst.ev.emit(mode, msg)
 }
 
 
-function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, previewOpacity, previewDisabledOpacity }) {
-    let _startInd = null
-    let _startEle = null
-    let _endInd = null
-    let _endEle = null
+//hitTest, 指標下方之落點, 經過與放下共用: 以指標座標取該點全部元素(由上而下, 含元素自身與其子元素, 觸控亦同), 取第一個本群組之成員且帶有效順序指標者
+//  不屬本群組之元素(遮罩、預覽等)與無效指標之成員不阻擋其下之成員; 巢狀時為最內層
+function hitTest(g, p) {
+    let els = []
+    try {
+        els = document.elementsFromPoint(p.clientX, p.clientY)
+    }
+    catch (err) {
+        els = []
+    }
+    for (let el of els) {
+        let inst = g.members.get(el)
+        if (!inst) {
+            continue
+        }
+        let ind = getIndex(el, inst.o.attIndex)
+        if (ind === null) {
+            continue
+        }
+        return { ele: el, ind }
+    }
+    return null
+}
 
-    //check
-    if (kpDgs[gid].isInit) {
-        return kpDgs[gid].evg
+
+//endDrag, 結束拖曳之唯一寫法: 先清狀態、計時器、會話監聽與預覽, 再發事件, 監聽器拋錯或於監聽器內再開始拖曳皆不受殘留狀態影響
+//  hit有值為放下: 經過中之項目與放下之項目不同時先對前者發leave, 再對落點發drop; 其餘結束(放開於項目外、取消、停用、解除等)若正經過某項目則發leave, 使enter必以leave或drop收尾
+function endDrag(g, e = null, hit = null) {
+    let d = g.drag
+    if (!d) {
+        return
     }
 
-    //isInit
-    kpDgs[gid].isInit = true
+    //clear
+    g.drag = null
+    if (active === g) {
+        active = null
+    }
+    if (d.timer !== null) {
+        clearTimeout(d.timer)
+        d.timer = null
+    }
+    runAll(d.offs)
+    if (d.pv) {
+        d.pv.clear()
+        d.pv = null
+    }
 
-    //evg
-    let evg = kpDgs[gid].evg
-
-    //on events
-    evg.on(gid + '-dragStart', dragStart)
-    evg.on(gid + '-dragMove', dragMove)
-    evg.on(gid + '-dragDrop', dragDrop)
-
-    //pv
-    let pv = kpDgs[gid].pv
-
-    function dragStart({ e, ele, from }) {
-        // console.log('dragStart', e, ele, from)
-
-        //check
-        if (!kpDgs[gid].isActive) {
-            return
-        }
-
-        //getIndex
-        let kitem = getIndex(ele, attIndex)
-        // console.log('kitem', kitem)
-
-        //check
-        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
-            //console.log('dragStart: 無法取得kitem')
-            return
-        }
-
-        _startInd = kitem
-        _startEle = ele
-
-        //emit
-        let msg = {
+    //leave
+    let endEle = d.endEle
+    let endInd = d.endInd
+    if (endEle && (!hit || endInd !== hit.ind)) {
+        deliver(g, endEle, 'leave', (inst) => ({
             event: e,
-            startInd: _startInd,
-            startEle: _startEle,
-            tarInd: _startInd,
-            tarEid: domGetAttr(_startEle, attIdentify),
-        }
-        evg.emit(gid + '-change', { mode: 'start', ...msg })
-        evg.emit(gid + '-start', msg)
+            startInd: d.startInd,
+            startEle: d.startEle,
+            endInd,
+            endEle,
+            tarInd: endInd,
+            tarEid: inst.eid,
+        }))
+    }
 
-        //p
-        let p = domGetPointFromEvent(e)
-        if (!p) {
+    //drop, 若拖曳至原拖曳項目上也要能觸發, 否則外部收不到滑鼠放掉訊息, 僅收得到拖曳至非拖曳項目的leave事件
+    if (hit) {
+        deliver(g, hit.ele, 'drop', (inst) => ({
+            event: e,
+            startInd: d.startInd,
+            startEle: d.startEle,
+            endInd: hit.ind,
+            endEle: hit.ele,
+            tarInd: hit.ind,
+            tarEid: inst.eid,
+        }))
+    }
+
+}
+
+
+//scheduleTeardown, 群組最後一員離開時延後一個microtask再刪除: 同一輪內有成員加入(宿主重繪時先解除再重建)即沿用群組與進行中之拖曳
+function scheduleTeardown(g) {
+    if (g.teardown) {
+        return
+    }
+    g.teardown = true
+    Promise.resolve().then(() => {
+        g.teardown = false
+        if (g.members.size > 0) {
             return
         }
+        endDrag(g)
+        if (kpDgs.get(g.gid) === g) {
+            kpDgs.delete(g.gid)
+        }
+    })
+}
 
-        //setTimeout, preview不能太快出現導致原本元素例如click事件失效
-        setTimeout(() => {
 
-            //check, 若觸發例如dragDrop事件因已清除故會無_startInd
-            if (_startInd === null) {
+//checkSourceLater, 拖曳來源之實例解除後延後一個microtask再確認: 來源元素已無實例(未重建)才取消, 預覽即時移除; 重建者拖曳延續
+function checkSourceLater(g, d) {
+    Promise.resolve().then(() => {
+        if (g.drag === d && !g.members.has(d.startEle)) {
+            endDrag(g)
+        }
+    })
+}
+
+
+//onMove, 經過: 判定與事件皆以順序指標比較是否同一項目(同原本)
+function onMove(g, d, e) {
+    if (g.drag !== d) {
+        return
+    }
+
+    //p, 觸控只看起手手指, 他指之移動不影響
+    let p = null
+    if (!d.touch) {
+        //主鍵已放開(於視窗外放開等收不到mouseup)即結束; 只看真實事件, 以new MouseEvent合成之移動其buttons預設為0, 既有以合成事件模擬拖曳者不因此中斷
+        if (e.isTrusted === true && isNumber(e.buttons) && (e.buttons & 1) === 0) {
+            endDrag(g, e)
+            return
+        }
+        p = toPoint(e)
+    }
+    else {
+        p = toPoint(findTouch(get(e, 'changedTouches', null), d.touchId))
+    }
+    if (!p) {
+        return
+    }
+
+    //check, 來源已解除且未重建即結束; 解除後立即重建(宿主重繪時先解除再重建)者拖曳延續
+    if (!g.members.has(d.startEle)) {
+        endDrag(g, e)
+        return
+    }
+
+    //預覽跟隨, 觸控之起手節點被移出DOM時視窗收不到事件, 由此處跟隨
+    d.lastP = p
+    if (d.pv) {
+        d.pv.updateDragPreview(p.clientX, p.clientY, 'domDrag')
+    }
+
+    //hit
+    let hit = hitTest(g, p)
+    let o = d.o
+
+    //emitLeave, 先清再發, 監聽器拋錯或於監聽器內結束拖曳時不留下半套狀態
+    let emitLeave = () => {
+        let endEle = d.endEle
+        let endInd = d.endInd
+        d.endEle = null
+        d.endInd = null
+        deliver(g, endEle, 'leave', (inst) => ({
+            event: e,
+            startInd: d.startInd,
+            startEle: d.startEle,
+            endInd,
+            endEle,
+            tarInd: endInd,
+            tarEid: inst.eid,
+        }))
+        if (d.pv) {
+            d.pv.setContainerStyle({ opacity: o.previewDisabledOpacity })
+        }
+    }
+
+    //check, 不在任何項目上
+    if (!hit) {
+        if (d.endInd !== null) {
+            emitLeave()
+        }
+        return
+    }
+
+    //check, 拖曳至原拖曳項目: 由其他項目回到原項目需觸發leave
+    if (hit.ind === d.startInd) {
+        if (d.endInd !== null) {
+            emitLeave()
+        }
+        return
+    }
+
+    //enter, 拖曳至不同於上一個項目之項目
+    if (hit.ind !== d.endInd) {
+
+        //由其他項目過來需先觸發leave, 其監聽器內結束拖曳者不再發enter
+        if (d.endInd !== null) {
+            emitLeave()
+            if (g.drag !== d) {
                 return
             }
+        }
 
-            //createPreview
-            pv.createPreview(_startEle, p.clientX, p.clientY)
-
-            //setContainerStyle
-            pv.setContainerStyle({ opacity: previewDisabledOpacity })
-
-        }, timeDragStartDelay)
-
+        d.endInd = hit.ind
+        d.endEle = hit.ele
+        deliver(g, hit.ele, 'enter', (inst) => ({
+            event: e,
+            startInd: d.startInd,
+            startEle: d.startEle,
+            endInd: hit.ind,
+            endEle: hit.ele,
+            tarInd: hit.ind,
+            tarEid: inst.eid,
+        }))
+        if (d.pv) {
+            d.pv.setContainerStyle({ opacity: o.previewOpacity })
+        }
+        return
     }
 
-    function dragMove({ e, name, from }) {
-        // console.log('dragMove', e, name, from)
-
-        //check
-        if (!kpDgs[gid].isActive) {
-            return
+    //move, 於上一個項目內拖曳; 同順序指標之元素可能已被替換(重繪時換新元素), 以當下之元素為準
+    d.endEle = hit.ele
+    let rl = domGetBoudRectRefSelf(p, hit.ele)
+    if (!rl) {
+        return
+    }
+    let rx = rl.w > 0 ? rl.x / rl.w : 0
+    let ry = rl.h > 0 ? rl.y / rl.h : 0
+    if (rx >= 0 && rx <= 1 && ry >= 0 && ry <= 1) {
+        deliver(g, hit.ele, 'move', (inst) => ({
+            event: e,
+            startInd: d.startInd,
+            startEle: d.startEle,
+            endInd: d.endInd,
+            endEle: d.endEle,
+            tarInd: d.endInd,
+            tarEid: inst.eid,
+            ...rl,
+            rx,
+            ry,
+        }))
+        if (d.pv) {
+            d.pv.setContainerStyle({ opacity: o.previewOpacity })
         }
-
-        //eleIn
-        let eleIn = findEleFromEventEle(e, attGroup, gid)
-        // console.log('findEleFromEventEle eleIn',eleIn)
-
-        //check
-        if (_startInd === null) {
-            return
-        }
-
-        //p
-        let p = domGetPointFromEvent(e)
-        if (!p) {
-            return
-        }
-
-        function emitEnter(endInd, endEle) {
-            _endInd = endInd
-            _endEle = endEle
-
-            //emit
-            let msg = {
-                event: e,
-                startInd: _startInd,
-                startEle: _startEle,
-                endInd: _endInd,
-                endEle: _endEle,
-                tarInd: _endInd,
-                tarEid: domGetAttr(_endEle, attIdentify),
-            }
-            evg.emit(gid + '-change', { mode: 'enter', ...msg })
-            evg.emit(gid + '-enter', msg)
-
-            //setContainerStyle
-            pv.setContainerStyle({ opacity: previewOpacity })
-
-        }
-
-        function emitLeave() {
-
-            //emit
-            let msg = {
-                event: e,
-                startInd: _startInd,
-                startEle: _startEle,
-                endInd: _endInd,
-                endEle: _endEle,
-                tarInd: _endInd,
-                tarEid: domGetAttr(_endEle, attIdentify),
-            }
-            evg.emit(gid + '-change', { mode: 'leave', ...msg })
-            evg.emit(gid + '-leave', msg)
-
-            //clear, 要放在emit之後才能清除
-            _endInd = null
-            _endEle = null
-
-            //setContainerStyle
-            pv.setContainerStyle({ opacity: previewDisabledOpacity })
-
-        }
-
-        function emitMove(rl, rx, ry) {
-
-            //emit
-            let msg = {
-                event: e,
-                startInd: _startInd,
-                startEle: _startEle,
-                endInd: _endInd,
-                endEle: _endEle,
-                tarInd: _endInd,
-                tarEid: domGetAttr(_endEle, attIdentify),
-                ...rl,
-                rx,
-                ry,
-            }
-            evg.emit(gid + '-change', { mode: 'move', ...msg })
-            evg.emit(gid + '-move', msg)
-
-            //setContainerStyle
-            pv.setContainerStyle({ opacity: previewOpacity })
-
-        }
-
-        //check, 滑鼠所在處的可被拖曳元素
-        if (!eleIn) {
-
-            //check
-            if (_endInd !== null) {
-
-                //emitLeave
-                emitLeave()
-
-            }
-
-            return
-        }
-
-        //getIndex
-        let kitem = getIndex(eleIn, attIndex)
-
-        //check
-        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
-            //console.log('dragMove: 無法取得kitem')
-            return
-        }
-
-        //check
-        if (kitem === _startInd) { //拖曳至原拖曳項目
-
-            //由其他拖曳項目拖曳至原拖曳項目內, 需要觸發leave事件
-            if (_endInd !== null) {
-
-                //emitLeave
-                emitLeave()
-
-            }
-
-            return
-        }
-
-        //check
-        if (kitem !== _endInd) { //拖曳至不同於上一個拖曳項目
-            //enter
-
-            //於其他拖曳項目之間拖曳, 且非拖曳至原拖曳項目, 故也需要觸發leave事件
-            if (_endInd !== null) {
-
-                //emitLeave
-                emitLeave()
-
-            }
-
-            //emitEnter
-            emitEnter(kitem, eleIn)
-
-        }
-        else { //move, 於上一個拖曳項目內拖曳
-
-            //rl
-            let rl = domGetBoudRectRefSelf(p, eleIn)
-
-            //rx, ry
-            let rx = 0
-            if (rl.w > 0) {
-                rx = rl.x / rl.w
-            }
-            let ry = 0
-            if (rl.h > 0) {
-                ry = rl.y / rl.h
-            }
-
-            if (rx >= 0 && rx <= 1 && ry >= 0 && ry <= 1) {
-
-                //emitMove
-                emitMove(rl, rx, ry)
-
-            }
-
-        }
-
     }
 
-    function dragDrop({ e, name, from }) {
-        // console.log('dragDrop', e, name, from)
+}
 
-        //removeDragPreview
-        pv.removeDragPreview()
-        // //pauseDragPreview
-        // pv.pauseDragPreview(true)
 
-        //check
-        if (!kpDgs[gid].isActive) {
-            return
-        }
-
-        //check
-        if (_startInd === null) {
-            //console.log('dragDrop: 無_startInd')
-            return
-        }
-        // console.log('dragDrop', '_startInd', _startInd)
-
-        function emitDrop(endInd, endEle) {
-            _endInd = endInd
-            _endEle = endEle
-
-            //emit
-            let msg = {
-                event: e,
-                startInd: _startInd,
-                startEle: _startEle,
-                endInd: _endInd,
-                endEle: _endEle,
-                tarInd: _endInd,
-                tarEid: domGetAttr(_endEle, attIdentify),
-            }
-            evg.emit(gid + '-change', { mode: 'drop', ...msg })
-            evg.emit(gid + '-drop', msg)
-
-        }
-
-        //eleIn
-        let eleIn = findEleFromEventClientXY(e, attGroup, gid)
-        // console.log('findEleFromEventClientXY eleIn',eleIn)
-
-        //check, 釋放時不在拖曳元素內故跳出
-        if (!eleIn) {
-            //console.log('dragDrop: 釋放時不在拖曳元素內')
-            _startInd = null
-            _startEle = null
-            _endInd = null
-            _endEle = null
-            return
-        }
-
-        //getIndex
-        let kitem = getIndex(eleIn, attIndex)
-
-        //check
-        if (kitem === null) { //不能用!kitem判斷, 因kitem可能為0
-            //console.log('dragDrop: 無法取得kitem')
-            return
-        }
-
-        //emitDrop, 若拖曳至原拖曳項目上也要能觸發, 否則外部收不到滑鼠放掉訊息, 僅收得到拖曳至非拖曳項目的leave事件
-        emitDrop(kitem, eleIn)
-
-        //clear, 要放在emit之後才能清除
-        _startInd = null
-        _startEle = null
-        _endInd = null
-        _endEle = null
-
+//onUp, 放開: 滑鼠只看主鍵(其他鍵之放開不影響), 觸控只看起手手指(他指之放開不影響); 不論是否落於項目皆結束拖曳
+function onUp(g, d, e) {
+    if (g.drag !== d) {
+        return
     }
+
+    //src
+    let src = e
+    if (d.touch) {
+        src = findTouch(get(e, 'changedTouches', null), d.touchId)
+        if (!src) {
+            return
+        }
+        touchEndAt = now()
+    }
+    else if (('button' in e) && e.button !== 0) {
+        return
+    }
+
+    //check, 來源已解除且未重建者不發drop
+    if (!g.members.has(d.startEle)) {
+        endDrag(g, e)
+        return
+    }
+
+    //預覽先移除再判定落點(同原本)
+    if (d.pv) {
+        d.pv.clear()
+        d.pv = null
+    }
+
+    //hit
+    let p = toPoint(src)
+    let hit = p ? hitTest(g, p) : null
+    endDrag(g, e, hit)
+}
+
+
+//onCancel, touchcancel(手勢被系統中斷, 例如瀏覽器接手捲動、長按選單): 起手手指被取消即結束, 不發drop
+function onCancel(g, d, e) {
+    if (g.drag !== d) {
+        return
+    }
+    if (d.touchId !== null && findTouch(get(e, 'changedTouches', null), d.touchId) === null) {
+        return
+    }
+    endDrag(g, e)
+}
+
+
+//onPress, 按下起手
+function onPress(inst, e, touch) {
+    let g = inst.g
+
+    //check
+    if (!inst.alive || !g.isActive) {
+        return
+    }
+
+    //check, 同一按下事件冒泡至外層成員(巢狀)或同元素之另一實例時, 只由最先起手者(最內層)處理
+    if (active && active.drag && active.drag.pressEvent === e) {
+        return
+    }
+
+    //check, 滑鼠只處理主鍵, 中鍵與右鍵不得起手(無button屬性之合成事件可起手); 觸控輕點後補發之相容滑鼠事件不起手
+    if (!touch) {
+        if (('button' in e) && e.button !== 0) {
+            return
+        }
+        let fte = get(e, 'sourceCapabilities.firesTouchEvents', null)
+        if (fte === true) {
+            return
+        }
+        if (fte !== false && now() - touchEndAt < COMPAT_MOUSE_MS) {
+            return
+        }
+    }
+
+    //t, touchId, 觸控以起手手指鎖定
+    let t = touch ? get(e, 'changedTouches[0]', null) : e
+    let touchId = touch ? get(t, 'identifier', null) : null
+    if (touchId === undefined) {
+        touchId = null
+    }
+
+    //check, 已在拖曳時之接手規則: 滑鼠一律接手(前一次必為放開事件遺失, 或為觸控之殘留); 觸控不接手滑鼠, 觸控僅於起手手指已離開(放開事件遺失)時接手
+    let d0 = active ? active.drag : null
+    if (d0 && touch) {
+        if (!d0.touch) {
+            return
+        }
+        if (d0.touchId !== null && findTouch(get(e, 'touches', null), d0.touchId) !== null) {
+            return
+        }
+    }
+
+    //check, 起點須帶有效順序指標
+    let o = inst.o
+    let kitem = getIndex(inst.ele, o.attIndex)
+    if (kitem === null) {
+        return
+    }
+
+    //前一次拖曳未收尾者先結束
+    if (active) {
+        endDrag(active, e)
+    }
+
+    //d, 本次拖曳之會話
+    let d = {
+        touch,
+        touchId,
+        pressEvent: e,
+        o, //起手實例之選項(預覽與延遲)
+        startInd: kitem,
+        startEle: inst.ele,
+        endInd: null,
+        endEle: null,
+        timer: null, //延遲建立預覽之計時器
+        pv: null, //預覽, 每次拖曳建立、結束即清
+        offs: [], //會話期間之監聽之移除函數
+        lastEv: null, //最近一次處理之事件, 同一事件經視窗與觸控之起手節點兩處送達時只處理一次
+        lastP: null, //最近一次之指標座標
+    }
+    g.drag = d
+    active = g
+
+    //會話監聽: 視窗之移動與放開掛capture(內層元素stopPropagation時仍收得到); 觸控另掛於起手節點(其被移出DOM時觸控事件只送達該節點);
+    //  觸控之起手節點於拖曳中阻止touchmove之預設行為(否則會變成捲動螢幕, 由window阻止無效), 未拖曳時不擋, 保留一般捲動
+    let once = (f) => (ev) => {
+        if (ev === d.lastEv) {
+            return
+        }
+        d.lastEv = ev
+        f(g, d, ev)
+    }
+    let fMove = once(onMove)
+    let fUp = once(onUp)
+    let fCancel = once(onCancel)
+    if (!touch) {
+        d.offs.push(listen(window, 'mousemove', fMove, true))
+        d.offs.push(listen(window, 'mouseup', fUp, true))
+    }
+    else {
+        d.offs.push(listen(window, 'touchmove', fMove, true))
+        d.offs.push(listen(window, 'touchend', fUp, true))
+        d.offs.push(listen(window, 'touchcancel', fCancel, true))
+        let tg = get(e, 'target', null)
+        if (tg && isfun(tg.addEventListener)) {
+            d.offs.push(listen(tg, 'touchmove', (ev) => {
+                if (ev.cancelable) { //window捲動中時事件為禁止取消(cancelable=false)狀態
+                    ev.preventDefault()
+                }
+                fMove(ev)
+            }, { passive: false }))
+            d.offs.push(listen(tg, 'touchend', fUp))
+            d.offs.push(listen(tg, 'touchcancel', fCancel))
+        }
+    }
+
+    //視窗失焦即取消; 不掛capture, 否則會收到頁內元素(如輸入框)之blur, blur不冒泡故非capture只收到視窗本身者
+    d.offs.push(listen(window, 'blur', (ev) => {
+        if (g.drag === d) {
+            endDrag(g, ev)
+        }
+    }))
+
+    //start
+    deliver(g, d.startEle, 'start', (i) => ({
+        event: e,
+        startInd: d.startInd,
+        startEle: d.startEle,
+        tarInd: d.startInd,
+        tarEid: i.eid,
+    }))
+
+    //check, 監聽器內已結束本次拖曳(例如解除、停用)
+    if (g.drag !== d) {
+        return
+    }
+
+    //p
+    let p = toPoint(t)
+    if (!p) {
+        return
+    }
+
+    //setTimeout, preview不能太快出現導致原本元素例如click事件失效; 計時器屬於本次拖曳, 拖曳結束即取消
+    d.timer = setTimeout(() => {
+        d.timer = null
+        if (g.drag !== d) {
+            return
+        }
+        d.pv = domDragPreview({
+            attIdentify: o.attIdentify,
+            containerOpacity: o.previewOpacity,
+            containerBackground: o.previewBackground,
+            containerBorderWidth: o.previewBorderWidth,
+            containerBorderColor: o.previewBorderColor,
+        })
+        d.pv.createPreview(d.startEle, p.clientX, p.clientY) //以按下點計算抓取之位移
+        if (d.lastP) {
+            d.pv.updateDragPreview(d.lastP.clientX, d.lastP.clientY, 'domDrag') //再移至目前之指標
+        }
+        d.pv.setContainerStyle({ opacity: d.endEle ? o.previewOpacity : o.previewDisabledOpacity })
+    }, o.timeDragStartDelay)
 
 }
 
 
 /**
  * 前端針對DOM元素設定監聽拖曳事件
+ *
+ * 同群組(group)之元素間拖放；須帶順序指標屬性(attIndex，有限數字，同群組須唯一)者才可為拖曳起點或落點，是否同一項目以順序指標判定
+ *
+ * 落點以指標座標判定(經過與放下相同，滑鼠與觸控相同)：取該點由上而下第一個本群組之已綁定元素，含指標位於其子元素上，但子元素超出元素框外之部分不算；不屬本群組之元素(如遮罩)不阻擋其下之元素；巢狀時為最內層者，按下亦由最內層者起手；同時只有一個拖曳(跨群組亦同)
+ *
+ * 滑鼠僅主鍵可起手，拖曳中其他鍵之按放不影響；移動時主鍵已放開(於視窗外放開而收不到mouseup，限真實事件)即結束。觸控以起手手指鎖定，他指之落下、移動、放開不影響，起手手指已離開(放開事件遺失)時新觸控可接手；滑鼠按下一律接手；觸控輕點後瀏覽器補發之相容滑鼠事件不起手
+ *
+ * 拖曳於放開時結束(於項目上放開則發drop，放回原項目亦發)；touchcancel、視窗失焦、群組停用時取消拖曳(不發drop)。拖曳中來源元素解除且未重新綁定者取消；先解除再立即重新綁定者(例如宿主重繪時重建)拖曳延續，後續事件送達新實例。結束時若正經過某項目而未於其上放下，對其發leave，使enter必以leave或drop收尾
+ *
+ * 拖曳中阻止本元素起手之瀏覽器原生拖放(如項目內之文字、圖片、連結)與觸控捲動，未拖曳時不干涉；監聽器拋錯時拖曳狀態已先清除
+ *
+ * 解除(unbind或clear)後本元素不再為起點或落點、不再收到事件，並於下一個microtask移除綁定時設定之屬性(同元素已由其他實例重新綁定時不動)，可重複呼叫；群組最後一個元素解除後(同一輪內未再加入)群組刪除
+ *
+ * 各元素之選項各自有效：預覽樣式與延遲取起手元素者，落點之順序指標取落點元素者
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDrag.test.mjs Github}
  * @memberOf wsemi
@@ -592,13 +587,13 @@ function dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, 
  * @param {String} [opt.attIndex='dragindex'] 輸入預覽元素順序指標之屬性名稱字串，預設'dragindex'
  * @param {String} [opt.attGroup='draggroup'] 輸入預覽元素群組之屬性名稱字串，預設'draggroup'
  * @param {String} [opt.group='group'] 輸入預覽元素群組字串，預設'group'
- * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
- * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，預設0.4
- * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，預設0.2
+ * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，須為數字(可為數字字串)，負數視為0，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
+ * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，須為有限數字(可為數字字串)，無效時用預設，預設0.4
+ * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，須為有限數字(可為數字字串)，無效時用預設，預設0.2
  * @param {String} [opt.previewBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
- * @param {Number} [opt.previewBorderWidth=1] 輸入預覽元素邊框寬度數字，預設1
+ * @param {Number} [opt.previewBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有限數字(可為數字字串)，無效時用預設，預設1
  * @param {String} [opt.previewBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
- * @returns {Object} 回傳物件，可使用on與clear函數，on可監聽change、start、move、enter、leave、drop事件，clear為釋放監聽
+ * @returns {Object} 回傳物件，可使用on、unbind、clear與setIsActive函數，on可監聽change、start、move、enter、leave、drop事件，unbind與clear相同，為釋放監聽，setIsActive為設定群組是否可拖曳(群組層級，停用時取消進行中之拖曳，解除後呼叫無作用)
  * @example
  * need test in browser
  *
@@ -637,158 +632,125 @@ function domDrag(ele, opt = {}) {
         return
     }
 
-    //attIdentify
-    let attIdentify = get(opt, 'attIdentify', null)
-    if (!isestr(attIdentify)) {
-        attIdentify = 'dragid'
+    //str
+    let str = (k, def) => {
+        let v = get(opt, k, null)
+        return isestr(v) ? v : def
     }
 
-    //attIndex
-    let attIndex = get(opt, 'attIndex', null)
-    if (!isestr(attIndex)) {
-        attIndex = 'dragindex'
+    //o, 數字選項可為數字或數字字串(如網頁輸入、表格轉存之資料), 非有限者用預設
+    let o = {
+        attIdentify: str('attIdentify', 'dragid'),
+        attIndex: str('attIndex', 'dragindex'),
+        attGroup: str('attGroup', 'draggroup'),
+        group: str('group', 'group'),
+        previewOpacity: optNum(opt, 'previewOpacity', 0.4),
+        previewDisabledOpacity: optNum(opt, 'previewDisabledOpacity', 0.2),
+        previewBackground: str('previewBackground', 'white'),
+        previewBorderWidth: optNum(opt, 'previewBorderWidth', 1),
+        previewBorderColor: str('previewBorderColor', '#f26'),
+        timeDragStartDelay: optNum(opt, 'timeDragStartDelay', 120, { min: 0, below: 'clamp', timer: true }),
     }
 
-    //attGroup
-    let attGroup = get(opt, 'attGroup', null)
-    if (!isestr(attGroup)) {
-        attGroup = 'draggroup'
-    }
-
-    //group
-    let group = get(opt, 'group', null)
-    if (!isestr(group)) {
-        group = 'group'
-    }
-
-    //previewOpacity
-    let previewOpacity = get(opt, 'previewOpacity', null)
-    if (!isNumber(previewOpacity)) {
-        previewOpacity = 0.4
-    }
-
-    //previewDisabledOpacity
-    let previewDisabledOpacity = get(opt, 'previewDisabledOpacity', null)
-    if (!isNumber(previewDisabledOpacity)) {
-        previewDisabledOpacity = 0.2
-    }
-
-    //previewBackground
-    let previewBackground = get(opt, 'previewBackground', null)
-    if (!isestr(previewBackground)) {
-        previewBackground = 'white'
-    }
-
-    //previewBorderWidth
-    let previewBorderWidth = get(opt, 'previewBorderWidth', null)
-    if (!isNumber(previewBorderWidth)) {
-        previewBorderWidth = 1
-    }
-
-    //previewBorderColor
-    let previewBorderColor = get(opt, 'previewBorderColor', null)
-    if (!isestr(previewBorderColor)) {
-        previewBorderColor = '#f26'
-    }
-
-    //timeDragStartDelay
-    let timeDragStartDelay = get(opt, 'timeDragStartDelay', null)
-    if (!isNumber(timeDragStartDelay)) {
-        timeDragStartDelay = 120
-    }
-
-    //eid
+    //gid, eid
+    let gid = o.group
     let eid = `c${genID(8)}`
 
-    //gid
-    let gid = group
-
-    //setAttribute
-    ele.setAttribute(attGroup, gid)
-    ele.setAttribute(attIdentify, eid)
-
-    //evg
-    let evg = regAndGetGroupEv(gid, eid, { attIdentify, previewOpacity, previewBackground, previewBorderWidth, previewBorderColor })
-    // console.log('evg', evg)
-
-    //dgEvEle
-    let eleFuncs = {
-        dragStart: (msg) => {
-            evg.emit(gid + '-dragStart', msg)
-        },
-        dragMove: (msg) => {
-            evg.emit(gid + '-dragMove', msg)
-        },
-    }
-    let oeve = dgEvEle(ele, eleFuncs, gid, eid)
-    // console.log('ele', ele, 'oeve', oeve)
-
-    //bind
-    oeve.bind()
-
-    //dgDragCore
-    dgDragCore({ gid, attGroup, attIndex, attIdentify, timeDragStartDelay, previewOpacity, previewDisabledOpacity })
-
-    function unbind() {
-
-        //unbind
-        oeve.unbind()
-
-        //unbindEleAndGroup
-        unbindEleAndGroup(gid, eid)
-
+    //g
+    let g = kpDgs.get(gid)
+    if (!g) {
+        g = {
+            gid,
+            members: new Map(),
+            isActive: true,
+            drag: null,
+            teardown: false,
+        }
+        kpDgs.set(gid, g)
     }
 
-    function setIsActive(isActive) {
-        kpDgs[gid].isActive = isActive
-    }
-
-    //ev
+    //ev, inst
     let ev = evem()
+    let inst = { eid, ele, ev, o, g, alive: true }
 
-    //evg on
-    evg.on(group + '-change', (msg) => {
-        // console.log('dg evg', group + '-change', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('change', msg)
+    //setAttribute, 群組屬性值未變者不重寫(每次寫入皆產生MutationRecord, 宿主每次重繪皆重建時避免加倍)
+    if (attr(ele, o.attGroup) !== gid) {
+        ele.setAttribute(o.attGroup, gid)
+    }
+    ele.setAttribute(o.attIdentify, eid)
+
+    //members
+    g.members.set(ele, inst)
+
+    //元素監聽: 按下維持冒泡, 內層元素stopPropagation可排除自己起手
+    let offs = []
+    offs.push(listen(ele, 'mousedown', (e) => {
+        onPress(inst, e, false)
+    }))
+    offs.push(listen(ele, 'touchstart', (e) => {
+        onPress(inst, e, true)
+    }))
+    offs.push(listen(ele, 'dragstart', (e) => {
+        //本元素起手之拖曳中阻止瀏覽器原生拖放(例如項目內被選取之文字、圖片、連結), 否則之後只有原生拖放事件而無mouseup, 拖曳無法收尾
+        if (g.drag && g.drag.startEle === ele) {
+            e.preventDefault()
         }
-    })
-    evg.on(group + '-start', (msg) => {
-        // console.log('dg evg', group + '-start', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('start', msg)
+    }))
+
+    //unbind, 可重複呼叫
+    function unbind() {
+        if (!inst.alive) {
+            return
         }
-    })
-    evg.on(group + '-move', (msg) => {
-        // console.log('dg evg', group + '-move', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('move', msg)
+        inst.alive = false
+
+        //元素監聽
+        runAll(offs)
+
+        //members
+        if (g.members.get(ele) === inst) {
+            g.members.delete(ele)
         }
-    })
-    evg.on(group + '-enter', (msg) => {
-        // console.log('dg evg', group + '-enter', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('enter', msg)
+
+        //屬性, 延後一個microtask移除且識別屬性仍為本實例所設者才移除: 同一輪內重新綁定(宿主重繪)者不移除, 避免每次重繪之屬性異動加倍
+        Promise.resolve().then(() => {
+            if (attr(ele, o.attIdentify) === eid) {
+                ele.removeAttribute(o.attIdentify)
+                if (attr(ele, o.attGroup) === gid) {
+                    ele.removeAttribute(o.attGroup)
+                }
+            }
+        })
+
+        //拖曳來源
+        if (g.drag && g.drag.startEle === ele) {
+            checkSourceLater(g, g.drag)
         }
-    })
-    evg.on(group + '-leave', (msg) => {
-        // console.log('dg evg', group + '-leave', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('leave', msg)
+
+        //群組
+        if (g.members.size === 0) {
+            scheduleTeardown(g)
         }
-    })
-    evg.on(group + '-drop', (msg) => {
-        // console.log('dg evg', group + '-drop', msg)
-        if (msg.tarEid === eid) {
-            ev.emit('drop', msg)
+
+    }
+
+    //setIsActive, 群組層級, 停用時取消進行中之拖曳; 解除後呼叫無作用
+    function setIsActive(isActive) {
+        if (!inst.alive) {
+            return
         }
-    })
+        g.isActive = isActive
+        if (!isActive) {
+            endDrag(g)
+        }
+    }
 
     //add setIsActive
     ev.setIsActive = setIsActive
 
-    //add unbind
+    //add unbind, clear
     ev.unbind = unbind
+    ev.clear = unbind
 
     return ev
 }

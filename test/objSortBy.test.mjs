@@ -38,6 +38,12 @@ describe(`objSortBy`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    it(`should order keys by numbers first and put values that cannot be converted or parsed last`, function() {
+        //規則同arrSort: 數字(含數字字串)依數值, 其他字串其次, 空字串、純空白字串、null等放最末且維持原順序; 以鍵之順序斷言(deepStrictEqual不比對鍵之順序)
+        let r = objSortBy({ a: 10, b: '', c: '9', d: 'x', e: null, f: 1 }, (v) => v)
+        assert.strict.deepStrictEqual(Object.keys(r), ['f', 'c', 'a', 'd', 'b', 'e'])
+    })
+
     let testFun = () => {
         return 0
     }

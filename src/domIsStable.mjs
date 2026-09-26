@@ -1,10 +1,9 @@
-
-import get from 'lodash-es/get.js'
 import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
-import evem from './evem.mjs'
 import genPm from './genPm.mjs'
 import delay from './delay.mjs'
+import optNum from './_optNum.mjs'
+import detector from './_detector.mjs'
 
 
 /**
@@ -12,15 +11,21 @@ import delay from './delay.mjs'
  *
  * 一輪偵測: 相隔timeDiff取兩次位置與尺寸(getBoundingClientRect，含transform位移)，並取子樹內進行中之動畫(getAnimations)；等該批動畫結束或取消後再取一次位置與動畫數，整輪期間位置皆未變且從頭到尾皆無動畫才視為穩定，期間曾有動畫或位移即回報不穩定，由下一輪再判。動畫只計playState為running且iterations有限者：已結束但因fill:forwards仍被回傳之動畫不計，否則子元素做完進場動畫後父元素會永遠不穩定；無限循環動畫(如spinner)永不結束，不計亦不等待，否則整輪永不落定
  *
+ * 已知限制：等待中之動畫若被暫停(未取消亦未結束)，該輪於其恢復或取消前不結束；未被繪製(未插入或display:none)之元素位置恆為0，判為穩定，須先確認被繪製者可用domIsRendered
+ *
+ * 元素無效或無getBoundingClientRect時：promise模式回傳被拒絕之Promise(原因為'invalid element'或'invalid element.getBoundingClientRect')；event模式仍回傳可使用create、on、dispose之物件但永不觸發，其error為原因，可偵測時error為null
+ *
+ * event模式之create於microtask啟動第一輪(晚於本次同步流程，故create後才插入之元素亦從插入後量起)，重複呼叫無效，dispose後呼叫亦無效；stable之監聽器拋錯時有error監聽者則發出error事件，否則console.error，不中斷偵測
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsStable.test.mjs Github}
  * @memberOf wsemi
  * @param {Element} ele 輸入Element元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.mode='promise'] 輸入模式字串，可使用'promise'與'event'，'promise'代表一次性偵測並回傳Promise(resolve回傳該輪是否穩定布林值)，'event'代表持續性偵測並回傳EventEmitter，每timeDetect啟動一輪(前一輪未完不重疊)，穩定狀態改變時emit('stable', bool)，初始視為不穩定故第一次穩定會emit true，預設'promise'
- * @param {Number} [opt.tolerance=0] 輸入位置容許誤差數字，單位px，預設0表示須完全相同
- * @param {Number} [opt.timeDiff=100] 輸入位置前後比對之時間差數字，單位ms，預設100
- * @param {Number} [opt.timeDetect=50] 輸入event模式輪詢偵測間隔數字，單位ms，預設50
- * @returns {Promise|Object} 回傳物件，給予'promise'時回傳Promise(resolve回傳當前是否穩定布林值，reject回傳錯誤訊息)，給予'event'時回傳EventEmitter，可使用create、on、dispose函數
+ * @param {String} [opt.mode='promise'] 輸入模式字串，可使用'promise'與'event'，'promise'代表一次性偵測並回傳Promise(resolve回傳該輪是否穩定布林值)，'event'代表持續性偵測並回傳EventEmitter，啟動時立即開始第一輪，之後每timeDetect啟動一輪(前一輪未完不重疊)，穩定狀態改變時emit('stable', bool)，初始視為不穩定故第一次穩定會emit true，預設'promise'
+ * @param {Number} [opt.tolerance=0] 輸入位置容許誤差數字，單位px，須為不小於0之數字(可為數字字串，Infinity代表任何變化皆容許)，無效時用預設，預設0表示須完全相同
+ * @param {Number} [opt.timeDiff=100] 輸入位置前後比對之時間差數字，單位ms，須為數字(可為數字字串)，0為立即比對，負數視為0，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設100
+ * @param {Number} [opt.timeDetect=50] 輸入event模式輪詢偵測間隔數字，單位ms，須為大於0之數字(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設50
+ * @returns {Promise|Object} 回傳物件，給予'promise'時回傳Promise(resolve回傳當前是否穩定布林值，reject回傳錯誤訊息)，給予'event'時回傳EventEmitter，可使用create、on、dispose函數與error屬性，dispose回傳true
  * @example
  * need test in browser
  *
@@ -43,30 +48,27 @@ import delay from './delay.mjs'
  */
 function domIsStable(ele, opt = {}) {
 
+    //mode
+    let mode = detector.getMode(opt)
+
     //check ele
     if (!isEle(ele)) {
-        return Promise.reject('invalid element')
+        return detector.detectorFail(mode, 'invalid element')
     }
 
     //check getBoundingClientRect
     if (!isfun(ele.getBoundingClientRect)) {
-        return Promise.reject('invalid element.getBoundingClientRect')
-    }
-
-    //mode
-    let mode = get(opt, 'mode', '')
-    if (mode !== 'promise' && mode !== 'event') {
-        mode = 'promise'
+        return detector.detectorFail(mode, 'invalid element.getBoundingClientRect')
     }
 
     //tolerance, 位置容許誤差(px)
-    let tolerance = get(opt, 'tolerance', 0)
+    let tolerance = optNum(opt, 'tolerance', 0, { min: 0, inf: 'keep' })
 
-    //timeDiff, 位置前後比對的時間差(ms)
-    let timeDiff = get(opt, 'timeDiff', 100)
+    //timeDiff, 位置前後比對的時間差(ms), 0為有效(使用端如w-component-vue之v-domstable允許0)
+    let timeDiff = optNum(opt, 'timeDiff', 100, { min: 0, below: 'clamp', timer: true })
 
-    //timeDetect, 偵測時間差(ms)
-    let timeDetect = get(opt, 'timeDetect', 50)
+    //timeDetect, 偵測時間差(ms), 須大於0, 否則為高頻輪詢
+    let timeDetect = optNum(opt, 'timeDetect', 50, { min: 0, minOpen: true, timer: true })
 
     //getRect: 取螢幕位置與尺寸(getBoundingClientRect的left/top會反映transform位移)
     let getRect = () => {
@@ -143,117 +145,43 @@ function domIsStable(ele, opt = {}) {
         return pm
     }
 
-    //corePm
-    let corePm = core
-
-    //coreEv
-    let coreEv = () => {
-
-        //ev
-        let ev = evem()
-
-        //watching
-        let watching = false
-
-        //timerCreate, timerQuery
-        let timerCreate = null
-        let timerQuery = null
-
-        //stop
-        let stop = false
-
-        //observe
-        let observe = (ele) => {
-            let b = false
-
-            //check
-            if (!isEle(ele)) {
-                return b
-            }
-
-            //observe
-            try {
-
-                let bLock = false
-                let bLast = false
-                timerQuery = setInterval(() => {
-                    if (stop) {
-                        clearInterval(timerQuery)
-                        return
-                    }
-                    if (bLock) {
-                        return
-                    }
-                    bLock = true
-                    core()
-                        .then((bNow) => {
-                            if (stop) {
-                                return
-                            }
-                            if (bLast !== bNow) {
-                                bLast = bNow
-                                ev.emit('stable', bNow)
-                            }
-                        })
-                        .catch(() => {
-                            // console.log(err)
-                        })
-                        .finally(() => {
-                            bLock = false
-                        })
-                }, timeDetect)
-
-                b = true
-            }
-            catch (err) {
-                // console.log(err)
-            }
-
-            return b
-        }
-
-        //create
-        let create = () => {
-            timerCreate = setInterval(() => {
-                watching = observe(ele)
-                if (watching) {
-                    clearInterval(timerCreate)
-                }
-            }, 50)
-        }
-
-        //dispose
-        let dispose = () => {
-            let b = false
-            try {
-                clearInterval(timerCreate)
-                clearInterval(timerQuery)
-                stop = true
-                b = true
-            }
-            catch (err) {
-                // console.log(err)
-            }
-            return b
-        }
-
-        //save
-        ev.create = create
-        ev.dispose = dispose
-
-        return ev
-    }
-
-    //r
-    let r = null
+    //promise
     if (mode === 'promise') {
-        r = corePm()
-    }
-    else if (mode === 'event') {
-        r = coreEv()
+        return core()
     }
 
-    return r
+    //event, 啟動時立即開始第一輪, 之後每timeDetect啟動一輪, 前一輪未完(例如等待動畫)不另起新輪; 釋放後進行中之一輪結果由骨架丟棄(釋放後之emit不發出)
+    return detector.detectorEvent((emit, addCleanup) => {
+        let stopped = false
+        let bLock = false
+        let bLast = false
+        let timer = null
+        addCleanup(() => {
+            stopped = true
+            clearInterval(timer)
+        })
+        let round = () => {
+            if (stopped || bLock) {
+                return
+            }
+            bLock = true
+            core()
+                .then((bNow) => {
+                    if (bLast !== bNow) {
+                        bLast = bNow
+                        emit('stable', bNow) //監聽器拋錯由evEmit處理, 不會進入下方之catch
+                    }
+                })
+                .catch(() => {
+                    //量測本身之錯誤, 由下一輪再判
+                })
+                .finally(() => {
+                    bLock = false
+                })
+        }
+        timer = setInterval(round, timeDetect)
+        round()
+    }, { tag: 'domIsStable' })
 }
 
 

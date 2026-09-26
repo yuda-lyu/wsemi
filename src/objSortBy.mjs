@@ -1,12 +1,14 @@
 import map from 'lodash-es/map.js'
 import each from 'lodash-es/each.js'
-import sortBy from 'lodash-es/sortBy.js'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
+import arrSort from './arrSort.mjs'
 
 
 /**
  * 對物件內各鍵進行排序，通過傳入排序函數取得各物件值或鍵，回傳可排序的數字或字串，則可進行對物件的鍵排序
+ *
+ * 排序規則同arrSort：數字與數字字串依數值排序排在最前，其他字串其次，無法轉數字或無法解析者(空字串、純空白字串、null、undefined、NaN、物件等)放最末並維持原順序
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/objSortBy.test.mjs Github}
  * @memberOf wsemi
@@ -54,8 +56,11 @@ function objSortBy(obj, fun) {
         return { k, v, t }
     })
 
-    //sortBy
-    rs = sortBy(rs, 't')
+    //arrSort, 依排序用之值取得排序後之指標, 規則同arrSort
+    let inds = arrSort(map(rs, 't'), { returnIndex: true })
+    rs = map(inds, (ind) => {
+        return rs[ind]
+    })
 
     //objTemp
     let objTemp = {}

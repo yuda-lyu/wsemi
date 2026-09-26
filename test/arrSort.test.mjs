@@ -282,4 +282,76 @@ describe(`arrSort`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //--- 無法轉數字或無法解析者放最末 ---
+
+    it(`should sort numbers numerically and put what cannot be converted or parsed last in original order`, function() {
+        //數字依數值; 非數字字串其次; 空字串、純空白字串、null等無法排序者放最末且維持原順序
+        let r = arrSort([10, '', 9, 'N/A', ' ', null, 100])
+        let rr = [9, 10, 100, 'N/A', '', ' ', null]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should keep numeric sorting for a column of numbers or numeric strings with blank cells`, function() {
+        //網頁輸入、表格轉存之數值欄常含空格: 數字不退回字典序(10在9之後), 空格在最後
+        let r = [
+            arrSort([10, ' ', 9]),
+            arrSort(['10', '9', ' ']),
+            arrSort([10, 9, -1, '']),
+            arrSort(['10', '', '9', '\t']),
+        ]
+        let rr = [
+            [9, 10, ' '],
+            ['9', '10', ' '],
+            [-1, 9, 10, ''],
+            ['9', '10', '', '\t'],
+        ]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should put strings after numbers, sorting those with numbers inside by their numbers`, function() {
+        let r = [
+            arrSort([5, 'abc10', 'abc3']),
+            arrSort(['b', ' ', 'a']),
+            arrSort(['abc1', 'abc30', ' ', 'abc4']),
+        ]
+        let rr = [
+            [5, 'abc3', 'abc10'],
+            ['a', 'b', ' '],
+            ['abc1', 'abc4', 'abc30', ' '],
+        ]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should put values of other types last instead of returning []`, function() {
+        //原本非同質陣列回傳[](資料遺失), 改為可排序者排序、其餘放最末
+        let o = { a: 1 }
+        let r = arrSort([3, o, 1, true, undefined, NaN, [2]])
+        let rr = [1, 3, o, true, undefined, NaN, [2]]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return the indexes with what cannot be sorted last when returnIndex`, function() {
+        let r = [
+            arrSort([10, ' ', 9], { returnIndex: true }),
+            arrSort([7], { returnIndex: true }),
+        ]
+        let rr = [
+            [2, 0, 1],
+            [0],
+        ]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should put objects whose compareKey value cannot be sorted last`, function() {
+        let r = arrSort([{ i: 10 }, { s: 'x' }, { i: 9 }, { i: ' ' }], { compareKey: 'i' })
+        let rr = [{ i: 9 }, { i: 10 }, { s: 'x' }, { i: ' ' }]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should put what cannot be sorted last when localeCompare`, function() {
+        let r = arrSort(['b10', ' ', 'b9', null, 'a'], { localeCompare: true })
+        let rr = ['a', 'b9', 'b10', ' ', null]
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
 })

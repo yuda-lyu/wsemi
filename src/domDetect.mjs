@@ -1,11 +1,11 @@
 import get from 'lodash-es/get.js'
 import throttle from 'lodash-es/throttle.js'
-import ispint from './ispint.mjs'
-import isp0int from './isp0int.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'
+import domIsRendered from './domIsRendered.mjs'
+import optNum from './_optNum.mjs'
 
 
 //2020年曾以IntersectionObserver與ResizeObserver實作(詳細請查git紀錄), 因實作缺陷致WTextSelect下拉選單不穩而改為輪詢:
@@ -43,30 +43,21 @@ function waitRemove(fn) {
 }
 
 
+//getTimeInterval, 正整數(可為數字字串), 超過計時器上限(含Infinity)者夾至上限, 無效時20
 function getTimeInterval(opt) {
-    let timeInterval = get(opt, 'timeInterval', null)
-    if (!ispint(timeInterval)) {
-        timeInterval = 20
-    }
-    return timeInterval
+    return optNum(opt, 'timeInterval', 20, { int: true, min: 0, minOpen: true, timer: true })
 }
 
 
+//getTolerancePixel, 不小於0之整數(可為數字字串), 可給0表示任何變化皆發出, Infinity表示任何變化皆不發出, 無效時1
 function getTolerancePixel(opt) {
-    let tolerancePixel = get(opt, 'tolerancePixel', null)
-    if (!isp0int(tolerancePixel)) { //可給0, 表示任何變化皆發出
-        tolerancePixel = 1
-    }
-    return tolerancePixel
+    return optNum(opt, 'tolerancePixel', 1, { int: true, min: 0, inf: 'keep' })
 }
 
 
+//getThrottle, 正整數(可為數字字串), 超過計時器上限(含Infinity)者夾至上限, 未給或0表示不節流
 function getThrottle(opt) {
-    let t = get(opt, 'throttle', null)
-    if (!ispint(t)) { //未給或0表示不節流
-        t = 0
-    }
-    return t
+    return optNum(opt, 'throttle', 0, { int: true, min: 0, minOpen: true, timer: true })
 }
 
 
@@ -139,34 +130,6 @@ function measure(p, getSize) {
 //isShown, 量測時元素可見(外框非0)且比較用尺寸非0
 function isShown(s) {
     return s.offsetWidth > 0 && s.offsetHeight > 0 && s.width > 0 && s.height > 0
-}
-
-
-//isRendered, 元素當下是否被繪製: 在頁面中且自身與祖先皆非display:none
-//  只需計算樣式不需排版: 若讀外框(offsetWidth)確認, 前一個監聽器改動DOM後(同步寫入或Vue於microtask更新)之每次確認皆強制重排, N個偵測器即N次排版
-//  有checkVisibility時以其判定(另涵蓋content-visibility:hidden等), 否則逐層檢查display; 不讀外框, 故元素仍被繪製而尺寸縮為0者視為被繪製
-function isRendered(p) {
-    if (!p || !p.isConnected) {
-        return false
-    }
-    if (isfun(p.checkVisibility)) {
-        return p.checkVisibility()
-    }
-    let e = p
-    while (e && e.nodeType === 1) {
-        let display = ''
-        try {
-            display = window.getComputedStyle(e).display
-        }
-        catch (err) {
-            display = ''
-        }
-        if (display === 'none') {
-            return false
-        }
-        e = e.parentElement || (e.parentNode && e.parentNode.host) || null //Shadow DOM內之頂層節點改查其宿主
-    }
-    return true
 }
 
 
@@ -286,7 +249,7 @@ function createCore(ev, opt, onReobserve) {
 
         //deferred
         if (deferred) {
-            if (!isRendered(p)) {
+            if (!domIsRendered(p)) {
                 skip(snew)
                 return
             }
@@ -322,7 +285,7 @@ function createCore(ev, opt, onReobserve) {
     }
 
     //fire, 於ResizeObserver回呼內同步發出(inSync)或延後發出
-    //  延後發出各自一個task: 前一個監聽器於microtask之DOM異動(如Vue之非同步更新)於下一個發出前已套用, 且監聽器不集中於同一個task; 發出前之確認只需樣式(isRendered), 故不因此強制重排
+    //  延後發出各自一個task: 前一個監聽器於microtask之DOM異動(如Vue之非同步更新)於下一個發出前已套用, 且監聽器不集中於同一個task; 發出前之確認只需樣式(domIsRendered, 只計算樣式不讀外框), 故不因此強制重排
     let inSync = false
     let fire = (sold, snew, sm, p, seq) => {
         if (inSync) {
@@ -407,7 +370,7 @@ function createCore(ev, opt, onReobserve) {
             windowWidth: window.innerWidth,
             windowHeight: window.innerHeight,
         }
-        if (!isShown(sd) || !isRendered(pLast)) {
+        if (!isShown(sd) || !domIsRendered(pLast)) {
             return
         }
         ev.emit('resizeWithWindow', {
@@ -668,13 +631,13 @@ function domDetectByObserver(f, opt = {}) {
  * @param {Function} f 輸入取得dom函數，可回傳null表示目前取不到
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入偵測模式字串，給'polling'則強制使用定期輪詢，預設''
- * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，預設20
- * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，可給0表示任何變化皆發出，預設1
+ * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設20
+ * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，可給0表示任何變化皆發出，須為不小於0之整數(可為數字字串，Infinity表示任何變化皆不發出)，無效時用預設，預設1
  * @param {Boolean} [opt.sync=false] 輸入是否於ResizeObserver回呼內同步發出事件布林值，true時使用端可於瀏覽器繪製前更新版面(例如圖表重繪)，僅ResizeObserver模式有效，預設false
  * @param {Boolean} [opt.watchIdentity=false] 輸入元素可見時是否仍於DOM變動時重新取得元素布林值，f可能於舊元素仍可見時改回傳另一元素者給true，僅ResizeObserver模式有效，預設false
  * @param {Function} [opt.getSize=null] 輸入比較用尺寸函數，傳入元素，回傳{width,height}，供依內容區或特定量測方式繪製之使用端(例如圖表依clientWidth扣除padding)，給予時只改padding、元素內出現或消失捲軸等外框不變之變化亦會發出，回傳非數字或拋錯之軸視為0(不發出)，預設null表示使用offsetWidth、offsetHeight
  * @param {Function} [opt.getBase=null] 輸入比較基準函數，回傳使用端目前套用之尺寸{width,height}，該軸非數字(含拋錯)表示該軸不比較(例如固定寬度)，給予時以其取代上次發出事件時之尺寸，故掛載時尺寸已一致者不發出(其後事件之sold於首次判定變化前為0)，由隱藏恢復顯示時若與使用端尺寸相同亦不發出；使用端須於事件內套用新尺寸(getBase之回傳隨之更新)，否則之後每次回報皆判定為變化而發出，預設null
- * @param {Integer} [opt.throttle=0] 輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，預設0表示不節流
+ * @param {Integer} [opt.throttle=0] 輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，其餘視為0，預設0表示不節流
  * @returns {Object} 回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件
  * @example
  * need test in browser

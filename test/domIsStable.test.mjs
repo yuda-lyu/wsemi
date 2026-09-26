@@ -347,4 +347,186 @@ describe(`domIsStable`, function() {
         assert.strict.deepStrictEqual(seq, [true])
     })
 
+    //--- 偵測器骨架、數值選項 ---
+
+    //countRect, 計數getBoundingClientRect之呼叫(每輪取三次位置)
+    let countRect = (el) => {
+        el.n = 0
+        let g = el.getBoundingClientRect.bind(el)
+        el.getBoundingClientRect = () => {
+            el.n++
+            return g()
+        }
+        return el
+    }
+
+    //trackIntervals, 追蹤setInterval之存活數
+    let trackIntervals = () => {
+        let si = globalThis.setInterval
+        let ci = globalThis.clearInterval
+        let act = new Set()
+        globalThis.setInterval = (fn, ms) => {
+            let id = si(fn, ms)
+            act.add(id)
+            return id
+        }
+        globalThis.clearInterval = (id) => {
+            act.delete(id)
+            return ci(id)
+        }
+        return {
+            active: () => act.size,
+            restore: () => {
+                globalThis.setInterval = si
+                globalThis.clearInterval = ci
+            },
+        }
+    }
+
+    it(`should return an inert detector with the error in event mode for an invalid element`, async function() {
+        //event模式不回傳Promise: on、create、dispose可呼叫且永不觸發, error為原因; promise模式仍reject(見上)
+        let el = new FakeEle()
+        el.getBoundingClientRect = null
+        let evs = [domIsStable(null, { mode: 'event' }), domIsStable(el, { mode: 'event' })]
+        let got = []
+        for (let ev of evs) {
+            assert.doesNotThrow(() => {
+                ev.on('stable', (b) => got.push(b))
+                ev.create()
+            })
+        }
+        await delay(250)
+        let rs = evs.map((ev) => ev.dispose())
+        assert.strict.deepStrictEqual([evs.map((ev) => ev instanceof Promise), evs.map((ev) => ev.error), got, rs], [[false, false], ['invalid element', 'invalid element.getBoundingClientRect'], [], [true, true]])
+    })
+
+    it(`should start the first round right after create, before any timer, and only once however often create is called`, async function() {
+        //create於microtask啟動第一輪(不等50ms輪詢與首個間隔); 重複create不並存兩份輪詢; dispose後create無效; dispose後無存活之計時器
+        let iv = trackIntervals()
+        try {
+            let a = countRect(new FakeEle())
+            let b = countRect(new FakeEle())
+            let c = countRect(new FakeEle())
+            let ea = domIsStable(a, { mode: 'event', timeDiff: 20, timeDetect: 30 })
+            let eb = domIsStable(b, { mode: 'event', timeDiff: 20, timeDetect: 30 })
+            let ec = domIsStable(c, { mode: 'event', timeDiff: 20, timeDetect: 30 })
+            ea.create()
+            let nAtCreate = a.n
+            await Promise.resolve()
+            let nAfterMicrotask = a.n
+            eb.create()
+            eb.create()
+            ec.dispose()
+            ec.create()
+            await delay(500)
+            let during = iv.active()
+            ea.dispose()
+            eb.dispose()
+            let ratio = b.n / a.n
+            assert.strict.deepStrictEqual([nAtCreate, nAfterMicrotask, ratio > 0.7 && ratio < 1.3, c.n, during, iv.active()], [0, 1, true, 0, 2, 0], `a=${a.n} b=${b.n}`)
+        }
+        finally {
+            iv.restore()
+        }
+    })
+
+    it(`should not start another round while one is still waiting for an animation`, async function() {
+        //前一輪未完(等待動畫結束)不另起新輪: 輪詢間隔30ms, 動畫400ms, 期間只有第一輪之兩次取點
+        let el = countRect(new FakeEle())
+        el.anims = [mkAnim({ msFinish: 400 })]
+        let ev = domIsStable(el, { mode: 'event', timeDiff: 20, timeDetect: 30 })
+        ev.create()
+        await delay(300)
+        let n = el.n
+        ev.dispose()
+        assert.strict.deepStrictEqual(n, 2)
+    })
+
+    it(`should measure an element inserted after create from its insertion`, async function() {
+        //Vue 2指令於bind時create而元素其後才插入: 第一輪於microtask起量, 不以未插入之0尺寸白費一輪
+        let el = new FakeEle()
+        el.rect = { left: 0, top: 0, width: 0, height: 0 }
+        let ev = domIsStable(el, { mode: 'event', timeDiff: 50, timeDetect: 50 })
+        let t0 = Date.now()
+        let tFirst = null
+        ev.on('stable', (b) => {
+            if (b && tFirst === null) {
+                tFirst = Date.now() - t0
+            }
+        })
+        ev.create()
+        el.rect = { left: 0, top: 0, width: 100, height: 100 } //同一輪之同步流程內插入
+        await delay(300)
+        ev.dispose()
+        assert.strict.deepStrictEqual(tFirst !== null && tFirst < 90, true, `tFirst=${tFirst}`)
+    })
+
+    it(`should report a throwing stable listener instead of swallowing it, and keep detecting`, async function() {
+        //監聽器拋錯經evEmit: 有error監聽者則發出error事件, 不被吞掉亦不中斷偵測
+        let el = new FakeEle()
+        let ev = domIsStable(el, { mode: 'event', timeDiff: 20, timeDetect: 30 })
+        let seq = []
+        let errs = []
+        let boom = true
+        ev.on('stable', (b) => {
+            if (boom) {
+                boom = false
+                throw new Error('stable boom')
+            }
+            seq.push(b)
+        })
+        ev.on('error', (e) => errs.push(e.msg.message))
+        ev.create()
+        await delay(200)
+        startTransition(el, { msPending: 20, ms: 200 })
+        await delay(700)
+        ev.dispose()
+        assert.strict.deepStrictEqual([errs, seq], [['stable boom'], [false, true]])
+    })
+
+    it(`should use the defaults for invalid numeric options, and accept numeric strings`, async function() {
+        //tolerance非有效非負數(含null、布林)→0(靜止元素仍穩定), Infinity保留(任何變化皆容許); timeDiff非有效(含null)→100, 0為有效(w-component-vue亦視0為有效), 負數視為0; 數字字串照常
+        let el = new FakeEle()
+        let out = []
+        for (let v of ['abc', -1, NaN, null, true]) {
+            out.push(await domIsStable(el, { tolerance: v }))
+        }
+        let dt = async (timeDiff) => {
+            let t0 = Date.now()
+            await domIsStable(el, { timeDiff })
+            return Date.now() - t0
+        }
+        let dtBad = await dt('abc')
+        let dtNull = await dt(null)
+        let dtNeg = await dt(-5)
+        let dtZero = await dt(0)
+        let dtStr = await dt('20')
+        let moving = (tolerance) => {
+            setTimeout(() => {
+                el.rect = { ...el.rect, left: el.rect.left + 0.5 }
+            }, 50)
+            return domIsStable(el, { tolerance })
+        }
+        let bStrTol = await moving('1')
+        let bInfTol = await moving(Infinity)
+        let bZeroTol = await moving(0)
+        assert.strict.deepStrictEqual(out, [true, true, true, true, true])
+        assert.strict.deepStrictEqual([dtBad >= 100, dtNull >= 100, dtNeg < 50, dtZero < 50, dtStr >= 20 && dtStr < 100, bStrTol, bInfTol, bZeroTol], [true, true, true, true, true, true, true, false], `bad=${dtBad} null=${dtNull} neg=${dtNeg} zero=${dtZero} str=${dtStr}`)
+    })
+
+    it(`should use the default interval for an invalid timeDetect`, async function() {
+        //timeDetect非有效正數(0、負數、非數字、null)→50, 不成高頻輪詢
+        let els = [0, 1, 2, 3, 4].map(() => countRect(new FakeEle()))
+        let evs = [50, 0, -5, 'x', null].map((timeDetect, i) => domIsStable(els[i], { mode: 'event', timeDiff: 10, timeDetect }))
+        for (let ev of evs) {
+            ev.create()
+        }
+        await delay(500)
+        for (let ev of evs) {
+            ev.dispose()
+        }
+        let [n50, ...ns] = els.map((e) => e.n)
+        assert.strict.deepStrictEqual(ns.map((n) => n / n50 < 1.3), [true, true, true, true], `n50=${n50} others=${ns}`)
+    })
+
 })

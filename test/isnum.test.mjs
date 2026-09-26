@@ -99,6 +99,21 @@ describe(`isnum`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
+    it(`should return false when input ' '`, function() {
+        let r = isnum(' ')
+        assert.strict.deepStrictEqual(r, false) //純空白字串非數字字串(JS之Number(' ')為0)
+    })
+
+    it(`should return false when input a string of several spaces, tabs or line breaks`, function() {
+        let r = ['   ', '\t', '\n', ' \t\r\n ', ' ', '　'].map((v) => isnum(v))
+        assert.strict.deepStrictEqual(r, [false, false, false, false, false, false])
+    })
+
+    it(`should return true when input a numeric string with surrounding spaces`, function() {
+        let r = [' 5 ', '\t12.34\n', ' -1 '].map((v) => isnum(v))
+        assert.strict.deepStrictEqual(r, [true, true, true])
+    })
+
     it(`should return false when input false`, function() {
         let r = isnum(false)
         assert.strict.deepStrictEqual(r, false)
