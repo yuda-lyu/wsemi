@@ -21514,9 +21514,9 @@ domConvertToPicDyn(ele, { scale: 3 })
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對DOM元素監聽resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件</p>
-<p>瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以offsetWidth、offsetHeight與比較基準之差超過容許誤差即發出，比較基準為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出</p>
+<p>瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以比較用尺寸(預設offsetWidth、offsetHeight)與比較基準之差超過容許誤差即發出，比較基準預設為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出；延後發出(非同步、節流或refresh)時，發出前元素已不被繪製(移出頁面，或自身或祖先為display:none)者不發出，待其再顯示時重新比較(同由隱藏恢復顯示，sold為0、smode兩軸為'larger')，此確認只計算樣式而不讀外框，故元素仍被繪製而尺寸於空檔內縮為0者照發；sync為true時refresh與節流之後續發出仍為延後發出，其量測早於已處理之事件者不發出</p>
 <p>元素可取不到、中途消失或重建為新節點：取不到、不在頁面中或尺寸為0時，於DOM變動時重新以f取得元素並改觀察之。行內元素(display:inline)ResizeObserver不回報，該偵測器改以定期量測，元素自身隱藏(display:none，如v-show)期間亦持續，顯示後即可量得；是否為行內於取得元素、ResizeObserver回報、定期量測及元素插入或移出頁面時判定</p>
-<p>事件內容：sold為比較基準(上次發出事件時之尺寸)，snew為本次量測，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，僅該軸之差超過容許誤差時給方向，否則為''，ele為元素；from為'window'之事件無ele，其snew為最新量測，其中視窗尺寸取事件當下之值，其smode寬與高恆為''(視窗事件不代表元素尺寸變化，且最新量測與比較基準之差必在容許誤差內)</p>
+<p>事件內容：sold為上次判定變化時之量測，snew為本次量測(另含width、height為比較用尺寸)，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，僅該軸之差超過容許誤差時給方向，否則為''，有給getBase者延後發出時依發出當下與使用端尺寸之比較重給，ele為元素；from為'window'之事件無ele，其snew為最新量測，其中視窗尺寸取事件當下之值，其smode寬與高恆為''(視窗事件不代表元素尺寸變化，且最新量測與比較基準之差必在容許誤差內)；視窗事件於最新量測之任一維為0(隱藏、移出頁面、取不到元素、尚未量得尺寸，或寬高其一為0之元素)，或元素當下不被繪製(例如媒體查詢隨視窗改變而隱藏)時不發出，與dom事件之規則一致</p>
 <p>已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，行內元素自取得起即自身為display:none(未曾以行內顯示過)、之後僅以style或class改為顯示者不會開始量測，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs">Github</a></p></li></ul></dd>
     
@@ -21524,7 +21524,7 @@ domConvertToPicDyn(ele, { scale: 3 })
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domDetect.mjs.html">domDetect.mjs</a>, <a href="domDetect.mjs.html#line452">line 452</a>
+        <a href="domDetect.mjs.html">domDetect.mjs</a>, <a href="domDetect.mjs.html#line697">line 697</a>
     </li></ul></dd>
     
 
@@ -21571,7 +21571,21 @@ domConvertToPicDyn(ele, { scale: 3 })
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browser//監聽domlet de = domDetect(() => {    return document.querySelector('#id')})de.on('resize', (s) => {    console.log('resize', s)})de.on('resizeWithWindow', (s) => {    console.log('resizeWithWindow', s)})//釋放監聽de.clear()</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+//監聽dom
+let de = domDetect(() => {
+    return document.querySelector('#id')
+})
+de.on('resize', (s) => {
+    console.log('resize', s)
+})
+de.on('resizeWithWindow', (s) => {
+    console.log('resizeWithWindow', s)
+})
+
+//釋放監聽
+de.clear()</code></pre>
 
 
 
@@ -21901,6 +21915,126 @@ domConvertToPicDyn(ele, { scale: 3 })
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>getSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入比較用尺寸函數，傳入元素，回傳{width,height}，供依內容區或特定量測方式繪製之使用端(例如圖表依clientWidth扣除padding)，給予時只改padding、元素內出現或消失捲軸等外框不變之變化亦會發出，回傳非數字或拋錯之軸視為0(不發出)，預設null表示使用offsetWidth、offsetHeight</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>getBase</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入比較基準函數，回傳使用端目前套用之尺寸{width,height}，該軸非數字(含拋錯)表示該軸不比較(例如固定寬度)，給予時以其取代上次發出事件時之尺寸，故掛載時尺寸已一致者不發出(其後事件之sold於首次判定變化前為0)，由隱藏恢復顯示時若與使用端尺寸相同亦不發出；使用端須於事件內套用新尺寸(getBase之回傳隨之更新)，否則之後每次回報皆判定為變化而發出，預設null</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>throttle</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Integer</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>0</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，預設0表示不節流</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -21930,7 +22064,7 @@ domConvertToPicDyn(ele, { scale: 3 })
 
         
 <div class="param-desc">
-    <p>回傳物件，可使用on與clear函數，on可監聽resize與resizeWithWindow事件，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件</p>
+    <p>回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件</p>
 </div>
 
 
@@ -109705,7 +109839,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Sep 26 2026 08:34:39 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Sep 26 2026 22:05:37 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
