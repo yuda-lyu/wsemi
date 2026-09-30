@@ -299,11 +299,11 @@ describe(`domDetect`, function() {
         assert.strict.deepStrictEqual(r.resize[1].sold.offsetWidth, 0)
     })
 
-    it(`should emit when small changes accumulate beyond the tolerance`, async function() {
-        //F2、G3 比較基準為上次發出之尺寸: 每次+1px不超過容許誤差1, 累積至2px即發出, sold與smode皆相對於基準
+    it(`should emit when small changes accumulate beyond the tolerance when toleranceBounce is 0`, async function() {
+        //F2、G3 toleranceBounce為0(舊版行為): 比較基準為上次發出之尺寸, 每次+1px不超過容許誤差1, 累積至2px即發出, sold與smode皆相對於基準
         let env = mkEnv()
         let el = new Ele(300, 40)
-        let r = env.dd(() => el)
+        let r = env.dd(() => el, { toleranceBounce: 0 })
         for (let w of [300, 301, 302, 303, 304, 303, 302]) {
             el.size(w, 40)
             env.fireRO(el)
@@ -328,10 +328,11 @@ describe(`domDetect`, function() {
     })
 
     it(`should fall back to a tolerance of one for an invalid tolerancePixel`, async function() {
+        //toleranceBounce為0使容許誤差內之301不發出, 以301是否發出區分容許誤差為1或0
         for (let tol of [-1, 'x', 1.5, null]) {
             let env = mkEnv()
             let el = new Ele(300, 40)
-            let r = env.dd(() => el, { tolerancePixel: tol })
+            let r = env.dd(() => el, { tolerancePixel: tol, toleranceBounce: 0 })
             for (let w of [300, 301, 303]) {
                 el.size(w, 40)
                 env.fireRO(el)
@@ -356,7 +357,7 @@ describe(`domDetect`, function() {
     })
 
     it(`should give no direction for an axis within the tolerance when the other axis triggers`, async function() {
-        //寬先+1px(未超過容許誤差, 不發出), 之後高+20px觸發發出: 寬之方向須為空, 否則依方向判斷變寬或變窄之使用端會誤動作
+        //預設下寬+1px自行發出; 之後高+20px觸發發出時寬差為0: 寬之方向須為空, 否則依方向判斷變寬或變窄之使用端會誤動作
         let env = mkEnv()
         let el = new Ele(300, 40)
         let r = env.dd(() => el)
@@ -366,8 +367,313 @@ describe(`domDetect`, function() {
         el.size(301, 60)
         env.fireRO(el)
         await sleep(10)
+        assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.snew.offsetHeight, m.smode.width, m.smode.height]), [[300, 40, 'larger', 'larger'], [301, 40, 'larger', ''], [301, 60, '', 'larger']])
+        assert.strict.deepStrictEqual([r.resize[1].sold.offsetWidth, r.resize[1].sold.offsetHeight], [300, 40])
+    })
+
+    it(`should give no direction for an axis within the tolerance when the other axis triggers and toleranceBounce is 0`, async function() {
+        //toleranceBounce為0(舊版行為): 寬先+1px(未超過容許誤差, 不發出), 之後高+20px觸發發出: 寬之方向須為空
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el, { toleranceBounce: 0 })
+        env.fireRO(el)
+        el.size(301, 40)
+        env.fireRO(el)
+        el.size(301, 60)
+        env.fireRO(el)
+        await sleep(10)
         assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.snew.offsetHeight, m.smode.width, m.smode.height]), [[300, 40, 'larger', 'larger'], [301, 60, '', 'larger']])
         assert.strict.deepStrictEqual([r.resize[1].sold.offsetWidth, r.resize[1].sold.offsetHeight], [300, 40])
+    })
+
+    //--- 容許誤差內之變化與回授 ---
+
+    it(`should emit every same-direction change within the tolerance by default`, async function() {
+        //容許誤差內之同向變化(逐px動畫或拖曳)照常發出, 末段恰差1px者不得被略過; 反向一次(304→303)未達跳動次數亦發出
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 301, 302, 303, 304, 303, 302]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 302, 303, 304, 303, 302])
+        assert.strict.deepStrictEqual(r.resize.map((m) => m.sold.offsetWidth), [0, 300, 301, 302, 303, 304, 303])
+        assert.strict.deepStrictEqual(r.resize.map((m) => m.smode.width), ['larger', 'larger', 'larger', 'larger', 'larger', 'smaller', 'smaller'])
+    })
+
+    it(`should give no direction for a bouncing axis when the other axis triggers`, async function() {
+        //寬於容許誤差內來回跳動達次數而不再發出(301→300), 之後高+20px觸發發出: 寬之方向須為空(殘餘之跳動不帶出方向)
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 301, 300, 301, 300]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        el.size(300, 60)
+        env.fireRO(el)
+        await sleep(10)
+        assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.snew.offsetHeight, m.smode.width, m.smode.height]), [[300, 40, 'larger', 'larger'], [301, 40, 'larger', ''], [300, 40, 'smaller', ''], [301, 40, 'larger', ''], [300, 60, '', 'larger']])
+    })
+
+    it(`should stop emitting within-tolerance changes after bouncing toleranceBounce times`, async function() {
+        //使用端於事件內改變尺寸所形成之1px來回回授: 反向第3次(預設)起不再發出, 回授即中斷
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 301, 300, 301, 300, 301, 300, 301]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 300, 301])
+    })
+
+    it(`should count bounces the same whether the first change is up or down`, async function() {
+        //首次量得前無前次量測, 首次之尺寸不帶方向: 先減後增之來回跳動與先增後減者同樣於反向第3次停止(皆發出4次)
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 299, 300, 299, 300, 299, 300, 299]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 299, 300, 299])
+    })
+
+    it(`should resume within-tolerance changes after a same-direction change or a change beyond the tolerance`, async function() {
+        //跳動停止後: 同向之容許誤差內變化(301→302)恢復發出; 超過容許誤差之變化(302→305)照常發出且重新計數
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 301, 300, 301, 300, 301, 302, 305, 306, 305, 306, 305, 306]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 300, 301, 302, 305, 306, 305, 306])
+    })
+
+    it(`should count bounces per axis`, async function() {
+        //寬來回跳動而停止時, 高之同向逐px變化照常發出
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        let seq = [[300, 40], [301, 40], [300, 40], [301, 40], [300, 41], [301, 42], [300, 43]]
+        for (let [w, h] of seq) {
+            el.size(w, h)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.snew.offsetHeight, m.smode.width, m.smode.height]), [[300, 40, 'larger', 'larger'], [301, 40, 'larger', ''], [300, 40, 'smaller', ''], [301, 40, 'larger', ''], [300, 41, '', 'larger'], [301, 42, '', 'larger'], [300, 43, '', 'larger']])
+    })
+
+    it(`should judge both axes on every measurement even when one of them already triggers`, async function() {
+        //寬逐px前進(每次皆判定而發出), 高同時於40、41來回跳動: 高須每次各自判定, 反向第3次起不判定而方向為空; 若寬已判定即略過高, 高之方向與計次皆錯
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let [w, h] of [[300, 40], [301, 41], [302, 40], [303, 41], [304, 40], [305, 41]]) {
+            el.size(w, h)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(r.resize.map((m) => [m.snew.offsetWidth, m.smode.width, m.smode.height]), [[300, 'larger', 'larger'], [301, 'larger', 'larger'], [302, 'larger', 'smaller'], [303, 'larger', 'larger'], [304, 'larger', ''], [305, 'larger', '']])
+    })
+
+    it(`should apply toleranceBounce as given, and fall back to three for an invalid value`, async function() {
+        //給1: 反向第1次起不再發出; 給Infinity: 永不停止; 無效(-1、'x'、1.5、null)用預設3
+        let seq = [300, 301, 300, 301, 300, 301, 300]
+        let run = async (tb) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, { toleranceBounce: tb })
+            for (let w of seq) {
+                el.size(w, 40)
+                env.fireRO(el)
+            }
+            await sleep(10)
+            let out = ws(r)
+            for (let d of env.dds) {
+                d.clear()
+            }
+            return out
+        }
+        assert.strict.deepStrictEqual(await run(1), [300, 301])
+        assert.strict.deepStrictEqual(await run('2'), [300, 301, 300])
+        assert.strict.deepStrictEqual(await run(Infinity), seq)
+        for (let tb of [-1, 'x', 1.5, null]) {
+            assert.strict.deepStrictEqual(await run(tb), [300, 301, 300, 301], String(tb))
+        }
+    })
+
+    it(`should emit nothing within an infinite tolerance regardless of toleranceBounce`, async function() {
+        //容許誤差為Infinity仍為任何變化皆不發出(首次量得亦同)
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el, { tolerancePixel: Infinity, toleranceBounce: Infinity })
+        for (let w of [300, 301, 350, 302]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [])
+    })
+
+    it(`should stop a one-way feedback within the tolerance after ten emits`, async function() {
+        //使用端於事件內使尺寸同向再+1px(例如以含框線之offsetHeight設定撐開自身之子元素高): 容許誤差內同向連續發出10次後中斷, 不得逐次無限增長
+        let env = mkEnv()
+        let el = new Ele(100, 40)
+        let r = env.dd(() => el)
+        r.d.on('resize', (m) => {
+            el.size(m.snew.offsetWidth + 1, 40)
+            env.fireRO(el)
+        })
+        env.fireRO(el)
+        await sleep(300)
+        assert.strict.deepStrictEqual([ws(r).length, ws(r)[ws(r).length - 1], el.offsetWidth], [11, 110, 111])
+    })
+
+    it(`should skip one within-tolerance change after ten same-direction emits, and emit the next change that exceeds the tolerance`, async function() {
+        //非回授之持續逐px變化: 連續10次後之第11次(311)不發出, 下一次(312)相對基準310已超過容許誤差而照發並重新計數, 其後313～322再連續10次照發
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        let seq = []
+        for (let w = 300; w <= 322; w++) {
+            seq.push(w)
+        }
+        for (let w of seq) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        let exp = seq.filter((w) => w !== 311)
+        assert.strict.deepStrictEqual(ws(r), exp)
+    })
+
+    it(`should reset the one-way count on a reversal`, async function() {
+        //連續10次後之311不發出; 反向回到310時與基準相同而不發出, 其後309為反向後之同向變化照常發出
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        let seq = []
+        for (let w = 300; w <= 311; w++) {
+            seq.push(w)
+        }
+        seq.push(310, 309)
+        for (let w of seq) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 309])
+    })
+
+    it(`should not limit within-tolerance changes when toleranceBounce is Infinity`, async function() {
+        //給Infinity: 容許誤差內之變化一律發出(不阻斷回授), 同向連續超過10次亦發出
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el, { toleranceBounce: Infinity })
+        let seq = []
+        for (let w = 300; w <= 315; w++) {
+            seq.push(w)
+        }
+        for (let w of seq) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), seq)
+    })
+
+    it(`should not take finding a lost element again as a reversal`, async function() {
+        //跳動計數至2(方向為-)後元素暫時取不到再取回(同尺寸), 之後-1px: 取不到之期間無量測, 不得以0為前次量測而誤計反向, 297照常發出
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let cur = el
+        let r = env.dd(() => cur)
+        for (let w of [300, 299, 298, 299, 298]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        cur = null
+        r.d.refresh()
+        await sleep(10)
+        cur = el
+        r.d.refresh()
+        await sleep(10)
+        el.size(297, 40)
+        env.fireRO(el)
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 299, 298, 299, 298, 297])
+    })
+
+    it(`should not compare directions across a replaced element`, async function() {
+        //跳動計數至2(方向為-)後元素被移除而換為寬299之新節點: 不同元素之量測不比較方向, 新節點之299為容許誤差內之變化照常發出(若以舊節點之298比較則誤計第3次反向而不發出)
+        let env = mkEnv()
+        let a = new Ele(300, 40)
+        let cur = a
+        let r = env.dd(() => cur)
+        for (let w of [300, 299, 298, 299, 298]) {
+            a.size(w, 40)
+            env.fireRO(a)
+        }
+        await sleep(10)
+        let b = new Ele(299, 40)
+        cur = b
+        a.isConnected = false
+        a.size(0, 0)
+        env.fireRO(a)
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 299, 298, 299, 298, 299])
+    })
+
+    it(`should not carry the bounce count across a hidden period`, async function() {
+        //來回跳動計數至2後隱藏再顯示: 隱藏使回授中斷, 顯示後重新計數, 其後之來回跳動同樣於反向第3次停止(顯示後發出4次)
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        for (let w of [300, 301, 300, 301]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        hide(el)
+        env.fireRO(el)
+        show(el, 301, 40)
+        env.fireRO(el)
+        for (let w of [300, 301, 300, 301]) {
+            el.size(w, 40)
+            env.fireRO(el)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 300, 301, 301, 300, 301, 300])
+    })
+
+    it(`should not count a change without a movement toward the one-way limit`, async function() {
+        //換為寬299之新節點: 與舊節點發出之298差1而判定為變化, 但相鄰量測無移動可言, 不計入同向連續上限; 其後300～309連續10次照發
+        let env = mkEnv()
+        let a = new Ele(298, 40)
+        let cur = a
+        let r = env.dd(() => cur)
+        env.fireRO(a)
+        await sleep(10)
+        let b = new Ele(299, 40)
+        cur = b
+        a.isConnected = false
+        a.size(0, 0)
+        env.fireRO(a)
+        await sleep(10)
+        for (let w = 300; w <= 309; w++) {
+            b.size(w, 40)
+            env.fireRO(b)
+        }
+        await sleep(10)
+        assert.strict.deepStrictEqual(ws(r), [298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309])
     })
 
     //--- 發出時點與清除 ---
@@ -744,10 +1050,10 @@ describe(`domDetect`, function() {
     })
 
     it(`should carry the comparison baseline as sold on window events`, async function() {
-        //sold為比較基準(上次發出事件時之尺寸), 視窗事件與dom事件同義; 未超過容許誤差之最新量測只出現於snew
+        //sold為比較基準(上次發出事件時之尺寸), 視窗事件與dom事件同義; 未判定為變化之最新量測只出現於snew(toleranceBounce為0使容許誤差內之301不發出)
         let env = mkEnv()
         let el = new Ele(300, 40)
-        let r = env.dd(() => el)
+        let r = env.dd(() => el, { toleranceBounce: 0 })
         env.fireRO(el)
         await sleep(10)
         el.size(301, 40)
@@ -818,7 +1124,7 @@ describe(`domDetect`, function() {
     })
 
     it(`should apply the same rules in polling mode`, async function() {
-        //輪詢與ResizeObserver共用比較、發出、視窗事件與清除: 累積超過容許誤差即發出、尺寸0不發出、恢復顯示再發出、視窗尺寸取當下值
+        //輪詢與ResizeObserver共用比較、發出、視窗事件與清除: 容許誤差內之同向變化照常發出、尺寸0不發出、恢復顯示再發出、視窗尺寸取當下值
         let env = mkEnv()
         let el = new Ele(300, 40)
         let r = env.dd(() => el, { mode: 'polling', timeInterval: 5 })
@@ -830,7 +1136,7 @@ describe(`domDetect`, function() {
         r.d.clear()
         el.size(400, 40)
         await sleep(25)
-        assert.strict.deepStrictEqual(ws(r), [300, 302, 302])
+        assert.strict.deepStrictEqual(ws(r), [300, 301, 302, 302])
         assert.strict.deepStrictEqual(r.rww.filter((m) => m.from === 'window').map((m) => m.snew.windowWidth), [900])
         assert.strict.deepStrictEqual(env.listeners.length, 0)
     })
@@ -1030,11 +1336,11 @@ describe(`domDetect`, function() {
     })
 
     it(`should keep a newer baseline when an older deferred emit is skipped`, async function() {
-        //較舊之延後發出略過時, 若其後已判定較新之變化, 不得把基準歸0, 否則之後容許誤差內之變化被誤判而多發
+        //較舊之延後發出略過時, 若其後已判定較新之變化, 不得把基準歸0, 否則之後容許誤差內之變化被誤判而多發(toleranceBounce為0, 以容許誤差內之301是否發出偵測基準是否被歸0)
         let env = mkEnv()
         let a = new Ele(300, 36)
         let cur = a
-        let r = env.dd(() => cur)
+        let r = env.dd(() => cur, { toleranceBounce: 0 })
         env.frame()
         await sleep(5)
         a.size(300, 40)
@@ -1448,6 +1754,33 @@ describe(`domDetect`, function() {
         assert.strict.deepStrictEqual([ws(r), [base.w, base.h]], [[245, 256], [256, 41]])
     })
 
+    it(`should keep a within-tolerance axis at the deferred re-compare with getBase only when toleranceBounce is not 0`, async function() {
+        //延後發出前使用端已自行套用與量測差1px之尺寸(容許誤差2內): 給0(舊版行為)時容許誤差內一律不發出; 預設時判定時已為變化且與使用端當下仍不同之軸照發, 使用端得以同步至實際尺寸
+        let run = async (opt) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let base = { w: 300, h: 40 }
+            let r = env.dd(() => el, { tolerancePixel: 2, ...opt, getBase: () => ({ width: base.w, height: base.h }) })
+            r.d.on('resize', (m) => {
+                base.w = m.snew.offsetWidth
+                base.h = m.snew.offsetHeight
+            })
+            env.fireRO(el)
+            await sleep(10)
+            el.size(305, 40)
+            env.fireRO(el)
+            base.w = 304
+            await sleep(10)
+            let out = r.resize.map((m) => [m.snew.offsetWidth, m.smode.width])
+            for (let d of env.dds) {
+                d.clear()
+            }
+            return [out, base.w]
+        }
+        assert.strict.deepStrictEqual(await run({ toleranceBounce: 0 }), [[], 304])
+        assert.strict.deepStrictEqual(await run({}), [[[305, 'larger']], 305])
+    })
+
     it(`should throttle with the first change at once and the last change at the end of the window`, async function() {
         for (let opt of [{}, { mode: 'polling', timeInterval: 5 }]) {
             let env = mkEnv()
@@ -1826,6 +2159,109 @@ describe(`domDetect`, function() {
             assert.strict.deepStrictEqual(r.resize.filter((m) => !(m.snew.offsetWidth > 0 && m.snew.offsetHeight > 0)).length, 0, `run=${k}`)
             let last = r.resize[r.resize.length - 1]
             assert.ok(Math.abs(last.snew.offsetWidth - w) <= tol && Math.abs(last.snew.offsetHeight - h) <= tol, `run=${k} last=${last.snew.offsetWidth}x${last.snew.offsetHeight} real=${w}x${h}`)
+            for (let d of env.dds) {
+                d.clear()
+            }
+        }
+    })
+
+    it(`should decide every change by the documented rules within the tolerance, on random sequences`, async function() {
+        //以固定種子之亂數產生寬之變化序列(多為±1, 含不變、容許誤差外、隱藏), 每次變化後瀏覽器皆回報, 同步與延後各半, 發出之寬須與依JSDoc規則寫成之模型逐筆相同:
+        //  超過容許誤差必發出並使計次歸0; 容許誤差內之非0差照常發出, 惟連續反向達toleranceBounce次後不發出(直到同向或超過容許誤差), 同向連續發出10次後不發出(直到反向或超過容許誤差);
+        //  方向取相鄰兩次量測(同一元素且皆可見)之差, 不相鄰(隱藏)時判定狀態歸0; toleranceBounce為0時容許誤差內一律不發出, 為Infinity時一律發出; 容許誤差為Infinity時皆不發出; 尺寸為0不發出
+        let seed = 20260930
+        let rnd = () => {
+            seed = (seed + 0x6D2B79F5) | 0
+            let v = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+            v = (v + Math.imul(v ^ (v >>> 7), 61 | v)) ^ v
+            return ((v ^ (v >>> 14)) >>> 0) / 4294967296
+        }
+        let model = (seq, tol, tb) => {
+            let b = 0 //比較基準
+            let p = 0 //上次量測
+            let dir = 0
+            let n = 0
+            let m = 0
+            let out = []
+            for (let v of seq) {
+                let adjacent = p > 0 && v > 0
+                if (!adjacent) {
+                    dir = 0
+                    n = 0
+                    m = 0
+                }
+                let step = adjacent ? v - p : 0
+                if (step !== 0) {
+                    let s = step > 0 ? 1 : -1
+                    let rev = dir !== 0 && s !== dir
+                    n = rev ? n + 1 : 0
+                    if (rev) {
+                        m = 0
+                    }
+                    dir = s
+                }
+                let d = b - v
+                let judged = false
+                if (Math.abs(d) > tol) {
+                    n = 0
+                    m = 0
+                    judged = true
+                }
+                else if (d !== 0 && tol !== Infinity) {
+                    if (tb === Infinity) {
+                        judged = true
+                    }
+                    else if (n < tb && m < 10) {
+                        if (step !== 0) {
+                            m++
+                        }
+                        judged = true
+                    }
+                }
+                if (judged) {
+                    b = v
+                    if (v > 0) {
+                        out.push(v)
+                    }
+                }
+                p = v
+            }
+            return out
+        }
+        for (let k = 0; k < 300; k++) {
+            let tol = [0, 1, 1, 2, Infinity][k % 5]
+            let tb = [0, 1, 2, 3, 3, 5, Infinity][k % 7]
+            let sync = k % 2 === 0
+            let oneWay = k % 3 === 0 //多為+1之長單向段, 使同向連續上限亦被驗到
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, { tolerancePixel: tol, toleranceBounce: tb, sync })
+            let seq = []
+            let w = 300
+            let len = 10 + Math.floor(rnd() * 30)
+            for (let i = 0; i < len; i++) {
+                let hide = rnd() < 0.05
+                let x = rnd()
+                let v = 0 //隱藏
+                if (!hide) {
+                    let st = 0
+                    if (oneWay) {
+                        st = x < 0.85 ? 1 : x < 0.92 ? 0 : x < 0.97 ? -1 : 2 + Math.floor(rnd() * 3)
+                    }
+                    else {
+                        st = x < 0.4 ? 1 : x < 0.75 ? -1 : x < 0.83 ? 0 : x < 0.95 ? (2 + Math.floor(rnd() * 3)) * (rnd() < 0.5 ? 1 : -1) : Math.floor(rnd() * 41) - 20
+                    }
+                    w = Math.max(1, w + st)
+                    v = w
+                }
+                seq.push(v)
+                el.size(v, v === 0 ? 0 : 40)
+                env.fireRO(el)
+            }
+            if (!sync) {
+                await sleep(5)
+            }
+            assert.strict.deepStrictEqual(ws(r), model(seq, tol, tb), `run=${k} tol=${tol} tb=${tb} sync=${sync} seq=${JSON.stringify(seq)}`)
             for (let d of env.dds) {
                 d.clear()
             }

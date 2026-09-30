@@ -21,6 +21,11 @@ let waiting = new Set()
 let mo = null
 
 
+//RUN_MAX, 同一軸容許誤差內同向連續判定為變化之上限: 使用端於事件內使尺寸同向再變1px之單向回授(例如以含框線之offsetHeight設定撐開自身之子元素高)至此中斷, 否則逐幀無限增長
+//  持續之逐px變化於達上限後之下一次量測即因累積超過容許誤差而發出, 故只略過1次; 代價為同向逐px之變化恰於連續第RUN_MAX+1次結束時停在差1px之舊值
+let RUN_MAX = 10
+
+
 function waitAdd(fn) {
     waiting.add(fn)
     if (!mo) {
@@ -52,6 +57,12 @@ function getTimeInterval(opt) {
 //getTolerancePixel, 不小於0之整數(可為數字字串), 可給0表示任何變化皆發出, Infinity表示任何變化皆不發出, 無效時1
 function getTolerancePixel(opt) {
     return optNum(opt, 'tolerancePixel', 1, { int: true, min: 0, inf: 'keep' })
+}
+
+
+//getToleranceBounce, 容許誤差內來回跳動之次數, 不小於0之整數(可為數字字串), 0表示容許誤差內之變化一律不發出(舊版行為), Infinity表示容許誤差內之變化一律發出(不阻斷回授), 無效時3
+function getToleranceBounce(opt) {
+    return optNum(opt, 'toleranceBounce', 3, { int: true, min: 0, inf: 'keep' })
 }
 
 
@@ -134,14 +145,27 @@ function isShown(s) {
 
 
 //createCore, 輪詢與ResizeObserver兩種模式共用之比較、發出、視窗事件與清除, 使兩者之規則只寫一處
-//  比較基準預設為上次判定變化時之尺寸sb, 差值超過容許誤差才更新; 若每次量測皆更新基準, 緩慢之連續小變化(如逐px拖曳或縮放視窗)永遠不會超過容許誤差, 累積再大也不發出
+//  比較基準預設為上次判定變化時之尺寸sb, 判定為變化時才更新; 若每次量測皆更新基準, 未判定之小變化(因回授而停止, 或toleranceBounce為0時容許誤差內之變化)累積再大也不發出
+//  容許誤差內之變化照常判定為變化而發出: 同向之逐px變化(如動畫或拖曳之末段)若略過, 最後一次發出之尺寸會停在過期值(例如高度動畫逐幀+1px時末段恰差1px而不發出);
+//  惟使用端於事件內改變尺寸所形成之回授須阻斷(見judgeAxis), 容許誤差即界定此類小變化之範圍
 //  尺寸為0時差值必超過容許誤差而使基準歸0, 故由隱藏恢復顯示時必發出
 //  有給getBase時比較基準改為使用端目前套用之尺寸(例如圖表目前寬高), 故掛載時尺寸已一致者不發出, 且與偵測器之回報次序無關
 //  onReobserve為延後發出因元素已不被繪製而略過時, 請觀察層重新觀察目前元素並登記等待之函數(輪詢模式不需要, 下一次取樣即重新比較)
 function createCore(ev, opt, onReobserve) {
 
-    //tolerancePixel
+    //tolerancePixel, toleranceBounce
     let tolerancePixel = getTolerancePixel(opt)
+    let toleranceBounce = getToleranceBounce(opt)
+
+    //bounce, 各軸之判定狀態: dir為相鄰兩次量測之差之方向(1或-1, 0為未知), n為連續反向次數, m為容許誤差內同向連續判定為變化之次數
+    //  方向以相鄰兩次量測判定而非相對比較基準: 已不判定而比較基準未更新時, 仍能判斷是否持續來回跳動
+    let bounceInit = () => {
+        return {
+            width: { dir: 0, n: 0, m: 0 },
+            height: { dir: 0, n: 0, m: 0 },
+        }
+    }
+    let bounce = bounceInit()
 
     //sync, 於ResizeObserver回呼內同步發出事件(繪製前), 供須於同一幀更新版面之使用端(例如圖表重繪); 預設以setTimeout脫勾
     let sync = get(opt, 'sync', false) === true
@@ -204,17 +228,55 @@ function createCore(ev, opt, onReobserve) {
         }
     }
 
-    //mode, 方向只於該軸超過容許誤差時給: 容許誤差內之差值視同未變化(不發事件), 若仍給方向, 另一軸觸發之事件會帶出該軸之殘餘方向
-    let mode = (d) => {
+    //judgeAxis, 該軸是否判定為變化, dAxis為相對比較基準之差, exceed為是否超過容許誤差, step為相鄰兩次量測之差(判定方向用, 不相鄰時為0):
+    //  超過容許誤差者必是, 並使計次歸0; 差為0者否; 容許誤差為Infinity者否(任何變化皆不發出);
+    //  容許誤差內之非0差照常判定, 惟以下兩種使用端於事件內改變尺寸所形成之回授不判定, toleranceBounce為0時容許誤差內一律不判定(舊版行為), 為Infinity時一律判定(不阻斷):
+    //  (1)來回回授: 該軸連續反向達toleranceBounce次後不判定, 直到同向變化或超過容許誤差
+    //  (2)單向回授: 該軸同向連續判定達RUN_MAX次後不判定, 直到反向或超過容許誤差
+    //  每週期含超過容許誤差之變化者(如+1、+1、-2之鋸齒)不在此列, 同超過容許誤差之回授屬使用端版面缺陷
+    let judgeAxis = (key, dAxis, exceed, step) => {
+        let s = bounce[key]
+        let dir = step > 0 ? 1 : (step < 0 ? -1 : 0)
+        if (dir !== 0) {
+            let reverse = s.dir !== 0 && dir !== s.dir
+            s.n = reverse ? s.n + 1 : 0
+            if (reverse) {
+                s.m = 0
+            }
+            s.dir = dir
+        }
+        if (exceed) {
+            s.n = 0
+            s.m = 0
+            return true
+        }
+        if (dAxis === 0 || tolerancePixel === Infinity) {
+            return false
+        }
+        if (toleranceBounce === Infinity) {
+            return true
+        }
+        if (s.n >= toleranceBounce || s.m >= RUN_MAX) {
+            return false
+        }
+        if (dir !== 0) {
+            s.m++
+        }
+        return true
+    }
+
+    //mode, 方向只於該軸判定為變化時給: 未判定之軸(差為0, 或容許誤差內而不判定)視同未變化, 若仍給方向, 另一軸觸發之事件會帶出該軸之殘餘方向
+    let mode = (d, q) => {
         return {
-            width: d.bw ? (d.dw > 0 ? 'smaller' : 'larger') : '',
-            height: d.bh ? (d.dh > 0 ? 'smaller' : 'larger') : '',
+            width: q.cw && d.dw !== 0 ? (d.dw > 0 ? 'smaller' : 'larger') : '',
+            height: q.ch && d.dh !== 0 ? (d.dh > 0 ? 'smaller' : 'larger') : '',
         }
     }
 
     //skip, 延後發出前元素已不被繪製而不發出:
     //  若此為最近一次判定之變化(之後未再判定), 比較基準與最新量測歸0, 並請觀察層重新觀察目前元素; 否則元素於下一幀前恢復顯示且尺寸與隱藏前相同時ResizeObserver不再回報(上次回報之尺寸未變), 此次變化即永不發出
     //  之後已再判定變化者由該次發出處理, 不得歸0, 否則覆蓋較新之比較基準
+    //  最新量測歸0後之下一次量測與其不相鄰, 判定狀態隨之歸0(見check)
     let skip = (snew) => {
         if (sb !== snew) {
             return
@@ -254,11 +316,17 @@ function createCore(ev, opt, onReobserve) {
                 return
             }
             if (getBase) {
+                //再比較: 保留超過容許誤差之軸, 以及判定時已判定為變化(有方向)且與使用端當下尺寸仍不同之軸; toleranceBounce為0時容許誤差內一律不發出(同舊版), 只保留前者
                 let d = diff(snew, false)
-                if (!d.bw && !d.bh) {
+                let within = toleranceBounce > 0
+                let q = {
+                    cw: d.bw || (within && sm.width !== '' && d.dw !== 0),
+                    ch: d.bh || (within && sm.height !== '' && d.dh !== 0),
+                }
+                if (!q.cw && !q.ch) {
                     return
                 }
-                sm = mode(d)
+                sm = mode(d, q)
             }
         }
 
@@ -337,13 +405,26 @@ function createCore(ev, opt, onReobserve) {
         //new size
         let snew = measure(p, getSize)
 
+        //adjacent, 與上次量測是否相鄰: 同一元素且前後皆可見(尺寸非0), 否則判定狀態歸0且不比較方向
+        //  元素換新節點、曾取不到(pLast為null)、隱藏(量得0)或延後發出被略過(最新量測已歸0)皆使回授中斷, 其前之方向與計次不延續
+        let adjacent = p === pLast && isShown(sd) && isShown(snew)
+        if (!adjacent) {
+            bounce = bounceInit()
+        }
+        let stepWidth = adjacent ? snew.width - sd.width : 0
+        let stepHeight = adjacent ? snew.height - sd.height : 0
+
         //save
         sd = snew
         pLast = p
 
-        //diff
+        //diff, judge, 兩軸皆須判定(各自更新判定狀態), 不得短路
         let d = diff(snew, true)
-        if (!d.bw && !d.bh) {
+        let q = {
+            cw: judgeAxis('width', d.dw, d.bw, stepWidth),
+            ch: judgeAxis('height', d.dh, d.bh, stepHeight),
+        }
+        if (!q.cw && !q.ch) {
             return
         }
 
@@ -353,7 +434,7 @@ function createCore(ev, opt, onReobserve) {
 
         //deliver
         seqCheck++
-        deliver(sold, snew, mode(d), p, seqCheck, allowSync && sync)
+        deliver(sold, snew, mode(d, q), p, seqCheck, allowSync && sync)
 
     }
 
@@ -618,13 +699,13 @@ function domDetectByObserver(f, opt = {}) {
 /**
  * 前端針對DOM元素監聽resize、resizeWithWindow事件，其中resizeWithWindow為dom resize與window resize皆會觸發的事件
  *
- * 瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以比較用尺寸(預設offsetWidth、offsetHeight)與比較基準之差超過容許誤差即發出，比較基準預設為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出；延後發出(非同步、節流或refresh)時，發出前元素已不被繪製(移出頁面，或自身或祖先為display:none)者不發出，待其再顯示時重新比較(同由隱藏恢復顯示，sold為0、smode兩軸為'larger')，此確認只計算樣式而不讀外框，故元素仍被繪製而尺寸於空檔內縮為0者照發；sync為true時refresh與節流之後續發出仍為延後發出，其量測早於已處理之事件者不發出
+ * 瀏覽器支援ResizeObserver與MutationObserver時以其偵測(即時且閒置時不耗資源)，否則退回定期輪詢，兩者之比較規則與事件相同：以比較用尺寸(預設offsetWidth、offsetHeight)與比較基準之差超過容許誤差即發出，比較基準預設為上次發出事件時之尺寸，故緩慢之連續小變化累積超過容許誤差亦會發出；容許誤差內之變化亦照常發出(同向逐px之變化如動畫或拖曳之末段不被略過)，惟為阻斷使用端於事件內改變尺寸所形成之回授，某軸之量測來回跳動(相鄰兩次量測之變化方向連續反向)達toleranceBounce次後，該軸容許誤差內之變化不再發出，直到該軸出現同向變化或超過容許誤差，且某軸容許誤差內之同向變化連續發出10次後，不再發出容許誤差內之同向變化，直到該軸反向或超過容許誤差(持續之逐px變化於下一次即累積超過容許誤差而照發，單向回授則至此中斷)；尺寸為0(隱藏或移出DOM)不發出，由隱藏恢復顯示時會發出，首次取得非0尺寸時會發出；延後發出(非同步、節流或refresh)時，發出前元素已不被繪製(移出頁面，或自身或祖先為display:none)者不發出，待其再顯示時重新比較(同由隱藏恢復顯示，sold為0、smode兩軸為'larger')，此確認只計算樣式而不讀外框，故元素仍被繪製而尺寸於空檔內縮為0者照發；sync為true時refresh與節流之後續發出仍為延後發出，其量測早於已處理之事件者不發出
  *
  * 元素可取不到、中途消失或重建為新節點：取不到、不在頁面中或尺寸為0時，於DOM變動時重新以f取得元素並改觀察之。行內元素(display:inline)ResizeObserver不回報，該偵測器改以定期量測，元素自身隱藏(display:none，如v-show)期間亦持續，顯示後即可量得；是否為行內於取得元素、ResizeObserver回報、定期量測及元素插入或移出頁面時判定
  *
- * 事件內容：sold為上次判定變化時之量測，snew為本次量測(另含width、height為比較用尺寸)，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，僅該軸之差超過容許誤差時給方向，否則為''，有給getBase者延後發出時依發出當下與使用端尺寸之比較重給，ele為元素；from為'window'之事件無ele，其snew為最新量測，其中視窗尺寸取事件當下之值，其smode寬與高恆為''(視窗事件不代表元素尺寸變化，且最新量測與比較基準之差必在容許誤差內)；視窗事件於最新量測之任一維為0(隱藏、移出頁面、取不到元素、尚未量得尺寸，或寬高其一為0之元素)，或元素當下不被繪製(例如媒體查詢隨視窗改變而隱藏)時不發出，與dom事件之規則一致
+ * 事件內容：sold為上次判定變化時之量測，snew為本次量測(另含width、height為比較用尺寸)，smode為寬與高相對比較基準之變化方向('larger'、'smaller'或'')，僅該軸判定為變化時(超過容許誤差，或容許誤差內且未因回授而停止)給方向，否則為''，有給getBase者延後發出時依發出當下與使用端尺寸之比較重給，ele為元素；from為'window'之事件無ele，其snew為最新量測，其中視窗尺寸取事件當下之值，其smode寬與高恆為''(視窗事件不代表元素尺寸變化，且最新量測與比較基準之差必在容許誤差內)；視窗事件於最新量測之任一維為0(隱藏、移出頁面、取不到元素、尚未量得尺寸，或寬高其一為0之元素)，或元素當下不被繪製(例如媒體查詢隨視窗改變而隱藏)時不發出，與dom事件之規則一致
  *
- * 已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，行內元素自取得起即自身為display:none(未曾以行內顯示過)、之後僅以style或class改為顯示者不會開始量測，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出
+ * 已知限制：ResizeObserver模式下，僅屬性變化(如class)使f改指他元素、或Shadow DOM內之節點被替換時不會跟隨，行內元素自取得起即自身為display:none(未曾以行內顯示過)、之後僅以style或class改為顯示者不會開始量測，此類使用端請用mode:'polling'；sync為true時監聽器不得使所監聽元素之尺寸於同一幀內再變，否則瀏覽器回報ResizeObserver loop錯誤；Safari 15.4以前不支援觀察border-box，只改padding或border之變化於該處不會發出；回授之阻斷僅限容許誤差內之來回跳動與單向兩種，每週期含超過容許誤差之變化者(例如+1、+1、-2之鋸齒)與超過容許誤差之回授不阻斷，此類屬使用端版面缺陷(例如以含框線之offsetHeight設定撐開自身之子元素高)；因回授而停止時，以及同向逐px之變化恰於連續第11次結束時，最後一次發出之尺寸可與實際差在容許誤差內
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDetect.test.mjs Github}
  * @memberOf wsemi
@@ -632,7 +713,8 @@ function domDetectByObserver(f, opt = {}) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入偵測模式字串，給'polling'則強制使用定期輪詢，預設''
  * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設20
- * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，可給0表示任何變化皆發出，須為不小於0之整數(可為數字字串，Infinity表示任何變化皆不發出)，無效時用預設，預設1
+ * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，差值不超過此值之變化為容許誤差內之變化(是否發出見toleranceBounce)，可給0表示任何變化皆發出(無回授之阻斷)，須為不小於0之整數(可為數字字串，Infinity表示任何變化皆不發出)，無效時用預設，預設1
+ * @param {Integer} [opt.toleranceBounce=3] 輸入容許誤差內來回跳動之次數整數，容許誤差內之變化照常發出，惟某軸相鄰兩次量測(同一元素之前後兩次可見量測，元素換新、取不到或隱藏後重新計數)之變化方向連續反向達此次數後(視為使用端於事件內改變尺寸所形成之回授)，該軸容許誤差內之變化不再發出，直到該軸出現同向變化或超過容許誤差；另某軸容許誤差內之同向變化連續發出10次後，不再發出容許誤差內之同向變化，直到該軸反向或超過容許誤差(阻斷單向回授)；給0表示容許誤差內之變化一律不發出(舊版行為)，給Infinity表示容許誤差內之變化一律發出(不阻斷回授)，須為不小於0之整數(可為數字字串)，無效時用預設，預設3
  * @param {Boolean} [opt.sync=false] 輸入是否於ResizeObserver回呼內同步發出事件布林值，true時使用端可於瀏覽器繪製前更新版面(例如圖表重繪)，僅ResizeObserver模式有效，預設false
  * @param {Boolean} [opt.watchIdentity=false] 輸入元素可見時是否仍於DOM變動時重新取得元素布林值，f可能於舊元素仍可見時改回傳另一元素者給true，僅ResizeObserver模式有效，預設false
  * @param {Function} [opt.getSize=null] 輸入比較用尺寸函數，傳入元素，回傳{width,height}，供依內容區或特定量測方式繪製之使用端(例如圖表依clientWidth扣除padding)，給予時只改padding、元素內出現或消失捲軸等外框不變之變化亦會發出，回傳非數字或拋錯之軸視為0(不發出)，預設null表示使用offsetWidth、offsetHeight
