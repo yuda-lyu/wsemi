@@ -12,16 +12,16 @@ import domConvertToPic from './domConvertToPic.mjs'
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1，預設1
- * @param {Boolean} [opt.toBase64=true] 輸入是否輸出為base64圖片，預設true
- * @param {String} [opt.picType='image/png'] 輸入輸出為base64圖片時的圖片格式，可選'image/jpeg'與'image/png'，使用'image/jpeg'時若無背景預設為黑色，預設'image/png'
+ * @param {Boolean} [opt.toBase64=true] 輸入是否回傳圖片之data URL字串布林值，給true回傳字串(png與jpeg為base64編碼，svg為utf-8之URL編碼)，給false回傳img元素(HTMLImageElement)，預設true
+ * @param {String} [opt.picType='image/png'] 輸入輸出圖片格式字串，可選'image/png'、'image/jpeg'(亦可給'image/jpg')與'svg'，png與svg保留透明背景，jpeg之透明處填白色，給其他值則使用'image/png'，預設'image/png'
  * @param {String|Object|Array} [pathItems=undefined] 輸入資源字串、字串陣列、物件、物件陣列，已不使用，僅保留簽名相容
- * @returns {Promise} 回傳Promise，resolve回傳產出圖片，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject回傳錯誤訊息
  * @example
  * need test in browser
  *
  * domConvertToPicDyn(ele, { scale: 3 })
  *     .then((b64)=>{
- *         // => iVBORw0KGgoAAAANSU...
+ *         // => data:image/png;base64,iVBORw0KGgoAAAANSU...
  *     })
  *
  */

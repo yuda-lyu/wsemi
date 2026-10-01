@@ -1,9 +1,9 @@
 {
   "name": "wsemi",
-  "version": "1.9.8",
+  "version": "1.9.9",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
-    "@zumer/snapdom": "^2.24.15",
+    "@zumer/snapdom": "^3.2.0",
     "chokidar": "^5.0.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.23",
@@ -22,7 +22,7 @@
     "tree-kill": "^1.2.2",
     "ua-parser-js": "^2.0.10",
     "uuid": "^14.0.2",
-    "viewerjs": "^1.14.0",
+    "viewerjs": "^1.15.2",
     "xss": "^1.0.15",
     "xxhash-wasm": "^1.1.0"
   },
