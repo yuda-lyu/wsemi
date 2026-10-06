@@ -921,18 +921,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let data = [
-    ['a', '123', 456],
-    [null, 'abc123', '', 111.222333],
-]
-
-let wb = createExcelWorkbook()
-console.log(wb)
-// => { sheets: [] }
-
-wb = addExcelWorksheetFromData(wb, data, 'tester')
-console.log(JSON.stringify(wb))
-// => {"sheets":[{"rows":[["a","123",456],[null,"abc123","",111.222333]],"name":"tester"}]}</code></pre>
+    <pre class="prettyprint"><code>let data = [    ['a', '123', 456],    [null, 'abc123', '', 111.222333],]let wb = createExcelWorkbook()console.log(wb)// => { sheets: [] }wb = addExcelWorksheetFromData(wb, data, 'tester')console.log(JSON.stringify(wb))// => {"sheets":[{"rows":[["a","123",456],[null,"abc123","",111.222333]],"name":"tester"}]}</code></pre>
 
 
 
@@ -32730,19 +32719,7 @@ ev.on('visible',(visible) => {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let data
-
-data = [
-    ['a', 'b', 'c'],
-    [1, 23.45, 'xyz']
-]
-await downloadExcelFileFromData('data(mat).xlsx', 'data', data)
-
-data = [
-    { x: 'a', y: 'b', z: 'c' },
-    { x: 1, y: 23.45, zzz: 'xyz' },
-]
-await downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
+    <pre class="prettyprint"><code>let datadata = [    ['a', 'b', 'c'],    [1, 23.45, 'xyz']]await downloadExcelFileFromData('data(mat).xlsx', 'data', data)data = [    { x: 'a', y: 'b', z: 'c' },    { x: 1, y: 23.45, zzz: 'xyz' },]await downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
 
 
 
@@ -33001,21 +32978,7 @@ await downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)</code></pre>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browser
-
-let data
-
-data = [
-    ['a', 'b', 'c'],
-    [1, 23.45, 'xyz']
-]
-downloadExcelFileFromDataDyn('data(mat).xlsx', 'data', data)
-
-data = [
-    { x: 'a', y: 'b', z: 'c' },
-    { x: 1, y: 23.45, zzz: 'xyz' },
-]
-downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
+    <pre class="prettyprint"><code>need test in browserlet datadata = [    ['a', 'b', 'c'],    [1, 23.45, 'xyz']]downloadExcelFileFromDataDyn('data(mat).xlsx', 'data', data)data = [    { x: 'a', y: 'b', z: 'c' },    { x: 1, y: 23.45, zzz: 'xyz' },]downloadExcelFileFromDataDyn('data(ltdt).xlsx', 'data', data)</code></pre>
 
 
 
@@ -58721,14 +58684,19 @@ if (true) {
 若數據格式fmt為csv格式，數據分欄符號為逗號，分行符號為[\r\n]，內容開頭無BOM，方便使用者解析</p>
 <p>本函數為async function
 fmt='ltdt'時以首列為表頭轉物件陣列：空cell為略鍵、空字串cell保留鍵且值為''、全空列跳過、空表頭之欄位跳過、重複表頭後者覆蓋前者
-fmt='array'與'csv'時保留全部列(含全空列)，空cell一律轉''</p>
+fmt='array'與'csv'時保留全部列(含全空列)，空cell一律轉''
+valueToString為true時一律提取原值轉字串：數值依原值轉字串(非顯示格式)、布林為'true'或'false'、錯誤格為其文字(如'#N/A')
+日期儲存格(數值且為日期或時間格式)之原值為Date，轉字串一律為'YYYY-MM-DDTHH:mm:ss.SSS'(不加時區、至毫秒)，即Excel儲存格之年月日時分秒，與執行環境之時區無關；
+純時間之儲存格日期部分為1899-12-31(1904日期系統為1904-01-01)，經過時間格式([h]:mm等)亦依原值轉為自該日起算之日期時間；
+valueToString為false時日期回傳Date，其UTC分量(getUTCFullYear、getUTCHours等)即Excel儲存格之年月日時分秒；fmt為'csv'時日期一律為上述字串
+表頭一律轉字串，轉換後為''者視為空表頭</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getDataFromExcelFileU8Arr.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line164">line 164</a>
+        <a href="getDataFromExcelFileU8Arr.mjs.html">getDataFromExcelFileU8Arr.mjs</a>, <a href="getDataFromExcelFileU8Arr.mjs.html#line208">line 208</a>
     </li></ul></dd>
     
 
@@ -58775,21 +58743,7 @@ fmt='array'與'csv'時保留全部列(含全空列)，空cell一律轉''</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>// test in browser
-domShowInputAndGetFilesU8Arrs()
-    .then(async function(d) {
-        let file = d[0] //get first file
-        let u8a = file.u8a
-        let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
-        console.log(dltdt[0].sheetname, dltdt[0].data)
-        // => ...
-    })
-
-// test in nodejs
-let u8a = fs.readFileSync('temp.xlsx')
-let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
-console.log(dltdt[0].sheetname, dltdt[0].data)
-// => ...</code></pre>
+    <pre class="prettyprint"><code>// test in browserdomShowInputAndGetFilesU8Arrs()    .then(async function(d) {        let file = d[0] //get first file        let u8a = file.u8a        let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })        console.log(dltdt[0].sheetname, dltdt[0].data)        // => ...    })// test in nodejslet u8a = fs.readFileSync('temp.xlsx')let dltdt = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })console.log(dltdt[0].sheetname, dltdt[0].data)// => ...</code></pre>
 
 
 
@@ -60233,28 +60187,7 @@ catch (err) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>//need test in nodejs
-
-async function test() {
-
-    let data = [
-        ['a', '123', 456],
-        [null, 'abc123', '', 111.222333],
-    ]
-
-    let u8a = await getExcelU8ArrFromData(data, 'mysheet')
-    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])
-    // => true 80 75 (xlsx為zip容器, 開頭必為'PK')
-
-    let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
-    console.log(r[0].sheetname, JSON.stringify(r[0].data))
-    // => mysheet [["a","123","456",""],["","abc123","","111.222333"]]
-
-}
-test()
-    .catch((err) => {
-        console.log(err)
-    })</code></pre>
+    <pre class="prettyprint"><code>//need test in nodejsasync function test() {    let data = [        ['a', '123', 456],        [null, 'abc123', '', 111.222333],    ]    let u8a = await getExcelU8ArrFromData(data, 'mysheet')    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])    // => true 80 75 (xlsx為zip容器, 開頭必為'PK')    let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })    console.log(r[0].sheetname, JSON.stringify(r[0].data))    // => mysheet [["a","123","456",""],["","abc123","","111.222333"]]}test()    .catch((err) => {        console.log(err)    })</code></pre>
 
 
 
@@ -60476,25 +60409,7 @@ test()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>//need test in nodejs
-
-async function test() {
-
-    let data = [
-        ['a', '123', 456],
-        [null, 'abc123', '', 111.222333],
-    ]
-
-    let wb = getExcelWorkbookFromData(data)
-    let u8a = await getExcelU8ArrFromWorkbook(wb)
-    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])
-    // => true 80 75 (xlsx為zip容器, 開頭必為'PK')
-
-}
-test()
-    .catch((err) => {
-        console.log(err)
-    })</code></pre>
+    <pre class="prettyprint"><code>//need test in nodejsasync function test() {    let data = [        ['a', '123', 456],        [null, 'abc123', '', 111.222333],    ]    let wb = getExcelWorkbookFromData(data)    let u8a = await getExcelU8ArrFromWorkbook(wb)    console.log(u8a instanceof Uint8Array, u8a[0], u8a[1])    // => true 80 75 (xlsx為zip容器, 開頭必為'PK')}test()    .catch((err) => {        console.log(err)    })</code></pre>
 
 
 
@@ -60659,18 +60574,7 @@ test()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let data = [
-    ['a', '123', 456],
-    [null, 'abc123', '', 111.222333],
-]
-
-let wb1 = getExcelWorkbookFromData(data)
-console.log(wb1.sheets[0].name)
-// => data
-
-let wb2 = getExcelWorkbookFromData(data, 'tester')
-console.log(wb2.sheets[0].name)
-// => tester</code></pre>
+    <pre class="prettyprint"><code>let data = [    ['a', '123', 456],    [null, 'abc123', '', 111.222333],]let wb1 = getExcelWorkbookFromData(data)console.log(wb1.sheets[0].name)// => datalet wb2 = getExcelWorkbookFromData(data, 'tester')console.log(wb2.sheets[0].name)// => tester</code></pre>
 
 
 
@@ -61126,31 +61030,7 @@ console.log(wb2.sheets[0].name)
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let mat = [
-    ['a', '123', 456],
-    [null, 'abc123', '', 111.222333],
-]
-
-let ws1 = getExcelWorksheetFromData(mat)
-console.log(ws1)
-// => {
-//   rows: [ [ 'a', '123', 456 ], [ null, 'abc123', '', 111.222333 ] ]
-// }
-
-let ltdt = [
-    { x: 'a', y: '123', z: 456 },
-    { x: null, y: 'abc123', z: '', a: 111.222333 },
-]
-
-let ws2 = getExcelWorksheetFromData(ltdt)
-console.log(ws2)
-// => {
-//   rows: [
-//     [ 'x', 'y', 'z', 'a' ],
-//     [ 'a', '123', 456, '' ],
-//     [ 'null', 'abc123', '', 111.222333 ]
-//   ]
-// }</code></pre>
+    <pre class="prettyprint"><code>let mat = [    ['a', '123', 456],    [null, 'abc123', '', 111.222333],]let ws1 = getExcelWorksheetFromData(mat)console.log(ws1)// => {//   rows: [ [ 'a', '123', 456 ], [ null, 'abc123', '', 111.222333 ] ]// }let ltdt = [    { x: 'a', y: '123', z: 456 },    { x: null, y: 'abc123', z: '', a: 111.222333 },]let ws2 = getExcelWorksheetFromData(ltdt)console.log(ws2)// => {//   rows: [//     [ 'x', 'y', 'z', 'a' ],//     [ 'a', '123', 456, '' ],//     [ 'null', 'abc123', '', 111.222333 ]//   ]// }</code></pre>
 
 
 
@@ -66334,7 +66214,7 @@ console.log(ws2)
 
     
 
-    <h4 class="name" id=".isDate"><span class="type-signature type-signature-static">(static) </span>isDate<span class="signature">(v)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".isDate"><span class="type-signature type-signature-static">(static) </span>isDate<span class="signature">(v, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -66345,13 +66225,15 @@ console.log(ws2)
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>判斷是否為時間(Date)</p>
+<p>預設可輸入Date、可解析為時間之字串或數值，判斷是否為有效時間
+若opt.onlyCheckDateObject為true，則僅以Object.prototype.toString.call(v)判斷是否為Date物件，不解析字串與數值，無效日期(Invalid Date)與跨realm(例如iframe、vm)之Date亦回傳true</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/isDate.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="isDate.mjs.html">isDate.mjs</a>, <a href="isDate.mjs.html#line178">line 178</a>
+        <a href="isDate.mjs.html">isDate.mjs</a>, <a href="isDate.mjs.html#line194">line 194</a>
     </li></ul></dd>
     
 
@@ -66398,7 +66280,7 @@ console.log(ws2)
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let cc = '2019-01-01T12:34:56:7891+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891+08:00 false Invalid Datec = '2019-01-01T12:34:56.7891+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891+08:00 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:789+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '2019-01-01T12:34:56.789+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789+08:00 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:78+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78+08:00 false Invalid Datec = '2019-01-01T12:34:56.78+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78+08:00 true 2019-01-01T04:34:56.780Zc = '2019-01-01T12:34:56+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56+08:00 true 2019-01-01T04:34:56.000Zc = '2019-01-01T12:34+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34+08:00 true 2019-01-01T04:34:00.000Zc = '2019-01-01T12+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12+08:00 false Invalid Datec = '2019-01-01+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01+08:00 false Invalid Datec = '2019-01+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01+08:00 false Invalid Datec = '2019+08:00'console.log(c, isDate(c), new Date(c))// => 2019+08:00 false Invalid Datec = '2019-01-01T12:34:56:7891Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891Z false Invalid Datec = '2019-01-01T12:34:56.7891Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891Z true 2019-01-01T12:34:56.789Zc = '2019-01-01T12:34:56:789Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789Z true 2019-01-01T12:34:56.789Zc = '2019-01-01T12:34:56.789Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789Z false Invalid Datec = '2019-01-01T12:34:56:78Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78Z false Invalid Datec = '2019-01-01T12:34:56.78Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78Z true 2019-01-01T12:34:56.780Zc = '2019-01-01T12:34:56Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56Z true 2019-01-01T12:34:56.000Zc = '2019-01-01T12:34Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34Z true 2019-01-01T12:34:00.000Zc = '2019-01-01T12Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12Z false Invalid Datec = '2019-01-01Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01Z true 2019-01-01T00:00:00.000Zc = '2019-01Z'console.log(c, isDate(c), new Date(c))// => 2019-01Z true 2019-01-01T00:00:00.000Zc = '2019Z'console.log(c, isDate(c), new Date(c))// => 2019Z true 2019-01-01T00:00:00.000Zc = '2019-01-01T12:34:56:7891'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891 false Invalid Datec = '2019-01-01T12:34:56.7891'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:789'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789 false Invalid Datec = '2019-01-01T12:34:56.789'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:78'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78 false Invalid Datec = '2019-01-01T12:34:56.78'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78 true 2019-01-01T04:34:56.780Zc = '2019-01-01T12:34:56'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56 true 2019-01-01T04:34:56.000Zc = '2019-01-01T12:34'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34 true 2019-01-01T04:34:00.000Zc = '2019-01-01T12'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12 false Invalid Datec = '2019-01-01'console.log(c, isDate(c), new Date(c))// => 2019-01-01 true 2019-01-01T00:00:00.000Zc = '2019-01'console.log(c, isDate(c), new Date(c))// => 2019-01 true 2019-01-01T00:00:00.000Zc = '2019'console.log(c, isDate(c), new Date(c))// => 2019 true 2019-01-01T00:00:00.000Zc = '2019-01-01T12:34:56A'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56A false Invalid Datec = '1256'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '1.25'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '-1.25'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Date</code></pre>
+    <pre class="prettyprint"><code>console.log(isDate('2019-01-01', { onlyCheckDateObject: true }))// => falseconsole.log(isDate(new Date('2019-01-01'), { onlyCheckDateObject: true }))// => trueconsole.log(isDate(new Date('x'), { onlyCheckDateObject: true }))// => true (無效日期亦為Date物件)let cc = '2019-01-01T12:34:56:7891+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891+08:00 false Invalid Datec = '2019-01-01T12:34:56.7891+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891+08:00 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:789+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '2019-01-01T12:34:56.789+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789+08:00 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:78+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78+08:00 false Invalid Datec = '2019-01-01T12:34:56.78+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78+08:00 true 2019-01-01T04:34:56.780Zc = '2019-01-01T12:34:56+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56+08:00 true 2019-01-01T04:34:56.000Zc = '2019-01-01T12:34+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34+08:00 true 2019-01-01T04:34:00.000Zc = '2019-01-01T12+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12+08:00 false Invalid Datec = '2019-01-01+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01-01+08:00 false Invalid Datec = '2019-01+08:00'console.log(c, isDate(c), new Date(c))// => 2019-01+08:00 false Invalid Datec = '2019+08:00'console.log(c, isDate(c), new Date(c))// => 2019+08:00 false Invalid Datec = '2019-01-01T12:34:56:7891Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891Z false Invalid Datec = '2019-01-01T12:34:56.7891Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891Z true 2019-01-01T12:34:56.789Zc = '2019-01-01T12:34:56:789Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789Z true 2019-01-01T12:34:56.789Zc = '2019-01-01T12:34:56.789Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789Z false Invalid Datec = '2019-01-01T12:34:56:78Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78Z false Invalid Datec = '2019-01-01T12:34:56.78Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78Z true 2019-01-01T12:34:56.780Zc = '2019-01-01T12:34:56Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56Z true 2019-01-01T12:34:56.000Zc = '2019-01-01T12:34Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34Z true 2019-01-01T12:34:00.000Zc = '2019-01-01T12Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12Z false Invalid Datec = '2019-01-01Z'console.log(c, isDate(c), new Date(c))// => 2019-01-01Z true 2019-01-01T00:00:00.000Zc = '2019-01Z'console.log(c, isDate(c), new Date(c))// => 2019-01Z true 2019-01-01T00:00:00.000Zc = '2019Z'console.log(c, isDate(c), new Date(c))// => 2019Z true 2019-01-01T00:00:00.000Zc = '2019-01-01T12:34:56:7891'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:7891 false Invalid Datec = '2019-01-01T12:34:56.7891'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.7891 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:789'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789 false Invalid Datec = '2019-01-01T12:34:56.789'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.789 true 2019-01-01T04:34:56.789Zc = '2019-01-01T12:34:56:78'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:78 false Invalid Datec = '2019-01-01T12:34:56.78'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56.78 true 2019-01-01T04:34:56.780Zc = '2019-01-01T12:34:56'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56 true 2019-01-01T04:34:56.000Zc = '2019-01-01T12:34'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34 true 2019-01-01T04:34:00.000Zc = '2019-01-01T12'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12 false Invalid Datec = '2019-01-01'console.log(c, isDate(c), new Date(c))// => 2019-01-01 true 2019-01-01T00:00:00.000Zc = '2019-01'console.log(c, isDate(c), new Date(c))// => 2019-01 true 2019-01-01T00:00:00.000Zc = '2019'console.log(c, isDate(c), new Date(c))// => 2019 true 2019-01-01T00:00:00.000Zc = '2019-01-01T12:34:56A'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56A false Invalid Datec = '1256'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '1.25'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Datec = '-1.25'console.log(c, isDate(c), new Date(c))// => 2019-01-01T12:34:56:789+08:00 false Invalid Date</code></pre>
 
 
 
@@ -66416,7 +66298,11 @@ console.log(ws2)
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -66442,10 +66328,132 @@ console.log(ws2)
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入任意資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>onlyCheckDateObject</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否僅判斷是否為Date物件布林值，若為true則以Object.prototype.toString.call(v)==='[object Date]'判斷，預設false</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -110126,7 +110134,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Oct 01 2026 18:23:16 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Oct 06 2026 20:46:28 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
