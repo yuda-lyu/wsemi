@@ -1,5 +1,7 @@
 // import fs from 'fs'
 import assert from 'assert'
+import { spawnSync } from 'child_process'
+import buildXlsx from './tools/buildXlsx.mjs'
 import replace from '../src/replace.mjs'
 import b642u8arr from '../src/b642u8arr.mjs'
 import getExcelU8ArrFromData from '../src/getExcelU8ArrFromData.mjs'
@@ -166,6 +168,128 @@ describe(`getDataFromExcelFileU8Arr`, function() {
     it(`should return error object when opt.valueToString is invalid`, async function() {
         let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array', valueToString: 'x' })
         assert.strict.deepStrictEqual(r.error, 'opt.valueToString is not a boolean')
+    })
+
+    //各型別儲存格, 以test/tools/buildXlsx.mjs依OOXML原文組出(仿Excel存檔: 內建格式只給numFmtId、數值原文含17位有效數字), 不經任何xlsx套件寫出
+    //原則: 提取原值轉字串; 日期原值(Date)一律轉'YYYY-MM-DDTHH:mm:ss.SSS', 不加時區、統一至毫秒, 不依值省略至日或秒
+    //[說明, 儲存格, valueToString為true之期望]
+    let typeCases = [
+        ['文字', { s: 'abc' }, 'abc'],
+        ['含換行文字', { s: 'a\nb' }, 'a\nb'],
+        ['前導零文字', { s: '00123' }, '00123'],
+        ['空字串', { s: '' }, ''],
+        ['inlineStr', { inline: 'inline' }, 'inline'],
+        ['rich text', { rich: ['rich', 'Text'] }, 'richText'],
+        ['文字格式(@)之數值', { n: 123, fmt: 49 }, '123'],
+        ['整數', { n: 66000 }, '66000'],
+        ['14位整數', { n: 61602905740006 }, '61602905740006'], //不用顯示文字, 否則為6.16029E+13
+        ['浮點誤差', { n: '0.30000000000000004' }, '0.30000000000000004'],
+        ['百分比格式', { n: 0.25, fmt: 9 }, '0.25'],
+        ['千分位格式', { n: 1234567, fmt: 3 }, '1234567'],
+        ['補零格式', { n: 123, fmt: '000000' }, '123'],
+        ['TRUE', { b: true }, 'true'],
+        ['FALSE', { b: false }, 'false'],
+        ['日期 內建14', { n: 45293, fmt: 14 }, '2024-01-02T00:00:00.000'],
+        ['日期 yyyy-mm-dd', { n: 45293, fmt: 'yyyy-mm-dd' }, '2024-01-02T00:00:00.000'],
+        ['日期 民國', { n: 45293, fmt: '[$-404]e/m/d' }, '2024-01-02T00:00:00.000'],
+        ['日期時間 內建22', { n: '45293.573263888891', fmt: 22 }, '2024-01-02T13:45:30.000'],
+        ['日期時間含毫秒', { n: '45293.573266782409', fmt: 'yyyy-mm-dd hh:mm:ss.000' }, '2024-01-02T13:45:30.250'],
+        ['日期格式藏時刻', { n: '45293.573263888891', fmt: 14 }, '2024-01-02T13:45:30.000'],
+        ['時間 內建20', { n: '0.57291666666666663', fmt: 20 }, '1899-12-31T13:45:00.000'],
+        ['時間含毫秒', { n: '0.57326678240740744', fmt: 'hh:mm:ss.000' }, '1899-12-31T13:45:30.250'],
+        ['經過時間 內建46', { n: 1.5, fmt: 46 }, '1900-01-01T12:00:00.000'],
+        ['序號0', { n: 0, fmt: 14 }, '1899-12-31T00:00:00.000'],
+        ['序號60', { n: 60, fmt: 14 }, '1900-02-28T00:00:00.000'], //Excel虛構之1900-02-29
+        ['序號61', { n: 61, fmt: 14 }, '1900-03-01T00:00:00.000'],
+        ['錯誤', { e: '#N/A' }, '#N/A'],
+        ['公式數值', { f: '1+2', n: 3 }, '3'],
+        ['公式字串', { f: '"a"&"b"', str: 'ab' }, 'ab'],
+        ['公式日期', { f: 'DATE(2024,1,2)', n: 45293, fmt: 14 }, '2024-01-02T00:00:00.000'],
+        ['公式無快取值', { f: '1+1' }, ''],
+        ['日期型儲存格(t=d)', { d: '2024-01-02T13:45:30', fmt: 'yyyy-mm-dd hh:mm:ss' }, '2024-01-02T13:45:30.000'],
+        ['有格式之空格', { fmt: 14 }, ''],
+        ['空格', null, ''],
+    ]
+    let u8aTypes = buildXlsx([[{ s: 'case' }, { s: 'value' }], ...typeCases.map(([k, cell]) => [{ s: k }, cell])])
+    let blankCases = ['公式無快取值', '有格式之空格', '空格'] //無值之cell, ltdt為略鍵
+    let isDateStr = (s) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/.test(s)
+
+    it(`should extract raw values to strings and Dates to 'YYYY-MM-DDTHH:mm:ss.SSS' in fmt='array'`, async function() {
+        //日期原值為Date, 原以cstr轉成''而遺失
+        let r = await getDataFromExcelFileU8Arr(u8aTypes, { fmt: 'array' })
+        let kp = Object.fromEntries(r[0].data.slice(1).map((row) => [row[0], row[1]]))
+        assert.strict.deepStrictEqual(kp, Object.fromEntries(typeCases.map(([k, , e]) => [k, e])))
+    })
+
+    it(`should extract raw values to strings and Dates to 'YYYY-MM-DDTHH:mm:ss.SSS' in fmt='ltdt'`, async function() {
+        let r = await getDataFromExcelFileU8Arr(u8aTypes, { fmt: 'ltdt' })
+        let rr = typeCases.map(([k, , e]) => (blankCases.includes(k) ? { case: k } : { case: k, value: e }))
+        assert.strict.deepStrictEqual(r[0].data, rr)
+    })
+
+    it(`should return raw values, Dates whose UTC components are the cells, when valueToString is false`, async function() {
+        let r = await getDataFromExcelFileU8Arr(u8aTypes, { fmt: 'array', valueToString: false })
+        let kp = Object.fromEntries(r[0].data.slice(1).map((row) => [row[0], row[1]]))
+        for (let [k, , e] of typeCases) {
+            if (isDateStr(e)) {
+                assert.strict.deepStrictEqual([kp[k] instanceof Date, kp[k] instanceof Date ? kp[k].toISOString() : kp[k]], [true, `${e}Z`], k)
+            }
+        }
+        assert.strict.deepStrictEqual([kp['整數'], kp['14位整數'], kp['TRUE'], kp['錯誤'], kp['文字'], kp['空格']], [66000, 61602905740006, true, '#N/A', 'abc', ''])
+    })
+
+    it(`should give Dates as quoted 'YYYY-MM-DDTHH:mm:ss.SSS' in fmt='csv' for both valueToString`, async function() {
+        //valueToString為false時日期原經getCsvStrFromData之cstr成空
+        let line = (csv, k) => csv.split('\r\n').find((l) => l.startsWith(`"${k}",`))
+        let rt = await getDataFromExcelFileU8Arr(u8aTypes, { fmt: 'csv' })
+        let rf = await getDataFromExcelFileU8Arr(u8aTypes, { fmt: 'csv', valueToString: false })
+        for (let r of [rt, rf]) {
+            assert.strict.deepStrictEqual(line(r[0].data, '日期時間含毫秒'), '"日期時間含毫秒","2024-01-02T13:45:30.250"')
+            assert.strict.deepStrictEqual(line(r[0].data, '時間 內建20'), '"時間 內建20","1899-12-31T13:45:00.000"')
+        }
+        assert.strict.deepStrictEqual([line(rt[0].data, '整數'), line(rf[0].data, '整數')], ['"整數","66000"', '"整數",66000'])
+    })
+
+    it(`should read the 1904 date system to the same wall clock`, async function() {
+        let u8a1904 = buildXlsx([[{ s: 'v' }], [{ n: 43831, fmt: 14 }], [{ n: '43831.573263888891', fmt: 22 }], [{ n: '0.57291666666666663', fmt: 20 }], [{ n: 0, fmt: 14 }]], { date1904: true })
+        let r = await getDataFromExcelFileU8Arr(u8a1904, { fmt: 'array' })
+        assert.strict.deepStrictEqual(r[0].data.slice(1).map((row) => row[0]), ['2024-01-02T00:00:00.000', '2024-01-02T13:45:30.000', '1904-01-01T13:45:00.000', '1904-01-01T00:00:00.000'])
+    })
+
+    it(`should convert headers by the same rule and skip headers converted to ''`, async function() {
+        //日期表頭原以cstr轉成''而互相覆蓋; 日期格式之超大數值讀為無效日期, 轉換後為'', 同空表頭跳過
+        let u8aHead = buildXlsx([
+            [{ s: 'make' }, { n: 45292, fmt: 14 }, { n: 1e12, fmt: 14 }, { b: true }, { s: 'c' }],
+            [{ s: 'BMW' }, { n: 10 }, { n: 20 }, { n: 30 }, { n: 40 }],
+        ])
+        let r = await getDataFromExcelFileU8Arr(u8aHead, { fmt: 'ltdt' })
+        assert.strict.deepStrictEqual(r[0].data, [{ 'make': 'BMW', '2024-01-01T00:00:00.000': '10', 'true': '30', 'c': '40' }])
+    })
+
+    it(`should give the same results in Asia/Taipei, UTC and America/New_York (child processes)`, function() {
+        //Excel儲存格之日期不帶時區, 輸出須與執行環境之時區無關; 子行程回報實際時差, 避免時區設定未生效而靜默跑在本機時區
+        let urlBuild = new URL('./tools/buildXlsx.mjs', import.meta.url).href
+        let urlRead = new URL('../src/getDataFromExcelFileU8Arr.mjs', import.meta.url).href
+        let code = `
+            import buildXlsx from '${urlBuild}'
+            import getDataFromExcelFileU8Arr from '${urlRead}'
+            let u8a = buildXlsx([[{ s: 'v' }], [{ n: 45293, fmt: 14 }], [{ n: '45293.573266782409', fmt: 22 }], [{ n: '0.57291666666666663', fmt: 20 }]])
+            let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
+            let rf = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array', valueToString: false })
+            console.log(JSON.stringify({ offset: new Date(2024, 0, 2).getTimezoneOffset(), s: r[0].data.slice(1).map((x) => x[0]), iso: rf[0].data.slice(1).map((x) => x[0].toISOString()) }))
+        `
+        let offsets = []
+        for (let tz of ['Asia/Taipei', 'UTC', 'America/New_York']) {
+            let p = spawnSync(process.execPath, ['--input-type=module', '-e', code], { env: { ...process.env, TZ: tz }, encoding: 'utf8' })
+            assert.strict.deepStrictEqual(p.status, 0, p.stderr)
+            let o = JSON.parse(p.stdout.trim())
+            offsets.push(o.offset)
+            assert.strict.deepStrictEqual([o.s, o.iso], [
+                ['2024-01-02T00:00:00.000', '2024-01-02T13:45:30.250', '1899-12-31T13:45:00.000'],
+                ['2024-01-02T00:00:00.000Z', '2024-01-02T13:45:30.250Z', '1899-12-31T13:45:00.000Z'],
+            ], tz)
+        }
+        assert.strict.deepStrictEqual(offsets, [-480, 0, 300])
     })
 
 })

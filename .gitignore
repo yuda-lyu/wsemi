@@ -1,9 +1,11 @@
 node_modules
+.opencode
+.claude
 .agents
 CLAUDE*.md
 AGENTS*.md
 .env
+
 tmp
-.claude
-.opencode
+test/_tmp
 _test*

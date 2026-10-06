@@ -1,4 +1,5 @@
 import assert from 'assert'
+import vm from 'vm'
 import isDate from '../src/isDate.mjs'
 
 
@@ -3157,6 +3158,25 @@ describe(`isDate`, function() {
     it(`should return false when input NaN`, function() {
         let r = isDate(NaN)
         assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should only check Date objects by Object.prototype.toString when opt.onlyCheckDateObject is true`, function() {
+        //僅判斷是否為Date物件, 不解析字串與數值; 無效日期與跨realm(vm)之Date亦為Date物件
+        let opt = { onlyCheckDateObject: true }
+        assert.strict.deepStrictEqual(isDate(new Date('2019-01-01T12:34:56Z'), opt), true)
+        assert.strict.deepStrictEqual(isDate(new Date('x'), opt), true)
+        assert.strict.deepStrictEqual(isDate(vm.runInNewContext('new Date(2019, 0, 1)'), opt), true)
+        for (let v of ['2019-01-01', '2019-01-01T12:34:56Z', 1546300800000, '1546300800000', '', null, undefined, NaN, true, {}, []]) {
+            assert.strict.deepStrictEqual(isDate(v, opt), false)
+        }
+    })
+
+    it(`should keep the default behavior when opt.onlyCheckDateObject is false or not a boolean`, function() {
+        for (let opt of [{ onlyCheckDateObject: false }, { onlyCheckDateObject: 'yes' }, {}, null, undefined]) {
+            assert.strict.deepStrictEqual(isDate('2019-01-01T12:34:56Z', opt), true)
+            assert.strict.deepStrictEqual(isDate(new Date('2019-01-01T12:34:56Z'), opt), true)
+            assert.strict.deepStrictEqual(isDate(new Date('x'), opt), false)
+        }
     })
 
 })
