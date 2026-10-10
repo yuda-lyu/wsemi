@@ -1,19 +1,19 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isu8arr from './isu8arr.mjs'
-import u8arr2b64 from './u8arr2b64.mjs'
-import b642str from './b642str.mjs'
 
 
 /**
  * Uint8Array轉字串
+ *
+ * 以原生TextDecoder解碼UTF-8，保留開頭之BOM(U+FEFF)，非合法UTF-8時視為轉換失敗(不靜默換成U+FFFD)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2str.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {String|Object} 回傳一般字串，輸入非Uint8Array或轉換失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {String|Object} 回傳一般字串，輸入非Uint8Array、非合法UTF-8或轉換失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * console.log(u8arr2str(new Uint8Array([116, 101, 115, 116, 228, 184, 173, 230, 150, 135])))
@@ -49,14 +49,10 @@ function u8arr2str(u8a, opt = {}) {
         return retError('invalid u8a')
     }
 
-    //r, 內部一律以returnWithStateAndMsg取狀態, 判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端
+    //r, fatal模式於非合法UTF-8時拋錯而視為失敗, 不靜默換成U+FFFD; ignoreBOM保留開頭之BOM, 與str2u8arr往返一致; 須攔截錯誤, 否則會外拋至呼叫端
     let r = ''
     try {
-        let rb64 = u8arr2b64(u8a, { returnWithStateAndMsg: true })
-        if (rb64.state === 'error') {
-            return retError(`u8arr2b64: ${rb64.msg}`)
-        }
-        r = b642str(rb64.msg)
+        r = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(u8a)
     }
     catch (err) {
         return retError(err.toString())
