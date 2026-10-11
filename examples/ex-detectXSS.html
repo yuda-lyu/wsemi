@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-tw">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <title>examples for detectXSS(xss)</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.12/dist/wsemi.umd.js"></script>
+    <script>
+        let log = console.log
+        console.log = function(){
+            log.apply(null, arguments)
+            wsemi.bodyLog.apply(null, arguments)
+        }
+    </script>
+
+</head>
+<body>
+
+    <script>
+        let r
+        r = wsemi.detectXSS('<img src=x onerror=alert(1)>')
+        console.log("detectXSS('<img src=x onerror=alert(1)>')",r)
+        r = wsemi.detectXSS('<svg/onload=alert(1)>')
+        console.log("detectXSS('<svg/onload=alert(1)>')",r)
+        r = wsemi.detectXSS('<a href="jav&#x09;ascript:alert(1)">點我</a>')
+        console.log("detectXSS('<a href=\"jav&#x09;ascript:alert(1)\">點我</a>')",r)
+        r = wsemi.detectXSS('孔深 < 500 m 且 > 10 m')
+        console.log("detectXSS('孔深 < 500 m 且 > 10 m')",r)
+    </script>
+
+</body>
+</html>
