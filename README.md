@@ -64,6 +64,10 @@ To view some examples for more understanding, visit examples:
 
 > **clearXSSDyn[dynamic import]:** [ex-clearXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSSDyn.html)]
 
+> **detectXSS:** [ex-detectXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-detectXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-detectXSS.html)]
+
+> **detectXSSDyn[dynamic import]:** [ex-detectXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-detectXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-detectXSSDyn.html)]
+
 > **openlink:** [ex-openLink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openLink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openLink.html)]
 
 > **xlsx:** [ex-xlsx.html](https://yuda-lyu.github.io/wsemi/examples/ex-xlsx.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-xlsx.html)]
@@ -81,7 +85,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.11/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.12/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -102,7 +106,7 @@ Add script for wsemi.
 ```
 
 [Optional] Add script for `xss`.
-> **Note:** Include script when using `clearXSS` function, and don't include script when using `clearXSSDyn` function.
+> **Note:** Include script when using `clearXSS` or `detectXSS` function, and don't include script when using `clearXSSDyn` or `detectXSSDyn` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
 ```

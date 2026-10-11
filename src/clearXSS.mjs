@@ -1,17 +1,10 @@
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
-import xss from 'xss'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
-import getGlobal from './getGlobal.mjs'
+import fxss from './_filterXSS.mjs'
 
-
-function getFilterXSS() {
-    let g = getGlobal()
-    let x = xss || g.xss
-    return x
-}
 
 /**
  * 清除xss攻擊語法
@@ -33,18 +26,17 @@ function getFilterXSS() {
  */
 function clearXSS(inp) {
 
-    //filterXSS
-    let filterXSS = getFilterXSS()
+    //filterXSS, opt, 有字串須處理時才取得, 使非字串輸入於瀏覽器未載入xss時仍回傳原值
+    let filterXSS = null
+    let opt = null
 
     //ftxss
     function ftxss(c) {
-        return filterXSS(c, {
-            onIgnoreTagAttr: function(tag, name, value, isWhiteAttr) {
-                if (name === 'style') {
-                    return name + '="' + filterXSS.escapeAttrValue(value) + '"'
-                }
-            }
-        })
+        if (filterXSS === null) {
+            filterXSS = fxss.getFilterXSS()
+            opt = fxss.getOpt(filterXSS) //與detectXSS共用設定
+        }
+        return filterXSS(c, opt)
     }
 
     //scxss
