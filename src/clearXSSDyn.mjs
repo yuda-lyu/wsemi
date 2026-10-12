@@ -4,13 +4,15 @@ import clearXSS from './clearXSS.mjs'
 
 
 /**
- * 清除xss攻擊語法，採用動態加載技術
+ * 清除xss攻擊語法，採用動態加載技術，處理規則同clearXSS
  *
  * Depend on: {@link https://jsxss.com/zh/index.html https://jsxss.com/zh/index.html}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSSDyn.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Object|Array} inp 輸入資料
+ * @param {Object} [opt={}] 輸入設定物件，保留簽名相容，目前不使用
+ * @param {String|Object|Array} pathItems 輸入資源字串、字串陣列、物件、物件陣列
  * @returns {Promise} 回傳Promise，resolve回傳輸出資料，reject回傳錯誤訊息
  * @example
  *
@@ -18,7 +20,7 @@ import clearXSS from './clearXSS.mjs'
  *
  * r = await clearXSSDyn(`><script>alert('XSS')</script>`)
  * console.log(r)
- * // => `&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;`
+ * // => `>&lt;script>alert('XSS')&lt;/script>`
  *
  * r = await clearXSSDyn(`<img src="javascript:alert('XSS')">`)
  * console.log(r)

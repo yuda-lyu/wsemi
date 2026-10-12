@@ -85,6 +85,24 @@ describe(`_filterXSS`, function() {
             assert.strict.deepStrictEqual(r, '<img src="https://a/b.png">')
         })
 
+        it(`should escape in text only the < that starts a tag or ends the string`, function() {
+            //<後接英文字母、斜線、驚嘆號、問號或位於結尾者轉義, >與其餘之<不轉義
+            let opt = fxss.getOpt(xss)
+            assert.strict.deepStrictEqual(xss('a < b > c', opt), 'a < b > c')
+            assert.strict.deepStrictEqual(xss('x<y', opt), 'x&lt;y')
+            assert.strict.deepStrictEqual(xss('x</y', opt), 'x&lt;/y')
+            assert.strict.deepStrictEqual(xss('x<!y', opt), 'x&lt;!y')
+            assert.strict.deepStrictEqual(xss('x<?y', opt), 'x&lt;?y')
+            assert.strict.deepStrictEqual(xss('a <', opt), 'a &lt;')
+            assert.strict.deepStrictEqual(xss('<svg onload=x()>', opt), '&lt;svg onload=x()>')
+        })
+
+        it(`should not change the escaping of attribute values`, function() {
+            //白名單內標籤之屬性值由js-xss之escapeAttrValue轉義<>", 不經文字之轉義
+            let r = xss('<a href="https://a/b" title="a<b>c">x</a>', fxss.getOpt(xss))
+            assert.strict.deepStrictEqual(r, '<a href="https://a/b" title="a&lt;b&gt;c">x</a>')
+        })
+
     })
 
 })

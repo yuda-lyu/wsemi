@@ -53,6 +53,16 @@ describe(`detectXSS`, function() {
 
         it(`should report the full name of an unclosed tag at the end`, function() {
             check('<script', [tag('script')])
+            check('x<y', [tag('y')])
+            check('<img/src="x"/onerror=alert(1)', [tag('img')])
+        })
+
+        it(`should not report a whitelisted tag left unclosed without attributes at the end`, function() {
+            //js-xss對結尾未閉合且無屬性之標籤取名少一字而歸為白名單外, 名稱實為白名單者不計
+            check('a<b', [])
+            check('若 a<b', [])
+            check('a</b', [])
+            check('<img', [])
         })
 
         it(`should report form controls and custom elements`, function() {

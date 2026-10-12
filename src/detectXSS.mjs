@@ -43,7 +43,7 @@ function getScheme(value) {
  *
  * 與clearXSS共用同一份js-xss設定(白名單、網址判定、白名單外之style屬性保留)，判定規則：
  *
- * 1. 標籤(type為'tag')：白名單外之標籤，名稱由原始標籤片段取得且其後須接空白、斜線、大於或結尾，故含'<svg/onload=...>'，不含'孔深 < 500 m'、'5<6>4'、'<o:p>'
+ * 1. 標籤(type為'tag')：白名單外之標籤，名稱由原始標籤片段取得且其後須接空白、斜線、大於或結尾，故含'<svg/onload=...>'，不含'孔深 < 500 m'、'5<6>4'、'<o:p>'；結尾未閉合且無屬性之白名單標籤(如'若 a<b'之'<b')亦不計
  *
  * 2. 屬性(type為'attr')：白名單內標籤被刪除之事件屬性，名稱為on接英文字母且有值，故不含'a<b and once>c'之once
  *
@@ -79,6 +79,9 @@ function getScheme(value) {
  * console.log(detectXSS('孔深 < 500 m 且 > 10 m'))
  * // => []
  *
+ * console.log(detectXSS('若 a<b'))
+ * // => []
+ *
  * console.log(detectXSS('a<b and once>c'))
  * // => []
  *
@@ -105,6 +108,12 @@ function detectXSS(str) {
     let baseOnIgnoreTagAttr = opt.onIgnoreTagAttr || filterXSS.onIgnoreTagAttr
     let baseSafeAttrValue = opt.safeAttrValue || filterXSS.safeAttrValue
 
+    //isWhiteTag, 是否為白名單標籤, 同js-xss以自身屬性判定(不含原型鍵)
+    let whiteList = opt.whiteList || filterXSS.whiteList
+    let isWhiteTag = (name) => {
+        return Object.prototype.hasOwnProperty.call(whiteList, name)
+    }
+
     //rs, add, 重複項目合併為1筆
     let rs = []
     let ks = {}
@@ -128,7 +137,12 @@ function detectXSS(str) {
                 if (r === undefined || r === null) {
                     let m = reTagName.exec(html)
                     if (m) {
-                        add({ type: 'tag', tag: m[1].toLowerCase() })
+                        let name = m[1].toLowerCase()
+                        //結尾未閉合且無屬性之標籤(原始片段恰為'<名稱'或'</名稱'), js-xss取名會少一字而歸為白名單外, 名稱實為白名單者不計(如'若 a<b'之'<b')
+                        if (html.length === m[0].length && isWhiteTag(name)) {
+                            return r
+                        }
+                        add({ type: 'tag', tag: name })
                     }
                 }
                 return r

@@ -11,6 +11,10 @@ import fxss from './_filterXSS.mjs'
  *
  * Depend on: {@link https://jsxss.com/zh/index.html https://jsxss.com/zh/index.html}
  *
+ * 白名單外之標籤轉義，白名單內之標籤刪除白名單外之屬性與危險網址(style屬性保留)，標籤外之文字只轉義會開始標籤之<(其後為英文字母、斜線、驚嘆號、問號或位於結尾)，>與其餘之<維持原樣，故'a < b'等數學式不改寫
+ *
+ * 輸出僅供以HTML內文呈現(如v-html、innerHTML)，不可放入屬性值或註解內
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSS.test.mjs Github}
  * @memberOf wsemi
  * @param {String|Object|Array} inp 輸入資料
@@ -18,10 +22,13 @@ import fxss from './_filterXSS.mjs'
  * @example
  *
  * console.log(clearXSS(`><script>alert('XSS')</script>`))
- * // => `&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;`
+ * // => `>&lt;script>alert('XSS')&lt;/script>`
  *
  * console.log(clearXSS(`<img src="javascript:alert('XSS')">`))
  * // => `<img src>`
+ *
+ * console.log(clearXSS(`孔深 < 500 m 且 > 10 m`))
+ * // => `孔深 < 500 m 且 > 10 m`
  *
  */
 function clearXSS(inp) {
