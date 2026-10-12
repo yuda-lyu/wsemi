@@ -15465,13 +15465,15 @@ await test3()
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>清除xss攻擊語法</p>
 <p>Depend on: <a href="https://jsxss.com/zh/index.html">https://jsxss.com/zh/index.html</a></p>
+<p>白名單外之標籤轉義，白名單內之標籤刪除白名單外之屬性與危險網址(style屬性保留)，標籤外之文字只轉義會開始標籤之&lt;(其後為英文字母、斜線、驚嘆號、問號或位於結尾)，&gt;與其餘之&lt;維持原樣，故'a &lt; b'等數學式不改寫</p>
+<p>輸出僅供以HTML內文呈現(如v-html、innerHTML)，不可放入屬性值或註解內</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSS.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="clearXSS.mjs.html">clearXSS.mjs</a>, <a href="clearXSS.mjs.html#line27">line 27</a>
+        <a href="clearXSS.mjs.html">clearXSS.mjs</a>, <a href="clearXSS.mjs.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -15518,7 +15520,7 @@ await test3()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(clearXSS(`>&lt;script>alert('XSS')&lt;/script>`))// => `&amp;gt;&amp;lt;script&amp;gt;alert('XSS')&amp;lt;/script&amp;gt;`console.log(clearXSS(`&lt;img src="javascript:alert('XSS')">`))// => `&lt;img src>`</code></pre>
+    <pre class="prettyprint"><code>console.log(clearXSS(`>&lt;script>alert('XSS')&lt;/script>`))// => `>&amp;lt;script>alert('XSS')&amp;lt;/script>`console.log(clearXSS(`&lt;img src="javascript:alert('XSS')">`))// => `&lt;img src>`console.log(clearXSS(`孔深 &lt; 500 m 且 > 10 m`))// => `孔深 &lt; 500 m 且 > 10 m`</code></pre>
 
 
 
@@ -15630,7 +15632,7 @@ await test3()
 
     
 
-    <h4 class="name" id=".clearXSSDyn"><span class="type-signature type-signature-async, static">(async, static) </span>clearXSSDyn<span class="signature">(inp)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".clearXSSDyn"><span class="type-signature type-signature-async, static">(async, static) </span>clearXSSDyn<span class="signature">(inp, opt<span class="signature-attributes">opt</span>, pathItems)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
 
     
 
@@ -15640,7 +15642,7 @@ await test3()
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>清除xss攻擊語法，採用動態加載技術</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>清除xss攻擊語法，採用動態加載技術，處理規則同clearXSS</p>
 <p>Depend on: <a href="https://jsxss.com/zh/index.html">https://jsxss.com/zh/index.html</a></p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSSDyn.test.mjs">Github</a></p></li></ul></dd>
     
@@ -15648,7 +15650,7 @@ await test3()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="clearXSSDyn.mjs.html">clearXSSDyn.mjs</a>, <a href="clearXSSDyn.mjs.html#line28">line 28</a>
+        <a href="clearXSSDyn.mjs.html">clearXSSDyn.mjs</a>, <a href="clearXSSDyn.mjs.html#line30">line 30</a>
     </li></ul></dd>
     
 
@@ -15695,7 +15697,7 @@ await test3()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let rr = await clearXSSDyn(`>&lt;script>alert('XSS')&lt;/script>`)console.log(r)// => `&amp;gt;&amp;lt;script&amp;gt;alert('XSS')&amp;lt;/script&amp;gt;`r = await clearXSSDyn(`&lt;img src="javascript:alert('XSS')">`)console.log(r)// => `&lt;img src>`</code></pre>
+    <pre class="prettyprint"><code>let rr = await clearXSSDyn(`>&lt;script>alert('XSS')&lt;/script>`)console.log(r)// => `>&amp;lt;script>alert('XSS')&amp;lt;/script>`r = await clearXSSDyn(`&lt;img src="javascript:alert('XSS')">`)console.log(r)// => `&lt;img src>`</code></pre>
 
 
 
@@ -15713,7 +15715,11 @@ await test3()
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -15745,10 +15751,104 @@ await test3()
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last"><p>輸入資料</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，保留簽名相容，目前不使用</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pathItems</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Array</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入資源字串、字串陣列、物件、物件陣列</p></td>
         </tr>
 
     
@@ -18830,7 +18930,7 @@ console.log(wb)
 <p>與clearXSS共用同一份js-xss設定(白名單、網址判定、白名單外之style屬性保留)，判定規則：</p>
 <ol>
 <li>
-<p>標籤(type為'tag')：白名單外之標籤，名稱由原始標籤片段取得且其後須接空白、斜線、大於或結尾，故含'&lt;svg/onload=...&gt;'，不含'孔深 &lt; 500 m'、'5&lt;6&gt;4'、'&lt;o:p&gt;'</p>
+<p>標籤(type為'tag')：白名單外之標籤，名稱由原始標籤片段取得且其後須接空白、斜線、大於或結尾，故含'&lt;svg/onload=...&gt;'，不含'孔深 &lt; 500 m'、'5&lt;6&gt;4'、'&lt;o:p&gt;'；結尾未閉合且無屬性之白名單標籤(如'若 a&lt;b'之'&lt;b')亦不計</p>
 </li>
 <li>
 <p>屬性(type為'attr')：白名單內標籤被刪除之事件屬性，名稱為on接英文字母且有值，故不含'a<b and once>c'之once</p>
@@ -18852,7 +18952,7 @@ console.log(wb)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="detectXSS.mjs.html">detectXSS.mjs</a>, <a href="detectXSS.mjs.html#line92">line 92</a>
+        <a href="detectXSS.mjs.html">detectXSS.mjs</a>, <a href="detectXSS.mjs.html#line95">line 95</a>
     </li></ul></dd>
     
 
@@ -18915,6 +19015,9 @@ console.log(detectXSS('&amp;lt;b&amp;gt; 為粗體標籤'))
 // => []
 
 console.log(detectXSS('孔深 &lt; 500 m 且 > 10 m'))
+// => []
+
+console.log(detectXSS('若 a&lt;b'))
 // => []
 
 console.log(detectXSS('a&lt;b and once>c'))
@@ -110548,7 +110651,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sun Oct 11 2026 08:43:48 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Oct 12 2026 12:18:18 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
