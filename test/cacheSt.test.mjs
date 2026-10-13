@@ -256,4 +256,44 @@ describe(`cacheSt`, function() {
         assert.strict.deepStrictEqual(ms, ms9)
     })
 
+    //key為任意字串, __proto__與Object原型之屬性名(constructor、toString等)亦為一般key: 未set不存在、set後可取回、不影響其他key
+    it(`should treat __proto__ and names on Object.prototype as ordinary keys`, async function() {
+        let cs = cacheSt({ timeDetect: 1000 })
+        try {
+            let names = ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf']
+            for (let k of names) {
+                assert.strict.deepStrictEqual(await cs.check(k), false, `check ${k} before set`)
+                assert.strict.deepStrictEqual(await cs.get(k), null, `get ${k} before set`)
+            }
+            assert.strict.deepStrictEqual(cs.checkWithSet('toString'), true)
+            assert.strict.deepStrictEqual(await cs.check('toString'), true)
+            await cs.set('__proto__', 'v')
+            assert.strict.deepStrictEqual(await cs.get('__proto__'), 'v')
+            assert.strict.deepStrictEqual(await cs.check('value'), false) //set __proto__不得使未set之key被視為存在
+            assert.strict.deepStrictEqual(await cs.check('time'), false)
+            await cs.set('constructor', 1)
+            assert.strict.deepStrictEqual(await cs.get('constructor'), 1)
+            await cs.del('constructor')
+            assert.strict.deepStrictEqual(await cs.check('constructor'), false)
+            await cs.del('__proto__')
+            assert.strict.deepStrictEqual(await cs.check('__proto__'), false)
+        }
+        finally {
+            cs.clear()
+        }
+    })
+
+    it(`should expire __proto__ like other keys`, async function() {
+        let cs = cacheSt({ timeExpire: 100, timeDetect: 50 })
+        try {
+            await cs.set('__proto__', 1)
+            assert.strict.deepStrictEqual(await cs.check('__proto__'), true)
+            await delay(300)
+            assert.strict.deepStrictEqual(await cs.check('__proto__'), false)
+        }
+        finally {
+            cs.clear()
+        }
+    })
+
 })

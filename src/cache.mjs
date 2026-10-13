@@ -538,7 +538,7 @@ import cint from './cint.mjs'
  */
 function cache() {
     let ev = evem() //事件以timer脫勾派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
-    let data = {} //快取資料
+    let data = Object.create(null) //快取資料, 以呼叫端之key為鍵; 用無原型物件使任意字串皆為一般鍵, 一般物件時__proto__會改掉其原型、constructor等原型屬性名會被haskey誤判為已存在, 對其update會寫到Object本身
 
     function emit(mode, data) {
         evEmitDelay(ev, mode, [data], { tag: 'cache' }) //用timer脫勾, 並於該新堆疊內攔截監聽器之同步拋錯

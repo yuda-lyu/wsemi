@@ -16,7 +16,7 @@ import isfun from './isfun.mjs'
  *
  * setTimeout會開一個「沒有呼叫者」的堆疊，監聽器之同步拋錯於該處即為uncaughtException，
  * 且呼叫端無論如何try都攔不到（此與監聽器是否為async無關，純同步監聽器亦然）。
- * 於呼叫端之堆疊上派發，一個普通的try即可攔下。確實需要脫勾者請改用evEmitDefer，
+ * 於呼叫端之堆疊上派發，一個普通的try即可攔下。確實需要脫勾者請改用evEmitDelay，
  * 其內部即以本函數派發，故仍有攔截。
  *
  * 【為何不處理async監聽器之reject】

@@ -706,4 +706,30 @@ describe(`cache`, function() {
         assert.strict.deepStrictEqual(r, { defIsolated: true, getFalseSame: true, setFalseSame: true, overrideCloned: true, invalidUseSet: true, waitTrueIsolated: true, waitFalseSame: true, proxySame: true })
     })
 
+    //key為任意字串, __proto__與Object原型之屬性名(constructor、toString等)亦為一般key: 未set視為無效key、不得寫到原型上之物件, set後可取回
+    it(`should treat __proto__ and names on Object.prototype as ordinary keys`, async function() {
+        let had = Object.prototype.hasOwnProperty.call(Object, 'value')
+        try {
+            let oc = cache()
+            for (let k of ['__proto__', 'constructor', 'toString', 'hasOwnProperty', 'valueOf']) {
+                assert.strict.deepStrictEqual(await oc.get(k), null, `get ${k} before set`)
+            }
+            oc.update('constructor', 5) //未set之key不得寫入, 一般物件時會寫到Object本身
+            oc.clear('constructor')
+            assert.strict.deepStrictEqual(Object.prototype.hasOwnProperty.call(Object, 'value'), had)
+            oc.set('constructor', { fun: async () => 1 })
+            oc.set('__proto__', { fun: async () => 2 })
+            assert.strict.deepStrictEqual(await oc.get('constructor'), 1)
+            assert.strict.deepStrictEqual(await oc.get('__proto__'), 2)
+            assert.strict.deepStrictEqual(await oc.get('needExec'), null) //set __proto__不得使未set之key被視為存在
+            oc.remove('constructor')
+            assert.strict.deepStrictEqual(await oc.get('constructor'), null)
+        }
+        finally {
+            if (!had) {
+                delete Object.value //修正前之版本會寫入Object.value, 測試後還原以免影響同檔其他測試
+            }
+        }
+    })
+
 })

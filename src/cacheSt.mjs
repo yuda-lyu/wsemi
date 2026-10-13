@@ -112,7 +112,7 @@ function cacheSt(opt = {}) {
 
     let ev = evem() //detect事件於setInterval內派發, 其餘於呼叫端同步堆疊或await之後派發且監聽器可能為async, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
 
-    let _gs = {}
+    let _gs = Object.create(null) //以呼叫端之key為鍵; 用無原型物件使任意字串皆為一般鍵, 一般物件時__proto__會改掉其原型(且不會過期)、constructor等原型屬性名會被haskey誤判為已存在
 
     let _set = async (key, value = true) => {
         _gs[key] = {

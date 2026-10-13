@@ -1689,7 +1689,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="alive.mjs.html">alive.mjs</a>, <a href="alive.mjs.html#line88">line 88</a>
+        <a href="alive.mjs.html">alive.mjs</a>, <a href="alive.mjs.html#line118">line 118</a>
     </li></ul></dd>
     
 
@@ -1736,7 +1736,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>async function topAsync() {    function test1() {        return new Promise((resolve, reject) => {            let ms = []            let oAL = alive({ timeAlive: 1500 })            let t = Date.now()            let a = { data: 123 }            let b = { data: '34.56' }            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a1')                oAL.trigger('a', a)            }, 500)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a2')                oAL.trigger('a', a)            }, 1900)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b1')                oAL.trigger('b', b)            }, 1000)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b2')                oAL.trigger('b', b)            }, 3000)            oAL.on('message', function({ eventName, key, data, now }) {                console.log(parseInt((Date.now() - t)) + 'ms', { eventName, key, data, now })                ms.push(eventName + '|' + key)            })            setTimeout(() => {                resolve(ms)            }, 5000)        })    }    console.log('test1')    let r1 = await test1()    console.log(JSON.stringify(r1))    // test1    // 503ms trigger a1    // 508ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }    // 1001ms trigger b1    // 1003ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }    // 1901ms trigger a2    // 2523ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }    // 3002ms trigger b2    // 3004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }    // 3430ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }    // 4544ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }    // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]}topAsync().catch(() => {})</code></pre>
+    <pre class="prettyprint"><code>async function topAsync() {    function test1() {        return new Promise((resolve, reject) => {            let ms = []            let oAL = alive({ timeAlive: 1500 })            let t = Date.now()            let a = { data: 123 }            let b = { data: '34.56' }            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a1')                oAL.trigger('a', a)            }, 500)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger a2')                oAL.trigger('a', a)            }, 1900)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b1')                oAL.trigger('b', b)            }, 1000)            setTimeout(() => {                console.log(parseInt((Date.now() - t)) + 'ms', 'trigger b2')                oAL.trigger('b', b)            }, 3000)            oAL.on('message', function({ eventName, key, data, now }) {                console.log(parseInt((Date.now() - t)) + 'ms', { eventName, key, data, now })                ms.push(eventName + '|' + key)            })            setTimeout(() => {                resolve(ms)            }, 5000)        })    }    console.log('test1')    let r1 = await test1()    console.log(JSON.stringify(r1))    // test1    // 503ms trigger a1    // 508ms { eventName: 'enter', key: 'a', data: { data: 123 }, now: 1 }    // 1001ms trigger b1    // 1003ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }    // 1901ms trigger a2    // 2523ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 1 }    // 3002ms trigger b2    // 3004ms { eventName: 'enter', key: 'b', data: { data: '34.56' }, now: 2 }    // 3430ms { eventName: 'leave', key: 'a', data: { data: 123 }, now: 1 }    // 4544ms { eventName: 'leave', key: 'b', data: { data: '34.56' }, now: 0 }    // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]    function test2() {        return new Promise((resolve, reject) => {            let ms = []            let oAL = alive({ timeAlive: 1500 })            oAL.on('message', function({ eventName, key }) {                ms.push(eventName + '|' + key)            })            oAL.trigger('a', { data: 123 })            setTimeout(() => {                oAL.trigger('b', { data: '34.56' })                let r = oAL.clear() //b剛trigger尚未發出enter, 故只回傳a, 且b之enter不再發出                ms.push('clear|' + r.map((v) => v.key).join(','))            }, 500)            setTimeout(() => {                resolve(ms)            }, 2500)        })    }    console.log('test2')    let r2 = await test2()    console.log(JSON.stringify(r2))    // test2    // ["enter|a","clear|a"]}topAsync().catch(() => {})</code></pre>
 
 
 
@@ -1869,7 +1869,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳事件物件，可呼叫函數on、trigger、get。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection</p>
+    <p>回傳事件物件，可呼叫函數on、trigger、get、clear。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單(含剛trigger而尚未發出enter者)。clear為釋放：立即清除偵測計時器、取消尚未發出之enter、清空佇列，本身不發事件，其後不再發出任何事件、trigger無效、get回傳[]，可重複呼叫(釋放為終態，需重新偵測者另建alive)；clear回傳已發出enter且尚未leave之單元陣列[{ key, data }]，供使用端補發離線通知，再次呼叫回傳[]；監聽器於派發中呼叫clear亦安全，同一輪尚未處理之單元不再派發。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection</p>
 </div>
 
 
@@ -35253,7 +35253,7 @@ once自動移除等），封裝層自身反而成為「調用方拿到非預期�
 <p>【為何不以setTimeout脫勾來迴避】</p>
 <p>setTimeout會開一個「沒有呼叫者」的堆疊，監聽器之同步拋錯於該處即為uncaughtException，
 且呼叫端無論如何try都攔不到（此與監聽器是否為async無關，純同步監聽器亦然）。
-於呼叫端之堆疊上派發，一個普通的try即可攔下。確實需要脫勾者請改用evEmitDefer，
+於呼叫端之堆疊上派發，一個普通的try即可攔下。確實需要脫勾者請改用evEmitDelay，
 其內部即以本函數派發，故仍有攔截。</p>
 <p>【為何不處理async監聽器之reject】</p>
 <p>emit依EventEmitter規範丟棄監聽器之回傳值，其rejection無人觀察；nodejs文件亦明載
@@ -110651,7 +110651,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Oct 12 2026 12:18:18 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Oct 13 2026 09:13:16 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
