@@ -1,4 +1,8 @@
 import assert from 'assert'
+import fs from 'fs'
+import path from 'path'
+import cp from 'child_process'
+import { fileURLToPath } from 'url'
 import execCli from '../src/execCli.mjs'
 
 
@@ -355,6 +359,97 @@ describe(`execCli`, function() {
         // console.log('maxBuffer len', r.stdout.length)
         assert.strict.deepStrictEqual(r.ok, true)
         assert.strict.deepStrictEqual(r.stdout.length < 2000, true)
+    })
+
+    //--- 失敗回報: 無法啟動子進程時不reject, error不含args與env之值 ---
+
+    let SA = 'SECRET_ARG_7d1f' //機密標記, 置於args
+    let SE = 'SECRET_ENV_9a2b' //機密標記, 置於env
+    let argLong = SA + 'x'.repeat(200000) //win32超過命令列上限, posix超過單一參數上限, 皆為spawn同步拋錯
+    let argNul = SA + '\u0000x'
+    let fdSrc = fileURLToPath(new URL('../src/', import.meta.url))
+    let fpEmfileRunner = path.resolve('./test/tools/spawnEmfileRunner.mjs')
+    let fdTmp = path.resolve('./test/_tmp/execCli')
+    let fpCmd = path.join(fdTmp, 'zzfallback.cmd')
+
+    //catchErr, 回傳Promise之拒絕值, 未拒絕時回{ resolved }
+    let catchErr = async (fn) => {
+        try {
+            let r = await fn()
+            return { resolved: r }
+        }
+        catch (err) {
+            return { rejected: err }
+        }
+    }
+
+    before(function() {
+        fs.mkdirSync(fdTmp, { recursive: true })
+        fs.writeFileSync(fpCmd, '@echo off\r\necho fallback %*\r\n') //無%dp0%\node_modules入口之.cmd, buildSpawnArgs走cmd.exe退路
+    })
+
+    after(function() {
+        fs.rmSync(fdTmp, { recursive: true, force: true })
+    })
+
+    it(`should resolve ok=false with pid undefined, without args and without retry when spawn throws synchronously`, async function() {
+        let r1 = await catchErr(() => execCli(nodeBin, ['-e', '1', argNul], { maxRetries: 2, retryDelayMs: 1 }))
+        let r2 = await catchErr(() => execCli(nodeBin, ['-e', '1', argLong], { maxRetries: 2, retryDelayMs: 1 }))
+        //P04a: 不reject, 結果物件之code為null、pid為undefined(同ENOENT), error為「碼: 訊息」且不含args
+        assert.strict.deepStrictEqual(['resolved' in r1, 'resolved' in r2], [true, true])
+        r1 = r1.resolved
+        r2 = r2.resolved
+        assert.strict.deepStrictEqual([r1.ok, r1.code, 'pid' in r1, r1.pid], [false, null, true, undefined])
+        assert.strict.deepStrictEqual(r1.error.startsWith('ERR_INVALID_ARG_VALUE: '), true)
+        assert.strict.deepStrictEqual(r1.error.includes(`'args[2]'`), true)
+        assert.strict.deepStrictEqual([r1.error.includes(SA), r1.error.includes('Received')], [false, false])
+        assert.strict.deepStrictEqual([r2.ok, r2.code, r2.error.includes(SA)], [false, null, false])
+        assert.strict.deepStrictEqual(r2.error.startsWith(process.platform === 'win32' ? 'ENAMETOOLONG: ' : ''), true)
+        //P04b: 同步錯誤不重試
+        assert.strict.deepStrictEqual([r1.attempts, r2.attempts], [1, 1])
+    })
+
+    it(`should not include env values in error when an env value contains a null byte`, async function() {
+        let r = await catchErr(() => execCli(nodeBin, ['-e', '1'], { env: { WSEMI_TEST_KEY: SE + '\u0000x' } }))
+        //P04c: 不reject, error保留變數名稱而不含其值
+        assert.strict.deepStrictEqual('resolved' in r, true)
+        assert.strict.deepStrictEqual(r.resolved.ok, false)
+        assert.strict.deepStrictEqual(r.resolved.error.includes('WSEMI_TEST_KEY'), true)
+        assert.strict.deepStrictEqual(r.resolved.error.includes(SE), false)
+    })
+
+    it(`should resolve ok=false with EMFILE without crashing when node cannot create stdio`, function() {
+        let p = cp.spawnSync(nodeBin, [fpEmfileRunner, fdSrc, 'execCli'], { encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        let o = JSON.parse(p.stdout.trim().split(/\r?\n/).pop())
+        //P05: 不reject、不拋出未捕捉例外
+        assert.strict.deepStrictEqual(o.settle, 'resolve')
+        assert.strict.deepStrictEqual([o.value.ok, o.value.error.startsWith('EMFILE: ')], [false, true])
+        assert.strict.deepStrictEqual(o.hasSecret, false)
+        assert.strict.deepStrictEqual(o.uncaught, [])
+    })
+
+    it(`should treat a number in args like a string when a .cmd falls back to cmd.exe on win32`, async function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let r = await catchErr(() => execCli(fpCmd, ['a', 123]))
+        let rs = await execCli(fpCmd, ['a', '123'])
+        //P04d: 不reject; P09: 非字串元素比照node轉為字串, 結果與給字串相同
+        assert.strict.deepStrictEqual('resolved' in r, true)
+        assert.strict.deepStrictEqual([r.resolved.ok, r.resolved.stdout], [true, rs.stdout])
+        assert.strict.deepStrictEqual(rs.stdout.includes('fallback'), true)
+    })
+
+    it(`should resolve ok=false instead of rejecting when building the .cmd fallback command throws on win32`, async function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        //無法轉為字串之元素使buildSpawnArgs於cmd.exe退路拋錯, 須與spawn同在try內
+        let r = await catchErr(() => execCli(fpCmd, ['a', Object.create(null)], { maxRetries: 2, retryDelayMs: 1 }))
+        //P04a、P04b
+        assert.strict.deepStrictEqual('resolved' in r, true)
+        assert.strict.deepStrictEqual([r.resolved.ok, r.resolved.code, r.resolved.pid, r.resolved.attempts], [false, null, undefined, 1])
+        assert.strict.deepStrictEqual(r.resolved.error.startsWith('UNKNOWN: '), true)
     })
 
 })

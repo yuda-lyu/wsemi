@@ -16,10 +16,15 @@ import strdelleft from './strdelleft.mjs'
 import strTruncate from './strTruncate.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
+import execSpawnError from './_execSpawnError.mjs'
 
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心已抽至execCliCore
 let { buildSpawnArgs, buildSpawnEnv } = execCliCore
+
+
+//kNoRetry, 無法啟動子進程之同步錯誤所產生之結果物件(確定性失敗, 重試無意義), 供execCli判定不重試, 不擴充對外之結果物件欄位
+let kNoRetry = new WeakSet()
 
 
 //optTruncate, 供strTruncate裁切失敗結果之stdout與stderr時, 於刪節號後標註原始總長度
@@ -126,15 +131,33 @@ function execCliOnce(command, args = [], opt = {}) {
     //每次attempt於此重新求值並僅作用於該次子進程, 不動本進程process.env, 故並行調用可各自帶不同值
     let envSpawn = buildSpawnEnv(envExtra)
 
-    //spawn
-    let winSpawn = buildSpawnArgs(command, args)
-    let proc = spawn(winSpawn.file, winSpawn.args, {
-        cwd,
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
-        env: envSpawn,
-        ...winSpawn.opt,
-    })
+    //spawn, 同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等)以結果物件回報而不reject, 且屬確定性失敗不重試; buildSpawnArgs之拋錯亦同
+    let proc
+    try {
+        let winSpawn = buildSpawnArgs(command, args)
+        proc = spawn(winSpawn.file, winSpawn.args, {
+            cwd,
+            stdio: ['pipe', 'pipe', 'pipe'],
+            windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
+            env: envSpawn,
+            ...winSpawn.opt,
+        })
+    }
+    catch (err) {
+        let e = execSpawnError(err)
+        let r = {
+            ok: false,
+            stdout: '',
+            stderr: '',
+            code: null,
+            error: `${e.code}: ${e.message}`,
+            durationMs: Date.now() - startTime,
+            pid: undefined, //與'error'事件(如ENOENT)之結果一致
+        }
+        kNoRetry.add(r)
+        pm.resolve(r)
+        return pm
+    }
 
     let stdout = ''
     let stderr = ''
@@ -146,6 +169,32 @@ function execCliOnce(command, args = [], opt = {}) {
 
     let settled = false
     let timedOut = false
+    let timer = null
+
+    //error, 須於存取stdio前監聽: node對EMFILE、ENFILE不建立stdio即於nextTick發出'error', 先存取會拋TypeError且'error'無人監聽而拉倒程序
+    //  可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等, 訊息經execSpawnError去除參數值
+    proc.on('error', (err) => {
+        if (settled) {
+            return
+        }
+        settled = true
+        clearTimeout(timer)
+        let e = execSpawnError(err)
+        pm.resolve({
+            ok: false,
+            stdout: '',
+            stderr: '',
+            code: null,
+            error: `${e.code}: ${e.message}`,
+            durationMs: Date.now() - startTime,
+            pid: proc.pid,
+        })
+    })
+
+    //stdio, EMFILE、ENFILE時node未建立(undefined), 由上方error回報
+    if (!proc.stdout || !proc.stderr || !proc.stdin) {
+        return pm
+    }
 
     //stdout data, 經TextDecoder跨chunk解碼
     proc.stdout.on('data', (chunk) => {
@@ -183,7 +232,7 @@ function execCliOnce(command, args = [], opt = {}) {
     proc.stdin.end()
 
     //timer, 逾時觸發時調用execProcessKillPid殺整棵程序樹
-    let timer = setTimeout(() => {
+    timer = setTimeout(() => {
         if (settled) {
             return
         }
@@ -212,24 +261,6 @@ function execCliOnce(command, args = [], opt = {}) {
         }, 3000).unref()
 
     }, timeoutMs)
-
-    //error, 監聽(例如執行spawn本身)錯誤訊息, 可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等
-    proc.on('error', (err) => {
-        if (settled) {
-            return
-        }
-        settled = true
-        clearTimeout(timer)
-        pm.resolve({
-            ok: false,
-            stdout: '',
-            stderr: '',
-            code: null,
-            error: `${err.code || 'UNKNOWN'}: ${err.message}`,
-            durationMs: Date.now() - startTime,
-            pid: proc.pid,
-        })
-    })
 
     //close
     proc.on('close', (code, signal) => {
@@ -314,7 +345,7 @@ function execCliOnce(command, args = [], opt = {}) {
  * 通用CLI子程序調用，封裝逾時、進程樹清理、輸出驗證、結構化錯誤回報與自動重試
  * 各參數原樣傳遞給目標CLI，支援中文
  * Windows下npm全域安裝之命令為.cmd批次檔，Node.js spawn無法直接執行(CVE-2024-27980安全修正後回EINVAL)，內部已參考cross-spawn自動解析.cmd入口並繞過cmd.exe，故可支援含多行文字之參數
- * 本函數不throw，一律以結果物件之ok與error欄位回報成敗
+ * 本函數不throw，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCli.test.mjs Github}
  * @memberOf wsemi
@@ -326,10 +357,10 @@ function execCliOnce(command, args = [], opt = {}) {
  * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
  * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean，預設undefined代表不驗證
  * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，超過部分將不再累積，預設10485760(10MB)
- * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，預設undefined
- * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，預設undefined
+ * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理，預設undefined
+ * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，行為同onStdout，預設undefined
  * @param {Object} [opt.env=undefined] 輸入本次調用額外注入之環境變數物件，會併入process.env之後(同名以此為準，含PYTHONIOENCODING)，僅作用於該次子進程而不影響本進程之process.env，故並行調用可各自帶不同值；值為undefined代表移除該變數(可遮蔽繼承值)，值為null會成為字面字串'null'故建議勿傳；Windows下環境變數大小寫不敏感，同名不同大小寫(如Path與PATH)亦視為同名覆蓋，預設undefined代表不覆寫任何變數
- * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)或exit code 2(參數錯誤)視為不可重試而立即中止，預設0
+ * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0
  * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，實際間隔為retryDelayMs乘以重試次數且上限15000ms，預設5000
  * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)
  * @example
@@ -508,6 +539,9 @@ async function execCli(command, args = [], opt = {}) {
         }
 
         //不可重試的錯誤
+        if (kNoRetry.has(lastResult)) {
+            break //無法啟動子進程之同步錯誤(參數過長、權限不足、非有效執行檔、參數檢查錯誤等), 重試無意義
+        }
         if (lastResult.error.includes('ENOENT')) {
             break //命令不存在, 重試無意義
         }

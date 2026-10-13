@@ -12,7 +12,7 @@ import execCliSession from './execCliSession.mjs'
 /**
  * 對stdio協定型CLI依序送出一行一則JSON之請求並收集回應(疊於execCliSession之上)，適用codex app-server、MCP之stdio伺服器等以換行分隔JSON之協定(LSP為Content-Length分幀，不適用)
  * 不內建任何協定知識，initialize/initialized等握手由呼叫端以請求陣列表達
- * 本函數不throw，一律以結果物件之ok與error、errorType欄位回報成敗
+ * 本函數不throw，一律以結果物件之ok與error、errorType欄位回報成敗，error不含args與env之值
  *
  * 規則:
  *   - 請求物件含method者為請求，自動配id(自0遞增)並等待同id之回應；含notify者為通知，不配id，送出即繼續
@@ -34,7 +34,7 @@ import execCliSession from './execCliSession.mjs'
  * @param {Boolean} [opt.continueOnError=false] 輸入回應含error時是否繼續送出後續請求布林值，預設false
  * @param {Function} [opt.onNotify=undefined] 輸入伺服器通知(無id訊息)回調函數，格式為(msg)=>{}，預設undefined
  * @param {Function} [opt.onServerRequest=undefined] 輸入伺服器發給客戶端之請求(帶id且含method)回調函數，格式為(msg, session)=>{}，可用session.writeLine回覆，預設undefined
- * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
+ * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理
  * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤)、notfound(命令不存在)、timeout(逾時)、exit(子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
  * @example
  * //need test in nodejs

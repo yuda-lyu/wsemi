@@ -1,4 +1,8 @@
 import assert from 'assert'
+import fs from 'fs'
+import path from 'path'
+import cp from 'child_process'
+import { fileURLToPath } from 'url'
 import execCliSession from '../src/execCliSession.mjs'
 
 
@@ -192,6 +196,84 @@ describe(`execCliSession`, function() {
         //無args時node進入REPL, stop()關閉stdin後立即結束
         let r = await s.stop()
         assert.strict.deepStrictEqual(r.code, 0)
+    })
+
+    //--- 失敗回報: 不throw, error不含args與env之值 ---
+
+    let SA = 'SECRET_ARG_7d1f' //機密標記, 置於args
+    let SE = 'SECRET_ENV_9a2b' //機密標記, 置於env
+    let fdSrc = fileURLToPath(new URL('../src/', import.meta.url))
+    let fpEmfileRunner = path.resolve('./test/tools/spawnEmfileRunner.mjs')
+    let fdTmp = path.resolve('./test/_tmp/execCliSession')
+    let fpCmd = path.join(fdTmp, 'zzfallback.cmd')
+
+    before(function() {
+        fs.mkdirSync(fdTmp, { recursive: true })
+        fs.writeFileSync(fpCmd, '@echo off\r\necho fallback %*\r\n') //無%dp0%\node_modules入口之.cmd, buildSpawnArgs走cmd.exe退路
+    })
+
+    after(function() {
+        fs.rmSync(fdTmp, { recursive: true, force: true })
+    })
+
+    it(`should not throw and should report errors without args or env values when spawn throws synchronously`, async function() {
+        let s1 = null
+        let s2 = null
+        assert.doesNotThrow(() => {
+            s1 = execCliSession(nodeBin, ['-e', '1', SA + '\u0000x'])
+            s2 = execCliSession(nodeBin, ['-e', '1'], { env: { WSEMI_TEST_KEY: SE + '\u0000x' } })
+        })
+        let r1 = await s1.stop()
+        let r2 = await s2.stop()
+        //P06a: 以stop()之結果物件回報, error保留參數名稱而不含其值
+        assert.strict.deepStrictEqual(r1.error.startsWith('ERR_INVALID_ARG_VALUE: '), true)
+        assert.strict.deepStrictEqual(r1.error.includes(`'args[2]'`), true)
+        assert.strict.deepStrictEqual([r1.error.includes(SA), r1.error.includes('Received')], [false, false])
+        assert.strict.deepStrictEqual([r2.error.includes('WSEMI_TEST_KEY'), r2.error.includes(SE)], [true, false])
+    })
+
+    it(`should report EMFILE via stop() without throwing or crashing when node cannot create stdio`, function() {
+        let p = cp.spawnSync(nodeBin, [fpEmfileRunner, fdSrc, 'execCliSession'], { encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        let o = JSON.parse(p.stdout.trim().split(/\r?\n/).pop())
+        //P06b
+        assert.strict.deepStrictEqual(o.settle, 'resolve')
+        assert.strict.deepStrictEqual(o.value.error.startsWith('EMFILE: '), true)
+        assert.strict.deepStrictEqual([o.value.exited, o.value.pid], [true, null])
+        assert.strict.deepStrictEqual(o.hasSecret, false)
+        assert.strict.deepStrictEqual(o.uncaught, [])
+    })
+
+    it(`should not throw when a .cmd falls back to cmd.exe and args contain a number on win32`, async function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let lines = []
+        let s = null
+        assert.doesNotThrow(() => {
+            s = execCliSession(fpCmd, ['a', 123], {
+                onLine: (line) => {
+                    lines.push(line)
+                },
+            })
+        })
+        let r = await s.stop()
+        //P06c: 不throw; P09: 數字比照字串傳遞
+        assert.strict.deepStrictEqual([r.exited, r.code], [true, 0])
+        assert.strict.deepStrictEqual(lines.some((l) => l.includes('fallback') && l.includes('123')), true)
+    })
+
+    it(`should not throw when building the .cmd fallback command throws on win32`, async function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        //無法轉為字串之元素使buildSpawnArgs於cmd.exe退路拋錯, 須與spawn同在try內
+        let s = null
+        assert.doesNotThrow(() => {
+            s = execCliSession(fpCmd, ['a', Object.create(null)])
+        })
+        let r = await s.stop()
+        //P06c
+        assert.strict.deepStrictEqual([r.exited, r.pid, r.error.startsWith('UNKNOWN: ')], [true, null, true])
     })
 
 })

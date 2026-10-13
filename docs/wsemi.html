@@ -178,7 +178,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execCliCore.mjs.html">execCliCore.mjs</a>, <a href="execCliCore.mjs.html#line265">line 265</a>
+        <a href="execCliCore.mjs.html">execCliCore.mjs</a>, <a href="execCliCore.mjs.html#line268">line 268</a>
     </li></ul></dd>
     
 
@@ -36366,14 +36366,14 @@ ev.emit('evName', data)</code></pre>
     <dd class="tag-description"><ul class="dummy"><li><p>通用CLI子程序調用，封裝逾時、進程樹清理、輸出驗證、結構化錯誤回報與自動重試
 各參數原樣傳遞給目標CLI，支援中文
 Windows下npm全域安裝之命令為.cmd批次檔，Node.js spawn無法直接執行(CVE-2024-27980安全修正後回EINVAL)，內部已參考cross-spawn自動解析.cmd入口並繞過cmd.exe，故可支援含多行文字之參數
-本函數不throw，一律以結果物件之ok與error欄位回報成敗</p>
+本函數不throw，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/execCli.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line373">line 373</a>
+        <a href="execCli.mjs.html">execCli.mjs</a>, <a href="execCli.mjs.html#line404">line 404</a>
     </li></ul></dd>
     
 
@@ -36857,7 +36857,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入stdout串流回調函數，格式為(chunk)=&gt;{}，預設undefined</p></td>
+            <td class="description last"><p>輸入stdout串流回調函數，格式為(chunk)=&gt;{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理，預設undefined</p></td>
         </tr>
 
     
@@ -36895,7 +36895,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入stderr串流回調函數，格式為(chunk)=&gt;{}，預設undefined</p></td>
+            <td class="description last"><p>輸入stderr串流回調函數，格式為(chunk)=&gt;{}，行為同onStdout，預設undefined</p></td>
         </tr>
 
     
@@ -36973,7 +36973,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)或exit code 2(參數錯誤)視為不可重試而立即中止，預設0</p></td>
+            <td class="description last"><p>輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0</p></td>
         </tr>
 
     
@@ -37085,7 +37085,7 @@ test()
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>對stdio協定型CLI依序送出一行一則JSON之請求並收集回應(疊於execCliSession之上)，適用codex app-server、MCP之stdio伺服器等以換行分隔JSON之協定(LSP為Content-Length分幀，不適用)
 不內建任何協定知識，initialize/initialized等握手由呼叫端以請求陣列表達
-本函數不throw，一律以結果物件之ok與error、errorType欄位回報成敗</p>
+本函數不throw，一律以結果物件之ok與error、errorType欄位回報成敗，error不含args與env之值</p>
 <p>規則:</p>
 <ul>
 <li>請求物件含method者為請求，自動配id(自0遞增)並等待同id之回應；含notify者為通知，不配id，送出即繼續</li>
@@ -37746,7 +37746,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入stderr片段回調函數，格式為(chunk)=&gt;{}，預設undefined</p></td>
+            <td class="description last"><p>輸入stderr片段回調函數，格式為(chunk)=&gt;{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理</p></td>
         </tr>
 
     
@@ -37818,14 +37818,14 @@ test()
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>建立互動式stdio工作階段(session)，用於stdio協定型之長駐CLI(如MCP之stdio伺服器、codex app-server等一行一則JSON之程式)，與execCli「寫完input即關閉stdin並等待結束」之一次性契約不同，本函數維持stdin開啟，由呼叫端逐次write，直到呼叫stop()才關閉stdin並等待子進程自行退出，逾寬限期則以execProcessKillPid樹殺
 Windows下npm全域安裝之命令為.cmd批次檔，內部經execCliCore.buildSpawnArgs解析為以node執行其JS入口，不使用shell:true，故樹殺可確實涵蓋子孫程序
-本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報</p>
+本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報，其error不含args與env之值</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/execCliSession.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execCliSession.mjs.html">execCliSession.mjs</a>, <a href="execCliSession.mjs.html#line79">line 79</a>
+        <a href="execCliSession.mjs.html">execCliSession.mjs</a>, <a href="execCliSession.mjs.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -38463,7 +38463,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入子進程結束回調函數，格式為(result)=&gt;{}，result同stop()之回傳，預設undefined</p></td>
+            <td class="description last"><p>輸入子進程結束回調函數，格式為(result)=&gt;{}，result同stop()之回傳，預設undefined。onLine、onStdout、onStderr、onExit內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理</p></td>
         </tr>
 
     
@@ -38785,7 +38785,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line61">line 61</a>
+        <a href="execProcess.mjs.html">execProcess.mjs</a>, <a href="execProcess.mjs.html#line64">line 64</a>
     </li></ul></dd>
     
 
@@ -38847,6 +38847,7 @@ if (true) {
 
 if (true) {
     //execFile與spawn之args須為陣列, 每個元素為一個參數; 給字串會被當成單一參數而失敗
+    //密碼置於命令列參數時同機其他使用者可由程序列表看到; 失敗訊息不含args, 但子程序自身之輸出可能回顯
     let prog = `C:\\Program Files\\7-Zip\\7z.exe`
     let pw = 'AbcD1234'
     let args = ['a', 'abc.7z', 'abc.txt', `-p${pw}`]
@@ -38959,7 +38960,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入腳本檔案位置字串或參數</p></td>
+            <td class="description last"><p>輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數；非陣列亦非字串時reject錯誤訊息(不拋錯)</p></td>
         </tr>
 
     
@@ -39062,7 +39063,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入執行模式字串，可選'spawn'、'exec'、'execFile'，預設'spawn'。'spawn'不經shell直接執行，輸出以串流處理，適合大量輸出或長時間執行，prog與args不需也不可加引號；'exec'經shell執行，prog與args以空白串接成指令字串，適合須用到shell語法之情形，陣列型args之元素含空白且未含雙引號者會自動以雙引號包住，prog含空白亦同，已含雙引號者視為呼叫端自行處理而原樣串接，字串型args視為呼叫端已自組之指令列，原樣串接不加引號；'execFile'不經shell直接執行可執行檔，args須為陣列，給字串會被當成單一參數。三種模式之stdout與stderr皆以Buffer接收後走同一條解碼路徑</p></td>
+            <td class="description last"><p>輸入執行模式字串，可選'spawn'、'exec'、'execFile'，預設'spawn'。'spawn'不經shell直接執行，輸出以串流處理，適合大量輸出或長時間執行，prog與args不需也不可加引號；'exec'經shell執行，prog與args以空白串接成指令字串，適合須用到shell語法之情形，陣列型args之元素含空白且未含雙引號者會自動以雙引號包住，prog含空白亦同，已含雙引號者視為呼叫端自行處理而原樣串接，字串型args視為呼叫端已自組之指令列，原樣串接不加引號；'execFile'不經shell直接執行可執行檔，args須為陣列，給字串會被當成單一參數。三種模式之stdout與stderr皆以Buffer接收後走同一條解碼路徑；惟'exec'與'execFile'之stdout或stderr超過1MB(node之maxBuffer預設值)時子程序會被node終止，reject為<code>code[null]:\n訊息</code>，大量輸出請用'spawn'</p></td>
         </tr>
 
     
@@ -39102,7 +39103,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準</p></td>
+            <td class="description last"><p>輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準。回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理</p></td>
         </tr>
 
     
@@ -39295,7 +39296,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息，離開碼非0時為<code>code[N]:\n訊息</code>，逾時為<code>timeout[Nms]:\n訊息</code></p>
+    <p>回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為<code>code[N]:\n訊息</code>，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為<code>timeout[Nms]:\n訊息</code>；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為<code>spawn[錯誤碼]:\n訊息</code>，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符、codeCmd不支援或spawn模式prog含引號時為說明字串</p>
 </div>
 
 
@@ -39339,7 +39340,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcessKillPid.mjs.html">execProcessKillPid.mjs</a>, <a href="execProcessKillPid.mjs.html#line27">line 27</a>
+        <a href="execProcessKillPid.mjs.html">execProcessKillPid.mjs</a>, <a href="execProcessKillPid.mjs.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -39473,7 +39474,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳成功訊息<code>pid[N] killed</code>，reject回傳錯誤訊息字串<code>pid[N] kill failed: 訊息</code>；Windows下訊息含taskkill之輸出，其為系統字碼頁而可能無法正確顯示</p>
 </div>
 
 
@@ -110651,7 +110652,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Oct 13 2026 09:13:16 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Oct 13 2026 23:59:17 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

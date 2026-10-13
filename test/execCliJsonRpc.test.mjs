@@ -1,4 +1,7 @@
 import assert from 'assert'
+import path from 'path'
+import cp from 'child_process'
+import { fileURLToPath } from 'url'
 import execCliJsonRpc from '../src/execCliJsonRpc.mjs'
 
 
@@ -138,6 +141,30 @@ describe(`execCliJsonRpc`, function() {
     it(`should omit params in the wire message when not provided`, async function() {
         let r = await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'p' }])
         assert.strict.deepStrictEqual('params' in r.results.p, false)
+    })
+
+    //--- 失敗回報: error不含args之值, 系統資源用盡時不崩潰 ---
+
+    let SA = 'SECRET_ARG_7d1f' //機密標記, 置於args
+    let fdSrc = fileURLToPath(new URL('../src/', import.meta.url))
+    let fpEmfileRunner = path.resolve('./test/tools/spawnEmfileRunner.mjs')
+
+    it(`should not include args in error when spawn throws synchronously for a null byte`, async function() {
+        let r = await execCliJsonRpc(nodeBin, ['-e', '1', SA + '\u0000x'], [{ method: 'x' }])
+        //P06e
+        assert.strict.deepStrictEqual(r.ok, false)
+        assert.strict.deepStrictEqual(r.error.startsWith('x: ERR_INVALID_ARG_VALUE: '), true)
+        assert.strict.deepStrictEqual([r.error.includes(SA), r.error.includes('Received')], [false, false])
+    })
+
+    it(`should report EMFILE without crashing when node cannot create stdio`, function() {
+        let p = cp.spawnSync(nodeBin, [fpEmfileRunner, fdSrc, 'execCliJsonRpc'], { encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        let o = JSON.parse(p.stdout.trim().split(/\r?\n/).pop())
+        //P06f
+        assert.strict.deepStrictEqual(o.settle, 'resolve')
+        assert.strict.deepStrictEqual([o.value.ok, o.value.error.startsWith('x: EMFILE: ')], [false, true])
+        assert.strict.deepStrictEqual(o.hasSecret, false)
+        assert.strict.deepStrictEqual(o.uncaught, [])
     })
 
 })

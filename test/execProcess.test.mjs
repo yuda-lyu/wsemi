@@ -1,5 +1,7 @@
 import assert from 'assert'
 import cp from 'child_process'
+import path from 'path'
+import { fileURLToPath, pathToFileURL } from 'url'
 import execProcess from '../src/execProcess.mjs'
 
 
@@ -73,16 +75,19 @@ describe(`execProcess`, function() {
         assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith('code[2]'), true)
     })
 
-    it(`should reject on 'error' event when spawning a non-existent program`, async function() {
+    it(`should reject a string spawn[ENOENT] without args when spawning a non-existent program`, async function() {
         let err = null
         try {
-            await execProcess('non_existent_command_xyz_12345', ['arg'])
+            await execProcess('non_existent_command_xyz_12345', ['arg', 'SECRET_ARG_7d1f'])
         }
         catch (e) {
             err = e
         }
         // console.log('nonexistent err', err)
-        assert.strict.deepStrictEqual(err !== null, true)
+        //P02a: 無法啟動子程序時reject字串`spawn[錯誤碼]:\n訊息`, 訊息含程式名, 不含args
+        assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith('spawn[ENOENT]:\n'), true)
+        assert.strict.deepStrictEqual(err.includes('non_existent_command_xyz_12345'), true)
+        assert.strict.deepStrictEqual(err.includes('SECRET_ARG_7d1f'), false)
     })
 
     it(`should ignore opt.timeout when value is invalid (e.g., -1)`, async function() {
@@ -344,6 +349,133 @@ describe(`execProcess`, function() {
         let r2 = await execProcess('tasklist', args, { mode: 'exec', codeCmd: 'big5' })
         assert.strict.deepStrictEqual(r1.length > 0, true)
         assert.strict.deepStrictEqual(r1, r2)
+    })
+
+    //--- 失敗回報: 無法啟動子程序之拒絕值為字串且不含參數(規格句見JSDoc之returns) ---
+
+    let SA = 'SECRET_ARG_7d1f' //機密標記, 置於args
+    let progMissing = path.resolve('./test/_tmp/execProcess/zz_no_such_prog_123.exe') //不存在之絕對路徑, 不建立
+    let argLong = SA + 'x'.repeat(200000) //win32超過命令列上限(ENAMETOOLONG), posix超過單一參數上限, 皆為spawn同步拋錯
+    let argNul = SA + '\u0000x'
+    let fdSrc = fileURLToPath(new URL('../src/', import.meta.url))
+    let fpEmfileRunner = path.resolve('./test/tools/spawnEmfileRunner.mjs')
+
+    //catchErr, 回傳Promise之拒絕值, 未拒絕時回{ resolved }
+    let catchErr = async (fn) => {
+        try {
+            let r = await fn()
+            return { resolved: r }
+        }
+        catch (err) {
+            return err
+        }
+    }
+
+    //runEmfile, 子行程內重現EMFILE後呼叫execProcess
+    let runEmfile = (opt) => {
+        let r = cp.spawnSync(nodeBin, [fpEmfileRunner, fdSrc, 'execProcess', JSON.stringify(opt)], { encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        return JSON.parse(r.stdout.trim().split(/\r?\n/).pop())
+    }
+
+    for (let [name, opt] of [['spawn', {}], ['execFile', { mode: 'execFile' }], ['spawn with codeCmd auto', { codeCmd: 'auto' }]]) {
+        it(`should reject a string spawn[ENOENT] with the program path but without args for a missing program (${name})`, async function() {
+            let err = await catchErr(() => execProcess(progMissing, ['a', SA], opt))
+            //P02a、P02f
+            assert.strict.deepStrictEqual(typeof err, 'string')
+            assert.strict.deepStrictEqual(err.startsWith('spawn[ENOENT]:\n'), true)
+            assert.strict.deepStrictEqual(err.includes('zz_no_such_prog_123'), true)
+            assert.strict.deepStrictEqual(err.includes(SA), false)
+        })
+    }
+
+    for (let mode of ['spawn', 'execFile', 'exec']) {
+        it(`should reject a string spawn[...] without args when spawn throws synchronously for a too long argument (${mode})`, async function() {
+            let err = await catchErr(() => execProcess(nodeBin, ['-e', '1', argLong], { mode }))
+            //P02b、P02d
+            assert.strict.deepStrictEqual(typeof err, 'string')
+            assert.strict.deepStrictEqual(err.startsWith(process.platform === 'win32' ? 'spawn[ENAMETOOLONG]:\n' : 'spawn['), true)
+            assert.strict.deepStrictEqual(err.includes(SA), false)
+        })
+
+        it(`should reject spawn[ERR_INVALID_ARG_VALUE] naming the argument but not its value for a null byte (${mode})`, async function() {
+            let err = await catchErr(() => execProcess(nodeBin, ['-e', '1', argNul], { mode }))
+            //P02c、P02d: node訊息之「Received 值」須去除, exec模式之參數名為command
+            assert.strict.deepStrictEqual(typeof err, 'string')
+            assert.strict.deepStrictEqual(err.startsWith('spawn[ERR_INVALID_ARG_VALUE]:\n'), true)
+            assert.strict.deepStrictEqual(err.includes(mode === 'exec' ? `'command'` : `'args[2]'`), true)
+            assert.strict.deepStrictEqual(err.includes(SA), false)
+            assert.strict.deepStrictEqual(err.includes('Received'), false)
+        })
+    }
+
+    it(`should reject spawn[ENOENT] without the command line when the shell is missing in exec mode`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        //子行程內改ComSpec, 不影響本行程; exec模式之node附帶參數為整條指令列
+        let url = pathToFileURL(path.join(fdSrc, 'execProcess.mjs')).href
+        let sc = `process.env.ComSpec='C:\\\\zz-no-such-dir\\\\cmd.exe';let m=await import(${JSON.stringify(url)});m.default(process.execPath,['-e','1',${JSON.stringify(SA)}],{mode:'exec'}).then((r)=>console.log(JSON.stringify({r})),(e)=>console.log(JSON.stringify({e:String(e),t:typeof e})))`
+        let r = cp.spawnSync(nodeBin, ['--input-type=module', '-e', sc], { encoding: 'utf8', windowsHide: true, timeout: 60000 })
+        let o = JSON.parse(r.stdout.trim())
+        //P02d
+        assert.strict.deepStrictEqual(o.t, 'string')
+        assert.strict.deepStrictEqual(o.e.startsWith('spawn[ENOENT]:\n'), true)
+        assert.strict.deepStrictEqual(o.e.includes(SA), false)
+    })
+
+    it(`should reject a string when prog is an empty string or not a string`, async function() {
+        let err1 = await catchErr(() => execProcess('', ['-e', '1']))
+        let err2 = await catchErr(() => execProcess(undefined, ['-e', '1']))
+        //P02e
+        assert.strict.deepStrictEqual([typeof err1, typeof err2], ['string', 'string'])
+        assert.strict.deepStrictEqual(err1.startsWith('spawn[ERR_INVALID_ARG_VALUE]:\n'), true)
+        assert.strict.deepStrictEqual(err2.startsWith('spawn[ERR_INVALID_ARG_TYPE]:\n'), true)
+    })
+
+    it(`should reject a string when prog is quoted in spawn mode`, async function() {
+        let err = await catchErr(() => execProcess(`"${nodeBin}"`, ['-e', '1']))
+        //P07: spawn模式prog含引號時reject說明字串, 字誤已修
+        assert.strict.deepStrictEqual(typeof err, 'string')
+        assert.strict.deepStrictEqual(err.includes('does not need to add quotes'), true)
+    })
+
+    for (let [name, opt] of [['spawn', {}], ['execFile', { mode: 'execFile' }], ['exec', { mode: 'exec' }], ['spawn with codeCmd auto', { codeCmd: 'auto' }]]) {
+        it(`should reject spawn[EMFILE] without throwing or crashing when node cannot create stdio (${name})`, function() {
+            let o = runEmfile(opt)
+            //P03: 系統資源用盡時同無法啟動, 不拋出未捕捉例外
+            assert.strict.deepStrictEqual(o.settle, 'reject')
+            assert.strict.deepStrictEqual(typeof o.value === 'string' && o.value.startsWith('spawn[EMFILE]:\n'), true)
+            assert.strict.deepStrictEqual(o.hasSecret, false)
+            assert.strict.deepStrictEqual(o.uncaught, [])
+        })
+    }
+
+    //--- args: 空陣列與空字串代表無參數, 型別不符以reject回報 ---
+
+    //progNoArgs, 不帶參數即可執行並結束之系統程式
+    let progNoArgs = process.platform === 'win32' ? 'whoami' : 'pwd'
+
+    for (let mode of ['spawn', 'execFile', 'exec']) {
+        it(`should run the program without arguments when args is an empty array or an empty string (${mode})`, async function() {
+            let r1 = await catchErr(() => execProcess(progNoArgs, [], { mode, codeCmd: 'auto' }))
+            let r2 = await catchErr(() => execProcess(progNoArgs, '', { mode, codeCmd: 'auto' }))
+            //P11a、P11b: 照常執行並resolve輸出
+            assert.strict.deepStrictEqual('resolved' in r1 && r1.resolved.trim().length > 0, true)
+            assert.strict.deepStrictEqual('resolved' in r2 && r2.resolved.trim() === r1.resolved.trim(), true)
+        })
+    }
+
+    it(`should reject a string instead of throwing when args is neither an array nor a string`, async function() {
+        let rs = []
+        for (let v of [undefined, null, 123, {}, true]) {
+            let p = null
+            assert.doesNotThrow(() => {
+                p = execProcess(nodeBin, v)
+            })
+            rs.push(await catchErr(() => p))
+        }
+        //P11c
+        assert.strict.deepStrictEqual(rs, new Array(5).fill('args is not an array or string'))
     })
 
 })

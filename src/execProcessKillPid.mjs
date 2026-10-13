@@ -1,5 +1,6 @@
 import treeKill from 'tree-kill'
 import genPm from './genPm.mjs'
+import getErrorMessage from './getErrorMessage.mjs'
 
 
 /**
@@ -8,7 +9,7 @@ import genPm from './genPm.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessKillPid.test.mjs Github}
  * @memberOf wsemi
  * @param {Number|String} pid 輸入程序pid
- * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息`pid[N] killed`，reject回傳錯誤訊息字串`pid[N] kill failed: 訊息`；Windows下訊息含taskkill之輸出，其為系統字碼頁而可能無法正確顯示
  * @example
  * //need test in nodejs
  *
@@ -40,9 +41,10 @@ function execProcessKillPid(pid) {
     let pm = genPm()
 
     //treeKill, Windows內部呼叫「taskkill /pid PID /T /F」, Linux/macOS則以ps/pgrep遞迴尋找子pid後逐一發signal
+    //失敗時tree-kill給Error物件(pid非數字、taskkill失敗等), 轉為錯誤訊息字串, 與resolve之訊息格式對稱
     treeKill(Number(pid), 'SIGKILL', (err) => {
         if (err) {
-            pm.reject(err)
+            pm.reject(`pid[${pid}] kill failed: ${getErrorMessage(err)}`)
         }
         else {
             pm.resolve(`pid[${pid}] killed`)

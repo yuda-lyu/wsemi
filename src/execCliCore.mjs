@@ -78,6 +78,9 @@ function resolveCommand(cmd) {
  */
 function escapeWinArg(arg) {
 
+    //String, 非字串元素比照node之spawn轉為字串(否則.replace拋TypeError)
+    arg = String(arg)
+
     //轉義反斜線 + 雙引號 組合
     arg = arg.replace(/(\\*)"/g, '$1$1\\"')
 

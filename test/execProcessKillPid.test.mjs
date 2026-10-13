@@ -104,4 +104,38 @@ describe(`execProcessKillPid`, function() {
         assert.strict.deepStrictEqual(completed, true)
     })
 
+    //--- 失敗回報: reject錯誤訊息字串, 與resolve之pid[N] killed對稱 ---
+
+    it(`should reject a string pid[N] kill failed when pid is not a number`, async function() {
+        let rs = []
+        for (let pid of ['abc', undefined]) {
+            try {
+                await execProcessKillPid(pid)
+                rs.push('resolved')
+            }
+            catch (e) {
+                rs.push(e)
+            }
+        }
+        //P08a
+        assert.strict.deepStrictEqual(rs, ['pid[abc] kill failed: pid must be a number', 'pid[undefined] kill failed: pid must be a number'])
+    })
+
+    it(`should reject a string pid[N] kill failed when killing a non-existent pid on win32`, async function() {
+        //posix下tree-kill吞掉ESRCH而resolve(見上一案), 僅win32之taskkill失敗會reject
+        let fakePid = 999999
+        if (process.platform !== 'win32' || isAlive(fakePid)) {
+            this.skip()
+        }
+        let err = null
+        try {
+            await execProcessKillPid(fakePid)
+        }
+        catch (e) {
+            err = e
+        }
+        //P08b
+        assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith(`pid[${fakePid}] kill failed: `), true)
+    })
+
 })
