@@ -1,6 +1,7 @@
 import assert from 'assert'
 import delay from '../src/delay.mjs'
 import cacheBd from '../src/cacheBd.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`cacheBd`, function() {
@@ -169,6 +170,16 @@ describe(`cacheBd`, function() {
     it(`should return '${JSON.stringify(ms3)}' when run test3'`, async function() {
         let ms = await test3()
         assert.strict.deepStrictEqual(ms, ms3)
+    })
+
+})
+
+
+describe(`cacheBd settle(R-PM-SETTLE-01)`, function() {
+
+    it(`cacheBd: 取值失敗後解除lock, getFromCache之後續嘗試可取得 [規則5]`, function() {
+        let { r } = runPmSettle('cacheBdRetry')
+        assert.strict.deepStrictEqual(r.out, { s: 'resolve', v: 'value', calls: 2 })
     })
 
 })

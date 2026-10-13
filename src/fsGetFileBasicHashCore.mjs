@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import isestr from './isestr.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -62,12 +63,12 @@ function fsGetFileBasicHashCore(fp, opt = {}) {
 
         //error
         input.on('error', (err) => {
-            pm.reject(err.toString())
+            pm.reject(errToStr(err)) //注入之fs所產stream可以非Error之值結束, 不可直接err.toString()(監聽器內再拋即成未捕捉例外且pm永不settle)
         })
 
     }
     catch (err) {
-        pm.reject(err.toString())
+        pm.reject(errToStr(err)) //注入之crypto、fs可拋出任意值
     }
 
     return pm

@@ -1,4 +1,5 @@
 import get from 'lodash-es/get.js'
+import errToStr from './_errToStr.mjs'
 import cv from './_jsonType.mjs'
 import isbol from './isbol.mjs'
 import isundefined from './isundefined.mjs'
@@ -90,7 +91,7 @@ function obj2str(data, ext = 'Uint8Array', opt = {}) {
         s = JSON.stringify(data, replacer)
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //try內會執行呼叫端之toJSON、getter與Proxy陷阱, 可拋出任意值(含null、無原型物件), 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

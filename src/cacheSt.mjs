@@ -177,7 +177,13 @@ function cacheSt(opt = {}) {
             return r
         }
         catch (err) {
-            let msg = `setWithFree: fn threw: ${(err && err.message) || err}`
+            //組訊息時讀取err可能拋錯(已撤銷之Proxy、會拋之getter), 須包try, 否則外傳者被換成該讀取錯誤而非原錯誤
+            let s = ''
+            try {
+                s = `${(err && err.message) || err}`
+            }
+            catch (e) {}
+            let msg = `setWithFree: fn threw: ${s}`
             evEmit(ev, 'setWithFree', [{ state: 'error', msg }], { tag: 'cacheSt' })
             throw err
         }

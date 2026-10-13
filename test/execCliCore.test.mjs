@@ -178,3 +178,85 @@ describe(`execCliCore`, function() {
     })
 
 })
+
+
+//R-EXEC-FAIL-01之6: 命令解析與批次檔存在(.cmd/.bat不存在者不交cmd.exe, 拋與node同形之ENOENT, 由呼叫端之同步catch以結果物件回報)
+describe(`buildSpawnArgs 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+
+    let { buildSpawnArgs } = execCliCore
+    let isWin = (process.platform === 'win32')
+
+    //夾具: test/_tmp/execCliCore/, before建、after刪
+    let fdFx = path.resolve('./test/_tmp/execCliCore')
+    before(function() {
+        fs.rmSync(fdFx, { recursive: true, force: true })
+        fs.mkdirSync(fdFx, { recursive: true })
+        fs.writeFileSync(path.join(fdFx, 'user.cmd'), '@echo off\r\necho hello-from-user-cmd\r\n')
+        fs.writeFileSync(path.join(fdFx, 'user.bat'), '@echo off\r\necho hello-from-user-bat\r\n')
+    })
+    after(function() {
+        fs.rmSync(fdFx, { recursive: true, force: true })
+    })
+
+    for (let [name, cmd, opt] of [
+        ['絕對路徑之.cmd', path.join(fdFx, 'missing.cmd'), {}],
+        ['絕對路徑之.bat', path.join(fdFx, 'missing.bat'), {}],
+        ['只給檔名之.cmd', 'wsemi-not-exist-zz.cmd', {}],
+        ['只給檔名之.bat', 'wsemi-not-exist-zz.bat', {}],
+        ['含目錄之相對路徑(以opt.cwd為基準)', '.\\missing.cmd', { cwd: fdFx }],
+    ]) {
+        it(`不存在之${name}拋出code為ENOENT、訊息為'spawn <路徑> ENOENT'(同node)之錯誤, 不交cmd.exe [R-EXEC-FAIL-01之6]`, function() {
+            if (!isWin) {
+                this.skip()
+            }
+            let err = null
+            try {
+                buildSpawnArgs(cmd, [], opt)
+            }
+            catch (e) {
+                err = e
+            }
+            assert.strict.deepStrictEqual(err instanceof Error, true, 'buildSpawnArgs須拋出Error')
+            assert.strict.deepStrictEqual([err.code, err.message], ['ENOENT', `spawn ${cmd} ENOENT`])
+        })
+    }
+
+    for (let [name, cmd, opt] of [
+        ['絕對路徑之.cmd', path.join(fdFx, 'user.cmd'), {}],
+        ['絕對路徑之.bat', path.join(fdFx, 'user.bat'), {}],
+        ['含目錄之相對路徑(以opt.cwd為基準)', '.\\user.cmd', { cwd: fdFx }],
+    ]) {
+        it(`存在之${name}不拋錯, 無node入口者經cmd.exe退路(file為cmd.exe、windowsVerbatimArguments) [R-EXEC-FAIL-01之6, 對照]`, function() {
+            if (!isWin) {
+                this.skip()
+            }
+            let r = buildSpawnArgs(cmd, [], opt)
+            assert.strict.deepStrictEqual([/(^|[\\/])cmd\.exe$/i.test(r.file), r.opt], [true, { windowsVerbatimArguments: true }], `file=${r.file}`)
+        })
+    }
+
+    it(`Windows之App Execution Alias(WindowsApps內之reparse point, 如winget)解析為該別名之路徑(不因fsIsFile以lstat判定連結為假而漏掉) (守門) [R-EXEC-FAIL-01之6]`, function() {
+        if (!isWin) {
+            this.skip()
+        }
+
+        //前提: %LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe存在(lstat, 別名之stat可能失敗)且該目錄在PATH內, 否則無從驗證而跳過
+        let dirApps = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps')
+        let fpAlias = path.join(dirApps, 'winget.exe')
+        let bExist = true
+        try {
+            fs.lstatSync(fpAlias)
+        }
+        catch (e) {
+            bExist = false
+        }
+        let bInPath = (process.env.PATH || '').split(';').some((d) => d.replace(/"/g, '').trim().replace(/[\\/]+$/, '').toLowerCase() === dirApps.toLowerCase())
+        if (!bExist || !bInPath) {
+            this.skip()
+        }
+
+        let r = buildSpawnArgs('winget', [])
+        assert.strict.deepStrictEqual(r.file.toLowerCase(), fpAlias.toLowerCase())
+    })
+
+})

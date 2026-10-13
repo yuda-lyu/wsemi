@@ -1,8 +1,14 @@
 import assert from 'assert'
+import { spawnSync } from 'child_process'
+import { Readable } from 'stream'
+import { fileURLToPath } from 'url'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsWriteText from '../src/fsWriteText.mjs'
 import fsGetFileBasicHash from '../src/fsGetFileBasicHash.mjs'
+import fsGetFileBasicHashCore from '../src/fsGetFileBasicHashCore.mjs'
+import { thrower, thrownCases, mkFsReadStub } from './tools/codecThrown.mjs'
+import { settleShown } from './tools/caseKit.mjs'
 
 
 describe(`fsGetFileBasicHash`, async function() {
@@ -51,6 +57,154 @@ describe(`fsGetFileBasicHash`, async function() {
         let r = await test()
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`fsGetFileBasicHashCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+
+    //含子行程案(修正前此案會懸置至腳本內之8秒看門狗), 放寬逾時
+    this.timeout(30000)
+
+    //thrownCases(test/tools/codecThrown.mjs)為呼叫端(注入之fs、crypto)可拋出之各種值, msg為_errToStr應得之字串
+    //修正前catch內與'error'監聽器內之err.toString()遇其任一皆再拋TypeError
+
+    //fs替身(mkFsReadStub): 僅使fsIsFileCore之前置檢查通過, createReadStream由各案注入; settleShown: 5秒內須settle, 結果值經showValue(非字串帶型別前綴)
+
+    //crypto替身: createHash由各案注入, 預設回傳可用之hash物件
+    let hashOk = () => ({ update() {}, digest: () => 'h' })
+    let mkCrypto = (createHash = hashOk) => ({ createHash })
+
+    //try內執行呼叫端注入之物: crypto.createHash(先執行)與fs.createReadStream, 由v指定其拋出之值
+    let points = [
+        {
+            name: 'crypto.createHash',
+            mkOpt: (v) => ({
+                fs: mkFsReadStub(thrower(new Error('createHash拋錯後不應走到createReadStream'))),
+                crypto: mkCrypto(thrower(v)),
+            }),
+        },
+        {
+            name: 'fs.createReadStream',
+            mkOpt: (v) => ({
+                fs: mkFsReadStub(thrower(v)),
+                crypto: mkCrypto(),
+            }),
+        },
+    ]
+
+    for (let p of points) {
+        for (let c of thrownCases) {
+            it(`should not throw but reject with '${c.msg}' when ${p.name} throws ${c.name} [R-CODEC-ERR-01之2]`, async function() {
+                let pm = null
+                assert.doesNotThrow(() => {
+                    pm = fsGetFileBasicHashCore('x.bin', p.mkOpt(c.mk()))
+                })
+                let r = await settleShown(pm)
+                assert.strict.deepStrictEqual(r, { s: 'reject', v: c.msg })
+            })
+        }
+    }
+
+    //stream 'error'監聽器(非try內)遇非Error之值: 修正前監聽器內err.toString()再拋TypeError, Promise永不settle
+    //同進程: 對fs所產stream同步emit('error', 值), 修正前TypeError自emit外拋(不經事件迴圈, 不污染mocha行程)
+    for (let c of thrownCases) {
+        it(`should not throw in the 'error' listener but reject with '${c.msg}' when the stream emits an 'error' event whose value is ${c.name} [R-CODEC-ERR-01之2]`, async function() {
+            let stream = new Readable({ read() {} })
+            let pm = fsGetFileBasicHashCore('x.bin', { fs: mkFsReadStub(() => stream), crypto: mkCrypto() })
+            assert.doesNotThrow(() => {
+                stream.emit('error', c.mk())
+            })
+            let r = await settleShown(pm)
+            assert.strict.deepStrictEqual(r, { s: 'reject', v: c.msg })
+        })
+    }
+
+    it(`(守門) should reject with 'Error: boom' (same as err.toString()) when crypto.createHash throws an Error [R-CODEC-ERR-01之2]`, async function() {
+        let opt = { fs: mkFsReadStub(null), crypto: mkCrypto(thrower(new Error('boom'))) }
+        let r = await settleShown(fsGetFileBasicHashCore('x.bin', opt))
+        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'Error: boom' })
+    })
+
+    it(`(守門) should reject with 'Error: boom' (same as err.toString()) when the stream ends with an Error [R-CODEC-ERR-01之2]`, async function() {
+        let fsFake = mkFsReadStub(() => new Readable({
+            read() {
+                this.destroy(new Error('boom'))
+            },
+        }))
+        let r = await settleShown(fsGetFileBasicHashCore('x.bin', { fs: fsFake, crypto: mkCrypto() }))
+        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'Error: boom' })
+    })
+
+    //端到端: fs所產stream自行以destroy(非Error之值)結束(destroy(null)不發出error事件, 故用無原型物件), 'error'事件於nextTick發出
+    //修正前監聽器內err.toString()再拋TypeError, 成為未捕捉例外且Promise永不settle; 未捕捉例外會污染mocha行程, 故於子行程執行
+    //被測模組路徑由本檔位置推得並以argv傳入, 子行程以pathToFileURL匯入; 腳本(僅含ASCII)輸出一行JSON({ s, v, uncaught })
+    //  s為'resolve'、'reject'或'pending'(8秒看門狗逾時), uncaught為未捕捉例外之訊息陣列
+    let fpMod = fileURLToPath(new URL('../src/fsGetFileBasicHashCore.mjs', import.meta.url))
+    let scriptStreamError = `
+import { Readable } from 'stream'
+import { pathToFileURL } from 'url'
+
+let uncaught = []
+process.on('uncaughtException', (e) => {
+    uncaught.push(String(e && e.message))
+})
+
+let core = (await import(pathToFileURL(process.argv[1]).href)).default
+
+let fs = {
+    statSync: () => ({}),
+    lstatSync: () => ({ isDirectory: () => false, isSymbolicLink: () => false }),
+    createReadStream: () => new Readable({
+        read() {
+            this.destroy(Object.create(null))
+        },
+    }),
+}
+let crypto = {
+    createHash: () => ({ update() {}, digest: () => 'h' }),
+}
+
+let out = { s: 'pending', v: null, uncaught }
+let wd = null
+let done = false
+let finish = () => {
+    if (done) {
+        return
+    }
+    done = true
+    clearTimeout(wd)
+    process.stdout.write(JSON.stringify(out) + '\\n', () => process.exit(0))
+}
+core('x.bin', { fs, crypto }).then(
+    (v) => {
+        out.s = 'resolve'
+        out.v = v
+        setTimeout(finish, 300)
+    },
+    (v) => {
+        out.s = 'reject'
+        out.v = v
+        setTimeout(finish, 300)
+    }
+)
+wd = setTimeout(finish, 8000)
+`
+
+    //runChild: 於子行程執行inline腳本(ES module), 回傳其stdout最後一行JSON之剖析結果; 無結果行(崩潰或被逾時終止)則拋出可判讀之錯誤
+    let runChild = (script, args) => {
+        let cp = spawnSync(process.execPath, ['--input-type=module', '-e', script, ...args], { encoding: 'utf8', timeout: 15000 })
+        let line = (cp.stdout || '').split(/\r?\n/).filter((l) => l.startsWith('{')).pop()
+        if (!line) {
+            throw new Error(`子行程無結果行: status=${cp.status}, signal=${cp.signal}, error=${cp.error && cp.error.message}, stderr=${String(cp.stderr || '').slice(0, 300)}`)
+        }
+        return JSON.parse(line)
+    }
+
+    it(`should reject with 'unknown error' without any uncaught exception or hang when the stream destroys itself with an object without prototype (end-to-end, child process) [R-CODEC-ERR-01之2]`, function() {
+        let r = runChild(scriptStreamError, [fpMod])
+        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'unknown error', uncaught: [] })
     })
 
 })

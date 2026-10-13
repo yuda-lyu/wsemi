@@ -1,5 +1,7 @@
 import assert from 'assert'
 import timemsTZ2past from '../src/timemsTZ2past.mjs'
+import { thrownCases } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`timemsTZ2past`, function() {
@@ -88,6 +90,47 @@ describe(`timemsTZ2past`, function() {
         let r = timemsTZ2past('2023-04-13T08:31:54.987+08:00', tNow, { returnWithStateAndMsg: 'yes' })
         let rr = { today: null, msg: '', err: '時間未到' }
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`timemsTZ2past 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+
+    let t = '2020-10-18T12:34:54.987+08:00'
+
+    //tNow由呼叫端給定, try內core經istimemsTZ(tNow)之isestr之Object.prototype.toString.call讀其Symbol.toStringTag時拋出指定值
+    //thrownCases(test/tools/codecThrown.mjs)為呼叫端可拋出之各種值, msg為_errToStr應得之字串; 修正前catch內err.toString()遇其任一皆再拋TypeError, 使函數同步外拋至呼叫端
+    let mkTNow = (v) => ({
+        get [Symbol.toStringTag]() {
+            throw v
+        },
+    })
+
+    //預設模式沿用既有失敗形狀{ today, msg, err }, 錯誤字串不外露, 故任何拋出值皆為同一結果
+    it(`should not throw but return { today: null, msg: '', err: '時間轉換失敗' } whatever tNow throws on reading Symbol.toStringTag without opt [R-CODEC-ERR-01之2]`, function() {
+        for (let c of thrownCases) {
+            let r = null
+            assert.doesNotThrow(() => {
+                r = timemsTZ2past(t, mkTNow(c.mk()))
+            }, c.name)
+            assert.strict.deepStrictEqual(showDeep(r), { today: null, msg: '', err: '時間轉換失敗' }, c.name)
+        }
+    })
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when tNow throws ${c.name} on reading Symbol.toStringTag with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+            let r = null
+            assert.doesNotThrow(() => {
+                r = timemsTZ2past(t, mkTNow(c.mk()), { returnWithStateAndMsg: true })
+            })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
+        })
+    }
+
+    it(`(守門) should return { state: 'error', msg: 'Error: boom' } (same as err.toString()) when tNow throws an Error on reading Symbol.toStringTag with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        let r = timemsTZ2past(t, mkTNow(new Error('boom')), { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'Error: boom' })
     })
 
 })

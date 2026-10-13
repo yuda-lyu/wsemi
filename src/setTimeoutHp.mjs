@@ -1,6 +1,16 @@
 import getGlobal from './getGlobal.mjs'
 import isWindow from './isWindow.mjs'
 import getTimeHp from './getTimeHp.mjs'
+import pm2resolve from './pm2resolve.mjs'
+
+
+//logErr, 記錄本身亦可能拋錯(如值之util.inspect.custom會拋), 須包try
+function logErr(err) {
+    try {
+        console.log(err)
+    }
+    catch (e) {}
+}
 
 
 /**
@@ -10,7 +20,7 @@ import getTimeHp from './getTimeHp.mjs'
  * @memberOf wsemi
  * @param {Function} fun 輸入調用函數
  * @param {Integer} interval 輸入時間間隔正整數，單位為毫秒ms，預設1
- * @returns {Function} 回傳停止函數，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @returns {null} 回傳null(無停止函數)。fun同步拋錯或其Promise被reject時以console.log記錄而不外拋
  * @example
  *
  * let t = setTimeoutHp(() => {
@@ -72,12 +82,17 @@ function setTimeoutHp(fun, interval = 1) {
             //stop
             running = false
 
-            //fun
+            //fun, 同步拋錯與其Promise被reject皆以console.log記錄而不外拋(不產生未處理之rejection), 同debounce
             try {
-                fun()
+                pm2resolve(fun)()
+                    .then((res) => {
+                        if (res.state === 'error') {
+                            logErr(res.msg)
+                        }
+                    })
             }
             catch (err) {
-                console.log(err)
+                logErr(err) //fun非函數時pm2resolve同步拋錯
             }
 
         }

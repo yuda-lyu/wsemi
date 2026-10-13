@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmDebounce from '../src/pmDebounce.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmDebounce`, function() {
@@ -122,6 +123,23 @@ describe(`pmDebounce`, function() {
     it(`should return '${r1}' when run test1'`, async function() {
         let ms = await test1()
         assert.strict.deepStrictEqual(ms, r1)
+    })
+
+})
+
+
+describe(`pmDebounce settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmDebounce: 任務同步拋錯或回傳惡意值不產生uncaughtException, 失敗以console.log記錄, 後續任務照常, 呼叫無回傳值 [規則2、3、10、文件]`, function() {
+        let { r } = runPmSettle('debounceSyncThrowThenNext')
+        assert.strict.deepStrictEqual(r.out, { ret: 'undefined', next: true, next2: true, logged: 1 })
+        assert.strict.deepStrictEqual(r.uncaught, [])
+    })
+
+    it(`exitDebounce: 任務失敗後計時器已釋放, 行程自然結束 [規則3、5]`, function() {
+        //以是否被逾時終止判定(殘留之interval會使行程永不結束), 不以牆鐘門檻判定, 避免並行高負載誤判
+        let { status, signal } = runPmSettle('exitDebounce', 'natural')
+        assert.strict.deepStrictEqual({ status, signal }, { status: 0, signal: null })
     })
 
 })

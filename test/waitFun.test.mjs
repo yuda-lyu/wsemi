@@ -1,5 +1,6 @@
 import assert from 'assert'
 import waitFun from '../src/waitFun.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`waitFun`, function() {
@@ -93,6 +94,28 @@ describe(`waitFun`, function() {
     it(`should return '${r3}' when run test3`, async function() {
         let ms = await test3()
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
+    })
+
+})
+
+
+describe(`waitFun settle(R-PM-SETTLE-01)`, function() {
+
+    it(`waitFun: 輪詢中拋錯或reject即reject該錯誤並停止輪詢, 同立即呼叫; 超過次數reject'exceeded attemptNum[N]' [規則1、2、5、文件]`, function() {
+        let { r } = runPmSettle('waitFunIntervalFail')
+        assert.strict.deepStrictEqual(r.out, {
+            intervalReject: { s: 'reject', same: true, calls: 2 },
+            intervalSyncThrow: { s: 'reject', same: true, calls: 2 },
+            immediateReject: { s: 'reject', same: true },
+            exceeded: { s: 'reject', v: 'exceeded attemptNum[2]' },
+        })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+    })
+
+    it(`exitWaitFun: 任務失敗後計時器已釋放, 行程自然結束 [規則3、5]`, function() {
+        //以是否被逾時終止判定(殘留之interval會使行程永不結束), 不以牆鐘門檻判定, 避免並行高負載誤判
+        let { status, signal } = runPmSettle('exitWaitFun', 'natural')
+        assert.strict.deepStrictEqual({ status, signal }, { status: 0, signal: null })
     })
 
 })

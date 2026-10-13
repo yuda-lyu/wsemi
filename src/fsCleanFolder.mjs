@@ -9,7 +9,7 @@ import fsCleanFolderCore from './fsCleanFolderCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)；資料夾不存在時自動建立；資料夾內之連結(符號連結、junction，含目標已不存在者)只移除連結本身不跟隨；目標本身為連結時不清空並回傳error
  * @example
  * need test in nodejs.
  *

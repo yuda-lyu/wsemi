@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmHook from '../src/pmHook.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmHook`, function() {
@@ -256,6 +257,24 @@ describe(`pmHook`, function() {
         let ms = await test5()
         // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r5)
+    })
+
+})
+
+
+describe(`pmHook settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmHook、pmHookReject: cb於任何階段拋錯皆以該錯誤reject, fun同步拋錯reject, 回傳一般值resolve, 必回傳Promise [規則1、6]`, function() {
+        let { r } = runPmSettle('hookThrows')
+        assert.strict.deepStrictEqual(r.out, {
+            before: { s: 'reject', msg: 'cb before' },
+            afterThen: { s: 'reject', msg: 'cb afterThen' },
+            afterCatch: { s: 'reject', msg: 'cb afterCatch' },
+            funSyncThrow: { s: 'reject', msg: 'fun sync' },
+            funValue: { s: 'resolve', v: 123 },
+            hookRejectCbThrow: { s: 'reject', msg: 'rej cb' },
+        })
+        assert.strict.deepStrictEqual(r.unhandled, [])
     })
 
 })

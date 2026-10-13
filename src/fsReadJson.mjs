@@ -8,7 +8,7 @@ import fsReadTextCore from './fsReadTextCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadJson.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入JSON檔案名稱
- * @returns {Object|Array} 回傳物件或陣列
+ * @returns {Object} 回傳結果物件，提供鍵success代表解析後之物件或陣列，提供鍵error代表錯誤訊息(讀檔或JSON解析之Error物件)
  * @example
  * need test in nodejs.
  *

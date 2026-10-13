@@ -3,6 +3,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 //core, 實際計算; 抽為獨立函數以便由呼叫端統一以try catch攔截非預期錯誤, 而不必將整段運算內縮
@@ -214,7 +215,7 @@ function timemsTZ2expire(t, tNow = null, opt = {}) {
         r = core(t, tNow)
     }
     catch (err) {
-        return retError(err.toString(), '時間轉換失敗')
+        return retError(errToStr(err), '時間轉換失敗') //try內會讀呼叫端之tNow(Proxy等), 可拋出任意值
     }
 
     return retSuccess(r)

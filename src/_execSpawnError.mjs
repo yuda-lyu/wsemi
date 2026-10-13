@@ -1,3 +1,4 @@
+import fs from 'fs'
 import isestr from './isestr.mjs'
 
 
@@ -9,7 +10,9 @@ import isestr from './isestr.mjs'
 
 
 //execSpawnError, 輸入錯誤物件, 回傳{ code, message }, 缺code時為'UNKNOWN', 缺message時以code代之, 任何輸入皆不拋錯
-function execSpawnError(err) {
+//  opt.cwd: 子進程之工作目錄; node以不存在(或非資料夾)之cwd spawn時回ENOENT而訊息指向執行檔, 故ENOENT且cwd非既存資料夾時改寫訊息指明cwd(碼仍為ENOENT, 分類不變)
+//  cwd之判定以stat跟隨連結(junction、符號連結指向既存資料夾者為有效之cwd); 不用fsIsFolder, 其以lstat判定且連結一律為假, 會把有效之junction誤報為cwd不存在
+function execSpawnError(err, opt = {}) {
     let code = ''
     let message = ''
     let errno = null
@@ -19,6 +22,29 @@ function execSpawnError(err) {
         errno = err.errno
     }
     catch (e) {}
+    let cwd = null
+    try {
+        cwd = opt.cwd
+    }
+    catch (e) {}
+    if (code === 'ENOENT' && isestr(cwd)) {
+        let bCwd = true
+        try {
+            bCwd = fs.statSync(cwd).isDirectory()
+        }
+        catch (e) {
+            //只有確定不存在(ENOENT、上層非資料夾之ENOTDIR)才視為cwd無效, 其他stat錯誤(如權限)不改寫訊息
+            let c = ''
+            try {
+                c = e.code
+            }
+            catch (e2) {}
+            bCwd = !(c === 'ENOENT' || c === 'ENOTDIR')
+        }
+        if (!bCwd) {
+            return { code, message: `cwd is not an existing folder: ${cwd}` }
+        }
+    }
     if (!isestr(code)) {
         code = 'UNKNOWN'
     }

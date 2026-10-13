@@ -2,10 +2,13 @@ import size from 'lodash-es/size.js'
 import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
+import pm2resolve from './pm2resolve.mjs'
 
 
 /**
  * 函數去除抖動
+ *
+ * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時以console.log記錄而不外拋(不產生未處理之rejection)，不影響後續佇列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.mjs Github}
  * @memberOf wsemi
@@ -157,12 +160,17 @@ function debounce(ms = 300) {
                     q = []
 
                     //執行最後任務, 不論成功失敗都須持續執行至無佇列
-                    try {
-                        m.func(...m.input) //有可能為sync或async, async時不await, 須持續執行至無佇列
-                    }
-                    catch (err) {
-                        console.log('m.func catch', err)
-                    }
+                    //有可能為sync或async, async時不await, 須持續執行至無佇列; 結果經pm2resolve正規化, 同步拋錯與非同步reject一律記錄, 不使計時器回呼拋錯亦不產生未處理之rejection
+                    pm2resolve(m.func)(...m.input)
+                        .then((res) => {
+                            if (res.state === 'error') {
+                                //記錄本身亦可能拋錯(如值之util.inspect.custom會拋), 須包try, 否則成為未處理之rejection(同evEmit之通報)
+                                try {
+                                    console.log('m.func catch', res.msg)
+                                }
+                                catch (err) {}
+                            }
+                        })
 
                 }
 

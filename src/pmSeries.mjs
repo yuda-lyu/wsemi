@@ -4,12 +4,14 @@ import genPm from './genPm.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
+import pmMarkHandled from './_pmMarkHandled.mjs'
 
 
 /**
  * Promise的mapSeries，循序執行Promise
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
+ * 不給fn時，先行產生之Promise於進入時即被觀察，排在後面者先reject亦不成為未處理之rejection，其結果仍依序取用。
  * 使用函數執行時，等同於pmMap使用函數執行且takeLimit=1，promise依序執行完畢才會調用下一個promise。
  * 先行產生promise時，等同於pmMap使用函數執行且takeLimit=0，或是等同於pmMap先行產生promise，各promise直接執行視各自執行時間結束。
  *
@@ -233,6 +235,12 @@ function pmSeries(rs, fun) {
 
     //default fun
     if (!isfun(fun)) {
+
+        //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則排在後面者先reject時於取用前成為未處理之rejection
+        each(rs, (v) => {
+            pmMarkHandled(useObj ? v.v : v)
+        })
+
         fun = function(v) {
             return v
         }

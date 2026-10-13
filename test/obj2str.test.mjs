@@ -1,6 +1,8 @@
 import assert from 'assert'
 import obj2str from '../src/obj2str.mjs'
 import str2obj from '../src/str2obj.mjs'
+import { thrower, thrownCases } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`obj2str`, function() {
@@ -190,6 +192,39 @@ describe(`obj2str`, function() {
         let r = str2obj(obj2str(o2, ['Uint8Array', 'Uint16Array']), ['Uint8Array', 'Uint16Array'])
         let rr = o2
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`obj2str 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+            let data = { a: { toJSON: thrower(c.mk()) } }
+            let r = null
+            assert.doesNotThrow(() => {
+                r = obj2str(data, 'Uint8Array', { returnWithStateAndMsg: true })
+            })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
+        })
+    }
+
+    for (let c of thrownCases) {
+        it(`should not throw but return '' when toJSON throws ${c.name} without opt [R-CODEC-ERR-01之2]`, function() {
+            let data = { a: { toJSON: thrower(c.mk()) } }
+            let r = null
+            assert.doesNotThrow(() => {
+                r = obj2str(data)
+            })
+            assert.strict.deepStrictEqual(showDeep(r), '')
+        })
+    }
+
+    it(`should keep the TypeError msg of BigInt serialization (same before and after the fix) [R-CODEC-ERR-01之2]`, function() {
+        let r = obj2str({ id: 1n }, 'Uint8Array', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.startsWith('TypeError: Do not know how to serialize a BigInt'), true, `msg 應為 BigInt 序列化錯誤, got ${r.msg}`)
     })
 
 })

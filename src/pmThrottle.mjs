@@ -1,6 +1,7 @@
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
+import pmSettleByState from './_pmSettleByState.mjs'
 import isfun from './isfun.mjs'
 import evem from './evem.mjs'
 
@@ -350,15 +351,7 @@ function pmThrottle() {
         //once
         ev.once(id, (res) => {
             //console.log('once', id, res)
-            if (res.state === 'success') {
-                pm.resolve(res.msg)
-            }
-            else if (res.state === 'cancelled') {
-                pm.reject({ reason: 'cancelled' })
-            }
-            else {
-                pm.reject(res.msg)
-            }
+            pmSettleByState(pm, res.state, res.msg)
         })
 
         return pm

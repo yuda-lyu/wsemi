@@ -10,7 +10,7 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolderCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)；資料夾不存在時自動建立；資料夾內之連結(符號連結、junction，含目標已不存在者)只移除連結本身不跟隨；目標本身為連結時不清空並回傳error
  * @example
  * need test in nodejs.
  *
@@ -29,9 +29,9 @@ function fsCleanFolderCore(pah, opt = {}) {
         //fsCreateFolderCore
         let r = fsCreateFolderCore(pah, { fs }) //若不存在則自動建立, 故先執行
 
-        //check
+        //check, 回傳結果物件本身({ error }), 與其他失敗出口一致
         if (r.error) {
-            return r.error
+            return r
         }
 
         return {
@@ -51,13 +51,18 @@ function fsCleanFolderCore(pah, opt = {}) {
         let entries = fs.readdirSync(pah)
         for (let entry of entries) {
             let curPath = path.join(pah, entry)
-            let stat = fs.statSync(curPath)
-            if (stat.isDirectory()) {
+
+            //以lstatSync判型別(不跟隨連結): 資料夾以rmSync遞迴刪除, 檔案與連結(符號連結、junction, 含目標已不存在之懸空連結)以unlinkSync只移除本身
+            //  原以statSync判型別, statSync會跟隨連結, 懸空連結即拋ENOENT而中止清空, 其後之項目亦未刪
+            //  檔案不改用rmSync: Windows下rmSync之錯誤訊息帶\\?\前綴且非ASCII路徑成亂碼(如檔案被占用之EPERM), unlinkSync之訊息正常
+            let st = fs.lstatSync(curPath)
+            if (st.isDirectory()) {
                 fs.rmSync(curPath, { recursive: true, force: true })
             }
             else {
                 fs.unlinkSync(curPath)
             }
+
         }
     }
     catch (err) {

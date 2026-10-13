@@ -1,4 +1,5 @@
 import get from 'lodash-es/get.js'
+import errToStr from './_errToStr.mjs'
 import isbol from './isbol.mjs'
 import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
@@ -80,7 +81,7 @@ function stru8arr2obj(data, opt = {}) {
         binarys = data.binarys
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //getter可拋出任意值(含null、無原型物件), 不可直接err.toString()
     }
 
     //check
@@ -154,7 +155,7 @@ function stru8arr2obj(data, opt = {}) {
 
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //reviver內讀呼叫端之binarys(Proxy陣列等)可拋出任意值
     }
 
     if (returnWithStateAndMsg) {

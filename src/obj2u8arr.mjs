@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
+import errToStr from './_errToStr.mjs'
 import isbol from './isbol.mjs'
 import isarr1 from './isarr1.mjs'
 import isab from './isab.mjs'
@@ -165,7 +166,7 @@ function obj2u8arr(data, opt = {}) {
 
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //合併時讀呼叫端之二進位(Proxy之ArrayBuffer等)可拋出任意值, 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

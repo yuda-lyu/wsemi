@@ -4,6 +4,7 @@ import path from 'path'
 import cp from 'child_process'
 import { fileURLToPath } from 'url'
 import execCliSession from '../src/execCliSession.mjs'
+import { runExecFail } from './tools/execFailRun.mjs'
 
 
 describe(`execCliSession`, function() {
@@ -274,6 +275,43 @@ describe(`execCliSession`, function() {
         let r = await s.stop()
         //P06c
         assert.strict.deepStrictEqual([r.exited, r.pid, r.error.startsWith('UNKNOWN: ')], [true, null, true])
+    })
+
+})
+
+
+//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+
+    it(`execCliSession: onExit拋錯(不攔截, 仍為未捕捉例外)時stop()仍settle(已啟動與未能啟動) [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
+        let { r } = runExecFail('sessionOnExitThrows')
+        assert.strict.deepStrictEqual(r.out, { started: 'resolve', spawnFail: 'resolve', uncaught: ['onExit spawnFail boom', 'onExit started boom'] })
+    })
+
+    it(`execCliSession: 只給檔名之批次檔依子進程env解析(env移除NoDefaultCurrentDirectoryInExePath時可找到cwd內者, 同cmd.exe) [R-EXEC-FAIL-01之6]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('sessionBareBatchEnv')
+        assert.strict.deepStrictEqual(r.out, { error: '', got: true })
+    })
+
+    it(`execCliSession: onLine(收尾flush、同chunk之第一行)、onStdout(同chunk之行與收尾flush)、onStderr(stderr尾段與收尾flush)拋錯(不攔截, 仍為未捕捉例外)時, 其餘行即時送達、stop()落定、結果完整 [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
+        let { r } = runExecFail('sessionCallbacks')
+        assert.strict.deepStrictEqual(r.out, {
+            sessionOnLineFlush: { code: 0, exited: true, error: '', exitSeen: true },
+            sessionOnStdoutLines: { s: 'resolve', lines: ['l1', 'l2'] },
+            sessionOnLineSameChunk: { got: 'resolve', seen: ['l1', 'l2'], stopped: 'resolve' },
+            sessionOnStdoutFlush: { code: 0, exited: true, error: '' },
+            sessionOnStderrData: { code: 3, error: 'Exit code 3', stderr: 'e1' },
+            sessionOnStderrFlush: { code: 0, exited: true, error: '', stderr: '�' },
+            uncaught: ['onLine chunk boom', 'onLine flush boom', 'onStderr data boom', 'onStderr flush boom', 'onStdout data boom', 'onStdout flush boom'],
+        })
+    })
+
+    it(`execCliSession: onExit拋錯時, 無處理器之行程仍以離開碼1結束並印出錯誤(重拋早於呼叫端續行, 不因隨即process.exit而遺失) (守門) [R-EXEC-FAIL-01之12]`, function() {
+        let { status, signal, stderr } = runExecFail('rethrowSessionOnExit', { exitMode: 'nohandler', allowNoResult: true })
+        assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
     })
 
 })

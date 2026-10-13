@@ -4,6 +4,7 @@ import genPm from './genPm.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -61,7 +62,7 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
 
     }
     catch (err) {
-        pm.reject(err.toString())
+        pm.reject(errToStr(err)) //注入之fs與第三方wasm載入可拋出任意值
     }
 
     return pm

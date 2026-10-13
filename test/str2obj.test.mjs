@@ -1,5 +1,6 @@
 import assert from 'assert'
 import str2obj from '../src/str2obj.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`str2obj`, function() {
@@ -197,6 +198,39 @@ describe(`str2obj`, function() {
         let r = str2obj('{"t":"[Uint8Array]::QmFz"}')
         let rr = { t: new Uint8Array([66, 97, 115]) }
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`str2obj ext拋出任意值(R-CODEC-ERR-01之2)`, function() {
+
+    //mkProxyExt, 讀取indexOf時拋出v之Proxy陣列(isarr對Proxy陣列為真且不觸發陷阱, 至replacer判斷ext時才讀indexOf)
+    let mkProxyExt = (v) => {
+        return new Proxy(['Uint8Array'], {
+            get(t, k) {
+                if (k === 'indexOf') {
+                    throw v
+                }
+                return Reflect.get(t, k)
+            },
+        })
+    }
+
+    it(`should not throw but return { state: 'error', msg: 'null' } when reading ext.indexOf of a Proxy ext throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = str2obj('{"a":1}', mkProxyExt(null), { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+    })
+
+    it(`should not throw but return {} when reading ext.indexOf of a Proxy ext throws null without opt [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = str2obj('{"a":1}', mkProxyExt(null))
+        })
+        assert.strict.deepStrictEqual(showDeep(r), {})
     })
 
 })

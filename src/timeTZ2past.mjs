@@ -3,6 +3,7 @@ import isbol from './isbol.mjs'
 import istimeTZ from './istimeTZ.mjs'
 import timemsTZ2past from './timemsTZ2past.mjs'
 import tz from './_tz.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 function addms(t) {
@@ -110,7 +111,7 @@ function timeTZ2past(t, tNow = null, opt = {}) {
         tNow = addms(tNow)
     }
     catch (err) {
-        return retError(err.toString(), '時間轉換失敗')
+        return retError(errToStr(err), '時間轉換失敗') //try內會讀呼叫端之tNow(Proxy等), 可拋出任意值
     }
 
     //timemsTZ2past, opt原樣傳遞, 兩種模式之回傳形狀皆由其產生

@@ -3,6 +3,7 @@ import path from 'path'
 import cp from 'child_process'
 import { fileURLToPath } from 'url'
 import execCliJsonRpc from '../src/execCliJsonRpc.mjs'
+import { runExecFail } from './tools/execFailRun.mjs'
 
 
 describe(`execCliJsonRpc`, function() {
@@ -165,6 +166,26 @@ describe(`execCliJsonRpc`, function() {
         assert.strict.deepStrictEqual([o.value.ok, o.value.error.startsWith('x: EMFILE: ')], [false, true])
         assert.strict.deepStrictEqual(o.hasSecret, false)
         assert.strict.deepStrictEqual(o.uncaught, [])
+    })
+
+})
+
+
+//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+
+    it(`execCliJsonRpc: 子進程未能啟動者errorType一律notfound, 已啟動後結束為exit [R-EXEC-FAIL-01之10]`, function() {
+        let { r } = runExecFail('rpcErrorType')
+        assert.strict.deepStrictEqual(r.out, { notFound: 'notfound', nonPe: 'notfound', nulArg: 'notfound', cwdMissing: 'notfound', exitEarly: 'exit' })
+    })
+
+    it(`execCliJsonRpc: onNotify、onServerRequest拋錯(不攔截, 仍為未捕捉例外)時, 同一chunk內之回應仍送達而不卡至逾時 [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
+        let { r } = runExecFail('rpcSameChunk')
+        assert.strict.deepStrictEqual(r.out, {
+            rpcSameChunk: { ok: true },
+            rpcSameChunkServerRequest: { ok: true },
+            uncaught: ['onNotify boom', 'onServerRequest boom'],
+        })
     })
 
 })

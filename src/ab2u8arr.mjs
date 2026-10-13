@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isab from './isab.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -51,7 +52,7 @@ function ab2u8arr(ab, opt = {}) {
         u8a = new Uint8Array(ab)
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //Proxy(ArrayBuffer)等之陷阱可拋出任意值, 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

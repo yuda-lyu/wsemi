@@ -1,6 +1,7 @@
 import assert from 'assert'
 import u8arr2obj from '../src/u8arr2obj.mjs'
 import obj2u8arr from '../src/obj2u8arr.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`u8arr2obj`, function() {
@@ -225,6 +226,50 @@ describe(`u8arr2obj`, function() {
         let r = u8arr2obj(u8a, { returnWithStateAndMsg: 'yes' })
         let rr = data
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+
+    //偽造標籤為Uint8Array之Proxy, 讀slice、subarray、buffer時拋出null: try內讀呼叫端之資料可拋出任意值, catch不可再拋(修前catch內err.toString()對null拋TypeError而外拋)
+    let mk = () => {
+        return new Proxy(new Uint8Array(16), {
+            get(t, k) {
+                if (k === Symbol.toStringTag) {
+                    return 'Uint8Array'
+                }
+                if (k === 'slice' || k === 'subarray' || k === 'buffer') {
+                    throw null // eslint-disable-line no-throw-literal
+                }
+                let v = Reflect.get(t, k)
+                return typeof v === 'function' ? v.bind(t) : v
+            },
+        })
+    }
+
+    it(`讀取呼叫端之資料拋出null時, returnWithStateAndMsg回傳{ state: 'error', msg: 'null' }而不外拋 [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        let threw = null
+        try {
+            r = u8arr2obj(mk(), { returnWithStateAndMsg: true })
+        }
+        catch (err) {
+            threw = String(err && err.message)
+        }
+        assert.strict.deepStrictEqual(showDeep({ r, threw }), { r: { state: 'error', msg: 'null' }, threw: null })
+    })
+
+    it(`讀取呼叫端之資料拋出null時, 預設模式回傳失敗之預設值而不外拋 [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        let threw = null
+        try {
+            r = u8arr2obj(mk())
+        }
+        catch (err) {
+            threw = String(err && err.message)
+        }
+        assert.strict.deepStrictEqual(showDeep({ r, threw }), { r: {}, threw: null })
     })
 
 })

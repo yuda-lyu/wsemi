@@ -1,9 +1,12 @@
 import fs from 'fs'
 import assert from 'assert'
+import { Writable, Readable } from 'stream'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsMergeFiles from '../src/fsMergeFiles.mjs'
 import fsMergeFilesCore from '../src/fsMergeFilesCore.mjs'
+import { thrower, revoked } from './tools/codecThrown.mjs'
+import { settleShown } from './tools/caseKit.mjs'
 
 
 describe(`fsMergeFiles`, function() {
@@ -252,5 +255,101 @@ describe(`fsMergeFiles error paths`, function() {
         await delay(300)
         assert.strict.deepStrictEqual([nUncaught, nUnhandled], [0, 0])
     })
+
+})
+
+
+describe(`fsMergeFilesCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+
+    //settle逾時判定, 放寬逾時
+    this.timeout(15000)
+
+    //reject值規則: 取拋出值之message; message為undefined者轉字串(_errToStr: 先String(err), 拋錯則讀字串message, 再無則'unknown error')
+    //  故Error只得message('boom', 不是err.toString()之'Error: boom'), 帶字串message之一般物件得其message(不是'[object Object]'), 與其餘站點之_errToStr結果不同, 不共用thrownCases
+    //修正前catch內以get(err, 'message', String(err))求值, 預設值引數先求String(err): 無原型物件、已撤銷之Proxy使其拋TypeError, async函數改以該TypeError reject, 且跳過其後寫入流之destroy
+    //same為true者修正前後結果相同(守門: 防止機械替換成err.toString()或errToStr(err), 或不防null、undefined之直接讀message); sameL為寫入流error監聽之注入點(注入點3)之同義旗標
+    let mergeCases = [
+        { name: 'an Error', mk: () => new Error('boom'), msg: 'boom', same: true, sameL: true },
+        { name: 'a plain object with a string message', mk: () => ({ message: 'plain-msg' }), msg: 'plain-msg', same: true, sameL: true },
+        { name: 'null', mk: () => null, msg: 'null', same: true, sameL: false },
+        { name: 'undefined', mk: () => undefined, msg: 'undefined', same: true, sameL: false },
+        { name: 'an object without prototype', mk: () => Object.create(null), msg: 'unknown error', same: false, sameL: false },
+        { name: 'a revoked Proxy', mk: () => revoked(), msg: 'unknown error', same: false, sameL: false },
+        { name: 'an object without prototype but with a string message', mk: () => Object.assign(Object.create(null), { message: 'np-msg' }), msg: 'np-msg', same: false, sameL: false },
+    ]
+
+    //fs替身(不觸及實體檔案): 輸出資料夾視為已存在(statSync、lstatSync), 寫入流(createWriteStream)與切片檢查(lstatSync)由各案注入
+    let fpIn = 'fake/in.bin'
+    let fpOut = 'fake/out.bin'
+    let statFolder = { isFile: () => false, isDirectory: () => true, isSymbolicLink: () => false }
+    let mkFs = ({ createWriteStream, lstatSync = () => statFolder }) => ({
+        statSync: () => ({}),
+        lstatSync,
+        createWriteStream,
+    })
+
+    //settleShown(test/tools/caseKit.mjs): 5秒內須settle, 結果值經showValue(非字串帶型別前綴, 已撤銷之Proxy等不進入assert之實際值)
+
+    //注入點1: fs.createWriteStream拋出(寫入流尚未建立)
+    for (let c of mergeCases) {
+        it(`${c.same ? '(守門) ' : ''}should reject with '${c.msg}' when fs.createWriteStream throws ${c.name} [R-CODEC-ERR-01之2]`, async function() {
+            let fsFake = mkFs({ createWriteStream: thrower(c.mk()) })
+            let r = await settleShown(fsMergeFilesCore([fpIn], fpOut, { fs: fsFake }))
+            assert.strict.deepStrictEqual(r, { s: 'reject', v: c.msg })
+        })
+    }
+
+    //注入點2: 寫入流已建立後, 切片檢查(fsIsFileCore內fs.lstatSync)拋出: reject同上, 且寫入流須destroy(釋放fd)
+    for (let c of mergeCases) {
+        it(`${c.same ? '(守門) ' : ''}should reject with '${c.msg}' and destroy the write stream when fs.lstatSync throws ${c.name} for the slice after the write stream was created [R-CODEC-ERR-01之2]`, async function() {
+            let ws = new Writable({
+                write(chunk, enc, cb) {
+                    cb()
+                },
+            })
+            let thrown = thrower(c.mk())
+            let fsFake = mkFs({
+                createWriteStream: () => ws,
+                lstatSync: (p) => {
+                    if (p === fpIn) {
+                        thrown()
+                    }
+                    return statFolder
+                },
+            })
+            let r = await settleShown(fsMergeFilesCore([fpIn], fpOut, { fs: fsFake }))
+            assert.strict.deepStrictEqual(r, { s: 'reject', v: c.msg })
+            assert.strict.deepStrictEqual(ws.destroyed, true)
+        })
+    }
+
+    //注入點3: 寫入流建立後(監聽器已掛上)以值v發出'error'(注入之fs所產寫入流可以非Error之值出錯), 早於切片之寫入完成
+    //  監聽器內不得拋錯(修正前讀err.message: null、undefined、已撤銷之Proxy即拋TypeError成未捕捉例外, pm不reject), 不得以null判定寫入流未出錯(修正前errWrite為null時續寫並刪除切片、以成功resolve)
+    //  reject同上, 切片不得被刪除, 寫入流須destroy
+    let statFile = { isFile: () => true, isDirectory: () => false, isSymbolicLink: () => false }
+    for (let c of mergeCases) {
+        it(`${c.sameL ? '(守門) ' : ''}should reject with '${c.msg}' without deleting the slice when the write stream emits an 'error' event whose value is ${c.name} [R-CODEC-ERR-01之2]`, async function() {
+            let ws = new Writable({
+                write(chunk, enc, cb) {
+                    cb()
+                },
+            })
+            let v = c.mk()
+            let fsFake = mkFs({
+                createWriteStream: () => {
+                    process.nextTick(() => ws.emit('error', v))
+                    return ws
+                },
+                lstatSync: (p) => (p === fpIn ? statFile : statFolder),
+            })
+            fsFake.createReadStream = () => Readable.from([Buffer.from('abc')])
+            let unlinked = []
+            fsFake.unlinkSync = (p) => {
+                unlinked.push(p)
+            }
+            let r = await settleShown(fsMergeFilesCore([fpIn], fpOut, { fs: fsFake }))
+            assert.strict.deepStrictEqual({ r, unlinked, destroyed: ws.destroyed }, { r: { s: 'reject', v: c.msg }, unlinked: [], destroyed: true })
+        })
+    }
 
 })

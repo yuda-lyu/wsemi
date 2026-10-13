@@ -14,6 +14,7 @@ import strright from './strright.mjs'
 import arrHas from './arrHas.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import callUser from './_callUser.mjs'
 
 
 /**
@@ -25,7 +26,7 @@ import execSpawnError from './_execSpawnError.mjs'
  * @param {String|Array} args 輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數；非陣列亦非字串時reject錯誤訊息(不拋錯)
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.mode='spawn'] 輸入執行模式字串，可選'spawn'、'exec'、'execFile'，預設'spawn'。'spawn'不經shell直接執行，輸出以串流處理，適合大量輸出或長時間執行，prog與args不需也不可加引號；'exec'經shell執行，prog與args以空白串接成指令字串，適合須用到shell語法之情形，陣列型args之元素含空白且未含雙引號者會自動以雙引號包住，prog含空白亦同，已含雙引號者視為呼叫端自行處理而原樣串接，字串型args視為呼叫端已自組之指令列，原樣串接不加引號；'execFile'不經shell直接執行可執行檔，args須為陣列，給字串會被當成單一參數。三種模式之stdout與stderr皆以Buffer接收後走同一條解碼路徑；惟'exec'與'execFile'之stdout或stderr超過1MB(node之maxBuffer預設值)時子程序會被node終止，reject為`code[null]:\n訊息`，大量輸出請用'spawn'
- * @param {Function} [opt.cbStdout=null] 輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準。回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理
+ * @param {Function} [opt.cbStdout=null] 輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準。回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之落定與結果字串)
  * @param {Function} [opt.cbStderr=null] 輸入回調stderr函數，預設null，行為同cbStdout
  * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除
  * @param {Boolean} [opt.useChcp=false] 輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'
@@ -224,7 +225,7 @@ function execProcess(prog, args, opt = {}) {
                 let text = dec.write(buf)
                 segs.push({ which, text, buf: retain ? buf : null })
                 if (text !== '' && isfun(cb)) {
-                    cb(text)
+                    callUser(cb, text)
                 }
             }
         }
@@ -248,7 +249,7 @@ function execProcess(prog, args, opt = {}) {
                 }
                 segs.push({ which, text, buf: null })
                 if (isfun(cb)) {
-                    cb(text)
+                    callUser(cb, text) //收尾時回調拋錯不得中斷close之收尾(否則本函數永不落定)
                 }
             }
             flush('out', decOut, cbStdout)

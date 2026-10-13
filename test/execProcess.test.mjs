@@ -3,6 +3,7 @@ import cp from 'child_process'
 import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import execProcess from '../src/execProcess.mjs'
+import { runExecFail } from './tools/execFailRun.mjs'
 
 
 //consoleCodePage, 取本機主控台字碼頁編號, 僅win32, 供依環境決定是否跳過依賴系統字碼頁之案例
@@ -476,6 +477,27 @@ describe(`execProcess`, function() {
         }
         //P11c
         assert.strict.deepStrictEqual(rs, new Array(5).fill('args is not an array or string'))
+    })
+
+})
+
+
+//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+
+    it(`execProcess: 末端不完整多位元組使cbStdout、cbStderr於收尾flush時首次被呼叫而拋錯(不攔截, 仍為未捕捉例外)時, execProcess仍落定 [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
+        let { r } = runExecFail('execProcessCbFlush')
+        assert.strict.deepStrictEqual(r.out, { execProcessCbFlush: 'resolve', execProcessCbStderrFlush: 'resolve', uncaught: ['cbStderr flush boom', 'cbStdout flush boom'] })
+    })
+
+    it(`execProcess: cbStdout、cbStderr於data時拋錯(不攔截, 仍為未捕捉例外)時, 該段輸出仍計入resolve之合併字串 [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
+        let { r } = runExecFail('execProcessCbData')
+        assert.strict.deepStrictEqual(r.out, { cbStdoutData: { s: 'resolve', v: 'x' }, cbStderrData: { s: 'resolve', v: 'y' }, uncaught: ['cbStderr data boom', 'cbStdout data boom'] })
+    })
+
+    it(`execProcess: cbStdout於收尾flush時拋錯, 無處理器之行程仍以離開碼1結束並印出錯誤(重拋早於呼叫端續行, 不因隨即process.exit而遺失) (守門) [R-EXEC-FAIL-01之12]`, function() {
+        let { status, signal, stderr } = runExecFail('rethrowExecProcessFlush', { exitMode: 'nohandler', allowNoResult: true })
+        assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
     })
 
 })

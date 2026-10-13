@@ -8,6 +8,7 @@ import isNumber from 'lodash-es/isNumber.js'
 import isnum from './isnum.mjs'
 import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 let inXRange = 'in x-range'
@@ -833,7 +834,7 @@ function interp1(ps, px, opt = {}) {
         }
         catch (err) {
             v = {
-                err: err.toString(),
+                err: errToStr(err), //try內讀呼叫端之opt(getter、Proxy)可拋出任意值, 不可直接err.toString()
             }
         }
         return v

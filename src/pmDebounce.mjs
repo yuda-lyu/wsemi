@@ -1,7 +1,7 @@
 import ispint from './ispint.mjs'
-import ispm from './ispm.mjs'
 import isfun from './isfun.mjs'
 import cint from './cint.mjs'
+import pm2resolve from './pm2resolve.mjs'
 
 
 /**
@@ -9,10 +9,12 @@ import cint from './cint.mjs'
  *
  * 同時僅會執行一個佇列(非同步函數)，到達防抖時間才會取最後一個佇列執行，待其執行完畢，若期間有新佇列進來則儲存，待執行完畢後取最後佇列出來執行
  *
+ * 任務之結果經pm2resolve正規化，任務同步拋錯或其Promise被reject皆視為執行完畢，以console.log記錄而不外拋(不產生未處理之rejection)，不影響後續佇列
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmDebounce.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
- * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後等待執行，呼叫無回傳值，被執行任務之結果與錯誤皆不回傳給呼叫端，須由任務自行處理
  * @example
  *
  * let dbc = pmDebounce(300)
@@ -185,32 +187,27 @@ function pmDebounce(ms = 300) {
                     q = []
                     // console.log('m', m)
 
-                    //執行最末任務
+                    //執行最末任務, 結果經pm2resolve正規化(同步回傳、同步拋錯、Promise皆同), 其必定resolve, 故必定恢復wait而不停擺, 亦不使計時器回呼拋錯
                     // console.log('fun start ii', getIt(), 'ms', tDiff, m.input)
-                    let r = m.func(...m.input)
-                    if (ispm(r)) {
-                        r
-                            .then((res) => {
-                                m.output = res
-                            })
-                            .catch((err) => {
-                                m.output = { err }
-                            })
-                            .finally(() => {
-                                state = 'wait'
+                    pm2resolve(m.func)(...m.input)
+                        .then((res) => {
+                            m.output = (res.state === 'success') ? res.msg : { err: res.msg }
+                            if (res.state === 'error') {
+                                //比照debounce記錄失敗, 記錄本身亦可能拋錯(如值之util.inspect.custom會拋), 須包try, 否則成為未處理之rejection
+                                try {
+                                    console.log('m.func catch', res.msg)
+                                }
+                                catch (err) {}
+                            }
+                        })
+                        .finally(() => {
+                            state = 'wait'
 
-                                //update, 因func計算時間可能較長, 得重新更新時間點
-                                tLast = Date.now()
+                            //update, 因func計算時間可能較長, 得重新更新時間點
+                            tLast = Date.now()
 
-                                // console.log('fun(async) end ii', getIt(), 'ms', m.input)
-                            })
-                    }
-                    else {
-                        m.output = r
-                        state = 'wait'
-
-                        // console.log('fun(sync) end_i', getIt(), 'ms', m.input)
-                    }
+                            // console.log('fun end ii', getIt(), 'ms', m.input)
+                        })
 
                 }
 

@@ -1,6 +1,7 @@
 import assert from 'assert'
 import ispm from '../src/ispm.mjs'
 import genPm from '../src/genPm.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`ispm`, function() {
@@ -147,6 +148,16 @@ describe(`ispm`, function() {
     it(`should return false when input NaN`, function() {
         let r = ispm(NaN)
         assert.strict.deepStrictEqual(r, false)
+    })
+
+})
+
+
+describe(`ispm settle(R-PM-SETTLE-01)`, function() {
+
+    it(`ispm: 讀取即拋錯之值回傳false而不拋錯 [規則8]`, function() {
+        let { r } = runPmSettle('ispmHostile')
+        assert.strict.deepStrictEqual(r.out, { revoked: false, getTrap: false, tagGetter: false, nativePm: true })
     })
 
 })

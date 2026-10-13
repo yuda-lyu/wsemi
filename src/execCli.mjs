@@ -14,9 +14,12 @@ import isp0int from './isp0int.mjs'
 import strleft from './strleft.mjs'
 import strdelleft from './strdelleft.mjs'
 import strTruncate from './strTruncate.mjs'
+import getErrorMessage from './getErrorMessage.mjs'
+import errToStr from './_errToStr.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import callUser from './_callUser.mjs'
 
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心已抽至execCliCore
@@ -127,14 +130,15 @@ function execCliOnce(command, args = [], opt = {}) {
     //pm
     let pm = genPm()
 
-    //envSpawn, 併入process.env(同名以envExtra為準, 含PYTHONIOENCODING)
-    //每次attempt於此重新求值並僅作用於該次子進程, 不動本進程process.env, 故並行調用可各自帶不同值
-    let envSpawn = buildSpawnEnv(envExtra)
-
-    //spawn, 同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等)以結果物件回報而不reject, 且屬確定性失敗不重試; buildSpawnArgs之拋錯亦同
+    //spawn, 同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等)以結果物件回報而不reject, 且屬確定性失敗不重試; buildSpawnArgs(含不存在之.cmd/.bat)與buildSpawnEnv之拋錯亦同
     let proc
     try {
-        let winSpawn = buildSpawnArgs(command, args)
+
+        //envSpawn, 併入process.env(同名以envExtra為準, 含PYTHONIOENCODING); 須在try內, env物件展開拋錯(如getter拋錯)亦以結果物件回報
+        //每次attempt於此重新求值並僅作用於該次子進程, 不動本進程process.env, 故並行調用可各自帶不同值
+        let envSpawn = buildSpawnEnv(envExtra)
+
+        let winSpawn = buildSpawnArgs(command, args, { cwd, env: envSpawn })
         proc = spawn(winSpawn.file, winSpawn.args, {
             cwd,
             stdio: ['pipe', 'pipe', 'pipe'],
@@ -144,7 +148,7 @@ function execCliOnce(command, args = [], opt = {}) {
         })
     }
     catch (err) {
-        let e = execSpawnError(err)
+        let e = execSpawnError(err, { cwd })
         let r = {
             ok: false,
             stdout: '',
@@ -152,7 +156,7 @@ function execCliOnce(command, args = [], opt = {}) {
             code: null,
             error: `${e.code}: ${e.message}`,
             durationMs: Date.now() - startTime,
-            pid: undefined, //與'error'事件(如ENOENT)之結果一致
+            pid: undefined, //與'error'事件(如ENOENT)之結果一致: 未能啟動者帶pid鍵且其值為undefined(JSDoc契約)
         }
         kNoRetry.add(r)
         pm.resolve(r)
@@ -179,7 +183,7 @@ function execCliOnce(command, args = [], opt = {}) {
         }
         settled = true
         clearTimeout(timer)
-        let e = execSpawnError(err)
+        let e = execSpawnError(err, { cwd })
         pm.resolve({
             ok: false,
             stdout: '',
@@ -196,14 +200,14 @@ function execCliOnce(command, args = [], opt = {}) {
         return pm
     }
 
-    //stdout data, 經TextDecoder跨chunk解碼
+    //stdout data, 經TextDecoder跨chunk解碼; 回調經callUser, 拋錯(不攔截, 改於下一輪重拋)不致中斷累積
     proc.stdout.on('data', (chunk) => {
         let str = stdoutDecoder.decode(chunk, { stream: true })
         if (!str) {
             return
         }
         if (isfun(onStdout)) {
-            onStdout(str)
+            callUser(onStdout, str)
         }
         if (stdout.length < maxBuffer) {
             stdout += str
@@ -217,7 +221,7 @@ function execCliOnce(command, args = [], opt = {}) {
             return
         }
         if (isfun(onStderr)) {
-            onStderr(str)
+            callUser(onStderr, str)
         }
         if (stderr.length < maxBuffer) {
             stderr += str
@@ -311,29 +315,60 @@ function execCliOnce(command, args = [], opt = {}) {
             return
         }
 
-        //validator
-        if (validator && !validator(stdout)) {
+        //resolveOk
+        let resolveOk = () => {
             pm.resolve({
-                ok: false,
-                stdout: strTruncate(stdout, 500, optTruncate),
-                stderr: strTruncate(stderr, 500, optTruncate),
+                ok: true,
+                stdout,
+                stderr,
                 code: 0,
-                error: 'OUTPUT_VALIDATION_FAILED',
+                error: '',
                 durationMs,
                 pid: proc.pid,
             })
+        }
+
+        //無驗證
+        if (!validator) {
+            resolveOk()
             return
         }
 
-        pm.resolve({
-            ok: true,
-            stdout,
-            stderr,
-            code: 0,
-            error: '',
-            durationMs,
-            pid: proc.pid,
+        //validator, 以原生Promise承接: 自訂函數同步拋錯或其Promise被reject視同驗證失敗(不成為未捕捉例外、不使本次呼叫懸置), 回傳Promise者以其結果判定, 真值為通過
+        //拋錯訊息以'validate threw: 訊息'前綴於stderr(error仍恰為OUTPUT_VALIDATION_FAILED, 下游以此判定驗證失敗)
+        //拋錯與否另以bThrew標記(拋出之值可為null、undefined, 不可拿值當旗標); 訊息取getErrorMessage, 為空者(null、undefined等)退為errToStr, 並截斷同stderr
+        new Promise((resolve) => {
+            resolve(validator(stdout))
         })
+            .then((b) => {
+                return { pass: !!b, bThrew: false, err: null }
+            }, (err) => {
+                return { pass: false, bThrew: true, err }
+            })
+            .then(({ pass, bThrew, err }) => {
+                if (pass) {
+                    resolveOk()
+                    return
+                }
+                let se = strTruncate(stderr, 500, optTruncate)
+                if (bThrew) {
+                    let m = getErrorMessage(err)
+                    if (m === '') {
+                        m = errToStr(err)
+                    }
+                    m = strTruncate(m, 500, optTruncate)
+                    se = `validate threw: ${m}${se !== '' ? `\n${se}` : ''}`
+                }
+                pm.resolve({
+                    ok: false,
+                    stdout: strTruncate(stdout, 500, optTruncate),
+                    stderr: se,
+                    code: 0,
+                    error: 'OUTPUT_VALIDATION_FAILED',
+                    durationMs,
+                    pid: proc.pid,
+                })
+            })
 
     })
 
@@ -353,16 +388,16 @@ function execCliOnce(command, args = [], opt = {}) {
  * @param {Array} [args=[]] 輸入參數字串陣列，內容原樣傳遞給目標CLI，預設[]
  * @param {Object} [opt={}] 輸入設定物件
  * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，預設120000
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: cwd is not an existing folder: <cwd>'(未能啟動，不重試)
  * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
- * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean，預設undefined代表不驗證
+ * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean或回傳Promise(以其resolve值判定)，回傳真值為通過；自訂函數拋錯或其Promise被reject視同驗證失敗(error為'OUTPUT_VALIDATION_FAILED'，stderr前綴'validate threw: 錯誤訊息'，訊息截斷至500字元)；自訂函數回傳之Promise不受timeoutMs約束(子進程已結束)，永不落定時本函數亦不落定，durationMs不含驗證時間，預設undefined代表不驗證
  * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，超過部分將不再累積，預設10485760(10MB)
- * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理，預設undefined
+ * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之輸出累積與結果)，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，行為同onStdout，預設undefined
  * @param {Object} [opt.env=undefined] 輸入本次調用額外注入之環境變數物件，會併入process.env之後(同名以此為準，含PYTHONIOENCODING)，僅作用於該次子進程而不影響本進程之process.env，故並行調用可各自帶不同值；值為undefined代表移除該變數(可遮蔽繼承值)，值為null會成為字面字串'null'故建議勿傳；Windows下環境變數大小寫不敏感，同名不同大小寫(如Path與PATH)亦視為同名覆蓋，預設undefined代表不覆寫任何變數
  * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0
  * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，實際間隔為retryDelayMs乘以重試次數且上限15000ms，預設5000
- * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、cwd不存在等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串時不啟動，attempts為0且不帶pid鍵
  * @example
  * //need test in nodejs
  *

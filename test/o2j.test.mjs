@@ -1,5 +1,7 @@
 import assert from 'assert'
 import o2j from '../src/o2j.mjs'
+import { thrower, thrownCases } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`o2j`, function() {
@@ -117,6 +119,42 @@ describe(`o2j`, function() {
         let r = o2j({ a: 1 }, false, { returnWithStateAndMsg: 'yes' })
         let rr = '{"a":1}'
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`o2j 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+            //bFormat為false與true兩條序列化路徑皆須攔截
+            for (let bFormat of [false, true]) {
+                let v = { a: { toJSON: thrower(c.mk()) } }
+                let r = null
+                assert.doesNotThrow(() => {
+                    r = o2j(v, bFormat, { returnWithStateAndMsg: true })
+                })
+                assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
+            }
+        })
+    }
+
+    for (let c of thrownCases) {
+        it(`should not throw but return '' when toJSON throws ${c.name} without opt [R-CODEC-ERR-01之2]`, function() {
+            let v = { a: { toJSON: thrower(c.mk()) } }
+            let r = null
+            assert.doesNotThrow(() => {
+                r = o2j(v)
+            })
+            assert.strict.deepStrictEqual(showDeep(r), '')
+        })
+    }
+
+    it(`should keep the TypeError msg of BigInt serialization (same before and after the fix) [R-CODEC-ERR-01之2]`, function() {
+        let r = o2j({ id: 1n }, false, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r.msg.startsWith('TypeError: Do not know how to serialize a BigInt'), true, `msg 應為 BigInt 序列化錯誤, got ${r.msg}`)
     })
 
 })

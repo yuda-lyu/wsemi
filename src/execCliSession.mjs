@@ -11,6 +11,7 @@ import isp0int from './isp0int.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import callUser from './_callUser.mjs'
 
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心
@@ -27,7 +28,7 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  * @param {String} command 輸入執行檔名稱字串，可為註冊系統的全域指令或執行檔路徑
  * @param {Array} [args=[]] 輸入參數字串陣列，預設[]
  * @param {Object} [opt={}] 輸入設定物件
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以onExit與stop()之結果回報error為'ENOENT: cwd is not an existing folder: <cwd>'
  * @param {Object} [opt.env=undefined] 輸入本次額外注入之環境變數物件，語意同execCli，預設undefined
  * @param {Number} [opt.timeoutMs=null] 輸入整體逾時毫秒正整數，逾時即樹殺並於結果標timeout:true，預設null代表不限制(工作階段為長駐，不沿用execCli之120000)
  * @param {Number} [opt.exitGraceMs=2000] 輸入stop()關閉stdin後等待子進程自行退出之寬限毫秒非負整數，逾期即樹殺，預設2000
@@ -36,7 +37,7 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  * @param {Function} [opt.onLine=undefined] 輸入stdout逐行回調函數，格式為(line)=>{}，line不含換行(\\r\\n與\\n皆視為換行)，子進程結束時殘餘之不完整行亦會發出，預設undefined
  * @param {Function} [opt.onStdout=undefined] 輸入stdout原始片段回調函數，格式為(chunk)=>{}，已經UTF-8跨chunk解碼，供非行式協定(如LSP之Content-Length分幀)自行分幀，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
- * @param {Function} [opt.onExit=undefined] 輸入子進程結束回調函數，格式為(result)=>{}，result同stop()之回傳，預設undefined。onLine、onStdout、onStderr、onExit內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理
+ * @param {Function} [opt.onExit=undefined] 輸入子進程結束回調函數，格式為(result)=>{}，result同stop()之回傳，預設undefined。onLine、onStdout、onStderr、onExit內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘回調之送達、stop()之落定與結果)
  * @returns {Object} 回傳工作階段物件s，內含pid(子進程pid，spawn失敗為null)、exited(是否已結束布林值)、write(str)(寫入stdin，回傳Promise，resolve為是否寫入成功布林值，子進程已結束時靜默resolve(false))、writeLine(str)(補換行後寫入)、stop()(關閉stdin並等待結束，回傳Promise，resolve回傳結果物件，內含code、signal、exited、timeout、killed、error、stderr、durationMs、pid；多次呼叫回傳同一Promise)
  * @example
  * //need test in nodejs
@@ -184,8 +185,9 @@ function execCliSession(command, args = [], opt = {}) {
             ...r,
         }
         s.exited = true
+
         if (isfun(onExit)) {
-            onExit(result)
+            callUser(onExit, result) //onExit拋錯不得中斷喚醒stop(), 否則stop()永久懸置
         }
         pmExit.resolve(result)
     }
@@ -216,18 +218,19 @@ function execCliSession(command, args = [], opt = {}) {
     //spawn, buildSpawnArgs之拋錯亦於此回報
     let proc
     try {
-        let sp = buildSpawnArgs(command, args)
+        let envSpawn = buildSpawnEnv(envExtra)
+        let sp = buildSpawnArgs(command, args, { cwd, env: envSpawn })
         proc = spawn(sp.file, sp.args, {
             cwd,
             stdio: ['pipe', 'pipe', 'pipe'],
             windowsHide: true, //執行的主程序若沒有主控台調用執行程序就不會有視窗, 但若通過pm2執行會有, 須設定windowsHide=true
-            env: buildSpawnEnv(envExtra),
+            env: envSpawn,
             ...sp.opt,
         })
     }
     catch (err) {
-        //spawn同步拋錯(如EPERM、ENAMETOOLONG、參數檢查錯誤), 訊息經execSpawnError去除參數值
-        let e = execSpawnError(err)
+        //spawn同步拋錯(如EPERM、ENAMETOOLONG、參數檢查錯誤、不存在之.cmd/.bat), 訊息經execSpawnError去除參數值, cwd不存在時改指cwd
+        let e = execSpawnError(err, { cwd })
         s.write = async () => false
         s.writeLine = async () => false
         s.stop = stopNoProc
@@ -241,7 +244,7 @@ function execCliSession(command, args = [], opt = {}) {
     //error, 須於存取stdio前監聽: node對EMFILE、ENFILE不建立stdio即於nextTick發出'error', 先存取會拋TypeError且'error'無人監聽而拉倒程序
     //  可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等, 訊息經execSpawnError去除參數值
     proc.on('error', (err) => {
-        let e = execSpawnError(err)
+        let e = execSpawnError(err, { cwd })
         settle({ error: `${e.code}: ${e.message}` })
     })
 
@@ -268,7 +271,7 @@ function execCliSession(command, args = [], opt = {}) {
                 line = line.slice(0, -1)
             }
             if (isfun(onLine)) {
-                onLine(line)
+                callUser(onLine, line) //拋錯不得中斷同一chunk其餘行之送達(否則延至下個chunk或收尾, 如JSON-RPC之回應卡至逾時)
             }
             idx = lineBuf.indexOf('\n')
         }
@@ -279,7 +282,7 @@ function execCliSession(command, args = [], opt = {}) {
                 line = line.slice(0, -1)
             }
             if (isfun(onLine)) {
-                onLine(line)
+                callUser(onLine, line)
             }
         }
     }
@@ -300,7 +303,7 @@ function execCliSession(command, args = [], opt = {}) {
             return
         }
         if (isfun(onStdout)) {
-            onStdout(str)
+            callUser(onStdout, str) //拋錯不得使該chunk不進onLine
         }
         emitLines(str, false)
     })
@@ -312,7 +315,7 @@ function execCliSession(command, args = [], opt = {}) {
             return
         }
         if (isfun(onStderr)) {
-            onStderr(str)
+            callUser(onStderr, str)
         }
         appendStderr(str)
     })
@@ -350,11 +353,11 @@ function execCliSession(command, args = [], opt = {}) {
             return
         }
 
-        //flush decoder殘餘與不完整行
+        //flush decoder殘餘與不完整行; 回調經callUser, 拋錯不得中斷收尾(否則不settle, stop()於killWaitMs後誤報STOP_TIMEOUT且onExit不被呼叫)
         let fOut = stdoutDecoder.decode()
         if (fOut) {
             if (isfun(onStdout)) {
-                onStdout(fOut)
+                callUser(onStdout, fOut)
             }
             emitLines(fOut, false)
         }
@@ -362,7 +365,7 @@ function execCliSession(command, args = [], opt = {}) {
         let fErr = stderrDecoder.decode()
         if (fErr) {
             if (isfun(onStderr)) {
-                onStderr(fErr)
+                callUser(onStderr, fErr)
             }
             appendStderr(fErr)
         }

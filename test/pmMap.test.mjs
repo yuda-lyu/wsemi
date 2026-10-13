@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmMap from '../src/pmMap.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmMap`, function() {
@@ -382,6 +383,24 @@ describe(`pmMap`, function() {
     it(`should return '${r9}' when run test9 with empty object`, async function() {
         let ms = await test9()
         assert.strict.deepStrictEqual(JSON.stringify(ms), r9)
+    })
+
+})
+
+
+describe(`pmMap settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmMap: fun同步拋錯reject原值, 回傳一般值resolve, 不給fun時一般值resolve且與pmSeries相同, 不經console.error [規則1、2]`, function() {
+        let { r } = runPmSettle('mapFunResults')
+        assert.strict.deepStrictEqual(r.out, {
+            funThrow: { s: 'reject', same: true },
+            funValue1: { s: 'resolve', v: [10, 20] },
+            funValue0: { s: 'resolve', v: [10, 20] },
+            noFunValues: { s: 'resolve', v: [1, 2] },
+            noFunObj: { s: 'resolve', v: [1, 2] },
+            seriesNoFunObj: { s: 'resolve', v: [1, 2] },
+            consoleError: 0,
+        })
     })
 
 })

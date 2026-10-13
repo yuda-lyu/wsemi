@@ -1,5 +1,7 @@
 import assert from 'assert'
 import stru8arr2obj from '../src/stru8arr2obj.mjs'
+import { thrower } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`stru8arr2obj`, function() {
@@ -246,6 +248,65 @@ describe(`stru8arr2obj`, function() {
         let r = stru8arr2obj(inp, { returnWithStateAndMsg: 'yes' })
         let rr = out
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`stru8arr2obj 呼叫端物件拋出任意值(R-CODEC-ERR-01之2)`, function() {
+
+    //mkGetterData, results為會拋出v之getter(另有binarys: [])
+    let mkGetterData = (v) => {
+        let data = {}
+        Object.defineProperty(data, 'results', { enumerable: true, get: thrower(v) })
+        data.binarys = []
+        return data
+    }
+
+    //mkProxyBinarys, 讀取length時拋出v之Proxy陣列(isarr對Proxy陣列為真且不觸發陷阱, 至reviver檢查索引界線時才讀length)
+    let mkProxyBinarys = (v) => {
+        return new Proxy([new Uint8Array([1])], {
+            get(t, k) {
+                if (k === 'length') {
+                    throw v
+                }
+                return Reflect.get(t, k)
+            },
+        })
+    }
+
+    let results = '{"a":"[BlazeForUint8Array]::0"}'
+
+    it(`should not throw but return { state: 'error', msg: 'null' } when the results getter throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = stru8arr2obj(mkGetterData(null), { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+    })
+
+    it(`should not throw but return {} when the results getter throws null without opt [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = stru8arr2obj(mkGetterData(null))
+        })
+        assert.strict.deepStrictEqual(showDeep(r), {})
+    })
+
+    it(`should not throw but return { state: 'error', msg: 'null' } when reading the length of a Proxy binarys throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = stru8arr2obj({ results, binarys: mkProxyBinarys(null) }, { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+    })
+
+    it(`should not throw but return {} when reading the length of a Proxy binarys throws null without opt [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = stru8arr2obj({ results, binarys: mkProxyBinarys(null) })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), {})
     })
 
 })

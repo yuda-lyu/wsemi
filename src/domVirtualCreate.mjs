@@ -93,18 +93,26 @@ async function domVirtualCreate(fun, opt = {}) {
     domPrepend(body, elePanel)
 
     //call fun
+    //不論fun成功、同步拋錯或其Promise被reject, 皆須移除臨時元素(finally), 否則失敗者之臨時元素殘留於body
     let r
-    let ofun = fun(eleTar)
-    if (ispm(ofun)) {
-        r = await ofun
+    try {
+        let ofun = fun(eleTar)
+        if (ispm(ofun)) {
+            r = await ofun
+        }
+        else {
+            r = ofun
+        }
     }
-    else {
-        r = ofun
+    finally {
+        // remove
+        // div.remove() //IE11不支援element.remove()
+        //清理本身不得拋錯覆蓋原結果或原錯誤(fun可能已自行移除臨時元素)
+        try {
+            domRemove(elePanel)
+        }
+        catch (err) {}
     }
-
-    // remove
-    // div.remove() //IE11不支援element.remove()
-    domRemove(elePanel)
 
     return r
 }

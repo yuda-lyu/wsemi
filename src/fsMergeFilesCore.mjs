@@ -9,6 +9,7 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import fsDeleteFileCore from './fsDeleteFileCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -63,8 +64,20 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     //pmWrite供等待drain時競速: 寫入流出錯後drain永不觸發, 無競速即懸置
     let streamWrite = null
     let errWrite = null
+    let bErrWrite = false //寫入流是否已出錯, 不以errWrite是否為null判定(注入之fs所產寫入流可以null出錯)
     let pmWrite = genPm()
-    pmWrite.catch(() => {}) //write於兩片之間(無人race時)出錯, pmWrite之reject會成為unhandledRejection, 故先掛空catch標記已處理; 實際處置在下方error監聽與迴圈頂端之errWrite檢查
+    pmWrite.catch(() => {}) //write於兩片之間(無人race時)出錯, pmWrite之reject會成為unhandledRejection, 故先掛空catch標記已處理; 實際處置在下方error監聽與迴圈頂端之bErrWrite檢查
+
+    //getErrMsg, 取錯誤之message, 無則轉字串; 讀取與轉字串皆可能拋錯(注入之fs可拋出或使寫入流以非Error之值出錯: null、無原型物件、已撤銷之Proxy), 寫入流之error監聽與catch共用
+    //不可以get之預設值引數先求值String(err)(其拋錯會跳過catch內之destroy且pm不settle), 監聽器內亦不可直接讀err.message(拋錯即成未捕捉例外且pm不settle)
+    let getErrMsg = (err) => {
+        let msg
+        try {
+            msg = err.message
+        }
+        catch (e) {}
+        return msg !== undefined ? msg : errToStr(err)
+    }
 
     //攔截錯誤, 注意stream是非同步故try catch是無法攔截的, 須各自監聽read與write串流的error事件處理, 此處是攔截串流以外的錯誤
     try {
@@ -75,8 +88,9 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
         //error, 若有error則不會觸發finish
         streamWrite.on('error', (err) => {
             // console.log(`merge filename[${filename}] err`, err)
+            bErrWrite = true
             errWrite = err
-            errTemp = err.message //待確認用err.toString()還是err.message更佳 bbb
+            errTemp = getErrMsg(err) //待確認用err.toString()還是err.message更佳 bbb
             pmWrite.reject(err)
             pm.reject(errTemp)
         })
@@ -103,7 +117,7 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
         for (let i = 0; i < fpsIn.length; i++) {
 
             //check, 寫入流已出錯則不再處理後續切片
-            if (errWrite !== null) {
+            if (bErrWrite) {
                 throw errWrite
             }
 
@@ -139,7 +153,7 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
                 for await (let chunk of streamRead) {
 
                     //check, 寫入流已出錯則中止本片
-                    if (errWrite !== null) {
+                    if (bErrWrite) {
                         throw errWrite
                     }
 
@@ -169,7 +183,7 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
                 if (pmLast !== null) {
                     await pmLast
                 }
-                if (errWrite !== null) {
+                if (bErrWrite) {
                     throw errWrite
                 }
 
@@ -186,7 +200,9 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
 
     }
     catch (err) {
-        errTemp = get(err, 'message', String(err))
+
+        //errTemp, 取錯誤之message, 無則轉字串(見getErrMsg)
+        errTemp = getErrMsg(err)
 
         //destroy, 釋放fd: throw路徑(如切片缺失)之寫入流已成功開檔, 不destroy則fd殘留至程序結束; 已出錯之寫入流destroy為無害重複
         try {

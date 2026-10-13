@@ -198,8 +198,12 @@ function cacheBd(fun, opt = {}) {
     //_get, 封裝原本非同步函數
     let _get = async(...inputs) => {
         lock = true
-        cc = await fun(...inputs) //若發生錯誤則向外報錯
-        lock = false
+        try {
+            cc = await fun(...inputs) //若發生錯誤則向外報錯
+        }
+        finally {
+            lock = false //不論成功失敗皆解除, 否則一次失敗後getFromCache永不再嘗試取得
+        }
         return cc
     }
 

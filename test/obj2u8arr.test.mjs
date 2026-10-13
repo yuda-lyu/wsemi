@@ -1,6 +1,8 @@
 import assert from 'assert'
 import obj2u8arr from '../src/obj2u8arr.mjs'
 import u8arr2obj from '../src/u8arr2obj.mjs'
+import { thrower, thrownCases } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`obj2u8arr`, function() {
@@ -163,6 +165,62 @@ describe(`obj2u8arr`, function() {
         let r = obj2u8arr(data, { returnWithStateAndMsg: 'yes' })
         let rr = u8a
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+})
+
+
+describe(`obj2u8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
+
+    //mkProxyAb, 讀取Symbol.iterator時拋出v之ArrayBuffer Proxy(isab對其為真, 打包時以new Uint8Array(b)轉位元組視圖才讀Symbol.iterator)
+    let mkProxyAb = (v) => {
+        return new Proxy(new ArrayBuffer(4), {
+            get(t, k) {
+                if (k === Symbol.iterator) {
+                    throw v
+                }
+                return Reflect.get(t, k)
+            },
+        })
+    }
+
+    it(`should not throw but return { state: 'error', msg: 'null' } when packing a Proxy ArrayBuffer whose Symbol.iterator throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = obj2u8arr({ ab: mkProxyAb(null) }, { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+    })
+
+    it(`should not throw but return new Uint8Array() when packing a Proxy ArrayBuffer whose Symbol.iterator throws null without opt [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = obj2u8arr({ ab: mkProxyAb(null) })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), new Uint8Array())
+    })
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: ${c.msg}' } when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+            //序列化步驟(obj2stru8arr)之錯誤須前置來源函數名, 其後為_errToStr之結果
+            let data = { a: { toJSON: thrower(c.mk()) } }
+            let r = null
+            assert.doesNotThrow(() => {
+                r = obj2u8arr(data, { returnWithStateAndMsg: true })
+            })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: `obj2stru8arr: ${c.msg}` })
+        })
+    }
+
+    it(`should not throw but return new Uint8Array() when toJSON throws any value without opt [R-CODEC-ERR-01之2]`, function() {
+        for (let c of thrownCases) {
+            let data = { a: { toJSON: thrower(c.mk()) } }
+            let r = null
+            assert.doesNotThrow(() => {
+                r = obj2u8arr(data)
+            })
+            assert.strict.deepStrictEqual(showDeep(r), new Uint8Array(), `toJSON throws ${c.name}`)
+        }
     })
 
 })

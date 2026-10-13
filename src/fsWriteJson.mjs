@@ -13,6 +13,9 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
  * @param {Object|Array} inp 輸入物件或陣列數據
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.useFormat=false] 輸入是否格式化(縮排2空白)布林值，預設false
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(inp非物件或陣列時為說明字串，序列化或寫檔失敗時為Error物件)
  * @example
  * need test in nodejs.
  *

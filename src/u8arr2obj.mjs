@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
+import errToStr from './_errToStr.mjs'
 import isbol from './isbol.mjs'
 import isu8arr from './isu8arr.mjs'
 import getBufferSize from './getBufferSize.mjs'
@@ -123,7 +124,7 @@ function u8arr2obj(u8a, opt = {}) {
 
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //try內會讀呼叫端之Uint8Array(偽造標籤之物件、覆寫slice者等)可拋出任意值, 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

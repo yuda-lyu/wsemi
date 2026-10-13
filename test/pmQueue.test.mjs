@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmQueue from '../src/pmQueue.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmQueue`, function() {
@@ -350,6 +351,37 @@ describe(`pmQueue`, function() {
         let ms = await test4()
         // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
+    })
+
+})
+
+
+describe(`pmQueue settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmQueue: 任務以惡意值拒絕時該呼叫reject原值, 後續任務照常 [規則1、3]`, function() {
+        let { r } = runPmSettle('queueHostileThenGood')
+        assert.strict.deepStrictEqual(r.out, { t1: { s: 'reject', same: true }, t2: { s: 'resolve', v: 'good' } })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+    })
+
+    it(`pmQueue: 任務同步回傳Symbol.toStringTag會拋之物件時resolve原值, 後續任務照常 [規則1、3、8]`, function() {
+        let { r } = runPmSettle('queueSyncReturnTagGetter')
+        assert.strict.deepStrictEqual(r.out, { t1: { s: 'resolve', same: true }, t2: { s: 'resolve', v: 'good' } })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+    })
+
+    it(`pmQueue、pmThrottle、pmInvResolve: 任務之取消皆以{ reason: 'cancelled' }傳出 [規則4、7]`, function() {
+        let { r } = runPmSettle('queueCancelPassThrough')
+        assert.strict.deepStrictEqual(r.out, {
+            pmQueue: { s: 'reject', reason: 'cancelled' },
+            pmThrottle: { s: 'reject', reason: 'cancelled' },
+            pmInvResolve: { s: 'reject', reason: 'cancelled' },
+        })
+    })
+
+    it(`pmQueue: 任務同步拋出null時reject null [規則1]`, function() {
+        let { r } = runPmSettle('queueThrowNull')
+        assert.strict.deepStrictEqual(r.out, { s: 'reject', isNull: true })
     })
 
 })

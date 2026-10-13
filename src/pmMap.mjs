@@ -5,14 +5,15 @@ import genPm from './genPm.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
-import ispm from './ispm.mjs'
 import queue from './queue.mjs'
+import pmMarkHandled from './_pmMarkHandled.mjs'
 
 
 /**
  * Promise的map，可設定同時處理數量
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
+ * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection。
  * 若先行產生promise則takeLimit設定會無效，因promise已先行初始化啟動。
  * 等同於Bluebird的Promise.map，而concurrency為takeLimit。
  * 使用函數執行時，當takeLimit=1，等同於mapSeries，promise依序執行完畢才會調用下一個promise。
@@ -386,6 +387,13 @@ function pmMap(rs, fun, takeLimit = 0) {
         rs = _rs
     }
 
+    //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則takeLimit限量時排後者於取用前先reject、或中止後不再取用者, 皆成為未處理之rejection
+    if (!isfun(fun)) {
+        each(rs, (v) => {
+            pmMarkHandled(useObj ? v.v : v)
+        })
+    }
+
     //queue
     let q = queue(takeLimit)
 
@@ -402,26 +410,23 @@ function pmMap(rs, fun, takeLimit = 0) {
         let v = q.get()
         //console.log('get', v)
 
-        //pmm
-        let pmm
-        if (isfun(fun)) {
-            let uk = v.key
-            let uv = v.value
-            if (useObj) {
-                uk = v.value.k
-                uv = v.value.v
-            }
-            pmm = fun(uv, uk)
-
-            //check
-            if (!ispm(pmm)) {
-                throw new Error(`return of fun is not a promise`)
-            }
-
+        //uk, uv
+        let uk = v.key
+        let uv = v.value
+        if (useObj) {
+            uk = v.value.k
+            uv = v.value.v
         }
-        else {
-            pmm = v.value
-        }
+
+        //pmm, 以原生Promise承接fun之結果或元素本身: fun同步拋錯轉為reject, 回傳一般值轉為resolve, 使本監聽器必不拋錯而每個任務必定settle(監聽器拋錯會被queue之evEmit攔截而使pm永不settle)
+        let pmm = new Promise((resolve) => {
+            if (isfun(fun)) {
+                resolve(fun(uv, uk))
+            }
+            else {
+                resolve(uv)
+            }
+        })
 
         //then and catch
         pmm

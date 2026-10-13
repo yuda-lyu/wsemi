@@ -1,5 +1,7 @@
 import assert from 'assert'
 import interp1 from '../src/interp1.mjs'
+import { thrownCases } from './tools/codecThrown.mjs'
+import { showDeep } from './tools/caseKit.mjs'
 
 
 describe(`interp1`, function() {
@@ -387,6 +389,76 @@ describe(`interp1`, function() {
     it(`should return { 'err': 'ps is not an array' } when input NaN`, function() {
         let r = interp1(NaN)
         assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+    })
+
+})
+
+
+describe(`interp1 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+
+    let ps = [
+        { x: 1, y: 0.2 },
+        { x: 3, y: 1.2 },
+        { x: 4, y: 2 },
+    ]
+
+    //僅stairs模式於try內才讀呼叫端之opt.xMin與opt.xMax(其餘opt欄位於try外讀取), 故以此二欄位之讀取拋出作為站點(getter與Proxy陷阱各一種讀取方式)
+    //thrownCases(test/tools/codecThrown.mjs)為呼叫端可拋出之各種值, msg為_errToStr應得之字串; 修正前catch內err.toString()遇其任一皆再拋TypeError, 使interp1同步外拋至呼叫端
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { err: '${c.msg}' } when the getter of opt.xMin throws ${c.name} [R-CODEC-ERR-01之2]`, function() {
+            let r = null
+            assert.doesNotThrow(() => {
+                r = interp1(ps, 2, {
+                    mode: 'stairs',
+                    get xMin() {
+                        throw c.mk()
+                    },
+                })
+            })
+            assert.strict.deepStrictEqual(showDeep(r), { err: c.msg })
+        })
+    }
+
+    for (let c of thrownCases) {
+        it(`should not throw but return { err: '${c.msg}' } when the get trap of a Proxy opt throws ${c.name} on reading xMax [R-CODEC-ERR-01之2]`, function() {
+            let opt = new Proxy({ mode: 'stairs' }, {
+                get(target, key) {
+                    if (key === 'xMax') {
+                        throw c.mk()
+                    }
+                    return target[key]
+                },
+            })
+            let r = null
+            assert.doesNotThrow(() => {
+                r = interp1(ps, 2, opt)
+            })
+            assert.strict.deepStrictEqual(showDeep(r), { err: c.msg })
+        })
+    }
+
+    it(`should catch per interpolation point and return [{ err: 'unknown error' }, { err: 'unknown error' }] when px is an array and the getter of opt.xMin throws an object without prototype [R-CODEC-ERR-01之2]`, function() {
+        let r = null
+        assert.doesNotThrow(() => {
+            r = interp1(ps, [2, 3], {
+                mode: 'stairs',
+                get xMin() {
+                    throw Object.create(null)
+                },
+            })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), [{ err: 'unknown error' }, { err: 'unknown error' }])
+    })
+
+    it(`(守門) should return { err: 'Error: boom' } (same as err.toString()) when the getter of opt.xMin throws an Error [R-CODEC-ERR-01之2]`, function() {
+        let r = interp1(ps, 2, {
+            mode: 'stairs',
+            get xMin() {
+                throw new Error('boom')
+            },
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { err: 'Error: boom' })
     })
 
 })

@@ -34,8 +34,8 @@ import execCliSession from './execCliSession.mjs'
  * @param {Boolean} [opt.continueOnError=false] 輸入回應含error時是否繼續送出後續請求布林值，預設false
  * @param {Function} [opt.onNotify=undefined] 輸入伺服器通知(無id訊息)回調函數，格式為(msg)=>{}，預設undefined
  * @param {Function} [opt.onServerRequest=undefined] 輸入伺服器發給客戶端之請求(帶id且含method)回調函數，格式為(msg, session)=>{}，可用session.writeLine回覆，預設undefined
- * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理
- * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤)、notfound(命令不存在)、timeout(逾時)、exit(子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
+ * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘訊息之處理與本函數之結果)
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤)、notfound(子進程未能啟動，如命令不存在、非有效執行檔、權限不足、cwd不存在)、timeout(逾時)、exit(已啟動之子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
  * @example
  * //need test in nodejs
  *
@@ -242,8 +242,8 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
         if (r.timeout) {
             errorType = 'timeout'
         }
-        else if (isestr(r.error) && r.error.includes('ENOENT')) {
-            errorType = 'notfound'
+        else if (r.pid === null || r.pid === undefined) {
+            errorType = 'notfound' //子進程從未啟動(execCliSession之pid為null): 不論錯誤碼(ENOENT、UNKNOWN、EPERM、參數檢查錯誤、cwd不存在等)皆屬無法啟動, 不以錯誤字樣判定
         }
         let error = isestr(r.error) ? r.error : `子進程於回應前結束(code ${r.code})`
         return rFail(errorType, `${method}: ${error}`, { results, responses, exitCode: r.code })

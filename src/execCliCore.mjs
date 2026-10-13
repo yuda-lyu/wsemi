@@ -1,9 +1,9 @@
-import { execFileSync } from 'child_process'
+import fs from 'fs'
 import path from 'path'
 import get from 'lodash-es/get.js'
 import isarr from './isarr.mjs'
+import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
-import fsIsFile from './fsIsFile.mjs'
 import fsReadText from './fsReadText.mjs'
 
 
@@ -16,40 +16,152 @@ import fsReadText from './fsReadText.mjs'
 
 
 /**
- * 用where指令找到命令的實際路徑(.cmd / .exe)
+ * 由環境變數物件取值, 鍵不分大小寫(Windows環境變數大小寫不敏感, 但{...process.env}展開後之物件鍵敏感, 如Path與PATH)
+ *
+ * @param {Object} env 輸入環境變數物件
+ * @param {String} key 輸入變數名稱字串
+ * @returns {*} 回傳變數值, 無則為undefined
+ */
+function getEnvValue(env, key) {
+    let k = Object.keys(env).find((k) => k.toUpperCase() === key)
+    return k === undefined ? undefined : env[k]
+}
+
+
+/**
+ * 判定路徑是否為檔案(跟隨連結), 用於命令搜尋: 一般檔案與指向檔案之符號連結為真; stat讀不到但本身為連結者亦為真(如WindowsApps之App Execution Alias, 其stat失敗而lstat為連結, where.exe亦列出); 資料夾與不存在者為假
+ * 不用fsIsFile: 其以lstat判定且連結一律為假, 會漏掉以連結安裝之執行檔
+ *
+ * @param {String} fp 輸入路徑字串
+ * @returns {Boolean} 回傳是否為檔案布林值
+ */
+function isFileFollowLink(fp) {
+    try {
+        return fs.statSync(fp).isFile()
+    }
+    catch (err) {}
+    try {
+        return fs.lstatSync(fp).isSymbolicLink()
+    }
+    catch (err) {}
+    return false
+}
+
+
+/**
+ * 判定路徑是否為實體檔案(跟隨連結, 懸空連結為假), 用於批次檔是否存在
+ *
+ * @param {String} fp 輸入路徑字串
+ * @returns {Boolean} 回傳是否為檔案布林值
+ */
+function isFileStat(fp) {
+    try {
+        return fs.statSync(fp).isFile()
+    }
+    catch (err) {}
+    return false
+}
+
+
+/**
+ * 依序列出命令之實體路徑: 先搜dirFirst(有給時)再依序搜PATH各目錄, 每個目錄先比對原名再依PATHEXT逐一補上副檔名
+ * 不呼叫where.exe: 其輸出為系統字碼頁(如Big5), 以utf-8解碼時含非ASCII字元之路徑(如中文使用者名稱下之%APPDATA%\npm, 或於中文資料夾內npm run時所加入之node_modules\.bin)會成亂碼而解析失敗; 亦免每次解析都啟動子程序(參考cross-spawn以which於JS內搜尋PATH)
+ *
+ * @param {String} cmd 輸入命令字串(不含目錄)
+ * @param {Object} o 輸入設定物件
+ * @param {String} [o.dirFirst=undefined] 輸入最先搜尋之目錄字串, 預設undefined代表不搜
+ * @param {Object} o.env 輸入環境變數物件, 取其PATH與PATHEXT
+ * @param {String} o.base 輸入PATH內相對目錄之基準目錄字串
+ * @param {Boolean} o.useExt 輸入是否依PATHEXT補副檔名布林值
+ * @returns {Array} 回傳實體路徑字串陣列, 無則為[]
+ */
+function whereList(cmd, { dirFirst, env, base, useExt }) {
+
+    //exts, 原名在前(同where: 名稱已含.亦補PATHEXT, 如zz.v1可找到zz.v1.cmd)
+    let exts = ['']
+    if (useExt) {
+        let pathext = getEnvValue(env, 'PATHEXT')
+        if (!isestr(pathext)) {
+            pathext = '.COM;.EXE;.BAT;.CMD'
+        }
+        for (let e of pathext.split(';')) {
+            e = e.trim()
+            if (e !== '') {
+                exts.push(e.toLowerCase())
+            }
+        }
+    }
+
+    //dirs, PATH以;分隔(引號內之;不分隔), 相對目錄以base為基準; 一律轉絕對路徑, 回傳之路徑方不依本進程之工作目錄
+    let dirs = []
+    if (isestr(dirFirst)) {
+        dirs.push(path.resolve(dirFirst))
+    }
+    let envPath = getEnvValue(env, 'PATH')
+    if (isestr(envPath)) {
+        for (let d of envPath.match(/(?:"[^"]*"|[^;"])+/g) || []) {
+            d = d.replace(/"/g, '').trim()
+            if (d !== '') {
+                dirs.push(path.resolve(base, d))
+            }
+        }
+    }
+
+    //rs
+    let rs = []
+    for (let d of dirs) {
+        for (let e of exts) {
+            let fp = path.join(d, cmd + e)
+            if (isFileFollowLink(fp) && !rs.some((r) => r.toLowerCase() === fp.toLowerCase())) {
+                rs.push(fp)
+            }
+        }
+    }
+    return rs
+}
+
+
+/**
+ * 找到命令的實際路徑(.cmd / .exe)
+ * 未帶副檔名者同where: 先搜本進程之工作目錄再搜本進程之PATH, 並依PATHEXT補副檔名
+ * 只給檔名之.cmd/.bat同cmd.exe(退路即由cmd.exe搜尋): 先搜子進程之工作目錄(子進程env有NoDefaultCurrentDirectoryInExePath時不搜)再搜子進程env之PATH, 不補副檔名
+ * 含目錄(絕對或相對)者原樣回傳
  *
  * @param {String} cmd 輸入命令字串
- * @returns {String} 回傳解析後之命令路徑字串
+ * @param {String} [cwd=undefined] 輸入子進程工作目錄字串, 預設undefined代表本進程之工作目錄
+ * @param {Object} [env=undefined] 輸入子進程環境變數物件, 預設undefined代表本進程之process.env
+ * @returns {String} 回傳解析後之命令路徑字串, 查無時回傳原命令字串
  */
-function resolveCommand(cmd) {
+function resolveCommand(cmd, cwd = undefined, env = undefined) {
 
     //非Windows無須解析
     if (process.platform !== 'win32') {
         return cmd
     }
 
-    //已帶副檔名, 無須解析
-    if (/\.(cmd|exe|bat|ps1)$/i.test(cmd)) {
-        return cmd
-    }
-
-    //絕對路徑, 無須解析
-    if (path.isAbsolute(cmd)) {
+    //含目錄(絕對或相對路徑), 無須解析(where對含目錄之樣式亦查無而原樣回傳)
+    if (path.basename(cmd) !== cmd) {
         return cmd
     }
 
     try {
 
-        //where, 取得命令實體路徑清單
-        //stdio的stderr須為ignore, 否則查無命令時where會把系統語系(如Big5)之錯誤訊息直接吐到主控台
-        let out = execFileSync('where', [cmd], {
-            encoding: 'utf8',
-            timeout: 5000,
-            windowsHide: true,
-            shell: false,
-            stdio: ['ignore', 'pipe', 'ignore'],
-        }).trim()
-        let lines = out.split(/\r?\n/)
+        //只給檔名之.cmd/.bat
+        if (/\.(cmd|bat)$/i.test(cmd)) {
+            let envChild = env !== undefined ? env : process.env
+            let dirChild = isestr(cwd) ? path.resolve(cwd) : process.cwd() //相對之cwd以本進程之工作目錄為基準(同spawn), 轉絕對路徑
+            let bNoCwd = getEnvValue(envChild, 'NODEFAULTCURRENTDIRECTORYINEXEPATH') !== undefined
+            let lines = whereList(cmd, { dirFirst: bNoCwd ? undefined : dirChild, env: envChild, base: dirChild, useExt: false })
+            return lines[0] || cmd
+        }
+
+        //已帶其他副檔名, 無須解析
+        if (/\.(exe|ps1)$/i.test(cmd)) {
+            return cmd
+        }
+
+        //whereList, 取得命令實體路徑清單(同where)
+        let lines = whereList(cmd, { dirFirst: process.cwd(), env: process.env, base: process.cwd(), useExt: true })
 
         //優先.cmd, 次之.exe, 皆無則取首筆
         let cmdFile = lines.find((l) => /\.cmd$/i.test(l))
@@ -139,8 +251,8 @@ function parseJsEntryFromCmd(cmdPath) {
     let dir = path.dirname(cmdPath)
     let jsPath = path.join(dir, m[1])
 
-    //fsIsFile, 須為實體檔案(existsSync對資料夾亦回true, 故改用fsIsFile)
-    if (fsIsFile(jsPath)) {
+    //isFileStat, 須為實體檔案(existsSync對資料夾亦回true); 跟隨連結, 以連結安裝之入口亦可(fsIsFile以lstat判定且連結一律為假)
+    if (isFileStat(jsPath)) {
         return jsPath
     }
 
@@ -159,9 +271,12 @@ function parseJsEntryFromCmd(cmdPath) {
  *
  * @param {String} command 輸入執行檔名稱字串
  * @param {Array} [args=[]] 輸入參數陣列, 預設[]
- * @returns {Object} 回傳spawn參數物件, 內含file(執行檔), args(參數陣列), opt(spawn額外選項物件)
+ * @param {Object} [opt={}] 輸入設定物件, 預設{}
+ * @param {String} [opt.cwd=undefined] 輸入子進程工作目錄字串, 用於解析只給檔名或相對路徑之.cmd/.bat並判定其是否存在, 預設undefined代表本進程之工作目錄
+ * @param {Object} [opt.env=undefined] 輸入子進程環境變數物件, 用於解析只給檔名之.cmd/.bat(取其PATH與NoDefaultCurrentDirectoryInExePath), 預設undefined代表本進程之process.env
+ * @returns {Object} 回傳spawn參數物件, 內含file(執行檔), args(參數陣列), opt(spawn額外選項物件); Windows下.cmd/.bat不存在時拋出code為'ENOENT'之錯誤(訊息同node之'spawn <路徑> ENOENT')
  */
-function buildSpawnArgs(command, args = []) {
+function buildSpawnArgs(command, args = [], opt = {}) {
 
     //args
     if (!isarr(args)) {
@@ -173,8 +288,20 @@ function buildSpawnArgs(command, args = []) {
         return { file: command, args, opt: {} }
     }
 
+    //cwd
+    let cwd = get(opt, 'cwd', null)
+    if (!isestr(cwd)) {
+        cwd = undefined
+    }
+
+    //env
+    let env = get(opt, 'env', null)
+    if (!isobj(env)) {
+        env = undefined
+    }
+
     //resolved
-    let resolved = resolveCommand(command)
+    let resolved = resolveCommand(command, cwd, env)
 
     //.exe可直接spawn
     if (/\.exe$/i.test(resolved)) {
@@ -184,7 +311,27 @@ function buildSpawnArgs(command, args = []) {
     //.cmd/.bat → 嘗試解析出實際入口
     if (/\.(cmd|bat)$/i.test(resolved)) {
 
-        let entry = parseJsEntryFromCmd(resolved)
+        //fpBatch, 只給檔名者已由resolveCommand解析為絕對路徑, 仍為檔名即查無; 含目錄之相對路徑以子進程之工作目錄為準(cmd.exe退路亦於該目錄解析)
+        let fpBatch = ''
+        if (path.isAbsolute(resolved)) {
+            fpBatch = resolved
+        }
+        else if (path.basename(resolved) !== resolved) {
+            fpBatch = path.resolve(cwd || process.cwd(), resolved)
+        }
+
+        //不存在之批次檔: 不可交cmd.exe退路(cmd.exe本身可啟動, 會得離開碼1與系統字碼頁之訊息且被重試), 以與node之非同步ENOENT同形之錯誤拋出, 由呼叫端之try以結果物件回報(code null、pid undefined、不重試)
+        //node對.cmd/.bat直接spawn會同步拋EINVAL(CVE-2024-27980防護), 故不能改為直接spawn取得ENOENT
+        if (!isFileStat(fpBatch)) {
+            let e = new Error(`spawn ${resolved} ENOENT`)
+            e.code = 'ENOENT'
+            e.errno = -4058
+            e.syscall = `spawn ${resolved}`
+            e.path = resolved
+            throw e
+        }
+
+        let entry = parseJsEntryFromCmd(fpBatch)
         if (entry) {
 
             //入口為原生.exe(如opencode的bin/opencode.exe) → 直接spawn

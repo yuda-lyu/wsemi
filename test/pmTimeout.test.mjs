@@ -2,6 +2,7 @@ import assert from 'assert'
 import pmTimeout from '../src/pmTimeout.mjs'
 import delay from '../src/delay.mjs'
 import genPm from '../src/genPm.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmTimeout`, function() {
@@ -236,6 +237,16 @@ describe(`pmTimeout`, function() {
         //以本測試能立即結束反證: 若誤在檢核前就建立60s計時器, mocha將被卡住至逾時
         await assert.rejects(() => pmTimeout(null, 60000), /^Error: invalid pm$/)
         await assert.rejects(() => pmTimeout(Promise.resolve(), -1), /^Error: invalid ms\[-1\]$/)
+    })
+
+})
+
+
+describe(`pmTimeout settle(R-PM-SETTLE-01)`, function() {
+
+    it(`ispm之使用端: pmTimeout輸入讀取即拋錯之值為invalid pm, waitFun謂詞回傳之視為未就緒 [規則8]`, function() {
+        let { r } = runPmSettle('ispmCallers')
+        assert.strict.deepStrictEqual(r.out, { pmTimeout: { s: 'reject', msg: 'invalid pm' }, waitFun: { s: 'reject', v: 'exceeded attemptNum[2]' } })
     })
 
 })

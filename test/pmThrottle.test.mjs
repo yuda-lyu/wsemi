@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmThrottle from '../src/pmThrottle.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmThrottle`, function() {
@@ -243,6 +244,28 @@ describe(`pmThrottle`, function() {
         let ms = await test3()
         // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r3)
+    })
+
+})
+
+
+describe(`pmThrottle settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmThrottle: 任務以惡意值拒絕時該呼叫reject原值, 之後之任務照常 [規則1、3]`, function() {
+        let { r } = runPmSettle('throttleHostileThenGood')
+        assert.strict.deepStrictEqual(r.out, { t1: { s: 'reject', same: true }, t2: { s: 'resolve', v: 'good' } })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+    })
+
+    it(`pmThrottle、pmInvResolve: 任務同步拋出null時reject null [規則1]`, function() {
+        let { r } = runPmSettle('throwNullOthers')
+        assert.strict.deepStrictEqual(r.out, { pmThrottle: { s: 'reject', isNull: true }, pmInvResolve: { s: 'reject', isNull: true } })
+    })
+
+    it(`exitThrottle: 任務失敗後計時器已釋放, 行程自然結束 [規則3、5]`, function() {
+        //以是否被逾時終止判定(殘留之interval會使行程永不結束), 不以牆鐘門檻判定, 避免並行高負載誤判
+        let { status, signal } = runPmSettle('exitThrottle', 'natural')
+        assert.strict.deepStrictEqual({ status, signal }, { status: 0, signal: null })
     })
 
 })

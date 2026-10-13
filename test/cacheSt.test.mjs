@@ -1,6 +1,7 @@
 import assert from 'assert'
 import delay from '../src/delay.mjs'
 import cacheSt from '../src/cacheSt.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`cacheSt`, function() {
@@ -294,6 +295,16 @@ describe(`cacheSt`, function() {
         finally {
             cs.clear()
         }
+    })
+
+})
+
+
+describe(`cacheSt settle(R-PM-SETTLE-01)`, function() {
+
+    it(`cacheSt: setWithFree之fn以惡意值拒絕時外傳原值且釋放key [規則2、5]`, function() {
+        let { r } = runPmSettle('cacheStHostile')
+        assert.strict.deepStrictEqual(r.out, { s: 'reject', same: true, freed: true })
     })
 
 })

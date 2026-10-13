@@ -1,5 +1,6 @@
 import assert from 'assert'
 import debounce from '../src/debounce.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`debounce`, function() {
@@ -111,6 +112,24 @@ describe(`debounce`, function() {
         let ms = await test2()
         // console.log(JSON.stringify(ms))
         assert.strict.deepStrictEqual(JSON.stringify(ms), r2)
+    })
+
+})
+
+
+describe(`debounce settle(R-PM-SETTLE-01)`, function() {
+
+    it(`debounce: 非同步任務reject不產生未處理之rejection, 以console.log記錄一次, 後續任務照常 [規則2、3、10]`, function() {
+        let { r } = runPmSettle('debounceAsyncReject')
+        assert.strict.deepStrictEqual(r.out, { next: true, logged: 1 })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+    })
+
+    it(`debounce: 記錄之值的檢視器會拋時亦不產生未處理之rejection [規則2]`, function() {
+        let { r } = runPmSettle('debounceInspectThrows')
+        assert.strict.deepStrictEqual(r.out, { next: true })
+        assert.strict.deepStrictEqual(r.unhandled, [])
+        assert.strict.deepStrictEqual(r.uncaught, [])
     })
 
 })

@@ -1,4 +1,5 @@
 import get from 'lodash-es/get.js'
+import errToStr from './_errToStr.mjs'
 import cv from './_jsonType.mjs'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
@@ -93,7 +94,7 @@ function str2obj(data, ext = 'Uint8Array', opt = {}) {
         s = JSON.parse(data, replacer)
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(errToStr(err)) //replacer讀呼叫端之ext(Proxy陣列等)可拋出任意值, 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

@@ -7,7 +7,7 @@ import get from 'lodash-es/get.js'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadTextCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
- * @returns {String} 回傳檔案內容utf-8字串
+ * @returns {Object} 回傳結果物件，提供鍵success代表檔案內容utf-8字串，提供鍵error代表錯誤訊息(讀檔之Error物件)
  * @example
  * need test in nodejs.
  *

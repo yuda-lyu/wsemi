@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import ispm from './ispm.mjs'
 import isbol from './isbol.mjs'
+import pmSettleByState from './_pmSettleByState.mjs'
 
 
 /**
@@ -117,15 +118,7 @@ function pmInvResolve(pm, opt = {}) {
             let msg = get(r, 'msg', {})
 
             //resolve, reject
-            if (state === 'success') {
-                _pm.resolve(msg)
-            }
-            else if (state === 'cancelled') {
-                _pm.reject({ reason: 'cancelled' })
-            }
-            else {
-                _pm.reject(msg)
-            }
+            pmSettleByState(_pm, state, msg)
 
         })
         .catch((err) => {

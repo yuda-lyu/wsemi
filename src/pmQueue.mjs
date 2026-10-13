@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
+import pmSettleByState from './_pmSettleByState.mjs'
 import queue from './queue.mjs'
 import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
@@ -21,7 +22,7 @@ import delay from './delay.mjs'
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖
- * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出
  * @example
  *
  * async function topAsync() {
@@ -448,27 +449,16 @@ function pmQueue(takeLimit = 0, takeLast = false) {
             //once
             q.once(id, (res) => {
                 //console.log('once', id, res)
-                if (takeLast) {
-                    if (id === gid) {
-                        if (res.state === 'success') {
-                            pm.resolve(res.msg)
-                        }
-                        else {
-                            pm.reject(res.msg)
-                        }
-                    }
-                    else {
-                        pm.reject({ reason: 'cancelled' })
-                    }
+
+                //takeLast, 非最後呼叫者一律取消
+                if (takeLast && id !== gid) {
+                    pm.reject({ reason: 'cancelled' })
+                    return
                 }
-                else {
-                    if (res.state === 'success') {
-                        pm.resolve(res.msg)
-                    }
-                    else {
-                        pm.reject(res.msg)
-                    }
-                }
+
+                //依結果狀態決定, 任務自身之取消亦以{ reason: 'cancelled' }傳出
+                pmSettleByState(pm, res.state, res.msg)
+
             })
 
             return pm

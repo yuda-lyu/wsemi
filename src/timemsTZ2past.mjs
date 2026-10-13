@@ -3,6 +3,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -209,7 +210,7 @@ function timemsTZ2past(t, tNow = null, opt = {}) {
         r = core(t, tNow)
     }
     catch (err) {
-        return retError(err.toString(), '時間轉換失敗')
+        return retError(errToStr(err), '時間轉換失敗') //try內會讀呼叫端之tNow(Proxy等), 可拋出任意值
     }
 
     return retSuccess(r)

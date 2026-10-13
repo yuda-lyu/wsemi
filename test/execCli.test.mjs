@@ -4,6 +4,7 @@ import path from 'path'
 import cp from 'child_process'
 import { fileURLToPath } from 'url'
 import execCli from '../src/execCli.mjs'
+import { runExecFail } from './tools/execFailRun.mjs'
 
 
 describe(`execCli`, function() {
@@ -450,6 +451,172 @@ describe(`execCli`, function() {
         assert.strict.deepStrictEqual('resolved' in r, true)
         assert.strict.deepStrictEqual([r.resolved.ok, r.resolved.code, r.resolved.pid, r.resolved.attempts], [false, null, undefined, 1])
         assert.strict.deepStrictEqual(r.resolved.error.startsWith('UNKNOWN: '), true)
+    })
+
+})
+
+
+//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+//  標注Windows專屬者(.cmd/.bat、cmd.exe、NoDefaultCurrentDirectoryInExePath、junction之語意)於其他平台跳過
+describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+
+    it(`execCli: 自訂validate拋錯視同驗證失敗, error恰為OUTPUT_VALIDATION_FAILED, stderr前綴'validate threw: ', 不成為未捕捉例外 [R-EXEC-FAIL-01之11]`, function() {
+        let { r } = runExecFail('validateThrows')
+        assert.strict.deepStrictEqual(r.out, { ok: false, error: 'OUTPUT_VALIDATION_FAILED', stderrHead: 'validate threw: v-boom', hasPidKey: true, pidType: 'number' })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []])
+    })
+
+    it(`execCli: 自訂validate回傳Promise時以其結果判定(reject視同驗證失敗, 驗證耗時不受timeoutMs約束), 永不落定者依原生語意等待而本函數亦不落定 [R-EXEC-FAIL-01之11]`, function() {
+        let { r } = runExecFail('validateAsync')
+        assert.strict.deepStrictEqual(r.out, {
+            asyncFalse: { ok: false, error: 'OUTPUT_VALIDATION_FAILED', threw: false },
+            asyncTrue: { ok: true, error: '', threw: false },
+            asyncReject: { ok: false, error: 'OUTPUT_VALIDATION_FAILED', threw: true },
+            slowTrue: { ok: true, error: '', threw: false },
+            neverSettles: { s: 'pending' },
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []])
+    })
+
+    it(`execCli: 自訂validate拋出null、undefined、已撤銷之Proxy、超長訊息之Error時, error皆恰為OUTPUT_VALIDATION_FAILED, stderr首行為'validate threw: 訊息'(訊息不可得者為unknown error, 超長者截斷), 不成為未捕捉例外 [R-EXEC-FAIL-01之11]`, function() {
+        let { r } = runExecFail('validateThrowValues')
+        let { throwHuge, ...others } = r.out
+        assert.strict.deepStrictEqual(others, {
+            throwNull: { ok: false, error: 'OUTPUT_VALIDATION_FAILED', stderrHead: 'validate threw: null', stderrLen: 20 },
+            throwUndefined: { ok: false, error: 'OUTPUT_VALIDATION_FAILED', stderrHead: 'validate threw: undefined', stderrLen: 25 },
+            throwRevoked: { ok: false, error: 'OUTPUT_VALIDATION_FAILED', stderrHead: 'validate threw: unknown error', stderrLen: 29 },
+        })
+        //超長訊息: 前綴後接訊息之截斷片段, 總長不超過600
+        assert.strict.deepStrictEqual([throwHuge.ok, throwHuge.error, throwHuge.stderrHead.startsWith('validate threw: xxxx'), throwHuge.stderrLen <= 600], [false, 'OUTPUT_VALIDATION_FAILED', true, true])
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []])
+    })
+
+    it(`execCli: 不存在之.cmd/.bat(絕對路徑、只給檔名、含目錄之相對路徑)為ENOENT、code null、帶pid鍵且為undefined、不重試 [R-EXEC-FAIL-01之6、9]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('missingBatch')
+        assert.strict.deepStrictEqual(r.out, {
+            absCmd: { error: `ENOENT: spawn <fx>${path.sep}missing.cmd ENOENT`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            absBat: { error: `ENOENT: spawn <fx>${path.sep}missing.bat ENOENT`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            bareCmd: { error: 'ENOENT: spawn wsemi-not-exist-zz.cmd ENOENT', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            bareBat: { error: 'ENOENT: spawn wsemi-not-exist-zz.bat ENOENT', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            relCmd: { error: 'ENOENT: spawn .\\missing.cmd ENOENT', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+        })
+    })
+
+    it(`execCli: 存在之批次檔仍可執行(絕對路徑; 只給檔名而位於子進程cwd者; 只給檔名而位於PATH者; 相對於子進程cwd之路徑) [R-EXEC-FAIL-01之6, 對照]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('batchStillRuns')
+        assert.strict.deepStrictEqual(r.out, {
+            abs: { ok: true, out: 'hello-from-user-cmd' },
+            bareInCwd: { ok: true, out: 'hello-from-user-cmd' },
+            npmCmd: { ok: true, isVer: true },
+            relInCwd: { ok: true, out: 'hello-from-user-cmd' },
+        })
+    })
+
+    it(`execCli: 只給檔名之批次檔於子進程env有NoDefaultCurrentDirectoryInExePath時不搜cwd(同cmd.exe), 查無即ENOENT、不重試 [R-EXEC-FAIL-01之6]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('bareBatchNoDefaultCwd')
+        assert.strict.deepStrictEqual(r.out, { ok: false, code: null, error: 'ENOENT: spawn user.cmd ENOENT', attempts: 1, hasPidKey: true, pidType: 'undefined' })
+    })
+
+    it(`execCli: npm shim以帶.cmd之檔名或不帶副檔名呼叫皆解析入口以node直接執行, 多行參數原樣送達 [R-EXEC-FAIL-01之6, 對稱]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('bareShimNodeDirect')
+        assert.strict.deepStrictEqual(r.out, { withExt: { ok: true, argvSame: true }, noExt: { ok: true, argvSame: true } })
+    })
+
+    it(`execCli: 只給命令名而其所在PATH目錄含非ASCII字元時可解析執行(不經where.exe之系統字碼頁輸出) [R-EXEC-FAIL-01之6]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('nonAsciiPathCommand')
+        assert.strict.deepStrictEqual(r.out, { ok: true, out: 'hello-from-user-cmd' })
+    })
+
+    it(`execCli、execCliSession: cwd不存在或非資料夾時error指明cwd, code null、帶pid鍵且為undefined、不重試 [R-EXEC-FAIL-01之7、9]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('cwdNotFolder')
+        assert.strict.deepStrictEqual(r.out, {
+            missing: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            isFile: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}user.cmd`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            session: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, pid: null },
+            bareBatch: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            sessionBareBatch: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, pid: null },
+        })
+    })
+
+    it(`execCli、execCliSession: cwd給相對路徑時, 只給檔名之批次檔仍依子進程cwd(轉絕對路徑)解析並可執行 [R-EXEC-FAIL-01之6]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('relCwdBareBatch')
+        assert.strict.deepStrictEqual(r.out, {
+            relIsRelative: true,
+            execCli: { ok: true, out: 'hello-rel' },
+            session: { error: '', got: true },
+        })
+    })
+
+    it(`execCli、execCliSession: 有效之junction作cwd(或本進程cwd為junction)時, 命令不存在之error仍指向命令而非cwd, 命令存在者可執行 [R-EXEC-FAIL-01之7]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('junctionCwd')
+        assert.strict.deepStrictEqual(r.out, {
+            cliMissing: 'ENOENT: spawn wsemi-not-exist-zz ENOENT',
+            cliOk: true,
+            sessionMissing: 'ENOENT: spawn wsemi-not-exist-zz ENOENT',
+            cliMissingBatch: 'ENOENT: spawn wsemi-not-exist-zz.cmd ENOENT',
+            cliBatchInside: { ok: true, out: 'hello-in-junction' },
+            procCwdJunction: 'ENOENT: spawn wsemi-not-exist-zz ENOENT',
+        })
+    })
+
+    it(`execCli、execCliSession: env之getter拋錯以結果物件回報(execCli不reject、execCliSession不throw, 不含env之值、不重試) [R-EXEC-FAIL-01之8]`, function() {
+        let { r } = runExecFail('envGetterThrows')
+        assert.strict.deepStrictEqual(r.out, {
+            s: 'resolve',
+            ok: false,
+            code: null,
+            error: 'UNKNOWN: env getter boom',
+            attempts: 1,
+            hasPidKey: true,
+            pidType: 'undefined',
+            session: { error: 'UNKNOWN: env getter boom', pid: null, exited: true },
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []])
+    })
+
+    it(`execCli: pid契約——未能啟動者帶pid鍵且為undefined、已啟動者為數值、command無效者不帶pid鍵 [R-EXEC-FAIL-01之9]`, function() {
+        let { r } = runExecFail('pidContract')
+        assert.strict.deepStrictEqual(r.out, {
+            syncNul: { code: null, hasPidKey: true, pidType: 'undefined' },
+            asyncEnoent: { code: null, hasPidKey: true, pidType: 'undefined' },
+            nonPe: { code: null, hasPidKey: true, pidType: 'undefined' },
+            startedExit1: { code: 1, hasPidKey: true, pidType: 'number' },
+            emptyCommand: { code: null, attempts: 0, hasPidKey: false, pidType: 'undefined' },
+        })
+    })
+
+    it(`execCli: onStdout、onStderr拋錯(不攔截, 仍為未捕捉例外)時該段輸出仍累積於結果之stdout、stderr [R-EXEC-FAIL-01之12]`, function() {
+        let { r } = runExecFail('onStdoutThrowsKeepsOutput')
+        assert.strict.deepStrictEqual(r.out, { ok: true, stdout: 'x', stderr: 'y', uncaught: ['onStderr boom', 'onStdout boom'] })
+    })
+
+    it(`execCli: onStdout拋錯時, 無處理器之行程仍以離開碼1結束並印出錯誤(錯誤原樣重拋、不被吞掉) (守門) [R-EXEC-FAIL-01之12]`, function() {
+        let { status, signal, stderr } = runExecFail('rethrowExecCliOnStdout', { exitMode: 'nohandler', allowNoResult: true })
+        assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
     })
 
 })

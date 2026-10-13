@@ -9,6 +9,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
  * @param {String} c 輸入utf-8文字數據
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(寫檔之Error物件)
  * @example
  * need test in nodejs.
  *

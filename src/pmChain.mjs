@@ -7,8 +7,8 @@ import isarr from './isarr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} pms 輸入Promise陣列
- * @param {*} initial 輸入循序執行Promise陣列的初始值
+ * @param {Array} pms 輸入函數陣列，各函數依序接收前一結果，回傳一般值或Promise(同Promise之then)；元素須為函數，傳入Promise(而非回傳Promise之函數)將被忽略，該Promise之reject亦不會被處理
+ * @param {*} initial 輸入循序執行函數陣列的初始值
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *

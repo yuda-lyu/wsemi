@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmSeries from '../src/pmSeries.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`pmSeries`, function() {
@@ -155,6 +156,17 @@ describe(`pmSeries`, function() {
     it(`should return '${r4}' when run test4'`, async function() {
         let ms = await test4()
         assert.strict.deepStrictEqual(JSON.stringify(ms), r4)
+    })
+
+})
+
+
+describe(`pmSeries settle(R-PM-SETTLE-01)`, function() {
+
+    it(`pmSeries、pmMap: 先行產生之Promise陣列中排後者先reject, reject該錯誤且無未處理之rejection(含中止後未取用者) [規則2、9]`, function() {
+        let { r } = runPmSettle('preCreatedLaterReject')
+        assert.strict.deepStrictEqual(r.out, { series: { s: 'reject', same: true }, map1: { s: 'reject', same: true }, mapAbort: { s: 'reject', same: true } })
+        assert.strict.deepStrictEqual(r.unhandled, [])
     })
 
 })
