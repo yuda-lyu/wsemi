@@ -210,3 +210,19 @@ describe(`isp0int`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isp0int 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return false when input new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: isnum族隨之一致, 同isp0int(NaN)為false
+        assert.strict.deepStrictEqual(isp0int(new Number(NaN)), false)
+    })
+
+    it(`should return true when input new Number(2)`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同其型別, 依其原始值判定(同isp0int(2))
+        assert.strict.deepStrictEqual(isp0int(new Number(2)), true)
+    })
+
+})

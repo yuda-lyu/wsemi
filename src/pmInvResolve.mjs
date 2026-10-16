@@ -10,10 +10,10 @@ import pmSettleByState from './_pmSettleByState.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmInvResolve.test.mjs Github}
  * @memberOf wsemi
- * @param {Promise} pm 輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料
+ * @param {Promise} pm 輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料，物件欄位有state與msg；pm非Promise時同步拋出Error('pm is not a promise')
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.thenExtractData=false] 輸入是否於then提取data欄位值布林值，主要用於轉換axios取得之pm，預設false
- * @returns {Promise} 回傳Promise，resolve回傳物件資料，物件欄位有state與msg，state可有success、error與cancelled。cancelled代表reject回傳{ reason: 'cancelled' }
+ * @returns {Promise} 回傳Promise，state為success時resolve其msg，為cancelled時reject { reason: 'cancelled' }，其餘(含error、缺state或非結果物件)reject其msg；msg原樣傳遞(含undefined)；輸入之pm被reject時原樣reject其值
  * @example
  *
  * async function test1() {
@@ -105,25 +105,42 @@ function pmInvResolve(pm, opt = {}) {
     }
 
     let _pm = genPm()
-    pm
-        .then((r) => {
+
+    //onS, 讀取結果之欄位可能拋錯(已撤銷之Proxy、會拋之getter), 拋錯即以該錯誤reject
+    let onS = (r) => {
+        try {
 
             //thenExtractData
             if (thenExtractData) {
                 r = get(r, 'data')
             }
 
-            //state, msg
+            //state, msg, msg原樣傳遞(含undefined), 同pmQueue、pmThrottle之res.msg
             let state = get(r, 'state', '')
-            let msg = get(r, 'msg', {})
+            let msg = get(r, 'msg')
 
             //resolve, reject
             pmSettleByState(_pm, state, msg)
 
-        })
-        .catch((err) => {
+        }
+        catch (err) {
             _pm.reject(err)
-        })
+        }
+    }
+
+    //onR, 輸入之pm被reject時原樣reject
+    let onR = (err) => {
+        _pm.reject(err)
+    }
+
+    //只呼叫一次then並同時給成功與失敗回呼, 不依賴then回傳物件之catch(覆寫catch之子類別、then回傳非Promise之thenable), 掛載本身拋錯亦以該錯誤reject
+    try {
+        pm.then(onS, onR)
+    }
+    catch (err) {
+        _pm.reject(err)
+    }
+
     return _pm
 }
 

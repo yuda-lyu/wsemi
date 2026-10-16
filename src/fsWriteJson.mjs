@@ -4,6 +4,7 @@ import isobj from './isobj.mjs'
 import isarr from './isarr.mjs'
 import isbol from './isbol.mjs'
 import fsWriteTextCore from './fsWriteTextCore.mjs'
+import toResultError from './_toResultError.mjs'
 
 
 /**
@@ -15,7 +16,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  * @param {Object|Array} inp 輸入物件或陣列數據
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useFormat=false] 輸入是否格式化(縮排2空白)布林值，預設false
- * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(inp非物件或陣列時為說明字串，序列化或寫檔失敗時為Error物件)
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(inp非物件或陣列時為說明字串，序列化或寫檔失敗時為Error物件，toJSON拋出非Error之值時為其字串)
  * @example
  * need test in nodejs.
  *
@@ -75,6 +76,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  *
  */
 function fsWriteJson(fp, inp, opt = {}) {
+    let bErr = false //是否出錯以布林旗標判定, 不以errTemp是否為null判定(toJSON可拋出null)
     let errTemp = null
 
     //check
@@ -84,14 +86,15 @@ function fsWriteJson(fp, inp, opt = {}) {
         }
     }
 
-    //useFormat
-    let useFormat = get(opt, 'useFormat', null)
-    if (!isbol(useFormat)) {
-        useFormat = false
-    }
-
     let j = ''
     try {
+
+        //useFormat, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即成同步拋錯
+        let useFormat = get(opt, 'useFormat', null)
+        if (!isbol(useFormat)) {
+            useFormat = false
+        }
+
         if (useFormat) {
             j = JSON.stringify(inp, null, 2)
         }
@@ -101,12 +104,13 @@ function fsWriteJson(fp, inp, opt = {}) {
     }
     catch (err) {
         // console.log(err)
+        bErr = true
         errTemp = err
     }
 
-    if (errTemp !== null) {
+    if (bErr) {
         return {
-            error: errTemp,
+            error: toResultError(errTemp), //Error或非空字串原樣, 其餘(null、undefined等)轉字串, 恆為truthy
         }
     }
 

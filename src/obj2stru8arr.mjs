@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import errToStr from './_errToStr.mjs'
+import realErrorToStr from './_realErrorToStr.mjs'
 import isbol from './isbol.mjs'
 import isobj from './isobj.mjs'
 import isobj0 from './isobj0.mjs'
@@ -12,33 +13,12 @@ import isab from './isab.mjs'
 //import treeObj from './treeObj.mjs'
 
 
-//isRealError, 判定真Error: instanceof Error(含子類別、DOMException、Error之Proxy、以Error.prototype為原型者)或Error.isError(以內部槽判定, 含跨realm之Error)
-//  不用lodash isError: 其對「非plain而帶字串name、message」之物件亦為真, 會把恰帶此二欄之一般資料類別(聊天訊息、驗證項目等)壓成字串而遺失其餘欄位
-//  執行環境無Error.isError時, 以未帶Symbol.toStringTag者之內部標籤判跨realm之Error(帶Symbol.toStringTag者其標籤可偽裝, 不據以判定)
-function isRealError(v) {
-    if (v === null || typeof v !== 'object') {
-        return false
-    }
-    if (v instanceof Error) {
-        return true
-    }
-    if (typeof Error.isError === 'function') {
-        return Error.isError(v)
-    }
-    if (Symbol.toStringTag in v) {
-        return false
-    }
-    let tag = Object.prototype.toString.call(v)
-    return tag === '[object Error]' || tag === '[object DOMException]'
-}
-
-
 /**
  * 物件資料轉字串與Unit8Array，物件內可含Unit8Array數據，適用於大檔。
  *
  * 通過JSON序列化物件內非Unit8Array數據成為字串，另分拆Unit8Array數據出來回傳，兩者間通過指標關聯，主要為避免序列化大型Unit8Array數據造成效能或記憶體不足問題
  *
- * 因以JSON.stringify序列化，下列型別會靜默失真且不會拋錯，須由呼叫端自行避免：NaN與Infinity轉為null；值為undefined、函數或Symbol者該鍵會消失(若為唯一鍵則results為'{}')；Map、Set、RegExp轉為{}；Date轉為ISO字串；稀疏陣列之空洞補為null；超出Number精度之大整數會失精。另Error物件(含子類別、DOMException、跨realm之Error)由本函數以toString轉為字串(其餘欄位不保留)；未繼承Error之物件(含恰帶字串name與message之資料類別或自訂錯誤類別)照一般物件序列化，保留其可列舉之自有欄位
+ * 因以JSON.stringify序列化，下列型別會靜默失真且不會拋錯，須由呼叫端自行避免：NaN與Infinity轉為null；值為undefined、函數或Symbol者該鍵會消失(若為唯一鍵則results為'{}')；Map、Set、RegExp轉為{}；Date轉為ISO字串；稀疏陣列之空洞補為null；超出Number精度之大整數會失精。另Error物件(含子類別、DOMException、跨realm之Error)由本函數以toString轉為字串(toString為Object預設或不可呼叫者以Error.prototype.toString之語意得'名稱: 訊息'，其餘欄位不保留)；未繼承Error之物件(含恰帶字串name與message之資料類別或自訂錯誤類別)照一般物件序列化，保留其可列舉之自有欄位
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.mjs Github}
  * @memberOf wsemi
@@ -142,15 +122,8 @@ function obj2stru8arr(o, opt = {}) {
                 return id
             }
             //真Error(含子類別、DOMException、跨realm之Error、Error之Proxy)轉字串, 其餘(含恰帶字串name與message之一般資料類別)照一般物件序列化
-            //  toString為Object預設者會得'[object Object]'而失去name與message, 改以Error.prototype.toString之語意('名稱: 訊息')
-            if (isRealError(value)) {
-                if (value.toString === Object.prototype.toString) {
-                    value = Error.prototype.toString.call(value)
-                }
-                else {
-                    value = value.toString()
-                }
-            }
+            //  toString為Object預設者或無可呼叫之toString者(如以null為原型)以Error.prototype.toString之語意('名稱: 訊息'), 見_realErrorToStr
+            value = realErrorToStr(value)
 
             //跳脫, 以首字元'['(charCode 91)快篩, 避免對每個字串都跑regex
             if (isestr(value) && value.charCodeAt(0) === 91 && reNeedEsc.test(value)) {

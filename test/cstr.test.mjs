@@ -70,3 +70,20 @@ describe(`cstr`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`cstr 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return '' when input new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: cstr隨isnum拆包而一致, 同cstr(NaN)為''
+        assert.strict.deepStrictEqual(cstr(new Number(NaN)), '')
+    })
+
+    it(`should return '1.5' when input new Number(1.5) and 'a' when input new String('a')`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同其型別, 依其原始值轉字串(同cstr(1.5)、cstr('a'))
+        assert.strict.deepStrictEqual(cstr(new Number(1.5)), '1.5')
+        assert.strict.deepStrictEqual(cstr(new String('a')), 'a')
+    })
+
+})

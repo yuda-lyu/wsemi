@@ -12,6 +12,7 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCopyFolderCore from './fsCopyFolderCore.mjs'
 import fsDeleteFolderCore from './fsDeleteFolderCore.mjs'
 import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -23,7 +24,7 @@ import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗)
  * @example
  * //need test in nodejs
  *
@@ -31,22 +32,41 @@ import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
  *
  */
 async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
-    let levelLimit = null
+    try {
 
-    //path, fs, crypto
-    let path = get(opt, 'path')
-    let fs = get(opt, 'fs')
-    let crypto = get(opt, 'crypto')
+        //path, fs, crypto, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於async函數內未捕捉即以Error物件reject
+        let path = get(opt, 'path')
+        let fs = get(opt, 'fs')
+        let crypto = get(opt, 'crypto')
 
-    //type
-    let type = get(opt, 'type', '')
-    if (!isestr(type)) {
-        type = 'md5'
+        //type
+        let type = get(opt, 'type', '')
+        if (!isestr(type)) {
+            type = 'md5'
+        }
+
+        return await core(fdSrc, fdTar, { path, fs, crypto, type })
     }
+    catch (err) {
+        //opt不可讀之Error、前置檢查與複製失敗之字串、fsTreeFolderCore之readdirSync(EPERM等)Error、注入之fs拋出之任意值, 一律轉字串; 已為字串者原樣
+        return Promise.reject(errToStr(err))
+    }
+}
+
+
+//resultFailed, 複製(fsCopyFolderCore、fsCopyFileCore)與刪除(fsDeleteFolderCore、fsDeleteFileCore)之結果物件帶error鍵即失敗; 以鍵判定而不以error值之真假判定(error值可為null等非字串之值)
+function resultFailed(rc) {
+    return Object.prototype.hasOwnProperty.call(rc, 'error')
+}
+
+
+//core, 差異同步; 任何失敗由fsSyncFolderCore統一轉字串reject
+async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
+    let levelLimit = null
 
     //check
     if (!fsIsFolderCore(fdSrc, { fs })) {
-        throw new Error(`fdSrc[${fdSrc}] is not a folder`)
+        return Promise.reject(`fdSrc[${fdSrc}] is not a folder`)
     }
 
     //b
@@ -54,7 +74,11 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
 
     //check
     if (!fsIsFolderCore(fdTar, { fs })) {
-        await fsCopyFolderCore(fdSrc, fdTar, { path, fs, useSync: false })
+        let rc = await fsCopyFolderCore(fdSrc, fdTar, { path, fs, useSync: false })
+        if (resultFailed(rc)) {
+            //原丟棄結果物件而恆回true(目標為既有檔案、上層為檔案等複製失敗時偽成功)
+            return Promise.reject(errToStr(rc.error))
+        }
         b = true
         return b
     }
@@ -115,16 +139,24 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
         if (v.isFolder) {
             let fpTar = path.resolve(fdTar, v.rpath)
             // console.log('del folder', fpTar)
-            fsDeleteFolderCore(fpTar, { fs })
+            let rd = fsDeleteFolderCore(fpTar, { fs })
+            if (resultFailed(rd)) {
+                //原丟棄結果物件, 刪除失敗(被占用、無權限等)仍回true而目標殘留多出之資料夾
+                return Promise.reject(errToStr(rd.error))
+            }
         }
     })
 
-    //再針對fdTar內刪除已消失之檔案, 可能有些檔案已於前階段刪除資料夾時已被刪除, 故不能偵測error報錯
+    //再針對fdTar內刪除已消失之檔案, 已於前階段隨資料夾刪除者fsDeleteFileCore回success(目標不存在仍算刪除成功), 不致誤報
     await pmSeries(r.del, async(v) => {
         if (!v.isFolder) {
             let fpTar = path.resolve(fdTar, v.rpath)
             // console.log('del file', fpTar)
-            fsDeleteFileCore(fpTar, { fs })
+            let rd = fsDeleteFileCore(fpTar, { fs })
+            if (resultFailed(rd)) {
+                //原丟棄結果物件, 刪除失敗(被占用、無權限等)仍回true而目標殘留多出之檔案
+                return Promise.reject(errToStr(rd.error))
+            }
         }
     })
 
@@ -134,7 +166,11 @@ async function fsSyncFolderCore(fdSrc, fdTar, opt = {}) {
             let fpSrc = path.resolve(fdSrc, v.rpath)
             let fpTar = path.resolve(fdTar, v.rpath)
             // console.log('copy file', fpSrc, fpTar)
-            await fsCopyFileCore(fpSrc, fpTar, { path, fs, useSync: false })
+            let rc = await fsCopyFileCore(fpSrc, fpTar, { path, fs, useSync: false })
+            if (resultFailed(rc)) {
+                //原丟棄結果物件, 複製失敗仍回true
+                return Promise.reject(errToStr(rc.error))
+            }
         }
     })
 

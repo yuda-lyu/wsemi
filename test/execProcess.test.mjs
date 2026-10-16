@@ -482,8 +482,8 @@ describe(`execProcess`, function() {
 })
 
 
-//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
-describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+//R-EXEC-FAIL-01之6~14: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`execProcess: 末端不完整多位元組使cbStdout、cbStderr於收尾flush時首次被呼叫而拋錯(不攔截, 仍為未捕捉例外)時, execProcess仍落定 [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
         let { r } = runExecFail('execProcessCbFlush')
@@ -498,6 +498,46 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
     it(`execProcess: cbStdout於收尾flush時拋錯, 無處理器之行程仍以離開碼1結束並印出錯誤(重拋早於呼叫端續行, 不因隨即process.exit而遺失) (守門) [R-EXEC-FAIL-01之12]`, function() {
         let { status, signal, stderr } = runExecFail('rethrowExecProcessFlush', { exitMode: 'nohandler', allowNoResult: true })
         assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
+    })
+
+    it(`execProcess: opt之getter拋錯、opt本身或其選項值、args、prog為已撤銷之Proxy時以reject說明字串回報, 不同步拋錯、不成為未捕捉例外 [R-EXEC-FAIL-01之5、13]`, function() {
+        let { r } = runExecFail('inputUnreadableProc')
+        assert.strict.deepStrictEqual(r.out, {
+            procGetter: { s: 'reject', v: 'opt is not readable: getter boom codeCmd' }, //規則13: reject 'opt is not readable: <訊息>'
+            procOptRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 同上(opt本身不可讀)
+            procArgsRevoked: { s: 'reject', v: 'args is not an array or string' }, //規則13、5: args判型拋錯視同型別不符, reject且不帶值
+            procProgRevoked: { s: 'reject', v: 'spawn[UNKNOWN]:' }, //規則13: prog不可讀為'spawn[UNKNOWN]:\n<訊息>'(取首行)
+            procProgRevokedAuto: { s: 'reject', v: 'spawn[UNKNOWN]:' }, //規則13: 同上, codeCmd為auto(於取得系統字碼頁後啟動)亦同
+            procCbStdoutRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 回調於入口判型一次, 不可讀者為opt不可讀
+            uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外
+    })
+
+    it(`execProcess: cbStdout、cbStderr為以函數為目標之Proxy且於入口判型後才撤銷時, data與收尾flush內不再判型呼叫端之值(execProcess照常落定、輸出照常計入), 未捕捉例外僅有呼叫已撤銷回調本身者 [R-EXEC-FAIL-01之12、13]`, function() {
+        let { r } = runExecFail('procCbRevokedLater')
+        //規則12: 呼叫已撤銷之回調所拋之TypeError經_callUser原樣重拋(revoked:apply), 不得有判型所生者(revoked:has)
+        let u = ['revoked:apply']
+        assert.strict.deepStrictEqual(r.out, {
+            cbStdoutData: { s: 'resolve', v: 'x', uncaught: u }, //規則13: data內不再判型cbStdout, 該段仍計入resolve之合併字串
+            cbStdoutFlush: { s: 'resolve', v: '�', uncaught: u }, //規則13: 收尾flush時不再判型cbStdout(否則close之收尾中斷而永不落定)
+            cbStderrData: { s: 'resolve', v: 'y', uncaught: u }, //規則13: 同上(cbStderr, data)
+            cbStderrFlush: { s: 'resolve', v: '�', uncaught: u }, //規則13: 同上(cbStderr, 收尾flush)
+        })
+        assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不產生未處理之rejection
+    })
+
+    it(`execProcess: opt之getter拋出非Error之值(null、undefined、字串)或prog不可讀而拋出字串時, reject字串保留拋出值之文字、不同步拋錯 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('procThrownValues')
+        //規則13: execProcess reject 'opt is not readable: <訊息>'(訊息取getErrorMessage, 為空退_errToStr)
+        let x = (m) => ({ s: 'reject', v: `opt is not readable: ${m}` })
+        assert.strict.deepStrictEqual(r.out, {
+            null: x('null'), //規則13: 拋出null
+            undefined: x('undefined'), //規則13: 拋出undefined
+            string: x('thrown-x'), //規則13: 拋出字串
+            progThrowsString: { s: 'reject', v: 'spawn[UNKNOWN]:\nthrown-x' }, //規則13: prog不可讀為'spawn[UNKNOWN]:\n<訊息>'
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外
     })
 
 })

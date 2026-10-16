@@ -19,6 +19,7 @@ import strdelleft from './strdelleft.mjs'
 import strdelright from './strdelright.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -33,7 +34,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
  * @param {Boolean} [opt.useTime=true] 輸入是否給予紀錄時間布林值，預設true
  * @param {Boolean} [opt.useLoc=true] 輸入是否紀錄觸發程式碼位置布林值，預設true
  * @param {Boolean} [opt.useLocRela=true] 輸入當useLoc=true時，是否紀錄觸發程式碼位置改用相對工作路徑之位置布林值，預設true
- * @returns {Function} 回傳log函數，比照console.log使用
+ * @returns {Function} 回傳log函數，比照console.log使用，寫入log檔失敗(如參數含循環參照、資料夾無法寫入)時以console.log記錄不外拋；useLoc=true而呼叫堆疊中無呼叫端之file:位置(如以setTimeout(srlog, 0, ...)直接排程呼叫)時，log函數同步拋出Error物件(can not parse stackLines)，呼叫端須自行try或改設useLoc=false
  * @example
  * need test in nodejs.
  *
@@ -251,8 +252,14 @@ function fsSrlog(opt = {}) {
         //show log
         console.log(...ags)
 
-        //save log
+        //save log, core為async且無人持有其Promise: 參數含循環參照(JSON.stringify拋錯)或寫檔失敗時即成unhandledRejection(未掛處理器之行程崩潰), 改以console.log記錄(記錄包try)
         core(time, loc, ...args)
+            .catch((err) => {
+                try {
+                    console.log('fsSrlog: can not save log:', errToStr(err))
+                }
+                catch (e) {}
+            })
 
     }
 

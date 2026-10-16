@@ -22,7 +22,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fpOut 輸入合併後檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
- * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
  *
@@ -32,27 +32,13 @@ import errToStr from './_errToStr.mjs'
 async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     let errTemp = ''
 
-    //fs
-    let fs = get(opt, 'fs')
-
-    //check fpsIn
+    //check fpsIn, 與其他出口一致以訊息字串reject(原throw Error使reject值為Error物件)
     if (!isearr(fpsIn)) {
-        throw new Error(`fpsIn in not an effective array`)
+        return Promise.reject(`fpsIn in not an effective array`)
     }
 
     //getPathParent
     let fdOut = getPathParent(fpOut)
-
-    //getFileName
-    let fnOut = get(opt, 'fnOut', '')
-    if (!isestr(fnOut)) {
-        fnOut = getFileName(fpOut)
-    }
-
-    //check
-    if (!fsIsFolderCore(fdOut, { fs })) {
-        fsCreateFolderCore(fdOut, { fs })
-    }
 
     //pm
     let pm = genPm()
@@ -68,19 +54,34 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     let pmWrite = genPm()
     pmWrite.catch(() => {}) //write於兩片之間(無人race時)出錯, pmWrite之reject會成為unhandledRejection, 故先掛空catch標記已處理; 實際處置在下方error監聽與迴圈頂端之bErrWrite檢查
 
-    //getErrMsg, 取錯誤之message, 無則轉字串; 讀取與轉字串皆可能拋錯(注入之fs可拋出或使寫入流以非Error之值出錯: null、無原型物件、已撤銷之Proxy), 寫入流之error監聽與catch共用
+    //getErrMsg, 取錯誤之message, message非字串(無、數字、null等)則轉字串, 恆回字串; 讀取與轉字串皆可能拋錯(注入之fs可拋出或使寫入流以非Error之值出錯: null、無原型物件、已撤銷之Proxy), 寫入流之error監聽與catch共用
     //不可以get之預設值引數先求值String(err)(其拋錯會跳過catch內之destroy且pm不settle), 監聽器內亦不可直接讀err.message(拋錯即成未捕捉例外且pm不settle)
+    //原為message不為undefined即原樣回傳, 拋出{ message: 42 }、{ message: null }者以數字、null reject
     let getErrMsg = (err) => {
         let msg
         try {
             msg = err.message
         }
         catch (e) {}
-        return msg !== undefined ? msg : errToStr(err)
+        return typeof msg === 'string' ? msg : errToStr(err)
     }
 
     //攔截錯誤, 注意stream是非同步故try catch是無法攔截的, 須各自監聽read與write串流的error事件處理, 此處是攔截串流以外的錯誤
     try {
+
+        //fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即以Error物件reject
+        let fs = get(opt, 'fs')
+
+        //getFileName
+        let fnOut = get(opt, 'fnOut', '')
+        if (!isestr(fnOut)) {
+            fnOut = getFileName(fpOut)
+        }
+
+        //check, 置於try內: 注入之fs之lstatSync可拋出任意值, 於try外即以原值reject
+        if (!fsIsFolderCore(fdOut, { fs })) {
+            fsCreateFolderCore(fdOut, { fs })
+        }
 
         //streamWrite
         streamWrite = fs.createWriteStream(fpOut)

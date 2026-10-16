@@ -95,3 +95,19 @@ describe(`pmHookReject`, function() {
     })
 
 })
+
+
+describe(`pmHookReject 回傳型別與非函數(R-PM-SETTLE-01規則12)`, function() {
+
+    it(`回傳包裝函數, 呼叫後回傳Promise; fun非函數(7值)時回傳null [規則12]`, async function() {
+        let f = pmHookReject(async () => 'ok')
+        //R-PM-SETTLE-01 規則12: @returns之型別與實回相符(實回Function); JSDoc pmHookReject:12「@returns {Function|null} 回傳包裝函數，呼叫後回傳Promise」
+        assert.strict.deepStrictEqual(typeof f, 'function')
+        assert.strict.deepStrictEqual(await f(), 'ok')
+        for (let v of [undefined, null, 0, 'abc', {}, Promise.resolve(1), async function* () {}]) {
+            //R-PM-SETTLE-01 規則12: pmHookReject回null(寫入JSDoc); JSDoc pmHookReject:12「fun非函數時回傳null」
+            assert.strict.deepStrictEqual(pmHookReject(v), null)
+        }
+    })
+
+})

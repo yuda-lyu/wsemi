@@ -13,7 +13,7 @@ import evem from './evem.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.mjs Github}
  * @memberOf wsemi
- * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息
+ * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；輸入非函數時不排入佇列，回傳之Promise以字串'fun is not a function'被reject(拒絕值同pmQueue)
  * @example
  *
  * async function topAsync() {
@@ -333,10 +333,10 @@ function pmThrottle() {
     function run(func, ...input) {
         let pm = genPm()
 
-        //check
+        //check, 非函數之任務不排入佇列, 回傳之Promise以字串reject(同pmQueue之拒絕值), 不回傳undefined(呼叫端.then會同步拋錯)
         if (!isfun(func)) {
-            console.log('func is not a function')
-            return
+            pm.reject('fun is not a function')
+            return pm
         }
 
         //id

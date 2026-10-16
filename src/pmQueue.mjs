@@ -22,7 +22,7 @@ import delay from './delay.mjs'
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖
- * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出
+ * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出；第1參數非函數時該任務之Promise以字串'fun is not a function'被reject
  * @example
  *
  * async function topAsync() {

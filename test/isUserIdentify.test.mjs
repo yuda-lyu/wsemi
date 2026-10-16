@@ -115,3 +115,22 @@ describe(`isUserIdentify`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isUserIdentify 包裝物件(R-WRAPPER-01)`, function() {
+
+    //settle, 取Promise之落定結果字串
+    let settle = (pm) => pm.then(() => 'resolve', (e) => `reject:${e}`)
+
+    it(`should reject '身份證字號非有效字串' when input new String('')`, async function() {
+        //R-WRAPPER-01 規則2: isUserIdentify隨isestr拆包而一致, 同isUserIdentify('')為reject'身份證字號非有效字串'
+        assert.strict.deepStrictEqual(await settle(isUserIdentify(new String(''))), 'reject:身份證字號非有效字串')
+    })
+
+    it(`should resolve when input new String('A122471399')`, async function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同字串, 依其原始值判定(同isUserIdentify('A122471399')為resolve)
+        assert.strict.deepStrictEqual(await settle(isUserIdentify(new String('A122471399'))), 'resolve')
+    })
+
+})

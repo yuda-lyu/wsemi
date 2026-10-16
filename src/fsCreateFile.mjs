@@ -1,5 +1,6 @@
 import fs from 'fs'
 import fsCreateFileCore from './fsCreateFileCore.mjs'
+import toResultError from './_toResultError.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import fsCreateFileCore from './fsCreateFileCore.mjs'
  * @param {String} [opt.encoding='utf8'] 輸入編碼字串，預設'utf8'
  * @param {Integer} [opt.mode=0o666] 輸入寫入模式數字，預設0o666
  * @param {String} [opt.flag='w'] 輸入寫入標誌字串，預設'w'
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)
  * @example
  * need test in nodejs.
  *
@@ -62,7 +63,14 @@ import fsCreateFileCore from './fsCreateFileCore.mjs'
  *
  */
 function fsCreateFile(pah, data, opt = {}) {
-    return fsCreateFileCore(pah, data, { fs, ...opt })
+    try {
+        return fsCreateFileCore(pah, data, { fs, ...opt })
+    }
+    catch (err) {
+        return {
+            error: toResultError(err) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 轉為結果物件而不同步拋出; Error原樣, 其餘轉字串, 恆為truthy
+        }
+    }
 }
 
 

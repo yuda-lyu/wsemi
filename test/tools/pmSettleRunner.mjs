@@ -72,6 +72,76 @@ function call(fn) {
     }
 }
 
+//shown, settle之結果轉為可序列化之物件(值經safeStr)
+function shown(r) {
+    return r.s === 'pending' ? { s: 'pending' } : { s: r.s, v: safeStr(r.v) }
+}
+
+//delay
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+//nonFuns, 非函數之任務值軸(R-PM-SETTLE-01規則12): undefined、null、0、字串、物件、Promise、async generator函數(isfun為false)
+function nonFuns() {
+    return [
+        ['undefined', undefined],
+        ['null', null],
+        ['zero', 0],
+        ['str', 'abc'],
+        ['obj', {}],
+        ['pm', Promise.resolve(1)],
+        ['asyncGen', async function* () {}],
+    ]
+}
+
+//mkTask, 依呼叫序k(由0起)決定耗時ms與結果之任務函數, 記錄呼叫次數、執行中數與最大並行數
+//  durOf(k)為0時同步回傳(不計並行), 為Infinity時回傳永不settle之Promise; okOf(k)為false時reject Error('down'+k), 否則resolve valOf(k)(預設'v'+k)
+function mkTask(durOf, okOf = () => true, valOf = (k) => 'v' + k) {
+    let st = { calls: 0, conc: 0, maxConc: 0 }
+    let fun = () => {
+        let k = st.calls
+        st.calls += 1
+        let d = durOf(k)
+        if (d === 0) {
+            if (!okOf(k)) {
+                throw new Error('down' + k)
+            }
+            return valOf(k)
+        }
+        st.conc += 1
+        st.maxConc = Math.max(st.maxConc, st.conc)
+        if (d === Infinity) {
+            return new Promise(() => {})
+        }
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                st.conc -= 1
+                if (okOf(k)) {
+                    resolve(valOf(k))
+                }
+                else {
+                    reject(new Error('down' + k))
+                }
+            }, d)
+        })
+    }
+    return { st, fun }
+}
+
+//captureLog, 攔截console.log, 回傳記錄陣列與還原函數
+function captureLog() {
+    let logs = []
+    let cl = console.log
+    console.log = (...a) => {
+        logs.push(a.map((x) => safeStr(x)).join(' '))
+    }
+    let restore = () => {
+        console.log = cl
+    }
+    return { logs, restore }
+}
+
 //最小DOM替身(domPrepend用insertBefore/firstChild, importResources用getElementsByTagName與load事件)
 class El {
     constructor(tag) {
@@ -702,6 +772,439 @@ let cases = {
             }
             throw new Error('later boom')
         }, { attemptNum: 3, timeInterval: 20 }).catch(() => {})
+    },
+
+    //cache.get: fun於同步階段呼叫同key之get(c01)、交叉key(c11)、getProxy(c15)、重入後同步拋錯(c09)、同tick三個get(c12對照)
+    cacheReentrant: async () => {
+        let C = await imp('cache')
+        let out = {}
+
+        //track, 重入者之結果記錄: 只掛then(不另建Promise與計時器), 使修前遞迴至堆疊溢位時每層之額外堆疊最小; 未落定者為{ s: 'pending' }, 未產生者為{ s: 'none' }
+        let track = (p) => {
+            let o = { s: 'pending' }
+            p.then((v) => {
+                o.s = 'resolve'
+                o.v = safeStr(v)
+            }, (e) => {
+                o.s = 'reject'
+                o.v = safeStr(e)
+            })
+            return o
+        }
+        let none = { s: 'none' }
+
+        //c01
+        let oc1 = C()
+        let n1 = 0
+        let inner1 = none
+        oc1.set('k', {
+            fun: () => {
+                n1++
+                inner1 = track(oc1.get('k'))
+                return 'v'
+            },
+            timeExpired: 30000,
+        })
+        let outer1 = await settle(oc1.get('k'), 1500)
+        await delay(20)
+        out.c01 = { calls: n1, outer: shown(outer1), inner: inner1 }
+
+        //c11
+        let oc2 = C()
+        let n2 = { k1: 0, k2: 0 }
+        let innerK2 = none //k1之fun內取k2
+        let innerK1 = none //k2之fun內取k1
+        oc2.set('k1', {
+            fun: () => {
+                n2.k1++
+                innerK2 = track(oc2.get('k2'))
+                return 'v1'
+            },
+            timeExpired: 30000,
+        })
+        oc2.set('k2', {
+            fun: () => {
+                n2.k2++
+                innerK1 = track(oc2.get('k1'))
+                return 'v2'
+            },
+            timeExpired: 30000,
+        })
+        let outer2 = await settle(oc2.get('k1'), 1500)
+        await delay(20)
+        out.c11 = { calls: n2, outer: shown(outer2), innerK2, innerK1 }
+
+        //c15
+        let oc3 = C()
+        let n3 = 0
+        let inner3 = none
+        let fun3 = () => {
+            n3++
+            inner3 = track(oc3.getProxy('k', { fun: fun3, timeExpired: 30000 }))
+            return 'v'
+        }
+        let outer3 = await settle(oc3.getProxy('k', { fun: fun3, timeExpired: 30000 }), 1500)
+        await delay(20)
+        out.c15 = { calls: n3, outer: shown(outer3), inner: inner3 }
+
+        //c09
+        let oc4 = C()
+        let n4 = 0
+        let inner4 = none
+        oc4.set('k', {
+            fun: () => {
+                n4++
+                if (n4 === 1) {
+                    inner4 = track(oc4.get('k'))
+                    throw new Error('boom1')
+                }
+                return 'ok'
+            },
+            timeExpired: 30000,
+        })
+        let outer4 = await settle(oc4.get('k'), 1500)
+        await delay(20)
+        let inner4Now = { ...inner4 }
+        let next4 = await settle(oc4.get('k'), 1500)
+        out.c09 = { outer: shown(outer4), inner: inner4Now, next: shown(next4), calls: n4 }
+
+        //c12
+        let oc5 = C()
+        let n5 = 0
+        oc5.set('k', {
+            fun: async () => {
+                n5++
+                await delay(20)
+                return 'v'
+            },
+            timeExpired: 30000,
+        })
+        let ps5 = [oc5.get('k'), oc5.get('k'), oc5.get('k')].map((p) => settle(p, 1500))
+        let rs5 = []
+        for (let p of ps5) {
+            rs5.push(shown(await p))
+        }
+        out.c12 = { calls: n5, results: rs5 }
+
+        return out
+    },
+
+    //cache.get: fun等待同key之get之結果為互等而永不settle(c02首個await即為重入、c04 await之後重入), fun只呼叫1次
+    cacheMutualWait: async () => {
+        let C = await imp('cache')
+        let out = {}
+        let oc1 = C()
+        let n1 = 0
+        oc1.set('k', {
+            fun: async () => {
+                n1++
+                await oc1.get('k')
+                return 'v'
+            },
+            timeExpired: 30000,
+        })
+        let r1 = await settle(oc1.get('k'), 300)
+        out.c02 = { calls: n1, outer: shown(r1) }
+        let oc2 = C()
+        let n2 = 0
+        oc2.set('k', {
+            fun: async () => {
+                n2++
+                await delay(10)
+                await oc2.get('k')
+                return 'v'
+            },
+            timeExpired: 30000,
+        })
+        let r2 = await settle(oc2.get('k'), 300)
+        out.c04 = { calls: n2, outer: shown(r2) }
+        return out
+    },
+
+    //pmInvResolve: 可呼叫thenable(then回傳undefined)與覆寫catch之Promise子類別不使其同步拋出, 依其結果settle
+    invResolveThenable: async () => {
+        let inv = await imp('pmInvResolve')
+        class BadCatch extends Promise {
+            catch() {
+                throw new Error('catch boom')
+            }
+        }
+        let callable = function() {}
+        callable.then = (res) => {
+            setTimeout(() => res({ state: 'success', msg: 'V' }), 5)
+        }
+        let e = new Error('real reason')
+        let out = {}
+        let mks = {
+            callable: () => callable,
+            subclassResolve: () => BadCatch.resolve({ state: 'success', msg: 'W' }),
+            subclassReject: () => BadCatch.reject(e),
+        }
+        for (let k in mks) {
+            let c = call(() => inv(mks[k]()))
+            if (!c.ok) {
+                out[k] = { syncThrow: true, msg: safeStr(c.e) }
+                continue
+            }
+            let r = await settle(c.p)
+            out[k] = { syncThrow: false, s: r.s, v: r.v === e ? '<same error>' : safeStr(r.v) }
+        }
+        return out
+    },
+
+    //pmThrottle: 非函數之任務不排入, 回傳之Promise以'fun is not a function'被reject, 不記錄, 不影響已排入與後續之有效任務
+    nonFunThrottle: async () => {
+        let T = await imp('pmThrottle')
+        let cap = captureLog()
+        try {
+            let t = T()
+            let out = {}
+            for (let [k, v] of nonFuns()) {
+                let c = call(() => t(v))
+                if (!c.ok) {
+                    out[k] = { syncThrow: true }
+                    continue
+                }
+                if (c.p === null || typeof c.p !== 'object' || typeof c.p.then !== 'function') {
+                    out[k] = { ret: typeof c.p }
+                    continue
+                }
+                let r = await settle(c.p)
+                out[k] = { s: r.s, v: safeStr(r.v) }
+            }
+            let pa = settle(t(async () => {
+                await delay(30)
+                return 'a'
+            }), 1500)
+            let cb = call(() => t(undefined)) //已排入有效任務後再呼叫非函數
+            if (cb.ok && cb.p && typeof cb.p.catch === 'function') {
+                cb.p.catch(() => {})
+            }
+            let ra = await pa
+            let rg = await settle(t(async () => 'good'), 1500)
+            return { out, queued: shown(ra), next: shown(rg), logged: cap.logs.filter((s) => s.includes('is not a function')).length }
+        }
+        finally {
+            cap.restore()
+        }
+    },
+
+    //pmQueue: 非函數之任務以'fun is not a function'被reject
+    nonFunQueue: async () => {
+        let Q = await imp('pmQueue')
+        let q = Q(1)
+        let out = {}
+        for (let [k, v] of nonFuns()) {
+            let r = await settle(q(v), 1500)
+            out[k] = shown(r)
+        }
+        out.next = shown(await settle(q(async () => 'good'), 1500))
+        return out
+    },
+
+    //setIntervalHp、setTimeoutHp: fun非函數時每次到期以console.log記錄Error('fn is not a function'), 停止後不再記錄
+    nonFunHp: async () => {
+        let SI = await imp('setIntervalHp')
+        let ST = await imp('setTimeoutHp')
+        let cap = captureLog()
+        try {
+            let cnt = () => cap.logs.filter((s) => s === 'fn is not a function').length
+            let stop = SI(undefined, 10)
+            await delay(120)
+            stop()
+            let n1 = cnt()
+            await delay(80)
+            let n2 = cnt()
+            let ret = ST(null, 10)
+            await delay(80)
+            let n3 = cnt() - n2
+            return { intervalLogsAtLeast2: n1 >= 2, noMoreAfterStop: n2 === n1, timeoutLogs: n3, timeoutRet: ret }
+        }
+        finally {
+            cap.restore()
+        }
+    },
+
+    //pmDebounce、debounce: 非函數之任務不排入, 回傳undefined並以console.log記錄'func is not a function', 不影響已排入之任務
+    nonFunPmDebounce: async () => {
+        let PD = await imp('pmDebounce')
+        let cap = captureLog()
+        try {
+            let ran = false
+            let d = PD(10)
+            d(() => {
+                ran = true
+            })
+            let ret = d(undefined)
+            await delay(150)
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === 'func is not a function').length }
+        }
+        finally {
+            cap.restore()
+        }
+    },
+    nonFunDebounce: async () => {
+        let D = await imp('debounce')
+        let cap = captureLog()
+        try {
+            let ran = false
+            let d = D(10)
+            d(() => {
+                ran = true
+            })
+            let ret = d('abc')
+            await delay(150)
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === 'func is not a function').length }
+        }
+        finally {
+            cap.restore()
+        }
+    },
+
+    //waitFun: 輪詢不重疊(S1慢fun恆false、S3同步false、S5先啟動之慢輪回true)
+    waitFunNoOverlap: async () => {
+        let W = await imp('waitFun')
+        let a = mkTask(() => 250, () => true, () => false)
+        let ra = await settle(W(a.fun, { attemptNum: 5, timeInterval: 100 }), 5000)
+        let s1 = { s: ra.s, v: safeStr(ra.v), calls: a.st.calls, maxConc: a.st.maxConc, inflightAtSettle: a.st.conc }
+        let b = mkTask(() => 0, () => true, () => false)
+        let rb = await settle(W(b.fun, { attemptNum: 5, timeInterval: 50 }), 5000)
+        let s3 = { s: rb.s, v: safeStr(rb.v), calls: b.st.calls }
+        let c = mkTask((k) => (k === 1 ? 500 : 10), () => true, (k) => k === 1)
+        let rc = await settle(W(c.fun, { attemptNum: 2, timeInterval: 100 }), 5000)
+        let s5 = { s: rc.s, maxConc: c.st.maxConc }
+        return { s1, s3, s5 }
+    },
+
+    //waitFun: 立即呼叫為false, 其後之呼叫永不settle(S6): 不settle且不再累積呼叫
+    waitFunHang: async () => {
+        let W = await imp('waitFun')
+        let a = mkTask((k) => (k === 0 ? 0 : Infinity), () => true, () => false)
+        let r = await settle(W(a.fun, { attemptNum: 3, timeInterval: 50 }), 600)
+        return { s: r.s, calls: a.st.calls }
+    },
+
+    //cacheBd(F3): 5個getFromCache, fun耗時600ms成功: 只觸發1次且皆得同值
+    cacheBdSingleFlight: async () => {
+        let cacheBd = await imp('cacheBd')
+        let a = mkTask(() => 600)
+        let bc = cacheBd(a.fun, { nTrigger: 1, nMax: 6 })
+        let rs = await Promise.all(Array.from({ length: 5 }, () => settle(bc.getFromCache(), 9000)))
+        return { calls: a.st.calls, results: rs.map(shown) }
+    },
+
+    //cacheBd(F5): A之getFromCache觸發之慢get(k0)執行中, 直接get(k1)失敗結束; B之getFromCache於k0執行中不觸發
+    cacheBdNoTriggerWhileRunning: async () => {
+        let cacheBd = await imp('cacheBd')
+        let a = mkTask((k) => (k === 0 ? 2500 : 50), (k) => k !== 1)
+        let bc = cacheBd(a.fun, { nTrigger: 1, nMax: 6 })
+        let pa = settle(bc.getFromCache('A'), 12000)
+        await delay(1100)
+        let pd = settle(bc.get('D'), 12000)
+        await delay(100)
+        let pb = settle(bc.getFromCache('B'), 12000)
+        let [ra, rd, rb] = await Promise.all([pa, pd, pb])
+        return { calls: a.st.calls, A: shown(ra), D: shown(rd), B: shown(rb) }
+    },
+
+    //cacheBd(F6): 先啟動之慢get(k0)晚於後啟動之快get(k1)完成: 各get回傳自身之結果, 快取為後啟動者之值
+    cacheBdSeqGuard: async () => {
+        let cacheBd = await imp('cacheBd')
+        let a = mkTask((k) => (k === 0 ? 800 : 50))
+        let bc = cacheBd(a.fun)
+        let p0 = settle(bc.get('old'), 3000)
+        await delay(100)
+        let p1 = settle(bc.get('new'), 3000)
+        let [r0, r1] = await Promise.all([p0, p1])
+        let rc = await settle(bc.getFromCache(), 3000)
+        return { old: shown(r0), new: shown(r1), cache: shown(rc) }
+    },
+
+    //pmMap(F12): 陣列第2個元素為拋錯之getter(有fun之takeLimit 1與0、未給fun), 物件之值為拋錯之getter: 以該錯誤reject, 不同步拋出、不懸置
+    mapElemGetterThrow: async () => {
+        let M = await imp('pmMap')
+        let one = async (mk, fun, takeLimit) => {
+            let e = new Error('getter boom')
+            let c = call(() => M(mk(e), fun, takeLimit))
+            if (!c.ok) {
+                return { syncThrow: true, same: c.e === e }
+            }
+            let r = await settle(c.p, 800)
+            return { s: r.s, same: r.v === e }
+        }
+        let arr = (e) => {
+            let rs = ['a', 'b', 'c']
+            Object.defineProperty(rs, 1, {
+                get() {
+                    throw e
+                },
+            })
+            return rs
+        }
+        let obj = (e) => ({
+            a: 'a',
+            get b() {
+                throw e
+            },
+        })
+        let fun = async (v) => v
+        return {
+            arrFun1: await one(arr, fun, 1),
+            arrFun0: await one(arr, fun, 0),
+            arrNoFun1: await one(arr, null, 1),
+            objFun1: await one(obj, fun, 1),
+        }
+    },
+
+    //cacheBd(F16): 直接呼叫之get失敗而呼叫端未接: 其rejection為未處理(同HEAD與cache.get、pmQueue), 不被本函數吞下
+    cacheBdDirectGetUncaught: async () => {
+        let cacheBd = await imp('cacheBd')
+        let bc = cacheBd(async () => {
+            throw new Error('direct-fail')
+        })
+        bc.get() //刻意不接
+        await delay(50)
+        return {}
+    },
+
+    //cacheBd(F16): fun同步拋錯之直接get失敗後, 執行中登記已移除, getFromCache之後續嘗試可觸發並取得
+    cacheBdSyncThrowRetry: async () => {
+        let cacheBd = await imp('cacheBd')
+        let n = 0
+        let c = cacheBd(() => {
+            n++
+            if (n === 1) {
+                throw new Error('sync-transient')
+            }
+            return 'value'
+        }, { nMax: 4, nTrigger: 1 })
+        let d = await settle(c.get(), 1000)
+        let r = await settle(c.getFromCache(), 6000)
+        return { direct: shown(d), fromCache: shown(r), calls: n }
+    },
+
+    //waitFun(F20): 立即呼叫為false, 其後之呼叫永不settle, 以pmTimeout包裝: pmTimeout逾時reject, 逾次後計時器停止而行程自然結束(natural模式)
+    waitFunHangExit: async () => {
+        let W = await imp('waitFun')
+        let P = await imp('pmTimeout')
+        let a = mkTask((k) => (k === 0 ? 0 : Infinity), () => true, () => false)
+        let r = await settle(P(W(a.fun, { attemptNum: 3, timeInterval: 50 }), 400), 2000)
+        return { s: r.s, code: (r.v !== null && typeof r.v === 'object') ? r.v.code : null, calls: a.st.calls }
+    },
+
+    //pmQueue(F23): takeLast下排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'fun is not a function'被reject
+    nonFunQueueTakeLast: async () => {
+        let Q = await imp('pmQueue')
+        let q = Q(0, true)
+        let p1 = settle(q(async () => {
+            await delay(30)
+            return 'a'
+        }), 1500)
+        let p2 = settle(q(async () => 'b'), 1500)
+        let p3 = settle(q(undefined), 1500)
+        let [r1, r2, r3] = await Promise.all([p1, p2, p3])
+        let rd = (x) => (x.s === 'reject' && x.v !== null && typeof x.v === 'object') ? { s: x.s, reason: x.v.reason } : shown(x)
+        return { t1: rd(r1), t2: rd(r2), t3: rd(r3) }
     },
 }
 

@@ -8,9 +8,11 @@ import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
 import ispint from './ispint.mjs'
 import isp0int from './isp0int.mjs'
+import cint from './cint.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
 
 
@@ -21,7 +23,7 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
 /**
  * 建立互動式stdio工作階段(session)，用於stdio協定型之長駐CLI(如MCP之stdio伺服器、codex app-server等一行一則JSON之程式)，與execCli「寫完input即關閉stdin並等待結束」之一次性契約不同，本函數維持stdin開啟，由呼叫端逐次write，直到呼叫stop()才關閉stdin並等待子進程自行退出，逾寬限期則以execProcessKillPid樹殺
  * Windows下npm全域安裝之命令為.cmd批次檔，內部經execCliCore.buildSpawnArgs解析為以node執行其JS入口，不使用shell:true，故樹殺可確實涵蓋子孫程序
- * 本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報，其error不含args與env之值
+ * 本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報，其error不含args與env之值；command、args、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦不spawn，同樣以onExit與stop()之結果回報(pid為null，error為'<錯誤碼>: <訊息>'，無錯誤碼者為UNKNOWN，拋出非Error之值時訊息為該值之文字；onExit本身不可讀時僅以stop()回報)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliSession.test.mjs Github}
  * @memberOf wsemi
@@ -38,7 +40,7 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  * @param {Function} [opt.onStdout=undefined] 輸入stdout原始片段回調函數，格式為(chunk)=>{}，已經UTF-8跨chunk解碼，供非行式協定(如LSP之Content-Length分幀)自行分幀，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
  * @param {Function} [opt.onExit=undefined] 輸入子進程結束回調函數，格式為(result)=>{}，result同stop()之回傳，預設undefined。onLine、onStdout、onStderr、onExit內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘回調之送達、stop()之落定與結果)
- * @returns {Object} 回傳工作階段物件s，內含pid(子進程pid，spawn失敗為null)、exited(是否已結束布林值)、write(str)(寫入stdin，回傳Promise，resolve為是否寫入成功布林值，子進程已結束時靜默resolve(false))、writeLine(str)(補換行後寫入)、stop()(關閉stdin並等待結束，回傳Promise，resolve回傳結果物件，內含code、signal、exited、timeout、killed、error、stderr、durationMs、pid；多次呼叫回傳同一Promise)
+ * @returns {Object} 回傳工作階段物件s，內含pid(子進程pid，spawn失敗為null)、exited(是否已結束布林值)、write(str)(寫入stdin，回傳Promise，resolve為是否寫入成功布林值，子進程已結束時靜默resolve(false))、writeLine(str)(補換行後寫入，str無法轉為字串時resolve(false))、stop()(關閉stdin並等待結束，回傳Promise，resolve回傳結果物件，內含code、signal、exited、timeout、killed、error、stderr、durationMs、pid；多次呼叫回傳同一Promise)
  * @example
  * //need test in nodejs
  *
@@ -80,62 +82,96 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  */
 function execCliSession(command, args = [], opt = {}) {
 
-    //args
-    if (!isarr(args)) {
-        args = []
+    //輸入之讀取與判型一律於try內: 拋錯者(command、args、opt或其選項值之getter拋錯、已撤銷之Proxy等不可讀之輸入)不throw, 記於errInput, 於下方以onExit與stop()之結果回報(同spawn同步錯誤)
+    //是否出錯以布林旗標bErrInput判定, 不以errInput之值為哨兵(拋出之值可為null、undefined); 多處拋錯時記第一個
+    //各選項先讀為暫存v再判型, 判型通過才指定, 拋錯時保留預設值; 回調於此即判型(非函數者為undefined), 其後監聽器與計時器內之判型不再觸及呼叫端之值
+    let cwd = process.cwd()
+    let envExtra
+    let timeoutMs = null
+    let exitGraceMs = 2000
+    let killWaitMs = 3000
+    let stderrKeep = 4000
+    let onLine
+    let onStdout
+    let onStderr
+    let onExit
+    let bCommand = false
+    let bErrInput = false
+    let errInput
+    let setErrInput = (err) => {
+        if (!bErrInput) {
+            bErrInput = true
+            errInput = err
+        }
     }
 
-    //opt
-    if (!isobj(opt)) {
+    //opt, 不可讀者以空物件續讀(其後各項皆取預設值)
+    try {
+        if (!isobj(opt)) {
+            opt = {}
+        }
+    }
+    catch (err) {
+        setErrInput(err)
         opt = {}
     }
 
-    //cwd
-    let cwd = get(opt, 'cwd')
-    if (!isestr(cwd)) {
-        cwd = process.cwd()
+    //callbacks, 先於其餘選項讀取且各自try: 可讀者保留(函數或undefined), 使其餘輸入不可讀時onExit仍可回報結果; 不可讀者為undefined(不被呼叫)
+    let readFn = (key) => {
+        try {
+            let f = get(opt, key)
+            return isfun(f) ? f : undefined
+        }
+        catch (err) {
+            setErrInput(err)
+            return undefined
+        }
     }
+    onLine = readFn('onLine')
+    onStdout = readFn('onStdout')
+    onStderr = readFn('onStderr')
+    onExit = readFn('onExit')
 
-    //envExtra
-    let envExtra = get(opt, 'env')
-    if (!isobj(envExtra)) {
-        envExtra = undefined
-    }
+    //其餘輸入
+    try {
+        let v
 
-    //timeoutMs, 預設null不限制
-    let timeoutMs = get(opt, 'timeoutMs')
-    if (!ispint(timeoutMs)) {
-        timeoutMs = null
-    }
-    else {
-        timeoutMs = Math.min(timeoutMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
-    }
+        //command
+        bCommand = isestr(command)
 
-    //exitGraceMs
-    let exitGraceMs = get(opt, 'exitGraceMs')
-    if (!isp0int(exitGraceMs)) {
-        exitGraceMs = 2000
-    }
-    exitGraceMs = Math.min(exitGraceMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+        //args
+        if (!isarr(args)) {
+            args = []
+        }
 
-    //killWaitMs
-    let killWaitMs = get(opt, 'killWaitMs')
-    if (!isp0int(killWaitMs)) {
-        killWaitMs = 3000
-    }
-    killWaitMs = Math.min(killWaitMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+        //cwd
+        v = get(opt, 'cwd')
+        cwd = isestr(v) ? v : process.cwd()
 
-    //stderrKeep
-    let stderrKeep = get(opt, 'stderrKeep')
-    if (!isp0int(stderrKeep)) {
-        stderrKeep = 4000
-    }
+        //envExtra
+        v = get(opt, 'env')
+        envExtra = isobj(v) ? v : undefined
 
-    //callbacks
-    let onLine = get(opt, 'onLine')
-    let onStdout = get(opt, 'onStdout')
-    let onStderr = get(opt, 'onStderr')
-    let onExit = get(opt, 'onExit')
+        //timeoutMs, 預設null不限制; 夾至計時器上限, 見_const.mjs
+        v = get(opt, 'timeoutMs')
+        timeoutMs = ispint(v) ? Math.min(v, cst.TIMER_TIME_MAX) : null
+
+        //exitGraceMs, 夾至計時器上限, 見_const.mjs
+        v = get(opt, 'exitGraceMs')
+        exitGraceMs = Math.min(isp0int(v) ? v : 2000, cst.TIMER_TIME_MAX)
+
+        //killWaitMs, 夾至計時器上限, 見_const.mjs
+        v = get(opt, 'killWaitMs')
+        killWaitMs = Math.min(isp0int(v) ? v : 3000, cst.TIMER_TIME_MAX)
+
+        //stderrKeep, 轉為數字(支援字串型數字與包裝物件, 否則監聽器內之=== 0判定不成立而不截斷)
+        v = get(opt, 'stderrKeep')
+        stderrKeep = isp0int(v) ? cint(v) : 4000
+
+    }
+    catch (err) {
+        setErrInput(err)
+    }
 
     //startTime
     let startTime = Date.now()
@@ -186,7 +222,7 @@ function execCliSession(command, args = [], opt = {}) {
         }
         s.exited = true
 
-        if (isfun(onExit)) {
+        if (onExit !== undefined) { //回調已於入口判型(函數或undefined), 監聽器與計時器內一律以!== undefined判定, 不再判型呼叫端之值(值於入口後撤銷時判型會拋出而中斷收尾)
             callUser(onExit, result) //onExit拋錯不得中斷喚醒stop(), 否則stop()永久懸置
         }
         pmExit.resolve(result)
@@ -204,8 +240,21 @@ function execCliSession(command, args = [], opt = {}) {
         return pmStop
     }
 
+    //輸入不可讀: 不spawn, 同spawn同步錯誤以timer脫勾後settle(error為'碼: 訊息', pid為null), settle經callUser呼叫可讀之onExit
+    if (bErrInput) {
+        let e = execSpawnError(errInput)
+        let m = execThrownMsg(e, errInput)
+        s.write = async () => false
+        s.writeLine = async () => false
+        s.stop = stopNoProc
+        setTimeout(() => {
+            settle({ error: `${e.code}: ${m}` })
+        }, 1)
+        return s
+    }
+
     //command必填字串: 不spawn, 以timer脫勾後settle使onExit於本函數回傳後才觸發
-    if (!isestr(command)) {
+    if (!bCommand) {
         s.write = async () => false
         s.writeLine = async () => false
         s.stop = stopNoProc
@@ -270,7 +319,7 @@ function execCliSession(command, args = [], opt = {}) {
             if (line.endsWith('\r')) {
                 line = line.slice(0, -1)
             }
-            if (isfun(onLine)) {
+            if (onLine !== undefined) {
                 callUser(onLine, line) //拋錯不得中斷同一chunk其餘行之送達(否則延至下個chunk或收尾, 如JSON-RPC之回應卡至逾時)
             }
             idx = lineBuf.indexOf('\n')
@@ -281,7 +330,7 @@ function execCliSession(command, args = [], opt = {}) {
             if (line.endsWith('\r')) {
                 line = line.slice(0, -1)
             }
-            if (isfun(onLine)) {
+            if (onLine !== undefined) {
                 callUser(onLine, line)
             }
         }
@@ -302,7 +351,7 @@ function execCliSession(command, args = [], opt = {}) {
         if (!str) {
             return
         }
-        if (isfun(onStdout)) {
+        if (onStdout !== undefined) {
             callUser(onStdout, str) //拋錯不得使該chunk不進onLine
         }
         emitLines(str, false)
@@ -314,7 +363,7 @@ function execCliSession(command, args = [], opt = {}) {
         if (!str) {
             return
         }
-        if (isfun(onStderr)) {
+        if (onStderr !== undefined) {
             callUser(onStderr, str)
         }
         appendStderr(str)
@@ -356,7 +405,7 @@ function execCliSession(command, args = [], opt = {}) {
         //flush decoder殘餘與不完整行; 回調經callUser, 拋錯不得中斷收尾(否則不settle, stop()於killWaitMs後誤報STOP_TIMEOUT且onExit不被呼叫)
         let fOut = stdoutDecoder.decode()
         if (fOut) {
-            if (isfun(onStdout)) {
+            if (onStdout !== undefined) {
                 callUser(onStdout, fOut)
             }
             emitLines(fOut, false)
@@ -364,7 +413,7 @@ function execCliSession(command, args = [], opt = {}) {
         emitLines('', true)
         let fErr = stderrDecoder.decode()
         if (fErr) {
-            if (isfun(onStderr)) {
+            if (onStderr !== undefined) {
                 callUser(onStderr, fErr)
             }
             appendStderr(fErr)
@@ -407,7 +456,17 @@ function execCliSession(command, args = [], opt = {}) {
 
     //writeLine
     s.writeLine = (str) => {
-        return s.write(String(str) + '\n')
+        //String須在try內, 與write對稱: 無法轉字串者(如Object.create(null)、已撤銷之Proxy)resolve(false)而不同步拋錯
+        let line
+        try {
+            line = String(str) + '\n'
+        }
+        catch {
+            let pm = genPm()
+            pm.resolve(false)
+            return pm
+        }
+        return s.write(line)
     }
 
     //stop, 關閉stdin → 等exitGraceMs → 未退出即樹殺 → 等exit; 多次呼叫回傳同一Promise

@@ -7,12 +7,13 @@ import getPathParent from './getPathParent.mjs'
 import getErrorMessage from './getErrorMessage.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
  * 後端nodejs下載網址成為檔案
  *
- * 下載內容先寫入暫存檔`${fpOut}.download`，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔。回應帶content-length且未經內容編碼與分塊傳輸時，改名前核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串`failed to download url[urlIn] to file[fpOut]: 原因`並清除暫存檔。同一fpOut之併發下載由呼叫端自行避免
+ * 下載內容先寫入暫存檔`${fpOut}.download`，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔。回應帶content-length且未經內容編碼與分塊傳輸時，改名前核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串`failed to download url[urlIn] to file[fpOut]: 原因`並清除暫存檔；輸入檢查不通過(urlIn、fpOut非有效字串、未給opt.pipeline)時reject說明字串。同一fpOut之併發下載由呼叫端自行避免
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFile.test.mjs Github}
  * @memberOf wsemi
@@ -30,38 +31,54 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
  *
  */
 async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
+    let fs = null
+    let Readable = null
+    let pipeline = null
 
-    //fs
-    let fs = get(opt, 'fs')
+    //讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於async函數內未捕捉即以Error物件reject; 非下載失敗, 依通則轉字串
+    try {
 
-    //Readable
-    let Readable = get(opt, 'Readable')
+        //fs
+        fs = get(opt, 'fs')
 
-    //pipeline
-    let pipeline = get(opt, 'pipeline')
+        //Readable
+        Readable = get(opt, 'Readable')
 
-    //check urlIn
+        //pipeline
+        pipeline = get(opt, 'pipeline')
+
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err))
+    }
+
+    //check urlIn, 與其他失敗一致以字串reject(原throw Error使reject值為Error物件, 與文件「reject回傳錯誤訊息字串」不符)
     if (!isestr(urlIn)) {
-        throw new Error(`urlIn in not an effective string`)
+        return Promise.reject(`urlIn in not an effective string`)
     }
 
     //check fpOut
     if (!isestr(fpOut)) {
-        throw new Error(`fpOut is not an effective string`)
+        return Promise.reject(`fpOut is not an effective string`)
     }
 
     //check pipeline
     if (!isfun(pipeline)) {
-        throw new Error(`opt.pipeline is not a function`)
+        return Promise.reject(`opt.pipeline is not a function`)
     }
 
     //getPathParent
     let fdOut = getPathParent(fpOut)
     // console.log('fdOut', fdOut)
 
-    //check
-    if (!fsIsFolderCore(fdOut, { fs })) {
-        fsCreateFolderCore(fdOut, { fs })
+    //check, 注入之fs之lstatSync可拋出任意值, 於此轉字串reject(原以原值reject)
+    try {
+        if (!fsIsFolderCore(fdOut, { fs })) {
+            fsCreateFolderCore(fdOut, { fs })
+        }
+    }
+    catch (err) {
+        return Promise.reject(`failed to download url[${urlIn}] to file[${fpOut}]: ${getErrorMessage(err, { useCause: true })}`)
     }
 
     //fpTemp, 先寫暫存檔, 成功才改名為正式檔名, 中斷時正式檔名不存在, 下次自然重新下載

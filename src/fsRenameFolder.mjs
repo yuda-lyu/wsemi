@@ -9,7 +9,7 @@ import fsRenameFolderCore from './fsRenameFolderCore.mjs'
  * @memberOf wsemi
  * @param {String} pahOld 輸入資料夾原本路徑字串
  * @param {String} pahNew 輸入資料夾更名路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)
  * @example
  * need test in nodejs.
  *

@@ -13,9 +13,9 @@ import delay from './delay.mjs'
  * @memberOf wsemi
  * @param {Function} fun 輸入非同步函數
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [nMax=200] 輸入使用快取版之總嘗試次數整數，超過則報錯，預設200
- * @param {Integer} [nTrigger=3] 輸入嘗試指定次數整數，若嘗試指定次數之後皆無快取則須自動執行get用以取得快取，預設3
- * @returns {Object} 回傳事件物件，可呼叫事件get、getFromCache，get為封裝後封裝原本非同步函數，getFromCache為提供取用快取版之非同步函數，若有快取則優先使用，若超過指定次數則自動執行get使能取得快取
+ * @param {Integer} [opt.nMax=200] 輸入使用快取版之總嘗試次數，為正整數，超過則報錯，預設200
+ * @param {Integer} [opt.nTrigger=3] 輸入嘗試指定次數，為正整數，若嘗試指定次數之後皆無快取則須自動執行get用以取得快取，預設3
+ * @returns {Object} 回傳事件物件，可呼叫事件get、getFromCache，get為封裝後封裝原本非同步函數，getFromCache為提供取用快取版之非同步函數，若有快取則優先使用，若超過指定次數則自動執行get使能取得快取。getFromCache於嘗試nTrigger次之後，若尚無快取且無任何執行中之get(含直接呼叫者)才觸發get，觸發之get失敗時不向外報錯而續等，超過nMax次(每次間隔1000ms)仍無快取時reject Error('exceeded nMax[nMax]')。get為直接執行fun並回傳其自身之結果(失敗則reject其錯誤)，不與執行中者共用；寫入快取依啟動先後，先啟動而後完成者之結果不覆蓋後啟動者已寫入之快取。fun非函數時get以TypeError被reject，getFromCache吞下其錯誤而持續輪詢至nMax後reject
  * @example
  *
  * let test1 = async () => {
@@ -192,27 +192,39 @@ function cacheBd(fun, opt = {}) {
     //快取
     let cc = null
 
-    //函數執行狀態
-    let lock = false
+    //啟動序號, 每次get遞增; seqCc為已寫入快取者之啟動序號, 先啟動而後完成者之結果不覆蓋後啟動者已寫入之快取
+    let seqStart = 0
+    let seqCc = 0
 
-    //_get, 封裝原本非同步函數
-    let _get = async(...inputs) => {
-        lock = true
-        try {
-            cc = await fun(...inputs) //若發生錯誤則向外報錯
-        }
-        finally {
-            lock = false //不論成功失敗皆解除, 否則一次失敗後getFromCache永不再嘗試取得
-        }
-        return cc
+    //執行中之get之啟動序號集合, 取代布林lock: 任一次get結束(含失敗)不得使其他執行中者被視為未執行
+    let seqsRunning = new Set()
+
+    //_get, 封裝原本非同步函數, 回傳其自身之結果, 若發生錯誤則向外報錯
+    let _get = (...inputs) => {
+        seqStart += 1
+        let seq = seqStart
+        seqsRunning.add(seq) //先登記再執行: fun同步拋錯時async內之finally於回傳前即執行, 須已登記方能移除
+        return (async () => {
+            try {
+                let r = await fun(...inputs) //fun同步拋錯或非函數亦由async承接為reject
+                if (seq > seqCc) {
+                    cc = r
+                    seqCc = seq
+                }
+                return r
+            }
+            finally {
+                seqsRunning.delete(seq) //不論成功失敗皆移除, 否則一次失敗後getFromCache永不再嘗試取得; 不於回傳之Promise上掛處理器, 呼叫端未接之失敗仍為未處理之rejection
+            }
+        })()
     }
 
     //_getFromCache, 提供取用快取版之非同步函數, 若有快取則優先使用, 若超過指定次數則執行get使能取得快取
     let _getFromCache = async(...inputs) => {
         for (let i = 1; i <= nMax; i++) {
 
-            //exec
-            if (i > nTrigger && !lock) {
+            //exec, 已有快取時不觸發(優先使用快取), 有任一執行中之get(含直接呼叫之get)時亦不觸發
+            if (i > nTrigger && cc === null && seqsRunning.size === 0) {
                 // console.log('執行get使能取得快取...')
                 await _get(...inputs)
                     .catch(() => {}) //取得快取時不向外報錯

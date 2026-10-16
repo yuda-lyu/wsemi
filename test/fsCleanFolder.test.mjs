@@ -8,6 +8,7 @@ import fsIsFile from '../src/fsIsFile.mjs'
 import fsIsFolder from '../src/fsIsFolder.mjs'
 import fsCleanFolder from '../src/fsCleanFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
+import { runFsFail, ev, ev0, rErr, itOptUnreadable } from './tools/fsFailRun.mjs'
 
 
 describe(`fsCleanFolder`, function() {
@@ -240,5 +241,47 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         assert.strict.deepStrictEqual(msg.includes('\\\\?\\'), false, `message 不應含 \\\\?\\ 前綴, got ${msg}`)
         assert.strict.deepStrictEqual(fs.existsSync(fpExe), true)
     })
+
+})
+
+
+describe(`fsCleanFolderCore 結果物件(R-FS-RESULT-01)`, function() {
+
+    //於獨立子行程執行(test/tools/fsFailRunner.mjs之RO30、RO30b、RO36), 夾具建於test/_tmp/fsFail-<案名>/並於案例結束刪除; 結果物件經執行器之dv描述
+    this.timeout(60000)
+
+    it(`RO30 should return a truthy error ('null' / 'undefined' / the Error object) when the injected fs.readdirSync throws null, undefined or an Error`, function() {
+        let { r } = runFsFail('RO30')
+        //R-FS-RESULT-01 規則5: error恆為truthy, 捕捉之值為Error者原樣, null、undefined等非Error非字串之值經_errToStr轉字串(原{ error: null }、{ error: undefined })
+        assert.strict.deepStrictEqual({ null: r.out.null, undefined: r.out.undefined, Error: r.out.Error, ...ev(r) }, {
+            null: rErr('null'),
+            undefined: rErr('undefined'),
+            Error: rErr('Error: boom', true),
+            ...ev0,
+        })
+    })
+
+    it(`RO30b should return { error: 'null' } (not { success }) when the folder does not exist and the injected fs.mkdirSync throws null`, function() {
+        let { r } = runFsFail('RO30b')
+        //R-FS-RESULT-01 規則5: 自動建立之fsCreateFolderCore之error恆為truthy, 故建立失敗不被if (r.error)略過而偽回success(原回{ success: 'done: …' }); 規則1: 失敗出口回{ error }
+        assert.strict.deepStrictEqual({ res: r.out.res, created: r.out.created, ...ev(r) }, {
+            res: rErr('null'),
+            created: false,
+            ...ev0,
+        })
+    })
+
+    it(`RO36 should return { error } instead of throwing synchronously when the injected fs.lstatSync of the pre-check throws`, function() {
+        let { r } = runFsFail('RO36')
+        //R-FS-RESULT-01 規則7: 前置檢查(注入opt.fs之lstatSync拋錯)在try內, 轉為{ error }不同步拋出(原同步拋出); 規則5: Error原樣、null轉'null'
+        assert.strict.deepStrictEqual({ Error: r.out.Error, null: r.out.null, ...ev(r) }, {
+            Error: rErr('Error: lstat boom', true),
+            null: rErr('null'),
+            ...ev0,
+        })
+    })
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)(外審 opus F02; 斷言與規則句見itOptUnreadable: R-FS-RESULT-01 規則7); 對外fsCleanFolder不收opt
+    itOptUnreadable('fsCleanFolderCore', 'result')
 
 })

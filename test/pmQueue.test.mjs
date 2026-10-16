@@ -385,3 +385,26 @@ describe(`pmQueue settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`pmQueue 非函數任務(R-PM-SETTLE-01規則12)`, function() {
+
+    it(`非函數之任務(7值)以字串'fun is not a function'被reject, 後續任務照常 [規則12]`, function() {
+        let { r } = runPmSettle('nonFunQueue')
+        //R-PM-SETTLE-01 規則12: pmQueue之任務非函數時回傳之Promise以字串'fun is not a function' reject; JSDoc pmQueue:25「第1參數非函數時該任務之Promise以字串'fun is not a function'被reject」
+        let rj = { s: 'reject', v: 'fun is not a function' }
+        assert.strict.deepStrictEqual(r.out, { undefined: rj, null: rj, zero: rj, str: rj, obj: rj, pm: rj, asyncGen: rj, next: { s: 'resolve', v: 'good' } })
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+    it(`pmQueue(0, true)排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'fun is not a function'被reject [規則12]`, function() {
+        let { r } = runPmSettle('nonFunQueueTakeLast')
+        //R-PM-SETTLE-01 規則12: pmQueue照常排入, 輪到時以同一字串reject(takeLast下非函數為最後一筆時其前之任務照常被取消); 規則4: 取消一律以{ reason: 'cancelled' }傳出
+        let cancelled = { s: 'reject', reason: 'cancelled' }
+        assert.strict.deepStrictEqual(r.out, { t1: cancelled, t2: cancelled, t3: { s: 'reject', v: 'fun is not a function' } })
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})

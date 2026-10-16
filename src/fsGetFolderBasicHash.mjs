@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import fsGetFolderBasicHashCore from './fsGetFolderBasicHashCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -12,7 +13,7 @@ import fsGetFolderBasicHashCore from './fsGetFolderBasicHashCore.mjs'
  * @param {String} fd 輸入資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳資料夾HASH值，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳資料夾HASH值，reject回傳錯誤訊息字串
  * @example
  * need test in nodejs.
  *
@@ -61,7 +62,12 @@ import fsGetFolderBasicHashCore from './fsGetFolderBasicHashCore.mjs'
  *
  */
 function fsGetFolderBasicHash(fd, opt = {}) {
-    return fsGetFolderBasicHashCore(fd, { path, fs, crypto, ...opt })
+    try {
+        return fsGetFolderBasicHashCore(fd, { path, fs, crypto, ...opt })
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯
+    }
 }
 
 

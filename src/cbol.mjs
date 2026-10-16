@@ -10,7 +10,7 @@ import isestr from './isestr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cbol.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意值
- * @returns {Boolean} 回傳布林值
+ * @returns {Boolean} 回傳布林值，恆回傳原始布林值(輸入new Boolean時回傳其原始值而非包裝物件)
  * @example
  *
  * console.log(cbol(true))
@@ -57,7 +57,14 @@ function cbol(v) {
 
     //cehck
     if (isbol(v)) {
-        return v
+        //包裝物件須回原始值(new Boolean(false)本身為truthy), 以Boolean.prototype.valueOf取得
+        //  凍結且偽造Symbol.toStringTag為'Boolean'之物件亦通過isbol, 取原始值時拋錯, 非布林故回false
+        try {
+            return Boolean.prototype.valueOf.call(v)
+        }
+        catch (err) {
+            return false
+        }
     }
     if (v === 0) {
         return false

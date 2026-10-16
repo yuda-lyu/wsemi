@@ -269,3 +269,31 @@ describe(`pmThrottle settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`pmThrottle 非函數任務(R-PM-SETTLE-01規則12)`, function() {
+
+    let r = null
+    before(function() {
+        r = runPmSettle('nonFunThrottle').r
+    })
+
+    it(`非函數之任務(7值)回傳Promise並以字串'fun is not a function'被reject [規則12]`, function() {
+        //R-PM-SETTLE-01 規則12: pmThrottle之任務非函數時不排入, 回傳之Promise以字串'fun is not a function' reject; JSDoc pmThrottle:16「輸入非函數時不排入佇列，回傳之Promise以字串'fun is not a function'被reject」
+        let rj = { s: 'reject', v: 'fun is not a function' }
+        assert.strict.deepStrictEqual(r.out.out, { undefined: rj, null: rj, zero: rj, str: rj, obj: rj, pm: rj, asyncGen: rj })
+    })
+
+    it(`非函數之任務不排入: 不取消已排入之任務, 後續任務照常, 不以console.log記錄 [規則12]`, function() {
+        //R-PM-SETTLE-01 規則12「不排入」: 排入中之有效任務不因其後之非函數呼叫而被取消(pmThrottle只執行最後排入者); 其後之有效任務照常
+        assert.strict.deepStrictEqual({ queued: r.out.queued, next: r.out.next }, { queued: { s: 'resolve', v: 'a' }, next: { s: 'resolve', v: 'good' } })
+        //R-PM-SETTLE-01 規則12: 以reject回報, 原console.log('func is not a function')之約定不再適用
+        assert.strict.deepStrictEqual(r.out.logged, 0)
+    })
+
+    it(`無未處理之rejection與未捕捉例外 [規則2]`, function() {
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})

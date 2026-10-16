@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -15,7 +16,7 @@ import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Boolean} [opt.forFile=true] 輸入是否針對檔案計算HASH值，預設true
  * @param {Boolean} [opt.forFolder=false] 輸入是否針對檔案計算HASH值，預設false
- * @returns {Promise} 回傳Promise，resolve回傳檔案或資料夾陣列且含HASH值，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳檔案或資料夾陣列且含HASH值，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
  *
@@ -284,7 +285,12 @@ import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
  *
  */
 function fsTreeFolderWithHash(fd, levelLimit = 1, opt = {}) {
-    return fsTreeFolderWithHashCore(fd, levelLimit, { path, fs, crypto, ...opt })
+    try {
+        return fsTreeFolderWithHashCore(fd, levelLimit, { path, fs, crypto, ...opt })
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯
+    }
 }
 
 

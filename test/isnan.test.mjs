@@ -160,3 +160,40 @@ describe(`isnan`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isnan 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return true when input new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: isnan對物件以Number.prototype.valueOf.call(v)取原始值; JSDoc「包裝物件依其原始值判定」, 同isnan(NaN)為true
+        assert.strict.deepStrictEqual(isnan(new Number(NaN)), true)
+    })
+
+    it(`should return false when input new Number(1) and new Number(Infinity)`, function() {
+        //R-WRAPPER-01 規則2: 依其原始值判定, 非NaN之數字包裝物件為false
+        assert.strict.deepStrictEqual(isnan(new Number(1)), false)
+        assert.strict.deepStrictEqual(isnan(new Number(Infinity)), false)
+    })
+
+    it(`should return false when input { valueOf() { return NaN } }`, function() {
+        //R-WRAPPER-01 規則2: 不呼叫物件自身之valueOf(防偽裝), 非Number物件即為false
+        let o = {
+            valueOf() {
+                return NaN
+            },
+        }
+        assert.strict.deepStrictEqual(isnan(o), false)
+    })
+
+    it(`should return false when input an object spoofing Symbol.toStringTag as Number`, function() {
+        //R-WRAPPER-01 規則2: 不以內部標籤判定(防偽裝), 非Number物件於Number.prototype.valueOf拋錯而為false
+        assert.strict.deepStrictEqual(isnan({ [Symbol.toStringTag]: 'Number' }), false)
+    })
+
+    it(`should return false when input new String('NaN')`, function() {
+        //R-WRAPPER-01 規則2: 非Number物件即為false(同isnan('NaN')為false)
+        assert.strict.deepStrictEqual(isnan(new String('NaN')), false)
+    })
+
+})

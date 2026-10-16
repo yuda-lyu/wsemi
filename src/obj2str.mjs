@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import errToStr from './_errToStr.mjs'
+import realErrorToStr from './_realErrorToStr.mjs'
 import cv from './_jsonType.mjs'
 import isbol from './isbol.mjs'
 import isundefined from './isundefined.mjs'
@@ -12,7 +13,7 @@ import isarr from './isarr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2str.test.mjs Github}
  * @memberOf wsemi
- * @param {*} data 輸入任意資料，為undefined時回傳空字串
+ * @param {*} data 輸入任意資料，為undefined時回傳空字串；其中之真Error(含子類別)轉為'名稱: 訊息'字串，同obj2stru8arr
  * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，非字串亦非陣列時回退為'Uint8Array'，預設'Uint8Array'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
@@ -72,6 +73,11 @@ function obj2str(data, ext = 'Uint8Array', opt = {}) {
 
     //replacer
     function replacer(k, v) {
+
+        //真Error(含子類別、DOMException、跨realm之Error、Error之Proxy)轉字串, 其餘(含恰帶字串name與message之一般資料類別)照一般物件序列化, 同obj2stru8arr
+        //  toString為Object預設者或無可呼叫之toString者(如以null為原型)以Error.prototype.toString之語意('名稱: 訊息'), 見_realErrorToStr
+        //  須先於escape, 轉出之字串若恰與標記同形亦須被跳脫
+        v = realErrorToStr(v)
 
         //escape, 須先於二進位轉換套用, 否則剛產生之標記字串會被再次跳脫; 只對字串生效故二進位不受影響
         v = cv.escape(v)

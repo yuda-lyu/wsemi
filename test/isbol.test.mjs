@@ -125,3 +125,21 @@ describe(`isbol`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isbol 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return true when input new Boolean(false) and new Boolean(true)`, function() {
+        //R-WRAPPER-01 規則1: isbol依內部標籤判型, 包裝物件視同其型別(既有)
+        assert.strict.deepStrictEqual(isbol(new Boolean(false)), true)
+        assert.strict.deepStrictEqual(isbol(new Boolean(true)), true)
+    })
+
+    it(`should return false when input new Number(1) and new String('true')`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件依內部標籤視同其型別, 數字與字串之包裝物件非布林
+        assert.strict.deepStrictEqual(isbol(new Number(1)), false)
+        assert.strict.deepStrictEqual(isbol(new String('true')), false)
+    })
+
+})

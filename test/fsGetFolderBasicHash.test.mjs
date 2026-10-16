@@ -3,6 +3,7 @@ import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsWriteText from '../src/fsWriteText.mjs'
 import fsGetFolderBasicHash from '../src/fsGetFolderBasicHash.mjs'
+import { itFsHashFail, itOptUnreadable, rejected, RULE } from './tools/fsHashFailRunner.mjs'
 
 
 describe(`fsGetFolderBasicHash`, async function() {
@@ -63,5 +64,28 @@ describe(`fsGetFolderBasicHash`, async function() {
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
     })
+
+})
+
+
+describe(`fsGetFolderBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
+
+    //每案於獨立子行程執行(test/tools/fsHashFailRunner.mjs), 夾具建於test/_tmp/fsHashFail-<案名>/並由執行器刪除(拒讀ACL先以icacls解除)
+    //id為審計輸入空間表(tmp/run01-1016/fs/fs-reject-table.md)之列號(GB08為規則2之補列); want以子行程回報之事實組出期望; rule為期望所對應之規則句
+    this.timeout(60000)
+
+    itFsHashFail([
+        { id: 'GB01', when: '真實fs: 資料夾不存在', want: (o) => rejected(`fd[${o.fd}] is not a folder`), rule: RULE.r1pre },
+        { id: 'GB02', when: '真實fs: 路徑為檔案', want: (o) => rejected(`fd[${o.fd}] is not a folder`), rule: RULE.r1pre },
+        { id: 'GB03', when: '真實fs: 夾內含懸空junction', want: (o) => rejected(`fp[${o.fpDangling}] is not a file`), rule: RULE.r1pre },
+        { id: 'GB04', when: '真實crypto: type不支援', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        { id: 'GB05', when: '真實fs: 子資料夾ACL拒列(readdirSync EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r2tree, win: true },
+        { id: 'GB06', when: 'Core注入fs: readdirSync拋null', want: () => rejected('null'), rule: RULE.r2tree },
+        { id: 'GB07', when: '真實fs: 夾內檔案ACL拒讀', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
+        { id: 'GB08', when: '對外函數+opt.fs: lstatSync拋null', want: () => rejected('null'), rule: RULE.r2 },
+    ])
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: RULE.r2opt)
+    itOptUnreadable(['fsGetFolderBasicHash', 'fsGetFolderBasicHashCore'])
 
 })

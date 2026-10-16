@@ -225,12 +225,15 @@ function escapeWinCmd(cmd) {
  * npm全域安裝的.cmd格式固定, 末行為:
  *   ... "%_prog%"  "%dp0%\node_modules\...\entry" %*
  * 入口可能為.js / .cjs / .mjs / 無副檔名 / .exe(如opencode的bin/opencode.exe),
- * 故一律抓引號內node_modules後的相對路徑, 再以fsIsFile驗證實體檔存在
+ * 故一律抓引號內node_modules後的相對路徑, 再以isFileStat驗證實體檔存在
  * (只匹配.js會讓無副檔名入口落入cmd.exe fallback, 破壞多行prompt)
  * 回傳後由buildSpawnArgs依副檔名決定: .exe直接spawn, 其餘交給node
  *
+ * 入口不存在時不回傳null(與「不是npm shim」區分), 而回傳exists為false; 是否據以判定為「未能啟動」另看isExecLine:
+ * 僅當入口出現於cmd-shim之執行行(行首或&之後, 可前置"%_prog%"與shebang參數, 以%*結尾)時為true, 自訂批次檔於IF EXIST等判斷句內引用同樣式者為false, 仍交cmd.exe退路
+ *
  * @param {String} cmdPath 輸入.cmd檔案路徑字串
- * @returns {String|null} 回傳入口檔案路徑字串, 無法解析回傳null
+ * @returns {Object|null} 回傳{ entry, exists, isExecLine }, entry為入口檔案路徑字串, exists為其是否為實體檔案, isExecLine為是否位於cmd-shim之執行行; 不含shim樣式或讀取失敗回傳null
  */
 function parseJsEntryFromCmd(cmdPath) {
 
@@ -252,11 +255,13 @@ function parseJsEntryFromCmd(cmdPath) {
     let jsPath = path.join(dir, m[1])
 
     //isFileStat, 須為實體檔案(existsSync對資料夾亦回true); 跟隨連結, 以連結安裝之入口亦可(fsIsFile以lstat判定且連結一律為假)
-    if (isFileStat(jsPath)) {
-        return jsPath
-    }
+    let exists = isFileStat(jsPath)
 
-    return null
+    //isExecLine, cmd-shim之執行行: 行首或&之後, 可前置"%_prog%"(及shebang參數), 入口以引號包住, 其後僅接%*; 捕捉值須與上方首個匹配相同
+    let mExec = content.match(/(?:^|&)[ \t]*(?:"%_prog%"[^\r\n]*?[ \t])?"%dp0%\\(node_modules\\[^"\r\n]+)"[ \t]+%\*[ \t]*\r?$/im)
+    let isExecLine = mExec !== null && mExec[1].toLowerCase() === m[1].toLowerCase()
+
+    return { entry: jsPath, exists, isExecLine }
 }
 
 
@@ -265,7 +270,8 @@ function parseJsEntryFromCmd(cmdPath) {
  * 策略優先順序:
  *   1. .exe → 直接spawn
  *   2. .cmd → 解析JS入口, 用node直接執行(繞過cmd.exe, 支援多行參數)
- *   3. .cmd但無法解析JS入口 → 透過cmd.exe /d /s /c執行(fallback, 不支援多行參數)
+ *   3. .cmd為npm shim(cmd-shim之執行行)而入口檔不存在 → 拋ENOENT(同不存在之批次檔)
+ *   4. 其餘.cmd → 透過cmd.exe /d /s /c執行(fallback, 不支援多行參數)
  * 非Windows平台原樣回傳
  * 回傳物件三個分支一律帶opt鍵(無額外設定時為{}), 呼叫端可直接展開至spawn之選項物件
  *
@@ -274,7 +280,7 @@ function parseJsEntryFromCmd(cmdPath) {
  * @param {Object} [opt={}] 輸入設定物件, 預設{}
  * @param {String} [opt.cwd=undefined] 輸入子進程工作目錄字串, 用於解析只給檔名或相對路徑之.cmd/.bat並判定其是否存在, 預設undefined代表本進程之工作目錄
  * @param {Object} [opt.env=undefined] 輸入子進程環境變數物件, 用於解析只給檔名之.cmd/.bat(取其PATH與NoDefaultCurrentDirectoryInExePath), 預設undefined代表本進程之process.env
- * @returns {Object} 回傳spawn參數物件, 內含file(執行檔), args(參數陣列), opt(spawn額外選項物件); Windows下.cmd/.bat不存在時拋出code為'ENOENT'之錯誤(訊息同node之'spawn <路徑> ENOENT')
+ * @returns {Object} 回傳spawn參數物件, 內含file(執行檔), args(參數陣列), opt(spawn額外選項物件); Windows下.cmd/.bat不存在時拋出code為'ENOENT'之錯誤(訊息同node之'spawn <路徑> ENOENT'); .cmd為npm shim(cmd-shim之執行行含"%dp0%\node_modules\...")而其入口檔不存在時亦拋出code為'ENOENT'之錯誤, 訊息為'spawn <入口檔路徑> ENOENT'
  */
 function buildSpawnArgs(command, args = [], opt = {}) {
 
@@ -331,8 +337,9 @@ function buildSpawnArgs(command, args = [], opt = {}) {
             throw e
         }
 
-        let entry = parseJsEntryFromCmd(fpBatch)
-        if (entry) {
+        let shim = parseJsEntryFromCmd(fpBatch)
+        if (shim !== null && shim.exists) {
+            let entry = shim.entry
 
             //入口為原生.exe(如opencode的bin/opencode.exe) → 直接spawn
             //切勿丟給node, 否則node會把PE二進位當JS解析而崩潰(MZ... SyntaxError)
@@ -342,6 +349,17 @@ function buildSpawnArgs(command, args = [], opt = {}) {
 
             //入口為JS(.js/.cjs/.mjs/無副檔名) → 用node直接執行, 繞過cmd.exe, 支援多行參數
             return { file: process.execPath, args: [entry, ...args], opt: {} }
+        }
+
+        //npm shim已辨識而入口不存在(全域套件資料夾被刪而shim殘留、安裝中斷): 同不存在之批次檔, 不交cmd.exe退路(cmd.exe會啟動而得離開碼1且被重試, .exe入口之訊息為系統字碼頁), 拋與node同形之ENOENT, 訊息指入口路徑(批次檔本身存在)
+        //僅限入口位於cmd-shim之執行行者(isExecLine), 自訂批次檔於判斷句內引用同樣式而另有退路者仍交cmd.exe
+        if (shim !== null && !shim.exists && shim.isExecLine) {
+            let e = new Error(`spawn ${shim.entry} ENOENT`)
+            e.code = 'ENOENT'
+            e.errno = -4058
+            e.syscall = `spawn ${shim.entry}`
+            e.path = shim.entry
+            throw e
         }
 
         //fallback: 透過cmd.exe執行(注意: 不支援多行參數)

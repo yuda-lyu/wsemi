@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import fsSyncFolderCore from './fsSyncFolderCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject代表回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗)
  * @example
  * //need test in nodejs
  *
@@ -303,7 +304,12 @@ import fsSyncFolderCore from './fsSyncFolderCore.mjs'
  *
  */
 function fsSyncFolder(fdSrc, fdTar, opt = {}) {
-    return fsSyncFolderCore(fdSrc, fdTar, { path, fs, crypto, ...opt })
+    try {
+        return fsSyncFolderCore(fdSrc, fdTar, { path, fs, crypto, ...opt })
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯
+    }
 }
 
 

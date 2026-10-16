@@ -9,7 +9,7 @@ import isundefined from './isundefined.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/o2j.test.mjs Github}
  * @memberOf wsemi
- * @param {*} v 輸入任意資料
+ * @param {*} v 輸入任意資料；Error依JSON原生只保留可列舉自有欄位(一般Error為{})，記錄錯誤請先以getErrorMessage轉字串
  * @param {Boolean} [bFormat=false] 輸入是否格式化布林值，預設為false
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false

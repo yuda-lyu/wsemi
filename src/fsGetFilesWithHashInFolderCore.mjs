@@ -4,6 +4,7 @@ import isestr from './isestr.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsGetFilesInFolderCore from './fsGetFilesInFolderCore.mjs'
 import fsGetFileHashCore from './fsGetFileHashCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -15,7 +16,7 @@ import fsGetFileHashCore from './fsGetFileHashCore.mjs'
  * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
  *
@@ -23,48 +24,54 @@ import fsGetFileHashCore from './fsGetFileHashCore.mjs'
  *
  */
 async function fsGetFilesWithHashInFolderCore(fd, levelLimit = 1, opt = {}) {
+    try {
 
-    //path, fs, crypto
-    let path = get(opt, 'path')
-    let fs = get(opt, 'fs')
-    let crypto = get(opt, 'crypto')
+        //path, fs, crypto, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於async函數內未捕捉即以Error物件reject
+        let path = get(opt, 'path')
+        let fs = get(opt, 'fs')
+        let crypto = get(opt, 'crypto')
 
-    //type
-    let type = get(opt, 'type', '')
-    if (!isestr(type)) {
-        type = 'md5'
-    }
-
-    //check
-    if (!fsIsFolderCore(fd, { fs })) {
-        throw new Error(`fd[${fd}] is not a folder`)
-    }
-
-    //fps
-    let fps = fsGetFilesInFolderCore(fd, levelLimit, { path, fs })
-
-    //add hash
-    fps = await pmSeries(fps, async (v) => {
-
-        //ph
-        let ph = get(v, 'path', '')
-
-        //hash
-        v.hashType = type
-        v.hash = ''
-        if (isestr(ph)) {
-            v.hash = await fsGetFileHashCore(ph, {
-                fs,
-                crypto,
-                type,
-                useSync: false, //使用非同步才能支援大檔
-            })
+        //type
+        let type = get(opt, 'type', '')
+        if (!isestr(type)) {
+            type = 'md5'
         }
 
-        return v
-    })
+        //check
+        if (!fsIsFolderCore(fd, { fs })) {
+            return Promise.reject(`fd[${fd}] is not a folder`)
+        }
 
-    return fps
+        //fps
+        let fps = fsGetFilesInFolderCore(fd, levelLimit, { path, fs })
+
+        //add hash
+        fps = await pmSeries(fps, async (v) => {
+
+            //ph
+            let ph = get(v, 'path', '')
+
+            //hash
+            v.hashType = type
+            v.hash = ''
+            if (isestr(ph)) {
+                v.hash = await fsGetFileHashCore(ph, {
+                    fs,
+                    crypto,
+                    type,
+                    useSync: false, //使用非同步才能支援大檔
+                })
+            }
+
+            return v
+        })
+
+        return fps
+    }
+    catch (err) {
+        //fsGetFilesInFolderCore之readdirSync(EPERM等)Error、注入之fs拋出之任意值, 一律轉字串; 已為字串者(fsGetFileHashCore之reject)原樣
+        return Promise.reject(errToStr(err))
+    }
 }
 
 

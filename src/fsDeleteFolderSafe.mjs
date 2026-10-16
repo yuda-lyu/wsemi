@@ -1,5 +1,6 @@
 import fs from 'fs'
 import fsDeleteFolderSafeCore from './fsDeleteFolderSafeCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -10,7 +11,7 @@ import fsDeleteFolderSafeCore from './fsDeleteFolderSafeCore.mjs'
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5
- * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)
  * @example
  * need test in nodejs.
  *
@@ -73,7 +74,17 @@ import fsDeleteFolderSafeCore from './fsDeleteFolderSafeCore.mjs'
  *
  */
 async function fsDeleteFolderSafe(pah, opt = {}) {
-    return await fsDeleteFolderSafeCore(pah, { fs, ...opt })
+
+    //o, 展開置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject
+    let o = null
+    try {
+        o = { fs, ...opt }
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err))
+    }
+
+    return await fsDeleteFolderSafeCore(pah, o)
 }
 
 

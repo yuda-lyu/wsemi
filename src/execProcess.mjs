@@ -14,6 +14,7 @@ import strright from './strright.mjs'
 import arrHas from './arrHas.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
 
 
@@ -31,7 +32,7 @@ import callUser from './_callUser.mjs'
  * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除
  * @param {Boolean} [opt.useChcp=false] 輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'
  * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，預設null表示不限制；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
- * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符、codeCmd不支援或spawn模式prog含引號時為說明字串
+ * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符(含判型即拋錯之不可讀之值)、codeCmd不支援、spawn模式prog含引號或opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`)時為說明字串；prog不可讀時為`spawn[UNKNOWN]:\n訊息`；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
  * @example
  * //need test in nodejs
  *
@@ -68,42 +69,59 @@ function execProcess(prog, args, opt = {}) {
     // spawn: 非同步執行命令，適合處理大量資料或長時間執行的程式，輸出以串流方式處理。spawnSync 為 spawn 的同步版本。
     // exec: 在 shell 中非同步執行命令，輸出被緩衝，適合輸出量較小的情況。execSync 為 exec 的同步版本。
     // execFile: 直接執行可執行檔案，不經過 shell，非同步執行，適合執行已知的可執行檔案。execFileSync 為 execFile 的同步版本。
-    let mode = get(opt, 'mode')
-    if (mode !== 'spawn' && mode !== 'exec' && mode !== 'execFile') {
-        mode = 'spawn'
-    }
-    // console.log('mode',mode)
-
-    //cbStdout
-    let cbStdout = get(opt, 'cbStdout')
-
-    //cbStderr
-    let cbStderr = get(opt, 'cbStderr')
-
-    //codeCmd, 正規化為{ mode, label }, 非有效字串為utf-8, 不支援之標籤為null於下方reject
-    let codeCmd = get(opt, 'codeCmd')
-    let cc = codec.normalizeCodeCmd(codeCmd)
-
-    //useChcp
-    let useChcp = get(opt, 'useChcp')
-    if (!isbol(useChcp)) {
-        useChcp = false
-    }
-
-    //timeout
-    let timeout = get(opt, 'timeout')
-    if (!isnum(timeout) || timeout <= 0) {
-        timeout = null
-    }
-    else {
-        timeout = Math.min(timeout, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
-    }
-
     //pm
     let pm = genPm()
 
-    //check args, 須為陣列(可為空陣列)或字串(可為空字串), 空陣列與空字串代表無參數; 其餘型別以reject回報, 不同步拋錯, 訊息不帶args之值
-    if (!isarr(args) && !isstr(args)) {
+    //opt之讀取與判型一律於此try內: 拋錯者(opt或其選項值之getter拋錯、已撤銷之Proxy等不可讀之輸入)以reject說明字串回報, 不同步拋錯
+    //各選項先讀為暫存v再判型, 判型通過才指定; 回調於此判型一次(非函數者為undefined), 其後監聽器內之判型不再觸及呼叫端之值
+    let mode = 'spawn'
+    let cbStdout
+    let cbStderr
+    let codeCmd
+    let cc = null
+    let useChcp = false
+    let timeout = null
+    try {
+        let v
+
+        //mode
+        v = get(opt, 'mode')
+        mode = (v === 'spawn' || v === 'exec' || v === 'execFile') ? v : 'spawn'
+        // console.log('mode',mode)
+
+        //cbStdout, cbStderr
+        v = get(opt, 'cbStdout')
+        cbStdout = isfun(v) ? v : undefined
+        v = get(opt, 'cbStderr')
+        cbStderr = isfun(v) ? v : undefined
+
+        //codeCmd, 正規化為{ mode, label }, 非有效字串為utf-8, 不支援之標籤為null於下方reject
+        codeCmd = get(opt, 'codeCmd')
+        cc = codec.normalizeCodeCmd(codeCmd)
+
+        //useChcp
+        v = get(opt, 'useChcp')
+        useChcp = isbol(v) ? v : false
+
+        //timeout, 夾至計時器上限, 見_const.mjs
+        v = get(opt, 'timeout')
+        timeout = (!isnum(v) || v <= 0) ? null : Math.min(v, cst.TIMER_TIME_MAX)
+
+    }
+    catch (err) {
+        pm.reject(`opt is not readable: ${execThrownMsg(execSpawnError(err), err)}`)
+        return pm
+    }
+
+    //check args, 須為陣列(可為空陣列)或字串(可為空字串), 空陣列與空字串代表無參數; 其餘型別(含判型即拋錯之不可讀之值)以reject回報, 不同步拋錯, 訊息不帶args之值
+    let bArgsOk = false
+    try {
+        bArgsOk = isarr(args) || isstr(args)
+    }
+    catch (err) {
+        bArgsOk = false //判型拋錯視同型別不符
+    }
+    if (!bArgsOk) {
         pm.reject(`args is not an array or string`)
         return pm
     }
@@ -129,19 +147,20 @@ function execProcess(prog, args, opt = {}) {
     //start, 建立子進程並接線, labelSystem為系統字碼頁標籤, 僅codeCmd為'auto'或'system'時需要
     let start = (labelSystem) => {
 
-        //spawn不經shell, prog含引號會被當成檔名之一部分, 於啟動前reject
-        if (mode === 'spawn') {
-            let cr = strleft(prog, 1)
-            let cl = strright(prog, 1)
-            if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
-                pm.reject(`prog[${prog}] of spawn does not need to add quotes`)
-                return
-            }
-        }
-
         //r
         let r = null
         try {
+
+            //spawn不經shell, prog含引號會被當成檔名之一部分, 於啟動前reject; 須在try內, prog不可讀(如已撤銷之Proxy)時同spawn同步拋錯回報而不同步拋出(codeCmd為auto/system時start於then內, 兩路一致)
+            if (mode === 'spawn') {
+                let cr = strleft(prog, 1)
+                let cl = strright(prog, 1)
+                if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
+                    pm.reject(`prog[${prog}] of spawn does not need to add quotes`)
+                    return
+                }
+            }
+
             if (mode === 'spawn') {
                 // console.log('mode',mode)
                 r = cp.spawn(prog, args, {
@@ -180,9 +199,9 @@ function execProcess(prog, args, opt = {}) {
             }
         }
         catch (err) {
-            //同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等), 轉為不含參數值之字串
+            //同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等), 轉為不含參數值之字串; prog不可讀而拋出非Error之值者保留該值之文字(_execThrownMsg)
             let e = execSpawnError(err)
-            pm.reject(`spawn[${e.code}]:\n${e.message}`)
+            pm.reject(`spawn[${e.code}]:\n${execThrownMsg(e, err)}`)
             return
         }
 
@@ -224,7 +243,7 @@ function execProcess(prog, args, opt = {}) {
                 }
                 let text = dec.write(buf)
                 segs.push({ which, text, buf: retain ? buf : null })
-                if (text !== '' && isfun(cb)) {
+                if (text !== '' && cb !== undefined) { //cb已於入口判型(函數或undefined), 監聽器內不再判型呼叫端之值(值於入口後撤銷時判型會拋出)
                     callUser(cb, text)
                 }
             }
@@ -248,7 +267,7 @@ function execProcess(prog, args, opt = {}) {
                     return
                 }
                 segs.push({ which, text, buf: null })
-                if (isfun(cb)) {
+                if (cb !== undefined) { //同onData, 不再判型呼叫端之值(判型拋出亦會中斷close之收尾)
                     callUser(cb, text) //收尾時回調拋錯不得中斷close之收尾(否則本函數永不落定)
                 }
             }

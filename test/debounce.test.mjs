@@ -133,3 +133,16 @@ describe(`debounce settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`debounce 非函數任務(R-PM-SETTLE-01規則12)`, function() {
+
+    it(`非函數之任務不排入佇列, 回傳undefined並以console.log記錄'func is not a function', 已排入之任務照常執行 [規則12]`, function() {
+        let { r } = runPmSettle('nonFunDebounce')
+        //R-PM-SETTLE-01 規則12: debounce回undefined並記錄(寫入JSDoc); JSDoc debounce:11「輸入非函數時不排入佇列(不影響已排入之任務)，以console.log記錄'func is not a function'」
+        assert.strict.deepStrictEqual(r.out, { ret: 'undefined', ran: true, logged: 1 })
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})

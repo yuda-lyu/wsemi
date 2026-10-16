@@ -4,6 +4,7 @@ import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsIsFile from '../src/fsIsFile.mjs'
 import fsWriteText from '../src/fsWriteText.mjs'
 import fsRenameFile from '../src/fsRenameFile.mjs'
+import { runFsFail, ev, ev0, rErr, itOptUnreadable } from './tools/fsFailRun.mjs'
 
 
 describe(`fsRenameFile`, function() {
@@ -67,5 +68,37 @@ describe(`fsRenameFile`, function() {
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
     })
+
+})
+
+
+describe(`fsRenameFileCore 結果物件(R-FS-RESULT-01)`, function() {
+
+    //於獨立子行程執行(test/tools/fsFailRunner.mjs之RO28、RO34), 夾具建於test/_tmp/fsFail-<案名>/並於案例結束刪除; 結果物件經執行器之dv描述
+    this.timeout(60000)
+
+    it(`RO28 should return a truthy error ('null' / 'undefined' / the Error object) when the injected fs.renameSync throws null, undefined or an Error`, function() {
+        let { r } = runFsFail('RO28')
+        //R-FS-RESULT-01 規則5: error恆為truthy, 捕捉之值為Error者原樣, null、undefined等非Error非字串之值經_errToStr轉字串(原{ error: null }、{ error: undefined })
+        assert.strict.deepStrictEqual({ null: r.out.null, undefined: r.out.undefined, Error: r.out.Error, ...ev(r) }, {
+            null: rErr('null'),
+            undefined: rErr('undefined'),
+            Error: rErr('Error: boom', true),
+            ...ev0,
+        })
+    })
+
+    it(`RO34 should return { error } instead of throwing synchronously when the injected fs.lstatSync of the pre-check throws`, function() {
+        let { r } = runFsFail('RO34')
+        //R-FS-RESULT-01 規則7: 前置檢查(注入opt.fs之lstatSync拋錯)在try內, 轉為{ error }不同步拋出(原同步拋出); 規則5: Error原樣、null轉'null'
+        assert.strict.deepStrictEqual({ Error: r.out.Error, null: r.out.null, ...ev(r) }, {
+            Error: rErr('Error: lstat boom', true),
+            null: rErr('null'),
+            ...ev0,
+        })
+    })
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)(外審 opus F02; 斷言與規則句見itOptUnreadable: R-FS-RESULT-01 規則7); 對外fsRenameFile不收opt
+    itOptUnreadable('fsRenameFileCore', 'result')
 
 })

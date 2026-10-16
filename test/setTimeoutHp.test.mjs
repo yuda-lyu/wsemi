@@ -22,3 +22,17 @@ describe(`setTimeoutHp settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`setTimeoutHp 非函數(R-PM-SETTLE-01規則12)`, function() {
+
+    it(`fun非函數時到期以console.log記錄Error('fn is not a function')一次, 回傳null [規則12]`, function() {
+        let { r } = runPmSettle('nonFunHp')
+        let { timeoutLogs, timeoutRet } = r.out
+        //R-PM-SETTLE-01 規則12: setTimeoutHp到期記錄(寫入JSDoc); JSDoc setTimeoutHp:23「回傳null(無停止函數)…fun非函數時到期以console.log記錄Error('fn is not a function')」
+        assert.strict.deepStrictEqual({ timeoutLogs, timeoutRet }, { timeoutLogs: 1, timeoutRet: null })
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})

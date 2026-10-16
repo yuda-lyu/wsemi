@@ -171,8 +171,8 @@ describe(`execCliJsonRpc`, function() {
 })
 
 
-//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
-describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+//R-EXEC-FAIL-01之6~14: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`execCliJsonRpc: 子進程未能啟動者errorType一律notfound, 已啟動後結束為exit [R-EXEC-FAIL-01之10]`, function() {
         let { r } = runExecFail('rpcErrorType')
@@ -186,6 +186,76 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
             rpcSameChunkServerRequest: { ok: true },
             uncaught: ['onNotify boom', 'onServerRequest boom'],
         })
+    })
+
+    it(`execCliJsonRpc: 自身讀取之opt(含回調)或requests不可讀時errorType為params且不啟動, 交execCliSession之env不可讀為notfound, 不reject、不成為未捕捉例外 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('inputUnreadableRpc')
+        assert.strict.deepStrictEqual(r.out, {
+            rpcGetter: { ok: false, errorType: 'params', error: 'UNKNOWN: getter boom timeoutMs' }, //規則13: 自身讀取失敗為errorType params
+            rpcOptRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: 同上(opt本身不可讀)
+            rpcEnvRevoked: { ok: false, errorType: 'notfound', error: 'initialize: UNKNOWN: <revoked>' }, //規則13: env原樣交Session判定, 不可讀為notfound(規則10: 未啟動一律notfound)
+            rpcOnNotifyRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: 回調於入口判型, 不可讀為params
+            rpcRequestRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: requests之元素不可讀為params
+            uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
+    })
+
+    it(`execCliJsonRpc: params無法序列化為JSON(BigInt、循環參照、toJSON拋錯、通知之params)時errorType為params、error為'<method>: 無法序列化為JSON: …', 不reject, 已啟動之子進程經stop()結束而不殘留至逾時 [R-EXEC-FAIL-01之14]`, function() {
+        let { r } = runExecFail('rpcParamsUnserializable')
+        //規則14: errorType params, error '<method>: 無法序列化為JSON: <訊息>'; 經stop()結束已啟動之子進程(childAliveAfter為false, 不得殘留至timeoutMs)
+        let x = (m) => ({ ok: false, errorType: 'params', errorHead: `${m}: 無法序列化為JSON`, childAliveAfter: false })
+        assert.strict.deepStrictEqual(r.out, {
+            bigint: x('initialize'), //規則14: BigInt
+            circularSecond: x('next'), //規則14: 循環參照(第2則, 子進程已回應第1則), error用讀取當下之method
+            toJSONThrows: x('initialize'), //規則14: toJSON拋錯
+            notifyBigint: x('initialized'), //規則14: 通知之params亦同
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則14: 不reject
+    })
+
+    it(`execCliJsonRpc: onNotify、onServerRequest為以函數為目標之Proxy且於入口判型後才撤銷時, onLine內不再判型呼叫端之值(結果照常落定), 未捕捉例外僅有呼叫已撤銷回調本身者 [R-EXEC-FAIL-01之12、13]`, function() {
+        let { r } = runExecFail('rpcCbRevokedLater')
+        //規則13: 回調於入口判型一次, 監聽器內不再觸及呼叫端之值; 規則12: 呼叫已撤銷之回調所拋之TypeError經Session之_callUser原樣重拋(revoked:apply), 不得有判型所生者(revoked:has), 同chunk之回應照常送達
+        let ok = { ok: true, errorType: '', results: { initialize: { ok: 1 } }, uncaught: ['revoked:apply'] }
+        assert.strict.deepStrictEqual(r.out, { onNotify: ok, onServerRequest: ok })
+        assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不reject
+    })
+
+    it(`execCliJsonRpc: requests為陷阱非決定性之Proxy陣列(入口讀取後才拋錯)時, 入口後不再迭代呼叫端之陣列: resolve結果物件、子進程經stop()結束而不殘留至逾時 [R-EXEC-FAIL-01之13、14]`, function() {
+        let { r } = runExecFail('rpcRequestsTrapLater')
+        assert.strict.deepStrictEqual(r.out, {
+            ok: true, //規則14: 其後一律用讀取當下之快照(requests於入口讀取為快照, 兩則請求照常送出)
+            errorType: '',
+            error: '',
+            results: { initialize: { ok: 1 }, next: { ok: 1 } },
+            childAliveAfter: false, //規則14: 經stop()結束已啟動之子進程(不得殘留至timeoutMs)
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取一律在try內(或用入口之快照), 不reject、不成為未捕捉例外
+    })
+
+    it(`execCliJsonRpc: 選項getter拋出非Error之值(null、undefined、字串)時為params且error保留拋出值之文字, params之toJSON拋出字串時error保留該字串 [R-EXEC-FAIL-01之13、14]`, function() {
+        let { r } = runExecFail('rpcThrownValues')
+        //規則13: 自身讀取失敗為errorType params(error '<碼>: <訊息>', 無碼者為UNKNOWN; 訊息取getErrorMessage, 為空退_errToStr)
+        let x = (m) => ({ ok: false, errorType: 'params', error: `UNKNOWN: ${m}` })
+        assert.strict.deepStrictEqual(r.out, {
+            null: x('null'), //規則13: 拋出null
+            undefined: x('undefined'), //規則13: 拋出undefined
+            string: x('thrown-x'), //規則13: 拋出字串
+            toJSONThrowsString: { ok: false, errorType: 'params', error: 'initialize: 無法序列化為JSON: thrown-x' }, //規則14: error '<method>: 無法序列化為JSON: <訊息>'(toJSON拋出字串時訊息為該字串)
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13、14: 不reject、不成為未捕捉例外
+    })
+
+    it(`execCliJsonRpc: requests為空陣列而子進程未啟動(命令不存在、cwd不存在、env不可讀)時errorType為notfound, 不偽回成功 [R-EXEC-FAIL-01之10、13]`, function() {
+        let { r } = runExecFail('rpcEmptyRequests')
+        assert.strict.deepStrictEqual(r.out, {
+            noCmd: { ok: false, errorType: 'notfound', error: 'ENOENT: spawn wsemi-not-exist-zz ENOENT' }, //規則10: 未啟動(session pid為null)一律notfound, 不以錯誤字樣判定
+            cwdMissing: { ok: false, errorType: 'notfound', error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir` }, //規則10、7: 同上(cwd不存在, error指明cwd)
+            envRevoked: { ok: false, errorType: 'notfound', error: 'UNKNOWN: <revoked>' }, //規則13: env原樣交Session判定, 不可讀為notfound
+            started: { ok: true, errorType: '', error: '' }, //規則10(對照): 已啟動且無請求者照常成功
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })
 
 })

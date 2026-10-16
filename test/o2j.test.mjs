@@ -158,3 +158,21 @@ describe(`o2j 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
     })
 
 })
+
+
+describe(`o2j Error依JSON原生(R-CODEC-ERR-01之1a)`, function() {
+
+    it(`should return '{}' when input new Error('x') [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: o2j維持JSON原生不轉, 一般Error為{}(JSON原生之設計事實, o2j JSDoc新句「Error依JSON原生只保留可列舉自有欄位(一般Error為{})」)
+        assert.strict.deepStrictEqual(o2j(new Error('x')), '{}')
+    })
+
+    it(`should keep only enumerable own fields of a nested Error [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: Error只保留可列舉自有欄位(JSON原生之設計事實, o2j JSDoc新句)
+        let err = new Error('boom')
+        err.code = 'E1'
+        let r = o2j({ err, msg: 'x' })
+        assert.strict.deepStrictEqual(r, '{"err":{"code":"E1"},"msg":"x"}')
+    })
+
+})

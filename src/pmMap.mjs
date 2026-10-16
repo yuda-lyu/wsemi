@@ -5,7 +5,8 @@ import genPm from './genPm.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
-import queue from './queue.mjs'
+import isnint from './isnint.mjs'
+import cint from './cint.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 
 
@@ -13,7 +14,7 @@ import pmMarkHandled from './_pmMarkHandled.mjs'
  * Promise的map，可設定同時處理數量
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
- * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection。
+ * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection。rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
  * 若先行產生promise則takeLimit設定會無效，因promise已先行初始化啟動。
  * 等同於Bluebird的Promise.map，而concurrency為takeLimit。
  * 使用函數執行時，當takeLimit=1，等同於mapSeries，promise依序執行完畢才會調用下一個promise。
@@ -376,51 +377,63 @@ function pmMap(rs, fun, takeLimit = 0) {
         return pm
     }
 
-    //object rs to array
+    //object rs to array, 陣列rs則複製為內部陣列; 皆於進入時取值(同pmSeries), 派發時不再讀呼叫端之rs, 讀取元素拋錯即reject該錯誤(不同步拋出、不懸置)
     let useObj = false
-    if (isobj(rs)) {
-        useObj = true
-        let _rs = []
-        each(rs, (v, k) => {
-            _rs.push({ k, v })
-        })
-        rs = _rs
+    try {
+        if (isobj(rs)) {
+            useObj = true
+            let _rs = []
+            each(rs, (v, k) => {
+                _rs.push({ k, v })
+            })
+            rs = _rs
+        }
+        else {
+            rs = Array.prototype.slice.call(rs)
+        }
+    }
+    catch (err) {
+        pm.reject(err)
+        return pm
     }
 
+    //isFunFun, 於派發前判定一次, 不於逐元素回呼內重複判定(lodash之isFunction對async函數每次皆經getRawTag賦值拋錯再捕捉, V8擷取之非同步堆疊隨promise鏈加深而成平方)
+    let isFunFun = isfun(fun)
+
     //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則takeLimit限量時排後者於取用前先reject、或中止後不再取用者, 皆成為未處理之rejection
-    if (!isfun(fun)) {
+    if (!isFunFun) {
         each(rs, (v) => {
             pmMarkHandled(useObj ? v.v : v)
         })
     }
 
-    //queue
-    let q = queue(takeLimit)
+    //takeLimit, 同queue之正規化: 非數字或負數視為0(無限制)
+    if (isnint(takeLimit)) {
+        takeLimit = 0
+    }
+    takeLimit = cint(takeLimit)
 
-    //message
-    q.on('message', function(qs) {
-        //console.log('message', JSON.stringify(qs))
+    //不經queue而以索引自行派發(同時執行數至多takeLimit), 以完成計數判定全部完成並只resolve一次(原每次完成皆size(ts)、每個finally皆values(ts)而成平方)
+    let n = rs.length
+    let next = 0 //下一個待派發之索引
+    let running = 0 //執行中之任務數
+    let nDone = 0 //已成功完成之任務數
+    let resolved = false
 
-        //check
-        if (abort) {
-            return
-        }
-
-        //get
-        let v = q.get()
-        //console.log('get', v)
+    //runOne
+    function runOne(i) {
 
         //uk, uv
-        let uk = v.key
-        let uv = v.value
+        let uk = i
+        let uv = rs[i]
         if (useObj) {
-            uk = v.value.k
-            uv = v.value.v
+            uk = rs[i].k
+            uv = rs[i].v
         }
 
-        //pmm, 以原生Promise承接fun之結果或元素本身: fun同步拋錯轉為reject, 回傳一般值轉為resolve, 使本監聽器必不拋錯而每個任務必定settle(監聽器拋錯會被queue之evEmit攔截而使pm永不settle)
+        //pmm, 以原生Promise承接fun之結果或元素本身: fun同步拋錯轉為reject, 回傳一般值轉為resolve, 使每個任務必定settle
         let pmm = new Promise((resolve) => {
-            if (isfun(fun)) {
+            if (isFunFun) {
                 resolve(fun(uv, uk))
             }
             else {
@@ -433,16 +446,14 @@ function pmMap(rs, fun, takeLimit = 0) {
             .then((res) => {
 
                 //save
-                ts[v.key] = res
+                ts[i] = res
+                nDone += 1
 
             })
             .catch((err) => {
 
-                //abort
+                //abort, 停止派發後續任務
                 abort = true
-
-                //clear
-                q.clear()
 
                 //reject
                 pm.reject(err)
@@ -450,29 +461,41 @@ function pmMap(rs, fun, takeLimit = 0) {
             })
             .finally(() => {
 
-                //cb
-                q.cb()
+                //running
+                running -= 1
 
                 //end
-                //if (size(ts) === rs.length) {
-                if (size(ts) === size(rs)) {
+                if (!resolved && nDone === n) {
 
                     //resolve
+                    resolved = true
                     pm.resolve(values(ts))
 
+                    return
                 }
+
+                //launch
+                launch()
 
             })
 
-    })
+    }
 
-    //push, 因queue emit為即時觸發故push需放最後
-    each(rs, (v, k) => {
-        q.push({
-            key: k,
-            value: v,
-        })
-    })
+    //launch, 派發至執行中之任務數達takeLimit(0為無限制)
+    function launch() {
+        while (!abort && next < n) {
+            if (takeLimit > 0 && running >= takeLimit) {
+                break
+            }
+            let i = next
+            next += 1
+            running += 1
+            runOne(i)
+        }
+    }
+
+    //launch
+    launch()
 
     return pm
 }

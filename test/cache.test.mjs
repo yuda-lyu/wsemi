@@ -1,5 +1,6 @@
 import assert from 'assert'
 import cache from '../src/cache.mjs'
+import { runPmSettle } from './tools/pmSettleRun.mjs'
 
 
 describe(`cache`, function() {
@@ -730,6 +731,152 @@ describe(`cache`, function() {
                 delete Object.value //修正前之版本會寫入Object.value, 測試後還原以免影響同檔其他測試
             }
         }
+    })
+
+})
+
+
+describe(`cache 重入與同步拋錯(R-PM-SETTLE-01規則11)`, function() {
+
+    //st, 將get之結果轉為可比對之字串
+    let st = (pm) => pm.then((v) => 'resolve ' + String(v), (e) => 'reject ' + (e instanceof Error ? e.message : String(e)))
+
+    describe(`子行程: 同步重入`, function() {
+        let r = null
+        before(function() {
+            r = runPmSettle('cacheReentrant').r
+        })
+
+        it(`fun於同步階段呼叫同key之get: fun只呼叫1次, 外層與重入者皆取得本次結果 [規則11]`, function() {
+            //R-PM-SETTLE-01 規則11: fun內(含同步階段)呼叫同key之get共用本次執行而不重複執行; JSDoc cache:18「fun內(含同步階段)呼叫同key之get亦共用本次執行而不重複執行」
+            assert.strict.deepStrictEqual(r.out.c01, { calls: 1, outer: { s: 'resolve', v: 'v' }, inner: { s: 'resolve', v: 'v' } })
+        })
+
+        it(`交叉key之同步重入(k1之fun取k2、k2之fun取k1): 各只呼叫1次 [規則11]`, function() {
+            //R-PM-SETTLE-01 規則11: 同上句(兄弟情境: 重入發生於另一key之fun內)
+            assert.strict.deepStrictEqual(r.out.c11, { calls: { k1: 1, k2: 1 }, outer: { s: 'resolve', v: 'v1' }, innerK2: { s: 'resolve', v: 'v2' }, innerK1: { s: 'resolve', v: 'v1' } })
+        })
+
+        it(`getProxy之同步重入: fun只呼叫1次 [規則11]`, function() {
+            //JSDoc cache:18「getProxy…回傳同get」+ 規則11之共用本次執行
+            assert.strict.deepStrictEqual(r.out.c15, { calls: 1, outer: { s: 'resolve', v: 'v' }, inner: { s: 'resolve', v: 'v' } })
+        })
+
+        it(`重入後fun同步拋錯: 重入者共用本次之失敗, 下次get重新執行 [規則11]`, function() {
+            //R-PM-SETTLE-01 規則11: fun同步拋錯與async reject同樣於結束後清除執行中狀態, 下次get重新執行
+            assert.strict.deepStrictEqual(r.out.c09, { outer: { s: 'reject', v: 'boom1' }, inner: { s: 'reject', v: 'boom1' }, next: { s: 'resolve', v: 'ok' }, calls: 2 })
+        })
+
+        it(`同tick三個get只執行1次(對照) [JSDoc]`, function() {
+            //JSDoc cache:18「若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果」
+            assert.strict.deepStrictEqual(r.out.c12, { calls: 1, results: [{ s: 'resolve', v: 'v' }, { s: 'resolve', v: 'v' }, { s: 'resolve', v: 'v' }] })
+        })
+
+        it(`無未處理之rejection與未捕捉例外 [規則2]`, function() {
+            //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException
+            assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+        })
+    })
+
+    it(`fun等待同key之get之結果為互等而永不settle, fun只呼叫1次 [規則11、JSDoc]`, function() {
+        //R-PM-SETTLE-01 規則11: fun等待同key之get之結果為互等而永不settle(設計限制); JSDoc cache:18「fun若等待該get之結果則互相等待而永不settle」; 懸置以子行程之看門狗(300ms)判定
+        let { r } = runPmSettle('cacheMutualWait')
+        assert.strict.deepStrictEqual(r.out, { c02: { calls: 1, outer: { s: 'pending' } }, c04: { calls: 1, outer: { s: 'pending' } } })
+        //R-PM-SETTLE-01 規則2
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+    it(`預設(useCacheWhenError=false)時fun同步拋錯: 該次reject, 下次get重新執行 [規則11]`, async function() {
+        let oc = cache()
+        let n = 0
+        oc.set('k', {
+            fun: () => {
+                n++
+                if (n === 1) {
+                    throw new Error('boom1')
+                }
+                return 'ok'
+            },
+            timeExpired: 30000,
+        })
+        let rs = [await st(oc.get('k')), await st(oc.get('k')), await st(oc.get('k'))]
+        //R-PM-SETTLE-01 規則11: fun同步拋錯…於結束後清除執行中狀態, 下次get重新執行; JSDoc cache:18「失敗不寫入快取…且下次get會重新執行(fun同步拋錯與其Promise被reject皆同)」
+        assert.strict.deepStrictEqual({ rs, n }, { rs: ['reject boom1', 'resolve ok', 'resolve ok'], n: 2 })
+    })
+
+    it(`useCacheWhenError=true時fun同步拋錯: 取得undefined, 過期後重新執行 [規則11]`, async function() {
+        let oc = cache()
+        let n = 0
+        oc.set('k', {
+            fun: () => {
+                n++
+                if (n === 1) {
+                    throw new Error('boom1')
+                }
+                return 'ok'
+            },
+            timeExpired: 50,
+            useCacheWhenError: true,
+        })
+        let r1 = await st(oc.get('k'))
+        await new Promise((resolve) => setTimeout(resolve, 120))
+        let r2 = await st(oc.get('k'))
+        //R-PM-SETTLE-01 規則11: …clear、過期後亦重新執行; JSDoc cache:18「失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired」(過期後重新執行)
+        assert.strict.deepStrictEqual({ rs: [r1, r2], n }, { rs: ['resolve undefined', 'resolve ok'], n: 2 })
+    })
+
+    it(`fun同步拋錯後clear: 重新執行 [規則11]`, async function() {
+        let oc = cache()
+        let n = 0
+        oc.set('k', {
+            fun: () => {
+                n++
+                if (n === 1) {
+                    throw new Error('boom1')
+                }
+                return 'ok'
+            },
+            timeExpired: 30000,
+        })
+        let r1 = await st(oc.get('k'))
+        oc.clear('k')
+        let r2 = await st(oc.get('k'))
+        //R-PM-SETTLE-01 規則11: clear後亦重新執行; JSDoc cache:18「clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值」
+        assert.strict.deepStrictEqual({ rs: [r1, r2], n }, { rs: ['reject boom1', 'resolve ok'], n: 2 })
+    })
+
+    it(`useCacheWhenError=true時fun同步拋錯後update再clear: update之值可取得, clear後重新執行 [規則11]`, async function() {
+        let oc = cache()
+        let n = 0
+        oc.set('k', {
+            fun: () => {
+                n++
+                if (n === 1) {
+                    throw new Error('boom1')
+                }
+                return 'ok'
+            },
+            timeExpired: 30000,
+            useCacheWhenError: true,
+        })
+        let r1 = await st(oc.get('k'))
+        oc.update('k', 'U')
+        let r2 = await st(oc.get('k'))
+        oc.clear('k')
+        let r3 = await st(oc.get('k'))
+        //JSDoc cache:18「update為強制更新key所屬快取值」「clear…使該快取視為需重新執行函數取值」; R-PM-SETTLE-01 規則11: clear後亦重新執行
+        assert.strict.deepStrictEqual({ rs: [r1, r2, r3], n }, { rs: ['resolve undefined', 'resolve U', 'resolve ok'], n: 2 })
+    })
+
+    it(`fun非函數時視為回傳undefined之空函數 [規則12]`, async function() {
+        let oc = cache()
+        let rs = []
+        for (let [k, v] of [['undefined', undefined], ['null', null], ['zero', 0], ['str', 'abc'], ['obj', {}], ['asyncGen', async function* () {}]]) {
+            oc.set(k, { fun: v, timeExpired: 30000 })
+            rs.push(await st(oc.get(k)))
+        }
+        //R-PM-SETTLE-01 規則12: cache.set視為回傳undefined之空函數(寫入JSDoc); JSDoc cache:18「fun非函數時視為回傳undefined之空函數」
+        assert.strict.deepStrictEqual(rs, Array(6).fill('resolve undefined'))
     })
 
 })

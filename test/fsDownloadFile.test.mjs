@@ -5,6 +5,7 @@ import assert from 'assert'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsDownloadFile from '../src/fsDownloadFile.mjs'
+import { runFsFail, ev, ev0, itOptUnreadable } from './tools/fsFailRun.mjs'
 
 
 describe(`fsDownloadFile with a local server`, function() {
@@ -173,7 +174,8 @@ describe(`fsDownloadFile with a local server`, function() {
         assert.strict.deepStrictEqual(fs.readFileSync(fp).equals(body), true)
     })
 
-    it(`should reject with an Error when urlIn is not an effective string`, async function() {
+    //2026-10-16 依R-FS-REJECT-01 規則1改寫: 原斷言以Error物件reject, 改為以說明字串reject(輸入檢查改為說明字串)
+    it(`should reject with a description string when urlIn is not an effective string`, async function() {
         let err = null
         try {
             await fsDownloadFile('', `${fdt}/x.bin`)
@@ -181,7 +183,8 @@ describe(`fsDownloadFile with a local server`, function() {
         catch (e) {
             err = e
         }
-        assert.strict.deepStrictEqual(err instanceof Error, true)
+        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
+        assert.strict.deepStrictEqual(err, 'urlIn in not an effective string')
     })
 
 })
@@ -231,5 +234,73 @@ describe(`fsDownloadFile`, function() {
         let rr = ms
         assert.strict.deepStrictEqual(r, rr)
     })
+
+})
+
+
+describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
+
+    //每案於獨立子行程執行(test/tools/fsFailRunner.mjs之DL*), 夾具建於test/_tmp/fsFail-<案名>/並於案例結束刪除; 假fetch以暫時替換globalThis.fetch為之, 不連外網
+    //結果值經執行器之dv描述: { s: 'resolve'|'reject'|'syncThrow'|'pending', k: 值之類別('string'、'Error'等), v }, 故可分辨以字串或以Error物件reject
+    //ev(r)、ev0: 子行程之未處理rejection與未捕捉例外及其期望(皆空)
+    this.timeout(60000)
+
+    //fail, 下載失敗之字串前綴(fsDownloadFileCore之既載格式)
+    let fail = (url, fp) => `failed to download url[${url}] to file[${fp}]: `
+
+    it(`DL01 should reject the description string (not an Error) when urlIn is an empty string`, function() {
+        let { r } = runFsFail('DL01')
+        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
+        //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'urlIn in not an effective string' }, ...ev0 })
+    })
+
+    it(`DL02 should reject the description string (not an Error) when fpOut is an empty string`, function() {
+        let { r } = runFsFail('DL02')
+        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpOut is not an effective string' }, ...ev0 })
+    })
+
+    it(`DL03 should reject the description string (not an Error) when opt.pipeline is not given to fsDownloadFileCore`, function() {
+        let { r } = runFsFail('DL03')
+        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'opt.pipeline is not a function' }, ...ev0 })
+    })
+
+    it(`DL04 (守門) should reject 'failed to download …: status[404] Not Found' when the response is 404`, function() {
+        let { r } = runFsFail('DL04')
+        //R-FS-REJECT-01 規則1之例外: fsDownloadFileCore之下載失敗維持'failed to download url[…] to file[…]: <訊息>'
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail('http://fake.invalid/x', r.out.p) + 'status[404] Not Found' }, ...ev0 })
+    })
+
+    it(`DL05 (守門) should reject 'failed to download …' when the connection is refused`, function() {
+        let { r } = runFsFail('DL05')
+        let res = r.out.res
+        //R-FS-REJECT-01 規則1之例外: 下載失敗維持'failed to download url[…] to file[…]: <訊息>'
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://127.0.0.1:1/x', r.out.p)), ...ev(r) }, { s: 'reject', k: 'string', prefix: true, ...ev0 })
+    })
+
+    it(`DL06 (守門) should reject 'failed to download …' when the parent of fpOut is a file`, function() {
+        let { r } = runFsFail('DL06')
+        let res = r.out.res
+        //R-FS-REJECT-01 規則1之例外: 下載失敗(寫檔錯誤)維持'failed to download url[…] to file[…]: <訊息>'
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://fake.invalid/x', r.out.p)), ...ev(r) }, { s: 'reject', k: 'string', prefix: true, ...ev0 })
+    })
+
+    it(`DL07 (守門) should reject 'failed to download …' and leave no file when opt.Readable is not given to fsDownloadFileCore`, function() {
+        let { r } = runFsFail('DL07')
+        let res = r.out.res
+        //R-FS-REJECT-01 規則1之例外: 下載失敗維持'failed to download url[…] to file[…]: <訊息>'(並清除暫存檔, 既載)
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://fake.invalid/x', r.out.p)), leftover: r.out.leftover, ...ev(r) }, { s: 'reject', k: 'string', prefix: true, leftover: [false, false], ...ev0 })
+    })
+
+    it(`DL08 should reject a 'failed to download …' string (not an Error) when the injected fs.lstatSync throws while checking the output folder`, function() {
+        let { r } = runFsFail('DL08')
+        //R-FS-REJECT-01 規則2: 前置檢查(注入之fs之lstatSync拋錯)一律在try內, 依規則1轉字串(下載失敗之既載格式)
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail('http://fake.invalid/x', r.out.p) + 'lstat boom' }, ...ev0 })
+    })
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 只Core收opt(外審 opus F02; 斷言與規則句見itOptUnreadable: R-FS-REJECT-01 規則2); 讀取opt非下載失敗亦非輸出夾之檢查, 依規則1之通則為String(err)
+    itOptUnreadable('fsDownloadFileCore', 'reject')
 
 })

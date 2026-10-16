@@ -1,6 +1,9 @@
 import path from 'path'
 import fs from 'fs'
+import get from 'lodash-es/get.js'
+import isbol from './isbol.mjs'
 import fsCopyFileCore from './fsCopyFileCore.mjs'
+import toResultError from './_toResultError.mjs'
 
 
 /**
@@ -12,7 +15,7 @@ import fsCopyFileCore from './fsCopyFileCore.mjs'
  * @param {String} fpTar 輸入目的檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useSync=true] 輸入是否使用同步函數布林值，預設true
- * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息，不觸發reject
+ * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，不觸發reject
  * @example
  * need test in nodejs.
  *
@@ -94,7 +97,26 @@ import fsCopyFileCore from './fsCopyFileCore.mjs'
  *
  */
 function fsCopyFile(fpSrc, fpTar, opt = {}) {
-    return fsCopyFileCore(fpSrc, fpTar, { path, fs, ...opt })
+    try {
+        return fsCopyFileCore(fpSrc, fpTar, { path, fs, ...opt })
+    }
+    catch (err) {
+
+        //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 轉為結果物件而不同步拋出; 回傳形式同fsCopyFileCore: useSync可讀且為false時以Promise resolve, 不可讀時視為預設true
+        let useSync = null
+        try {
+            useSync = get(opt, 'useSync', '')
+        }
+        catch (e) {}
+        if (!isbol(useSync)) {
+            useSync = true
+        }
+        let r = {
+            error: toResultError(err), //Error原樣, 其餘轉字串, 恆為truthy
+        }
+        return useSync ? r : Promise.resolve(r)
+
+    }
 }
 
 

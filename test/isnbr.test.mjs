@@ -160,3 +160,21 @@ describe(`isnbr`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isnbr 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return true when input new Number(1.5) and new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則1: isnbr依內部標籤判型, 包裝物件視同其型別(既有; NaN亦為Number)
+        assert.strict.deepStrictEqual(isnbr(new Number(1.5)), true)
+        assert.strict.deepStrictEqual(isnbr(new Number(NaN)), true)
+    })
+
+    it(`should return false when input new String('1.5') and new Boolean(true)`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件依內部標籤視同其型別, 字串與布林之包裝物件非數字
+        assert.strict.deepStrictEqual(isnbr(new String('1.5')), false)
+        assert.strict.deepStrictEqual(isnbr(new Boolean(true)), false)
+    })
+
+})

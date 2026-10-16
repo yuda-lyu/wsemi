@@ -12,7 +12,7 @@ import isundefined from './isundefined.mjs'
  * @memberOf wsemi
  * @param {Function} fun 輸入非同步Promise函數
  * @param {Function} [cb=() => {}] 輸入回調函數，預設()={}，cb函數之輸入為監聽到的資訊物件，欄位有mode與data，mode可為'before'、'afterThen'、'afterCatch'字串，而data則代表非同步函數的輸入或輸出資訊。若想於cb函數修改回傳，則由cb函數的輸入修改完回傳即可。例如收到msg={mode:'before',data:'123'}，將msg.data='abc'，再return msg.data
- * @returns {Promise} 回傳為Promise，resolve為回傳成功結果，reject為回傳失敗訊息。fun同步拋錯視為reject，回傳一般值視為resolve；before之cb拋錯、fun拋錯或reject、afterThen之cb拋錯皆交afterCatch之cb後reject，afterCatch之cb拋錯則以該錯誤reject；惟fun回傳永不settle之Promise或永不呼叫回呼之thenable時亦不settle
+ * @returns {Function|null} 回傳包裝函數，呼叫後回傳Promise，resolve為回傳成功結果，reject為回傳失敗訊息；fun非函數時回傳null。fun同步拋錯視為reject，回傳一般值視為resolve；before之cb拋錯、fun拋錯或reject、afterThen之cb拋錯皆交afterCatch之cb後reject，afterCatch之cb拋錯則以該錯誤reject；惟fun回傳永不settle之Promise或永不呼叫回呼之thenable時亦不settle
  * @example
  *
  * async function topAsync() {

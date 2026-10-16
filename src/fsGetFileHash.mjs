@@ -1,6 +1,7 @@
 import fs from 'fs'
 import crypto from 'crypto'
 import fsGetFileHashCore from './fsGetFileHashCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -11,8 +12,8 @@ import fsGetFileHashCore from './fsGetFileHashCore.mjs'
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
- * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法字串為'xxhash64'時，使用切片長度數字，單位位元，預設64*1024*1024(64mb)
- * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject代表回傳錯誤訊息
+ * @param {Number} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法字串為'xxhash64'時，使用切片長度數字，單位位元，上限2^30(1024*1024*1024，1gb)，非正整數(0、負數、小數、非數字)或超過上限時使用預設值，預設64*1024*1024(64mb)
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串
  * @example
  * need test in nodejs.
  *
@@ -76,7 +77,12 @@ import fsGetFileHashCore from './fsGetFileHashCore.mjs'
  *
  */
 function fsGetFileHash(fp, opt = {}) {
-    return fsGetFileHashCore(fp, { fs, crypto, ...opt })
+    try {
+        return fsGetFileHashCore(fp, { fs, crypto, ...opt })
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯
+    }
 }
 
 

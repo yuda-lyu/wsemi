@@ -125,3 +125,21 @@ describe(`isernot`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isernot 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return false when input new String('') and new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: isernot隨iser一致, 同isernot('')、isernot(NaN)為false
+        assert.strict.deepStrictEqual(isernot(new String('')), false)
+        assert.strict.deepStrictEqual(isernot(new Number(NaN)), false)
+    })
+
+    it(`should return true when input new String('a') and new Number(0)`, function() {
+        //R-WRAPPER-01 規則2: 依其原始值判定, 同isernot('a')、isernot(0)為true
+        assert.strict.deepStrictEqual(isernot(new String('a')), true)
+        assert.strict.deepStrictEqual(isernot(new Number(0)), true)
+    })
+
+})

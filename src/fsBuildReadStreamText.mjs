@@ -11,7 +11,7 @@ import evEmit from './evEmit.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsBuildReadStreamText.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入讀取檔案路徑字串
- * @returns {EventEmitter} 回傳EventEmitter，可監聽create、line、close、error事件，line事件接收讀入各列字串，create於回傳後延後派發故可被監聽。底層stream出錯(如開檔時檔案已消失、無讀取權限)以error事件回報{ fun: 'stream', msg }且隨後仍派發close。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽error時請先以fun欄位分流
+ * @returns {EventEmitter} 回傳EventEmitter，可監聽create、line、close、error事件，line事件接收讀入各列字串，create於回傳後延後派發故可被監聽。底層stream出錯(如開檔時檔案已消失、無讀取權限)以error事件回報{ fun: 'stream', msg }且隨後仍派發close。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽error時請先以fun欄位分流。fp非檔案(不存在、為資料夾)時同步拋出Error物件(fp is not a file)而不回傳EventEmitter，呼叫端須自行try
  * @example
  * need test in nodejs.
  *

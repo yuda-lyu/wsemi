@@ -246,6 +246,9 @@ function pmSeries(rs, fun) {
         }
     }
 
+    //isFunFun, 於迴圈外判定一次, 不於逐元素回呼內重複判定(lodash之isFunction對async函數每次皆經getRawTag賦值拋錯再捕捉, V8擷取之非同步堆疊隨promise鏈加深而成平方)
+    let isFunFun = isfun(fun)
+
     //ts
     let k = -1
     let ts = []
@@ -259,7 +262,7 @@ function pmSeries(rs, fun) {
                 uk = v.k
                 uv = v.v
             }
-            if (isfun(fun)) {
+            if (isFunFun) {
                 return fun(uv, uk)
             }
             else {

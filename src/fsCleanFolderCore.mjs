@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
+import toResultError from './_toResultError.mjs'
 
 
 /**
@@ -18,36 +19,36 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
  *
  */
 function fsCleanFolderCore(pah, opt = {}) {
-
-    //path, fs
-    let path = get(opt, 'path')
-    let fs = get(opt, 'fs')
-
-    //check
-    if (!fsExistsCore(pah, { fs })) {
-
-        //fsCreateFolderCore
-        let r = fsCreateFolderCore(pah, { fs }) //若不存在則自動建立, 故先執行
-
-        //check, 回傳結果物件本身({ error }), 與其他失敗出口一致
-        if (r.error) {
-            return r
-        }
-
-        return {
-            success: 'done: ' + pah
-        }
-    }
-
-    //check
-    if (!fsIsFolderCore(pah, { fs })) {
-        return {
-            error: 'input path is not a folder' //若存在但又不是資料夾, 則一律視為錯誤
-        }
-    }
-
-    //刪除資料夾內的全部資料夾與檔案
     try {
+
+        //path, fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即成同步拋錯
+        let path = get(opt, 'path')
+        let fs = get(opt, 'fs')
+
+        //check, 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
+        if (!fsExistsCore(pah, { fs })) {
+
+            //fsCreateFolderCore
+            let r = fsCreateFolderCore(pah, { fs }) //若不存在則自動建立, 故先執行
+
+            //check, 回傳結果物件本身({ error }), 與其他失敗出口一致; fsCreateFolderCore之error恆為truthy
+            if (r.error) {
+                return r
+            }
+
+            return {
+                success: 'done: ' + pah
+            }
+        }
+
+        //check
+        if (!fsIsFolderCore(pah, { fs })) {
+            return {
+                error: 'input path is not a folder' //若存在但又不是資料夾, 則一律視為錯誤
+            }
+        }
+
+        //刪除資料夾內的全部資料夾與檔案
         let entries = fs.readdirSync(pah)
         for (let entry of entries) {
             let curPath = path.join(pah, entry)
@@ -64,10 +65,11 @@ function fsCleanFolderCore(pah, opt = {}) {
             }
 
         }
+
     }
     catch (err) {
         return {
-            error: err
+            error: toResultError(err) //Error或非空字串原樣, 其餘(null、undefined等)轉字串, 恆為truthy
         }
     }
 

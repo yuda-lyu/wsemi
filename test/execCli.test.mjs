@@ -456,9 +456,9 @@ describe(`execCli`, function() {
 })
 
 
-//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+//R-EXEC-FAIL-01之6~14: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
 //  標注Windows專屬者(.cmd/.bat、cmd.exe、NoDefaultCurrentDirectoryInExePath、junction之語意)於其他平台跳過
-describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`execCli: 自訂validate拋錯視同驗證失敗, error恰為OUTPUT_VALIDATION_FAILED, stderr前綴'validate threw: ', 不成為未捕捉例外 [R-EXEC-FAIL-01之11]`, function() {
         let { r } = runExecFail('validateThrows')
@@ -617,6 +617,85 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
     it(`execCli: onStdout拋錯時, 無處理器之行程仍以離開碼1結束並印出錯誤(錯誤原樣重拋、不被吞掉) (守門) [R-EXEC-FAIL-01之12]`, function() {
         let { status, signal, stderr } = runExecFail('rethrowExecCliOnStdout', { exitMode: 'nohandler', allowNoResult: true })
         assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
+    })
+
+    it(`execCli、execCliSession、execCliJsonRpc: npm shim(cmd-shim之執行行)已辨識而入口檔不存在者不交cmd.exe, 為ENOENT且訊息指入口路徑、code null、帶pid鍵且為undefined、不重試(各呼叫形式與入口種類); 自訂批次檔於判斷句內引用同樣式者仍經cmd.exe [R-EXEC-FAIL-01之6a]`, function() {
+        if (process.platform !== 'win32') {
+            this.skip()
+        }
+        let { r } = runExecFail('shimEntryMissing')
+        let sep = path.sep
+        let e = `<fx>${sep}shim${sep}node_modules${sep}zzbrk${sep}entry.mjs`
+        //規則6a: 拋與node同形之ENOENT, 訊息指入口路徑('spawn <入口檔路徑> ENOENT'); 規則4、9: execCli以未能啟動之結果物件回報(code null、帶pid鍵且為undefined、attempts 1不重試)
+        let x = (p) => ({ ok: false, error: `ENOENT: spawn ${p} ENOENT`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' })
+        assert.strict.deepStrictEqual(r.out, {
+            entry: e,
+            abs: x(e), //規則6a: 絕對路徑之shim
+            bareExt: x(e), //規則6a: 只給檔名之.cmd(子進程env之PATH)
+            noExt: x(e), //規則6a: 未帶副檔名(where之語意補PATHEXT)
+            rel: x(e), //規則6a: 含目錄之相對路徑(以子進程cwd為基準)
+            exeEntry: x(`<fx>${sep}shim${sep}node_modules${sep}zzbrkexe${sep}bin${sep}zzbrkexe.exe`), //規則6a: 無shebang形狀(原生.exe入口)
+            nonAscii: x(`<fx>${sep}中文 dir${sep}node_modules${sep}zzbrk2${sep}cli.js`), //規則6a: 含空白與非ASCII之路徑
+            session: { error: `ENOENT: spawn ${e} ENOENT`, pid: null }, //規則9: execCliSession之未啟動pid為null
+            rpc: { errorType: 'notfound', error: `initialize: ENOENT: spawn ${e} ENOENT` }, //規則10: 未啟動一律notfound
+            userPattern: { ok: true, out: 'fallback-ok' }, //規則6a: 入口樣式位於判斷句(IF EXIST)等非執行行者仍交cmd.exe(自訂批次檔走自己之退路, 可正常執行)
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則6a: 由呼叫端之同步catch回報, 不成為未處理之rejection或未捕捉例外
+    })
+
+    it(`execCli、execCliSession: opt之getter拋錯、opt本身或其選項值、command為已撤銷之Proxy時以結果物件回報(execCli不reject、execCliSession不throw), 回調不可讀者於入口即判定、不於監聽器內拋錯且stop()必落定 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('inputUnreadable')
+        //規則13: execCli以規則4之結果物件回報(error '<碼>: <訊息>', 無碼者為UNKNOWN; attempts 1、pid鍵undefined)
+        let cli = (m) => ({ ok: false, code: null, error: `UNKNOWN: ${m}`, attempts: 1, hasPidKey: true, pidType: 'undefined' })
+        //規則13: execCliSession不spawn, 以onExit與stop()之結果回報(pid null, error同形)
+        let ses = (m) => ({ code: null, error: `UNKNOWN: ${m}`, pid: null, exited: true })
+        assert.strict.deepStrictEqual(r.out, {
+            cliGetter: cli('getter boom cwd'),
+            cliOptRevoked: cli('<revoked>'),
+            cliEnvRevoked: cli('<revoked>'), //規則13: attempts 1(maxRetries 2亦不重試)
+            cliOnStdoutRevoked: cli('<revoked>'),
+            cliCommandRevoked: cli('<revoked>'),
+            sesGetter: ses('getter boom onExit'),
+            sesOptRevoked: ses('<revoked>'),
+            sesEnvRevoked: ses('<revoked>'),
+            sesOnLineRevoked: ses('<revoked>'),
+            sesOnExitRevoked: ses('<revoked>'),
+            uncaught: [], //規則13: 呼叫端之回調於入口判型一次, 監聽器與計時器內不再觸及呼叫端之值
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取與判型一律在try內, 不reject、不成為未捕捉例外
+    })
+
+    it(`execCli: onStdout、onStderr、validate為以函數為目標之Proxy且於入口判型後才撤銷時, 監聽器與重試內不再判型呼叫端之值(結果照常落定、輸出照常累積、不reject), 未捕捉例外僅有呼叫已撤銷回調本身者 [R-EXEC-FAIL-01之12、13]`, function() {
+        let { r } = runExecFail('cliCbRevokedLater')
+        assert.strict.deepStrictEqual(r.out, {
+            //規則13: 回調於入口判型一次, 監聽器內不再觸及呼叫端之值(該段輸出仍累積); 規則12: 呼叫已撤銷之回調所拋之TypeError經_callUser原樣重拋(revoked:apply), 不得有判型所生者(revoked:has)
+            onStdoutData: { ok: true, code: 0, stdout: 'x', stderr: 'y', attempts: 1, uncaught: ['revoked:apply'] },
+            onStderrData: { ok: true, code: 0, stdout: 'x', stderr: 'y', attempts: 1, uncaught: ['revoked:apply'] }, //規則12、13: 同上(stderr)
+            //規則13: 重試(計時器後之續行)內不再判型validate, 以結果物件回報而不reject(規則4之「本函數不throw亦不reject」); 離開碼非0故validate不被呼叫
+            validateRetry: { ok: false, code: 1, stdout: '', stderr: '', attempts: 2, uncaught: [] },
+        })
+        assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不reject、不產生未處理之rejection
+    })
+
+    it(`execCli: 選項getter拋出非Error之值(null、undefined、字串)時以結果物件回報, error保留拋出值之文字 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('cliThrownValues')
+        //規則13: execCli以規則4之結果物件回報(error '<碼>: <訊息>', 無碼者為UNKNOWN; attempts 1、pid鍵undefined); 訊息取getErrorMessage, 為空退_errToStr(拋出值之文字不遺失)
+        let x = (m) => ({ ok: false, code: null, error: `UNKNOWN: ${m}`, attempts: 1, hasPidKey: true, pidType: 'undefined' })
+        assert.strict.deepStrictEqual(r.out, {
+            null: x('null'), //規則13: 拋出null
+            undefined: x('undefined'), //規則13: 拋出undefined
+            string: x('thrown-x'), //規則13: 拋出字串
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
+    })
+
+    it(`execCli: opt.input為包裝字串(new String)時子進程收到其內容且結果ok(不reject、子進程不殘留), 偽String標籤物件轉字串拋錯時以結果物件回報 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('cliInputWrapper')
+        assert.strict.deepStrictEqual(r.out, {
+            stringWrapper: { ok: true, stdout: 'got:abc', error: '', childAliveAfter: false }, //規則13: 輸入之讀取與判型(含轉為原始字串)一律在try內, spawn後不得於try外拋錯而reject並使子進程殘留
+            fakeStringThrows: { ok: false, code: null, error: 'UNKNOWN: toString boom', attempts: 1, hasPidKey: true, pidType: 'undefined' }, //規則13: 讀取或轉換拋錯以規則4之結果物件回報(attempts 1、pid鍵undefined、不重試)
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })
 
 })

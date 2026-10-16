@@ -6,7 +6,7 @@ import binstr from './binstr.mjs'
  * 主要判斷location.href內是否含有localhost
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isDev.test.mjs Github}
  * @memberOf wsemi
- * @returns {Boolean} 回傳是否為開發階段
+ * @returns {Boolean} 回傳是否為開發階段，非瀏覽器環境(無location)回傳false
  * @example
  * need test in browser
  *
@@ -16,8 +16,8 @@ import binstr from './binstr.mjs'
  */
 function isDev() {
 
-    //check
-    if (location) {
+    //check, 未宣告之全域直接讀取為ReferenceError, 故須以typeof防護(Web Worker亦有location, 不可改用isWindow)
+    if (typeof location !== 'undefined' && location) {
         return binstr(location.href, 'localhost')
     }
 

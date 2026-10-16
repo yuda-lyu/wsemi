@@ -7,6 +7,7 @@ import fsMergeFiles from '../src/fsMergeFiles.mjs'
 import fsMergeFilesCore from '../src/fsMergeFilesCore.mjs'
 import { thrower, revoked } from './tools/codecThrown.mjs'
 import { settleShown } from './tools/caseKit.mjs'
+import { runFsFail, ev, ev0, itOptUnreadable } from './tools/fsFailRun.mjs'
 
 
 describe(`fsMergeFiles`, function() {
@@ -264,7 +265,7 @@ describe(`fsMergeFilesCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
     //settle逾時判定, 放寬逾時
     this.timeout(15000)
 
-    //reject值規則: 取拋出值之message; message為undefined者轉字串(_errToStr: 先String(err), 拋錯則讀字串message, 再無則'unknown error')
+    //reject值規則: 取拋出值之message; message非字串者(undefined、數字、null等; 外審 opus F15)轉字串(_errToStr: 先String(err), 拋錯則讀字串message, 再無則'unknown error')
     //  故Error只得message('boom', 不是err.toString()之'Error: boom'), 帶字串message之一般物件得其message(不是'[object Object]'), 與其餘站點之_errToStr結果不同, 不共用thrownCases
     //修正前catch內以get(err, 'message', String(err))求值, 預設值引數先求String(err): 無原型物件、已撤銷之Proxy使其拋TypeError, async函數改以該TypeError reject, 且跳過其後寫入流之destroy
     //same為true者修正前後結果相同(守門: 防止機械替換成err.toString()或errToStr(err), 或不防null、undefined之直接讀message); sameL為寫入流error監聽之注入點(注入點3)之同義旗標
@@ -276,6 +277,9 @@ describe(`fsMergeFilesCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         { name: 'an object without prototype', mk: () => Object.create(null), msg: 'unknown error', same: false, sameL: false },
         { name: 'a revoked Proxy', mk: () => revoked(), msg: 'unknown error', same: false, sameL: false },
         { name: 'an object without prototype but with a string message', mk: () => Object.assign(Object.create(null), { message: 'np-msg' }), msg: 'np-msg', same: false, sameL: false },
+        //外審 opus F15: message非字串之一般物件, 原以message原值(數字42、null)reject; R-FS-REJECT-01 規則1: 拒絕值一律為字串, R-CODEC-ERR-01 規則2(改訂): message非字串才_errToStr(一般物件得'[object Object]', R-CODEC-ERR-01 已知限制)
+        { name: 'a plain object whose message is a number', mk: () => ({ message: 42 }), msg: '[object Object]', same: false, sameL: false },
+        { name: 'a plain object whose message is null', mk: () => ({ message: null }), msg: '[object Object]', same: false, sameL: false },
     ]
 
     //fs替身(不觸及實體檔案): 輸出資料夾視為已存在(statSync、lstatSync), 寫入流(createWriteStream)與切片檢查(lstatSync)由各案注入
@@ -351,5 +355,78 @@ describe(`fsMergeFilesCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
             assert.strict.deepStrictEqual({ r, unlinked, destroyed: ws.destroyed }, { r: { s: 'reject', v: c.msg }, unlinked: [], destroyed: true })
         })
     }
+
+})
+
+
+describe(`fsMergeFiles 失敗回報(R-FS-REJECT-01)`, function() {
+
+    //每案於獨立子行程執行(test/tools/fsFailRunner.mjs之MG*), 夾具建於test/_tmp/fsFail-<案名>/並於案例結束刪除
+    //結果值經執行器之dv描述: { s: 'resolve'|'reject'|'syncThrow'|'pending', k: 值之類別('string'、'Error'等), v }, 故可分辨以字串或以Error物件reject
+    //ev(r)、ev0: 子行程之未處理rejection與未捕捉例外及其期望(皆空)
+    this.timeout(60000)
+
+    it(`MG01 should reject the description string (not an Error) when fpsIn is not an array`, function() {
+        let { r } = runFsFail('MG01')
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 前置檢查為說明字串
+        //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpsIn in not an effective array' }, ...ev0 })
+    })
+
+    it(`MG02 should reject the description string (not an Error) when fpsIn is an empty array`, function() {
+        let { r } = runFsFail('MG02')
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 前置檢查為說明字串
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpsIn in not an effective array' }, ...ev0 })
+    })
+
+    it(`MG03 (守門) should reject the message string when a slice does not exist`, function() {
+        let { r } = runFsFail('MG03')
+        //R-FS-REJECT-01 規則1之例外: fsMergeFilesCore之拒絕值為message(R-CODEC-ERR-01 規則2)
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: `fpIn[${r.out.p}] is not a file` }, ...ev0 })
+    })
+
+    it(`MG04 (守門) should reject the message string without the 'Error: ' prefix and keep the slice when the output path is a folder`, function() {
+        let { r } = runFsFail('MG04')
+        let res = r.out.res
+        //R-FS-REJECT-01 規則1之例外: fsMergeFilesCore之拒絕值為message, 不得機械替換成_errToStr而變成'Error: …'(R-CODEC-ERR-01 規則2)
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, msg: /^EISDIR: /.test(res.v), sliceKept: r.out.sliceKept, ...ev(r) }, { s: 'reject', k: 'string', msg: true, sliceKept: true, ...ev0 })
+    })
+
+    it(`MG05 should reject the message string (not an Error) when opt.fs.lstatSync throws while checking the output folder`, function() {
+        let { r } = runFsFail('MG05')
+        //R-FS-REJECT-01 規則2: 前置檢查(呼叫端opt.fs經{ fs, ...opt }覆蓋內建fs後之lstatSync拋錯)一律在try內; 規則1之例外: 拒絕值為message
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'lstat boom' }, ...ev0 })
+    })
+
+    it(`MG06 should reject a string (not the non-string message) when opt.fs.lstatSync throws { message: 42 } or { message: null }`, function() {
+        let { r } = runFsFail('MG06')
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串(typeof v === 'string'); R-CODEC-ERR-01 規則2(改訂, 外審 opus F15): message非字串才_errToStr, 一般物件得'[object Object]'
+        let want = { s: 'reject', k: 'string', v: '[object Object]' }
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { message42: want, messageNull: want }, ...ev0 })
+    })
+
+    it(`MG07 should reject the same string from fsMergeFiles (spreading opt throws) and fsMergeFilesCore (reading opt throws) for the same unreadable opt`, function() {
+        let { r } = runFsFail('MG07')
+        let res = r.out.res
+        //R-FS-REJECT-01 規則1之例外(fsMergeFilesCore為message)擴及對外fsMergeFiles之opt展開失敗(fsopt ⑦-1): 同一輸入兩函數之拒絕值相同
+        assert.strict.deepStrictEqual(Object.keys(res).filter((k) => JSON.stringify(res[k].outer) !== JSON.stringify(res[k].core)), [])
+        //R-FS-REJECT-01 規則1、R-CODEC-ERR-01 規則2(改訂): message為字串者取message(Error不帶'Error: '前綴), 否則_errToStr(null得'null'、字串原樣、一般物件得'[object Object]'、無原型物件讀字串message)
+        let rj = (v) => ({ s: 'reject', k: 'string', v })
+        assert.strict.deepStrictEqual(Object.fromEntries(Object.entries(res).map(([k, o]) => [k, o.outer])), {
+            Error: rj('getter boom'),
+            null: rj('null'),
+            string: rj('str'),
+            message42: rj('[object Object]'),
+            plainMsg: rj('pm'),
+            noProtoMsg: rj('np'),
+        })
+        //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException
+        assert.strict.deepStrictEqual(ev(r), ev0)
+    })
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: R-FS-REJECT-01 規則2)
+    //  對外之展開失敗不經Core, 依裁定(fsopt ⑦-1)與Core同格式: message為字串者取message, 否則_errToStr
+    itOptUnreadable('fsMergeFiles', 'rejectMsg')
+    itOptUnreadable('fsMergeFilesCore', 'rejectMsg')
 
 })

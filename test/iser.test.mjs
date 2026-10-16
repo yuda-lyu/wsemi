@@ -125,3 +125,21 @@ describe(`iser`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`iser 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return true when input new String('') and new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: iser隨isstr0、isnan拆包而一致, 同iser('')、iser(NaN)為true
+        assert.strict.deepStrictEqual(iser(new String('')), true)
+        assert.strict.deepStrictEqual(iser(new Number(NaN)), true)
+    })
+
+    it(`should return false when input new String('a') and new Number(0)`, function() {
+        //R-WRAPPER-01 規則2: 依其原始值判定, 同iser('a')、iser(0)為false
+        assert.strict.deepStrictEqual(iser(new String('a')), false)
+        assert.strict.deepStrictEqual(iser(new Number(0)), false)
+    })
+
+})

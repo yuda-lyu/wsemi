@@ -216,3 +216,24 @@ describe(`pmConvertResolve settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`pmConvertResolve 回傳型別與非函數(R-PM-SETTLE-01規則12)`, function() {
+
+    it(`回傳包裝函數, 呼叫後回傳Promise [規則12]`, async function() {
+        let f = pmConvertResolve(async (a) => a + 1)
+        //R-PM-SETTLE-01 規則12: @returns之型別與實回相符(pmConvertResolve實回Function); JSDoc pmConvertResolve:17「@returns {Function} 回傳包裝函數，呼叫後回傳Promise」
+        assert.strict.deepStrictEqual(typeof f, 'function')
+        assert.strict.deepStrictEqual(await f(1), { state: 'success', msg: 2 })
+    })
+
+    it(`fn非函數(7值)時於本函數呼叫當下同步拋出Error('fn is not a function'), pm2resolve同 [規則12]`, async function() {
+        let pm2resolve = (await import('../src/pm2resolve.mjs')).default
+        for (let v of [undefined, null, 0, 'abc', {}, Promise.resolve(1), async function* () {}]) {
+            //R-PM-SETTLE-01 規則12: pmConvertResolve建立時同步拋出(寫入JSDoc); JSDoc pmConvertResolve:17「fn非函數時於本函數呼叫當下同步拋出Error('fn is not a function')」
+            assert.strict.throws(() => pmConvertResolve(v), (e) => e instanceof Error && e.message === 'fn is not a function')
+            assert.strict.throws(() => pm2resolve(v), (e) => e instanceof Error && e.message === 'fn is not a function')
+        }
+    })
+
+})

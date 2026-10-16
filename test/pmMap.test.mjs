@@ -404,3 +404,116 @@ describe(`pmMap settle(R-PM-SETTLE-01)`, function() {
     })
 
 })
+
+
+describe(`pmMap 派發與完成(R-PM-SETTLE-01規則16)`, function() {
+
+    //mk, 任務函數: 記錄被呼叫之元素、執行中數與最大並行數, 耗時依dOf(v), 元素為failAt時reject('#'+v)否則resolve('#'+v)
+    let mk = (dOf, failAt = null) => {
+        let st = { called: [], conc: 0, maxConc: 0 }
+        let fun = (v) => {
+            st.called.push(v)
+            st.conc += 1
+            st.maxConc = Math.max(st.maxConc, st.conc)
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    st.conc -= 1
+                    if (v === failAt) {
+                        reject('#' + v)
+                    }
+                    else {
+                        resolve('#' + v)
+                    }
+                }, dOf(v))
+            })
+        }
+        return { st, fun }
+    }
+
+    //st, 結果轉為{ s, v }
+    let st = (pm) => pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+
+    it(`同時執行數之最大值等於takeLimit(1、2), takeLimit為0時不限 [規則16]`, async function() {
+        let out = {}
+        for (let takeLimit of [1, 2, 0]) {
+            let m = mk(() => 20)
+            let r = await st(pmMap([1, 2, 3, 4, 5, 6], m.fun, takeLimit))
+            out[takeLimit] = { r, maxConc: m.st.maxConc }
+        }
+        let all = { s: 'resolve', v: ['#1', '#2', '#3', '#4', '#5', '#6'] }
+        //R-PM-SETTLE-01 規則16: pmMap不經queue, 以索引派發; JSDoc pmMap:26「輸入同時處理數量整數，預設0，代表無限制」
+        assert.strict.deepStrictEqual(out, { 1: { r: all, maxConc: 1 }, 2: { r: all, maxConc: 2 }, 0: { r: all, maxConc: 6 } })
+    })
+
+    it(`完成順序與輸入順序不同、或同一輪完成時, resolve之結果皆依輸入順序且只resolve一次 [規則16]`, async function() {
+        let m = mk((v) => 60 - (v * 10))
+        let a = await st(pmMap([1, 2, 3, 4, 5], m.fun, 0))
+        let b = await st(pmMap([1, 2, 3, 4, 5], (v) => v * 10, 0))
+        let c = await st(pmMap([1, 2, 3].map((v) => Promise.resolve(v)), null, 2))
+        //R-PM-SETTLE-01 規則16: 以完成計數判定全部完成並只resolve一次; JSDoc pmMap:27「resolve回傳成功結果」(依輸入順序, 同JSDoc範例)
+        assert.strict.deepStrictEqual({ a, b, c }, {
+            a: { s: 'resolve', v: ['#1', '#2', '#3', '#4', '#5'] },
+            b: { s: 'resolve', v: [10, 20, 30, 40, 50] },
+            c: { s: 'resolve', v: [1, 2, 3] },
+        })
+    })
+
+    it(`任一者reject即reject, 其後未派發者之fun呼叫0次 [規則16]`, async function() {
+        let m1 = mk(() => 10, 3)
+        let r1 = await st(pmMap([1, 2, 3, 4, 5], m1.fun, 1))
+        let m2 = mk((v) => (v === 1 ? 10 : 40), 1)
+        let r2 = await st(pmMap([1, 2, 3, 4, 5], m2.fun, 2))
+        await new Promise((resolve) => setTimeout(resolve, 80)) //等候已派發者完成, 確認其後無再派發
+        //R-PM-SETTLE-01 規則16: 以索引派發; JSDoc pmMap:16「任一者reject即reject並停止派發後續任務」
+        assert.strict.deepStrictEqual({ r1, called1: m1.st.called, r2, called2: m2.st.called }, {
+            r1: { s: 'reject', v: '#3' },
+            called1: [1, 2, 3],
+            r2: { s: 'reject', v: '#1' },
+            called2: [1, 2],
+        })
+    })
+
+})
+
+
+describe(`pmMap 輸入於進入時取值(R-PM-SETTLE-01規則1、2、16)`, function() {
+
+    describe(`子行程: 元素讀取即拋錯`, function() {
+        let r = null
+        before(function() {
+            r = runPmSettle('mapElemGetterThrow').r
+        })
+
+        it(`陣列第2個元素讀取即拋錯(有fun之takeLimit 1與0、未給fun): 以該錯誤reject, 不同步拋出、不懸置 [規則1]`, function() {
+            //R-PM-SETTLE-01 規則1: 呼叫端之任何結果(含讀取即拋錯者)使回傳之Promise必定settle; 規則16(增訂): 陣列輸入於進入時取值(同HEAD); JSDoc pmMap:17「讀取元素拋錯時以該錯誤reject」
+            let rj = { s: 'reject', same: true }
+            assert.strict.deepStrictEqual({ arrFun1: r.out.arrFun1, arrFun0: r.out.arrFun0, arrNoFun1: r.out.arrNoFun1 }, { arrFun1: rj, arrFun0: rj, arrNoFun1: rj })
+        })
+
+        it(`物件之值讀取即拋錯: 同陣列, 以該錯誤reject [規則1]`, function() {
+            //R-PM-SETTLE-01 規則1: 同上(物件輸入於進入時轉為內部陣列, 與陣列輸入同一取值時機); JSDoc pmMap:17「讀取元素拋錯時以該錯誤reject」
+            assert.strict.deepStrictEqual(r.out.objFun1, { s: 'reject', same: true })
+        })
+
+        it(`無未處理之rejection與未捕捉例外 [規則2]`, function() {
+            //R-PM-SETTLE-01 規則2
+            assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+        })
+    })
+
+    it(`呼叫後改動輸入陣列(改元素、縮短長度): fun收到呼叫當下之值 [規則16]`, async function() {
+        let calls = []
+        let rs = ['a', 'b', 'c']
+        let pm = pmMap(rs, async (v, k) => {
+            calls.push([k, v])
+            await new Promise((resolve) => setTimeout(resolve, 10))
+            return v
+        }, 1)
+        rs[1] = 'B-mutated'
+        rs.length = 2
+        let r = await pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+        //R-PM-SETTLE-01 規則16(增訂): 陣列輸入於進入時取值(同HEAD), 派發時不再讀呼叫端之陣列; JSDoc pmMap:17「rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值」
+        assert.strict.deepStrictEqual({ calls, r }, { calls: [[0, 'a'], [1, 'b'], [2, 'c']], r: { s: 'resolve', v: ['a', 'b', 'c'] } })
+    })
+
+})

@@ -154,6 +154,17 @@ describe(`execCliSession`, function() {
         assert.strict.deepStrictEqual(r.stderr.endsWith('END-OF-ERR'), true)
     })
 
+    it(`should accept stderrKeep given as numeric string or Number wrapper ('0', new Number(0), '3') [數值輸入通則]`, async function() {
+        let sc = `process.stderr.write('abcdef')`
+        let f = async (stderrKeep) => {
+            let s = execCliSession(nodeBin, ['-e', sc], { stderrKeep })
+            let r = await s.stop()
+            return r.stderr
+        }
+        let rs = [await f('0'), await f(new Number(0)), await f('3'), await f(new Number(3))] // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(rs, ['', '', 'def', 'def']) //使用者通則: 數值輸入一律支援字串型數字(stderrKeep 0為不保留, 3為保留尾端3字元)
+    })
+
     it(`should resolve write() false after exit and return the same promise from repeated stop()`, async function() {
         let s = execCliSession(nodeBin, ['-e', 'process.stdout.write("x")'])
         let p1 = s.stop()
@@ -280,8 +291,8 @@ describe(`execCliSession`, function() {
 })
 
 
-//R-EXEC-FAIL-01之6~12: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
-describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+//R-EXEC-FAIL-01之6~14: 每案於獨立子行程執行(test/tools/execFailRunner.mjs), 夾具建於test/_tmp/execFail-<案名>/並於案例結束刪除
+describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`execCliSession: onExit拋錯(不攔截, 仍為未捕捉例外)時stop()仍settle(已啟動與未能啟動) [R-EXEC-FAIL-01之12; R-PM-SETTLE-01之1]`, function() {
         let { r } = runExecFail('sessionOnExitThrows')
@@ -312,6 +323,57 @@ describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
     it(`execCliSession: onExit拋錯時, 無處理器之行程仍以離開碼1結束並印出錯誤(重拋早於呼叫端續行, 不因隨即process.exit而遺失) (守門) [R-EXEC-FAIL-01之12]`, function() {
         let { status, signal, stderr } = runExecFail('rethrowSessionOnExit', { exitMode: 'nohandler', allowNoResult: true })
         assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
+    })
+
+    it(`execCliSession: writeLine之參數無法轉為字串(Object.create(null)、已撤銷之Proxy)時resolve(false), 與write對稱、不同步拋錯 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('sessionWriteLineUnconvertible')
+        assert.strict.deepStrictEqual(r.out, {
+            nullProto: { s: 'resolve', v: false }, //規則13: writeLine之參數無法轉字串時resolve(false)(同write)
+            revoked: { s: 'resolve', v: false }, //規則13: 同上(已撤銷之Proxy)
+            stop: { code: 0, error: '' }, //規則13: 失敗之writeLine不影響工作階段, stop()照常結束
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外
+    })
+
+    it(`execCliSession: onExit、onLine、onStdout、onStderr為以函數為目標之Proxy且於入口判型後才撤銷時, data、收尾flush與settle內不再判型呼叫端之值: stop()照常落定且不誤報STOP_TIMEOUT、行與stderr尾段不遺失, 未捕捉例外僅有呼叫已撤銷回調本身者 [R-EXEC-FAIL-01之12、13]`, function() {
+        let { r } = runExecFail('sesCbRevokedLater')
+        //規則13: 監聽器與計時器內不再觸及呼叫端之值(否則onExit者stop()永不落定、onLine者誤報STOP_TIMEOUT、onStderr者stderr尾段遺失); 規則12: 收尾settle與喚醒stop()照常完成
+        let ok = (lines, stderr = '') => ({ code: 0, exited: true, error: '', stderr, lines, uncaught: ['revoked:apply'] }) //規則12: 呼叫已撤銷之回調所拋之TypeError經_callUser原樣重拋(revoked:apply), 不得有判型所生者(revoked:has)
+        assert.strict.deepStrictEqual(r.out, {
+            onExit: ok(['o1']), //規則13: settle內不再判型onExit, stop()落定
+            onLineData: ok([]), //規則13: data之切行內不再判型onLine, 收尾照常settle(不誤報STOP_TIMEOUT)
+            onLineFlush: ok([]), //規則13: 收尾flush不完整行時不再判型onLine
+            onStdoutData: ok(['o1']), //規則13: data內不再判型onStdout, 該chunk仍進onLine
+            onStdoutFlush: ok(['�']), //規則13: 收尾flush時不再判型onStdout
+            onStderrData: ok([], 'e1'), //規則13: data內不再判型onStderr, 該段仍計入stderr尾段
+            onStderrFlush: ok([], '�'), //規則13: 收尾flush時不再判型onStderr
+        })
+        assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不產生未處理之rejection
+    })
+
+    it(`execCliSession: onExit可讀而cwd、stderrKeep、onLine之getter拋錯或env為已撤銷之Proxy時, 不spawn且onExit被呼叫一次、其結果同stop() [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('sesOnExitInputUnreadable')
+        //規則13: execCliSession不spawn(建立當下pid null、子進程之輸出未出現), 以onExit與stop()之結果回報(pid null, error '<碼>: <訊息>', 無碼者為UNKNOWN); onExit收到之結果即stop()之結果
+        let x = (m) => ({ error: `UNKNOWN: ${m}`, pid: null, pidAtCreate: null, onExitCalls: 1, onExitSameAsStop: true, lines: [] })
+        assert.strict.deepStrictEqual(r.out, {
+            cwdGetter: x('getter boom cwd'), //規則13: cwd不可讀
+            stderrKeepGetter: x('getter boom stderrKeep'), //規則13: stderrKeep不可讀
+            onLineGetter: x('getter boom onLine'), //規則13: 他項回調不可讀時, 可讀之onExit仍回報
+            envRevoked: x('<revoked>'), //規則13: env為已撤銷之Proxy
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取與判型一律在try內, 不throw、不成為未捕捉例外
+    })
+
+    it(`execCliSession: 選項getter拋出非Error之值(null、undefined、字串)時不spawn, 以onExit與stop()回報且error保留拋出值之文字 [R-EXEC-FAIL-01之13]`, function() {
+        let { r } = runExecFail('sesThrownValues')
+        //規則13: 輸入不可讀(getter拋錯)時不spawn(拋出之值可為null、undefined, 不得因而照常spawn), 以onExit與stop()之結果回報(pid null, error '<碼>: <訊息>', 無碼者為UNKNOWN; 訊息取getErrorMessage, 為空退_errToStr)
+        let x = (m) => ({ error: `UNKNOWN: ${m}`, pid: null, pidAtCreate: null, onExitCalls: 1, lines: [] })
+        assert.strict.deepStrictEqual(r.out, {
+            null: x('null'), //規則13: 拋出null
+            undefined: x('undefined'), //規則13: 拋出undefined
+            string: x('thrown-x'), //規則13: 拋出字串, 訊息保留該字串
+        })
+        assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不throw、不成為未捕捉例外
     })
 
 })

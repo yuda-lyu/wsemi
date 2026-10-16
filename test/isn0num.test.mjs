@@ -160,3 +160,19 @@ describe(`isn0num`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isn0num 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return false when input new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: isnum族隨之一致, 同isn0num(NaN)為false
+        assert.strict.deepStrictEqual(isn0num(new Number(NaN)), false)
+    })
+
+    it(`should return true when input new Number(-1.5)`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同其型別, 依其原始值判定(同isn0num(-1.5))
+        assert.strict.deepStrictEqual(isn0num(new Number(-1.5)), true)
+    })
+
+})

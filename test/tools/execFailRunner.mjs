@@ -1,4 +1,4 @@
-//execFailRunner.mjs: R-EXEC-FAIL-01之6~12(執行外部程序家族execProcess、execCli、execCliSession、execCliJsonRpc之失敗回報)之子行程執行器
+//execFailRunner.mjs: R-EXEC-FAIL-01之6~14(執行外部程序家族execProcess、execCli、execCliSession、execCliJsonRpc之失敗回報)之子行程執行器
 //  每個案例於獨立子行程執行(不污染mocha之worker), 預設掛unhandledRejection與uncaughtException記錄器與看門狗(settle逾時回{ s: 'pending' })
 //  被測實作固定為本檔往上兩層之src/(由本檔位置推得); 夾具一律建於本檔往上一層之_tmp/execFail-<案名>/, 案例開頭建立, 結束(finally)刪除該案資料夾, 不動_tmp根目錄
 //  結果以一行'@@R@@'開頭之JSON({ out, unhandled, uncaught })輸出至stdout, 由test/tools/execFailRun.mjs之runExecFail剖析
@@ -93,6 +93,60 @@ let contentFakeExe = 'MZ-not-a-real-pe' //副檔名為.exe而內容非有效PE
 //scRpcServer, 一行一則JSON之伺服器腳本: 每收到一則請求, 以同一次write送出head所指之訊息與該請求之回應(同一chunk)
 function scRpcServer(head) {
     return 'let rl=require("readline").createInterface({input:process.stdin});rl.on("line",(l)=>{let m=JSON.parse(l);process.stdout.write(JSON.stringify(' + head + ')+"\\n"+JSON.stringify({jsonrpc:"2.0",id:m.id,result:{ok:1}})+"\\n")})'
+}
+
+//getterOpt, 回傳僅含一個可列舉鍵key之物件, 讀取該鍵即拋出Error('getter boom '+key), 作為不可讀之選項物件
+function getterOpt(key) {
+    let o = {}
+    Object.defineProperty(o, key, {
+        enumerable: true,
+        get() {
+            throw new Error('getter boom ' + key)
+        },
+    })
+    return o
+}
+
+//getterThrow, 回傳僅含一個可列舉鍵key之物件, 讀取該鍵即拋出v(任意值, 含null、undefined、字串等非Error之值), 作為不可讀之選項物件
+function getterThrow(key, v) {
+    let o = {}
+    Object.defineProperty(o, key, {
+        enumerable: true,
+        get() {
+            throw v
+        },
+    })
+    return o
+}
+
+//thrownVals, 入口不可讀時拋出之值軸(非Error之值): [名稱, 拋出值]
+let thrownVals = [['null', null], ['undefined', undefined], ['string', 'thrown-x']]
+
+//rvk, 將V8之已撤銷Proxy訊息正規化為'<revoked>'(陷阱名隨判型函數而異: Object.prototype.toString、has、get等)
+function rvk(s) {
+    return s.replace(/Cannot perform '[^']+' on a proxy that has been revoked/g, '<revoked>')
+}
+
+//fnRevocable, 以函數為目標之可撤銷Proxy({ proxy, revoke }): 撤銷前判型為函數(入口判型正常), 撤銷後判型即拋TypeError(陷阱'has'等), 呼叫則拋陷阱'apply'之TypeError
+function fnRevocable() {
+    return Proxy.revocable(() => {}, {})
+}
+
+//since, 自uncaught之第n0筆起記錄之未捕捉例外, 已撤銷Proxy之訊息正規化為'revoked:<陷阱名>'後去重排序, 供逐子案歸屬
+//  'revoked:apply'為呼叫已撤銷之回調本身所拋(經_callUser原樣重拋, 規則12允許); 'revoked:has'等為本套件於監聽器內判型所拋(規則13不允許)
+function since(n0) {
+    return [...new Set(uncaught.slice(n0).map((m) => m.replace(/^Cannot perform '([^']+)' on a proxy that has been revoked$/, 'revoked:$1')))].sort()
+}
+
+//pidAlive, 讀取子進程寫出之pid檔並查其是否存活(無pid檔視為未存活)
+function pidAlive(fpPid) {
+    try {
+        process.kill(Number(fs.readFileSync(fpPid, 'utf8')), 0)
+        return true
+    }
+    catch (e) {
+        return false
+    }
 }
 
 let cases = {
@@ -572,6 +626,431 @@ let cases = {
         let execCli = await imp('execCli')
         await execCli(node, ['-e', 'process.stdout.write("x")'], { onStdout: boom('cb boom') })
         process.exit(0)
+    },
+
+    //R-EXEC-FAIL-01之6a(npm shim入口缺失): cmd-shim形狀之.cmd(入口位於執行行)而入口檔不存在者不交cmd.exe, 同不存在之批次檔為ENOENT(訊息指入口路徑)、code null、帶pid鍵且為undefined、不重試; 各呼叫形式與入口種類
+    //  對照: 自訂批次檔於IF EXIST判斷句內引用同樣式而另有退路者仍經cmd.exe執行
+    shimEntryMissing: async () => {
+        mkFx()
+        let execCli = await imp('execCli')
+        let ses = await imp('execCliSession')
+        let rpc = await imp('execCliJsonRpc')
+        let head = ['@ECHO off', 'GOTO start', ':find_dp0', 'SET dp0=%~dp0', 'EXIT /b', ':start', 'SETLOCAL', 'CALL :find_dp0']
+        let shimNode = (target) => [...head, '', 'IF EXIST "%dp0%\\node.exe" (', '  SET "_prog=%dp0%\\node.exe"', ') ELSE (', '  SET "_prog=node"', ')', '',
+            `endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & set PATHEXT=%PATHEXT:;.JS;=;% & "%_prog%"  "%dp0%\\${target}" %*`, ''].join('\r\n')
+        let shimDirect = (target) => [...head, `"%dp0%\\${target}"   %*`, ''].join('\r\n')
+        let dirShim = path.join(fx, 'shim')
+        let dirUni = path.join(fx, '中文 dir')
+        mkFile(path.join(dirShim, 'zzbrk.cmd'), shimNode('node_modules\\zzbrk\\entry.mjs'))
+        mkFile(path.join(dirShim, 'zzbrkexe.cmd'), shimDirect('node_modules\\zzbrkexe\\bin\\zzbrkexe.exe'))
+        mkFile(path.join(dirUni, 'zzbrk2.cmd'), shimNode('node_modules\\zzbrk2\\cli.js'))
+        mkFile(path.join(fx, 'userpat.cmd'), ['@echo off', 'SET dp0=%~dp0', 'IF EXIST "%dp0%\\node_modules\\optional\\cli.js" (', '  node "%dp0%\\node_modules\\optional\\cli.js" %*', ') ELSE (', '  echo fallback-ok', ')', ''].join('\r\n'))
+        process.env.PATH = dirShim + ';' + process.env.PATH
+        let entry = path.join(dirShim, 'node_modules', 'zzbrk', 'entry.mjs').replace(fx, '<fx>')
+        let out = { entry }
+        let retry = { maxRetries: 2, retryDelayMs: 100 }
+        for (let [k, cmd, opt] of [
+            ['abs', path.join(dirShim, 'zzbrk.cmd'), {}],
+            ['bareExt', 'zzbrk.cmd', {}],
+            ['noExt', 'zzbrk', {}],
+            ['rel', '.\\zzbrk.cmd', { cwd: dirShim }],
+            ['exeEntry', path.join(dirShim, 'zzbrkexe.cmd'), {}],
+            ['nonAscii', path.join(dirUni, 'zzbrk2.cmd'), {}],
+        ]) {
+            let r = await settle(execCli(cmd, [], { ...retry, ...opt }))
+            out[k] = res(r, (v) => ({ ok: v.ok, error: v.error.replace(fx, '<fx>'), code: v.code, attempts: v.attempts, ...pk(v) }))
+        }
+        let rs = await settle(ses(path.join(dirShim, 'zzbrk.cmd'), []).stop(), 8000)
+        out.session = res(rs, (v) => ({ error: v.error.replace(fx, '<fx>'), pid: v.pid }))
+        let rr = await settle(rpc(path.join(dirShim, 'zzbrk.cmd'), [], [{ method: 'initialize' }], { timeoutMs: 8000 }), 12000)
+        out.rpc = res(rr, (v) => ({ errorType: v.errorType, error: v.error.replace(fx, '<fx>') }))
+        let ru = await settle(execCli(path.join(fx, 'userpat.cmd'), [], { maxRetries: 0 }))
+        out.userPattern = res(ru, (v) => ({ ok: v.ok, out: v.stdout.trim() }))
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13(輸入不可讀): opt之getter拋錯、opt本身或其選項值為已撤銷之Proxy時, execCli resolve結果物件(code null、帶pid鍵且為undefined、attempts 1、不重試)、execCliSession不throw(stop()之error為'UNKNOWN: 訊息'、pid null)
+    //  回調為已撤銷之Proxy時不得於監聽器或計時器內拋出(本套件自身之判型), stop()必落定
+    inputUnreadable: async () => {
+        let execCli = await imp('execCli')
+        let ses = await imp('execCliSession')
+        let argsOut = ['-e', 'process.stdout.write("l1\\nl2");process.stderr.write("e1")']
+        let out = {}
+        let fc = async (command, args, opt) => {
+            let r = await settle(execCli(command, args, opt), 8000)
+            return res(r, (v) => ({ ok: v.ok, code: v.code, error: rvk(v.error), attempts: v.attempts, ...pk(v) }))
+        }
+        out.cliGetter = await fc(node, argsOut, getterOpt('cwd'))
+        out.cliOptRevoked = await fc(node, argsOut, revoked())
+        out.cliEnvRevoked = await fc(node, argsOut, { env: revoked(), maxRetries: 2, retryDelayMs: 100 })
+        out.cliOnStdoutRevoked = await fc(node, argsOut, { onStdout: revoked() })
+        out.cliCommandRevoked = await fc(revoked(), argsOut, {})
+        let fs2 = async (command, args, opt) => {
+            let s = null
+            try {
+                s = ses(command, args, opt)
+            }
+            catch (e) {
+                return { s: 'threw' }
+            }
+            let r = await settle(s.stop(), 8000)
+            return res(r, (v) => ({ code: v.code, error: rvk(v.error), pid: v.pid === null ? null : typeof v.pid, exited: v.exited }))
+        }
+        out.sesGetter = await fs2(node, argsOut, getterOpt('onExit'))
+        out.sesOptRevoked = await fs2(node, argsOut, revoked())
+        out.sesEnvRevoked = await fs2(node, argsOut, { env: revoked() })
+        out.sesOnLineRevoked = await fs2(node, argsOut, { onLine: revoked() })
+        out.sesOnExitRevoked = await fs2(node, argsOut, { onExit: revoked() })
+        await sleep(100)
+        out.uncaught = uniq()
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCliJsonRpc之輸入不可讀為params(不啟動); 交execCliSession之值不可讀為notfound; 回調為已撤銷之Proxy不成為未捕捉例外
+    inputUnreadableRpc: async () => {
+        let rpc = await imp('execCliJsonRpc')
+        let q = [{ method: 'initialize' }]
+        let sc = scRpcServer('{jsonrpc:"2.0",method:"note",params:{}}')
+        let out = {}
+        let fr = async (opt, requests = q) => {
+            let r = await settle(rpc(node, ['-e', sc], requests, opt), 12000)
+            return res(r, (v) => ({ ok: v.ok, errorType: v.errorType, error: rvk(v.error) }))
+        }
+        out.rpcGetter = await fr(getterOpt('timeoutMs'))
+        out.rpcOptRevoked = await fr(revoked())
+        out.rpcEnvRevoked = await fr({ env: revoked() })
+        out.rpcOnNotifyRevoked = await fr({ onNotify: revoked(), timeoutMs: 60000 })
+        out.rpcRequestRevoked = await fr({}, [revoked()])
+        await sleep(100)
+        out.uncaught = uniq()
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execProcess之輸入不可讀以reject說明字串回報、不同步拋錯; 回調不可讀者於入口即判定, 不於監聽器內拋錯
+    inputUnreadableProc: async () => {
+        let execProcess = await imp('execProcess')
+        let out = {}
+        let fp = async (prog, args, opt) => {
+            let r
+            try {
+                r = await settle(execProcess(prog, args, opt), 8000)
+            }
+            catch (e) {
+                return { s: 'threw' }
+            }
+            return { s: r.s, v: typeof r.v === 'string' ? rvk(r.v.split('\n')[0]).slice(0, 60) : r.v }
+        }
+        let argsOut = ['-e', 'process.stdout.write("x")']
+        out.procGetter = await fp(node, argsOut, getterOpt('codeCmd'))
+        out.procOptRevoked = await fp(node, argsOut, revoked())
+        out.procArgsRevoked = await fp(node, revoked(), {})
+        out.procProgRevoked = await fp(revoked(), argsOut, {})
+        out.procProgRevokedAuto = await fp(revoked(), argsOut, { codeCmd: 'auto' }) //start於getSystemCodePage之then內, 兩路一致
+        out.procCbStdoutRevoked = await fp(node, argsOut, { cbStdout: revoked() })
+        await sleep(100)
+        out.uncaught = uniq()
+        return out
+    },
+
+    //R-EXEC-FAIL-01之14: execCliJsonRpc之params無法序列化為JSON(BigInt、循環參照、toJSON拋錯)時為params, 不reject, 已啟動之子進程經stop()結束(不殘留至逾時)
+    //  子進程啟動即寫出自身pid; 落定後等待500ms(遠小於timeoutMs)再查其是否存活, 使「未經stop()而殘留」者必已寫出pid而可被查到
+    rpcParamsUnserializable: async () => {
+        mkFx()
+        let rpc = await imp('execCliJsonRpc')
+        let out = {}
+        let circ = { a: 1 }
+        circ.self = circ
+        for (let [k, requests] of [
+            ['bigint', [{ method: 'initialize', params: { n: 1n } }]],
+            ['circularSecond', [{ method: 'initialize' }, { method: 'next', params: circ }]],
+            ['toJSONThrows', [{ method: 'initialize', params: { toJSON: boom('toJSON boom') } }]],
+            ['notifyBigint', [{ notify: 'initialized', params: { n: 1n } }]],
+        ]) {
+            let fpPid = path.join(fx, `pid-${k}.txt`)
+            let sc = 'require("fs").writeFileSync(' + JSON.stringify(fpPid) + ',String(process.pid));' + scRpcServer('{jsonrpc:"2.0",method:"note",params:{}}')
+            let r = await settle(rpc(node, ['-e', sc], requests, { timeoutMs: 60000 }), 8000)
+            await sleep(500)
+            let alive = pidAlive(fpPid)
+            out[k] = res(r, (v) => ({ ok: v.ok, errorType: v.errorType, errorHead: v.error.split(':').slice(0, 2).join(':'), childAliveAfter: alive }))
+        }
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCliSession之writeLine之參數無法轉字串時resolve(false)(與write對稱), 不同步拋錯
+    sessionWriteLineUnconvertible: async () => {
+        let ses = await imp('execCliSession')
+        let s = ses(node, ['-e', 'process.stdin.resume();process.stdin.on("end",()=>process.exit(0))'], {})
+        let out = {}
+        for (let [k, v] of [['nullProto', Object.create(null)], ['revoked', revoked()]]) {
+            let r
+            try {
+                r = await settle(s.writeLine(v), 3000)
+            }
+            catch (e) {
+                r = { s: 'threw' }
+            }
+            out[k] = r
+        }
+        let rs = await settle(s.stop(), 8000)
+        out.stop = res(rs, (v) => ({ code: v.code, error: v.error }))
+        return out
+    },
+
+    //R-EXEC-FAIL-01之12、13: execCli之回調(onStdout、onStderr、validate)為以函數為目標之Proxy, 入口判型時正常、呼叫返回後即撤銷
+    //  監聽器與重試(計時器後之續行)內不得再判型呼叫端之值; 各子案之未捕捉例外以since逐一歸屬
+    cliCbRevokedLater: async () => {
+        let execCli = await imp('execCli')
+        let out = {}
+        let f = async (k, args, mk) => {
+            let n0 = uncaught.length
+            let { proxy, revoke } = fnRevocable()
+            let p = execCli(node, args, mk(proxy))
+            revoke()
+            let r = await settle(p, 8000)
+            await sleep(50)
+            out[k] = { ...res(r, (v) => ({ ok: v.ok, code: v.code, stdout: v.stdout, stderr: v.stderr, attempts: v.attempts })), uncaught: since(n0) }
+        }
+        let argsOut = ['-e', 'process.stdout.write("x");process.stderr.write("y")']
+        await f('onStdoutData', argsOut, (fn) => ({ onStdout: fn }))
+        await f('onStderrData', argsOut, (fn) => ({ onStderr: fn }))
+        //首次離開碼1而重試: 第2次嘗試時validate已撤銷(離開碼非0, validate不被呼叫)
+        await f('validateRetry', ['-e', 'process.exit(1)'], (fn) => ({ validate: fn, maxRetries: 1, retryDelayMs: 1 }))
+        return out
+    },
+
+    //R-EXEC-FAIL-01之12、13: execCliSession之回調(onExit、onLine、onStdout、onStderr)為以函數為目標之Proxy, 入口判型時正常、建立後即撤銷; 涵蓋data、收尾flush與settle各呼叫點
+    //  收尾若被中斷(未settle), stop()於exitGraceMs+killWaitMs(約4.5秒)後以STOP_TIMEOUT落定(誤報); 正常者子進程自行結束即落定
+    sesCbRevokedLater: async () => {
+        let ses = await imp('execCliSession')
+        let out = {}
+        let tm = { exitGraceMs: 4000, killWaitMs: 500 }
+        let f = async (k, code, key) => {
+            let n0 = uncaught.length
+            let lines = []
+            let { proxy, revoke } = fnRevocable()
+            let s = ses(node, ['-e', code], { ...tm, onLine: (l) => lines.push(l), [key]: proxy })
+            revoke()
+            let r = await settle(s.stop(), 8000)
+            await sleep(50)
+            out[k] = { ...res(r, (v) => ({ code: v.code, exited: v.exited, error: v.error, stderr: v.stderr })), lines, uncaught: since(n0) }
+        }
+        await f('onExit', 'process.stdout.write("o1\\n")', 'onExit')
+        await f('onLineData', 'process.stdout.write("l1\\nl2\\n")', 'onLine')
+        await f('onLineFlush', 'process.stdout.write("tail")', 'onLine')
+        await f('onStdoutData', 'process.stdout.write("o1\\n")', 'onStdout')
+        await f('onStdoutFlush', 'process.stdout.write(Buffer.from([0xe4,0xb8]))', 'onStdout')
+        await f('onStderrData', 'process.stderr.write("e1")', 'onStderr')
+        await f('onStderrFlush', 'process.stderr.write(Buffer.from([0xe4,0xb8]))', 'onStderr')
+        return out
+    },
+
+    //R-EXEC-FAIL-01之12、13: execCliJsonRpc之onNotify、onServerRequest為以函數為目標之Proxy, 入口判型時正常、呼叫返回後即撤銷; 伺服器之通知(或請求)與回應同一chunk
+    rpcCbRevokedLater: async () => {
+        let rpc = await imp('execCliJsonRpc')
+        let out = {}
+        let f = async (k, head, key) => {
+            let n0 = uncaught.length
+            let { proxy, revoke } = fnRevocable()
+            let p = rpc(node, ['-e', scRpcServer(head)], [{ method: 'initialize' }], { timeoutMs: 60000, [key]: proxy })
+            revoke()
+            let r = await settle(p, 8000)
+            await sleep(50)
+            out[k] = { ...res(r, (v) => ({ ok: v.ok, errorType: v.errorType, results: v.results })), uncaught: since(n0) }
+        }
+        await f('onNotify', '{jsonrpc:"2.0",method:"note",params:{}}', 'onNotify')
+        await f('onServerRequest', '{jsonrpc:"2.0",id:99,method:"roots/list"}', 'onServerRequest')
+        return out
+    },
+
+    //R-EXEC-FAIL-01之14: requests為陷阱非決定性之Proxy陣列(入口讀取時正常、其後任何讀取即拋錯): 入口後不再迭代呼叫端之陣列, resolve結果物件且子進程經stop()結束(不殘留至timeoutMs)
+    //  子進程啟動即寫出自身pid; 落定後等待500ms(遠小於timeoutMs)再查其是否存活
+    rpcRequestsTrapLater: async () => {
+        mkFx()
+        let rpc = await imp('execCliJsonRpc')
+        let fpPid = path.join(fx, 'pid.txt')
+        let sc = 'require("fs").writeFileSync(' + JSON.stringify(fpPid) + ',String(process.pid));' + scRpcServer('{jsonrpc:"2.0",method:"note",params:{}}')
+        let armed = false
+        let requests = new Proxy([{ method: 'initialize' }, { method: 'next' }], {
+            get(t, k, rcv) {
+                if (armed) {
+                    throw new Error('requests trap armed')
+                }
+                return Reflect.get(t, k, rcv)
+            },
+        })
+        let p = rpc(node, ['-e', sc], requests, { timeoutMs: 60000 })
+        armed = true
+        let r = await settle(p, 8000)
+        await sleep(500)
+        return { ...res(r, (v) => ({ ok: v.ok, errorType: v.errorType, error: v.error, results: v.results })), childAliveAfter: pidAlive(fpPid) }
+    },
+
+    //R-EXEC-FAIL-01之12、13: execProcess之cbStdout、cbStderr為以函數為目標之Proxy, 入口判型時正常、呼叫返回後即撤銷; 涵蓋data與收尾flush兩呼叫點
+    procCbRevokedLater: async () => {
+        let execProcess = await imp('execProcess')
+        let out = {}
+        let f = async (k, code, key) => {
+            let n0 = uncaught.length
+            let { proxy, revoke } = fnRevocable()
+            let p = execProcess(node, ['-e', code], { [key]: proxy })
+            revoke()
+            let r = await settle(p, 8000)
+            await sleep(50)
+            out[k] = { s: r.s, v: r.v, uncaught: since(n0) }
+        }
+        await f('cbStdoutData', 'process.stdout.write("x")', 'cbStdout')
+        await f('cbStdoutFlush', 'process.stdout.write(Buffer.from([0xe4,0xb8]))', 'cbStdout')
+        await f('cbStderrData', 'process.stderr.write("y")', 'cbStderr')
+        await f('cbStderrFlush', 'process.stderr.write(Buffer.from([0xe4,0xb8]))', 'cbStderr')
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCliSession之onExit可讀而其他輸入不可讀(cwd、stderrKeep、onLine之getter拋錯, env為已撤銷之Proxy)時, 不spawn且onExit照常被呼叫一次, 其結果同stop()
+    //  子進程若被啟動即輸出child-ran(由可讀之onLine收到), 故lines為空且建立當下pid為null即代表未spawn
+    sesOnExitInputUnreadable: async () => {
+        let ses = await imp('execCliSession')
+        let out = {}
+        let f = async (k, mk) => {
+            let calls = []
+            let lines = []
+            let opt = { onExit: (r) => calls.push(r), onLine: (l) => lines.push(l) }
+            mk(opt)
+            let s = ses(node, ['-e', 'process.stdout.write("child-ran\\n")'], opt)
+            let pidAtCreate = s.pid
+            let r = await settle(s.stop(), 8000)
+            await sleep(50)
+            out[k] = res(r, (v) => ({ error: rvk(v.error), pid: v.pid, pidAtCreate, onExitCalls: calls.length, onExitSameAsStop: calls[0] === v, lines }))
+        }
+        let def = (key) => (o) => Object.defineProperty(o, key, {
+            enumerable: true,
+            get() {
+                throw new Error('getter boom ' + key)
+            },
+        })
+        await f('cwdGetter', def('cwd'))
+        await f('stderrKeepGetter', def('stderrKeep'))
+        await f('onLineGetter', def('onLine'))
+        await f('envRevoked', (o) => {
+            o.env = revoked()
+        })
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCli之選項getter拋出非Error之值(null、undefined、字串)時以結果物件回報, error保留拋出值之文字
+    cliThrownValues: async () => {
+        let execCli = await imp('execCli')
+        let out = {}
+        for (let [k, v] of thrownVals) {
+            let r = await settle(execCli(node, ['-e', '1'], getterThrow('cwd', v)), 8000)
+            out[k] = res(r, (x) => ({ ok: x.ok, code: x.code, error: x.error, attempts: x.attempts, ...pk(x) }))
+        }
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCliSession之選項getter拋出非Error之值(null、undefined、字串)時不spawn(是否出錯以布林旗標判定), 以onExit與stop()回報, error保留拋出值之文字
+    sesThrownValues: async () => {
+        let ses = await imp('execCliSession')
+        let out = {}
+        for (let [k, v] of thrownVals) {
+            let calls = []
+            let lines = []
+            let opt = getterThrow('cwd', v)
+            opt.onExit = (r) => calls.push(r)
+            opt.onLine = (l) => lines.push(l)
+            let s = ses(node, ['-e', 'process.stdout.write("child-ran\\n")'], opt)
+            let pidAtCreate = s.pid
+            let r = await settle(s.stop(), 8000)
+            await sleep(50)
+            out[k] = res(r, (x) => ({ error: x.error, pid: x.pid, pidAtCreate, onExitCalls: calls.length, lines }))
+        }
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13、14: execCliJsonRpc之選項getter拋出非Error之值時為params且error保留拋出值之文字; params之toJSON拋出字串時同(無法序列化為JSON: <該字串>)
+    rpcThrownValues: async () => {
+        let rpc = await imp('execCliJsonRpc')
+        let out = {}
+        for (let [k, v] of thrownVals) {
+            let r = await settle(rpc(node, ['-e', '1'], [{ method: 'initialize' }], getterThrow('timeoutMs', v)), 12000)
+            out[k] = res(r, (x) => ({ ok: x.ok, errorType: x.errorType, error: x.error }))
+        }
+        let sc = scRpcServer('{jsonrpc:"2.0",method:"note",params:{}}')
+        let rj = await settle(rpc(node, ['-e', sc], [{
+            method: 'initialize',
+            params: {
+                toJSON() {
+                    throw 'thrown-x' // eslint-disable-line no-throw-literal
+                },
+            },
+        }], { timeoutMs: 60000 }), 12000)
+        out.toJSONThrowsString = res(rj, (x) => ({ ok: x.ok, errorType: x.errorType, error: x.error }))
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execProcess之opt之getter拋出非Error之值時reject 'opt is not readable: <該值之文字>'; prog不可讀而拋出字串時'spawn[UNKNOWN]:\n<該字串>'
+    procThrownValues: async () => {
+        let execProcess = await imp('execProcess')
+        let out = {}
+        let fp = async (prog, args, opt) => {
+            let r
+            try {
+                r = await settle(execProcess(prog, args, opt), 8000)
+            }
+            catch (e) {
+                return { s: 'threw' }
+            }
+            return r
+        }
+        for (let [k, v] of thrownVals) {
+            out[k] = await fp(node, ['-e', '1'], getterThrow('codeCmd', v))
+        }
+        let progTrap = new Proxy({}, {
+            get() {
+                throw 'thrown-x' // eslint-disable-line no-throw-literal
+            },
+        })
+        out.progThrowsString = await fp(progTrap, ['-e', '1'], {})
+        return out
+    },
+
+    //R-EXEC-FAIL-01之10、13: execCliJsonRpc之requests為空陣列時, 子進程未啟動(命令不存在、cwd不存在、交Session之env不可讀)者一律notfound, 不偽回成功; 對照: 可啟動者ok
+    rpcEmptyRequests: async () => {
+        mkFx()
+        let rpc = await imp('execCliJsonRpc')
+        let out = {}
+        for (let [k, cmd, args, opt] of [
+            ['noCmd', 'wsemi-not-exist-zz', [], {}],
+            ['cwdMissing', node, ['-e', '1'], { cwd: path.join(fx, 'no-such-dir') }],
+            ['envRevoked', node, ['-e', '1'], { env: revoked() }],
+            ['started', node, ['-e', '1'], {}],
+        ]) {
+            let r = await settle(rpc(cmd, args, [], opt), 12000)
+            out[k] = res(r, (x) => ({ ok: x.ok, errorType: x.errorType, error: rvk(x.error).replace(fx, '<fx>') }))
+        }
+        return out
+    },
+
+    //R-EXEC-FAIL-01之13: execCli之opt.input為包裝字串(new String)時子進程收到其內容且結果ok, 不reject、子進程不殘留; 偽String標籤物件轉字串拋錯時以結果物件回報(不啟動)
+    //  子進程啟動即寫出自身pid, 讀完stdin(EOF)後輸出'got:<內容>'; 落定後等待500ms再查其是否存活
+    cliInputWrapper: async () => {
+        mkFx()
+        let execCli = await imp('execCli')
+        let out = {}
+        let fpPid = path.join(fx, 'pid.txt')
+        let sc = 'require("fs").writeFileSync(' + JSON.stringify(fpPid) + ',String(process.pid));let d="";process.stdin.on("data",(c)=>d+=c);process.stdin.on("end",()=>process.stdout.write("got:"+d))'
+        let r = await settle(execCli(node, ['-e', sc], { input: new String('abc'), timeoutMs: 60000 }), 8000) // eslint-disable-line no-new-wrappers
+        await sleep(500)
+        out.stringWrapper = { ...res(r, (x) => ({ ok: x.ok, stdout: x.stdout, error: x.error })), childAliveAfter: pidAlive(fpPid) }
+        let fake = {
+            [Symbol.toStringTag]: 'String',
+            length: 3,
+            toString() {
+                throw new Error('toString boom')
+            },
+        }
+        let r2 = await settle(execCli(node, ['-e', '1'], { input: fake, maxRetries: 2, retryDelayMs: 100 }), 8000)
+        out.fakeStringThrows = res(r2, (x) => ({ ok: x.ok, code: x.code, error: x.error, attempts: x.attempts, ...pk(x) }))
+        return out
     },
 }
 

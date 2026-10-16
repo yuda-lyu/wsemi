@@ -84,7 +84,7 @@ describe(`_execSpawnError`, function() {
 
 
 //R-EXEC-FAIL-01之7: cwd不存在或非資料夾所致之ENOENT, 訊息改指cwd(碼不變); cwd之判定跟隨連結(有效之junction為有效cwd, 懸空者為無效)
-describe(`execSpawnError 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+describe(`execSpawnError 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     //夾具: test/_tmp/_execSpawnError/, before建、after刪
     let fdFx = path.resolve('./test/_tmp/_execSpawnError')

@@ -13,9 +13,9 @@ import ispm from './ispm.mjs'
  * @memberOf wsemi
  * @param {Function} fun 輸入判斷用函數
  * @param {Object} opt 輸入設定物件，預設{}
- * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200
- * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000
- * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true；fun拋錯或其Promise被reject時(立即呼叫與輪詢皆同)停止輪詢並reject該錯誤，超過最大嘗試次數時reject字串'exceeded attemptNum[最大嘗試次數]'
+ * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200，以輪詢週期計(立即呼叫不計)，計數超過attemptNum後於該次呼叫完成時仍未成立即reject，故fun最多被呼叫attemptNum+2次(立即1次與輪詢)
+ * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000；每個週期計1次，前一次呼叫未完成時該週期不呼叫fun(輪詢不重疊)但仍計入嘗試次數
+ * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true；fun拋錯或其Promise被reject時(立即呼叫與輪詢皆同)停止輪詢並reject該錯誤，超過最大嘗試次數時reject字串'exceeded attemptNum[最大嘗試次數]'；fun非函數時reject字串'waitfunction需輸入函數f'；fun回傳永不settle之Promise時亦不settle(不再累積呼叫)，計數超過attemptNum後停止計時器(本函數仍不settle，但不使行程無法結束)，需逾時者以pmTimeout包裝
  * @example
  *
  * async function topAsync() {
@@ -82,7 +82,6 @@ import ispm from './ispm.mjs'
  *     // waiting: 2
  *     // test2 then
  *     // ["waiting: 1","waiting: 2","test2 then"]
- *     // waiting: 3
  *
  * }
  * topAsync().catch(() => {})
@@ -129,11 +128,21 @@ async function waitFun(fun, opt = {}) {
     }
     timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
-    //setInterval
+    //setInterval, 每個週期計1次; 前一次呼叫未完成時該週期只計次不呼叫fun(輪詢不重疊), 逾次仍於呼叫完成時判定
     let n = 0
+    let running = false
     let t = setInterval(async() => {
         n += 1
         //console.log('waitFun: ', n)
+
+        //check
+        if (running) {
+            if (n > attemptNum) {
+                clearInterval(t) //已逾次則停止計時器, 逾次判定仍由執行中之該次呼叫完成時為之; 使fun永不settle時計時器不續跑而行程可自然結束
+            }
+            return
+        }
+        running = true
 
         //輪詢中fun拋錯或其Promise被reject, 同立即呼叫之處理: 停止輪詢並reject該錯誤, 不得使計時器之async回呼reject(未處理之rejection且輪詢永不停止)
         try {
@@ -144,10 +153,14 @@ async function waitFun(fun, opt = {}) {
             pm.reject(err)
             return
         }
+        finally {
+            running = false
+        }
         if (r === true) {
             //console.log('resolve', n)
             clearInterval(t)
             pm.resolve()
+            return
         }
         if (n > attemptNum) {
             //console.log('reject', n, attemptNum)

@@ -1,9 +1,9 @@
 import assert from 'assert'
-import vm from 'vm'
 import obj2stru8arr from '../src/obj2stru8arr.mjs'
 import obj2u8arr from '../src/obj2u8arr.mjs'
 import u8arr2obj from '../src/u8arr2obj.mjs'
 import { thrower, thrownCases } from './tools/codecThrown.mjs'
+import { realErrorCases, nestedErrorCase, errorProtoToStringCases, nameThrowsErrorCase } from './tools/realErrorCases.mjs'
 import { showDeep } from './tools/caseKit.mjs'
 
 
@@ -200,77 +200,10 @@ describe(`obj2stru8arr Error轉換(R-CODEC-ERR-01之1)`, function() {
         return JSON.stringify(r2.msg.v)
     }
 
-    //HttpError, 繼承Error並加掛欄位之自訂錯誤類別
-    class HttpError extends Error {
-        constructor(m) {
-            super(m)
-            this.name = 'HttpError'
-            this.status = 503
-        }
-    }
-
-    //AppError, 未繼承Error但恰帶字串name與message之錯誤類別, 為一般物件
-    class AppError {
-        constructor() {
-            this.name = 'AppError'
-            this.message = 'quota exceeded'
-            this.code = 429
-        }
-    }
-
-    //AppErrorWithToString, 同AppError且另定義toString
-    class AppErrorWithToString {
-        constructor() {
-            this.name = 'AppError'
-            this.message = 'quota exceeded'
-            this.code = 429
-        }
-
-        toString() {
-            return `${this.name}: ${this.message}`
-        }
-    }
-
-    //ChatMessage, 恰帶字串name與message之一般資料類別
-    class ChatMessage {
-        constructor() {
-            this.name = 'Alice'
-            this.message = 'hi'
-            this.ts = 1
-            this.room = 'r1'
-        }
-    }
-
-    //cases, 逐值斷言, rr為解回值之JSON字串
+    //cases, 逐值斷言, rr為解回值之JSON字串(值軸見tools/realErrorCases.mjs, 與obj2str共用)
     //  前7列為真Error(含子類別、DOMException、以Error.prototype為原型者、Error之Proxy、跨realm之Error), 轉為'名稱: 訊息'字串, 修正前後相同, 屬對照
     //  後6列為一般物件, 照一般物件序列化並保留全部可列舉欄位(含恰帶字串name與message之類別實例、跨realm之非Error類別實例、偽造Symbol.toStringTag者), 修正前會被壓成字串而遺失欄位
-    let cases = [
-        { name: 'Error', mk: () => new Error('m'), rr: '"Error: m"' },
-        { name: 'TypeError', mk: () => new TypeError('t'), rr: '"TypeError: t"' },
-        { name: 'a custom error class extending Error with extra fields (HttpError)', mk: () => new HttpError('down'), rr: '"HttpError: down"' },
-        { name: 'DOMException', mk: () => new DOMException('dom msg', 'AbortError'), rr: '"AbortError: dom msg"' },
-        {
-            name: 'an object created from Error.prototype',
-            mk: () => {
-                let e = Object.create(Error.prototype)
-                e.message = 'oc'
-                return e
-            },
-            rr: '"Error: oc"',
-        },
-        { name: 'a Proxy of Error', mk: () => new Proxy(new Error('p'), {}), rr: '"Error: p"' },
-        { name: 'an Error from another realm (vm context)', mk: () => vm.runInContext('new Error("fx")', vm.createContext({})), rr: '"Error: fx"' },
-        { name: 'a non-Error class with string name and message (AppError)', mk: () => new AppError(), rr: '{"name":"AppError","message":"quota exceeded","code":429}' },
-        { name: 'a non-Error class with string name and message and its own toString (AppError)', mk: () => new AppErrorWithToString(), rr: '{"name":"AppError","message":"quota exceeded","code":429}' },
-        { name: 'a data class with string name and message (ChatMessage)', mk: () => new ChatMessage(), rr: '{"name":"Alice","message":"hi","ts":1,"room":"r1"}' },
-        {
-            name: 'a non-Error class instance from another realm (vm context)',
-            mk: () => vm.runInContext(`class AppError { constructor() { this.name = 'AppError'; this.message = 'm'; this.code = 1 } }; new AppError()`, vm.createContext({})),
-            rr: '{"name":"AppError","message":"m","code":1}',
-        },
-        { name: 'a plain object with string name and message', mk: () => ({ name: 'AppError', message: 'quota exceeded', code: 429 }), rr: '{"name":"AppError","message":"quota exceeded","code":429}' },
-        { name: 'a plain object spoofing Symbol.toStringTag as Error', mk: () => ({ message: 'spoof', [Symbol.toStringTag]: 'Error' }), rr: '{"message":"spoof"}' },
-    ]
+    let cases = realErrorCases
 
     for (let c of cases) {
         it(`should decode ${c.name} as ${c.rr} after obj2u8arr and u8arr2obj [R-CODEC-ERR-01之1]`, function() {
@@ -279,9 +212,65 @@ describe(`obj2stru8arr Error轉換(R-CODEC-ERR-01之1)`, function() {
     }
 
     it(`should convert real Errors at any depth while keeping sibling data objects intact [R-CODEC-ERR-01之1]`, function() {
-        let v = { list: [new Error('e1'), new ChatMessage(), { inner: new TypeError('e2') }] }
-        let rr = '{"list":["Error: e1",{"name":"Alice","message":"hi","ts":1,"room":"r1"},{"inner":"TypeError: e2"}]}'
-        assert.strict.deepStrictEqual(rt(v), rr)
+        assert.strict.deepStrictEqual(rt(nestedErrorCase.mk()), nestedErrorCase.rr)
+    })
+
+    //toString恰為Object預設者或無可呼叫之toString者之真Error(值軸見tools/realErrorCases.mjs, 與obj2str共用)
+    for (let c of errorProtoToStringCases) {
+
+        it(`should succeed and serialize ${c.name} as ${c.rr} [R-CODEC-ERR-01之1]`, function() {
+            //R-CODEC-ERR-01 規則1: toString恰為Object預設者或無可呼叫之toString者(如以null為原型)以Error.prototype.toString之語意得'名稱: 訊息', 序列化成功而非整筆失敗
+            let r = obj2stru8arr({ v: c.mk() }, { returnWithStateAndMsg: true })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'success', msg: { results: `{"v":${c.rr}}`, binarys: [] } })
+        })
+
+        it(`should decode ${c.name} as ${c.rr} after obj2u8arr and u8arr2obj [R-CODEC-ERR-01之1]`, function() {
+            //R-CODEC-ERR-01 規則1: 同上, obj2u8arr經obj2stru8arr轉換, 解回得'名稱: 訊息'字串
+            assert.strict.deepStrictEqual(rt(c.mk()), c.rr)
+        })
+
+    }
+
+    it(`should not throw but return { state: 'error', msg: '${nameThrowsErrorCase.msg}' } when reading name of an Error without prototype throws [R-CODEC-ERR-01之1]`, function() {
+        //R-CODEC-ERR-01 規則1: Error.prototype.toString讀name/message拋錯時依codec之catch回報; 規則2: catch以_errToStr轉字串而不外拋
+        let r = null
+        assert.doesNotThrow(() => {
+            r = obj2stru8arr({ v: nameThrowsErrorCase.mk() }, { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: nameThrowsErrorCase.msg })
+    })
+
+    it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: ${nameThrowsErrorCase.msg}' } by obj2u8arr when reading name of an Error without prototype throws [R-CODEC-ERR-01之1]`, function() {
+        //R-CODEC-ERR-01 規則1: 同上, 依codec之catch回報; obj2u8arr既有契約: 經obj2stru8arr失敗時msg前置'obj2stru8arr: '(同test/obj2u8arr.test.mjs之R-CODEC-ERR-01之2段)
+        let r = null
+        assert.doesNotThrow(() => {
+            r = obj2u8arr({ v: nameThrowsErrorCase.mk() }, { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: `obj2stru8arr: ${nameThrowsErrorCase.msg}` })
+    })
+
+    describe(`執行環境無Error.isError時之退路(外審 opus F04)`, function() {
+
+        //暫時移除Error.isError(較舊Node與部分瀏覽器無此函數), after還原; _isRealError於每次呼叫時才讀Error.isError, 故可於同一行程重跑同一值軸
+        let desc = null
+        before(function() {
+            desc = Object.getOwnPropertyDescriptor(Error, 'isError')
+            delete Error.isError
+        })
+        after(function() {
+            if (desc) {
+                Object.defineProperty(Error, 'isError', desc)
+            }
+        })
+
+        for (let c of [...realErrorCases, ...errorProtoToStringCases]) {
+            it(`should decode ${c.name} as ${c.rr} without Error.isError [R-CODEC-ERR-01之1]`, function() {
+                //R-CODEC-ERR-01 規則1: 執行環境無Error.isError時以instanceof, 或未帶Symbol.toStringTag者之內部標籤為'[object Error]'/'[object DOMException]'判定(帶toStringTag者可偽裝, 不據以判定); 結果與有Error.isError時相同
+                assert.strict.deepStrictEqual(typeof Error.isError, 'undefined')
+                assert.strict.deepStrictEqual(rt(c.mk()), c.rr)
+            })
+        }
+
     })
 
 })

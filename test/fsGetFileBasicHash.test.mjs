@@ -9,6 +9,7 @@ import fsGetFileBasicHash from '../src/fsGetFileBasicHash.mjs'
 import fsGetFileBasicHashCore from '../src/fsGetFileBasicHashCore.mjs'
 import { thrower, thrownCases, mkFsReadStub } from './tools/codecThrown.mjs'
 import { settleShown } from './tools/caseKit.mjs'
+import { itFsHashFail, itNoHandler, itOptUnreadable, rejected, RULE } from './tools/fsHashFailRunner.mjs'
 
 
 describe(`fsGetFileBasicHash`, async function() {
@@ -206,5 +207,38 @@ wd = setTimeout(finish, 8000)
         let r = runChild(scriptStreamError, [fpMod])
         assert.strict.deepStrictEqual(r, { s: 'reject', v: 'unknown error', uncaught: [] })
     })
+
+})
+
+
+describe(`fsGetFileBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
+
+    //每案於獨立子行程執行(test/tools/fsHashFailRunner.mjs), 夾具建於test/_tmp/fsHashFail-<案名>/並由執行器刪除(拒讀ACL先以icacls解除)
+    //id為審計輸入空間表(tmp/run01-1016/fs/fs-reject-table.md)之列號; want以子行程回報之事實(路徑、同一錯誤直接呼叫所得之String(err))組出期望; rule為期望所對應之規則句
+    this.timeout(60000)
+
+    itFsHashFail([
+        { id: 'BH01', when: '真實fs: 路徑不存在', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
+        { id: 'BH02', when: '真實fs: 路徑為資料夾', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
+        { id: 'BH03', when: '真實fs: 上層為檔案(ENOTDIR)', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
+        { id: 'BH04', when: '真實crypto: type不支援(createHash拋Error)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        { id: 'BH05', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
+        { id: 'BH06', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        { id: 'BH07', when: '注入fs: 串流以null出錯', want: () => rejected('null'), rule: RULE.r1any },
+        { id: 'BH08', when: '注入crypto: createHash拋null', want: () => rejected('null'), rule: RULE.r1any },
+        { id: 'BH09', when: 'Core注入fs: lstatSync拋Error(statSync正常)', want: () => rejected('Error: lstat boom'), rule: RULE.r2 },
+        { id: 'BH10', when: '對外函數+opt.fs(展開覆蓋): lstatSync拋null', want: () => rejected('null'), rule: RULE.r2 },
+        { id: 'BH11', when: '注入crypto: readable監聽器內hash.update拋Error', want: () => rejected('Error: update boom'), rule: RULE.r3 },
+        { id: 'BH12', when: '注入crypto: readable監聽器內hash.update拋null', want: () => rejected('null'), rule: RULE.r3 },
+        { id: 'BH13', when: '注入crypto: readable監聽器內hash.digest拋Error', want: () => rejected('Error: digest boom'), rule: RULE.r3 },
+        { id: 'BH14', when: '注入fs: readable監聽器內串流read()拋Error', want: () => rejected('Error: read boom'), rule: RULE.r3 },
+        { id: 'BH15', when: '輸入: fp為數字123', want: () => rejected('fp[123] is not a file'), rule: RULE.r1pre },
+    ])
+
+    //監聽器內注入物拋錯之4形, 無處理器時須不崩潰
+    itNoHandler(['BH11', 'BH12', 'BH13', 'BH14'])
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: RULE.r2opt)
+    itOptUnreadable(['fsGetFileBasicHash', 'fsGetFileBasicHashCore'])
 
 })

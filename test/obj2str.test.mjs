@@ -3,6 +3,7 @@ import obj2str from '../src/obj2str.mjs'
 import str2obj from '../src/str2obj.mjs'
 import { thrower, thrownCases } from './tools/codecThrown.mjs'
 import { showDeep } from './tools/caseKit.mjs'
+import { realErrorCases, nestedErrorCase, errorProtoToStringCases, nameThrowsErrorCase } from './tools/realErrorCases.mjs'
 
 
 describe(`obj2str`, function() {
@@ -225,6 +226,78 @@ describe(`obj2str 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
         let r = obj2str({ id: 1n }, 'Uint8Array', { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
         assert.strict.deepStrictEqual(r.msg.startsWith('TypeError: Do not know how to serialize a BigInt'), true, `msg 應為 BigInt 序列化錯誤, got ${r.msg}`)
+    })
+
+})
+
+
+describe(`obj2str Error轉換(R-CODEC-ERR-01之1a)`, function() {
+
+    //值軸與obj2stru8arr之「Error轉換(R-CODEC-ERR-01之1)」共用: 真Error 7形轉'名稱: 訊息', 非Error 6形保留欄位
+    for (let c of realErrorCases) {
+        it(`should serialize ${c.name} as ${c.rr} [R-CODEC-ERR-01之1a]`, function() {
+            //R-CODEC-ERR-01 規則1a: obj2str之replacer同規則1轉真Error為'名稱: 訊息'; 規則1: 其餘物件照一般物件序列化, 保留可列舉自有欄位
+            let r = obj2str({ v: c.mk() })
+            assert.strict.deepStrictEqual(r, `{"v":${c.rr}}`)
+        })
+    }
+
+    it(`should convert real Errors at any depth while keeping sibling data objects intact [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: 同規則1, 任意深度之真Error皆轉字串, 其旁之一般資料物件保留欄位
+        assert.strict.deepStrictEqual(obj2str(nestedErrorCase.mk()), nestedErrorCase.rr)
+    })
+
+    it(`should serialize a top-level Error as '"Error: boom"' [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: data本身為真Error亦轉'名稱: 訊息'
+        assert.strict.deepStrictEqual(obj2str(new Error('boom')), '"Error: boom"')
+    })
+
+    it(`should restore { err: 'Error: boom', msg: 'x' } by str2obj(obj2str({ err: new Error('boom'), msg: 'x' })) [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: 經obj2str序列化之真Error, 解碼端得'名稱: 訊息'字串
+        let r = str2obj(obj2str({ err: new Error('boom'), msg: 'x' }))
+        assert.strict.deepStrictEqual(r, { err: 'Error: boom', msg: 'x' })
+    })
+
+    it(`should keep binary conversion of sibling Uint8Array and Uint16Array when data contains a real Error [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a: 真Error轉字串; obj2str既有契約: Uint8Array與Uint16Array依ext轉為標記字串
+        let r = obj2str({ err: new TypeError('t'), u8a: new Uint8Array([66, 97, 115]), u16a: new Uint16Array([11, 79, 6]) }, ['Uint8Array', 'Uint16Array'])
+        let rr = '{"err":"TypeError: t","u8a":"[Uint8Array]::QmFz","u16a":"[Uint16Array]::CwBPAAYA"}'
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should escape the string of a real Error whose toString equals the marker, so that str2obj restores it as that string [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1: 真Error呼叫其toString; obj2str既有契約: 應用字串與標記同形時前置跳脫記號, str2obj還原為原字串而非二進位
+        class MarkerError extends Error {
+            toString() {
+                return '[Uint8Array]::QmFz'
+            }
+        }
+        let r = str2obj(obj2str({ e: new MarkerError('x') }))
+        assert.strict.deepStrictEqual(r, { e: '[Uint8Array]::QmFz' })
+    })
+
+    //toString恰為Object預設者或無可呼叫之toString者之真Error(值軸見tools/realErrorCases.mjs, 與obj2stru8arr共用)
+    for (let c of errorProtoToStringCases) {
+        it(`should succeed and serialize ${c.name} as ${c.rr} [R-CODEC-ERR-01之1a]`, function() {
+            //R-CODEC-ERR-01 規則1a: obj2str之replacer同規則1; 規則1: toString恰為Object預設者或無可呼叫之toString者(如以null為原型)以Error.prototype.toString之語意得'名稱: 訊息', 序列化成功而非整筆失敗
+            let r = obj2str({ v: c.mk() }, 'Uint8Array', { returnWithStateAndMsg: true })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'success', msg: `{"v":${c.rr}}` })
+        })
+    }
+
+    it(`should restore { err: 'Error: boom', msg: 'x' } by str2obj(obj2str(...)) when err is an Error without prototype [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1a、規則1: 以null為原型之真Error以Error.prototype.toString之語意得'名稱: 訊息', 解碼端得該字串
+        let r = str2obj(obj2str({ err: Object.setPrototypeOf(new Error('boom'), null), msg: 'x' }))
+        assert.strict.deepStrictEqual(r, { err: 'Error: boom', msg: 'x' })
+    })
+
+    it(`should not throw but return { state: 'error', msg: '${nameThrowsErrorCase.msg}' } when reading name of an Error without prototype throws [R-CODEC-ERR-01之1a]`, function() {
+        //R-CODEC-ERR-01 規則1: Error.prototype.toString讀name/message拋錯時依codec之catch回報; 規則2: catch以_errToStr轉字串而不外拋
+        let r = null
+        assert.doesNotThrow(() => {
+            r = obj2str({ v: nameThrowsErrorCase.mk() }, 'Uint8Array', { returnWithStateAndMsg: true })
+        })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: nameThrowsErrorCase.msg })
     })
 
 })

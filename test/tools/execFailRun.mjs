@@ -1,4 +1,4 @@
-//execFailRun.mjs: R-EXEC-FAIL-01之6~12各測試檔共用之子行程呼叫端, 執行test/tools/execFailRunner.mjs之指定案例並剖析其輸出
+//execFailRun.mjs: R-EXEC-FAIL-01之6~14各測試檔共用之子行程呼叫端, 執行test/tools/execFailRunner.mjs之指定案例並剖析其輸出
 //  各測試檔一律import此函數, 不得在測試檔內另寫近似之run(); 子行程與結果行之處理委派runChildCase(各執行器共用)
 import { fileURLToPath } from 'url'
 import { runChildCase } from './runChildCase.mjs'

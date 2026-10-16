@@ -125,3 +125,20 @@ describe(`isestr`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isestr 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return false when input new String('')`, function() {
+        //R-WRAPPER-01 規則2: isestr對包裝物件拆包後判定(以v.length > 0); JSDoc「包裝物件依其原始值判定」, 同isestr('')為false
+        assert.strict.deepStrictEqual(isestr(new String('')), false)
+    })
+
+    it(`should return true when input new String('a') and new String(' ')`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同字串; 規則2: 依其原始值判定, 非空即為有效字串(同isestr('a')、isestr(' '))
+        assert.strict.deepStrictEqual(isestr(new String('a')), true)
+        assert.strict.deepStrictEqual(isestr(new String(' ')), true)
+    })
+
+})

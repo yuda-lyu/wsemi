@@ -175,3 +175,20 @@ describe(`isnum`, function() {
     })
 
 })
+
+
+/* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
+describe(`isnum 包裝物件(R-WRAPPER-01)`, function() {
+
+    it(`should return false when input new Number(NaN)`, function() {
+        //R-WRAPPER-01 規則2: isnum族隨isnan拆包而一致, 同isnum(NaN)為false(JSDoc「只有數字(NaN除外)」)
+        assert.strict.deepStrictEqual(isnum(new Number(NaN)), false)
+    })
+
+    it(`should return true when input new Number(1.5) and new String('1.5')`, function() {
+        //R-WRAPPER-01 規則1: 包裝物件視同其型別(本庫_optNum依賴new Number(3)為數字); 規則2: 依其原始值判定
+        assert.strict.deepStrictEqual(isnum(new Number(1.5)), true)
+        assert.strict.deepStrictEqual(isnum(new String('1.5')), true)
+    })
+
+})

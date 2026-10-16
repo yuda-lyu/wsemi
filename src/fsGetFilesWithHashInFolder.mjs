@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import fsGetFilesWithHashInFolderCore from './fsGetFilesWithHashInFolderCore.mjs'
+import errToStr from './_errToStr.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import fsGetFilesWithHashInFolderCore from './fsGetFilesWithHashInFolderCore.mjs
  * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
  *
@@ -99,7 +100,12 @@ import fsGetFilesWithHashInFolderCore from './fsGetFilesWithHashInFolderCore.mjs
  *
  */
 async function fsGetFilesWithHashInFolder(fd, levelLimit = 1, opt = {}) {
-    return fsGetFilesWithHashInFolderCore(fd, levelLimit, { path, fs, crypto, ...opt })
+    try {
+        return fsGetFilesWithHashInFolderCore(fd, levelLimit, { path, fs, crypto, ...opt })
+    }
+    catch (err) {
+        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject
+    }
 }
 
 

@@ -8,7 +8,7 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCreateFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入資料夾路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)
  * @example
  * need test in nodejs.
  *

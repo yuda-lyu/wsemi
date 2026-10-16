@@ -6,6 +6,7 @@ import fsGetFileXxHash from '../src/fsGetFileXxHash.mjs'
 import fsGetFileXxHashCore from '../src/fsGetFileXxHashCore.mjs'
 import { thrower, thrownCases, mkFsReadStub } from './tools/codecThrown.mjs'
 import { settleShown } from './tools/caseKit.mjs'
+import { itFsHashFail, itNoHandler, itOptUnreadable, rejected, resolved, RULE } from './tools/fsHashFailRunner.mjs'
 
 
 describe(`fsGetFileXxHash`, async function() {
@@ -82,5 +83,50 @@ describe(`fsGetFileXxHashCore 非Error拋出值(R-CODEC-ERR-01之2)`, function()
         let r = await settleShown(fsGetFileXxHashCore('x.bin', { fs: mkFsReadStub(thrower(new Error('boom'))) }))
         assert.strict.deepStrictEqual(r, { s: 'reject', v: 'Error: boom' })
     })
+
+})
+
+
+describe(`fsGetFileXxHash 失敗回報(R-FS-REJECT-01)`, function() {
+
+    //每案於獨立子行程執行(test/tools/fsHashFailRunner.mjs), 夾具建於test/_tmp/fsHashFail-<案名>/並由執行器刪除(拒讀ACL先以icacls解除)
+    //id為審計輸入空間表(tmp/run01-1016/fs/fs-reject-table.md)之列號(XH16、XH17為規則4a之補列); want以子行程回報之事實組出期望; rule為期望所對應之規則句
+    this.timeout(60000)
+
+    //hwmDefault, 子行程攔得之highWaterMark恰為一次且為預設值64*1024*1024時回預設chunkSize之雜湊, 否則回說明字串(使斷言不成立)
+    let hwmDefault = (o) => (o.hwm.length === 1 && o.hwm[0] === 64 * 1024 * 1024 ? o.hashDefault : `<highWaterMark應為預設值67108864, 實為${JSON.stringify(o.hwm)}>`)
+
+    itFsHashFail([
+        { id: 'XH01', when: '真實fs: 路徑不存在', want: () => rejected('fp is not a file'), rule: RULE.r1pre },
+        { id: 'XH02', when: '真實fs: 路徑為資料夾', want: () => rejected('fp is not a file'), rule: RULE.r1pre },
+        { id: 'XH03', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
+        { id: 'XH04', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        { id: 'XH05', when: '注入fs: 串流以null出錯', want: () => rejected('null'), rule: RULE.r1any },
+        { id: 'XH06', when: '注入fs: 串流以undefined出錯', want: () => rejected('undefined'), rule: RULE.r1any },
+        { id: 'XH07', when: '注入fs: 串流以字串str出錯', want: () => rejected('str'), rule: RULE.r1any },
+        { id: 'XH15', when: '注入fs: 串流以Error(boom)出錯', want: () => rejected('Error: boom'), rule: RULE.r1err },
+        { id: 'XH08', when: '注入fs: createReadStream拋Error(boom)', want: () => rejected('Error: boom'), rule: RULE.r1err },
+        { id: 'XH09', when: 'Core注入fs: lstatSync拋Error', want: () => rejected('Error: lstat boom'), rule: RULE.r2 },
+        { id: 'XH10', when: '對外函數+opt.fs: lstatSync拋null', want: () => rejected('null'), rule: RULE.r2 },
+        { id: 'XH11', when: '注入fs: 串流data事件給null(data監聽器內hasher.update拋錯)', want: (o) => rejected(o.errStr), rule: RULE.r3 },
+        //XH13、XH14、XH16、XH17: 與同一檔案以預設chunkSize計算之雜湊相同(XH14另須不為空內容之雜湊, 否則期望值即不成立)
+        { id: 'XH13', when: '輸入: chunkSize=-1', want: (o) => resolved(o.hashDefault), rule: RULE.r4a },
+        { id: 'XH14', when: '輸入: chunkSize=0', want: (o) => resolved(o.hashDefault !== o.hashEmpty ? o.hashDefault : '<預設chunkSize之雜湊不應為空內容之雜湊>'), rule: RULE.r4a },
+        { id: 'XH16', when: '輸入: chunkSize=0.5(非整數)', want: (o) => resolved(o.hashDefault), rule: RULE.r4a },
+        { id: 'XH17', when: '輸入: chunkSize為字串abc(非數字)', want: (o) => resolved(o.hashDefault), rule: RULE.r4a },
+        //XH18~XH20(外審 opus F21): 與預設chunkSize之雜湊相同, 且createReadStream所收之highWaterMark為預設值64*1024*1024(hwmDefault, 否則期望值即不成立)
+        { id: 'XH18', when: '輸入: chunkSize=2^31(原懸置)', want: (o) => resolved(hwmDefault(o)), rule: RULE.r4aMax },
+        { id: 'XH19', when: '輸入: chunkSize=2^32(原得空內容之雜湊)', want: (o) => resolved(hwmDefault(o)), rule: RULE.r4aMax },
+        { id: 'XH20', when: '輸入: chunkSize=2^53(原RangeError)', want: (o) => resolved(hwmDefault(o)), rule: RULE.r4aMax },
+    ])
+
+    //監聽器內注入物拋錯, 無處理器時須不崩潰
+    itNoHandler(['XH11'])
+
+    //XH12: 已知限制(R-FS-REJECT-01 已知限制, 不修): 注入之串流以非Buffer之data(如數字123)餵入時仍得空雜湊, 僅注入可觸發
+    it(`XH12 注入fs: 串流data給數字123後end [R-FS-REJECT-01 已知限制, 不修]`)
+
+    //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: RULE.r2opt)
+    itOptUnreadable(['fsGetFileXxHash', 'fsGetFileXxHashCore'])
 
 })

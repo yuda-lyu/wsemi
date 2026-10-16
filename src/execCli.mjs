@@ -19,6 +19,7 @@ import errToStr from './_errToStr.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
+import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
 
 
@@ -114,15 +115,12 @@ function execCliOnce(command, args = [], opt = {}) {
         timeoutMs = 120000,
         cwd = process.cwd(),
         input = undefined,
-        validate = undefined,
+        validate: validator = null, //已於parseInput經buildValidator建立(驗證函數或null), 此處(含重試)不再判型呼叫端之值
         maxBuffer = 10 * 1024 * 1024,
         onStdout = undefined,
         onStderr = undefined,
         env: envExtra = undefined,
     } = opt
-
-    //validator
-    let validator = buildValidator(validate)
 
     //startTime
     let startTime = Date.now()
@@ -206,7 +204,7 @@ function execCliOnce(command, args = [], opt = {}) {
         if (!str) {
             return
         }
-        if (isfun(onStdout)) {
+        if (onStdout !== undefined) { //已於parseInput判型(函數或undefined), 監聽器內不再判型呼叫端之值(值於入口後撤銷時判型會於監聽器內拋出)
             callUser(onStdout, str)
         }
         if (stdout.length < maxBuffer) {
@@ -220,7 +218,7 @@ function execCliOnce(command, args = [], opt = {}) {
         if (!str) {
             return
         }
-        if (isfun(onStderr)) {
+        if (onStderr !== undefined) { //同onStdout
             callUser(onStderr, str)
         }
         if (stderr.length < maxBuffer) {
@@ -377,77 +375,27 @@ function execCliOnce(command, args = [], opt = {}) {
 
 
 /**
- * 通用CLI子程序調用，封裝逾時、進程樹清理、輸出驗證、結構化錯誤回報與自動重試
- * 各參數原樣傳遞給目標CLI，支援中文
- * Windows下npm全域安裝之命令為.cmd批次檔，Node.js spawn無法直接執行(CVE-2024-27980安全修正後回EINVAL)，內部已參考cross-spawn自動解析.cmd入口並繞過cmd.exe，故可支援含多行文字之參數
- * 本函數不throw，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)
+ * execCli之輸入判型與預設值(內部使用), 讀取或判型拋錯(getter拋錯、已撤銷之Proxy等不可讀之輸入)時直接拋出, 由execCli承接
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCli.test.mjs Github}
- * @memberOf wsemi
- * @param {String} command 輸入執行檔名稱字串，例如'node'、'curl'、'claude'等，可為註冊系統的全域指令或執行檔路徑
- * @param {Array} [args=[]] 輸入參數字串陣列，內容原樣傳遞給目標CLI，預設[]
- * @param {Object} [opt={}] 輸入設定物件
- * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，預設120000
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: cwd is not an existing folder: <cwd>'(未能啟動，不重試)
- * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
- * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean或回傳Promise(以其resolve值判定)，回傳真值為通過；自訂函數拋錯或其Promise被reject視同驗證失敗(error為'OUTPUT_VALIDATION_FAILED'，stderr前綴'validate threw: 錯誤訊息'，訊息截斷至500字元)；自訂函數回傳之Promise不受timeoutMs約束(子進程已結束)，永不落定時本函數亦不落定，durationMs不含驗證時間，預設undefined代表不驗證
- * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，超過部分將不再累積，預設10485760(10MB)
- * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之輸出累積與結果)，預設undefined
- * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，行為同onStdout，預設undefined
- * @param {Object} [opt.env=undefined] 輸入本次調用額外注入之環境變數物件，會併入process.env之後(同名以此為準，含PYTHONIOENCODING)，僅作用於該次子進程而不影響本進程之process.env，故並行調用可各自帶不同值；值為undefined代表移除該變數(可遮蔽繼承值)，值為null會成為字面字串'null'故建議勿傳；Windows下環境變數大小寫不敏感，同名不同大小寫(如Path與PATH)亦視為同名覆蓋，預設undefined代表不覆寫任何變數
- * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0
- * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，實際間隔為retryDelayMs乘以重試次數且上限15000ms，預設5000
- * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、cwd不存在等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串時不啟動，attempts為0且不帶pid鍵
- * @example
- * //need test in nodejs
- *
- * async function test() {
- *
- *     let nodeBin = process.execPath
- *
- *     let r1 = await execCli(nodeBin, ['-e', 'process.stdout.write("hello")'])
- *     console.log('r1', r1.ok, r1.stdout)
- *     // => r1 true hello
- *
- *     let r2 = await execCli(nodeBin, ['-e', 'process.exit(3)'])
- *     console.log('r2', r2.ok, r2.code, r2.error)
- *     // => r2 false 3 Exit code 3
- *
- *     let r3 = await execCli(nodeBin, ['-e', 'process.stdin.on("data",(d)=>process.stdout.write(d))'], { input: '中文測試' })
- *     console.log('r3', r3.ok, r3.stdout)
- *     // => r3 true 中文測試
- *
- *     let r4 = await execCli(nodeBin, ['-e', 'process.stdout.write("abc")'], { validate: 'json' })
- *     console.log('r4', r4.ok, r4.error)
- *     // => r4 false OUTPUT_VALIDATION_FAILED
- *
- *     let r5 = await execCli(nodeBin, ['-e', 'setTimeout(()=>{},30000)'], { timeoutMs: 500 })
- *     console.log('r5', r5.ok, r5.error)
- *     // => r5 false TIMEOUT after 0.5s
- *
- *     let r6 = await execCli(nodeBin, ['-e', 'process.stdout.write(process.env.API_KEY)'], { env: { API_KEY: 'KEY_A' } })
- *     console.log('r6', r6.ok, r6.stdout, process.env.API_KEY)
- *     // => r6 true KEY_A undefined (僅作用於該次子進程, 本進程process.env不受影響)
- *
- * }
- * test()
- *     .catch((err) => {
- *         console.log(err)
- *     })
- *
+ * @param {*} command 輸入執行檔名稱
+ * @param {*} args 輸入參數陣列
+ * @param {*} opt 輸入設定物件
+ * @returns {Object} 回傳{ rInvalid }(command無效之結果物件)或{ args, maxRetries, retryDelayMs, onceOpt }
  */
-async function execCli(command, args = [], opt = {}) {
+function parseInput(command, args, opt) {
 
     //command必填字串: 本函數以error物件回報失敗(非throw風格), 故回傳統一error結構
     if (!isestr(command)) {
         return {
-            ok: false,
-            stdout: '',
-            stderr: '',
-            code: null,
-            error: 'command 須為非空字串',
-            durationMs: 0,
-            attempts: 0,
+            rInvalid: {
+                ok: false,
+                stdout: '',
+                stderr: '',
+                code: null,
+                error: 'command 須為非空字串',
+                durationMs: 0,
+                attempts: 0,
+            },
         }
     }
 
@@ -473,12 +421,13 @@ async function execCli(command, args = [], opt = {}) {
     }
 
     //input: 傳入stdin的字串, 無效回退預設undefined(未提供 = 不寫stdin)
+    //  通過isestr者(含包裝物件new String)於此轉為原始字串: stdin.write只收原始字串, 包裝物件會於spawn後(本try外)同步拋錯而reject且子進程殘留; 轉字串拋錯者於此以結果物件回報
     let input = get(onceOpt, 'input', null)
     if (!isestr(input)) {
         onceOpt.input = undefined
     }
     else {
-        onceOpt.input = input
+        onceOpt.input = String(input)
     }
 
     //env: 逐次注入之環境變數物件, 無效回退預設undefined(未提供 = 不覆寫任何變數)
@@ -490,18 +439,9 @@ async function execCli(command, args = [], opt = {}) {
         onceOpt.env = env
     }
 
-    //validate: 驗證規則字串, 無效回退預設undefined(未提供 = 不驗證)
-    //注意: validate亦可為自訂函數(buildValidator支援), 故先放行function不覆蓋
+    //validate: 驗證規則字串或自訂函數, 於此經buildValidator判型並建立驗證函數一次(無有效規則為null = 不驗證), execCliOnce(含重試)直接使用而不再判型呼叫端之值
     let validate = get(onceOpt, 'validate', null)
-    if (isfun(validate)) {
-        onceOpt.validate = validate
-    }
-    else if (!isestr(validate)) {
-        onceOpt.validate = undefined
-    }
-    else {
-        onceOpt.validate = validate
-    }
+    onceOpt.validate = buildValidator(validate)
 
     //onStdout / onStderr: 串流回調函數, 無效回退預設undefined(未提供 = 不回調)
     let onStdout = get(onceOpt, 'onStdout', null)
@@ -553,6 +493,97 @@ async function execCli(command, args = [], opt = {}) {
     else {
         onceOpt.maxBuffer = cint(maxBuffer)
     }
+
+    return { args, maxRetries, retryDelayMs, onceOpt }
+}
+
+
+/**
+ * 通用CLI子程序調用，封裝逾時、進程樹清理、輸出驗證、結構化錯誤回報與自動重試
+ * 各參數原樣傳遞給目標CLI，支援中文
+ * Windows下npm全域安裝之命令為.cmd批次檔，Node.js spawn無法直接執行(CVE-2024-27980安全修正後回EINVAL)，內部已參考cross-spawn自動解析.cmd入口並繞過cmd.exe，故可支援含多行文字之參數
+ * 本函數不throw亦不reject，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)；command、args、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦以結果物件回報，error為'<錯誤碼>: <訊息>'(無錯誤碼者為UNKNOWN，拋出非Error之值時訊息為該值之文字)
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCli.test.mjs Github}
+ * @memberOf wsemi
+ * @param {String} command 輸入執行檔名稱字串，例如'node'、'curl'、'claude'等，可為註冊系統的全域指令或執行檔路徑
+ * @param {Array} [args=[]] 輸入參數字串陣列，內容原樣傳遞給目標CLI，預設[]
+ * @param {Object} [opt={}] 輸入設定物件
+ * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，預設120000
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: cwd is not an existing folder: <cwd>'(未能啟動，不重試)
+ * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
+ * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean或回傳Promise(以其resolve值判定)，回傳真值為通過；自訂函數拋錯或其Promise被reject視同驗證失敗(error為'OUTPUT_VALIDATION_FAILED'，stderr前綴'validate threw: 錯誤訊息'，訊息截斷至500字元)；自訂函數回傳之Promise不受timeoutMs約束(子進程已結束)，永不落定時本函數亦不落定，durationMs不含驗證時間，預設undefined代表不驗證
+ * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，超過部分將不再累積，預設10485760(10MB)
+ * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之輸出累積與結果)，預設undefined
+ * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，行為同onStdout，預設undefined
+ * @param {Object} [opt.env=undefined] 輸入本次調用額外注入之環境變數物件，會併入process.env之後(同名以此為準，含PYTHONIOENCODING)，僅作用於該次子進程而不影響本進程之process.env，故並行調用可各自帶不同值；值為undefined代表移除該變數(可遮蔽繼承值)，值為null會成為字面字串'null'故建議勿傳；Windows下環境變數大小寫不敏感，同名不同大小寫(如Path與PATH)亦視為同名覆蓋，預設undefined代表不覆寫任何變數
+ * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在、不存在之.cmd/.bat、npm shim之入口檔不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0
+ * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，實際間隔為retryDelayMs乘以重試次數且上限15000ms，預設5000
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、npm shim之入口檔不存在、cwd不存在、輸入不可讀等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串時不啟動，attempts為0且不帶pid鍵
+ * @example
+ * //need test in nodejs
+ *
+ * async function test() {
+ *
+ *     let nodeBin = process.execPath
+ *
+ *     let r1 = await execCli(nodeBin, ['-e', 'process.stdout.write("hello")'])
+ *     console.log('r1', r1.ok, r1.stdout)
+ *     // => r1 true hello
+ *
+ *     let r2 = await execCli(nodeBin, ['-e', 'process.exit(3)'])
+ *     console.log('r2', r2.ok, r2.code, r2.error)
+ *     // => r2 false 3 Exit code 3
+ *
+ *     let r3 = await execCli(nodeBin, ['-e', 'process.stdin.on("data",(d)=>process.stdout.write(d))'], { input: '中文測試' })
+ *     console.log('r3', r3.ok, r3.stdout)
+ *     // => r3 true 中文測試
+ *
+ *     let r4 = await execCli(nodeBin, ['-e', 'process.stdout.write("abc")'], { validate: 'json' })
+ *     console.log('r4', r4.ok, r4.error)
+ *     // => r4 false OUTPUT_VALIDATION_FAILED
+ *
+ *     let r5 = await execCli(nodeBin, ['-e', 'setTimeout(()=>{},30000)'], { timeoutMs: 500 })
+ *     console.log('r5', r5.ok, r5.error)
+ *     // => r5 false TIMEOUT after 0.5s
+ *
+ *     let r6 = await execCli(nodeBin, ['-e', 'process.stdout.write(process.env.API_KEY)'], { env: { API_KEY: 'KEY_A' } })
+ *     console.log('r6', r6.ok, r6.stdout, process.env.API_KEY)
+ *     // => r6 true KEY_A undefined (僅作用於該次子進程, 本進程process.env不受影響)
+ *
+ * }
+ * test()
+ *     .catch((err) => {
+ *         console.log(err)
+ *     })
+ *
+ */
+async function execCli(command, args = [], opt = {}) {
+
+    //parseInput, 輸入之讀取與判型一律於此try內: 拋錯者(command、args、opt或其選項值之getter拋錯、已撤銷之Proxy等不可讀之輸入)以結果物件回報, 同spawn同步錯誤(code null、帶pid鍵且為undefined、attempts 1、不重試), 不reject
+    let startTime = Date.now()
+    let p
+    try {
+        p = parseInput(command, args, opt)
+    }
+    catch (err) {
+        let e = execSpawnError(err)
+        return {
+            ok: false,
+            stdout: '',
+            stderr: '',
+            code: null,
+            error: `${e.code}: ${execThrownMsg(e, err)}`,
+            durationMs: Date.now() - startTime,
+            pid: undefined, //同spawn同步錯誤: 未能啟動者帶pid鍵且其值為undefined(JSDoc契約)
+            attempts: 1,
+        }
+    }
+    if (p.rInvalid) {
+        return p.rInvalid
+    }
+    let { maxRetries, retryDelayMs, onceOpt } = p
+    args = p.args
 
     let lastResult
     let totalAttempts = 0

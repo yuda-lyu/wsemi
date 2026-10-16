@@ -111,15 +111,22 @@ describe(`execCliCore`, function() {
             assert.strict.deepStrictEqual(r.opt, { windowsVerbatimArguments: true })
         })
 
-        it(`should fallback to cmd.exe when .cmd entry text exists but file is missing on Windows`, function() {
+        it(`should throw ENOENT pointing to the entry when .cmd shim entry file is missing on Windows`, function() {
             if (!isWin) {
                 this.skip()
             }
+            //R-EXEC-FAIL-01之6a: npm shim已辨識(入口位於執行行)而入口檔不存在者, 同規則6拋ENOENT且訊息指入口路徑, 不交cmd.exe(原「fallback to cmd.exe」之規格改寫, 2026-10-16裁示)
             let fp = path.join(fdTest, 'w.cmd')
-            let r = buildSpawnArgs(fp, [])
-            let comspec = process.env.comspec || process.env.COMSPEC || 'cmd.exe'
-            assert.strict.deepStrictEqual(r.file, comspec)
-            assert.strict.deepStrictEqual(r.opt, { windowsVerbatimArguments: true })
+            let err = null
+            try {
+                buildSpawnArgs(fp, [])
+            }
+            catch (e) {
+                err = e
+            }
+            let entry = path.join(fdTest, 'node_modules', 'pkg', 'bin', 'missing.js')
+            assert.strict.deepStrictEqual(err instanceof Error, true, 'buildSpawnArgs須拋出Error') //規則6a: 拋出(由呼叫端之同步catch回報)
+            assert.strict.deepStrictEqual([err.code, err.message, err.path], ['ENOENT', `spawn ${entry} ENOENT`, entry]) //規則6a: 'spawn <入口檔路徑> ENOENT', path同node之形
         })
 
     })
@@ -180,8 +187,8 @@ describe(`execCliCore`, function() {
 })
 
 
-//R-EXEC-FAIL-01之6: 命令解析與批次檔存在(.cmd/.bat不存在者不交cmd.exe, 拋與node同形之ENOENT, 由呼叫端之同步catch以結果物件回報)
-describe(`buildSpawnArgs 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
+//R-EXEC-FAIL-01之6、6a: 命令解析與批次檔存在(.cmd/.bat不存在者、npm shim之入口檔不存在者不交cmd.exe, 拋與node同形之ENOENT, 由呼叫端之同步catch以結果物件回報)
+describe(`buildSpawnArgs 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     let { buildSpawnArgs } = execCliCore
     let isWin = (process.platform === 'win32')
@@ -234,6 +241,38 @@ describe(`buildSpawnArgs 失敗回報(R-EXEC-FAIL-01之6~12)`, function() {
             assert.strict.deepStrictEqual([/(^|[\\/])cmd\.exe$/i.test(r.file), r.opt], [true, { windowsVerbatimArguments: true }], `file=${r.file}`)
         })
     }
+
+    for (let [name, file, content, entryRel] of [
+        ['node shebang形狀(cmd-shim 8)', 'shimjs.cmd', ['@ECHO off', 'GOTO start', ':find_dp0', 'SET dp0=%~dp0', 'EXIT /b', ':start', 'SETLOCAL', 'CALL :find_dp0', '', 'IF EXIST "%dp0%\\node.exe" (', '  SET "_prog=%dp0%\\node.exe"', ') ELSE (', '  SET "_prog=node"', ')', '', 'endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & set PATHEXT=%PATHEXT:;.JS;=;% & "%_prog%"  "%dp0%\\node_modules\\zz\\bin\\cli.js" %*', ''], 'node_modules\\zz\\bin\\cli.js'],
+        ['無shebang形狀(原生.exe入口)', 'shimexe.cmd', ['@ECHO off', 'GOTO start', ':find_dp0', 'SET dp0=%~dp0', 'EXIT /b', ':start', 'SETLOCAL', 'CALL :find_dp0', '"%dp0%\\node_modules\\zz\\bin\\zz.exe"   %*', ''], 'node_modules\\zz\\bin\\zz.exe'],
+    ]) {
+        it(`npm shim(${name})之入口檔不存在時拋出code為ENOENT、訊息為'spawn <入口> ENOENT'之錯誤, 不交cmd.exe [R-EXEC-FAIL-01之6a]`, function() {
+            if (!isWin) {
+                this.skip()
+            }
+            fs.writeFileSync(path.join(fdFx, file), content.join('\r\n'))
+            let entry = path.join(fdFx, entryRel)
+            let err = null
+            try {
+                buildSpawnArgs(path.join(fdFx, file), ['a'])
+            }
+            catch (e) {
+                err = e
+            }
+            assert.strict.deepStrictEqual(err instanceof Error, true, 'buildSpawnArgs須拋出Error') //規則6a: 入口位於cmd-shim之執行行(行首或&之後, 可前置"%_prog%", 之後只接%*)者拋出
+            assert.strict.deepStrictEqual([err.code, err.message, err.path], ['ENOENT', `spawn ${entry} ENOENT`, entry]) //規則6a: 訊息指入口路徑, errno/syscall/path同node之形
+        })
+    }
+
+    it(`自訂批次檔於判斷句內引用"%dp0%\\node_modules\\…"(非cmd-shim之執行行)而該檔不存在時不拋錯, 仍經cmd.exe退路 [R-EXEC-FAIL-01之6a, 對照]`, function() {
+        if (!isWin) {
+            this.skip()
+        }
+        let fp = path.join(fdFx, 'userpat.cmd')
+        fs.writeFileSync(fp, ['@echo off', 'SET dp0=%~dp0', 'IF EXIST "%dp0%\\node_modules\\optional\\cli.js" (', '  node "%dp0%\\node_modules\\optional\\cli.js" %*', ') ELSE (', '  echo fallback-ok', ')', ''].join('\r\n'))
+        let r = buildSpawnArgs(fp, [])
+        assert.strict.deepStrictEqual([/(^|[\\/])cmd\.exe$/i.test(r.file), r.opt], [true, { windowsVerbatimArguments: true }], `file=${r.file}`) //規則6a: 入口樣式位於判斷句(如IF EXIST)等非執行行者仍交cmd.exe
+    })
 
     it(`Windows之App Execution Alias(WindowsApps內之reparse point, 如winget)解析為該別名之路徑(不因fsIsFile以lstat判定連結為假而漏掉) (守門) [R-EXEC-FAIL-01之6]`, function() {
         if (!isWin) {

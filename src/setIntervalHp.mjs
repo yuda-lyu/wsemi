@@ -20,7 +20,7 @@ function logErr(err) {
  * @memberOf wsemi
  * @param {Function} fun 輸入調用函數
  * @param {Integer} interval 輸入時間間隔正整數，單位為毫秒ms，預設1
- * @returns {Function} 回傳停止函數，呼叫後不再調用fun。fun同步拋錯或其Promise被reject時以console.log記錄而不外拋，不影響後續調用
+ * @returns {Function} 回傳停止函數，呼叫後不再調用fun。fun同步拋錯或其Promise被reject時以console.log記錄而不外拋，不影響後續調用；fun非函數時每次到期皆以console.log記錄Error('fn is not a function')，直至呼叫停止函數
  * @example
  *
  * let i = 0
