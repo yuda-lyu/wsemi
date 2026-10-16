@@ -18,7 +18,7 @@ import isab from './isab.mjs'
  * @param {Array} data.binarys 輸入Unit8Array陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {*} 回傳任意物件，輸入無效或反序列化失敗(如results非合法JSON)時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {*} 回傳任意物件，輸入無效或反序列化失敗(如results非合法JSON、同一二進位索引被引用多次)時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let r = {
@@ -122,6 +122,9 @@ function stru8arr2obj(data, opt = {}) {
     let tagEsc = '[BlazeForPreventEscape]'
     let reEsced = /^\[BlazeForPreventEscape\](?:\[BlazeForPreventEscape\])*\[BlazeFor(?:Uint8Array|Uint16Array|ArrayBuffer)\]::\d+$/
 
+    //used, 已被引用之二進位索引; 合法編碼端(obj2stru8arr)每個二進位值都配新索引, 同一索引被引用多次只可能為異常封包, 且ArrayBuffer標記每次引用都複製一份堆外記憶體(配置量=引用次數乘分塊大小), 故視為壞封包
+    let used = new Set()
+
     let o = {}
     try {
 
@@ -149,6 +152,11 @@ function stru8arr2obj(data, opt = {}) {
             if (id >= binarys.length) {
                 throw new Error(`binary index out of range[${id}], binarys.length[${binarys.length}]`)
             }
+
+            if (used.has(id)) {
+                throw new Error(`binary index referenced more than once[${id}]`)
+            }
+            used.add(id)
 
             return restoreBin(m[1], id, binarys[id])
         })

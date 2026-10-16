@@ -1,6 +1,12 @@
 import assert from 'assert'
+import { fileURLToPath } from 'url'
+import each from 'lodash-es/each.js'
+import size from 'lodash-es/size.js'
 import pmMap from '../src/pmMap.mjs'
+import isarr from '../src/isarr.mjs'
+import isobj from '../src/isobj.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
+import { runChildCase } from './tools/runChildCase.mjs'
 
 
 describe(`pmMap`, function() {
@@ -514,6 +520,359 @@ describe(`pmMap 輸入於進入時取值(R-PM-SETTLE-01規則1、2、16)`, funct
         let r = await pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
         //R-PM-SETTLE-01 規則16(增訂): 陣列輸入於進入時取值(同HEAD), 派發時不再讀呼叫端之陣列; JSDoc pmMap:17「rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值」
         assert.strict.deepStrictEqual({ calls, r }, { calls: [[0, 'a'], [1, 'b'], [2, 'c']], r: { s: 'resolve', v: ['a', 'b', 'c'] } })
+    })
+
+})
+
+
+describe(`pmMap 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
+
+    let runner = fileURLToPath(new URL('./tools/pmObjLenRunner.mjs', import.meta.url))
+
+    //以資料屬性設定自有鍵(含__proto__, 一般賦值會改原型)
+    let setOwn = (o, k, v) => {
+        Object.defineProperty(o, k, { value: v, writable: true, enumerable: true, configurable: true })
+        return o
+    }
+
+    //call, 等待pmMap之結果轉為{ s, v }; 同步拋出記為{ s: 'throw' }, 使修前之同步拋出以斷言失敗呈現而非中斷
+    let call = (fn) => {
+        try {
+            return Promise.resolve(fn()).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+        }
+        catch (e) {
+            return Promise.resolve({ s: 'throw', v: e })
+        }
+    }
+
+    let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    //以'k=v'呈現fun收到之鍵與值
+    let kv = (v, k) => k + '=' + v
+
+    describe(`物件輸入只依自有可列舉字串鍵, length與其他鍵同為一般鍵(規則1、2)`, function() {
+
+        class ProtoLen {
+            get length() {
+                return 2
+            }
+        }
+
+        //期望值為手算: 物件以Object.keys順序(整數鍵升冪在前, 其餘依建立順序), 值為'鍵=值'
+        let cases = [
+            [`length:1與一般鍵a(修前得'0=undefined')`, () => ({ length: 1, a: 'x' }), ['length=1', 'a=x']],
+            [`length:0與一般鍵a(修前得空陣列)`, () => ({ length: 0, a: 'x' }), ['length=0', 'a=x']],
+            [`只有length:0(修前得空陣列)`, () => ({ length: 0 }), ['length=0']],
+            [`length:2並存數字鍵0、1(修前只走索引0、1, 漏length與a)`, () => ({ length: 2, 0: 'p', 1: 'q', a: 'x' }), ['0=p', '1=q', 'length=2', 'a=x']],
+            [`length為-0(JSON.parse可產生, isLength為真)`, () => JSON.parse('{"length":-0,"a":"x"}'), ['length=0', 'a=x']],
+            [`原型上有length getter之class實例(修前依其值走索引)`, () => {
+                let o = new ProtoLen()
+                o.a = 'x'
+                return o
+            }, ['a=x']],
+            [`Object.create(null)且有length鍵(修前走索引)`, () => {
+                let o = Object.create(null)
+                o.length = 1
+                o.b = 'y'
+                return o
+            }, ['length=1', 'b=y']],
+            [`Symbol.toStringTag偽稱Array(isarr為真之非真陣列), length:2(修前依length走索引)`, () => ({ [Symbol.toStringTag]: 'Array', length: 2, a: 'x' }), ['length=2', 'a=x']],
+            [`Symbol.toStringTag偽稱Array, length:0(修前得空陣列)`, () => ({ [Symbol.toStringTag]: 'Array', length: 0, a: 'x' }), ['length=0', 'a=x']],
+            [`Symbol.toStringTag偽稱Array, 只有length:3(修前得三個undefined)`, () => ({ [Symbol.toStringTag]: 'Array', length: 3 }), ['length=3']],
+        ]
+
+        for (let [name, mk, exp] of cases) {
+            it(`should iterate own keys only for ${name}`, async function() {
+                let out = {}
+                for (let takeLimit of [0, 1, 2]) {
+                    out[takeLimit] = await call(() => pmMap(mk(), kv, takeLimit))
+                }
+                let ok = { s: 'resolve', v: exp }
+                assert.strict.deepStrictEqual(out, { 0: ok, 1: ok, 2: ok })
+            })
+        }
+
+        //length非陣列樣之值(修前亦走自有鍵, 行為鎖定)
+        it(`should keep iterating own keys when length is not array-like (-1, 1.5, '3', null, true, NaN, Infinity, 2^53, object, array)`, async function() {
+            let lens = [
+                [-1, 'length=-1'],
+                [1.5, 'length=1.5'],
+                ['3', 'length=3'],
+                ['abc', 'length=abc'],
+                [null, 'length=null'],
+                [undefined, 'length=undefined'],
+                [true, 'length=true'],
+                [NaN, 'length=NaN'],
+                [Infinity, 'length=Infinity'],
+                [2 ** 53, 'length=9007199254740992'],
+                [{}, 'length=[object Object]'],
+                [[], 'length='],
+                [[1, 2], 'length=1,2'],
+            ]
+            let out = []
+            for (let [len] of lens) {
+                out.push(await call(() => pmMap({ length: len, a: 'x' }, kv, 1)))
+            }
+            assert.strict.deepStrictEqual(out, lens.map(([, s]) => ({ s: 'resolve', v: [s, 'a=x'] })))
+        })
+
+        it(`should pass string keys to fun for objects (including digit keys and length) and number indexes for arrays`, async function() {
+            let ko = []
+            let ka = []
+            await pmMap({ 0: 'p', length: 1 }, (v, k) => {
+                ko.push(typeof k + ':' + k)
+            }, 1)
+            await pmMap(['p', 'q'], (v, k) => {
+                ka.push(typeof k + ':' + k)
+            }, 1)
+            assert.strict.deepStrictEqual({ ko, ka }, { ko: ['string:0', 'string:length'], ka: ['number:0', 'number:1'] })
+        })
+
+        it(`should take the values of own keys when fun is omitted (values are promises or plain values)`, async function() {
+            let mk = () => ({ length: 1, a: Promise.resolve('A'), b: Promise.resolve('B') })
+            let r0 = await call(() => pmMap(mk(), null, 0))
+            let r1 = await call(() => pmMap(mk(), null, 1))
+            let ok = { s: 'resolve', v: [1, 'A', 'B'] }
+            assert.strict.deepStrictEqual({ r0, r1 }, { r0: ok, r1: ok })
+        })
+
+        it(`should only use own enumerable string keys: no inherited, non-enumerable or symbol keys`, async function() {
+            let proto = { inh: 1 }
+            let o = Object.create(proto)
+            o.a = 'x'
+            Object.defineProperty(o, 'hid', { value: 'h', enumerable: false })
+            o[Symbol('s')] = 'sym'
+            class C {
+                constructor() {
+                    this.p = 1
+                }
+
+                m() {}
+            }
+            let r = await call(() => pmMap(o, kv))
+            let rc = await call(() => pmMap(new C(), kv))
+            assert.strict.deepStrictEqual({ r, rc }, { r: { s: 'resolve', v: ['a=x'] }, rc: { s: 'resolve', v: ['p=1'] } })
+        })
+
+        it(`should keep the empty-collection and invalid-input behavior`, async function() {
+            let empties = []
+            for (let inp of [[], {}, Object.create(null), []]) {
+                empties.push(await call(() => pmMap(inp, kv, 1)))
+            }
+            let sparse = await call(() => pmMap(new Array(3), kv))
+            // eslint-disable-next-line no-new-wrappers
+            let bads = [undefined, null, 0, 1, '', 'abc', true, () => {}, new Map(), new Set(), new Uint8Array(2), new Date(0), /x/, new String('ab'), Symbol('s'), 10n]
+            let rb = []
+            for (let b of bads) {
+                rb.push(await call(() => pmMap(b, kv)))
+            }
+            assert.strict.deepStrictEqual({ empties, sparse, rb }, {
+                empties: [{ s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }],
+                sparse: { s: 'resolve', v: ['0=undefined', '1=undefined', '2=undefined'] }, //真陣列(稀疏)仍依其length逐一呼叫
+                rb: bads.map(() => ({ s: 'reject', v: 'rs is not an array or object' })),
+            })
+        })
+
+        it(`should not add keys to or change the input object, and fun receives the values at call time`, async function() {
+            let inp = { length: 2, a: 'x', 0: 'p' }
+            let snap = JSON.stringify(inp)
+            let keys = Object.keys(inp)
+            let r1 = await call(() => pmMap(inp, kv))
+            assert.strict.deepStrictEqual({ r1, same: JSON.stringify(inp) === snap, keys: Object.keys(inp) }, { r1: { s: 'resolve', v: ['0=p', 'length=2', 'a=x'] }, same: true, keys })
+
+            let o = { a: 1, b: 2, c: 3 }
+            let seen = []
+            let pm = pmMap(o, async (v, k) => {
+                seen.push([k, v])
+                await sleep(5)
+                return v
+            }, 1)
+            o.b = 'changed'
+            delete o.c
+            o.d = 'new'
+            let r2 = await call(() => pm)
+            assert.strict.deepStrictEqual({ seen, r2 }, { seen: [['a', 1], ['b', 2], ['c', 3]], r2: { s: 'resolve', v: [1, 2, 3] } })
+        })
+
+    })
+
+    describe(`無陣列樣length鍵之輸入: 與修前演算法及獨立期望值逐案相同(行為鎖定)`, function() {
+
+        //修前之輸入轉換(size判空、isobj以lodash each展開、陣列以slice複製)原樣複製, 回傳fun收到之[k, v]序列; 非陣列非物件回'reject'
+        let legacyPairs = (rs) => {
+            if (!isarr(rs) && !isobj(rs)) {
+                return 'reject'
+            }
+            if (size(rs) === 0) {
+                return []
+            }
+            let useObj = false
+            if (isobj(rs)) {
+                useObj = true
+                let _rs = []
+                each(rs, (v, k) => {
+                    _rs.push({ k, v })
+                })
+                rs = _rs
+            }
+            else {
+                rs = Array.prototype.slice.call(rs)
+            }
+            let out = []
+            for (let i = 0; i < rs.length; i++) {
+                out.push(useObj ? [rs[i].k, rs[i].v] : [i, rs[i]])
+            }
+            return out
+        }
+
+        //獨立於實作與修前演算法之期望值: 陣列依索引0..length-1(稀疏處為undefined), 物件依Object.keys
+        let oracle = (rs) => {
+            if (Array.isArray(rs)) {
+                return Array.from({ length: rs.length }, (_, i) => [i, rs[i]])
+            }
+            return Object.keys(rs).map((k) => [k, rs[k]])
+        }
+
+        let seed = 20261017
+        let rnd = () => {
+            seed = (seed * 1103515245 + 12345) % 2147483648
+            return seed / 2147483648
+        }
+        let pick = (arr) => arr[Math.floor(rnd() * arr.length)]
+        let vals = [1, 0, -5, 1.5, 'a', '', 'x y', null, undefined, true, false, NaN, { n: 1 }, [1, 2]]
+        //length值皆非陣列樣(非負整數以外): 修前亦以自有鍵迭代
+        let lenVals = [-1, 1.5, '3', 'abc', null, true, NaN, Infinity, 2 ** 53, {}, [], [1, 2], undefined]
+        let keyNames = ['a', 'b', 'c', '0', '1', '10', 'constructor', 'toString', '__proto__', 'hasOwnProperty', 'x y', '中文']
+
+        let gen = () => {
+            if (rnd() < 0.4) {
+                let n = Math.floor(rnd() * 6)
+                let a = []
+                for (let i = 0; i < n; i++) {
+                    a.push(pick(vals))
+                }
+                if (n > 0 && rnd() < 0.3) {
+                    delete a[Math.floor(rnd() * n)] //稀疏
+                }
+                return a
+            }
+            let o = {}
+            let n = Math.floor(rnd() * 6)
+            for (let i = 0; i < n; i++) {
+                setOwn(o, pick(keyNames), pick(vals))
+            }
+            if (rnd() < 0.4) {
+                setOwn(o, 'length', pick(lenVals))
+            }
+            return o
+        }
+
+        //兩個案例共用同一批輸入與takeLimit
+        let inputs = Array.from({ length: 400 }, () => gen())
+        let limits = inputs.map(() => pick([0, 1, 2]))
+
+        let diff = async (expectOf) => {
+            let bad = []
+            for (let i = 0; i < inputs.length; i++) {
+                let r = await call(() => pmMap(inputs[i], (v, k) => [k, v], limits[i]))
+                try {
+                    assert.strict.deepStrictEqual(r, { s: 'resolve', v: expectOf(inputs[i]) })
+                }
+                catch (err) {
+                    bad.push(i)
+                }
+            }
+            return bad
+        }
+
+        it(`should equal the legacy conversion on 400 random objects and arrays without array-like length keys`, async function() {
+            assert.strict.deepStrictEqual(await diff(legacyPairs), [])
+        })
+
+        it(`should equal the independent expectation (Object.keys / indexes) on the same inputs`, async function() {
+            assert.strict.deepStrictEqual(await diff(oracle), [])
+        })
+
+    })
+
+    describe(`子行程: 讀取失敗時已讀到之Promise仍被觀察、Array子類別(Symbol.species)與稀疏陣列 [R-PM-SETTLE-01規則9、17]`, function() {
+
+        it(`不給fun, 前項為rejected Promise、其後元素/值讀取即拋錯: 以該錯誤reject, 前項不成為未處理之rejection`, function() {
+            let r = runChildCase(runner, 'promisePrefix').r
+            let rj = { syncThrow: false, s: 'reject', same: true }
+            assert.strict.deepStrictEqual({ out: { mapArr: r.out.mapArr, mapObj: r.out.mapObj }, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { mapArr: rj, mapObj: rj }, unhandled: [], uncaught: [] })
+        })
+
+        it(`Symbol.species回Object之Array子類別得[2,3]; 稀疏陣列之空洞以undefined交fun(長度含空洞), 同修前`, function() {
+            let r = runChildCase(runner, 'speciesSparse').r
+            assert.strict.deepStrictEqual({
+                species: r.out.mapSpecies,
+                sparseFun: r.out.mapSparseFun,
+                sparseNoFun: r.out.mapSparseNoFun,
+                unhandled: r.unhandled,
+                uncaught: r.uncaught,
+            }, {
+                species: { s: 'resolve', v: [2, 3] },
+                sparseFun: { s: 'resolve', v: ['0:a', '1:undefined', '2:c'] },
+                sparseNoFun: { s: 'resolve', v: ['a', null, 'c'] }, //undefined經子行程JSON輸出為null
+                unhandled: [],
+                uncaught: [],
+            })
+        })
+
+    })
+
+    describe(`子行程: 容器本身讀取即拋錯(已撤銷Proxy、Symbol.toStringTag拋錯) [R-PM-SETTLE-01規則17]`, function() {
+
+        it(`已撤銷之Proxy: 以TypeError reject, 不同步拋出`, function() {
+            let r = runChildCase(runner, 'revokedContainer').r
+            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', isTypeError: true }, unhandled: [], uncaught: [] })
+        })
+
+        it(`Symbol.toStringTag讀取即拋錯: 以該錯誤reject, 不同步拋出`, function() {
+            let r = runChildCase(runner, 'tagGetterContainer').r
+            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: true, msg: null }, unhandled: [], uncaught: [] })
+        })
+
+    })
+
+    describe(`極大length於限額子行程: 時間與記憶體只依實際鍵數`, function() {
+
+        let MAX = Number.MAX_SAFE_INTEGER
+        //limit 64MB: 修前之實作對 length>=5e6 即逐次建立元素而耗盡堆積, 離開碼 134
+        let cases = [
+            ['len', 5e6],
+            ['len', 1e8],
+            ['len', MAX],
+            ['len', 4294967295],
+            ['len', 4294967296],
+            ['len', 2 ** 53], //超過 isLength 上限, 修前即以自有鍵迭代, 對照
+            ['tag', 1e6], //Symbol.toStringTag偽稱Array(isarr為真之非真陣列): 不得依length迭代
+            ['tag', MAX],
+            ['keys', MAX],
+        ]
+        for (let [kind, len] of cases) {
+            it(`should finish map:${kind}:${len} within 1000 ms and 4 MB of heap, iterating own keys only`, function() {
+                let rc = runChildCase(runner, `map:${kind}:${len}`, { execArgv: ['--expose-gc', '--max-old-space-size=64'], allowNoResult: true, timeout: 30000 })
+                assert.strict.strictEqual(rc.status, 0, `status=${rc.status} signal=${rc.signal} stderr=${String(rc.stderr).split('\n').find((l) => /FATAL|Error/.test(l)) || ''}`)
+                assert.ok(rc.r !== null, 'no result line')
+                let o = rc.r.out
+                assert.strict.deepStrictEqual({ unhandled: rc.r.unhandled, uncaught: rc.r.uncaught, runnerError: o.runnerError }, { unhandled: [], uncaught: [], runnerError: undefined })
+                let exp = ['length=' + len]
+                if (kind === 'keys') {
+                    for (let i = 0; i < 100; i++) {
+                        exp.push('k' + i + '=x')
+                    }
+                }
+                else {
+                    exp.push('a=x')
+                }
+                assert.strict.deepStrictEqual(o.res, exp)
+                assert.ok(o.ms < 1000, `ms=${o.ms}`)
+                assert.ok(o.heapMB < 4, `heapMB=${o.heapMB}`)
+            })
+        }
+
     })
 
 })

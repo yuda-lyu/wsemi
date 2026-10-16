@@ -50,8 +50,9 @@ function objSortBy(obj, fun) {
         throw new Error('fun is not a function')
     }
 
-    //rs
-    let rs = map(obj, (v, k) => {
+    //rs, 物件以自有可列舉字串鍵迭代, length與其他鍵同為一般鍵(R-OBJ-ITER-01: lodash map對具非負整數length之物件改走索引, 遺失真實鍵且length極大時耗盡記憶體)
+    let rs = Object.keys(obj).map((k) => {
+        let v = obj[k]
         let t = fun(v, k)
         return { k, v, t }
     })
@@ -65,7 +66,13 @@ function objSortBy(obj, fun) {
     //objTemp
     let objTemp = {}
     each(rs, (r) => {
-        objTemp[r.k] = r.v
+        if (r.k === '__proto__') {
+            //自有__proto__鍵(如JSON.parse產生)以defineProperty設為自有資料屬性, 一般賦值會改原型而遺失該鍵
+            Object.defineProperty(objTemp, r.k, { value: r.v, writable: true, enumerable: true, configurable: true })
+        }
+        else {
+            objTemp[r.k] = r.v
+        }
     })
 
     return objTemp

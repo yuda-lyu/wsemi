@@ -1,4 +1,3 @@
-import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
@@ -14,6 +13,8 @@ import fxss from './_filterXSS.mjs'
  * 白名單外之標籤轉義，白名單內之標籤刪除白名單外之屬性與危險網址(style屬性保留)，標籤外之文字只轉義會開始標籤之<(其後為英文字母、斜線、驚嘆號、問號或位於結尾)，>與其餘之<維持原樣，故'a < b'等數學式不改寫
  *
  * 輸出僅供以HTML內文呈現(如v-html、innerHTML)，不可放入屬性值或註解內
+ *
+ * 物件與陣列遞迴處理，物件只依自有可列舉鍵走訪，length視為一般鍵(不使走訪改為類陣列，不新增鍵)，成本與length值無關
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/clearXSS.test.mjs Github}
  * @memberOf wsemi
@@ -46,12 +47,19 @@ function clearXSS(inp) {
         return filterXSS(c, opt)
     }
 
-    //scxss
+    //scxss, 物件只依自有可列舉鍵迭代(不用lodash each: 具非負整數length鍵之物件會被當類陣列, 真實鍵被略過且依length逐一建立索引鍵), 真陣列依索引迭代
+    //僅以Symbol.toStringTag偽稱Array之物件(isarr為真而Array.isArray為假)視為物件, 不依其length迭代
     function scxss(o) {
-        if (isarr(o) || isobj(o)) {
-            each(o, function(v, k) {
-                o[k] = scxss(v)
-            })
+        if (Array.isArray(o)) {
+            for (let i = 0; i < o.length; i++) {
+                o[i] = scxss(o[i])
+            }
+            return o
+        }
+        else if (isobj(o) || isarr(o)) {
+            for (let k of Object.keys(o)) {
+                o[k] = scxss(o[k])
+            }
             return o
         }
         else if (isestr(o)) {

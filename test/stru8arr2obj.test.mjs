@@ -310,3 +310,47 @@ describe(`stru8arr2obj 呼叫端物件拋出任意值(R-CODEC-ERR-01之2)`, func
     })
 
 })
+
+
+describe(`stru8arr2obj 二進位索引只可被引用一次(R-OBJ-ITER-01規則6 外審補測)`, function() {
+
+    //合法編碼端(obj2stru8arr)每個二進位值都配新索引, 同一索引被引用多次只可能為異常封包: ArrayBuffer標記每次引用都複製一份堆外記憶體, 引用次數乘分塊大小即為配置量
+    let mk = (marks, binarys) => ({ results: JSON.stringify(marks), binarys })
+
+    for (let type of ['Uint8Array', 'Uint16Array', 'ArrayBuffer']) {
+        let b = new Uint8Array([1, 0, 2, 0])
+
+        it(`should reject a binary index referenced twice (${type}): {} by default, error with the reason when returnWithStateAndMsg`, function() {
+            let inp = mk([`[BlazeFor${type}]::0`, `[BlazeFor${type}]::0`], [b])
+            assert.strict.deepStrictEqual(stru8arr2obj(inp), {})
+            assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+        })
+
+        it(`should restore distinct indexes each referenced once (${type})`, function() {
+            let inp = mk([`[BlazeFor${type}]::0`, `[BlazeFor${type}]::1`], [b, new Uint8Array([3, 0, 4, 0])])
+            let r = stru8arr2obj(inp, { returnWithStateAndMsg: true })
+            assert.strict.strictEqual(r.state, 'success')
+            assert.strict.strictEqual(r.msg.length, 2)
+        })
+    }
+
+    it(`should reject the same index referenced by markers of different types`, function() {
+        let inp = mk(['[BlazeForUint8Array]::0', '[BlazeForArrayBuffer]::0'], [new Uint8Array([1, 2])])
+        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+    })
+
+    it(`should reject a repeated reference even when it is nested deep inside the results`, function() {
+        let inp = { results: JSON.stringify({ a: [{ x: '[BlazeForArrayBuffer]::0' }], b: { y: { z: '[BlazeForArrayBuffer]::0' } } }), binarys: [new Uint8Array([1, 2])] }
+        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+    })
+
+    it(`should not count escaped application strings as references`, function() {
+        //與標記格式相同之應用字串經編碼端前置跳脫記號, 解碼時剝一層還原為字串, 不是二進位參照
+        let esc = '[BlazeForPreventEscape][BlazeForUint8Array]::0'
+        let inp = { results: JSON.stringify([esc, esc, '[BlazeForUint8Array]::0']), binarys: [new Uint8Array([9])] }
+        let r = stru8arr2obj(inp, { returnWithStateAndMsg: true })
+        assert.strict.strictEqual(r.state, 'success')
+        assert.strict.deepStrictEqual(r.msg, ['[BlazeForUint8Array]::0', '[BlazeForUint8Array]::0', new Uint8Array([9])])
+    })
+
+})

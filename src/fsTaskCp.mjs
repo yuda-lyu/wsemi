@@ -1,6 +1,5 @@
 import fs from 'fs'
 import get from 'lodash-es/get.js'
-import each from 'lodash-es/each.js'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import genPm from './genPm.mjs'
@@ -311,9 +310,12 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
 
     let cvKpToLtdt = (kp) => {
         let ltdt = []
-        each(kp, (v, k) => {
-            ltdt.push({ fp: k, hash: v })
-        })
+        if (kp === null || kp === undefined) { //紀錄檔內容為null時(j2o得null)視為無紀錄, 同原each對null不迭代
+            return ltdt
+        }
+        for (let k of Object.keys(kp)) { //以自有鍵迭代, 檔案路徑鍵為length時不得被lodash each當成陣列樣物件而依索引迭代(R-OBJ-ITER-01)
+            ltdt.push({ fp: k, hash: kp[k] })
+        }
         return ltdt
     }
 

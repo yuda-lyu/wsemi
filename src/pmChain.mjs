@@ -1,5 +1,5 @@
 import genPm from './genPm.mjs'
-import isarr from './isarr.mjs'
+import pmReadItems from './_pmReadItems.mjs'
 
 
 /**
@@ -7,7 +7,7 @@ import isarr from './isarr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} pms 輸入函數陣列，各函數依序接收前一結果，回傳一般值或Promise(同Promise之then)；元素須為函數，傳入Promise(而非回傳Promise之函數)將被忽略，該Promise之reject亦不會被處理
+ * @param {Array} pms 輸入函數陣列，各函數依序接收前一結果，回傳一般值或Promise(同Promise之then)；元素須為函數，傳入Promise(而非回傳Promise之函數)將被忽略，該Promise之reject亦不會被處理；元素於進入時即取值，呼叫後改動pms不影響執行，讀取元素拋錯時以該錯誤reject
  * @param {*} initial 輸入循序執行函數陣列的初始值
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
@@ -133,14 +133,26 @@ import isarr from './isarr.mjs'
  *
  */
 function pmChain(pms, initial = null) {
-    if (!isarr(pms)) {
+
+    //複製與建鏈皆於try內且於進入時完成, 其後只處理複本(呼叫後改動pms不影響執行), 讀取元素拋錯(元素getter拋錯、已撤銷Proxy等)即reject該錯誤(不同步拋出、不留下已建好之鏈)
+    //複製由_pmReadItems(只接受真陣列Array.isArray, 以明確建立之普通陣列保留空洞, 不使用slice以免由使用端之Symbol.species決定內部容器); 以Symbol.toStringTag偽稱Array之物件視為非陣列
+    try {
+        let rd = pmReadItems(pms, true)
+        if (rd === null) {
+            let pm = genPm()
+            pm.reject('pms is not an array')
+            return pm
+        }
+        return rd.items.reduce((pm, v) => {
+            return pm.then(v)
+        }, Promise.resolve(initial))
+    }
+    catch (err) {
         let pm = genPm()
-        pm.reject('pms is not an array')
+        pm.reject(err)
         return pm
     }
-    return pms.reduce((pm, v) => {
-        return pm.then(v)
-    }, Promise.resolve(initial))
+
 }
 
 

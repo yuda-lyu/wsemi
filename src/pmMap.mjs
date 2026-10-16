@@ -1,13 +1,11 @@
 import each from 'lodash-es/each.js'
-import size from 'lodash-es/size.js'
 import values from 'lodash-es/values.js'
 import genPm from './genPm.mjs'
-import isarr from './isarr.mjs'
-import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
 import isnint from './isnint.mjs'
 import cint from './cint.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
+import pmReadItems from './_pmReadItems.mjs'
 
 
 /**
@@ -15,6 +13,7 @@ import pmMarkHandled from './_pmMarkHandled.mjs'
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
  * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection。rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
+ * rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, 鍵字串)；名為length之鍵與其他鍵同為一般鍵，不因其值為非負整數而改成依索引迭代。
  * 若先行產生promise則takeLimit設定會無效，因promise已先行初始化啟動。
  * 等同於Bluebird的Promise.map，而concurrency為takeLimit。
  * 使用函數執行時，當takeLimit=1，等同於mapSeries，promise依序執行完畢才會調用下一個promise。
@@ -22,7 +21,7 @@ import pmMarkHandled from './_pmMarkHandled.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmMap.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
+ * @param {Array|Object} rs 輸入資料陣列或鍵值物件，若不給fn則rs需要為Promise陣列(或值為Promise之物件)
  * @param {Function} fun 輸入循序執行值的呼叫async函數
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
@@ -365,35 +364,25 @@ function pmMap(rs, fun, takeLimit = 0) {
     //pm
     let pm = genPm()
 
-    //check
-    if (!isarr(rs) && !isobj(rs)) {
-        pm.reject('rs is not an array or object')
-        return pm
-    }
-
-    //check
-    if (size(rs) === 0) {
-        pm.resolve([]) //對空集合立即resolve([]), 因物件輸入會先轉換成[{k, v}]陣列處理, 最終透過values(ts)皆回傳陣列, 故須resolve([])
-        return pm
-    }
-
-    //object rs to array, 陣列rs則複製為內部陣列; 皆於進入時取值(同pmSeries), 派發時不再讀呼叫端之rs, 讀取元素拋錯即reject該錯誤(不同步拋出、不懸置)
+    //check與rs to array, 皆於進入時取值(同pmSeries、pmChain), 單一擁有者為_pmReadItems(R-PM-SETTLE-01規則17、R-OBJ-ITER-01): 真陣列複製為普通陣列, 物件依自有可列舉字串鍵展開, 判定或讀取拋錯即reject該錯誤(不同步拋出、不懸置), 已讀到之Promise先標記已處理
     let useObj = false
     try {
-        if (isobj(rs)) {
-            useObj = true
-            let _rs = []
-            each(rs, (v, k) => {
-                _rs.push({ k, v })
-            })
-            rs = _rs
+        let rd = pmReadItems(rs)
+        if (rd === null) {
+            pm.reject('rs is not an array or object')
+            return pm
         }
-        else {
-            rs = Array.prototype.slice.call(rs)
-        }
+        rs = rd.items
+        useObj = rd.useObj
     }
     catch (err) {
         pm.reject(err)
+        return pm
+    }
+
+    //check
+    if (rs.length === 0) {
+        pm.resolve([]) //對空集合立即resolve([]), 因物件輸入會先轉換成[{k, v}]陣列處理, 最終透過values(ts)皆回傳陣列, 故須resolve([])
         return pm
     }
 

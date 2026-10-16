@@ -1,5 +1,4 @@
 import map from 'lodash-es/map.js'
-import each from 'lodash-es/each.js'
 import zipObject from 'lodash-es/zipObject.js'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
@@ -59,12 +58,12 @@ function keysmat2ltdt(keys, mat, opt = {}) {
         //o
         let o = zipObject(keys, r)
 
-        //clear undefined
-        each(o, function(v, k) {
-            if (v === undefined) {
+        //clear undefined, 以自有鍵迭代, 欄名為length時不得被lodash each當成陣列樣物件而依索引迭代(R-OBJ-ITER-01)
+        for (let k of Object.keys(o)) {
+            if (o[k] === undefined) {
                 o[k] = ''
             }
-        })
+        }
 
         return o
     })

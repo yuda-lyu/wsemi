@@ -1,7 +1,6 @@
 import trim from 'lodash-es/trim.js'
 import get from 'lodash-es/get.js'
 import map from 'lodash-es/map.js'
-import each from 'lodash-es/each.js'
 import size from 'lodash-es/size.js'
 import keys from 'lodash-es/keys.js'
 import round from 'lodash-es/round.js'
@@ -1293,12 +1292,13 @@ function interp(gradient) {
         }
     }
 
-    //gs
+    //gs, 物件以自有可列舉字串鍵迭代, length與其他鍵同為一般鍵(R-OBJ-ITER-01: lodash each對具非負整數length之物件改走索引, 使length被忽略)
     let gs = []
-    each(gradient, (v, k) => {
+    for (let k of Object.keys(gradient)) {
+        let v = gradient[k]
         // console.log('g', k, v)
         gs.push([cdbl(k), toRgba(parseColor(v)), v])
-    })
+    }
     gs = sortBy(gs, 0)
     // console.log('gs', gs)
 

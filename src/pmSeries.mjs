@@ -1,10 +1,9 @@
 import drop from 'lodash-es/drop.js'
 import each from 'lodash-es/each.js'
 import genPm from './genPm.mjs'
-import isarr from './isarr.mjs'
-import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
+import pmReadItems from './_pmReadItems.mjs'
 
 
 /**
@@ -12,12 +11,14 @@ import pmMarkHandled from './_pmMarkHandled.mjs'
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
  * 不給fn時，先行產生之Promise於進入時即被觀察，排在後面者先reject亦不成為未處理之rejection，其結果仍依序取用。
+ * rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
+ * rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, 鍵字串)；名為length之鍵與其他鍵同為一般鍵，不因其值為非負整數而改成依索引迭代。
  * 使用函數執行時，等同於pmMap使用函數執行且takeLimit=1，promise依序執行完畢才會調用下一個promise。
  * 先行產生promise時，等同於pmMap使用函數執行且takeLimit=0，或是等同於pmMap先行產生promise，各promise直接執行視各自執行時間結束。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} rs 輸入資料陣列，若不給fn則rs需要為Promise陣列
+ * @param {Array|Object} rs 輸入資料陣列或鍵值物件，若不給fn則rs需要為Promise陣列(或值為Promise之物件)
  * @param {Function} fun 輸入循序執行值的呼叫函數
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
@@ -216,21 +217,20 @@ function pmSeries(rs, fun) {
     //pm
     let pm = genPm()
 
-    //check
-    if (!isarr(rs) && !isobj(rs)) {
-        pm.reject('rs is not an array or object')
-        return pm
-    }
-
-    //object rs to array
+    //check與rs to array, 皆於進入時取值(同pmMap、pmChain), 單一擁有者為_pmReadItems(R-PM-SETTLE-01規則17、R-OBJ-ITER-01): 真陣列複製為普通陣列, 物件依自有可列舉字串鍵展開, 判定或讀取拋錯即reject該錯誤(不同步拋出、不懸置), 已讀到之Promise先標記已處理
     let useObj = false
-    if (isobj(rs)) {
-        useObj = true
-        let _rs = []
-        each(rs, (v, k) => {
-            _rs.push({ k, v })
-        })
-        rs = _rs
+    try {
+        let rd = pmReadItems(rs)
+        if (rd === null) {
+            pm.reject('rs is not an array or object')
+            return pm
+        }
+        rs = rd.items
+        useObj = rd.useObj
+    }
+    catch (err) {
+        pm.reject(err)
+        return pm
     }
 
     //default fun

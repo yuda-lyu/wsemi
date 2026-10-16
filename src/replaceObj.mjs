@@ -1,4 +1,3 @@
-import each from 'lodash-es/each.js'
 import isobj from './isobj.mjs'
 import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
@@ -31,20 +30,22 @@ function replaceObj(c, o) {
         return ''
     }
 
-    //自動轉換
-    each(o, function(v, k) {
+    //自動轉換, 物件以自有可列舉字串鍵迭代, length與其他鍵同為一般鍵(R-OBJ-ITER-01: lodash each對具非負整數length之物件改走索引, length極大時為CPU無限迴圈)
+    for (let k of Object.keys(o)) {
+        let v = o[k]
         if (isobj(v) || isarr(v)) { //允許空字串
             v = JSON.stringify(v)
         }
         else {
             v = cstr(v)
         }
-    })
+    }
 
     //replace
-    each(o, function(v, k) {
+    for (let k of Object.keys(o)) {
+        let v = o[k]
         c = replace(c, k, v)
-    })
+    }
 
     return c
 }
