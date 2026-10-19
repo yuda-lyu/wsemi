@@ -26,6 +26,7 @@
 //
 //各後端對OK案之共同斷言: select(find)命中集合 = 依族別之ids; delAll(find)刪除之集合 = select(find)命中之集合(delAll前以seed()重建);
 //對REJ案之共同斷言: select與delAll皆reject且訊息以'invalid find: '開頭, 資料表不變.
+//例外: T38與T39(Proxy包空物件)以環境有可用之structuredClone為前提(Node 17以上、主流瀏覽器皆有); 無者cvOrmFind視為全部(帳本R-FIND-01已知限制9).
 
 
 let columns = {
@@ -80,6 +81,7 @@ let W = {
     hole: 'sparse array hole',
     extra: 'array carries extra properties',
     exc: 'an exception was thrown',
+    emptyodd: 'an empty find must be an ordinary object',
 }
 
 let A6 = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6']
@@ -154,6 +156,14 @@ S('T28', 'WL-H5', '已撤銷之Proxy', () => {
 S('T29', 'WL-02', '原型改為null之Map(標籤被誤判為一般物件, 無自有鍵會成為「全部」)', () => Object.setPrototypeOf(new Map([['id', 'a1']]), null), 'REJ', { why: W.plain })
 S('T30', 'WL-02', '原型改為Object.prototype之Set', () => Object.setPrototypeOf(new Set(['a1']), Object.prototype), 'REJ', { why: W.plain })
 S('T31', 'WL-02', '原型改為null之Uint8Array(4)', () => Object.setPrototypeOf(new Uint8Array(4), null), 'REJ', { why: W.plain })
+S('T32', 'WL-02', '原型改為null之Map且帶自有鍵g(曾被當成條件{g:\'A\'})', () => Object.assign(Object.setPrototypeOf(new Map(), null), { g: 'A' }), 'REJ', { why: W.plain })
+S('T33', 'WL-02', '原型改為Object.prototype之Set且帶自有鍵g', () => Object.assign(Object.setPrototypeOf(new Set(), Object.prototype), { g: 'A' }), 'REJ', { why: W.plain })
+S('T34', 'WL-02', '原型改為null之Promise且帶自有鍵g', () => Object.assign(Object.setPrototypeOf(Promise.resolve(1), null), { g: 'A' }), 'REJ', { why: W.plain })
+S('T35', 'WL-02', '原型改為null之ArrayBuffer且帶自有鍵g', () => Object.assign(Object.setPrototypeOf(new ArrayBuffer(4), null), { g: 'A' }), 'REJ', { why: W.plain })
+S('T36', 'WL-02', '原型改為null之Uint8Array(2)且帶自有鍵g', () => Object.assign(Object.setPrototypeOf(new Uint8Array(2), null), { g: 'A' }), 'REJ', { why: W.plain })
+S('T37', 'WL-02', '原型改為null之WeakMap且帶自有鍵g', () => Object.assign(Object.setPrototypeOf(new WeakMap(), null), { g: 'A' }), 'REJ', { why: W.plain })
+S('T38', 'WL-02', 'Proxy包原型改為null之Map(無自有鍵, 曾被當成空條件而使delAll刪光全表; 前提: 環境有可用之structuredClone, 無者視為全部)', () => new Proxy(Object.setPrototypeOf(new Map(), null), {}), 'REJ', { why: W.emptyodd })
+S('T39', 'WL-01', 'Proxy包空物件(空即全部, 須為可證明之真實空物件, Proxy不視為全部; 前提: 環境有可用之structuredClone, 無者視為全部)', () => new Proxy({}, {}), 'REJ', { why: W.emptyodd })
 
 //E 等值與純量型別(WL-03、WL-S1、WL-S2)
 S('E01', 'WL-03', '{id:\'a1\'}', () => ({ id: 'a1' }), 'OK', { ids: I(['a1']) })
@@ -453,6 +463,12 @@ S('H27', 'WL-H5', '欄值之Symbol.toStringTag getter拋錯', () => ({
     }
 }), 'REJ', { why: W.exc })
 S('H28', 'WL-L3', '$in含10000元素(上限內; 首元素\'Mary\', 其餘填充; 後端上限低於10000者應reject)', () => ({ name: { $in: ['Mary', ...fills(9999)] } }), 'OK', { ids: I(['a3']), need: { maxIn: 10000 } })
+S('H29', 'WL-02', '$or元素為原型改為null之Map且帶自有鍵g', () => ({ $or: [Object.assign(Object.setPrototypeOf(new Map(), null), { g: 'A' })] }), 'REJ', { why: W.plain })
+S('H30', 'WL-02', '$and元素為原型改為Object.prototype之Set且帶自有鍵g', () => ({ $and: [{ age: { $gt: 0 } }, Object.assign(Object.setPrototypeOf(new Set(), Object.prototype), { g: 'A' })] }), 'REJ', { why: W.plain })
+S('H31', 'WL-02', '欄位運算子物件為原型改為null之Map且帶自有鍵$gt', () => ({ age: Object.assign(Object.setPrototypeOf(new Map(), null), { $gt: 20 }) }), 'REJ', { why: W.type })
+S('H32', 'WL-02', '巢狀$or/$and內之原型改為null之Promise且帶自有鍵g', () => ({ $or: [{ g: 'B' }, { $and: [Object.assign(Object.setPrototypeOf(Promise.resolve(1), null), { g: 'A' })] }] }), 'REJ', { why: W.plain })
+S('H33', 'WL-02', '$or元素為Proxy包原型改為null之Map(空; 非頂層之空物件本即reject)', () => ({ $or: [new Proxy(Object.setPrototypeOf(new Map(), null), {})] }), 'REJ', { why: W.emptydoc })
+S('H34', 'WL-02', '欄位值為Proxy包原型改為null之Map(空運算子物件)', () => ({ age: new Proxy(Object.setPrototypeOf(new Map(), null), {}) }), 'REJ', { why: W.emptyop })
 
 
 let cases = list

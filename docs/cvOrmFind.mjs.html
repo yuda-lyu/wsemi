@@ -61,12 +61,17 @@
 //預設上限, opt只可下調
 let DEF = { maxDepth: 32, maxList: 1000, maxIn: 10000, maxNodes: 100000, maxKey: 128 }
 
+//結構化複製對重複出現之字串每次皆寫出並讀回, 記憶體與(字串總長 x 出現次數)成正比(同一字串被引用一萬次即放大一萬倍),
+//走訪時累計字串碼元總長(含重複), 逾此門檻不複製而改走探針(探針成本與物件數成正比、與字串長度無關)
+let CLONE_MAX_CHARS = 4000000
+
 //內建函數(模組載入時取得, 不受其後之全域汙染影響)
 let ownKeys = Reflect.ownKeys
 let getDesc = Object.getOwnPropertyDescriptor
 let getProto = Object.getPrototypeOf
 let defProp = Object.defineProperty
 let create = Object.create
+let setProto = Object.setPrototypeOf
 let isArray = Array.isArray
 let isInt = Number.isInteger
 let isFin = Number.isFinite
@@ -90,7 +95,7 @@ let toStr = String
 //內部槽之品牌檢查: Map、Set、Promise等之標籤取自其原型之Symbol.toStringTag, 原型被改為null或Object.prototype後
 //Object.prototype.toString回[object Object]而判為一般物件. TypedArray之標籤getter對非TypedArray回傳undefined(不拋錯),
 //可於每個物件檢查(其自有索引鍵之數量與元素數成正比, 須在列舉自有鍵之前擋下); 其餘以品牌方法對非該型別拋錯判定,
-//拋錯成本高, 僅用於頂層且無自有鍵者(空物件於頂層代表「全部」, 此處誤判之代價最大; 其餘位置之空物件本即reject)
+//每次拋錯約3us, 逐物件探測於常見輸入慢約29倍至100倍, 故走訪完畢後先以一次結構化複製證明無品牌物件, 證明不成立才逐物件探針(規則16)
 let taTag = call.bind(getDesc(getProto(Uint8Array.prototype), Symbol.toStringTag).get)
 let probeKey = {}
 let noop = () => {}
@@ -98,7 +103,7 @@ let mapHas = call.bind(Map.prototype.has)
 let setHas = call.bind(Set.prototype.has)
 let weakMapHas = call.bind(WeakMap.prototype.has)
 let abLength = call.bind(getDesc(ArrayBuffer.prototype, 'byteLength').get)
-let dvLength = call.bind(getDesc(DataView.prototype, 'byteLength').get)
+let dvBuffer = call.bind(getDesc(DataView.prototype, 'buffer').get) //不用byteLength: detached或越界之DataView其byteLength getter亦拋錯而被誤判為非DataView, buffer getter不受影響
 let symValueOf = call.bind(Symbol.prototype.valueOf)
 let promiseThen = call.bind(Promise.prototype.then)
 let probes = [
@@ -107,7 +112,7 @@ let probes = [
     (v) => weakMapHas(v, probeKey),
     (v) => oursHas(v, probeKey),
     (v) => abLength(v),
-    (v) => dvLength(v),
+    (v) => dvBuffer(v),
     (v) => symValueOf(v),
     (v) => promiseThen(v, noop, noop), //兩個處理器皆給, 使真Promise衍生之Promise不致產生未處理之rejection
 ]
@@ -119,9 +124,69 @@ if (typeof WeakRef === 'function') {
     let deref = call.bind(WeakRef.prototype.deref)
     probes[probes.length] = (v) => deref(v)
 }
+if (typeof FinalizationRegistry === 'function') {
+    let frUnregister = call.bind(FinalizationRegistry.prototype.unregister)
+    probes[probes.length] = (v) => frUnregister(v, probeKey) //token為物件故不拋錯(回false), 非FinalizationRegistry則拋錯
+}
 if (typeof BigInt === 'function') {
     let bigValueOf = call.bind(BigInt.prototype.valueOf)
     probes[probes.length] = (v) => bigValueOf(v)
+}
+
+//sClone, 結構化複製(Web標準全域, 非Node API; 規則16): 用於證明條件物件中無品牌物件, 不可用時為null(改走精確探針).
+//載入時自檢: 對Proxy須拋錯(Proxy無內部槽, 不拋錯者表示會經陷阱讀取, 不可用)、Map複製後仍為Map、{}複製後為標籤[object Object]且原型為
+//有效之Object.prototype(自身無原型、含hasOwnProperty); 原型取複製函數所屬領域者(cloneProto), 使jest等以vm分領域、
+//全域函數來自外層領域之環境仍可用(複本之原型為外層領域之Object.prototype), 而複本原型為null或他物者視為不可用
+let sClone = null
+let cloneProto = null
+if (typeof structuredClone === 'function') {
+    try {
+        let f = structuredClone
+        let throwsOnProxy = false
+        try {
+            f(new Proxy({}, {}))
+        }
+        catch (err) {
+            throwsOnProxy = true
+        }
+        let e = f({})
+        let p = getProto(e)
+        if (throwsOnProxy &amp;&amp; toTag(f(new Map())) === '[object Map]' &amp;&amp; toTag(e) === '[object Object]' &amp;&amp; ownKeys(e).length === 0 &amp;&amp; p !== null &amp;&amp; getProto(p) === null &amp;&amp; hasOwn(p, 'hasOwnProperty') &amp;&amp; getProto(f({ a: 1 })) === p) {
+            //品牌樣本(原型改為null): 複製須拋錯或複本不再是一般物件(原型不為p); 否則此實作不能用來證明無品牌物件
+            let good = true
+            let samples = [() => new Map(), () => new Set(), () => new WeakMap(), () => new WeakSet(), () => Promise.resolve(0), () => new ArrayBuffer(1), () => new DataView(new ArrayBuffer(1)), () => Object(Symbol('s'))]
+            if (typeof SharedArrayBuffer === 'function') {
+                samples[samples.length] = () => new SharedArrayBuffer(1)
+            }
+            if (typeof WeakRef === 'function') {
+                samples[samples.length] = () => new WeakRef(probeKey)
+            }
+            if (typeof FinalizationRegistry === 'function') {
+                samples[samples.length] = () => new FinalizationRegistry(noop)
+            }
+            if (typeof BigInt === 'function') {
+                samples[samples.length] = () => Object(BigInt(1))
+            }
+            for (let i = 0; i &lt; samples.length &amp;&amp; good; i++) {
+                let o = setProto(samples[i](), null)
+                try {
+                    if (getProto(f(o)) === p) {
+                        good = false
+                    }
+                }
+                catch (err) {
+                    //拋錯: 符合
+                }
+            }
+            if (good) {
+                sClone = f
+                cloneProto = p
+            }
+        }
+    }
+    catch (err) {
+        //不可用, 走精確探針
+    }
 }
 
 //原因詞彙(單一出處; 案例表src/_cvOrmFindCases.mjs之why為其子字串)
@@ -149,6 +214,7 @@ let R = {
     deep: 'nesting is too deep',
     big: 'condition is too large',
     exc: 'an exception was thrown while reading the condition',
+    emptyOdd: 'an empty find must be an ordinary object',
 }
 
 //欄名文法: 字母或底線開頭, 其後字母/組合附加符號/數字/底線
@@ -274,11 +340,74 @@ let hasSlot = (v) => {
     return false
 }
 
-//readProp, 讀物件之自有屬性值(僅讀一次, 以屬性描述子): 拒絕Symbol鍵、不可列舉、存取器
-let readProp = (obj, k) => {
+//cloneIsPlain, 對走訪時記錄之條件物件(c.ob: 實際讀過並接受之物件本身, 不是走訪後才可能被呼叫端陷阱改動之find可達樹)做一次結構化複製
+//(規則16): 成功且每個複本之原型皆為複製函數所屬領域之Object.prototype(只看原型身分, 不看標籤: 複本由引擎產生, 標籤可被全域汙染改變),
+//即證明這些物件皆非品牌物件(Map、Set、ArrayBuffer、DataView、BigInt包裝等複製後仍為原品牌, 原型為其內建原型; 其下層條件物件皆各自在記錄內, 故只需逐筆淺檢).
+//不可複製之物件(Proxy、WeakMap、Promise、WeakRef、Symbol包裝、FinalizationRegistry等)使其拋錯而回false, 改走精確探針
+let cloneIsPlain = (ob, n) => {
+    if (sClone === null) {
+        return false
+    }
+    try {
+        let cl = sClone(ob)
+        for (let i = 0; i &lt; n; i++) {
+            if (getProto(cl[i]) !== cloneProto) {
+                return false
+            }
+        }
+        return true
+    }
+    catch (err) {
+        return false
+    }
+}
+
+//emptyCloneOk, 頂層空物件(語意為「全部」)是否可證明為真實空物件: 結構化複製成功且複本為一般空物件
+//(複本可為空物件者仍可能是含私有欄位之類別實例或宿主物件改原型為null之結果, 純JS無法辨別, 見已知限制⑤)
+let emptyCloneOk = (v) => {
+    if (sClone === null) {
+        return false
+    }
+    try {
+        let cl = sClone(v)
+        return getProto(cl) === cloneProto &amp;&amp; ownKeys(cl).length === 0
+    }
+    catch (err) {
+        return false
+    }
+}
+
+//track, 記錄通過一般物件判定之非空條件物件、其路徑與是否為欄位運算子物件, 供走訪完畢後之品牌檢查使用;
+//記錄陣列為null原型(直接指派不查找Array.prototype之索引setter, 不受汙染; 比defineProperty快約45倍)
+let track = (c, obj, ops) => {
+    let n = c.nt
+    c.ob[n] = obj
+    c.pa[n] = c.path
+    c.op[n] = ops
+    c.nt = n + 1
+}
+
+//chkSlots, 走訪完畢後檢查所有被記錄之條件物件皆非內建品牌物件: 先以一次結構化複製證明, 證明不成立才依走訪順序逐物件探針, 命中者以其路徑reject
+let chkSlots = (c) => {
+    let n = c.nt
+    if (n === 0 || (c.chars &lt;= CLONE_MAX_CHARS &amp;&amp; cloneIsPlain(c.ob, n))) {
+        return
+    }
+    for (let i = 0; i &lt; n; i++) {
+        if (hasSlot(c.ob[i])) {
+            c.path = c.pa[i]
+            fail(c.op[i] ? `${R.type} [object]` : `${R.plain}, got [object]`)
+        }
+    }
+}
+
+//readProp, 讀物件之自有屬性值(僅讀一次, 以屬性描述子): 拒絕Symbol鍵(無法安全顯示, 報所屬物件之路徑)、不可列舉、存取器;
+//路徑先推進至該屬性鍵, 描述子陷阱拋錯與存取器等失敗皆報至該鍵(由呼叫端於處理完該屬性後退回)
+let readProp = (c, obj, k) => {
     if (typeof k !== 'string') {
         fail(R.sym)
     }
+    c.path = { up: c.path, k }
     let d = getDesc(obj, k)
     if (d === undefined || !d.enumerable) {
         fail(R.nonEnumProp)
@@ -298,18 +427,19 @@ let readLen = (arr) => {
     return n
 }
 
-//readElem, 讀陣列元素(僅讀一次, 以屬性描述子): 洞於陣列路徑報告, 不可列舉與存取器於元素路徑報告
+//readElem, 讀陣列元素(僅讀一次, 以屬性描述子): 路徑先推進至該元素(由呼叫端於處理完該元素後退回),
+//描述子陷阱拋錯、不可列舉與存取器皆報至元素索引; 洞無元素可指, 退回而於陣列路徑報告
 let readElem = (c, arr, i) => {
+    c.path = { up: c.path, k: i }
     let d = getDesc(arr, i)
     if (d === undefined) {
+        c.path = c.path.up
         fail(`sparse array hole at index ${i}`)
     }
     if (!d.enumerable) {
-        c.path = { up: c.path, k: i }
         fail(R.nonEnumEl)
     }
     if (!hasOwn(d, 'value')) {
-        c.path = { up: c.path, k: i }
         fail(R.accEl)
     }
     return d.value
@@ -368,6 +498,7 @@ let scalar = (c, v, allowNull) => {
     switch (typeof v) {
     case 'string':
         chkStr(v)
+        c.chars += v.length
         return v
     case 'number':
         if (!isFin(v)) {
@@ -418,7 +549,6 @@ let chkSet = (c, op, arr) => {
     let out = []
     for (let i = 0; i &lt; n; i++) {
         let v = readElem(c, arr, i)
-        c.path = { up: c.path, k: i }
         put(out, i, scalar(c, v, false))
         c.path = c.path.up
     }
@@ -437,11 +567,11 @@ let chkOps = (c, obj) => {
     if (n === 0) {
         fail(R.emptyOp)
     }
+    track(c, obj, true)
     let out = create(null)
     for (let i = 0; i &lt; n; i++) {
         let k = keys[i]
-        let v = readProp(obj, k)
-        c.path = { up: c.path, k }
+        let v = readProp(c, obj, k)
         switch (k) {
         case '$eq':
         case '$ne':
@@ -503,7 +633,6 @@ let chkList = (c, op, arr, depth) => {
     let out = []
     for (let i = 0; i &lt; n; i++) {
         let v = readElem(c, arr, i)
-        c.path = { up: c.path, k: i }
         put(out, i, chkDoc(c, v, depth, false))
         c.path = c.path.up
     }
@@ -524,19 +653,25 @@ let chkDoc = (c, obj, depth, top) => {
     let n = keys.length
     if (n === 0) {
         if (top) {
-            //頂層空物件代表「全部」, 先排除原型被改為null或Object.prototype之Map、Set等(其標籤被誤判為一般物件)
-            if (hasSlot(obj)) {
-                fail(`${R.plain}, got [object]`)
+            //頂層空物件代表「全部」, 誤判代價最大: 須可證明為真實空物件(規則16), 排除原型被改為null或Object.prototype之Map、Set等
+            //(其標籤被誤判為一般物件)與Proxy、不可複製之宿主物件; 無可用結構化複製之環境只能以探針辨品牌物件
+            if (!emptyCloneOk(obj)) {
+                if (hasSlot(obj)) {
+                    fail(`${R.plain}, got [object]`)
+                }
+                if (sClone !== null) {
+                    fail(R.emptyOdd)
+                }
             }
             return create(null)
         }
         fail(R.emptyDoc)
     }
+    track(c, obj, false)
     let out = create(null)
     for (let i = 0; i &lt; n; i++) {
         let k = keys[i]
-        let v = readProp(obj, k)
-        c.path = { up: c.path, k }
+        let v = readProp(c, obj, k)
         if (k === '$and' || k === '$or') {
             put(out, k, chkList(c, k, v, depth + 1))
         }
@@ -609,7 +744,7 @@ let getLimits = (opt) => {
  *
  * 白名單：
  *
- * 1. 頂層與每層條件物件須為一般物件(原型為Object.prototype或null)，null、陣列、字串、數值、布林、函數、Date、RegExp、Map、Set、類別實例等一律reject，不得視同{}；原型被改為null或Object.prototype之Map、Set、Promise、ArrayBuffer、DataView、TypedArray等亦reject(TypedArray於每個物件檢查，其餘於頂層無自有鍵時以品牌檢查)
+ * 1. 頂層與每層條件物件須為一般物件(原型為Object.prototype或null)，null、陣列、字串、數值、布林、函數、Date、RegExp、Map、Set、類別實例等一律reject，不得視同{}；原型被改為null或Object.prototype之Map、Set、WeakMap、WeakSet、Promise、ArrayBuffer、DataView、TypedArray、Symbol與BigInt包裝、WeakRef、FinalizationRegistry等內建品牌物件，於任何位置(頂層、欄位運算子物件、$and/$or元素，空或帶自有鍵)亦reject；頂層空物件(代表全部)須可證明為真實空物件，Proxy與不可複製之宿主物件不視為全部
  *
  * 2. 欄位等值{欄: 純量}，多欄隱含AND；純量為字串、有限數字(含-0)、布林、有效Date，字串不得含NUL與孤立代理字元；null僅可用於欄位等值、$eq、$ne
  *
@@ -625,9 +760,9 @@ let getLimits = (opt) => {
  *
  * 8. 上限(opt只可下調，不可放寬)：邏輯巢狀深度32、$and/$or長度1000、$in/$nin長度10000、節點總數100000(條件物件、運算子物件、純量各計1)、欄名128
  *
- * 錯誤一律為同步拋出之Error('invalid find: 原因 at [路徑]')，不回顯值(鍵名為路徑之一部分，限30字元並以?取代控制字元、格式字元與方括號)；走訪中任何例外(含呼叫端之getter、Proxy陷阱、Symbol.toStringTag getter)一律轉為此格式，不轉述呼叫端之錯誤訊息；可重入。opt須為物件、null或未給，僅可含下列五個鍵(自有資料屬性)，設定錯誤另拋Error('invalid opt: 原因')。
+ * 錯誤一律為同步拋出之Error('invalid find: 原因 at [路徑]')，不回顯值(鍵名為路徑之一部分，限30字元並以?取代控制字元、格式字元與方括號)；走訪中任何例外(含呼叫端之getter、Proxy陷阱、Symbol.toStringTag getter)一律轉為此格式，不轉述呼叫端之錯誤訊息，描述子陷阱拋錯、存取器與不可列舉屬性之路徑含該屬性鍵或元素索引；可重入。opt須為物件、null或未給，僅可含下列五個鍵(自有資料屬性)，設定錯誤另拋Error('invalid opt: 原因')。
  *
- * 已知限制：判定內部標籤須讀Symbol.toStringTag，可能執行呼叫端之Proxy陷阱或getter(例外一律轉為invalid find)；原型被改為null或Object.prototype、且帶自有可列舉資料屬性之Map等內建物件於非頂層位置視為以其自有屬性為條件之一般物件；Proxy之ownKeys結果於引擎內先被完整具現化，其成本不受節點預算約束；共享參照(同一物件出現於多處)每出現一次即各讀各檢各複製，節點數亦逐次計入
+ * 已知限制：判定內部標籤須讀Symbol.toStringTag，可能執行呼叫端之Proxy陷阱或getter(例外一律轉為invalid find)；Proxy無法穿透，非空位置之Proxy包住原型被改之品牌物件視同其經陷阱暴露之條件物件；無法觀察品牌者(含私有欄位之類別實例與AbortController等宿主物件改原型為null、自有鍵為純量constructor之Promise)不被辨出；品牌檢查先以一次結構化複製(structuredClone)證明被記錄之條件物件皆非品牌物件，環境無可用之該全域、字串總長逾400萬碼元或樹內含Proxy時改逐物件探針(每物件約50微秒，含Proxy之近節點上限輸入可達數秒)，且無可用之該全域時無法辨出空Proxy；被判為品牌物件而reject者，其內部資料(Map/Set之項目、ArrayBuffer之位元組)可能被複製讀取一次，成本不受節點預算約束；Proxy之ownKeys結果於引擎內先被完整具現化，其成本不受節點預算約束；共享參照(同一物件出現於多處)每出現一次即各讀各檢各複製，節點數亦逐次計入
  *
  * 後端專屬之檢核(欄位型別、欄是否存在、主鍵正規化、DATE範圍、NULL三值語意)不在此，由各後端於本函數之後自行處理；契約案例表見wsemi/src/_cvOrmFindCases.mjs。
  *
@@ -677,13 +812,16 @@ function cvOrmFind(find, opt) {
     let lim = getLimits(opt)
 
     //c, 單次呼叫之狀態(無模組層可變狀態)
-    let c = { nodes: 0, path: null, maxDepth: lim.maxDepth, maxList: lim.maxList, maxIn: lim.maxIn, maxNodes: lim.maxNodes, maxKey: lim.maxKey }
+    //ob/pa/op/nt為走訪中記錄之條件物件、其路徑、是否運算子物件與筆數, 供走訪完畢後之品牌檢查使用
+    let c = { nodes: 0, path: null, maxDepth: lim.maxDepth, maxList: lim.maxList, maxIn: lim.maxIn, maxNodes: lim.maxNodes, maxKey: lim.maxKey, chars: 0, ob: setProto([], null), pa: setProto([], null), op: setProto([], null), nt: 0 }
 
     try {
         if (find === undefined) {
             return create(null)
         }
-        return chkDoc(c, find, 0, true)
+        let out = chkDoc(c, find, 0, true)
+        chkSlots(c)
+        return out
     }
     catch (err) {
         //本模組之失敗取其原因詞彙, 其餘例外(呼叫端之getter、Proxy陷阱等)一律為固定原因, 不轉述其訊息
@@ -709,7 +847,7 @@ export default cvOrmFind
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Oct 17 2026 13:11:01 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Oct 19 2026 16:26:07 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

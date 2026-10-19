@@ -758,21 +758,21 @@ describe('cvOrmFind 異常結構(規則10)', function() {
             get a() {
                 return 1
             }
-        }), 'accessor property is not allowed', 'find')
+        }), 'accessor property is not allowed', 'find.a')
         rej(() => ({
             a: {
                 get $gt() {
                     return 1
                 }
             }
-        }), 'accessor property is not allowed', 'find.a')
+        }), 'accessor property is not allowed', 'find.a.$gt')
         rej(() => ({
             $and: [{
                 get a() {
                     return 1
                 }
             }]
-        }), 'accessor property is not allowed', 'find.$and[0]')
+        }), 'accessor property is not allowed', 'find.$and[0].a')
         rej(() => ({
             a: {
                 $in: Object.defineProperty([], '0', {
@@ -806,12 +806,12 @@ describe('cvOrmFind 異常結構(規則10)', function() {
     })
 
     it('should reject non-enumerable properties and elements', function() {
-        rej(() => hidden({}, 'g', 'A'), 'non-enumerable property is not allowed', 'find')
-        rej(() => ({ a: hidden({}, '$gt', 1) }), 'non-enumerable property is not allowed', 'find.a')
-        rej(() => ({ $and: [hidden({}, 'g', 'A')] }), 'non-enumerable property is not allowed', 'find.$and[0]')
+        rej(() => hidden({}, 'g', 'A'), 'non-enumerable property is not allowed', 'find.g')
+        rej(() => ({ a: hidden({}, '$gt', 1) }), 'non-enumerable property is not allowed', 'find.a.$gt')
+        rej(() => ({ $and: [hidden({}, 'g', 'A')] }), 'non-enumerable property is not allowed', 'find.$and[0].g')
         rej(() => ({ g: { $in: hidden(['A'], '0', 'A') } }), 'non-enumerable element is not allowed', 'find.g.$in[0]')
         rej(() => ({ $or: hidden([{ g: 'A' }], '0', { g: 'A' }) }), 'non-enumerable element is not allowed', 'find.$or[0]')
-        rej(() => withEnumerable(hidden({}, 'a', 1), 'b', 2), 'non-enumerable property is not allowed', 'find')
+        rej(() => withEnumerable(hidden({}, 'a', 1), 'b', 2), 'non-enumerable property is not allowed', 'find.a')
     })
 
     it('should reject sparse arrays, extra own properties on arrays (string, symbol, index-like) and non-array array-likes', function() {
@@ -1038,8 +1038,8 @@ describe('cvOrmFind 檢查之值即使用之值(規則11)', function() {
                 get a() {
                     return 1
                 }
-            }), 'accessor property is not allowed', 'find')
-            rej(() => hidden({}, 'a', 1), 'non-enumerable property is not allowed', 'find')
+            }), 'accessor property is not allowed', 'find.a')
+            rej(() => hidden({}, 'a', 1), 'non-enumerable property is not allowed', 'find.a')
             rej(() => ({
                 a: {
                     $in: Object.defineProperty([], '0', {
@@ -1262,7 +1262,7 @@ describe('cvOrmFind 錯誤格式與例外轉換(規則12)', function() {
         })
         rej(() => trap('ownKeys', new Error('SECRET-keys')), why, 'find')
         rej(() => ({ x: trap('ownKeys', new Error('SECRET-keys')) }), why, 'find.x')
-        rej(() => ({ $and: [{ a: 1 }, trap('getOwnPropertyDescriptor', new Error('SECRET-gopd'))] }), why, 'find.$and[1]')
+        rej(() => ({ $and: [{ a: 1 }, trap('getOwnPropertyDescriptor', new Error('SECRET-gopd'))] }), why, 'find.$and[1].a') //描述子陷阱: 路徑含屬性鍵(規則12)
         rej(() => ({ $and: [{ a: 1 }, trap('getPrototypeOf', new Error('SECRET-gpo'))] }), why, 'find.$and[1]')
         rej(() => ({
             a: {
@@ -1370,7 +1370,7 @@ describe('cvOrmFind 錯誤格式與例外轉換(規則12)', function() {
                 throw new Error('outer failure')
             }
         })
-        rej(() => ({ a: 1, c: q }), 'an exception was thrown', 'find.c')
+        rej(() => ({ a: 1, c: q }), 'an exception was thrown', 'find.c.$gt')
     })
 
 })
@@ -1759,10 +1759,10 @@ describe('cvOrmFind 外審補強(R-FIND-01 規則2、9~12)', function() {
         rej(() => ({ a: { $eq: ta() } }), 'unsupported value type', 'find.a.$eq')
     })
 
-    it('documents the limit: a re-prototyped Map that carries own enumerable data properties is read as a plain bag of its own properties', function() {
+    it('should reject a re-prototyped Map or Set that carries own enumerable data properties, at the top and as an element (formerly a documented limit, now rule 16)', function() {
         let m = Object.assign(nullp(new Map([['x', 1]])), { g: 'A' })
-        assert.deepStrictEqual(toPlain(cvOrmFind(m)), { g: 'A' })
-        assert.deepStrictEqual(toPlain(cvOrmFind({ $and: [Object.assign(nullp(new Set()), { g: 'A' })] })), { $and: [{ g: 'A' }] })
+        rej(() => m, 'condition must be a plain object, got [object]', 'find')
+        rej(() => ({ $and: [Object.assign(nullp(new Set()), { g: 'A' })] }), 'condition must be a plain object, got [object]', 'find.$and[0]')
     })
 
     it('should return a fresh object for {} and for an empty null-prototype input, and keep no state between results', function() {
@@ -2340,17 +2340,17 @@ describe('cvOrmFind 極大輸入(子行程, R-FIND-01)', function() {
 
     let run = (name, execArgv = ['--max-old-space-size=64', '--expose-gc'], timeout = 60000) => runChildCase(fpRunner, name, { execArgv, timeout })
 
-    let rejectedFast = (name, why) => {
+    let rejectedFast = (name, why, maxMB = 40) => {
         let { r, status } = run(name)
         assert.strictEqual(status, 0, name)
         assert.strictEqual(r.ok, false, `${name}: must reject`)
         assert.ok(r.err.startsWith('invalid find: ') && r.err.includes(why), `${name}: ${r.err}`)
         assert.ok(r.ms < 5000, `${name}: ${r.ms} ms`)
-        assert.ok(r.heapMB < 40, `${name}: ${r.heapMB} MB`)
+        assert.ok(r.heapMB < maxMB, `${name}: ${r.heapMB} MB`)
     }
 
     it('should reject exponential shared references (depth 25 and 40) within the node budget, quickly and without much memory', function() {
-        rejectedFast('dag:25', 'condition is too large')
+        rejectedFast('dag:25', 'condition is too large', 56) //規則16之記錄陣列與路徑節點在約10萬節點下多保留約18 MB(HEAD 19 MB、本版 37~44 MB; 未強制GC之heapUsed增量)
         rejectedFast('dag:40', 'nesting is too deep')
     })
 
@@ -2386,6 +2386,16 @@ describe('cvOrmFind 極大輸入(子行程, R-FIND-01)', function() {
         }
     })
 
+    it('should accept one string referenced 10000 times (100M code units in total) in a 64 MB process: the clone is skipped above the string limit', function() {
+        for (let name of ['shared:10000:10000', 'shared:100:30000']) {
+            let { r, status } = run(name)
+            assert.strictEqual(status, 0, name)
+            assert.strictEqual(r.ok, true, `${name}: ${r.err}`)
+            assert.ok(r.ms < 5000, `${name}: ${r.ms} ms`)
+            assert.ok(r.heapMB < 40, `${name}: ${r.heapMB} MB`)
+        }
+    })
+
     it('should accept a 5MB string and 99999 fields in a limited process', function() {
         let { r, status } = run('str:5000000', ['--max-old-space-size=96', '--expose-gc'])
         assert.strictEqual(status, 0)
@@ -2395,6 +2405,645 @@ describe('cvOrmFind 極大輸入(子行程, R-FIND-01)', function() {
         assert.strictEqual(m.status, 0)
         assert.strictEqual(m.r.ok, true, m.r.err)
         assert.ok(m.r.ms < 10000, `${m.r.ms} ms`)
+    })
+
+})
+
+
+describe('cvOrmFind 內建品牌物件於任何位置與 Proxy 之處置(規則2、16)', function() {
+
+    //可改原型之內建品牌(mk 每次回傳全新物件); 規則16: 探針名單內者於任何位置、空或帶自有鍵皆 reject
+    let brands = [
+        ['Map', () => new Map([['id', 'a1']])],
+        ['Set', () => new Set(['a1'])],
+        ['WeakMap', () => new WeakMap()],
+        ['WeakSet', () => new WeakSet()],
+        ['Promise', () => Promise.resolve({})],
+        ['ArrayBuffer', () => new ArrayBuffer(4)],
+        ['SharedArrayBuffer', () => new SharedArrayBuffer(4)],
+        ['DataView', () => new DataView(new ArrayBuffer(4))],
+        ['Uint8Array', () => new Uint8Array(2)],
+        ['Float64Array', () => new Float64Array(2)],
+        ['BigInt64Array', () => new BigInt64Array(2)],
+        ['Symbol wrapper', () => Object(Symbol('s'))],
+        ['BigInt wrapper', () => Object(BigInt(1))],
+        ['WeakRef', () => new WeakRef({ id: 'a1' })],
+        ['FinalizationRegistry', () => new FinalizationRegistry(() => {})],
+    ]
+    let noIndexKeys = brands.filter(([n]) => !/Array$/.test(n)) //TypedArray之自有索引鍵與元素數成正比
+    let protos = [['null', null], ['Object.prototype', Object.prototype]]
+    let hijack = (mk, proto, keys) => Object.assign(Object.setPrototypeOf(mk(), proto), keys)
+    let PLAIN = 'condition must be a plain object, got [object]'
+    let TYPE = 'unsupported value type [object]'
+
+    it('should reject every built-in brand with a changed prototype at the top (null and Object.prototype; empty or with own keys)', function() {
+        let n = 0
+        for (let [name, mk] of brands) {
+            for (let [pn, p] of protos) {
+                rej(() => hijack(mk, p, { g: 'A' }), PLAIN, 'find')
+                rej(() => hijack(mk, p, {}), 'condition must be a plain object', 'find')
+                n += 2
+                assert.ok(true, `${name} ${pn}`)
+            }
+        }
+        assert.strictEqual(n, 60)
+    })
+
+    it('should reject them as $and / $or elements and in nested logic when they carry own keys (the path is the element)', function() {
+        let positions = [
+            ['$or element', (o) => ({ $or: [o] }), 'find.$or[0]'],
+            ['$and element', (o) => ({ $and: [{ a: 1 }, o] }), 'find.$and[1]'],
+            ['$or after a field', (o) => ({ g: 'A', $or: [{ b: 1 }, o] }), 'find.$or[1]'],
+            ['nested', (o) => ({ g: 'A', $and: [{ $or: [{ b: 1 }, o] }] }), 'find.$and[0].$or[1]'],
+        ]
+        for (let [, mk] of brands) {
+            for (let [, p] of protos) {
+                for (let [, wrap, at] of positions) {
+                    rej(() => wrap(hijack(mk, p, { g: 'A' })), PLAIN, at)
+                }
+            }
+        }
+    })
+
+    it('should reject them as field operator objects when they carry operator-shaped own keys', function() {
+        for (let [, mk] of brands) {
+            for (let [, p] of protos) {
+                rej(() => ({ a: hijack(mk, p, { $gt: 1 }) }), TYPE, 'find.a')
+                rej(() => ({ a: hijack(mk, p, { $in: [1] }) }), TYPE, 'find.a')
+                rej(() => ({ $or: [{ x: 1 }, { a: hijack(mk, p, { $eq: 'A' }) }] }), TYPE, 'find.$or[1].a')
+            }
+        }
+    })
+
+    it('should reject them empty as elements and operator objects (empty is never a condition there)', function() {
+        for (let [, mk] of brands) {
+            for (let [, p] of protos) {
+                let e1 = errOf(() => ({ $or: [hijack(mk, p, {})] }))
+                assert.ok(reMsg.test(e1.message) && e1.message.endsWith(' at [find.$or[0]]'), e1.message)
+                let e2 = errOf(() => ({ a: hijack(mk, p, {}) }))
+                assert.ok(reMsg.test(e2.message) && e2.message.endsWith(' at [find.a]'), e2.message)
+            }
+        }
+    })
+
+    it('should keep rejecting the brands whose internal tag stays visible after the prototype change (RegExp, Error, wrappers, arguments) at every position', function() {
+        let tagged = [
+            ['RegExp', () => /x/],
+            ['Error', () => new Error('x')],
+            ['Number wrapper', () => new Number(1)],
+            ['String wrapper', () => new String('s')],
+            ['Boolean wrapper', () => new Boolean(true)],
+            ['Date', () => new Date(0)],
+            ['arguments', () => (function() {
+                return arguments
+            })(1)],
+        ]
+        for (let [name, mk] of tagged) {
+            for (let [, p] of protos) {
+                rej(() => hijack(mk, p, { g: 'A' }), 'condition must be a plain object', 'find')
+                rej(() => ({ $or: [hijack(mk, p, { g: 'A' })] }), 'condition must be a plain object', 'find.$or[0]')
+                if (name !== 'Date') {
+                    rej(() => ({ a: hijack(mk, p, { $gt: 1 }) }), 'unsupported value type', 'find.a') //Date於欄位值位置為合法純量
+                }
+            }
+        }
+    })
+
+    it('should not mistake plain objects for brands (keys named like brand methods, null prototype, constructor-like names), through the clone path and the exact-probe path', function() {
+        let trees = [
+            () => ({ size: 1, has: 2, then: 3, byteLength: 4, deref: 5, unregister: 6, valueOf: 7, constructor: 8 }),
+            () => ({ $or: [{ size: 1, then: 2 }, { byteLength: 3 }] }),
+            () => ({ a: { $gt: 1 }, $and: [Object.assign(Object.create(null), { has: 1, size: 2 })] }),
+            () => ({ $and: [{ $or: [{ then: 1 }, Object.assign(Object.create(null), { deref: 'x' })] }] }),
+            () => ({ then: { $in: [1, 2] }, size: { $gt: 1, $lt: 5 }, constructor: null }),
+        ]
+        for (let mk of trees) {
+            ok(mk)
+            ok(() => ({ $and: [new Proxy({ z: 1 }, {}), mk()] })) //樹內有Proxy: 結構化複製失敗, 改由探針逐物件判定, 不得把一般物件判成品牌
+        }
+    })
+
+    it('should report the outermost brand object first (objects are recorded before their children)', function() {
+        let inner = hijack(() => new Set(), null, { h: 1 })
+        let outer = hijack(() => new Map(), null, { $or: [inner] })
+        rej(() => ({ $or: [outer] }), PLAIN, 'find.$or[0]')
+    })
+
+    it('should report the key of a property that the ownKeys trap lists but that does not exist', function() {
+        rej(() => new Proxy({ a: 1 }, { ownKeys: () => ['a', 'g'] }), 'non-enumerable property is not allowed', 'find.g')
+    })
+
+    it('should not depend on the internal tag of the copies: a polluted Object.prototype[@@toStringTag] after load keeps a real empty find as "all"', function() {
+        Object.defineProperty(Object.prototype, Symbol.toStringTag, { value: 'Polluted', configurable: true })
+        try {
+            assert.deepStrictEqual(Reflect.ownKeys(cvOrmFind(Object.create(null))), [])
+            assert.deepStrictEqual(toPlain(cvOrmFind(Object.assign(Object.create(null), { a: Object.assign(Object.create(null), { $gt: 1 }) }))), { a: { $gt: 1 } })
+            rej(() => Object.setPrototypeOf(new Map(), null), 'condition must be a plain object', 'find')
+        }
+        finally {
+            delete Object.prototype[Symbol.toStringTag]
+        }
+    })
+
+    it('should still reject brand objects when the total string length is above the clone limit (the exact probes decide)', function() {
+        this.timeout(60000)
+        let big = 'x'.repeat(5000000)
+        rej(() => ({ big, $or: [hijack(() => new Map(), null, { g: 'A' })] }), PLAIN, 'find.$or[0]')
+        ok(() => ({ big, $or: [{ g: 'A' }] }))
+    })
+
+    it('should use the cheap path for a single condition object and for a typical find (the exact-probe path is far slower)', function() {
+        let best = (f) => {
+            let b = Infinity
+            for (let r = 0; r < 30; r++) {
+                let t0 = process.hrtime.bigint()
+                for (let i = 0; i < 40; i++) {
+                    f()
+                }
+                b = Math.min(b, Number(process.hrtime.bigint() - t0))
+            }
+            return b
+        }
+        let typical = () => ({ name: 'a', age: { $gt: 20, $in: [21, 22] }, $or: [{ g: 'A' }, { g: null }] })
+        let fast1 = best(() => cvOrmFind({ g: 'A' }))
+        let slow1 = best(() => cvOrmFind(new Proxy({ g: 'A' }, {}))) //1個條件物件, 逐物件探針約25倍
+        let fast4 = best(() => cvOrmFind(typical()))
+        let slow4 = best(() => cvOrmFind({ $and: [new Proxy({ z: 1 }, {}), typical()] })) //約20倍
+        assert.ok(fast1 * 4 < slow1, `${fast1} vs ${slow1}`)
+        assert.ok(fast4 * 4 < slow4, `${fast4} vs ${slow4}`)
+    })
+
+    it('should reject an empty-looking Proxy at the top: the only place where emptiness means "all" must be provably a real empty object', function() {
+        let why = 'an empty find must be an ordinary object'
+        rej(() => new Proxy({}, {}), why, 'find')
+        rej(() => new Proxy(Object.create(null), {}), why, 'find')
+        rej(() => new Proxy(Object.setPrototypeOf(new Map(), null), {}), why, 'find') //外審證據: 曾被當空條件而使 delAll 刪光全表
+        rej(() => new Proxy(Object.setPrototypeOf(new Set(), Object.prototype), {}), why, 'find')
+        for (let [, mk] of noIndexKeys) {
+            for (let [, p] of protos) {
+                rej(() => new Proxy(hijack(mk, p, {}), {}), why, 'find')
+            }
+        }
+        //陷阱回報零個自有鍵而目標有鍵
+        rej(() => new Proxy({ g: 'A' }, {
+            ownKeys() {
+                return []
+            }
+        }), why, 'find')
+        //非頂層之空物件本即 reject(沿用既有原因)
+        rej(() => ({ $or: [new Proxy({}, {})] }), 'empty condition', 'find.$or[0]')
+        rej(() => ({ a: new Proxy({}, {}) }), 'empty operator object', 'find.a')
+    })
+
+    it('should accept a non-empty Proxy for what its traps expose (read once), also a Proxy over a re-prototyped built-in with own keys: known limitation 5', function() {
+        ok(() => new Proxy({ g: 'A' }, {}))
+        ok(() => ({ $or: [new Proxy({ g: 'A' }, {}), { b: 1 }] }))
+        let m = hijack(() => new Map(), null, { g: 'A' })
+        assert.deepStrictEqual(toPlain(cvOrmFind(new Proxy(m, {}))), { g: 'A' })
+        assert.deepStrictEqual(toPlain(cvOrmFind({ $or: [new Proxy(m, {})] })), { $or: [{ g: 'A' }] })
+        //原型未改之品牌物件被Proxy包住: 原型檢查(Map.prototype)擋下
+        rej(() => new Proxy(new Map([['g', 'A']]), {}), 'condition must be a plain object', 'find')
+        rej(() => ({ $or: [new Proxy(new Set(), {})] }), 'condition must be a plain object', 'find.$or[0]')
+    })
+
+    it('should give the same verdicts through the exact-probe path (a Proxy elsewhere in the tree makes the structured clone fail)', function() {
+        let px = () => new Proxy({ z: 1 }, {})
+        let pop = () => new Proxy({ $gt: 1 }, {})
+        ok(() => ({ $and: [px(), { g: 'A' }] }))
+        ok(() => ({ a: pop(), $or: [{ g: 'A' }, px()] }))
+        for (let [, mk] of brands) {
+            for (let [, p] of protos) {
+                rej(() => ({ $and: [px(), hijack(mk, p, { g: 'A' })] }), PLAIN, 'find.$and[1]')
+                rej(() => ({ $and: [px(), { $or: [{ b: 1 }, hijack(mk, p, { g: 'A' })] }] }), PLAIN, 'find.$and[1].$or[1]')
+                rej(() => ({ a: pop(), b: hijack(mk, p, { $gt: 1 }) }), TYPE, 'find.b')
+                rej(() => ({ $or: [hijack(mk, p, { g: 'A' }), px()] }), PLAIN, 'find.$or[0]')
+            }
+        }
+    })
+
+    it('should report the first brand object in visiting order, with its own path', function() {
+        let m1 = () => hijack(() => new Map(), null, { g: 'A' })
+        let s2 = () => hijack(() => new Set(), null, { g: 'B' })
+        rej(() => ({ $or: [{ x: 1 }, m1(), s2()] }), PLAIN, 'find.$or[1]')
+        rej(() => ({ $or: [{ x: 1 }, s2(), m1()] }), PLAIN, 'find.$or[1]')
+        rej(() => ({ $and: [{ $or: [{ x: 1 }, m1()] }, s2()] }), PLAIN, 'find.$and[0].$or[1]')
+    })
+
+    let code = fs.readFileSync(fpSrc, 'utf8').replace(/^export default cvOrmFind\s*$/m, 'globalThis.__f = cvOrmFind')
+
+    //於 vm 內建構品牌物件與呼叫(同領域): ctxObj 決定該領域有無 structuredClone 及其行為
+    let runInRealm = (ctxObj) => {
+        let ctx = vm.createContext(ctxObj)
+        vm.runInContext(code, ctx)
+        return JSON.parse(vm.runInContext(`(function() {
+            let f = globalThis.__f
+            let t = (v) => { try { f(v); return 'ACCEPT' } catch (e) { return e.message } }
+            let hijack = (o, p, keys) => Object.assign(Object.setPrototypeOf(o, p), keys)
+            let mks = {
+                Map: () => new Map(), Set: () => new Set(), WeakMap: () => new WeakMap(), WeakSet: () => new WeakSet(), Promise: () => Promise.resolve(1),
+                ArrayBuffer: () => new ArrayBuffer(2), DataView: () => new DataView(new ArrayBuffer(2)), Uint8Array: () => new Uint8Array(2),
+                WeakRef: () => new WeakRef({}), FinalizationRegistry: () => new FinalizationRegistry(() => {}),
+                SymbolWrapper: () => Object(Symbol('s')), BigIntWrapper: () => Object(BigInt(1))
+            }
+            let res = { brands: {} }
+            for (let n of Object.keys(mks)) {
+                let mk = mks[n]
+                res.brands[n] = [
+                    t(hijack(mk(), null, { g: 'A' })),
+                    t(hijack(mk(), Object.prototype, { g: 'A' })),
+                    t({ $or: [hijack(mk(), null, { g: 'A' })] }),
+                    t({ a: hijack(mk(), null, { $gt: 1 }) }),
+                    t(hijack(mk(), null, {})),
+                ]
+            }
+            res.proxyEmpty = t(new Proxy({}, {}))
+            res.proxyHiddenMap = t(new Proxy(Object.setPrototypeOf(new Map(), null), {}))
+            res.proxyNonEmpty = t(new Proxy({ g: 'A' }, {}))
+            res.plain = [t({ g: 'A' }), t({ $or: [{ g: 'A' }, { a: { $gt: 1 } }] }), t({}), t(undefined)]
+            res.hasClone = typeof structuredClone
+            return JSON.stringify(res)
+        })()`, ctx))
+    }
+    let wantBrand = [
+        `invalid find: ${PLAIN} at [find]`,
+        `invalid find: ${PLAIN} at [find]`,
+        `invalid find: ${PLAIN} at [find.$or[0]]`,
+        `invalid find: ${TYPE} at [find.a]`,
+        `invalid find: ${PLAIN} at [find]`,
+    ]
+
+    it('should reject all brands in a realm without structuredClone (exact probes only); an empty Proxy cannot be told apart there (known limitation 9)', function() {
+        let r = runInRealm({})
+        assert.strictEqual(r.hasClone, 'undefined')
+        for (let [n, v] of Object.entries(r.brands)) {
+            assert.deepStrictEqual(v, wantBrand, n)
+        }
+        assert.strictEqual(r.proxyEmpty, 'ACCEPT')
+        assert.strictEqual(r.proxyHiddenMap, 'ACCEPT')
+        assert.strictEqual(r.proxyNonEmpty, 'ACCEPT')
+        assert.deepStrictEqual(r.plain, ['ACCEPT', 'ACCEPT', 'ACCEPT', 'ACCEPT'])
+    })
+
+    it('should not trust a structuredClone that fails its self-check at load (no throw on a Proxy, always throwing, a Map not kept as a Map): exact probes decide', function() {
+        let throwOnce = () => {
+            let n = 0
+            return () => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                return {} //Map與{}皆複製成一般物件(Map之品牌不保留)
+            }
+        }
+        //Proxy拒絕、Map保留品牌, 但{}複製成null原型物件(與執行期要求之一般物件不符)
+        let nullProtoCopy = () => {
+            let n = 0
+            return () => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                return n === 3 ? new Map() : Object.create(null) //自檢呼叫順序: Proxy、{}、Map、{a:1}
+            }
+        }
+        //Map被複製成一般物件(品牌樣本為null原型、一律拋錯, 故只有Map子句能擋下它)
+        let tagOf = (v) => Object.prototype.toString.call(v)
+        let flattenMap = () => {
+            let n = 0
+            return (v) => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                if (tagOf(v) === '[object Map]') {
+                    return {}
+                }
+                if (Array.isArray(v)) {
+                    return Array.prototype.map.call(v, () => ({})) //記錄陣列(null原型陣列)之元素全複製成一般物件
+                }
+                if (Object.getPrototypeOf(v) === null) {
+                    throw new Error('sample refused')
+                }
+                return {}
+            }
+        }
+        //{}與{a:1}之複本原型非Object.prototype(其原型本身仍有原型): 原型有效性之自檢擋下; 若未擋下, 其後對真正之 {} 拋錯將使 {} 被拒
+        let badProtoShim = () => {
+            let n = 0
+            let p2 = Object.create({})
+            return (v) => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                if (n === 3) {
+                    return new Map()
+                }
+                if (n <= 4) {
+                    return Object.create(p2)
+                }
+                if (Object.getPrototypeOf(v) === null) {
+                    return Object.create(null)
+                }
+                if (Array.isArray(v)) {
+                    return Array.prototype.map.call(v, () => Object.create(null))
+                }
+                throw new Error('refused after self-check')
+            }
+        }
+        //{}之複本帶自有鍵(Proxy拋錯、Map保留、品牌樣本拋錯、記錄陣列複本皆一般): 僅「{}複本須無自有鍵」之自檢子句能擋下; 未擋下則真正之 {} 會被拒
+        let keyedEmpty = () => {
+            let n = 0
+            return (v) => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                if (n === 3) {
+                    return new Map()
+                }
+                if (Array.isArray(v)) {
+                    return Array.prototype.map.call(v, () => ({}))
+                }
+                if (Object.getPrototypeOf(v) === null) {
+                    throw new Error('sample refused')
+                }
+                return { x: 1 }
+            }
+        }
+        for (let mkShim of [() => (v) => v, () => () => {
+            throw new Error('no clone')
+        }, throwOnce, nullProtoCopy, flattenMap, badProtoShim, keyedEmpty]) {
+            let r = runInRealm({ structuredClone: mkShim() })
+            assert.strictEqual(r.hasClone, 'function')
+            for (let [n, v] of Object.entries(r.brands)) {
+                assert.deepStrictEqual(v, wantBrand, n)
+            }
+            assert.strictEqual(r.proxyEmpty, 'ACCEPT')
+            assert.deepStrictEqual(r.plain, ['ACCEPT', 'ACCEPT', 'ACCEPT', 'ACCEPT'])
+        }
+    })
+
+    it('should require every copy to carry the Object.prototype learned at load, and refuse a clone that turns re-prototyped brand samples into plain objects', function() {
+        //通過前四次自檢(呼叫順序: Proxy拋錯、{}、Map保留、{a:1}; {}與{a:1}皆為同一原型之空物件)後, 對其餘呼叫(品牌樣本與正式呼叫)回傳 other(v)
+        let afterBasicChecks = (other) => () => {
+            let n = 0
+            return (v) => {
+                n++
+                if (n === 1) {
+                    throw new Error('proxy refused')
+                }
+                if (n === 3) {
+                    return new Map()
+                }
+                if (n <= 4) {
+                    return {}
+                }
+                return other(v)
+            }
+        }
+        //(a)品牌樣本之複本原型為null(不是自檢時學到之Object.prototype)而被接受使用; 其後陣列內元素之複本原型亦為null, 永不構成證明
+        let protoOff = afterBasicChecks((v) => (Array.isArray(v) ? Array.prototype.map.call(v, () => Object.create(null)) : Object.create(null)))
+        let r = runInRealm({ structuredClone: protoOff() })
+        for (let [n, v] of Object.entries(r.brands)) {
+            assert.deepStrictEqual(v, wantBrand, n) //不合要求之複本不得當作證明, 改由探針判定
+        }
+        assert.strictEqual(r.plain[0], 'ACCEPT')
+        assert.strictEqual(r.plain[3], 'ACCEPT')
+        //(b)把品牌樣本也複製成一般物件(原型為學到之Object.prototype): 自檢不通過而停用, 全程改走探針, 真正之 {} 仍為全部
+        let samplesPlain = afterBasicChecks(() => ({}))
+        let r2 = runInRealm({ structuredClone: samplesPlain() })
+        for (let [n, v] of Object.entries(r2.brands)) {
+            assert.deepStrictEqual(v, wantBrand, n)
+        }
+        assert.deepStrictEqual(r2.plain, ['ACCEPT', 'ACCEPT', 'ACCEPT', 'ACCEPT'])
+        assert.strictEqual(r2.proxyEmpty, 'ACCEPT') //已停用: 空Proxy無法辨出(已知限制9)
+    })
+
+    it('should work with a structuredClone that belongs to another realm (the global of a vm sandbox such as jest): same verdicts, a real {} is still "all"', function() {
+        let r = runInRealm({ structuredClone }) //主領域之原生函數, 複本之原型為主領域之Object.prototype
+        assert.strictEqual(r.hasClone, 'function')
+        for (let [n, v] of Object.entries(r.brands)) {
+            assert.deepStrictEqual(v, wantBrand, n)
+        }
+        let why = 'invalid find: an empty find must be an ordinary object at [find]'
+        assert.strictEqual(r.proxyEmpty, why) //自檢通過, 故空Proxy被擋(與無structuredClone之領域不同)
+        assert.strictEqual(r.proxyHiddenMap, why)
+        assert.strictEqual(r.proxyNonEmpty, 'ACCEPT')
+        assert.deepStrictEqual(r.plain, ['ACCEPT', 'ACCEPT', 'ACCEPT', 'ACCEPT']) //含真正之 {}: 不得因複本原型屬他領域而被誤拒
+    })
+
+    it('should judge the recorded objects themselves: a later trap that swaps an earlier brand object out of the tree does not hide it', function() {
+        let m = hijack(() => new Map(), null, { g: 'A' })
+        let arr = [m]
+        let p = new Proxy({ z: 1 }, {
+            getOwnPropertyDescriptor(t, k) {
+                arr[0] = { g: 'B' } //先前已讀並接受之Map被換掉
+                arr[1] = { z: 2 } //連Proxy自己也換掉, 走訪後 find 可達之樹已無Proxy與Map
+                return Reflect.getOwnPropertyDescriptor(t, k)
+            }
+        })
+        arr.push(p)
+        rej(() => ({ $and: arr }), PLAIN, 'find.$and[0]')
+        //運算子物件位置
+        let top = { a: hijack(() => new Set(), null, { $gt: 1 }) }
+        top.b = new Proxy({ $gt: 2 }, {
+            getOwnPropertyDescriptor(t, k) {
+                top.a = { $gt: 1 } //先前讀過之Set被換掉
+                top.b = { $gt: 2 } //Proxy自己也換掉
+                return Reflect.getOwnPropertyDescriptor(t, k)
+            }
+        })
+        rej(() => top, TYPE, 'find.a')
+    })
+
+    it('should recognise detached and out-of-bounds DataViews and detached TypedArrays (their byteLength getters throw)', function() {
+        if (typeof ArrayBuffer.prototype.transfer !== 'function') {
+            this.skip()
+        }
+        let detachedDv = () => {
+            let ab = new ArrayBuffer(8)
+            let dv = new DataView(ab)
+            ab.transfer()
+            return dv
+        }
+        let outOfBoundsDv = () => {
+            let rab = new ArrayBuffer(8, { maxByteLength: 16 })
+            let dv = new DataView(rab, 4)
+            rab.resize(2)
+            return dv
+        }
+        let detachedTa = () => {
+            let ab = new ArrayBuffer(8)
+            let ta = new Uint8Array(ab)
+            ab.transfer()
+            return ta
+        }
+        for (let mk of [detachedDv, outOfBoundsDv, detachedTa]) {
+            for (let [, p] of protos) {
+                rej(() => hijack(mk, p, { g: 'A' }), PLAIN, 'find')
+                rej(() => ({ $or: [hijack(mk, p, { g: 'A' })] }), PLAIN, 'find.$or[0]')
+                rej(() => ({ a: hijack(mk, p, { $gt: 1 }) }), TYPE, 'find.a')
+                rej(() => ({ $and: [new Proxy({ z: 1 }, {}), hijack(mk, p, { g: 'A' })] }), PLAIN, 'find.$and[1]') //精確探針路徑
+            }
+        }
+    })
+
+    it('documents the limits: objects whose brand is not observable (private-field class or host instance cloned to {}; a Promise with an own scalar constructor key) are not recognised', function() {
+        //含私有欄位之類別實例與宿主物件(AbortController)改原型為null後複製成空物件, 純JS無法與Object.create(null)區分: 頂層空視為「全部」
+        class Priv {
+            #p = 1
+            get p() {
+                return this.#p
+            }
+        }
+        assert.deepStrictEqual(Reflect.ownKeys(cvOrmFind(Object.setPrototypeOf(new Priv(), null))), [])
+        if (typeof AbortController === 'function') {
+            //Node 24 之 AbortController 無自有鍵(實例狀態在私有欄位): 與 Priv 同形; 他版本若有自有 Symbol 鍵則被 reject, 兩者皆非回歸
+            let ac = Object.setPrototypeOf(new AbortController(), null)
+            let keys = Reflect.ownKeys(ac)
+            if (keys.length === 0) {
+                assert.deepStrictEqual(Reflect.ownKeys(cvOrmFind(ac)), [])
+            }
+        }
+        //Promise.prototype.then 先查 constructor(物種建構子), 自有 constructor 為純量時拋錯而被探針當成非Promise;
+        //constructor 為合法欄名, 亦不可據以拒收; 結構化複製使真Promise拋錯, 但無法指認是哪一個物件
+        let p = Object.assign(Object.setPrototypeOf(Promise.resolve(1), null), { constructor: 0 })
+        assert.deepStrictEqual(toPlain(cvOrmFind(p)), { constructor: 0 })
+        assert.deepStrictEqual(toPlain(cvOrmFind({ $or: [p] })), { $or: [{ constructor: 0 }] })
+    })
+
+    it('should clone the recorded objects once per call, and keep using the structuredClone captured at load (also after the global is replaced)', async function() {
+        let real = globalThis.structuredClone
+        let n = 0
+        globalThis.structuredClone = (v, o) => {
+            n++
+            return real(v, o)
+        }
+        let mod
+        try {
+            mod = await import(`../src/cvOrmFind.mjs?count=${Date.now()}`) //新實例於載入時取得計數用包裝
+        }
+        finally {
+            globalThis.structuredClone = real
+        }
+        let f = mod.default
+        n = 0
+        f({ g: 'A' })
+        assert.strictEqual(n, 1)
+        n = 0
+        f({ $or: [{ a: 1 }, { b: { $gt: 2 } }], c: { $in: [1, 2] } })
+        assert.strictEqual(n, 1)
+        n = 0
+        f({})
+        assert.strictEqual(n, 1)
+        n = 0
+        f()
+        assert.strictEqual(n, 0)
+        //載入後替換全域不影響已取得者(退化成不拋錯之函數仍不放行品牌物件)
+        n = 0
+        globalThis.structuredClone = (v) => v
+        try {
+            assert.throws(() => f(hijack(() => new Map(), null, { g: 'A' })), /^Error: invalid find: condition must be a plain object, got \[object\] at \[find\]$/)
+            assert.throws(() => f(new Proxy({}, {})), /an empty find must be an ordinary object/)
+        }
+        finally {
+            globalThis.structuredClone = real
+        }
+        assert.strictEqual(n, 2)
+    })
+
+    it('documents the cost bound: the internals of a rejected brand object are read once by the clone (a getter inside it is called at most once; maxNodes does not bound this)', function() {
+        let calls = 0
+        let entry = {}
+        Object.defineProperty(entry, 'x', {
+            get() {
+                calls++
+                return 1
+            },
+            enumerable: true
+        })
+        let m = hijack(() => new Map([['k', entry]]), null, { g: 'A' })
+        rej(() => m, PLAIN, 'find', { maxNodes: 2 })
+        assert.ok(calls <= 1, String(calls))
+    })
+
+    it('should take the cheap structured-clone path for ordinary finds: a 50000-object tree and a 1000-element $or finish far below the exact-probe cost', function() {
+        this.timeout(120000)
+        let big = { $and: Array.from({ length: 1000 }, (_, i) => ({ $or: Array.from({ length: 49 }, (_, j) => ({ a: i * 100 + j })) })) }
+        let wide = { $or: Array.from({ length: 1000 }, (_, i) => ({ g: `x${i}` })) }
+        let wideDate = { $or: Array.from({ length: 1000 }, (_, i) => ({ d: { $gte: new Date(i) }, e: new Date(i) })) } //Date於結構化複製之複本中仍屬合法
+        let min = (f, n) => {
+            let best = Infinity
+            for (let i = 0; i < n; i++) {
+                let t0 = process.hrtime.bigint()
+                f()
+                best = Math.min(best, Number(process.hrtime.bigint() - t0) / 1e6)
+            }
+            return best
+        }
+        let msBig = min(() => cvOrmFind(big), 3) //逐物件探針實測約6600 ms
+        let msWide = min(() => cvOrmFind(wide), 10) //逐物件探針實測約99 ms
+        let msWideDate = min(() => cvOrmFind(wideDate), 10) //2000個條件物件, 逐物件探針約80 ms
+        assert.ok(msBig < 2500, `${msBig} ms`)
+        assert.ok(msWide < 40, `${msWide} ms`)
+        assert.ok(msWideDate < 50, `${msWideDate} ms`)
+    })
+
+})
+
+
+describe('cvOrmFind 錯誤路徑含屬性鍵與元素索引(規則12)', function() {
+
+    let why = 'an exception was thrown while reading the condition'
+    let gopd = (target, bad) => new Proxy(target, {
+        getOwnPropertyDescriptor(t, k) {
+            if (k === bad) {
+                throw new Error('SECRET-gopd')
+            }
+            return Reflect.getOwnPropertyDescriptor(t, k)
+        }
+    })
+
+    it('should report the property key when the descriptor trap throws (document, operator object, $and / $or element)', function() {
+        rej(() => gopd({ g: 'A' }, 'g'), why, 'find.g')
+        rej(() => gopd({ a: 1, g: 'A' }, 'g'), why, 'find.g')
+        rej(() => ({ a: gopd({ $gt: 1 }, '$gt') }), why, 'find.a.$gt')
+        rej(() => ({ $or: [{ x: 1 }, gopd({ g: 'A' }, 'g')] }), why, 'find.$or[1].g')
+        rej(() => ({ $and: [{ $or: [gopd({ g: 'A' }, 'g')] }] }), why, 'find.$and[0].$or[0].g')
+        for (let mk of [() => gopd({ g: 'A' }, 'g'), () => ({ a: gopd({ $gt: 1 }, '$gt') })]) {
+            assert.ok(!errOf(mk).message.includes('SECRET'))
+        }
+    })
+
+    it('should report the element index when the element descriptor trap throws ($in, $nin, $and, $or)', function() {
+        rej(() => ({ a: { $in: gopd([1, 2, 3], '1') } }), why, 'find.a.$in[1]')
+        rej(() => ({ a: { $nin: gopd([1, 2, 3], '2') } }), why, 'find.a.$nin[2]')
+        rej(() => ({ $or: gopd([{ g: 'A' }, { g: 'B' }], '1') }), why, 'find.$or[1]')
+        rej(() => ({ $and: gopd([{ g: 'A' }], '0') }), why, 'find.$and[0]')
+        rej(() => ({ $or: [{ x: 1 }, { $and: gopd([{ g: 'A' }, { g: 'B' }], '1') }] }), why, 'find.$or[1].$and[1]')
+    })
+
+    it('should report the property key for accessor and non-enumerable properties, without calling the getter', function() {
+        let n = 0
+        let acc = (key) => Object.defineProperty({}, key, {
+            get() {
+                n++
+                return 1
+            },
+            enumerable: true,
+            configurable: true
+        })
+        rej(() => acc('g'), 'accessor property is not allowed', 'find.g')
+        rej(() => ({ a: acc('$gt') }), 'accessor property is not allowed', 'find.a.$gt')
+        rej(() => ({ $or: [{ x: 1 }, acc('g')] }), 'accessor property is not allowed', 'find.$or[1].g')
+        rej(() => ({ $or: [{ x: 1 }, hidden({}, 'g', 'A')] }), 'non-enumerable property is not allowed', 'find.$or[1].g')
+        assert.strictEqual(n, 0)
+    })
+
+    it('should keep the owner path for symbol keys and array holes (a symbol key cannot be displayed safely, a hole has no key)', function() {
+        rej(() => ({ $or: [{ x: 1 }, { [Symbol('s')]: 1 }] }), 'symbol key is not allowed', 'find.$or[1]')
+        rej(() => ({ a: { $in: [1, , 3] } }), 'sparse array hole at index 1', 'find.a.$in') // eslint-disable-line no-sparse-arrays
     })
 
 })

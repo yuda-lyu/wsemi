@@ -11,11 +11,13 @@
 //    str:N      欄值為長度N之字串, 字串長度不另限, 應接受
 //    many:N     N個欄位等值, N為節點上限內之最大值時應接受
 //    taproto:N  原型改為null之N位元組Uint8Array, 應於列舉自有索引鍵之前拒收(列舉會依元素數配置鍵而耗盡記憶體)
+//    shared:N:L {name:{$in:[s,s,...]}}: 同一個長度L之字串被引用N次(碼元總長N*L), 應接受; 結構化複製對重複字串每次皆寫出並讀回,
+//               記憶體與總長成正比, 故逾門檻不複製(規則16)
 import cvOrmFind from '../../src/cvOrmFind.mjs'
 
 
 let caseName = process.argv[2] || ''
-let [kind, sn] = caseName.split(':')
+let [kind, sn, sl] = caseName.split(':')
 let n = Number(sn)
 
 let inp
@@ -59,6 +61,10 @@ else if (kind === 'str') {
 }
 else if (kind === 'taproto') {
     inp = Object.setPrototypeOf(new Uint8Array(n), null)
+}
+else if (kind === 'shared') {
+    let str = 'x'.repeat(Number(sl))
+    inp = { name: { $in: Array.from({ length: n }, () => str) } }
 }
 else if (kind === 'many') {
     inp = {}
