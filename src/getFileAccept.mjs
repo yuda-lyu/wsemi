@@ -1,5 +1,4 @@
 import each from 'lodash-es/each.js'
-import haskey from './haskey.mjs'
 import getFileType from './getFileType.mjs'
 
 
@@ -54,7 +53,7 @@ function getFileAccept(groupBy = '') {
     let r = {}
     each(data, function(v) {
         let k = v[groupBy]
-        if (!haskey(r, k)) {
+        if (!Object.prototype.hasOwnProperty.call(r, k)) {
             r[k] = []
         }
         r[k].push(v)
