@@ -2,12 +2,13 @@ import assert from 'assert'
 import ormStrCases from '../src/_cvOrmStrCases.mjs'
 import chkOrmStr from '../src/chkOrmStr.mjs'
 import { createRefModel, runApiCase } from './tools/ormStrRefModel.mjs'
+import { digestCases } from './tools/ormStrCaseDigest.mjs'
 
 
 //契約案例表src/_cvOrmStrCases.mjs之自身測試(規則見CLAUDE_rulebook.md R-ORMSTR-01):
 //形狀、形態旗標(獨立預言機)、輸入空間完整度矩陣(形態 x 位置 x API)、訊息詞彙、全新值、對參考後端逐案執行、對參考後端之變異(各接線點拿掉須轉紅)
 
-let { reasons, forms, cases } = ormStrCases
+let { reasons, forms, cases, next } = ormStrCases
 
 let API_KINDS = {
     insert: ['ok', 'rejectAll', 'free'],
@@ -48,9 +49,10 @@ let mkGfsA = (id, extra) => ({ ...mkA(id, extra), u8a: new Uint8Array(2) })
 let mkGfsB = (id, extra) => ({ ...mkB(id, extra), u8a: new Uint8Array(2) })
 let base = { url: 'x://y/', db: 'd', cl: 'c' }
 
-let runAll = async (mk, cfg, filter = () => true) => {
+//runAll, 對參考後端逐案執行(預設cases之API層; list給next則跑增補案例)並回傳有問題者
+let runAll = async (mk, cfg, filter = () => true, list = apiCases) => {
     let out = []
-    for (let c of apiCases.filter(filter)) {
+    for (let c of list.filter(filter)) {
         let probs = await runApiCase(c, { create: () => createRefModel(base, cfg), ctor: (opt) => createRefModel(opt, cfg), mk, mkGfs: mk === mkB ? mkGfsB : mkGfsA, base })
         if (probs.length > 0) {
             out.push({ id: c.id, probs })
@@ -95,13 +97,18 @@ describe('契約案例表 形態與形狀(R-ORMSTR-01)', function() {
             assert.strictEqual(typeof c.label, 'string', c.id)
             assert.ok('expect' in c, c.id)
         }
-        for (let c of apiCases) {
+        let nextIds = new Set(next.map((c) => c.id))
+        assert.strictEqual(nextIds.size, next.length, 'next: unique ids')
+        assert.ok(next.every((c) => !ids.has(c.id)), 'next: ids disjoint from cases')
+        for (let c of [...apiCases, ...next]) {
+            let isNext = nextIds.has(c.id)
             assert.ok(API_KINDS[c.api], `${c.id}: api ${c.api}`)
             assert.ok(API_KINDS[c.api].includes(c.expect.kind), `${c.id}: kind ${c.expect.kind} for ${c.api}`)
             assert.ok(['id', 'name', 'nested', 'array', 'arrayObj', 'key', 'nestedKey', 'map', 'mapKey', 'set', 'strobj', 'error', 'regexp', 'inherit', 'arrObjKey', 'opt.db', 'opt.cl', 'opt.url'].includes(c.pos), c.id)
             assert.ok(forms[c.form], c.id)
             assert.strictEqual(c.str, forms[c.form].str, c.id)
-            assert.ok(Array.isArray(c.need) && c.need.every((v) => ['doc', 'gfs'].includes(v)), c.id)
+            //need: cases只用doc、gfs(已發布後端之harness只認此二旗標); inh、event只出現在next
+            assert.ok(Array.isArray(c.need) && c.need.every((v) => (isNext ? ['doc', 'gfs', 'inh', 'event'] : ['doc', 'gfs']).includes(v)), c.id)
             assert.strictEqual(typeof c.pre, 'function', c.id)
             assert.strictEqual(typeof c.args, 'function', c.id)
             assert.ok(c.variant === null || ['insert', 'update'].includes(c.variant), c.id)
@@ -133,6 +140,16 @@ describe('契約案例表 形態與形狀(R-ORMSTR-01)', function() {
             if (c.afterCall) {
                 assert.strictEqual(c.group, 'toctou', c.id)
             }
+            if (c.listen) {
+                assert.ok(isNext, `${c.id}: listen only in next`)
+                assert.strictEqual(c.group, 'toctou', c.id)
+                assert.ok(c.need.includes('event'), `${c.id}: listen needs the event capability`)
+                assert.deepStrictEqual(Object.keys(c.listen), ['event', 'fn', 'minCalls'], c.id)
+                assert.ok(['change', 'error'].includes(c.listen.event), c.id)
+                assert.strictEqual(typeof c.listen.fn, 'function', c.id)
+                assert.ok(Number.isInteger(c.listen.minCalls) && c.listen.minCalls >= 1, `${c.id}: minCalls`)
+            }
+            assert.ok(!c.need.includes('event') || c.listen, `${c.id}: the event capability needs a listen`)
         }
     })
 
@@ -141,7 +158,7 @@ describe('契約案例表 形態與形狀(R-ORMSTR-01)', function() {
         let reData = /^invalid data: string contains lone surrogate at \[data\[\d\]\.(?:[A-Za-z]+|<invalid key>|<key>)(?:\.(?:[A-Za-z]+|<invalid key>|<key>)|\[\d\])*\]$/
         let reOpt = /^invalid opt\.(db|cl|url): string contains lone surrogate$/
         let all = []
-        for (let c of apiCases) {
+        for (let c of [...apiCases, ...next]) {
             for (let m of c.expect.msgs ? c.expect.msgs : c.expect.msg === undefined ? [] : [c.expect.msg]) {
                 all.push([c, m])
             }
@@ -195,7 +212,7 @@ describe('契約案例表 形態與形狀(R-ORMSTR-01)', function() {
             }
             return false
         }
-        for (let c of apiCases) {
+        for (let c of [...apiCases, ...next]) {
             let a1 = c.args(mkA, base)
             let a2 = c.args(mkA, base)
             let stateful = c.group === 'toctou' //docs帶讀取計數之存取器, 深度比較會推進計數, 只驗不共用物件
@@ -220,7 +237,7 @@ describe('契約案例表 形態與形狀(R-ORMSTR-01)', function() {
     })
 
     it('should use only well-formed strings in pre() rows (preloading must always be possible)', function() {
-        for (let c of apiCases) {
+        for (let c of [...apiCases, ...next]) {
             for (let d of c.pre(mkA)) {
                 assert.strictEqual(chkOrmStr(d.id), null, c.id)
             }
@@ -454,6 +471,179 @@ describe('契約案例表 輸入空間完整度矩陣(形態 x 位置 x API; R-O
 })
 
 
+describe('契約案例表 既有案例逐案不變(只增不改; R-ORMSTR-01 規則17)', function() {
+
+    //git 340647815 版(第94項併入前)之 1553 案之摘要: 已發布之七個w-orm-*後端以deep import逐案執行案例表, 既有案例不得被悄悄改動.
+    //摘要涵蓋靜態欄位、pre/args/make之產出、toctou組之動態行為(讀取計數存取器連讀三次、afterCall之原始碼與作用後狀態)與listen.
+    //有意改動既有案例時須重算此常數(node tmp腳本以 digestCases 對舊版〔git show 340647815:src/_cvOrmStrCases.mjs〕與新版各算一次須相同)並於帳本說明
+    let OLD_DIGEST = '6d2fc1796e3408cee3c712084e543f20eddfaccbb293d8c1d92d6061dc51b30d'
+
+    it('should keep the 1553 cases unchanged in every field and in what pre(), args(), afterCall and the read-counting accessors produce', function() {
+        assert.strictEqual(cases.length, 1553)
+        assert.strictEqual(digestCases(cases), OLD_DIGEST)
+    })
+
+    it('should notice a change of any case (digest discriminates): a changed expectation, a changed argument, a dropped case, a changed need', function() {
+        let at = (id) => cases.findIndex((c) => c.id === id)
+        let i = at('val:insert:name:HI_END')
+        let alt = [...cases]
+        alt[i] = { ...cases[i], expect: { ...cases[i].expect, ids: ['k0', 'zz'] } }
+        assert.notStrictEqual(digestCases(alt), OLD_DIGEST)
+        let alt2 = [...cases]
+        alt2[i] = { ...cases[i], args: (mk, b) => [[mk('g0'), mk('g1', { name: 'changed' }), mk('g2')]] }
+        assert.notStrictEqual(digestCases(alt2), OLD_DIGEST)
+        assert.notStrictEqual(digestCases(cases.filter((c) => c.id !== 'val:insert:name:HI_END')), OLD_DIGEST)
+        let alt3 = [...cases]
+        alt3[at('toctou:insert:bad-first')] = { ...cases[at('toctou:insert:bad-first')], need: ['doc'] }
+        assert.notStrictEqual(digestCases(alt3), OLD_DIGEST)
+    })
+
+    it('should notice a change of the stress that the toctou cases apply: the second value of a read-counting accessor, the afterCall mutation, and an args that no longer stresses', function() {
+        let at = (id) => cases.findIndex((c) => c.id === id)
+        let b = at('toctou:insert:bad-first')
+        let g = at('toctou:insert:good-first')
+        let m = at('toctou:insert:mutate-after-call')
+        //第二次讀取之值改變(第一次不變)
+        let flip = (mk, first, later) => {
+            let n = 0
+            let d = mk('g1')
+            Object.defineProperty(d, 'name', {
+                get() {
+                    n++
+                    return n === 1 ? first : later
+                },
+                enumerable: true,
+                configurable: true
+            })
+            return d
+        }
+        let alt = [...cases]
+        alt[b] = { ...cases[b], args: (mk) => [[mk('g0'), flip(mk, 'a\uD800', 'bad'), mk('g2')]] }
+        assert.notStrictEqual(digestCases(alt), OLD_DIGEST)
+        //afterCall改成不作為
+        let alt2 = [...cases]
+        alt2[m] = { ...cases[m], afterCall: () => {} }
+        assert.notStrictEqual(digestCases(alt2), OLD_DIGEST)
+        //args改成全良構資料(不再施壓)
+        let alt3 = [...cases]
+        alt3[g] = { ...cases[g], args: (mk) => [[mk('g0'), mk('g1', { name: 'ok' }), mk('g2')]] }
+        assert.notStrictEqual(digestCases(alt3), OLD_DIGEST)
+    })
+
+    it('should be unaffected by the increment cases: next is a separate export', function() {
+        assert.strictEqual(next.length, 9)
+        assert.strictEqual(digestCases(cases), OLD_DIGEST)
+        assert.notStrictEqual(digestCases([...cases, ...next]), OLD_DIGEST)
+    })
+
+})
+
+
+describe('契約案例表 增補案例next(2026-10-21, R-ORMSTR-01 規則17): 不在cases內', function() {
+
+    let byIdN = new Map(next.map((c) => [c.id, c]))
+    let IDS = ['toctou:insert:inh-getter-name', 'toctou:insertBulk:inh-getter-name', 'toctou:save:inh-getter-name', 'toctou:save:inh-getter-id', 'toctou:del:inh-getter-id', 'toctou:save:event-shared:insert', 'toctou:save:event-shared:update', 'toctou:save:event-shared-error', 'toctou:save:listener-throws']
+
+    it('should export exactly the nine increment cases, all of group toctou, in a fixed order, and none of them inside cases', function() {
+        assert.deepStrictEqual(next.map((c) => c.id), IDS)
+        assert.ok(next.every((c) => c.group === 'toctou'))
+        assert.ok(IDS.every((id) => !cases.some((c) => c.id === id)))
+        assert.ok(!cases.some((c) => c.need && (c.need.includes('inh') || c.need.includes('event') || c.listen)), 'cases carry neither the inh / event flags nor listen (the published harnesses never see them)')
+    })
+
+    it('should have the inherited-accessor cases (checked value is the written value): name made unwell-formed for insert, insertBulk and save; id redirected to an existing row for save and del', function() {
+        for (let api of ['insert', 'insertBulk', 'save']) {
+            let c = byIdN.get(`toctou:${api}:inh-getter-name`)
+            assert.ok(c, api)
+            assert.deepStrictEqual(c.need, ['inh'])
+            assert.strictEqual(c.pos, 'name')
+            assert.strictEqual(c.expect.kind, api === 'save' ? 'itemErr' : 'ok')
+            assert.deepStrictEqual(c.expect.rows, { g1: { name: 'ok' } }) //寫入值為被檢查之值, 不是存取器副作用改成之不合格值
+        }
+        for (let api of ['save', 'del']) {
+            let c = byIdN.get(`toctou:${api}:inh-getter-id`)
+            assert.ok(c, api)
+            assert.deepStrictEqual(c.need, ['inh'])
+            assert.deepStrictEqual(c.expect.unchanged, ['k0']) //被改指向之既有列不得被動到
+            assert.deepStrictEqual(c.expect.rows.k0, { name: 'pre' })
+        }
+        assert.strictEqual(byIdN.get('toctou:save:inh-getter-id').variant, 'update')
+        assert.deepStrictEqual(byIdN.get('toctou:del:inh-getter-id').expect.ids, ['k0']) //只刪g1
+        assert.strictEqual(next.filter((c) => c.need.includes('inh')).length, 5)
+    })
+
+    it('should have the event cases: change listener on save (insert and update variants), error listener on a failing record with a following good record, and a listener that throws', function() {
+        for (let v of ['insert', 'update']) {
+            let c = byIdN.get(`toctou:save:event-shared:${v}`)
+            assert.ok(c, v)
+            assert.deepStrictEqual(c.need, ['doc', 'event'])
+            assert.strictEqual(c.variant, v)
+            assert.deepStrictEqual(Object.keys(c.listen), ['event', 'fn', 'minCalls'])
+            assert.strictEqual(c.listen.event, 'change')
+            //update變體須先預存三份文件(save為更新); insert變體只有k0(save為插入)
+            assert.deepStrictEqual(c.pre(mkA).map((d) => d.id), v === 'update' ? ['k0', 'g0', 'g1', 'g2'] : ['k0'])
+            for (let id of ['g0', 'g1', 'g2']) {
+                assert.deepStrictEqual(c.expect.rows[id], { meta: { s: 'good' } })
+            }
+            //三份文件共用同一個meta; 每次呼叫args皆為全新之共享物件
+            let [docs] = c.args(mkA, base)
+            assert.strictEqual(docs.length, 3)
+            assert.ok(docs[0].meta === docs[1].meta && docs[1].meta === docs[2].meta)
+            assert.ok(c.args(mkA, base)[0][0].meta !== docs[0].meta)
+        }
+        let ce = byIdN.get('toctou:save:event-shared-error')
+        assert.deepStrictEqual(ce.need, ['doc', 'event'])
+        assert.strictEqual(ce.listen.event, 'error')
+        let [de] = ce.args(mkA, base)
+        assert.strictEqual(de.length, 2)
+        assert.ok(de[0].meta === de[1].meta, 'the failing record shares the meta with the good one')
+        assert.strictEqual(chkOrmStr(de[0].name), 'string contains lone surrogate') //第一筆因name不合格而失敗
+        assert.strictEqual(ce.expect.kind, 'itemErr')
+        assert.deepStrictEqual(ce.expect.bad, [0])
+        assert.deepStrictEqual(ce.expect.rows.g1, { meta: { s: 'good' } })
+        let ct = byIdN.get('toctou:save:listener-throws')
+        assert.deepStrictEqual(ct.need, ['event'])
+        assert.throws(() => ct.listen.fn('save', []), /listener failure/)
+        assert.strictEqual(next.filter((c) => c.need.includes('event')).length, 4)
+    })
+
+    it('should apply the poison function of the event cases to both array payloads and single-document payloads, touching only a nested meta object', function() {
+        let c = byIdN.get('toctou:save:event-shared:insert')
+        let a = { meta: { s: 'good' } }
+        let b = { meta: { s: 'good' } }
+        c.listen.fn('save', [a])
+        assert.strictEqual(a.meta.s, 'a\uD800')
+        c.listen.fn('save', b)
+        assert.strictEqual(b.meta.s, 'a\uD800')
+        let plain = { name: 'x', meta: null }
+        c.listen.fn('save', [plain, null, 5, { meta: 5 }])
+        assert.deepStrictEqual(plain, { name: 'x', meta: null })
+    })
+
+    it('should attach the inherited accessor to the prototype of the document (enumerable, not an own property) so that cloneDeep keeps it and the clone does not read it, and run its side effect on the receiver', function() {
+        for (let id of ['toctou:insert:inh-getter-name', 'toctou:save:inh-getter-id', 'toctou:del:inh-getter-id']) {
+            let [docs] = byIdN.get(id).args(mkA, base)
+            let d = docs.find((x) => Object.getPrototypeOf(x) !== Object.prototype)
+            assert.ok(d, id)
+            assert.ok(!Object.prototype.hasOwnProperty.call(d, 'inhSide'), id)
+            let desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(d), 'inhSide')
+            assert.ok(desc && typeof desc.get === 'function' && desc.enumerable === true, id)
+            let other = { id: 'z', name: 'n' }
+            let before = { ...d }
+            assert.strictEqual(desc.get.call(other), 'x') //副作用作用於呼叫者(this), 不是文件本身
+            assert.deepStrictEqual({ ...d }, before, `${id}: the side effect must act on the receiver only`)
+            assert.notDeepStrictEqual(other, { id: 'z', name: 'n' }, `${id}: the side effect changes the receiver`)
+        }
+    })
+
+    it('should pass every increment case on the reference model (both document factories)', async function() {
+        assert.deepStrictEqual(await runAll(mkA, {}, () => true, next), [])
+        assert.deepStrictEqual(await runAll(mkB, {}, () => true, next), [])
+    })
+
+})
+
+
 describe('契約案例表 對參考後端逐案執行(R-ORMSTR-01)', function() {
 
     it('should pass every API case on the reference model (mk with defaults first)', async function() {
@@ -523,7 +713,9 @@ describe('契約案例表 對參考後端之變異(各接線點拿掉須轉紅)'
         }
         let bad = await runAll(mkA, { onFail })
         //selectByPk/selectByPkGfs(kind null)不寫入, 無失敗路徑可改動既有列; 其unchanged只防多餘副作用
-        let want = apiCases.filter((c) => c.expect.unchanged && c.expect.unchanged.length > 0 && c.expect.kind !== 'null').map((c) => c.id)
+        //成功之呼叫(如繼承存取器把主鍵改指向既有列之防護案, 成功且unchanged為被改指向之列)不走失敗路徑, 不在此列
+        let failing = (c) => c.expect.kind === 'rejectAll' || (c.expect.kind === 'itemErr' && c.expect.bad.length > 0)
+        let want = apiCases.filter((c) => c.expect.unchanged && c.expect.unchanged.length > 0 && c.expect.kind !== 'null' && failing(c)).map((c) => c.id)
         assert.ok(want.length >= 300, `${want.length}`)
         assert.deepStrictEqual(sorted(bad.map((v) => v.id)), sorted(want))
     })
@@ -578,6 +770,66 @@ describe('契約案例表 對參考後端之變異(各接線點拿掉須轉紅)'
         let want = rej.map((c) => c.id).filter((id) => !exempt.has(id))
         assert.ok(want.length >= 400, `${want.length}`)
         assert.deepStrictEqual(sorted(bad.map((v) => v.id)), sorted(want))
+    })
+
+    it('should turn red for exactly the five inherited-accessor cases of next when the model walks the very copy that it then writes (the earlier wiring: check and write share one copy)', async function() {
+        let want = ['toctou:insert:inh-getter-name', 'toctou:insertBulk:inh-getter-name', 'toctou:save:inh-getter-name', 'toctou:save:inh-getter-id', 'toctou:del:inh-getter-id']
+        assert.deepStrictEqual(sorted((await runAll(mkA, { checkSame: true }, () => true, next)).map((v) => v.id)), sorted(want))
+        assert.deepStrictEqual(sorted((await runAll(mkB, { checkSame: true }, () => true, next)).map((v) => v.id)), sorted(want))
+        //每案的失敗形狀: 寫入了存取器副作用改成之值, 或動到被改指向之既有列
+        let bad = await runAll(mkA, { checkSame: true }, (c) => c.id === 'toctou:del:inh-getter-id' || c.id === 'toctou:insert:inh-getter-name', next)
+        assert.ok(bad.find((v) => v.id === 'toctou:del:inh-getter-id').probs.some((p) => p.startsWith('ids:')))
+        assert.ok(bad.find((v) => v.id === 'toctou:insert:inh-getter-name').probs.some((p) => p.startsWith('row "g1"')))
+        //既有cases不受此旗標影響(沒有一案依賴走訪哪一份複本)
+        assert.deepStrictEqual(await runAll(mkA, { checkSame: true }), [])
+    })
+
+    it('should turn red for exactly the three shared-reference event cases of next when the model hands the listener the pending copy itself, and degrade to a plain pass when the harness ignores listen', async function() {
+        let want = ['toctou:save:event-shared:insert', 'toctou:save:event-shared:update', 'toctou:save:event-shared-error']
+        assert.deepStrictEqual(sorted((await runAll(mkA, { eventShared: true }, () => true, next)).map((v) => v.id)), sorted(want))
+        assert.deepStrictEqual(sorted((await runAll(mkB, { eventShared: true }, () => true, next)).map((v) => v.id)), sorted(want))
+        //失敗之形狀: 其後各筆(g1、g2)被汙染, 第一筆自己(g0)已寫入而不受影響——案例隔離的是[其後各筆], 不是[儲存與事件共享參照]
+        let bad = await runAll(mkA, { eventShared: true }, (c) => c.id === 'toctou:save:event-shared:insert', next)
+        let probs = bad[0].probs.join('\n')
+        assert.ok(probs.includes('row "g1"') && probs.includes('row "g2"') && !probs.includes('row "g0"'), probs)
+        for (let id of want) {
+            let c = next.find((v) => v.id === id)
+            let probs = await runApiCase({ ...c, listen: undefined }, { create: () => createRefModel(base, { eventShared: true }), ctor: null, mk: mkA, mkGfs: mkGfsA, base })
+            assert.deepStrictEqual(probs, [], id) //舊版harness不認得listen: 退化為一般成功案, 不誤報
+        }
+    })
+
+    it('should turn red for exactly the listener-throws case of next when the model lets a throwing listener break the operation', async function() {
+        assert.deepStrictEqual((await runAll(mkA, { emitThrows: true }, () => true, next)).map((v) => v.id), ['toctou:save:listener-throws'])
+        assert.deepStrictEqual((await runAll(mkB, { emitThrows: true }, () => true, next)).map((v) => v.id), ['toctou:save:listener-throws'])
+    })
+
+    it('should turn red for exactly the four event cases of next when the model never emits the event (minCalls proves the listener was really exercised), but not when the harness ignores listen', async function() {
+        let want = ['toctou:save:event-shared:insert', 'toctou:save:event-shared:update', 'toctou:save:event-shared-error', 'toctou:save:listener-throws']
+        let bad = await runAll(mkA, { noEvents: true }, () => true, next)
+        assert.deepStrictEqual(sorted(bad.map((v) => v.id)), sorted(want))
+        assert.ok(bad.every((v) => v.probs.length === 1 && /listener was called 0 time\(s\), expected at least 1/.test(v.probs[0])), JSON.stringify(bad))
+        for (let id of want) {
+            let c = next.find((v) => v.id === id)
+            assert.deepStrictEqual(await runApiCase({ ...c, listen: undefined }, { create: () => createRefModel(base, { noEvents: true }), ctor: null, mk: mkA, mkGfs: mkGfsA, base }), [], id)
+        }
+    })
+
+    it('should keep every increment case green on the reference model with all the defect switches off, and turn red for exactly the eight defective ones with both sharing switches on', async function() {
+        assert.deepStrictEqual(await runAll(mkA, { checkSame: false, eventShared: false, emitThrows: false, noEvents: false }, () => true, next), [])
+        let bad = await runAll(mkA, { checkSame: true, eventShared: true }, () => true, next)
+        assert.strictEqual(bad.length, 8)
+        assert.ok(!bad.some((v) => v.id === 'toctou:save:listener-throws'))
+    })
+
+    it('should register the listener of an event case on the model and refuse a backend without on() (the harness cannot silently skip the subscriber)', async function() {
+        let c = next.find((v) => v.id === 'toctou:save:event-shared:insert')
+        let create = () => {
+            let wo = createRefModel(base, {})
+            wo.on = undefined
+            return wo
+        }
+        await assert.rejects(() => runApiCase(c, { create, ctor: null, mk: mkA, mkGfs: mkGfsA, base }), /on is not a function|on\(\)/)
     })
 
 })

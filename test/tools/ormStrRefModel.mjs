@@ -12,10 +12,12 @@ import chkOrmData from '../../src/chkOrmData.mjs'
 let NUL = String.fromCharCode(0)
 
 //依規格之處置(可被變異: wsemi測試拿掉各接線點須轉紅)
-//  opt: { checkId, checkData, checkOpt, idNul, dataNul, mangle, leakOnFail, onFail }, 檢核預設全開(變異時關閉其一; leakOnFail為true時整批reject前已寫入, onFail(store)於失敗時被呼叫以模擬失敗呼叫改動既有列; dataNul為true時資料值與鍵名亦檢NUL, 為錯誤的接線); mangle為true時模擬UTF-8/C字串型儲存:
+//  opt: { checkId, checkData, checkOpt, idNul, dataNul, mangle, leakOnFail, onFail, checkSame, eventShared, emitThrows, noEvents },檢核預設全開(變異時關閉其一; leakOnFail為true時整批reject前已寫入, onFail(store)於失敗時被呼叫以模擬失敗呼叫改動既有列; dataNul為true時資料值與鍵名亦檢NUL, 為錯誤的接線); mangle為true時模擬UTF-8/C字串型儲存:
 //  主鍵存取前孤立代理碼元改為U+FFFD、NUL之後截斷(用於證明案例表能抓出[未拒絕而被改寫]之實作)
+//  檢查之值即寫入之值(R-ORMSTR-01規則15): 預設於獨立複本上走訪(寫入用複本不被走訪, 繼承存取器之副作用只動到走訪用複本), 交給訂閱者之物件為獨立快照;
+//  checkSame為true時走訪寫入用複本本身(變異: 缺陷後端), eventShared為true時事件交出待處理之複本本身, 其與其後各筆共享參照(變異: 缺陷後端)
 let createRefModel = (baseOpt, ctorOpt = {}) => {
-    let cfg = { checkId: true, checkData: true, checkOpt: true, idNul: true, mangle: false, ...ctorOpt }
+    let cfg = { checkId: true, checkData: true, checkOpt: true, idNul: true, mangle: false, checkSame: false, eventShared: false, emitThrows: false, noEvents: false, ...ctorOpt }
     let optErr = (name, v) => {
         let r = chkOrmStr(v, { nul: true })
         return r === null ? null : `invalid opt.${name}: ${r}`
@@ -44,6 +46,7 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
     let clone = (v) => cloneDeep(v)
 
     //checkDoc, 單一文件之檢核(主鍵先於資料); 回傳null或完整訊息
+    //  chkOrmData會呼叫繼承之可列舉存取器(this為被走訪者), 其副作用若改動被走訪之複本, 寫入用複本就不是被檢查之值, 故預設走訪另一份獨立複本
     let checkDoc = (d, k) => {
         if (cfg.checkId) {
             let r = chkOrmStr(d.id, { nul: cfg.idNul })
@@ -52,7 +55,7 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
             }
         }
         if (cfg.checkData) {
-            let r = chkOrmData(d, { root: `data[${k}]`, nul: cfg.dataNul === true })
+            let r = chkOrmData(cfg.checkSame ? d : clone(d), { root: `data[${k}]`, nul: cfg.dataNul === true })
             if (r !== null) {
                 return `invalid data: ${r.reason} at [${r.path}]`
             }
@@ -60,6 +63,28 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
         return null
     }
     let arr = (data) => (Array.isArray(data) ? data : [data])
+
+    //事件: change/error, 訂閱函數簽章(mode, data, res); 交出之data預設為獨立快照(訂閱者的改動不影響其後各筆), eventShared為true時交出待處理之複本本身
+    //  訂閱函數拋錯不影響操作; mk為產生data之函數, 無訂閱者時不呼叫(不複製)
+    let listeners = { change: [], error: [] }
+    let snap = (v) => (cfg.eventShared ? v : clone(v))
+    let emit = (event, mode, mk, res) => {
+        if (cfg.noEvents || listeners[event].length === 0) { //noEvents為true時不發任何事件(變異: 後端不發該事件, 案例的minCalls須抓到)
+            return
+        }
+        let data = mk()
+        for (let fn of listeners[event]) {
+            try {
+                fn(mode, data, res)
+            }
+            catch (err) {
+                //訂閱函數拋錯不得影響操作(emitThrows為true時重拋, 變異: 缺陷後端)
+                if (cfg.emitThrows) {
+                    throw err
+                }
+            }
+        }
+    }
 
     //以store(Map)為對象之操作組: 一般集合與GridFS共用規格, 但儲存分開
     let ops = (store, needU8a) => {
@@ -71,14 +96,14 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
             return store.has(key(pk)) ? clone(store.get(key(pk))) : null
         }
         o.insert = async (data) => {
-            let docs = arr(data).map(clone) //先複製再檢核, 其後只用複本
+            let docs = clone(arr(data)) //整批一次複製(保留文件間之共享參照, 同各後端)再檢核, 其後只用複本
             for (let k = 0; k < docs.length; k++) {
                 let e = checkDoc(docs[k], k)
                 if (e) {
                     if (cfg.leakOnFail) {
                         //變異: 先寫入再拋錯(整批reject卻已寫入)
                         for (let d of docs) {
-                            store.set(key(d.id), { ...d, id: key(d.id) })
+                            store.set(key(d.id), clone({ ...d, id: key(d.id) }))
                         }
                     }
                     if (cfg.onFail) {
@@ -91,36 +116,45 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
                 }
             }
             for (let d of docs) {
-                store.set(key(d.id), { ...d, id: key(d.id) })
+                store.set(key(d.id), clone({ ...d, id: key(d.id) })) //持久化即序列化: 儲存的是值, 不與事後交出之物件共享參照
             }
-            return { n: docs.length, nInserted: docs.length, ok: 1 }
+            let res = { n: docs.length, nInserted: docs.length, ok: 1 }
+            emit('change', 'insert', () => snap(docs), res)
+            return res
         }
+        //save/del: 全批先檢核(各後端常見作法), 其後逐筆處理並於每筆之後發事件; 事件在逐筆之間同步執行, 訂閱者的改動若能影響其後各筆即為缺陷
         o.save = async (data) => {
-            let docs = arr(data).map(clone)
+            let docs = clone(arr(data))
+            let errs = docs.map((d, k) => checkDoc(d, k))
             return docs.map((d, k) => {
-                let e = checkDoc(d, k)
-                if (e) {
+                if (errs[k]) {
                     if (cfg.onFail) {
                         cfg.onFail(store)
                     }
-                    return { n: 0, nInserted: 0, nModified: 0, ok: 0, err: e }
+                    emit('error', 'save', () => [snap(d)], errs[k])
+                    return { n: 0, nInserted: 0, nModified: 0, ok: 0, err: errs[k] }
                 }
-                store.set(key(d.id), { ...(store.get(key(d.id)) || {}), ...d, id: key(d.id) })
-                return { n: 1, nInserted: 1, nModified: 0, ok: 1 }
+                store.set(key(d.id), clone({ ...(store.get(key(d.id)) || {}), ...d, id: key(d.id) }))
+                let res = { n: 1, nInserted: 1, nModified: 0, ok: 1 }
+                emit('change', 'save', () => [snap(d)], res)
+                return res
             })
         }
         o.del = async (data) => {
-            let docs = arr(data).map(clone)
+            let docs = clone(arr(data))
+            let errs = docs.map((d, k) => checkDoc(d, k))
             return docs.map((d, k) => {
-                let e = checkDoc(d, k)
-                if (e) {
+                if (errs[k]) {
                     if (cfg.onFail) {
                         cfg.onFail(store)
                     }
-                    return { n: 0, nDeleted: 0, ok: 0, err: e }
+                    emit('error', 'del', () => [snap(d)], errs[k])
+                    return { n: 0, nDeleted: 0, ok: 0, err: errs[k] }
                 }
                 let had = store.delete(key(d.id))
-                return { n: had ? 1 : 0, nDeleted: had ? 1 : 0, ok: 1 }
+                let res = { n: had ? 1 : 0, nDeleted: had ? 1 : 0, ok: 1 }
+                emit('change', 'del', () => [snap(d)], res)
+                return res
             })
         }
         return o
@@ -139,6 +173,12 @@ let createRefModel = (baseOpt, ctorOpt = {}) => {
     wo.selectByPkGfs = f.selectByPk
     wo.delGfs = f.del
     wo.listGfs = async () => [...files.keys()]
+    wo.on = (event, fn) => {
+        if (!Object.prototype.hasOwnProperty.call(listeners, event)) {
+            throw new Error(`unknown event ${event}`)
+        }
+        listeners[event].push(fn)
+    }
     return wo
 }
 
@@ -213,6 +253,13 @@ let runApiCase = async (c, { create, ctor, mk: mk0, mkGfs, base }) => {
     let args = c.args(mk, base)
     let r
     let rej
+    let nCalls = 0
+    if (c.listen) {
+        wo.on(c.listen.event, (...a) => {
+            nCalls += 1
+            return c.listen.fn(...a)
+        }) //訂閱者於呼叫之前註冊(後端須有on)
+    }
     try {
         let p = wo[c.api](...args)
         if (c.afterCall) {
@@ -222,6 +269,9 @@ let runApiCase = async (c, { create, ctor, mk: mk0, mkGfs, base }) => {
     }
     catch (x) {
         rej = x
+    }
+    if (c.listen && nCalls < (c.listen.minCalls || 0)) {
+        probs.push(`listener was called ${nCalls} time(s), expected at least ${c.listen.minCalls}`) //確有施壓: 後端須真的發該事件
     }
     if (e.kind === 'free') {
         //值與鍵名含NUL: 接受或因自身限制拒收皆可, 但拒收之訊息不得為共用檢核之詞彙

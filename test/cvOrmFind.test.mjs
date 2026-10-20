@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 import cvOrmFind from '../src/cvOrmFind.mjs'
 import cvOrmFindCases from '../src/_cvOrmFindCases.mjs'
 import oracle from './tools/cvOrmFindOracle.mjs'
+import ormFindRefIds from './tools/ormFindRef.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
 import { srcBundle } from './tools/srcBundle.mjs'
 
@@ -1519,63 +1520,8 @@ describe('cvOrmFind 契約案例表(R-FIND-01)', function() {
 
     let { cases, seed, columns } = cvOrmFindCases
 
-    //獨立於實作之參考比對器: 依族別語意計算find命中之id集合, 用以核對案例表之ids
-    let isNil = (v) => v === undefined || v === null
-    let cmp = (fam, a, b) => {
-        //回傳-1/0/1, 不可比較者回傳undefined
-        let ta = isDate(a) ? 'date' : typeof a
-        let tb = isDate(b) ? 'date' : typeof b
-        if (fam === 'sql' && ta !== tb) {
-            //SQL族: 數字與字串依欄型轉換(字串須為數值格式)
-            let na = ta === 'string' && a.trim() !== '' ? Number(a) : a
-            let nb = tb === 'string' && b.trim() !== '' ? Number(b) : b
-            if (typeof na === 'number' && typeof nb === 'number' && !Number.isNaN(na) && !Number.isNaN(nb)) {
-                return na < nb ? -1 : na > nb ? 1 : 0
-            }
-            return undefined
-        }
-        if (ta !== tb) {
-            return undefined
-        }
-        let x = ta === 'date' ? a.getTime() : a
-        let y = tb === 'date' ? b.getTime() : b
-        if (ta === 'boolean') {
-            x = x ? 1 : 0
-            y = y ? 1 : 0
-        }
-        return x < y ? -1 : x > y ? 1 : 0
-    }
-    let eq = (fam, a, b) => (b === null ? isNil(a) : !isNil(a) && cmp(fam, a, b) === 0)
-    let matchField = (fam, a, cond) => {
-        if (cond === null || typeof cond !== 'object' || isDate(cond)) {
-            return eq(fam, a, cond)
-        }
-        return Object.keys(cond).every((op) => {
-            let b = cond[op]
-            let c = (isNil(a) || b === null) ? undefined : cmp(fam, a, b)
-            switch (op) {
-            case '$eq': return eq(fam, a, b)
-            case '$ne': return fam === 'mongo' ? !eq(fam, a, b) : (b === null ? !isNil(a) : !isNil(a) && c !== 0 && c !== undefined)
-            case '$gt': return c !== undefined && c > 0
-            case '$gte': return c !== undefined && c >= 0
-            case '$lt': return c !== undefined && c < 0
-            case '$lte': return c !== undefined && c <= 0
-            case '$in': return b.some((x) => eq(fam, a, x))
-            case '$nin': return fam === 'mongo' ? !b.some((x) => eq(fam, a, x)) : (!isNil(a) && !b.some((x) => eq(fam, a, x)))
-            default: throw new Error(`reference: unknown operator ${op}`)
-            }
-        })
-    }
-    let matchDoc = (fam, row, doc) => Object.keys(doc).every((k) => {
-        if (k === '$and') {
-            return doc.$and.every((d) => matchDoc(fam, row, d))
-        }
-        if (k === '$or') {
-            return doc.$or.some((d) => matchDoc(fam, row, d))
-        }
-        return matchField(fam, row[k], doc[k])
-    })
-    let refIds = (fam, find) => seed().filter((row) => matchDoc(fam, row, find)).map((row) => row.id)
+    //獨立於實作之參考比對器(test/tools/ormFindRef.mjs, 與lowerFind測試共用): 依族別語意計算find命中之id集合, 用以核對案例表之ids
+    let refIds = (fam, find) => ormFindRefIds(fam, find, seed())
 
     it('should have the documented shape: unique ids, group letters, known rules, expects, why/ids/schema/need only where meaningful', function() {
         let rules = new Set(['WL-01', 'WL-02', 'WL-03', 'WL-04', 'WL-05', 'WL-06', 'WL-07', 'WL-S1', 'WL-S2', 'WL-N1', 'WL-N2', 'WL-E1', 'WL-E2', 'WL-E3', 'WL-E4', 'WL-E5', 'WL-F1', 'WL-F2', 'WL-F3', 'WL-L1', 'WL-L2', 'WL-L3', 'WL-L4', 'WL-H1', 'WL-H2', 'WL-H3', 'WL-H5'])

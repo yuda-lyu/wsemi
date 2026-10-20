@@ -1136,3 +1136,35 @@ describe('chkOrmData 成本(規則7)', function() {
     }
 
 })
+
+
+describe('chkOrmData 會呼叫繼承存取器之 JSDoc 說明(規則15、第94項併入)', function() {
+
+    let src = fs.readFileSync(fpSrc, 'utf8')
+    let doc = src.slice(src.indexOf('/**'), src.indexOf('function chkOrmData'))
+
+    it('should say in the JSDoc that enumerable accessors (inherited ones included) are called, that the backend must walk an independent copy, and that the walk copy can be repaired by the accessor (known limitation)', function() {
+        assert.ok(/會呼叫可列舉存取器\(含繼承者\)，後端應於獨立複本上走訪/.test(doc))
+        assert.ok(/改動被走訪之同一份複本/.test(doc))
+        assert.ok(/寫入用複本不被走訪/.test(doc))
+        assert.ok(/事件訂閱者之物件亦須為獨立快照/.test(doc))
+        assert.ok(/訂閱函數拋錯不得影響操作/.test(doc))
+        assert.ok(/擋不住存取器『修好』走訪用複本中的不合格值/.test(doc))
+        assert.ok(/把存取器固定為資料/.test(doc))
+        assert.ok(/『修好』之情形尚無案例，列為已知限制/.test(doc))
+    })
+
+    it('should not keep the earlier wording that the backend may keep using the very same copy after the call', function() {
+        assert.ok(!/並假設後端其後只使用同一份複本/.test(doc))
+        assert.ok(/並假設後端其後寫入的就是被檢查之值/.test(doc))
+    })
+
+    it('should be backed by increment cases that exist in next (not in cases): the inherited-accessor and event cases named in the JSDoc', function() {
+        let ids = new Set(ormStrCases.next.map((c) => c.id))
+        for (let id of ['toctou:insert:inh-getter-name', 'toctou:insertBulk:inh-getter-name', 'toctou:save:inh-getter-name', 'toctou:save:inh-getter-id', 'toctou:del:inh-getter-id', 'toctou:save:event-shared:insert', 'toctou:save:event-shared:update', 'toctou:save:event-shared-error', 'toctou:save:listener-throws']) {
+            assert.ok(ids.has(id), id)
+        }
+        assert.ok(!ormStrCases.cases.some((c) => ids.has(c.id)))
+    })
+
+})
