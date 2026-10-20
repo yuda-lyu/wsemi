@@ -3,8 +3,152 @@ import assert from 'assert'
 import fsDeleteFile from '../src/fsDeleteFile.mjs'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 import fsTask from '../src/fsTask.mjs'
 
+let __dirname = dirname(fileURLToPath(import.meta.url))
+
+
+describe(`fsTask 檔案來源之紀錄須為一般物件(R-OBJ-ITER-01 候選9)`, function() {
+
+    //fpHash.json、fpResult.json 讀自檔案(可能被竄改或損毀), 須視為一般物件之字典: length 為一般鍵, 非一般物件者視為無紀錄
+    let root = join(__dirname, '_tmp', 'fsTaskRecord')
+    let wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    let item = (p) => [{ type: 'file', path: p }]
+
+    //測試自建自刪(只刪本案資料夾, 不刪 test/_tmp 根目錄)
+    after(function() {
+        fs.rmSync(root, { recursive: true, force: true })
+        assert.strict.strictEqual(fs.existsSync(root), false)
+    })
+
+    //mk, 建立案例資料夾: watch 為監看夾(可預放檔案), _tkfs 為儲存夾(可預寫紀錄檔原文)
+    let mk = (name, { hash = null, result = null, files = {} } = {}) => {
+        let base = join(root, name)
+        fs.rmSync(base, { recursive: true, force: true })
+        let fd = join(base, 'watch')
+        let st = join(base, '_tkfs')
+        fs.mkdirSync(fd, { recursive: true })
+        fs.mkdirSync(st, { recursive: true })
+        for (let [fn, c] of Object.entries(files)) {
+            fs.writeFileSync(join(fd, fn), c, 'utf8')
+        }
+        if (hash !== null) {
+            fs.writeFileSync(join(st, 'fpHash.json'), hash, 'utf8')
+        }
+        if (result !== null) {
+            fs.writeFileSync(join(st, 'fpResult.json'), result, 'utf8')
+        }
+        return { fd, st }
+    }
+
+    //watch, 以 40 ms 輪詢 ms 毫秒, 收集 change 事件並立即 resolve 其 pm
+    let watch = async (c, ms = 400) => {
+        let events = []
+        let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 40 })
+        ev.on('change', (msg) => {
+            events.push({ type: msg.type, fp: msg.fp, fn: msg.fn, hash: msg.hash })
+            msg.pm.resolve()
+        })
+        try {
+            await wait(ms)
+        }
+        finally {
+            ev.clear()
+        }
+        return events
+    }
+
+    let readJson = (c, fn) => JSON.parse(fs.readFileSync(join(c.st, fn), 'utf8'))
+    let sortBy = (arr) => [...arr].sort((a, b) => (a.fp < b.fp ? -1 : 1))
+
+    it(`should treat a length key of fpHash.json as an ordinary path: one del event per recorded key and none repeated`, async function() {
+        //修前: 整個字典依 length 當類陣列迭代, 每個輪詢週期重複派發 { type: 'del', fp: '0', fn: '0', hash: '' }
+        let c = mk('hash-length', { hash: '{"length":1,"a":"h"}' })
+        let events = await watch(c, 500)
+        assert.strict.deepStrictEqual(sortBy(events), [
+            { type: 'del', fp: 'a', fn: 'a', hash: 'h' },
+            { type: 'del', fp: 'length', fn: 'length', hash: 1 },
+        ])
+        assert.strict.deepStrictEqual(readJson(c, 'fpHash.json'), {})
+    })
+
+    it(`should dispatch one del event for a recorded path and update the record (control without length)`, async function() {
+        let c = mk('hash-control', { hash: '{"a":"h"}' })
+        let events = await watch(c, 400)
+        assert.strict.deepStrictEqual(events, [{ type: 'del', fp: 'a', fn: 'a', hash: 'h' }])
+        assert.strict.deepStrictEqual(readJson(c, 'fpHash.json'), {})
+    })
+
+    it(`should dispatch add once for a watched file named length`, async function() {
+        let c = mk('hash-file-length', { files: { length: 'abc' } })
+        let events = await watch(c, 400)
+        assert.strict.deepStrictEqual(events.map((v) => [v.type, v.fn]), [['add', 'length']])
+        assert.strict.deepStrictEqual(Object.keys(readJson(c, 'fpHash.json')), [events[0].fp])
+    })
+
+    let notObjs = ['["a","b"]', '"abc"', '123', 'null', 'true', '{bad', '']
+    for (let content of notObjs) {
+        it(`should treat fpHash.json as no record when it is not a plain object (${JSON.stringify(content)}): no event for an empty folder`, async function() {
+            let c = mk('hash-notobj', { hash: content })
+            let events = await watch(c, 300)
+            assert.strict.deepStrictEqual(events, [])
+        })
+
+        it(`should dispatch add once for a new file and record it when fpHash.json is not a plain object (${JSON.stringify(content)})`, async function() {
+            let c = mk('hash-notobj-file', { hash: content, files: { 'f.txt': 'abc' } })
+            let events = await watch(c, 400)
+            assert.strict.deepStrictEqual(events.map((v) => [v.type, v.fn]), [['add', 'f.txt']])
+            assert.strict.deepStrictEqual(Object.keys(readJson(c, 'fpHash.json')), [events[0].fp])
+        })
+    }
+
+    it(`should keep other results and the length key when fpResult.json has a length key and a result is taken`, function() {
+        //修前: each 依 length 當類陣列迭代, 其他結果全被清空, 檔案寫成 {}
+        let c = mk('result-length', { result: JSON.stringify({ 'length': 0, 'a|h': item('x'), 'b|h': item('y') }) })
+        let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 100000 })
+        try {
+            assert.strict.deepStrictEqual(ev.getAndEliminateResult('a', 'h'), item('x'))
+        }
+        finally {
+            ev.clear()
+        }
+        assert.strict.deepStrictEqual(readJson(c, 'fpResult.json'), { 'length': 0, 'b|h': item('y') })
+    })
+
+    it(`should keep other results when a result is taken (control without length)`, function() {
+        let c = mk('result-control', { result: JSON.stringify({ 'a|h': item('x'), 'b|h': item('y') }) })
+        let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 100000 })
+        try {
+            assert.strict.deepStrictEqual(ev.getAndEliminateResult('a', 'h'), item('x'))
+        }
+        finally {
+            ev.clear()
+        }
+        assert.strict.deepStrictEqual(readJson(c, 'fpResult.json'), { 'b|h': item('y') })
+    })
+
+    for (let content of notObjs) {
+        it(`should treat fpResult.json as no record when it is not a plain object (${JSON.stringify(content)}): setResult does not throw and results can be taken`, function() {
+            //修前: 字串/數字/null/布林使 setResult 拋 TypeError, 字串被展開寫成 {"0":"a",...}
+            let c = mk('result-notobj', { result: content })
+            let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 100000 })
+            try {
+                assert.strict.deepStrictEqual(ev.getAndEliminateResult('x', 'y'), [])
+                assert.strict.deepStrictEqual(readJson(c, 'fpResult.json'), {})
+                ev.setResult('f', 'h', item('p'))
+                assert.strict.deepStrictEqual(readJson(c, 'fpResult.json'), { 'f|h': item('p') })
+                assert.strict.deepStrictEqual(ev.getAndEliminateResult('f', 'h'), item('p'))
+                assert.strict.deepStrictEqual(readJson(c, 'fpResult.json'), {})
+            }
+            finally {
+                ev.clear()
+            }
+        })
+    }
+
+})
 
 describe(`fsTask`, function() {
 

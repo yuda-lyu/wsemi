@@ -17,7 +17,7 @@ import treeObj from './treeObj.mjs'
 
 
 /**
- * 展平物件或陣列成為關聯陣列
+ * 展平物件或陣列成為關聯陣列，真陣列(含帶其他Symbol.toStringTag者)依索引，物件依自有鍵(length視為一般鍵)，以Symbol.toStringTag偽稱Array之物件視為物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenToConn.test.mjs Github}
  * @memberOf wsemi
@@ -688,12 +688,16 @@ function flattenToConn(data, opt = {}) {
         //idParent
         let idParent = genId(nk, null)
 
+        //isArr, isObj, 真陣列依索引; 以Symbol.toStringTag偽稱Array之物件(isarr為真而非真陣列)視為物件, 不依其length迭代(R-OBJ-ITER-01)
+        let isArr = Array.isArray(value)
+        let isObj = !isArr && (isobj(value) || isarr(value))
+
         //type
         let type = 'node'
-        if (isobj(value)) {
+        if (isObj) {
             type = 'object'
         }
-        else if (isarr(value)) {
+        else if (isArr) {
             type = 'array'
         }
 
@@ -710,17 +714,17 @@ function flattenToConn(data, opt = {}) {
         }
 
         //bindText
-        if (!isobj(value) && !isarr(value)) {
+        if (!isObj && !isArr) {
             node[bindText] = value
         }
 
         //bindNumOfChilren
-        if (isobj(value) || isarr(value)) {
+        if (isObj || isArr) {
             let numOfChilren = null
-            if (isobj(value)) {
+            if (isObj) {
                 numOfChilren = size(keys(value))
             }
-            else if (isarr(value)) {
+            else {
                 numOfChilren = size(value)
             }
             node[bindNumOfChilren] = numOfChilren

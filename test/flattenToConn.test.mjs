@@ -2,6 +2,89 @@ import assert from 'assert'
 import flattenToConn from '../src/flattenToConn.mjs'
 
 
+describe(`flattenToConn 偽稱Array之物件視為物件(R-OBJ-ITER-01 候選10)`, function() {
+
+    //以Symbol.toStringTag偽稱'Array'之物件(isarr為真而非真陣列), 可寫與不可寫兩種標籤
+    let mkFake = (len, writable) => {
+        let o = { a: 'kept', length: len }
+        if (writable) {
+            o[Symbol.toStringTag] = 'Array'
+        }
+        else {
+            Object.defineProperty(o, Symbol.toStringTag, { value: 'Array' })
+        }
+        return o
+    }
+
+    //flattenToConn以force走訪, 含Symbol鍵(treeObj取自有屬性名稱與自有Symbol), 偽標籤本身之Symbol鍵亦成一節點; 此處只比對字串鍵之節點
+    let strNodes = (r) => r.filter((v) => !/Symbol\(/.test(String(v.id)))
+
+    for (let writable of [true, false]) {
+        let tag = writable ? 'writable' : 'non-writable'
+
+        it(`should give the same nodes for a nested object faking Array (${tag} tag, length 2) as for the plain object with the same keys`, function() {
+            let r = strNodes(flattenToConn({ child: mkFake(2, writable) }))
+            let e = flattenToConn({ child: { a: 'kept', length: 2 } })
+            assert.strict.deepStrictEqual(r, e)
+            assert.strict.strictEqual(r[0].type, 'object')
+            assert.strict.strictEqual(r[0].numOfChilren, 2)
+            assert.strict.deepStrictEqual(r.map((v) => v.id), ['child', 'child-a', 'child-length'])
+        })
+
+        it(`should give the same nodes for a nested object faking Array (${tag} tag, length 0) as for the plain object with the same keys`, function() {
+            let r = strNodes(flattenToConn({ child: mkFake(0, writable) }))
+            let e = flattenToConn({ child: { a: 'kept', length: 0 } })
+            assert.strict.deepStrictEqual(r, e)
+            assert.strict.strictEqual(r[0].type, 'object')
+        })
+
+        it(`should give the same nodes for an object faking Array (${tag} tag, length 2) at the root as for the plain object with the same keys`, function() {
+            let r = strNodes(flattenToConn(mkFake(2, writable)))
+            let e = flattenToConn({ a: 'kept', length: 2 })
+            assert.strict.deepStrictEqual(r, e)
+            assert.strict.deepStrictEqual(r.map((v) => v.id), ['a', 'length'])
+        })
+    }
+
+    for (let writable of [true, false]) {
+        for (let len of [0, 2, 1000]) {
+            it(`should count the string keys as the children of an object faking Array (${writable ? 'writable' : 'non-writable'} tag, length ${len}), not the length value`, function() {
+                //R-OBJ-ITER-01: length為一般鍵, numOfChilren為自有鍵數(a與length共2), 與length之值無關
+                let o = { a: 'kept', length: len }
+                if (writable) {
+                    o[Symbol.toStringTag] = 'Array'
+                }
+                else {
+                    Object.defineProperty(o, Symbol.toStringTag, { value: 'Array' })
+                }
+                let r = flattenToConn({ child: o })
+                assert.strict.strictEqual(r[0].id, 'child')
+                assert.strict.strictEqual(r[0].type, 'object')
+                assert.strict.strictEqual(r[0].numOfChilren, 2)
+            })
+        }
+    }
+
+    for (let tag of ['Foo', 'Object', 'Arguments']) {
+        it(`should give array nodes for a real array with another Symbol.toStringTag (${tag}), like an ordinary array`, function() {
+            let a = Object.defineProperty([1, 2], Symbol.toStringTag, { value: tag })
+            let r = flattenToConn({ list: a })
+            let e = flattenToConn({ list: [1, 2] })
+            assert.strict.deepStrictEqual(r, e)
+            assert.strict.strictEqual(r[0].type, 'array')
+            assert.strict.deepStrictEqual(r.map((v) => v.id), ['list', 'list-0', 'list-1'])
+        })
+    }
+
+    it(`should still give array nodes for real arrays`, function() {
+        let r = flattenToConn({ list: [1, [2]] })
+        assert.strict.strictEqual(r[0].type, 'array')
+        assert.strict.strictEqual(r[0].numOfChilren, 2)
+        assert.strict.strictEqual(r.find((v) => v.id === 'list-1').type, 'array')
+    })
+
+})
+
 describe(`flattenToConn`, function() {
 
     let obj = {

@@ -8,6 +8,16 @@ import u8arr2str from './u8arr2str.mjs'
 import stru8arr2obj from './stru8arr2obj.mjs'
 
 
+//checkLenHead, 檢查封包標頭記載之分塊資訊區長度, 回傳不符原因字串, 符合則回傳空字串
+//取自封包標頭(網路/檔案來源, 不可信), 須為非負整數且不逾封包資料區之位元組數: 小數與負數經slice被靜默截斷或自尾端算而得同一分割(非正規編碼), NaN與Infinity亦然
+function checkLenHead(lenHead, size) {
+    if (!Number.isInteger(lenHead) || lenHead < 0 || lenHead > size) {
+        return 'head length must be a non-negative integer not exceeding the packet'
+    }
+    return ''
+}
+
+
 //checkPks, 檢查分塊資訊, 回傳不符原因字串, 全符合則回傳空字串
 //分塊資訊取自封包標頭(網路/檔案來源, 不可信), 須在迭代與配置記憶體前驗證(R-OBJ-ITER-01規則6), 否則偽造{"length":N}會使迭代依N次並逐次配置Uint8Array
 //  1. 須為真陣列(Array.isArray), 帶length鍵之物件或字串等不得依其length迭代
@@ -63,7 +73,7 @@ function sliceU8arr(u8a, inds) {
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭內分塊資訊非真陣列、含非負有限整數以外之項、、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid pks, <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭記載之分塊資訊區長度非非負整數或逾封包資料區長度(含封包短於8位元組)、分塊資訊非真陣列、含非負有限整數以外之項、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid pks, <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
  * let u8a = new Uint8Array([
@@ -82,7 +92,7 @@ function sliceU8arr(u8a, inds) {
  * console.log(u8arr2obj(new Uint8Array([1, 2, 3]), { returnWithStateAndMsg: true }))
  * // => {
  * //     state: 'error',
- * //     msg: 'SyntaxError: Unexpected end of JSON input'
+ * //     msg: 'invalid pks, head length must be a non-negative integer not exceeding the packet'
  * // }
  *
  */
@@ -122,6 +132,10 @@ function u8arr2obj(u8a, opt = {}) {
 
         //lenHead
         let lenHead = bufReadDbl(bHead) //讀取分塊資訊區長度
+        let errHead = checkLenHead(lenHead, getBufferSize(bOthers)) //來自封包(不可信), 須先驗證才可用於切分
+        if (errHead !== '') {
+            return retError(`invalid pks, ${errHead}`)
+        }
         let bvPks = bOthers.slice(0, lenHead) //分塊資訊區之二進位數據(Uint8Array)
         let bbPks = bOthers.slice(lenHead, getBufferSize(bOthers)) //各分塊區之二進位數據(Uint8Array)
 

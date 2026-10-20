@@ -220,11 +220,19 @@ describe(`u8arr2obj`, function() {
         assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為型別錯誤, got ${r.msg}`)
     })
 
-    it(`should return { state: 'error', msg: <SyntaxError> } when input a corrupted packet with returnWithStateAndMsg`, function() {
-        let r = u8arr2obj(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]), { returnWithStateAndMsg: true })
+    it(`should return { state: 'error', msg: <SyntaxError> } when input a packet whose header block is not valid JSON with returnWithStateAndMsg`, function() {
+        //標頭長度為合法之3, 其後3位元組'abc'不是合法JSON(分塊資訊須為JSON陣列)
+        let bad = new Uint8Array([0x40, 0x08, 0, 0, 0, 0, 0, 0, 97, 98, 99])
+        let r = u8arr2obj(bad, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(Object.keys(r).sort(), ['msg', 'state'])
         assert.strict.deepStrictEqual(r.state, 'error')
         assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+    })
+
+    it(`should return { state: 'error', msg: 'invalid pks, head length …' } when the head length is not a non-negative integer with returnWithStateAndMsg (R-OBJ-ITER-01 規則6)`, function() {
+        //標頭前8位元組以大端double讀取: [1..8]為極小非整數, 修前由JSON.parse失敗(SyntaxError)擋下, 現於分割前即拒收
+        let r = u8arr2obj(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]), { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid pks, head length must be a non-negative integer not exceeding the packet' })
     })
 
     it(`should return { state: 'error', msg: 'stru8arr2obj: <SyntaxError>' } when the inner stru8arr2obj fails with returnWithStateAndMsg`, function() {
@@ -284,6 +292,103 @@ describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
             threw = String(err && err.message)
         }
         assert.strict.deepStrictEqual(showDeep({ r, threw }), { r: {}, threw: null })
+    })
+
+})
+
+describe(`u8arr2obj 標頭長度lenHead須為非負整數且不逾封包(R-OBJ-ITER-01 規則6)`, function() {
+
+    //標頭前8位元組為大端double: 分塊資訊區之位元組數; 來自封包(不可信), 小數與負數經slice被靜默截斷或自尾端算而得同一分割(非正規編碼), 須拒收
+    let INV = 'invalid pks, head length must be a non-negative integer not exceeding the packet'
+    let packet = obj2u8arr({ a: 1, b: new Uint8Array([7, 8, 9]) })
+    let good = new DataView(packet.buffer, packet.byteOffset, 8).getFloat64(0, false)
+    let others = packet.length - 8
+    let withHead = (v) => {
+        let q = packet.slice()
+        new DataView(q.buffer, q.byteOffset, 8).setFloat64(0, v, false)
+        return q
+    }
+
+    it(`should decode the canonical packet (precondition: the head length is a positive integer inside the packet)`, function() {
+        assert.ok(Number.isInteger(good) && good > 0 && good < others, `good=${good} others=${others}`)
+        let r = u8arr2obj(packet, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'success')
+        assert.strict.deepStrictEqual(r.msg.a, 1)
+        assert.strict.deepStrictEqual([...r.msg.b], [7, 8, 9])
+    })
+
+    let rejects = [
+        ['a fraction (head length + 0.5)', good + 0.5],
+        ['a fraction (head length + 0.99)', good + 0.99],
+        ['a negative number counted from the end that would give the same split', -(others - good)],
+        ['-1', -1],
+        ['NaN', NaN],
+        ['Infinity', Infinity],
+        ['-Infinity', -Infinity],
+        ['a number above the packet size (size + 1)', others + 1],
+        ['2^53', 2 ** 53],
+        ['1e308', 1e308],
+    ]
+    for (let [name, v] of rejects) {
+        it(`should reject ${name} before splitting the packet: strict mode gives { state: 'error', msg: INV }, loose mode gives {}`, function() {
+            assert.strict.deepStrictEqual(u8arr2obj(withHead(v), { returnWithStateAndMsg: true }), { state: 'error', msg: INV })
+            assert.strict.deepStrictEqual(u8arr2obj(withHead(v)), {})
+        })
+    }
+
+    //整數且不逾封包者通過標頭檢查, 後續由JSON解析或分塊資訊檢查失敗(不是INV)
+    let passesHeadCheck = [
+        ['0', 0],
+        ['-0', -0],
+        ['head length - 1', good - 1],
+        ['head length + 1', good + 1],
+        ['the packet size (all is header)', others],
+    ]
+    for (let [name, v] of passesHeadCheck) {
+        it(`should pass the head length check for ${name} and fail later as a corrupted packet, not by the head length rule`, function() {
+            let r = u8arr2obj(withHead(v), { returnWithStateAndMsg: true })
+            assert.strict.deepStrictEqual(r.state, 'error')
+            assert.ok(r.msg !== INV, `msg=${r.msg}`)
+        })
+    }
+
+    for (let n of [0, 1, 3, 7]) {
+        it(`should reject a packet shorter than the 8-byte head (${n} bytes) by the head length rule`, function() {
+            let r = u8arr2obj(new Uint8Array(n).fill(1), { returnWithStateAndMsg: true })
+            assert.strict.deepStrictEqual(r, { state: 'error', msg: INV })
+        })
+    }
+
+    it(`should reject an invalid head length before slicing the head block (only the head and the rest are sliced)`, function() {
+        //來自封包之長度須先驗證才可用於切分; 以計次之Uint8Array子類別確認拒收時只切了標頭8位元組與其餘兩次
+        let n = 0
+        class CountU8 extends Uint8Array {
+            slice(...a) {
+                n++
+                return new CountU8(super.slice(...a))
+            }
+        }
+        let u = new CountU8(withHead(good + 0.5))
+        n = 0
+        assert.strict.deepStrictEqual(u8arr2obj(u, { returnWithStateAndMsg: true }), { state: 'error', msg: INV })
+        assert.strict.strictEqual(n, 2)
+        n = 0
+        let ok = u8arr2obj(new CountU8(packet), { returnWithStateAndMsg: true })
+        assert.strict.strictEqual(ok.state, 'success')
+        assert.ok(n >= 4, `n=${n}`)
+    })
+
+    it(`should decode the same packet when the head length is an exact integer written in the other valid ways (handmade packet with head length 3)`, function() {
+        let enc = new TextEncoder()
+        let body = enc.encode('[7]{"a":1}')
+        let q = new Uint8Array(8 + body.length)
+        q.set(body, 8)
+        new DataView(q.buffer, 0, 8).setFloat64(0, 3, false)
+        assert.strict.deepStrictEqual(u8arr2obj(q, { returnWithStateAndMsg: true }), { state: 'success', msg: { a: 1 } })
+        new DataView(q.buffer, 0, 8).setFloat64(0, 3.9, false)
+        assert.strict.deepStrictEqual(u8arr2obj(q, { returnWithStateAndMsg: true }), { state: 'error', msg: INV })
+        new DataView(q.buffer, 0, 8).setFloat64(0, -7, false)
+        assert.strict.deepStrictEqual(u8arr2obj(q, { returnWithStateAndMsg: true }), { state: 'error', msg: INV })
     })
 
 })

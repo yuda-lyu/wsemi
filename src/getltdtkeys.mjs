@@ -5,7 +5,7 @@ import isearr from './isearr.mjs'
 
 
 /**
- * 由ltdt提取不重複keys
+ * 由ltdt提取不重複keys，各列物件只依自有可列舉鍵(length視為一般鍵)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getltdtkeys.test.mjs Github}
  * @memberOf wsemi
@@ -27,7 +27,8 @@ function getltdtkeys(ltdt) {
     //ks
     let ks = []
     each(ltdt, function(v) {
-        let kst = keys(v)
+        //列物件只依自有可列舉鍵(lodash keys對不可寫偽稱Arguments之物件會依length走索引, R-OBJ-ITER-01), 列為真陣列者沿用keys(含空洞索引), Object(null)與Object(undefined)為{}
+        let kst = Array.isArray(v) ? keys(v) : Object.keys(Object(v))
         ks = [...ks, ...kst]
         ks = uniq(ks)
     })

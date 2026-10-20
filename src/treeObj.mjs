@@ -61,17 +61,17 @@ function traverseObj(data, f, keepSymbols = false) {
     let nowKey = []
 
     //check
-    if (!isarr(data) && !isobj(data)) {
+    if (!Array.isArray(data) && !isarr(data) && !isobj(data)) { //真陣列(含帶其他Symbol.toStringTag者)與巢狀位置一致
         data = f(data, null, [])
         return data
     }
 
     function getKeys(obj) {
-        if (isarr(obj)) {
+        if (Array.isArray(obj)) { //真陣列依索引; 以Symbol.toStringTag偽稱Array者(isarr為真)視為物件, 不依其length迭代(R-OBJ-ITER-01)
             //return keys(obj)
             return range(size(obj))
         }
-        if (isobj(obj)) {
+        if (isobj(obj) || isarr(obj)) {
             let v1 = Object.getOwnPropertyNames(obj)
             // console.log('v1', v1)
             let v2 = null
@@ -92,7 +92,7 @@ function traverseObj(data, f, keepSymbols = false) {
 
     function traverse(vs, _k) {
         //console.log('vs', vs)
-        if (isarr(vs)) {
+        if (Array.isArray(vs)) {
             let ks = getKeys(vs)
             return ks.map((k) => {
                 let v = vs[k]
@@ -105,7 +105,7 @@ function traverseObj(data, f, keepSymbols = false) {
                 return v
             })
         }
-        else if (isobj(vs)) {
+        else if (isobj(vs) || isarr(vs)) {
             let ks = getKeys(vs)
             let o = {}
             ks.map((k) => {
@@ -237,7 +237,7 @@ function traverseObj(data, f, keepSymbols = false) {
 
 
 /**
- * 遍歷物件並回傳複製物件，類似JSON.stringify，但不會序列化成為字串
+ * 遍歷物件並回傳複製物件，類似JSON.stringify，但不會序列化成為字串。真陣列(含帶其他Symbol.toStringTag者)依索引遍歷，物件依自有鍵遍歷(length視為一般鍵)，以Symbol.toStringTag偽稱Array之物件視為物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/treeObj.test.mjs Github}
  * @memberOf wsemi

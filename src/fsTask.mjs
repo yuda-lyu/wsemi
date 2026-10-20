@@ -1,7 +1,6 @@
 import fs from 'fs'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
-import map from 'lodash-es/map.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import cst from './_const.mjs'
 import evem from './evem.mjs'
@@ -10,6 +9,7 @@ import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
+import isobj from './isobj.mjs'
 import ispnum from './ispnum.mjs'
 import cint from './cint.mjs'
 import j2o from './j2o.mjs'
@@ -241,7 +241,7 @@ function fsTask(fd, opt = {}) {
             r = j2o(j)
         }
         catch (err) {}
-        return r
+        return isobj(r) ? r : {} //檔案來源, 可能被竄改或損毀, 非一般物件(陣列、字串、數字、null、布林)視為無紀錄(R-OBJ-ITER-01)
     }
 
     //writeObHash
@@ -293,15 +293,15 @@ function fsTask(fd, opt = {}) {
         let kpHashNew = await calcHash()
         // console.log('kpHashNew', kpHashNew)
 
-        //hsOld
-        let hsOld = map(kpHashsOld, (hash, path) => {
-            return { path, hash }
+        //hsOld, 紀錄檔為檔案來源, 只依自有可列舉鍵迭代(length視為一般鍵; lodash map會把含非負整數length之物件當類陣列, R-OBJ-ITER-01)
+        let hsOld = Object.keys(kpHashsOld).map((path) => {
+            return { path, hash: kpHashsOld[path] }
         })
         // console.log('hsOld', hsOld)
 
         //hsNew
-        let hsNew = map(kpHashNew, (hash, path) => {
-            return { path, hash }
+        let hsNew = Object.keys(kpHashNew).map((path) => {
+            return { path, hash: kpHashNew[path] }
         })
         // console.log('hsNew', hsNew)
 
@@ -511,7 +511,7 @@ function fsTask(fd, opt = {}) {
             r = j2o(j)
         }
         catch (err) {}
-        return r
+        return isobj(r) ? r : {} //檔案來源, 非一般物件視為無紀錄(R-OBJ-ITER-01)
     }
 
     //writeObResult
@@ -548,14 +548,15 @@ function fsTask(fd, opt = {}) {
     //eliminateObResult
     let eliminateObResult = (kpResult, fp) => {
         let kp = {}
-        each(kpResult, (rs, key) => {
+        for (let key of Object.keys(kpResult)) { //紀錄檔為檔案來源, 只依自有可列舉鍵迭代(R-OBJ-ITER-01)
+            let rs = kpResult[key]
             let s = sep(key, '|')
             let _fp = get(s, 0, '')
             // let _hash = get(s, 1, '')
             if (_fp !== fp) {
                 kp[key] = rs
             }
-        })
+        }
         return kp
     }
 

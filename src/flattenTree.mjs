@@ -8,7 +8,7 @@ import isobj0 from './isobj0.mjs'
 
 
 /**
- * 展平樹狀物件或陣列
+ * 展平樹狀物件或陣列，以Symbol.toStringTag偽稱Array之物件視為物件
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenTree.test.mjs Github}
  * @memberOf wsemi
@@ -74,14 +74,14 @@ import isobj0 from './isobj0.mjs'
  */
 function flattenTree(data, opt = {}) {
 
-    //check
-    if (isarr(data)) {
+    //check, 真陣列依索引; 以Symbol.toStringTag偽稱Array之物件(isarr為真而非真陣列)視為物件, 不依其length迭代(R-OBJ-ITER-01)
+    if (Array.isArray(data)) {
         if (data.length === 0) {
             return []
         }
     }
-    else if (isobj(data)) {
-        if (isobj0(data)) {
+    else if (isobj(data) || isarr(data)) {
+        if (isobj(data) ? isobj0(data) : Object.keys(data).length === 0) { //偽稱Array之物件(isobj為假)以自有鍵數判定空物件
             return []
         }
     }
@@ -103,7 +103,7 @@ function flattenTree(data, opt = {}) {
 
     //data
     let toArr = false
-    if (isobj(data)) {
+    if (!Array.isArray(data)) {
         toArr = true
         data = [data]
     }
