@@ -8,6 +8,7 @@ import cvOrmFind from '../src/cvOrmFind.mjs'
 import cvOrmFindCases from '../src/_cvOrmFindCases.mjs'
 import oracle from './tools/cvOrmFindOracle.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { srcBundle } from './tools/srcBundle.mjs'
 
 
 //規則見CLAUDE_rulebook.md R-FIND-01; 案例表見src/_cvOrmFindCases.mjs; 預言機見test/tools/cvOrmFindOracle.mjs
@@ -1380,18 +1381,21 @@ describe('cvOrmFind 純JS(規則13)', function() {
 
     let src = fs.readFileSync(fpSrc, 'utf8')
 
-    it('should not import any module, nor mention Node APIs or lodash in the source', function() {
-        assert.ok(!/^\s*import\s/m.test(src), 'must not import')
-        assert.ok(!/\brequire\s*\(/.test(src), 'must not require')
-        assert.ok(!/\bBuffer\b/.test(src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), 'must not use Buffer')
-        assert.ok(!/\bprocess\b/.test(src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), 'must not use process')
-        assert.ok(!/lodash/.test(src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), 'must not use lodash')
+    it('should import nothing but the pure-JS wsemi helpers chkOrmStr, _ormMsgClean and _ormPathCut (themselves without imports), nor mention Node APIs or lodash in the sources', function() {
+        let strip = (t) => t.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
+        assert.deepStrictEqual(src.match(/^\s*import\s.*$/gm).map((v) => v.trim()), ['import chkOrmStr from \'./chkOrmStr.mjs\'', 'import clean from \'./_ormMsgClean.mjs\'', 'import ormPathCut from \'./_ormPathCut.mjs\''])
+        for (let t of [src, fs.readFileSync(path.join(dirTest, '..', 'src', 'chkOrmStr.mjs'), 'utf8'), fs.readFileSync(path.join(dirTest, '..', 'src', '_ormMsgClean.mjs'), 'utf8'), fs.readFileSync(path.join(dirTest, '..', 'src', '_ormPathCut.mjs'), 'utf8')]) {
+            assert.ok(t === src || !/^\s*import\s/m.test(t), 'helper must not import')
+            assert.ok(!/\brequire\s*\(/.test(t), 'must not require')
+            assert.ok(!/\bBuffer\b/.test(strip(t)), 'must not use Buffer')
+            assert.ok(!/\bprocess\b/.test(strip(t)), 'must not use process')
+            assert.ok(!/lodash/.test(strip(t)), 'must not use lodash')
+        }
         assert.ok(/^export default cvOrmFind\s*$/m.test(src), 'must export default cvOrmFind')
     })
 
     it('should load and work in a context without Node globals (no process, Buffer, require, console)', function() {
-        let code = src.replace(/^export default cvOrmFind\s*$/m, 'globalThis.__cvOrmFind = cvOrmFind')
-        assert.notStrictEqual(code, src)
+        let code = srcBundle('cvOrmFind', '__cvOrmFind')
         let ctx = vm.createContext({})
         vm.runInContext(code, ctx)
         let script = `
@@ -1420,6 +1424,92 @@ describe('cvOrmFind 純JS(規則13)', function() {
         ])
         assert.strictEqual(out.date, true)
         assert.strictEqual(out.proto, true)
+    })
+
+})
+
+
+describe('cvOrmFind 路徑截斷共用_ormPathCut(R-ORMSTR-01規則16)', function() {
+
+    let LONE = 'string contains lone surrogate'
+    let lone = String.fromCharCode(0xD800)
+    let msgOf = (v) => {
+        try {
+            cvOrmFind(v)
+            return 'NO THROW'
+        }
+        catch (err) {
+            return err.message
+        }
+    }
+    let pathOf = (m) => m.slice(m.lastIndexOf(' at [') + 5, -1)
+    let deep = (n, leaf) => {
+        let r = leaf
+        for (let i = 0; i < n; i++) {
+            r = { $and: [r] }
+        }
+        return r
+    }
+
+    it('should build every error path through the shared _ormPathCut, receiving the full untruncated path (stand-in proves the call, in every kind of failure)', function() {
+        let code = srcBundle('cvOrmFind', '__f', { _ormPathCut: '(s) => \'CUT<\' + s.length + \'>\'' })
+        let ctx = vm.createContext({})
+        vm.runInContext(code, ctx)
+        let out = JSON.parse(vm.runInContext(`(function() {
+            let f = globalThis.__f
+            let msg = (v) => { try { f(v); return 'NO THROW' } catch (e) { return e.message } }
+            let lone = String.fromCharCode(0xD800)
+            let deep = (n, leaf) => { let r = leaf; for (let i = 0; i < n; i++) { r = { $and: [r] } } return r }
+            return JSON.stringify([msg({ a: lone }), msg(deep(20, { a: lone })), msg({ a: { $in: [1, lone] } }), msg({ $where: 1 }), msg(null)])
+        })()`, ctx))
+        assert.deepStrictEqual(out, [
+            `invalid find: ${LONE} at [CUT<6>]`, //find.a
+            `invalid find: ${LONE} at [CUT<166>]`, //find + 20個.$and[0] + .a
+            `invalid find: ${LONE} at [CUT<13>]`, //find.a.$in[1]
+            'invalid find: unsupported operator [$where] at [CUT<11>]', //find.$where
+            'invalid find: condition must be a plain object, got [null] at [CUT<4>]', //find
+        ])
+    })
+
+    it('should leave an all-ASCII path of exactly 120 characters whole and cut one of 121 to ... plus the last 100 (as before the change)', function() {
+        let prefix = `find${'.$and[0]'.repeat(14)}.` //117
+        let key120 = 'abc' //117 + 3
+        let key121 = 'abcd'
+        let m120 = msgOf(deep(14, { [key120]: lone }))
+        assert.strictEqual(m120, `invalid find: ${LONE} at [${prefix}${key120}]`)
+        assert.strictEqual(pathOf(m120).length, 120)
+        let m121 = msgOf(deep(14, { [key121]: lone }))
+        let full121 = `${prefix}${key121}`
+        assert.strictEqual(full121.length, 121)
+        assert.strictEqual(m121, `invalid find: ${LONE} at [...${full121.slice(-100)}]`)
+        assert.strictEqual(pathOf(m121).length, 103)
+        //深層(前綴遠長於100碼元): 末100碼元
+        let mDeep = msgOf(deep(30, { a: lone }))
+        assert.strictEqual(mDeep, `invalid find: ${LONE} at [...${`find${'.$and[0]'.repeat(30)}.a`.slice(-100)}]`)
+    })
+
+    it('should keep every message well-formed over emoji field names and operator names of up to 60 units at every prefix depth (names are cleaned to 30 units and the cut lies in the ASCII prefix today; this guards the day the name limit or prefix changes)', function() {
+        let emoji = String.fromCodePoint(0x1F600)
+        let tried = 0
+        let cut = 0
+        for (let lv = 0; lv <= 32; lv++) {
+            for (let padF = 0; padF <= 60; padF++) {
+                let F = `${'k'.repeat(padF)}${emoji.repeat(Math.floor((60 - padF) / 2))}`
+                let O = `${'o'.repeat(padF % 7)}${emoji.repeat(Math.floor((60 - (padF % 7)) / 2))}`
+                for (let v of [deep(lv, { [F]: lone }), deep(lv, { [F]: { [O]: 1 } }), deep(lv, { [F]: { $in: [1, lone] } })]) {
+                    let m = msgOf(v)
+                    tried++
+                    assert.ok(m.isWellFormed(), `lv ${lv} padF ${padF}`)
+                    assert.ok(pathOf(m).length <= 103 || !pathOf(m).startsWith('...'), `lv ${lv} padF ${padF}`)
+                    if (pathOf(m).startsWith('...')) {
+                        cut++
+                        assert.strictEqual(pathOf(m).length, 103, `lv ${lv} padF ${padF}`) //路徑前綴皆ASCII, 切點恆為100碼元
+                    }
+                }
+            }
+        }
+        assert.strictEqual(tried, 33 * 61 * 3)
+        assert.ok(cut > 1000, `truncation must really be exercised: ${cut}`)
     })
 
 })
@@ -1981,7 +2071,7 @@ describe('cvOrmFind 外審補強(R-FIND-01 規則2、9~12)', function() {
     })
 
     it('should check lone surrogates without String.prototype.isWellFormed (fallback), also when Object.prototype has a function of that name', function() {
-        let code = fs.readFileSync(fpSrc, 'utf8').replace(/^export default cvOrmFind\s*$/m, 'globalThis.__f = cvOrmFind')
+        let code = srcBundle('cvOrmFind', '__f')
         let lones = [ch(0xD800), ch(0xDBFF), ch(0xDC00), ch(0xDFFF), `a${ch(0xD800)}`, `${ch(0xD800)}a`, `x${ch(0xDC00)}y`, `${ch(0xD83D)}x${ch(0xDE00)}`, `${ch(0xDE00)}${ch(0xD83D)}`, `${ch(0xD83D)}${ch(0xDE00)}${ch(0xDE00)}`]
         let pair = `${ch(0xD83D)}${ch(0xDE00)}`
         let run = (withProtoFn) => {
@@ -2629,7 +2719,7 @@ describe('cvOrmFind 內建品牌物件於任何位置與 Proxy 之處置(規則2
         rej(() => ({ $and: [{ $or: [{ x: 1 }, m1()] }, s2()] }), PLAIN, 'find.$and[0].$or[1]')
     })
 
-    let code = fs.readFileSync(fpSrc, 'utf8').replace(/^export default cvOrmFind\s*$/m, 'globalThis.__f = cvOrmFind')
+    let code = srcBundle('cvOrmFind', '__f')
 
     //於 vm 內建構品牌物件與呼叫(同領域): ctxObj 決定該領域有無 structuredClone 及其行為
     let runInRealm = (ctxObj) => {

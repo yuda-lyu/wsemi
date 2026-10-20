@@ -6,9 +6,14 @@
 // 1. fail-closed: 不在白名單內者一律throw Error('invalid find: <原因> at [<路徑>]'), 不靜默忽略, 不回顯值
 // 2. 逐屬性與逐元素僅以屬性描述子讀取一次(Reflect.ownKeys走訪, 存取器/不可列舉/Symbol鍵/洞/額外屬性reject), 複本只用該次所讀之值
 // 3. 不使用陣列方法與for...of(Array.prototype被汙染時不受影響), 檢核與訊息所用之內建函數(Object、Reflect、Array、Date、Number、WeakSet,
-//    String之indexOf、charCodeAt、slice、isWellFormed,RegExp之exec)於模組載入時取得, 載入後被覆寫不影響檢核; 輸出以defineProperty與null原型描述子建立
-// 4. 純JS: 不import任何模組、不用Node API, 可隨UMD打包; 無模組層可變狀態(可重入)
+//    String之charCodeAt,RegExp之exec)於模組載入時取得, 載入後被覆寫不影響檢核; 輸出以defineProperty與null原型描述子建立
+// 4. 純JS: 不使用Node API, 僅import wsemi內同為純JS之chkOrmStr(字串良構檢核)、_ormMsgClean(訊息鍵名清除)與_ormPathCut(訊息路徑尾端截斷), 可隨UMD打包; 無模組層可變狀態(可重入)
+// 5. 字串值之NUL與孤立代理檢核由chkOrmStr單一擁有(R-ORMSTR-01), 本函數取其原因字串組成訊息, 不另存第二份
 //後端專屬之檢核(欄位型別、欄是否存在、主鍵正規化、DATE範圍、NULL三值語意)不在此, 留在各後端
+
+import chkOrmStr from './chkOrmStr.mjs'
+import clean from './_ormMsgClean.mjs'
+import ormPathCut from './_ormPathCut.mjs'
 
 
 //預設上限, opt只可下調
@@ -38,10 +43,7 @@ let toTag = call.bind(Object.prototype.toString)
 let getTimeOf = call.bind(Date.prototype.getTime)
 let oursAdd = call.bind(WeakSet.prototype.add)
 let oursHas = call.bind(WeakSet.prototype.has)
-let isWF = hasOwn(String.prototype, 'isWellFormed') ? call.bind(String.prototype.isWellFormed) : null //無此方法之環境走reLone退路, 不經原型鏈取得(Object.prototype同名成員不得被當成它)
-let strIndexOf = call.bind(String.prototype.indexOf)
 let charCode = call.bind(String.prototype.charCodeAt)
-let strSlice = call.bind(String.prototype.slice)
 let reExec = call.bind(RegExp.prototype.exec) //以內建exec取比對結果, 不經RegExp.prototype.test所查找之實例exec
 let toStr = String
 
@@ -155,8 +157,6 @@ let R = {
     type: 'unsupported value type',
     num: 'number is not finite',
     date: 'invalid Date',
-    nul0: 'string contains NUL',
-    lone: 'string contains lone surrogate',
     arrVal: 'array value is not supported, use $in',
     emptyOp: 'empty operator object',
     emptyDoc: 'empty condition',
@@ -173,12 +173,6 @@ let R = {
 //欄名文法: 字母或底線開頭, 其後字母/組合附加符號/數字/底線
 let reCol = /^[\p{L}_][\p{L}\p{M}\p{N}_]*$/u
 
-//孤立之代理碼元(高代理之後無低代理, 或低代理之前無高代理), 供不支援String.prototype.isWellFormed之環境判斷
-let reLone = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/
-
-//訊息清除用: 控制字元(Cc,含C1)、格式字元(Cf,含雙向控制與零寬字元)、行與段分隔符(Zl、Zp)、私用區(Co)、孤立代理碼元(Cs,成對者為單一碼點不受影響)與方括號(使鍵名不致偽造路徑段)以?取代
-let reBad = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Co}\p{Cs}[\]]/u
-
 //訊息中可顯示之內部標籤(固定詞彙, 其餘一律為object, 不顯示呼叫端自訂之標籤)
 let reTag = /^\[object (Date|RegExp|Map|Set|WeakMap|WeakSet|Promise|Error|String|Number|Boolean|BigInt|Symbol|ArrayBuffer|SharedArrayBuffer|DataView|Arguments|(?:Int8|Uint8|Uint8Clamped|Int16|Uint16|Int32|Uint32|Float32|Float64|BigInt64|BigUint64)Array)\]$/
 
@@ -193,26 +187,7 @@ let fail = (reason) => {
     throw e
 }
 
-//clean, 清除控制字元與孤立代理並限長, 供訊息使用(鍵名經此才進訊息)
-//逐碼點以內建exec判定, 不用replace(其會查找RegExp.prototype之Symbol.replace與實例exec, 載入後被覆寫時可能無窮迴圈)
-let clean = (s, n) => {
-    let t = s.length > n ? `${strSlice(s, 0, n)}...` : s
-    let out = ''
-    for (let i = 0; i < t.length; i++) {
-        let ch = t[i]
-        let cp = charCode(t, i)
-        if (cp >= 0xD800 && cp <= 0xDBFF && i + 1 < t.length) {
-            let lo = charCode(t, i + 1)
-            if (lo >= 0xDC00 && lo <= 0xDFFF) {
-                //成對代理(單一碼點)
-                ch = ch + t[i + 1]
-                i++
-            }
-        }
-        out += reExec(reBad, ch) === null ? ch : '?'
-    }
-    return out
-}
+//clean(自_ormMsgClean.mjs引入), 清除控制字元與孤立代理並限長, 供訊息使用(鍵名經此才進訊息)
 
 //kind, 值之種類(固定詞彙, 不回顯值本身): null、undefined、typeof、array、內部標籤白名單內者, 其餘為object
 //讀取例外(已撤銷之Proxy、Symbol.toStringTag getter拋錯)不在此吞掉, 由最外層轉為固定之例外原因
@@ -236,9 +211,9 @@ let render = (p) => {
     let s = p === null ? 'find' : render(p.up) + (typeof p.k === 'number' ? `[${p.k}]` : `.${clean(p.k, 30)}`)
     return s
 }
+//renderPath, 路徑尾端截斷交給ormPathCut(自_ormPathCut.mjs引入, 與chkOrmData單一出處): 逾120碼元者截為...加末100碼元, 切點避開代理對
 let renderPath = (p) => {
-    let s = render(p)
-    return s.length > 120 ? `...${strSlice(s, -100)}` : s
+    return ormPathCut(render(p))
 }
 
 //spend, 節點計數(條件物件、運算子物件、純量各計1), 逾上限即停止走訪
@@ -422,12 +397,11 @@ let chkExtra = (arr, n) => {
 }
 
 //chkStr, 字串不得含NUL與孤立代理字元(經UTF-8送出時被拒或被改寫, 令送出之值與呼叫端所給不同), 長度不另限
+//檢核與原因詞彙由chkOrmStr單一擁有(R-ORMSTR-01), 此處只依其原因fail
 let chkStr = (s) => {
-    if (strIndexOf(s, '\u0000') !== -1) {
-        fail(R.nul0)
-    }
-    if (isWF !== null ? !isWF(s) : reExec(reLone, s) !== null) {
-        fail(R.lone)
+    let r = chkOrmStr(s)
+    if (r !== null) {
+        fail(r)
     }
 }
 
