@@ -1,0 +1,14 @@
+node_modules
+.opencode
+.claude
+.agents
+CLAUDE*.md
+AGENTS*.md
+.env
+
+tmp
+test/_tmp
+_test*
+
+# 指引要求文件入 git 版控、不入 npm 包(2026-10-22)
+sgud
