@@ -300,3 +300,15 @@
 - **確定性的錯誤也被當暫時性重試**: 全域 fetch 拒收帶帳密網址、回傳 Node Readable 本體的 fetch 都以 TypeError 歸 E_NETWORK 並重試 3 次,且前者把帳密原樣寫進訊息。能在入口判定者一律入口 E_ARG(帳密、`.`/`..`/冒號檔名),訊息中的網址遮蔽 `scheme://***@`。
 - **變異腳本不要讓 quiet-run 的逾時殺掉**: 93 項約 55 分鐘(含 N 項),`quiet-run --timeout 3300` 在 N10 被殺、結果 JSON 只在結尾寫;逾時前的結果仍在 quiet-run 的 log(每項一行 JSON)。腳本應每項即時寫入結果檔;`quiet-run` 傳空字串參數會被丟掉(`mutate.mjs "" all` 變成 `mutate.mjs all`),要用具名參數或 `all` 旗標。
 - **測試鎖會排隊很久**: 等待 3 分 00 秒、2 分 20 秒、超過 10 分鐘不等;前景 Bash 逾 10 分鐘會被移到背景,**背景再逾 10 分鐘會被殺**(排隊中之 quiet-run 隨之消失),要等長鎖的指令一開始就用 `run_in_background` 並給 `timeout: 7200000`。
+
+## 共用外部執行檔取得 `fsEnsureBins` 之實作與外審(2026-10-28,wsemi-run04)
+
+- **Windows 內建 tar.exe(bsdtar)解 zip 時,參數一律用相對 ASCII 路徑並以 `cwd` 指定工作夾**: repo 路徑含中文,把非 ASCII 絕對路徑經命令列交給原生程式有編碼風險;改為 `spawn(tar, ['-x','-f','archive/x.zip','-C','x','--',member], { cwd: 暫存夾 })` 實測正常.不可經 PATH 找 `tar`(Git Bash 之 GNU tar 不能解 zip),Windows 用 `<SystemRoot>\System32\tar.exe`.
+- **`isestr`/`isbol` 接受包裝物件**(`new String`、`new Boolean`): 以它們檢核「之後要交給 regex、split、spawn」的值,檢查之值可能不是使用之值(terra 實測自訂 `Symbol.toPrimitive` 使檢核通過之成員在 tar 參數變為 `-P`,解出到工作夾外).安全相關之字串與布林一律 `typeof v === 'string'` / `typeof v === 'boolean'`.
+- **快取校驗之行程內記憶**: 只比檔案識別不夠,須連同本次期望之 sha256 與 size;雜湊後須再比一次識別(雜湊期間被換掉);取得放入後不要立即記憶(放入至記錄之間可被換掉),下次使用時校驗一次即可.Windows 時鐘粒度約 15 ms,同一行程內緊接之改寫可能不變更 mtime,測試「竄改後重取」要以 `utimesSync` 明確改時間戳.
+- **「最近一次成功」之主幹清單副本不可作為退路**: 放在可寫之快取夾,能寫者可同改副本與執行檔,使 D4 之竄改偵測失效(terra H5 實測).只作紀錄.
+- **npm 12 之 `npm pack --dry-run --json` 輸出改為以套件名為鍵之物件**(npm 11 以前為陣列),讀取須兩者皆可.
+- **外審者在其副本跑我的測試,可在我等鎖期間先得到基準結果**: 本輪兩槽測試鎖被他套件占用逾 1 小時,terra 第 1 輪之基準(111 passing、3 failing)指出 3 個測試本身之錯,在我取得鎖前即已修正;外審之 `out/probes/*.log` 為 UTF-16(PowerShell 重導),以 `Buffer#toString('utf16le')` 讀.
+- **mocha 不加 `--exit` 時,測試內未清除之長計時器會撐住行程**: 舊碼之解壓逾時 10 分鐘固定常數,修前紅與相關變異會等滿該計時器才結束;時限改為依 `opt.totalMs` 後測試可在數秒內驗逾時.變異腳本一律加 `--exit` 與單項上限(同步無限迴圈之變異只能由外部終止).
+- **Windows 之 `fs.Stats.ino` 超過 2^53**(實測約 6e16): 以數值運算偽造「識別改變」(`ino + 1`)會因浮點精度而不變;測試改動 `mtimeMs`.以 `dev:ino:size:mtimeMs:ctimeMs` 組合判定識別時,ino 之精度損失由其他欄位補足.
+- **兩輪外審之安排**: 第 1 輪於等鎖期間先派(外審者在其副本跑我的測試,提早得到基準結果),第 2 輪專審修正本身;第 2 輪找出 18 條修正之缺口(零進度寫入無限迴圈、微任務競態、方法快照等),可見修正量大時單輪外審不足.
