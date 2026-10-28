@@ -5,6 +5,7 @@ import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
 import optNum from './_optNum.mjs'
 import cst from './_const.mjs'
+import getTrace from './getTrace.mjs'
 
 
 //同程序內進行中之下載, 鍵為正式檔之絕對路徑(Windows不分大小寫), 值為進行中工作之陣列(同一檔可有期望值或選項不同之多個工作)
@@ -139,6 +140,18 @@ function dropBody(res) {
 }
 
 
+//statusOf, 觀察回調用: 取回應之status(數字, 讀取失敗或非數字為null); 只在傳了onTrace時才呼叫, 讀取之拋錯不外洩
+function statusOf(res) {
+    try {
+        let s = get(res, 'status')
+        return typeof s === 'number' ? s : null
+    }
+    catch (err) {
+        return null
+    }
+}
+
+
 //normExpected, 檢核期望值, 回傳{ sha256(小寫), size(未給或null則null) }或{ err }
 //各值只讀取一次並解包為原始值(包裝物件之方法可被覆寫, 不可檢查一個值而使用另一個值)
 function normExpected(v) {
@@ -188,6 +201,9 @@ function splitPath(fp, win32) {
 function remainMs(ctx, step) {
     let remain = ctx.deadline - now()
     if (remain <= 0) {
+        if (ctx.trace) {
+            ctx.trace('timeout', { n: ctx.n, kind: 'total', where: 'budget', ms: ctx.totalMs })
+        }
         throw mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up`, { step })
     }
     return Math.min(remain, cst.TIMER_TIME_MAX)
@@ -229,6 +245,7 @@ function waitClose(ws, ms) {
 //guard包住請求期間之每個等待(fetch、pipeline), 中止時即落定, 不依賴被等待者是否響應signal; close時中止請求, 釋放未讀完之本體與連線
 function openReq(ctx, step) {
     let remain = remainMs(ctx, step)
+    let n = ctx.n
     let ac = new AbortController()
     let reason = null
     let pmAbort = new Promise((resolve, reject) => {
@@ -239,22 +256,37 @@ function openReq(ctx, step) {
     pmAbort.catch(() => {})
     let abort = (err) => {
         if (reason === null && !ac.signal.aborted) {
+            if (ctx.trace) {
+                ctx.trace('abort', { n, why: err.code })
+            }
             reason = err
             ac.abort(err)
         }
     }
     let timerTotal = setTimeout(() => {
+        if (ctx.trace) {
+            ctx.trace('timeout', { n, kind: 'total', where: 'request', ms: ctx.totalMs })
+        }
         abort(mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up`))
     }, remain)
     let timerStall = null
     let timerFb = null
-    let touch = () => {
+    let touch = (from) => {
         clearTimeout(timerStall)
         timerStall = setTimeout(() => {
+            if (ctx.trace) {
+                ctx.trace('timeout', { n, kind: 'stall', where: 'request', ms: ctx.stallMs })
+            }
             abort(mkErr('E_TIMEOUT', `no data received for ${ctx.stallMs}ms`))
         }, ctx.stallMs)
+        if (ctx.trace) {
+            ctx.trace('touch', { n, from, ms: ctx.stallMs })
+        }
     }
-    touch()
+    if (ctx.trace) {
+        ctx.trace('request', { n, stallMs: ctx.stallMs, remainMs: remain })
+    }
+    touch('request')
     return {
         signal: ac.signal,
         touch,
@@ -270,6 +302,9 @@ function openReq(ctx, step) {
             if (fallbackMs !== undefined && !ac.signal.aborted) {
                 clearTimeout(timerFb)
                 timerFb = setTimeout(() => {
+                    if (ctx.trace && !ac.signal.aborted) {
+                        ctx.trace('abort', { n, why: 'fallback' })
+                    }
                     ac.abort()
                 }, fallbackMs)
             }
@@ -279,6 +314,9 @@ function openReq(ctx, step) {
             clearTimeout(timerStall)
             clearTimeout(timerFb)
             if (!ac.signal.aborted) {
+                if (ctx.trace) {
+                    ctx.trace('abort', { n, why: 'close' })
+                }
                 ac.abort()
             }
         },
@@ -310,6 +348,9 @@ async function getExpected(ctx, attempt) {
     let errTimeout = mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up while getting the expected value`, { step: 'expected' })
     let pmTimeout = new Promise((resolve, reject) => {
         timer = setTimeout(() => {
+            if (ctx.trace) {
+                ctx.trace('timeout', { n: ctx.n, kind: 'total', where: 'expected', ms: ctx.totalMs })
+            }
             ac.abort(errTimeout)
             reject(errTimeout)
         }, remain)
@@ -368,6 +409,9 @@ async function hashFile(ctx, fp, ms, step) {
         })()
         let pmTimeout = new Promise((resolve, reject) => {
             timer = setTimeout(() => {
+                if (ctx.trace) {
+                    ctx.trace('timeout', { n: ctx.n, kind: 'total', where: 'read', ms: Math.max(ms, 1) })
+                }
                 reject(mkErr('E_TIMEOUT_TOTAL', `reading "${fp}" did not finish within ${ms}ms`, { step }))
             }, Math.max(ms, 1))
         })
@@ -427,8 +471,12 @@ async function fetchToTemp(ctx, exp, tmp) {
             return fnFetch(ctx.urlIn, { signal: req.signal })
         })
         res = await req.guard(pmFetch)
-        req.touch()
-        if (!get(res, 'ok')) {
+        req.touch('headers')
+        let isOk = get(res, 'ok')
+        if (ctx.trace) {
+            ctx.trace('headers', { n: ctx.n, ok: !!isOk, status: statusOf(res) })
+        }
+        if (!isOk) {
             let status = get(res, 'status')
             let statusText = get(res, 'statusText', '') || ''
             dropBody(res)
@@ -459,6 +507,9 @@ async function fetchToTemp(ctx, exp, tmp) {
             throw mkErr('E_FS', msg, { step, cause: err })
         }
         tmp.owned = true
+        if (ctx.trace) {
+            ctx.trace('temp', { n: ctx.n, act: 'create', ok: true })
+        }
         try {
             ws = ctx.fs.createWriteStream(tmp.fp, { fd })
         }
@@ -515,7 +566,10 @@ async function fetchToTemp(ctx, exp, tmp) {
                     throw mkErr('E_SIZE_MISMATCH', `size mismatch: expected ${cap} bytes, received more than that`, { step: 'verify', actual: { sha256: null, size: null } })
                 }
                 hash.update(chunk)
-                req.touch()
+                if (ctx.trace) {
+                    ctx.trace('data', { n: ctx.n, bytes: size })
+                }
+                req.touch('data')
                 yield chunk
             }
         }
@@ -534,6 +588,9 @@ async function fetchToTemp(ctx, exp, tmp) {
         //verify
         let sha256 = hash.digest('hex')
         let actual = { sha256, size }
+        if (ctx.trace) {
+            ctx.trace('verify', { n: ctx.n, phase: 'stream', size, sizeOk: cap === null || size === cap, hashOk: sha256 === exp.sha256 })
+        }
         if (cap !== null && size !== cap) {
             throw mkErr('E_SIZE_MISMATCH', `size mismatch: expected ${cap} bytes, received ${size} bytes (sha256 ${short(sha256)})`, { step: 'verify', actual })
         }
@@ -552,6 +609,9 @@ async function fetchToTemp(ctx, exp, tmp) {
                 throw err
             }
             throw mkErr('E_FS', `can not read back the temporary file "${tmp.fp}": ${errMsg(err)}`, { step, cause: err })
+        }
+        if (ctx.trace) {
+            ctx.trace('verify', { n: ctx.n, phase: 'disk', size: disk.size, sizeOk: disk.size === size, hashOk: disk.sha256 === sha256 })
         }
         if (disk.sha256 !== sha256 || disk.size !== size) {
             throw mkErr('E_HASH_MISMATCH', `the temporary file "${tmp.fp}" changed after it was written: received ${short(sha256)} (${size} bytes), on disk ${short(disk.sha256)} (${disk.size} bytes)`, { step, actual: disk })
@@ -593,10 +653,16 @@ async function renameFinal(ctx, fpTmp, exp) {
     for (let i = 1; i <= ctx.renameAttempts; i++) {
         try {
             ctx.fs.renameSync(fpTmp, ctx.fpAbs)
+            if (ctx.trace) {
+                ctx.trace('rename', { n: ctx.n, i, ok: true })
+            }
             return true
         }
         catch (err) {
             lastErr = err
+            if (ctx.trace) {
+                ctx.trace('rename', { n: ctx.n, i, ok: false })
+            }
             if (await matchFile(ctx, ctx.fpAbs, exp, ctx.stallMs) >= 0) {
                 return false
             }
@@ -647,6 +713,9 @@ async function attemptOnce(ctx, attempt) {
     if (ctx.useSkipIfMatch) {
         let size = await matchFile(ctx, ctx.fpAbs, exp, remainMs(ctx, 'verify'))
         if (size >= 0) {
+            if (ctx.trace) {
+                ctx.trace('skip', { n: attempt, size })
+            }
             return { sha256: exp.sha256, size, downloaded: false }
         }
     }
@@ -672,6 +741,9 @@ async function attemptOnce(ctx, attempt) {
     //清本次建立之暫存檔
     if (tmp.owned) {
         let errClean = await removeTemp(ctx, tmp.fp)
+        if (ctx.trace) {
+            ctx.trace('temp', { n: attempt, act: 'remove', ok: errClean === null })
+        }
         if (errClean !== null) {
             ctx.leftovers.push({ fp: tmp.fp, error: errClean })
         }
@@ -701,6 +773,13 @@ function isRetryable(err, ctx) {
         return get(err, 'retryable') === true
     }
     return false
+}
+
+
+//codeStr, 觀察回調用: 取錯誤之code(字串, 否則null); 本函數自建之錯誤其code恆為字串
+function codeStr(err) {
+    let c = get(err, 'code')
+    return typeof c === 'string' ? c : null
 }
 
 
@@ -792,8 +871,15 @@ async function run(ctx) {
     let noteStop = ''
     for (let i = 1; i <= ctx.maxAttempts; i++) {
         nAttempt = i
+        ctx.n = i
+        if (ctx.trace) {
+            ctx.trace('attempt', { n: i, max: ctx.maxAttempts })
+        }
         try {
             let r = await attemptOnce(ctx, i)
+            if (ctx.trace) {
+                ctx.trace('settle', { ok: true, code: null, attempts: i })
+            }
             return {
                 fp: ctx.fp,
                 sha256: r.sha256,
@@ -807,15 +893,27 @@ async function run(ctx) {
             errLast = err
         }
         if (!isRetryable(errLast, ctx)) {
+            if (ctx.trace) {
+                ctx.trace('stop', { n: i, why: 'fatal', code: codeStr(errLast) })
+            }
             break
         }
         if (i >= ctx.maxAttempts) {
+            if (ctx.trace) {
+                ctx.trace('stop', { n: i, why: 'max', code: codeStr(errLast) })
+            }
             break
         }
         let delay = ctx.retryDelayMs * i
         if (now() + delay >= ctx.deadline) {
             noteStop = `retry stopped: waiting ${delay}ms would exceed the total time budget of ${ctx.totalMs}ms`
+            if (ctx.trace) {
+                ctx.trace('stop', { n: i, why: 'budget', code: codeStr(errLast) })
+            }
             break
+        }
+        if (ctx.trace) {
+            ctx.trace('retry', { n: i, ms: delay })
         }
         if (ctx.onRetry !== null) {
             try {
@@ -829,7 +927,11 @@ async function run(ctx) {
         }
         await sleep(delay)
     }
-    throw finalErr(ctx, errLast, nAttempt, noteStop)
+    let errFinal = finalErr(ctx, errLast, nAttempt, noteStop)
+    if (ctx.trace) {
+        ctx.trace('settle', { ok: false, code: codeStr(errFinal), attempts: nAttempt })
+    }
+    throw errFinal
 }
 
 
@@ -946,6 +1048,9 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         o.useShare = unwrap(get(opt, 'useShare'))
         o.useSkipIfMatch = unwrap(get(opt, 'useSkipIfMatch'))
         o.onRetry = get(opt, 'onRetry')
+
+        //trace, 觀察回調(opt.onTrace), 未給時為null; 置於其他選項之讀取之後, 使opt不可讀之既有失敗路徑不變
+        o.trace = getTrace(opt)
     }
     catch (err) {
         if (isOwnErr(err)) {
@@ -1010,6 +1115,8 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         useShare: isbol(o.useShare) ? o.useShare : true,
         useSkipIfMatch: isbol(o.useSkipIfMatch) ? o.useSkipIfMatch : false,
         onRetry: isfun(o.onRetry) ? o.onRetry : null,
+        trace: o.trace,
+        n: 0,
         pid,
         win32,
         leftovers: [],
@@ -1044,14 +1151,27 @@ function joinJob(job, ctx) {
     let timer = null
     let pmTimeout = new Promise((resolve, reject) => {
         timer = setTimeout(() => {
+            if (ctx.trace) {
+                ctx.trace('timeout', { n: 0, kind: 'total', where: 'share', ms: ctx.totalMs })
+            }
             let e = mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up while waiting for the shared download`, { step: 'share' })
             reject(finalErr(ctx, e, 0, ''))
         }, ctx.totalMs)
     })
-    return Promise.race([job.pm, pmTimeout])
+    let pm = Promise.race([job.pm, pmTimeout])
         .finally(() => {
             clearTimeout(timer)
         })
+    if (ctx.trace) {
+        //共用者自己的落定通知(先於呼叫端的續行): 另掛一條不改變pm之落定的分支, 兩個處理器皆不拋錯故不產生未處理之rejection
+        pm.then((r) => {
+            ctx.trace('settle', { ok: true, code: null, attempts: r.attempts })
+        }, (err) => {
+            let a = get(err, 'attempts')
+            ctx.trace('settle', { ok: false, code: codeStr(err), attempts: typeof a === 'number' ? a : 0 })
+        })
+    }
+    return pm
 }
 
 
@@ -1095,6 +1215,7 @@ function joinJob(job, ctx) {
  * @param {Boolean} [opt.useShare=true] 輸入同程序內併發呼叫是否共用同一次下載，預設true
  * @param {Boolean} [opt.useSkipIfMatch=false] 輸入每次嘗試取得期望值後，fpOut已是期望內容時是否不下載直接成功(回傳downloaded為false)，既有檔無法讀取視為不符，預設false
  * @param {Function} [opt.onRetry=null] 輸入重試前之通知函數，收到{ attempt, maxAttempts, delayMs, error }，其拋錯或回傳之rejection皆忽略，預設null
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，與給使用者之進度通知opt.onRetry是兩回事(互不影響)；n為由1起算之嘗試序號(共用等待者與參數通過後之準備失敗為0)；type為'attempt'時為第n次嘗試開始(含n、max為maxAttempts)，'skip'時為opt.useSkipIfMatch成立而fpOut已是期望內容故不下載(含n、size)，'request'時為即將送出請求且整體時限計時器與停滯計時器已設定(含n、stallMs、remainMs為整體時限剩餘毫秒數)，'touch'時為停滯計時器剛重設(自此起連續stallMs沒有資料即停滯；含n、from為'request'|'headers'|'data'、ms為stallMs)，'headers'時為回應標頭已到(含n、ok、status為數字或null)，'data'時為本體又收到一塊資料(含n、bytes為本次嘗試累計位元組數；其後隨即重設停滯計時器)，'temp'時為暫存檔建立(act為'create')或清除(act為'remove'；含n、act、ok為是否成功)，'verify'時為校驗結果(phase為'stream'代表本體讀完之大小與SHA-256比對、'disk'代表重讀暫存檔核對；含n、phase、size、sizeOk、hashOk，皆為布林或數字，不含雜湊內容)，'rename'時為第i次更名嘗試(含n、i、ok)，'timeout'時為時限計時器觸發(kind為'stall'代表停滯、'total'代表整體時限；where為'request'代表請求階段之計時器、'expected'代表取期望值階段、'read'代表重讀檔案比對階段、'share'代表共用等待者逾時、'budget'代表檢查時整體時限已用盡；含n、kind、where、ms)，'abort'時為請求之中止實際執行(why為中止原因代碼'E_TIMEOUT'|'E_TIMEOUT_TOTAL'、'fallback'代表一端先出錯後5秒仍未落定而放手、'close'代表本次嘗試結束時釋放未讀完之本體與連線；含n、why)，'retry'時為第n次嘗試失敗而即將等待ms毫秒後重試(含n、ms；與opt.onRetry同一時點但不論有無給onRetry皆通知)，'stop'時為不再重試(why為'fatal'代表不可重試之錯誤、'max'代表次數用盡、'budget'代表等待會超過整體時限；含n、why、code為該錯誤代碼)，'share'時為同程序共用之登記(act為'own'代表本次為進行中之工作、'join'代表加入進行中之同一工作、'off'代表opt.useShare為false而各自下載；含act)，'settle'時為本次呼叫即將resolve(ok為true)或reject(含ok、code為錯誤代碼或null、attempts)；入口之參數錯誤(E_ARG)不通知任何事件；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響下載，預設null
  * @returns {Promise} 回傳Promise，resolve回傳結果物件{ fp, sha256, size, attempts, downloaded, leftovers }，sha256為小寫，leftovers為先前嘗試刪不掉之暫存檔陣列[{ fp, error }]；reject回傳Error物件，其code為'E_ARG'、'E_EXPECTED'、'E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'、'E_RENAME'之一，另帶step('argument'、'prepare'、'expected'、'request'、'download'、'verify'、'rename'、'share')、attempts(已嘗試次數，參數錯誤、建立資料夾錯誤與共用等待逾時為0)；E_ARG以外另帶url、fp、expected(最後使用之期望值)、actual(已計算之實際值或null)、leftovers、cleanupError(有刪不掉之暫存檔時為第一個之錯誤)、status(HTTP錯誤時)、cause，message含失敗步驟、預期與實際(雜湊截短為16碼)、建議與刪不掉之暫存檔；E_ARG(入口之參數錯誤)只另帶cause(有時); 下載途中之E_ARG(回應本體不是WHATWG ReadableStream)與其他代碼同帶上述欄位
  * @example
  * //need test in nodejs
@@ -1136,11 +1257,18 @@ async function fsDownloadFileVerifyCore(urlIn, fpOut, expected, opt = {}) {
     }
     catch (err) {
         let e = mkErr('E_FS', `can not prepare folder "${fd === '' ? '.' : fd}": ${errMsg(err)}`, { step: 'prepare', attempts: 0, cause: err })
-        return Promise.reject(finalErr(ctx, e, 0, ''))
+        let errFinal = finalErr(ctx, e, 0, '')
+        if (ctx.trace) {
+            ctx.trace('settle', { ok: false, code: codeStr(errFinal), attempts: 0 })
+        }
+        return Promise.reject(errFinal)
     }
 
     //useShare
     if (!ctx.useShare) {
+        if (ctx.trace) {
+            ctx.trace('share', { act: 'off' })
+        }
         return run(ctx)
     }
     let key = ctx.win32 ? ctx.fpAbs.toLowerCase() : ctx.fpAbs
@@ -1153,7 +1281,13 @@ async function fsDownloadFileVerifyCore(urlIn, fpOut, expected, opt = {}) {
         return sameJob(job, ctx)
     })
     if (cur !== undefined) {
+        if (ctx.trace) {
+            ctx.trace('share', { act: 'join' })
+        }
         return joinJob(cur, ctx)
+    }
+    if (ctx.trace) {
+        ctx.trace('share', { act: 'own' })
     }
     let job = {
         urlIn: ctx.urlIn,

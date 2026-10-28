@@ -209,6 +209,33 @@ describe(`fsTask 檔案來源之紀錄須為一般物件(R-OBJ-ITER-01 候選9)`
         })
     }
 
+    it(`should document in the JSDoc the options it actually reads: opt.typeHash (not opt.type) and opt.fdStorage, and use opt.typeHash as the hash method`, async function() {
+        //wsemi-run09: JSDoc原寫opt.type而程式讀opt.typeHash(給opt.type無作用), 且opt.fdStorage未列入JSDoc; 以程式與語意為準(typeHash不與事件之type混淆), 改JSDoc
+        let src = fs.readFileSync(join(__dirname, '..', 'src', 'fsTask.mjs'), 'utf8')
+        let params = [...src.matchAll(/@param\s+\{[^}]*\}\s+\[?opt\.(\w+)/g)].map((m) => m[1])
+        assert.strict.deepStrictEqual({ typeHash: params.includes('typeHash'), fdStorage: params.includes('fdStorage'), type: params.includes('type') }, { typeHash: true, fdStorage: true, type: false })
+        //程式確實讀typeHash(sha1為40碼十六進位)而不讀type(預設md5為32碼)
+        let firstHash = (name, extra) => new Promise((resolve, reject) => {
+            let c = mk(name, { files: { 'a.txt': 'abc' } })
+            let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 40, ...extra })
+            let tGuard = setTimeout(() => {
+                ev.clear()
+                reject(new Error('firstHash: no change event'))
+            }, 20000)
+            ev.on('change', (msg) => {
+                clearTimeout(tGuard)
+                ev.clear()
+                msg.pm.resolve()
+                resolve(msg.hash)
+            })
+        })
+        let hs = []
+        hs.push(await firstHash('opt-md5', {}))
+        hs.push(await firstHash('opt-sha1', { typeHash: 'sha1' }))
+        hs.push(await firstHash('opt-type-ignored', { type: 'sha1' }))
+        assert.strict.deepStrictEqual(hs, ['900150983cd24fb0d6963f7d28e17f72', 'a9993e364706816aba3e25717850c26c9cd0d89d', '900150983cd24fb0d6963f7d28e17f72'])
+    })
+
     describe(`fsTask 觀察回調(onTrace, R-TRACE-01)`, function() {
 
         //runOnce, 同一情境(紀錄檔含已不存在之gone、資料夾新增a.txt: 依序派發del gone、add a.txt)以指定之onTrace執行, 兩個change皆settle且紀錄檔更新後回傳結果

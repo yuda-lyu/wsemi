@@ -4,6 +4,7 @@ import isestr from './isestr.mjs'
 import domGetPointFromEvent from './domGetPointFromEvent.mjs'
 import domGetBoudRect from './domGetBoudRect.mjs'
 import optNum from './_optNum.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -21,6 +22,7 @@ import optNum from './_optNum.mjs'
  * @param {String} [opt.containerBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
  * @param {Number} [opt.containerBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有限數字(可為數字字串)，無效時用預設，預設1
  * @param {String} [opt.containerBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'create'時為createPreview已建立預覽並完成監聽、定位與確認來源之計時器排定(含replaced為布林，代表建立前已有預覽而被替換)，'skip'時為createPreview無法建立預覽(含reason；reason為'no-box'代表無法取得來源位置、'build-error'代表建構預覽時拋錯如來源按鈕已自我刪除)，'tick'時為每500毫秒確認來源元素是否仍在頁面中之一次判定(含connected為布林，false時緊接著通知reason為'source-gone'之remove)，'remove'時為確有預覽而已被移除並已停止監聽與計時器(含reason；reason為'remove'代表removeDragPreview、'clear'代表clear、'replace'代表createPreview替換既有預覽、'source-gone'代表來源已被移出頁面；無預覽時重複呼叫不通知)；事件皆於對應動作完成後通知(通知當下預覽、監聽與計時器之狀態已一致)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響預覽，預設null
  * @returns {Object} 回傳物件，內含createPreview、updateDragPreview、pauseDragPreview、removeDragPreview、setNodeStyle、setCoverStyle、setSellStyle、setContainerStyle、clear事件，clear同removeDragPreview
  * @example
  * need test in browser
@@ -41,6 +43,9 @@ function domDragPreview(opt = {}) {
     let _attId = 'dragpreviewid'
     let _cur = null //目前之預覽: ele(來源)、node(拷貝)、cover、shell、container、timer(確認來源之計時器)、offs(視窗監聽之移除函數)
     let _pause = false
+
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
 
     //attIdentify, 預覽之拷貝清除此欄位, 使全域只有來源元素帶有此識別
     let attIdentify = get(opt, 'attIdentify', null)
@@ -177,17 +182,23 @@ function domDragPreview(opt = {}) {
         //console.log('createPreview')
 
         //同一時間只有一個預覽, 先移除前一個
-        removeDragPreview()
+        let replaced = _cur !== null
+        removeCur('replace')
 
         //build, 須try catch因可能原dom例如是按鈕要自我刪除故會導致出錯
         let cur = null
+        let failed = false
         try {
             cur = build(ele, x, y)
         }
         catch (err) {
             cur = null
+            failed = true
         }
         if (cur === null) {
+            if (trace) {
+                trace('skip', { reason: failed ? 'build-error' : 'no-box' })
+            }
             return
         }
         _cur = cur
@@ -212,10 +223,19 @@ function domDragPreview(opt = {}) {
                 clearInterval(cur.timer)
                 return
             }
-            if (!cur.ele.isConnected) {
-                removeDragPreview()
+            let connected = cur.ele.isConnected
+            if (trace) {
+                trace('tick', { connected: !!connected })
+            }
+            if (!connected) {
+                removeCur('source-gone')
             }
         }, 500)
+
+        //create, 預覽、監聽與確認來源之計時器皆已就緒
+        if (trace) {
+            trace('create', { replaced })
+        }
 
     }
 
@@ -238,7 +258,8 @@ function domDragPreview(opt = {}) {
         _pause = b
     }
 
-    function removeDragPreview() {
+    //removeCur, 移除目前之預覽並停止監聽與確認來源之計時器, 可重複呼叫; reason為通知用之移除原因
+    function removeCur(reason) {
         //console.log('removeDragPreview')
 
         //check
@@ -261,6 +282,15 @@ function domDragPreview(opt = {}) {
             c.parentNode.removeChild(c)
         }
 
+        //remove, 預覽、監聽與計時器皆已移除
+        if (trace) {
+            trace('remove', { reason })
+        }
+
+    }
+
+    function removeDragPreview() {
+        removeCur('remove')
     }
 
     //setStyle, 對目前預覽之指定層設定樣式, 無預覽時不動作
@@ -293,7 +323,7 @@ function domDragPreview(opt = {}) {
     }
 
     function clear() {
-        removeDragPreview()
+        removeCur('clear')
     }
 
     return {

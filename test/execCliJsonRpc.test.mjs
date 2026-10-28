@@ -4,6 +4,8 @@ import cp from 'child_process'
 import { fileURLToPath } from 'url'
 import execCliJsonRpc from '../src/execCliJsonRpc.mjs'
 import { runExecFail } from './tools/execFailRun.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+import { fiveOnTrace, watchUnhandled, badProp, recMeta } from './tools/execCliTraceKit.mjs'
 
 
 describe(`execCliJsonRpc`, function() {
@@ -166,6 +168,100 @@ describe(`execCliJsonRpc`, function() {
         assert.strict.deepStrictEqual([o.value.ok, o.value.error.startsWith('x: EMFILE: ')], [false, true])
         assert.strict.deepStrictEqual(o.hasSecret, false)
         assert.strict.deepStrictEqual(o.uncaught, [])
+    })
+
+    //R-TRACE-01: opt.onTrace原樣轉交execCliSession, 事件即其工作階段之事件(本函數自身無計時器亦不另通知); 事件以traceRec等待, 逾時門檻本身即規格者於假時鐘下推進(P5)
+    describe(`觀察回調(R-TRACE-01)`, function() {
+
+        it(`should pass opt.onTrace through to execCliSession: spawn, one write per message, data, stop with exitGraceMs, settle with the exit result`, async function() {
+            let rec = recMeta()
+            let reqs = [
+                { method: 'initialize', params: { clientInfo: { name: 'demo' } } },
+                { notify: 'initialized' },
+                { method: 'account/read' },
+            ]
+            let r = await execCliJsonRpc(nodeBin, ['-e', scServer], reqs, { exitGraceMs: 60000, onTrace: rec.on })
+            let ev = rec.events
+            assert.strict.deepStrictEqual([r.ok, r.exitCode], [true, 0])
+            //JSDoc opt.onTrace: 事件即execCliSession之事件; spawn於最先
+            assert.strict.deepStrictEqual(ev[0].type, 'spawn')
+            assert.strict.deepStrictEqual(typeof ev[0].pid, 'number')
+            //JSDoc opt.onTrace: write為每則請求或通知寫入stdin一次(len含補上之換行)
+            let len = (o) => JSON.stringify(o).length + 1
+            assert.strict.deepStrictEqual(ev.filter((e) => e.type === 'write'), [
+                { type: 'write', ok: true, len: len({ id: 0, method: 'initialize', params: { clientInfo: { name: 'demo' } } }) },
+                { type: 'write', ok: true, len: len({ method: 'initialized' }) },
+                { type: 'write', ok: true, len: len({ id: 1, method: 'account/read' }) },
+            ])
+            assert.strict.deepStrictEqual(ev.filter((e) => e.type === 'data').length > 0, true)
+            //JSDoc opt.onTrace: stop之ms為exitGraceMs; 全部完成後才stop, 此時之退出不視為失敗; settle為最後一個事件
+            assert.strict.deepStrictEqual(ev.slice(-2), [{ type: 'stop', ms: 60000 }, { type: 'settle', code: 0, signal: null, exited: true, timeout: false, killed: false, error: '' }])
+            assert.strict.deepStrictEqual(ev.filter((e) => ['grace', 'kill', 'timeout'].includes(e.type)), [])
+            //事件為凍結物件, 回調不帶接收者
+            assert.strict.deepStrictEqual(rec.meta.length === ev.length && rec.meta.every(([self, frozen]) => self === undefined && frozen), true)
+        })
+
+        it(`should notify timeout at exactly timeoutMs and then kill when the server never answers, and report errorType timeout`, async function() {
+            //整體逾時門檻本身即規格(JSDoc opt.timeoutMs涵蓋全部請求與收尾): 假時鐘下以advance量測; 子進程與樹殺為真實I/O
+            let clock = useFakeClock()
+            try {
+                let tr = traceRec()
+                let p = execCliJsonRpc(nodeBin, ['-e', 'setInterval(() => {}, 1000)'], [{ method: 'x' }], { timeoutMs: 4000, onTrace: tr.on })
+                let sp = await tr.wait((e) => e.type === 'spawn')
+                await tr.wait((e) => e.type === 'write') //請求已送出
+                let at = tr.mark()
+                await clock.advance(3999)
+                assert.strict.deepStrictEqual(tr.types(at), [])
+                await clock.advance(1)
+                assert.strict.deepStrictEqual(tr.events.slice(at, at + 2), [{ type: 'timeout', ms: 4000 }, { type: 'kill', pid: sp.pid, ms: 3000 }]) //kill之ms為execCliSession預設killWaitMs
+                let r = await p
+                assert.strict.deepStrictEqual([r.ok, r.errorType, r.error.startsWith('x: TIMEOUT after 4s')], [false, 'timeout', true])
+                let st = tr.events.at(-1)
+                assert.strict.deepStrictEqual([st.type, st.timeout, st.killed, st.exited], ['settle', true, true, true])
+            }
+            finally {
+                clock.restore()
+            }
+        })
+
+        it(`should give the same results without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+            //R-TRACE-01 P3: 未傳觀察回調時行為不變; P4: 回調之拋錯與回傳之rejection不影響結果、不產生未處理之rejection; 情境涵蓋成功、rpc錯誤、子進程提早結束、命令不存在、參數錯誤、逾時
+            let un = watchUnhandled()
+            let rec = traceRec()
+            let norm = (r) => ({ ok: r.ok, errorType: r.errorType, error: r.error.includes('TIMEOUT') ? 'TIMEOUT' : r.error, results: r.results, n: r.responses.length, exitCode: r.errorType === 'timeout' ? 'timeout' : r.exitCode })
+            let got = []
+            try {
+                for (let onTrace of fiveOnTrace(rec.on)) {
+                    let rs = []
+                    let o = { exitGraceMs: 60000, onTrace }
+                    rs.push(await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'initialize', params: { a: 1 } }, { notify: 'initialized' }], o))
+                    rs.push(await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'fail' }, { method: 'never' }], o))
+                    rs.push(await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'die' }, { method: 'never' }], o))
+                    rs.push(await execCliJsonRpc('non_existent_command_xyz_12345', [], [{ method: 'x' }], o))
+                    rs.push(await execCliJsonRpc('', [], [{ method: 'x' }], o))
+                    rs.push(await execCliJsonRpc(nodeBin, ['-e', 'setInterval(() => {}, 1000)'], [{ method: 'x' }], { ...o, timeoutMs: 300 }))
+                    got.push(rs.map(norm))
+                }
+                await new Promise((resolve) => setImmediate(resolve))
+                await new Promise((resolve) => setImmediate(resolve))
+            }
+            finally {
+                un.stop()
+            }
+            assert.strict.deepStrictEqual(got.slice(1), [got[0], got[0], got[0], got[0]])
+            assert.strict.deepStrictEqual(got[0].map((x) => [x.ok, x.errorType]), [[true, ''], [false, 'rpc'], [false, 'exit'], [false, 'notfound'], [false, 'params'], [false, 'timeout']])
+            assert.strict.deepStrictEqual(un.list, [])
+            let types = new Set(rec.events.map((e) => e.type))
+            assert.strict.deepStrictEqual(['spawn', 'data', 'write', 'stop', 'timeout', 'kill', 'settle'].every((t) => types.has(t)), true)
+        })
+
+        it(`should report errorType params without spawning when the onTrace property itself is unreadable (getter throws)`, async function() {
+            //JSDoc opt.onTrace: opt.onTrace屬性本身不可讀與onStderr相同, errorType為params; 不reject
+            let opt = badProp({}, 'onTrace', 'trace getter boom')
+            let r = await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'x' }], opt)
+            assert.strict.deepStrictEqual([r.ok, r.errorType, r.error], [false, 'params', 'UNKNOWN: trace getter boom'])
+        })
+
     })
 
 })

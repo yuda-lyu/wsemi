@@ -16,6 +16,7 @@ import execProcessKillPid from './execProcessKillPid.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -32,6 +33,7 @@ import callUser from './_callUser.mjs'
  * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除
  * @param {Boolean} [opt.useChcp=false] 輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'
  * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，預設null表示不限制；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args型別不符，'codeCmd'代表編碼不支援，'prog'代表spawn模式prog含引號)；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
  * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符(含判型即拋錯之不可讀之值)、codeCmd不支援、spawn模式prog含引號或opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`)時為說明字串；prog不可讀時為`spawn[UNKNOWN]:\n訊息`；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
  * @example
  * //need test in nodejs
@@ -81,6 +83,7 @@ function execProcess(prog, args, opt = {}) {
     let cc = null
     let useChcp = false
     let timeout = null
+    let trace = null
     try {
         let v
 
@@ -107,6 +110,9 @@ function execProcess(prog, args, opt = {}) {
         v = get(opt, 'timeout')
         timeout = (!isnum(v) || v <= 0) ? null : Math.min(v, cst.TIMER_TIME_MAX)
 
+        //trace, 觀察回調(opt.onTrace), 未給時為null; 置於其餘選項之讀取之後, 使opt不可讀之既有失敗路徑不變
+        trace = getTrace(opt)
+
     }
     catch (err) {
         pm.reject(`opt is not readable: ${execThrownMsg(execSpawnError(err), err)}`)
@@ -122,6 +128,9 @@ function execProcess(prog, args, opt = {}) {
         bArgsOk = false //判型拋錯視同型別不符
     }
     if (!bArgsOk) {
+        if (trace) {
+            trace('settle', { ok: false, reason: 'args', code: null })
+        }
         pm.reject(`args is not an array or string`)
         return pm
     }
@@ -140,6 +149,9 @@ function execProcess(prog, args, opt = {}) {
     }
     if (cc === null) {
         //不支援之編碼於執行前reject, 不得等到data事件才拋, 因事件處理器內之拋錯不在try catch範圍也不會進error事件, 會拉倒整個程序
+        if (trace) {
+            trace('settle', { ok: false, reason: 'codeCmd', code: null })
+        }
         pm.reject(`codeCmd[${codeCmd}] is not a supported encoding`)
         return pm
     }
@@ -156,6 +168,9 @@ function execProcess(prog, args, opt = {}) {
                 let cr = strleft(prog, 1)
                 let cl = strright(prog, 1)
                 if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
+                    if (trace) {
+                        trace('settle', { ok: false, reason: 'prog', code: null })
+                    }
                     pm.reject(`prog[${prog}] of spawn does not need to add quotes`)
                     return
                 }
@@ -201,8 +216,16 @@ function execProcess(prog, args, opt = {}) {
         catch (err) {
             //同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等), 轉為不含參數值之字串; prog不可讀而拋出非Error之值者保留該值之文字(_execThrownMsg)
             let e = execSpawnError(err)
+            if (trace) {
+                trace('settle', { ok: false, reason: 'spawn', code: null })
+            }
             pm.reject(`spawn[${e.code}]:\n${execThrownMsg(e, err)}`)
             return
+        }
+
+        //spawn事件, 子程序已建立; 建立失敗者(EMFILE、ENFILE、找不到執行檔等)無pid, 其失敗由下方error回報
+        if (trace) {
+            trace('spawn', { mode, pid: typeof r.pid === 'number' ? r.pid : null })
         }
 
         //timer, bTimeout, 逾時計時器於下方設定, 先宣告供error與close使用
@@ -216,6 +239,10 @@ function execProcess(prog, args, opt = {}) {
                 clearTimeout(timer)
             }
             let e = execSpawnError(err)
+            if (trace) {
+                trace('settle', { ok: false, reason: 'spawn', code: null })
+                trace = null //已落定, 其後node仍會發出close(無法啟動者error後必有close), 不再通知
+            }
             pm.reject(`spawn[${e.code}]:\n${e.message}`)
         })
 
@@ -236,12 +263,21 @@ function execProcess(prog, args, opt = {}) {
 
         //onData, 解碼後推入segs並回呼, 空字串(該chunk僅含尚未完整之多位元組序列)不回呼
         let onData = (which, dec, cb) => {
+            let bSwitch = false //該串流是否已通知過switch事件
             return (data) => {
                 let buf = data
                 if (!Buffer.isBuffer(buf)) {
                     buf = Buffer.from(String(buf))
                 }
                 let text = dec.write(buf)
+                if (trace) {
+                    //switch為判定(首次遇到非utf-8位元組而改用系統字碼頁), data為其結果, 皆早於回調cb
+                    if (dec.switched && !bSwitch) {
+                        bSwitch = true
+                        trace('switch', { which, label: dec.label })
+                    }
+                    trace('data', { which, bytes: buf.length, text })
+                }
                 segs.push({ which, text, buf: retain ? buf : null })
                 if (text !== '' && cb !== undefined) { //cb已於入口判型(函數或undefined), 監聽器內不再判型呼叫端之值(值於入口後撤銷時判型會拋出)
                     callUser(cb, text)
@@ -312,8 +348,14 @@ function execProcess(prog, args, opt = {}) {
         if (timeout !== null) {
             timer = setTimeout(() => {
                 bTimeout = true
+                if (trace) {
+                    trace('timeout', { ms: timeout })
+                }
                 if (r && r.pid) {
-                    //fire-and-forget, 殺掉子進程後close/error事件會接著觸發, 由bTimeout決定reject訊息
+                    //fire-and-forget, 殺掉子進程後close/error事件會接著觸發, 由bTimeout決定reject訊息; 不轉傳onTrace, 其事件流不混入本回調
+                    if (trace) {
+                        trace('kill', { pid: r.pid })
+                    }
                     execProcessKillPid(r.pid)
                         .catch(() => {}) //pid可能已結束, 忽略error
                 }
@@ -328,12 +370,21 @@ function execProcess(prog, args, opt = {}) {
             }
             let cmsg = buildMsg()
             if (bTimeout) {
+                if (trace) {
+                    trace('settle', { ok: false, reason: 'timeout', code: typeof code === 'number' ? code : null })
+                }
                 pm.reject(`timeout[${timeout}ms]:\n${cmsg}`)
             }
             else if (code !== 0) {
+                if (trace) {
+                    trace('settle', { ok: false, reason: 'code', code: typeof code === 'number' ? code : null })
+                }
                 pm.reject(`code[${code}]:\n${cmsg}`)
             }
             else {
+                if (trace) {
+                    trace('settle', { ok: true, reason: 'ok', code: 0 })
+                }
                 pm.resolve(cmsg)
             }
         })
@@ -349,6 +400,9 @@ function execProcess(prog, args, opt = {}) {
             .then(start)
             .catch((err) => {
                 let e = execSpawnError(err)
+                if (trace) {
+                    trace('settle', { ok: false, reason: 'spawn', code: null })
+                }
                 pm.reject(`spawn[${e.code}]:\n${e.message}`)
             })
     }

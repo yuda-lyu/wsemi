@@ -31,7 +31,8 @@ import getTrace from './getTrace.mjs'
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
- * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
+ * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用
+ * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，預設'./_tkfs'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為定時器到期一次(含busy為上一輪掃描是否仍在進行，為true時本次到期略過)，'skip'時為因上一個change之pm尚未settle(lock)而本輪不掃描(含reason為'lock')，'scan'時為一輪掃描開始或結束(含phase為'start'或'end'，結束時另含files為掃描到之檔案數、records為紀錄檔之筆數)，'compare'時為新舊比對結果(含add、del、diff、same為各類件數)，'emit'時為即將派發一個change事件(含kind為'add'、'del'或'diff'，fp為檔案路徑字串)，'settle'時為該change之pm已settle而即將據以處理(含kind、fp、ok為任務是否成功)，'record'時為任務成功後紀錄檔fpHash.json已更新(含kind、fp)，'fail'時為一輪掃描因列舉檔案或計算雜湊失敗而中止，'clear'時為已呼叫clear；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
  * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }

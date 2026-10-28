@@ -12,6 +12,8 @@ import fsCreateFolder from '../src/fsCreateFolder.mjs'
 import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsDownloadFileVerify from '../src/fsDownloadFileVerify.mjs'
 import fsDownloadFileVerifyCore from '../src/fsDownloadFileVerifyCore.mjs'
+import { useFakeClock } from './tools/timeKit.mjs'
+import { mkRec, advanceUntil, fiveOnTrace, guard } from './tools/dlTraceKit.mjs'
 
 
 //規格: 派工提示詞(wsemi-run01〈要做的事〉1)與規則帳本R-DL-VERIFY-01; 各案註解之R編號對應tmp之validate-plan需求述語, 規則句見R-DL-VERIFY-01
@@ -34,6 +36,68 @@ describe(`fsDownloadFileVerify with a local server`, function() {
     let unhandled = []
     let onUnhandled = (e) => {
         unhandled.push(String(e))
+    }
+
+    //觀察回調(opt.onTrace)測試用之伺服器端同步點(R-TRACE-01): 回應之放行與結束由測試以事件控制, 不用伺服器端計時器(假時鐘會一併取代計時器, 且負載下時刻不定)
+    //  gates: 受測試控制之回應(action為gated); closeWaiters: 某網址之下一個回應結束或連線被中止(action為hang時只可能是被對方中止)
+    let gates = {}
+    let closeWaiters = {}
+
+    //mkGate, 預先登記某網址之受控回應: 伺服器收到請求即送出標頭(flushHeaders), 之後本體由測試以write/end放行; len給了則content-length為len, 否則chunked
+    let mkGate = (key, len) => {
+        let g = { len, res: null, ready: null, open: null }
+        g.ready = new Promise((resolve) => {
+            g.open = resolve
+        })
+        g.write = (buf) => {
+            g.res.write(buf)
+        }
+        g.end = (buf) => {
+            g.res.end(buf)
+        }
+        gates[key] = g
+        return g
+    }
+
+    //mkMem, 記憶體內受測試控制之回應(傳入opt.fetch, 不經本機HTTP): 標頭立即可用, 本體由測試以write/end放行; calls為fetch被呼叫次數
+    //  假時鐘(useFakeClock)下不用真實連線: 客戶端(undici)於假時鐘期間建立之內部計時器於還原後殘留, 後續假時鐘期間其清除動作會誤清測試中被測碼的計時器(以實測確認: 前一案之殘留使後一案的整體時限計時器永不觸發)
+    let mkMem = (len) => {
+        let ctl = null
+        let stream = new ReadableStream({
+            start(c) {
+                ctl = c
+            },
+        })
+        let mem = { calls: 0 }
+        mem.fetch = async () => {
+            mem.calls++
+            return new Response(stream, { status: 200, headers: len === undefined ? {} : { 'content-length': String(len) } })
+        }
+        mem.write = (buf) => {
+            ctl.enqueue(new Uint8Array(buf))
+        }
+        mem.end = () => {
+            ctl.close()
+        }
+        return mem
+    }
+
+    //watchClose, 登記後回傳Promise, 於該網址的下一個回應結束或連線被中止時resolve { ended }, ended為伺服器是否已自行結束回應(false代表連線是被對方中止)
+    let watchClose = (key) => {
+        return new Promise((resolve) => {
+            closeWaiters[key] = resolve
+        })
+    }
+
+    //withClock, 於假時鐘下執行fn(clock), 結束(含失敗)必還原; 時間本身即規格者(停滯、整體時限、重試間隔)用之(P5), 事件來自本機真實I/O者以onTrace事件為同步點才推進
+    let withClock = async (fn) => {
+        let clock = useFakeClock()
+        try {
+            return await fn(clock)
+        }
+        finally {
+            clock.restore()
+        }
     }
 
     let url = (p) => {
@@ -163,6 +227,23 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 clearTimeout(t)
             })
         },
+        gated: (req, res, key) => {
+            //受測試控制之回應(mkGate): 標頭立即送出, 本體由測試放行
+            let g = gates[key]
+            let h = { 'content-type': 'application/octet-stream' }
+            if (g.len !== undefined) {
+                h['content-length'] = String(g.len)
+            }
+            res.writeHead(200, h)
+            res.flushHeaders()
+            g.res = res
+            g.open()
+        },
+        hang: (req, res) => {
+            //chunked, 送出2000位元組後不再送資料也不結束, 連線只能由對方中止(伺服器端close且未自行結束即代表被對方中止)
+            res.writeHead(200, { 'content-type': 'application/octet-stream' })
+            res.write(body.subarray(0, 2000))
+        },
         s404: (req, res) => {
             res.writeHead(404, { 'content-type': 'text/plain' })
             res.end('not found')
@@ -210,11 +291,16 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             hits[key] = (hits[key] || 0) + 1
             res.on('close', () => {
                 closedAt[key] = Date.now() //回應結束或連線被對方中止之時刻
+                let wc = closeWaiters[key]
+                if (wc) {
+                    delete closeWaiters[key]
+                    wc({ ended: res.writableEnded })
+                }
             })
             let seq = plans[key] || [key]
             let a = seq[Math.min(hits[key] - 1, seq.length - 1)]
             let f = actions[a] || actions.s404
-            f(req, res)
+            f(req, res, key)
         })
         await new Promise((resolve) => {
             server.listen(port, '127.0.0.1', resolve)
@@ -270,14 +356,21 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R09 should never expose fpOut while downloading: the temporary file is in the same folder and fpOut appears only after verification`, async function() {
         let fp = fpOf('slowok')
-        let pm = fsDownloadFileVerify(plan('slowok', ['slowok']), fp, exp)
-        await new Promise((resolve) => {
-            setTimeout(resolve, 200)
-        })
+        //下載中之狀態改由事件同步(R-TRACE-01): 伺服器先送一半並扣住後半, 待測試放行; 不以固定等待後檢查
+        let g = mkGate('slowokgate', body.length)
+        let rec = mkRec()
+        let pm = fsDownloadFileVerify(plan('slowokgate', ['gated']), fp, exp, { onTrace: rec.on })
+        await guard(g.ready, 'server request')
+        g.write(body.subarray(0, 150000))
+        await rec.wait((e) => e.type === 'data') //同步點: 標頭已到、暫存檔已建立、本體已有資料寫入, 後半仍被伺服器扣住(下載尚在進行)
         //R04: 下載中之暫存檔在同資料夾; R09: 驗證前正式檔名不存在
         let during = { fp: fs.existsSync(fp), parts: parts(fp).length }
+        let types = rec.types()
+        g.end(body.subarray(150000))
         let r = await pm
         assert.strict.deepStrictEqual({ during, after: { fp: fs.existsSync(fp), parts: parts(fp).length }, size: r.size }, { during: { fp: false, parts: 1 }, after: { fp: true, parts: 0 }, size: body.length })
+        //事件順序: 標頭到達與暫存檔建立先於第一塊資料(此時尚無verify與rename)
+        assert.strict.deepStrictEqual([types.indexOf('headers') < types.indexOf('temp'), types.indexOf('temp') < types.indexOf('data'), types.includes('verify'), types.includes('rename')], [true, true, false, false])
     })
 
     it(`R01 should replace an existing old file on success`, async function() {
@@ -406,34 +499,104 @@ describe(`fsDownloadFileVerify with a local server`, function() {
     })
 
     it(`R11/R12 should reject E_TIMEOUT when no data arrives for opt.stallMs during the body`, async function() {
+        //停滯門檻(stallMs)本身即規格: 假時鐘下以onTrace事件為同步點(標頭與前100位元組已到)後才推進, 使「停滯」由測試因果決定, 不受負載影響(R-TRACE-01, P5)
         let fp = fpOf('stall')
-        let t = Date.now()
-        let err = await catchErr(fsDownloadFileVerify(plan('stall', ['stall']), fp, exp, { stallMs: 300, maxAttempts: 1 }))
-        let ms = Date.now() - t
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, fp: fs.existsSync(fp), parts: parts(fp), inTime: ms < 3000 }, { code: 'E_TIMEOUT', step: 'download', fp: false, parts: [], inTime: true }, `ms=${ms}`)
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let mem = mkMem(body.length) //記憶體內回應: 標頭與前100位元組後不再送資料(同伺服器stall行為)
+            let pm = catchErr(fsDownloadFileVerify(url('stall'), fp, exp, { fetch: mem.fetch, stallMs: 300, maxAttempts: 1, onTrace: rec.on }))
+            mem.write(body.subarray(0, 100))
+            await rec.wait((e) => e.type === 'data')
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 2000)
+            let err = await guard(pm, 'settle') //未落定時以防懸置上限失敗(使finally還原假時鐘)
+            //R12: 自最後一次收到資料(停滯計時器重設)起恰隔stallMs才判停滯, step為download(標頭已到)
+            let to = rec.find('timeout')
+            let tc = rec.all('touch').filter((v) => v.i < to.i).pop()
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, fp: fs.existsSync(fp), parts: parts(fp), advanced: adv.ok, from: tc.e.from, gap: to.at - tc.at, kind: to.e.kind, where: to.e.where, ms: to.e.ms }, { code: 'E_TIMEOUT', step: 'download', fp: false, parts: [], advanced: true, from: 'data', gap: 300, kind: 'stall', where: 'request', ms: 300 })
+            //中止原因為停滯, 不重試(maxAttempts 1)而結束
+            assert.strict.deepStrictEqual([rec.find('abort').e.why, rec.find('stop').e.why, rec.find('settle').e.code], ['E_TIMEOUT', 'max', 'E_TIMEOUT'])
+        })
     })
 
     it(`R12 should not treat a download as stalled while data keeps arriving within opt.stallMs, even if the whole download takes longer`, async function() {
         let fp = fpOf('dripok')
-        let r = await fsDownloadFileVerify(plan('dripok', ['dripok']), fp, exp, { stallMs: 400, maxAttempts: 1 })
-        //R12: 停滯為「連續」stallMs沒收到資料, 每收到資料即重新計時
-        assert.strict.deepStrictEqual([r.attempts, fs.readFileSync(fp).equals(body)], [1, true])
+        //每塊資料由測試放行(記憶體內回應, 無計時器): 每塊之後只推進100ms(小於stallMs 400), 全程推進1000ms(大於stallMs)
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let mem = mkMem(body.length)
+            let pm = fsDownloadFileVerify(url('dripok'), fp, exp, { fetch: mem.fetch, stallMs: 400, maxAttempts: 1, onTrace: rec.on })
+            let len = Math.ceil(body.length / 10)
+            let t0 = Date.now()
+            for (let i = 0; i < 10; i++) {
+                let end = Math.min((i + 1) * len, body.length)
+                mem.write(body.subarray(i * len, end))
+                await rec.wait((e) => e.type === 'data' && e.bytes >= end) //同步點: 該塊已收到(停滯計時器隨即重設)
+                await clock.advance(100)
+            }
+            mem.end()
+            await advanceUntil(clock, () => rec.has('settle'), 5000, 50)
+            let r = await guard(pm, 'settle')
+            let elapsed = Date.now() - t0
+            //R12: 停滯為「連續」stallMs沒收到資料, 每收到資料即重新計時
+            assert.strict.deepStrictEqual([r.attempts, fs.readFileSync(fp).equals(body), elapsed >= 1000, rec.has('timeout'), rec.all('touch', (e) => e.from === 'data').length >= 10], [1, true, true, false, true])
+        })
     })
 
     it(`R11/R12 should reject E_TIMEOUT when the headers do not arrive within opt.stallMs, and retry it`, async function() {
         let fp = fpOf('stallhead')
-        let err = await catchErr(fsDownloadFileVerify(plan('stallhead', ['stallhead']), fp, exp, { stallMs: 300, maxAttempts: 2, retryDelayMs: 10 }))
-        //R11: 停滯可重試
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: hits.stallhead }, { code: 'E_TIMEOUT', step: 'request', attempts: 2, hits: 2 })
+        //伺服器不回應標頭(stallhead)改以傳入之fetch模擬(永不落定且不響應中止), 並以其呼叫次數代替伺服器端的收到次數: 假時鐘還原後客戶端(undici)重用之閒置連線上, 中止後再送第2個請求會被卡住(與被測碼無關), 故此案不經本機HTTP
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let nFetch = 0
+            let pm = catchErr(fsDownloadFileVerify(url('stallhead'), fp, exp, {
+                stallMs: 300,
+                maxAttempts: 2,
+                retryDelayMs: 10,
+                fetch: () => {
+                    nFetch++
+                    return new Promise(() => {})
+                },
+                onTrace: rec.on,
+            }))
+            await rec.wait((e) => e.type === 'request') //同步點: 第1次請求已送出(停滯與整體計時器已設定), 停滯由此起算
+            await advanceUntil(clock, () => rec.has('settle'), 2000)
+            let err = await guard(pm, 'settle')
+            //R11: 停滯可重試; 停滯發生在標頭到達之前(step為request)
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: nFetch }, { code: 'E_TIMEOUT', step: 'request', attempts: 2, hits: 2 })
+            //R12: 兩次嘗試皆自請求送出(停滯計時器設定)起恰隔stallMs判停滯, 重試前恰等待retryDelayMs*1
+            let tos = rec.all('timeout')
+            let touches = rec.all('touch')
+            let t1 = touches.filter((v) => v.e.n === 1 && v.i < tos[0].i).pop()
+            let t2 = touches.filter((v) => v.e.n === 2 && v.i < tos[1].i).pop()
+            assert.strict.deepStrictEqual({ stalls: tos.map((v) => [v.e.n, v.e.kind, v.e.where, v.e.ms]), gap1: tos[0].at - t1.at, gap2: tos[1].at - t2.at, wait: t2.at - tos[0].at, retry: rec.find('retry').e, headers: rec.has('headers') }, { stalls: [[1, 'stall', 'request', 300], [2, 'stall', 'request', 300]], gap1: 300, gap2: 300, wait: 10, retry: { type: 'retry', n: 1, ms: 10 }, headers: false })
+        })
     })
 
     it(`R12 should reject E_TIMEOUT_TOTAL when the whole download exceeds opt.totalMs although data keeps arriving`, async function() {
         let fp = fpOf('drip')
-        let t = Date.now()
-        let err = await catchErr(fsDownloadFileVerify(plan('drip', ['drip']), fp, exp, { stallMs: 5000, totalMs: 600 }))
-        let ms = Date.now() - t
-        //R11: 整體時間用盡不重試
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: hits.drip, fp: fs.existsSync(fp), parts: parts(fp), inTime: ms < 4000 }, { code: 'E_TIMEOUT_TOTAL', step: 'download', attempts: 1, hits: 1, fp: false, parts: [], inTime: true }, `ms=${ms}`)
+        //每次放行1位元組(由測試放行, 記憶體內回應, 無計時器), 每位元組之後推進50ms; 資料持續到達使停滯(5000)不會觸發, 只有整體時限(600)觸發
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let mem = mkMem(body.length)
+            let pm = catchErr(fsDownloadFileVerify(url('drip'), fp, exp, { fetch: mem.fetch, stallMs: 5000, totalMs: 600, onTrace: rec.on }))
+            let sent = 0
+            for (let i = 0; i < 60 && !rec.has('timeout'); i++) {
+                mem.write(body.subarray(sent, sent + 1))
+                sent++
+                await rec.wait((e) => e.type === 'data' && e.bytes >= sent)
+                await clock.advance(50)
+            }
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 10000, 50) //整體時限觸發後之清理(關閉寫入端)可能仍需推進虛擬時間
+            let err = await guard(pm, `settle (${JSON.stringify(rec.types())})`)
+            assert.strict.deepStrictEqual(adv.ok, true)
+            //R11: 整體時間用盡不重試
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: mem.calls, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_TIMEOUT_TOTAL', step: 'download', attempts: 1, hits: 1, fp: false, parts: [] })
+            //R12: 整體時限計時器自請求送出起算remainMs(不大於totalMs)後觸發, 期間資料持續到達故停滯計時器從未觸發
+            let rq = rec.find('request')
+            let to = rec.find('timeout')
+            let d = to.at - rq.at
+            assert.strict.deepStrictEqual({ kind: to.e.kind, where: to.e.where, ms: to.e.ms, remainOk: rq.e.remainMs > 0 && rq.e.remainMs <= 600, gapOk: d >= rq.e.remainMs && d < rq.e.remainMs + 1, onlyOne: rec.all('timeout').length, many: rec.all('data').length >= 5, stop: rec.find('stop').e.why, abort: rec.find('abort').e.why }, { kind: 'total', where: 'request', ms: 600, remainOk: true, gapOk: true, onlyOne: 1, many: true, stop: 'fatal', abort: 'E_TIMEOUT_TOTAL' }, `d=${d} remainMs=${rq.e.remainMs}`)
+        })
     })
 
     it(`R12 should stop retrying when the wait would exceed opt.totalMs`, async function() {
@@ -798,27 +961,48 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R11 should classify a disk error while reading back the temporary file as E_FS (not a stall), without retrying`, async function() {
         let fp = fpOf('readback')
-        let fsx = mkFs({
-            createReadStream: (p, o) => {
-                if (!String(p).endsWith('.part')) {
-                    return fs.createReadStream(p, o)
-                }
-                //重讀暫存檔時, 超過stallMs後才回報磁碟錯誤
-                let once = false
-                return new Readable({
-                    read() {
-                        if (!once) {
-                            once = true
-                            setTimeout(() => {
-                                this.destroy(busy('EIO'))
-                            }, 150)
-                        }
-                    },
-                })
-            },
+        //假時鐘下: 下載階段(本機真實I/O)不推進時間故不會有假停滯; 待事件確認本體已讀完並校驗、重讀已開始, 才推進超過stallMs(50)至磁碟錯誤(150)
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let started = null
+            let pmStarted = new Promise((resolve) => {
+                started = resolve
+            })
+            let fsx = mkFs({
+                createReadStream: (p, o) => {
+                    if (!String(p).endsWith('.part')) {
+                        return fs.createReadStream(p, o)
+                    }
+                    //重讀暫存檔時, 超過stallMs後才回報磁碟錯誤
+                    let once = false
+                    return new Readable({
+                        read() {
+                            if (!once) {
+                                once = true
+                                started()
+                                setTimeout(() => {
+                                    this.destroy(busy('EIO'))
+                                }, 150)
+                            }
+                        },
+                    })
+                },
+            })
+            let nFetch = 0
+            let fnFetch = async () => {
+                nFetch++
+                return new Response(body)
+            }
+            let pm = catchErr(fsDownloadFileVerify(url('readback'), fp, exp, { fs: fsx, fetch: fnFetch, stallMs: 50, maxAttempts: 2, retryDelayMs: 1, onTrace: rec.on }))
+            await rec.wait((e) => e.type === 'verify' && e.phase === 'stream') //同步點: 本體已讀完並校驗(下載階段結束)
+            await guard(pmStarted, 'readback started') //重讀已開始(其150ms計時器已設定)
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 1000)
+            let err = await guard(pm, 'settle')
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: nFetch, fp: fs.existsSync(fp), parts: parts(fp), advanced: adv.ok }, { code: 'E_FS', step: 'verify', attempts: 1, hits: 1, fp: false, parts: [], advanced: true })
+            //重讀不受停滯計時器約束(下載階段結束即停止計時): 推進超過stallMs(50)仍無停滯, 磁碟錯誤於重讀開始後恰150ms出現
+            let v = rec.find('verify', (e) => e.phase === 'stream')
+            assert.strict.deepStrictEqual({ stall: rec.has('timeout'), abort: rec.all('abort').map((x) => x.e.why), stop: rec.find('stop').e, gap: rec.find('settle').at - v.at }, { stall: false, abort: ['close'], stop: { type: 'stop', n: 1, why: 'fatal', code: 'E_FS' }, gap: 150 })
         })
-        let err = await catchErr(fsDownloadFileVerify(plan('readback', ['ok']), fp, exp, { fs: fsx, stallMs: 50, maxAttempts: 2, retryDelayMs: 1 }))
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, hits: hits.readback, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_FS', step: 'verify', attempts: 1, hits: 1, fp: false, parts: [] })
     })
 
     it(`R11 should reject E_FS, close the opened descriptor and remove its own temporary file when creating the write stream throws synchronously`, async function() {
@@ -942,14 +1126,37 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R14 should bound a joining call by its own opt.totalMs while the shared download continues`, async function() {
         let fp = fpOf('jointo')
-        let u = plan('jointo', ['slowok'])
-        let p1 = fsDownloadFileVerify(u, fp, exp)
-        let t = Date.now()
-        let e2 = await catchErr(fsDownloadFileVerify(u, fp, exp, { totalMs: 100 }))
-        let ms = Date.now() - t
-        let r1 = await p1
-        //共用者以各自之totalMs為等待上限; 共用之下載續行, 訊息不得稱正式檔未被改動
-        assert.strict.deepStrictEqual({ code: e2.code, step: e2.step, attempts: e2.attempts, early: ms < 300, r1: r1.attempts, hits: hits.jointo, note: e2.message.includes('may replace') && !e2.message.includes('was not modified') }, { code: 'E_TIMEOUT_TOTAL', step: 'share', attempts: 0, early: true, r1: 1, hits: 1, note: true }, `ms=${ms}`)
+        //假時鐘下: 共用之下載由測試扣住(伺服器端不用計時器), 共用者之totalMs(100)以虛擬時間精確斷言, 不用牆鐘門檻
+        await withClock(async (clock) => {
+            let mem = mkMem(body.length)
+            let u = url('jointo')
+            let rec1 = mkRec()
+            let rec2 = mkRec()
+            let p1 = fsDownloadFileVerify(u, fp, exp, { fetch: mem.fetch, onTrace: rec1.on })
+            mem.write(body.subarray(0, 150000))
+            await rec1.wait((e) => e.type === 'data') //同步點: 共用之下載已在進行
+            let done2 = false
+            let p2 = catchErr(fsDownloadFileVerify(u, fp, exp, { fetch: mem.fetch, totalMs: 100, onTrace: rec2.on })).then((v) => {
+                done2 = true
+                return v
+            })
+            await rec2.wait((e) => e.type === 'share')
+            await clock.advance(99)
+            let before = done2 //尚未到共用者之totalMs
+            await clock.advance(1)
+            let e2 = await guard(p2, 'joiner settle')
+            let after = done2
+            mem.write(body.subarray(150000)) //共用之下載續行(未被共用者之逾時中止), 放行後半
+            mem.end()
+            await advanceUntil(clock, () => rec1.has('settle'), 5000, 50)
+            let r1 = await guard(p1, 'shared settle')
+            //共用者以各自之totalMs為等待上限; 共用之下載續行, 訊息不得稱正式檔未被改動
+            assert.strict.deepStrictEqual({ code: e2.code, step: e2.step, attempts: e2.attempts, before, after, r1: r1.attempts, hits: mem.calls, note: e2.message.includes('may replace') && !e2.message.includes('was not modified') }, { code: 'E_TIMEOUT_TOTAL', step: 'share', attempts: 0, before: false, after: true, r1: 1, hits: 1, note: true })
+            //事件: 共用者加入而不下載; 其逾時恰於加入後100ms(虛擬時間); 共用之下載未受影響
+            let sh = rec2.find('share')
+            let to = rec2.find('timeout')
+            assert.strict.deepStrictEqual({ share1: rec1.find('share').e.act, share2: sh.e.act, kind: to.e.kind, where: to.e.where, ms: to.e.ms, gap: to.at - sh.at, attempts2: rec2.has('attempt'), settle2: rec2.find('settle').e, settle1: rec1.find('settle').e }, { share1: 'own', share2: 'join', kind: 'total', where: 'share', ms: 100, gap: 100, attempts2: false, settle2: { type: 'settle', ok: false, code: 'E_TIMEOUT_TOTAL', attempts: 0 }, settle1: { type: 'settle', ok: true, code: null, attempts: 1 } })
+        })
     })
 
     for (let [k, o] of [['shareopt1', { retryOnMismatch: false }], ['shareopt2', { maxAttempts: 2 }], ['shareopt3', { useSkipIfMatch: true }]]) {
@@ -1048,51 +1255,69 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R12 should settle with E_TIMEOUT when the write stream never completes a write`, async function() {
         let fp = fpOf('stuckws')
-        let t = Date.now()
-        let fsx = mkFs({
-            createWriteStream: (p, o) => {
-                return new Writable({
-                    write(chunk, enc, cb) {
-                        //永不回呼
-                    },
-                    destroy(err, cb) {
-                        try {
-                            fs.closeSync(o.fd)
-                        }
-                        catch (e) {}
-                        cb(err)
-                    },
-                })
-            },
+        //停滯門檻本身即規格: 假時鐘下以onTrace事件為同步點(標頭與第一塊資料已到, 寫入端不回呼)後才推進
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let fsx = mkFs({
+                createWriteStream: (p, o) => {
+                    return new Writable({
+                        write(chunk, enc, cb) {
+                            //永不回呼
+                        },
+                        destroy(err, cb) {
+                            try {
+                                fs.closeSync(o.fd)
+                            }
+                            catch (e) {}
+                            cb(err)
+                        },
+                    })
+                },
+            })
+            let pm = catchErr(fsDownloadFileVerify(url('stuckws'), fp, exp, { fs: fsx, fetch: async () => new Response(body), stallMs: 200, maxAttempts: 1, onTrace: rec.on }))
+            await rec.wait((e) => e.type === 'data')
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 2000)
+            let err = await guard(pm, 'settle')
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, advanced: adv.ok, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_TIMEOUT', step: 'download', advanced: true, fp: false, parts: [] })
+            //自最後一次收到資料(停滯計時器重設)起恰隔stallMs判停滯, 寫入端關閉後即落定(不等5秒)
+            let to = rec.find('timeout')
+            let tc = rec.all('touch').filter((v) => v.i < to.i).pop()
+            assert.strict.deepStrictEqual({ kind: to.e.kind, from: tc.e.from, gap: to.at - tc.at, settleAt: rec.find('settle').at - to.at }, { kind: 'stall', from: 'data', gap: 200, settleAt: 0 })
         })
-        let err = await catchErr(fsDownloadFileVerify(plan('stuckws', ['ok']), fp, exp, { fs: fsx, stallMs: 200, maxAttempts: 1 }))
-        let ms = Date.now() - t
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, inTime: ms < 4000, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_TIMEOUT', step: 'download', inTime: true, fp: false, parts: [] }, `ms=${ms}`)
     })
 
     it(`R12 should settle with E_TIMEOUT when the write stream neither completes a write nor finishes its destroy`, async function() {
         let fp = fpOf('stuckws2')
-        let t = Date.now()
-        let fsx = mkFs({
-            createWriteStream: (p, o) => {
-                return new Writable({
-                    write(chunk, enc, cb) {
-                        //永不回呼
-                    },
-                    destroy(e0, cb) {
-                        try {
-                            fs.closeSync(o.fd)
-                        }
-                        catch (e) {}
-                        //永不回呼, 串流不會關閉
-                    },
-                })
-            },
+        //停滯門檻與「等待寫入端關閉至多5秒」皆為時間規格: 假時鐘下以onTrace事件為同步點(標頭與第一塊資料已到)後才推進
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let fsx = mkFs({
+                createWriteStream: (p, o) => {
+                    return new Writable({
+                        write(chunk, enc, cb) {
+                            //永不回呼
+                        },
+                        destroy(e0, cb) {
+                            try {
+                                fs.closeSync(o.fd)
+                            }
+                            catch (e) {}
+                            //永不回呼, 串流不會關閉
+                        },
+                    })
+                },
+            })
+            let pm = catchErr(fsDownloadFileVerify(url('stuckws2'), fp, exp, { fs: fsx, fetch: async () => new Response(body), stallMs: 200, maxAttempts: 1, onTrace: rec.on }))
+            await rec.wait((e) => e.type === 'data')
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 8000)
+            let err = await guard(pm, 'settle')
+            //等待寫入端關閉至多5秒後放棄, 呼叫仍落定
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, advanced: adv.ok, fp: fs.existsSync(fp) }, { code: 'E_TIMEOUT', step: 'download', advanced: true, fp: false })
+            //停滯觸發(停滯計時器重設後恰隔stallMs)後, 恰再等5000ms才放棄等待關閉並落定
+            let to = rec.find('timeout')
+            let tc = rec.all('touch').filter((v) => v.i < to.i).pop()
+            assert.strict.deepStrictEqual({ gap: to.at - tc.at, wait: rec.find('settle').at - to.at }, { gap: 200, wait: 5000 })
         })
-        let err = await catchErr(fsDownloadFileVerify(plan('stuckws2', ['ok']), fp, exp, { fs: fsx, stallMs: 200, maxAttempts: 1 }))
-        let ms = Date.now() - t
-        //等待寫入端關閉至多5秒後放棄, 呼叫仍落定
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, inTime: ms < 9000, fp: fs.existsSync(fp) }, { code: 'E_TIMEOUT', step: 'download', inTime: true, fp: false }, `ms=${ms}`)
     })
 
     it(`R12 should bound the check of an existing fpOut (opt.useSkipIfMatch) by opt.totalMs`, async function() {
@@ -1112,21 +1337,30 @@ describe(`fsDownloadFileVerify with a local server`, function() {
     it(`R08/R12 should bound the comparison of fpOut after a failed rename by opt.stallMs`, async function() {
         let fp = fpOf('renstuck')
         fs.writeFileSync(fp, bodyBad) //與期望同大小, 須讀內容才能判定
-        let t = Date.now()
-        let fsx = mkFs({
-            renameSync: () => {
-                throw busy('EPERM')
-            },
-            createReadStream: (p, o) => {
-                if (String(p).endsWith('.part')) {
-                    return fs.createReadStream(p, o)
-                }
-                return new Readable({ read() {} }) //讀正式檔永不送出資料
-            },
+        //比對讀取之上限(stallMs)為時間規格: 假時鐘下下載階段(本機真實I/O)不推進時間故無假停滯; 待事件確認已下載並重讀暫存檔完成才推進
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let fsx = mkFs({
+                renameSync: () => {
+                    throw busy('EPERM')
+                },
+                createReadStream: (p, o) => {
+                    if (String(p).endsWith('.part')) {
+                        return fs.createReadStream(p, o)
+                    }
+                    return new Readable({ read() {} }) //讀正式檔永不送出資料
+                },
+            })
+            let pm = catchErr(fsDownloadFileVerify(url('renstuck'), fp, exp, { fs: fsx, fetch: async () => new Response(body), stallMs: 150, retryDelayMs: 1, onTrace: rec.on }))
+            await rec.wait((e) => e.type === 'rename') //同步點: 已下載、校驗並重讀暫存檔, 第1次更名失敗, 其後比對fpOut內容(永不送出資料)
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 5000)
+            let err = await guard(pm, 'settle')
+            assert.strict.deepStrictEqual([err.code, adv.ok, fs.readFileSync(fp).equals(bodyBad), parts(fp)], ['E_RENAME', true, true, []])
+            //每次比對fpOut之讀取至多stallMs(150)就放棄(不是等讀完): 第i次更名失敗到第i+1次之間恰為150 + i(重試間隔retryDelayMs*i)毫秒
+            let rs = rec.all('rename')
+            let tos = rec.all('timeout')
+            assert.strict.deepStrictEqual({ renames: rs.map((v) => [v.e.i, v.e.ok]), gaps: rs.slice(1).map((v, k) => v.at - rs[k].at), reads: tos.map((v) => [v.e.kind, v.e.where, v.e.ms]), last: rec.find('settle').at - rs[4].at }, { renames: [[1, false], [2, false], [3, false], [4, false], [5, false]], gaps: [151, 152, 153, 154], reads: [['total', 'read', 150], ['total', 'read', 150], ['total', 'read', 150], ['total', 'read', 150], ['total', 'read', 150]], last: 150 })
         })
-        let err = await catchErr(fsDownloadFileVerify(plan('renstuck', ['ok']), fp, exp, { fs: fsx, stallMs: 150, retryDelayMs: 1 }))
-        let ms = Date.now() - t
-        assert.strict.deepStrictEqual([err.code, ms < 5000, fs.readFileSync(fp).equals(bodyBad), parts(fp)], ['E_RENAME', true, true, []], `ms=${ms}`)
     })
 
     it(`R12 should abort the request (close the connection) when a failure happens after the headers and before the body is consumed`, async function() {
@@ -1136,19 +1370,24 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 throw new Error('supplied create failure')
             },
         })
-        let err = await catchErr(fsDownloadFileVerify(plan(k, ['bigslow']), fpOf(k), exp, { fs: fsx }))
-        let tReject = Date.now()
-        await new Promise((resolve) => {
-            setTimeout(resolve, 300)
-        })
-        //伺服器須5秒後才送完; 連線於失敗後隨即被關閉
-        assert.strict.deepStrictEqual([err.code, typeof closedAt[k] === 'number' && closedAt[k] - tReject < 1000], ['E_FS', true])
+        //伺服器扣住本體不結束(hang): 其端的連線只可能因對方(本函數)中止而close, 以伺服器端close事件(ended為false)為同步點, 不以固定等待後檢查時刻
+        let rec = mkRec()
+        let cl = watchClose(k)
+        let err = await catchErr(fsDownloadFileVerify(plan(k, ['hang']), fpOf(k), exp, { fs: fsx, onTrace: rec.on }))
+        let closed = await guard(cl, 'server close')
+        //連線於失敗後被關閉(伺服器端未自行結束回應, 是被中止), 且本函數已通知中止
+        let ab = rec.find('abort')
+        assert.strict.deepStrictEqual([err.code, closed.ended, ab.e, ab.i < rec.find('settle').i], ['E_FS', false, { type: 'abort', n: 1, why: 'close' }, true])
     })
 
     it(`R12 should abort the request (close the connection) when handling the response throws before the body is handed over`, async function() {
         let k = 'abortheaders'
-        let err = await catchErr(fsDownloadFileVerify(plan(k, ['bigslow']), fpOf(k), exp, {
+        //伺服器扣住本體不結束(hang): 以伺服器端close事件(ended為false代表被對方中止)為同步點, 不以固定等待後檢查時刻
+        let rec = mkRec()
+        let cl = watchClose(k)
+        let err = await catchErr(fsDownloadFileVerify(plan(k, ['hang']), fpOf(k), exp, {
             maxAttempts: 1,
+            onTrace: rec.on,
             fetch: async (u, init) => {
                 let r = await fetch(u, init)
                 //回應之標頭不可讀(傳入之fetch回傳異常物件), 本體未交給串流
@@ -1164,11 +1403,9 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 }
             },
         }))
-        let tReject = Date.now()
-        await new Promise((resolve) => {
-            setTimeout(resolve, 300)
-        })
-        assert.strict.deepStrictEqual([err.code, typeof closedAt[k] === 'number' && closedAt[k] - tReject < 1000], ['E_NETWORK', true])
+        let closed = await guard(cl, 'server close')
+        let ab = rec.find('abort')
+        assert.strict.deepStrictEqual([err.code, closed.ended, ab.e, ab.i < rec.find('settle').i], ['E_NETWORK', false, { type: 'abort', n: 1, why: 'close' }, true])
     })
 
     //======== 路徑 ========
@@ -2181,30 +2418,41 @@ describe(`fsDownloadFileVerify with a local server`, function() {
     })
 
     it(`R12 should measure the total time with a monotonic clock: a system clock set back during a retry must not stretch the time budget`, async function() {
-        let dateNow = Date.now
+        //假時鐘下(setTimeout與Date皆為虛擬, 無真實等待): 整體上限(3000)與停滯上限(7500)、重試間隔(500)按比例放大, 使「首次嘗試耗時」不再與上限競爭(被測碼以performance.now計剩餘時間, 假時鐘控制不了, 故只需真實耗時遠小於放大後之剩餘預算)
+        //系統時鐘被調回之幅度(60000)須大於 停滯上限 - 整體上限, 才分得出「單調時計」與「系統時鐘」
         let n = 0
-        let t = performance.now()
-        let err = null
-        try {
-            err = await catchErr(fsDownloadFileVerify('x://clock', fpOf('clock'), { sha256: shaOf('x') }, {
-                fetch: async () => {
-                    n++
-                    return n === 1 ? new Response(null, { status: 500 }) : new Promise(() => {})
-                },
-                maxAttempts: 2,
-                retryDelayMs: 20,
-                totalMs: 100,
-                stallMs: 250,
-                onRetry: () => {
-                    Date.now = () => dateNow() - 10000 //系統時鐘被調回10秒
-                },
-            }))
-        }
-        finally {
-            Date.now = dateNow
-        }
-        //以單調時計: 整體上限(100ms)先於停滯上限(250ms)到達; 以系統時鐘則上限被拉長10秒而先逢停滯
-        assert.strict.deepStrictEqual([err.code, performance.now() - t < 1500], ['E_TIMEOUT_TOTAL', true])
+        let rec = mkRec()
+        let dateNow = null
+        await withClock(async (clock) => {
+            dateNow = Date.now
+            try {
+                let pm = catchErr(fsDownloadFileVerify('x://clock', fpOf('clock'), { sha256: shaOf('x') }, {
+                    fetch: async () => {
+                        n++
+                        return n === 1 ? new Response(null, { status: 500 }) : new Promise(() => {})
+                    },
+                    maxAttempts: 2,
+                    retryDelayMs: 500,
+                    totalMs: 3000,
+                    stallMs: 7500,
+                    onRetry: () => {
+                        Date.now = () => dateNow() - 60000 //系統時鐘被調回60秒
+                    },
+                    onTrace: rec.on,
+                }))
+                await rec.wait((e) => e.type === 'retry') //同步點: 第1次失敗後進入重試等待(onRetry已先於此通知), 之後之等待皆由假時鐘推進
+                let adv = await advanceUntil(clock, () => rec.has('settle'), 12000, 50)
+                let err = await guard(pm, 'settle')
+                //以單調時計: 整體上限先於停滯上限到達; 以系統時鐘則上限被拉長而先逢停滯
+                assert.strict.deepStrictEqual([err.code, adv.ok], ['E_TIMEOUT_TOTAL', true])
+                //第2次嘗試之整體時限剩餘時間(remainMs)不得因系統時鐘被調回而增加(不大於totalMs); 整體時限觸發而停滯從未觸發
+                let rq2 = rec.find('request', (e) => e.n === 2)
+                assert.strict.deepStrictEqual({ retry: rec.find('retry').e, remainOk: rq2.e.remainMs > 0 && rq2.e.remainMs <= 3000, timeouts: rec.all('timeout').map((v) => [v.e.n, v.e.kind, v.e.where]), stop: rec.find('stop').e.why }, { retry: { type: 'retry', n: 1, ms: 500 }, remainOk: true, timeouts: [[2, 'total', 'request']], stop: 'fatal' }, `remainMs=${rq2.e.remainMs}`)
+            }
+            finally {
+                Date.now = dateNow
+            }
+        })
     })
 
     it(`R14 should remove the key of a finished download from the sharing table (no growth by distinct destinations)`, async function() {
@@ -2261,6 +2509,300 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         assert.strict.deepStrictEqual([r3.downloaded, fs.statSync(fp3).size], [true, 0])
         let r4 = await fsDownloadFileVerify('x://empty/3', fp3, expEmpty, { useSkipIfMatch: true, fetch: async () => new Response('should not be fetched') })
         assert.strict.deepStrictEqual([r4.downloaded, r4.size], [false, 0])
+    })
+
+    //======== 觀察回調(opt.onTrace, R-TRACE-01) ========
+
+    //seq, 事件序列簡式(略去逐塊資料之data與touch:data, 其塊數隨傳輸分塊而異): 'touch:<from>'、'verify:<phase>'、'temp:<act>'、'share:<act>', 其餘為type
+    let seq = (rec) => {
+        return rec.events.map((e) => {
+            if (e.type === 'touch' || e.type === 'verify' || e.type === 'temp' || e.type === 'share') {
+                return `${e.type}:${e.from || e.phase || e.act}`
+            }
+            return e.type
+        }).filter((v) => v !== 'data' && v !== 'touch:data')
+    }
+
+    it(`onTrace should not change the outcome whatever the callback is: none, recorder, throwing, rejecting or not a function (P3/P4)`, async function() {
+        let rec = mkRec()
+        let outs = []
+        let k = 0
+        for (let on of fiveOnTrace(rec.on)) {
+            k++
+            let fp = fpOf(`tr5ok${k}`)
+            let r = await fsDownloadFileVerify(plan(`tr5ok${k}`, ['bad', 'ok']), fp, exp, { retryDelayMs: 1, onTrace: on })
+            let e = await catchErr(fsDownloadFileVerify(plan(`tr5ng${k}`, ['s404']), fpOf(`tr5ng${k}`), exp, { onTrace: on }))
+            outs.push({
+                r: [r.fp === fp, r.sha256, r.size, r.attempts, r.downloaded, r.leftovers, fs.readFileSync(fp).equals(body), hits[`tr5ok${k}`], parts(fp)],
+                e: [e.code, e.step, e.status, e.attempts, hits[`tr5ng${k}`], e.message.split(`tr5ng${k}`).join('K'), fs.existsSync(fpOf(`tr5ng${k}`))],
+            })
+        }
+        //五種回調結果完全相同
+        for (let i = 1; i < outs.length; i++) {
+            assert.strict.deepStrictEqual(outs[i], outs[0], `callback #${i}`)
+        }
+        assert.strict.deepStrictEqual(outs[0].r.slice(1), [sha, body.length, 2, true, [], true, 2, []])
+        //紀錄器確實收到事件(成功之重試與失敗各一輪)
+        assert.strict.deepStrictEqual([rec.all('settle').map((v) => [v.e.ok, v.e.code, v.e.attempts])], [[[true, null, 2], [false, 'E_HTTP', 1]]])
+        //拋錯與回傳rejection之回調不產生未處理之rejection
+        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setImmediate(resolve))
+        assert.strict.deepStrictEqual(unhandled, [])
+    })
+
+    it(`onTrace should pass frozen events with fixed primitive fields per type, called without a receiver`, async function() {
+        let seen = []
+        let thisVals = []
+        let on = function(e) {
+            thisVals.push(this)
+            seen.push(e)
+        }
+        let o = { retryDelayMs: 1, onTrace: on }
+
+        //1. 成功(雜湊不符重試一次後成功): share、attempt、request、touch、headers、temp、data、verify、abort、retry、rename、settle
+        await fsDownloadFileVerify(plan('trshape1', ['bad', 'ok']), fpOf('trshape1'), exp, o)
+
+        //2. 略過下載: skip
+        fs.writeFileSync(fpOf('trshape2'), body)
+        await fsDownloadFileVerify(plan('trshape2', ['ok']), fpOf('trshape2'), exp, { ...o, useSkipIfMatch: true })
+
+        //3. 不共用: share off; 預算不足不再重試: stop budget; 次數用盡: stop max; 不可重試: stop fatal
+        await catchErr(fsDownloadFileVerify(plan('trshape3', ['bad']), fpOf('trshape3'), exp, { ...o, useShare: false, retryDelayMs: 5000, totalMs: 2000 }))
+        await catchErr(fsDownloadFileVerify(plan('trshape4', ['s500']), fpOf('trshape4'), exp, { ...o, maxAttempts: 2 }))
+        await catchErr(fsDownloadFileVerify(plan('trshape5', ['s404']), fpOf('trshape5'), exp, o))
+
+        //4. 更名失敗一次: rename ok false; 暫存檔清除: temp remove
+        let nRename = 0
+        await fsDownloadFileVerify(plan('trshape6', ['ok']), fpOf('trshape6'), exp, {
+            ...o,
+            fs: mkFs({
+                renameSync: (a, b) => {
+                    nRename++
+                    if (nRename === 1) {
+                        throw busy('EBUSY')
+                    }
+                    return fs.renameSync(a, b)
+                },
+            }),
+        })
+
+        //5. 假時鐘: 停滯計時器觸發(timeout)與請求中止(abort E_TIMEOUT)
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let both = (e) => {
+                rec.on(e)
+                on(e)
+            }
+            let pm = catchErr(fsDownloadFileVerify('x://shape', fpOf('trshape7'), { sha256: shaOf('x') }, {
+                ...o,
+                onTrace: both,
+                fetch: () => new Promise(() => {}),
+                maxAttempts: 1,
+                stallMs: 100,
+            }))
+            await advanceUntil(clock, () => rec.has('settle'), 1000)
+            await guard(pm, 'settle')
+        })
+
+        //6. 共用: 加入者之share join與settle
+        let release = null
+        let gate = new Promise((resolve) => {
+            release = resolve
+        })
+        let fnGate = async () => {
+            await gate
+            return new Response('abc')
+        }
+        let oj = { ...o, fetch: fnGate }
+        let p1 = fsDownloadFileVerify('x://shapejoin', fpOf('trshape8'), { sha256: shaOf('abc') }, oj)
+        let p2 = fsDownloadFileVerify('x://shapejoin', fpOf('trshape8'), { sha256: shaOf('abc') }, oj)
+        release()
+        await Promise.all([p1, p2])
+
+        //固定欄位表(各type的欄位名, 皆另有type)
+        let keys = {}
+        for (let e of seen) {
+            let ks = Object.keys(e).sort().join(',')
+            keys[e.type] = keys[e.type] || new Set()
+            keys[e.type].add(ks)
+        }
+        let table = {}
+        for (let t of Object.keys(keys).sort()) {
+            table[t] = [...keys[t]]
+        }
+        assert.strict.deepStrictEqual(table, {
+            abort: ['n,type,why'],
+            attempt: ['max,n,type'],
+            data: ['bytes,n,type'],
+            headers: ['n,ok,status,type'],
+            rename: ['i,n,ok,type'],
+            request: ['n,remainMs,stallMs,type'],
+            retry: ['ms,n,type'],
+            settle: ['attempts,code,ok,type'],
+            share: ['act,type'],
+            skip: ['n,size,type'],
+            stop: ['code,n,type,why'],
+            temp: ['act,n,ok,type'],
+            timeout: ['kind,ms,n,type,where'],
+            touch: ['from,ms,n,type'],
+            verify: ['hashOk,n,phase,size,sizeOk,type'],
+        })
+        //各type之取值語意: 列舉型欄位只出現規定值
+        let vals = (t, f) => {
+            return [...new Set(seen.filter((e) => e.type === t).map((e) => e[f]))].sort()
+        }
+        assert.strict.deepStrictEqual({ act: vals('share', 'act'), from: vals('touch', 'from'), phase: vals('verify', 'phase'), tempAct: vals('temp', 'act'), stop: vals('stop', 'why'), abort: vals('abort', 'why'), kind: vals('timeout', 'kind') }, { act: ['join', 'off', 'own'], from: ['data', 'headers', 'request'], phase: ['disk', 'stream'], tempAct: ['create', 'remove'], stop: ['budget', 'fatal', 'max'], abort: ['E_TIMEOUT', 'close'], kind: ['stall'] })
+        //凍結、欄位值皆為原始值(數字、字串、布林、null), 不帶接收者
+        assert.strict.deepStrictEqual({ frozen: seen.every((e) => Object.isFrozen(e)), primitive: seen.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), noThis: thisVals.every((v) => v === undefined), many: seen.length > 40 }, { frozen: true, primitive: true, noThis: true, many: true })
+    })
+
+    it(`onTrace should report the sequence of a download, a retry, a failure and a skipped download`, async function() {
+        //成功: 標頭到達與暫存檔建立先於資料, 校驗(本體、重讀暫存檔)後才更名, 請求於校驗後釋放
+        let rec1 = mkRec()
+        await fsDownloadFileVerify(plan('trseq1', ['ok']), fpOf('trseq1'), exp, { onTrace: rec1.on })
+        assert.strict.deepStrictEqual(seq(rec1), ['share:own', 'attempt', 'request', 'touch:request', 'touch:headers', 'headers', 'temp:create', 'verify:stream', 'verify:disk', 'abort', 'rename', 'settle'])
+        assert.strict.deepStrictEqual({ attempt: rec1.find('attempt').e, headers: rec1.find('headers').e, bytes: rec1.all('data').pop().e.bytes, stream: rec1.find('verify', (e) => e.phase === 'stream').e, disk: rec1.find('verify', (e) => e.phase === 'disk').e, rename: rec1.find('rename').e, abort: rec1.find('abort').e.why, settle: rec1.find('settle').e }, {
+            attempt: { type: 'attempt', n: 1, max: 3 },
+            headers: { type: 'headers', n: 1, ok: true, status: 200 },
+            bytes: body.length,
+            stream: { type: 'verify', n: 1, phase: 'stream', size: body.length, sizeOk: true, hashOk: true },
+            disk: { type: 'verify', n: 1, phase: 'disk', size: body.length, sizeOk: true, hashOk: true },
+            rename: { type: 'rename', n: 1, i: 1, ok: true },
+            abort: 'close',
+            settle: { type: 'settle', ok: true, code: null, attempts: 1 },
+        })
+
+        //雜湊不符後重試(onRetry與retry事件同一時點, 不論有無給onRetry): 第1次嘗試之暫存檔清除, 等待retryDelayMs*1後第2次嘗試成功
+        let rec2 = mkRec()
+        let calls = []
+        await fsDownloadFileVerify(plan('trseq2', ['bad', 'ok']), fpOf('trseq2'), exp, { retryDelayMs: 7, onRetry: (o) => calls.push(o.delayMs), onTrace: rec2.on })
+        let head = ['share:own', 'attempt', 'request', 'touch:request', 'touch:headers', 'headers', 'temp:create', 'verify:stream']
+        assert.strict.deepStrictEqual(seq(rec2), [...head, 'abort', 'temp:remove', 'retry', 'attempt', 'request', 'touch:request', 'touch:headers', 'headers', 'temp:create', 'verify:stream', 'verify:disk', 'abort', 'rename', 'settle'])
+        assert.strict.deepStrictEqual({ verify1: rec2.find('verify').e, remove: rec2.find('temp', (e) => e.act === 'remove').e, retry: rec2.find('retry').e, ns: rec2.all('attempt').map((v) => v.e.n), onRetry: calls, settle: rec2.find('settle').e }, {
+            verify1: { type: 'verify', n: 1, phase: 'stream', size: body.length, sizeOk: true, hashOk: false },
+            remove: { type: 'temp', n: 1, act: 'remove', ok: true },
+            retry: { type: 'retry', n: 1, ms: 7 },
+            ns: [1, 2],
+            onRetry: [7],
+            settle: { type: 'settle', ok: true, code: null, attempts: 2 },
+        })
+
+        //不給onRetry時retry事件仍通知
+        let rec3 = mkRec()
+        await fsDownloadFileVerify(plan('trseq3', ['s500', 'ok']), fpOf('trseq3'), exp, { retryDelayMs: 3, onTrace: rec3.on })
+        assert.strict.deepStrictEqual(rec3.find('retry').e, { type: 'retry', n: 1, ms: 3 })
+
+        //HTTP 404: 標頭到達(ok false)、不可重試而停止、不建立暫存檔
+        let rec4 = mkRec()
+        await catchErr(fsDownloadFileVerify(plan('trseq4', ['s404']), fpOf('trseq4'), exp, { onTrace: rec4.on }))
+        assert.strict.deepStrictEqual({ seq: seq(rec4), headers: rec4.find('headers').e, stop: rec4.find('stop').e, settle: rec4.find('settle').e }, {
+            seq: ['share:own', 'attempt', 'request', 'touch:request', 'touch:headers', 'headers', 'abort', 'stop', 'settle'],
+            headers: { type: 'headers', n: 1, ok: false, status: 404 },
+            stop: { type: 'stop', n: 1, why: 'fatal', code: 'E_HTTP' },
+            settle: { type: 'settle', ok: false, code: 'E_HTTP', attempts: 1 },
+        })
+
+        //次數用盡與預算不足之停止
+        let rec5 = mkRec()
+        await catchErr(fsDownloadFileVerify(plan('trseq5', ['s500']), fpOf('trseq5'), exp, { maxAttempts: 2, retryDelayMs: 1, onTrace: rec5.on }))
+        assert.strict.deepStrictEqual([rec5.find('stop').e, rec5.find('settle').e], [{ type: 'stop', n: 2, why: 'max', code: 'E_HTTP' }, { type: 'settle', ok: false, code: 'E_HTTP', attempts: 2 }])
+        let rec6 = mkRec()
+        await catchErr(fsDownloadFileVerify(plan('trseq6', ['bad']), fpOf('trseq6'), exp, { retryDelayMs: 5000, totalMs: 2000, onTrace: rec6.on }))
+        assert.strict.deepStrictEqual([rec6.find('stop').e, rec6.has('retry')], [{ type: 'stop', n: 1, why: 'budget', code: 'E_HASH_MISMATCH' }, false])
+
+        //略過下載(opt.useSkipIfMatch): 不送請求
+        let rec7 = mkRec()
+        fs.writeFileSync(fpOf('trseq7'), body)
+        let r7 = await fsDownloadFileVerify(plan('trseq7', ['ok']), fpOf('trseq7'), exp, { useSkipIfMatch: true, onTrace: rec7.on })
+        assert.strict.deepStrictEqual({ downloaded: r7.downloaded, seq: seq(rec7), skip: rec7.find('skip').e, hits: hits.trseq7 }, { downloaded: false, seq: ['share:own', 'attempt', 'skip', 'settle'], skip: { type: 'skip', n: 1, size: body.length }, hits: 0 })
+
+        //更名失敗後重試: 第1次失敗(ok false)、第2次成功
+        let rec8 = mkRec()
+        let nRename = 0
+        await fsDownloadFileVerify(plan('trseq8', ['ok']), fpOf('trseq8'), exp, {
+            retryDelayMs: 1,
+            onTrace: rec8.on,
+            fs: mkFs({
+                renameSync: (a, b) => {
+                    nRename++
+                    if (nRename === 1) {
+                        throw busy('EBUSY')
+                    }
+                    return fs.renameSync(a, b)
+                },
+            }),
+        })
+        assert.strict.deepStrictEqual(rec8.all('rename').map((v) => [v.e.i, v.e.ok]), [[1, false], [2, true]])
+
+        //期望值不符且不重試: 暫存檔已清除(temp remove ok)
+        let rec9 = mkRec()
+        await catchErr(fsDownloadFileVerify(plan('trseq9', ['bad']), fpOf('trseq9'), exp, { retryOnMismatch: false, onTrace: rec9.on }))
+        assert.strict.deepStrictEqual([rec9.find('temp', (e) => e.act === 'remove').e, rec9.find('stop').e], [{ type: 'temp', n: 1, act: 'remove', ok: true }, { type: 'stop', n: 1, why: 'fatal', code: 'E_HASH_MISMATCH' }])
+    })
+
+    it(`onTrace should report sharing: the first call owns the download, a joining call only joins and settles with the same outcome, and useShare false is reported as off`, async function() {
+        let g = mkGate('trjoin', body.length)
+        let u = plan('trjoin', ['gated'])
+        let rec1 = mkRec()
+        let rec2 = mkRec()
+        let p1 = fsDownloadFileVerify(u, fpOf('trjoin'), exp, { onTrace: rec1.on })
+        let p2 = fsDownloadFileVerify(u, fpOf('trjoin'), exp, { onTrace: rec2.on })
+        await guard(g.ready, 'server request')
+        g.end(body)
+        let [r1, r2] = await Promise.all([p1, p2])
+        assert.strict.deepStrictEqual({ same: r1 === r2, hits: hits.trjoin, share1: rec1.find('share').e, types2: rec2.types(), settle2: rec2.find('settle').e }, { same: true, hits: 1, share1: { type: 'share', act: 'own' }, types2: ['share', 'settle'], settle2: { type: 'settle', ok: true, code: null, attempts: 1 } })
+        assert.strict.deepStrictEqual(rec2.find('share').e, { type: 'share', act: 'join' })
+
+        //共用之失敗: 加入者同樣收到失敗之settle
+        let rec3 = mkRec()
+        let rec4 = mkRec()
+        let u2 = plan('trjoinfail', ['s404'])
+        let es = await Promise.all([catchErr(fsDownloadFileVerify(u2, fpOf('trjoinfail'), exp, { onTrace: rec3.on })), catchErr(fsDownloadFileVerify(u2, fpOf('trjoinfail'), exp, { onTrace: rec4.on }))])
+        assert.strict.deepStrictEqual({ same: es[0] === es[1], hits: hits.trjoinfail, settle: rec4.find('settle').e }, { same: true, hits: 1, settle: { type: 'settle', ok: false, code: 'E_HTTP', attempts: 1 } })
+
+        //useShare為false
+        let rec5 = mkRec()
+        await fsDownloadFileVerify(plan('troff', ['ok']), fpOf('troff'), exp, { useShare: false, onTrace: rec5.on })
+        assert.strict.deepStrictEqual(rec5.find('share').e, { type: 'share', act: 'off' })
+    })
+
+    it(`onTrace should report nothing for an invalid argument, and only settle when the folder of fpOut can not be prepared`, async function() {
+        let rec1 = mkRec()
+        let e1 = await catchErr(fsDownloadFileVerify('', fpOf('trarg'), exp, { onTrace: rec1.on }))
+        assert.strict.deepStrictEqual([e1.code, rec1.events.length], ['E_ARG', 0])
+        let rec2 = mkRec()
+        fs.writeFileSync(`${fdt}/afile2`, 'x')
+        let e2 = await catchErr(fsDownloadFileVerify(plan('trprep', ['ok']), `${fdt}/afile2/x.bin`, exp, { onTrace: rec2.on }))
+        assert.strict.deepStrictEqual([e2.code, e2.step, hits.trprep, rec2.events], ['E_FS', 'prepare', 0, [{ type: 'settle', ok: false, code: 'E_FS', attempts: 0 }]])
+    })
+
+    it(`onTrace should report the 5 seconds fallback abort when the write stream failed first and the supplied pipeline never settles (fake clock)`, async function() {
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let fsx = mkFs({
+                createWriteStream: (p, o) => {
+                    return fs.createWriteStream(p, o)
+                },
+            })
+            let pm = catchErr(fsDownloadFileVerify('x://pipenevertr', fpOf('pipenevertr'), { sha256: shaOf('x') }, {
+                fs: fsx,
+                fetch: async () => new Response('x'),
+                pipeline: (src, check, ws) => {
+                    ws.emit('error', Object.assign(new Error('disk failed'), { code: 'EIO' })) //寫入端先出錯(同步通知, 與暫存檔建立同一虛擬時刻), 但此pipeline不落定
+                    return new Promise(() => {})
+                },
+                maxAttempts: 1,
+                stallMs: 30000,
+                totalMs: 60000,
+                onTrace: rec.on,
+            }))
+            let adv = await advanceUntil(clock, () => rec.has('settle'), 8000, 50)
+            let err = await guard(pm, 'settle')
+            assert.strict.deepStrictEqual([err.code, err.step, adv.ok, parts(fpOf('pipenevertr'))], ['E_FS', 'download', true, []])
+            //寫入端先出錯(此時停滯與整體計時停止)後恰5000ms才放手使請求落定; 停滯與整體時限計時器皆未觸發
+            let ab = rec.find('abort')
+            assert.strict.deepStrictEqual({ why: ab.e.why, gap: ab.at - rec.find('temp').at, timeouts: rec.all('timeout').length, abortCount: rec.all('abort').length }, { why: 'fallback', gap: 5000, timeouts: 0, abortCount: 1 })
+        })
     })
 
     it(`should not produce unhandled rejections in this suite`, function() {

@@ -10,6 +10,7 @@ import domAppend from './domAppend.mjs'
 import domFind from './domFind.mjs'
 import domGetFiles from './domGetFiles.mjs'
 import domTriggerEvent from './domTriggerEvent.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -22,6 +23,7 @@ import domTriggerEvent from './domTriggerEvent.mjs'
  * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
  * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'open'時為已建立input並綁定監聽而即將觸發點擊開啟選檔視窗(含multiple、entireHierarchy為生效後之布林值)，'cancel'時為收到input之cancel事件(取消選檔之主要偵測)而即將以空檔案結束，'focus'時為收到window之focus事件(舊瀏覽器之備援偵測，entireHierarchy時不綁定)而排定1500ms後判定(含ms固定為1500)，'judge'時為1500ms後之判定(含cancel為此時尚未收到change而視為取消，false代表change已先處理而不再結束)，'settle'時為即將resolve(含by為'change'、'cancel'或'focus'代表由change事件、cancel事件或focus判定結束，files為檔案數量，errs為超過sizeMbLimit之檔案數量)；事件皆於對應動作之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響選檔處理，預設null
  * @returns {Promise} 回傳Promise，resolve回傳各檔案陣列，無reject
  * @example
  * need test in browser
@@ -115,6 +117,9 @@ function domShowInputAndGetFiles(opt = {}) {
     }
     sizeMbLimit = cdbl(sizeMbLimit)
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
+
     //pm
     let pm = genPm()
 
@@ -146,8 +151,8 @@ function domShowInputAndGetFiles(opt = {}) {
     //bTrigger
     let bTrigger = false
 
-    //evChange
-    function evChange(msg) {
+    //evChange, by為結束來源('change'為change事件, 'cancel'與'focus'為取消路徑以空檔案結束), 作為change監聽器時僅有msg故預設為'change'
+    function evChange(msg, by = 'change') {
         // console.log('evChange', msg)
 
         //bTrigger
@@ -162,6 +167,11 @@ function domShowInputAndGetFiles(opt = {}) {
         //domGetFiles
         let rs = domGetFiles(ele, sizeMbLimit)
         // console.log('domGetFiles', rs)
+
+        //trace
+        if (trace) {
+            trace('settle', { by, files: rs.files.length, errs: Object.keys(rs.errs).length })
+        }
 
         //resolve
         pm.resolve(rs)
@@ -186,19 +196,28 @@ function domShowInputAndGetFiles(opt = {}) {
         if (bTrigger) {
             return
         }
-        evChange.call(inp, msg) //以inp為this, files為空故resolve空files
+        if (trace) {
+            trace('cancel', {})
+        }
+        evChange.call(inp, msg, 'cancel') //以inp為this, files為空故resolve空files
     }
 
     //evCancel, 舊瀏覽器之備援偵測
     function evCancel(msg) {
         // console.log('evCancel', msg)
+        if (trace) {
+            trace('focus', { ms: 1500 })
+        }
         //setTimeout, 因不論有無上傳, window的focus事件都會觸發且會比change還快, 故須延遲偵測bTrigger
         //延遲須夠長: 選檔時change可能比focus晚逾300ms(實測於Windows/Chrome可穩定重現), 過短會誤判為取消,
         //搶先resolve空陣列並移除input, 造成「有選檔但讀不到」; 真取消時多等待並無感, 故取1500ms
         setTimeout(() => {
+            if (trace) {
+                trace('judge', { cancel: !bTrigger })
+            }
             //check, 尚未trigger代表為cancel
             if (!bTrigger) {
-                evChange.call(inp, msg) //以inp為this, files為空故resolve空files
+                evChange.call(inp, msg, 'focus') //以inp為this, files為空故resolve空files
             }
         }, 1500)
     }
@@ -213,6 +232,11 @@ function domShowInputAndGetFiles(opt = {}) {
     if (!entireHierarchy) {
         //focus, 舊瀏覽器(無input cancel事件)取消時靠window的focus事件來得知, 但不論有無上傳focus都會觸發且會比change還快, 故須綁定延遲觸發的evCancel
         window.addEventListener('focus', evCancel)
+    }
+
+    //trace
+    if (trace) {
+        trace('open', { multiple, entireHierarchy })
     }
 
     //click

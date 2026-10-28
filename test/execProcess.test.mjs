@@ -1,9 +1,13 @@
 import assert from 'assert'
+import fs from 'fs'
 import cp from 'child_process'
 import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import execProcess from '../src/execProcess.mjs'
 import { runExecFail } from './tools/execFailRun.mjs'
+import { useFakeClock } from './tools/timeKit.mjs'
+import { revoked, thrower } from './tools/codecThrown.mjs'
+import { withGuard, realSleep, reapTree, recTrace, fiveOnTrace, collectUnhandled, gateScript, mkGate, finishCase } from './tools/execTraceKit.mjs'
 
 
 //consoleCodePage, 取本機主控台字碼頁編號, 僅win32, 供依環境決定是否跳過依賴系統字碼頁之案例
@@ -41,11 +45,43 @@ describe(`execProcess`, function() {
     let sLineSplit = 'process.stdout.write("abc");setTimeout(()=>{process.stdout.write("def\\n")},300)'
     let sUtf8Trunc = 'process.stdout.write(Buffer.from([231,132,161,231,132]))' //「無」後接被截斷之半個字
     let sMixed = 'process.stdout.write(Buffer.from([231,132,161]));setTimeout(()=>{process.stderr.write(Buffer.from([181,76]))},150)' //stdout utf-8, stderr big5
-    let sCbSwitch = 'process.stdout.write("ok");setTimeout(()=>{process.stdout.write(Buffer.from([181,76]))},300)'
     let sErrExit3 = 'process.stderr.write(Buffer.from([181,76]));setTimeout(()=>{process.exit(3)},100)'
     let sForever = 'setInterval(()=>{process.stdout.write(Buffer.from([231,132,161]))},50)'
-    let sOrder = 'process.stdout.write("a");setTimeout(()=>{process.stderr.write("b")},150);setTimeout(()=>{process.stdout.write("c")},300)'
     let sBom = 'process.stdout.write(Buffer.from([239,187,191,65]))'
+
+    //--- 觀察回調(opt.onTrace)輔助: 事件閘門子行程與事件同步點, 規則見sgud/rule/rulebook_timer.md之R-TRACE-01 ---
+
+    //fdGate, 閘門檔夾(test/_tmp/execProcess-trace/<案名>/), 案例結束即刪
+    let fdGate = fileURLToPath(new URL('./_tmp/execProcess-trace/', import.meta.url))
+
+    //各案自刪其子夾後會留下空的根, 測試結束時一併移除
+    after(function() {
+        fs.rmSync(fdGate, { recursive: true, force: true })
+    })
+
+    //isData, 判斷data事件: 來源which與解碼後字串text
+    let isData = (which, text) => (e) => e.type === 'data' && e.which === which && e.text === text
+
+    //runGated, 以事件閘門子行程(gateScript)執行execProcess: steps如'o:61,e:62'(o為stdout、e為stderr, 後接位元組十六進位); plan[k]為判斷事件之函數, 見到(自上一個之後)第一個符合者即開第k+1道閘門放行下一步輸出
+    //  回傳{ r: { s: 'resolve'|'reject', v }, tr }; 防懸置上限用真實計時器; 收尾放行全部閘門並殺樹回驗(見execTraceKit之finishCase)
+    let runGated = async (name, steps, opt, plan) => {
+        let gate = mkGate(fdGate + name)
+        let tr = recTrace({ guard: 12000 })
+        let p = execProcess(nodeBin, ['-e', gateScript, gate.base, steps], { ...opt, onTrace: tr.on })
+        try {
+            let from = 0
+            for (let k = 0; k < plan.length; k++) {
+                let e = await tr.wait(plan[k], from)
+                from = tr.events.indexOf(e) + 1
+                gate.open(k + 1)
+            }
+            let r = await withGuard(p.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v })), 15000, `execProcess ${name}`)
+            return { r, tr }
+        }
+        finally {
+            assert.strict.deepStrictEqual(await finishCase(p, tr, gate, steps.split(',').length), true, `leftover child process (${name})`)
+        }
+    }
 
     it(`should resolve with stdout content when running a basic command`, async function() {
         let r = await execProcess(nodeBin, ['-e', 'process.stdout.write("hello")'])
@@ -239,8 +275,10 @@ describe(`execProcess`, function() {
     })
 
     it(`should merge stdout and stderr in arrival order`, async function() {
-        let r = await execProcess(nodeBin, ['-e', sOrder])
-        assert.strict.deepStrictEqual(r, 'abc')
+        //JSDoc returns: resolve回傳stdout與stderr依到達順序合併之字串; 子程序依事件閘門輸出a(stdout)、b(stderr)、c(stdout), 父行程見到上一筆之data事件才放行下一筆, 故到達順序由因果決定而非子程序內計時器之間隔
+        let { r, tr } = await runGated(`order`, `o:61,e:62,o:63`, {}, [isData('out', 'a'), isData('err', 'b')])
+        assert.strict.deepStrictEqual(r, { s: 'resolve', v: 'abc' })
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'data').map((e) => `${e.which}:${e.text}`), ['out:a', 'err:b', 'out:c'])
     })
 
     it(`should resolve an empty string when the child prints nothing`, async function() {
@@ -266,19 +304,39 @@ describe(`execProcess`, function() {
     })
 
     it(`should carry decoded output into the timeout reject message under auto`, async function() {
-        let err = null
+        //JSDoc timeout: 逾時為`timeout[Nms]:\n訊息`, 訊息為子程序之輸出; 逾時門檻(400ms)本身是規格, 以假時鐘推進; 「子程序已啟動並至少輸出一次」不是規格, 以data事件為同步點(見到含「無」之data事件才推進到門檻)
+        await execProcess(nodeBin, ['-e', '1'], { codeCmd: 'auto' }) //先取得並快取系統字碼頁(真實chcp), 啟用假時鐘後auto不再有此真實I/O
+        let tr = recTrace({ guard: 12000 })
+        let clock = useFakeClock()
+        let p = null
         try {
-            await execProcess(nodeBin, ['-e', sForever], { codeCmd: 'auto', timeout: 400 })
+            p = execProcess(nodeBin, ['-e', sForever], { codeCmd: 'auto', timeout: 400, onTrace: tr.on })
+            let st = p.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+            await tr.wait((e) => e.type === 'spawn') //子程序已建立, 逾時計時器(虛擬400ms)已設定
+            await tr.wait((e) => e.type === 'data' && e.text.includes('無')) //子程序已啟動並已輸出
+            let i0 = tr.mark()
+            await clock.advance(399)
+            assert.strict.deepStrictEqual(tr.types(i0).filter((t) => t === 'timeout' || t === 'kill'), []) //未達門檻不得逾時
+            await clock.advance(1)
+            let ev = await tr.wait((e) => e.type === 'settle')
+            assert.strict.deepStrictEqual([ev.ok, ev.reason], [false, 'timeout'])
+            let r = await withGuard(st, 15000, 'execProcess timeout settle')
+            let err = r.s === 'reject' ? r.v : null
+            assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith('timeout[400ms]:\n'), true)
+            let body = err.slice('timeout[400ms]:\n'.length)
+            assert.strict.deepStrictEqual(body.includes('無'), true)
+            //被殺於字元中間時至多結尾一個U+FFFD, 不得整段改判為系統字碼頁
+            assert.strict.deepStrictEqual((body.match(/�/g) || []).length <= 1, true)
+            assert.strict.deepStrictEqual(body.replace(/無|�/g, ''), '')
         }
-        catch (e) {
-            err = e
+        finally {
+            clock.restore()
+            let ev = tr.events.find((x) => x.type === 'spawn')
+            let settled = tr.events.some((x) => x.type === 'settle')
+            if (!settled && ev && typeof ev.pid === 'number') {
+                assert.strict.deepStrictEqual(await reapTree(ev.pid), true, 'leftover child process')
+            }
         }
-        assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith('timeout[400ms]:\n'), true)
-        let body = err.slice('timeout[400ms]:\n'.length)
-        assert.strict.deepStrictEqual(body.includes('無'), true)
-        //被殺於字元中間時至多結尾一個U+FFFD, 不得整段改判為系統字碼頁
-        assert.strict.deepStrictEqual((body.match(/�/g) || []).length <= 1, true)
-        assert.strict.deepStrictEqual(body.replace(/無|�/g, ''), '')
     })
 
     it(`should decode system code page output with codeCmd auto on a big5 console`, async function() {
@@ -301,15 +359,16 @@ describe(`execProcess`, function() {
         if (cpSys !== 950) {
             this.skip()
         }
+        //JSDoc cbStdout: codeCmd為'auto'時該串流首次遇到非utf-8位元組後才改用系統字碼頁, 之前已回調之字串不追溯; 子程序依事件閘門輸出ok與big5位元組(b54c), 第二次輸出於第一次data事件之後才發生, 故必為兩次獨立之回調(不因父行程卡頓而合併成單一chunk)
         let calls = []
-        let r = await execProcess(nodeBin, ['-e', sCbSwitch], {
+        let { r } = await runGated(`cbswitch`, `o:6f6b,o:b54c`, {
             codeCmd: 'auto',
             cbStdout: (data) => {
                 calls.push(data)
             },
-        })
+        }, [isData('out', 'ok')])
         assert.strict.deepStrictEqual(calls, ['ok', '無'])
-        assert.strict.deepStrictEqual(r, 'ok無')
+        assert.strict.deepStrictEqual(r, { s: 'resolve', v: 'ok無' })
     })
 
     it(`should decode with codeCmd system on a big5 console`, async function() {
@@ -477,6 +536,258 @@ describe(`execProcess`, function() {
         }
         //P11c
         assert.strict.deepStrictEqual(rs, new Array(5).fill('args is not an array or string'))
+    })
+
+    //--- 觀察回調(opt.onTrace): 事件語意與P3/P4(規則見sgud/rule/rulebook_timer.md之R-TRACE-01) ---
+
+    describe(`觀察回調(opt.onTrace)`, function() {
+
+        //settleOf, 取事件中之settle(至多一個)
+        let settles = (tr) => tr.events.filter((e) => e.type === 'settle')
+
+        //pidOf, 取spawn事件之pid
+        let pidOf = (tr) => {
+            let e = tr.events.find((x) => x.type === 'spawn')
+            return e ? e.pid : null
+        }
+
+        //run, 執行execProcess並回傳{ s, v }與紀錄器; 收尾若被測函數仍未落定(缺陷)則殺樹回驗
+        let run = async (prog, args, opt) => {
+            let tr = recTrace({ guard: 12000 })
+            let p = execProcess(prog, args, { ...opt, onTrace: tr.on })
+            let r = null
+            try {
+                r = await withGuard(p.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v })), 15000, 'execProcess settle')
+            }
+            finally {
+                assert.strict.deepStrictEqual(await finishCase(p, tr, null, 0), true, 'leftover child process')
+            }
+            return { r, tr }
+        }
+
+        it(`should notify spawn, data and settle in order with decoded text and settle before the promise resolves`, async function() {
+            //JSDoc onTrace: spawn為子程序已建立(mode、pid), data為收到chunk並已解碼(which、bytes、text; 先於cbStdout、cbStderr), settle為即將resolve(ok、reason為'ok'、code為離開碼0)
+            let order = []
+            let gate = mkGate(fdGate + `order-events`)
+            let tr = recTrace({ guard: 12000 })
+            let onTrace = (e) => {
+                order.push(e.type === 'data' ? `trace:data:${e.which}` : `trace:${e.type}`)
+                tr.on(e)
+            }
+            let p = execProcess(nodeBin, ['-e', gateScript, gate.base, 'o:61,e:6262'], {
+                onTrace,
+                cbStdout: (d) => order.push(`cb:out:${d}`),
+                cbStderr: (d) => order.push(`cb:err:${d}`),
+            })
+            let st = p.then((v) => {
+                order.push('resolved')
+                return { s: 'resolve', v }
+            }, (v) => ({ s: 'reject', v }))
+            try {
+                await tr.wait(isData('out', 'a'))
+                gate.open(1)
+                let r = await withGuard(st, 15000, 'execProcess settle')
+                assert.strict.deepStrictEqual(r, { s: 'resolve', v: 'abb' })
+                let e0 = tr.events[0]
+                assert.strict.deepStrictEqual([e0.type, e0.mode, typeof e0.pid === 'number' && e0.pid > 0], ['spawn', 'spawn', true])
+                assert.strict.deepStrictEqual(tr.events.slice(1), [
+                    { type: 'data', which: 'out', bytes: 1, text: 'a' },
+                    { type: 'data', which: 'err', bytes: 2, text: 'bb' },
+                    { type: 'settle', ok: true, reason: 'ok', code: 0 },
+                ])
+                //事件早於使用端回調(data先於cbStdout、cbStderr), settle早於落定
+                assert.strict.deepStrictEqual(order, ['trace:spawn', 'trace:data:out', 'cb:out:a', 'trace:data:err', 'cb:err:bb', 'trace:settle', 'resolved'])
+            }
+            finally {
+                assert.strict.deepStrictEqual(await finishCase(p, tr, gate, 2), true, 'leftover child process')
+            }
+        })
+
+        it(`should report in spawn the mode and the pid of the child (the child itself for spawn and execFile, the shell for exec)`, async function() {
+            //JSDoc onTrace: spawn含mode為執行模式字串、pid為子程序pid; exec模式之pid為shell之pid
+            let script = 'process.stdout.write(String(process.pid))'
+            let a = await run(nodeBin, ['-e', script], { mode: 'spawn' })
+            let b = await run(nodeBin, ['-e', script], { mode: 'execFile' })
+            let c = await run(`"${nodeBin}"`, `-e "${script}"`, { mode: 'exec' })
+            assert.strict.deepStrictEqual([a.r.s, String(pidOf(a.tr)) === a.r.v, a.tr.events[0].mode], ['resolve', true, 'spawn'])
+            assert.strict.deepStrictEqual([b.r.s, String(pidOf(b.tr)) === b.r.v, b.tr.events[0].mode], ['resolve', true, 'execFile'])
+            assert.strict.deepStrictEqual([c.r.s, Number.isInteger(pidOf(c.tr)) && pidOf(c.tr) > 0, c.tr.events[0].mode], ['resolve', true, 'exec'])
+        })
+
+        it(`should notify settle with reason code and the exit code when the exit code is non-zero, and settle with reason ok for exit code 0 without any data`, async function() {
+            //JSDoc onTrace: settle之reason為'code'代表離開碼非0(code為該離開碼)、'ok'代表離開碼0; 無輸出者無data事件
+            let a = await run(nodeBin, ['-e', 'process.exitCode=2'], {})
+            let b = await run(nodeBin, ['-e', '1'], {})
+            assert.strict.deepStrictEqual(a.r, { s: 'reject', v: 'code[2]:\n' })
+            assert.strict.deepStrictEqual(a.tr.events.slice(1), [{ type: 'settle', ok: false, reason: 'code', code: 2 }])
+            assert.strict.deepStrictEqual(b.r, { s: 'resolve', v: '' })
+            assert.strict.deepStrictEqual(b.tr.events.slice(1), [{ type: 'settle', ok: true, reason: 'ok', code: 0 }])
+        })
+
+        it(`should notify timeout, kill and settle only after the opt.timeout threshold and not forward the events of execProcessKillPid (fake clock)`, async function() {
+            //JSDoc onTrace: timeout為已達opt.timeout而即將殺子進程(ms)、kill為即將調用execProcessKillPid(pid; 不轉傳onTrace); 門檻本身是規格, 假時鐘推進, 子程序輸出由data事件同步
+            let tr = recTrace({ guard: 12000 })
+            let clock = useFakeClock()
+            let p = null
+            try {
+                p = execProcess(nodeBin, ['-e', 'process.stdout.write("up");setTimeout(()=>{},30000)'], { timeout: 5000, onTrace: tr.on })
+                let st = p.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+                await tr.wait(isData('out', 'up')) //子程序已啟動並輸出; 逾時計時器(虛擬5000ms)已於spawn時設定
+                let i0 = tr.mark()
+                await clock.advance(4999)
+                assert.strict.deepStrictEqual(tr.types(i0), []) //未達門檻無任何事件
+                await clock.advance(1)
+                let ev = await tr.wait((e) => e.type === 'settle')
+                let r = await withGuard(st, 15000, 'execProcess timeout settle')
+                assert.strict.deepStrictEqual(r, { s: 'reject', v: 'timeout[5000ms]:\nup' })
+                let tail = tr.events.slice(i0)
+                assert.strict.deepStrictEqual(tail.map((e) => e.type), ['timeout', 'kill', 'settle']) //不含execProcessKillPid之start、done
+                assert.strict.deepStrictEqual(tail[0], { type: 'timeout', ms: 5000 })
+                assert.strict.deepStrictEqual([tail[1].pid === pidOf(tr), tail[2].ok, tail[2].reason, ev === tail[2]], [true, false, 'timeout', true])
+                assert.strict.deepStrictEqual(tail[2].code === null || typeof tail[2].code === 'number', true) //離開碼: 訊號結束為null, 否則為數字
+            }
+            finally {
+                clock.restore()
+                if (!tr.events.some((e) => e.type === 'settle') && typeof pidOf(tr) === 'number') {
+                    assert.strict.deepStrictEqual(await reapTree(pidOf(tr)), true, 'leftover child process')
+                }
+            }
+        })
+
+        it(`should not notify timeout or kill when the process ends before opt.timeout`, async function() {
+            //JSDoc onTrace: timeout、kill僅於達到opt.timeout時通知; 先結束者計時器已清除(事件僅spawn、data、settle)
+            let a = await run(nodeBin, ['-e', 'process.stdout.write("fast")'], { timeout: 60000 })
+            assert.strict.deepStrictEqual(a.r, { s: 'resolve', v: 'fast' })
+            assert.strict.deepStrictEqual(a.tr.types(), ['spawn', 'data', 'settle'])
+        })
+
+        it(`should notify only settle when the call ends before spawning (args, codeCmd, quoted prog, synchronous spawn failure)`, async function() {
+            //JSDoc onTrace: settle之reason為'args'(args型別不符)、'codeCmd'(編碼不支援)、'prog'(spawn模式prog含引號)、'spawn'(無法啟動), 此類結束早於子程序建立, 無spawn事件
+            let a = await run(nodeBin, 123, {})
+            let b = await run(nodeBin, ['-e', '1'], { codeCmd: 'no-such-encoding' })
+            let c = await run(`"${nodeBin}"`, ['-e', '1'], {})
+            let d = await run(nodeBin, ['-e', '1', 'x\u0000y'], {})
+            let one = (reason) => [{ type: 'settle', ok: false, reason, code: null }]
+            assert.strict.deepStrictEqual([a.r.s, a.tr.events], ['reject', one('args')])
+            assert.strict.deepStrictEqual([b.r.s, b.tr.events], ['reject', one('codeCmd')])
+            assert.strict.deepStrictEqual([c.r.s, c.tr.events], ['reject', one('prog')])
+            assert.strict.deepStrictEqual([d.r.s, d.tr.events], ['reject', one('spawn')])
+        })
+
+        it(`should notify spawn with a null pid and settle once with reason spawn when the program cannot be started, without a second settle from the following close`, async function() {
+            //JSDoc onTrace: 無法啟動子程序者spawn之pid為null; settle之reason為'spawn', error事件者其後node仍會發出之close不再通知(每次呼叫至多一個settle)
+            let progMissing2 = path.resolve('./test/_tmp/execProcess/zz_no_such_prog_456.exe')
+            for (let opt of [{}, { codeCmd: 'auto' }, { mode: 'execFile' }]) {
+                let { r, tr } = await run(progMissing2, ['a'], opt)
+                assert.strict.deepStrictEqual(r.s, 'reject')
+                assert.strict.deepStrictEqual(r.v.startsWith('spawn[ENOENT]:\n'), true)
+                assert.strict.deepStrictEqual(tr.events, [
+                    { type: 'spawn', mode: opt.mode || 'spawn', pid: null },
+                    { type: 'settle', ok: false, reason: 'spawn', code: null },
+                ])
+                //否定斷言之觀察窗: error之後close仍會到達(node必發), 其不得再通知settle; 窗內事件變少只會漏抓, 停止本身由上方事件序列斷言
+                await realSleep(150)
+                assert.strict.deepStrictEqual(settles(tr).length, 1)
+            }
+        })
+
+        it(`should notify the switch event once per stream before the data event that triggered it, and keep decoding with the switched label under auto`, async function() {
+            //JSDoc onTrace: switch為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(which、label); 每串流至多一次, 早於觸發改判之data事件; stdout與stderr各有解碼器故各至多一次; 本案不依賴本機字碼頁(僅斷言事件與回調結構, 不斷言解碼後之字)
+            let calls = []
+            let { r, tr } = await runGated(`switch-events`, `o:6f6b,o:b54c,o:b54c,e:b54c`, {
+                codeCmd: 'auto',
+                cbStdout: (d) => calls.push(d),
+            }, [isData('out', 'ok'), (e) => e.type === 'data' && e.which === 'out' && e.bytes === 2, (e) => e.type === 'data' && e.which === 'out' && e.bytes === 2 && e.text !== ''])
+            let sw = tr.events.map((e, i) => [e, i]).filter(([e]) => e.type === 'switch')
+            assert.strict.deepStrictEqual(sw.map(([e]) => e.which), ['out', 'err'])
+            assert.strict.deepStrictEqual(sw.every(([e]) => typeof e.label === 'string' && e.label !== ''), true)
+            //switch緊接於觸發它之data事件之前: 第一個switch(out)後為第二個stdout chunk(bytes 2), 第二個switch(err)後為stderr之data
+            assert.strict.deepStrictEqual(sw.map(([e, i]) => `${tr.events[i + 1].type}:${tr.events[i + 1].which}:${tr.events[i + 1].bytes}`), ['data:out:2', 'data:err:2'])
+            //'ok'之chunk與第三個stdout chunk(已改判後)不再通知switch
+            assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'data').map((e) => `${e.which}:${e.bytes}`), ['out:2', 'out:2', 'out:2', 'err:2'])
+            assert.strict.deepStrictEqual([r.s, calls.length, calls[0]], ['resolve', 3, 'ok'])
+        })
+
+        it(`should notify an empty text for a chunk holding only an incomplete multibyte sequence and not call cbStdout for it`, async function() {
+            //JSDoc onTrace: data之text於該chunk僅含尚未完整之多位元組序列時為空字串; JSDoc cbStdout: 多位元組字元跨chunk時等到完整才給, 不會收到空字串
+            let calls = []
+            let { r, tr } = await runGated(`partial`, `o:e784,o:a1`, { cbStdout: (d) => calls.push(d) }, [(e) => e.type === 'data' && e.bytes === 2])
+            assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'data').map((e) => [e.bytes, e.text]), [[2, ''], [1, '無']])
+            assert.strict.deepStrictEqual([r, calls], [{ s: 'resolve', v: '無' }, ['無']])
+        })
+
+        it(`should reject the string without notifying when opt is unreadable before the callback is taken, including when the onTrace getter throws`, async function() {
+            //JSDoc onTrace: opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗, reject說明字串且不通知; 與其餘選項不可讀之既有失敗路徑結果相同
+            let tr = recTrace()
+            let opt1 = Object.defineProperty({ onTrace: tr.on }, 'timeout', { enumerable: true, get: thrower(new Error('getter boom')) })
+            let a = await execProcess(nodeBin, ['-e', '1'], opt1).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+            let b = await execProcess(nodeBin, ['-e', '1'], revoked()).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+            let opt3 = Object.defineProperty({}, 'onTrace', { enumerable: true, get: thrower(new Error('trace getter boom')) })
+            let c = await execProcess(nodeBin, ['-e', '1'], opt3).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+            assert.strict.deepStrictEqual(a, { s: 'reject', v: 'opt is not readable: getter boom' })
+            assert.strict.deepStrictEqual([b.s, b.v.startsWith('opt is not readable: ')], ['reject', true])
+            assert.strict.deepStrictEqual(c, { s: 'reject', v: 'opt is not readable: trace getter boom' })
+            assert.strict.deepStrictEqual(tr.events.length, 0)
+        })
+
+        it(`should give the same results without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+            //R-TRACE-01 P3: 未傳觀察回調時行為不變; P4: 回調之拋錯與回傳之rejection不影響本函數、不產生未處理之rejection; 涵蓋resolve、離開碼非0、無法啟動、args與編碼與引號之說明字串、逾時(真實逾時, 子程序不會自行結束, 僅比對結果不斷言時間)、opt不可讀
+            let un = collectUnhandled()
+            let rec = recTrace({ guard: 12000 })
+            let got = []
+            let toRes = (pm) => pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+            try {
+                for (let onTrace of fiveOnTrace(rec.on)) {
+                    let o = { onTrace }
+                    let a = await toRes(execProcess(nodeBin, ['-e', 'process.stdout.write("hello")'], o))
+                    let b = await toRes(execProcess(nodeBin, ['-e', 'process.stderr.write("boom");process.exitCode=2'], o))
+                    let c = await toRes(execProcess(path.resolve('./test/_tmp/execProcess/zz_no_such_prog_789.exe'), ['a'], o))
+                    let d = await toRes(execProcess(nodeBin, 123, o))
+                    let e = await toRes(execProcess(nodeBin, ['-e', '1'], { onTrace, codeCmd: 'no-such-encoding' }))
+                    let f = await toRes(execProcess(`"${nodeBin}"`, ['-e', '1'], o))
+                    let g = await toRes(execProcess(nodeBin, ['-e', 'setTimeout(()=>{},30000)'], { onTrace, timeout: 300 }))
+                    let optBad = Object.defineProperty({ onTrace }, 'mode', { enumerable: true, get: thrower(new Error('getter boom')) })
+                    let h = await toRes(execProcess(nodeBin, ['-e', '1'], optBad))
+                    let i = await toRes(execProcess(nodeBin, ['-e', 'process.stdout.write("u")'], { onTrace, codeCmd: 'auto' }))
+                    got.push([a, b, c, d, e, f, g, h, i])
+                }
+                await new Promise((resolve) => setImmediate(resolve))
+                await new Promise((resolve) => setImmediate(resolve))
+            }
+            finally {
+                un = un.stop()
+            }
+            assert.strict.deepStrictEqual(got.length, 5)
+            for (let k = 1; k < 5; k++) {
+                assert.strict.deepStrictEqual(got[k], got[0], `variant ${k}`)
+            }
+            assert.strict.deepStrictEqual(got[0].map((x) => x.s), ['resolve', 'reject', 'reject', 'reject', 'reject', 'reject', 'reject', 'reject', 'resolve'])
+            assert.strict.deepStrictEqual([got[0][0].v, got[0][1].v, got[0][6].v, got[0][8].v], ['hello', 'code[2]:\nboom', 'timeout[300ms]:\n', 'u'])
+            assert.strict.deepStrictEqual(un, [])
+            //紀錄器確有收到事件(spawn、data、settle、timeout、kill)
+            let ts = new Set(rec.types())
+            assert.strict.deepStrictEqual(['spawn', 'data', 'settle', 'timeout', 'kill'].every((t) => ts.has(t)), true)
+        })
+
+        it(`should notify frozen events of primitive fields fixed per type, with no receiver`, async function() {
+            //JSDoc onTrace: 事件為凍結物件{ type, ... }, 欄位依type列舉且皆為原始值; 回調不帶接收者呼叫(R-TRACE-01 P4: 唯讀快照、最少欄位、不暴露內部可變狀態)
+            let rs = []
+            rs.push(await run(nodeBin, ['-e', 'process.stdout.write("a");process.stderr.write("b")'], {})) //spawn、data、settle
+            rs.push(await run(nodeBin, ['-e', 'setTimeout(()=>{},30000)'], { timeout: 300 })) //timeout、kill
+            rs.push(await run(nodeBin, ['-e', '1', 'x\u0000y'], {})) //settle(spawn)
+            rs.push(await runGated(`fields-switch`, `o:b54c`, { codeCmd: 'auto' }, [])) //switch
+            let trs = rs.map((x) => x.tr)
+            let all = trs.flatMap((t) => t.events)
+            let keys = {}
+            for (let e of all) {
+                keys[e.type] = Object.keys(e).sort().join(',')
+            }
+            assert.strict.deepStrictEqual(keys, { spawn: 'mode,pid,type', data: 'bytes,text,type,which', settle: 'code,ok,reason,type', timeout: 'ms,type', kill: 'pid,type', switch: 'label,type,which' })
+            assert.strict.deepStrictEqual(all.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), true)
+            let meta = trs.flatMap((t) => t.meta)
+            assert.strict.deepStrictEqual(meta.length === all.length && meta.every(([self, frozen]) => self === undefined && frozen), true)
+        })
+
     })
 
 })

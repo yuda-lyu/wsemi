@@ -1,6 +1,7 @@
 // import fs from 'fs'
 import get from 'lodash-es/get.js'
 import isfun from './isfun.mjs'
+import getTrace from './getTrace.mjs'
 import optNum from './_optNum.mjs'
 import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
@@ -92,6 +93,13 @@ function codeOf(err) {
     catch (e) {
         return undefined
     }
+}
+
+
+//codeStr, 觀察回調(onTrace)用: 取code字串, 非字串或無code為null
+function codeStr(err) {
+    let c = codeOf(err)
+    return isStr(c) ? c : null
 }
 
 
@@ -598,6 +606,8 @@ function buildCtx(opt) {
         extractMs: o.extractMs,
         refs: o.refs,
         leftovers: [],
+        fresh: [], //離線時記下「開始時尚不存在」之資料夾, 缺檔reject前把其中仍為空者清掉(見tidyFresh)
+        trace: null, //觀察回調(opt.onTrace), 由入口取得後設定
         pid,
         win32,
         pkg: '',
@@ -853,6 +863,9 @@ async function fromMirror(ctx, e, o, dest) {
             let st = lstatOrNull(ctx, at)
             if (st === null) {
                 emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: at, result: 'miss' })
+                if (ctx.trace) {
+                    ctx.trace('mirror', { name: e.name, file: o.name, result: 'miss' })
+                }
                 return null
             }
             if (!st.isFile()) {
@@ -873,6 +886,9 @@ async function fromMirror(ctx, e, o, dest) {
             addLeft(ctx, e, rv)
         }
         emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'ok' })
+        if (ctx.trace) {
+            ctx.trace('mirror', { name: e.name, file: o.name, result: 'ok' })
+        }
         return true
     }
     catch (err) {
@@ -884,10 +900,16 @@ async function fromMirror(ctx, e, o, dest) {
         let status = get(err, 'status')
         if (codeOf(err) === 'E_HTTP' && (status === 404 || status === 410)) {
             emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'miss' })
+            if (ctx.trace) {
+                ctx.trace('mirror', { name: e.name, file: o.name, result: 'miss' })
+            }
             return null
         }
         let reason = maskUrl(`the mirror copy ${at} was rejected: ${isStr(codeOf(err)) ? `${codeOf(err)} ` : ''}${errMsg(err).split('\n')[0]}`)
         emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'rejected', error: reason })
+        if (ctx.trace) {
+            ctx.trace('mirror', { name: e.name, file: o.name, result: 'rejected' })
+        }
         return reason
     }
 }
@@ -912,6 +934,9 @@ function missingOf(ctx, e, reasons) {
         parts: e.parts !== null ? e.parts.map(alt) : null,
         reasons,
     }
+    if (ctx.trace) {
+        ctx.trace('offline', { name: e.name })
+    }
     return mkErr('E_OFFLINE_MISSING', `offline: ${e.name} is missing`, { step: 'offline', missing: [m] })
 }
 
@@ -931,12 +956,21 @@ async function obtain(ctx, e, o, dest, reasons) {
         throw missingOf(ctx, e, reasons)
     }
     emit(ctx, { step: 'download', name: e.name, file: o.name, url: o.url })
+    if (ctx.trace) {
+        ctx.trace('download', { name: e.name, file: o.name })
+    }
     try {
         let rv = await fsDownloadFileVerifyCore(o.url, dest, { sha256: o.sha256, size: o.size }, verifyOpt(ctx, { fetch: ctx.fetchRaw }))
         addLeft(ctx, e, rv) //成功前之嘗試刪不掉之暫存檔
     }
     catch (err) {
+        if (ctx.trace) {
+            ctx.trace('downloaded', { name: e.name, file: o.name, ok: false, code: codeStr(err) })
+        }
         throw tagErr(ctx, err, e.name, o.url.startsWith(`${RAW}/`) ? 'github' : 'url')
+    }
+    if (ctx.trace) {
+        ctx.trace('downloaded', { name: e.name, file: o.name, ok: true, code: null })
     }
 }
 
@@ -978,7 +1012,7 @@ async function concatFiles(ctx, fps, fpOut) {
 
 //runTar, 執行解壓程式, 回傳{ code, stderr }、{ err, enoent }或{ timeout, exited }
 //逾時(ctx.extractMs)則終止之, 並等其結束至多KILL_WAIT_MS(結束前不回傳, 免得清理暫存夾時解壓程式仍在寫入), exited為是否確認已結束
-function runTar(ctx, prog, args, cwd) {
+function runTar(ctx, name, prog, args, cwd) {
     return new Promise((resolve) => {
         let done = false
         let timedOut = false
@@ -1021,6 +1055,9 @@ function runTar(ctx, prog, args, cwd) {
         })
         timer = setTimeout(() => {
             timedOut = true
+            if (ctx.trace) {
+                ctx.trace('kill', { name })
+            }
             try {
                 cp.kill()
             }
@@ -1038,13 +1075,21 @@ async function extract(ctx, e, work, zipRel) {
     let x = e.extract
     ctx.fs.mkdirSync(ctx.path.join(work, 'x'), { recursive: true })
     emit(ctx, { step: 'extract', name: e.name, member: x.member })
+    if (ctx.trace) {
+        ctx.trace('extract', { name: e.name })
+    }
     let args = ['-x', '-f', zipRel, '-C', 'x', '--', x.member]
     let r = null
     for (let prog of ctx.tarProgs) {
-        r = await runTar(ctx, prog, args, work)
+        r = await runTar(ctx, e.name, prog, args, work)
         if (!r.enoent) {
             break
         }
+    }
+    if (ctx.trace) {
+        //result: 'error'為解壓程式不存在或無法啟動, 'timeout'為逾時(exited為終止後是否確認已結束), 'exit'為已結束(code為其離開碼)
+        let result = 'enoent' in r ? 'error' : r.timeout ? 'timeout' : 'exit'
+        ctx.trace('extracted', { name: e.name, result, code: result === 'exit' && typeof r.code === 'number' ? r.code : null, exited: result === 'timeout' ? r.exited === true : result === 'exit' ? true : null })
     }
     let fail = (msg, cause, more = {}) => {
         let extra = { step: 'extract', pkg: ctx.pkg, bin: e.name, ...more }
@@ -1141,21 +1186,88 @@ function rmWork(ctx, e, work) {
     catch (err) {
         ctx.left.push({ name: e.name, fp: work, error: errMsg(err) })
         emit(ctx, { step: 'cleanup', name: e.name, fp: work, error: errMsg(err) })
+        if (ctx.trace) {
+            ctx.trace('cleanup', { name: e.name, ok: false })
+        }
+        return
     }
+    if (ctx.trace) {
+        ctx.trace('cleanup', { name: e.name, ok: true })
+    }
+}
+
+
+//noteFresh, 離線時記下fd(本檔之<快取>/<sha256>夾)及其上層中「此刻尚不存在」之資料夾(自fd往上, 遇存在者即止)
+//供缺檔reject前tidyFresh清掉其中仍為空者; 原本已存在之夾不記; 讀不到狀態(權限等)則不記
+function noteFresh(ctx, fd) {
+    let cur = fd
+    for (;;) {
+        let st = null
+        try {
+            st = lstatOrNull(ctx, cur)
+        }
+        catch (err) {
+            return
+        }
+        if (st !== null) {
+            return
+        }
+        if (!ctx.fresh.includes(cur)) {
+            ctx.fresh.push(cur)
+        }
+        let up = ctx.path.join(cur, '..')
+        if (up === cur) {
+            return
+        }
+        cur = up
+    }
+}
+
+
+//tidyFresh, 離線缺檔reject前, 把noteFresh所記之資料夾中仍為空者刪除(由深而淺, 用rmdirSync只刪空夾, 非空或刪不掉者保留不報錯); 回傳刪除之個數
+//缺檔之嘗試(暫存夾、下載核心建立之<sha256>夾、鏡像失敗而留下之空夾)不得留下本次新建之空資料夾; 傳入之fs無rmdirSync者不處理
+function tidyFresh(ctx) {
+    let n = 0
+    let fps = [...ctx.fresh].sort((a, b) => b.length - a.length)
+    ctx.fresh.length = 0
+    for (let fp of fps) {
+        try {
+            let rmdir = get(ctx.fsRaw, 'rmdirSync')
+            if (isfun(rmdir)) {
+                rmdir.call(ctx.fsRaw, fp)
+                n++
+            }
+        }
+        catch (err) {}
+    }
+    return n
 }
 
 
 //runEntry, 取得一個檔: 快取(校驗)→鏡像→GitHub或廠商網址; 壓縮檔於暫存夾內取得、組合、解出、校驗後才移入快取
 async function runEntry(ctx, e, fd, fpFinal) {
-    if (await checkCache(ctx, e, fpFinal)) {
+    let hit = await checkCache(ctx, e, fpFinal)
+    if (ctx.trace) {
+        ctx.trace('cache', { name: e.name, hit })
+    }
+    if (hit) {
         emit(ctx, { step: 'cache', name: e.name, fp: fpFinal, hit: true })
+        if (ctx.trace) {
+            ctx.trace('ready', { name: e.name })
+        }
         return fpFinal
+    }
+    if (ctx.offline) {
+        noteFresh(ctx, fd) //離線: 記下本檔之<sha256>夾與快取根(及其上層)中尚不存在者, 缺檔reject前把仍為空者清掉
     }
     //取得後不記入行程內記憶(放入後至記錄前可能被換掉), 下次使用時再校驗一次
     let reasons = []
     if (e.extract === null) {
         await obtain(ctx, e, e.direct, fpFinal, reasons)
         emit(ctx, { step: 'ready', name: e.name, fp: fpFinal })
+        if (ctx.trace) {
+            ctx.trace('ready', { name: e.name })
+        }
         return fpFinal
     }
 
@@ -1164,6 +1276,9 @@ async function runEntry(ctx, e, fd, fpFinal) {
         let r = await fromMirror(ctx, e, e.final, fpFinal)
         if (r === true) {
             emit(ctx, { step: 'ready', name: e.name, fp: fpFinal })
+            if (ctx.trace) {
+                ctx.trace('ready', { name: e.name })
+            }
             return fpFinal
         }
         if (r !== null) {
@@ -1171,7 +1286,15 @@ async function runEntry(ctx, e, fd, fpFinal) {
         }
     }
 
+    //離線且無鏡像: 壓縮檔與分割檔皆無來源可取(離線不連網), 先於建暫存夾即回報缺檔, 不建立快取夾(唯讀之套件根亦得E_OFFLINE_MISSING而非建夾失敗)
+    if (ctx.offline && ctx.mirrorKind === '') {
+        throw missingOf(ctx, e, reasons)
+    }
+
     let work = mkWork(ctx, e)
+    if (ctx.trace) {
+        ctx.trace('work', { name: e.name })
+    }
     let keep = false
     try {
         let zipRel = ''
@@ -1203,6 +1326,9 @@ async function runEntry(ctx, e, fd, fpFinal) {
         }
         let fpX = await extract(ctx, e, work, zipRel)
         await place(ctx, e, fpX, fd, fpFinal)
+        if (ctx.trace) {
+            ctx.trace('place', { name: e.name })
+        }
     }
     catch (err) {
         keep = isOwnErr(err) && err.workBusy === true //解壓程式未確認結束: 不刪暫存夾
@@ -1211,12 +1337,18 @@ async function runEntry(ctx, e, fd, fpFinal) {
     finally {
         if (keep) {
             ctx.left.push({ name: e.name, fp: work, error: 'the extraction program did not exit, the work folder is kept' })
+            if (ctx.trace) {
+                ctx.trace('cleanup', { name: e.name, ok: false })
+            }
         }
         else {
             rmWork(ctx, e, work)
         }
     }
     emit(ctx, { step: 'ready', name: e.name, fp: fpFinal })
+    if (ctx.trace) {
+        ctx.trace('ready', { name: e.name })
+    }
     return fpFinal
 }
 
@@ -1265,6 +1397,9 @@ function ensureEntry(ctx, e) {
                     }
                     catch (e2) {}
                 }
+                if (ctx.trace && err.code !== 'E_OFFLINE_MISSING') {
+                    ctx.trace('fail', { name: e.name, code: codeStr(err) })
+                }
                 throw err
             })
     }
@@ -1276,6 +1411,9 @@ function ensureEntry(ctx, e) {
     }
     catch (err) {
         //下載選項含無法序列化之值(如BigInt): 不共用
+        if (ctx.trace) {
+            ctx.trace('job', { name: e.name, mode: 'solo' })
+        }
         return { pm: run(), left }
     }
     let mods = [ctx.fsRaw, ctx.fetchRaw, ctx.spawn, ctx.cryptoRaw, ctx.ReadableRaw, ctx.pipeline, ...ctx.refs]
@@ -1288,7 +1426,13 @@ function ensureEntry(ctx, e) {
         return job.sig === sig && job.mods.length === mods.length && job.mods.every((m, i) => m === mods[i])
     })
     if (cur !== undefined) {
+        if (ctx.trace) {
+            ctx.trace('job', { name: e.name, mode: 'join' })
+        }
         return { pm: cur.pm, left: cur.left }
+    }
+    if (ctx.trace) {
+        ctx.trace('job', { name: e.name, mode: 'new' })
     }
     let job = { sig, mods, left, pm: null }
     job.pm = run()
@@ -1338,8 +1482,8 @@ async function readCapped(res, cap, hold) {
 }
 
 
-//cancelBody, 取消回應本體(或其reader)以釋放連線; 不等待其落定, 失敗不影響結果
-function cancelBody(res, reader) {
+//cancelBody, 取消回應本體(或其reader)以釋放連線; 不等待其落定, 失敗不影響結果; why為通知觀察回調用之原因
+function cancelBody(ctx, why, res, reader) {
     try {
         let p = reader ? reader.cancel() : res.body.cancel()
         if (p && isfun(p.catch)) {
@@ -1347,6 +1491,9 @@ function cancelBody(res, reader) {
         }
     }
     catch (err) {}
+    if (ctx.trace) {
+        ctx.trace('cancel', { why })
+    }
 }
 
 
@@ -1374,13 +1521,13 @@ async function fetchText(ctx, url) {
         pmFetch.then((r) => {
             gotRes = r
             if (done && !taken) {
-                cancelBody(r, null) //放棄等待後才落定之回應(與finally之先後不定, 兩處擇一取消)
+                cancelBody(ctx, 'late', r, null) //放棄等待後才落定之回應(與finally之先後不定, 兩處擇一取消)
             }
         }, () => {})
         let res = await Promise.race([pmFetch, pmTimeout])
         taken = true
         if (!get(res, 'ok')) {
-            cancelBody(res, null)
+            cancelBody(ctx, 'status', res, null)
             throw mkErr('E_HTTP', `HTTP ${get(res, 'status')}`, { step: 'manifest', status: get(res, 'status') })
         }
         return await Promise.race([readCapped(res, MANIFEST_CAP, hold), pmTimeout])
@@ -1395,10 +1542,10 @@ async function fetchText(ctx, url) {
         done = true
         clearTimeout(timer)
         if (hold.reader !== null) {
-            cancelBody(null, hold.reader) //逾時、超過上限或讀取失敗時未讀完之本體
+            cancelBody(ctx, 'unread', null, hold.reader) //逾時、超過上限或讀取失敗時未讀完之本體
         }
         else if (gotRes !== null && !taken) {
-            cancelBody(gotRes, null) //逾時勝出而回應已落定(未交出)
+            cancelBody(ctx, 'settled', gotRes, null) //逾時勝出而回應已落定(未交出)
         }
         ac.abort()
     }
@@ -1456,6 +1603,9 @@ function writeLast(ctx, text) {
             }
         }
     }
+    if (ctx.trace) {
+        ctx.trace('last', { ok: renamed })
+    }
 }
 
 
@@ -1472,14 +1622,23 @@ async function resolveManifest(ctx, base) {
     if (!ctx.offline) {
         let url = ctx.floatingManifestUrl !== null ? ctx.floatingManifestUrl : `${RAW}/${base.repo}/${BRANCH}/${encRel(base.manifestPath)}`
         try {
+            if (ctx.trace) {
+                ctx.trace('trunk', { phase: 'fetch', code: null })
+            }
             let text = await fetchText(ctx, url)
             let m = parseManifest(ctx, base, text, ` from ${url}`)
             writeLast(ctx, text)
             emit(ctx, { step: 'manifest', source: 'remote', url })
+            if (ctx.trace) {
+                ctx.trace('trunk', { phase: 'ok', code: null })
+            }
             return m
         }
         catch (err) {
             emit(ctx, { step: 'manifest', source: 'remote', url, error: maskUrl(`${codeOf(err) || ''} ${errMsg(err)}`.trim()) })
+            if (ctx.trace) {
+                ctx.trace('trunk', { phase: 'fail', code: codeStr(err) })
+            }
         }
     }
     emit(ctx, { step: 'manifest', source: 'baseline' })
@@ -1553,6 +1712,7 @@ function offlineErr(ctx, missing) {
  * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE
  * @param {Function} [opt.fetch=null] 輸入fetch函數(測試注入或處理認證), 未給時用全域fetch
  * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之檔案數), 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
  * @param {String} [opt.floatingManifestUrl=null] 輸入主幹模式之清單網址, 須在https://raw.githubusercontent.com/<repo>/之下, 預設由清單之repo與manifestPath組成
  * @param {Integer} [opt.maxAttempts=3] 輸入下載之最多嘗試次數(交fsDownloadFileVerify)
  * @param {Number} [opt.retryDelayMs=1000] 輸入下載之重試間隔基數毫秒(交fsDownloadFileVerify)
@@ -1573,7 +1733,30 @@ function offlineErr(ctx, missing) {
  *
  */
 async function fsEnsureBinsCore(manifest, opt = {}) {
-    let ctx = buildCtx(opt)
+
+    //觀察回調(opt.onTrace), 未給時為null; 取於buildCtx之前使E_ARG亦通知settle; opt不可讀(getter拋錯、已撤銷之Proxy)時視為未給, 其錯誤仍由buildCtx於讀取opt時照舊回報
+    let trace = null
+    try {
+        trace = getTrace(opt)
+    }
+    catch (err) {}
+
+    try {
+        let ctx = buildCtx(opt)
+        ctx.trace = trace
+        return await ensureMain(ctx, manifest, trace)
+    }
+    catch (err) {
+        if (trace) {
+            trace('settle', { ok: false, code: codeStr(err) })
+        }
+        throw err
+    }
+}
+
+
+//ensureMain, fsEnsureBinsCore之主流程(成功時於回傳前通知settle, 失敗由呼叫端通知)
+async function ensureMain(ctx, manifest, trace) {
 
     //清單, 物件或JSON檔路徑
     let raw = manifest
@@ -1594,6 +1777,9 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
 
     //主幹模式取清單
     let m = await resolveManifest(ctx, base)
+    if (trace) {
+        trace('manifest', { source: base.mode !== 'floating' ? 'base' : m === base ? 'baseline' : 'remote', files: m.entries.length })
+    }
 
     //names
     let byName = new Map(m.entries.map((e) => {
@@ -1632,6 +1818,11 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
         }
     }
     if (missing.length > 0) {
+        //離線缺檔: 不得留下本次建立之空資料夾(快取根、<sha256>夾), 先清掉其中仍為空者再回報
+        let nTidy = tidyFresh(ctx)
+        if (trace) {
+            trace('tidy', { n: nTidy })
+        }
         let err = offlineErr(ctx, missing)
         if (ctx.leftovers.length > 0) {
             err.leftovers = ctx.leftovers
@@ -1641,6 +1832,9 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
     let r = Object.fromEntries(pairs)
     if (!Object.prototype.hasOwnProperty.call(r, 'leftovers')) {
         Object.defineProperty(r, 'leftovers', { value: ctx.leftovers, enumerable: false }) //刪不掉之暫存夾[{ name, fp, error }], 不影響{ [name]: 路徑 }之形狀
+    }
+    if (trace) {
+        trace('settle', { ok: true, code: null })
     }
     return r
 }

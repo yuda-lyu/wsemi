@@ -14,6 +14,7 @@ import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
+import getTrace from './getTrace.mjs'
 
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心
@@ -40,6 +41,7 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  * @param {Function} [opt.onStdout=undefined] 輸入stdout原始片段回調函數，格式為(chunk)=>{}，已經UTF-8跨chunk解碼，供非行式協定(如LSP之Content-Length分幀)自行分幀，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
  * @param {Function} [opt.onExit=undefined] 輸入子進程結束回調函數，格式為(result)=>{}，result同stop()之回傳，預設undefined。onLine、onStdout、onStderr、onExit內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘回調之送達、stop()之落定與結果)
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；欄位皆為原始值，不含stdout與stderr之內文(只有長度)；type為'spawn'時為子進程已建立(含pid，未能啟動者為null)，'data'時為收到一段已解碼之輸出(含stream為'stdout'或'stderr'、len為該段字元數；子進程結束時殘餘之解碼不通知，settle之後亦不通知)，'write'時為一次寫入stdin定案(含ok為是否寫入成功、len為字元數；因已結束、已stop()或stdin不可寫而拒絕者len為null，已settle後之寫入不通知)，'stop'時為首次呼叫stop()而即將關閉stdin並起算寬限(含ms為exitGraceMs；已settle或未能spawn者不通知，重複呼叫不通知)，'grace'時為寬限期已到而子進程仍未退出，即將樹殺(含ms為exitGraceMs)，'timeout'時為timeoutMs整體逾時計時器觸發而即將樹殺(含ms為timeoutMs)，'kill'時為即將以execProcessKillPid樹殺並起算killWaitMs(含pid、ms為killWaitMs)，'settle'時為工作階段即將定案而於onExit與stop()落定之前通知(含code為離開碼數字或null、signal為終止訊號字串或null、exited、timeout、killed、error字串，欄位同結果物件，exited為false代表樹殺後逾killWaitMs仍未退出)；輸入不可讀、command無效、spawn失敗者只有settle事件；opt.onTrace屬性本身不可讀(getter拋錯)與其他回調相同，視為輸入不可讀；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響工作階段，預設null
  * @returns {Object} 回傳工作階段物件s，內含pid(子進程pid，spawn失敗為null)、exited(是否已結束布林值)、write(str)(寫入stdin，回傳Promise，resolve為是否寫入成功布林值，子進程已結束時靜默resolve(false))、writeLine(str)(補換行後寫入，str無法轉為字串時resolve(false))、stop()(關閉stdin並等待結束，回傳Promise，resolve回傳結果物件，內含code、signal、exited、timeout、killed、error、stderr、durationMs、pid；多次呼叫回傳同一Promise)
  * @example
  * //need test in nodejs
@@ -95,6 +97,7 @@ function execCliSession(command, args = [], opt = {}) {
     let onStdout
     let onStderr
     let onExit
+    let onTrace
     let bCommand = false
     let bErrInput = false
     let errInput
@@ -131,6 +134,10 @@ function execCliSession(command, args = [], opt = {}) {
     onStdout = readFn('onStdout')
     onStderr = readFn('onStderr')
     onExit = readFn('onExit')
+
+    //trace, 觀察回調(opt.onTrace)同其他回調先讀取並判型, 不可讀者視為輸入不可讀; 未給時為null
+    onTrace = readFn('onTrace')
+    let trace = onTrace === undefined ? null : getTrace({ onTrace })
 
     //其餘輸入
     try {
@@ -222,6 +229,18 @@ function execCliSession(command, args = [], opt = {}) {
         }
         s.exited = true
 
+        //settle事件, 於onExit與stop()落定之前通知
+        if (trace) {
+            trace('settle', {
+                code: result.code,
+                signal: result.signal,
+                exited: result.exited,
+                timeout: result.timeout,
+                killed: result.killed,
+                error: result.error,
+            })
+        }
+
         if (onExit !== undefined) { //回調已於入口判型(函數或undefined), 監聽器與計時器內一律以!== undefined判定, 不再判型呼叫端之值(值於入口後撤銷時判型會拋出而中斷收尾)
             callUser(onExit, result) //onExit拋錯不得中斷喚醒stop(), 否則stop()永久懸置
         }
@@ -289,6 +308,9 @@ function execCliSession(command, args = [], opt = {}) {
         return s
     }
     s.pid = proc.pid || null
+    if (trace) {
+        trace('spawn', { pid: s.pid })
+    }
 
     //error, 須於存取stdio前監聽: node對EMFILE、ENFILE不建立stdio即於nextTick發出'error', 先存取會拋TypeError且'error'無人監聽而拉倒程序
     //  可能為'找不到可執行檔'(ENOENT), '權限不足', '系統資源用盡'等, 訊息經execSpawnError去除參數值
@@ -351,6 +373,9 @@ function execCliSession(command, args = [], opt = {}) {
         if (!str) {
             return
         }
+        if (trace && !settled) {
+            trace('data', { stream: 'stdout', len: str.length })
+        }
         if (onStdout !== undefined) {
             callUser(onStdout, str) //拋錯不得使該chunk不進onLine
         }
@@ -362,6 +387,9 @@ function execCliSession(command, args = [], opt = {}) {
         let str = stderrDecoder.decode(chunk, { stream: true })
         if (!str) {
             return
+        }
+        if (trace && !settled) {
+            trace('data', { stream: 'stderr', len: str.length })
         }
         if (onStderr !== undefined) {
             callUser(onStderr, str)
@@ -375,6 +403,9 @@ function execCliSession(command, args = [], opt = {}) {
     //kill, 樹殺並等待exit, 逾killWaitMs仍未退出則以exited:false結束等待
     let kill = (errorIfStuck) => {
         killed = true
+        if (trace) {
+            trace('kill', { pid: s.pid, ms: killWaitMs })
+        }
         execProcessKillPid(proc.pid)
             .catch(() => {}) //pid可能已結束, 忽略error
         killTimer = setTimeout(() => {
@@ -392,6 +423,9 @@ function execCliSession(command, args = [], opt = {}) {
                 return
             }
             timedOut = true
+            if (trace) {
+                trace('timeout', { ms: timeoutMs })
+            }
             kill(`TIMEOUT after ${timeoutMs / 1000}s(子進程未能結束)`)
         }, timeoutMs)
     }
@@ -440,15 +474,25 @@ function execCliSession(command, args = [], opt = {}) {
     s.write = (str) => {
         let pm = genPm()
         if (settled || stopping || proc.stdin.destroyed || !proc.stdin.writable) {
+            if (trace && !settled) {
+                trace('write', { ok: false, len: null })
+            }
             pm.resolve(false)
             return pm
         }
         try {
-            proc.stdin.write(String(str), 'utf8', (err) => {
+            let sw = String(str)
+            proc.stdin.write(sw, 'utf8', (err) => {
+                if (trace && !settled) {
+                    trace('write', { ok: !err, len: sw.length })
+                }
                 pm.resolve(!err)
             })
         }
         catch {
+            if (trace && !settled) {
+                trace('write', { ok: false, len: null })
+            }
             pm.resolve(false)
         }
         return pm
@@ -480,6 +524,9 @@ function execCliSession(command, args = [], opt = {}) {
             return pmStop
         }
         stopping = true
+        if (trace) {
+            trace('stop', { ms: exitGraceMs })
+        }
         try {
             proc.stdin.end()
         }
@@ -487,6 +534,9 @@ function execCliSession(command, args = [], opt = {}) {
         graceTimer = setTimeout(() => {
             if (settled) {
                 return
+            }
+            if (trace) {
+                trace('grace', { ms: exitGraceMs })
             }
             kill('STOP_TIMEOUT(子進程未能結束)')
         }, exitGraceMs)

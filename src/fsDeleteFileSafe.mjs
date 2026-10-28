@@ -10,9 +10,9 @@ import errToStr from './_errToStr.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=null] 輸入設定物件，預設null
- * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫unlinkSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；n已達numRetry者等待後不再嘗試而接著giveup)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為不需(再)刪除而即將resolve或reject(含n與reason；reason為'not-exist'代表前置檢查標的不存在而resolve、'not-file'代表前置檢查標的非檔案而reject，此二者n為0；reason為'vanished'代表第n次嘗試得ENOENT且標的確已不存在(重試期間被他方刪除)而resolve)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY')，'fail'時為前置檢查拋錯(n為0)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
+ * @param {Object} [opt.fs=fs] 輸入fs物件，須提供statSync、lstatSync、unlinkSync，預設為Node內建fs(供測試注入假fs)；給null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
+ * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫unlinkSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為不需(再)刪除而即將resolve或reject(含n與reason；reason為'not-exist'代表前置檢查標的不存在而resolve、'not-file'代表前置檢查標的非檔案而reject，此二者n為0；reason為'vanished'代表第n次嘗試得ENOENT且標的確已不存在(重試期間被他方刪除)而resolve)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)
  * @example
  * need test in nodejs.

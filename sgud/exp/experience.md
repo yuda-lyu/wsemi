@@ -138,3 +138,18 @@
 - **獨佔基準與子代理排隊**: 基準 CPU 與 lag 兩段共約 53 分鐘,子代理 src 與測試約 15 分鐘寫完,其餘時間都在等鎖(本套件同時只持一槽,四位子代理的測試序列執行);下次宜先寫完作業書立即派出,並要求子代理把測試指令合併(例: 變異、舊測試對照、eslint 用一個腳本一個 quiet-run).
 - **主控裁定之函數缺陷修法**(原則 14,不留相容層): pmDebounce 防抖時間自「最後一次調用」起算(執行中調用亦計入,完成時不重設),d 約 1201ms 執行(原約 1321ms);cache.update 視同 fun 已執行完成(`needExec=false`);cacheBd 以 `hasCc` 旗標判定已有快取(null 亦算);setIntervalHp/setTimeoutHp 無效 interval(非正有限數,數字字串仍有效)不啟動並 `console.log` 一次 `Error('interval is not a positive finite number')`(setIntervalHp 仍回傳無作用之停止函數,setTimeoutHp 回 null);async fun 慢於 interval 時 setIntervalHp 會重疊調用(同原生 setInterval,判為非缺陷,JSDoc 已寫明);queue 的 `message` 事件傳 `qs.slice()` 淺複製快照(各消息本身不複製).
 - **sgud 整理作法**: 先把原檔複製到 `tmp/<輪>/sgud-orig/`,以腳本依 `## ` 標題切節(各節為原行之連續切片),規則帳本依類型拆 10 檔、經驗把 2026-10-21 以前 30 節抽出;驗證腳本以「標題多重集相等+依原順序重組後與原檔逐字相同」核對.腳本與輸出在主控任務 `agent-out/wsemi-run08-evidence/sgud/`.注意整理後再編輯某檔,重組比對即不再相等,故核對必須在整理當下做並留存輸出.
+
+
+## 觀察回調全面套用第 3 輪(最末輪: exec 系、下載/取得、dom 系,2026-10-29,wsemi-run09)
+
+- **流程與工時**: 基準先於實作與派子代理跑完(獨佔鎖,02:13–02:57 約 44 分鐘,CPU 8 次、lag 400:1000 共 8 次、重度阻塞 1500:3000 共 4 次);之後 6 位 sonnet(xhigh)子代理並行(15~60 分鐘),主責同時處理 run08 只列不修之缺陷(含修前紅)與文件;程式碼凍結(約 04:05)後再跑改造後負載(約 45 分鐘,期間無法跑任何測試,只做文件).下次: 作業書(共通+分組)在基準等待期間寫好(本輪即如此,基準期間只做唯讀分析與作業書,不動 src/test);C 類案多於 8 件者拆兩位子代理(gC 13 案耗時約 59 分鐘,其餘 16~33 分鐘).
+- **基準偏寬再現,但「stall 類」例外**: CPU 壓力 8 次 0 次案失敗;lag 400:1000 的 8 次中恰有一案 8/8 失敗(fsDownloadFileVerify `R12 should not treat a download as stalled while data keeps arriving…`),重度阻塞 3/4——停滯計時器與 I/O 同時被延遲時多數 stall/total 門檻案反而不失敗,只有「資料持續到達不得算停滯」這種需要計時器與 I/O 互相配合者現形.結論同 run08: 改善證據要靠「設計去除固定時刻假設」與耗時,不只靠失敗率.
+- **事件閘門**(子行程/外部程序輸出之先後與分段): 不用子行程內 `setTimeout` 隔開輸出;子行程輸出一段後輪詢標記檔,父行程於 onTrace 之 `data` 事件見到該段才建立標記檔,使順序由因果決定(execProcess #1、#3、execCli #7);「已啟動並輸出」以 `spawn`/`data` 事件為同步點再推進假時鐘(#2).
+- **Windows 樹殺測試要孫行程 detached**: 非 detached 之孫行程被 libuv 放入 KILL_ON_JOB_CLOSE 之 job,父 node 結束時孫即隨之結束,只殺父 pid 孫也會死,原案無法分辨是否真樹殺;變異「只殺該 pid」在非 detached 時存活、detached 時被擊殺.
+- **假時鐘不能與真實 undici `fetch` 併用**: 前一案在假時鐘期間建立的 undici 內部計時器還原後殘留,於下一個假時鐘案中被誤清(實測後案之 600ms 總時限計時器整段不觸發).下載類時間門檻案一律改記憶體內回應(`ReadableStream` 由測試放行)加假時鐘;伺服器加 `Connection: close` 會觸發 undici `assert(!this.paused)` 使整個測試檔崩潰.
+- **以 `performance.now`/`hrtime` 計時者假時鐘控制不了**(fsDownloadFileVerifyCore 之單調時鐘案 #20): 放大比例使真實耗時遠小於剩餘預算,只靠事件斷言語意.
+- **無計時器之函數(execProcessKillPid)**: 其 C 類案之固定 `delay` 在測試端,改等子行程輸出就緒標記、`exit` 事件與 `process.kill(pid, 0)` 輪詢(真實計時器防懸置);src 仍加 `start`/`done`/`fail` 事件供測試與診斷,但不是為了測試硬塞計時器.
+- **fsEvem 事件名稱即檔名**: 修法是驗證(單一安全檔名)而非改檔名機制——隨機檔名會讓同名事件不再覆寫同一檔、資料夾無限增長;收端改 `path.basename` 才能讓含 `.` 之名稱原樣送達;`getFileTrueName` 去掉最後一段是原缺陷根源.紅燈測試的夾具要把「逃出去的檔」限制在夾具內(`root/inner/fd`),否則修前紅燈本身會在 repo 根留下檔案.
+- **fs 注入驗證只檢 `statSync`**: `fsExistsCore` 只吞 `statSync` 的錯誤,故 `fs` 為 null 時成功假象只出在 `statSync`;缺 `lstatSync`/`unlinkSync`/`rmSync` 者其 TypeError 本在 try 內以字串 reject,不需另檢(一度檢三個函數,導致既有半成品假 fs 測試失敗,縮回).
+- **fsEnsureBins 離線缺檔不留空夾**: 站點是 `mkWork`(離線判定前建暫存夾)與 fsDownloadFileVerifyCore 建 `<sha256>` 夾;最小修法是離線且無鏡像者先判缺檔再建夾,有鏡像而取不到者記下「此刻尚不存在」之夾並於 reject 前由深而淺 `rmdirSync` 只清空夾.殘留: 非 `E_OFFLINE_MISSING` 之離線失敗仍留空快取根.
+- **子代理管理教訓**: ①同名新工具檔會互相覆蓋(gA/gB 都建 `execTraceKit.mjs`,後者蓋掉前者)——作業書須規定工具檔名加函數前綴;②子代理以 `TaskStop` 停掉排隊中之 mocha 背景工作會留下殘留鎖(以 `quiet-run --release-stale --cwd <repo>` 回收,持有者已結束者才處理);③子代理自述曾用一次 `cd`(守門 hook 應擋,報告據實列出);④gC 耗時約 59 分鐘(其餘 16~33 分鐘),主因是 13 案各需新工具與記憶體內回應載具;子代理自述之耗時不可信,以完成通知之 duration 為準.

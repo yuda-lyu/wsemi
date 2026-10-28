@@ -12,6 +12,12 @@ import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsEnsureBins from '../src/fsEnsureBins.mjs'
 import fsEnsureBinsCore from '../src/fsEnsureBinsCore.mjs'
 import zipStore from './tools/zipStore.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+
+
+//防懸置上限用模組載入時保存之真實計時器: 假時鐘(useFakeClock)會取代globalThis.setTimeout/clearTimeout(規格P5③)
+const realSetTimeout = setTimeout
+const realClearTimeout = clearTimeout
 
 
 //規格: 外部執行檔之存放下載校驗與離線(制式規格, opensrcOper之dspec)§3~§6與§8 T3~T8之wsemi層; 規則帳本R-BIN-ENSURE-01; 各案註解標明對應之規格條號
@@ -1229,15 +1235,58 @@ describe(`fsEnsureBins with a local server`, function() {
         assert.strict.equal(eA.code, 'E_OFFLINE_MISSING')
         assert.strict.equal(fs.readFileSync(rB['tool.exe']).equals(tool), true)
         //不同fetch各自取得
+        //三個呼叫皆須在任一回應寫入快取前送出請求(否則較慢者命中快取而少一筆請求): 由伺服器端閘門控制何時放行回應,
+        //放行條件為onTrace事件(三個呼叫皆已登記取得)與伺服器端已到達之請求數, 順序由事件因果決定, 不靠回應延遲多久
         let root = fx('sharefetch')
+        let held = [] //已到達伺服器、尚未放行之請求
+        let open = false
+        let notify = null
+        let respond = (res) => {
+            res.writeHead(200, { 'content-length': String(tool.length) })
+            res.end(tool)
+        }
         routes[`${RAW1}bin/tool.exe`] = (req, res) => {
-            setTimeout(() => {
-                res.writeHead(200, { 'content-length': String(tool.length) })
-                res.end(tool)
-            }, 200)
+            if (open) {
+                respond(res)
+                return
+            }
+            held.push(res)
+            if (notify) {
+                notify()
+            }
+        }
+        let waitHeld = (n) => {
+            return new Promise((resolve, reject) => {
+                let t = realSetTimeout(() => {
+                    reject(new Error(`only ${held.length} of ${n} requests arrived`))
+                }, 20000) //只防懸置
+                notify = () => {
+                    if (held.length >= n) {
+                        realClearTimeout(t)
+                        resolve()
+                    }
+                }
+                notify()
+            })
         }
         let f2 = (u, init) => mapFetch(u, init)
-        await Promise.all([ens(mf([fTool()]), { pkgRoot: root }), ens(mf([fTool()]), { pkgRoot: root, fetch: f2 }), ens(mf([fTool()]), { pkgRoot: root, fs: { ...fs } })])
+        let trs = [traceRec(), traceRec(), traceRec()]
+        let pms = [
+            ens(mf([fTool()]), { pkgRoot: root, onTrace: trs[0].on }),
+            ens(mf([fTool()]), { pkgRoot: root, fetch: f2, onTrace: trs[1].on }),
+            ens(mf([fTool()]), { pkgRoot: root, fs: { ...fs }, onTrace: trs[2].on }),
+        ]
+        try {
+            let jobs = await Promise.all(trs.map((tr) => tr.wait((e) => e.type === 'job')))
+            await waitHeld(jobs.filter((e) => e.mode === 'new').length) //各自取得者之請求皆已到達伺服器(尚無任何回應)
+            assert.strict.deepStrictEqual(jobs.map((e) => e.mode), ['new', 'new', 'new']) //不同fetch、不同fs物件不共用同一次取得
+            assert.strict.equal(held.length, 3)
+        }
+        finally {
+            open = true //無論斷言成敗皆放行, 不使請求懸置
+            held.forEach(respond)
+        }
+        await Promise.all(pms)
         assert.strict.equal(hits.filter((v) => v.endsWith('bin/tool.exe')).length, 3) //不同fetch、不同fs物件各自取得
         //同一fs物件但兩次呼叫之間換了方法: 不共用
         let root2 = fx('sharemethod')
@@ -1319,11 +1368,30 @@ describe(`fsEnsureBins with a local server`, function() {
             }
             return mapFetch(u, init)
         }
-        let t0 = Date.now()
-        let r = await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: root, fetch: f, stallMs: 300 })
-        assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true) //退回基準清單
-        assert.strict.equal(Date.now() - t0 < 10000, true)
-        assert.strict.equal(cancels, 1)
+        //門檻本身是規格(stallMs 300): 假時鐘推進虛擬時間, 本機下載(真實I/O)不受負載造成之假停滯影響; 以onTrace事件為同步點
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let pm = ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: root, fetch: f, stallMs: 300, onTrace: tr.on })
+            await tr.wait((e) => e.type === 'trunk' && e.phase === 'fetch') //主幹清單已開始取(時限計時器已建立)
+            await clock.advance(299)
+            //opt.stallMs內不放棄主幹清單, 本體亦未取消
+            assert.strict.equal(tr.events.some((e) => e.type === 'trunk' && e.phase === 'fail'), false)
+            assert.strict.equal(cancels, 0)
+            await clock.advance(1)
+            let fail = await tr.wait((e) => e.type === 'trunk' && e.phase === 'fail')
+            assert.strict.equal(fail.code, 'E_TIMEOUT') //逾opt.stallMs而放棄
+            assert.strict.equal(cancels, 1) //放棄時取消其本體
+            let iCancel = tr.events.findIndex((e) => e.type === 'cancel')
+            assert.strict.deepStrictEqual([tr.events[iCancel].why, iCancel < tr.events.indexOf(fail)], ['unread', true]) //本體已回標頭但永不送資料: 取消讀取中之本體, 先於放棄之通知
+            let r = await pm
+            assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true) //退回基準清單
+            assert.strict.equal(tr.events.find((e) => e.type === 'manifest').source, 'baseline')
+            assert.strict.equal(cancels, 1)
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should not use a trunk manifest larger than 1MB even if it is valid JSON (M5)`, async function() {
@@ -1573,17 +1641,45 @@ describe(`fsEnsureBins with a local server`, function() {
     it(`should keep the work folder and report it when the extraction program does not exit after termination (D5)`, async function() {
         this.timeout(30000)
         let root = fx('noexit')
+        let kills = 0
         let fake = () => {
             let cp = new EventEmitter()
             cp.stderr = new EventEmitter()
-            cp.kill = () => {}
+            cp.kill = () => {
+                kills++ //終止後仍不結束
+            }
             return cp
         }
-        let e = await catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake, totalMs: 500 }))
-        assert.strict.equal(e.code, 'E_EXTRACT')
-        assert.strict.equal(Array.isArray(e.leftovers) && e.leftovers.length, 1)
-        assert.strict.equal(fs.existsSync(e.leftovers[0].fp), true) //未確認結束前不刪
-        fs.rmSync(e.leftovers[0].fp, { recursive: true, force: true })
+        //門檻本身是規格(解壓逾opt.totalMs 500即終止, 終止後等其結束至多5000ms): 假時鐘推進虛擬時間;
+        //壓縮檔之本機下載(真實I/O)不受負載影響, 以解壓開始之onTrace事件為同步點才推進
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let pmErr = catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake, totalMs: 500, onTrace: tr.on })) //先掛上錯誤處理: 推進假時鐘期間即會reject
+            await tr.wait((e) => e.type === 'extract') //下載與準備已完成, 解壓開始(解壓之計時器已建立)
+            await clock.advance(499)
+            assert.strict.equal(tr.events.some((e) => e.type === 'kill'), false) //opt.totalMs內不終止
+            assert.strict.equal(kills, 0)
+            await clock.advance(1)
+            await tr.wait((e) => e.type === 'kill')
+            assert.strict.equal(kills, 1) //逾時即終止解壓程式
+            await clock.advance(4999)
+            assert.strict.equal(tr.events.some((e) => e.type === 'extracted'), false) //終止後等待其結束至多5000ms, 未到不放棄
+            await clock.advance(1)
+            let x = await tr.wait((e) => e.type === 'extracted')
+            assert.strict.deepStrictEqual([x.result, x.exited], ['timeout', false]) //仍未結束: 放棄等待
+            let e = await pmErr
+            assert.strict.equal(e.code, 'E_EXTRACT')
+            assert.strict.equal(Array.isArray(e.leftovers) && e.leftovers.length, 1)
+            assert.strict.equal(fs.existsSync(e.leftovers[0].fp), true) //未確認結束前不刪
+            let cl = tr.events.find((v) => v.type === 'cleanup')
+            assert.strict.deepStrictEqual([cl.name, cl.ok], ['k6.exe', false]) //暫存夾保留(未刪)
+            assert.strict.equal(tr.events.some((v) => v.type === 'place' || v.type === 'ready'), false)
+            fs.rmSync(e.leftovers[0].fp, { recursive: true, force: true })
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should report leftovers on a rejection and to every caller sharing a get (D5)`, async function() {
@@ -1635,28 +1731,63 @@ describe(`fsEnsureBins with a local server`, function() {
     })
 
     it(`should cancel the body of a trunk manifest response that settles as the timeout wins (M5)`, async function() {
-        let root = fx('m5race')
         routes[`${RAWF}${C1}/bin/tool.exe`] = tool
-        let cancels = 0
-        let f = (u, init) => {
-            fetchCalls.push(String(u))
-            if (String(u).endsWith('/manifest.json')) {
-                return new Promise((resolve) => {
-                    init.signal.addEventListener('abort', () => {
-                        resolve(new Response(new ReadableStream({
-                            cancel() {
-                                cancels++
-                            },
-                        }), { status: 200 }))
+        //兩種落定時點: 中止當下同步落定(逾時勝出之同時), 與中止後再經一次真實的事件迴圈才落定(放棄等待之後才到的回應), 兩者本體皆須被取消恰1次
+        for (let later of [false, true]) {
+            let root = fx(`m5race-${later ? 'later' : 'sync'}`)
+            let cancels = 0
+            let f = (u, init) => {
+                fetchCalls.push(String(u))
+                if (String(u).endsWith('/manifest.json')) {
+                    return new Promise((resolve) => {
+                        init.signal.addEventListener('abort', () => {
+                            let settle = () => {
+                                resolve(new Response(new ReadableStream({
+                                    cancel() {
+                                        cancels++
+                                    },
+                                }), { status: 200 }))
+                            }
+                            if (later) {
+                                setImmediate(settle) //真實之setImmediate不受假時鐘影響
+                            }
+                            else {
+                                settle()
+                            }
+                        })
                     })
-                })
+                }
+                return mapFetch(u, init)
             }
-            return mapFetch(u, init)
+            //門檻本身是規格(stallMs 200): 假時鐘推進虛擬時間; 逾時勝出後才落定之回應, 以其本體被取消之onTrace事件為同步點(不再以固定等待後檢查)
+            let clock = useFakeClock()
+            try {
+                let tr = traceRec()
+                let pm = ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: root, fetch: f, stallMs: 200, onTrace: tr.on })
+                await tr.wait((e) => e.type === 'trunk' && e.phase === 'fetch')
+                await clock.advance(199)
+                assert.strict.equal(tr.events.some((e) => e.type === 'trunk' && e.phase === 'fail'), false, `${later}`) //opt.stallMs內不放棄
+                assert.strict.equal(cancels, 0)
+                await clock.advance(1)
+                let c = await tr.wait((e) => e.type === 'cancel')
+                let fail = await tr.wait((e) => e.type === 'trunk' && e.phase === 'fail')
+                assert.strict.equal(fail.code, 'E_TIMEOUT')
+                if (later) {
+                    assert.strict.equal(c.why, 'late') //放棄等待後才落定之回應
+                }
+                else {
+                    assert.strict.equal(['late', 'settled'].includes(c.why), true) //逾時勝出之同時落定之回應(兩處擇一取消)
+                }
+                assert.strict.equal(cancels, 1)
+                let r = await pm
+                assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true) //退回基準清單
+                assert.strict.equal(cancels, 1) //恰取消1次(兩處擇一, 不重複)
+                assert.strict.equal(tr.events.filter((e) => e.type === 'cancel').length, 1)
+            }
+            finally {
+                clock.restore()
+            }
         }
-        let r = await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: root, fetch: f, stallMs: 200 })
-        assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true)
-        await new Promise((resolve) => setTimeout(resolve, 100))
-        assert.strict.equal(cancels, 1)
     })
 
     it(`should not loop forever when a write makes no progress, and report a copy that can not be removed (M5)`, async function() {
@@ -1692,6 +1823,356 @@ describe(`fsEnsureBins with a local server`, function() {
         ])
         assert.strict.equal(e1 && e1.code, 'E_EXTRACT')
         assert.strict.equal(fs.readFileSync(r2['k6.exe']).equals(exe), true)
+    })
+
+    //---------------- 觀察回調(opt.onTrace; 規則帳本R-TRACE-01) ----------------
+
+    //各type之固定欄位(皆為原始值; 欄位名不得為type, 與JSDoc之列舉一致)
+    let TRACE_FIELDS = {
+        manifest: ['source', 'files'],
+        trunk: ['phase', 'code'],
+        cancel: ['why'],
+        last: ['ok'],
+        job: ['name', 'mode'],
+        cache: ['name', 'hit'],
+        mirror: ['name', 'file', 'result'],
+        offline: ['name'],
+        work: ['name'],
+        download: ['name', 'file'],
+        downloaded: ['name', 'file', 'ok', 'code'],
+        extract: ['name'],
+        kill: ['name'],
+        extracted: ['name', 'result', 'code', 'exited'],
+        place: ['name'],
+        cleanup: ['name', 'ok'],
+        ready: ['name'],
+        fail: ['name', 'code'],
+        tidy: ['n'],
+        settle: ['ok', 'code'],
+    }
+    let checkEvents = (events) => {
+        for (let e of events) {
+            assert.strict.equal(Object.isFrozen(e), true, e.type)
+            assert.strict.notEqual(TRACE_FIELDS[e.type], undefined, `unknown type ${e.type}`)
+            assert.strict.deepStrictEqual(Object.keys(e).sort(), ['type', ...TRACE_FIELDS[e.type]].sort(), e.type)
+            for (let v of Object.values(e)) {
+                assert.strict.equal(v === null || ['string', 'number', 'boolean'].includes(typeof v), true, e.type)
+            }
+        }
+    }
+    let typesOf = (tr, name) => {
+        return tr.events.filter((e) => e.name === name).map((e) => e.type)
+    }
+    let flush = () => {
+        return new Promise((resolve) => {
+            setImmediate(resolve)
+        })
+    }
+    let fakeTar = (code) => {
+        return () => {
+            let cp = new EventEmitter()
+            cp.stderr = new EventEmitter()
+            cp.kill = () => {}
+            setImmediate(() => {
+                if (code === 'enoent') {
+                    let err = new Error('spawn tar ENOENT')
+                    err.code = 'ENOENT'
+                    cp.emit('error', err)
+                    cp.emit('close', -2)
+                }
+                else {
+                    cp.stderr.emit('data', 'tar: something failed')
+                    cp.emit('close', code)
+                }
+            })
+            return cp
+        }
+    }
+
+    it(`should give the same result whether onTrace is not given, records, throws, returns a rejection or is not a function, without unhandled rejections (P3, P4)`, async function() {
+        let calls = { throws: 0, rejects: 0 }
+        let kinds = {
+            none: () => undefined,
+            record: () => traceRec().on,
+            throws: () => () => {
+                calls.throws++
+                throw new Error('observer failed')
+            },
+            rejects: () => () => {
+                calls.rejects++
+                return Promise.reject(new Error('observer rejected'))
+            },
+            notfun: () => 'abc',
+        }
+        let run = async (mk) => {
+            let root = fx('p3')
+            let esc = JSON.stringify(root).slice(1, -1)
+            let norm = (v) => JSON.parse(JSON.stringify(v).split(esc).join('<root>'))
+            let cb = mk()
+            let o = cb === undefined ? {} : { onTrace: cb }
+            //連網取得(直接檔與解壓檔)
+            let r = await ens(mf([fTool(), fK6()]), { pkgRoot: root, ...o })
+            let s1 = { keys: Object.keys(r), paths: Object.values(r).map((v) => path.relative(root, v)), ok: [fs.readFileSync(r['tool.exe']).equals(tool), fs.readFileSync(r['k6.exe']).equals(exe)], leftovers: r.leftovers.length }
+            //離線缺檔
+            let e = await catchErr(ens(mf([fTool(), fK6(), fFf()]), { pkgRoot: root, offline: true, ...o }))
+            let s2 = norm({ code: e.code, step: e.step, names: e.missing.map((v) => v.name), message: e.message })
+            //下載失敗
+            let e3 = await catchErr(ens(mf([fTool({ path: 'bin/none.exe' })]), { pkgRoot: fx('p3b'), maxAttempts: 1, ...o }))
+            let s3 = { code: e3.code, status: e3.status, bin: e3.bin }
+            return { s1, s2, s3, tree: walk(root) }
+        }
+        let n0 = unhandled.length
+        let base = await run(kinds.none)
+        for (let k of Object.keys(kinds)) {
+            let r = await run(kinds[k])
+            assert.strict.deepStrictEqual(r, base, k)
+        }
+        await flush()
+        await flush()
+        assert.strict.deepStrictEqual(unhandled.slice(n0), [])
+        assert.strict.equal(calls.throws > 0 && calls.rejects > 0, true) //拋錯與回傳rejection之回調確實被呼叫過
+    })
+
+    it(`should notify frozen events of fixed fields with primitive values, without a receiver, in the order of what happened (P4)`, async function() {
+        let seen = []
+        let recv = []
+        let on = function(e) {
+            recv.push(this)
+            seen.push(e)
+        }
+        //釘選、連網: 直接檔、解壓檔、分割檔
+        await ens(mf([fTool(), fK6(), fFf()]), { pkgRoot: fx('ev1'), onTrace: on })
+        //主幹模式: 取到主幹清單(含副本寫入)
+        setFloating(mfF([strip(fT(tool2))], { commit: C2 }))
+        await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev2'), onTrace: on })
+        //離線缺檔
+        await catchErr(ens(mf([fTool(), fK6()]), { pkgRoot: fx('ev3'), offline: true, onTrace: on }))
+        assert.strict.equal(seen.length > 0, true)
+        assert.strict.equal(recv.every((v) => v === undefined), true) //不帶接收者
+        checkEvents(seen)
+        let types = new Set(seen.map((e) => e.type))
+        for (let t of ['manifest', 'trunk', 'last', 'job', 'cache', 'offline', 'work', 'download', 'downloaded', 'extract', 'extracted', 'place', 'cleanup', 'ready', 'tidy', 'settle']) {
+            assert.strict.equal(types.has(t), true, t)
+        }
+    })
+
+    it(`should notify the events of getting files in order: job, cache, work, download, downloaded, extract, extracted, place, cleanup, ready, then settle`, async function() {
+        let tr = traceRec()
+        let r = await ens(mf([fTool(), fK6(), fFf()]), { pkgRoot: fx('ev-order'), onTrace: tr.on })
+        assert.strict.deepStrictEqual(Object.keys(r), ['tool.exe', 'k6.exe', 'ffmpeg.exe'])
+        assert.strict.deepStrictEqual(tr.events[0], { type: 'manifest', source: 'base', files: 3 })
+        assert.strict.deepStrictEqual(typesOf(tr, 'tool.exe'), ['job', 'cache', 'download', 'downloaded', 'ready'])
+        assert.strict.deepStrictEqual(typesOf(tr, 'k6.exe'), ['job', 'cache', 'work', 'download', 'downloaded', 'extract', 'extracted', 'place', 'cleanup', 'ready'])
+        assert.strict.deepStrictEqual(typesOf(tr, 'ffmpeg.exe'), ['job', 'cache', 'work', 'download', 'downloaded', 'download', 'downloaded', 'download', 'downloaded', 'extract', 'extracted', 'place', 'cleanup', 'ready'])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'download').map((e) => e.file), ['tool.exe', 'k6-v1.zip', 'ff.zip.001', 'ff.zip.002', 'ff.zip.003'])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'cache').map((e) => e.hit), [false, false, false])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'job').map((e) => e.mode), ['new', 'new', 'new'])
+        assert.strict.equal(tr.events.filter((e) => e.type === 'downloaded').every((e) => e.ok === true && e.code === null), true)
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'extracted').map((e) => [e.result, e.code, e.exited]), [['exit', 0, true], ['exit', 0, true]])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'cleanup').map((e) => e.ok), [true, true])
+        assert.strict.deepStrictEqual(tr.events[tr.events.length - 1], { type: 'settle', ok: true, code: null }) //settle為最後, 且於resolve之前
+        assert.strict.equal(tr.events.filter((e) => e.type === 'settle').length, 1)
+    })
+
+    it(`should notify cache hits (cache hit true and ready without download) on the second call`, async function() {
+        let root = fx('ev-cache')
+        await ens(mf([fTool(), fK6()]), { pkgRoot: root })
+        let tr = traceRec()
+        await ens(mf([fTool(), fK6()]), { pkgRoot: root, fetch: failFetch, onTrace: tr.on })
+        assert.strict.deepStrictEqual(typesOf(tr, 'tool.exe'), ['job', 'cache', 'ready'])
+        assert.strict.deepStrictEqual(typesOf(tr, 'k6.exe'), ['job', 'cache', 'ready'])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'cache').map((e) => e.hit), [true, true])
+    })
+
+    it(`should notify the mirror results: ok, miss and rejected (falls back to GitHub when online)`, async function() {
+        let root = fx('ev-mirror-ok')
+        let mirror = path.join(root, 'mirror')
+        putMirror(mirror, tool, 'tool.exe')
+        let tr = traceRec()
+        await ens(mf([fTool()]), { pkgRoot: root, mirror, fetch: failFetch, onTrace: tr.on })
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'mirror'), [{ type: 'mirror', name: 'tool.exe', file: 'tool.exe', result: 'ok' }])
+        assert.strict.deepStrictEqual(typesOf(tr, 'tool.exe'), ['job', 'cache', 'mirror', 'ready']) //鏡像取得: 不下載
+        let root2 = fx('ev-mirror-miss')
+        let tr2 = traceRec()
+        await ens(mf([fTool()]), { pkgRoot: root2, mirror: path.join(root2, 'mirror'), onTrace: tr2.on })
+        assert.strict.deepStrictEqual(tr2.events.filter((e) => e.type === 'mirror').map((e) => e.result), ['miss'])
+        assert.strict.deepStrictEqual(typesOf(tr2, 'tool.exe'), ['job', 'cache', 'mirror', 'download', 'downloaded', 'ready'])
+        let root3 = fx('ev-mirror-rej')
+        let mirror3 = path.join(root3, 'mirror')
+        putMirror(mirror3, toolBad, 'tool.exe', 'w-t', tool)
+        let tr3 = traceRec()
+        await ens(mf([fTool()]), { pkgRoot: root3, mirror: mirror3, onTrace: tr3.on })
+        assert.strict.deepStrictEqual(tr3.events.filter((e) => e.type === 'mirror').map((e) => e.result), ['rejected'])
+        assert.strict.deepStrictEqual(typesOf(tr3, 'tool.exe'), ['job', 'cache', 'mirror', 'download', 'downloaded', 'ready'])
+        //http鏡像404亦為miss
+        let tr4 = traceRec()
+        await ens(mf([fTool()]), { pkgRoot: fx('ev-mirror-http'), mirror: `http://127.0.0.1:${port}/mirror`, onTrace: tr4.on })
+        assert.strict.deepStrictEqual(tr4.events.filter((e) => e.type === 'mirror').map((e) => e.result), ['miss'])
+    })
+
+    it(`should notify offline: offline for every missing file, tidy with how many empty folders it removed, then settle with E_OFFLINE_MISSING (O3)`, async function() {
+        //無鏡像: 不建任何資料夾, tidy為0
+        let tr = traceRec()
+        let root = fx('ev-off1')
+        let e = await catchErr(ens(mf([fTool(), fK6()]), { pkgRoot: root, offline: true, onTrace: tr.on }))
+        assert.strict.equal(e.code, 'E_OFFLINE_MISSING')
+        assert.strict.deepStrictEqual(typesOf(tr, 'tool.exe'), ['job', 'cache', 'offline'])
+        assert.strict.deepStrictEqual(typesOf(tr, 'k6.exe'), ['job', 'cache', 'offline']) //離線判定先於建暫存夾: 無work
+        assert.strict.deepStrictEqual(tr.events.slice(-2), [{ type: 'tidy', n: 0 }, { type: 'settle', ok: false, code: 'E_OFFLINE_MISSING' }])
+        assert.strict.equal(tr.events.some((v) => v.type === 'fail'), false) //離線缺檔由彙整回報, 非單檔失敗
+        assert.strict.deepStrictEqual(walk(root), [])
+        //空的本地鏡像 + 解壓檔: 建過暫存夾(含快取根)後清掉
+        let tr2 = traceRec()
+        let root2 = fx('ev-off2')
+        fs.mkdirSync(path.join(root2, 'mirror'))
+        await catchErr(ens(mf([fK6()]), { pkgRoot: root2, mirror: path.join(root2, 'mirror'), offline: true, onTrace: tr2.on }))
+        assert.strict.deepStrictEqual(typesOf(tr2, 'k6.exe'), ['job', 'cache', 'mirror', 'work', 'mirror', 'offline', 'cleanup'])
+        assert.strict.deepStrictEqual(tr2.events.find((v) => v.type === 'tidy'), { type: 'tidy', n: 1 }) //快取根
+        assert.strict.deepStrictEqual(walk(root2), ['mirror'])
+        //鏡像檔不符 + 直接檔: 下載核心建立之<sha256>夾與快取根皆清掉
+        let tr3 = traceRec()
+        let root3 = fx('ev-off3')
+        let tool2Bad = Buffer.from(tool2)
+        tool2Bad[10] = (tool2Bad[10] + 1) % 256 //同長度、內容不同
+        putMirror(path.join(root3, 'mirror'), tool2Bad, 'tool2.exe', 'w-t', tool2)
+        await catchErr(ens(mf([{ name: 'tool2.exe', path: 'bin/tool2.exe', sha256: sha(tool2), size: tool2.length }]), { pkgRoot: root3, mirror: path.join(root3, 'mirror'), offline: true, onTrace: tr3.on }))
+        assert.strict.deepStrictEqual(typesOf(tr3, 'tool2.exe'), ['job', 'cache', 'mirror', 'offline'])
+        assert.strict.deepStrictEqual(tr3.events.find((v) => v.type === 'tidy'), { type: 'tidy', n: 2 })
+        assert.strict.deepStrictEqual(walk(root3).filter((v) => !v.startsWith('mirror')), [])
+    })
+
+    it(`should notify job as new, join (a concurrent call of the same file shares the get) and solo (options that can not be serialized are not shared)`, async function() {
+        let root = fx('ev-job')
+        let tr1 = traceRec()
+        let tr2 = traceRec()
+        await Promise.all([ens(mf([fTool()]), { pkgRoot: root, onTrace: tr1.on }), ens(mf([fTool()]), { pkgRoot: root, onTrace: tr2.on })])
+        assert.strict.deepStrictEqual(tr1.events.filter((e) => e.type === 'job'), [{ type: 'job', name: 'tool.exe', mode: 'new' }])
+        assert.strict.deepStrictEqual(tr2.events.filter((e) => e.type === 'job'), [{ type: 'job', name: 'tool.exe', mode: 'join' }])
+        assert.strict.deepStrictEqual(typesOf(tr2, 'tool.exe'), ['job']) //共用者不另行取得(無cache、download)
+        assert.strict.equal(hits.filter((v) => v.endsWith('bin/tool.exe')).length, 1)
+        let tr3 = traceRec()
+        let e = await catchErr(ens(mf([fTool()]), { pkgRoot: fx('ev-solo'), offline: true, maxAttempts: 10n, onTrace: tr3.on })) //BigInt無法序列化
+        assert.strict.equal(e.code, 'E_OFFLINE_MISSING')
+        assert.strict.deepStrictEqual(tr3.events.filter((v) => v.type === 'job'), [{ type: 'job', name: 'tool.exe', mode: 'solo' }])
+    })
+
+    it(`should notify the trunk manifest: fetch, ok with the copy written, fail with the code, and baseline (M5, T8)`, async function() {
+        //取得: fetch→last→ok→manifest remote
+        setFloating(mfF([strip(fT(tool2))], { commit: C2 }))
+        let tr = traceRec()
+        await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev-trunk-ok'), onTrace: tr.on })
+        assert.strict.deepStrictEqual(tr.events.slice(0, 4), [
+            { type: 'trunk', phase: 'fetch', code: null },
+            { type: 'last', ok: true },
+            { type: 'trunk', phase: 'ok', code: null },
+            { type: 'manifest', source: 'remote', files: 1 },
+        ])
+        //副本寫入失敗: last為false, 仍取得主幹清單
+        let fsFail = {
+            ...fs,
+            writeSync: () => {
+                let err = new Error('EIO: i/o error, write')
+                err.code = 'EIO'
+                throw err
+            },
+        }
+        let tr2 = traceRec()
+        await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev-trunk-last'), fs: fsFail, onTrace: tr2.on })
+        assert.strict.deepStrictEqual(tr2.events.slice(0, 4).map((e) => [e.type, e.ok, e.phase]), [['trunk', undefined, 'fetch'], ['last', false, undefined], ['trunk', undefined, 'ok'], ['manifest', undefined, undefined]])
+        //404: 回應本體取消(status)→fail(E_HTTP)→退回基準
+        delete routes[`${RAWF}master/bin/manifest.json`]
+        let tr3 = traceRec()
+        await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev-trunk-404'), onTrace: tr3.on })
+        assert.strict.deepStrictEqual(tr3.events.slice(0, 4), [
+            { type: 'trunk', phase: 'fetch', code: null },
+            { type: 'cancel', why: 'status' },
+            { type: 'trunk', phase: 'fail', code: 'E_HTTP' },
+            { type: 'manifest', source: 'baseline', files: 1 },
+        ])
+        //無效之主幹清單: E_MANIFEST
+        setFloating('{ not json')
+        let tr4 = traceRec()
+        await ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev-trunk-bad'), onTrace: tr4.on })
+        assert.strict.deepStrictEqual(tr4.events.find((e) => e.type === 'trunk' && e.phase === 'fail'), { type: 'trunk', phase: 'fail', code: 'E_MANIFEST' })
+        assert.strict.equal(tr4.events.some((e) => e.type === 'last'), false) //未取得有效清單不寫副本
+        //離線: 不取主幹清單
+        let tr5 = traceRec()
+        let e5 = await catchErr(ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: fx('ev-trunk-off'), offline: true, onTrace: tr5.on }))
+        assert.strict.equal(e5.code, 'E_OFFLINE_MISSING')
+        assert.strict.equal(tr5.events.some((e) => e.type === 'trunk'), false)
+        assert.strict.deepStrictEqual(tr5.events[0], { type: 'manifest', source: 'baseline', files: 1 })
+    })
+
+    it(`should notify a failed file: downloaded with ok false and the code, fail, then settle with the same code (E3)`, async function() {
+        let tr = traceRec()
+        let e = await catchErr(ens(mf([fTool({ path: 'bin/none.exe' })]), { pkgRoot: fx('ev-fail-dl'), maxAttempts: 1, onTrace: tr.on }))
+        assert.strict.equal(e.code, 'E_HTTP')
+        assert.strict.deepStrictEqual(typesOf(tr, 'tool.exe'), ['job', 'cache', 'download', 'downloaded', 'fail'])
+        assert.strict.deepStrictEqual(tr.events.find((v) => v.type === 'downloaded'), { type: 'downloaded', name: 'tool.exe', file: 'tool.exe', ok: false, code: 'E_HTTP' })
+        assert.strict.deepStrictEqual(tr.events.slice(-2), [{ type: 'fail', name: 'tool.exe', code: 'E_HTTP' }, { type: 'settle', ok: false, code: 'E_HTTP' }])
+        //解壓程式以非0結束
+        let tr2 = traceRec()
+        let e2 = await catchErr(ens(mf([fK6()]), { pkgRoot: fx('ev-fail-tar'), spawn: fakeTar(2), onTrace: tr2.on }))
+        assert.strict.equal(e2.code, 'E_EXTRACT')
+        assert.strict.deepStrictEqual(tr2.events.find((v) => v.type === 'extracted'), { type: 'extracted', name: 'k6.exe', result: 'exit', code: 2, exited: true })
+        assert.strict.deepStrictEqual(typesOf(tr2, 'k6.exe'), ['job', 'cache', 'work', 'download', 'downloaded', 'extract', 'extracted', 'cleanup', 'fail']) //失敗: 無place與ready, 暫存夾已刪
+        //解壓程式不存在
+        let tr3 = traceRec()
+        await catchErr(ens(mf([fK6()]), { pkgRoot: fx('ev-fail-enoent'), spawn: fakeTar('enoent'), onTrace: tr3.on }))
+        assert.strict.deepStrictEqual(tr3.events.find((v) => v.type === 'extracted'), { type: 'extracted', name: 'k6.exe', result: 'error', code: null, exited: null })
+    })
+
+    it(`should notify cleanup with ok false when the work folder can not be removed (D5)`, async function() {
+        let fsKeep = {
+            ...fs,
+            rmSync: (p, o) => {
+                if (String(p).includes('.work-')) {
+                    let err = new Error(`EBUSY: resource busy or locked, rmdir '${p}'`)
+                    err.code = 'EBUSY'
+                    throw err
+                }
+                return fs.rmSync(p, o)
+            },
+        }
+        let tr = traceRec()
+        let r = await ens(mf([fK6()]), { pkgRoot: fx('ev-cleanup'), fs: fsKeep, onTrace: tr.on })
+        assert.strict.deepStrictEqual(typesOf(tr, 'k6.exe').slice(-3), ['place', 'cleanup', 'ready'])
+        assert.strict.deepStrictEqual(tr.events.find((v) => v.type === 'cleanup'), { type: 'cleanup', name: 'k6.exe', ok: false })
+        fs.rmSync(r.leftovers[0].fp, { recursive: true, force: true })
+    })
+
+    it(`should notify settle with E_ARG and E_MANIFEST for a bad argument or manifest, and with the unknown name after manifest (E3)`, async function() {
+        let tr = traceRec()
+        let e = await catchErr(ens(mf([fTool()]), { onTrace: tr.on })) //無pkgRoot
+        assert.strict.equal(e.code, 'E_ARG')
+        assert.strict.deepStrictEqual(tr.events, [{ type: 'settle', ok: false, code: 'E_ARG' }])
+        let tr2 = traceRec()
+        let e2 = await catchErr(ens({ schema: 2 }, { pkgRoot: fx('ev-arg'), onTrace: tr2.on }))
+        assert.strict.equal(e2.code, 'E_MANIFEST')
+        assert.strict.deepStrictEqual(tr2.events, [{ type: 'settle', ok: false, code: 'E_MANIFEST' }])
+        let tr3 = traceRec()
+        let e3 = await catchErr(ens(mf([fTool()]), { pkgRoot: fx('ev-arg2'), names: ['nope.exe'], onTrace: tr3.on }))
+        assert.strict.equal(e3.code, 'E_ARG')
+        assert.strict.deepStrictEqual(tr3.events, [{ type: 'manifest', source: 'base', files: 1 }, { type: 'settle', ok: false, code: 'E_ARG' }])
+    })
+
+    it(`should treat an onTrace getter that throws as not given, and forward onTrace through the public fsEnsureBins`, async function() {
+        let root = fx('ev-getter')
+        let o = { fs, path, crypto, Readable, pipeline, spawn, env: {}, fetch: mapFetch, retryDelayMs: 10, pkgRoot: root }
+        Object.defineProperty(o, 'onTrace', {
+            enumerable: true,
+            get() {
+                throw new Error('getter failed')
+            },
+        })
+        let r = await fsEnsureBinsCore(mf([fTool()]), o)
+        assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true) //視為未給, 不影響取得
+        //對外之fsEnsureBins以{...opt}展開, onTrace原樣轉傳
+        let tr = traceRec()
+        let root2 = fx('ev-public')
+        let e = await catchErr(fsEnsureBins(mf([fTool()]), { pkgRoot: root2, cacheDir: path.join(root2, 'c'), offline: true, mirror: '', onTrace: tr.on }))
+        assert.strict.equal(e.code, 'E_OFFLINE_MISSING')
+        assert.strict.deepStrictEqual(tr.events.map((v) => v.type), ['manifest', 'job', 'cache', 'offline', 'tidy', 'settle'])
     })
 
     it(`should not produce unhandled rejections in this suite`, function() {

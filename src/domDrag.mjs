@@ -10,6 +10,7 @@ import evem from './evem.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
 import domDragPreview from './domDragPreview.mjs'
 import optNum from './_optNum.mjs'
+import getTrace from './getTrace.mjs'
 
 
 //kpDgs, 各群組: 群組字串 → { gid, members: Map(元素→實例), isActive, drag, teardown }; 用Map使任何字串皆可為群組名, 不與物件原型之鍵衝突
@@ -139,7 +140,8 @@ function hitTest(g, p) {
 
 //endDrag, 結束拖曳之唯一寫法: 先清狀態、計時器、會話監聽與預覽, 再發事件, 監聽器拋錯或於監聽器內再開始拖曳皆不受殘留狀態影響
 //  hit有值為放下: 經過中之項目與放下之項目不同時先對前者發leave, 再對落點發drop; 其餘結束(放開於項目外、取消、停用、解除等)若正經過某項目則發leave, 使enter必以leave或drop收尾
-function endDrag(g, e = null, hit = null) {
+//  reason為觀察回調(onTrace)通知用之結束原因
+function endDrag(g, e = null, hit = null, reason = 'cancel') {
     let d = g.drag
     if (!d) {
         return
@@ -150,14 +152,26 @@ function endDrag(g, e = null, hit = null) {
     if (active === g) {
         active = null
     }
+    let trace = d.trace
     if (d.timer !== null) {
         clearTimeout(d.timer)
         d.timer = null
+        if (trace) {
+            trace('timer', { phase: 'cancel', ms: d.o.timeDragStartDelay })
+        }
     }
     runAll(d.offs)
     if (d.pv) {
         d.pv.clear()
         d.pv = null
+        if (trace) {
+            trace('preview', { phase: 'remove' })
+        }
+    }
+
+    //end, 狀態皆已清除, 先於leave與drop之派發通知(監聽器拋錯而中斷派發時仍已通知)
+    if (trace) {
+        trace('end', { reason, ind: d.startInd })
     }
 
     //leave
@@ -202,7 +216,7 @@ function scheduleTeardown(g) {
         if (g.members.size > 0) {
             return
         }
-        endDrag(g)
+        endDrag(g, null, null, 'teardown')
         if (kpDgs.get(g.gid) === g) {
             kpDgs.delete(g.gid)
         }
@@ -214,7 +228,7 @@ function scheduleTeardown(g) {
 function checkSourceLater(g, d) {
     Promise.resolve().then(() => {
         if (g.drag === d && !g.members.has(d.startEle)) {
-            endDrag(g)
+            endDrag(g, null, null, 'source-gone')
         }
     })
 }
@@ -231,7 +245,7 @@ function onMove(g, d, e) {
     if (!d.touch) {
         //主鍵已放開(於視窗外放開等收不到mouseup)即結束; 只看真實事件, 以new MouseEvent合成之移動其buttons預設為0, 既有以合成事件模擬拖曳者不因此中斷
         if (e.isTrusted === true && isNumber(e.buttons) && (e.buttons & 1) === 0) {
-            endDrag(g, e)
+            endDrag(g, e, null, 'buttons')
             return
         }
         p = toPoint(e)
@@ -245,7 +259,7 @@ function onMove(g, d, e) {
 
     //check, 來源已解除且未重建即結束; 解除後立即重建(宿主重繪時先解除再重建)者拖曳延續
     if (!g.members.has(d.startEle)) {
-        endDrag(g, e)
+        endDrag(g, e, null, 'source-gone')
         return
     }
 
@@ -373,7 +387,7 @@ function onUp(g, d, e) {
 
     //check, 來源已解除且未重建者不發drop
     if (!g.members.has(d.startEle)) {
-        endDrag(g, e)
+        endDrag(g, e, null, 'source-gone')
         return
     }
 
@@ -381,12 +395,15 @@ function onUp(g, d, e) {
     if (d.pv) {
         d.pv.clear()
         d.pv = null
+        if (d.trace) {
+            d.trace('preview', { phase: 'remove' })
+        }
     }
 
     //hit
     let p = toPoint(src)
     let hit = p ? hitTest(g, p) : null
-    endDrag(g, e, hit)
+    endDrag(g, e, hit, hit ? 'drop' : 'release')
 }
 
 
@@ -398,7 +415,7 @@ function onCancel(g, d, e) {
     if (d.touchId !== null && findTouch(get(e, 'changedTouches', null), d.touchId) === null) {
         return
     }
-    endDrag(g, e)
+    endDrag(g, e, null, 'touchcancel')
 }
 
 
@@ -457,7 +474,7 @@ function onPress(inst, e, touch) {
 
     //前一次拖曳未收尾者先結束
     if (active) {
-        endDrag(active, e)
+        endDrag(active, e, null, 'takeover')
     }
 
     //d, 本次拖曳之會話
@@ -475,6 +492,7 @@ function onPress(inst, e, touch) {
         offs: [], //會話期間之監聽之移除函數
         lastEv: null, //最近一次處理之事件, 同一事件經視窗與觸控之起手節點兩處送達時只處理一次
         lastP: null, //最近一次之指標座標
+        trace: inst.trace, //觀察回調(起手實例之opt.onTrace), 本次拖曳之事件皆由此通知, 未給時為null
     }
     g.drag = d
     active = g
@@ -515,11 +533,14 @@ function onPress(inst, e, touch) {
     //視窗失焦即取消; 不掛capture, 否則會收到頁內元素(如輸入框)之blur, blur不冒泡故非capture只收到視窗本身者
     d.offs.push(listen(window, 'blur', (ev) => {
         if (g.drag === d) {
-            endDrag(g, ev)
+            endDrag(g, ev, null, 'blur')
         }
     }))
 
-    //start
+    //start, 派發start前通知(監聽器拋錯而中斷時仍已通知)
+    if (d.trace) {
+        d.trace('start', { ind: d.startInd, touch })
+    }
     deliver(g, d.startEle, 'start', (i) => ({
         event: e,
         startInd: d.startInd,
@@ -545,6 +566,9 @@ function onPress(inst, e, touch) {
         if (g.drag !== d) {
             return
         }
+        if (d.trace) {
+            d.trace('timer', { phase: 'fire', ms: o.timeDragStartDelay })
+        }
         d.pv = domDragPreview({
             attIdentify: o.attIdentify,
             containerOpacity: o.previewOpacity,
@@ -557,7 +581,13 @@ function onPress(inst, e, touch) {
             d.pv.updateDragPreview(d.lastP.clientX, d.lastP.clientY, 'domDrag') //再移至目前之指標
         }
         d.pv.setContainerStyle({ opacity: d.endEle ? o.previewOpacity : o.previewDisabledOpacity })
+        if (d.trace) {
+            d.trace('preview', { phase: 'create' })
+        }
     }, o.timeDragStartDelay)
+    if (d.trace) {
+        d.trace('timer', { phase: 'set', ms: o.timeDragStartDelay })
+    }
 
 }
 
@@ -593,6 +623,7 @@ function onPress(inst, e, touch) {
  * @param {String} [opt.previewBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
  * @param {Number} [opt.previewBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有限數字(可為數字字串)，無效時用預設，預設1
  * @param {String} [opt.previewBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；一次拖曳之事件皆由起手元素之回調通知(落點元素之回調不通知)；type為'start'時為起手(含ind為起點順序指標、touch為布林代表觸控起手；先於start事件之派發通知)，'timer'時為延遲建立預覽之計時器(含phase與ms；phase為'set'代表已排定、'fire'代表到點且確認仍屬本次拖曳而將建立預覽、'cancel'代表拖曳於到點前結束而取消；ms為timeDragStartDelay解析後之毫秒數)，'preview'時為domDrag對預覽之建立或移除(含phase；phase為'create'代表已建立預覽、'remove'代表已移除預覽)，'end'時為拖曳已結束(含ind為起點順序指標、reason；reason為'drop'代表放開於項目上、'release'代表放開於項目外、'buttons'代表移動時主鍵已放開、'touchcancel'代表起手手指被取消、'blur'代表視窗失焦、'inactive'代表群組被停用、'source-gone'代表來源元素解除且未重建、'takeover'代表新的按下接手前一次未收尾之拖曳、'teardown'代表群組刪除時尚有拖曳；通知當下計時器、會話監聽與預覽皆已清除，且先於leave與drop之派發)，'unbind'時為本實例已解除(含drag為布林，代表解除當下是否有以本元素為來源之進行中拖曳；其後該拖曳之事件仍通知至結束，但不再起手新的拖曳，重複呼叫不通知)；內部建立之預覽(domDragPreview)不轉傳回調；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響拖曳，預設null
  * @returns {Object} 回傳物件，可使用on、unbind、clear與setIsActive函數，on可監聽change、start、move、enter、leave、drop事件，unbind與clear相同，為釋放監聽，setIsActive為設定群組是否可拖曳(群組層級，停用時取消進行中之拖曳，解除後呼叫無作用)
  * @example
  * need test in browser
@@ -669,9 +700,12 @@ function domDrag(ele, opt = {}) {
         kpDgs.set(gid, g)
     }
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null; 內部建立之domDragPreview不轉傳, 各自只通知自己之事件
+    let trace = getTrace(opt)
+
     //ev, inst
     let ev = evem()
-    let inst = { eid, ele, ev, o, g, alive: true }
+    let inst = { eid, ele, ev, o, g, alive: true, trace }
 
     //setAttribute, 群組屬性值未變者不重寫(每次寫入皆產生MutationRecord, 宿主每次重繪皆重建時避免加倍)
     if (attr(ele, o.attGroup) !== gid) {
@@ -703,6 +737,11 @@ function domDrag(ele, opt = {}) {
             return
         }
         inst.alive = false
+
+        //unbind, 本實例已釋放, 其後不再起手新的拖曳; 進行中之拖曳(以本元素為來源)其後續事件仍由起手時之回調通知至拖曳結束
+        if (trace) {
+            trace('unbind', { drag: !!(g.drag && g.drag.startEle === ele) })
+        }
 
         //元素監聽
         runAll(offs)
@@ -741,7 +780,7 @@ function domDrag(ele, opt = {}) {
         }
         g.isActive = isActive
         if (!isActive) {
-            endDrag(g)
+            endDrag(g, null, null, 'inactive')
         }
     }
 

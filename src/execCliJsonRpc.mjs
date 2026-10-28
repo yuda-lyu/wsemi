@@ -37,6 +37,7 @@ import execThrownMsg from './_execThrownMsg.mjs'
  * @param {Function} [opt.onNotify=undefined] 輸入伺服器通知(無id訊息)回調函數，格式為(msg)=>{}，預設undefined
  * @param {Function} [opt.onServerRequest=undefined] 輸入伺服器發給客戶端之請求(帶id且含method)回調函數，格式為(msg, session)=>{}，可用session.writeLine回覆，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘訊息之處理與本函數之結果)
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，原樣轉交execCliSession，事件即其工作階段之事件(type為spawn、data、write、stop、grace、timeout、kill、settle，欄位與時機見execCliSession之opt.onTrace，其中write為每則請求或通知寫入stdin一次，timeout之ms為本函數之timeoutMs，stop與grace之ms為exitGraceMs)，本函數自身無計時器亦不另通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數；opt.onTrace屬性本身不可讀(getter拋錯)與onStderr相同，errorType為params，預設null
  * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤，含輸入不可讀與params無法序列化)、notfound(子進程未能啟動，如命令不存在、npm shim之入口檔不存在、非有效執行檔、權限不足、cwd不存在、交execCliSession之cwd、env、exitGraceMs之值不可讀)、timeout(逾時)、exit(已啟動之子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
  * @example
  * //need test in nodejs
@@ -162,13 +163,14 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
         v = get(opt, 'onServerRequest')
         onServerRequest = isfun(v) ? v : undefined
 
-        //optSession, onStderr同為回調而於此判型(不可讀為params); cwd、env、exitGraceMs原樣轉交execCliSession判型
+        //optSession, onStderr同為回調而於此判型(不可讀為params); cwd、env、exitGraceMs原樣轉交execCliSession判型; onTrace(觀察回調)原樣轉交execCliSession, 事件即其工作階段之事件(本函數自身無計時器亦不另通知)
         v = get(opt, 'onStderr')
         optSession = {
             cwd: get(opt, 'cwd'),
             env: get(opt, 'env'),
             exitGraceMs: get(opt, 'exitGraceMs'),
             onStderr: isfun(v) ? v : undefined,
+            onTrace: get(opt, 'onTrace'),
         }
 
     }

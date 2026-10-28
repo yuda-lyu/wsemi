@@ -111,7 +111,8 @@ describe(`fsEvem`, function() {
             let sk = tr.events.filter((e) => e.type === 'skip').map((e) => `${e.reason}|${e.kind}|${e.evName}`)
             assert.strict.deepStrictEqual(sk.filter((s) => s.startsWith('kind|')).length, 1)
             assert.strict.deepStrictEqual(sk.filter((s) => s.startsWith('kind|'))[0].startsWith('kind|addDir|'), true)
-            assert.strict.deepStrictEqual(sk.filter((s) => s.startsWith('content|')).sort(), ['content|add|bad', 'content|add|emp', 'content|add|num'])
+            //事件名稱即檔名(含副檔名), 與emit寫出者一致(wsemi-run09: 原以getFileTrueName去掉最後一段, 含.之名稱收端還原錯誤)
+            assert.strict.deepStrictEqual(sk.filter((s) => s.startsWith('content|')).sort(), ['content|add|bad.txt', 'content|add|emp', 'content|add|num.txt'])
             assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'emit').map((e) => e.evName), ['foo'])
             assert.strict.deepStrictEqual(got, [[{ a: 1 }, 't1']])
             //emit事件緊接於監聽器之前(先通知再派發)
@@ -290,6 +291,123 @@ describe(`fsEvem`, function() {
         }
         finally {
             fsDeleteFolder(fd)
+        }
+    })
+
+    //
+    //以下為事件名稱安全案(wsemi-run09, 見sgud/rule/rulebook_fs.md R-FS-EVEM-NAME-01)
+    //  JSDoc: 事件名稱即事件檔案之檔名, 須為單一安全檔名; 不得使寫入目標離開事件資料夾, 含.之名稱須原樣送達
+    //
+
+    //mkRoot, 夾具根資料夾root(內含inner, inner內含事件資料夾fd), 供偵測是否有檔案寫到事件資料夾之外(上一層為inner, 上上層為root, 皆在夾具內)
+    let mkRoot = (root) => {
+        fsDeleteFolder(root)
+        fsCreateFolder(`${root}/inner`)
+        return `${root}/inner/fd`
+    }
+
+    //names
+    let namesEscape = (root) => [
+        '../escape', //上一層
+        '..\\escape', //上一層(反斜線)
+        '../../escape2', //上上層
+        'sub/x', //子資料夾
+        'sub\\x', //子資料夾(反斜線)
+        path.resolve(root, 'inner', 'abs_escape'), //絕對路徑(位於夾具內, 修前會寫到事件資料夾之外)
+        '.', //目前資料夾
+        '..', //上一層資料夾
+    ]
+    let namesUnsafe = [
+        '', //空字串
+        'a:b', //NTFS替代資料流/磁碟機代號
+        'a*b', 'a?b', 'a<b', 'a>b', 'a"b', 'a|b', //Windows不合法字元
+        'x\u0000y', 'x\ny', 'x\ty', //控制字元
+        'trail.', 'trail ', //Windows會去掉結尾之.與空白而與他名衝突
+        'CON', 'nul', 'Com1', 'lpt9', 'aux.txt', //Windows裝置名稱
+        'x'.repeat(300), //超過檔名長度上限
+        123, null, undefined, {}, //非字串
+    ]
+    let namesSafe = ['ping', 'a-b_c', '中文事件', 'user.login', 'a b', 'v1.2.3', '.hidden', 'CONSOLE', 'com10', 'it\'s', 'a,b', 'a;b', 'a=b', 'a+b', 'a@b', 'a#b', 'a%b', 'a&b', 'a(b)', 'a[b]', 'a{b}', 'a~b', 'a^b', 'a`b']
+
+    it(`should throw and write nothing outside the event folder when the event name would leave it (relative, backslash, absolute, . and ..)`, async function() {
+        //JSDoc: 事件名稱須為單一安全檔名, 寫入目標不得離開事件資料夾; 修前path.resolve(fd, evName)可寫出fd之外
+        let root = './_test_fsEvem_name1'
+        let fd = mkRoot(root)
+        let ev = fsEvem({ fd, timeInterval: 20 })
+        try {
+            for (let name of namesEscape(root)) {
+                assert.throws(() => ev.emit(name, 1), Error, `emit(${JSON.stringify(name)}) should throw`)
+            }
+            //夾具內事件資料夾之上一層(inner)只有事件資料夾本身、上上層(root)只有inner, 事件資料夾內沒有任何事件檔案
+            assert.strict.deepStrictEqual(fs.readdirSync(`${root}/inner`).sort(), ['fd'])
+            assert.strict.deepStrictEqual(fs.readdirSync(root).sort(), ['inner'])
+            assert.strict.deepStrictEqual(fs.readdirSync(fd), [])
+        }
+        finally {
+            ev.clear()
+            fsDeleteFolder(root)
+        }
+    })
+
+    it(`should throw for an empty, non-string, over-long or otherwise unsafe file name, and write nothing`, async function() {
+        let root = './_test_fsEvem_name2'
+        let fd = mkRoot(root)
+        let ev = fsEvem({ fd, timeInterval: 20 })
+        try {
+            for (let name of namesUnsafe) {
+                assert.throws(() => ev.emit(name, 1), Error, `emit(${JSON.stringify(name)}) should throw`)
+            }
+            assert.strict.deepStrictEqual(fs.readdirSync(`${root}/inner`).sort(), ['fd'])
+            assert.strict.deepStrictEqual(fs.readdirSync(root).sort(), ['inner'])
+            assert.strict.deepStrictEqual(fs.readdirSync(fd), [])
+        }
+        finally {
+            ev.clear()
+            fsDeleteFolder(root)
+        }
+    })
+
+    it(`should write the event file named exactly as the event name for safe names (dots, spaces, non-ASCII, punctuation)`, async function() {
+        let root = './_test_fsEvem_name3'
+        let fd = mkRoot(root)
+        let ev = fsEvem({ fd, timeInterval: 20 })
+        try {
+            for (let name of namesSafe) {
+                assert.doesNotThrow(() => ev.emit(name, 1), `emit(${JSON.stringify(name)}) should not throw`)
+            }
+            assert.strict.deepStrictEqual(fs.readdirSync(fd).sort(), [...namesSafe].sort())
+            assert.strict.deepStrictEqual(fs.readdirSync(`${root}/inner`).sort(), ['fd'])
+        }
+        finally {
+            ev.clear()
+            fsDeleteFolder(root)
+        }
+    })
+
+    it(`should deliver an event whose name contains dots with the exact name, not the name without its last dot segment`, async function() {
+        //JSDoc: 事件名稱即檔名; 修前收端以getFileTrueName去掉最後一段, 'user.login'還原為'user'
+        let root = './_test_fsEvem_name4'
+        let fd = mkRoot(root)
+        let tr = traceRec({ guard })
+        let ev = fsEvem({ fd, timeInterval: 20, onTrace: tr.on })
+        let got = []
+        for (let name of ['user.login', 'v1.2.3', 'a.b.c.d']) {
+            ev.on(name, (pkg) => got.push([name, pkg]))
+        }
+        try {
+            await tr.wait((e) => e.type === 'ready')
+            for (let name of ['user.login', 'v1.2.3', 'a.b.c.d']) {
+                let from = tr.mark()
+                ev.emit(name, name.length)
+                await tr.wait((e) => e.type === 'emit', from) //任一emit事件(修前為被截斷之名稱, 以斷言判定而不等不到之事件)
+                let em = tr.events.slice(from).find((e) => e.type === 'emit')
+                assert.strict.deepStrictEqual(em.evName, name)
+            }
+            assert.strict.deepStrictEqual(got, [['user.login', 10], ['v1.2.3', 6], ['a.b.c.d', 7]])
+        }
+        finally {
+            ev.clear()
+            fsDeleteFolder(root)
         }
     })
 

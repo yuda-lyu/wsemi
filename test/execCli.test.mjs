@@ -5,6 +5,8 @@ import cp from 'child_process'
 import { fileURLToPath } from 'url'
 import execCli from '../src/execCli.mjs'
 import { runExecFail } from './tools/execFailRun.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+import { fiveOnTrace, watchUnhandled, keysByType, allPrimitive, badProp, recMeta, scHolder, gpidOf, waitGone, killPid } from './tools/execCliTraceKit.mjs'
 
 
 describe(`execCli`, function() {
@@ -355,11 +357,47 @@ describe(`execCli`, function() {
 
     it(`should stop accumulating stdout after maxBuffer is reached`, async function() {
         //分多次寫出, 累積量超過maxBuffer後便不再累積, 故長度遠小於總輸出量
-        let sc = 'let i=0;let t=setInterval(()=>{process.stdout.write("x".repeat(100));i++;if(i>=20){clearInterval(t)}},5)'
-        let r = await execCli(nodeBin, ['-e', sc], { maxBuffer: 100 })
-        // console.log('maxBuffer len', r.stdout.length)
-        assert.strict.deepStrictEqual(r.ok, true)
-        assert.strict.deepStrictEqual(r.stdout.length < 2000, true)
+        //原案以子進程setInterval 5ms分20次寫出, 負載下父行程首次讀取晚於子進程全程而2000字元併成單一chunk則誤判; 改為事件閘門(R-TRACE-01 P1):
+        //  子進程每寫一塊(100字元)便等標記檔gate-<已寫塊數>出現才寫下一塊, 父行程於onTrace收到第k個data事件後才建立gate-k, 故每塊必為獨立之chunk, 「達上限後停止累積」由因果決定, 與讀取時序無關
+        let fdGate = fileURLToPath(new URL('./_tmp/execCli-maxBuffer/', import.meta.url))
+        fs.rmSync(fdGate, { recursive: true, force: true })
+        fs.mkdirSync(fdGate, { recursive: true })
+        let sc = [
+            'const fs=require("fs")',
+            'const dir=process.argv[1]',
+            'let i=0',
+            'const wait=()=>{if(i>=20){return};const t=setInterval(()=>{if(fs.existsSync(dir+"/gate-"+i)){clearInterval(t);next()}},2)}',
+            'const next=()=>{process.stdout.write("x".repeat(100));i++;wait()}',
+            'next()',
+        ].join(';')
+        try {
+            let tr = traceRec()
+            let p = execCli(nodeBin, ['-e', sc, fdGate], { maxBuffer: 100, timeoutMs: 60000, onTrace: tr.on }) //timeoutMs只防閘門失效而懸置
+            for (let k = 1; k <= 20; k++) {
+                await tr.wait((e) => e.type === 'data', 0, k)
+                fs.writeFileSync(fdGate + 'gate-' + k, '')
+            }
+            let r = await p
+            // console.log('maxBuffer len', r.stdout.length)
+            assert.strict.deepStrictEqual(r.ok, true)
+            assert.strict.deepStrictEqual(r.stdout.length < 2000, true)
+            //JSDoc opt.onTrace: data之size為處理後已累積之字元數、kept為該段是否被累積; 達上限(maxBuffer 100)之前一段已累積, 其後各段不累積且size不變
+            let ev = tr.events.filter((e) => e.type === 'data')
+            assert.strict.deepStrictEqual(ev.every((e) => e.stream === 'stdout'), true)
+            assert.strict.deepStrictEqual(ev.reduce((a, e) => a + e.len, 0), 2000) //20塊各100字元皆已送達(閘門使每塊獨立)
+            assert.strict.deepStrictEqual(ev.every((e, i) => e.kept === (i === 0 ? true : ev[i - 1].size < 100)), true)
+            assert.strict.deepStrictEqual(ev[0].size, 100)
+            assert.strict.deepStrictEqual(ev.slice(1).every((e) => e.kept === false && e.size === 100), true)
+            //JSDoc opt.onTrace: full為該串流累積量首次達到maxBuffer, 只通知一次, 且在觸發它之data事件之後
+            let full = tr.events.filter((e) => e.type === 'full')
+            assert.strict.deepStrictEqual(full, [{ type: 'full', stream: 'stdout', size: 100 }])
+            assert.strict.deepStrictEqual(tr.events.indexOf(full[0]), tr.events.indexOf(ev[0]) + 1)
+            //最終結果: 只累積達上限之那一塊
+            assert.strict.deepStrictEqual(r.stdout.length, 100)
+        }
+        finally {
+            fs.rmSync(fdGate, { recursive: true, force: true })
+        }
     })
 
     //--- 失敗回報: 無法啟動子進程時不reject, error不含args與env之值 ---
@@ -696,6 +734,228 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             fakeStringThrows: { ok: false, code: null, error: 'UNKNOWN: toString boom', attempts: 1, hasPidKey: true, pidType: 'undefined' }, //規則13: 讀取或轉換拋錯以規則4之結果物件回報(attempts 1、pid鍵undefined、不重試)
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
+    })
+
+})
+
+
+//R-TRACE-01: opt.onTrace之事件語意與P3/P4; 事件以traceRec等待(不以固定等待後檢查), 重試間隔與逾時門檻本身即規格者於假時鐘下推進(P5), 子進程與樹殺為真實I/O
+describe(`execCli 觀察回調(R-TRACE-01)`, function() {
+
+    let nodeBin = process.execPath
+
+    //假時鐘下推進後事件已同步送達; 子進程為真實I/O, 以事件(spawn、data、settle等)為同步點
+
+    it(`should notify attempt, spawn, data, settle and done in order for a successful call`, async function() {
+        let tr = traceRec()
+        let sc = 'process.stdout.write("hello");process.stderr.write("warn")'
+        let r = await execCli(nodeBin, ['-e', sc], { onTrace: tr.on })
+        let ev = tr.events
+        //JSDoc opt.onTrace: attempt為即將啟動第n次嘗試; spawn之pid為子進程pid; 結果物件之pid同
+        assert.strict.deepStrictEqual(ev[0], { type: 'attempt', n: 1 })
+        assert.strict.deepStrictEqual(ev[1], { type: 'spawn', pid: r.pid })
+        //JSDoc opt.onTrace: data為收到一段已解碼之輸出(len為字元數、size為處理後已累積之字元數、kept為是否累積); 內文不在事件中, 只有長度
+        let sum = (stream) => ev.filter((e) => e.type === 'data' && e.stream === stream).reduce((a, e) => a + e.len, 0)
+        assert.strict.deepStrictEqual([sum('stdout'), sum('stderr')], [5, 4])
+        assert.strict.deepStrictEqual(ev.filter((e) => e.type === 'data').every((e) => e.kept === true && e.size >= e.len), true)
+        //JSDoc opt.onTrace: settle為本次嘗試即將定案(reason ok、code為離開碼、signal為null); done為整個呼叫即將回傳(n為實際嘗試次數); 所有data皆早於settle, 其後即done
+        assert.strict.deepStrictEqual(ev.slice(-2), [{ type: 'settle', reason: 'ok', code: 0, signal: null }, { type: 'done', n: 1, ok: true, reason: 'ok' }])
+        assert.strict.deepStrictEqual(ev.slice(2, -2).every((e) => e.type === 'data'), true)
+        assert.strict.deepStrictEqual([r.ok, r.stdout, r.stderr, r.attempts], [true, 'hello', 'warn', 1])
+    })
+
+    it(`should notify retry with the exact interval (retryDelayMs times the attempt number, capped at 15000ms) and start the next attempt only when it has elapsed`, async function() {
+        //重試間隔本身即規格(JSDoc opt.retryDelayMs: 實際間隔為retryDelayMs乘以重試次數且上限15000ms): 假時鐘下以advance量測, 子進程之結束為真實I/O, 以事件為同步點
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let p = execCli(nodeBin, ['-e', 'process.exit(3)'], { maxRetries: 2, retryDelayMs: 8000, onTrace: tr.on })
+            let waits = [8000, 15000] //8000x1; 8000x2=16000, 夾至15000
+            for (let k = 0; k < 2; k++) {
+                let e = await tr.wait((x) => x.type === 'retry', 0, k + 1)
+                assert.strict.deepStrictEqual(e, { type: 'retry', n: k + 2, ms: waits[k] })
+                let at = tr.mark()
+                await clock.advance(waits[k] - 1)
+                assert.strict.deepStrictEqual(tr.types(at), []) //間隔未滿: 不得啟動下一次嘗試
+                await clock.advance(1)
+                assert.strict.deepStrictEqual(tr.events[at], { type: 'attempt', n: k + 2 }) //間隔恰滿: 啟動第k+2次嘗試
+            }
+            let r = await p
+            assert.strict.deepStrictEqual(tr.types(), ['attempt', 'spawn', 'settle', 'retry', 'attempt', 'spawn', 'settle', 'retry', 'attempt', 'spawn', 'settle', 'done'])
+            assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'settle').map((e) => [e.reason, e.code]), [['exit', 3], ['exit', 3], ['exit', 3]])
+            assert.strict.deepStrictEqual(tr.events.at(-1), { type: 'done', n: 3, ok: false, reason: 'exhausted' })
+            assert.strict.deepStrictEqual([r.ok, r.code, r.attempts], [false, 3, 3])
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should notify the reason in done: spawn (synchronous spawn error), enoent, code2 and exhausted (also for maxRetries 0, validation failure), without any retry for the non-retryable ones`, async function() {
+        //JSDoc opt.maxRetries: ENOENT、exit code 2、無法啟動子進程之同步錯誤視為不可重試而立即中止; JSDoc opt.onTrace: done之reason
+        let cases = [
+            { name: 'enoent', cmd: 'non_existent_command_xyz_12345', args: ['arg'], opt: {}, settle: ['error', null], done: { n: 1, ok: false, reason: 'enoent' } },
+            { name: 'code2', cmd: nodeBin, args: ['-e', 'process.exit(2)'], opt: {}, settle: ['exit', 2], done: { n: 1, ok: false, reason: 'code2' } },
+            { name: 'spawn', cmd: nodeBin, args: ['-e', '1', 'a\u0000x'], opt: {}, settle: ['error', null], done: { n: 1, ok: false, reason: 'spawn' } },
+            { name: 'exhausted0', cmd: nodeBin, args: ['-e', 'process.exit(3)'], opt: { maxRetries: 0 }, settle: ['exit', 3], done: { n: 1, ok: false, reason: 'exhausted' } },
+            { name: 'validate', cmd: nodeBin, args: ['-e', 'process.stdout.write("   ")'], opt: { validate: 'nonempty', maxRetries: 0 }, settle: ['validate', 0], done: { n: 1, ok: false, reason: 'exhausted' } },
+        ]
+        for (let c of cases) {
+            let tr = traceRec()
+            let r = await execCli(c.cmd, c.args, { maxRetries: 3, retryDelayMs: 1, ...c.opt, onTrace: tr.on })
+            let ev = tr.events
+            assert.strict.deepStrictEqual({ name: c.name, retries: ev.filter((e) => e.type === 'retry').length, attempts: ev.filter((e) => e.type === 'attempt').length }, { name: c.name, retries: 0, attempts: 1 })
+            let st = ev.find((e) => e.type === 'settle')
+            assert.strict.deepStrictEqual({ name: c.name, settle: [st.reason, st.code] }, { name: c.name, settle: c.settle })
+            assert.strict.deepStrictEqual({ name: c.name, done: ev.at(-1) }, { name: c.name, done: { type: 'done', ...c.done } })
+            assert.strict.deepStrictEqual({ name: c.name, attempts: r.attempts }, { name: c.name, attempts: 1 })
+        }
+    })
+
+    it(`should notify timeout at exactly timeoutMs, then kill, then settle with reason timeout (and no stuck settle) when the child outlives timeoutMs`, async function() {
+        //逾時門檻本身即規格(JSDoc opt.timeoutMs): 假時鐘下以advance量測; 子進程之存活與樹殺為真實I/O
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let p = execCli(nodeBin, ['-e', 'setTimeout(() => {}, 30000)'], { timeoutMs: 5000, onTrace: tr.on })
+            let sp = await tr.wait((e) => e.type === 'spawn')
+            let at = tr.mark()
+            await clock.advance(4999)
+            assert.strict.deepStrictEqual(tr.types(at), []) //未達門檻: 無timeout亦無kill
+            await clock.advance(1)
+            assert.strict.deepStrictEqual(tr.events.slice(at, at + 2), [{ type: 'timeout', ms: 5000 }, { type: 'kill', pid: sp.pid }]) //恰達門檻: 先通知逾時, 再通知樹殺
+            let st = await tr.wait((e) => e.type === 'settle')
+            let r = await p
+            //JSDoc opt.onTrace: settle之reason為timeout代表逾時樹殺後close; done於其後
+            assert.strict.deepStrictEqual([st.reason, st.code], ['timeout', r.code])
+            assert.strict.deepStrictEqual(tr.events.at(-1), { type: 'done', n: 1, ok: false, reason: 'exhausted' })
+            assert.strict.deepStrictEqual([r.ok, r.error], [false, 'TIMEOUT after 5s'])
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should settle with reason stuck 3000ms after the kill when the pipe is held by an orphan and close never comes`, async function() {
+        //樹殺後close遲遲不來(子進程已結束而孫行程握住stdout/stderr管線): 3秒後強制定案(JSDoc opt.onTrace: settle之reason為stuck); 3秒本身即規格, 假時鐘下量測
+        let clock = useFakeClock()
+        let gpid = null
+        try {
+            let tr = traceRec()
+            let p = execCli(nodeBin, ['-e', scHolder], {
+                timeoutMs: 5000,
+                onStdout: (chunk) => {
+                    gpid = gpidOf(chunk) || gpid
+                },
+                onTrace: tr.on,
+            })
+            let sp = await tr.wait((e) => e.type === 'spawn')
+            await tr.wait((e) => e.type === 'data') //孫行程pid已輸出
+            assert.strict.deepStrictEqual(gpid > 0, true)
+            assert.strict.deepStrictEqual(await waitGone(sp.pid), true) //子進程已結束(此後kill不會殺到孫行程)
+            let at = tr.mark()
+            await clock.advance(4999)
+            assert.strict.deepStrictEqual(tr.types(at), [])
+            await clock.advance(1)
+            assert.strict.deepStrictEqual(tr.types(at), ['timeout', 'kill'])
+            await clock.advance(2999)
+            assert.strict.deepStrictEqual(tr.types(at), ['timeout', 'kill']) //樹殺後未滿3000ms: 尚未定案
+            await clock.advance(1)
+            let r = await p
+            assert.strict.deepStrictEqual(tr.events.slice(at + 2), [{ type: 'settle', reason: 'stuck', code: null, signal: null }, { type: 'done', n: 1, ok: false, reason: 'exhausted' }]) //恰滿3000ms: 強制定案, 其後即done
+            assert.strict.deepStrictEqual([r.ok, r.code, r.error], [false, null, 'TIMEOUT after 5s(子進程未能結束)'])
+            //定案後釋放: 孫行程結束使close遲到, 不再通知
+            clock.restore()
+            let n = tr.events.length
+            assert.strict.deepStrictEqual(await killPid(gpid), true)
+            await new Promise((resolve) => setImmediate(resolve))
+            await new Promise((resolve) => setImmediate(resolve))
+            assert.strict.deepStrictEqual(tr.events.length, n)
+        }
+        finally {
+            clock.restore()
+            await killPid(gpid)
+        }
+    })
+
+    it(`should notify full once for stderr when the accumulation first reaches maxBuffer, with data events of stream stderr only`, async function() {
+        //JSDoc opt.onTrace: full為該串流累積量首次達到maxBuffer(含stream、size); stderr與stdout各自累積
+        let tr = traceRec()
+        let r = await execCli(nodeBin, ['-e', 'process.stderr.write("e".repeat(250))'], { maxBuffer: 100, onTrace: tr.on })
+        let ev = tr.events.filter((e) => e.type === 'data')
+        assert.strict.deepStrictEqual(ev.length > 0 && ev.every((e) => e.stream === 'stderr'), true)
+        let full = tr.events.filter((e) => e.type === 'full')
+        let cross = ev.find((e) => e.kept && e.size >= 100)
+        assert.strict.deepStrictEqual(full, [{ type: 'full', stream: 'stderr', size: cross.size }])
+        assert.strict.deepStrictEqual([r.ok, r.stderr.length, r.stdout], [true, ev.at(-1).size, ''])
+    })
+
+    it(`should return the result object without events when command is not an effective string, or an option of opt is unreadable (including the onTrace getter)`, async function() {
+        //JSDoc opt.onTrace: command無效或opt不可讀而在啟動前即回報者無事件; 既有行為: 不reject, 以結果物件回報
+        let tr = traceRec()
+        let r1 = await execCli('', [], { onTrace: tr.on })
+        let optGetter = badProp({ onTrace: tr.on }, 'cwd', 'cwd getter boom')
+        let r2 = await execCli(nodeBin, ['-e', '1'], optGetter)
+        let optTraceGetter = badProp({}, 'onTrace', 'trace getter boom')
+        let r3 = await execCli(nodeBin, ['-e', '1'], optTraceGetter)
+        assert.strict.deepStrictEqual([r1.ok, r1.error, r1.attempts], [false, 'command 須為非空字串', 0])
+        assert.strict.deepStrictEqual([r2.ok, r2.error, r2.attempts], [false, 'UNKNOWN: cwd getter boom', 1])
+        assert.strict.deepStrictEqual([r3.ok, r3.error, r3.attempts], [false, 'UNKNOWN: trace getter boom', 1]) //onTrace屬性本身不可讀亦以結果物件回報, 不reject
+        assert.strict.deepStrictEqual(tr.events, [])
+    })
+
+    it(`should give the same results without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時行為不變; P4: 回調之拋錯與回傳之rejection不影響結果、不產生未處理之rejection; 情境涵蓋成功、重試後失敗、ENOENT、同步spawn錯誤、驗證失敗、逾時、達maxBuffer
+        let un = watchUnhandled()
+        let rec = traceRec()
+        let norm = (r) => ({ ok: r.ok, stdout: r.stdout, stderr: r.stderr, code: r.error.startsWith('TIMEOUT') ? 'TIMEOUT' : r.code, error: r.error, attempts: r.attempts })
+        let got = []
+        try {
+            for (let onTrace of fiveOnTrace(rec.on)) {
+                let rs = []
+                rs.push(await execCli(nodeBin, ['-e', 'process.stdout.write("hello");process.stderr.write("warn")'], { onTrace }))
+                rs.push(await execCli(nodeBin, ['-e', 'process.exit(3)'], { maxRetries: 1, retryDelayMs: 1, onTrace }))
+                rs.push(await execCli('non_existent_command_xyz_12345', ['arg'], { maxRetries: 2, retryDelayMs: 1, onTrace }))
+                rs.push(await execCli(nodeBin, ['-e', '1', 'a\u0000x'], { maxRetries: 2, retryDelayMs: 1, onTrace }))
+                rs.push(await execCli(nodeBin, ['-e', 'process.stdout.write("   ")'], { validate: 'nonempty', onTrace }))
+                rs.push(await execCli(nodeBin, ['-e', 'setTimeout(() => {}, 30000)'], { timeoutMs: 300, onTrace }))
+                rs.push(await execCli(nodeBin, ['-e', 'process.stdout.write("x".repeat(250))'], { maxBuffer: 100, onTrace }))
+                got.push(rs.map(norm))
+            }
+            await new Promise((resolve) => setImmediate(resolve))
+            await new Promise((resolve) => setImmediate(resolve))
+        }
+        finally {
+            un.stop()
+        }
+        assert.strict.deepStrictEqual(got.slice(1), [got[0], got[0], got[0], got[0]])
+        assert.strict.deepStrictEqual(got[0].map((x) => [x.ok, x.attempts]), [[true, 1], [false, 2], [false, 1], [false, 1], [false, 1], [false, 1], [true, 1]])
+        assert.strict.deepStrictEqual(un.list, [])
+        //紀錄器確有收到各情境之事件
+        let types = new Set(rec.events.map((e) => e.type))
+        assert.strict.deepStrictEqual(['attempt', 'retry', 'spawn', 'data', 'full', 'timeout', 'kill', 'settle', 'done'].every((t) => types.has(t)), true)
+    })
+
+    it(`should notify frozen events with primitive fields fixed per type and without a receiver`, async function() {
+        //JSDoc opt.onTrace: 事件為凍結物件{ type, ... }, 欄位依type列舉且皆為原始值(R-TRACE-01 P4: 唯讀快照、最少欄位); 回調不帶接收者呼叫
+        let rec = recMeta()
+        await execCli(nodeBin, ['-e', 'process.stdout.write("hello")'], { onTrace: rec.on })
+        await execCli(nodeBin, ['-e', 'process.exit(3)'], { maxRetries: 1, retryDelayMs: 1, onTrace: rec.on })
+        await execCli(nodeBin, ['-e', 'process.stdout.write("x".repeat(250))'], { maxBuffer: 100, onTrace: rec.on })
+        await execCli(nodeBin, ['-e', 'setTimeout(() => {}, 30000)'], { timeoutMs: 300, onTrace: rec.on })
+        assert.strict.deepStrictEqual(keysByType(rec.events), {
+            attempt: 'n,type',
+            spawn: 'pid,type',
+            data: 'kept,len,size,stream,type',
+            full: 'size,stream,type',
+            retry: 'ms,n,type',
+            timeout: 'ms,type',
+            kill: 'pid,type',
+            settle: 'code,reason,signal,type',
+            done: 'n,ok,reason,type',
+        })
+        assert.strict.deepStrictEqual(allPrimitive(rec.events), true)
+        assert.strict.deepStrictEqual(rec.meta.length > 0 && rec.meta.length === rec.events.length && rec.meta.every(([self, frozen]) => self === undefined && frozen), true)
     })
 
 })

@@ -8,6 +8,7 @@ import istime from './istime.mjs'
 import isEle from './isEle.mjs'
 import domRemove from './domRemove.mjs'
 import domFind from './domFind.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -19,6 +20,7 @@ import domFind from './domFind.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Element} [opt.eleRef=null] 輸入觸發點擊Element元素，若不給則使用document.activeElement取得，預設為null
  * @param {String} [opt.type='datetime-local'] 輸入時間類型字串，可選為'datetime-local'與'date'，預設為'datetime-local'
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'mount'時為已將時間輸入框放入頁面而排定1ms後延遲彈出(含inpType為生效後之輸入框類型'datetime-local'或'date'、withValue為輸入框是否帶有time之預設值)，'picker'時為延遲(1ms)後已綁定change監聽而即將彈出日曆視窗，'focusout'時為觸發元素收到focusout(取消選取之偵測)而排定50ms後觸發(含ms固定為50)，'change'時為收到輸入框之change事件(含value為此次取得之值字串，取值失敗時沿用先前之值，初始為空字串)，'skip'時為觸發時已有先前之觸發而略過(含by為'change'或'focusout'代表略過者之來源)，'settle'時為首次觸發而即將結束(含by為'change'或'focusout'代表觸發來源、changed為是否取得變更時間、value為將resolve之新時間字串，未變更時為null且Promise不會resolve)；事件皆於對應動作之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響時間選取，預設null
  * @returns {Promise} 回傳Promise，resolve回傳選擇新時間，無reject
  * @example
  * need test in browser
@@ -45,6 +47,9 @@ function domShowInputDatatime(time, opt = {}) {
     if (type !== 'date' && type !== 'datetime-local') {
         type = 'datetime-local'
     }
+
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
 
     //eleRef
     let eleRef = get(opt, 'eleRef', null)
@@ -116,14 +121,22 @@ function domShowInputDatatime(time, opt = {}) {
 
     }
 
+    //trace
+    if (trace) {
+        trace('mount', { inpType: type, withValue: b })
+    }
+
     //bTrigger
     let bTrigger = false
 
-    //trigger
-    function trigger() {
+    //trigger, by為觸發來源('change'或'focusout')
+    function trigger(by) {
 
         //check, 因可能change與focusout皆會觸發, 故通過bTrigger只觸發1次
         if (bTrigger) {
+            if (trace) {
+                trace('skip', { by })
+            }
             return
         }
         bTrigger = true
@@ -154,12 +167,20 @@ function domShowInputDatatime(time, opt = {}) {
             }
             // console.log(type, 'timeNew', timeNew)
 
+            //trace
+            if (trace) {
+                trace('settle', { by, changed: true, value: timeNew })
+            }
+
             //resolve
             pm.resolve(timeNew)
 
         }
         else {
             // console.log('未變更時間')
+            if (trace) {
+                trace('settle', { by, changed: false, value: null })
+            }
         }
 
     }
@@ -178,8 +199,13 @@ function domShowInputDatatime(time, opt = {}) {
             console.log(err)
         }
 
+        //trace
+        if (trace) {
+            trace('change', { value: typeof timeChange === 'string' ? timeChange : null })
+        }
+
         //trigger
-        trigger()
+        trigger('change')
 
     }
 
@@ -187,9 +213,14 @@ function domShowInputDatatime(time, opt = {}) {
     function evFocusout(msg) {
         // console.log('evFocusout', msg)
 
+        //trace
+        if (trace) {
+            trace('focusout', { ms: 50 })
+        }
+
         //setTimeout, picker取消時靠觸發元素的focusout事件來得知, focusout會比change觸發還快, 故得要延遲觸發
         setTimeout(() => {
-            trigger()
+            trigger('focusout')
         }, 50) //不能給1, 觸發時間最小可能為20ms, 手速過快, 可能會導致focusout仍比change還快觸發, 導致無法接收與處理change事件
 
     }
@@ -202,6 +233,11 @@ function domShowInputDatatime(time, opt = {}) {
 
         //change
         inp.addEventListener('change', evChange, true)
+
+        //trace
+        if (trace) {
+            trace('picker', {})
+        }
 
         //showPicker
         inp.showPicker() //彈出日曆視窗

@@ -190,12 +190,38 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         assert.strict.deepStrictEqual({ r, calls: st.calls }, { r: { s: 'resolve', v: 'done: x' }, calls: 3 })
     })
 
-    it(`should notify giveup after the last retry wait and reject the last EBUSY error string when retries are exhausted (numRetry 3)`, async function() {
-        let { r, tr, st } = await go(['EBUSY', 'EBUSY', 'EBUSY'], { opt: { numRetry: 3 }, ms: 1000 })
-        //JSDoc onTrace: retry之n已達numRetry者等待後不再嘗試而接著giveup(含n為numRetry、code為EBUSY); giveup為重試耗盡而即將reject, 其後不再有事件
-        assert.strict.deepStrictEqual(tr.lines(), ['attempt1@0', 'retry1/EBUSY/300@0', 'attempt2@300', 'retry2/EBUSY/300@300', 'attempt3@600', 'retry3/EBUSY/300@600', 'giveup3/EBUSY@900'])
+    it(`should notify giveup right after the last failed attempt, without waiting again, and reject the last EBUSY error string when retries are exhausted (numRetry 3)`, async function() {
+        //wsemi-run09: 最後一次嘗試失敗後已無下一次嘗試, 不再等待300ms也不通知retry; 假時鐘只推進600ms(= 前兩次重試間隔)即須已reject(修前多等300ms而於900ms才reject, 推進600ms時尚未settle)
+        let { r, tr, st } = await go(['EBUSY', 'EBUSY', 'EBUSY'], { opt: { numRetry: 3 }, ms: 600 })
+        //JSDoc onTrace: retry為第n次遇EBUSY而即將等待ms毫秒(只在之後還有下一次嘗試時通知, n小於numRetry); giveup為重試耗盡而即將reject(含n為numRetry、code為EBUSY), 於最後一次嘗試失敗當下通知, 其後不再有事件
+        assert.strict.deepStrictEqual(tr.lines(), ['attempt1@0', 'retry1/EBUSY/300@0', 'attempt2@300', 'retry2/EBUSY/300@300', 'attempt3@600', 'giveup3/EBUSY@600'])
         //JSDoc @returns: 重試耗盡仍被占用reject錯誤訊息字串(最後一次之錯誤); 不偽成功
         assert.strict.deepStrictEqual({ r, calls: st.calls, exists: st.exists }, { r: { s: 'reject', v: 'Error: EBUSY 3' }, calls: 3, exists: true })
+    })
+
+    it(`should reject a string and notify fail with n 0, instead of resolving as if the folder did not exist, when opt.fs is null or has no statSync`, async function() {
+        //wsemi-run09: 修前fsExistsCore吞掉對null呼叫statSync之TypeError而視為標的不存在, 回傳'folder does not exist: x'(成功)卻沒有刪除任何東西
+        //JSDoc opt.fs: null或缺少statSync時reject字串(R-FS-REJECT-01 規則1), 不視為標的不存在
+        let { fs: full } = mkFake('rmSync', [])
+        let cases = [
+            ['null', null],
+            ['undefined', undefined],
+            ['string', 'fs'],
+            ['number', 1],
+            ['empty object', {}],
+            ['no statSync', { lstatSync: full.lstatSync, rmSync: () => {} }],
+            ['statSync not a function', { statSync: 'x', lstatSync: full.lstatSync, rmSync: () => {} }],
+        ]
+        for (let [name, fsBad] of cases) {
+            let tr = mkRec()
+            let r = await runFake(() => fsDeleteFolderSafeCore('x', { fs: fsBad, onTrace: tr.on }), 0)
+            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && r.v.startsWith('opt.fs is invalid'), lines: tr.lines() }, { name, s: 'reject', str: true, lines: ['fail0/null@0'] })
+        }
+        //JSDoc opt.fs: 缺少lstatSync或rmSync時其呼叫之TypeError不被吞, 以字串reject(不成功、不通知opt.fs不合)
+        for (let [name, fsPart] of [['no rmSync', { statSync: full.statSync, lstatSync: full.lstatSync }], ['no lstatSync', { statSync: full.statSync, rmSync: () => {} }]]) {
+            let r = await runFake(() => fsDeleteFolderSafeCore('x', { fs: fsPart }), 0)
+            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && !r.v.startsWith('opt.fs is invalid') }, { name, s: 'reject', str: true })
+        }
     })
 
     it(`should notify fail with the error code and reject at once (no retry) when the attempt throws a non-retryable error`, async function() {
@@ -338,6 +364,14 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
                 r3: 'rejected: input path is not a folder: ' + fp,
                 lines: ['attempt1', 'done1', 'skip:not-exist/0', 'skip:not-folder/0'],
             })
+        })
+
+        it(`should reject a string and keep the folder, instead of resolving as if it did not exist, when the caller passes opt.fs null`, async function() {
+            //wsemi-run09: 對外函數以{ fs, ...opt }展開, 呼叫端給opt.fs為null會覆蓋內建fs; 修前Core將其當作標的不存在而回成功, 資料夾仍在
+            let fd = fdt + 'keep'
+            fs.mkdirSync(fd, { recursive: true })
+            let r = await fsDeleteFolderSafe(fd, { fs: null }).then((v) => ({ s: 'resolve', v }), (e) => ({ s: 'reject', v: e }))
+            assert.strict.deepStrictEqual({ s: r.s, str: typeof r.v === 'string' && r.v.startsWith('opt.fs is invalid'), exists: fs.existsSync(fd) }, { s: 'reject', str: true, exists: true })
         })
 
     })

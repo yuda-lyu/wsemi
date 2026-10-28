@@ -4,6 +4,7 @@ import cint from './cint.mjs'
 import delay from './delay.mjs'
 import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
+import fsMissFns from './_fsMissFns.mjs'
 import errToStr from './_errToStr.mjs'
 import getTrace from './getTrace.mjs'
 
@@ -15,9 +16,9 @@ import getTrace from './getTrace.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=null] 輸入設定物件，預設null
- * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫rmSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；n已達numRetry者等待後不再嘗試而接著giveup)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為前置檢查即結束而即將resolve或reject(含n為0與reason；reason為'not-exist'代表標的不存在而resolve、'not-folder'代表標的非資料夾而reject)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY')，'fail'時為前置檢查拋錯(n為0)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
+ * @param {Object} [opt.fs=null] 輸入fs物件，須提供statSync、lstatSync、rmSync，預設null；Core由呼叫端傳入(對外函數fsDeleteFolderSafe預設傳入內建fs，呼叫端可再以opt.fs覆蓋)；null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
+ * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫rmSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為前置檢查即結束而即將resolve或reject(含n為0與reason；reason為'not-exist'代表標的不存在而resolve、'not-folder'代表標的非資料夾而reject)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)
  * @example
  * need test in nodejs.
@@ -45,6 +46,16 @@ async function fsDeleteFolderSafeCore(pah, opt = {}) {
 
         //trace, 觀察回調(opt.onTrace), 未給時為null; 置於numRetry與fs之讀取之後, 使opt不可讀之既有失敗路徑不變
         trace = getTrace(opt)
+
+        //check fs, 須提供statSync: fsExistsCore吞掉statSync之所有錯誤, fs為null或無statSync時對其呼叫之TypeError被吞而誤判標的不存在, 回傳成功卻沒有刪除任何東西
+        //  缺少lstatSync或rmSync者, 其呼叫之TypeError不被吞(前置檢查與重試迴圈皆在try內)而依既有路徑以字串reject, 不需另檢查
+        let miss = fsMissFns(fs, ['statSync'])
+        if (miss.length > 0) {
+            if (trace) {
+                trace('fail', { n: 0, code: null })
+            }
+            return Promise.reject('opt.fs is invalid: it must be an object providing statSync (and lstatSync, rmSync)')
+        }
 
         //check, 需先判斷
         if (!fsExistsCore(pah, { fs })) {
@@ -118,10 +129,13 @@ async function fsDeleteFolderSafeCore(pah, opt = {}) {
             }
             catch (e) {}
             if (code === 'EBUSY') {
-                if (trace) {
-                    trace('retry', { n: i + 1, code: 'EBUSY', ms: 300 })
+                //最後一次嘗試失敗後已無下一次嘗試, 不再等待(原多等300ms才reject)也不通知retry, 直接離開迴圈由下方giveup處理
+                if (i < numRetry - 1) {
+                    if (trace) {
+                        trace('retry', { n: i + 1, code: 'EBUSY', ms: 300 })
+                    }
+                    await delay(300)
                 }
-                await delay(300)
             }
             else {
                 if (trace) {

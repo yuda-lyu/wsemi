@@ -1,6 +1,8 @@
 import assert from 'assert'
 import domDrag from '../src/domDrag.mjs'
 import { mkFakeDom, clearFakeDom, trackIntervals, tick } from './tools/fakeDom.mjs'
+import { useFakeClock } from './tools/timeKit.mjs'
+import { mkRec, fiveOnTrace, watchUnhandled, mkMeta, flush, keysByType, allPrimitive } from './tools/domDragTraceKit.mjs'
 
 
 let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -788,6 +790,409 @@ describe(`domDrag`, function() {
             await tick()
         }
         assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [1, 1, 0.4], [0, 0, null]])
+    })
+
+})
+
+
+//runDragScenario, 以假時鐘跑一組完整情境(完整拖曳、延遲前blur取消、觸控取消、來源解除), 回傳各步驟後之可觀察狀態與公開事件; onTrace為待測之回調選項, rec給定時一併回傳其事件簡式
+async function runDragScenario(onTrace, k, rec = null) {
+    let env = mkFakeDom()
+    let c = useFakeClock()
+    let its = []
+    try {
+        let [a, b] = mkItems(env, 2, `trs${k}`, { opt: { onTrace, timeDragStartDelay: 120 } })
+        its = [a, b]
+        let m = mouse(env)
+        let t = touch(env)
+        let log = []
+        let snap = () => [env.previews(), opacity(env), env.nWinListeners(), events(a.rec).length, events(b.rec).length]
+        //1. 完整拖曳: 延遲到點建立預覽, 經過b後放下
+        m.press(a)
+        log.push(snap())
+        await c.advance(119)
+        log.push(snap())
+        await c.advance(1)
+        log.push(snap())
+        m.move(b.pt)
+        log.push(snap())
+        m.move(b.pt)
+        m.up(b.pt)
+        log.push(snap())
+        //2. 延遲前視窗失焦而取消
+        m.press(b)
+        await c.advance(30)
+        env.winDispatch('blur')
+        log.push(snap())
+        //3. 觸控起手, 預覽建立後被取消
+        t.start(a, { ...a.pt, id: 1 })
+        await c.advance(120)
+        log.push(snap())
+        t.cancel(a, { ...a.pt, id: 1 })
+        log.push(snap())
+        //4. 預覽建立後來源解除而取消
+        m.press(a)
+        await c.advance(120)
+        a.d.unbind()
+        await flush()
+        log.push(snap())
+        return {
+            log,
+            pub: [a.rec, b.rec],
+            nSet: [Object.fromEntries(a.el.nSet), Object.fromEntries(b.el.nSet)],
+            nEle: [a.el.nListeners(), b.el.nListeners()],
+            lines: rec ? rec.lines() : null,
+        }
+    }
+    finally {
+        for (let it of its) {
+            it.d.unbind()
+        }
+        await flush()
+        c.restore()
+    }
+}
+
+
+describe(`domDrag onTrace(R-TRACE-01)`, function() {
+
+    let all = []
+    let clock = null
+
+    afterEach(async function() {
+        for (let d of all) {
+            d.unbind()
+        }
+        all = []
+        await flush()
+        if (clock) {
+            clock.restore()
+            clock = null
+        }
+    })
+
+    after(function() {
+        clearFakeDom()
+    })
+
+    it(`should notify start, timer set, timer fire at the delay, preview create, then preview remove and end drop in causal order`, async function() {
+        //JSDoc onTrace: timeDragStartDelay(預設120ms)本身即規格, 以假時鐘斷言到點時刻(119ms未到、120ms到點); preview create於預覽建立後通知, remove於放開時先移除預覽, end於狀態皆清除後通知
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let rec = mkRec(() => [env.previews(), env.nWinListeners() > 0])
+        let [a, b] = mkItems(env, 2, 'tr1', { opt: { onTrace: rec.on, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a)
+        await clock.advance(119)
+        let at119 = rec.timed()
+        await clock.advance(1)
+        await rec.wait((e) => e.type === 'preview' && e.phase === 'create')
+        let opAtCreate = opacity(env)
+        m.move(b.pt)
+        m.up(b.pt)
+        assert.strict.deepStrictEqual(at119, ['start:0/false@0', 'timer:set/120@0'])
+        assert.strict.deepStrictEqual(rec.timed(), ['start:0/false@0', 'timer:set/120@0', 'timer:fire/120@120', 'preview:create@120', 'preview:remove@120', 'end:drop/0@120'])
+        //通知當下[預覽數, 會話監聽是否存在]: 預覽建立後為1, 放開時預覽先移除而監聽尚在, end時預覽與監聽皆已清除
+        assert.strict.deepStrictEqual(rec.snaps, [[0, true], [0, true], [0, true], [1, true], [0, true], [0, false]])
+        assert.strict.deepStrictEqual([opAtCreate, events(b.rec)], [0.2, ['enter', 'drop']])
+    })
+
+    it(`should notify timer cancel and end release when released outside any item before the delay, and nothing afterwards`, async function() {
+        //JSDoc onTrace: timer cancel為拖曳於到點前結束而取消; end release為放開於項目外; 取消後計時器不再到點(假時鐘推進超過延遲仍無事件、無預覽)
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, 'tr2', { opt: { onTrace: rec.on, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a)
+        await clock.advance(50)
+        m.up({ x: 300, y: 300 })
+        let ended = rec.timed()
+        await clock.advance(500)
+        assert.strict.deepStrictEqual(ended, ['start:0/false@0', 'timer:set/120@0', 'timer:cancel/120@50', 'end:release/0@50'])
+        assert.strict.deepStrictEqual([rec.timed(), env.previews(), env.nWinListeners()], [ended, 0, 0])
+    })
+
+    it(`should report the resolved delay in timer set: default for invalid values, numeric strings, negative as 0, Infinity clamped to the timer limit`, async function() {
+        //JSDoc timeDragStartDelay: 無效時用預設120, 數字字串依其值, 負數視為0, 超過計時器上限(含Infinity)夾至上限2147483647; timer事件之ms為解析後之值
+        clock = useFakeClock()
+        let got = []
+        let i = 0
+        for (let v of ['x', ' ', '5', -5, Infinity]) {
+            let env = mkFakeDom()
+            let rec = mkRec()
+            let [a, b] = mkItems(env, 2, `tr3_${i++}`, { opt: { onTrace: rec.on, timeDragStartDelay: v } })
+            all.push(a.d, b.d)
+            mouse(env).press(a)
+            got.push(rec.events.filter((e) => e.type === 'timer').map((e) => `${e.phase}/${e.ms}`))
+        }
+        assert.strict.deepStrictEqual(got, [['set/120'], ['set/120'], ['set/5'], ['set/0'], ['set/2147483647']])
+    })
+
+    it(`should notify end with the reason of each way a drag finishes, always after timer cancel and before leave and drop`, async function() {
+        //JSDoc end reason: drop放開於項目上、release放開於項目外、buttons移動時主鍵已放開、touchcancel起手手指被取消、blur視窗失焦、inactive群組被停用、source-gone來源元素解除且未重建(移動、放開、解除後microtask三條路徑)、takeover新的按下接手前一次未收尾之拖曳; 同一次拖曳只通知一次end
+        let ln = (head, tail) => ['start:' + head, 'timer:set/120', ...tail]
+        let cancelEnd = (r, ind = 0) => ['timer:cancel/120', `end:${r}/${ind}`]
+        let gone = ln('0/false', ['unbind:true', ...cancelEnd('source-gone')])
+        //各案: [名稱, 起手方式(mouse0由項目0、mouse1由項目1滑鼠按下、touch由項目0觸控), 動作, 預期事件序列]
+        let cases = [
+            ['drop', 'mouse0', ({ m, b }) => m.up(b.pt), ln('0/false', cancelEnd('drop'))],
+            ['release', 'mouse0', ({ m }) => m.up({ x: 300, y: 300 }), ln('0/false', cancelEnd('release'))],
+            ['buttons', 'mouse1', ({ m, a }) => m.move(a.pt, { buttons: 0 }), ln('1/false', cancelEnd('buttons', 1))],
+            ['touchcancel', 'touch', ({ t, a, b }) => {
+                t.cancel(a, { ...b.pt, id: 9 }) //他指之取消不影響
+                t.cancel(a, { ...b.pt, id: 1 })
+            }, ln('0/true', cancelEnd('touchcancel'))],
+            ['blur', 'mouse0', ({ env }) => env.winDispatch('blur'), ln('0/false', cancelEnd('blur'))],
+            ['inactive', 'mouse0', ({ a }) => a.d.setIsActive(false), ln('0/false', cancelEnd('inactive'))],
+            ['gone-move', 'mouse0', ({ a, b, m }) => {
+                a.d.unbind()
+                m.move(b.pt)
+            }, gone],
+            ['gone-up', 'mouse0', ({ a, b, m }) => {
+                a.d.unbind()
+                m.up(b.pt)
+            }, gone],
+            ['gone-microtask', 'mouse0', async ({ a }) => {
+                a.d.unbind()
+                await flush()
+            }, gone],
+            ['takeover', 'mouse0', ({ m, a }) => m.press(a), ['start:0/false', 'timer:set/120', ...cancelEnd('takeover'), 'start:0/false', 'timer:set/120']],
+        ]
+        clock = useFakeClock()
+        let got = {}
+        let want = {}
+        let late = {}
+        for (let [k, how, act, exp] of cases) {
+            let env = mkFakeDom()
+            let rec = mkRec()
+            let [a, b] = mkItems(env, 2, `tr4_${k}`, { opt: { onTrace: rec.on, timeDragStartDelay: 120 } })
+            all.push(a.d, b.d)
+            let m = mouse(env)
+            let t = touch(env)
+            let from = how === 'mouse1' ? b : a
+            if (how === 'touch') {
+                t.start(from, { ...from.pt, id: 1 })
+            }
+            else {
+                m.press(from)
+            }
+            await act({ env, a, b, m, t })
+            got[k] = rec.lines()
+            await flush() //其後之microtask不得再通知(同一次拖曳只一個end)
+            late[k] = rec.lines()
+            want[k] = exp
+        }
+        assert.strict.deepStrictEqual(got, want)
+        assert.strict.deepStrictEqual(late, want)
+    })
+
+    it(`should notify no timer when the start listener already ended the drag, and nothing for presses that do not start a drag`, function() {
+        //start之監聽器內結束拖曳(停用群組): 不排定計時器, 僅start與end(inactive); 非主鍵、停用中、無有效順序指標之按下不起手: 無事件, 無拖曳時setIsActive亦無end
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, 'tr5', { opt: { onTrace: rec.on, timeDragStartDelay: 777 } })
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a, a.pt, { button: 2, buttons: 2 })
+        m.press(a, a.pt, { button: 1, buttons: 4 })
+        a.d.setIsActive(false)
+        m.press(a)
+        a.d.setIsActive(true)
+        a.el.removeAttribute('dragindex')
+        m.press(a)
+        a.el.setAttribute('dragindex', '0')
+        let idle = rec.lines()
+        a.d.on('start', () => {
+            a.d.setIsActive(false)
+        })
+        m.press(a)
+        assert.strict.deepStrictEqual([idle, rec.lines()], [[], ['start:0/false', 'end:inactive/0']])
+    })
+
+    it(`should notify start and end before delivering the start, leave and drop events, even when a drop listener throws`, function() {
+        //派發使用端事件者於派發前通知(監聽器拋錯而中斷派發時仍已通知): start先於start監聽器, end先於leave與drop監聽器
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let order = []
+        let rec = mkRec()
+        let onTrace = (e) => {
+            if (e.type === 'start' || e.type === 'end') {
+                order.push(`t:${e.type}`)
+            }
+            rec.on(e)
+        }
+        let [a, b, c] = mkItems(env, 3, 'tr6', { opt: { onTrace, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d, c.d)
+        a.d.on('start', () => order.push('l:start'))
+        b.d.on('leave', () => order.push('l:leave'))
+        let boom = false
+        c.d.on('drop', () => {
+            order.push('l:drop')
+            if (boom) {
+                throw new Error('consumer boom')
+            }
+        })
+        let m = mouse(env)
+        m.press(a)
+        m.move(b.pt)
+        m.up(c.pt)
+        let first = order.slice()
+        boom = true
+        let k = rec.mark()
+        m.press(a)
+        assert.throws(() => m.up(c.pt), /consumer boom/)
+        assert.strict.deepStrictEqual(first, ['t:start', 'l:start', 't:end', 'l:leave', 'l:drop'])
+        assert.strict.deepStrictEqual(rec.lines(k), ['start:0/false', 'timer:set/120', 'timer:cancel/120', 'end:drop/0'])
+        assert.strict.deepStrictEqual([env.previews(), env.nWinListeners()], [0, 0])
+    })
+
+    it(`should notify unbind with whether a drag of this element was in progress, once per instance, then end source-gone`, async function() {
+        //JSDoc onTrace: unbind(drag)於解除當下通知, 重複呼叫不通知, 解除後不再起手; 進行中之拖曳於下一個microtask取消(preview remove、end source-gone), 他成員解除不影響拖曳
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, 'tr7', { opt: { onTrace: rec.on, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a)
+        await clock.advance(120)
+        b.d.unbind()
+        let afterOther = [rec.lines().slice(-1), env.previews()]
+        a.d.unbind()
+        a.d.unbind()
+        let sync = rec.lines()
+        await flush()
+        assert.strict.deepStrictEqual(afterOther, [['unbind:false'], 1])
+        assert.strict.deepStrictEqual(sync, ['start:0/false', 'timer:set/120', 'timer:fire/120', 'preview:create', 'unbind:false', 'unbind:true'])
+        assert.strict.deepStrictEqual(rec.lines(), [...sync, 'preview:remove', 'end:source-gone/0'])
+        //解除後之按下不再起手
+        let n = rec.events.length
+        m.press(a)
+        m.press(b)
+        assert.strict.deepStrictEqual([rec.events.length, env.previews()], [n, 0])
+    })
+
+    it(`should report a drag only to the callback of the instance that started it, also after the source is rebound`, async function() {
+        //一次拖曳之事件皆由起手元素之回調通知(落點元素之回調不通知); 宿主重繪時先解除再重建(拖曳延續)者, 後續事件仍由起手實例之回調通知, 新實例之回調不收
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let recA = mkRec()
+        let recA2 = mkRec()
+        let recB = mkRec()
+        let [a, b] = mkItems(env, 2, 'tr8', { opt: { onTrace: recA.on, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d)
+        b.d.unbind()
+        b.opt = { ...b.opt, onTrace: recB.on }
+        b.bind()
+        all.push(b.d)
+        await flush()
+        let k = recA.mark()
+        let m = mouse(env)
+        m.press(a)
+        await clock.advance(120)
+        m.move(b.pt)
+        a.d.unbind()
+        a.opt = { ...a.opt, onTrace: recA2.on }
+        a.bind()
+        all.push(a.d)
+        await flush()
+        m.move(b.pt)
+        m.up(b.pt)
+        assert.strict.deepStrictEqual(recA.lines(k), ['start:0/false', 'timer:set/120', 'timer:fire/120', 'preview:create', 'unbind:true', 'preview:remove', 'end:drop/0'])
+        assert.strict.deepStrictEqual([recA2.lines(), recB.lines(), events(b.rec)], [[], [], ['enter', 'move', 'drop']])
+    })
+
+    it(`should not pass onTrace on to the preview it creates`, async function() {
+        //JSDoc onTrace: 內部建立之預覽(domDragPreview)不轉傳回調, 各自只通知自己之事件; 預覽存在期間每500ms之確認(tick)不出現在domDrag之事件流
+        let env = mkFakeDom()
+        clock = useFakeClock()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, 'tr9', { opt: { onTrace: rec.on, timeDragStartDelay: 120 } })
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a)
+        await clock.advance(120)
+        await clock.advance(1500)
+        let pv = env.previews()
+        m.up(b.pt)
+        assert.strict.deepStrictEqual(pv, 1)
+        assert.strict.deepStrictEqual(rec.timed(), ['start:0/false@0', 'timer:set/120@0', 'timer:fire/120@120', 'preview:create@120', 'preview:remove@1620', 'end:drop/0@1620'])
+    })
+
+    it(`should give the same results without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時行為不變(預覽、透明度、會話監聽、公開事件、屬性寫入次數、元素監聽數皆同); P4: 回調之拋錯與回傳之rejection不影響拖曳、不產生未處理之rejection
+        let un = watchUnhandled()
+        let rec = mkRec()
+        let got = []
+        try {
+            let k = 0
+            for (let onTrace of fiveOnTrace(rec.on)) {
+                got.push(await runDragScenario(onTrace, k++, onTrace === rec.on ? rec : null))
+            }
+            await flush()
+            await flush()
+        }
+        finally {
+            un.stop()
+        }
+        let ref = { ...got[0], lines: null }
+        assert.strict.deepStrictEqual(got.map((r) => ({ ...r, lines: null })), [ref, ref, ref, ref, ref])
+        assert.strict.deepStrictEqual(un.list, [])
+        //情境本身確實跑到各步驟: 預覽於到點才出現, 放下、blur取消、觸控取消、來源解除後皆已清除
+        assert.strict.deepStrictEqual(got[0].log.map((x) => x[0]), [0, 0, 1, 1, 0, 0, 1, 0, 0])
+        //紀錄器收到之完整事件序列(四個階段)
+        assert.strict.deepStrictEqual(got[1].lines, [
+            'start:0/false', 'timer:set/120', 'timer:fire/120', 'preview:create', 'preview:remove', 'end:drop/0',
+            'start:1/false', 'timer:set/120', 'timer:cancel/120', 'end:blur/1',
+            'start:0/true', 'timer:set/120', 'timer:fire/120', 'preview:create', 'preview:remove', 'end:touchcancel/0',
+            'start:0/false', 'timer:set/120', 'timer:fire/120', 'preview:create', 'unbind:true', 'preview:remove', 'end:source-gone/0',
+        ])
+    })
+
+    it(`should notify with frozen events of fixed primitive fields and no receiver`, async function() {
+        //R-TRACE-01 P4: 事件為凍結物件、各type之欄位固定且皆為原始值、回調不帶接收者
+        let rec = mkRec()
+        let meta = mkMeta(rec)
+        await runDragScenario(meta.on, 'meta')
+        assert.strict.deepStrictEqual(keysByType(rec.events), { start: 'ind,touch,type', timer: 'ms,phase,type', preview: 'phase,type', end: 'ind,reason,type', unbind: 'drag,type' })
+        assert.strict.deepStrictEqual(allPrimitive(rec.events), true)
+        assert.strict.deepStrictEqual(meta.meta.length > 0 && meta.meta.length === rec.events.length && meta.meta.every(([self, frozen]) => self === undefined && frozen), true)
+    })
+
+    it(`should build no event object when onTrace is not a function`, function() {
+        //R-TRACE-01 P3: 未傳(或非函數)回調時不組事件物件(零額外成本), 傳了才組; 以Object.freeze呼叫數觀察(事件物件由getTrace凍結); 只含同步之起手、移動、放開
+        let freeze = Object.freeze
+        let seq = 0
+        let count = (onTrace) => {
+            let env = mkFakeDom()
+            clock = useFakeClock()
+            let [a, b] = mkItems(env, 2, `tr10_${seq++}`, { opt: { onTrace, timeDragStartDelay: 120 } })
+            all.push(a.d, b.d)
+            let m = mouse(env)
+            let n = 0
+            Object.freeze = (o) => {
+                n++
+                return freeze(o)
+            }
+            try {
+                m.press(a)
+                m.move(b.pt)
+                m.up(b.pt)
+            }
+            finally {
+                Object.freeze = freeze
+            }
+            a.d.unbind()
+            b.d.unbind()
+            clock.restore()
+            clock = null
+            return n
+        }
+        assert.strict.deepStrictEqual([count(undefined), count('abc'), count(null), count(() => {}) > 0], [0, 0, 0, true])
     })
 
 })
