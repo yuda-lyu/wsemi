@@ -4,6 +4,7 @@ import genPm from './genPm.mjs'
 import ispm from './ispm.mjs'
 import isestr from './isestr.mjs'
 import isp0int from './isp0int.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -20,6 +21,7 @@ import isp0int from './isp0int.mjs'
  * @param {Integer} ms 輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘reject錯誤'invalid ms[ms數]'
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.label=''] 輸入識別字串，將置於逾時錯誤訊息之前綴以利辨識來源，非有效字串時回退為空字串，預設''
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'start'時為已啟動逾時計時器(含ms為夾至上限後之逾時毫秒數)，'timeout'時為逾時計時器已到期而即將reject逾時錯誤(含ms)，'settle'時為本函數即將resolve或reject(含by為'pm'代表pm先完成、'timeout'代表逾時勝出、'invalid'代表輸入檢核失敗，ok為pm先完成時是否resolve，逾時與檢核失敗皆為false)；每次呼叫恰通知一次settle，檢核失敗時不通知start與timeout；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響逾時判定，預設null
  * @returns {Promise} 回傳Promise，pm先完成則resolve或reject其結果，逾時則reject一個code為'TIMEOUT'之Error
  * @example
  * //need test in nodejs
@@ -67,14 +69,23 @@ import isp0int from './isp0int.mjs'
  */
 async function pmTimeout(pm, ms, opt = {}) {
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
+
     //check, pm與ms給錯視為程式撰寫錯誤
     //本函數為async function, 故此處throw會轉為reject傳出, 與pm*家族之錯誤傳遞管道一致(見pmSeries/pmChain)
     if (!ispm(pm)) {
+        if (trace) {
+            trace('settle', { by: 'invalid', ok: false })
+        }
         throw new Error(`invalid pm`)
     }
 
     //check
     if (!isp0int(ms)) {
+        if (trace) {
+            trace('settle', { by: 'invalid', ok: false })
+        }
         throw new Error(`invalid ms[${ms}]`)
     }
 
@@ -96,18 +107,39 @@ async function pmTimeout(pm, ms, opt = {}) {
     //timeout, 計時器用Promise, 逾時即reject
     let t
     let timeout = genPm()
+    let byTimeout = false //僅trace時用, 逾時計時器是否已到期
+    let pmOk = null //僅trace時用, pm自身是否resolve
+    if (trace) {
+        pm.then(() => {
+            pmOk = true
+        }, () => {
+            pmOk = false
+        })
+    }
     t = setTimeout(() => {
+        if (trace) {
+            byTimeout = true
+            trace('timeout', { ms })
+        }
         let e = new Error(msgErr)
         e.code = 'TIMEOUT' //供呼叫端辨別為逾時而非pm自身之錯誤
         e.timeout = ms
         timeout.reject(e)
     }, ms)
+    if (trace) {
+        trace('start', { ms })
+    }
 
     //race, 先完成者勝出
     //無論勝負皆須clearTimeout: pm先完成時若不清除, 計時器會持續佔住event loop而延後process結束
     //pm逾時落敗後其自身之reject仍由Promise.race內部掛載之handler接住, 不會產生unhandled rejection
     let r = Promise.race([pm, timeout])
-        .finally(() => clearTimeout(t))
+        .finally(() => {
+            clearTimeout(t)
+            if (trace) {
+                trace('settle', { by: byTimeout ? 'timeout' : 'pm', ok: byTimeout ? false : pmOk === true })
+            }
+        })
 
     return r
 }

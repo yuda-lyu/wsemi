@@ -97,6 +97,7 @@ describe(`fsCopyFile`, function() {
 //fsCopyFile之失敗案例: 每案於獨立子行程執行(test/tools/fsFailRunner.mjs之CF*), 夾具建於test/_tmp/fsFail-<案名>/並於案例結束刪除(先解除ACL拒絕、銷毀攔得之串流)
 //  結果值經執行器之dv描述: { s: 'resolve'|'return'|'reject'|'syncThrow'|'pending', k }, 結果物件為{ k: 'result', keys, error: { k, v } }; 故可分辨回傳結果物件、reject與同步拋出, 及error為null/undefined
 //  串流之釋放以opt.fs代理攔得之實例判定(destroyed、fd已關閉): 開啟中之fd不是active resource, process.getActiveResourcesInfo()分辨不出(探測於修前修後皆為[]), 僅附帶斷言無殘留之FSReqCallback
+//  串流狀態於各串流'close'後才取(執行器之closedState; 已關閉者即成立, 永不close者於防懸置上限後標closeTimeout而斷言失敗), 不以結果回傳後固定sleep猜fd何時關閉(R-TRACE-01 規則5: 以事件同步, 不以固定等待後檢查)
 //  ev(r)、ev0: 子行程之未處理rejection與未捕捉例外及其期望(皆空); Windows專屬之真實觸發(ACL拒讀)於他平台skip
 describe(`fsCopyFile 失敗回報(R-FS-REJECT-01)`, function() {
 

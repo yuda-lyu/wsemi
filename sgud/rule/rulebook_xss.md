@@ -1,0 +1,58 @@
+# 規則帳本(XSS 偵測與清洗)
+
+本檔自 `sgud/rule/rulebook.md` 搬移而來(2026-10-28 整理,wsemi-run08):各節之節號與標題不變、內容逐字未動;全部條目之索引見 `sgud/rule/rulebook.md`〈索引〉.
+
+## R-XSS-01 js-xss 之取得與設定單一出處;偵測回報清洗會轉義或刪除之可疑項目
+
+- 單一擁有者: `src/_filterXSS.mjs`(`getFilterXSS`、`getOpt`),為 src 內唯一 `import xss` 者;使用端 `src/clearXSS.mjs`、`src/detectXSS.mjs`;`src/clearXSSDyn.mjs`、`src/detectXSSDyn.mjs` 動態載入後委派之.
+- 規則:
+  1. 取得 js-xss 一律經 `getFilterXSS()`: import 者 → 全域 `filterXSS`(js-xss 瀏覽器版所掛)→ 全域 `xss`(相容)→ 拋 `invalid filterXSS`.不得於各函數自寫取得邏輯.UMD 之 xss 為 external,於 wsemi 載入當下取全域值,xss 晚於 wsemi 載入(Dyn 函數)時 import 者為 undefined,須於執行時找全域.
+  2. js-xss 設定一律經 `getOpt(filterXSS)`(白名單、網址判定用 js-xss 預設,另保留白名單外之 style 屬性並跳脫其值,文字之轉義用 `escapeHtml`),clearXSS 與 detectXSS 共用;clearXSS 於有字串須處理時才取得 js-xss,非字串輸入於未載入 xss 時仍回原值.
+  2a. 標籤外之文字與白名單外之標籤只轉義會開始標籤之 `<`: `/<(?=[A-Za-z!/?]|$)/g`(依 HTML 規格 Tag open state,後接英文字母、斜線、驚嘆號、問號者;**結尾之 `<` 亦轉義**,否則兩欄各自清除後相連會拼出標籤),`>` 與其餘之 `<` 不轉義.白名單內標籤之屬性值仍由 js-xss 之 `escapeAttrValue` 轉義 `<>"`(不經此函數).輸出僅供 HTML 內文(v-html、innerHTML)使用,不可放入屬性值或註解內.
+  3. detectXSS 以包裝共用設定之回呼判定:共用設定之原處理回傳 undefined/null(即由 js-xss 轉義或刪除)才計,故共用設定改變時偵測自動同步.
+  4. detectXSS 判定: ①白名單外標籤,名稱由原始片段以 `^<\/?([a-z][a-z0-9-]*)(?=[\t\n\f\r />]|$)` 取(含 `<svg/onload>`,不含 `< 500`、`5<6>`、`<o:p>`、註解;原始片段恰為 `<名稱`/`</名稱`(結尾未閉合且無屬性,js-xss 取名少一字而歸白名單外)且名稱在白名單者不計,如 `若 a<b`);②被刪之事件屬性,名稱 `^on[a-z]+$` 且有值;③href/src 被擋且依 HTML5 解碼字元參照(屬性值模式)、刪 tab 與換行、刪開頭字碼 0~32 後協定為 javascript/vbscript/data,相對網址被擋不計;④有 `<!--` 時另以 `allowCommentTag:true` 再解析一次取聯集(js-xss 只認 `-->`,瀏覽器另認 `--!>`;只解析註解又會被註解內引號吞掉後文);⑤依出現順序、重複合併;非字串或空字串回 `[]`.
+- 已知限制: style 屬性比照 clearXSS 保留不檢查(全版面 fixed 遮罩不報);非 HTML 之純文字(如 `javascript:alert(1)`)不偵測,網址欄位須另檢查協定;js-xss 預設網址白名單會擋不以 `./`、`../`、`/`、`#` 開頭之相對路徑(clearXSS 刪除其值,detectXSS 不報).clearXSS 仍會改寫 `<` 接英文字母之文字(`a<b`→`a&lt;b`),且 js-xss 會把形似白名單標籤之文字當標籤而吃字(`若 a<b 則停止`→`若 a<b>`、`A<B>C`→`A<b>C`,結尾之 `<if` 取名少一字成 `<i>`),寫入時清除之使用端須自行處理被改寫之主鍵;放入註解內時 `-->` 不轉義會使後文外露(非 XSS).
+- 盤點指令: 以 Grep 於 `src/` 搜 `from 'xss'|filterXSS\(|g\.xss|fxss\.`.
+- 站點全集與判準(2026-10-11 盤點):
+  - `src/_filterXSS.mjs`: 唯一 `import xss` 者,已套.
+  - `src/clearXSS.mjs`、`src/detectXSS.mjs`: 經 `fxss`(`_filterXSS` 之預設匯出)取得與設定,已套.
+  - `src/clearXSSDyn.mjs`、`src/detectXSSDyn.mjs`: 動態載入後委派,已套.
+- 軸: 標籤(白名單內/外、斜線分隔屬性、大小寫、未閉合、巢狀拆字、自訂元素、比較符號與數字與冒號名稱)× 屬性(事件/一般/style/空值/非 on 接字母)× 網址(href/src × 協定 × 字元參照/tab 換行/開頭控制字元/大小寫/相對路徑/允許之網址)× 註解(`-->`/`--!>`/空註解/註解內引號/一般註解)× 輸入型別 × 載入方式(Node import/UMD 預載/UMD 動態載入/未載入).
+- 測試: `test/detectXSS.test.mjs`(規則①~⑤與現行作法誤報之字元參照、非字串、結尾裸白名單標籤)、`test/_filterXSS.test.mjs`(取得之退路順序與拋錯、共用設定、只轉義會開始標籤之 `<`、屬性值轉義不變)、`test/clearXSS.test.mjs`(維持原樣之數學式、須轉義者含大寫與結尾、白名單標籤與屬性值處理不變、攻擊字串於每個位置切兩欄各自清除後相連不得拼出非白名單標籤或事件屬性).指令: `npx mocha --no-parallel test/detectXSS.test.mjs test/_filterXSS.test.mjs test/clearXSS.test.mjs --timeout 180000`.Dyn 函數之測試檔為 need test in browser,以自編 UMD 於真 Chromium 驗收(不預載 xss、CDN 以 page.route 供本機 `node_modules/xss/dist/xss.min.js`).
+- 變更紀錄:
+  - 2026-10-11: 新增 `_filterXSS`、`detectXSS`、`detectXSSDyn`;clearXSS 改經 `_filterXSS`(77 個字串與 8 個非字串/巢狀輸入之輸出改前改後相同);修正 clearXSS 只找全域 `xss` 致 UMD 版 clearXSSDyn 於未預載 xss 時拋 `t is not a function`(README 所述用法即不預載);瀏覽器未載入 xss 時字串輸入之錯誤訊息改為 `invalid filterXSS, g.filterXSS, use script for import`.依據: 67 個案例以真 Chromium 判定 31 個會執行,detectXSS 漏報 0、21 個一般文字誤報 0;提案(rddmanager 之 建議wsemi擴充.md)字面規則漏報 7~11 個.
+  - 2026-10-11: 內部模組初名 `_xssCore`,依使用者指示改為 `_filterXSS`(wsemi 之 `*Core` 為 fs 與 execCli 之核心實作命名,避免混淆);`examples/ex-clearXSSDyn.html` 移除預載 xss 之 script(原與 README「Dyn 不需引用」不符,並遮蔽了上述缺陷),Dyn 範例一律不預載依賴.
+  - 2026-10-12: 依 w-serv-orm 之建議wsemi修正.md,`getOpt` 加 `escapeHtml`(規則 2a),數學式、箭頭、markdown 引用之 `<>` 不再轉義(一般文字 47 筆維持原樣由 7 增為 31);`test/clearXSS.test.mjs` 6 個含 `&gt;` 之期望值改為 `>`;clearXSS、clearXSSDyn 範例輸出同改,clearXSSDyn 文件補 `opt`(保留簽名相容,不使用)與 `pathItems`.依據: 真 Chromium DOMParser 81,630 次解析(176 單欄、6,934 切兩欄、9,216 任兩欄 × 內文/td/div/p/textarea)現行與實作皆 0 危險,無結尾條者 854;實作與評估原型於 176 案與 2 萬筆隨機字串一致且冪等;變異測試 9 項皆被抓到.同日修 detectXSS 結尾裸白名單標籤誤報(`a<b` 原報標籤 b).
+  - 2026-10-17: clearXSS 遞迴改以自有可列舉鍵迭代物件、索引迭代陣列(規則見 R-OBJ-ITER-01,破壞性變更紀錄第 16 條): 修正含非負整數 `length` 鍵之物件其內字串未清除(清除繞過)與依 `length` 逐一建立索引鍵致記憶體耗盡;`test/clearXSS.test.mjs` 增 43 案.
+  - 2026-10-20: clearXSS 走訪改顯式堆疊＋記憶化(規則見 R-XSS-WALK-01,破壞性變更紀錄第 30 條): 深巢狀、循環不再拋,DAG 線性,Map 值/Set 元素/Symbol 鍵值納入清除;字串路徑(`filterXSS` 與 `getOpt` 設定)不變.
+
+## R-XSS-WALK-01 clearXSS 之走訪: 顯式堆疊、來源物件只處理一次、複製後依終態清除、型別處置表
+
+- 依據: 排程第 62 項(`建議wsemi修正.md` ①,源自第 61 項外審 F5/F6);審計 run01(`C:\opensrcOper\dnow\20261020083554\agent-out\run01-審計回應.md`)與主控複審裁示 D1~D8、D11(`review\run01-複審.md`);run02 外審(opus、sol、minimax)後依其發現重構(見〈外審〉).
+- 修前缺陷(`scxss(cloneDeep(inp))`,2026-10-20 實測): ① 深巢狀同步拋 `RangeError`: 冷行程約 1767 層(陣列 JSON 約 3.5 KB、物件約 10.6 KB),首失敗點是 lodash `cloneDeep`(非 scxss),`JSON.parse` 可解 300 萬層故網路可達; ② 循環參照同步 `RangeError`; ③ 共用子結構(DAG)被逐路徑重走: 每層兩個參照指向同一子物件,n 層即 2^n 次 `filterXSS`(n=22 為 4,194,304 次約 1.4 s),且 clearXSS 對字串**非冪等**(`<b='<<>` 清一次得 `&lt;b='<<>`、再清一次得 `&lt;b='&lt;<>`),故共用物件內之字串被清多次、輸出依到達路徑數而異; ④ Map 值、Set 元素、Symbol 鍵之值被複製而**不清除**; ⑤ 以**不可寫** `Symbol.toStringTag` 偽稱 `'Array'` 之物件使 lodash `cloneDeep` 拋 `TypeError`(偽稱 `'Arguments'` 者鍵被改成索引鍵並丟失 `length`).
+- 規則:
+  1. 走訪不用遞迴: 以顯式工作堆疊(深度優先前序)走訪,深度只受堆積限制(實測 100 萬層 0.15~0.33 s、堆積約 190~220 MB;Map/Set 每層較大,30 萬層約 150 MB);**不設深度/節點上限**(主控裁示 D7: clearXSS 無錯誤通道,上限屬 API 邊界,另立下游項).
+  2. 以來源物件之參照記憶化(`Map`: 來源 → 輸出): 同一來源物件(物件、陣列、Map、Set、經 lodash 複製者、非空包裝 String)只處理一次,輸出中對應同一輸出物件,故共用結構與循環參照於輸出中保持(不展開、不拋);成本與節點數成正比.共用物件內之字串因此只清一次(＝展開成樹之結果).
+  3. 分流(每個物件只取一次內部標籤 `Object.prototype.toString`):
+     - **快速路徑**(不經 lodash;JSON 可產生之輸入全在此): 原型為 `Array.prototype` 之真陣列 → 新陣列,依索引逐項處理(空洞補 `undefined`,非索引屬性丟棄,**正規表示式比對結果之 `index` 與 `input` 保留,`input` 亦清除**); 內部標籤為 `[object Object]` 且原型為 `Object.prototype` 之物件 → 新物件,依自有可列舉**字串鍵與 Symbol 鍵**逐項處理,`__proto__` 鍵以 `defineProperty` 設為自有資料屬性(writable、enumerable、configurable 皆真),`length` 為一般鍵(R-OBJ-ITER-01).
+     - `arguments` 物件與以 `Symbol.toStringTag` 偽稱 `Array`/`Arguments` 之物件(含不可寫標籤者; lodash 對其丟鍵或拋錯): 視為物件,依自有可列舉鍵走訪,輸出為一般物件並以 `defineProperty` 定義(不經原型 setter);`arguments` 之空缺索引與改過之 `length` 不具現(依自有鍵).
+     - 非空包裝 String → 清除後之原始字串(記憶化); 空包裝 String 不處理,回其複本.
+     - `Map`、`Set`(以內部槽確認,含跨 realm〔iframe、vm〕與子類別; 僅偽造標籤或原型者不算): 以來源之建構子建立; Map 值與 Set 元素逐項處理,**Map 鍵原樣**(不複製、不清除),清除後相同之 Set 元素合併; 自有可列舉屬性(字串鍵與 Symbol 鍵)一併處理.
+     - **其餘物件**(類別實例、null 原型物件、陣列子類別、跨 realm 之一般物件與陣列、Date、RegExp、型別陣列、Buffer、ArrayBuffer、包裝 Number、帶自訂標籤者、不可複製者…)沿用 lodash `cloneDeepWith` 之**淺複製**(其物件值屬性置換為佔位,其餘照 `cloneDeep` 語意,含原型、`initCloneObject` 與 `initCloneArray`、可寫標籤之揭開):
+       - 不可複製者(函數、Error、WeakMap、WeakSet、Promise、URL、包裝 BigInt/Symbol…): **巢狀**回同一參照、內部字串不清除;**根**回 `{}`; 根為函數時複製為一般物件並處理其可列舉屬性(同 `cloneDeep` 之頂層語意).
+       - 複本為陣列或 `[object Object]`(類別實例、null 原型物件〔→一般物件〕、陣列子類別、可寫而不可列舉之自訂標籤物件〔lodash 揭開標籤〕、跨 realm 物件…): 依**複本之終態**逐鍵處理——同修前「先複製後走訪」,故原型 setter 於複製時產生之鍵、陣列建構子新增之索引皆納入; 物件值屬性由主迴圈走訪(與記憶化共用).
+       - 複本為其他型別(Date、RegExp、型別陣列、Buffer、ArrayBuffer、包裝 Number、仍帶自訂標籤者…): 回傳複本,**自有字串屬性不清除**(同修前),自有物件值屬性由主迴圈走訪(共用與循環保持,不再另起 lodash 遞迴).
+  4. 鍵(物件字串鍵、Map 鍵)一律不清除(D6: 改鍵會碰撞、改資料形狀,鍵內標記由呼叫端處理); 以 `clearXSS(v) !== v` 檢測者不涵蓋鍵.
+  5. 根為原始值/字串時不配置記憶化表與工作框,`filterXSS` 與其設定(`getOpt`)有字串須處理時才取得且每次呼叫至多取得一次(保留未載入 xss 時非字串輸入仍回原值之性質).
+  6. 輸入不被修改(經 lodash `cloneDeep` 複製之特殊物件沿用其行為,如不可寫偽標籤之包裝物件); 輸出不與輸入共用可走訪容器(不可複製者之巢狀同參照、Map 之物件鍵除外).
+  7. 對 JSON 可產生之輸入(字串、number、boolean、null、純物件、陣列),輸出與修前**逐位元相同**(值、鍵序、原型、共用結構): 以修前演算法差分.
+- 已知限制: 清除對字串**不保證冪等**(上述 `<b='<<>`;根因在 js-xss 依上下文分段與 `escapeHtml` 之段尾規則;裁示 D8 僅登記觀察不修),已清除之值再送入可能再被改寫,使用 `clearXSS(v) !== v` 判「含標記」者(w-web-sso、w-web-perm、w-web-api、w-serv-orm `getItemsIdXSS`)對此類病態文字會誤判; Error(可由 `structuredClone` 產生)、WeakMap、Promise、URL、函數之屬性、原型資料、不可列舉屬性、Date 等複本之自有字串屬性、仍帶自訂 `Symbol.toStringTag` 之物件內的字串不清除; 讀取次數: 可列舉資料/存取器屬性讀一次,`constructor` 與 `Symbol.toStringTag` 另被型別辨識讀取(同修前); 巨大稀疏陣列為 O(length)(同修前); 深巢狀不再於 clearXSS 內拋錯,但下游之 `JSON.stringify`(約 4.8k 層)、lodash `isEqual`(約 2k 層)、`structuredClone` 仍有堆疊上限,深度防線屬 API 邊界(下游項); 瀏覽器 UMD 於未預載 xss 時,含字串之 Map 值、Set 元素、Symbol 鍵值之輸入由「回傳複本」改為拋 `invalid filterXSS`(有字串須處理時才取得 js-xss,非字串輸入仍回原值).
+- 盤點指令: Grep `src/clearXSS.mjs` 之 `cloneDeepWith`(只應出現在 `skipClone`)、`cloneDeep\(`(應 0 處)、`function conv`(應 1 處)、`scxss`(應 0 處); 另 Grep `src/` 之 `clearXSS\(` 得呼叫端(僅 `clearXSSDyn.mjs`).
+- 站點全集與判準(2026-10-20 盤點): `src/clearXSS.mjs` 為唯一實作者,已套; 下游程式碼呼叫端(唯讀盤點,不改碼): w-serv-orm `src/getMapOrm.mjs:775`(`mapOwn(v, vv => clearXSS(vv))`)與 `:681`(字串)、w-web-sso `server/procCore.mjs:836`(字串)與 `:1590`(`isEqual(clearXSS(row[k]), row[k])`)、w-web-perm `server/validateRows.mjs:97`(字串)、w-web-api `server/checkSyncRows.mjs:42`(字串);輸入皆 JSON 形狀,無人依賴 Map/Set/循環/DAG,故下游無須改碼.
+- 軸: 值型別(字串〔非空/空/包裝〕、number〔含 NaN、±Infinity、-0〕、bigint、boolean、null、undefined、symbol、函數、Date、RegExp、型別陣列/Buffer/ArrayBuffer、包裝 Number、Error、WeakMap、Promise、URL;共 23)× 位置(根/物件內/陣列內)× 容器(物件、類別實例、null 原型、陣列〔空洞/非索引屬性/子類別/建構子新增索引/繼承索引〕、arguments、Map、Set〔跨 realm、子類別、自有屬性〕、Symbol 鍵、偽標籤〔Array/Arguments/其他 × 可寫/不可寫 × 可列舉/不可列舉〕、Proxy、凍結、存取器、原型 setter、繼承、不可列舉、Date 等之自有物件值屬性)× 結構(樹/深巢狀/DAG/循環)× 字串位置(值/鍵).
+- 測試: `test/clearXSS.test.mjs` 新 `describe('走訪結構: 深度、共用、循環、容器型別(R-XSS-WALK-01)')` 210 案: ①JSON 可產生之輸入與修前演算法差分(種子固定 3000 棵隨機樹,比對值、鍵序、原型;輸入不變;輸出容器不與輸入共用)與固定答案; ②深巢狀(物件/陣列/混合 1 萬與 30 萬層、Map/Set 10 萬層於行程內;子行程 100 萬層〈Map/Set 30 萬層〉限額 512 MB,斷言離開碼 0、耗時 < 5 s、堆積 < 450 MB); ③DAG(20 層〈修前 2^20 次 filterXSS〉單次呼叫、陣列/Map/Set/混合、輸出共用、非冪等字串清一次;子行程 1000 層五種); ④循環(自指、互指、Map/Set/物件↔Map、Symbol 鍵環、20 萬節點環;子行程 100 萬節點環); ⑤型別處置表(根/物件內/陣列內): 原始值 11 種、包裝 String、Date/RegExp/型別陣列/Buffer/ArrayBuffer/包裝 Number 複本、Error/WeakMap/Promise/URL/函數之巢狀同參照與根語意、類別實例、null 原型、constructor 鍵、Symbol 鍵、不可列舉、存取器讀一次、繼承、凍結、Proxy、arguments、陣列形狀、偽稱 Array/Arguments〈可寫/不可寫 × 可列舉/不可列舉 × 三位置〉、偽稱 String、自訂標籤〈限制〉、Map/Set〈值、鍵不處理、子類別、順序〉、原型物件; ⑥外審補強: 可寫不可列舉標籤(6 種標籤 × 3 位置)、Date/RegExp/型別陣列/自訂標籤物件之自有物件值屬性(與他路徑共用、循環、2 萬層不溢位、100 個 Date 共用 1 份)、原型 setter、陣列建構子新增索引、繼承索引之空洞、比對結果陣列 index/input、Map 物件鍵、Map/Set 自有屬性與子類別欄位、Set 去重、可寫標籤 Object 之 Map/Set/Date、跨 realm(vm)Map/Set/物件/陣列 × 三位置、`__proto__` 描述子旗標、包裝 String 共用與 getOpt 次數; ⑦鍵不清除; ⑧js-xss 惰性取得與清除順序.另 fsTask 26、treeObj 17、flattenToConn 16、flattenTree 8、getltdtkeys 6、u8arr2obj 24 新案(含改寫 1 案: 壞封包之 `msg` 類別).執行器 `test/tools/clearXssWalkRunner.mjs`(共用 `runChildCase`).修前紅(以 fullTitle 相減,現行新版測試對 HEAD src): 新增 307 案中 136 紅(clearXSS 71、treeObj 15、flattenToConn 15、flattenTree 6、getltdtkeys 1、fsTask 11、u8arr2obj 17)、171 綠(行為鎖定);既有案例對 HEAD src 0 紅.全套 `npm test`: 16479 passing、4 pending、0 failing(基準 16178/4/1,1 為 domDetect 計時型偶發).指令: `npx mocha --no-parallel test/clearXSS.test.mjs --timeout 180000`.
+- 變異: 2026-10-20 `tmp/run02/mutate.mjs`(定義在 `mutants.mjs`;副本內逐項改壞 src,try/finally 還原並以 sha256 回驗)共 65 項: clearXSS 38、fsTask 5、treeObj/flattenToConn/flattenTree 13、getltdtkeys 3、u8arr2obj 6;64 項轉紅(其中 5 項記憶化類以 OOM 崩潰〈離開碼 134〉判定),1 項等價存活(fs04: hsNew 改回 lodash map——`kpHashNew` 由 `calcHash` 以字串雜湊自建,字串 `length` 非類陣列).歷程: 外審前第一版 48 項中 tr07 存活,補 `length:0` 案後轉紅;外審後改寫並擴為 65 項,cx22、cx23、cx35 首輪存活,補測試後轉紅;外審者自提變異存活者(opus 5 項、sol 5 項、minimax 2 項: 根位置不可寫偽稱 Array/Arguments、flattenToConn 子數、treeObj 不可列舉鍵、Map 物件鍵、繼承索引之空洞、`__proto__` 描述子旗標、getOpt 次數、lenHead 切分前)皆已補對應測試,並納入 mutants.mjs 之 tr10、tr11、cx10、cx37、lh06 等項.
+- 外審: run02 外審三位皆完成(opus claude-opus-5-5 xhigh、sol gpt-6.1-sol max、minimax opencode/minimax-m3.1-flash-free xhigh): 提出 35 條(sol 16、opus 12 加觀察 2、minimax 7),其中 4 項高(皆為『比修前清得少』: 可寫不可列舉標籤、foreign 自有屬性圖、原型 setter、陣列建構子索引)與全部中項已修,低項已修或登記,1 項誤報(minimax F7);三位各自的 JSON 差分(opus 6 萬棵、sol 3 萬棵、minimax 3 千棵)皆未見 JSON 形狀輸出與修前不同.詳見 `agent-out/run02-修正報告.md` 〈外審評分表〉.
+- 變更紀錄:
+  - 2026-10-20: 新增本條(第 62 項 run02);破壞性變更紀錄第 30 條.
+  - 2026-10-20(外審後): 由「來源分類＋自寫 newObj/newArr」改為「快速路徑僅限原型為 Object.prototype/Array.prototype 者,其餘沿用 lodash 淺複製後依複本終態清除」,物件值屬性以佔位置換由主迴圈走訪; 修正外審發現之 4 項清除退化(可寫不可列舉標籤、foreign 自有屬性圖、原型 setter、陣列建構子索引)與 Map/Set 自有屬性遺失、跨 realm、包裝 String 記憶化、比對結果陣列 index/input、偽稱 Array/Arguments 之根位置; 原型之 `isNative/foreign` 命名不再存在.

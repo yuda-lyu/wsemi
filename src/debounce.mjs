@@ -3,6 +3,7 @@ import isfun from './isfun.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 import pm2resolve from './pm2resolve.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -13,6 +14,8 @@ import pm2resolve from './pm2resolve.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每10ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
  * @example
  *
  * async function topAsync() {
@@ -122,7 +125,7 @@ import pm2resolve from './pm2resolve.mjs'
  * topAsync().catch(() => {})
  *
  */
-function debounce(ms = 300) {
+function debounce(ms = 300, opt = {}) {
 
     function ClsDebounce(ms) {
         let q = [] //queue
@@ -135,6 +138,9 @@ function debounce(ms = 300) {
         }
         ms = cint(ms)
 
+        //trace, 觀察回調(opt.onTrace), 未給時為null
+        let trace = getTrace(opt)
+
         function detect() {
             if (t !== null) {
                 return
@@ -146,6 +152,9 @@ function debounce(ms = 300) {
                 if (size(q) === 0) {
                     clearInterval(t)
                     t = null
+                    if (trace) {
+                        trace('stop', {})
+                    }
                     return
                 }
 
@@ -157,6 +166,9 @@ function debounce(ms = 300) {
 
                     //取最後的任務與清空佇列
                     let m = q.pop()
+                    if (trace) {
+                        trace('run', { dropped: q.length })
+                    }
                     q = []
 
                     //執行最後任務, 不論成功失敗都須持續執行至無佇列
@@ -175,6 +187,9 @@ function debounce(ms = 300) {
                 }
 
             }, 10) //10ms偵測, 啟動後跑timer, 無佇列則會停止減耗
+            if (trace) {
+                trace('start', {})
+            }
         }
 
         function run(func, ...input) {
@@ -188,6 +203,9 @@ function debounce(ms = 300) {
             //save
             tLast = Date.now()
             q.push({ func, input })
+            if (trace) {
+                trace('push', { size: q.length })
+            }
 
             //detect
             detect()

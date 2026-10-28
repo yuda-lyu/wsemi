@@ -9,6 +9,7 @@ import isbol from './isbol.mjs'
 import isp0int from './isp0int.mjs'
 import cint from './cint.mjs'
 import delay from './delay.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -22,6 +23,8 @@ import delay from './delay.mjs'
  * @memberOf wsemi
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
  * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含n為依呼叫順序由1起算之任務序號)，'start'時為任務開始執行(含n、running為含該任務之執行中任務數)，'end'時為任務執行完畢而即將依結果resolve或reject其Promise(含n、running為不含該任務之執行中任務數、ok為任務是否成功)，'cancel'時為takeLast下非最後呼叫者之結果被捨棄而即將reject{ reason: 'cancelled' }(含n)；任務非函數時仍通知start與end(ok為false)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響佇列，預設null
  * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出；第1參數非函數時該任務之Promise以字串'fun is not a function'被reject
  * @example
  *
@@ -363,10 +366,15 @@ import delay from './delay.mjs'
  * topAsync().catch(() => {})
  *
  */
-function pmQueue(takeLimit = 0, takeLast = false) {
+function pmQueue(takeLimit = 0, takeLast = false, opt = {}) {
 
     function ClsPmQueue(takeLimit, takeLast) {
         let gid = null
+
+        //trace, 觀察回調(opt.onTrace), 未給時為null; seq為任務序號, nRun為執行中任務數, 皆僅於trace時計
+        let trace = getTrace(opt)
+        let seq = 0
+        let nRun = 0
 
         //takeLimit
         if (!isp0int(takeLimit)) {
@@ -404,6 +412,12 @@ function pmQueue(takeLimit = 0, takeLast = false) {
             //input
             let input = get(v, 'input')
 
+            //start
+            if (trace) {
+                nRun += 1
+                trace('start', { n: v.n, running: nRun })
+            }
+
             //res
             let res
             if (!isfun(fun)) {
@@ -414,6 +428,12 @@ function pmQueue(takeLimit = 0, takeLast = false) {
             }
             else {
                 res = await pm2resolve(fun)(...input)
+            }
+
+            //end, 於emit(其後依結果settle該任務之Promise)之前通知
+            if (trace) {
+                nRun -= 1
+                trace('end', { n: v.n, running: nRun, ok: res.state === 'success' })
             }
 
             //emit
@@ -436,14 +456,25 @@ function pmQueue(takeLimit = 0, takeLast = false) {
             //save gid
             gid = id
 
+            //n, 任務序號
+            let n = 0
+            if (trace) {
+                seq += 1
+                n = seq
+            }
+
             //p
             let p = {
                 id,
                 fun,
                 input,
+                n,
             }
 
             //push
+            if (trace) {
+                trace('push', { n })
+            }
             q.push(p)
 
             //once
@@ -452,6 +483,9 @@ function pmQueue(takeLimit = 0, takeLast = false) {
 
                 //takeLast, 非最後呼叫者一律取消
                 if (takeLast && id !== gid) {
+                    if (trace) {
+                        trace('cancel', { n })
+                    }
                     pm.reject({ reason: 'cancelled' })
                     return
                 }

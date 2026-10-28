@@ -109,6 +109,19 @@ describe(`fsMergeFiles error paths`, function() {
 
     let delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+    //streamClosed: 等串流關閉('close'事件, 已關閉者即成立); fd之關閉為threadpool非同步, 不以固定時間猜; 永遠不會close者(被測函數未destroy而fd殘留)於ms毫秒(真實計時器, 防懸置上限)後reject
+    let streamClosed = (s, ms = 8000) => new Promise((resolve, reject) => {
+        if (s.closed === true) {
+            resolve()
+            return
+        }
+        let t = setTimeout(() => reject(new Error(`stream not closed within ${ms}ms (fd=${s.fd}, destroyed=${s.destroyed})`)), ms)
+        s.once('close', () => {
+            clearTimeout(t)
+            resolve()
+        })
+    })
+
     //mkProxy: 以fs代理攔截createWriteStream取得寫入流實例, 供斷言失敗後是否destroy(fd是否釋放)
     //failOnWriteIndex為第N次_write時模擬ENOSPC, 且以setImmediate非同步回呼仿真實fs(此時序會讓「read end即刪切片」之舊作法誤刪資料未寫成功之切片)
     //highWaterMark可縮小寫入流緩衝以逼出背壓(drain)路徑
@@ -153,11 +166,11 @@ describe(`fsMergeFiles error paths`, function() {
         let { fsProxy, st } = mkProxy()
         fs.writeFileSync(`${fdt}/c_0`, 'AAA')
         let r = await settle(fsMergeFilesCore([`${fdt}/c_0`, `${fdt}/c_1`], `${fdt}/c.out`, { fs: fsProxy }))
-        await delay(300) //等open完成
         // console.log('missing r', r, st.ws.destroyed, st.ws.fd)
         assert.strict.deepStrictEqual(r.state, 'reject')
         assert.strict.deepStrictEqual(r.e.includes('is not a file'), true)
-        //throw路徑之寫入流已成功開檔, 若未destroy則fd殘留
+        //throw路徑之寫入流已成功開檔, 若未destroy則fd殘留: 等寫入流close(open完成後隨destroy關閉fd; 已關閉者即成立), 取代原固定delay(300)等open完成; 未destroy者永不close, 防懸置上限後reject
+        await streamClosed(st.ws)
         assert.strict.deepStrictEqual(st.ws.destroyed, true)
         assert.strict.deepStrictEqual(st.ws.fd, null)
     })

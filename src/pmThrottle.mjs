@@ -4,6 +4,7 @@ import pm2resolve from './pm2resolve.mjs'
 import pmSettleByState from './_pmSettleByState.mjs'
 import isfun from './isfun.mjs'
 import evem from './evem.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -13,6 +14,8 @@ import evem from './evem.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmThrottle.test.mjs Github}
  * @memberOf wsemi
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；n為依呼叫順序由1起算之任務序號；type為'push'時為任務排入佇列(含n，輸入非函數時不排入故不通知)，'start'時為開始偵測(每20ms檢查一次是否有待處理之任務)，'cancel'時為任務n因有較後排入者而即將被取消(含n)，'run'時為即將執行該次偵測所取之最後排入任務(含n)，'done'時為被執行之任務已執行完畢而即將依結果resolve或reject其Promise(含n、ok為是否成功)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響節流，預設null
  * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後並循序等待執行，回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；輸入非函數時不排入佇列，回傳之Promise以字串'fun is not a function'被reject(拒絕值同pmQueue)
  * @example
  *
@@ -251,11 +254,15 @@ import evem from './evem.mjs'
  * topAsync().catch(() => {})
  *
  */
-function pmThrottle() {
+function pmThrottle(opt = {}) {
     let ev = evem()
     let q = [] //queue
     let t = null //timer
     let running = false
+
+    //trace, 觀察回調(opt.onTrace), 未給時為null; seq為任務序號, 僅於trace時計
+    let trace = getTrace(opt)
+    let seq = 0
 
     function detect() {
         if (t !== null) {
@@ -284,6 +291,11 @@ function pmThrottle() {
                     state: 'cancelled',
                 }
 
+                //cancel, 於emit(其後依結果settle該任務之Promise)之前通知
+                if (trace) {
+                    trace('cancel', { n: q[i].n })
+                }
+
                 //emit
                 ev.emit(id, res)
 
@@ -291,26 +303,21 @@ function pmThrottle() {
             q = []
 
             if (m) {
-                let res
 
                 //id
                 let id = m.id
 
-                //check
-                if (isfun(m.func)) {
-
-                    //func
-                    res = await pm2resolve(m.func)(...m.input)
-
+                //run
+                if (trace) {
+                    trace('run', { n: m.n })
                 }
-                else {
 
-                    //res
-                    res = {
-                        state: 'error',
-                        msg: 'fun is not a function',
-                    }
+                //func, 非函數之任務於run()已拒絕而不入列, 故此處m.func必為函數
+                let res = await pm2resolve(m.func)(...m.input)
 
+                //done, 於emit(其後依結果settle該任務之Promise)之前通知
+                if (trace) {
+                    trace('done', { n: m.n, ok: res.state === 'success' })
                 }
 
                 //emit
@@ -325,9 +332,15 @@ function pmThrottle() {
             if (!running && q.length === 0) {
                 clearInterval(t)
                 t = null
+                if (trace) {
+                    trace('stop', {})
+                }
             }
 
         }, 20) //20ms偵測, 啟動後跑timer, 無佇列則會停止減耗
+        if (trace) {
+            trace('start', {})
+        }
     }
 
     function run(func, ...input) {
@@ -342,8 +355,18 @@ function pmThrottle() {
         //id
         let id = genID()
 
+        //n, 任務序號
+        let n = 0
+        if (trace) {
+            seq += 1
+            n = seq
+        }
+
         //push
-        q.push({ id, func, input })
+        q.push({ id, func, input, n })
+        if (trace) {
+            trace('push', { n })
+        }
 
         //detect
         detect()

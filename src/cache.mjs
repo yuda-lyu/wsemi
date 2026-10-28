@@ -8,6 +8,7 @@ import haskey from './haskey.mjs'
 import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
 import cint from './cint.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -15,7 +16,9 @@ import cint from './cint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cache.test.mjs Github}
  * @memberOf wsemi
- * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數(fun非函數時視為回傳undefined之空函數)、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheWhenError為函數執行失敗時是否仍寫入快取，預設false，失敗不寫入快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get會重新執行(fun同步拋錯與其Promise被reject皆同)，故呼叫端需自行catch，若設定true則失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired，呼叫端不會收到錯誤而是取得undefined、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢；fun內(含同步階段)呼叫同key之get亦共用本次執行而不重複執行，惟fun若等待該get之結果則互相等待而永不settle(需逾時者以pmTimeout包裝)，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，於函數執行中呼叫時以update之值為準，不被執行結果覆寫。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設。事件以timer脫勾派發且事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection；故error事件同時承載本模組自身之錯誤(fun為'get'等且帶key)與監聽器錯誤(fun為'listener'且無key)，監聽error時請先以fun欄位分流
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部邏輯事件發生當下同步呼叫(非計時器週期)，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件欄位只含呼叫端傳入之key(通常為字串)、字串、布林與數字，不含fun之輸入與回傳值；type為'set'時為set呼叫(含key、added為是否新增，key已存在而被忽略時為false)，'get'時為get呼叫之判定(含key、n為本實例第幾次get呼叫、mode為'invalid'無效key，'wait'共用執行中之promise，'first'首次或clear後執行，'expired'因超過timeExpired而重新執行，'cache'使用快取，timeDiff為mode是'expired'或'cache'時距快取時間之毫秒數，其餘mode為null)，'start'時為即將呼叫fun(含key、run為本實例第幾次執行)，'end'時為該次fun執行結束(含key、run、ok為fun是否未失敗、stored為本次結果是否寫入快取，失敗而不寫入快取或執行中被update而不覆寫時為false)且早於該次執行之get settle，'update'、'clear'時為對應呼叫(含key、running為該key是否執行中)，'remove'時為對應呼叫(含key)；key無效時update、clear、remove不通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響快取，預設null
+ * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數(fun非函數時視為回傳undefined之空函數)、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheWhenError為函數執行失敗時是否仍寫入快取，預設false，失敗不寫入快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get會重新執行(fun同步拋錯與其Promise被reject皆同)，故呼叫端需自行catch，若設定true則失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired，呼叫端不會收到錯誤而是取得undefined、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢；fun內(含同步階段)呼叫同key之get亦共用本次執行而不重複執行，惟fun若等待該get之結果則互相等待而永不settle(需逾時者以pmTimeout包裝)，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，視同函數已執行完成並寫入新值，故對已set但尚未執行過(或已clear)之key，其後get取得update之值而不執行函數(直至過期)，於函數執行中呼叫時以update之值為準，不被執行結果覆寫；update之後才呼叫clear者，下次get仍重新執行。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設。事件以timer脫勾派發且事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection；故error事件同時承載本模組自身之錯誤(fun為'get'等且帶key)與監聽器錯誤(fun為'listener'且無key)，監聽error時請先以fun欄位分流
  * @example
  *
  * async function topAsync() {
@@ -536,7 +539,10 @@ import cint from './cint.mjs'
  * topAsync().catch(() => {})
  *
  */
-function cache() {
+function cache(opt = {}) {
+    let trace = getTrace(opt) //觀察回調, 未傳時為null, 各站點以if (trace)略過而不組事件物件
+    let nGet = 0 //get呼叫序號, 僅於通知時遞增
+    let nRun = 0 //fun執行序號, 僅於通知時遞增
     let ev = evem() //事件以timer脫勾派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
     let data = Object.create(null) //快取資料, 以呼叫端之key為鍵; 用無原型物件使任意字串皆為一般鍵, 一般物件時__proto__會改掉其原型、constructor等原型屬性名會被haskey誤判為已存在, 對其update會寫到Object本身
 
@@ -550,6 +556,9 @@ function cache() {
         if (haskey(data, key)) {
             //可重複設定不報錯
             //emit('error', { fun: 'set', key, msg: 'has key' })
+            if (trace) {
+                trace('set', { key, added: false })
+            }
             return
         }
 
@@ -605,6 +614,9 @@ function cache() {
             useCloneDeep,
         }
         emit('message', { fun: 'set', key, timeExpired, timeFrom, useCacheWhenError, useCloneDeep })
+        if (trace) {
+            trace('set', { key, added: true })
+        }
 
     }
 
@@ -621,6 +633,9 @@ function cache() {
             //若執行中則共用執行中之promise, 待其執行完畢即一併取得結果, 不輪詢
             if (d.pm) {
                 emit('message', { fun: 'get', key, msg: 'waiting' })
+                if (trace) {
+                    trace('get', { key, n: ++nGet, mode: 'wait', timeDiff: null })
+                }
                 await d.pm
                 if (useCloneDeep) {
                     return cloneDeep(d.value)
@@ -636,12 +651,18 @@ function cache() {
             //needExec or timeExpired
             let b = d.needExec
             let timeDiff = (t - d.time)
+            let mode = 'cache' //僅供觀察回調
             if (b) {
                 emit('message', { fun: 'get', key, msg: 'execute first' })
+                mode = 'first'
             }
             else if (d.timeExpired > 0 && (timeDiff > d.timeExpired)) {
                 emit('message', { fun: 'get', key, msg: 'execute by timeExpired', timeDiff })
                 b = true
+                mode = 'expired'
+            }
+            if (trace) {
+                trace('get', { key, n: ++nGet, mode, timeDiff: (mode === 'first') ? null : timeDiff })
             }
 
             //fun
@@ -649,11 +670,15 @@ function cache() {
                 emit('message', { fun: 'get', key, msg: 'fun start' })
                 d.needExec = false //受理即清除標記, 執行中若再clear會重設為true, 留待下次get重新執行
                 let gen = d.gen //執行中若被update則d.gen改變, 本次執行結果不覆寫update之值與時間
+                let nr = 0 //本次執行序號, 僅供觀察回調
                 let run = async () => {
+                    let ok = false //fun是否未失敗, 僅供觀察回調
+                    let stored = false //本次結果是否寫入快取, 僅供觀察回調
                     try {
                         let v
                         try {
                             v = await d.fun(...d.inputs) //fun同步拋錯或回傳非promise皆由try與await承接
+                            ok = true
                         }
                         catch (err) {
                             emit('error', { fun: 'get', key, msg: err })
@@ -669,11 +694,15 @@ function cache() {
                         if (d.gen === gen) {
                             d.value = v
                             d.time = (d.timeFrom === 'end') ? Date.now() : t //timeFrom為end時自執行完畢起算, 否則自執行開始起算
+                            stored = true
                         }
                     }
                     finally {
                         d.pm = null
                         emit('message', { fun: 'get', key, msg: 'fun end' })
+                        if (trace) {
+                            trace('end', { key, run: nr, ok, stored })
+                        }
                     }
                 }
                 //先建立並保存本次執行之promise再呼叫fun(自get進入至此無await, 故同一tick內之後到者亦可見d.pm而共用): fun內(含同步階段)呼叫同key之get時可見d.pm而共用本次執行, 不遞迴重複執行
@@ -685,6 +714,10 @@ function cache() {
                     rejectRun = reject
                 })
                 d.pm = pmRun
+                if (trace) {
+                    nr = ++nRun
+                    trace('start', { key, run: nr })
+                }
                 run().then(resolveRun, rejectRun)
                 await pmRun
             }
@@ -701,6 +734,9 @@ function cache() {
         }
         else {
             emit('error', { fun: 'get', key, msg: 'invalid key' })
+            if (trace) {
+                trace('get', { key, n: ++nGet, mode: 'invalid', timeDiff: null })
+            }
             return null
         }
     }
@@ -715,7 +751,11 @@ function cache() {
             emit('message', { fun: 'updateValue', key })
             data[key].value = value
             data[key].time = Date.now()
+            data[key].needExec = false //update視同fun已執行完成並寫入新值: 剛set尚未執行或已clear之key, 其後get取得此值而不執行fun; update之後再clear則重設為true
             data[key].gen += 1 //執行中被update時, 使本次執行結果不覆寫此值與時間
+            if (trace) {
+                trace('update', { key, running: !!data[key].pm })
+            }
         }
     }
 
@@ -723,6 +763,9 @@ function cache() {
         if (haskey(data, key)) {
             emit('message', { fun: 'clear', key })
             data[key].needExec = true //於執行中呼叫亦有效: 執行中之呼叫仍取得本次結果, 下次get重新執行
+            if (trace) {
+                trace('clear', { key, running: !!data[key].pm })
+            }
         }
     }
 
@@ -730,6 +773,9 @@ function cache() {
         if (haskey(data, key)) {
             emit('message', { fun: 'remove', key })
             delete data[key]
+            if (trace) {
+                trace('remove', { key })
+            }
         }
     }
 

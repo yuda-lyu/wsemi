@@ -10,6 +10,7 @@ import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
 import cint from './cint.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -19,6 +20,7 @@ import cint from './cint.mjs'
  * @memberOf wsemi
  * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
  * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，單位為毫秒ms，預設為50
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'enter'或'leave'時為即將發出該message事件(含key、now同事件內容)，'tick'時為每次偵測佇列(含size為偵測前之單元數)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，clear後不再呼叫，預設null
  * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get、clear。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單(含剛trigger而尚未發出enter者)。clear為釋放：立即清除偵測計時器、取消尚未發出之enter、清空佇列，本身不發事件，其後不再發出任何事件、trigger無效、get回傳[]，可重複呼叫(釋放為終態，需重新偵測者另建alive)；clear回傳已發出enter且尚未leave之單元陣列[{ key, data }]，供使用端補發離線通知，再次呼叫回傳[]；監聽器於派發中呼叫clear亦安全，同一輪尚未處理之單元不再派發。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
  *
@@ -139,6 +141,9 @@ function alive(opt = {}) {
     timeDetect = cint(timeDetect)
     timeDetect = Math.min(timeDetect, cst.TIMER_TIME_MAX) //同上
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
+
     function detect() {
         if (cleared) {
             return
@@ -148,6 +153,10 @@ function alive(opt = {}) {
         }
         t = setInterval(() => {
             //console.log('q', q)
+
+            if (trace) {
+                trace('tick', { size: size(q) })
+            }
 
             //detect
             each(q, (v, key) => {
@@ -166,6 +175,9 @@ function alive(opt = {}) {
                     entered.delete(key)
 
                     //emit leave
+                    if (trace) {
+                        trace('leave', { key, now: size(q) })
+                    }
                     evEmit(ev, 'message', [{ eventName: 'leave', key, data: r.data, now: size(q) }], { tag: 'alive' })
 
                     //監聽器於派發中呼叫clear時須立即停止本輪, 不再處理或派發
@@ -186,6 +198,9 @@ function alive(opt = {}) {
             if (!iseobj(q)) {
                 clearInterval(t)
                 t = null
+                if (trace) {
+                    trace('stop', {})
+                }
             }
 
         }, timeDetect)
@@ -219,6 +234,9 @@ function alive(opt = {}) {
                 }
 
                 //emit enter
+                if (trace) {
+                    trace('enter', { key, now: size(q) })
+                }
                 evEmit(ev, 'message', [{ eventName: 'enter', key, data, now: size(q) }], { tag: 'alive' })
 
             }, 1)

@@ -6,6 +6,7 @@ import waitFun from './waitFun.mjs'
 import haskey from './haskey.mjs'
 import ispint from './ispint.mjs'
 import cint from './cint.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -16,6 +17,7 @@ import cint from './cint.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.timeExpire=1800000] 輸入TTL過期時間整數，單位為毫秒ms，key寫入超過此時間後將被內部偵測週期自動刪除，預設30分鐘(1800000ms)
  * @param {Integer} [opt.timeDetect=2000] 輸入TTL偵測週期整數，單位為毫秒ms，預設2000
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於TTL偵測週期內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；僅涵蓋TTL偵測週期，不含set、get、check、checkWithSet、setWithFree、del之呼叫(其本身皆為同步完成，並已有同名事件可由on監聽)，亦不含waitExist與waitNotExist之輪詢(其輪詢事件由waitFun之opt.onTrace提供，本函數不轉發，其開始與結束已有waitExist、waitNotExist事件可由on監聽)；type為'expire'時為偵測到key已超過timeExpire而剛被刪除(含key、age為其寫入至本次偵測之毫秒數)，'detect'時為每次偵測週期結束(含n為第幾次偵測、size為偵測前之key數、expired為本次刪除之key數)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響快取，clear後不再呼叫(含clear時正在進行之偵測週期之餘下部分)，預設null
  * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
  *
@@ -110,6 +112,9 @@ function cacheSt(opt = {}) {
     timeDetect = cint(timeDetect)
     timeDetect = Math.min(timeDetect, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
+    let trace = getTrace(opt) //觀察回調, 未傳時為null, 各站點以if (trace)略過而不組事件物件
+    let nDetect = 0 //偵測週期序號, 僅於通知時遞增
+    let released = false //clear後不再通知(含正在進行之偵測週期之餘下部分)
     let ev = evem() //detect事件於setInterval內派發, 其餘於呼叫端同步堆疊或await之後派發且監聽器可能為async, 監聽器出錯不得殺行程, 故派發處以evEmit攔截
 
     let _gs = Object.create(null) //以呼叫端之key為鍵; 用無原型物件使任意字串皆為一般鍵, 一般物件時__proto__會改掉其原型(且不會過期)、constructor等原型屬性名會被haskey誤判為已存在
@@ -267,11 +272,21 @@ function cacheSt(opt = {}) {
         evEmit(ev, 'detect', [{ state: 'start' }], { tag: 'cacheSt' })
 
         let now = Date.now()
-        for (let key of Object.keys(_gs)) {
+        let keys = Object.keys(_gs)
+        let nExpired = 0 //本次刪除之key數, 僅供觀察回調
+        for (let key of keys) {
             let r = _gs[key]
             if (r && (now - r.time) > timeExpire) {
                 delete _gs[key]
+                nExpired++
+                if (trace && !released) {
+                    trace('expire', { key, age: now - r.time })
+                }
             }
+        }
+
+        if (trace && !released) {
+            trace('detect', { n: ++nDetect, size: keys.length, expired: nExpired })
         }
 
         evEmit(ev, 'detect', [{ state: 'finish' }], { tag: 'cacheSt' })
@@ -279,6 +294,7 @@ function cacheSt(opt = {}) {
     }, timeDetect)
 
     let clear = () => {
+        released = true
         clearInterval(t)
     }
 

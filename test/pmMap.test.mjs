@@ -7,11 +7,55 @@ import isarr from '../src/isarr.mjs'
 import isobj from '../src/isobj.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 
 
 describe(`pmMap`, function() {
 
-    async function test1() {
+    //test1之結果取決於各任務之持續時間(測試自帶計時器, 340/310/260/190/100ms)之相對先後(第4個任務於timer1結束後啟動, 其結束須早於第3個任務), 時間本身即規格, 以假時鐘推進(R-TRACE-01 P5); 原以真實計時器, 負載下timer1遲到即改變先後
+    //settled, 假時鐘推進完畢後取結果: 假時鐘不會自行前進, 若尚未完成則拋錯, 不直接await以免懸置(並使假時鐘無法restore)
+    async function settled(p) {
+        let done = false
+        let pp = p.then((v) => {
+            done = true
+            return v
+        }, (e) => {
+            done = true
+            throw e
+        })
+        pp.catch(() => {})
+        await new Promise((resolve) => setImmediate(resolve)) //真實setImmediate讓出, 使已可進行之microtask全數執行
+        if (!done) {
+            throw new Error('not settled within the advanced fake time')
+        }
+        return pp
+    }
+
+    //runFake, 啟用假時鐘執行test並推進ms毫秒, 回傳其結果
+    async function runFake(test, ms, onTrace) {
+        let clock = useFakeClock()
+        try {
+            let p = test(onTrace)
+            await clock.advance(ms)
+            return await settled(p)
+        }
+        finally {
+            clock.restore()
+        }
+    }
+
+    //fmt, 事件轉為簡式字串(索引由0起算): start0/1(任務索引/含該任務之執行中數)、done0(任務索引, 失敗者尾綴!)、resolve5(全部任務數)、reject2(首個失敗之任務索引, 輸入檢查失敗為-1)
+    let fmt = (e) => {
+        if (e.type === 'start') {
+            return `start${e.i}/${e.running}`
+        }
+        if (e.type === 'done') {
+            return `done${e.i}${e.ok ? '' : '!'}`
+        }
+        return `${e.type}${e.type === 'resolve' ? e.n : e.i}`
+    }
+
+    async function test1(onTrace) {
         return new Promise((resolve, reject) => {
             let ms = []
             let takeLimit = 2 //通過function調用產生promise, 可受takeLimit控管同時執行數量, takeLimit=2
@@ -26,7 +70,7 @@ describe(`pmMap`, function() {
                         resolve('#' + v)
                     }, d)
                 })
-            }, takeLimit)
+            }, takeLimit, { onTrace })
                 .then(function(res) {
                     // console.log('then', JSON.stringify(res))
                     ms.push({ res })
@@ -58,8 +102,11 @@ describe(`pmMap`, function() {
     // [{"call":1},{"call":2},{"resolve":2,"d":310},{"call":3},{"resolve":1,"d":340},{"call":4},{"resolve":4,"d":190},{"call":5},{"resolve":3,"d":260},{"resolve":5,"d":100},{"res":["#1","#2","#3","#4","#5"]}]
     let r1 = '[{"call":1},{"call":2},{"resolve":2,"d":310},{"call":3},{"resolve":1,"d":340},{"call":4},{"resolve":4,"d":190},{"call":5},{"resolve":3,"d":260},{"resolve":5,"d":100},{"res":["#1","#2","#3","#4","#5"]}]'
     it(`should return '${r1}' when run test1'`, async function() {
-        let ms = await test1()
+        let tr = traceRec()
+        let ms = await runFake(test1, 700, tr.on)
         assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
+        //觀察回調(索引由0起算): takeLimit=2時同時執行數(含該任務)至多2, 完成順序為第2個(310ms)、第1個(340ms)、第4個(530ms)、第3個(570ms)、第5個(630ms), 補位的第3、4、5個任務於前一任務完成後才派發
+        assert.strict.deepStrictEqual(tr.events.map(fmt), ['start0/1', 'start1/2', 'done1', 'start2/2', 'done0', 'start3/2', 'done3', 'start4/2', 'done2', 'done4', 'resolve5'])
     })
 
     async function test2() {
@@ -389,6 +436,134 @@ describe(`pmMap`, function() {
     it(`should return '${r9}' when run test9 with empty object`, async function() {
         let ms = await test9()
         assert.strict.deepStrictEqual(JSON.stringify(ms), r9)
+    })
+
+    //runScn, 以假時鐘執行pmMap(各任務持續時間同test1: 340/310/260/190/100ms)並推進1000ms(循序執行至第3個任務結束需910ms), 回傳各任務之呼叫與完成紀錄加上pmMap之最終結果之JSON字串
+    async function runScn(rs, takeLimit, failAt, onTrace) {
+        let clock = useFakeClock()
+        try {
+            let ms = []
+            let p = pmMap(rs, (v) => {
+                return new Promise((resolve, reject) => {
+                    ms.push({ call: v })
+                    setTimeout(() => {
+                        if (failAt.includes(v)) {
+                            ms.push({ reject: v })
+                            reject('#' + v)
+                        }
+                        else {
+                            ms.push({ resolve: v })
+                            resolve('#' + v)
+                        }
+                    }, 400 - ((v ** 2) * 10 + 50))
+                })
+            }, takeLimit, { onTrace })
+                .then((res) => {
+                    ms.push({ res })
+                }, (err) => {
+                    ms.push({ err })
+                })
+            await clock.advance(1000)
+            await settled(p)
+            return JSON.stringify(ms)
+        }
+        finally {
+            clock.restore()
+        }
+    }
+
+    it(`should behave the same without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變(第4參數可省略, 同舊版之pmMap(rs, fun, takeLimit)); P4: 回調之拋錯與回傳值不影響派發與結果、不產生未處理之rejection; 以假時鐘使各次之時序相同
+        let un = []
+        let onUn = (v) => un.push(String(v))
+        process.on('unhandledRejection', onUn)
+        let rs = []
+        try {
+            let rec = traceRec()
+            for (let onTrace of [undefined, rec.on, () => {
+                throw new Error('trace boom')
+            }, () => Promise.reject(new Error('trace reject')), 'abc']) {
+                let got = {}
+                got.limit2 = await runScn([1, 2, 3, 4, 5], 2, [], onTrace)
+                got.limit1Fail = await runScn([1, 2, 3, 4, 5], 1, [3], onTrace)
+                got.limit0Fail = await runScn([1, 2, 3, 4, 5], 0, [3, 5], onTrace)
+                got.obj = await runScn({ a: 1, b: 2 }, 0, [], onTrace)
+                got.invalid = await pmMap(123, (v) => v, 0, { onTrace }).then((v) => ['resolve', v], (e) => ['reject', e])
+                got.empty = await pmMap([], (v) => v, 0, { onTrace }).then((v) => ['resolve', v], (e) => ['reject', e])
+                //省略第4參數
+                got.noOpt = await pmMap([1, 2, 3], (v) => v * 2, 2)
+                rs.push(got)
+            }
+            await new Promise((resolve) => setImmediate(resolve))
+            assert.strict.deepStrictEqual(rec.events.length > 0, true)
+        }
+        finally {
+            process.removeListener('unhandledRejection', onUn)
+        }
+        let exp = {
+            limit2: '[{"call":1},{"call":2},{"resolve":2},{"call":3},{"resolve":1},{"call":4},{"resolve":4},{"call":5},{"resolve":3},{"resolve":5},{"res":["#1","#2","#3","#4","#5"]}]',
+            limit1Fail: '[{"call":1},{"resolve":1},{"call":2},{"resolve":2},{"call":3},{"reject":3},{"err":"#3"}]',
+            limit0Fail: '[{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"reject":5},{"err":"#5"},{"resolve":4},{"reject":3},{"resolve":2},{"resolve":1}]',
+            obj: '[{"call":1},{"call":2},{"resolve":2},{"resolve":1},{"res":["#1","#2"]}]',
+            invalid: ['reject', 'rs is not an array or object'],
+            empty: ['resolve', []],
+            noOpt: [2, 4, 6],
+        }
+        assert.strict.deepStrictEqual([rs, un], [[exp, exp, exp, exp, exp], []])
+    })
+
+    it(`should notify start, done, resolve and reject through onTrace with frozen events of primitive fields and no receiver`, async function() {
+        //JSDoc opt.onTrace: 事件為凍結物件{ type, ... }, 欄位依type列舉且皆為原始值; 回調不帶接收者呼叫(R-TRACE-01 P4: 唯讀快照、最少欄位、不暴露內部可變狀態)
+        let meta = []
+        let run = async (rs, takeLimit, failAt) => {
+            let tr = traceRec()
+            let onTrace = function(e) {
+                meta.push([this, Object.isFrozen(e)])
+                tr.on(e)
+            }
+            await runScn(rs, takeLimit, failAt, onTrace)
+            return tr
+        }
+        let all = []
+
+        //takeLimit=1且第3個失敗: 循序執行, 失敗後停止派發(第4、5個不啟動), 以失敗者之索引reject
+        let t1 = await run([1, 2, 3, 4, 5], 1, [3])
+        assert.strict.deepStrictEqual(t1.events.map(fmt), ['start0/1', 'done0', 'start1/1', 'done1', 'start2/1', 'done2!', 'reject2'])
+        all.push(...t1.events)
+
+        //不限制且第5、3個失敗: 5個同時派發(執行中數1~5), 先失敗者(第5個, 100ms)使reject, 較晚失敗者(第3個, 260ms)僅通知done, 失敗後已派發者仍陸續完成
+        let t2 = await run([1, 2, 3, 4, 5], 0, [3, 5])
+        assert.strict.deepStrictEqual(t2.events.map(fmt), ['start0/1', 'start1/2', 'start2/3', 'start3/4', 'start4/5', 'done4!', 'reject4', 'done3', 'done2!', 'done1', 'done0'])
+        all.push(...t2.events)
+
+        //全部成功: 以全部任務數resolve
+        let t3 = await run([1, 2], 0, [])
+        assert.strict.deepStrictEqual(t3.events.map(fmt), ['start0/1', 'start1/2', 'done1', 'done0', 'resolve2'])
+        all.push(...t3.events)
+
+        //輸入檢查失敗與空集合: 無任務, reject之索引為-1, resolve之任務數為0
+        let tr4 = traceRec()
+        let tr5 = traceRec()
+        let wrap = (tr) => function(e) {
+            meta.push([this, Object.isFrozen(e)])
+            tr.on(e)
+        }
+        await pmMap(123, (v) => v, 0, { onTrace: wrap(tr4) }).catch(() => {})
+        await pmMap([], (v) => v, 0, { onTrace: wrap(tr5) })
+        assert.strict.deepStrictEqual(tr4.events.map(fmt), ['reject-1'])
+        assert.strict.deepStrictEqual(tr5.events.map(fmt), ['resolve0'])
+        all.push(...tr4.events, ...tr5.events)
+
+        //各type之欄位固定(排序後)
+        let keys = {}
+        for (let e of all) {
+            keys[e.type] = Object.keys(e).sort().join(',')
+        }
+        assert.strict.deepStrictEqual(keys, { start: 'i,running,type', done: 'i,ok,type', resolve: 'n,type', reject: 'i,type' })
+        //欄位皆為原始值(數字、字串、布林或null)
+        assert.strict.deepStrictEqual(all.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), true)
+        //事件為凍結物件, 回調不帶接收者(this為undefined)
+        assert.strict.deepStrictEqual(meta.length > 0 && meta.every(([self, frozen]) => self === undefined && frozen), true)
     })
 
 })

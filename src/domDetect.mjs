@@ -6,6 +6,7 @@ import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 import domIsRendered from './domIsRendered.mjs'
 import optNum from './_optNum.mjs'
+import getTrace from './getTrace.mjs'
 
 
 //2020年曾以IntersectionObserver與ResizeObserver實作(詳細請查git紀錄), 因實作缺陷致WTextSelect下拉選單不穩而改為輪詢:
@@ -175,6 +176,9 @@ function createCore(ev, opt, onReobserve) {
     let getBase = getFun(opt, 'getBase')
     let throttleTime = getThrottle(opt)
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
+
     //cleared, sd, sb, pLast, timers, seqCheck, seqPost
     let cleared = false
     let sd = sizeZero() //最新量測
@@ -300,12 +304,18 @@ function createCore(ev, opt, onReobserve) {
 
         //seq, 已處理較新之量測者不發出較舊者: sync時refresh或節流之後續發出為延後發出, 可能晚於其後已同步發出之事件, 照發則使用端最後收到過期尺寸
         if (seq < seqPost) {
+            if (trace) {
+                trace('skip', { seq, reason: 'stale' })
+            }
             return
         }
         seqPost = seq
 
         //尺寸為0(隱藏或移出DOM)不發出
         if (!isShown(snew)) {
+            if (trace) {
+                trace('skip', { seq, reason: 'zero' })
+            }
             return
         }
 
@@ -313,6 +323,9 @@ function createCore(ev, opt, onReobserve) {
         if (deferred) {
             if (!domIsRendered(p)) {
                 skip(snew)
+                if (trace) {
+                    trace('skip', { seq, reason: 'hidden' })
+                }
                 return
             }
             if (getBase) {
@@ -324,10 +337,18 @@ function createCore(ev, opt, onReobserve) {
                     ch: d.bh || (within && sm.height !== '' && d.dh !== 0),
                 }
                 if (!q.cw && !q.ch) {
+                    if (trace) {
+                        trace('skip', { seq, reason: 'base' })
+                    }
                     return
                 }
                 sm = mode(d, q)
             }
+        }
+
+        //trace, 於派發前通知: 監聽器拋錯時(非sync之派發會中斷)仍已通知
+        if (trace) {
+            trace('emit', { seq, width: snew.width, height: snew.height, deferred })
         }
 
         ev.emit('resize', {
@@ -389,8 +410,8 @@ function createCore(ev, opt, onReobserve) {
         }
     }
 
-    //check, 量測並與比較基準比較
-    let check = (p, allowSync) => {
+    //check, 量測並與比較基準比較, source為量測之來源(觀察回調之check事件用)
+    let check = (p, allowSync, source) => {
         if (cleared) {
             return
         }
@@ -399,6 +420,9 @@ function createCore(ev, opt, onReobserve) {
         if (!p) {
             sd = sizeZero()
             pLast = null
+            if (trace) {
+                trace('check', { source, found: false, width: 0, height: 0, changed: false, seq: null })
+            }
             return
         }
 
@@ -425,6 +449,9 @@ function createCore(ev, opt, onReobserve) {
             ch: judgeAxis('height', d.dh, d.bh, stepHeight),
         }
         if (!q.cw && !q.ch) {
+            if (trace) {
+                trace('check', { source, found: true, width: snew.width, height: snew.height, changed: false, seq: null })
+            }
             return
         }
 
@@ -432,8 +459,11 @@ function createCore(ev, opt, onReobserve) {
         let sold = sb
         sb = snew
 
-        //deliver
+        //deliver, 判定為變化之check事件於交付前通知, 使其先於同步發出之emit事件
         seqCheck++
+        if (trace) {
+            trace('check', { source, found: true, width: snew.width, height: snew.height, changed: true, seq: seqCheck })
+        }
         deliver(sold, snew, mode(d, q), p, seqCheck, allowSync && sync)
 
     }
@@ -503,7 +533,7 @@ function domDetectByPolling(f, opt = {}) {
 
     //setInterval, 取不到元素時亦交check處理(最新量測歸0)
     let timer = setInterval(() => {
-        core.check(getEle(f), false)
+        core.check(getEle(f), false, 'poll')
     }, getTimeInterval(opt))
 
     //refresh, 立即重新取得元素並比較(延後發出); clear後不再呼叫f, 同ResizeObserver模式
@@ -511,7 +541,7 @@ function domDetectByPolling(f, opt = {}) {
         if (core.isCleared()) {
             return
         }
-        core.check(getEle(f), false)
+        core.check(getEle(f), false, 'refresh')
     }
 
     //clear
@@ -537,6 +567,9 @@ function domDetectByObserver(f, opt = {}) {
 
     //timeInterval, 行內元素改以定期量測時使用
     let timeInterval = getTimeInterval(opt)
+
+    //trace, 觀察回調(opt.onTrace), 未給時為null; 本層通知行內元素之定期量測開始與停止, 量測與發出由core通知
+    let trace = getTrace(opt)
 
     //ev, core
     //  延後發出略過時重新觀察目前元素, 並依[尺寸為0時等待DOM變動]登記等待(最新量測已歸0), 不依賴重新觀察之首次回報(舊版Safari對0尺寸之新觀察不回報)
@@ -592,11 +625,17 @@ function domDetectByObserver(f, opt = {}) {
         }
         let inline = display === 'inline' || (display === 'none' && eleInline)
         if (inline && timerInline === null) {
-            timerInline = setInterval(onResize, timeInterval)
+            timerInline = setInterval(onResizeInline, timeInterval)
+            if (trace) {
+                trace('inline', { on: true })
+            }
         }
         else if (!inline && timerInline !== null) {
             clearInterval(timerInline)
             timerInline = null
+            if (trace) {
+                trace('inline', { on: false })
+            }
         }
     }
 
@@ -647,11 +686,11 @@ function domDetectByObserver(f, opt = {}) {
         updateWaiting()
     }
 
-    //onResize
-    let onResize = () => {
+    //onResize, source為量測之來源: 'observer'為ResizeObserver回報, 'inline'為行內元素之定期量測
+    let onResize = (source) => {
         retarget()
         try {
-            core.check(ele, true)
+            core.check(ele, true, source)
         }
         finally {
             //sync模式下監聽器拋錯時仍須更新行內與等待狀態
@@ -659,10 +698,16 @@ function domDetectByObserver(f, opt = {}) {
             updateWaiting()
         }
     }
+    let onResizeObserver = () => {
+        onResize('observer')
+    }
+    let onResizeInline = () => {
+        onResize('inline')
+    }
 
     //roBorder, roContent
-    roBorder = new window.ResizeObserver(onResize)
-    roContent = new window.ResizeObserver(onResize)
+    roBorder = new window.ResizeObserver(onResizeObserver)
+    roContent = new window.ResizeObserver(onResizeObserver)
 
     //initialize
     retarget()
@@ -671,7 +716,7 @@ function domDetectByObserver(f, opt = {}) {
     //refresh, 立即重新取得元素並比較(延後發出), 供比較基準因尺寸以外之原因改變時使用(例如getBase之固定寬度被取消)
     ev.refresh = () => {
         retarget()
-        core.check(ele, false)
+        core.check(ele, false, 'refresh')
         syncInline()
         updateWaiting()
     }
@@ -720,6 +765,7 @@ function domDetectByObserver(f, opt = {}) {
  * @param {Function} [opt.getSize=null] 輸入比較用尺寸函數，傳入元素，回傳{width,height}，供依內容區或特定量測方式繪製之使用端(例如圖表依clientWidth扣除padding)，給予時只改padding、元素內出現或消失捲軸等外框不變之變化亦會發出，回傳非數字或拋錯之軸視為0(不發出)，預設null表示使用offsetWidth、offsetHeight
  * @param {Function} [opt.getBase=null] 輸入比較基準函數，回傳使用端目前套用之尺寸{width,height}，該軸非數字(含拋錯)表示該軸不比較(例如固定寬度)，給予時以其取代上次發出事件時之尺寸，故掛載時尺寸已一致者不發出(其後事件之sold於首次判定變化前為0)，由隱藏恢復顯示時若與使用端尺寸相同亦不發出；使用端須於事件內套用新尺寸(getBase之回傳隨之更新)，否則之後每次回報皆判定為變化而發出，預設null
  * @param {Integer} [opt.throttle=0] 輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，其餘視為0，預設0表示不節流
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於偵測器內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'check'時為每次量測與比較(含source為量測來源：'poll'輪詢、'observer'ResizeObserver回報、'inline'行內元素之定期量測、'refresh'；found為是否取得元素；width、height為比較用尺寸，取不到元素時為0；changed為是否判定為變化而交付發出；seq為判定為變化之序號，否則null)，'emit'時為即將發出resize事件(含seq、width、height，deferred為是否延後發出)，'skip'時為判定為變化而不發出(含seq，reason為'stale'已處理較新之量測、'zero'尺寸為0、'hidden'延後發出前元素已不被繪製、'base'延後發出前與getBase之尺寸已一致)，'inline'時為行內元素之定期量測開始或停止(含on)；節流期間併入後續發出之判定無emit或skip事件；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，clear後不再呼叫，預設null
  * @returns {Object} 回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件
  * @example
  * need test in browser

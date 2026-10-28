@@ -1,15 +1,17 @@
 import assert from 'assert'
 import { spawnSync } from 'child_process'
 import alive from '../src/alive.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 
 
 describe(`alive`, function() {
 
-    function test1() {
+    //test1之結果取決於各trigger與逾時(timeAlive)之先後, 時間本身即規格, 以假時鐘推進(R-TRACE-01 P5); 原以真實計時器, 負載下觸發延後即改變先後
+    function test1(onTrace) {
         return new Promise((resolve, reject) => {
             let ms = []
 
-            let oAL = alive({ timeAlive: 1500 })
+            let oAL = alive({ timeAlive: 1500, onTrace })
             // let t = Date.now()
 
             let a = { data: 123 }
@@ -61,9 +63,52 @@ describe(`alive`, function() {
     // ["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]
     let r1 = '["enter|a","enter|b","leave|b","enter|b","leave|a","leave|b"]'
     it(`should return '${r1}' when run test1'`, async function() {
-        let ms = await test1()
-        // console.log(JSON.stringify(ms))
-        assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let p = test1(tr.on)
+            await clock.advance(5000)
+            let ms = await p
+            // console.log(JSON.stringify(ms))
+            assert.strict.deepStrictEqual(JSON.stringify(ms), r1)
+            //觀察回調: enter、leave與message事件同序同now, 最後佇列已空而停止偵測
+            let msg = tr.events.filter((e) => e.type === 'enter' || e.type === 'leave').map((e) => `${e.type}|${e.key}|${e.now}`)
+            assert.strict.deepStrictEqual(msg, ['enter|a|1', 'enter|b|2', 'leave|b|1', 'enter|b|2', 'leave|a|1', 'leave|b|0'])
+            assert.strict.deepStrictEqual(tr.types().filter((t) => t !== 'tick').pop(), 'stop')
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should behave the same without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變; P4: 回調之拋錯與回傳值不影響偵測、不產生未處理之rejection; 以假時鐘使各次之時序相同
+        let un = []
+        let onUn = (v) => un.push(String(v))
+        process.on('unhandledRejection', onUn)
+        let rs = []
+        try {
+            let rec = traceRec()
+            for (let onTrace of [undefined, rec.on, () => {
+                throw new Error('trace boom')
+            }, () => Promise.reject(new Error('trace reject')), 'abc']) {
+                let clock = useFakeClock()
+                try {
+                    let p = test1(onTrace)
+                    await clock.advance(5000)
+                    rs.push(JSON.stringify(await p))
+                }
+                finally {
+                    clock.restore()
+                }
+            }
+            await new Promise((resolve) => setImmediate(resolve))
+            assert.strict.deepStrictEqual(rec.events.length > 0, true)
+        }
+        finally {
+            process.removeListener('unhandledRejection', onUn)
+        }
+        assert.strict.deepStrictEqual([rs, un], [[r1, r1, r1, r1, r1], []])
     })
 
     function test2() {
@@ -105,15 +150,17 @@ describe(`alive`, function() {
         let keys = ['__proto__', 'data', 'time', 'constructor', 'toString', 'hasOwnProperty', 'valueOf', 'isPrototypeOf', '__defineGetter__']
 
         it(`should treat __proto__ and names on Object.prototype as ordinary keys`, async function() {
+            //以觀察回調同步(R-TRACE-01): 第9個enter之回呼結束時尚未偵測佇列(偵測於其後之計時器), 故此時全數存活; 原以固定等待30ms, 負載下停滯超過timeAlive即已leave
             let ms = []
-            let o = alive({ timeAlive: 100, timeDetect: 20 })
+            let tr = traceRec()
+            let o = alive({ timeAlive: 100, timeDetect: 20, onTrace: tr.on })
             o.on('message', (m) => ms.push(m.eventName + '|' + m.key))
             for (let k of keys) {
                 o.trigger(k, { k })
             }
-            await sleep(30)
+            await tr.wait((e) => e.type === 'enter', 0, keys.length)
             assert.strict.deepStrictEqual(o.get(), keys.map((k) => ({ key: k, data: { k } })))
-            await sleep(300)
+            await tr.wait((e) => e.type === 'leave', 0, keys.length)
             assert.strict.deepStrictEqual(ms, [...keys.map((k) => 'enter|' + k), ...keys.map((k) => 'leave|' + k)])
             assert.strict.deepStrictEqual(o.get(), [])
         })

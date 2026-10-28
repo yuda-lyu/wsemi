@@ -2,6 +2,7 @@ import ispint from './ispint.mjs'
 import isfun from './isfun.mjs'
 import cint from './cint.mjs'
 import pm2resolve from './pm2resolve.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -9,11 +10,15 @@ import pm2resolve from './pm2resolve.mjs'
  *
  * 同時僅會執行一個佇列(非同步函數)，到達防抖時間才會取最後一個佇列執行，待其執行完畢，若期間有新佇列進來則儲存，待執行完畢後取最後佇列出來執行
  *
+ * 防抖時間(ms)自最後一次調用起算，任務執行中進來之調用亦計入；每20ms偵測一次，任務執行完畢時若自最後一次調用起已閒置滿ms，即於下一次偵測執行最後之佇列，未滿則只再等剩餘時間(不因任務執行完畢而重新起算)
+ *
  * 任務之結果經pm2resolve正規化，任務同步拋錯或其Promise被reject皆視為執行完畢，以console.log記錄而不外拋(不產生未處理之rejection)，不影響後續佇列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmDebounce.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每20ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'done'時為被執行之任務已執行完畢(含ok為是否成功，其後才恢復可執行下一批)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
  * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後等待執行，呼叫無回傳值，被執行任務之結果與錯誤皆不回傳給呼叫端，須由任務自行處理；輸入非函數時不排入佇列(不影響已排入之任務)，以console.log記錄'func is not a function'
  * @example
  *
@@ -77,9 +82,9 @@ import pm2resolve from './pm2resolve.mjs'
  *             return test(inp)
  *         }, 'd') //無阻攔時900->1200發呆, 1200->1700執行
  *     }, 900)
- *     //900ms, d進入排程, 因b執行尚未結束, d雖可進入排程, 同時排程前面還有c, 故c與d皆為等待
- *     //1000ms, b已執行完, 取最末d出來判識(c被強制剔除), d須發呆300ms才能開始執行
- *     //1200ms, d已發呆完, 開始執行(d執行為1200->1700)
+ *     //900ms, d進入排程, 因b執行尚未結束, d雖可進入排程, 同時排程前面還有c, 故c與d皆為等待, 發呆時間自最後一次調用(d, 900ms)起算
+ *     //1000ms, b已執行完, 取最末d出來判識(c被強制剔除), 此時d僅發呆100ms(900->1000)未滿300ms, 故再等剩餘200ms
+ *     //1200ms, d已發呆滿300ms(900->1200), 開始執行(d執行為1200->1700)
  *     //1700ms, d執行完
  *
  * }
@@ -114,7 +119,7 @@ import pm2resolve from './pm2resolve.mjs'
  * }, 2200) //實測setInterval因多次執行會比較不準, 故顯示2000ms結束, 實際為2200ms之後
  *
  */
-function pmDebounce(ms = 300) {
+function pmDebounce(ms = 300, opt = {}) {
 
     function ClsDebounce(ms) {
         let q = [] //queue
@@ -127,6 +132,9 @@ function pmDebounce(ms = 300) {
             ms = 300
         }
         ms = cint(ms)
+
+        //trace, 觀察回調(opt.onTrace), 未給時為null
+        let trace = getTrace(opt)
 
         function detect() {
 
@@ -160,6 +168,9 @@ function pmDebounce(ms = 300) {
                     clearInterval(t)
                     t = null
                     tLast = null
+                    if (trace) {
+                        trace('stop', {})
+                    }
                     return
                 }
 
@@ -179,11 +190,11 @@ function pmDebounce(ms = 300) {
                     //state
                     state = 'doing'
 
-                    //update, 直接使用前面計算時間差之時間點
-                    tLast = tNow
-
                     //取最後的任務與清空佇列
                     let m = q.pop()
+                    if (trace) {
+                        trace('run', { dropped: q.length })
+                    }
                     q = []
                     // console.log('m', m)
 
@@ -191,6 +202,9 @@ function pmDebounce(ms = 300) {
                     // console.log('fun start ii', getIt(), 'ms', tDiff, m.input)
                     pm2resolve(m.func)(...m.input)
                         .then((res) => {
+                            if (trace) {
+                                trace('done', { ok: res.state === 'success' })
+                            }
                             m.output = (res.state === 'success') ? res.msg : { err: res.msg }
                             if (res.state === 'error') {
                                 //比照debounce記錄失敗, 記錄本身亦可能拋錯(如值之util.inspect.custom會拋), 須包try, 否則成為未處理之rejection
@@ -201,24 +215,18 @@ function pmDebounce(ms = 300) {
                             }
                         })
                         .finally(() => {
+                            //恢復wait, 不更新tLast: 防抖時間自最後一次調用起算, 任務完成時已閒置滿ms者於下一次偵測即執行, 未滿者只等剩餘時間
                             state = 'wait'
-
-                            //update, 因func計算時間可能較長, 得重新更新時間點
-                            tLast = Date.now()
 
                             // console.log('fun end ii', getIt(), 'ms', m.input)
                         })
 
                 }
 
-                //clear
-                if (state === 'wait' && q.length === 0) {
-                    clearInterval(t)
-                    t = null
-                    tLast = null
-                }
-
             }, 20) //20ms偵測, 啟動後跑timer, 無佇列則會停止減耗
+            if (trace) {
+                trace('start', {})
+            }
 
         }
 
@@ -231,17 +239,8 @@ function pmDebounce(ms = 300) {
             }
             // console.log('call run ii', Date.now() - _tNow, 'ms', input)
 
-            //first tLast
-            if (tLast === null) {
-                tLast = Date.now()
-            }
-            else if (state === 'wait') {
-                tLast = Date.now()
-            }
-            else {
-                // console.log('state', state)
-                //不更新tLast
-            }
+            //tLast, 每次調用皆更新為最後一次調用之時間, 任務執行中進來之調用亦計入
+            tLast = Date.now()
 
             //push
             q.push({
@@ -250,6 +249,9 @@ function pmDebounce(ms = 300) {
                 output: null,
             })
             // console.log('push q', q)
+            if (trace) {
+                trace('push', { size: q.length })
+            }
 
             //detect
             detect()

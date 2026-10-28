@@ -2,7 +2,9 @@ import assert from 'assert'
 import pmTimeout from '../src/pmTimeout.mjs'
 import delay from '../src/delay.mjs'
 import genPm from '../src/genPm.mjs'
+import cst from '../src/_const.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 
 
 describe(`pmTimeout`, function() {
@@ -237,6 +239,222 @@ describe(`pmTimeout`, function() {
         //以本測試能立即結束反證: 若誤在檢核前就建立60s計時器, mocha將被卡住至逾時
         await assert.rejects(() => pmTimeout(null, 60000), /^Error: invalid pm$/)
         await assert.rejects(() => pmTimeout(Promise.resolve(), -1), /^Error: invalid ms\[-1\]$/)
+    })
+
+    //以下為觀察回調(opt.onTrace)之案(R-TRACE-01): 逾時門檻本身即規格, 以假時鐘推進(時間只由advance推進, 不受負載影響)
+    //scenarios, 各情境於假時鐘下執行並推進, 回傳pmTimeout之結果[狀態, 值]; opt為傳給pmTimeout之第3參數
+    let toR = (p) => p.then((v) => ['resolve', v], (e) => ['reject', e instanceof Error ? `${e.code}:${e.message}` : e])
+    //settled, 假時鐘推進完畢後取結果: 假時鐘不會自行前進, 若尚未完成則拋錯, 不直接await以免懸置(並使假時鐘無法restore)
+    async function settled(p) {
+        let done = false
+        let pp = p.then((v) => {
+            done = true
+            return v
+        }, (e) => {
+            done = true
+            throw e
+        })
+        pp.catch(() => {})
+        await new Promise((resolve) => setImmediate(resolve)) //真實setImmediate讓出, 使已可進行之microtask全數執行
+        if (!done) {
+            throw new Error('not settled within the advanced fake time')
+        }
+        return pp
+    }
+    let scenarios = {
+        //pm於60ms先完成(逾時門檻100ms)
+        pmFirst: async(clock, opt) => {
+            let pm = genPm()
+            let p = toR(pmTimeout(pm, 100, opt))
+            setTimeout(() => pm.resolve('ok'), 60)
+            await clock.advance(200)
+            return settled(p)
+        },
+        //pm於101ms才完成(逾時門檻100ms): 門檻之邊界, 逾時勝出
+        timeoutFirst: async(clock, opt) => {
+            let pm = genPm()
+            let p = toR(pmTimeout(pm, 100, opt))
+            setTimeout(() => pm.resolve('late'), 101)
+            await clock.advance(200)
+            return settled(p)
+        },
+        //pm於99ms完成(逾時門檻100ms): 門檻之邊界, pm勝出
+        pmJustBefore: async(clock, opt) => {
+            let pm = genPm()
+            let p = toR(pmTimeout(pm, 100, opt))
+            setTimeout(() => pm.resolve('ok'), 99)
+            await clock.advance(200)
+            return settled(p)
+        },
+        //pm於30ms先reject
+        pmReject: async(clock, opt) => {
+            let pm = genPm()
+            let p = toR(pmTimeout(pm, 100, opt))
+            setTimeout(() => pm.reject('strErr'), 30)
+            await clock.advance(200)
+            return settled(p)
+        },
+        //參數無效
+        invalidPm: async(clock, opt) => toR(pmTimeout(null, 100, opt)),
+        invalidMs: async(clock, opt) => toR(pmTimeout(Promise.resolve(), -1, opt)),
+    }
+    //go, 啟用假時鐘執行情境name, 回傳{ r, events, at }: at為各事件發生時之假時鐘時間(ms)
+    async function go(name, optBase = {}, useOnTrace = true) {
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let at = []
+            let opt = optBase
+            if (useOnTrace) {
+                opt = {
+                    ...optBase,
+                    onTrace: (e) => {
+                        at.push(Date.now())
+                        tr.on(e)
+                    },
+                }
+            }
+            let r = await scenarios[name](clock, opt)
+            return { r, events: tr.events, at }
+        }
+        finally {
+            clock.restore()
+        }
+    }
+    //fmt, 事件轉為簡式字串: start100(逾時毫秒數)、timeout100、settle:pm:ok(settle之by與ok)
+    let fmt = (e) => (e.type === 'settle' ? `settle:${e.by}:${e.ok ? 'ok' : 'ng'}` : e.ms === undefined ? e.type : `${e.type}${e.ms}`)
+
+    it(`should notify start and settle(pm) when pm settles before the timeout`, async function() {
+        let { r, events, at } = await go('pmFirst')
+        assert.strict.deepStrictEqual(r, ['resolve', 'ok'])
+        //觀察回調: 啟動計時器(100ms)於0ms, pm先完成(60ms)而settle, 不通知timeout
+        assert.strict.deepStrictEqual(events.map(fmt), ['start100', 'settle:pm:ok'])
+        assert.strict.deepStrictEqual(at, [0, 60])
+        let rj = await go('pmReject')
+        assert.strict.deepStrictEqual(rj.r, ['reject', 'strErr'])
+        assert.strict.deepStrictEqual(rj.events.map(fmt), ['start100', 'settle:pm:ng'])
+        assert.strict.deepStrictEqual(rj.at, [0, 30])
+    })
+
+    it(`should notify timeout at exactly ms and settle(timeout) before rejecting`, async function() {
+        let { r, events, at } = await go('timeoutFirst', { label: 'L' })
+        //JSDoc: 逾時則reject code為'TIMEOUT'之Error, message為'[label ]timeout[ms數ms]'
+        assert.strict.deepStrictEqual(r, ['reject', 'TIMEOUT:L timeout[100ms]'])
+        //觀察回調: 逾時計時器恰於100ms到期(timeout)並由逾時勝出(settle), pm於101ms完成時已不再通知
+        assert.strict.deepStrictEqual(events.map(fmt), ['start100', 'timeout100', 'settle:timeout:ng'])
+        assert.strict.deepStrictEqual(at, [0, 100, 100])
+    })
+
+    it(`should let pm win at ms-1 and the timeout win at ms+1 (boundary of the timeout threshold)`, async function() {
+        //逾時門檻之邊界: pm於99ms完成(門檻100ms)則pm勝出且不通知timeout; 於101ms完成則逾時勝出
+        let a = await go('pmJustBefore')
+        assert.strict.deepStrictEqual(a.r, ['resolve', 'ok'])
+        assert.strict.deepStrictEqual(a.events.map(fmt), ['start100', 'settle:pm:ok'])
+        let b = await go('timeoutFirst')
+        assert.strict.deepStrictEqual(b.r, ['reject', 'TIMEOUT:timeout[100ms]'])
+        assert.strict.deepStrictEqual(b.events.map(fmt), ['start100', 'timeout100', 'settle:timeout:ng'])
+    })
+
+    it(`should notify settle(invalid) only, without start or timeout, when the arguments are invalid`, async function() {
+        let a = await go('invalidPm')
+        assert.strict.deepStrictEqual(a.r, ['reject', 'undefined:invalid pm'])
+        assert.strict.deepStrictEqual(a.events.map(fmt), ['settle:invalid:ng'])
+        let b = await go('invalidMs')
+        assert.strict.deepStrictEqual(b.r, ['reject', 'undefined:invalid ms[-1]'])
+        assert.strict.deepStrictEqual(b.events.map(fmt), ['settle:invalid:ng'])
+    })
+
+    it(`should notify start with ms clamped to the timer upper bound`, async function() {
+        //JSDoc: 夾至計時器上限(cst.TIMER_TIME_MAX); start之ms為夾至上限後之逾時毫秒數
+        let tr = traceRec()
+        let r = await pmTimeout(Promise.resolve('ok'), cst.TIMER_TIME_MAX + 1000, { onTrace: tr.on })
+        assert.strict.deepStrictEqual(r, 'ok')
+        assert.strict.deepStrictEqual(tr.events.map(fmt), [`start${cst.TIMER_TIME_MAX}`, 'settle:pm:ok'])
+    })
+
+    it(`should behave the same without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變(opt可省略, 同舊版之pmTimeout(pm, ms)); P4: 回調之拋錯與回傳值不影響逾時判定、不產生未處理之rejection; 以假時鐘使各次之時序相同
+        let un = []
+        let onUn = (v) => un.push(String(v))
+        process.on('unhandledRejection', onUn)
+        let rs = []
+        try {
+            let rec = traceRec()
+            for (let onTrace of [undefined, rec.on, () => {
+                throw new Error('trace boom')
+            }, () => Promise.reject(new Error('trace reject')), 'abc']) {
+                let got = {}
+                for (let name of Object.keys(scenarios)) {
+                    let clock = useFakeClock()
+                    try {
+                        got[name] = await scenarios[name](clock, onTrace === undefined ? { label: 'L' } : { label: 'L', onTrace })
+                    }
+                    finally {
+                        clock.restore()
+                    }
+                }
+                rs.push(got)
+            }
+            //省略第3參數
+            let clock = useFakeClock()
+            try {
+                let pm = genPm()
+                let p = toR(pmTimeout(pm, 100))
+                await clock.advance(150)
+                rs.push({ omitted: await settled(p) })
+            }
+            finally {
+                clock.restore()
+            }
+            await new Promise((resolve) => setImmediate(resolve))
+            assert.strict.deepStrictEqual(rec.events.length > 0, true)
+        }
+        finally {
+            process.removeListener('unhandledRejection', onUn)
+        }
+        let exp = {
+            pmFirst: ['resolve', 'ok'],
+            timeoutFirst: ['reject', 'TIMEOUT:L timeout[100ms]'],
+            pmJustBefore: ['resolve', 'ok'],
+            pmReject: ['reject', 'strErr'],
+            invalidPm: ['reject', 'undefined:invalid pm'],
+            invalidMs: ['reject', 'undefined:invalid ms[-1]'],
+        }
+        assert.strict.deepStrictEqual([rs, un], [[exp, exp, exp, exp, exp, { omitted: ['reject', 'TIMEOUT:timeout[100ms]'] }], []])
+    })
+
+    it(`should notify start, timeout and settle through onTrace with frozen events of primitive fields and no receiver`, async function() {
+        //JSDoc opt.onTrace: 事件為凍結物件{ type, ... }, 欄位依type列舉且皆為原始值; 回調不帶接收者呼叫(R-TRACE-01 P4: 唯讀快照、最少欄位、不暴露內部可變狀態)
+        let meta = []
+        let all = []
+        for (let name of ['pmFirst', 'timeoutFirst', 'invalidPm']) {
+            let clock = useFakeClock()
+            try {
+                let tr = traceRec()
+                await scenarios[name](clock, {
+                    onTrace: function(e) {
+                        meta.push([this, Object.isFrozen(e)])
+                        tr.on(e)
+                    },
+                })
+                all.push(...tr.events)
+            }
+            finally {
+                clock.restore()
+            }
+        }
+        //各type之欄位固定(排序後)
+        let keys = {}
+        for (let e of all) {
+            keys[e.type] = Object.keys(e).sort().join(',')
+        }
+        assert.strict.deepStrictEqual(keys, { start: 'ms,type', timeout: 'ms,type', settle: 'by,ok,type' })
+        //欄位皆為原始值(數字、字串、布林或null)
+        assert.strict.deepStrictEqual(all.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), true)
+        //事件為凍結物件, 回調不帶接收者(this為undefined)
+        assert.strict.deepStrictEqual(meta.length > 0 && meta.every(([self, frozen]) => self === undefined && frozen), true)
+        //每次呼叫恰通知一次settle
+        assert.strict.deepStrictEqual(all.filter((e) => e.type === 'settle').map((e) => e.by), ['pm', 'timeout', 'invalid'])
     })
 
 })

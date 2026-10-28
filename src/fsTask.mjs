@@ -20,6 +20,7 @@ import ltdtDiffByKey from './ltdtDiffByKey.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -32,6 +33,7 @@ import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為定時器到期一次(含busy為上一輪掃描是否仍在進行，為true時本次到期略過)，'skip'時為因上一個change之pm尚未settle(lock)而本輪不掃描(含reason為'lock')，'scan'時為一輪掃描開始或結束(含phase為'start'或'end'，結束時另含files為掃描到之檔案數、records為紀錄檔之筆數)，'compare'時為新舊比對結果(含add、del、diff、same為各類件數)，'emit'時為即將派發一個change事件(含kind為'add'、'del'或'diff'，fp為檔案路徑字串)，'settle'時為該change之pm已settle而即將據以處理(含kind、fp、ok為任務是否成功)，'record'時為任務成功後紀錄檔fpHash.json已更新(含kind、fp)，'fail'時為一輪掃描因列舉檔案或計算雜湊失敗而中止，'clear'時為已呼叫clear；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
  * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
@@ -219,6 +221,9 @@ function fsTask(fd, opt = {}) {
     timeInterval = cint(timeInterval)
     timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null; clear後設為null不再通知
+    let trace = getTrace(opt)
+
     //fsCreateFolder
     fsCreateFolder(fdStorage)
 
@@ -282,7 +287,15 @@ function fsTask(fd, opt = {}) {
         //check
         if (lock === true) {
             // console.log('locking')
+            if (trace) {
+                trace('skip', { reason: 'lock' })
+            }
             return
+        }
+
+        //trace
+        if (trace) {
+            trace('scan', { phase: 'start' })
         }
 
         //kpHashsOld
@@ -292,6 +305,11 @@ function fsTask(fd, opt = {}) {
         //kpHashNew
         let kpHashNew = await calcHash()
         // console.log('kpHashNew', kpHashNew)
+
+        //trace
+        if (trace) {
+            trace('scan', { phase: 'end', files: Object.keys(kpHashNew).length, records: Object.keys(kpHashsOld).length })
+        }
 
         //hsOld, 紀錄檔為檔案來源, 只依自有可列舉鍵迭代(length視為一般鍵; lodash map會把含非負整數length之物件當類陣列, R-OBJ-ITER-01)
         let hsOld = Object.keys(kpHashsOld).map((path) => {
@@ -308,6 +326,11 @@ function fsTask(fd, opt = {}) {
         //rd
         let rd = ltdtDiffByKey(hsOld, hsNew, 'path')
         // console.log('rd.infor', rd.infor)
+
+        //trace
+        if (trace) {
+            trace('compare', { add: rd.add.length, del: rd.del.length, diff: rd.diff.length, same: rd.same.length })
+        }
 
         //emit
         each(rd.infor, (v, k) => {
@@ -362,6 +385,11 @@ function fsTask(fd, opt = {}) {
             //pm
             let pm = genPm()
 
+            //trace, 於派發前通知(監聽器同步拋錯時仍已通知)
+            if (trace) {
+                trace('emit', { kind: type, fp })
+            }
+
             //emit, 於setInterval輪詢之回呼內派發且帶pm
             //  監聽器同步拋錯時須先reject該pm再通報, 否則lock不釋放而使後續change永不派發
             evEmit(ev, 'change', [{ type, fp, fn, hash, pm }], {
@@ -375,6 +403,11 @@ function fsTask(fd, opt = {}) {
             pm
                 .then(() => {
 
+                    //trace
+                    if (trace) {
+                        trace('settle', { kind: type, fp, ok: true })
+                    }
+
                     //kpHashsModify
                     let kpHashsModify = cloneDeep(kpHashsOld)
 
@@ -384,9 +417,20 @@ function fsTask(fd, opt = {}) {
                     //writeObHash
                     writeObHash(kpHashsModify)
 
+                    //trace
+                    if (trace) {
+                        trace('record', { kind: type, fp })
+                    }
+
                 })
                 .catch(() => {
                     //任務失敗(呼叫端reject pm, 或監聽器出錯致evem預設政策reject pm), 不更新紀錄檔; 無此catch則reject會成為unhandledRejection
+
+                    //trace
+                    if (trace) {
+                        trace('settle', { kind: type, fp, ok: false })
+                    }
+
                 })
                 .finally(() => {
 
@@ -618,6 +662,11 @@ function fsTask(fd, opt = {}) {
     let busy = false
     let t = setInterval(() => {
 
+        //trace
+        if (trace) {
+            trace('tick', { busy })
+        }
+
         //check
         if (busy) {
             return
@@ -626,7 +675,11 @@ function fsTask(fd, opt = {}) {
 
         //compareHashAndEmitOne
         compareHashAndEmitOne()
-            .catch(() => {})
+            .catch(() => {
+                if (trace) {
+                    trace('fail', {})
+                }
+            })
             .finally(() => {
                 busy = false
             })
@@ -636,6 +689,10 @@ function fsTask(fd, opt = {}) {
     //clear
     let clear = () => {
         clearInterval(t)
+        if (trace) {
+            trace('clear', {})
+            trace = null //釋放後不再通知
+        }
     }
 
     //save

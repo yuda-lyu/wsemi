@@ -1,5 +1,6 @@
 import assert from 'assert'
 import domDetect from '../src/domDetect.mjs'
+import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 
 
 //本函數於瀏覽器執行, 以ResizeObserver、MutationObserver、window與document偵測元素尺寸, nodejs無此等物件, 故以假環境覆蓋全域
@@ -210,6 +211,39 @@ function mkEnv(o = {}) {
 //ws, 各resize事件之寬
 function ws(rec) {
     return rec.resize.map((m) => m.snew.offsetWidth)
+}
+
+
+//以觀察回調(opt.onTrace)同步, 不以固定等待(R-TRACE-01): 定期量測(輪詢、行內元素)為setInterval, 判定為變化後再以setTimeout延後1ms發出, 為兩跳之鏈, 負載下固定等待可先結束而使測試提早改變狀態(2026-10-28主控全套於高負載時即因此少一筆)
+//settle, 等索引from之後各次判定為變化之量測(check之changed為true)之結果(emit或skip, 以seq對應)
+async function settle(tr, from) {
+    for (let e of tr.events.slice(from)) {
+        if (e.type === 'check' && e.changed) {
+            await tr.wait((x) => (x.type === 'emit' || x.type === 'skip') && x.seq === e.seq, from)
+        }
+    }
+}
+
+
+//sample, 等此後下一次指定來源(poll、inline)之量測及其結果; 測試於呼叫前同步改動之狀態必於該次量測讀到
+async function sample(tr, source) {
+    let from = tr.mark()
+    await tr.wait((e) => e.type === 'check' && e.source === source, from)
+    await settle(tr, from)
+}
+
+
+//inlines, 自索引from起行內元素定期量測之開始與停止
+function inlines(tr, from = 0) {
+    return tr.events.slice(from).filter((e) => e.type === 'inline').map((e) => e.on)
+}
+
+
+//clearAll, 清除目前環境之偵測器; 用假時鐘之測試於還原時鐘前呼叫, 使其計時器於假時鐘內清除
+function clearAll(env) {
+    for (let d of env.dds) {
+        d.clear()
+    }
 }
 
 
@@ -527,14 +561,19 @@ describe(`domDetect`, function() {
         //使用端於事件內使尺寸同向再+1px(例如以含框線之offsetHeight設定撐開自身之子元素高): 容許誤差內同向連續發出10次後中斷, 不得逐次無限增長
         let env = mkEnv()
         let el = new Ele(100, 40)
-        let r = env.dd(() => el)
+        let tr = traceRec()
+        let r = env.dd(() => el, { onTrace: tr.on })
         r.d.on('resize', (m) => {
             el.size(m.snew.offsetWidth + 1, 40)
             env.fireRO(el)
         })
         env.fireRO(el)
-        await sleep(300)
+        //回授為逐次延後1ms之鏈, 以觀察回調等到第11次發出; 其監聽器內之+1px(111)於同一回呼內同步量測, 續行時已記錄
+        let e11 = await tr.wait((e) => e.type === 'emit', 0, 11)
         assert.strict.deepStrictEqual([ws(r).length, ws(r)[ws(r).length - 1], el.offsetWidth], [11, 110, 111])
+        //中斷: 第11次發出後之量測(兩盒各一次)皆判定為不變化, 不再交付發出, 故不會有第12次
+        let after = tr.events.slice(tr.events.indexOf(e11) + 1)
+        assert.strict.deepStrictEqual(after.map((e) => [e.type, e.width, e.changed]), [['check', 111, false], ['check', 111, false]])
     })
 
     it(`should skip one within-tolerance change after ten same-direction emits, and emit the next change that exceeds the tolerance`, async function() {
@@ -894,91 +933,115 @@ describe(`domDetect`, function() {
         //F4 非替換之行內元素ResizeObserver不回報, 改以定期量測
         let env = mkEnv()
         let el = new Ele(27, 18, { display: 'inline' })
-        let r = env.dd(() => el, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => el, { timeInterval: 5, onTrace: tr.on })
+        await sample(tr, 'inline')
         el.size(137, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         el.display = 'block'
+        let from = tr.mark()
         env.fireRO(el)
         let n = r.resize.length
         el.size(200, 18)
-        await sleep(30)
+        await sleep(30) //否定斷言之觀察窗: 已非行內, 不得再定期量測(負載只使窗內取樣變少而漏抓, 不會誤判)
         let nStopped = r.resize.length
+        let polled = tr.events.slice(from).filter((e) => e.type === 'check' && e.source === 'inline').length
+        let fromRO = tr.mark()
         env.fireRO(el)
-        await sleep(10)
+        await settle(tr, fromRO)
         assert.strict.deepStrictEqual(ws(r), [27, 137, 200])
         assert.strict.deepStrictEqual([n, nStopped], [2, 2])
+        //ResizeObserver回報時判定已非行內而停止定期量測, 其後無定期量測
+        assert.strict.deepStrictEqual([inlines(tr), inlines(tr, from), polled], [[true, false], [false], 0])
     })
 
     it(`should measure an inline element that was taken before being connected`, async function() {
         //Vue指令之bind時序: 元素於插入DOM前即建立偵測器, 此時取不到display而判為非行內; 插入後須於DOM變動時重判為行內並改定期量測
         let env = mkEnv()
         let el = new Ele(27, 18, { display: 'inline', connected: false })
-        let r = env.dd(() => el, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => el, { timeInterval: 5, onTrace: tr.on })
+        await sleep(30) //否定斷言之觀察窗: 插入前判為非行內, 不定期量測
+        let before = tr.types()
         el.isConnected = true
         env.fireMO()
-        await sleep(30)
+        let started = inlines(tr)
+        await sample(tr, 'inline')
         el.size(137, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         assert.strict.deepStrictEqual(ws(r), [27, 137])
+        //插入前無任何量測; 插入之DOM變動時重判為行內而開始定期量測
+        assert.strict.deepStrictEqual([before, started], [[], [true]])
     })
 
     it(`should resume measuring an inline element after it is removed and inserted again`, async function() {
         //如keep-alive: 行內元素移出DOM時定期量測量到尺寸0並判為非行內而停止, 插回後須於DOM變動時重判為行內並恢復定期量測
         let env = mkEnv()
         let el = new Ele(27, 18, { display: 'inline' })
-        let r = env.dd(() => el, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => el, { timeInterval: 5, onTrace: tr.on })
+        await sample(tr, 'inline')
         el.isConnected = false
         el.size(0, 0)
-        await sleep(30)
+        await sample(tr, 'inline')
+        let stopped = inlines(tr)
         el.isConnected = true
         el.size(27, 18)
         env.fireMO()
-        await sleep(30)
+        await sample(tr, 'inline')
         el.size(137, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+        //移出時量到0並停止定期量測, 插回之DOM變動時恢復
+        assert.strict.deepStrictEqual([stopped, inlines(tr)], [[true, false], [true, false, true]])
     })
 
     it(`should keep measuring an inline element while it hides itself, and pick up the size once shown`, async function() {
         //如v-show: 行內元素自身設display:none時取得之display為none而非inline, 若因此停止定期量測, 顯示後行內元素ResizeObserver又不回報即永不量測
         let env = mkEnv()
         let el = new Ele(27, 18, { display: 'inline' })
-        let r = env.dd(() => el, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => el, { timeInterval: 5, onTrace: tr.on })
+        await sample(tr, 'inline')
         el.display = 'none'
         el.size(0, 0)
-        await sleep(30)
+        let from = tr.mark()
+        await sample(tr, 'inline')
+        let hidden = tr.events.slice(from).filter((e) => e.type === 'check').map((e) => [e.source, e.width])
         el.display = 'inline'
         el.size(27, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         el.size(137, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+        //隱藏期間仍定期量測(量到0), 從未停止
+        assert.strict.deepStrictEqual([hidden, inlines(tr)], [[['inline', 0]], [true]])
     })
 
     it(`should resume an inline element that was hidden, removed and inserted again while hidden`, async function() {
         //隱藏期間移出(不在頁面中而停止量測)再插回時仍為隱藏, 須依曾判定為行內而恢復定期量測
         let env = mkEnv()
         let el = new Ele(27, 18, { display: 'inline' })
-        let r = env.dd(() => el, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => el, { timeInterval: 5, onTrace: tr.on })
+        await sample(tr, 'inline')
         el.display = 'none'
         el.size(0, 0)
-        await sleep(30)
+        await sample(tr, 'inline')
         el.isConnected = false
-        await sleep(30)
+        await sample(tr, 'inline')
+        let stopped = inlines(tr)
         el.isConnected = true
         env.fireMO()
-        await sleep(30)
+        let resumedWhileHidden = inlines(tr)
         el.display = 'inline'
         el.size(27, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         el.size(137, 18)
-        await sleep(30)
+        await sample(tr, 'inline')
         assert.strict.deepStrictEqual(ws(r), [27, 27, 137])
+        //移出時停止, 插回時仍為隱藏即依曾判定為行內而恢復定期量測
+        assert.strict.deepStrictEqual([stopped, resumedWhileHidden], [[true, false], [true, false, true]])
     })
 
     it(`should not poll a hidden element that was never measured as inline`, async function() {
@@ -1004,18 +1067,25 @@ describe(`domDetect`, function() {
         let env = mkEnv()
         let a = new Ele(27, 18, { display: 'inline' })
         let cur = a
-        let r = env.dd(() => cur, { timeInterval: 5 })
-        await sleep(30)
+        let tr = traceRec()
+        let r = env.dd(() => cur, { timeInterval: 5, onTrace: tr.on })
+        await sample(tr, 'inline')
         let b = new Ele(0, 0, { display: 'none' })
         cur = b
-        await sleep(30)
+        await sample(tr, 'inline')
+        let stopped = inlines(tr)
         b.display = 'block'
         b.size(300, 40)
-        await sleep(30)
+        let from = tr.mark()
+        await sleep(30) //否定斷言之觀察窗: 新節點不沿用行內而不定期量測
         let n = r.resize.length
+        let polled = tr.events.slice(from).length
+        let fromRO = tr.mark()
         env.fireRO(b)
-        await sleep(10)
+        await settle(tr, fromRO)
         assert.strict.deepStrictEqual([n, ws(r)], [1, [27, 300]])
+        //換成隱藏之新節點時停止定期量測, 其後無量測
+        assert.strict.deepStrictEqual([stopped, polled], [[true, false], 0])
     })
 
     it(`should give no direction on window events after a change within the tolerance`, async function() {
@@ -1114,8 +1184,9 @@ describe(`domDetect`, function() {
         for (let [o, opt] of [[{}, { mode: 'polling', timeInterval: 5 }], [{ noRO: true }, { timeInterval: 5 }]]) {
             let env = mkEnv(o)
             let el = new Ele(300, 40)
-            let r = env.dd(() => el, opt)
-            await sleep(30)
+            let tr = traceRec()
+            let r = env.dd(() => el, { ...opt, onTrace: tr.on })
+            await sample(tr, 'poll')
             assert.strict.deepStrictEqual([ws(r), env.ros.length, env.mos.length], [[300], 0, 0], JSON.stringify(o))
             for (let d of env.dds) {
                 d.clear()
@@ -1127,18 +1198,22 @@ describe(`domDetect`, function() {
         //輪詢與ResizeObserver共用比較、發出、視窗事件與清除: 容許誤差內之同向變化照常發出、尺寸0不發出、恢復顯示再發出、視窗尺寸取當下值
         let env = mkEnv()
         let el = new Ele(300, 40)
-        let r = env.dd(() => el, { mode: 'polling', timeInterval: 5 })
+        let tr = traceRec()
+        let r = env.dd(() => el, { mode: 'polling', timeInterval: 5, onTrace: tr.on })
         for (let w of [300, 301, 302, 0, 302]) {
             el.size(w, w === 0 ? 0 : 40)
-            await sleep(25)
+            await sample(tr, 'poll')
         }
         env.resizeWindow(900, 600)
         r.d.clear()
+        let nCleared = tr.mark()
         el.size(400, 40)
-        await sleep(25)
+        await sleep(25) //否定斷言之觀察窗: clear後不再取樣與發出
         assert.strict.deepStrictEqual(ws(r), [300, 301, 302, 302])
         assert.strict.deepStrictEqual(r.rww.filter((m) => m.from === 'window').map((m) => m.snew.windowWidth), [900])
         assert.strict.deepStrictEqual(env.listeners.length, 0)
+        //尺寸0之量測判定為變化但不發出(zero); clear後無事件
+        assert.strict.deepStrictEqual([tr.events.filter((e) => e.type === 'skip').map((e) => e.reason), tr.mark() - nCleared], [['zero'], 0])
     })
 
     it(`should treat a throwing f as not found in polling mode`, async function() {
@@ -1146,16 +1221,19 @@ describe(`domDetect`, function() {
         let env = mkEnv()
         let ok = false
         let el = new Ele(300, 40)
+        let tr = traceRec()
         let r = env.dd(() => {
             if (!ok) {
                 throw new Error('f boom')
             }
             return el
-        }, { mode: 'polling', timeInterval: 5 })
-        await sleep(50)
+        }, { mode: 'polling', timeInterval: 5, onTrace: tr.on })
+        let miss = await tr.wait((e) => e.type === 'check')
         ok = true
-        await sleep(50) //輪詢與延後發出之計時器於負載下可能延誤, 等待放寬
+        await sample(tr, 'poll')
         assert.strict.deepStrictEqual(ws(r), [300])
+        //f拋錯之取樣視為取不到元素
+        assert.strict.deepStrictEqual([miss.source, miss.found], ['poll', false])
     })
 
     it(`should return null for an invalid f`, function() {
@@ -1378,22 +1456,34 @@ describe(`domDetect`, function() {
     })
 
     it(`should measure again on the next sample after a skipped emit in polling mode and for an inline element`, async function() {
-        for (let [opt, display] of [[{ mode: 'polling', timeInterval: 5 }, 'block'], [{ timeInterval: 5 }, 'inline']]) {
-            let env = mkEnv()
-            let el = new Ele(27, 18, { display })
-            let r = env.dd(() => el, opt)
-            await sleep(30)
-            el.size(137, 18)
-            r.d.refresh()
-            el.display = 'none'
-            el.size(0, 0)
-            await sleep(3)
-            el.display = display
-            el.size(137, 18)
-            await sleep(30)
-            assert.strict.deepStrictEqual([ws(r), r.resize[r.resize.length - 1].sold.offsetWidth], [[27, 137], 0], display)
-            for (let d of env.dds) {
-                d.clear()
+        //延後發出因元素不被繪製而略過後比較基準歸0, 下一次取樣即重新比較而發出; 所驗為計時器之先後(略過先於下一次取樣), 以假時鐘控制(R-TRACE-01 P5)
+        //  以真實計時器時, 隱藏期間若先有一次取樣量到0, 比較基準亦因該次而歸0, 掩蓋略過時未歸0之缺陷(變異M09於真實計時器下時抓時漏)
+        for (let [opt, display, source] of [[{ mode: 'polling', timeInterval: 5 }, 'block', 'poll'], [{ timeInterval: 5 }, 'inline', 'inline']]) {
+            let clock = useFakeClock()
+            try {
+                let env = mkEnv()
+                let el = new Ele(27, 18, { display })
+                let tr = traceRec()
+                let r = env.dd(() => el, { ...opt, onTrace: tr.on })
+                await clock.advance(7) //第5ms取樣量到27, 第6ms發出
+                el.size(137, 18)
+                let from = tr.mark()
+                r.d.refresh() //判定為變化, 延後至第8ms發出
+                el.display = 'none'
+                el.size(0, 0)
+                await clock.advance(1) //第8ms: 延後發出時元素已不被繪製而略過; 下一次取樣在第10ms
+                let between = tr.events.slice(from).map((e) => [e.type, e.type === 'check' ? e.source : e.reason])
+                el.display = display
+                el.size(137, 18)
+                await clock.advance(4) //第10ms取樣量到137而判定為變化, 第11ms發出
+                assert.strict.deepStrictEqual([ws(r), r.resize[r.resize.length - 1].sold.offsetWidth], [[27, 137], 0], display)
+                //refresh之判定與其略過(hidden)之間無取樣; 恢復顯示後之取樣判定為變化
+                assert.strict.deepStrictEqual(between, [['check', 'refresh'], ['skip', 'hidden']], display)
+                assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'check' && e.source === source).map((e) => [e.width, e.changed]), [[27, true], [137, true]], display)
+                clearAll(env)
+            }
+            finally {
+                clock.restore()
             }
         }
     })
@@ -1535,19 +1625,29 @@ describe(`domDetect`, function() {
     it(`should not emit window events once f finds no element, even if the old element stays rendered`, async function() {
         //f改回傳null而舊元素仍在頁面中且可見: 偵測對象已不存在, 最新量測歸0, 視窗事件不得帶出舊元素之尺寸
         for (let opt of [{}, { mode: 'polling', timeInterval: 5 }]) {
+            let polling = opt.mode === 'polling'
             let env = mkEnv()
             let el = new Ele(300, 40)
             let cur = el
-            let r = env.dd(() => cur, opt)
+            let tr = traceRec()
+            let r = env.dd(() => cur, { ...opt, onTrace: tr.on })
+            let from = tr.mark()
             env.frame()
-            await sleep(30)
+            if (polling) {
+                await sample(tr, 'poll')
+            }
+            else {
+                await settle(tr, from)
+            }
             cur = null
-            if (opt.mode !== 'polling') {
+            from = tr.mark()
+            if (!polling) {
                 r.d.refresh() //ResizeObserver模式由refresh重新取得元素(舊元素未變, 瀏覽器不回報); 輪詢模式由定期取樣重新取得
             }
-            await sleep(30)
+            let miss = await tr.wait((e) => e.type === 'check', from)
             env.resizeWindow(900, 800)
             assert.strict.deepStrictEqual([ws(r), r.rww.filter((m) => m.from === 'window').length], [[300], 0], JSON.stringify(opt))
+            assert.strict.deepStrictEqual(miss.found, false, JSON.stringify(opt))
             for (let d of env.dds) {
                 d.clear()
             }
@@ -1557,27 +1657,44 @@ describe(`domDetect`, function() {
     it(`should not emit window events while f finds no element, in both modes`, async function() {
         //取不到元素時最新量測歸0, 視窗事件不發出; 比較基準不動, 同尺寸之元素再出現時不發出dom事件(同1.9.5)
         for (let opt of [{}, { mode: 'polling', timeInterval: 5 }]) {
+            let polling = opt.mode === 'polling'
             let env = mkEnv()
             let el = new Ele(300, 40)
             let cur = el
-            let r = env.dd(() => cur, opt)
-            env.frame()
-            await sleep(30)
+            let tr = traceRec()
+            let r = env.dd(() => cur, { ...opt, onTrace: tr.on })
+            //step, 同步改動後等其量測之結果: 輪詢模式等下一次取樣, ResizeObserver模式之回報於frame內同步量測
+            let step = async (act) => {
+                let from = tr.mark()
+                act()
+                if (polling) {
+                    await sample(tr, 'poll')
+                }
+                else {
+                    await settle(tr, from)
+                }
+                return tr.events.slice(from).filter((e) => e.type === 'check').map((e) => e.found)
+            }
+            await step(() => env.frame())
             env.resizeWindow(1000, 800)
-            cur = null
-            el.isConnected = false
-            el.size(0, 0)
-            env.frame()
-            await sleep(30)
+            let fMiss = await step(() => {
+                cur = null
+                el.isConnected = false
+                el.size(0, 0)
+                env.frame()
+            })
             env.resizeWindow(900, 800)
             let b = new Ele(300, 40)
-            cur = b
-            env.fireMO()
-            env.frame()
-            await sleep(30)
+            let fBack = await step(() => {
+                cur = b
+                env.fireMO()
+                env.frame()
+            })
             env.resizeWindow(800, 800)
             let w = r.rww.filter((m) => m.from === 'window')
             assert.strict.deepStrictEqual([w.map((m) => m.snew.windowWidth), ws(r)], [[1000, 800], [300]], JSON.stringify(opt))
+            //取不到之量測與再取得之量測皆已發生
+            assert.strict.deepStrictEqual([fMiss.includes(false), fBack.length > 0 && fBack.every((v) => v)], [true, true], JSON.stringify(opt))
             for (let d of env.dds) {
                 d.clear()
             }
@@ -1633,16 +1750,24 @@ describe(`domDetect`, function() {
             let env = mkEnv()
             let el = new Ele(300, 40)
             let chart = { w: 300, h: 40, fixW: false }
-            let r = env.dd(() => el, { ...opt, getBase: () => ({ width: chart.fixW ? 'fixed' : chart.w, height: chart.h }) })
+            let tr = traceRec()
+            let r = env.dd(() => el, { ...opt, getBase: () => ({ width: chart.fixW ? 'fixed' : chart.w, height: chart.h }), onTrace: tr.on })
             r.d.on('resize', (m) => {
                 if (!chart.fixW) {
                     chart.w = m.snew.width
                 }
                 chart.h = m.snew.height
             })
+            //step, 等此步之量測及其結果: 輪詢模式等下一次取樣, ResizeObserver模式之回報於frame內同步量測(R-TRACE-01; 原以固定等待30ms, 輪詢模式於負載下少一筆)
             let step = async () => {
+                let from = tr.mark()
                 env.frame()
-                await sleep(30)
+                if (opt.mode === 'polling') {
+                    await sample(tr, 'poll')
+                }
+                else {
+                    await settle(tr, from)
+                }
             }
             await step()
             el.size(350, 40)
@@ -1782,67 +1907,86 @@ describe(`domDetect`, function() {
     })
 
     it(`should throttle with the first change at once and the last change at the end of the window`, async function() {
+        //節流窗口之長短本身即規格, 以假時鐘推進(R-TRACE-01 P5); 原以真實等待累計對60ms窗口, 負載下窗口內之讀值與尾端皆不穩
         for (let opt of [{}, { mode: 'polling', timeInterval: 5 }]) {
-            let env = mkEnv()
-            let el = new Ele(300, 40)
-            let r = env.dd(() => el, { ...opt, throttle: 60 })
-            env.frame()
-            await sleep(10)
-            for (let w of [310, 320, 330]) {
-                el.size(w, 40)
+            let clock = useFakeClock()
+            try {
+                let env = mkEnv()
+                let el = new Ele(300, 40)
+                let tr = traceRec()
+                let r = env.dd(() => el, { ...opt, throttle: 60, onTrace: tr.on })
                 env.frame()
-                await sleep(10)
+                await clock.advance(10)
+                for (let w of [310, 320, 330]) {
+                    el.size(w, 40)
+                    env.frame()
+                    await clock.advance(10)
+                }
+                let during = ws(r)
+                await clock.advance(100)
+                assert.strict.deepStrictEqual([during, ws(r)], [[300], [300, 330]], JSON.stringify(opt))
+                //首次立即(延後1ms)發出, 窗口內之變化併入尾端, 以最後一次之量測發出
+                assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'emit').map((e) => [e.width, e.deferred]), [[300, true], [330, true]], JSON.stringify(opt))
+                clearAll(env)
             }
-            let during = ws(r)
-            await sleep(100)
-            await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-            assert.strict.deepStrictEqual([during, ws(r)], [[300], [300, 330]], JSON.stringify(opt))
-            for (let d of env.dds) {
-                d.clear()
+            finally {
+                clock.restore()
             }
         }
     })
 
     it(`should cancel the pending throttled emit on clear`, async function() {
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let r = env.dd(() => el, { throttle: 60 })
-        env.frame()
-        await sleep(10)
-        el.size(310, 40)
-        env.frame()
-        await sleep(10)
-        r.d.clear()
-        await sleep(100)
-        await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-        assert.strict.deepStrictEqual(ws(r), [300])
+        //假時鐘(R-TRACE-01 P5): clear須在60ms窗口結束前
+        let clock = useFakeClock()
+        try {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, { throttle: 60 })
+            env.frame()
+            await clock.advance(10)
+            el.size(310, 40)
+            env.frame()
+            await clock.advance(10)
+            r.d.clear()
+            await clock.advance(110)
+            assert.strict.deepStrictEqual(ws(r), [300])
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should not schedule the pending throttled emit after clear`, async function() {
         //clear時取消節流待發出者: 已排定之事件本就因clear而不發出, 但不取消時節流計時器殘留至窗口結束後仍排定延後發出
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let r = env.dd(() => el, { throttle: 60 })
-        env.frame()
-        await sleep(10)
-        el.size(310, 40)
-        env.frame()
-        await sleep(10)
-        let delays = []
-        let st = globalThis.setTimeout
-        globalThis.setTimeout = (fn, ms) => {
-            delays.push(ms)
-            return st(fn, ms)
-        }
+        //假時鐘(R-TRACE-01 P5): clear須在60ms窗口結束前; 攔截者包裝假時鐘之setTimeout
+        let clock = useFakeClock()
         try {
-            r.d.clear()
-            await sleep(100)
-            await sleep(10)
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, { throttle: 60 })
+            env.frame()
+            await clock.advance(10)
+            el.size(310, 40)
+            env.frame()
+            await clock.advance(10)
+            let delays = []
+            let st = globalThis.setTimeout
+            globalThis.setTimeout = (fn, ms) => {
+                delays.push(ms)
+                return st(fn, ms)
+            }
+            try {
+                r.d.clear()
+                await clock.advance(110)
+            }
+            finally {
+                globalThis.setTimeout = st
+            }
+            assert.strict.deepStrictEqual([ws(r), delays.filter((ms) => ms === 1)], [[300], []])
         }
         finally {
-            globalThis.setTimeout = st
+            clock.restore()
         }
-        assert.strict.deepStrictEqual([ws(r), delays.filter((ms) => ms === 1)], [[300], []])
     })
 
     it(`should clear the timers of scheduled deferred emits on clear`, async function() {
@@ -1894,19 +2038,29 @@ describe(`domDetect`, function() {
     })
 
     it(`should emit the first change synchronously and the rest deferred with throttle and sync`, async function() {
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let live = []
-        let r = env.dd(() => el, { throttle: 60, sync: true })
-        r.d.on('resize', () => live.push(el.offsetWidth))
-        env.frame()
-        let nSync = r.resize.length
-        el.size(310, 40)
-        env.frame()
-        let nWindow = r.resize.length
-        await sleep(100)
-        await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-        assert.strict.deepStrictEqual([nSync, nWindow, ws(r), live], [1, 1, [300, 310], [300, 310]])
+        //假時鐘(R-TRACE-01 P5): 尾端於60ms窗口結束時觸發, 再延後1ms發出
+        let clock = useFakeClock()
+        try {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let live = []
+            let tr = traceRec()
+            let r = env.dd(() => el, { throttle: 60, sync: true, onTrace: tr.on })
+            r.d.on('resize', () => live.push(el.offsetWidth))
+            env.frame()
+            let nSync = r.resize.length
+            el.size(310, 40)
+            env.frame()
+            let nWindow = r.resize.length
+            await clock.advance(110)
+            assert.strict.deepStrictEqual([nSync, nWindow, ws(r), live], [1, 1, [300, 310], [300, 310]])
+            //首次於回呼內同步發出, 尾端延後發出
+            assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'emit').map((e) => [e.width, e.deferred]), [[300, false], [310, true]])
+            clearAll(env)
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should not emit an older deferred measurement after a newer one was emitted synchronously`, async function() {
@@ -1930,38 +2084,46 @@ describe(`domDetect`, function() {
 
     it(`should not emit an older throttled trailing measurement after a newer one was emitted synchronously`, async function() {
         //sync且節流時後續發出為延後發出; 其1ms空檔若被延誤至節流窗口結束後, 期間之回報為首次而同步發出較新之量測, 較舊之後續發出不得再發出
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let held = []
-        let st = globalThis.setTimeout
-        let r = env.dd(() => el, { sync: true, throttle: 20 })
-        env.fireRO(el) //首次, 同步發出300
-        el.size(310, 40)
-        env.fireRO(el) //窗口內, 待後續發出
-        globalThis.setTimeout = (fn, ms) => {
-            if (ms === 1) {
-                held.push(fn) //攔下後續發出之延後, 模擬其被延誤
-                return 0
-            }
-            return st(fn, ms)
-        }
+        //假時鐘(R-TRACE-01 P5): 節流以Date.now判定窗口, 原以真實等待與忙等, 負載下尾端之重排使攔下之筆數不定
+        let clock = useFakeClock()
         try {
-            await sleep(40)
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let held = []
+            let st = globalThis.setTimeout
+            let tr = traceRec()
+            let r = env.dd(() => el, { sync: true, throttle: 20, onTrace: tr.on })
+            env.fireRO(el) //首次, 同步發出300
+            el.size(310, 40)
+            env.fireRO(el) //窗口內, 待後續發出
+            globalThis.setTimeout = (fn, ms) => {
+                if (ms === 1) {
+                    held.push(fn) //攔下後續發出之延後, 模擬其被延誤
+                    return 0
+                }
+                return st(fn, ms)
+            }
+            try {
+                await clock.advance(40)
+            }
+            finally {
+                globalThis.setTimeout = st
+            }
+            await clock.advance(25) //超過節流時間, 使下一次回報為首次; 尾端已觸發, 無待觸發之計時器
+            el.size(320, 40)
+            env.fireRO(el) //首次, 同步發出320
+            let from = tr.mark()
+            for (let fn of held) {
+                fn() //被延誤之後續發出(310)此時才執行
+            }
+            assert.strict.deepStrictEqual([held.length, ws(r)], [1, [300, 320]])
+            //被延誤之310因已處理較新之量測而略過
+            assert.strict.deepStrictEqual(tr.events.slice(from).map((e) => [e.type, e.reason]), [['skip', 'stale']])
+            clearAll(env)
         }
         finally {
-            globalThis.setTimeout = st
+            clock.restore()
         }
-        let t0 = Date.now()
-        while (Date.now() - t0 < 25) {
-            //忙等超過節流時間, 使下一次回報為首次(節流以Date.now判定)
-        }
-        el.size(320, 40)
-        env.fireRO(el) //首次, 同步發出320
-        for (let fn of held) {
-            fn() //被延誤之後續發出(310)此時才執行
-        }
-        await sleep(10)
-        assert.strict.deepStrictEqual([held.length, ws(r)], [1, [300, 320]])
     })
 
     it(`should not emit a throttled trailing change that the consumer has already applied`, async function() {
@@ -1989,27 +2151,38 @@ describe(`domDetect`, function() {
 
     it(`should merge a refresh within the throttle window into the trailing emit`, async function() {
         //節流窗口內之refresh併入節流, 於窗口結束時以最後一次之量測發出
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let chart = { w: 300, h: 40, fixW: false }
-        let r = env.dd(() => el, { throttle: 60, getBase: () => ({ width: chart.fixW ? null : chart.w, height: chart.h }) })
-        r.d.on('resize', (m) => {
-            chart.w = m.snew.offsetWidth
-            chart.h = m.snew.offsetHeight
-        })
-        el.size(310, 40)
-        env.frame()
-        await sleep(10)
-        chart.fixW = true
-        el.size(360, 40)
-        env.frame()
-        chart.fixW = false
-        r.d.refresh()
-        await sleep(10)
-        let nInWindow = r.resize.length
-        await sleep(80)
-        await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-        assert.strict.deepStrictEqual([nInWindow, ws(r)], [1, [310, 360]])
+        //假時鐘(R-TRACE-01 P5): 窗口內讀值須在60ms窗口結束前
+        let clock = useFakeClock()
+        try {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let chart = { w: 300, h: 40, fixW: false }
+            let tr = traceRec()
+            let r = env.dd(() => el, { throttle: 60, getBase: () => ({ width: chart.fixW ? null : chart.w, height: chart.h }), onTrace: tr.on })
+            r.d.on('resize', (m) => {
+                chart.w = m.snew.offsetWidth
+                chart.h = m.snew.offsetHeight
+            })
+            el.size(310, 40)
+            env.frame()
+            await clock.advance(10)
+            chart.fixW = true
+            el.size(360, 40)
+            env.frame()
+            chart.fixW = false
+            r.d.refresh()
+            await clock.advance(10)
+            let nInWindow = r.resize.length
+            await clock.advance(90)
+            assert.strict.deepStrictEqual([nInWindow, ws(r)], [1, [310, 360]])
+            //refresh之判定為變化, 併入尾端而以其量測發出
+            let rf = tr.events.find((e) => e.type === 'check' && e.source === 'refresh')
+            assert.strict.deepStrictEqual([rf.changed, tr.events.filter((e) => e.type === 'emit').map((e) => [e.seq === rf.seq, e.width])], [true, [[false, 310], [true, 360]]])
+            clearAll(env)
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should restore the sync state after a throwing listener with throttle and sync`, async function() {
@@ -2047,22 +2220,32 @@ describe(`domDetect`, function() {
     })
 
     it(`should skip a throttled emit of a hidden element and emit once it is shown again`, async function() {
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let r = env.dd(() => el, { throttle: 60 })
-        env.frame()
-        await sleep(10)
-        el.size(310, 40)
-        env.frame()
-        hide(el)
-        await sleep(100)
-        await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-        let n = r.resize.length
-        show(el, 310, 40)
-        env.frame()
-        await sleep(100)
-        await sleep(10) //節流之後續發出於節流計時器觸發後再延後1ms發出, 再等一輪
-        assert.strict.deepStrictEqual([n, ws(r)], [1, [300, 310]])
+        //假時鐘(R-TRACE-01 P5): 尾端於60ms窗口結束時觸發, 再延後1ms發出
+        let clock = useFakeClock()
+        try {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let tr = traceRec()
+            let r = env.dd(() => el, { throttle: 60, onTrace: tr.on })
+            env.frame()
+            await clock.advance(10)
+            el.size(310, 40)
+            env.frame()
+            hide(el)
+            await clock.advance(110)
+            let n = r.resize.length
+            let skips = tr.events.filter((e) => e.type === 'skip').map((e) => e.reason)
+            show(el, 310, 40)
+            env.frame()
+            await clock.advance(110)
+            assert.strict.deepStrictEqual([n, ws(r)], [1, [300, 310]])
+            //隱藏時之尾端略過(hidden)
+            assert.strict.deepStrictEqual(skips, ['hidden'])
+            clearAll(env)
+        }
+        finally {
+            clock.restore()
+        }
     })
 
     it(`should compare again on refresh in both modes`, async function() {
@@ -2121,6 +2304,160 @@ describe(`domDetect`, function() {
         env.frame()
         await sleep(20)
         assert.strict.deepStrictEqual(ws(r), [300])
+    })
+
+    //--- 觀察回調(onTrace) ---
+
+    it(`should notify measurements, emits, skips and inline polling through onTrace with frozen events of primitive fields and no receiver`, async function() {
+        //JSDoc opt.onTrace: 事件為凍結物件{ type, ... }, 欄位依type列舉; 回調不帶接收者呼叫(R-TRACE-01 P4: 唯讀快照、最少欄位、不暴露內部可變狀態)
+        let env = mkEnv()
+        let tr = traceRec()
+        let meta = []
+        let onTrace = function(e) {
+            meta.push([this, Object.isFrozen(e)])
+            tr.on(e)
+        }
+        let el = new Ele(300, 40)
+        let base = { w: 300, h: 40 }
+        let r = env.dd(() => el, { getBase: () => ({ width: base.w, height: base.h }), onTrace })
+        r.d.on('resize', (m) => {
+            base.w = m.snew.width
+            base.h = m.snew.height
+        })
+        let from = tr.mark()
+        env.frame() //掛載時與使用端一致: 不判定為變化
+        el.size(350, 40)
+        env.frame() //判定為變化並延後發出350
+        await settle(tr, from)
+        from = tr.mark()
+        el.size(400, 40)
+        env.frame()
+        base.w = 400 //延後發出前使用端已自行套用: 略過(base)
+        await settle(tr, from)
+        from = tr.mark()
+        hide(el)
+        env.frame() //尺寸0: 判定為變化但不發出(zero)
+        await settle(tr, from)
+        let il = new Ele(27, 18, { display: 'inline' })
+        env.dd(() => il, { timeInterval: 5, onTrace })
+        await sample(tr, 'inline')
+        il.display = 'block'
+        env.fireRO(il) //已非行內: 停止定期量測
+        assert.strict.deepStrictEqual(ws(r), [350])
+        let pick = (e) => {
+            if (e.type === 'check') {
+                return [e.type, e.source, e.found, e.width, e.changed, e.seq !== null]
+            }
+            if (e.type === 'emit') {
+                return [e.type, e.width, e.deferred]
+            }
+            if (e.type === 'skip') {
+                return [e.type, e.reason]
+            }
+            return [e.type, e.on]
+        }
+        assert.strict.deepStrictEqual(tr.events.map(pick), [
+            ['check', 'observer', true, 300, false, false],
+            ['check', 'observer', true, 300, false, false],
+            ['check', 'observer', true, 350, true, true],
+            ['check', 'observer', true, 350, false, false],
+            ['emit', 350, true],
+            ['check', 'observer', true, 400, true, true],
+            ['check', 'observer', true, 400, false, false],
+            ['skip', 'base'],
+            ['check', 'observer', true, 0, true, true],
+            ['check', 'observer', true, 0, false, false],
+            ['skip', 'zero'],
+            ['inline', true],
+            ['check', 'inline', true, 27, true, true],
+            ['emit', 27, true],
+            ['check', 'observer', true, 27, false, false],
+            ['inline', false],
+            ['check', 'observer', true, 27, false, false],
+        ])
+        //各type之欄位固定且皆為原始值
+        let keys = {}
+        for (let e of tr.events) {
+            keys[e.type] = Object.keys(e).join(',')
+            assert.strict.deepStrictEqual(Object.values(e).every((v) => v === null || typeof v !== 'object'), true)
+        }
+        assert.strict.deepStrictEqual(keys, {
+            check: 'type,source,found,width,height,changed,seq',
+            emit: 'type,seq,width,height,deferred',
+            skip: 'type,seq,reason',
+            inline: 'type,on',
+        })
+        assert.strict.deepStrictEqual(meta.every(([self, frozen]) => self === undefined && frozen), true)
+    })
+
+    it(`should behave the same without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變; P4: 回調之拋錯與回傳值不影響偵測、不產生未處理之rejection
+        //以假時鐘使各次執行之時序相同, 比較事件序列
+        let run = async (mode, onTrace) => {
+            let clock = useFakeClock()
+            try {
+                let env = mkEnv()
+                let el = new Ele(300, 40)
+                let base = { w: 300, h: 40 }
+                let opt = { timeInterval: 5, throttle: 20, getBase: () => ({ width: base.w, height: base.h }) }
+                if (mode === 'polling') {
+                    opt.mode = 'polling'
+                }
+                if (onTrace !== undefined) {
+                    opt.onTrace = onTrace
+                }
+                let r = env.dd(() => el, opt)
+                r.d.on('resize', (m) => {
+                    base.w = m.snew.width
+                    base.h = m.snew.height
+                })
+                for (let [w, h] of [[310, 40], [320, 40], [321, 40], [0, 0], [320, 40], [320, 52]]) {
+                    if (w === 0) {
+                        hide(el)
+                    }
+                    else {
+                        show(el, w, h)
+                    }
+                    env.frame()
+                    await clock.advance(30)
+                }
+                el.size(330, 52)
+                r.d.refresh()
+                await clock.advance(30)
+                env.resizeWindow(900, 700)
+                clearAll(env)
+                return {
+                    resize: r.resize.map((m) => [m.sold.width, m.snew.width, m.snew.height, m.smode.width, m.smode.height]),
+                    rww: r.rww.map((m) => [m.from, m.snew.width, m.snew.windowWidth]),
+                    listeners: env.listeners.length,
+                }
+            }
+            finally {
+                clock.restore()
+            }
+        }
+        let un = []
+        let onUn = (v) => un.push(String(v))
+        process.on('unhandledRejection', onUn)
+        try {
+            for (let mode of ['observer', 'polling']) {
+                let a = await run(mode, undefined)
+                let rec = traceRec()
+                let b = await run(mode, rec.on)
+                let c = await run(mode, () => {
+                    throw new Error('trace boom')
+                })
+                let d = await run(mode, () => Promise.reject(new Error('trace reject')))
+                let e = await run(mode, 'abc')
+                await new Promise((resolve) => setImmediate(resolve))
+                assert.strict.deepStrictEqual([b, c, d, e], [a, a, a, a], mode)
+                assert.strict.deepStrictEqual([a.resize.length >= 4, rec.events.length > 0], [true, true], mode)
+            }
+        }
+        finally {
+            process.removeListener('unhandledRejection', onUn)
+        }
+        assert.strict.deepStrictEqual(un, [])
     })
 
     //--- 不變式 ---

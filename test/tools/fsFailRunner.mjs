@@ -168,9 +168,36 @@ function pidAlive(pid) {
     return s.includes(`"${pid}"`)
 }
 
+//waitFor, 輪詢至cond()成立(可為async), 每poll毫秒查一次(輪詢步調, 非等待時間); 以ms為防懸置上限(真實計時器), 逾時擲出可判讀之錯誤(由runFsFail轉為執行器出錯), 不讓案例靜默通過或懸置
+//  先查cond再查是否逾時, 使行程被拖慢時最後一次查詢仍有機會成立
+async function waitFor(cond, what, ms = 15000, poll = 20) {
+    let t0 = Date.now()
+    for (;;) {
+        if (await cond()) {
+            return
+        }
+        if (Date.now() - t0 > ms) {
+            throw new Error(`waitFor timeout (${ms}ms): ${what}`)
+        }
+        await sleep(poll)
+    }
+}
+
 //spawnHold, 起子程序持有資源(檔案或cwd)並登記: 殺樹(taskkill /T /F, 陣列參數免shell)後以tasklist回驗PID已消失
-async function spawnHold(cmd, args, cwd, msWait) {
-    let cp = spawn(cmd, args, { cwd, stdio: 'ignore', windowsHide: true })
+//  ready(cp)為就緒條件(async), 須等到資源確已被持有才回傳, 不以固定毫秒猜測子程序何時就緒(啟動時間不定); 就緒前子程序已結束者擲出
+//  opt.stdout為true時子程序之stdout接為pipe, 供ready讀取子程序輸出之就緒標記(cp.out累積其內容)
+async function spawnHold(cmd, args, cwd, ready, opt = {}) {
+    let cp = spawn(cmd, args, { cwd, stdio: ['ignore', opt.stdout ? 'pipe' : 'ignore', 'ignore'], windowsHide: true })
+    cp.out = ''
+    cp.gone = null
+    if (opt.stdout) {
+        cp.stdout.on('data', (d) => {
+            cp.out += String(d)
+        })
+    }
+    cp.on('exit', (code) => {
+        cp.gone = code
+    })
     onCleanup(async () => {
         try {
             execFileSync('taskkill', ['/pid', String(cp.pid), '/T', '/F'], { stdio: 'pipe' })
@@ -185,8 +212,21 @@ async function spawnHold(cmd, args, cwd, msWait) {
         }
         throw new Error(`pid ${cp.pid} still alive after taskkill`)
     })
-    await sleep(msWait)
+    await ready(cp)
     return cp
+}
+
+//holdsLock, 檔案p是否已被他程序以不共享刪除之方式持有: 以rename探測(與unlink同需DELETE存取, 被持有時為共用違規EBUSY/EPERM), 非破壞(探測成功即還原, 視為尚未持有); p尚不存在亦視為尚未持有
+function holdsLock(p) {
+    let q = p + '.probe'
+    try {
+        fs.renameSync(p, q)
+    }
+    catch (e) {
+        return e.code === 'EBUSY' || e.code === 'EPERM'
+    }
+    fs.renameSync(q, p)
+    return false
 }
 
 //captureFs, 以fs代理攔截createReadStream、createWriteStream取得串流實例, 供斷言失敗後是否destroy(fd是否釋放, R-FS-REJECT-01之6); 清理時一律銷毀
@@ -216,6 +256,30 @@ function captureFs(ext = {}) {
 //streamState, 串流之狀態: destroyed與fd(null代表已關閉)
 function streamState(streams) {
     return streams.map(({ t, s }) => ({ t, destroyed: s.destroyed, fdClosed: s.fd === null || s.fd === undefined }))
+}
+
+//closedState, 等被攔得之串流各自關閉('close'事件, 已關閉者即成立)後回傳其狀態(同streamState); 取代結果回傳後固定sleep再取s.fd與activeFs
+//  被destroy之串流須待開檔(open)完成才發關閉請求, 開檔與關閉皆為threadpool非同步: 固定時間內未完成者, 其FSReqCallback仍在進行而使active非空(誤判), 且fd於「尚未開啟」與「已關閉」時皆為null無法分辨; 'close'事件才代表開檔(若有)與關閉皆已完成
+//  三種狀態: 串流從未被建立者不在streams內(由斷言比對串流清單); 已關閉者(s.closed)直接成立; 永遠不會close者(如被測函數未destroy而fd殘留)於ms毫秒(真實計時器, 防懸置上限)後標closeTimeout:true並以其當時狀態(fdClosed為false)回傳, 使斷言明確失敗
+//  各串流並行等待, 全部關閉後再讓出一次事件迴圈(setImmediate), 使關閉請求(FSReqCallback)之收尾完成才取activeFs
+async function closedState(streams, ms = 8000) {
+    let timedOut = new Set()
+    await Promise.all(streams.map(({ s }, i) => new Promise((resolve) => {
+        if (s.closed === true) {
+            resolve()
+            return
+        }
+        let t = setTimeout(() => {
+            timedOut.add(i)
+            resolve()
+        }, ms)
+        s.once('close', () => {
+            clearTimeout(t)
+            resolve()
+        })
+    })))
+    await new Promise((resolve) => setImmediate(resolve))
+    return streamState(streams).map((st, i) => (timedOut.has(i) ? { ...st, closeTimeout: true } : st))
 }
 
 //activeFs, 迄今仍存活之fs類資源(FSReqCallback、FileHandle)
@@ -313,7 +377,15 @@ let cases = {
     DF03: async () => {
         mkFx()
         let p = fxp('busy.txt')
-        await spawnHold('cmd.exe', ['/d', '/c', 'ping -n 30 127.0.0.1 > busy.txt'], fx, 800)
+        //就緒: busy.txt已由cmd.exe建立並以不共享刪除之方式持有(探測見holdsLock), 才呼叫被測函數; 不以固定毫秒猜cmd.exe何時啟動
+        await spawnHold('cmd.exe', ['/d', '/c', 'ping -n 30 127.0.0.1 > busy.txt'], fx, async (cp) => {
+            await waitFor(() => {
+                if (cp.gone !== null) {
+                    throw new Error(`cmd.exe exited early: ${cp.gone}`)
+                }
+                return holdsLock(p)
+            }, 'busy.txt held by cmd.exe')
+        })
         let f = await imp('fsDeleteFileSafe')
         let res = await run(() => f(p, { numRetry: 2 }), 8000)
         return { res, exists: fs.existsSync(p) }
@@ -383,7 +455,15 @@ let cases = {
         let b = fxp('busyDir')
         fs.mkdirSync(b)
         fs.writeFileSync(path.join(b, 'x.txt'), 'x')
-        await spawnHold(process.execPath, ['-e', 'setTimeout(()=>{},30000)'], b, 500)
+        //就緒: 子行程已啟動並於stdout輸出就緒標記(其cwd把手於行程啟動時即持有), 才呼叫被測函數; 不以固定毫秒猜子行程何時成為該資料夾之cwd
+        await spawnHold(process.execPath, ['-e', `process.stdout.write('ready');setTimeout(()=>{},30000)`], b, async (cp) => {
+            await waitFor(() => {
+                if (cp.gone !== null) {
+                    throw new Error(`holder exited early: ${cp.gone}`)
+                }
+                return cp.out.includes('ready')
+            }, 'holder process ready mark')
+        }, { stdout: true })
         let f = await imp('fsDeleteFolderSafe')
         let res = await run(() => f(b, { numRetry: 2 }), 8000)
         return { res, exists: fs.existsSync(b) }
@@ -615,8 +695,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFileCore')
         let res = await run(() => f(fxp('a.txt'), fxp('tarDir'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
     CF03: async () => {
         mkFx()
@@ -649,8 +729,8 @@ let cases = {
         fsP.createReadStream = () => fakeErrStream(null)
         let f = await imp('fsCopyFileCore')
         let res = await run(() => f('x', fxp('y.txt'), { path, fs: fsP, useSync: false }))
-        await sleep(100)
-        return { res, streams: streamState(streams) }
+        let sts = await closedState(streams)
+        return { res, streams: sts }
     },
     CF08: async () => {
         mkFx()
@@ -659,8 +739,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFileCore')
         let res = await run(() => f(fxp('deny.txt'), fxp('out.txt'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
     CF09: async () => {
         mkFx()
@@ -685,8 +765,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFileCore')
         let res = await run(() => f(fxp('a.txt'), fxp('x\0y.txt'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
 
     //======== fsCopyFolder(Core) ========
@@ -703,8 +783,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFolderCore')
         let res = await run(() => f(fxp('src'), fxp('fileP.txt', 'sub'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
     CD03: async () => {
         mkFx()
@@ -737,8 +817,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFolderCore')
         let res = await run(() => f(fxp('src'), fxp('tar'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
     CD08: async () => {
         mkFx()
@@ -748,8 +828,8 @@ let cases = {
         fsP.createReadStream = () => fakeErrStream(null)
         let f = await imp('fsCopyFolderCore')
         let res = await run(() => f(fxp('src'), fxp('tar'), { path, fs: fsP, useSync: false }))
-        await sleep(100)
-        return { res, streams: streamState(streams) }
+        let sts = await closedState(streams)
+        return { res, streams: sts }
     },
     CD09: async () => {
         mkFx()
@@ -769,8 +849,8 @@ let cases = {
         let { fsP, streams } = captureFs()
         let f = await imp('fsCopyFolderCore')
         let res = await run(() => f(fxp('src'), fxp('ta\0r'), { path, fs: fsP, useSync: false }))
-        await sleep(300)
-        return { res, streams: streamState(streams), active: activeFs() }
+        let sts = await closedState(streams)
+        return { res, streams: sts, active: activeFs() }
     },
 
     //======== fsSrlog ========

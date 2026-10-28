@@ -6,6 +6,7 @@ import isnint from './isnint.mjs'
 import cint from './cint.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import pmReadItems from './_pmReadItems.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -24,6 +25,8 @@ import pmReadItems from './_pmReadItems.mjs'
  * @param {Array|Object} rs 輸入資料陣列或鍵值物件，若不給fn則rs需要為Promise陣列(或值為Promise之物件)
  * @param {Function} fun 輸入循序執行值的呼叫async函數
  * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；i為任務於展開後陣列之索引(由0起算)；type為'start'時為派發任務i(含i、running為含該任務之執行中任務數)，'done'時為任務i已完成(含i、ok為是否成功)，'resolve'時為全部n個任務皆成功而即將resolve(含n)，'reject'時為首個失敗之任務i使pmMap即將reject(含i，輸入檢查失敗時i為-1)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響派發，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *
@@ -357,9 +360,12 @@ import pmReadItems from './_pmReadItems.mjs'
  * topAsync().catch(() => {})
  *
  */
-function pmMap(rs, fun, takeLimit = 0) {
+function pmMap(rs, fun, takeLimit = 0, opt = {}) {
     let ts = {}
     let abort = false
+
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
 
     //pm
     let pm = genPm()
@@ -369,6 +375,9 @@ function pmMap(rs, fun, takeLimit = 0) {
     try {
         let rd = pmReadItems(rs)
         if (rd === null) {
+            if (trace) {
+                trace('reject', { i: -1 })
+            }
             pm.reject('rs is not an array or object')
             return pm
         }
@@ -376,12 +385,18 @@ function pmMap(rs, fun, takeLimit = 0) {
         useObj = rd.useObj
     }
     catch (err) {
+        if (trace) {
+            trace('reject', { i: -1 })
+        }
         pm.reject(err)
         return pm
     }
 
     //check
     if (rs.length === 0) {
+        if (trace) {
+            trace('resolve', { n: 0 })
+        }
         pm.resolve([]) //對空集合立即resolve([]), 因物件輸入會先轉換成[{k, v}]陣列處理, 最終透過values(ts)皆回傳陣列, 故須resolve([])
         return pm
     }
@@ -434,12 +449,25 @@ function pmMap(rs, fun, takeLimit = 0) {
         pmm
             .then((res) => {
 
+                //done
+                if (trace) {
+                    trace('done', { i, ok: true })
+                }
+
                 //save
                 ts[i] = res
                 nDone += 1
 
             })
             .catch((err) => {
+
+                //done與reject, 首個失敗之任務使pmMap reject(abort尚未為true), 其後失敗者僅通知done
+                if (trace) {
+                    trace('done', { i, ok: false })
+                    if (!abort) {
+                        trace('reject', { i })
+                    }
+                }
 
                 //abort, 停止派發後續任務
                 abort = true
@@ -458,6 +486,9 @@ function pmMap(rs, fun, takeLimit = 0) {
 
                     //resolve
                     resolved = true
+                    if (trace) {
+                        trace('resolve', { n })
+                    }
                     pm.resolve(values(ts))
 
                     return
@@ -479,6 +510,9 @@ function pmMap(rs, fun, takeLimit = 0) {
             let i = next
             next += 1
             running += 1
+            if (trace) {
+                trace('start', { i, running })
+            }
             runOne(i)
         }
     }

@@ -12,6 +12,7 @@ import ltdtDiffByKey from './ltdtDiffByKey.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsWatchFile from './fsWatchFile.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -22,6 +23,7 @@ import fsWatchFile from './fsWatchFile.mjs'
  * @param {String} fdSrc 輸入來源端更新紀錄之資料夾路徑字串
  * @param {String} fdTar 輸入偵測端已紀錄之資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，供buildTar所建立之偵測端使用，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'recv'時為收到來源端紀錄檔之變更(含kind為檔案監看事件種類'add'、'change'或'unlink'，隨後排入300ms之debounce)，'run'時為debounce到期而開始偵測，'skip'時為來源端無紀錄(紀錄檔不存在、內容為空物件或非物件)而不偵測(含reason為'no src')，'emit'時為即將派發change事件(含add、del、diff、same為kpCmp各類件數)，'settle'時為change之pm已settle而即將據以處理(含ok為任務是否成功)，'record'時為任務成功後偵測端紀錄檔已更新，'clear'時為已呼叫偵測端之clear；clear後不再通知(已排入debounce者仍會偵測與派發change，但不再通知)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
  * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }
  * @example
  * //need test in nodejs
@@ -358,6 +360,9 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         //dbc
         let dbc = debounce(300)
 
+        //trace, 觀察回調(opt.onTrace), 未給時為null; 偵測端clear後設為null不再通知
+        let trace = getTrace(opt)
+
         //core, 回傳pmm(外部任務執行狀態), 來源無紀錄則回傳'no src'; 原碼另建一個永不settle之外層pm回傳, 無人await故無害但為死碼, 已移除
         let core = async (msg) => {
             // console.log('core', msg)
@@ -368,6 +373,9 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
             //check
             if (!iseobj(kpSrc)) {
                 //來源無紀錄檔案, 故不偵測
+                if (trace) {
+                    trace('skip', { reason: 'no src' })
+                }
                 return 'no src'
             }
 
@@ -389,11 +397,25 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
             pmm
                 .then((res) => {
                     // console.log('執行任務成功, 更新紀錄檔案', kpSrc)
+                    if (trace) {
+                        trace('settle', { ok: true })
+                    }
                     writeKpObTar(kpSrc)
+                    if (trace) {
+                        trace('record', {})
+                    }
                 })
                 .catch(() => {
                     //執行任務失敗, 不更新紀錄檔
+                    if (trace) {
+                        trace('settle', { ok: false })
+                    }
                 })
+
+            //trace, 於派發前通知(監聽器同步拋錯時仍已通知)
+            if (trace) {
+                trace('emit', { add: r.add.length, del: r.del.length, diff: r.diff.length, same: r.same.length })
+            }
 
             //emit, 於watcher回呼內派發且帶pm, 監聽器同步拋錯時須先reject該pm再通報, 否則呼叫端之流程懸置
             evEmit(ev, 'change', [{ kpSrc, kpTar, kpCmp: r, pm: pmm }], {
@@ -411,7 +433,15 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         evFile.on('change', (msg) => {
             // console.log(msg.type, getFileName(msg.fp))
 
+            //trace, kind為檔案監看事件種類(add、change、unlink)
+            if (trace) {
+                trace('recv', { kind: msg.type })
+            }
+
             dbc(() => {
+                if (trace) {
+                    trace('run', {})
+                }
                 core(msg)
                     .catch(() => {})
             })
@@ -425,6 +455,17 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         ev.readKp = readKpObTar
         ev.writeKp = writeKpObTar
         ev.clear = evFile.clear
+        if (trace) {
+            //傳了觀察回調才包裝clear(不傳時clear同舊版為evFile.clear), 釋放後不再通知
+            ev.clear = () => {
+                let r = evFile.clear()
+                if (trace) {
+                    trace('clear', {})
+                    trace = null
+                }
+                return r
+            }
+        }
 
         return ev
     }

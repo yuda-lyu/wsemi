@@ -8,6 +8,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
+import getTrace from './getTrace.mjs'
 
 
 /**
@@ -22,6 +23,7 @@ import evEmit from './evEmit.mjs'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為每次週期輪詢(每timeInterval一次；含watching為是否已有watcher、exists為監看路徑目前是否為資料夾)，'watch'時為chokidar之watcher剛建立，'ready'時為chokidar初始掃描完成(僅傳了onTrace才監聽chokidar之ready，不影響原行為)，'emit'時為即將對change監聽器派發一個事件(含kind為事件種類即change事件之type如add、change、unlink、addDir、unlinkDir，fp為path.resolve後之路徑字串，src為事件來源，'watcher'代表chokidar偵測到、'timer'代表週期輪詢發現監看資料夾已消失而合成之unlinkDir)，'error'時為chokidar之watcher自身出錯(含fun為'watcher'，錯誤物件不傳出，請由error事件取得)，'unwatch'時為unWatch被呼叫且watcher尚存在(開始關閉；關閉完成前重複呼叫會重複通知)，'closed'時為watcher.close()已完成且watcher已設為null(可再次建立watcher)，'clear'時為clear被呼叫(僅首次)；clear後僅會再通知unwatch與closed(資源釋放之回報)，其餘事件不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響監看，預設null
  * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如資料夾內含無權限之子資料夾EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
  * @example
  * need test in nodejs.
@@ -167,21 +169,39 @@ function fsWatchFolder(fd, opt = {}) {
     //fpSpe
     let fpSpe = fd
 
+    //trace, 觀察回調(opt.onTrace), 未給時為null
+    let trace = getTrace(opt)
+
+    //cleared, 是否已clear, 供trace於clear後不再通知(unwatch、closed除外)
+    let cleared = false
+
     //timer
     let watcher = null
     let t = setInterval(() => {
+
+        //exists, 每次輪詢皆查一次監看路徑是否為資料夾
+        let exists = fsIsFolder(fpSpe)
+        if (trace) {
+            trace('tick', { watching: watcher !== null, exists })
+        }
 
         //check
         if (watcher !== null) {
 
             //check, 若watcher已成功監聽fd, 但更名fd時會無法觸發
-            if (!fsIsFolder(fpSpe)) {
+            if (!exists) {
                 //因監聽觸發狀態不能unWatch, 故要延遲呼叫
 
+                //fpr
+                let fpr = path.resolve(fpSpe)
+
                 //emit, 資料夾已消失無法stat, stats比照chokidar之unlinkDir給undefined(原碼誤將fs.fstatSync函數本身塞入)
+                if (trace) {
+                    trace('emit', { kind: 'unlinkDir', fp: fpr, src: 'timer' })
+                }
                 evEmit(ev, 'change', [{
                     type: 'unlinkDir',
-                    fp: path.resolve(fpSpe),
+                    fp: fpr,
                     stats: undefined,
                 }], { tag: 'fsWatchFolder' })
 
@@ -194,7 +214,7 @@ function fsWatchFolder(fd, opt = {}) {
         }
 
         //check
-        if (!fsIsFolder(fpSpe)) {
+        if (!exists) {
             return
         }
 
@@ -220,6 +240,9 @@ function fsWatchFolder(fd, opt = {}) {
                 fp = path.resolve(fp)
 
                 //emit
+                if (trace && !cleared) {
+                    trace('emit', { kind: type, fp, src: 'watcher' })
+                }
                 evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder' })
 
                 //check
@@ -233,8 +256,21 @@ function fsWatchFolder(fd, opt = {}) {
             })
             .on('error', (err) => {
                 //chokidar之FSWatcher為nodejs原生EventEmitter, 其對非ENOENT/ENOTDIR之錯誤(如EPERM、EACCES)會emit('error'), 無監聽者即throw殺行程, 故轉為ev之error事件
+                if (trace && !cleared) {
+                    trace('error', { fun: 'watcher' })
+                }
                 evEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFolder' })
             })
+
+        //trace, 僅傳了onTrace才監聽ready與通知watch, 不影響原行為
+        if (trace) {
+            watcher.on('ready', () => {
+                if (!cleared) {
+                    trace('ready', {})
+                }
+            })
+            trace('watch', {})
+        }
 
 
     }, timeInterval)
@@ -244,6 +280,9 @@ function fsWatchFolder(fd, opt = {}) {
         // console.log('call unWatch')
         if (watcher === null) {
             return
+        }
+        if (trace) {
+            trace('unwatch', {})
         }
         try {
             watcher.unwatch(fpSpe)
@@ -259,11 +298,19 @@ function fsWatchFolder(fd, opt = {}) {
             .finally(() => {
                 watcher = null
                 // console.log('watcher=null')
+                if (trace) {
+                    trace('closed', {})
+                }
             })
     }
 
     //clear
     let clear = () => {
+        let first = !cleared
+        cleared = true
+        if (trace && first) {
+            trace('clear', {})
+        }
         unWatch()
         clearInterval(t)
     }

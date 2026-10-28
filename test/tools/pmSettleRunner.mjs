@@ -62,6 +62,85 @@ function settle(p, ms = 800) {
     })
 }
 
+//mkTrace, 觀察回調(opt.onTrace)之紀錄器: on為回調, events為已收到之事件, sub(f)訂閱其後之事件
+function mkTrace() {
+    let events = []
+    let subs = []
+    let on = (e) => {
+        events.push(e)
+        for (let f of subs.slice()) {
+            f(e)
+        }
+    }
+    return { events, on, sub: (f) => subs.push(f) }
+}
+
+//settleTrace, 等待p之結果, 以觀察回調判定懸置而不以牆鐘逾時(R-TRACE-01): p未settle前收到isLate之事件(已過應settle之時點仍續行)即回'pending'
+//  p之settle為microtask, 必先於其後之計時器回呼所通知之事件, 故判定不受負載影響; 未settle且不再有事件者(停止輪詢而懸置)由父行程之子行程逾時兜底
+function settleTrace(p, tr, isLate) {
+    return new Promise((resolve) => {
+        let done = false
+        let fin = (r) => {
+            if (!done) {
+                done = true
+                resolve(r)
+            }
+        }
+        tr.sub((e) => {
+            if (isLate(e)) {
+                fin({ s: 'pending' })
+            }
+        })
+        p.then((v) => fin({ s: 'resolve', v }), (e) => fin({ s: 'reject', v: e }))
+    })
+}
+
+//lateTick, waitFun已過應settle之時點: 週期計數超過n
+function lateTick(n) {
+    return (e) => e.type === 'tick' && e.n > n
+}
+
+//noOverlap, 以waitFun之觀察回調事件驗證輪詢不重疊(R-PM-SETTLE-01規則13), 回傳各判準是否成立; 不依呼叫次數之絕對值(其隨週期與fun耗時之真實比例而變)
+//  overlapFree: 呼叫(call)至其完成(result或reject)之間不再呼叫, 期間之週期皆busy(只計次不呼叫), 其餘週期皆非busy(立即呼叫)
+//  ticksCounted: 週期計數逐次+1(busy之週期亦計入嘗試次數)
+//  callsMatch: fun之呼叫次數等於call事件數, 等於立即1次加非busy之週期數, 且不超過attemptNum+2
+//  rejectAtResult: 最後為某次呼叫完成(result, ok為false)而以exceeded reject, 其計數超過attemptNum(逾次於呼叫完成時判定)
+function noOverlap(events, calls, attemptNum) {
+    let inflight = false
+    let overlapFree = true
+    let ns = []
+    let nCall = 0
+    let nIdle = 0
+    for (let e of events) {
+        if (e.type === 'call') {
+            if (inflight) {
+                overlapFree = false
+            }
+            inflight = true
+            nCall++
+        }
+        else if (e.type === 'result' || e.type === 'reject') {
+            inflight = false
+        }
+        else if (e.type === 'tick') {
+            ns.push(e.n)
+            if (e.busy !== inflight) {
+                overlapFree = false
+            }
+            if (!e.busy) {
+                nIdle++
+            }
+        }
+    }
+    let [r, j] = events.slice(-2)
+    return {
+        overlapFree,
+        ticksCounted: ns.length > 0 && ns.every((n, i) => n === i + 1),
+        callsMatch: calls === nCall && nCall === 1 + nIdle && calls <= attemptNum + 2,
+        rejectAtResult: !!(r && j) && r.type === 'result' && r.ok === false && j.type === 'reject' && j.reason === 'exceeded' && j.n === r.n && r.n > attemptNum,
+    }
+}
+
 //call, 同步呼叫並記錄是否同步拋出
 function call(fn) {
     try {
@@ -468,33 +547,38 @@ let cases = {
     },
 
     //waitFun: 輪詢中拋錯或reject即reject該錯誤並停止輪詢, 同立即呼叫
+    //  以觀察回調判定懸置(settleTrace): 原以牆鐘800ms看門狗, 負載下輪詢未及完成即判pending
     waitFunIntervalFail: async () => {
         let W = await imp('waitFun')
         let e = new Error('later boom')
         let n = 0
-        let a = await settle(W(async () => {
+        let ta = mkTrace()
+        let a = await settleTrace(W(async () => {
             n++
             if (n === 1) {
                 return false
             }
             throw e
-        }, { attemptNum: 5, timeInterval: 20 }))
-        await new Promise((resolve) => setTimeout(resolve, 120))
+        }, { attemptNum: 5, timeInterval: 20, onTrace: ta.on }), ta, lateTick(1))
+        await new Promise((resolve) => setTimeout(resolve, 120)) //否定斷言之觀察窗: reject後不再呼叫(calls仍為2)
         let m = 0
         let e2 = new Error('later sync boom')
-        let b = await settle(W(() => {
+        let tb = mkTrace()
+        let b = await settleTrace(W(() => {
             m++
             if (m === 1) {
                 return false
             }
             throw e2
-        }, { attemptNum: 5, timeInterval: 20 }))
-        await new Promise((resolve) => setTimeout(resolve, 120))
+        }, { attemptNum: 5, timeInterval: 20, onTrace: tb.on }), tb, lateTick(1))
+        await new Promise((resolve) => setTimeout(resolve, 120)) //同上
         let e3 = new Error('first boom')
-        let c = await settle(W(async () => {
+        let tc = mkTrace()
+        let c = await settleTrace(W(async () => {
             throw e3
-        }, { attemptNum: 5, timeInterval: 20 }))
-        let d = await settle(W(() => false, { attemptNum: 2, timeInterval: 20 }))
+        }, { attemptNum: 5, timeInterval: 20, onTrace: tc.on }), tc, lateTick(0))
+        let td = mkTrace()
+        let d = await settleTrace(W(() => false, { attemptNum: 2, timeInterval: 20, onTrace: td.on }), td, lateTick(3))
         return {
             intervalReject: { s: a.s, same: a.v === e, calls: n },
             intervalSyncThrow: { s: b.s, same: b.v === e2, calls: m },
@@ -1002,23 +1086,15 @@ let cases = {
         return out
     },
 
-    //setIntervalHp、setTimeoutHp: fun非函數時每次到期以console.log記錄Error('fn is not a function'), 停止後不再記錄
+    //setTimeoutHp: fun非函數時到期以console.log記錄Error('fn is not a function')一次, 回傳null(setIntervalHp之非函數案改由hpTraceRunner的intervalNonFun以事件同步)
     nonFunHp: async () => {
-        let SI = await imp('setIntervalHp')
         let ST = await imp('setTimeoutHp')
         let cap = captureLog()
         try {
-            let cnt = () => cap.logs.filter((s) => s === 'fn is not a function').length
-            let stop = SI(undefined, 10)
-            await delay(120)
-            stop()
-            let n1 = cnt()
-            await delay(80)
-            let n2 = cnt()
             let ret = ST(null, 10)
             await delay(80)
-            let n3 = cnt() - n2
-            return { intervalLogsAtLeast2: n1 >= 2, noMoreAfterStop: n2 === n1, timeoutLogs: n3, timeoutRet: ret }
+            let n3 = cap.logs.filter((s) => s === 'fn is not a function').length
+            return { timeoutLogs: n3, timeoutRet: ret }
         }
         finally {
             cap.restore()
@@ -1062,17 +1138,21 @@ let cases = {
     },
 
     //waitFun: 輪詢不重疊(S1慢fun恆false、S3同步false、S5先啟動之慢輪回true)
+    //  以觀察回調判定懸置(settleTrace), 並以事件序列驗證輪詢不重疊(原斷言呼叫恰3次, 依真實時間之比例, 負載下週期延誤即變)
     waitFunNoOverlap: async () => {
         let W = await imp('waitFun')
         let a = mkTask(() => 250, () => true, () => false)
-        let ra = await settle(W(a.fun, { attemptNum: 5, timeInterval: 100 }), 5000)
-        let s1 = { s: ra.s, v: safeStr(ra.v), calls: a.st.calls, maxConc: a.st.maxConc, inflightAtSettle: a.st.conc }
+        let ta = mkTrace()
+        let ra = await settleTrace(W(a.fun, { attemptNum: 5, timeInterval: 100, onTrace: ta.on }), ta, lateTick(7))
+        let s1 = { s: ra.s, v: safeStr(ra.v), maxConc: a.st.maxConc, inflightAtSettle: a.st.conc, ...noOverlap(ta.events, a.st.calls, 5) }
         let b = mkTask(() => 0, () => true, () => false)
-        let rb = await settle(W(b.fun, { attemptNum: 5, timeInterval: 50 }), 5000)
+        let tb = mkTrace()
+        let rb = await settleTrace(W(b.fun, { attemptNum: 5, timeInterval: 50, onTrace: tb.on }), tb, lateTick(6))
         let s3 = { s: rb.s, v: safeStr(rb.v), calls: b.st.calls }
         let c = mkTask((k) => (k === 1 ? 500 : 10), () => true, (k) => k === 1)
-        let rc = await settle(W(c.fun, { attemptNum: 2, timeInterval: 100 }), 5000)
-        let s5 = { s: rc.s, maxConc: c.st.maxConc }
+        let tc = mkTrace()
+        let rc = await settleTrace(W(c.fun, { attemptNum: 2, timeInterval: 100, onTrace: tc.on }), tc, lateTick(3))
+        let s5 = { s: rc.s, maxConc: c.st.maxConc, last: tc.events.slice(-2).map((e) => [e.type, e.ok]) }
         return { s1, s3, s5 }
     },
 
