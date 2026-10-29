@@ -10,16 +10,16 @@ import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 /**
  * 後端nodejs依實檔產生外部執行檔清單之一項{ name, path或url, sha256, size }, 供各套件之toolg/genBinManifest.mjs產生bin/manifest.json(清單不手寫sha256與大小)
  *
- * 清單之格式與用法見fsEnsureBins(規格: 外部執行檔之存放下載校驗與離線, 規則帳本R-BIN-ENSURE-01)。name、path與url須合fsEnsureBins之規則(與其共用同一規則: url須https、不得帶帳密、不得為releases/latest或分支), path與url不可同給, 不合者reject。sha256為小寫64碼, size為位元組數; 計算對象為檔案之原始位元組, 自有檔須與GitHub上之內容(git blob)相同, 文字檔請以.gitattributes設為binary(不轉換換行)。
+ * 清單之格式與用法見fsEnsureBins(規格: 外部執行檔之存放下載校驗與離線, 規則帳本R-BIN-ENSURE-01)。name、path與url須合fsEnsureBins之規則(與其共用同一規則: url須為GitHub版本標籤之資產網址https://github.com/<owner>/<repo>/releases/download/<tag>/<檔>或ref為40碼提交之GitHub原始檔網址, 不得帶帳密、查詢字串、片段、埠號, 規格M2、F15), path與url不可同給, 不合者reject。檔案組(fsEnsureBins之bundles)之組內各檔以opt.path給組內相對路徑(取其path、sha256、size), 壓縮檔之成員亦同(先解出至暫存夾再對各成員呼叫本函數)。sha256為小寫64碼, size為位元組數; 計算對象為檔案之原始位元組, 自有檔須與GitHub上之內容(git blob)相同, 文字檔請以.gitattributes設為binary(不轉換換行)。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetBinManifestEntry.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.name] 輸入清單項之name，預設為fp之檔名
+ * @param {String|null} [opt.name] 輸入清單項之name，預設為fp之檔名; 給null時清單項不含name(檔案組之組內檔與壓縮檔之成員只需path, 其檔名可含空白, 如chrome之'First Run')
  * @param {String} [opt.path] 輸入清單項之path(repo內之相對路徑, 以/分隔)，給了才放入
  * @param {String} [opt.url] 輸入清單項之url(廠商檔之下載網址)，給了才放入
- * @returns {Promise} 回傳Promise，resolve回傳清單項物件{ name, path, url, sha256, size }(path、url給了才有)，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳清單項物件{ name, path, url, sha256, size }(path、url給了才有, opt.name為null時無name)，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
  *
@@ -91,7 +91,10 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         if (!isestr(fp)) {
             throw new Error(`fp is not an effective string`)
         }
-        for (let [k, v] of [['name', name], ['path', p], ['url', u]]) {
+        if (name !== undefined && name !== null && (typeof name !== 'string' || name === '')) {
+            throw new Error(`opt.name must be a non-empty primitive string or null when given`)
+        }
+        for (let [k, v] of [['path', p], ['url', u]]) {
             if (v !== undefined && (typeof v !== 'string' || v === '')) {
                 throw new Error(`opt.${k} must be a non-empty primitive string when given`)
             }
@@ -108,9 +111,12 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         if (!fs.statSync(fp).isFile()) {
             throw new Error(`fp[${fp}] is not a file`)
         }
-        r = { name: name !== undefined ? name : path.basename(fp) }
-        if (!isBinName(r.name)) {
-            throw new Error(`name[${r.name}] is not a file name that fsEnsureBins accepts (letters, digits and ._+-, not a reserved device name), give opt.name`)
+        r = {}
+        if (name !== null) {
+            r.name = name !== undefined ? name : path.basename(fp)
+            if (!isBinName(r.name)) {
+                throw new Error(`name[${r.name}] is not a file name that fsEnsureBins accepts (letters, digits and ._+-, not a reserved device name), give opt.name`)
+            }
         }
         if (p !== undefined) {
             r.path = p

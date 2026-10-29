@@ -38,10 +38,15 @@ function isBinRel(v) {
 }
 
 
+//提交雜湊(40碼小寫十六進位)
+let reCommit = /^[0-9a-f]{40}$/
+
+
 /**
- * 清單之廠商網址之檢核: 須為https、不得帶帳密、不得為未釘版本之網址(releases/latest、分支), 回傳錯誤說明或''
+ * 清單之網址(廠商檔、分割檔、壓縮檔之url)之檢核(規格M2、F15之網址釘選判定): 只接受兩種已釘選之形式, 回傳錯誤說明或''
  *
- * 路徑先整段解碼再比對(含編碼之斜線%2F), 不分大小寫; 分支之判定: GitHub原始檔網址(raw.githubusercontent.com/<o>/<r>/<ref>/、github.com/<o>/<r>/raw|blob/<ref>/)之ref為master、main、HEAD或refs/heads/開頭者; 版本標籤之下載網址(/releases/download/<tag>/)之tag不判定分支(標籤名稱可含refs/heads)
+ * ①GitHub版本標籤之資產網址 https://github.com/<owner>/<repo>/releases/download/<tag>/<檔>(恰此6段; tag可含編碼之斜線); ②GitHub原始檔網址且ref為40碼小寫提交: https://raw.githubusercontent.com/<owner>/<repo>/<commit>/<path>或https://github.com/<owner>/<repo>/raw/<commit>/<path>。
+ * 須為https、不得帶帳密、不得有查詢字串、片段或埠號(以原始字串判定, 含空之?、#與預設埠:443)、反斜線與空白; 各段不得為空, 各段解碼後owner、repo、檔名與原始檔路徑之各段不得含斜線或反斜線; 其他主機、releases/latest、分支或標籤之原始檔網址(含master、main、HEAD、refs/heads/…與其他分支名)、blob頁面皆拒收(分支名無法自網址與標籤區分, 故原始檔一律須為提交)
  *
  * @param {*} v 輸入任意值
  * @returns {String} 回傳錯誤說明, 合格為''
@@ -50,6 +55,23 @@ function binUrlProblem(v) {
     if (typeof v !== 'string') {
         return 'must be a primitive string'
     }
+    //形式以原始字串判定(URL解析會補斜線、把反斜線當成斜線、把空之?與#與預設埠:443正規化掉): 須以https://開頭(scheme不分大小寫), 不得有查詢字串、片段、反斜線、空白、帳密、埠號
+    if (!/^https:\/\//i.test(v)) {
+        return 'must be an https url (starting with https://)'
+    }
+    if (/[?#]/.test(v)) {
+        return 'must not have a query or fragment'
+    }
+    if (/[\\\s]/.test(v)) {
+        return 'must not have backslashes or whitespace'
+    }
+    let auth = v.slice('https://'.length).split('/')[0]
+    if (auth.includes('@')) {
+        return 'must not contain credentials'
+    }
+    if (auth.includes(':')) {
+        return 'must not have a port'
+    }
     let u = null
     try {
         u = new URL(v)
@@ -57,37 +79,47 @@ function binUrlProblem(v) {
     catch (err) {
         return 'is not a valid url'
     }
-    if (u.protocol !== 'https:') {
-        return 'must be an https url'
+    let segs = u.pathname.split('/').slice(1)
+    let dec = []
+    for (let s of segs) {
+        try {
+            dec.push(decodeURIComponent(s))
+        }
+        catch (err) {
+            return 'has an invalid percent-encoding in its path'
+        }
     }
-    if (u.username !== '' || u.password !== '') {
-        return 'must not contain credentials'
+    let plain = (i) => {
+        //owner、repo、檔名等段: 非空且解碼後不含斜線、反斜線
+        return dec[i] !== undefined && dec[i] !== '' && !/[/\\]/.test(dec[i])
     }
-    let p = u.pathname
-    try {
-        p = decodeURIComponent(p)
+    let restOk = (i) => {
+        //原始檔之路徑(第i段起): 至少一段且各段非空、解碼後不含斜線與反斜線(檢查之段即請求之段)
+        for (let k = i; k < dec.length; k++) {
+            if (!plain(k)) {
+                return false
+            }
+        }
+        return dec.length > i
     }
-    catch (err) {
-        return 'has an invalid percent-encoding in its path'
+    let need = 'must be a GitHub release asset url (https://github.com/<owner>/<repo>/releases/download/<tag>/<file>) or a GitHub raw file url at a 40-character commit (https://raw.githubusercontent.com/<owner>/<repo>/<commit>/<path>), so that it does not change; releases/latest, branches and other hosts are not accepted'
+    let host = u.hostname
+    if (host === 'github.com') {
+        if (segs.length === 6 && segs[2] === 'releases' && segs[3] === 'download' && plain(0) && plain(1) && dec[4] !== '' && plain(5)) {
+            return ''
+        }
+        if (plain(0) && plain(1) && segs[2] === 'raw' && reCommit.test(segs[3] || '') && restOk(4)) {
+            return ''
+        }
+        return need
     }
-    p = p.toLowerCase()
-    if (/\/releases\/latest(\/|$)/.test(p)) {
-        return 'must not point to releases/latest, give the url of a release tag'
+    if (host === 'raw.githubusercontent.com') {
+        if (plain(0) && plain(1) && reCommit.test(segs[2] || '') && restOk(3)) {
+            return ''
+        }
+        return need
     }
-    let host = u.hostname.toLowerCase()
-    let reRef = /^(master|main|head|refs\/heads)\//
-    let ref = null
-    let m = null
-    if (host === 'raw.githubusercontent.com' && (m = p.match(/^\/[^/]+\/[^/]+\/(.+)$/))) {
-        ref = m[1]
-    }
-    else if (host === 'github.com' && (m = p.match(/^\/[^/]+\/[^/]+\/(raw|blob)\/(.+)$/))) {
-        ref = m[2]
-    }
-    if (ref !== null && reRef.test(ref)) {
-        return 'must not point to a branch, give the url of a release tag or a commit'
-    }
-    return ''
+    return need
 }
 
 

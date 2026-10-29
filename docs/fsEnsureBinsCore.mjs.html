@@ -57,11 +57,23 @@ import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
 //GitHub原始檔網址之基底, 自有檔之網址為&lt;RAW>/&lt;repo>/&lt;commit或master>/&lt;path>
 let RAW = 'https://raw.githubusercontent.com'
 
+//GitHub API之基底, 主幹模式重取清單時以之解析主幹之提交(raw.githubusercontent.com之CDN快取鍵不含查詢字串且不理會no-cache, 只有不同路徑才繞過, 故改取該提交之網址)
+let API = 'https://api.github.com'
+
 //主幹模式之分支
 let BRANCH = 'master'
 
 //主幹清單之大小上限(位元組)
 let MANIFEST_CAP = 1024 * 1024
+
+//GitHub API回傳提交雜湊之大小上限(位元組)
+let COMMIT_CAP = 1024
+
+//解壓時每次執行tar之成員參數總長上限(字元), Windows命令列上限為32767
+let ARGS_CAP = 6000
+
+//結果物件之不可列舉屬性名, 檔名與組名不得與之同名(不分大小寫)
+let RESERVED = ['leftovers', 'manifest', 'entries', 'bundles']
 
 //解壓程式被終止後等待其結束之上限(毫秒)
 let KILL_WAIT_MS = 5000
@@ -214,8 +226,21 @@ function baseOfUrl(v) {
 }
 
 
+//bundleId, 檔案組之組識別(規格M6): 組內各檔依path排序(字串之碼位順序)後, 逐行'&lt;sha256(小寫)>  &lt;path>\n'(同sha256sum之輸出格式)串接之SHA-256
+function bundleId(hash, files) {
+    let ls = files.map((f) => {
+        return { path: f.path, line: `${f.sha256}  ${f.path}\n` }
+    })
+    ls.sort((a, b) => {
+        return a.path &lt; b.path ? -1 : a.path > b.path ? 1 : 0
+    })
+    return hash(ls.map((v) => v.line).join(''))
+}
+
+
 //normManifest, 檢核清單(schema 1)並轉為內部結構; 每個欄位只讀取一次, 之後只用轉換後之值(檢查之值即使用之值); 不符拋E_MANIFEST
-function normManifest(raw, src) {
+//nopt.hash為SHA-256函數(文字→64碼小寫十六進位, 算組識別), nopt.ref為無commit時自有檔之ref(預設主幹分支; 重取主幹清單時為所解析之提交)
+function normManifest(raw, src, nopt) {
     let bad = (field, msg) => {
         return mkErr('E_MANIFEST', maskUrl(`fsEnsureBins: the manifest${src} is invalid: ${field} ${msg}`), { step: 'manifest', field: maskUrl(field) })
     }
@@ -257,11 +282,215 @@ function normManifest(raw, src) {
         }
         return { path: null, url: new URL(u).href }
     }
+    let partsOf = (parts, at) => {
+        //分割檔: 各分割之來源與校驗值, 名稱(選填, 預設為path或url之最後一段)不分大小寫不得重複
+        let r = []
+        let pnames = new Set()
+        let m = parts.length
+        for (let j = 0; j &lt; m; j++) {
+            let p = parts[j]
+            let atp = `${at}.parts[${j}]`
+            if (!isObj(p)) {
+                throw bad(atp, 'must be an object')
+            }
+            keysOk(p, ['name', 'path', 'url', 'sha256', 'size'], atp)
+            let pname = p.name
+            let s = source(p, atp)
+            let fz = file(p, atp)
+            if (pname === undefined) {
+                pname = s.path !== null ? s.path.split('/').pop() : baseOfUrl(s.url)
+            }
+            if (!isBinName(pname)) {
+                throw bad(`${atp}.name`, `must be a file name of letters, digits and ._+- (give name when the path or url does not end with one): ${String(pname)}`)
+            }
+            if (pnames.has(pname.toLowerCase())) {
+                throw bad(`${atp}.name`, `duplicates another part name (case-insensitive): ${pname}`)
+            }
+            pnames.add(pname.toLowerCase())
+            r.push({ name: pname, ...fz, ...s })
+        }
+        return r
+    }
+    let names = new Set()
+    let nameOk = (name, at, what) => {
+        //檔名與組名: 白名單、不分大小寫不得重複(兩者為結果物件之鍵)、不得為結果物件之不可列舉屬性名
+        if (!isBinName(name)) {
+            throw bad(at, 'must be a file name of letters, digits and ._+- (not a reserved device name)')
+        }
+        if (RESERVED.includes(name.toLowerCase())) {
+            throw bad(at, `must not be ${RESERVED.join(', ')} (names of the properties of the result): ${name}`)
+        }
+        if (names.has(name.toLowerCase())) {
+            throw bad(at, `duplicates another ${what} (case-insensitive, names of files and bundles share the keys of the result): ${name}`)
+        }
+        names.add(name.toLowerCase())
+    }
+    let noteOf = (v, at) => {
+        if (v !== undefined &amp;&amp; typeof v !== 'string') {
+            throw bad(at, 'must be a string')
+        }
+        return v !== undefined ? v : null
+    }
+    let bundle = (b, at) => {
+        //檔案組(規格M6): 組內各檔之path為組內相對路徑; 來源為repo檔(&lt;dir>/&lt;path>)、廠商網址(url)或壓縮檔之成員(archives[].extract.files)
+        if (!isObj(b)) {
+            throw bad(at, 'must be an object')
+        }
+        keysOk(b, ['name', 'dir', 'files', 'archives', 'note'], at)
+        let name = b.name
+        let dir = b.dir
+        let bfiles = b.files
+        let archs = b.archives
+        let bnote = b.note
+        nameOk(name, `${at}.name`, 'name')
+        let note = noteOf(bnote, `${at}.note`)
+        if (dir !== undefined &amp;&amp; !isBinRel(dir)) {
+            throw bad(`${at}.dir`, 'must be a relative path with / separators of letters, digits, spaces and ._+- (no empty, . or .. segments)')
+        }
+        if (bfiles !== undefined &amp;&amp; !Array.isArray(bfiles)) {
+            throw bad(`${at}.files`, 'must be an array')
+        }
+        if (archs !== undefined &amp;&amp; !Array.isArray(archs)) {
+            throw bad(`${at}.archives`, 'must be an array')
+        }
+        let nbf = bfiles !== undefined ? bfiles.length : 0
+        let nba = archs !== undefined ? archs.length : 0
+        if (nbf + nba === 0) {
+            throw bad(at, 'must have a non-empty files or archives')
+        }
+        let all = [] //組內全部檔: { path, sha256, size, src(直接來源)或null, arch(壓縮檔之索引或-1) }
+        let seen = new Map() //小寫path → path
+        let addPath = (p, atp) => {
+            if (!isBinRel(p)) {
+                throw bad(`${atp}.path`, 'must be a relative path with / separators of letters, digits, spaces and ._+- (no empty, . or .. segments)')
+            }
+            let k = p.toLowerCase()
+            if (seen.has(k)) {
+                throw bad(`${atp}.path`, `duplicates another path in the bundle (case-insensitive): ${p}`)
+            }
+            seen.set(k, p)
+        }
+        for (let j = 0; j &lt; nbf; j++) {
+            let f = bfiles[j]
+            let atf = `${at}.files[${j}]`
+            if (!isObj(f)) {
+                throw bad(atf, 'must be an object')
+            }
+            keysOk(f, ['path', 'url', 'sha256', 'size'], atf)
+            let p = f.path
+            let u = f.url
+            addPath(p, atf)
+            let fz = file(f, atf)
+            let fname = p.split('/').pop()
+            let s = null
+            if (u !== undefined) {
+                let e = isStr(u) ? binUrlProblem(u) : 'must be a string'
+                if (e !== '') {
+                    throw bad(`${atf}.url`, `${e}: ${isStr(u) ? u : typeof u}`)
+                }
+                s = { name: fname, ...fz, path: null, url: new URL(u).href }
+            }
+            else {
+                if (dir === undefined) {
+                    throw bad(atf, 'needs url, or dir of the bundle when the file is in the repository (its path in the repository is &lt;dir>/&lt;path>)')
+                }
+                let rp = `${dir}/${p}`
+                if (!isBinRel(rp)) {
+                    throw bad(`${atf}.path`, `makes a path in the repository that is too long: ${dir}/${p}`)
+                }
+                s = { name: fname, ...fz, path: rp, url: null }
+            }
+            all.push({ path: p, ...fz, src: s, arch: -1 })
+        }
+        let arcs = []
+        for (let k = 0; k &lt; nba; k++) {
+            let a = archs[k]
+            let ata = `${at}.archives[${k}]`
+            if (!isObj(a)) {
+                throw bad(ata, 'must be an object')
+            }
+            keysOk(a, ['path', 'url', 'parts', 'sha256', 'size', 'assembled', 'extract', 'note'], ata)
+            let x = a.extract
+            let parts = a.parts
+            let assembled = a.assembled
+            let anote = noteOf(a.note, `${ata}.note`)
+            if (!isObj(x)) {
+                throw bad(`${ata}.extract`, 'is required and must be an object')
+            }
+            keysOk(x, ['type', 'files'], `${ata}.extract`)
+            let xtype = x.type
+            let xfiles = x.files
+            if (xtype !== 'zip') {
+                throw bad(`${ata}.extract.type`, `must be 'zip'`)
+            }
+            if (!Array.isArray(xfiles) || xfiles.length === 0) {
+                throw bad(`${ata}.extract.files`, 'must be a non-empty array')
+            }
+            let rec = { archive: null, parts: null, assembled: null, members: [], note: anote }
+            if (parts !== undefined) {
+                if (a.path !== undefined || a.url !== undefined || a.sha256 !== undefined || a.size !== undefined) {
+                    throw bad(ata, 'with parts must not have path, url, sha256 or size (give them in each part and in assembled)')
+                }
+                if (!Array.isArray(parts) || parts.length === 0) {
+                    throw bad(`${ata}.parts`, 'must be a non-empty array')
+                }
+                if (!isObj(assembled)) {
+                    throw bad(`${ata}.assembled`, 'is required with parts and must be an object')
+                }
+                keysOk(assembled, ['type', 'sha256', 'size'], `${ata}.assembled`)
+                if (assembled.type !== 'zip') {
+                    throw bad(`${ata}.assembled.type`, `must be 'zip'`)
+                }
+                rec.assembled = file(assembled, `${ata}.assembled`)
+                rec.parts = partsOf(parts, ata)
+            }
+            else {
+                if (assembled !== undefined) {
+                    throw bad(`${ata}.assembled`, 'is only for parts')
+                }
+                let s = source(a, ata)
+                let fz = file(a, ata)
+                let aname = s.path !== null ? s.path.split('/').pop() : baseOfUrl(s.url)
+                if (!isBinName(aname)) {
+                    throw bad(ata, `can not take a file name for the archive from its path or url: ${String(aname)}`)
+                }
+                rec.archive = { name: aname, ...fz, ...s }
+            }
+            let nm = xfiles.length
+            for (let m = 0; m &lt; nm; m++) {
+                let mo = xfiles[m]
+                let atm = `${ata}.extract.files[${m}]`
+                if (!isObj(mo)) {
+                    throw bad(atm, 'must be an object')
+                }
+                keysOk(mo, ['path', 'sha256', 'size'], atm)
+                let p = mo.path
+                addPath(p, atm)
+                let fz = file(mo, atm)
+                let fm = { path: p, ...fz, src: null, arch: k }
+                all.push(fm)
+                rec.members.push(fm)
+            }
+            arcs.push(rec)
+        }
+        //一檔之路徑不得為另一檔之上層資料夾(不分大小寫)
+        for (let k of seen.keys()) {
+            let segs = k.split('/')
+            for (let i = 1; i &lt; segs.length; i++) {
+                let anc = segs.slice(0, i).join('/')
+                if (seen.has(anc)) {
+                    throw bad(at, `has a file whose path is a folder of another file: ${seen.get(anc)}`)
+                }
+            }
+        }
+        let id = bundleId(nopt.hash, all)
+        return { kind: 'bundle', name, id, dir: dir !== undefined ? dir : null, note, files: all, archives: arcs }
+    }
     try {
         if (!isObj(raw)) {
             throw bad('(root)', 'must be an object')
         }
-        keysOk(raw, ['schema', 'pkg', 'mode', 'repo', 'commit', 'manifestPath', 'files', 'note', 'version'], '(root)')
+        keysOk(raw, ['schema', 'pkg', 'mode', 'repo', 'commit', 'manifestPath', 'files', 'bundles', 'note', 'version'], '(root)')
         let schema = raw.schema
         let pkg = raw.pkg
         let mode = raw.mode
@@ -269,6 +498,7 @@ function normManifest(raw, src) {
         let commit = raw.commit
         let manifestPath = raw.manifestPath
         let files = raw.files
+        let bundles = raw.bundles
         let note = raw.note
         let version = raw.version
         if (schema !== 1) {
@@ -295,13 +525,19 @@ function normManifest(raw, src) {
         if (version !== undefined &amp;&amp; typeof version !== 'string') {
             throw bad('version', 'must be a string')
         }
-        if (!Array.isArray(files) || files.length === 0) {
-            throw bad('files', 'must be a non-empty array')
+        if (files !== undefined &amp;&amp; !Array.isArray(files)) {
+            throw bad('files', 'must be an array')
+        }
+        if (bundles !== undefined &amp;&amp; !Array.isArray(bundles)) {
+            throw bad('bundles', 'must be an array')
+        }
+        let n = files !== undefined ? files.length : 0
+        let nb = bundles !== undefined ? bundles.length : 0
+        if (n + nb === 0) {
+            throw bad('files', 'must be a non-empty array (or give a non-empty bundles)')
         }
 
         let entries = []
-        let names = new Set()
-        let n = files.length
         for (let i = 0; i &lt; n; i++) {
             let f = files[i]
             let at = `files[${i}]`
@@ -314,16 +550,8 @@ function normManifest(raw, src) {
             let assembled = f.assembled
             let extract = f.extract
             let fnote = f.note
-            if (!isBinName(name)) {
-                throw bad(`${at}.name`, 'must be a file name of letters, digits and ._+- (not a reserved device name)')
-            }
-            if (names.has(name.toLowerCase())) {
-                throw bad(`${at}.name`, `duplicates another file name (case-insensitive): ${name}`)
-            }
-            names.add(name.toLowerCase())
-            if (fnote !== undefined &amp;&amp; typeof fnote !== 'string') {
-                throw bad(`${at}.note`, 'must be a string')
-            }
+            nameOk(name, `${at}.name`, 'file name')
+            fnote = noteOf(fnote, `${at}.note`)
 
             //extract
             let ext = null
@@ -343,7 +571,7 @@ function normManifest(raw, src) {
                 ext = { member, ...file(extract, `${at}.extract`) }
             }
 
-            let e = { name, final: null, direct: null, archive: null, parts: null, assembled: null, extract: ext }
+            let e = { kind: 'file', name, final: null, direct: null, archive: null, parts: null, assembled: null, extract: ext, note: fnote }
             if (parts !== undefined) {
                 //分割壓縮檔: 各分割與組合後之壓縮檔各有校驗值, 須解出
                 if (f.path !== undefined || f.url !== undefined || f.sha256 !== undefined || f.size !== undefined) {
@@ -363,31 +591,7 @@ function normManifest(raw, src) {
                     throw bad(`${at}.assembled.type`, `must be 'zip'`)
                 }
                 e.assembled = file(assembled, `${at}.assembled`)
-                e.parts = []
-                let pnames = new Set()
-                let m = parts.length
-                for (let j = 0; j &lt; m; j++) {
-                    let p = parts[j]
-                    let atp = `${at}.parts[${j}]`
-                    if (!isObj(p)) {
-                        throw bad(atp, 'must be an object')
-                    }
-                    keysOk(p, ['name', 'path', 'url', 'sha256', 'size'], atp)
-                    let pname = p.name
-                    let s = source(p, atp)
-                    let fz = file(p, atp)
-                    if (pname === undefined) {
-                        pname = s.path !== null ? s.path.split('/').pop() : baseOfUrl(s.url)
-                    }
-                    if (!isBinName(pname)) {
-                        throw bad(`${atp}.name`, `must be a file name of letters, digits and ._+- (give name when the path or url does not end with one): ${String(pname)}`)
-                    }
-                    if (pnames.has(pname.toLowerCase())) {
-                        throw bad(`${atp}.name`, `duplicates another part name (case-insensitive): ${pname}`)
-                    }
-                    pnames.add(pname.toLowerCase())
-                    e.parts.push({ name: pname, ...fz, ...s })
-                }
+                e.parts = partsOf(parts, at)
             }
             else {
                 if (assembled !== undefined) {
@@ -409,26 +613,44 @@ function normManifest(raw, src) {
             e.final = ext !== null ? { name, sha256: ext.sha256, size: ext.size } : { name, sha256: e.direct.sha256, size: e.direct.size }
             entries.push(e)
         }
+        for (let i = 0; i &lt; nb; i++) {
+            entries.push(bundle(bundles[i], `bundles[${i}]`))
+        }
 
-        //自有檔(path)之網址: 釘選模式須有commit, 主幹模式無commit時用主幹
+        //自有檔(path, 檔案組為dir下之檔)之網址: 釘選模式須有commit, 主幹模式無commit時用主幹(或重取時所解析之提交)
+        let srcsOf = (e) => {
+            if (e.kind === 'bundle') {
+                return [...e.files.map((f) => f.src), ...e.archives.flatMap((a) => [a.archive, ...(a.parts || [])])]
+            }
+            return [e.direct, e.archive, ...(e.parts || [])]
+        }
         let ownUsed = entries.some((e) => {
-            return [e.direct, e.archive, ...(e.parts || [])].some((o) => {
+            return srcsOf(e).some((o) => {
                 return o !== null &amp;&amp; o.path !== null
             })
         })
         if (mode === 'pinned' &amp;&amp; ownUsed &amp;&amp; commit === undefined) {
             throw bad('commit', 'is required in pinned mode when a file has a path')
         }
-        let ref = commit !== undefined ? commit : BRANCH
+        let ref = commit !== undefined ? commit : isStr(get(nopt, 'ref')) ? nopt.ref : BRANCH
         for (let e of entries) {
-            for (let o of [e.direct, e.archive, ...(e.parts || [])]) {
+            for (let o of srcsOf(e)) {
                 if (o !== null &amp;&amp; o.path !== null) {
                     o.url = `${RAW}/${repo}/${ref}/${encRel(o.path)}`
                 }
             }
         }
 
-        return { pkg, mode, repo, commit: commit !== undefined ? commit : null, manifestPath: manifestPath !== undefined ? manifestPath : 'bin/manifest.json', entries }
+        return {
+            pkg,
+            mode,
+            repo,
+            commit: commit !== undefined ? commit : null,
+            manifestPath: manifestPath !== undefined ? manifestPath : 'bin/manifest.json',
+            note: note !== undefined ? note : null,
+            version: version !== undefined ? version : null,
+            entries,
+        }
     }
     catch (err) {
         if (isOwnErr(err)) {
@@ -733,7 +955,7 @@ function cacheErr(ctx, e, msg, cause) {
     if (cause !== undefined) {
         extra.cause = cause
     }
-    return mkErr('E_FS', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: ${msg}`, extra)
+    return mkErr('E_FS', `${labelOf(ctx, e)}: ${msg}`, extra)
 }
 
 
@@ -843,8 +1065,8 @@ function verifyOpt(ctx, extra) {
 }
 
 
-//tagErr, 下載錯誤標註所屬之套件、檔名與來源(訊息前綴), 不改code
-function tagErr(ctx, err, name, source) {
+//tagErr, 下載錯誤標註所屬之套件、檔名(檔案組為組名與組內路徑file)與來源(訊息前綴), 不改code
+function tagErr(ctx, err, name, source, file = null) {
     if (!isOwnErr(err) &amp;&amp; !isStr(codeOf(err))) {
         err = mkErr('E_FS', errMsg(err), { cause: err })
     }
@@ -852,7 +1074,10 @@ function tagErr(ctx, err, name, source) {
         err.pkg = ctx.pkg
         err.bin = name
         err.source = source
-        err.message = maskUrl(`fsEnsureBins[${ctx.pkg}] file[${name}] from ${source}: ${err.message}`)
+        if (file !== null) {
+            err.file = file
+        }
+        err.message = maskUrl(`fsEnsureBins[${ctx.pkg}] ${file !== null ? `bundle[${name}] file[${file}]` : `file[${name}]`} from ${source}: ${err.message}`)
     }
     catch (e) {}
     _tagged.add(err)
@@ -874,13 +1099,14 @@ function addLeft(ctx, e, x) {
 }
 
 
-//mirrorPathOf, 鏡像內之位置: &lt;鏡像>/&lt;套件>/&lt;sha256>/&lt;name>
+//mirrorPathOf, 鏡像內之位置: &lt;鏡像>/&lt;套件>/&lt;sha256>/&lt;name>; o.rel(&lt;套件>之下之各段, 如檔案組之[&lt;組識別>, ...path之各段])給了時為&lt;鏡像>/&lt;套件>/&lt;rel>
 function mirrorPathOf(ctx, o) {
+    let segs = Array.isArray(o.rel) ? o.rel : [o.sha256, o.name]
     if (ctx.mirrorKind === 'dir') {
-        return ctx.path.join(ctx.mirrorBase, ctx.pkg, o.sha256, o.name)
+        return ctx.path.join(ctx.mirrorBase, ctx.pkg, ...segs)
     }
     if (ctx.mirrorKind === 'http') {
-        return `${ctx.mirrorBase}/${encodeURIComponent(ctx.pkg)}/${o.sha256}/${encodeURIComponent(o.name)}`
+        return `${ctx.mirrorBase}/${encodeURIComponent(ctx.pkg)}/${segs.map((s) => encodeURIComponent(s)).join('/')}`
     }
     return ''
 }
@@ -901,17 +1127,24 @@ function localFetch(ctx, fp) {
 }
 
 
+//fileOf, 事件與錯誤用之檔名: 檔案組之檔為其組內路徑(o.file), 否則為o.name
+function fileOf(o) {
+    return isStr(o.file) ? o.file : o.name
+}
+
+
 //fromMirror, 自鏡像取得o至dest並以清單校驗; 回傳true(取得)、null(鏡像無此檔)或拒用之說明(校驗不符、讀取或連線失敗)
 async function fromMirror(ctx, e, o, dest) {
     let at = mirrorPathOf(ctx, o)
     let exp = { sha256: o.sha256, size: o.size }
+    let fn = fileOf(o)
     try {
         if (ctx.mirrorKind === 'dir') {
             let st = lstatOrNull(ctx, at)
             if (st === null) {
-                emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: at, result: 'miss' })
+                emit(ctx, { step: 'mirror', name: e.name, file: fn, from: at, result: 'miss' })
                 if (ctx.trace) {
-                    ctx.trace('mirror', { name: e.name, file: o.name, result: 'miss' })
+                    ctx.trace('mirror', { name: e.name, file: fn, result: 'miss' })
                 }
                 return null
             }
@@ -932,9 +1165,9 @@ async function fromMirror(ctx, e, o, dest) {
             let rv = await fsDownloadFileVerifyCore(at, dest, exp, verifyOpt(ctx, { fetch: f, retryOnMismatch: false }))
             addLeft(ctx, e, rv)
         }
-        emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'ok' })
+        emit(ctx, { step: 'mirror', name: e.name, file: fn, from: maskUrl(at), result: 'ok' })
         if (ctx.trace) {
-            ctx.trace('mirror', { name: e.name, file: o.name, result: 'ok' })
+            ctx.trace('mirror', { name: e.name, file: fn, result: 'ok' })
         }
         return true
     }
@@ -942,20 +1175,20 @@ async function fromMirror(ctx, e, o, dest) {
         addLeft(ctx, e, err) //拒用時下載核心刪不掉之暫存檔不得被吞掉
         //下載核心之E_FS、E_RENAME為寫入端(快取或暫存夾)之磁碟錯誤、E_ARG為參數錯誤, 皆不是鏡像之問題, 不續找下一來源(鏡像端之讀取或連線錯誤為E_NETWORK等)
         if (['E_FS', 'E_RENAME', 'E_ARG'].includes(codeOf(err))) {
-            throw tagErr(ctx, err, e.name, 'mirror')
+            throw tagErr(ctx, err, e.name, 'mirror', e.kind === 'bundle' ? fn : null)
         }
         let status = get(err, 'status')
         if (codeOf(err) === 'E_HTTP' &amp;&amp; (status === 404 || status === 410)) {
-            emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'miss' })
+            emit(ctx, { step: 'mirror', name: e.name, file: fn, from: maskUrl(at), result: 'miss' })
             if (ctx.trace) {
-                ctx.trace('mirror', { name: e.name, file: o.name, result: 'miss' })
+                ctx.trace('mirror', { name: e.name, file: fn, result: 'miss' })
             }
             return null
         }
         let reason = maskUrl(`the mirror copy ${at} was rejected: ${isStr(codeOf(err)) ? `${codeOf(err)} ` : ''}${errMsg(err).split('\n')[0]}`)
-        emit(ctx, { step: 'mirror', name: e.name, file: o.name, from: maskUrl(at), result: 'rejected', error: reason })
+        emit(ctx, { step: 'mirror', name: e.name, file: fn, from: maskUrl(at), result: 'rejected', error: reason })
         if (ctx.trace) {
-            ctx.trace('mirror', { name: e.name, file: o.name, result: 'rejected' })
+            ctx.trace('mirror', { name: e.name, file: fn, result: 'rejected' })
         }
         return reason
     }
@@ -980,6 +1213,7 @@ function missingOf(ctx, e, reasons) {
         archive: e.archive !== null ? alt(e.archive) : null,
         parts: e.parts !== null ? e.parts.map(alt) : null,
         reasons,
+        bundle: null,
     }
     if (ctx.trace) {
         ctx.trace('offline', { name: e.name })
@@ -988,23 +1222,69 @@ function missingOf(ctx, e, reasons) {
 }
 
 
-//obtain, 取得o至dest: 鏡像(有設定時)→GitHub或廠商網址(離線時不連); 任何來源皆以清單校驗
+//missingBundleOf, 檔案組之離線缺檔(由run彙整為E_OFFLINE_MISSING): 列出全組(組須整組備妥), have為本次已取得(自鏡像)之組內路徑
+function missingBundleOf(ctx, b, have, reasons) {
+    let dirB = ctx.path.join(ctx.cacheRoot, b.id)
+    let alt = (o) => {
+        return { name: o.name, sha256: o.sha256, size: o.size, url: o.url, mirrorPath: ctx.mirrorKind !== '' ? maskUrl(mirrorPathOf(ctx, o)) : null }
+    }
+    let files = b.files.map((f) => {
+        return {
+            path: f.path,
+            sha256: f.sha256,
+            size: f.size,
+            missing: !have.has(f.path),
+            cachePath: ctx.path.join(dirB, ...f.path.split('/')),
+            mirrorPath: ctx.mirrorKind !== '' ? maskUrl(mirrorPathOf(ctx, { rel: [b.id, ...f.path.split('/')] })) : null,
+            url: f.src !== null ? f.src.url : null,
+            archive: f.arch,
+        }
+    })
+    let archives = b.archives.map((a) => {
+        return { archive: a.archive !== null ? alt(a.archive) : null, parts: a.parts !== null ? a.parts.map(alt) : null, assembled: a.assembled, members: a.members.length }
+    })
+    let m = {
+        name: b.name,
+        sha256: null,
+        size: b.files.reduce((t, f) => t + f.size, 0),
+        cachePath: dirB,
+        mirrorPath: ctx.mirrorKind !== '' ? maskUrl(mirrorPathOf(ctx, { rel: [b.id] })) : null,
+        url: null,
+        member: null,
+        archive: null,
+        parts: null,
+        reasons,
+        bundle: { id: b.id, files, archives },
+    }
+    if (ctx.trace) {
+        ctx.trace('offline', { name: b.name })
+    }
+    return mkErr('E_OFFLINE_MISSING', `offline: ${b.name} is missing`, { step: 'offline', missing: [m] })
+}
+
+
+//obtain, 取得o至dest: 鏡像(有設定時)→GitHub或廠商網址(離線時不連); 任何來源皆以清單校驗; 回傳true(取得)
+//離線而取不到時: 單一檔拋離線缺檔(missingOf), 檔案組之檔回傳false(由runBundle彙整全組)
 async function obtain(ctx, e, o, dest, reasons) {
+    let fn = fileOf(o)
     if (ctx.mirrorKind !== '') {
         let r = await fromMirror(ctx, e, o, dest)
         if (r === true) {
-            return
+            return true
         }
         if (r !== null) {
             reasons.push(r)
         }
     }
     if (ctx.offline) {
+        if (e.kind === 'bundle') {
+            return false
+        }
         throw missingOf(ctx, e, reasons)
     }
-    emit(ctx, { step: 'download', name: e.name, file: o.name, url: o.url })
+    emit(ctx, { step: 'download', name: e.name, file: fn, url: o.url })
     if (ctx.trace) {
-        ctx.trace('download', { name: e.name, file: o.name })
+        ctx.trace('download', { name: e.name, file: fn })
     }
     try {
         let rv = await fsDownloadFileVerifyCore(o.url, dest, { sha256: o.sha256, size: o.size }, verifyOpt(ctx, { fetch: ctx.fetchRaw }))
@@ -1012,13 +1292,14 @@ async function obtain(ctx, e, o, dest, reasons) {
     }
     catch (err) {
         if (ctx.trace) {
-            ctx.trace('downloaded', { name: e.name, file: o.name, ok: false, code: codeStr(err) })
+            ctx.trace('downloaded', { name: e.name, file: fn, ok: false, code: codeStr(err) })
         }
-        throw tagErr(ctx, err, e.name, o.url.startsWith(`${RAW}/`) ? 'github' : 'url')
+        throw tagErr(ctx, err, e.name, o.url.startsWith(`${RAW}/`) ? 'github' : 'url', e.kind === 'bundle' ? fn : null)
     }
     if (ctx.trace) {
-        ctx.trace('downloaded', { name: e.name, file: o.name, ok: true, code: null })
+        ctx.trace('downloaded', { name: e.name, file: fn, ok: true, code: null })
     }
+    return true
 }
 
 
@@ -1117,63 +1398,136 @@ function runTar(ctx, name, prog, args, cwd) {
 }
 
 
-//extract, 於暫存夾內以tar(Windows內建tar.exe即bsdtar)解出成員, 依清單extract校驗; 參數皆為暫存夾內之相對路徑(不經命令列傳遞非ASCII之絕對路徑)
-async function extract(ctx, e, work, zipRel) {
-    let x = e.extract
-    ctx.fs.mkdirSync(ctx.path.join(work, 'x'), { recursive: true })
-    emit(ctx, { step: 'extract', name: e.name, member: x.member })
-    if (ctx.trace) {
-        ctx.trace('extract', { name: e.name })
+//labelOf, 錯誤訊息之前綴: 單一檔為file[&lt;name>], 檔案組為bundle[&lt;name>]
+function labelOf(ctx, e) {
+    return `fsEnsureBins[${ctx.pkg}] ${e.kind === 'bundle' ? 'bundle' : 'file'}[${e.name}]`
+}
+
+
+//extractErr, 解壓失敗(E_EXTRACT); what為所解之成員之說明, file為檔案組之組內路徑(單一成員時)
+function extractErr(ctx, e, what, msg, cause, more = {}) {
+    let extra = { step: 'extract', pkg: ctx.pkg, bin: e.name, ...more }
+    if (cause !== undefined) {
+        extra.cause = cause
     }
-    let args = ['-x', '-f', zipRel, '-C', 'x', '--', x.member]
-    let r = null
-    for (let prog of ctx.tarProgs) {
-        r = await runTar(ctx, e.name, prog, args, work)
-        if (!r.enoent) {
-            break
+    return mkErr('E_EXTRACT', maskUrl(`${labelOf(ctx, e)}: can not extract ${what}: ${msg}`), extra)
+}
+
+
+//tarRun, 於cwd以tar(Windows內建tar.exe即bsdtar)自zipRel解出members至xRel; 參數皆為cwd內之相對路徑(不經命令列傳遞非ASCII之絕對路徑), 成員前加--
+//成員多時分批執行(每批成員參數總長至多ARGS_CAP字元, 免逾命令列上限), 每批各通知extract與extracted; 失敗拋E_EXTRACT(逾時而解壓程式未確認結束者帶workBusy)
+async function tarRun(ctx, e, cwd, zipRel, xRel, members, what) {
+    ctx.fs.mkdirSync(ctx.path.join(cwd, xRel), { recursive: true })
+    let batches = []
+    let cur = []
+    let len = 0
+    for (let m of members) {
+        if (cur.length > 0 &amp;&amp; len + m.length + 1 > ARGS_CAP) {
+            batches.push(cur)
+            cur = []
+            len = 0
+        }
+        cur.push(m)
+        len += m.length + 1
+    }
+    batches.push(cur)
+    for (let batch of batches) {
+        //檔案組之錯誤帶file(組內路徑): 一批只有一個成員時為該成員, 多成員之批無法定位單一檔而不帶
+        let more = e.kind === 'bundle' &amp;&amp; batch.length === 1 ? { file: batch[0] } : {}
+        emit(ctx, e.kind === 'bundle' ? { step: 'extract', name: e.name, members: batch.length } : { step: 'extract', name: e.name, member: batch[0] })
+        if (ctx.trace) {
+            ctx.trace('extract', { name: e.name })
+        }
+        let args = ['-x', '-f', zipRel, '-C', xRel, '--', ...batch]
+        let r = null
+        for (let prog of ctx.tarProgs) {
+            r = await runTar(ctx, e.name, prog, args, cwd)
+            if (!r.enoent) {
+                break
+            }
+        }
+        if (ctx.trace) {
+            //result: 'error'為解壓程式不存在或無法啟動, 'timeout'為逾時(exited為終止後是否確認已結束), 'exit'為已結束(code為其離開碼)
+            let result = 'enoent' in r ? 'error' : r.timeout ? 'timeout' : 'exit'
+            ctx.trace('extracted', { name: e.name, result, code: result === 'exit' &amp;&amp; typeof r.code === 'number' ? r.code : null, exited: result === 'timeout' ? r.exited === true : result === 'exit' ? true : null })
+        }
+        if (r.enoent) {
+            throw extractErr(ctx, e, what, `the extraction program is not available (${ctx.tarProgs.join(' or ')}; Windows 10 1803 and later include tar.exe, other systems need bsdtar of libarchive)`, r.err, more)
+        }
+        if (r.err) {
+            throw extractErr(ctx, e, what, errMsg(r.err), r.err, more)
+        }
+        if (r.timeout) {
+            //終止後仍未確認結束: 保留暫存夾(解壓程式可能仍在寫入), 列入leftovers
+            throw extractErr(ctx, e, what, `the extraction did not finish within ${ctx.extractMs}ms (opt.totalMs)${r.exited ? '' : `, and the extraction program did not exit within ${KILL_WAIT_MS}ms after being terminated, the work folder "${cwd}" is kept`}`, undefined, r.exited ? { ...more } : { ...more, workBusy: true })
+        }
+        if (r.code !== 0) {
+            throw extractErr(ctx, e, what, `the extraction program exited with code ${r.code}: ${String(r.stderr).trim().slice(0, 500)}`, undefined, more)
         }
     }
-    if (ctx.trace) {
-        //result: 'error'為解壓程式不存在或無法啟動, 'timeout'為逾時(exited為終止後是否確認已結束), 'exit'為已結束(code為其離開碼)
-        let result = 'enoent' in r ? 'error' : r.timeout ? 'timeout' : 'exit'
-        ctx.trace('extracted', { name: e.name, result, code: result === 'exit' &amp;&amp; typeof r.code === 'number' ? r.code : null, exited: result === 'timeout' ? r.exited === true : result === 'exit' ? true : null })
-    }
-    let fail = (msg, cause, more = {}) => {
-        let extra = { step: 'extract', pkg: ctx.pkg, bin: e.name, ...more }
-        if (cause !== undefined) {
-            extra.cause = cause
-        }
-        return mkErr('E_EXTRACT', maskUrl(`fsEnsureBins[${ctx.pkg}] file[${e.name}]: can not extract "${x.member}": ${msg}`), extra)
-    }
-    if (r.enoent) {
-        throw fail(`the extraction program is not available (${ctx.tarProgs.join(' or ')}; Windows 10 1803 and later include tar.exe, other systems need bsdtar of libarchive)`, r.err)
-    }
-    if (r.err) {
-        throw fail(errMsg(r.err), r.err)
-    }
-    if (r.timeout) {
-        //終止後仍未確認結束: 保留暫存夾(解壓程式可能仍在寫入), 列入leftovers
-        throw fail(`the extraction did not finish within ${ctx.extractMs}ms (opt.totalMs)${r.exited ? '' : `, and the extraction program did not exit within ${KILL_WAIT_MS}ms after being terminated, the work folder "${work}" is kept`}`, undefined, r.exited ? {} : { workBusy: true })
-    }
-    if (r.code !== 0) {
-        throw fail(`the extraction program exited with code ${r.code}: ${String(r.stderr).trim().slice(0, 500)}`)
-    }
-    let fp = ctx.path.join(work, 'x', ...x.member.split('/'))
+}
+
+
+//checkMember, 解出之檔須為一般檔案且大小與SHA-256符合清單; 不符拋E_EXTRACT(不在壓縮檔內、非一般檔案)或E_SIZE_MISMATCH、E_HASH_MISMATCH(step extract); rel為成員之路徑, file為檔案組之組內路徑
+async function checkMember(ctx, e, fp, x, rel, file) {
+    let more = file !== null ? { file } : {}
     let st = lstatOrNull(ctx, fp)
     if (st === null) {
-        throw fail(`the member is not in the archive`)
+        throw extractErr(ctx, e, `"${rel}"`, `the member is not in the archive`, undefined, more)
     }
     if (!st.isFile()) {
-        throw fail(`the member is not a regular file`)
+        throw extractErr(ctx, e, `"${rel}"`, `the member is not a regular file`, undefined, more)
     }
     let h = await hashFile(ctx, fp)
     if (h.size !== x.size) {
-        throw mkErr('E_SIZE_MISMATCH', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: the extracted "${x.member}" has ${h.size} bytes, the manifest expects ${x.size} bytes`, { step: 'extract', pkg: ctx.pkg, bin: e.name, expected: { sha256: x.sha256, size: x.size }, actual: h })
+        throw mkErr('E_SIZE_MISMATCH', `${labelOf(ctx, e)}: the extracted "${rel}" has ${h.size} bytes, the manifest expects ${x.size} bytes`, { step: 'extract', pkg: ctx.pkg, bin: e.name, ...more, expected: { sha256: x.sha256, size: x.size }, actual: h })
     }
     if (h.sha256 !== x.sha256) {
-        throw mkErr('E_HASH_MISMATCH', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: the extracted "${x.member}" has sha256 ${h.sha256}, the manifest expects ${x.sha256}`, { step: 'extract', pkg: ctx.pkg, bin: e.name, expected: { sha256: x.sha256, size: x.size }, actual: h })
+        throw mkErr('E_HASH_MISMATCH', `${labelOf(ctx, e)}: the extracted "${rel}" has sha256 ${h.sha256}, the manifest expects ${x.sha256}`, { step: 'extract', pkg: ctx.pkg, bin: e.name, ...more, expected: { sha256: x.sha256, size: x.size }, actual: h })
     }
+}
+
+
+//extract, 於暫存夾內解出單一檔之成員(e.extract.member)並依清單extract校驗, 回傳解出之檔
+async function extract(ctx, e, work, zipRel) {
+    let x = e.extract
+    await tarRun(ctx, e, work, zipRel, 'x', [x.member], `"${x.member}"`)
+    let fp = ctx.path.join(work, 'x', ...x.member.split('/'))
+    await checkMember(ctx, e, fp, x, x.member, null)
     return fp
+}
+
+
+//getArchive, 於cwd內取得壓縮檔(src.archive), 或各分割(src.parts, 各自校驗)依序組合並校驗src.assembled, 回傳zip於cwd內之相對路徑
+//檔案組於離線取不到時回傳''(由runBundle彙整全組), 單一檔則由obtain拋離線缺檔
+async function getArchive(ctx, e, src, cwd, reasons) {
+    if (src.archive !== null) {
+        let ok = await obtain(ctx, e, src.archive, ctx.path.join(cwd, 'archive', src.archive.name), reasons)
+        return ok ? `archive/${src.archive.name}` : ''
+    }
+    let fps = []
+    for (let p of src.parts) {
+        let fp = ctx.path.join(cwd, 'parts', p.name)
+        if (!await obtain(ctx, e, p, fp, reasons)) {
+            return ''
+        }
+        fps.push(fp)
+    }
+    let zipRel = 'assembled.zip'
+    let fpZip = ctx.path.join(cwd, zipRel)
+    try {
+        await concatFiles(ctx, fps, fpZip)
+    }
+    catch (err) {
+        throw mkErr('E_FS', `${labelOf(ctx, e)}: can not assemble the parts: ${errMsg(err)}`, { step: 'assemble', pkg: ctx.pkg, bin: e.name, cause: err })
+    }
+    let h = await hashFile(ctx, fpZip)
+    let a = src.assembled
+    if (h.size !== a.size || h.sha256 !== a.sha256) {
+        let code = h.size !== a.size ? 'E_SIZE_MISMATCH' : 'E_HASH_MISMATCH'
+        throw mkErr(code, `${labelOf(ctx, e)}: the assembled archive has sha256 ${h.sha256} and ${h.size} bytes, the manifest expects ${a.sha256} and ${a.size} bytes`, { step: 'assemble', pkg: ctx.pkg, bin: e.name, expected: { sha256: a.sha256, size: a.size }, actual: h })
+    }
+    return zipRel
 }
 
 
@@ -1190,7 +1544,7 @@ async function place(ctx, e, fpX, dirFinal, fpFinal) {
                 return
             }
             if (!codesBusy.includes(codeOf(err)) || i === 5) {
-                throw mkErr('E_RENAME', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: can not move the extracted file to "${fpFinal}": ${errMsg(err)}`, { step: 'place', pkg: ctx.pkg, bin: e.name, cause: err })
+                throw mkErr('E_RENAME', `${labelOf(ctx, e)}: can not move the extracted file to "${fpFinal}": ${errMsg(err)}`, { step: 'place', pkg: ctx.pkg, bin: e.name, cause: err })
             }
             await sleep(200 * i)
         }
@@ -1201,7 +1555,7 @@ async function place(ctx, e, fpX, dirFinal, fpFinal) {
 //mkWork, 於快取夾內建立本次專用之暫存夾(排他建立)
 function mkWork(ctx, e) {
     let fail = (err) => {
-        return mkErr('E_FS', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: can not create a work folder in "${ctx.cacheRoot}": ${errMsg(err)}`, { step: 'prepare', pkg: ctx.pkg, bin: e.name, cause: err })
+        return mkErr('E_FS', `${labelOf(ctx, e)}: can not create a work folder in "${ctx.cacheRoot}": ${errMsg(err)}`, { step: 'prepare', pkg: ctx.pkg, bin: e.name, cause: err })
     }
     try {
         ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
@@ -1237,6 +1591,15 @@ function rmWork(ctx, e, work) {
             ctx.trace('cleanup', { name: e.name, ok: false })
         }
         return
+    }
+    //暫存夾已整個刪除: 先前回報之其內刪不掉之暫存(如下載核心之.part)已不存在, 自本次取得之leftovers移除
+    let pre = `${work}${ctx.win32 ? '\\' : '/'}`
+    let left = ctx.left
+    for (let k = left.length - 1; k >= 0; k--) {
+        let fp = get(left[k], 'fp')
+        if (isStr(fp) &amp;&amp; keyOf(ctx, fp).startsWith(keyOf(ctx, pre))) {
+            left.splice(k, 1)
+        }
     }
     if (ctx.trace) {
         ctx.trace('cleanup', { name: e.name, ok: true })
@@ -1344,33 +1707,7 @@ async function runEntry(ctx, e, fd, fpFinal) {
     }
     let keep = false
     try {
-        let zipRel = ''
-        if (e.archive !== null) {
-            zipRel = `archive/${e.archive.name}`
-            await obtain(ctx, e, e.archive, ctx.path.join(work, 'archive', e.archive.name), reasons)
-        }
-        else {
-            let fps = []
-            for (let p of e.parts) {
-                let fp = ctx.path.join(work, 'parts', p.name)
-                await obtain(ctx, e, p, fp, reasons)
-                fps.push(fp)
-            }
-            zipRel = 'assembled.zip'
-            let fpZip = ctx.path.join(work, zipRel)
-            try {
-                await concatFiles(ctx, fps, fpZip)
-            }
-            catch (err) {
-                throw mkErr('E_FS', `fsEnsureBins[${ctx.pkg}] file[${e.name}]: can not assemble the parts: ${errMsg(err)}`, { step: 'assemble', pkg: ctx.pkg, bin: e.name, cause: err })
-            }
-            let h = await hashFile(ctx, fpZip)
-            let a = e.assembled
-            if (h.size !== a.size || h.sha256 !== a.sha256) {
-                let code = h.size !== a.size ? 'E_SIZE_MISMATCH' : 'E_HASH_MISMATCH'
-                throw mkErr(code, `fsEnsureBins[${ctx.pkg}] file[${e.name}]: the assembled archive has sha256 ${h.sha256} and ${h.size} bytes, the manifest expects ${a.sha256} and ${a.size} bytes`, { step: 'assemble', pkg: ctx.pkg, bin: e.name, expected: { sha256: a.sha256, size: a.size }, actual: h })
-            }
-        }
+        let zipRel = await getArchive(ctx, e, e, work, reasons)
         let fpX = await extract(ctx, e, work, zipRel)
         await place(ctx, e, fpX, fd, fpFinal)
         if (ctx.trace) {
@@ -1400,6 +1737,324 @@ async function runEntry(ctx, e, fd, fpFinal) {
 }
 
 
+//checkOne, 快取之檔案組內之一檔是否為期望內容(一般檔案且大小與SHA-256皆符合本次清單); 不刪除(不符之組由runBundle整組重取後替換)
+//本行程內已校驗且檔案識別未變、期望值相同者不重複雜湊; 雜湊後再確認識別未變, 雜湊期間被換掉者重新檢查(至多CACHE_RECHECK次), 仍變動則E_FS
+async function checkOne(ctx, b, f, fp) {
+    let key = keyOf(ctx, fp)
+    let want = `${f.sha256}|${f.size}`
+    let rd = (err) => {
+        return cacheErr(ctx, b, `can not read the cached file "${fp}": ${errMsg(err)}`, err)
+    }
+    for (let n = 0; n &lt;= CACHE_RECHECK; n++) {
+        let st = null
+        try {
+            st = lstatOrNull(ctx, fp)
+        }
+        catch (err) {
+            throw rd(err)
+        }
+        if (st === null || !st.isFile() || st.size !== f.size) {
+            _verified.delete(key)
+            return false
+        }
+        let id = idOf(st)
+        if (_verified.get(key) === `${id}|${want}`) {
+            return true
+        }
+        _verified.delete(key)
+        let r = null
+        try {
+            r = await hashFile(ctx, fp)
+        }
+        catch (err) {
+            throw rd(err)
+        }
+        let st2 = null
+        try {
+            st2 = lstatOrNull(ctx, fp)
+        }
+        catch (err) {
+            throw rd(err)
+        }
+        if (st2 === null || !st2.isFile() || idOf(st2) !== id) {
+            continue //雜湊期間被換掉或刪除: 所雜湊者不一定是現在之檔
+        }
+        if (r.size === f.size &amp;&amp; r.sha256 === f.sha256) {
+            _verified.set(key, `${id}|${want}`)
+            return true
+        }
+        return false
+    }
+    throw cacheErr(ctx, b, `the cached file "${fp}" kept changing while being verified (${CACHE_RECHECK + 1} times), another process may be writing it; retry later`)
+}
+
+
+//checkBundle, 快取之檔案組(規格M6、D4): &lt;快取>/&lt;組識別>須為資料夾(非連結), 組內每檔皆為一般檔案且大小與SHA-256符合本次清單(只校驗清單所列之檔)
+//回傳'hit'(整組可用)、'miss'(組資料夾不存在)或'bad'(存在而不符: 缺檔、竄改、非一般檔案、非資料夾)
+async function checkBundle(ctx, b, dirB) {
+    let st = null
+    try {
+        st = lstatOrNull(ctx, dirB)
+    }
+    catch (err) {
+        throw cacheErr(ctx, b, `can not read the cached bundle "${dirB}": ${errMsg(err)}`, err)
+    }
+    if (st === null) {
+        return 'miss'
+    }
+    if (!st.isDirectory()) {
+        return 'bad'
+    }
+    for (let f of b.files) {
+        let ok = await checkOne(ctx, b, f, ctx.path.join(dirB, ...f.path.split('/')))
+        if (!ok) {
+            return 'bad'
+        }
+    }
+    return 'hit'
+}
+
+
+//publishBundle, 整組原子發布: 已逐檔校驗之暫存組資料夾stage以一次更名成為dirB(&lt;快取>/&lt;組識別>)
+//回傳'placed'(放入)、'replaced'(先移走不符之舊組後放入)或'exists'(目標已是整組校驗通過之組: 他方已發布, 本次之組捨棄)
+//目標不符: 先將之移入本次暫存夾再更名; 所移走者於移走後再校驗, 若其實已是整組可用之組(他方於本次判定之後才放好)即移回並採用之;
+//目標於移走前已消失(他方已移走)、或更名衝突(EEXIST、ENOTEMPTY)後目標已消失即重試更名; 最終失敗(含其後之讀取錯誤)時, 若曾移走舊組且目標仍不存在即盡力移回,
+//移不回(目標已被他方放入或移回失敗)者隨暫存夾刪除(不符之組本應刪除, 規格D4; 所移走之好組移回失敗而本次之組已放入者為同內容之組); 移不走(使用中等)或更名失敗為E_RENAME
+async function publishBundle(ctx, b, stage, dirB, work) {
+    let aside = null //本次最先移走之舊組(於work內)
+    let restore = () => {
+        if (aside !== null) {
+            try {
+                if (lstatOrNull(ctx, dirB) === null) {
+                    ctx.fs.renameSync(aside, dirB)
+                }
+            }
+            catch (e) {}
+        }
+    }
+    let fail = (msg, err) => {
+        restore()
+        return mkErr('E_RENAME', `${labelOf(ctx, b)}: ${msg}: ${errMsg(err)}`, { step: 'place', pkg: ctx.pkg, bin: b.name, cause: err })
+    }
+    let check = async (fp) => {
+        //發布期間之校驗之讀取錯誤: 先移回舊組再拋出
+        try {
+            return await checkBundle(ctx, b, fp)
+        }
+        catch (err) {
+            restore()
+            throw err
+        }
+    }
+    for (let i = 1; i &lt;= 5; i++) {
+        try {
+            ctx.fs.renameSync(stage, dirB)
+            return aside !== null ? 'replaced' : 'placed'
+        }
+        catch (err) {
+            let s = await check(dirB)
+            if (s === 'hit') {
+                return 'exists'
+            }
+            if (s === 'bad') {
+                let old = ctx.path.join(work, `old${i}`)
+                try {
+                    ctx.fs.renameSync(dirB, old)
+                }
+                catch (err2) {
+                    if (codeOf(err2) === 'ENOENT') {
+                        continue //判定之後已被他方移走: 重試更名
+                    }
+                    if ((await check(dirB)) === 'hit') {
+                        return 'exists'
+                    }
+                    if (!codesBusy.includes(codeOf(err2)) || i === 5) {
+                        throw fail(`the cached bundle "${dirB}" does not match the manifest and can not be replaced (close the programs using it, or remove it by hand)`, err2)
+                    }
+                    await sleep(200 * i)
+                    continue
+                }
+                let first = aside === null
+                if (first) {
+                    aside = old //先登記, 其後之失敗皆可移回
+                }
+                //所移走者若已是整組可用之組(他方於本次判定之後才發布): 移回並採用, 不刪他方之組; 其校驗之讀取錯誤視為非好組(續以本次之組發布)
+                let valid = false
+                try {
+                    valid = (await checkBundle(ctx, b, old)) === 'hit'
+                }
+                catch (err3) {}
+                if (valid) {
+                    try {
+                        ctx.fs.renameSync(old, dirB)
+                        if (first) {
+                            aside = null
+                        }
+                        return 'exists'
+                    }
+                    catch (err4) {
+                        if ((await check(dirB)) === 'hit') {
+                            return 'exists'
+                        }
+                    }
+                }
+                continue
+            }
+            if (['EEXIST', 'ENOTEMPTY'].includes(codeOf(err))) {
+                continue //更名衝突後目標已消失(他方已移走): 重試
+            }
+            if (!codesBusy.includes(codeOf(err)) || i === 5) {
+                throw fail(`can not move the bundle to "${dirB}"`, err)
+            }
+            await sleep(200 * i)
+        }
+    }
+    throw fail(`can not move the bundle to "${dirB}"`, new Error('retries exhausted'))
+}
+
+
+//runBundle, 取得一個檔案組(規格M6): ①快取(整組校驗) → ②鏡像之組資料夾&lt;鏡像>/&lt;套件>/&lt;組識別>/&lt;path>(逐檔) → ③其餘之直接來源檔(鏡像&lt;sha256>/&lt;檔名> → GitHub或廠商網址)
+//與壓縮檔之成員(壓縮檔或各分割: 鏡像 → GitHub或廠商網址; 只解出尚缺之成員, 逐檔校驗); 皆於本次專用暫存夾內之組資料夾備妥且逐檔校驗後才整組原子發布(publishBundle)
+//不符之舊組只在發布時被替換: 取得失敗時舊組原樣保留且不回傳; 離線而缺任何一檔時回報全組(missingBundleOf)
+async function runBundle(ctx, b, dirB) {
+    let state = await checkBundle(ctx, b, dirB)
+    if (ctx.trace) {
+        ctx.trace('cache', { name: b.name, hit: state === 'hit' })
+    }
+    if (state === 'hit') {
+        emit(ctx, { step: 'cache', name: b.name, fp: dirB, hit: true })
+        if (ctx.trace) {
+            ctx.trace('ready', { name: b.name })
+        }
+        return dirB
+    }
+    if (state === 'bad') {
+        emit(ctx, { step: 'cache', name: b.name, fp: dirB, hit: false, reason: 'mismatch' })
+    }
+    if (ctx.offline) {
+        noteFresh(ctx, dirB) //離線: 記下尚不存在之組資料夾與快取根, 缺檔reject前把仍為空者清掉
+    }
+    let reasons = []
+    let have = new Set()
+
+    //離線且無鏡像: 無來源可取, 先於建暫存夾即回報缺檔(不建立快取夾)
+    if (ctx.offline &amp;&amp; ctx.mirrorKind === '') {
+        throw missingBundleOf(ctx, b, have, reasons)
+    }
+
+    let work = mkWork(ctx, b)
+    if (ctx.trace) {
+        ctx.trace('work', { name: b.name })
+    }
+    let keep = false
+    try {
+        let stage = ctx.path.join(work, 'b')
+        ctx.fs.mkdirSync(stage)
+        let segs = (f) => {
+            return f.path.split('/')
+        }
+        let dest = (f) => {
+            return ctx.path.join(stage, ...segs(f))
+        }
+
+        //②鏡像之組資料夾(由快取製成之鏡像即為此結構); 本地鏡像無組資料夾時不逐檔查找
+        if (ctx.mirrorKind !== '') {
+            let absent = false
+            if (ctx.mirrorKind === 'dir') {
+                let at = mirrorPathOf(ctx, { rel: [b.id] })
+                try {
+                    absent = lstatOrNull(ctx, at) === null
+                }
+                catch (err) {}
+                if (absent) {
+                    emit(ctx, { step: 'mirror', name: b.name, file: null, from: at, result: 'miss' })
+                    if (ctx.trace) {
+                        ctx.trace('mirror', { name: b.name, file: null, result: 'miss' })
+                    }
+                }
+            }
+            if (!absent) {
+                for (let f of b.files) {
+                    let r = await fromMirror(ctx, b, { name: segs(f).pop(), file: f.path, sha256: f.sha256, size: f.size, rel: [b.id, ...segs(f)] }, dest(f))
+                    if (r === true) {
+                        have.add(f.path)
+                    }
+                    else if (r !== null) {
+                        reasons.push(r)
+                    }
+                }
+            }
+        }
+
+        //③直接來源之檔(repo檔、廠商網址)
+        for (let f of b.files) {
+            if (f.src === null || have.has(f.path)) {
+                continue
+            }
+            if (await obtain(ctx, b, { ...f.src, file: f.path }, dest(f), reasons)) {
+                have.add(f.path)
+            }
+        }
+
+        //③壓縮檔之成員: 只解出尚缺者
+        for (let k = 0; k &lt; b.archives.length; k++) {
+            let a = b.archives[k]
+            let rest = a.members.filter((f) => {
+                return !have.has(f.path)
+            })
+            if (rest.length === 0) {
+                continue
+            }
+            let cwd = ctx.path.join(work, `a${k}`)
+            ctx.fs.mkdirSync(cwd)
+            let zipRel = await getArchive(ctx, b, a, cwd, reasons)
+            if (zipRel === '') {
+                continue //離線取不到
+            }
+            let what = rest.length === 1 ? `"${rest[0].path}"` : `${rest.length} members of ${a.archive !== null ? a.archive.name : `the archive of ${a.parts.length} parts`}`
+            await tarRun(ctx, b, cwd, zipRel, 'x', rest.map((f) => f.path), what)
+            for (let f of rest) {
+                let fpX = ctx.path.join(cwd, 'x', ...segs(f))
+                await checkMember(ctx, b, fpX, f, f.path, f.path)
+                let d = dest(f)
+                ctx.fs.mkdirSync(ctx.path.join(d, '..'), { recursive: true })
+                ctx.fs.renameSync(fpX, d)
+                have.add(f.path)
+            }
+        }
+
+        if (have.size &lt; b.files.length) {
+            throw missingBundleOf(ctx, b, have, reasons) //只有離線會缺(連網時之失敗皆已拋出)
+        }
+        let result = await publishBundle(ctx, b, stage, dirB, work)
+        emit(ctx, { step: 'publish', name: b.name, fp: dirB, result })
+        if (ctx.trace) {
+            ctx.trace('publish', { name: b.name, result })
+        }
+    }
+    catch (err) {
+        keep = isOwnErr(err) &amp;&amp; err.workBusy === true //解壓程式未確認結束: 不刪暫存夾
+        throw err
+    }
+    finally {
+        if (keep) {
+            ctx.left.push({ name: b.name, fp: work, error: 'the extraction program did not exit, the work folder is kept' })
+            if (ctx.trace) {
+                ctx.trace('cleanup', { name: b.name, ok: false })
+            }
+        }
+        else {
+            rmWork(ctx, b, work)
+        }
+    }
+    emit(ctx, { step: 'ready', name: b.name, fp: dirB })
+    if (ctx.trace) {
+        ctx.trace('ready', { name: b.name })
+    }
+    return dirB
+}
+
+
 //normErr, 取得一個檔之失敗一律為帶code、step、pkg、bin之錯誤: 非本函數與下載核心之錯誤(如傳入之fs所拋)轉為E_FS
 function normErr(ctx, e, err) {
     //下載核心之錯誤已由tagErr標註(以身分判定, 不以可被傳入元件偽造之pkg或code判定), 原樣回傳
@@ -1408,7 +2063,7 @@ function normErr(ctx, e, err) {
     }
     if (!isOwnErr(err)) {
         let c = codeOf(err)
-        err = mkErr('E_FS', maskUrl(`fsEnsureBins[${ctx.pkg}] file[${e.name}]: ${isStr(c) ? `${c} ` : ''}${errMsg(err)}`), { step: 'prepare', cause: err })
+        err = mkErr('E_FS', maskUrl(`${labelOf(ctx, e)}: ${isStr(c) ? `${c} ` : ''}${errMsg(err)}`), { step: 'prepare', cause: err })
     }
     if (err.code === 'E_OFFLINE_MISSING') {
         return err //離線缺檔由主流程彙整
@@ -1426,21 +2081,84 @@ function normErr(ctx, e, err) {
 }
 
 
-//ensureEntry, 同程序內同一最終檔、同樣來源設定之併發呼叫共用同一次取得; 回傳{ pm, left }, left為該次取得刪不掉之暫存(共用者共享)
+//normLeft, 刪不掉之暫存之清單正規化: { name(缺者為name0), fp, error(遮蔽帳密) }, 依fp去重(Windows不分大小寫), 已不存在者不列
+function normLeft(ctx, items, name0) {
+    let r = []
+    for (let v of items) {
+        let fp = get(v, 'fp')
+        if (!isStr(fp) || r.some((w) => keyOf(ctx, w.fp) === keyOf(ctx, fp))) {
+            continue
+        }
+        let gone = false
+        try {
+            gone = lstatOrNull(ctx, fp) === null
+        }
+        catch (err) {}
+        if (gone) {
+            continue
+        }
+        let n = get(v, 'name')
+        r.push({ name: isStr(n) ? n : name0, fp, error: maskUrl(get(v, 'error')) })
+    }
+    return r
+}
+
+
+//withLeftovers, 本次呼叫之最終錯誤附上本次各項(含主幹清單副本、重取前之嘗試)刪不掉之暫存; 有新增者另建錯誤物件(共用同一次取得者之錯誤物件為同一物件, 不改寫之)
+function withLeftovers(ctx, err) {
+    try {
+        if (err === null || typeof err !== 'object' || (ctx.leftovers.length === 0 &amp;&amp; !Array.isArray(err.leftovers))) {
+            return err
+        }
+        let cur = Array.isArray(err.leftovers) ? err.leftovers : []
+        let all = normLeft(ctx, [...cur, ...ctx.leftovers], '')
+        //與現有之清單相同(同順序之同路徑)者不另建; 有新增或濾除(已不存在者)即另建
+        let same = all.length === cur.length &amp;&amp; all.every((v, k) => isStr(get(cur[k], 'fp')) &amp;&amp; keyOf(ctx, cur[k].fp) === keyOf(ctx, v.fp))
+        if (same) {
+            return err
+        }
+        let e2 = new Error(err.message)
+        for (let k of Object.getOwnPropertyNames(err)) {
+            if (k !== 'message' &amp;&amp; k !== 'stack') {
+                e2[k] = err[k]
+            }
+        }
+        e2.stack = err.stack
+        e2.leftovers = all
+        if (_own.has(err)) {
+            _own.add(e2)
+        }
+        if (_tagged.has(err)) {
+            _tagged.add(e2)
+        }
+        return e2
+    }
+    catch (e) {
+        return err
+    }
+}
+
+
+//ensureEntry, 同程序內同一最終檔(檔案組為同一組資料夾)、同樣來源設定之併發呼叫共用同一次取得; 回傳{ pm, left }, left為該次取得刪不掉之暫存(共用者共享)
 function ensureEntry(ctx, e) {
-    let fd = ctx.path.join(ctx.cacheRoot, e.final.sha256)
-    let fpFinal = ctx.path.join(fd, e.final.name)
+    let isB = e.kind === 'bundle'
+    let fd = ctx.path.join(ctx.cacheRoot, isB ? e.id : e.final.sha256)
+    let fpFinal = isB ? fd : ctx.path.join(fd, e.final.name)
     let key = keyOf(ctx, fpFinal)
     let left = []
     let run = () => {
         let jctx = Object.create(ctx) //本次取得之脈絡: left為本次取得之leftovers
         jctx.left = left
-        return runEntry(jctx, e, fd, fpFinal)
+        return (isB ? runBundle(jctx, e, fd) : runEntry(jctx, e, fd, fpFinal))
             .catch((err) => {
                 err = normErr(ctx, e, err)
-                if (left.length > 0 &amp;&amp; err.code !== 'E_OFFLINE_MISSING') {
+                if (err.code !== 'E_OFFLINE_MISSING') {
+                    //下載核心之leftovers({ fp, error })與本次取得之left合併為{ name, fp, error }, 依fp去重, 已不存在者(隨暫存夾刪除)不列
                     try {
-                        err.leftovers = [...(Array.isArray(err.leftovers) ? err.leftovers : []), ...left]
+                        let all = [...(Array.isArray(err.leftovers) ? err.leftovers : []), ...left]
+                        if (all.length > 0) {
+                            err.leftovers = normLeft(ctx, all, e.name)
+                        }
                     }
                     catch (e2) {}
                 }
@@ -1544,8 +2262,9 @@ function cancelBody(ctx, why, res, reader) {
 }
 
 
-//fetchText, 取主幹清單之文字, 以manifestMs(同opt.stallMs)為整體上限; 逾時或失敗時取消未讀完之本體, 放棄等待後才落定之回應亦取消其本體
-async function fetchText(ctx, url) {
+//fetchText, 取主幹清單(或鏡像之manifest-last.json、主幹之提交雜湊)之文字, 以manifestMs(同opt.stallMs)為整體上限, 本體上限cap位元組; init為另加之fetch選項(headers、redirect)
+//逾時或失敗時取消未讀完之本體, 放棄等待後才落定之回應亦取消其本體
+async function fetchText(ctx, url, init = {}, cap = MANIFEST_CAP) {
     let ac = new AbortController()
     let timer = null
     let done = false
@@ -1563,7 +2282,7 @@ async function fetchText(ctx, url) {
     try {
         let fn = ctx.fetchFn
         let pmFetch = Promise.resolve().then(() => {
-            return fn(url, { signal: ac.signal })
+            return fn(url, { ...init, signal: ac.signal })
         })
         pmFetch.then((r) => {
             gotRes = r
@@ -1577,7 +2296,7 @@ async function fetchText(ctx, url) {
             cancelBody(ctx, 'status', res, null)
             throw mkErr('E_HTTP', `HTTP ${get(res, 'status')}`, { step: 'manifest', status: get(res, 'status') })
         }
-        return await Promise.race([readCapped(res, MANIFEST_CAP, hold), pmTimeout])
+        return await Promise.race([readCapped(res, cap, hold), pmTimeout])
     }
     catch (err) {
         if (isOwnErr(err)) {
@@ -1599,8 +2318,19 @@ async function fetchText(ctx, url) {
 }
 
 
-//parseManifest, 文字解析並檢核, 須與基準清單同一套件與repo
-function parseManifest(ctx, base, text, src) {
+//normOpt, normManifest之選項: hash(組識別用之SHA-256)與ref(無commit時自有檔之ref, null為主幹分支)
+function normOpt(ctx, ref = null) {
+    return {
+        hash: (t) => {
+            return ctx.createHash('sha256').update(t, 'utf8').digest('hex')
+        },
+        ref,
+    }
+}
+
+
+//parseManifest, 文字解析並檢核, 須與基準清單同一套件與repo; ref為無commit時自有檔之ref(重取主幹清單時為所解析之提交)
+function parseManifest(ctx, base, text, src, ref = null) {
     let raw = null
     try {
         raw = JSON.parse(String(text).replace(/^\uFEFF/, ''))
@@ -1608,7 +2338,7 @@ function parseManifest(ctx, base, text, src) {
     catch (err) {
         throw mkErr('E_MANIFEST', `fsEnsureBins: the manifest${src} is not valid JSON: ${errMsg(err)}`, { step: 'manifest' })
     }
-    let m = normManifest(raw, src)
+    let m = normManifest(raw, src, normOpt(ctx, ref))
     if (m.pkg !== base.pkg || m.repo !== base.repo) {
         throw mkErr('E_MANIFEST', `fsEnsureBins: the manifest${src} is for ${m.pkg}(${m.repo}), not ${base.pkg}(${base.repo})`, { step: 'manifest', field: 'pkg' })
     }
@@ -1656,18 +2386,74 @@ function writeLast(ctx, text) {
 }
 
 
-//resolveManifest, 主幹模式: 取主幹清單(schema檢核且須同pkg與repo), 失敗(含離線、無效)則用基準清單(規格M5、T8)
-//「最近一次成功」之副本存於快取夾, 其可信度同快取夾(能寫入者可同改副本與執行檔), 故不作為退路, 以免使快取之校驗(D4)失效
+//mirrorLast, 主幹模式之退路(規格M5、F5): 鏡像之&lt;鏡像>/&lt;套件>/manifest-last.json(由鏡像管理者寫入, 格式即主幹清單原文; 信任錨為鏡像管理者)
+//同樣schema檢核且須同pkg與repo, 上限同主幹清單(1MB); 離線時http鏡像不追隨重導; 回傳採用之{ m, source: 'mirror-last', url }或null(無、拒用)
+async function mirrorLast(ctx, base) {
+    let at = mirrorPathOf(ctx, { rel: [NAME_LAST] })
+    let note = (result, code, error) => {
+        emit(ctx, { step: 'manifest', source: 'mirror-last', from: maskUrl(at), result, ...(error !== undefined ? { error } : {}) })
+        if (ctx.trace) {
+            ctx.trace('mirrorlast', { result, code })
+        }
+    }
+    try {
+        let text = ''
+        if (ctx.mirrorKind === 'dir') {
+            let st = lstatOrNull(ctx, at)
+            if (st === null) {
+                note('miss', null)
+                return null
+            }
+            if (!st.isFile()) {
+                throw mkErr('E_MANIFEST', `"${at}" is not a file`, { step: 'manifest' })
+            }
+            if (st.size > MANIFEST_CAP) {
+                throw mkErr('E_MANIFEST', `the manifest is larger than ${MANIFEST_CAP} bytes`, { step: 'manifest' })
+            }
+            let buf = ctx.fs.readFileSync(at)
+            if (buf.length > MANIFEST_CAP) {
+                throw mkErr('E_MANIFEST', `the manifest is larger than ${MANIFEST_CAP} bytes`, { step: 'manifest' })
+            }
+            text = new TextDecoder('utf-8', { fatal: true }).decode(buf)
+        }
+        else {
+            text = await fetchText(ctx, at, ctx.offline ? { redirect: 'manual' } : {})
+        }
+        let m = parseManifest(ctx, base, text, ` from the mirror ${maskUrl(at)}`)
+        note('ok', null)
+        return { m, source: 'mirror-last', url: maskUrl(at) }
+    }
+    catch (err) {
+        let status = get(err, 'status')
+        if (codeOf(err) === 'E_HTTP' &amp;&amp; (status === 404 || status === 410)) {
+            note('miss', null)
+            return null
+        }
+        note('rejected', codeStr(err), maskUrl(`${codeOf(err) || ''} ${errMsg(err)}`.trim()))
+        return null
+    }
+}
+
+
+//trunkUrl, 主幹清單之網址: opt.floatingManifestUrl, 否則&lt;RAW>/&lt;repo>/master/&lt;manifestPath>
+function trunkUrl(ctx, base) {
+    return ctx.floatingManifestUrl !== null ? ctx.floatingManifestUrl : `${RAW}/${base.repo}/${BRANCH}/${encRel(base.manifestPath)}`
+}
+
+
+//resolveManifest, 取本次採用之清單, 回傳{ m, source, url }: 釘選模式為傳入之清單(source 'base'); 主幹模式(規格M5、T8)依序為
+//①主幹清單('remote', 離線時不取) → ②取不到(離線、連不到、無效)且有鏡像時鏡像之manifest-last.json('mirror-last') → ③傳入之基準清單('baseline')
+//快取夾之「最近一次成功」副本存於快取夾, 其可信度同快取夾(能寫入者可同改副本與執行檔), 只作紀錄, 不作為退路, 以免使快取之校驗(D4)失效
 async function resolveManifest(ctx, base) {
     if (base.mode !== 'floating') {
-        return base
+        return { m: base, source: 'base', url: null }
     }
     //信任錨為GitHub主幹(規格M5): opt.floatingManifestUrl只能是同一repo之GitHub原始檔網址(可改分支或路徑, 測試以opt.fetch改指本機)
     if (ctx.floatingManifestUrl !== null &amp;&amp; !ctx.floatingManifestUrl.startsWith(`${RAW}/${base.repo}/`)) {
         throw mkErr('E_ARG', `fsEnsureBins[${base.pkg}]: opt.floatingManifestUrl must be under ${RAW}/${base.repo}/ (the trust anchor of the trunk manifest is GitHub), got ${ctx.floatingManifestUrl}`, { step: 'argument' })
     }
     if (!ctx.offline) {
-        let url = ctx.floatingManifestUrl !== null ? ctx.floatingManifestUrl : `${RAW}/${base.repo}/${BRANCH}/${encRel(base.manifestPath)}`
+        let url = trunkUrl(ctx, base)
         try {
             if (ctx.trace) {
                 ctx.trace('trunk', { phase: 'fetch', code: null })
@@ -1679,7 +2465,7 @@ async function resolveManifest(ctx, base) {
             if (ctx.trace) {
                 ctx.trace('trunk', { phase: 'ok', code: null })
             }
-            return m
+            return { m, source: 'remote', url }
         }
         catch (err) {
             emit(ctx, { step: 'manifest', source: 'remote', url, error: maskUrl(`${codeOf(err) || ''} ${errMsg(err)}`.trim()) })
@@ -1688,15 +2474,94 @@ async function resolveManifest(ctx, base) {
             }
         }
     }
+    if (ctx.mirrorKind !== '') {
+        let r = await mirrorLast(ctx, base)
+        if (r !== null) {
+            return r
+        }
+    }
     emit(ctx, { step: 'manifest', source: 'baseline' })
-    return base
+    return { m: base, source: 'baseline', url: null }
+}
+
+
+//refetchTrunk, 主幹模式下取得之檔與清單不符時重取一次主幹清單(規格M5, CDN約5分鐘不同步): raw.githubusercontent.com之快取鍵不含查詢字串且不理會no-cache(2026-10-29實測),
+//故以GitHub API解析主幹之提交(&lt;API>/repos/&lt;repo>/commits/master, Accept: application/vnd.github.sha), 改取該提交之清單, 其無commit之自有檔亦取自該提交(同一版本之清單與檔);
+//opt.floatingManifestUrl在&lt;RAW>/&lt;repo>/master/之下者同樣改取該提交之同一路徑, 其他分支或路徑者重取同一網址(不繞開CDN); 回傳{ m, source: 'remote', url }或null(失敗)
+async function refetchTrunk(ctx, base) {
+    let url = ''
+    try {
+        let ref = null
+        //主幹分支之網址(預設, 或opt.floatingManifestUrl為&lt;RAW>/&lt;repo>/master/之下者; 分支段解碼後判定, 含%6Daster等編碼形式)改取所解析之提交; 其他分支或路徑重取同一網址
+        let cur = trunkUrl(ctx, base)
+        let segs = new URL(cur).pathname.split('/') //['', owner, repo, ref, ...path]
+        let refSeg = ''
+        try {
+            refSeg = decodeURIComponent(segs[3] || '')
+        }
+        catch (err) {}
+        if (refSeg !== BRANCH || segs.length &lt; 5) {
+            url = cur
+        }
+        else {
+            let api = `${API}/repos/${base.repo}/commits/${BRANCH}`
+            let sha = (await fetchText(ctx, api, { headers: { accept: 'application/vnd.github.sha' } }, COMMIT_CAP)).trim()
+            if (!reCommit.test(sha)) {
+                throw mkErr('E_MANIFEST', `${api} did not return a commit: ${sha.slice(0, 80)}`, { step: 'manifest' })
+            }
+            ref = sha
+            url = `${RAW}/${base.repo}/${sha}/${segs.slice(4).join('/')}${new URL(cur).search}` //保留所給網址之查詢字串
+        }
+        let text = await fetchText(ctx, url)
+        let m = parseManifest(ctx, base, text, ` from ${url}`, ref)
+        writeLast(ctx, text)
+        emit(ctx, { step: 'manifest', source: 'remote', url, refetch: true })
+        if (ctx.trace) {
+            ctx.trace('refetch', { phase: 'ok', code: null })
+        }
+        return { m, source: 'remote', url }
+    }
+    catch (err) {
+        emit(ctx, { step: 'manifest', source: 'remote', url, refetch: true, error: maskUrl(`${codeOf(err) || ''} ${errMsg(err)}`.trim()) })
+        if (ctx.trace) {
+            ctx.trace('refetch', { phase: 'fail', code: codeStr(err) })
+        }
+        return null
+    }
 }
 
 
 //offlineErr, 離線缺檔之固定格式錯誤: 缺哪個檔(名稱、sha256、大小)、應放到哪(快取與鏡像之完整路徑)、怎麼準備
 function offlineErr(ctx, missing) {
-    let ls = [`fsEnsureBins[${ctx.pkg}]: offline (W_BIN_OFFLINE or opt.offline), ${missing.length} external executable file(s) are not in the cache or the mirror:`]
+    let ls = [`fsEnsureBins[${ctx.pkg}]: offline (W_BIN_OFFLINE or opt.offline), ${missing.length} external executable file(s) or bundle(s) are not in the cache or the mirror:`]
     for (let m of missing) {
+        if (m.bundle !== null) {
+            //檔案組: 須整組備妥, 列出全組各檔(缺者標missing)
+            let b = m.bundle
+            let nMiss = b.files.filter((f) => f.missing).length
+            ls.push(`- ${m.name}: a bundle of ${b.files.length} files (${m.size} bytes, bundle id ${b.id}), ${nMiss} of them missing; the whole bundle is needed`)
+            ls.push(`  put the whole bundle in: ${m.cachePath} (cache)`)
+            ls.push(`  or in: ${m.mirrorPath !== null ? m.mirrorPath : `&lt;W_BIN_MIRROR>/${ctx.pkg}/${b.id}`} (mirror${m.mirrorPath !== null ? '' : ', not set'})`)
+            ls.push(`  files (path in the bundle: sha256, bytes):`)
+            for (let f of b.files) {
+                ls.push(`    ${f.path}: sha256 ${f.sha256}, ${f.size} bytes${f.missing ? ', missing' : ''}${f.url !== null ? `, source: ${f.url}` : ''}`)
+            }
+            for (let a of b.archives) {
+                if (a.archive !== null) {
+                    ls.push(`  ${a.members} of them are extracted from the archive ${a.archive.name}: sha256 ${a.archive.sha256}, ${a.archive.size} bytes, source: ${a.archive.url}; the archive may instead be put at: ${a.archive.mirrorPath !== null ? a.archive.mirrorPath : `&lt;W_BIN_MIRROR>/${ctx.pkg}/${a.archive.sha256}/${a.archive.name}`} (mirror)`)
+                }
+                else {
+                    ls.push(`  ${a.members} of them are extracted from an archive split into ${a.parts.length} parts, which may instead be put in the mirror:`)
+                    for (let p of a.parts) {
+                        ls.push(`    ${p.mirrorPath !== null ? p.mirrorPath : `&lt;W_BIN_MIRROR>/${ctx.pkg}/${p.sha256}/${p.name}`}: sha256 ${p.sha256}, ${p.size} bytes, source: ${p.url}`)
+                    }
+                }
+            }
+            for (let r of m.reasons) {
+                ls.push(`  note: ${r}`)
+            }
+            continue
+        }
         ls.push(`- ${m.name}: sha256 ${m.sha256}, ${m.size} bytes`)
         ls.push(`  put it at: ${m.cachePath} (cache)`)
         if (m.mirrorPath !== null) {
@@ -1722,7 +2587,7 @@ function offlineErr(ctx, missing) {
             ls.push(`  note: ${r}`)
         }
     }
-    ls.push(`how to prepare: on a computer with internet access, set W_BIN_CACHE to an empty folder and call ensureBins() of this package (or use its functions that need these files), then bring that folder here and set W_BIN_MIRROR to it (the folder holds &lt;package>/&lt;sha256>/&lt;name>); or put each file above at the given path`)
+    ls.push(`how to prepare: on a computer with internet access, set W_BIN_CACHE to an empty folder and call ensureBins() of this package (or use its functions that need these files), then bring that folder here and set W_BIN_MIRROR to it (the folder holds &lt;package>/&lt;sha256>/&lt;name> and &lt;package>/&lt;bundle id>/&lt;path>); or put each file above at the given path`)
     return mkErr('E_OFFLINE_MISSING', maskUrl(ls.join('\n')), { step: 'offline', pkg: ctx.pkg, missing })
 }
 
@@ -1732,13 +2597,13 @@ function offlineErr(ctx, missing) {
  *
  * 規格: 外部執行檔之存放下載校驗與離線(制式規格, opensrcOper之dspec), 本函數為其§6之共用實作; 規則帳本R-BIN-ENSURE-01。各套件只提供清單、呼叫本函數取得路徑、匯出ensureBins(), 不得自寫下載、快取、鏡像、校驗。
  *
- * 清單manifest(schema 1)為物件或JSON檔路徑(相對路徑以opt.pkgRoot為基準): { schema: 1, pkg, mode: 'pinned'|'floating', repo: '&lt;owner>/&lt;repo>', commit(40碼小寫十六進位, 釘選模式有path之檔時必填), manifestPath(主幹模式之清單於repo內之路徑, 預設'bin/manifest.json'), files: [...], note, version }。files之每項: name(檔名, 英數與._+-, 不分大小寫不得重複), 來源為path(repo內之相對路徑, 自有檔, 網址為https://raw.githubusercontent.com/&lt;repo>/&lt;commit或master>/&lt;path>)、url(廠商檔, 須https、不得帶帳密、不得為releases/latest)或parts(分割壓縮檔, 每項{ path或url, sha256, size, name(選填, 預設為path或url之最後一段) }, 須另給assembled: { type: 'zip', sha256, size }為組合後之校驗值), sha256(64碼十六進位)與size(位元組數)為該來源檔之校驗值(parts者不給), extract: { type: 'zip', member(壓縮檔內之相對路徑), sha256, size }為解出之檔之校驗值, note(選填)。不認得之欄位、型別不符、名稱或路徑不合白名單皆為E_MANIFEST。
+ * 清單manifest(schema 1)為物件或JSON檔路徑(相對路徑以opt.pkgRoot為基準): { schema: 1, pkg, mode: 'pinned'|'floating', repo: '&lt;owner>/&lt;repo>', commit(40碼小寫十六進位, 釘選模式有path之檔時必填), manifestPath(主幹模式之清單於repo內之路徑, 預設'bin/manifest.json'), files: [...], note, version }。files之每項: name(檔名, 英數與._+-, 不分大小寫不得重複), 來源為path(repo內之相對路徑, 自有檔, 網址為https://raw.githubusercontent.com/&lt;repo>/&lt;commit或master>/&lt;path>)、url(廠商檔: 須為GitHub版本標籤之資產網址https://github.com/&lt;owner>/&lt;repo>/releases/download/&lt;tag>/&lt;檔>, 或GitHub原始檔網址且ref為40碼小寫提交[https://raw.githubusercontent.com/&lt;owner>/&lt;repo>/&lt;commit>/&lt;path>或https://github.com/&lt;owner>/&lt;repo>/raw/&lt;commit>/&lt;path>]; 須https, 不得帶帳密、查詢字串、片段、埠號, releases/latest、分支、標籤之原始檔網址與其他主機皆拒收, 規格M2、F15; parts、檔案組之url同)或parts(分割壓縮檔, 每項{ path或url, sha256, size, name(選填, 預設為path或url之最後一段) }, 須另給assembled: { type: 'zip', sha256, size }為組合後之校驗值), sha256(64碼十六進位)與size(位元組數)為該來源檔之校驗值(parts者不給), extract: { type: 'zip', member(壓縮檔內之相對路徑), sha256, size }為解出之檔之校驗值, note(選填)。不認得之欄位、型別不符、名稱或路徑不合白名單皆為E_MANIFEST。檔案組(規格M6; 頂層bundles, 有bundles時files可省略): [{ name(組名), dir(選填, 組內repo檔所在之repo資料夾), files: [{ path(組內相對路徑), url(選填, 廠商網址; 未給者為repo檔&lt;dir>/&lt;path>), sha256, size }], archives: [{ path、url或parts＋assembled(壓縮檔之來源, 同files之壓縮檔), sha256, size, extract: { type: 'zip', files: [{ path(壓縮檔內之路徑, 即組內路徑), sha256, size }] }, note }], note }], files與archives至少一個非空; 組內路徑不分大小寫不得重複, 一檔之路徑不得為另一檔之上層資料夾。files之name與檔案組之name共用結果物件之鍵, 不分大小寫不得重複, 且不得為leftovers、manifest、entries、bundles(不分大小寫, 結果物件之不可列舉屬性名)。
  *
- * 取得順序: ①快取: 位置為&lt;快取>/&lt;sha256>/&lt;name>(內容定址, sha256為最終檔之值, 壓縮檔者為extract之值), 快取資料夾為opt.cacheDir, 否則環境變數W_BIN_CACHE時為&lt;W_BIN_CACHE>/&lt;pkg>, 否則&lt;opt.pkgRoot>/bin-cache; 命中亦校驗大小與SHA-256, 本行程內已校驗且檔案識別(裝置、inode、大小、修改與變更時間)未變者不重複雜湊, 不符者刪除(識別未變才刪)後重新取得。②鏡像: opt.mirror, 否則環境變數W_BIN_MIRROR, 為本地資料夾或http(s)基底網址, 結構為&lt;鏡像>/&lt;pkg>/&lt;sha256>/&lt;name>; 壓縮檔者先找解出之最終檔, 再找壓縮檔(&lt;name>為其path或url之最後一段)或各分割檔; 鏡像之檔不符清單即拒用(不留檔)並續找下一來源。③GitHub或廠商網址(離線時不連)。任何來源皆經fsDownloadFileVerify之暫存檔、校驗、原子更名寫入, 不讀到半檔。
+ * 取得順序: ①快取: 位置為&lt;快取>/&lt;sha256>/&lt;name>(內容定址, sha256為最終檔之值, 壓縮檔者為extract之值), 快取資料夾為opt.cacheDir, 否則環境變數W_BIN_CACHE時為&lt;W_BIN_CACHE>/&lt;pkg>, 否則&lt;opt.pkgRoot>/bin-cache; 命中亦校驗大小與SHA-256, 本行程內已校驗且檔案識別(裝置、inode、大小、修改與變更時間)未變者不重複雜湊, 不符者刪除(識別未變才刪)後重新取得。②鏡像: opt.mirror, 否則環境變數W_BIN_MIRROR, 為本地資料夾或http(s)基底網址, 結構為&lt;鏡像>/&lt;pkg>/&lt;sha256>/&lt;name>; 壓縮檔者先找解出之最終檔, 再找壓縮檔(&lt;name>為其path或url之最後一段)或各分割檔; 鏡像之檔不符清單即拒用(不留檔)並續找下一來源。③GitHub或廠商網址(離線時不連)。任何來源皆經fsDownloadFileVerify之暫存檔、校驗、原子更名寫入, 不讀到半檔。檔案組: 位置為&lt;快取>/&lt;組識別>/&lt;path>, 組識別為組內各檔依path排序(字串之碼位順序)後逐行'&lt;sha256>  &lt;path>\n'(同sha256sum之輸出)串接之SHA-256(64碼小寫); 快取命中須組資料夾(非連結)內清單所列之每檔皆為一般檔案且大小與SHA-256符合(只校驗清單所列之檔), 任一檔不符(竄改、缺、非一般檔案)即整組重取: 依序為鏡像之組資料夾&lt;鏡像>/&lt;pkg>/&lt;組識別>/&lt;path>(逐檔; 本地鏡像無組資料夾時略過)、各直接來源檔(鏡像&lt;sha256>/&lt;path之最後一段> → GitHub或廠商網址)、壓縮檔之成員(壓縮檔或各分割: 鏡像 → GitHub或廠商網址, 只解出尚缺之成員, 成員多時分批執行tar, 逐檔校驗), 全部於本次暫存夾內備妥並逐檔校驗後才以一次更名整組原子發布; 不符之舊組於發布時才被替換(移入暫存夾後隨之刪除, 使用中而移不走為E_RENAME), 取得失敗時舊組原樣保留且不回傳; 他方已先發布且整組校驗通過者採用之。
  *
- * 離線: opt.offline, 否則環境變數W_BIN_OFFLINE為1或true時, 只用快取與鏡像, 缺檔時reject E_OFFLINE_MISSING, 訊息列出每個缺檔之名稱、sha256、大小、應放之快取與鏡像完整路徑、來源網址與準備方法, 錯誤物件之missing為[{ name, sha256, size, cachePath, mirrorPath, url, member, archive, parts, reasons }]。
+ * 離線: opt.offline, 否則環境變數W_BIN_OFFLINE為1或true時, 只用快取與鏡像, 缺檔時reject E_OFFLINE_MISSING, 訊息列出每個缺檔之名稱、sha256、大小、應放之快取與鏡像完整路徑、來源網址與準備方法, 錯誤物件之missing為[{ name, sha256, size, cachePath, mirrorPath, url, member, archive, parts, reasons, bundle }](bundle於單一檔為null)。檔案組缺任何一檔時列出全組(須整組備妥): 其項之sha256為null、size為全組總大小、cachePath與mirrorPath為組資料夾, bundle為{ id, files: [{ path, sha256, size, missing(本次未取得), cachePath, mirrorPath, url, archive(壓縮檔之索引或-1) }], archives: [{ archive, parts, assembled, members }] }。
  *
- * 主幹模式(mode為floating): 先取主幹清單(opt.floatingManifestUrl, 否則https://raw.githubusercontent.com/&lt;repo>/master/&lt;manifestPath>, 上限1MB, 時限同opt.stallMs), 同樣檢核schema且須為同一pkg與repo; 成功時其副本存於&lt;快取>/manifest-last.json(紀錄, 不作為校驗依據); 失敗(含離線、無效)時用傳入之基準清單。主幹清單之信任錨為GitHub主幹(規格M5), 故opt.floatingManifestUrl只能是https://raw.githubusercontent.com/&lt;repo>/之下(同一repo, 可改分支或路徑, 否則E_ARG), 套件之ensureBins不應轉傳使用者之值。
+ * 主幹模式(mode為floating): 先取主幹清單(opt.floatingManifestUrl, 否則https://raw.githubusercontent.com/&lt;repo>/master/&lt;manifestPath>, 上限1MB, 時限同opt.stallMs), 同樣檢核schema且須為同一pkg與repo; 成功時其副本存於&lt;快取>/manifest-last.json(紀錄, 不作為校驗依據); 失敗(含離線、無效)時, 有鏡像者先用鏡像之&lt;鏡像>/&lt;pkg>/manifest-last.json(鏡像管理者寫入之主幹清單原文, 信任錨為鏡像管理者; 同樣檢核, 上限1MB, 離線時http鏡像不追隨重導; 規格M5、F5), 無或拒用時用傳入之基準清單; 快取夾之副本只作紀錄, 不作退路(F6)。取得之檔(含解出、組合之檔)與清單不符(E_HASH_MISMATCH、E_SIZE_MISMATCH)、非離線且本次採用之清單亦為主幹模式時重取一次主幹清單再試(規格M5、F7, CDN約5分鐘不同步): raw.githubusercontent.com之CDN快取鍵不含查詢字串且不理會no-cache(2026-10-29實測), 故以https://api.github.com/repos/&lt;repo>/commits/master(Accept: application/vnd.github.sha)解析主幹之提交, 改取該提交之清單, 其無commit之自有檔亦取自該提交; opt.floatingManifestUrl在https://raw.githubusercontent.com/&lt;repo>/master/之下者同樣改取該提交之同一路徑, 其他分支或路徑者重取同一網址(不繞開CDN); 重取失敗時以原錯誤失敗, 重取後仍不符則以其錯誤失敗。主幹清單之信任錨為GitHub主幹(規格M5), 故opt.floatingManifestUrl只能是https://raw.githubusercontent.com/&lt;repo>/之下(同一repo, 可改分支或路徑, 否則E_ARG), 套件之ensureBins不應轉傳使用者之值。
  *
  * 壓縮檔: 於快取夾內本次專用之暫存夾(.work-&lt;pid>-&lt;亂數>)取得壓縮檔(或各分割檔各自校驗後依序組合並校驗assembled), 以tar解出成員(Windows為&lt;SystemRoot>\System32\tar.exe即bsdtar, 其他系統為bsdtar或tar, 須支援zip, 參數皆為暫存夾內之相對路徑, 成員前加--), 解出之檔須為一般檔案且符合extract之大小與SHA-256, 才原子移入快取; 暫存夾於結束時刪除, 刪不掉者(含下載核心刪不掉之暫存檔、主幹清單副本之暫存檔)列於結果之leftovers(不可列舉之屬性; 失敗時為錯誤物件之leftovers; 共用同一次取得者皆得到)。解壓時限同opt.totalMs, 逾時終止後等其結束至多5秒, 仍未結束則保留暫存夾並列入leftovers。解壓失敗為E_EXTRACT。
  *
@@ -1746,9 +2611,11 @@ function offlineErr(ctx, missing) {
  *
  * 併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者); 跨程序以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。
  *
- * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[&lt;pkg>] file[&lt;name>] from &lt;github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名)。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。
+ * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[&lt;pkg>] file[&lt;name>] from &lt;github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[&lt;pkg>] bundle[&lt;組名>] file[&lt;同file之值>])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。
  *
- * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs Github}
+ * 破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。
+ *
+ * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs Github}(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs)
  * @memberOf wsemi
  * @param {Object|String} manifest 輸入清單物件(schema 1), 或其JSON檔路徑(相對路徑以opt.pkgRoot為基準)
  * @param {Object} opt 輸入設定物件
@@ -1758,8 +2625,8 @@ function offlineErr(ctx, missing) {
  * @param {String} [opt.mirror=undefined] 輸入鏡像(本地資料夾或http(s)基底網址), 給了即優先於W_BIN_MIRROR(空字串為不使用鏡像)
  * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE
  * @param {Function} [opt.fetch=null] 輸入fetch函數(測試注入或處理認證), 未給時用全域fetch
- * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之檔案數), 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
+ * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
  * @param {String} [opt.floatingManifestUrl=null] 輸入主幹模式之清單網址, 須在https://raw.githubusercontent.com/&lt;repo>/之下, 預設由清單之repo與manifestPath組成
  * @param {Integer} [opt.maxAttempts=3] 輸入下載之最多嘗試次數(交fsDownloadFileVerify)
  * @param {Number} [opt.retryDelayMs=1000] 輸入下載之重試間隔基數毫秒(交fsDownloadFileVerify)
@@ -1772,7 +2639,7 @@ function offlineErr(ctx, missing) {
  * @param {Function} opt.pipeline 輸入stream/promises之pipeline
  * @param {Function} opt.spawn 輸入child_process之spawn(解壓用)
  * @param {Object} [opt.env={}] 輸入環境變數物件(讀W_BIN_CACHE、W_BIN_MIRROR、W_BIN_OFFLINE、SystemRoot)
- * @returns {Promise} 回傳Promise, resolve回傳物件{ [name]: 絕對路徑 }(另有不可列舉之leftovers: 刪不掉之暫存夾[{ name, fp, error }]), reject回傳帶code之Error
+ * @returns {Promise} 回傳Promise, resolve回傳物件{ [name]: 絕對路徑 }(檔案組為其組資料夾), 另有不可列舉之屬性: leftovers(刪不掉之暫存夾[{ name, fp, error }])、manifest(本次採用之清單, 凍結: { source('base'、'remote'、'mirror-last'、'baseline'), url(主幹清單或鏡像之manifest-last.json之位置, 否則null), refetched(是否重取主幹清單), pkg, mode, repo, commit, manifestPath, version, note })、entries(所取各項之清單項{ [name]: 依清單之形式, sha256為小寫 }, 凍結, 供呼叫端知所用版本)、bundles(各檔案組{ [name]: { dir, id, files: { [組內路徑]: 絕對路徑 } } }, 凍結), reject回傳帶code之Error
  * @example
  * //need test in nodejs
  *
@@ -1788,16 +2655,18 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
     }
     catch (err) {}
 
+    let ctx = null
     try {
-        let ctx = buildCtx(opt)
+        ctx = buildCtx(opt)
         ctx.trace = trace
         return await ensureMain(ctx, manifest, trace)
     }
     catch (err) {
+        let e = ctx !== null ? withLeftovers(ctx, err) : err //任一失敗出口(含清單重取後之名稱選取): 附上本次各項刪不掉之暫存
         if (trace) {
-            trace('settle', { ok: false, code: codeStr(err) })
+            trace('settle', { ok: false, code: codeStr(e) })
         }
-        throw err
+        throw e
     }
 }
 
@@ -1818,14 +2687,87 @@ async function ensureMain(ctx, manifest, trace) {
             throw mkErr('E_MANIFEST', `fsEnsureBins: can not read the manifest file "${fp}": ${errMsg(err)}`, { step: 'manifest', cause: err })
         }
     }
-    let base = normManifest(raw, src)
+    let base = normManifest(raw, src, normOpt(ctx))
     ctx.pkg = base.pkg
     ctx.cacheRoot = ctx.cacheDir !== '' ? ctx.cacheDir : ctx.envCache !== '' ? ctx.path.join(ctx.envCache, base.pkg) : ctx.path.join(ctx.pkgRoot, 'bin-cache')
 
-    //主幹模式取清單
-    let m = await resolveManifest(ctx, base)
+    //主幹模式取清單(主幹 → 鏡像之manifest-last.json → 基準清單)
+    let res = await resolveManifest(ctx, base)
+    let refetched = false
+    let got = null
+    try {
+        got = await ensureAll(ctx, res, trace)
+    }
+    catch (err) {
+        //主幹模式下取得之檔(或解出、組合之檔)與清單不符: 重取一次主幹清單(繞過CDN快取)再試, 仍不符才失敗(規格M5); 離線不重取
+        //以本次採用之清單之模式判定(主幹清單或鏡像之manifest-last.json可為釘選模式之清單, 其不重取)
+        let c = codeOf(err)
+        if (base.mode !== 'floating' || res.m.mode !== 'floating' || ctx.offline || (c !== 'E_HASH_MISMATCH' &amp;&amp; c !== 'E_SIZE_MISMATCH')) {
+            throw err
+        }
+        if (trace) {
+            trace('refetch', { phase: 'start', code: c })
+        }
+        //第一次嘗試之錯誤將被捨棄: 其刪不掉之暫存(下載核心之.part等)併入本次呼叫之leftovers
+        try {
+            for (let v of normLeft(ctx, Array.isArray(err.leftovers) ? err.leftovers : [], '')) {
+                if (!ctx.leftovers.some((w) => keyOf(ctx, w.fp) === keyOf(ctx, v.fp))) {
+                    ctx.leftovers.push(v)
+                }
+            }
+        }
+        catch (e2) {}
+        let r2 = await refetchTrunk(ctx, base)
+        if (r2 === null) {
+            throw err
+        }
+        res = r2
+        refetched = true
+        got = await ensureAll(ctx, res, trace)
+    }
+
+    let r = Object.fromEntries(got.pairs)
+    let mInfo = {
+        source: res.source,
+        url: res.url,
+        refetched,
+        pkg: res.m.pkg,
+        mode: res.m.mode,
+        repo: res.m.repo,
+        commit: res.m.commit,
+        manifestPath: res.m.manifestPath,
+        version: res.m.version,
+        note: res.m.note,
+    }
+    //鍵為呼叫端之名稱與路徑(可為__proto__), 一律以Object.fromEntries建立自有屬性
+    let entries = Object.fromEntries(got.done.map(([e]) => {
+        return [e.name, viewEntry(e)]
+    }))
+    let bundles = Object.fromEntries(got.done.filter(([e]) => e.kind === 'bundle').map(([e, fp]) => {
+        let files = Object.fromEntries(e.files.map((f) => {
+            return [f.path, ctx.path.join(fp, ...f.path.split('/'))]
+        }))
+        return [e.name, { dir: fp, id: e.id, files }]
+    }))
+    //不可列舉之屬性, 不影響{ [name]: 路徑 }之形狀(檔名與組名不得與之同名, 見normManifest): leftovers為刪不掉之暫存夾[{ name, fp, error }];
+    //manifest為本次採用之清單(來源與頂層欄位), entries為所取各項之清單項(依清單之形式), bundles為各檔案組之{ dir, id, files: { [組內路徑]: 絕對路徑 } }
+    Object.defineProperty(r, 'leftovers', { value: normLeft(ctx, ctx.leftovers, ''), enumerable: false }) //回傳時之狀態: 已不存在者不列
+    Object.defineProperty(r, 'manifest', { value: deepFreeze(mInfo), enumerable: false })
+    Object.defineProperty(r, 'entries', { value: deepFreeze(entries), enumerable: false })
+    Object.defineProperty(r, 'bundles', { value: deepFreeze(bundles), enumerable: false })
     if (trace) {
-        trace('manifest', { source: base.mode !== 'floating' ? 'base' : m === base ? 'baseline' : 'remote', files: m.entries.length })
+        trace('settle', { ok: true, code: null })
+    }
+    return r
+}
+
+
+//ensureAll, 依採用之清單res(resolveManifest或refetchTrunk之結果)取得所選各項(opt.names, 預設全部), 回傳{ pairs: [[name, 路徑]], done: [[清單項, 路徑]] }
+//各項依清單順序逐一取得; 離線缺檔者彙整為一個E_OFFLINE_MISSING
+async function ensureAll(ctx, res, trace) {
+    let m = res.m
+    if (trace) {
+        trace('manifest', { source: res.source, files: m.entries.length })
     }
 
     //names
@@ -1847,11 +2789,14 @@ async function ensureMain(ctx, manifest, trace) {
 
     //逐一取得; 離線缺檔者彙整後一併回報
     let pairs = []
+    let done = []
     let missing = []
     for (let e of sel) {
         let j = ensureEntry(ctx, e)
         try {
-            pairs.push([e.name, await j.pm])
+            let fp = await j.pm
+            pairs.push([e.name, fp])
+            done.push([e, fp])
         }
         catch (err) {
             if (isOwnErr(err) &amp;&amp; err.code === 'E_OFFLINE_MISSING' &amp;&amp; err.step === 'offline' &amp;&amp; Array.isArray(err.missing) &amp;&amp; err.pkg === undefined) {
@@ -1865,7 +2810,7 @@ async function ensureMain(ctx, manifest, trace) {
         }
     }
     if (missing.length > 0) {
-        //離線缺檔: 不得留下本次建立之空資料夾(快取根、&lt;sha256>夾), 先清掉其中仍為空者再回報
+        //離線缺檔: 不得留下本次建立之空資料夾(快取根、&lt;sha256>夾、組資料夾), 先清掉其中仍為空者再回報
         let nTidy = tidyFresh(ctx)
         if (trace) {
             trace('tidy', { n: nTidy })
@@ -1876,14 +2821,86 @@ async function ensureMain(ctx, manifest, trace) {
         }
         throw err
     }
-    let r = Object.fromEntries(pairs)
-    if (!Object.prototype.hasOwnProperty.call(r, 'leftovers')) {
-        Object.defineProperty(r, 'leftovers', { value: ctx.leftovers, enumerable: false }) //刪不掉之暫存夾[{ name, fp, error }], 不影響{ [name]: 路徑 }之形狀
+    return { pairs, done }
+}
+
+
+//deepFreeze, 深層凍結(回傳之唯讀資訊)
+function deepFreeze(o) {
+    for (let v of Object.values(o)) {
+        if (v !== null &amp;&amp; typeof v === 'object') {
+            deepFreeze(v)
+        }
     }
-    if (trace) {
-        trace('settle', { ok: true, code: null })
+    return Object.freeze(o)
+}
+
+
+//viewSrc, 清單項之來源(依清單之形式): 自有檔為path, 廠商檔為url
+function viewSrc(o) {
+    return o.path !== null ? { path: o.path, sha256: o.sha256, size: o.size } : { url: o.url, sha256: o.sha256, size: o.size }
+}
+
+
+//viewArchive, 壓縮檔來源(單一壓縮檔或分割＋組合)之清單形式
+function viewArchive(a) {
+    if (a.archive !== null) {
+        return viewSrc(a.archive)
     }
-    return r
+    return {
+        parts: a.parts.map((p) => {
+            return { name: p.name, ...viewSrc(p) }
+        }),
+        assembled: { type: 'zip', sha256: a.assembled.sha256, size: a.assembled.size },
+    }
+}
+
+
+//viewEntry, 本次所取之清單項(依清單之形式, sha256為小寫, 分割檔之name為實際採用者), 供呼叫端記錄版本(如以sha256對照)
+function viewEntry(e) {
+    if (e.kind === 'bundle') {
+        let v = { name: e.name }
+        if (e.dir !== null) {
+            v.dir = e.dir
+        }
+        let direct = e.files.filter((f) => {
+            return f.src !== null
+        })
+        if (direct.length > 0) {
+            v.files = direct.map((f) => {
+                return f.src.path !== null ? { path: f.path, sha256: f.sha256, size: f.size } : { path: f.path, url: f.src.url, sha256: f.sha256, size: f.size }
+            })
+        }
+        if (e.archives.length > 0) {
+            v.archives = e.archives.map((a) => {
+                let x = {
+                    ...viewArchive(a),
+                    extract: {
+                        type: 'zip',
+                        files: a.members.map((f) => {
+                            return { path: f.path, sha256: f.sha256, size: f.size }
+                        }),
+                    },
+                }
+                if (a.note !== null) {
+                    x.note = a.note
+                }
+                return x
+            })
+        }
+        if (e.note !== null) {
+            v.note = e.note
+        }
+        return v
+    }
+    let v = { name: e.name, ...(e.direct !== null ? viewSrc(e.direct) : viewArchive(e)) }
+    if (e.extract !== null) {
+        v.extract = { type: 'zip', member: e.extract.member, sha256: e.extract.sha256, size: e.extract.size }
+    }
+    if (e.note !== null) {
+        v.note = e.note
+    }
+    return v
 }
 
 
@@ -1902,7 +2919,7 @@ export default fsEnsureBinsCore
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Oct 29 2026 05:04:13 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Oct 29 2026 09:42:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

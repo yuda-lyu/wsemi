@@ -53,6 +53,19 @@ describe(`fsGetBinManifestEntry with files`, function() {
         assert.strict.deepStrictEqual(Object.keys(r2), ['name', 'url', 'sha256', 'size'])
     })
 
+    it(`should give an entry without name for opt.name null, for a file of a bundle whose file name has a space (M6)`, async function() {
+        let fp = path.join(fdt, 'First Run')
+        fs.writeFileSync(fp, body)
+        //預設之name(檔名)不合白名單: reject; name: null 則只給組內路徑與校驗值
+        assert.strict.equal(typeof await catchErr(fsGetBinManifestEntry(fp, { path: 'App/First Run' })), 'string')
+        let r = await fsGetBinManifestEntry(fp, { name: null, path: 'App/First Run' })
+        assert.strict.deepStrictEqual(r, { path: 'App/First Run', sha256: sha, size: body.length })
+        let r2 = await fsGetBinManifestEntry(fp, { name: null })
+        assert.strict.deepStrictEqual(r2, { sha256: sha, size: body.length })
+        //組內路徑仍依白名單(不得有..)
+        assert.strict.equal(typeof await catchErr(fsGetBinManifestEntry(fp, { name: null, path: 'App/../First Run' })), 'string')
+    })
+
     it(`should reject a message string for a missing file, a folder or invalid arguments (R-FS-REJECT-01)`, async function() {
         let fpTool = path.join(fdt, 'tool.exe')
         let bads = [
