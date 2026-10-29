@@ -4,6 +4,17 @@
 
 本檔 2026-10-28 新建;此前各功能之現況未逐一盤點入檔,以 `sgud/rule/rulebook.md` 各條目之「站點全集」「測試」「已知限制」「變更紀錄」為準.之後完成一項功能或結束一輪工作時於此增列或更新.
 
+## 診斷輸出與遮罩之共用函數(R-DIAG-01)
+
+- 現況(2026-10-29 diag-run04 結束時;package.json version 1.9.30 之工作樹,未提交未發布): 對外 8 函數 `getDiag`、`getDiagSecrets`、`maskDiagText`、`maskDiagCopy`、`maskDiagErr`、`maskDiagUrl`、`getDiagBriefErr`、`genDiagFunLog` 與內部 `_diagKit.mjs`、`_diagCodes.mjs`、`_diagCases.mjs`(共用語料 171 案)已實作,`src/index.mjs` 已以 gPackageIndex 重產(增 8 個匯出).wsemi 內部 `fsDownloadFileVerifyCore`、`fsEnsureBinsCore` 之 `maskUrl` 已改用共用之 `maskUrlCred`(X65,輸出與原 maskUrl 逐字相同).規格為主控 dspec〈診斷輸出與遮罩〉與設計 diag-run01 §6.
+- 規則: `sgud/rule/rulebook_diag.md` R-DIAG-01(含盤點指令、站點全集、已知限制、本輪自行決定之事項).
+- 測試: `test/getDiag.test.mjs`、`test/getDiagSecrets.test.mjs`、`test/maskDiagText.test.mjs`、`test/maskDiagCopy.test.mjs`、`test/maskDiagErr.test.mjs`、`test/maskDiagUrl.test.mjs`、`test/getDiagBriefErr.test.mjs`、`test/genDiagFunLog.test.mjs`;工具 `test/tools/diagCaseRunner.mjs`(語料執行器,無 util 子行程)、`test/tools/diagSuite.mjs`、`test/tools/diagPrepHookChild.mjs`(E14).語料於有 util 與無 util 兩種環境各跑一次.
+- 驗證: 見主控任務 20261029002013 `agent-out/diag-run02-修正報告.md`(語料逐案結果、變異、UMD 增量、headless Chromium 冒煙、全套 npm test).外審 terra(gpt-6.1-terra/max)35 條、claude-api(claude-opus-5-5/xhigh)25 條已逐條核對並修正.**diag-run03(發布前第三方複核)**: 對修正後之碼再派 terra(31 條:屬實 28、部分屬實 3)並自審 5 條(與 terra 重疊 3),改碼與語料 25 案、規則 R-DIAG-01 第 13 條(秘密清單無法使用即 fail-closed);修前紅/修後綠、變異、UMD 與瀏覽器冒煙、全套見 `agent-out/diag-run03-修正報告.md`.**diag-run04(發布前收斂輪)**: 對 run03 之改動派 terra 首審、修正後複核兩次,並自審;剩餘高/中嚴重度條數、驗證數字與待裁示見 `agent-out/diag-run04-修正報告.md`〈給主控的結論〉.
+- 同輪另補: `fsEnsureBins` 檔案組發布期間「舊組已移走後校驗目標讀取錯誤→移回舊組」之測試(`test/fsEnsureBinsBundle.test.mjs`,wsemi-run10 變異 R01 之缺口,補後擊殺).
+- 已知限制: 見 R-DIAG-01〈刻意與已知限制〉.
+- 待辦(他套件,不在 wsemi): 14 份遷移(設計 §4、§6.10;主控另排).diag-run02 之待裁示 P1～P5、P9 已裁示(維持/接受);P6(`_pmMarkHandled` 跨 realm)另排 wsemi 小輪、P8(codeName)於 mongo 遷移時定.diag-run03 之 Q-A(類別原型上之資料屬性)主控裁示維持已知限制、Q-B(秘密清單無法使用即 fail-closed)接受.diag-run04 之待裁示 Q-C～Q-F 見其報告.
+- 已知缺口(測試,待補): `test/maskDiagText.test.mjs` 之 terra #28 案把「清單含存取器之項」與「樣式之 flags getter」放在同一呼叫,清單先 fail-closed 使樣式路徑未被走到(變異 F28b 存活);getDiag 細節出口之可偵測 Proxy 清單項無語料(變異 N38 存活).
+
 ## 帶期望雜湊之下載 `fsDownloadFileVerify`(R-DL-VERIFY-01)
 
 - 現況: 已發布於 wsemi 1.9.26(2026-10-28,wsemi-run01~run03 實作與修正).`src/fsDownloadFileVerify.mjs`(對外,傳入 Node 內建 fs、crypto、Readable、pipeline)、`src/fsDownloadFileVerifyCore.mjs`(主體,fs/fetch 可由呼叫端傳入);`src/index.mjs` 已含兩個匯出.

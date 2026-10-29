@@ -438,6 +438,7 @@ describe('chkOrmStr 與 cvOrmFind 單一出處(規則5)', function() {
         assert.deepStrictEqual(hits.sort(), [
             '_cvOrmFindCases.mjs', //案例資料(含孤立代理字串值)
             '_cvOrmStrCases.mjs', //案例資料
+            '_diagKit.mjs', //診斷文字截長時切點避開代理對(cutAt, 僅比對碼元範圍), 非檢核(R-DIAG-01, diag-run02)
             '_ormMsgClean.mjs', //訊息鍵名清除(成對代理不拆開), 非檢核
             '_ormPathCut.mjs', //路徑尾端截斷時切點避開代理對(僅比對碼元範圍, 字串良構判定一律委派chkOrmStr; cvOrmFind與chkOrmData共用)
             'chkOrmStr.mjs', //唯一擁有者

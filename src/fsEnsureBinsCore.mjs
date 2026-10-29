@@ -4,6 +4,7 @@ import isfun from './isfun.mjs'
 import getTrace from './getTrace.mjs'
 import optNum from './_optNum.mjs'
 import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
+import { maskUrlCred } from './_diagKit.mjs'
 import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
 
 
@@ -115,9 +116,9 @@ function codeStr(err) {
 }
 
 
-//maskUrl, 文字內之網址若帶帳密(scheme://user:pass@host)則遮蔽之(全部出現處), 同fsDownloadFileVerifyCore之maskUrl
+//maskUrl, 文字內之網址若帶帳密(scheme://user:pass@host)則遮蔽之(全部出現處); 用診斷遮罩共用之網址步驟(R-DIAG-01)
 function maskUrl(s) {
-    return String(s).replace(/([A-Za-z][A-Za-z0-9+.-]*:\/\/)[^/?#\s]*@/g, '$1***@')
+    return maskUrlCred(s)
 }
 
 

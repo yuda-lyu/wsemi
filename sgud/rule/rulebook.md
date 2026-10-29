@@ -22,6 +22,7 @@
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
+| 診斷輸出與遮罩 | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 14.9 |
 | 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 8.3 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 
@@ -30,6 +31,7 @@
 - `破壞性變更紀錄` → `rulebook_breaking.md`(第 39 項起)、`rulebook_breaking_20261021.md`(第 1～38 項): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
 - `R-BIN-ENSURE-01` → `rulebook_bin.md`: R-BIN-ENSURE-01 外部執行檔之取得一律經 `fsEnsureBins`(清單校驗、快取→鏡像→GitHub、離線)
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
+- `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
 - `R-DL-VERIFY-01` → `rulebook_dl.md`: R-DL-VERIFY-01 下載執行檔或二進位資產一律經 `fsDownloadFileVerify` 驗證 SHA-256(與大小)
 - `R-ENV-01` → `rulebook_data.md`: R-ENV-01 環境判斷函數(回布林)於非目標環境回 false、不拋錯
 - `R-EXCEL-READ-01` → `rulebook_data.md`: R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串

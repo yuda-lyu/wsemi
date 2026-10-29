@@ -6,6 +6,7 @@ import isbol from './isbol.mjs'
 import optNum from './_optNum.mjs'
 import cst from './_const.mjs'
 import getTrace from './getTrace.mjs'
+import { maskUrlCred } from './_diagKit.mjs'
 
 
 //同程序內進行中之下載, 鍵為正式檔之絕對路徑(Windows不分大小寫), 值為進行中工作之陣列(同一檔可有期望值或選項不同之多個工作)
@@ -95,9 +96,9 @@ function codeOf(err) {
 }
 
 
-//maskUrl, 文字內之網址若帶帳密(scheme://user:pass@host)則遮蔽之(全部出現處, 前面可有空白等其他文字), 用於錯誤訊息與錯誤物件, 不讓帳密落入log
+//maskUrl, 文字內之網址若帶帳密(scheme://user:pass@host)則遮蔽之(全部出現處, 前面可有空白等其他文字), 用於錯誤訊息與錯誤物件, 不讓帳密落入log; 用診斷遮罩共用之網址步驟(R-DIAG-01)
 function maskUrl(s) {
-    return String(s).replace(/([A-Za-z][A-Za-z0-9+.-]*:\/\/)[^/?#\s]*@/g, '$1***@')
+    return maskUrlCred(s)
 }
 
 

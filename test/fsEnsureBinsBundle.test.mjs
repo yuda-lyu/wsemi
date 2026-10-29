@@ -625,6 +625,42 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         sameTree(r.conn, connFiles)
     })
 
+    it(`should put the old bundle back when reading the bundle folder fails while publishing after moving the old one away (M6: the old bundle is kept on failure; run10 mutation R01)`, async function() {
+        //規格M6/D4: 發布失敗時舊組保留; publishBundle之check於讀取錯誤時先移回舊組再拋出(run10變異R01存活之測試缺口)
+        let root = fx('b-restore-read')
+        let r1 = await ens(mf({ bundles: [bConn()] }), { pkgRoot: root })
+        fs.writeFileSync(path.join(r1.conn, 'conn.exe'), exeAbad)
+        fs.writeFileSync(path.join(r1.conn, 'sentinel.txt'), 'keep')
+        let nStage = 0
+        let armed = false
+        let thrown = false
+        let f = fsHook((a, b, real) => {
+            //第2次以暫存組更名(舊組已移走之後)失敗, 並使其後對組位置之下一次讀取(發布期間之校驗)失敗一次
+            if (isStage(a) && b === r1.conn && ++nStage === 2) {
+                armed = true
+                let err = new Error(`EIO: i/o error, rename '${a}'`)
+                err.code = 'EIO'
+                throw err
+            }
+            return real()
+        })
+        f.lstatSync = (p, o) => {
+            if (armed && !thrown && path.resolve(String(p)) === r1.conn) {
+                thrown = true
+                let err = new Error(`EACCES: permission denied, lstat '${p}'`)
+                err.code = 'EACCES'
+                throw err
+            }
+            return fs.lstatSync(p, o)
+        }
+        let e = await catchErr(ens(mf({ bundles: [bConn()] }), { pkgRoot: root, fs: f }))
+        assert.strict.deepStrictEqual([thrown, e && e.code, e && e.step], [true, 'E_FS', 'cache'])
+        //舊組移回原位(含其中之其他檔), 未隨暫存夾刪除
+        assert.strict.equal(fs.readFileSync(path.join(r1.conn, 'conn.exe')).equals(exeAbad), true)
+        assert.strict.equal(fs.readFileSync(path.join(r1.conn, 'sentinel.txt'), 'utf8'), 'keep')
+        assert.strict.deepStrictEqual(leftovers(root), [])
+    })
+
     it(`should go on publishing when verifying the moved-away bundle fails to read (M6)`, async function() {
         let root = fx('b-check-throws')
         let r1 = await ens(mf({ bundles: [bConn()] }), { pkgRoot: root })
