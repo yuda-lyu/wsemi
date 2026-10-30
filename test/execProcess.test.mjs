@@ -852,3 +852,95 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
     })
 
 })
+
+
+//opt.cwd(JSDoc execProcess之opt.cwd; 同execCli, R-EXEC-FAIL-01規則7): 子進程之工作目錄, 三種模式皆生效; 非非空字串為本進程之工作目錄; 不存在或非資料夾時reject'spawn[ENOENT]:\ncwd is not an existing folder: <cwd>'
+//夾具建於test/_tmp/execProcess-cwd/(含空白與中文之資料夾、檔案、指向資料夾之junction), after刪除
+describe(`execProcess opt.cwd`, function() {
+
+    let fd = path.resolve('./test/_tmp/execProcess-cwd')
+    let fdSub = path.join(fd, 'd 中文 x')
+    let fpFile = path.join(fd, 'f.txt')
+    let fdLink = path.join(fd, 'lnk')
+    let fdMissing = path.join(fd, 'no-such-dir')
+    let modes = ['spawn', 'exec', 'execFile']
+    let js = 'process.stdout.write(process.cwd())'
+
+    before(function() {
+        fs.rmSync(fd, { recursive: true, force: true })
+        fs.mkdirSync(fdSub, { recursive: true })
+        fs.writeFileSync(fpFile, 'x')
+        fs.symlinkSync(fdSub, fdLink, 'junction')
+    })
+
+    after(function() {
+        //先拆連結(只移除連結本身, 不跟進目標)再刪夾具
+        try {
+            fs.unlinkSync(fdLink)
+        }
+        catch (err) {}
+        fs.rmSync(fd, { recursive: true, force: true })
+    })
+
+    //run, 以node印出子進程之工作目錄; exec模式經shell, node路徑與腳本須自行加引號
+    let run = (mode, opt) => {
+        let prog = mode === 'exec' ? `"${process.execPath}"` : process.execPath
+        let args = mode === 'exec' ? ['-e', `"${js}"`] : ['-e', js]
+        let ev = []
+        return execProcess(prog, args, { mode, ...opt, onTrace: (e) => ev.push(e) }).then((v) => ({ s: 'resolve', v, ev }), (v) => ({ s: 'reject', v, ev }))
+    }
+
+    it(`should run the child in the given folder for all three modes (folder name with spaces and non-ASCII, relative path, junction)`, async function() {
+        let rs = {}
+        for (let mode of modes) {
+            rs[mode] = [(await run(mode, { cwd: fdSub })).v, (await run(mode, { cwd: path.relative(process.cwd(), fdSub) })).v, (await run(mode, { cwd: fdLink })).s]
+        }
+        //「子進程工作目錄」: 子進程之process.cwd()即所給之資料夾(相對路徑以本進程之工作目錄為基準); junction指向既存資料夾者為有效之cwd
+        let want = [fdSub, fdSub, 'resolve']
+        assert.strict.deepStrictEqual(rs, { spawn: want, exec: want, execFile: want })
+    })
+
+    it(`should use the current working directory when cwd is not a non-empty string`, async function() {
+        let rs = {}
+        for (let mode of modes) {
+            rs[mode] = []
+            for (let cwd of [undefined, null, '', 123, {}]) {
+                rs[mode].push((await run(mode, { cwd })).v)
+            }
+        }
+        //「預設process.cwd()，非非空字串時亦用預設」
+        let want = Array(5).fill(process.cwd())
+        assert.strict.deepStrictEqual(rs, { spawn: want, exec: want, execFile: want })
+    })
+
+    it(`should reject 'spawn[ENOENT]:\\ncwd is not an existing folder: <cwd>' when cwd is missing or is a file, with settle reason 'spawn'`, async function() {
+        let rs = {}
+        for (let mode of modes) {
+            rs[mode] = []
+            for (let cwd of [fdMissing, fpFile]) {
+                let r = await run(mode, { cwd })
+                let settle = r.ev.filter((e) => e.type === 'settle')
+                rs[mode].push([r.s, r.v, settle.map((e) => `${e.ok}:${e.reason}`)])
+            }
+        }
+        //R-EXEC-FAIL-01規則7: 訊息改指cwd(碼仍為ENOENT); JSDoc: 未能啟動子程序, settle之reason為'spawn'(每次呼叫至多一個settle)
+        let want = [
+            ['reject', `spawn[ENOENT]:\ncwd is not an existing folder: ${fdMissing}`, ['false:spawn']],
+            ['reject', `spawn[ENOENT]:\ncwd is not an existing folder: ${fpFile}`, ['false:spawn']],
+        ]
+        assert.strict.deepStrictEqual(rs, { spawn: want, exec: want, execFile: want })
+    })
+
+    it(`should reject 'opt is not readable' when the cwd getter throws, without throwing synchronously`, async function() {
+        let opt = {}
+        Object.defineProperty(opt, 'cwd', {
+            get() {
+                throw new Error('cwd getter boom')
+            },
+        })
+        let r = await execProcess(process.execPath, ['-e', js], opt).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+        //R-EXEC-FAIL-01規則13: opt之選項值不可讀時reject 'opt is not readable: <訊息>'
+        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'opt is not readable: cwd getter boom' })
+    })
+
+})

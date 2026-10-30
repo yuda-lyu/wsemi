@@ -3,14 +3,21 @@
 //  1.--burners N: 起N個CPU壓力行程與測試行程爭用CPU(建議N為邏輯核數), 近於多套件同時測試之實況, 延遲之大小不可控
 //  2.--lag L:P: 於各測試行程每P毫秒阻塞事件迴圈L毫秒(見loadPreload.mjs), 延遲可重現
 //  各測試行程之事件迴圈延遲另以monitorEventLoopDelay量測, 列於摘要作為負載之證據
-//用法: node test/tools/loadTrial.mjs --out <資料夾> [--runs K] [--burners N] [--lag L:P] [--burn-max 秒] [--cwd 資料夾] -- <mocha參數...>
+//用法: node test/tools/loadTrial.mjs --out <資料夾> [--runs K] [--burners N] [--lag L:P] [--burn-max 秒] [--cwd 資料夾] [--hang-sec 秒] [--run-max 秒] [--diag] [--guard 腳本] -- <mocha參數...>
 //  --cwd: 於他處(如git archive解出之舊版副本)執行mocha, mocha取自本檔往上之node_modules
+//  --hang-sec(別名--exit-grace): mocha寫出json報告後逾此秒數(預設30)仍未自行結束者, 判為「測完不退出」(失敗), 終止其行程樹(不以--exit掩蓋)
+//  --run-max: 單次mocha執行上限秒數(預設900, 0為不限), 逾時同樣判為不退出並終止其行程樹
+//  --diag: 各測試行程每秒記錄仍撐住行程之資源及其建立堆疊(diag<k>/diag-<pid>.json); 該次無失敗且自行結束者刪除, 不退出或有失敗者保留供定位
+//          (測試於偵測到異常當下可呼叫globalThis.__ltDiagDump(tag)另存當下快照)
+//  --guard: 每輪執行前先以node執行此腳本(乾淨環境: 不帶NODE_OPTIONS, 故不受--lag影響; 路徑以本行程之工作目錄為基準, 上限600秒), 離開碼非0即停止其後各輪、記入summary.guardFailed並以離開碼3結束;
+//           用於會對真實桌面盲目送出輸入之測試(前景被他物遮蔽時不得續跑)等, 每輪前須確認之前提
 //  例: node test/tools/loadTrial.mjs --out test/_tmp/loadTrial --runs 5 --burners 8 -- --no-parallel test/domDetect.test.mjs --timeout 180000
-//  各輪之json報告、輸出與延遲量測存於<資料夾>, 摘要存<資料夾>/summary.json; 離開碼: 各輪皆無失敗為0, 否則1
+//  各輪之json報告、輸出與延遲量測存於<資料夾>, 摘要存<資料夾>/summary.json; 離開碼: 各輪皆無失敗且皆自行結束為0, guard失敗為3, 否則1
 //  壓力行程於結束(含例外)時終止並以PID回驗, 另各自於父行程消失或逾--burn-max秒時自行結束, 不殘留
+//  各套件自wsemi複製本檔與loadPreload.mjs(兩檔須同時複製: 環境變數WSEMI_LT_*為兩檔之間之約定), 不各自修改; 需擴充者回報wsemi(單一版本)
 import fs from 'fs'
 import path from 'path'
-import { spawn } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import { fileURLToPath, pathToFileURL } from 'url'
 
 
@@ -52,15 +59,36 @@ function isAlive(pid) {
 }
 
 
+//killTree, 終止行程樹(Windows以taskkill /T; 其餘平台只終止mocha主行程)
+function killTree(pid) {
+    if (process.platform === 'win32') {
+        spawnSync('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, stdio: 'ignore' })
+    }
+    else {
+        try {
+            process.kill(pid, 'SIGKILL')
+        }
+        catch (err) {
+            //已結束
+        }
+    }
+}
+
+
 function parseArgs(argv) {
     let i = argv.indexOf('--')
     let own = i >= 0 ? argv.slice(0, i) : argv
     let mochaArgs = i >= 0 ? argv.slice(i + 1) : []
-    let opt = { runs: 1, burners: 0, lag: '', burnMax: 3600, out: '', cwd: '' }
+    let opt = { runs: 1, burners: 0, lag: '', burnMax: 3600, out: '', cwd: '', hangSec: 30, runMax: 900, diag: false, guard: '' }
     for (let k = 0; k < own.length; k += 2) {
         let key = own[k]
         let v = own[k + 1]
-        if (key === '--runs') {
+        if (key === '--diag') {
+            //旗標, 無值
+            opt.diag = true
+            k -= 1
+        }
+        else if (key === '--runs') {
             opt.runs = Number(v)
         }
         else if (key === '--burners') {
@@ -78,6 +106,15 @@ function parseArgs(argv) {
         else if (key === '--cwd') {
             opt.cwd = v
         }
+        else if (key === '--hang-sec' || key === '--exit-grace') {
+            opt.hangSec = Number(v)
+        }
+        else if (key === '--run-max') {
+            opt.runMax = Number(v)
+        }
+        else if (key === '--guard') {
+            opt.guard = v
+        }
         else {
             throw new Error(`unknown option ${key}`)
         }
@@ -87,6 +124,15 @@ function parseArgs(argv) {
     }
     if (opt.lag && !/^\d+:\d+$/.test(opt.lag)) {
         throw new Error(`invalid --lag ${opt.lag}, use L:P`)
+    }
+    if (!(opt.hangSec > 0)) {
+        throw new Error('invalid --hang-sec, use a positive number of seconds')
+    }
+    if (!(opt.runMax >= 0)) {
+        throw new Error('invalid --run-max, use a number of seconds (0 for no limit)')
+    }
+    if (opt.guard === undefined || (opt.guard !== '' && typeof opt.guard !== 'string')) {
+        throw new Error('--guard requires a script path')
     }
     if (mochaArgs.length === 0) {
         throw new Error('mocha arguments are required after --')
@@ -112,19 +158,61 @@ function findMocha() {
 }
 
 
-function runMocha(args, env, fnLog, cwd) {
+//runMocha, 執行一次mocha; json報告(fnJson)寫出後逾hangSec秒仍未自行結束者判為「測完不退出」, 終止其行程樹並回傳hung(原因字串)與noExit=true(不以--exit掩蓋; 此時行程所留資源見diag快照);
+//runMax(秒, 0為不限)為整次執行上限, 逾時同樣判為不退出; 報告之寫出時刻取其檔案之修改時間
+function runMocha(args, env, fnLog, cwd, fnJson, hangSec, runMax) {
     return new Promise((resolve) => {
         let fd = fs.openSync(fnLog, 'w')
         let cp = spawn(process.execPath, args, { cwd, env, windowsHide: true, stdio: ['ignore', fd, fd] })
+        let hung = ''
+        let t0 = Date.now()
+        let watch = setInterval(() => {
+            if (hung) {
+                return
+            }
+            let tReport = 0
+            try {
+                tReport = fs.statSync(fnJson).mtimeMs
+            }
+            catch (err) {
+                tReport = 0 //尚未寫出
+            }
+            if (tReport && Date.now() - tReport > hangSec * 1000) {
+                hung = `mocha wrote its report but did not exit within ${hangSec}s`
+            }
+            else if (runMax > 0 && Date.now() - t0 > runMax * 1000) {
+                hung = `mocha did not finish within ${runMax}s`
+            }
+            if (hung) {
+                killTree(cp.pid)
+            }
+        }, 500)
         cp.on('error', (err) => {
+            clearInterval(watch)
             fs.closeSync(fd)
-            resolve({ code: -1, error: err.message })
+            resolve({ code: -1, error: err.message, hung, noExit: hung !== '' })
         })
         cp.on('close', (code, signal) => {
+            clearInterval(watch)
             fs.closeSync(fd)
-            resolve({ code, signal })
+            resolve({ code, signal, hung, noExit: hung !== '', pid: cp.pid })
         })
     })
+}
+
+
+//runGuard, 每輪前之前提確認: 以node執行guard腳本(不帶NODE_OPTIONS), 輸出寫guard<k>.log, 回傳{ code, signal }
+function runGuard(fnGuard, fnLog) {
+    let fdLog = fs.openSync(fnLog, 'w')
+    try {
+        let genv = { ...process.env }
+        delete genv.NODE_OPTIONS
+        let g = spawnSync(process.execPath, [path.resolve(fnGuard)], { env: genv, windowsHide: true, stdio: ['ignore', fdLog, fdLog], timeout: 600000 })
+        return { code: g.status, signal: g.signal }
+    }
+    finally {
+        fs.closeSync(fdLog)
+    }
 }
 
 
@@ -184,10 +272,21 @@ async function main() {
     let runs = []
     let byCase = new Map()
     let burnersAfter = []
+    let guardFailed = null
     try {
         for (let k = 1; k <= opt.runs; k++) {
+            if (opt.guard) {
+                let g = runGuard(opt.guard, path.join(out, `guard${k}.log`))
+                console.log(`guard${k}: code=${g.code}`)
+                if (g.code !== 0) {
+                    guardFailed = { run: k, code: g.code, signal: g.signal }
+                    console.log(`GUARD FAILED before run${k}: stop the remaining runs`)
+                    break
+                }
+            }
             let fnJson = path.join(out, `run${k}.json`)
             let dirProbe = path.join(out, `probe${k}`)
+            let dirDiag = path.join(out, `diag${k}`)
             let env = { ...process.env }
             env.NODE_OPTIONS = `${env.NODE_OPTIONS || ''} --import=${pathToFileURL(fnPreload).href}`.trim()
             env.WSEMI_LT_PROBE = dirProbe
@@ -197,13 +296,19 @@ async function main() {
             else {
                 delete env.WSEMI_LT_LAG
             }
+            if (opt.diag) {
+                env.WSEMI_LT_DIAG = dirDiag
+            }
+            else {
+                delete env.WSEMI_LT_DIAG
+            }
             if (fs.existsSync(fnJson)) {
                 fs.unlinkSync(fnJson)
             }
             let t0 = Date.now()
-            let rc = await runMocha([fnMocha, ...mochaArgs, '--reporter', 'json', '--reporter-option', `output=${fnJson}`], env, path.join(out, `run${k}.log`), cwd)
+            let rc = await runMocha([fnMocha, ...mochaArgs, '--reporter', 'json', '--reporter-option', `output=${fnJson}`], env, path.join(out, `run${k}.log`), cwd, fnJson, opt.hangSec, opt.runMax)
             let ms = Date.now() - t0
-            let r = { run: k, code: rc.code, ms, passes: null, failures: null, pending: null, failed: [] }
+            let r = { run: k, code: rc.code, pid: rc.pid === undefined ? null : rc.pid, ms, passes: null, failures: null, pending: null, failed: [], hung: rc.hung, noExit: rc.noExit, exitAfterReportMs: null }
             if (fs.existsSync(fnJson)) {
                 let j = JSON.parse(fs.readFileSync(fnJson, 'utf8'))
                 r.passes = j.stats.passes
@@ -214,6 +319,8 @@ async function main() {
                     r.failed.push({ key, msg: String((f.err && f.err.message) || '').split('\n')[0].slice(0, 200) })
                     byCase.set(key, (byCase.get(key) || 0) + 1)
                 }
+                //json報告寫出至行程結束之毫秒數(自行退出者應近於0)
+                r.exitAfterReportMs = Date.now() - fs.statSync(fnJson).mtimeMs
             }
             else {
                 r.failed.push({ key: '(no json report)', msg: `mocha exited ${rc.code}` })
@@ -227,8 +334,18 @@ async function main() {
                 p99Max: probes.reduce((m, p) => Math.max(m, p.p99), 0),
                 max: probes.reduce((m, p) => Math.max(m, p.max), 0),
             }
+            if (r.hung) {
+                //測完不退出: 列為失敗, 並保留diag快照(僅--diag時有)作為證據
+                let key = '(mocha did not exit)'
+                r.failed.push({ key, msg: r.hung })
+                byCase.set(key, (byCase.get(key) || 0) + 1)
+            }
+            else if (opt.diag && r.failures === 0 && r.code === 0 && fs.existsSync(dirDiag)) {
+                //行程正常結束且無失敗者, 快照無保留價值; 有失敗者保留(測試於異常當下可呼叫globalThis.__ltDiagDump存當下快照)
+                fs.rmSync(dirDiag, { recursive: true, force: true })
+            }
             runs.push(r)
-            console.log(`run${k}: code=${r.code} passes=${r.passes} failures=${r.failures} pending=${r.pending} ms=${ms} lag(p50Max=${r.lag.p50Max}ms, p99Max=${r.lag.p99Max}ms, max=${r.lag.max}ms, procs=${r.lag.procs})`)
+            console.log(`run${k}: code=${r.code}${r.hung ? ' HUNG' : ''} passes=${r.passes} failures=${r.failures} pending=${r.pending} ms=${ms} exitAfterReportMs=${r.exitAfterReportMs} lag(p50Max=${r.lag.p50Max}ms, p99Max=${r.lag.p99Max}ms, max=${r.lag.max}ms, procs=${r.lag.procs})`)
             for (let f of r.failed) {
                 console.log(`  FAIL ${f.key}: ${f.msg}`)
             }
@@ -243,6 +360,7 @@ async function main() {
         mochaArgs,
         runs,
         failRate: Array.from(byCase.entries()).map(([key, n]) => ({ key, n, of: opt.runs })),
+        guardFailed,
         burnersAfter,
     }
     fs.writeFileSync(path.join(out, 'summary.json'), JSON.stringify(summary, null, 2))
@@ -253,8 +371,8 @@ async function main() {
     if (pids.length > 0) {
         console.log(`burners after: ${burnersAfter.map((b) => `${b.pid}:${b.alive ? 'ALIVE' : 'gone'}`).join(',')}`)
     }
-    let ok = runs.every((r) => r.failures === 0 && r.code === 0) && burnersAfter.every((b) => !b.alive)
-    process.exitCode = ok ? 0 : 1
+    let ok = runs.every((r) => r.failures === 0 && r.code === 0 && !r.hung) && burnersAfter.every((b) => !b.alive)
+    process.exitCode = guardFailed ? 3 : (ok ? 0 : 1)
 }
 
 

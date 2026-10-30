@@ -13,7 +13,7 @@ import getTrace from './getTrace.mjs'
  * Promise的map，可設定同時處理數量
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
- * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection。rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
+ * fn之回傳亦可為一般值(視為resolve)，fn同步拋錯視為reject；不給fn時rs之元素亦可為一般值，皆同pmSeries。任一者reject即reject並停止派發後續任務；不給fn時先行產生之Promise於進入時即被觀察，未派發者之reject亦不成為未處理之rejection(原生Promise以品牌判定，含跨realm〔vm新context、iframe〕與原型為null者；原型為null者無then而非thenable，依原值交出於結果中)。rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
  * rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, 鍵字串)；名為length之鍵與其他鍵同為一般鍵，不因其值為非負整數而改成依索引迭代。
  * 若先行產生promise則takeLimit設定會無效，因promise已先行初始化啟動。
  * 等同於Bluebird的Promise.map，而concurrency為takeLimit。

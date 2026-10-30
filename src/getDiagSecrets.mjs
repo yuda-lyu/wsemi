@@ -364,7 +364,9 @@ let fromUrl = (u, add) => {
  * 查詢參數名稱含pass/pwd/secret/token/credential/user/api-key者之值(原樣、+視為空白、寬鬆解碼、以;分段；值為true/false/null不列)、查詢之帳號與密碼(各取首個)之並列形式與其base64、authMechanismProperties內之秘密屬性值、WHATWG URL解析所得之帳密(有密碼者才列並列形式)；
  * 帳號只列detail(含畸形網址片段等於帳號或其解碼形者)；帳號之後為空密碼(帳號:@)者不列並列形式
  *
- * username、password(單值或陣列，各項皆列): 帳號、密碼、帳號:密碼與其base64(依原索引成對〔空洞與轉不成字串之項不使其後之項錯位〕，一方只有一項者與另一方之每一項成對；密碼為空者不列)；paths: 儲存路徑(由套件以path模組算好之原樣、正規化、絕對、暫存檔路徑)，本函數只加正反斜線、磁碟機代號大小寫、UNC兩式等字串變體，全為路徑符號者不收；values: 原樣(如權杖)
+ * username、password(單值或陣列，各項皆列): 帳號、密碼、帳號:密碼與其base64(依原索引成對〔空洞與轉不成字串之項不使其後之項錯位〕，一方只有一項者與另一方之每一項成對；密碼為空者不列)；paths: 儲存路徑(由套件以path模組算好之原樣、正規化、絕對、暫存檔路徑)，本函數只加正反斜線、磁碟機代號大小寫、UNC兩式等字串變體，全為路徑符號者不收；values: 原樣(如權杖)；
+ * conns: 連線位址(ORM等之設定可為連線字串或檔案型資料庫之位置者)，各項依其字串(包裝字串解包)分類：含'://'或'@'者為連線字串，同urls(帳密為憑證，兩份清單皆列)，其餘為儲存路徑，同paths(只列detail，對外錯誤值不遮儲存路徑，dspec Q3)；
+ * 與套件自行分類後分別給urls、paths之結果相同(取代各套件各寫一份之分類，如w-serv-orm之getUrlSecrets)
  *
  * 每個秘密另取各種輸出形式：百分比解碼(嚴格與寬鬆)、單引號加倍、JSON跳脫、反斜線跳脫、util.inspect跳脫、URL編碼(RFC 3986嚴格、表單編碼)、空白為%20
  *
@@ -384,6 +386,7 @@ let fromUrl = (u, add) => {
  * @param {String|Number|Array} [src.password] 輸入密碼或其陣列
  * @param {String|Array} [src.paths] 輸入儲存路徑或其陣列
  * @param {String|Array} [src.values] 輸入其他秘密值(如權杖)或其陣列
+ * @param {String|Array} [src.conns] 輸入連線位址(連線字串或檔案型資料庫之位置，依內容自動分類為urls或paths)或其陣列
  * @returns {Object} 回傳秘密清單物件{ detail, reject }，兩者皆為凍結之字串陣列(長者在前；來源無法讀取時最末另含失敗標記字串)
  * @example
  *
@@ -395,6 +398,10 @@ let fromUrl = (u, add) => {
  *
  * let ss2 = getDiagSecrets({ password: 12345, paths: ['C:\\data\\db01'] })
  * console.log(ss2.detail.includes('12345'), ss2.detail.includes('c:\\data\\db01'), ss2.reject.includes('C:\\data\\db01'))
+ * // => true true false
+ *
+ * let ss3 = getDiagSecrets({ conns: ['mongodb://u1:pw5678@h:27017/db', 'C:\\data\\db02'] })
+ * console.log(ss3.reject.includes('pw5678'), ss3.detail.includes('C:\\data\\db02'), ss3.reject.includes('C:\\data\\db02'))
  * // => true true false
  *
  */
@@ -433,7 +440,10 @@ function getDiagSecrets(src) {
     }
     let each = (k) => eachAt(k).map((x) => x[1])
     try {
-        for (let u of each('urls')) {
+        //conns, 連線位址: 含://或@者(連線字串)同urls, 其餘(檔案型資料庫之位置)同paths(對外錯誤值不遮儲存路徑, dspec Q3)
+        let conns = each('conns')
+        let isConnStr = (s) => s.indexOf('://') >= 0 || s.indexOf('@') >= 0
+        for (let u of [...each('urls'), ...conns.filter(isConnStr)]) {
             try {
                 fromUrl(u, add)
             }
@@ -479,7 +489,7 @@ function getDiagSecrets(src) {
                 }
             }
         }
-        for (let p of each('paths')) {
+        for (let p of [...each('paths'), ...conns.filter((s) => !isConnStr(s))]) {
             if (p.length < 3 || !RE_PATH_OK.test(p)) {
                 continue
             }

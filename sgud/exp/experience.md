@@ -137,3 +137,17 @@
 - **攔截 child_process 驗選項與子程序 pid**: 被測模組以 `cp.spawn(...)` 屬性取用時,測試可暫換 `cp.spawn`/`cp.spawnSync`(同一個 CJS 物件)記錄 options(windowsHide、shell、stdio、timeout、killSignal、maxBuffer)與 `pid`,再以 `process.kill(pid, 0)` 輪詢驗子程序已結束;比寫 pid 檔可靠(逾時短時子程序可能未及寫檔).
 - **「事件於 resolve 之前通知」之驗法**: settle 事件與 resolve 同一同步段,await 後兩種順序看不出;於回調內 `util.inspect(pm).includes('<pending>')`.
 - **子代理(sonnet)獨立審查**之 15 條中 1 條為當下之紅測試根因(上列 SystemRoot)、2 條為兩版分歧/TOCTOU;先跑一次再審,審查者可引 quiet-run 之 log 為旁證.
+
+## 小輪 9 項(2026-10-30,主控任務 20261030143215 run01)
+
+- **原型為 null 之原生 Promise 不是 thenable**: 無 `then` 可查,`Promise.resolve`／`.then` 之回傳把它當一般值;`pmSeries`、`pmMap` 依原值交出(結果陣列含該 Promise),其 rejection 不會傳到 pmSeries.品牌判定(`Promise.prototype.then.call`)仍可標記它;測試預期須寫「依原值交出且無未處理之 rejection」,不是「pmSeries reject」(首次寫錯而紅).
+- **無 util 時沿原型鏈讀屬性會執行不可偵測 Proxy 之陷阱**: `markDropped` 擴充跨 realm 時改為走原型鏈找 constructor,語料 A10(`Object.create(new Proxy({}, { getPrototypeOf }))`)於無 util 環境即紅——兩環境都跑語料才抓得到;無 util 時只看值自身與其直接原型(原碼即只讀到這一層).
+- **跨 realm 之內建函數以原始碼辨識**: `Function.prototype.toString.call(f)` 之 `function Promise() { [native code] }`、`function get [Symbol.species]() { [native code] }`(各內建之 species getter 原始碼相同,皆回傳 this);bound function 與 Proxy 之原始碼無名稱,class 為 `class X …`,故不會誤認.
+- **Node 對不存在(或為檔案)之 cwd 一律經 `'error'` 事件回 ENOENT**(Windows,spawn/exec/execFile 三模式實測),同步 catch 不會遇到;`execSpawnError(err, { cwd })` 於兩路皆傳屬防禦(變異於同步路徑必存活,列等價).
+- **變異使計時器永不停止時受測 mocha 不退出**: debounce 之「cancel 不清計時器」變異讓 mocha 寫完報告後掛住,`spawnSync` 等到逾時;變異執行器一律加 `--exit`(只看成敗,不影響判定).中途重啟取鎖鏈時,以 taskkill /T 殺自己之鏈並 `--release-stale` 回收鎖.
+- **守門擋下合併指令中之一段即整條不執行**: `echo x > f; nohup bash chain.sh &` 因 echo 寫檔被擋,nohup 亦未執行;啟動背景鏈後須另行確認(看 log 或行程).
+- **`monitorEventLoopDelay` 之樣本數依行程存活時間**: 數百毫秒即結束之 mocha 可能 `count` 為 0(探測檔仍寫出);負載執行器之測試只斷言探測檔存在.
+- **測試負載執行器本身**: 受測之 mocha 夾具須於有限時間內自行結束(掛住之計時器 20 秒後自清),否則「不終止行程樹」類變異會留下孤兒行程;以「離開碼非 0 且行程已不存在」區分被終止與自行結束.「guard 不帶 NODE_OPTIONS」之測試須以帶 NODE_OPTIONS 之環境啟動 loadTrial 本身,否則變異存活(L7).
+- **以 then 之品牌檢查判型之成本**: 對非 Promise 每次建 TypeError,10 萬個一般值約 296ms(instanceof 約 0.4ms);原始值先早退、`util.types.isPromise` 可用時先預檢.品牌判定「改寫 then 後仍用載入時之內建」須有改寫 then 之測試,否則改成呼叫時取 then 之變異存活(P4).
+- **樣本須涵蓋各分類判準之單獨成立**: conns 之「含 `://` 或 `@`」樣本中含 `://` 者皆含 `@`,使「只認 @」之變異存活;補只有 `://`(`redis://…?token=`、`sqlite:///…`)之樣本.
+- **子代理(sonnet)讀碼審查**於全套已綠後仍找到 8 條(中 3: 無 util 之多餘陷阱、兩個測試缺口;低 5),其中效能退化與「無 util 多一次取原型」為我自己於本輪引入——擴充判定時要以「比修前多執行了哪些使用端程式/多花多少成本」對照 HEAD.

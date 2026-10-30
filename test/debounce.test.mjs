@@ -174,6 +174,150 @@ describe(`debounce`, function() {
 })
 
 
+describe(`debounce cancel`, function() {
+
+    //cancel之規格(JSDoc debounce): 立即停止偵測(清除偵測計時器)並丟棄尚未執行之任務; 已開始執行之任務不受影響; 之後再呼叫則重新開始偵測; onTrace之'cancel'事件含dropped、stopped, 不另通知'stop'
+    //時序以假時鐘推進(防抖之等待本身即規格, R-TRACE-01 P5), 同步點為觀察回調之事件
+
+    let fmt = (e) => (e.type === 'push' ? `push${e.size}` : e.type === 'run' ? `run-${e.dropped}` : e.type === 'cancel' ? `cancel-${e.dropped}-${e.stopped}` : e.type)
+
+    it(`should drop pending tasks and stop the detection timer immediately`, async function() {
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let got = []
+            let dbc = debounce(300, { onTrace: tr.on })
+            dbc((v) => got.push(v), 'A')
+            await clock.advance(50)
+            dbc((v) => got.push(v), 'B')
+            await clock.advance(50)
+            let r = dbc.cancel()
+            //「丟棄尚未執行之任務」: 等待逾ms後A、B皆未執行; 「停止偵測」: 偵測計時器已清除, 其後不再有任何事件(未清除者會於佇列空時通知stop)
+            await clock.advance(1000)
+            assert.strict.deepStrictEqual({ r, got, ev: tr.events.map(fmt) }, { r: undefined, got: [], ev: ['push1', 'start', 'push2', 'cancel-2-true'] })
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should release the detection timer synchronously (active Timeout count returns to the baseline)`, function() {
+        //「立即停止偵測」: cancel返回時偵測之setInterval已清除(以本行程之進行中計時器數量測, 基準與比較皆在同一同步區段, 不等待)
+        let count = () => process.getActiveResourcesInfo().filter((t) => t === 'Timeout').length
+        let base = count()
+        let dbc = debounce(300)
+        dbc(() => {})
+        let during = count()
+        dbc.cancel()
+        assert.strict.deepStrictEqual([during - base, count() - base], [1, 0])
+    })
+
+    it(`should not affect a task that has already started, and should drop the task pushed after it`, async function() {
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let got = []
+            let release = null
+            let gate = new Promise((resolve) => {
+                release = resolve
+            })
+            let dbc = debounce(100, { onTrace: tr.on })
+            dbc(async () => {
+                got.push('A:start')
+                await gate
+                got.push('A:end')
+            })
+            //逐1ms推進至A開始執行(run事件), 於下一次偵測(10ms後)之前排入B再取消: A不受影響, B被丟棄
+            for (let i = 0; i < 1000 && !tr.events.some((e) => e.type === 'run'); i++) {
+                await clock.advance(1)
+            }
+            dbc(() => got.push('B'))
+            dbc.cancel()
+            release()
+            await clock.advance(500)
+            assert.strict.deepStrictEqual({ got, ev: tr.events.map(fmt) }, { got: ['A:start', 'A:end'], ev: ['push1', 'start', 'run-0', 'push1', 'cancel-1-true'] })
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should restart detection when called again after cancel, and cancel without pending tasks only notifies`, async function() {
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let got = []
+            let dbc = debounce(100, { onTrace: tr.on })
+            //未有待執行者時取消: dropped為0、stopped為false
+            dbc.cancel()
+            dbc((v) => got.push(v), 'A')
+            dbc.cancel()
+            //取消後再呼叫: 如同初次呼叫重新排入並開始偵測, 逾ms後執行
+            dbc((v) => got.push(v), 'C')
+            await clock.advance(300)
+            assert.strict.deepStrictEqual({ got, ev: tr.events.map(fmt) }, { got: ['C'], ev: ['cancel-0-false', 'push1', 'start', 'cancel-1-true', 'push1', 'start', 'run-0', 'stop'] })
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should allow cancel inside the running task (the running task completes, detection stops without a stop event)`, async function() {
+        let clock = useFakeClock()
+        try {
+            let tr = traceRec()
+            let got = []
+            let dbc = debounce(100, { onTrace: tr.on })
+            dbc(() => {
+                dbc.cancel()
+                got.push('A')
+            })
+            await clock.advance(500)
+            assert.strict.deepStrictEqual({ got, ev: tr.events.map(fmt) }, { got: ['A'], ev: ['push1', 'start', 'run-0', 'cancel-0-true'] })
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should behave the same for cancel without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
+        //R-TRACE-01 P3/P4: 未傳觀察回調時之對外行為不變; 回調之拋錯與回傳值不影響cancel、不產生未處理之rejection
+        let un = []
+        let onUn = (v) => un.push(String(v))
+        process.on('unhandledRejection', onUn)
+        let rs = []
+        try {
+            let rec = traceRec()
+            for (let onTrace of [undefined, rec.on, () => {
+                throw new Error('trace boom')
+            }, () => Promise.reject(new Error('trace reject')), 'abc']) {
+                let clock = useFakeClock()
+                try {
+                    let got = []
+                    let dbc = debounce(100, { onTrace })
+                    dbc((v) => got.push(v), 'A')
+                    await clock.advance(20)
+                    dbc.cancel()
+                    dbc((v) => got.push(v), 'B')
+                    await clock.advance(300)
+                    rs.push(JSON.stringify(got))
+                }
+                finally {
+                    clock.restore()
+                }
+            }
+            await new Promise((resolve) => setImmediate(resolve))
+            assert.strict.deepStrictEqual(rec.events.map(fmt), ['push1', 'start', 'cancel-1-true', 'push1', 'start', 'run-0', 'stop'])
+        }
+        finally {
+            process.removeListener('unhandledRejection', onUn)
+        }
+        assert.strict.deepStrictEqual([rs, un], [Array(5).fill('["B"]'), []])
+    })
+
+})
+
+
 describe(`debounce settle(R-PM-SETTLE-01)`, function() {
 
     it(`debounce: 非同步任務reject不產生未處理之rejection, 以console.log記錄一次, 後續任務照常 [規則2、3、10]`, function() {

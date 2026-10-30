@@ -1,5 +1,5 @@
 import { ERR_TYPES, CODES } from './_diagCodes.mjs'
-import { isObjLike, isProxy, isErr, className, ownData, gd, hasOwn, arrVals } from './_diagKit.mjs'
+import { isObjLike, isProxy, isErr, className, ctorName, ownData, gd, hasOwn, arrVals } from './_diagKit.mjs'
 
 
 //readArr, 讀設定之陣列(鍵與陣列項皆只讀自有資料屬性, 不執行getter; 可偵測之Proxy不讀)
@@ -36,7 +36,8 @@ let isCode = (c, names) => {
  *
  * 規則見sgud/rule/rulebook_diag.md之R-DIAG-01。errType: 非物件為typeof名稱('string'、'number'、'boolean'、'undefined'、'bigint'、'symbol')、null為'null'、函數為'function'；
  * 可偵測之Proxy為'Proxy'(不觸發陷阱)；原生錯誤(util.types.isNativeError，含跨realm；無util時以有界原型鏈可達Error.prototype判定)取類別名
- * (原型鏈首個name若為字串資料屬性且非Error即取之，否則首個自有資料constructor之自有資料name)，僅在內建錯誤類別名或opt.types所列者照列，其餘一律'Error'；其他物件為'object'
+ * (原型鏈首個name若為字串資料屬性且非Error即取之，否則首個自有資料constructor之自有資料name)，僅在內建錯誤類別名或opt.types所列者照列；類別名不在其中時，opt.types另以建構子名(首個自有資料constructor之自有資料name)比對，
+ * 在opt.types者列建構子名(實例自設name者，如pg之DatabaseError實例之name為'error'，宣告types:['DatabaseError']即列DatabaseError)；其餘一律'Error'(建構子名只與opt.types比對，不與內建錯誤類別名之集合比對)；其他物件為'object'
  *
  * errCode: 取自有資料屬性code(不執行getter)，不在允許集合者依序取opt.nested各鍵所指物件之自有資料code(深度1)；允許集合為系統錯誤名(SYS)、Node內部與TLS代碼(NODE)與opt.codes所宣告之集合
  * (sqlstate、sqlite、mysql、mssql、mongo、mongoServer、lmdb、level)，不用任何樣式，整數只收集合明列者(mongoServer、mssql)
@@ -50,7 +51,7 @@ let isCode = (c, names) => {
  * @param {*} e 輸入錯誤或任意值
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Array} [opt.codes=[]] 輸入另允許之代碼集合名稱陣列，預設[]
- * @param {Array} [opt.types=[]] 輸入另允許之錯誤類別名陣列，預設[]
+ * @param {Array} [opt.types=[]] 輸入另允許之錯誤類別名陣列(與類別名及建構子名比對)，預設[]
  * @param {Array} [opt.nested=[]] 輸入另讀其code之巢狀錯誤鍵陣列，如['original','parent']，預設[]
  * @returns {Object} 回傳摘要物件{ errType, errCode? }
  * @example
@@ -86,7 +87,14 @@ function getDiagBriefErr(e, opt) {
         }
         else if (isErr(e)) {
             let cn = className(e)
-            errType = ERR_TYPES.indexOf(cn) >= 0 || types.indexOf(cn) >= 0 ? cn : 'Error'
+            if (ERR_TYPES.indexOf(cn) >= 0 || types.indexOf(cn) >= 0) {
+                errType = cn
+            }
+            else {
+                //類別名不在允許集合時, 宣告之types另以建構子名比對(實例自設name者, 如pg之DatabaseError實例之name為'error'); 集合外仍一律Error(實例之name可夾帶任意識別字)
+                let k = ctorName(e)
+                errType = types.indexOf(k) >= 0 ? k : 'Error'
+            }
         }
         else {
             errType = 'object'

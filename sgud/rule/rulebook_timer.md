@@ -26,7 +26,7 @@
 
 ## R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
 
-- 單一擁有者: 任務結果正規化 `src/pmConvertResolve.mjs`(即 pm2resolve);`{ state, msg }` → resolve/reject `src/_pmSettleByState.mjs`(內部,不進 index);呼叫端先行產生之 Promise 陣列之預先觀察 `src/_pmMarkHandled.mjs`(內部);容器於進入時取值 `src/_pmReadItems.mjs`(內部,規則 17);Promise 判定 `src/ispm.mjs`.
+- 單一擁有者: 任務結果正規化 `src/pmConvertResolve.mjs`(即 pm2resolve);`{ state, msg }` → resolve/reject `src/_pmSettleByState.mjs`(內部,不進 index);呼叫端先行產生之 Promise 陣列之預先觀察 `src/_pmMarkHandled.mjs`(內部;2026-10-30 run01 第 181 項起**以品牌判定**:直接以載入時之 `Promise.prototype.then` 執行,非原生 Promise 者於 then 之品牌檢查即拋而忽略〔不讀屬性、不觸發 Proxy 陷阱、不呼叫一般 thenable 之 then〕;跨 realm 與原型為 null 之原生 Promise 亦標記〔原以 instanceof 判定而漏標〕;原型為 null 者無 then 非 thenable,pmSeries/pmMap 依原值交出;原始值直接略過,`util.types.isPromise` 可用時先預檢〔非 Promise 者不進 then,免每次建例外:10 萬個一般值約 296ms→0.4ms,`run01-evidence/probe-pmh-perf.mjs`〕;測試 `test/_pmMarkHandled.test.mjs`,有 util 與無 util 兩種環境);容器於進入時取值 `src/_pmReadItems.mjs`(內部,規則 17);Promise 判定 `src/ispm.mjs`.
 - 規則:
   1. 呼叫端函數之任何結果(同步回傳任意值、同步拋出任意值含 null/undefined、Promise resolve/reject 任意值含讀取即拋錯者)使回傳之 Promise 必定 settle;唯永不 settle 之 Promise 或永不呼叫回呼之 thenable 例外(依原生語意等待,需逾時者以 pmTimeout 包裝,JSDoc 載明).
   2. 不得產生 unhandledRejection 或 uncaughtException;檢查或分類結果值之讀取一律在 try 內或交由原生 Promise 機制;計時器回呼與事件監聽器內不得有可拋出之未保護呼叫;記錄與清理本身亦不得拋出(記錄包 try).明文例外: 文件契約為「回調拋錯不攔截、成為未捕捉例外」之串流回調,經 `src/_callUser.mjs` 承接後以 `queueMicrotask` 原樣重拋(R-EXEC-FAIL-01 規則 12)——此為兌現契約之刻意重拋,不得改為吞掉.

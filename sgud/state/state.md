@@ -4,6 +4,18 @@
 
 本檔 2026-10-28 新建;此前各功能之現況未逐一盤點入檔,以 `sgud/rule/rulebook.md` 各條目之「站點全集」「測試」「已知限制」「變更紀錄」為準.之後完成一項功能或結束一輪工作時於此增列或更新.
 
+## 小輪 run01 之 9 項(主控任務 20261030143215,2026-10-30;package.json version 1.9.32 之工作樹,未提交未發布)
+
+- `debounce` 之 `cancel()`(第 178 項,R-TRACE-01): 已實作;回傳函數帶 `cancel()`(清偵測計時器、丟棄待執行者、已開始者不受影響),onTrace 增 `cancel`(dropped、stopped).測試 `test/debounce.test.mjs`〈debounce cancel〉6 案.
+- `execProcess` 之 `opt.cwd`(第 179 項,R-EXEC-FAIL-01 規則 7): 已實作(三模式);測試 `test/execProcess.test.mjs`〈execProcess opt.cwd〉4 案.
+- `_pmMarkHandled` 品牌判定(第 181 項、Q-D,R-PM-SETTLE-01、R-DIAG-01): 已實作;`_diagKit` 之 `markDropped` 改 `speciesSafe`(跨 realm、原型為 null 亦標記;無 util 時只看自身與直接原型).測試 `test/_pmMarkHandled.test.mjs`(執行器 `test/tools/pmMarkHandledRunner.mjs`)、語料 R23.
+- 負載執行器收回(第 184 項,R-TRACE-01 規則 6): `test/tools/loadTrial.mjs`、`loadPreload.mjs` 為單一版本(`--hang-sec`/`--exit-grace`、`--run-max`、`--diag`、`__ltDiagDump`、`--guard`);測試 `test/loadTrial.test.mjs` 9 案.
+- diag(第 187 項、mig-api、mig-task、diag-run04 缺口、第 192 項,R-DIAG-01): `getDiagBriefErr` 之 types 以建構子名比對(語料 C14)、公開 `isProxy`(`src/isProxy.mjs`,index 已重產)、`genDiagFunLog` 之 `opt.safeKeys`(語料 A11、A12)、語料 A13(safe 之自有 `__proto__`)、F28b(`test/maskDiagText.test.mjs` terra #28 拆兩案)與 N38(語料 O25)已補、`getDiagSecrets` 之來源 `conns`(語料 U22).語料 179 案(另 R24: 無 util 時捨棄之 Proxy 之陷阱次數).
+- 破壞性變更: `sgud/rule/rulebook_breaking.md` 第 43 項.
+- 驗證(2026-10-30 run01 最終碼): 全套 `npm test` 18115 passing、5 pending、0 failing;受影響 15 檔 628 passing;修前紅(HEAD 實作＋新測試)首次 31 failing、審查後補測試再跑 15 failing(與前次部分重複);變異 52 項(含對照組 3 項以舊測試/舊語料重跑而存活,證缺口已補),實質 49 項之最終結果擊殺 48、等價存活 1(E6);eslint 改動檔 0 error(`src/index.mjs` 檔尾無換行為產生器既有輸出).sonnet 子代理獨立讀碼審查 8 條已處置;未經第三方外審.明細見主控任務 20261030143215 `agent-out/run01-修正報告.md` 與 `agent-out/run01-evidence/`.
+- 待裁示: POSIX 以檔案為 cwd 時之 ENOTDIR(`_execSpawnError` 只改寫 ENOENT;本機無法實測,見 R-EXEC-FAIL-01 規則 7 之附記).
+- 待辦(他套件,不在 wsemi): 見同報告〈給下游之改用須知〉(w-sync-webdata 改呼叫 `cancel`、w-data-mseed 改回 `execProcess`、各套件自 wsemi 複製負載執行器、w-serv-orm 改用 `isProxy`、w-web-task/perm 改用 `conns`、sso/task/perm/api 之 `genDiagFunLog` 加 `safeKeys`、各 w-orm-* 之 `types`).
+
 ## 查詢埠之監聽者 `execProcessPortPids`／`execProcessPortPidsSync`(R-PORT-PIDS-01)
 
 - 現況(2026-10-30 主控任務 20261030064553 run01 結束時;package.json version 1.9.31 之工作樹,未提交未發布): 新增對外 `src/execProcessPortPids.mjs`(Promise: resolve PID 數字陣列去重排序,空陣列＝已確認無人;失敗 reject 字串)、`src/execProcessPortPidsSync.mjs`(同步: 失敗回 null,訊息經 onTrace settle 之 msg)與內部 `src/_execPortPids.mjs`(兩版共用之解析與判定流程);`src/index.mjs` 已以 gPackageIndex 重產(增 2 個匯出).Windows 先 netstat、查無或失敗轉 Get-NetTCPConnection(其查無才判無人)、`opt.useBoth` 取聯集;Linux/macOS 為 lsof;選項 `timeout`(預設 10000)、`useBoth`、`platform`、`exec`、`onTrace`.既有函數未改.
@@ -23,7 +35,7 @@
 - 同輪另補: `fsEnsureBins` 檔案組發布期間「舊組已移走後校驗目標讀取錯誤→移回舊組」之測試(`test/fsEnsureBinsBundle.test.mjs`,wsemi-run10 變異 R01 之缺口,補後擊殺).
 - 已知限制: 見 R-DIAG-01〈刻意與已知限制〉.
 - 待辦(他套件,不在 wsemi): 14 份遷移(設計 §4、§6.10;主控另排).diag-run02 之待裁示 P1～P5、P9 已裁示(維持/接受);P6(`_pmMarkHandled` 跨 realm)另排 wsemi 小輪、P8(codeName)於 mongo 遷移時定.diag-run03 之 Q-A(類別原型上之資料屬性)主控裁示維持已知限制、Q-B(秘密清單無法使用即 fail-closed)接受.diag-run04 之待裁示 Q-C～Q-F 見其報告.
-- 已知缺口(測試,待補): `test/maskDiagText.test.mjs` 之 terra #28 案把「清單含存取器之項」與「樣式之 flags getter」放在同一呼叫,清單先 fail-closed 使樣式路徑未被走到(變異 F28b 存活);getDiag 細節出口之可偵測 Proxy 清單項無語料(變異 N38 存活).
+- 已知缺口(測試): diag-run04 之 F28b、N38 已於 2026-10-30 run01 補齊(見上〈小輪 run01 之 9 項〉);P6、Q-D 已改碼解除.
 
 ## 帶期望雜湊之下載 `fsDownloadFileVerify`(R-DL-VERIFY-01)
 

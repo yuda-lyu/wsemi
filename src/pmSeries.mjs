@@ -10,7 +10,7 @@ import pmReadItems from './_pmReadItems.mjs'
  * Promise的mapSeries，循序執行Promise
  *
  * 若輸入rs為資料陣列則fn需將數據處理並回傳Promise，若輸入rs為Promise陣列則fn可不給，並循序執行各Promise。
- * 不給fn時，先行產生之Promise於進入時即被觀察，排在後面者先reject亦不成為未處理之rejection，其結果仍依序取用。
+ * 不給fn時，先行產生之Promise於進入時即被觀察，排在後面者先reject亦不成為未處理之rejection，其結果仍依序取用(原生Promise以品牌判定，含跨realm〔vm新context、iframe〕與原型為null者；原型為null者無then而非thenable，依原值交出於結果中)。
  * rs之元素於進入時即取值，呼叫後改動rs不影響fn收到之值，讀取元素拋錯時以該錯誤reject。
  * rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, 鍵字串)；名為length之鍵與其他鍵同為一般鍵，不因其值為非負整數而改成依索引迭代。
  * 使用函數執行時，等同於pmMap使用函數執行且takeLimit=1，promise依序執行完畢才會調用下一個promise。

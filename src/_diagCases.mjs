@@ -1040,6 +1040,49 @@ add('C07', 'getDiagBriefErr', '自訂類別名為Error、宣告之DatabaseError�
     },
     expect: { check: (out) => jeq(out, [{ errType: 'Error' }, { errType: 'DatabaseError' }, { errType: 'TypeError' }]) || JSON.stringify(out) },
 })
+add('C14', 'getDiagBriefErr', '真驅動形態: pg之DatabaseError(pg-protocol 1.16.0 messages.js之建構子設this.name=name, 後端錯誤之name為error)宣告types時列DatabaseError、未宣告為Error; 實例name在允許集合者仍取之; 集合外之實例name不列', {
+    make: () => {
+        class DatabaseError extends Error {
+            constructor(message, length, name) {
+                super(message)
+                this.length = length
+                this.name = name
+            }
+        }
+        return Object.assign(new DatabaseError('duplicate key value violates unique constraint', 120, 'error'), { severity: 'ERROR', code: '23505' })
+    },
+    call: (api) => {
+        //DatabaseError, 同pg-protocol之class DatabaseError extends Error { constructor(message, length, name) { super(message); this.length = length; this.name = name } }, 其後解析器設code等欄位
+        class DatabaseError extends Error {
+            constructor(message, length, name) {
+                super(message)
+                this.length = length
+                this.name = name
+            }
+        }
+        let mk = (name) => Object.assign(new DatabaseError('duplicate key value violates unique constraint', 120, name), { severity: 'ERROR', code: '23505' })
+        let o = { codes: ['sqlstate'], types: ['DatabaseError'] }
+        return [
+            api.getDiagBriefErr(mk('error'), o),
+            api.getDiagBriefErr(mk('error'), { codes: ['sqlstate'] }),
+            api.getDiagBriefErr(mk('TypeError'), o),
+            api.getDiagBriefErr(mk('Alice01Leak'), o),
+            api.getDiagBriefErr(mk('Alice01Leak'), { codes: ['sqlstate'] }),
+            api.getDiagBriefErr(Object.assign(new TypeError('x'), { name: 'Alice01Leak' }), o),
+        ]
+    },
+    expect: {
+        check: (out) => jeq(out, [
+            { errType: 'DatabaseError', errCode: '23505' }, //宣告types: 類別名(實例name 'error')不在集合時以建構子名比對
+            { errType: 'Error', errCode: '23505' }, //未宣告types: 集合外一律Error
+            { errType: 'TypeError', errCode: '23505' }, //實例name在允許集合(內建錯誤類別名)者仍取之(既有規則)
+            { errType: 'DatabaseError', errCode: '23505' }, //實例name為集合外之識別字: 不列該name, 以建構子名比對宣告之types
+            { errType: 'Error', errCode: '23505' }, //同上但未宣告types: Error
+            { errType: 'Error' }, //內建錯誤類別名不以建構子名比對(TypeError實例自設集合外name仍為Error)
+        ]) || JSON.stringify(out),
+    },
+    wire: true,
+})
 add('C08', 'getDiagBriefErr', 'Proxy錯誤: util可用時為Proxy且陷阱0次', {
     need: 'util',
     call: (api, ctx) => {
@@ -1128,6 +1171,35 @@ add('U01', 'getDiagSecrets', '一般網址: 帳、密、帳:密、整串; 一個
                 r[1].reject.includes('zzPw77')) || 'missing'
         },
     },
+})
+add('U22', 'getDiagSecrets', 'conns(連線位址)依內容分類: 含://或@者同urls、其餘同paths(儲存路徑不入reject); 與分別給urls、paths之結果相同(同w-serv-orm之getUrlSecrets); 包裝字串解包; 來源無法讀取者fail-closed', {
+    make: (ctx) => ({ conns: [ctx.sec.url, ctx.sec.path] }),
+    call: (api, ctx) => {
+        //含://與@、只含@、只含://(無帳密段, 查詢參數帶秘密)之連線字串, 與各式儲存路徑
+        let xs = [ctx.sec.url, 'mongodb://mu1:mPw4433@h1:27017,h2:27017/db?authSource=admin', 'mssql://sa2:qq7788@srv/db', 'svc01@host:5432', 'redis://localhost:6379/0?token=rdTk5566', 'sqlite:///var/lib/x.db', 'C:\\data\\store\\db01', './db', '/var/lib/app/db.sqlite', '\\\\srv\\share\\lmdb']
+        let isConn = (s) => s.indexOf('://') >= 0 || s.indexOf('@') >= 0
+        let same = (a, b) => jeq(a.detail, b.detail) && jeq(a.reject, b.reject)
+        let each = xs.map((x) => same(api.getDiagSecrets({ conns: [x] }), api.getDiagSecrets(isConn(x) ? { urls: [x] } : { paths: [x] })))
+        let all = same(api.getDiagSecrets({ conns: xs }), api.getDiagSecrets({ urls: xs.filter(isConn), paths: xs.filter((s) => !isConn(s)) }))
+        let single = same(api.getDiagSecrets({ conns: xs[0] }), api.getDiagSecrets({ urls: xs[0] }))
+        let boxed = same(api.getDiagSecrets({ conns: [new String(xs[6])] }), api.getDiagSecrets({ paths: [xs[6]] })) && same(api.getDiagSecrets({ conns: [new String(xs[4])] }), api.getDiagSecrets({ urls: [xs[4]] }))
+        let r = api.getDiagSecrets({ conns: xs })
+        let acc = {}
+        Object.defineProperty(acc, 'conns', {
+            get: () => {
+                ctx.hit()
+                return xs
+            },
+            enumerable: true
+        })
+        let bad = api.getDiagSecrets(acc)
+        return { each, all, single, boxed, rejHasPath: ['./db', 'C:\\data\\store\\db01', '/var/lib/app/db.sqlite'].some((p) => r.reject.includes(p)), rejHasPw: ['Pw9xQ!z7', 'mPw4433', 'qq7788', 'rdTk5566', 'sqlite:///var/lib/x.db'].every((p) => r.reject.includes(p)), detHasPath: r.detail.includes('./db') && r.detail.includes('C:\\data\\store\\db01'), badFail: api.maskDiagText('x', bad) }
+    },
+    expect: {
+        userCode: 0,
+        check: (o) => (o.each.every((b) => b === true) && o.all && o.single && o.boxed && !o.rejHasPath && o.rejHasPw && o.detHasPath && o.badFail === '***') || JSON.stringify(o),
+    },
+    wire: true,
 })
 add('U02', 'getDiagSecrets', '查詢參數user/password、pwd、token之值入列', {
     call: (api) => api.getDiagSecrets({ urls: ['postgres://h/db?user=quser1&password=qpass1&pwd=qpwd12&token=qtok12&checkKeys=true&tokenRequired=false&passwordless=TRUE&usernull=null&x=plain1'] }),
@@ -1577,6 +1649,97 @@ add('R22', 'maskDiagErr', '替換為[Promise]或[Object]之原生rejected Promis
             out.unhandled === 0) || JSON.stringify(out),
     },
 })
+add('R23', 'maskDiagErr', '跨realm與原型為null之原生rejected Promise(捨棄者、funLog與write之回傳)標記已處理: 無unhandledRejection; 子類別、constructor為存取器者不執行其程式(不標記)', {
+    call: async (api, ctx) => {
+        let base = ctx.unhandled === null ? 0 : ctx.unhandled()
+        let n = 0
+        //mk, 產生一個rejected Promise: 跨realm(需ctx.realm)或原型為null(本realm)
+        let mk = (kind) => (kind === 'realm' ? ctx.realm('Promise.reject(new Error("x"))') : Object.setPrototypeOf(Promise.reject(new Error('x')), null))
+        let kinds = ctx.realm === null ? ['null'] : ['realm', 'null']
+        let outs = []
+        for (let k of kinds) {
+            outs.push(api.maskDiagCopy({ node: mk(k) }, []).node)
+            outs.push(api.maskDiagErr({ node: mk(k) }, []).node)
+            outs.push(api.maskDiagCopy({ password: mk(k) }, []).password)
+            api.genDiagFunLog(() => mk(k)).funLog('lb', {})
+            api.getDiag({ funLog: () => mk(k) }, {})('lb', {})
+        }
+        //不標記者之程式不執行: 子類別之建構子(species取得時會呼叫)、自有constructor存取器(以resolved者驗, 不產生rejection)
+        class Sub extends Promise {}
+        let sub = Sub.resolve(1)
+        let pa = Promise.resolve(1)
+        Object.defineProperty(pa, 'constructor', {
+            get: () => {
+                n++
+                return Promise
+            }
+        })
+        Object.defineProperty(Sub, Symbol.species, {
+            get: () => {
+                n++
+                return Promise
+            }
+        })
+        api.maskDiagCopy({ a: sub, b: pa }, [])
+        //跨realm之Promise[Symbol.species]被改寫為使用端之getter: 不標記, getter不執行(以resolved者驗)
+        let xs = ctx.realm === null ? null : ctx.realm('(() => { let n = 0; Object.defineProperty(Promise, Symbol.species, { get() { n++; return Promise }, configurable: true }); return { p: Promise.resolve(1), hits: () => n } })()')
+        if (xs !== null) {
+            api.maskDiagCopy({ a: xs.p }, [])
+            n += xs.hits()
+        }
+        //本realm之Promise[Symbol.species]暫改為使用端之getter(同步段內還原): 不標記, getter不執行(以resolved者驗)
+        let dSp = Object.getOwnPropertyDescriptor(Promise, Symbol.species)
+        let pr = Promise.resolve(1)
+        Object.defineProperty(Promise, Symbol.species, {
+            get() {
+                n++
+                return Promise
+            },
+            configurable: true
+        })
+        try {
+            api.maskDiagCopy({ a: pr }, [])
+        }
+        finally {
+            Object.defineProperty(Promise, Symbol.species, dSp)
+        }
+        await ctx.tick()
+        return { outs: outs.map((x) => typeof x), n, unhandled: ctx.unhandled === null ? 0 : ctx.unhandled() - base }
+    },
+    expect: {
+        check: (out, ctx) => {
+            if (ctx.util) {
+                return (out.outs.every((t) => t === 'string') && out.n === 0 && out.unhandled === 0) || JSON.stringify(out)
+            }
+            //無util時之實際行為(已知限制, 記錄之): 原型為null之Promise不可辨識而依一般物件拷貝(拷貝與對外值之node各1, 其rejection未標記), 跨realm之捨棄者不標記(node拷貝、node對外值、憑證鍵名各1);
+            //funLog與write之回傳(_pmMarkHandled以品牌判定)與原型為null之捨棄者仍標記; 使用端程式皆不執行
+            let want = ctx.realm === null ? { outs: ['object', 'object', 'string'], unhandled: 2 } : { outs: ['string', 'string', 'string', 'object', 'object', 'string'], unhandled: 5 }
+            return (jeq(out.outs, want.outs) && out.n === 0 && out.unhandled === want.unhandled) || JSON.stringify(out)
+        },
+    },
+})
+add('R24', 'maskDiagErr', '捨棄之值為Proxy(憑證鍵名之值; 目標之原型為null或Promise.prototype): util可用時陷阱0次; 無util時(不可偵測, 已知限制)只執行判定所需之陷阱: 取原型1次、讀自有constructor描述子1次', {
+    call: (api) => {
+        return [Object.create(null), Object.create(Promise.prototype)].map((target) => {
+            let c = {}
+            let h = {}
+            for (let t of ['get', 'set', 'has', 'ownKeys', 'getOwnPropertyDescriptor', 'defineProperty', 'deleteProperty', 'getPrototypeOf', 'setPrototypeOf', 'isExtensible', 'preventExtensions']) {
+                h[t] = (...args) => {
+                    c[t] = (c[t] || 0) + 1
+                    return Reflect[t](...args)
+                }
+            }
+            api.maskDiagCopy({ password: new Proxy(target, h) }, [])
+            return c
+        })
+    },
+    expect: {
+        check: (out, ctx) => {
+            let want = ctx.util ? [{}, {}] : [{ getPrototypeOf: 1, getOwnPropertyDescriptor: 1 }, { getPrototypeOf: 1, getOwnPropertyDescriptor: 1 }]
+            return jeq(out, want) || JSON.stringify(out)
+        },
+    },
+})
 add('R17', 'maskDiagErr', 'Map與Set之迭代器、生成器視為需處理(util可用時; 無util時不可辨識列已知限制)', {
     need: 'util',
     call: (api, ctx) => {
@@ -1998,6 +2161,28 @@ add('O24', 'getDiag', '秘密清單含無法檢查之項(存取器)時視為取�
     },
     expect: { userCode: 0, noSecret: 'reject', check: (out) => jeq(out, ['(unprintable)', '***', '[Uncopyable]', '***']) || JSON.stringify(out) },
 })
+add('O25', 'getDiag', '秘密清單含可偵測之Proxy之項(util可用時)視為取不到: 細節為(unprintable)(與其他出口一致)、mask為***、copy為[Uncopyable]、err為new Error(\'***\'); 陷阱不執行', {
+    call: (api, ctx) => {
+        let h = {}
+        for (let t of ['get', 'getOwnPropertyDescriptor', 'getPrototypeOf', 'has', 'ownKeys']) {
+            h[t] = (...args) => {
+                ctx.hit()
+                return Reflect[t](...args)
+            }
+        }
+        let got = []
+        let d = api.getDiag({ funLog: (l, s, det) => got.push(det) }, { secrets: [ctx.sec.password, new Proxy({}, h)] })
+        d('op', {}, () => ({ note: ctx.sec.password }))
+        let src = new Error(`x ${ctx.sec.password}`)
+        let e = d.err(src)
+        return [got[0], d.mask(`x ${ctx.sec.password}`), d.copy({ m: 1 }), e instanceof Error && e !== src ? e.message : 'not a new Error']
+    },
+    //無util時Proxy不可偵測(已知限制, 記錄之): 該項為物件之項而略過(非字串秘密不切碎), 清單其餘之項照用
+    expect: {
+        noSecret: 'reject',
+        check: (out, ctx) => (ctx.util ? (jeq(out, ['(unprintable)', '***', '[Uncopyable]', '***']) && ctx.hits === 0) : jeq(out, [{ note: '***' }, 'x ***', { m: 1 }, 'x ***'])) || `${JSON.stringify(out)} hits=${ctx.hits}`,
+    },
+})
 add('O23', 'getDiag', '宣告類參數(patterns、codes、types、nested、safeKeys)為已撤銷之Proxy時略過: 秘密清單照用、不使輸出fail-closed(maskDiagText之opt.patterns亦同)', {
     call: (api, ctx) => {
         let pw = ctx.sec.password
@@ -2162,6 +2347,108 @@ add('A10', 'genDiagFunLog', 'safe之不可列舉鍵不佔輸出名額(頂層50�
         return [got[0], got[1], got[2]['[Truncated]'], got[2]['[Truncated]#2'], Object.keys(got[2]).length, viaDiag[0], got[3]]
     },
     expect: { userCode: 0, check: (out) => jeq(out, [{ errType: 'TypeError' }, { entry: { shown: 'B1' } }, 'A1', '[Truncated]', 51, { entry: { shown: 'B1' } }, { entry: '[Object]' }]) || JSON.stringify(out) },
+})
+add('A11', 'genDiagFunLog', 'opt.safeKeys: 給了只留白名單內之頂層鍵(恆含errType、errCode)、巢狀不過濾; 未給(含undefined、null)不過濾', {
+    make: (ctx) => ({ n: 1, ks: [0], password: ctx.sec.password, errType: 'Error', errCode: '23505', sub: { password: 'x' } }),
+    call: (api, ctx) => {
+        let mk = () => ({ n: 1, ks: [0], password: ctx.sec.password, errType: 'Error', errCode: '23505', sub: { k: 'v' } })
+        let rs = []
+        for (let opt of [{ safeKeys: ['n', 'ks', 'sub'] }, { safeKeys: [] }, { event: 'x-diag', safeKeys: ['n'] }]) {
+            let got = []
+            api.genDiagFunLog((o) => got.push(o), opt).funLog('lb', mk())
+            rs.push(got[0])
+        }
+        let un = []
+        for (let opt of [undefined, {}, { safeKeys: undefined }, { safeKeys: null }]) {
+            let got = []
+            api.genDiagFunLog((o) => got.push(o.safe), opt).funLog('lb', { n: 1, other: 'o' })
+            un.push(got[0])
+        }
+        return { rs, un }
+    },
+    expect: {
+        noSecret: 'detail',
+        check: (out) => (jeq(out.rs, [
+            { event: 'orm-diag', label: 'lb', safe: { n: 1, ks: [0], errType: 'Error', errCode: '23505', sub: { k: 'v' } } },
+            { event: 'orm-diag', label: 'lb', safe: { errType: 'Error', errCode: '23505' } },
+            { event: 'x-diag', label: 'lb', safe: { n: 1, errType: 'Error', errCode: '23505' } },
+        ]) && out.un.every((s) => jeq(s, { n: 1, other: 'o' }))) || JSON.stringify(out),
+    },
+    wire: true,
+})
+add('A12', 'genDiagFunLog', 'opt.safeKeys宣告了而無法使用(存取器、非陣列、可偵測之Proxy)或opt無法讀取時視為空白名單(只留errType、errCode); 陣列之存取器之項與非字串之項略過; getter與陷阱不執行', {
+    call: (api, ctx) => {
+        let h = {
+            get: (t, k) => {
+                ctx.hit()
+                return Reflect.get(t, k)
+            },
+            getOwnPropertyDescriptor: (t, k) => {
+                ctx.hit()
+                return Reflect.getOwnPropertyDescriptor(t, k)
+            },
+            ownKeys: (t) => {
+                ctx.hit()
+                return Reflect.ownKeys(t)
+            },
+        }
+        let acc = {}
+        Object.defineProperty(acc, 'safeKeys', {
+            get: () => {
+                ctx.hit()
+                return ['n']
+            },
+            enumerable: true
+        })
+        let arr = ['n', 7, null]
+        Object.defineProperty(arr, 3, {
+            get: () => {
+                ctx.hit()
+                return 'm'
+            },
+            enumerable: true
+        })
+        let { proxy: dead, revoke } = Proxy.revocable({}, {})
+        revoke()
+        let opts = [acc, { safeKeys: 'n' }, { safeKeys: { 0: 'n', length: 1 } }, { safeKeys: new Proxy(['n'], h) }, new Proxy({ safeKeys: ['n'] }, h), dead, { safeKeys: arr }]
+        return opts.map((opt) => {
+            let got = []
+            api.genDiagFunLog((o) => got.push(o.safe), opt).funLog('lb', { n: 1, m: 2, errType: 'Error' })
+            return got[0]
+        })
+    },
+    expect: {
+        //無util時Proxy不可偵測: 以Proxy為值之safeKeys依其目標讀取(陷阱被執行, 已知限制), 以Proxy為opt者依其目標讀取; 已撤銷之Proxy讀取即拋而fail-closed
+        check: (out, ctx) => {
+            let e = { errType: 'Error' }
+            let want = ctx.util ? [e, e, e, e, e, e, { n: 1, errType: 'Error' }] : [e, e, e, { n: 1, errType: 'Error' }, { n: 1, errType: 'Error' }, e, { n: 1, errType: 'Error' }]
+            return (jeq(out, want) && (ctx.util ? ctx.hits === 0 : true)) || `${JSON.stringify(out)} hits=${ctx.hits}`
+        },
+    },
+})
+add('A13', 'genDiagFunLog', 'safe含自有__proto__鍵(JSON.parse產生, 頂層與巢狀): 寫為自有鍵、輸出之原型不變; safeKeys未列時丟棄', {
+    call: (api) => {
+        let mk = () => JSON.parse('{"__proto__":{"x":1},"a":2,"sub":{"__proto__":{"y":1}}}')
+        let got = []
+        api.genDiagFunLog((o) => got.push(o.safe)).funLog('lb', mk())
+        api.genDiagFunLog((o) => got.push(o.safe), { safeKeys: ['a', 'sub'] }).funLog('lb', mk())
+        api.genDiagFunLog((o) => got.push(o.safe), { safeKeys: ['__proto__'] }).funLog('lb', mk())
+        let d = (o, k) => Object.getOwnPropertyDescriptor(o, k)
+        return got.map((s) => ({
+            protoOk: Object.getPrototypeOf(s) === Object.prototype && Object.getPrototypeOf(s.sub || {}) === Object.prototype,
+            own: d(s, '__proto__') ? d(s, '__proto__').value : '(none)',
+            subOwn: s.sub && d(s.sub, '__proto__') ? d(s.sub, '__proto__').value : '(none)',
+            a: s.a,
+            x: s.x,
+        }))
+    },
+    expect: {
+        check: (out) => jeq(out, [
+            { protoOk: true, own: { x: 1 }, subOwn: { y: 1 }, a: 2, x: undefined },
+            { protoOk: true, own: '(none)', subOwn: { y: 1 }, a: 2, x: undefined },
+            { protoOk: true, own: { x: 1 }, subOwn: '(none)', a: undefined, x: undefined },
+        ]) || JSON.stringify(out),
+    },
 })
 
 

@@ -10,21 +10,21 @@
 
 | 類 | 檔 | 條目 | 約 KB |
 |---|---|---|---|
-| 計時器、佇列與 Promise 流程 | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01 | 20.3 |
-| 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 23.2 |
+| 計時器、佇列與 Promise 流程 | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01 | 20.9 |
+| 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
 | 檔案系統 | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01 | 21.8 |
 | 帶期望雜湊之下載 | `sgud/rule/rulebook_dl.md` | R-DL-VERIFY-01 | 23.2 |
 | 外部執行檔取得 | `sgud/rule/rulebook_bin.md` | R-BIN-ENSURE-01 | 25.0 |
-| 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 29.8 |
+| 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
 | 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01、R-FILETYPE-01 | 24.3 |
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
-| 診斷輸出與遮罩 | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 14.9 |
+| 診斷輸出與遮罩 | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 29.4 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
-| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 8.3 |
+| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 10.4 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 
 各條目全標題:

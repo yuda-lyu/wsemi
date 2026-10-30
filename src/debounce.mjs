@@ -11,11 +11,14 @@ import getTrace from './getTrace.mjs'
  *
  * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時以console.log記錄而不外拋(不產生未處理之rejection)，不影響後續佇列；輸入非函數時不排入佇列(不影響已排入之任務)，以console.log記錄'func is not a function'
  *
+ * 回傳之函數另帶cancel()：立即停止偵測(清除偵測計時器)並丟棄尚未執行之任務，回傳undefined；已開始執行之任務(含其尚未完成之Promise)不受影響、不被中止；未有待執行之任務時呼叫亦無妨(只通知事件)；cancel之後再呼叫去除抖動函數，則如同初次呼叫重新排入並開始偵測
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/debounce.test.mjs Github}
  * @memberOf wsemi
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每10ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每10ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'stop'時為佇列已空而停止偵測，'cancel'時為呼叫cancel()(含dropped為被丟棄之待執行任務數、stopped為是否停止了進行中之偵測布林值；cancel不另通知'stop')；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
+ * @returns {Function} 回傳去除抖動函數，格式為(func, ...input)=>undefined，func為欲去除抖動之任務函數，input為呼叫func時之引數；另帶cancel方法
  * @example
  *
  * async function topAsync() {
@@ -211,6 +214,21 @@ function debounce(ms = 300, opt = {}) {
             detect()
 
         }
+
+        //cancel, 停止偵測並丟棄待執行之任務; 已開始執行之任務(含其Promise)不受影響; 之後再呼叫run則重新開始偵測
+        function cancel() {
+            let dropped = q.length
+            let stopped = t !== null
+            if (stopped) {
+                clearInterval(t)
+                t = null
+            }
+            q = []
+            if (trace) {
+                trace('cancel', { dropped, stopped })
+            }
+        }
+        run.cancel = cancel
 
         return run
     }

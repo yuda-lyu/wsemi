@@ -358,7 +358,7 @@ let fix = (v, c, depth) => {
  * 自有屬性需處理之函數(頂層或巢狀)為[Function]；頂層為可偵測之Proxy或內部失敗(含秘密清單無法使用：可偵測之Proxy、存取器之項、可偵測之Proxy之項、來源無法讀取之getDiagSecrets結果〔含其複製之副本〕、型別不合)時回傳new Error('***')(字串為***)；其他原始值原樣；永不拋錯
  *
  * 已知限制: 私有欄位(#x)無法複製，其getter於副本拋TypeError(只在含憑證時才產生副本)；只經原型上存取器取得之文字、類別原型上之資料屬性(類別定義之一部分，副本沿用其原型)不在檢查範圍；二進位資料之額外自有屬性不檢查；
- * 函數之閉包與回傳值(含自訂迭代器之next)不在檢查範圍(不含清單項之函數原樣交出)；捨棄之原生Promise只在then之species取得不執行使用端程式時標記已處理(子類別、原型被改、跨realm者不標記)，
+ * 函數之閉包與回傳值(含自訂迭代器之next)不在檢查範圍(不含清單項之函數原樣交出)；捨棄之原生Promise只在then之species取得不執行使用端程式時標記已處理(本realm與跨realm者、原型為null者皆標記，無util.types時跨realm者不標記；子類別、constructor或Symbol.species被改寫為使用端程式者不標記)，
  * 未走訪而整體捨棄之子樹(憑證鍵名之值整體替換、超過上限之截斷)內之Promise不標記；以defineProperty之預設旗標定義Symbol.toStringTag之一般類別視為不透明(副本為[Object])；
  * 無util.types時Proxy不可偵測(檢查時其陷阱可能被執行)、原型被改為Object.prototype之Map等不可辨識(原型為null者以內建getter辨識)；reject清單之短密碼(少於4字元)不遮；Error.prepareStackTrace之使用端hook所產生之stack不在保證內；
  * 不含憑證之長字串原樣交出(身分不變，不截長)；自我重疊之長秘密(如'aaaa…')於週期性文字之比對成本為文字長度×秘密長度

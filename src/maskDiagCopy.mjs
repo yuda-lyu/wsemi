@@ -359,7 +359,7 @@ let copyWith = (v, list, opt) => {
  * 無法使用者(可偵測之Proxy、存取器之項、可偵測之Proxy之項、來源無法讀取之getDiagSecrets結果〔含其複製之副本〕、型別不合)回傳[Uncopyable](fail-closed)；清單之其他物件之項略過。永不拋錯
  *
  * 已知限制: 無util.types(瀏覽器、Node<20.16)時Proxy不可偵測，判型時其陷阱可能被執行，跨realm之Map、Set等以一般物件複製；載入前已掛名為ErrorPrepareStackTrace之hook無法分辨；
- * 捨棄之原生Promise只在then之species取得不執行使用端程式時標記已處理(子類別、原型被改、跨realm者不標記)；未走訪而整體捨棄之子樹(憑證鍵名之值整體替換、超過上限之截斷)內之Promise不標記；
+ * 捨棄之原生Promise只在then之species取得不執行使用端程式時標記已處理(本realm與跨realm者、原型為null者皆標記，無util.types時跨realm者不標記；子類別、constructor或Symbol.species被改寫為使用端程式者不標記)；未走訪而整體捨棄之子樹(憑證鍵名之值整體替換、超過上限之截斷)內之Promise不標記；
  * 無util時原型非Object.prototype之物件以內建getter試探型別(每個節點至多十餘次例外，常數倍成本)；以defineProperty之預設旗標定義Symbol.toStringTag之一般類別與內建宿主物件無從區分，視為內容不在自有屬性而為[Object]
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/maskDiagCopy.test.mjs Github}

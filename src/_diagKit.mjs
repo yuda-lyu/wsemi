@@ -469,7 +469,20 @@ let className = (v) => {
                 }
             }
         }
-        for (let x of xs) {
+        return ctorName(v)
+    }
+    catch (err) {
+        //放棄
+    }
+    return 'Error'
+}
+
+
+//ctorName, 錯誤之建構子名: 原型鏈(含自身)首個自有資料constructor之自有資料name(識別字); 皆無或非識別字為Error; 不讀存取器
+//供getDiagBriefErr以opt.types比對建構子名(實例自設name者, 如pg之DatabaseError實例之name為'error')
+let ctorName = (v) => {
+    try {
+        for (let x of [v, ...protoChain(v)]) {
             if (isProxy(x)) {
                 break
             }
@@ -1349,22 +1362,73 @@ let markHandled = (r, pmMarkHandled) => {
 }
 
 
-//markDropped, 遮罩時捨棄而不交出之原值(替換為[Promise]、[Object]、憑證鍵名之***, 或清單無法使用時之整體替換)若為原生Promise則標記已處理(無人能再處理其rejection, 不產生未處理之rejection):
-//只在then之species取得不執行使用端程式時交_pmMarkHandled: 原型恰為本realm之Promise.prototype(不走原型鏈)、無自有constructor或其為值恰為Promise之資料屬性、
-//且Promise.prototype.constructor與Promise[Symbol.species]仍為載入時之內建; 子類別(其建構子為使用端程式)、原型被改、跨realm者不標記(已知限制, 同P6)
+//isNativePm, 是否為內建之Promise建構子且其Symbol.species為內建之存取器(then以之建立衍生Promise時不執行使用端程式): 本realm者恰為Promise且species之getter為載入時之內建;
+//跨realm者以原始碼判定(建構子為'function Promise() { [native code] }'、species之getter為'function get [Symbol.species]() { [native code] }', 內建之species getter皆回傳this), 可偵測之Proxy為否
 const PM_SPECIES = getterOf(Promise, Symbol.species)
+const RE_PM_SRC = /^function Promise\(\) \{\s*\[native code\]\s*\}$/
+const RE_SPECIES_SRC = /^function get \[Symbol\.species\]\(\) \{\s*\[native code\]\s*\}$/
+let isNativeSrc = (f, re) => {
+    let s = typeof f === 'function' && !isProxy(f) ? tryCall(FN_SRC, f) : NONE
+    return typeof s === 'string' && re.test(s)
+}
+let isNativePm = (C) => {
+    if (typeof C !== 'function' || isProxy(C)) {
+        return false
+    }
+    let sp = gd(C, Symbol.species)
+    if (sp === undefined || hasOwn(sp, 'value')) {
+        return false
+    }
+    if (C === Promise) {
+        return PM_SPECIES !== null && sp.get === PM_SPECIES
+    }
+    return isNativeSrc(C, RE_PM_SRC) && isNativeSrc(sp.get, RE_SPECIES_SRC)
+}
+
+
+//speciesSafe, then取得v之species(讀v.constructor與其Symbol.species)是否不執行使用端程式: 沿原型鏈(含自身, 有界)找首個constructor描述子, 須為資料屬性且其值為內建Promise(isNativePm);
+//原型鏈至null皆無constructor者then用內建Promise而不讀species(原型為null者即是); 途中遇可偵測之Proxy、存取器或超過上限為否
+//pv為呼叫端已取得之v之原型(有給者不再對v取原型: 無util時v可能為不可偵測之Proxy, 少執行一次其陷阱)
+let speciesSafe = (v, pv) => {
+    let x = v
+    for (let i = 0; i <= LIM.proto; i++) {
+        if (x === null) {
+            return true
+        }
+        if (isProxy(x)) {
+            return false
+        }
+        let d = gd(x, 'constructor')
+        if (d !== undefined) {
+            return hasOwn(d, 'value') && isNativePm(d.value)
+        }
+        x = i === 0 && pv !== undefined ? pv : Object.getPrototypeOf(x)
+    }
+    return false
+}
+
+
+//markDropped, 遮罩時捨棄而不交出之原值(替換為[Promise]、[Object]、憑證鍵名之***, 或清單無法使用時之整體替換)若為原生Promise則標記已處理(無人能再處理其rejection, 不產生未處理之rejection):
+//只在then之species取得不執行使用端程式時(speciesSafe)交_pmMarkHandled(其以品牌判定原生Promise): 本realm與跨realm之原生Promise、原型為null者皆標記;
+//子類別(其建構子為使用端程式)、constructor或Symbol.species被改寫為使用端程式者不標記(已知限制);
+//無util時Proxy不可偵測(v可能為Proxy而執行其陷阱): 只取v之原型一次並讀v之自有constructor描述子, 只處理原型為null或恰為本realm之Promise.prototype者(不讀其他原型物件), 跨realm者不標記(已知限制)
 let markDropped = (v) => {
     try {
-        if (!isObjLike(v) || isProxy(v) || Object.getPrototypeOf(v) !== Promise.prototype) {
+        if (!isObjLike(v) || isProxy(v)) {
             return
         }
-        let dc = gd(v, 'constructor')
-        if (dc !== undefined && !(hasOwn(dc, 'value') && dc.value === Promise)) {
-            return
+        let util = TYPES !== null && typeof TYPES.isPromise === 'function'
+        if (util && !TYPES.isPromise(v)) {
+            return //非原生Promise(util可用時以品牌判定, 含跨realm), 不必走原型鏈
         }
-        let pc = gd(Promise.prototype, 'constructor')
-        let sp = gd(Promise, Symbol.species)
-        if (pc === undefined || !hasOwn(pc, 'value') || pc.value !== Promise || sp === undefined || sp.get !== PM_SPECIES || PM_SPECIES === null) {
+        let pv //無util時已取得之原型, 交speciesSafe沿用
+        if (!util) {
+            pv = Object.getPrototypeOf(v)
+            if (pv !== null && pv !== Promise.prototype) {
+                return
+            }
+        }
+        if (!speciesSafe(v, pv)) {
             return
         }
         pmMarkHandled(v)
@@ -1384,7 +1448,7 @@ let hasUtil = () => {
 export {
     MASK, LIM, TYPES, NONE, STACK_GETTER, ERR_CTORS, RE_INDEX,
     BL_AB, BL_SAB, BL_TA, BL_DV, SZ_MAP, SZ_SET, RE_SOURCE, DATE_TIME, MAP_ENTRIES, SET_VALUES, MAP_IT_NEXT, SET_IT_NEXT,
-    gd, hasOwn, tryCall, isObjLike, isProxy, ownData, declOf, protoChain, isErr, unbox, kindOf, className, errCtorOf, stackReadable, readStack,
+    gd, hasOwn, tryCall, isObjLike, isProxy, ownData, declOf, protoChain, isErr, unbox, kindOf, className, ctorName, errCtorOf, stackReadable, readStack,
     isIndexKey, symDesc, isCredKey, pickList, getMatcher, getCtx, maskStr, maskUrlCred, applyIvs, addUrlCred, normLabel, normSafe, hasUtil,
     MODE_KEY, BUDGET_KEY, optMode, isClassProto, markHandled, markDropped, freeKey, defKey, arrVals, LIST_FAIL_ITEM
 }
