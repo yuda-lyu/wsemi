@@ -4,6 +4,16 @@
 
 本檔 2026-10-28 新建;此前各功能之現況未逐一盤點入檔,以 `sgud/rule/rulebook.md` 各條目之「站點全集」「測試」「已知限制」「變更紀錄」為準.之後完成一項功能或結束一輪工作時於此增列或更新.
 
+## 查詢埠之監聽者 `execProcessPortPids`／`execProcessPortPidsSync`(R-PORT-PIDS-01)
+
+- 現況(2026-10-30 主控任務 20261030064553 run01 結束時;package.json version 1.9.31 之工作樹,未提交未發布): 新增對外 `src/execProcessPortPids.mjs`(Promise: resolve PID 數字陣列去重排序,空陣列＝已確認無人;失敗 reject 字串)、`src/execProcessPortPidsSync.mjs`(同步: 失敗回 null,訊息經 onTrace settle 之 msg)與內部 `src/_execPortPids.mjs`(兩版共用之解析與判定流程);`src/index.mjs` 已以 gPackageIndex 重產(增 2 個匯出).Windows 先 netstat、查無或失敗轉 Get-NetTCPConnection(其查無才判無人)、`opt.useBoth` 取聯集;Linux/macOS 為 lsof;選項 `timeout`(預設 10000)、`useBoth`、`platform`、`exec`、`onTrace`.既有函數未改.
+- 規則: `sgud/rule/rulebook_port.md` R-PORT-PIDS-01(含站點全集: 4 處下游待改用、間接使用者).R-TRACE-01 站點全集已增列本 2 函數.
+- 測試: `test/_execPortPids.test.mjs`、`test/execProcessPortPids.test.mjs`、`test/execProcessPortPidsSync.test.mjs`;夾具與案例表 `test/tools/portPidsKit.mjs`(不建臨時檔).
+- 驗證(2026-10-30 run01 最終碼): 新 3 檔 161 passing;全套 `npm test` 18067 passing、5 pending、0 failing;變異 37/37 擊殺;eslint 0 error.本機(26300＋KB5127936)實際路徑: 自起監聽 netstat 0/10 → 一律走 Get-NetTCPConnection(兩版每次約 1.0 秒;netstat 中位 33ms、PowerShell 中位 1042ms).sonnet 子代理獨立審查 15 條已處置(修 11);修正後未再審,未經第三方外審.明細見主控任務 20261030064553 `agent-out/run01-修正報告.md` 與 `agent-out/run01-evidence/`.
+- 待裁示: lsof 於非 root 時之 `[]`(規格定為無人);`useBoth` 之預設(現 false).
+- 待辦(他套件,不在 wsemi): 4 處改用(w-package-tools-e2e `listenerPids`/`parseListenerPids`、w-web-task `harnessProc`、w-scan-dep `exsbom` 之 `ownsPort`/`listeningPorts`、w-scan-stress `pidOfPort`),改用須知見上列報告〈給下游 4 處之改用須知〉.
+- 已知限制: 見 R-PORT-PIDS-01〈已知限制〉.
+
 ## 診斷輸出與遮罩之共用函數(R-DIAG-01)
 
 - 現況(2026-10-29 diag-run04 結束時;package.json version 1.9.30 之工作樹,未提交未發布): 對外 8 函數 `getDiag`、`getDiagSecrets`、`maskDiagText`、`maskDiagCopy`、`maskDiagErr`、`maskDiagUrl`、`getDiagBriefErr`、`genDiagFunLog` 與內部 `_diagKit.mjs`、`_diagCodes.mjs`、`_diagCases.mjs`(共用語料 171 案)已實作,`src/index.mjs` 已以 gPackageIndex 重產(增 8 個匯出).wsemi 內部 `fsDownloadFileVerifyCore`、`fsEnsureBinsCore` 之 `maskUrl` 已改用共用之 `maskUrlCred`(X65,輸出與原 maskUrl 逐字相同).規格為主控 dspec〈診斷輸出與遮罩〉與設計 diag-run01 §6.

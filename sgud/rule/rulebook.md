@@ -23,6 +23,7 @@
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
 | 診斷輸出與遮罩 | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 14.9 |
+| 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
 | 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 8.3 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 
@@ -45,6 +46,7 @@
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`
 - `R-OBJ-ITER-01` → `rulebook_obj.md`: R-OBJ-ITER-01 迭代使用端傳入之物件:只依自有可列舉字串鍵,`length` 鍵不得使走訪改成陣列樣
 - `R-ORMSTR-01` → `rulebook_orm-str.md`: R-ORMSTR-01 w-orm 系列字串良構: 單一擁有者 `chkOrmStr` / `chkOrmData`、契約案例表 `_cvOrmStrCases`、只因良構性拒收
+- `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 Get-NetTCPConnection 備援、失敗與無人嚴格分開
 - `R-PM-SETTLE-01` → `rulebook_timer.md`: R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放
 - `R-TRACE-01` → `rulebook_trace.md`: R-TRACE-01 計時器相關函數之觀察回調(opt.onTrace)與其測試: 以事件同步、斷言語意,不以延時偵測

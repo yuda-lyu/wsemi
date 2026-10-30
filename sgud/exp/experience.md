@@ -127,3 +127,13 @@
 - **Codex 內容審查**: 首派 3 分鐘即被 cyber 旗標擋下(審查者自建之探測含 `s3cret` 類字樣);提示詞加「防禦性品質審查」說明並要求測試值用中性佔位字串後,三次派工皆完成.
 - **他套件長時間獨佔測試鎖時,排隊指令要 detached**: 掛在工具呼叫上之 `quiet-run --lock` 會被背景時限砍掉;以 `nohup` 排隊、輸出落檔再輪詢.
 - **CPU 比值測試要先確認變異會紅**: 撇號形之陣列值,引號跨段成對而使無上限之掃描亦為線性,該案擋不住「移除上限」之變異;註解不可宣稱其驗證了上限.
+
+## 查詢埠之監聽者(2026-10-30,主控任務 20261030064553 run01)
+
+- **本機實測(Windows 11 26300.9818＋KB5127936,zh-TW)**: `netstat -ano` 約 25ms,但自起之監聽 0/10 列出;系統之 135、445 有列但狀態字錯(`0.0.0.0:135 0.0.0.0:0 FIN_WAIT_1`、`:445 … CLOSED`).`Get-NetTCPConnection -LocalPort` 約 0.9 秒、10/10 查到,State 為 0.故判定「監聽」只看遠端 `0.0.0.0:0`/`[::]:0`,135 仍由 netstat 查得、新起之監聽一律走備援.
+- **PowerShell 之「查無」與「指令不存在」Category 相同**: 查無為 `CmdletizationQuery_NotFound_LocalPort,Get-NetTCPConnection`,指令不存在為 `CommandNotFoundException`,兩者 `CategoryInfo.Category` 皆為 `ObjectNotFound`;以 Category 判會把指令不存在當無人(fail-open),須以 FullyQualifiedErrorId 之前綴分辨.真機測試以把 cmdlet 名改錯之腳本驗證.
+- **非同步版之第 2 個子指令於微任務後才組成**: 若組成時才讀 `process.env.SystemRoot`,呼叫端於呼叫後改動環境變數會使兩個子指令用不同之系統夾(測試即因「呼叫後立即還原」而走到真實 PowerShell 得 `[]`);入口讀一次存入設定.判準: 非同步流程中凡「呼叫當下之狀態」皆於入口快照.
+- **spawnSync 之 timeout 須為整數**: 小數即拋 `ERR_OUT_OF_RANGE`(Node 24 實測),setTimeout 則接受小數——同一選項兩版行為分歧;入口無條件進位.
+- **攔截 child_process 驗選項與子程序 pid**: 被測模組以 `cp.spawn(...)` 屬性取用時,測試可暫換 `cp.spawn`/`cp.spawnSync`(同一個 CJS 物件)記錄 options(windowsHide、shell、stdio、timeout、killSignal、maxBuffer)與 `pid`,再以 `process.kill(pid, 0)` 輪詢驗子程序已結束;比寫 pid 檔可靠(逾時短時子程序可能未及寫檔).
+- **「事件於 resolve 之前通知」之驗法**: settle 事件與 resolve 同一同步段,await 後兩種順序看不出;於回調內 `util.inspect(pm).includes('<pending>')`.
+- **子代理(sonnet)獨立審查**之 15 條中 1 條為當下之紅測試根因(上列 SystemRoot)、2 條為兩版分歧/TOCTOU;先跑一次再審,審查者可引 quiet-run 之 log 為旁證.
