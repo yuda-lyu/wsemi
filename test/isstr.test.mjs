@@ -206,9 +206,11 @@ describe(`包裝物件全表 f(p) 與 f(Object(p))(R-WRAPPER-01)`, function() {
         assert.strict.deepStrictEqual(diffs, [])
     })
 
-    it(`should differ exactly at the 3 cells listed in R-WRAPPER-01 規則3 over the whole table`, function() {
-        //R-WRAPPER-01 規則3: 其餘函數不保證拆包, 全表差異只容許cbol(new Number(1))、isday、istime之包裝字串3格(帳本盤點指令之判準)
+    it(`should differ exactly at the cells listed in R-WRAPPER-01 規則3 over the whole table`, function() {
+        //R-WRAPPER-01 規則3: 其餘函數不保證拆包, 全表差異只容許cbol(new Number(1))、isday、istime之包裝字串3格(帳本盤點指令之判準);
+        //另isenum、iseint(R-ENUM-01 規則1, 專用判斷函數包裝物件不解包)對原始值為true之15格(isenum 9、iseint 6)
         assert.strict.deepStrictEqual(sortCells(tb.rows), sortCells(rule3Cells))
+        assert.strict.deepStrictEqual(rule3Cells.length, 3 + 9 + 6)
     })
 
 })

@@ -21,11 +21,21 @@ let prims = ['', ' ', 'a', 'abc', '0', '1', '1.5', '-1', 'NaN', 'true', 'false',
 let rule2Fns = ['isestr', 'isstr0', 'isnan', 'cbol', 'iser', 'isernot', 'isnum', 'isint', 'isn0int', 'isn0num', 'isp0int', 'isp0num', 'cstr', 'isUserName', 'isUserIdentify']
 
 
-//rule3Cells, R-WRAPPER-01 規則3所列不保證拆包之格(設計限制): cbol(new Number(1))為false、isday與istime對包裝字串為false
+//noUnwrapPrims, 專用判斷函數isenum、iseint(R-ENUM-01 規則1, dspec 輸入參數之檢測機制 §7.1: 包裝物件不解包、一律false)對原始值為true之格, 即其f(p)與f(Object(p))之差異格
+//  isenum: 數字字串'0'、'1'、'1.5'、'-1'與數字0、1、-1、1.5、-1.5; iseint: 整數字串'0'、'1'、'-1'與整數0、1、-1('1.5'、1.5、-1.5非整數, 兩者皆false故無差異)
+let noUnwrapPrims = {
+    isenum: ['string:0', 'string:1', 'string:1.5', 'string:-1', 'number:0', 'number:1', 'number:-1', 'number:1.5', 'number:-1.5'],
+    iseint: ['string:0', 'string:1', 'string:-1', 'number:0', 'number:1', 'number:-1'],
+}
+
+
+//rule3Cells, R-WRAPPER-01 規則3所列不保證拆包之格(設計限制): cbol(new Number(1))為false、isday與istime對包裝字串為false;
+//  及isenum、iseint對包裝物件一律false(專用判斷函數不拆包, R-ENUM-01 規則1)
 let rule3Cells = [
     { fn: 'cbol', prim: 'number:1', resPrim: 'boolean:true', resWrap: 'boolean:false' },
     { fn: 'isday', prim: 'string:2020-01-01', resPrim: 'boolean:true', resWrap: 'boolean:false' },
     { fn: 'istime', prim: 'string:2020-01-01T00:00:00', resPrim: 'boolean:true', resWrap: 'boolean:false' },
+    ...Object.keys(noUnwrapPrims).flatMap((fn) => noUnwrapPrims[fn].map((prim) => ({ fn, prim, resPrim: 'boolean:true', resWrap: 'boolean:false' }))),
 ]
 
 
