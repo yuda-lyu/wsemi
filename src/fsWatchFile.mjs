@@ -1,14 +1,17 @@
 import path from 'path'
 import chokidar from 'chokidar'
 import get from 'lodash-es/get.js'
-import ispint from './ispint.mjs'
 import isbol from './isbol.mjs'
-import cint from './cint.mjs'
 import fsIsFile from './fsIsFile.mjs'
-import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數會使每個檔案回報ERR_OUT_OF_RANGE, 故小數亦屬非預期), 非預期改用預設(100、300)
+let RULE_TIME_INTERVAL = { fn: 'fsWatchFile', name: 'opt.timeInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
+let RULE_TIME_BINARY_INTERVAL = { fn: 'fsWatchFile', name: 'opt.timeBinaryInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -21,8 +24,10 @@ import getTrace from './getTrace.mjs'
  * @param {String} fp 輸入偵測檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
- * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
- * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @param {Number|String} [opt.timeInterval=100] 輸入偵測檔案變更間隔時間，opt類參數(有效整數，正整數計時毫秒1~2147483647，須為整數〔交給chokidar〕，數字字串亦可，去頭尾空白後取值)，同時為週期輪詢監看檔案是否存在之週期，與代表chokidar開啟polling時的interval，單位為毫秒ms，非預期之輸入(非有效數字、小數、0、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾至上限、不報錯，預設為100
+ * @param {Number|String} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間，opt類參數(規則同opt.timeInterval)，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，非預期之輸入視為未給而改用預設，不夾至上限、不報錯，預設為300
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval或opt.timeBinaryInterval為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為每次週期輪詢(每timeInterval一次；含watching為是否已有watcher，exists為監看路徑目前是否為檔案，已有watcher時不查故為null)，'watch'時為chokidar之watcher剛建立，'ready'時為chokidar初始掃描完成(僅傳了onTrace才監聽chokidar之ready，不影響原行為)，'emit'時為即將對change監聽器派發一個事件(含kind為事件種類即change事件之type如add、change、unlink，fp為path.resolve後之路徑字串)，'error'時為chokidar之watcher自身出錯(含fun為'watcher'，錯誤物件不傳出，請由error事件取得)，'unwatch'時為unWatch被呼叫且watcher尚存在(開始關閉；關閉完成前重複呼叫會重複通知)，'closed'時為watcher.close()已完成且watcher已設為null，'clear'時為clear被呼叫(僅首次)；clear後僅會再通知unwatch與closed(資源釋放之回報)，其餘事件不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響監看，預設null
  * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如無權限EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
  * @example
@@ -101,20 +106,11 @@ function fsWatchFile(fp, opt = {}) {
         polling = false
     }
 
-    //timeInterval
-    let timeInterval = get(opt, 'timeInterval')
-    if (!ispint(timeInterval)) {
-        timeInterval = 100
-    }
-    timeInterval = cint(timeInterval)
-    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeInterval, opt類參數(預設100), 須為有效數字且為正數計時毫秒(0<值<=2147483647, 可帶小數), 非預期(含Infinity、超過上限)視為未給、改用預設, 不夾至上限
+    let timeInterval = optVal(get(opt, 'timeInterval'), 100, RULE_TIME_INTERVAL, opt)
 
-    //timeBinaryInterval
-    let timeBinaryInterval = get(opt, 'timeBinaryInterval')
-    if (!ispint(timeBinaryInterval)) {
-        timeBinaryInterval = 300
-    }
-    timeBinaryInterval = cint(timeBinaryInterval)
+    //timeBinaryInterval, opt類參數(預設300), 同timeInterval
+    let timeBinaryInterval = optVal(get(opt, 'timeBinaryInterval'), 300, RULE_TIME_BINARY_INTERVAL, opt)
 
     //ev
     let ev = evem() //change事件於chokidar回呼內派發, 監聽器出錯不得殺行程, 故派發處以evEmit攔截

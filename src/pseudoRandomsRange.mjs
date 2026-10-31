@@ -1,8 +1,11 @@
-import isnum from './isnum.mjs'
-import ispint from './ispint.mjs'
-import cdbl from './cdbl.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
 import pseudoRandom from './pseudoRandom.mjs'
+
+
+//vstart, vend, n: opt類參數(JSDoc [參數=預設]), vstart與vend須為有效數字(isenum, 無範圍限制), n須為有效整數且為個數1~4294967295(iseint, use: 'count', min: 1); 非預期(含超出範圍、Infinity、'0x10'、包裝物件等)視為未給、改用預設0、1與1, 不報錯; seed不在此列, 維持原樣
+let RULE_VSTART = { fn: 'pseudoRandomsRange', name: 'vstart', kind: 'enum' }
+let RULE_VEND = { fn: 'pseudoRandomsRange', name: 'vend', kind: 'enum' }
+let RULE_N = { fn: 'pseudoRandomsRange', name: 'n', kind: 'eint', chk: { use: 'count', min: 1 } }
 
 
 /**
@@ -10,9 +13,9 @@ import pseudoRandom from './pseudoRandom.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pseudoRandomsRange.test.mjs Github}
  * @memberOf wsemi
- * @param {Number} [vstart=0] 輸入範圍最小值，預設0
- * @param {Number} [vend=1] 輸入範圍最大值，預設1
- * @param {Integer} [n=1] 輸入產生數量整數，預設1
+ * @param {Number|String} [vstart=0] 輸入範圍最小值，opt類參數(有效數字，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效數字、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設0
+ * @param {Number|String} [vend=1] 輸入範圍最大值，規則同vstart，預設1；若vstart大於vend則拋出錯誤
+ * @param {Number|String} [n=1] 輸入產生數量，opt類參數(有效整數，個數1~4294967295，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小於1、超過4294967295、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設1
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
  * @returns {Number} 回傳位於指定範圍內隨機數字
  * @example
@@ -98,23 +101,14 @@ import pseudoRandom from './pseudoRandom.mjs'
  */
 function pseudoRandomsRange(vstart = 0, vend = 1, n = 1, seed = 'start1') {
 
-    //vstart
-    if (!isnum(vstart)) {
-        vstart = 0
-    }
-    vstart = cdbl(vstart)
+    //vstart, 非預期改用預設0
+    vstart = optVal(vstart, 0, RULE_VSTART)
 
-    //vend
-    if (!isnum(vend)) {
-        vend = 1
-    }
-    vend = cdbl(vend)
+    //vend, 非預期改用預設1
+    vend = optVal(vend, 1, RULE_VEND)
 
-    //n
-    if (!ispint(n)) {
-        n = 1
-    }
-    n = cint(n)
+    //n, 非預期改用預設1
+    n = optVal(n, 1, RULE_N)
 
     //check
     if (vstart > vend) {

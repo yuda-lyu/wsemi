@@ -270,7 +270,7 @@ describe(`preciseNum`, function() {
     it(`should keep integer path unchanged`, function() {
         assert.strict.deepStrictEqual(preciseNum(5), '5')
         assert.strict.deepStrictEqual(preciseNum('5'), '5')
-        assert.strict.deepStrictEqual(preciseNum(1e21), '1e+21')
+        assert.strict.deepStrictEqual(preciseNum(1e21), '1000000000000000000000') //第221項第二批(§11第16項B): 整數輸出正規化為完整十進位, 不含指數記號(原'1e+21')
         assert.strict.deepStrictEqual(preciseNum(123456789012345680), '123456789012345680')
         assert.strict.deepStrictEqual(preciseNum(123456789012345680, { returnDigit: true }), 0)
         //第221項第一批: Infinity不是有效數字(isenum), throw(修前整數路徑回'Infinity')
@@ -296,11 +296,12 @@ describe(`preciseNum`, function() {
         assert.throws(() => preciseNum(new Number(1e-11)), { message: 'v is not a number' })
     })
 
-    //對應述語P6(第221項第一批改): 整數路徑(isint為true)之有效數字字串原樣返回(去頭尾空白); isnum放行而isenum不收之寫法throw(修前原樣返回)
-    it(`should return integer-path numeric strings as they are and throw for the ones isenum rejects`, function() {
-        assert.strict.deepStrictEqual(preciseNum('1.5e3'), '1.5e3')
-        assert.strict.deepStrictEqual(preciseNum(' 1.5e3 '), '1.5e3')
-        assert.strict.deepStrictEqual(preciseNum('1e1'), '1e1')
+    //對應述語P6(第221項第一批改、第二批§11第16項B再改): 整數路徑之有效數字字串輸出正規化(去頭尾空白、不含指數記號, '1.5e3'得'1500'、'1e1'得'10'; 原樣返回'1.5e3'、'1e1');
+    //  isnum放行而isenum不收之寫法throw(修前原樣返回)
+    it(`should return normalized integer-path numeric strings and throw for the ones isenum rejects`, function() {
+        assert.strict.deepStrictEqual(preciseNum('1.5e3'), '1500')
+        assert.strict.deepStrictEqual(preciseNum(' 1.5e3 '), '1500')
+        assert.strict.deepStrictEqual(preciseNum('1e1'), '10')
         for (let s of ['0x10', 'Infinity', '-Infinity', '1e400', '0b11', '0o7']) {
             assert.throws(() => preciseNum(s), { message: 'v is not a number' }, s)
             assert.throws(() => preciseNum(s, { returnDigit: true }), { message: 'v is not a number' }, s)

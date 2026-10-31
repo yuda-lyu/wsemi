@@ -161,10 +161,13 @@ describe(`arrAdd`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input [], []`, function() {
-        let r = arrAdd([], [])
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第二批(dspec §11第15項): 每個輸入陣列各自至少1個有效數字(空陣列視為0個), 否則throw(原回[])
+    it(`should throw when input [], []`, function() {
+        assert.throws(() => arrAdd([], []), (err) => {
+            assert.strict.deepStrictEqual(err instanceof Error, true)
+            assert.strict.deepStrictEqual(err.message, 'invalid arrs[0]: must contain a valid number')
+            return true
+        })
     })
 
     it(`should return [] when input [], {}`, function() {

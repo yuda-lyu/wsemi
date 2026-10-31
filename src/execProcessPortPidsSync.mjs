@@ -12,7 +12,7 @@ import kit from './_execPortPids.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessPortPidsSync.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer|String} port 輸入埠號，須為1~65535之整數，可為字串型數字(依ispint判定)或包裝物件(new Number、new String，以其原始值判定)，其餘物件為不合法
+ * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，回傳null(失敗訊息見opt.onTrace之settle事件之msg)，不視為未給、不改用預設
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，可為字串型數字，小數無條件進位為整數，非正數或非數字時為預設值；逾時即強制結束該子指令並視為失敗，預設10000
  * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即回傳null(不以netstat之部分結果代替)，預設false

@@ -25,8 +25,9 @@
 | 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
-| 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191;末節為第一批處置結果) | `sgud/rule/rulebook_judge_sites.md` | R-ENUM-01 之站點全集、R-ENUM-CALLERS-01 之已套／未套 | 約 47 |
-| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 約 22 |
+| 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191;末節為第一批處置結果) | `sgud/rule/rulebook_judge_sites.md` | R-ENUM-01 之站點全集、R-ENUM-CALLERS-01 之已套／未套、R-OPT-VAL-01 之已套／未套(末節) | 約 53 |
+| opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;僅下游 0 站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 16 |
+| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 約 28 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 
 各條目全標題:
@@ -49,9 +50,10 @@
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`
 - `R-OBJ-ITER-01` → `rulebook_obj.md`: R-OBJ-ITER-01 迭代使用端傳入之物件:只依自有可列舉字串鍵,`length` 鍵不得使走訪改成陣列樣
+- `R-OPT-VAL-01` → `rulebook_optval.md`(已套／未套站點見 `rulebook_judge_sites.md` 末節〈第 221 項第二批第一級發布 A 處置結果〉): R-OPT-VAL-01 opt 類數值參數遇非預期之輸入(含超出範圍)視為未給、改用預設(共用 `_optVal.mjs`、`opt.debug` 警告固定詞彙不含值),必須參數才報錯;廣義數字陣列 `opt.base` 與每陣列至少 1 個有效數字(尾端 `undefined`／`null` 視為未給 opt);`preciseNum` 整數路徑;`arrFilterByENum`;`setTimeoutHp`／`setIntervalHp` 之 `interval` 用 `positive` 不設上限;本輪只含下游 0 站點之函數
 - `R-ORMSTR-01` → `rulebook_orm-str.md`: R-ORMSTR-01 w-orm 系列字串良構: 單一擁有者 `chkOrmStr` / `chkOrmData`、契約案例表 `_cvOrmStrCases`、只因良構性拒收
 - `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 Get-NetTCPConnection 備援、失敗與無人嚴格分開
-- `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變;`judge`、`estimateTicks` 隨之)
+- `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變〔**第 221 項第二批第一級發布 A 起整數路徑改為保留全部位數並正規化,見 R-OPT-VAL-01 規則 11**〕;`judge`、`estimateTicks` 隨之)
 - `R-PM-SETTLE-01` → `rulebook_timer.md`: R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放
 - `R-TRACE-01` → `rulebook_trace.md`: R-TRACE-01 計時器相關函數之觀察回調(opt.onTrace)與其測試: 以事件同步、斷言語意,不以延時偵測

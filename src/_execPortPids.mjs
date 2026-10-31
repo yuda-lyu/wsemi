@@ -5,7 +5,7 @@ import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import isnum from './isnum.mjs'
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
+import iseint from './iseint.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
 import getTrace from './getTrace.mjs'
@@ -437,27 +437,11 @@ function readInput(port, opt, execDef) {
         return { err: `opt is not readable: ${execThrownMsg(execSpawnError(err), err)}` }
     }
 
-    //port, 支援字串型數字; 先取原始值快照再判定與轉換(包裝物件以原型之valueOf拆包, 不呼叫物件自身之valueOf, 免判定與取值不一), 其餘物件、判型拋錯(不可讀之值)視同不合法
+    //port, 必須參數(無預設): 須為有效整數且為埠號(iseint, use: 'port', 1~65535, 數字字串亦可, 去頭尾空白後取值); 非預期(含包裝物件、小數、0、超出範圍、Infinity、'0x50'、非數字、不可讀之值)為null, 由呼叫端依原通道回報(非同步版reject、同步版回傳null)
+    //  iseint對被檢測值永不拋錯、不呼叫其任何方法、不解包包裝物件, 判定與取值(Number(port))為同一值
     let n = null
-    try {
-        let v = port
-        if (typeof v === 'object' && v !== null) {
-            if (v instanceof Number) {
-                v = Number.prototype.valueOf.call(v)
-            }
-            else if (v instanceof String) {
-                v = String.prototype.valueOf.call(v)
-            }
-            else {
-                v = undefined
-            }
-        }
-        if ((typeof v === 'number' || typeof v === 'string') && ispint(v) && Number(v) <= 65535) {
-            n = Number(v)
-        }
-    }
-    catch (err) {
-        n = null
+    if (iseint(port, { use: 'port' })) {
+        n = Number(port)
     }
 
     return { err: null, port: n, cfg }

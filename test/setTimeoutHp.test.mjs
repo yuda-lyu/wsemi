@@ -53,15 +53,14 @@ describe(`setTimeoutHp 非函數(R-PM-SETTLE-01規則12)`, function() {
 
 describe(`setTimeoutHp interval驗證`, function() {
 
-    let msg = 'interval is not a positive finite number'
-
-    it(`should not start for an invalid interval, log the Error once, and return null`, function() {
+    it(`should treat an unexpected interval as not given (default 1ms) and start normally: fire once no earlier than 1ms, call fun once, log nothing, return null`, function() {
         let r = runHp('timeoutInvalid')
         let labels = ['0', '-5', 'NaN', 'Infinity', '-Infinity', '"abc"', '""', '" "', 'null', 'true', '{}', '[]']
-        //JSDoc interval「須為正有限數」、@returns「interval為無效值時不啟動計時、不調用fun，以console.log記錄Error('interval is not a positive finite number')一次」且回傳null
-        //記錄、回傳與事件(無start)為呼叫當下同步可見; 觀察窗(100ms)後仍無調用fun、無通知、無額外記錄(否定斷言)
-        assert.strict.deepStrictEqual(r.out.items, labels.map((v) => ({ v, ret: null, logs: [msg], events: 0, calls: 0 })))
-        assert.strict.deepStrictEqual(r.out.totalLogs, labels.length)
+        //第221項第二批g1timer組(dspec K3, 使用者2026-10-31): interval為opt類參數, JSDoc「非預期之輸入視為未給而改用預設1毫秒並照常啟動，不報錯、不記錄」且回傳null
+        //(舊版: 不啟動、不調用fun、以console.log記錄Error('interval is not a positive finite number')各一次)
+        //start事件為呼叫當下同步可見(startedSync為1); 其後fire(僅通知一次)與result:success各一次、fun被調用一次, 到期不早於1ms(下界, 不受負載影響), 全程無記錄
+        assert.strict.deepStrictEqual(r.out.items, labels.map((v) => ({ v, ret: null, startedSync: 1, seq: ['start', 'fire', 'result:success'], elapsedOk: true, calls: 1 })))
+        assert.strict.deepStrictEqual(r.out.totalLogs, 0)
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })
 

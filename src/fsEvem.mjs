@@ -7,8 +7,6 @@ import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
 import j2o from './j2o.mjs'
 import o2j from './o2j.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
@@ -18,6 +16,12 @@ import fsWatchFolder from './fsWatchFolder.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數會使每個檔案回報ERR_OUT_OF_RANGE, 故小數亦屬非預期), 非預期改用預設(100、300)
+let RULE_TIME_INTERVAL = { fn: 'fsEvem', name: 'opt.timeInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
+let RULE_TIME_BINARY_INTERVAL = { fn: 'fsEvem', name: 'opt.timeBinaryInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 //事件名稱即事件檔案之檔名, 須為單一安全檔名: 不得使寫入目標離開事件資料夾, 不得含跨平台不合法之字元, 不得為Windows裝置名稱, 不得因Windows去掉結尾之.與空白而與他名衝突
@@ -65,8 +69,10 @@ function checkEvName(evName) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
- * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
- * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
+ * @param {Number|String} [opt.timeInterval=100] 輸入偵測檔案變更間隔時間，opt類參數(有效整數，正整數計時毫秒1~2147483647，須為整數〔交給chokidar〕，數字字串亦可，去頭尾空白後取值)，同時為內部週期輪詢事件資料夾是否存在之週期，與代表chokidar開啟polling時的interval，單位為毫秒ms，非預期之輸入(非有效數字、小數、0、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾至上限、不報錯，預設為100
+ * @param {Number|String} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間，opt類參數(規則同opt.timeInterval)，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，非預期之輸入視為未給而改用預設，不夾至上限、不報錯，預設為300
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval或opt.timeBinaryInterval為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'write'時為emit已寫出事件檔案(含evName為事件名稱，即檔名)，'ready'時為內部監看事件檔案資料夾之watcher已就緒(初始掃描完成，此後寫入之事件檔案才經穩定期後確實被接收；僅傳了onTrace才監聽，不影響原行為，且不轉傳內部fsWatchFolder之事件流)，'skip'時為監看到檔案事件但略過(含reason為略過原因，'kind'代表事件種類非add與change如資料夾本身之addDir或事件檔之unlink，'content'代表檔案內容無法解析為非空物件；kind為監看事件之種類；evName為由檔名推得之事件名稱)，'emit'時為即將對本程序之監聽器派發一個事件(含evName為事件名稱；不含事件內容)，'clear'時為clear被呼叫(僅首次)；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響事件傳遞，預設null
  * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件，呼叫端須自行try
  * @example
@@ -129,19 +135,11 @@ function fsEvem(opt = {}) {
         polling = false
     }
 
-    //timeInterval
-    let timeInterval = get(opt, 'timeInterval')
-    if (!ispint(timeInterval)) {
-        timeInterval = 100
-    }
-    timeInterval = cint(timeInterval)
+    //timeInterval, opt類參數(預設100), 須為有效數字且為正數計時毫秒(0<值<=2147483647, 可帶小數), 非預期(含Infinity、超過上限)視為未給、改用預設, 不夾至上限
+    let timeInterval = optVal(get(opt, 'timeInterval'), 100, RULE_TIME_INTERVAL, opt)
 
-    //timeBinaryInterval
-    let timeBinaryInterval = get(opt, 'timeBinaryInterval')
-    if (!ispint(timeBinaryInterval)) {
-        timeBinaryInterval = 300
-    }
-    timeBinaryInterval = cint(timeBinaryInterval)
+    //timeBinaryInterval, opt類參數(預設300), 同timeInterval
+    let timeBinaryInterval = optVal(get(opt, 'timeBinaryInterval'), 300, RULE_TIME_BINARY_INTERVAL, opt)
 
     //keySys
     let keySys = get(opt, 'keySys')

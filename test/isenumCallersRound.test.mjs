@@ -155,13 +155,24 @@ describe(`取整與格式化函數改用isenum/iseint(第221項第一批)`, func
             assert.strict.deepStrictEqual(cfilesize('0b11'), '')
         })
 
-        //對應任務範圍: dig、digExp、cfinancial之idig本輪不動(仍由isp0int判定, 無效回'')
-        it(`should keep idig handling of dig, digExp, cfinancial unchanged in this batch`, function() {
-            for (let f of [dig, digExp, cfinancial]) {
+        //對應任務範圍: dig之idig本輪不動(有下游站點, 屬第三級; 仍由isp0int判定, 無效回'')
+        it(`should keep idig handling of dig unchanged in this batch`, function() {
+            for (let f of [dig]) {
                 assert.strict.deepStrictEqual(f(1.5, 'abc'), '')
                 assert.strict.deepStrictEqual(f(1.5, -1), '')
                 assert.strict.deepStrictEqual(f(1.5, 2.5), '')
                 assert.strict.deepStrictEqual(f(1.5, null), '')
+            }
+        })
+
+        //對應第221項第二批g3count(第一級發布A): digExp、cfinancial之idig改為opt類參數(iseint, use為digits), 非預期('abc'、-1、2.5、null等)改用預設0而非回''(使用者2026-10-31第七段裁定); 修前本案釘住現況(此二者回'')
+        it(`should use default idig 0 (not empty string) when idig of digExp, cfinancial is unexpected`, function() {
+            for (let f of [digExp, cfinancial]) {
+                assert.strict.deepStrictEqual(f(1.5, 'abc'), '2')
+                assert.strict.deepStrictEqual(f(1.5, -1), '2')
+                assert.strict.deepStrictEqual(f(1.5, 2.5), '2')
+                assert.strict.deepStrictEqual(f(1.5, null), '2')
+                assert.strict.deepStrictEqual(f(1.5, 'abc'), f(1.5, 0))
             }
         })
 

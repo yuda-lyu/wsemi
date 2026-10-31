@@ -3,6 +3,11 @@ import cdbl from './cdbl.mjs'
 import isEle from './isEle.mjs'
 import isnum from './isnum.mjs'
 import genID from './genID.mjs'
+import optVal from './_optVal.mjs'
+
+
+//opt.duration: opt類參數, 須為有效數字且大於等於0(isenum, use: 'nonnegative', 0為瞬間完成), 非預期(含負數、Infinity、'0x10'、包裝物件等)視為未給、改用預設500, 不報錯
+let RULE_DURATION = { fn: 'domFadeOut', name: 'opt.duration', kind: 'enum', chk: { use: 'nonnegative' } }
 
 
 /**
@@ -12,7 +17,9 @@ import genID from './genID.mjs'
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入取得dom函數
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Number} [opt.duration=500] 輸入動畫持續時間毫秒整數，預設500
+ * @param {Number|String} [opt.duration=500] 輸入動畫持續時間毫秒，opt類參數(有效數字，大於等於0，可帶小數，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效數字、負數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設500
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.duration為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @param {Number} [opt.delay=0] 輸入動畫延遲啟動時間毫秒整數，預設0
  * @param {Number} [opt.opacityIni=1] 輸入初始透明度浮點數，介於0至1之間，預設1
  * @example
@@ -30,12 +37,8 @@ function domFadeOut(ele, opt = {}) {
         return
     }
 
-    //duration
-    let duration = get(opt, 'duration', 500)
-    duration = cdbl(duration)
-    if (duration < 0) {
-        duration = 1000
-    }
+    //duration, 非預期(含負數)改用預設500
+    let duration = optVal(get(opt, 'duration', 500), 500, RULE_DURATION, opt)
 
     //delay
     let delay = get(opt, 'delay', 0)

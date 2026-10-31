@@ -29,8 +29,14 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
                 assert.strict.deepStrictEqual(arrAdd([1, v, 3], [10, 20, 30]), [11, 20, 33])
                 assert.strict.deepStrictEqual(arrAdd([1, 2, 3], [10, v, 30]), [11, 2, 33])
             })
-            it(`should return 0 at the position where both are ${lb}`, function() {
-                assert.strict.deepStrictEqual(arrAdd([v], [v]), [0])
+            it(`should return 0 at the position where both are ${lb} (each array has another valid number)`, function() {
+                //第221項第二批(§11第15項): 每個陣列各自至少1個有效數字, 故兩陣列各補一個有效數字; 同位置皆非有效數字仍為0
+                assert.strict.deepStrictEqual(arrAdd([v, 1], [v, 2]), [0, 3])
+            })
+            it(`should throw when the array has no valid number but ${lb}`, function() {
+                //§11第15項: 每個陣列各自至少1個有效數字, 否則throw
+                assert.throws(() => arrAdd([v], [1]), isErr('invalid arrs[0]: must contain a valid number'))
+                assert.throws(() => arrAdd([1], [v]), isErr('invalid arrs[1]: must contain a valid number'))
             })
         }
 
@@ -38,15 +44,17 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
         for (let [lb, s, n] of VALID_STR) {
             it(`should add numeric string ${lb} as number ${n}`, function() {
                 assert.strict.deepStrictEqual(arrAdd([1, s, 3], [10, 20, 30]), [11, n + 20, 33])
-                assert.strict.deepStrictEqual(arrAdd([s], ['-']), [n])
-                assert.strict.deepStrictEqual(arrAdd(['NP'], [s]), [n])
+                assert.strict.deepStrictEqual(arrAdd([s, 1], ['-', 2]), [n, 3])
+                assert.strict.deepStrictEqual(arrAdd(['NP', 1], [s, 2]), [n, 3])
             })
         }
 
         //對應裁定: 多於兩個陣列時逐一以預設值處理
         it(`should apply the default to every array when adding more than two`, function() {
             assert.strict.deepStrictEqual(arrAdd([1, '-', 3], [null, 2, Infinity], ['0x10', 5, 7]), [1, 7, 10])
-            assert.strict.deepStrictEqual(arrAdd(['-', '-'], ['NP', 'NP'], [null, undefined]), [0, 0])
+            assert.strict.deepStrictEqual(arrAdd(['-', 1], ['NP', 2], [null, 3]), [0, 6])
+            //§11第15項: 每個陣列各自至少1個有效數字, 第3個陣列沒有則throw並帶索引
+            assert.throws(() => arrAdd(['-', 1], ['NP', 2], [null, undefined]), isErr('invalid arrs[2]: must contain a valid number'))
         })
 
         //對應JSDoc: 陣列容器之處置不變(少於2個、非陣列、長度不同回[])
@@ -56,7 +64,7 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
             assert.strict.deepStrictEqual(arrAdd([1, 2], [1]), [])
             assert.strict.deepStrictEqual(arrAdd(1, [1]), [])
             assert.strict.deepStrictEqual(arrAdd([1], 'a'), [])
-            assert.strict.deepStrictEqual(arrAdd([], []), [])
+            assert.throws(() => arrAdd([], []), isErr('invalid arrs[0]: must contain a valid number')) //§11第15項: 空陣列視為0個有效數字, 改throw(原回[])
             assert.strict.deepStrictEqual(arrAdd([1, 2], [1, 2], [1]), [])
         })
 
@@ -70,22 +78,30 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
                 assert.strict.deepStrictEqual(arrMulti([2, v, 3], [10, 20, 30]), [20, 20, 90])
                 assert.strict.deepStrictEqual(arrMulti([2, 2, 3], [10, v, 30]), [20, 2, 90])
             })
-            it(`should return 1 at the position where both are ${lb}`, function() {
-                assert.strict.deepStrictEqual(arrMulti([v], [v]), [1])
+            it(`should return 1 at the position where both are ${lb} (each array has another valid number)`, function() {
+                //第221項第二批(§11第15項): 每個陣列各自至少1個有效數字, 故兩陣列各補一個有效數字; 同位置皆非有效數字仍為1
+                assert.strict.deepStrictEqual(arrMulti([v, 2], [v, 3]), [1, 6])
+            })
+            it(`should throw when the array has no valid number but ${lb}`, function() {
+                //§11第15項: 每個陣列各自至少1個有效數字, 否則throw
+                assert.throws(() => arrMulti([v], [1]), isErr('invalid arrs[0]: must contain a valid number'))
+                assert.throws(() => arrMulti([1], [v]), isErr('invalid arrs[1]: must contain a valid number'))
             })
         }
 
         for (let [lb, s, n] of VALID_STR) {
             it(`should multiply numeric string ${lb} as number ${n}`, function() {
                 assert.strict.deepStrictEqual(arrMulti([2, s, 3], [10, 20, 30]), [20, n * 20, 90])
-                assert.strict.deepStrictEqual(arrMulti([s], ['-']), [n])
-                assert.strict.deepStrictEqual(arrMulti(['NP'], [s]), [n])
+                assert.strict.deepStrictEqual(arrMulti([s, 2], ['-', 3]), [n, 6])
+                assert.strict.deepStrictEqual(arrMulti(['NP', 2], [s, 3]), [n, 6])
             })
         }
 
         it(`should apply the default to every array when multiplying more than two`, function() {
             assert.strict.deepStrictEqual(arrMulti([2, '-', 3], [null, 2, Infinity], ['0x10', 5, 7]), [2, 10, 21])
-            assert.strict.deepStrictEqual(arrMulti(['-', '-'], ['NP', 'NP'], [null, undefined]), [1, 1])
+            assert.strict.deepStrictEqual(arrMulti(['-', 2], ['NP', 3], [null, 4]), [1, 24])
+            //§11第15項: 每個陣列各自至少1個有效數字, 第3個陣列沒有則throw並帶索引
+            assert.throws(() => arrMulti(['-', 2], ['NP', 3], [null, undefined]), isErr('invalid arrs[2]: must contain a valid number'))
         })
 
         it(`should keep container handling unchanged`, function() {
@@ -94,7 +110,7 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
             assert.strict.deepStrictEqual(arrMulti([1, 2], [1]), [])
             assert.strict.deepStrictEqual(arrMulti(1, [1]), [])
             assert.strict.deepStrictEqual(arrMulti([1], 'a'), [])
-            assert.strict.deepStrictEqual(arrMulti([], []), [])
+            assert.throws(() => arrMulti([], []), isErr('invalid arrs[0]: must contain a valid number')) //§11第15項: 空陣列視為0個有效數字, 改throw(原回[])
         })
 
     })

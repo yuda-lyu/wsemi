@@ -326,4 +326,32 @@
 
 ### 本批連動、不在原站點全集內者
 
-- `arrProduct`、`arrNorm`(皆未改)經 `arrMulti` 連動,見 R-ENUM-CALLERS-01〈已知限制／連動〉.
+- `arrProduct`、`arrNorm`(皆未改)經 `arrMulti` 連動,見 R-ENUM-CALLERS-01〈已知限制／連動〉.(第二批第一級發布 A 已依 §11 第 15 項改定,見下節.)
+
+---
+
+## 第 221 項第二批第一級發布 A 處置結果(wsemiA,2026-10-31,規則 R-OPT-VAL-01,檔 `rulebook_optval.md`)
+
+- 依據:使用者 2026-10-31 改定流程(第一級＝下游 0 站點之函數先做;第二級＝確認所有下游站點之呼叫都不用改者;第三級＝一次改一個函數,先改下游套件)與 wsemi221b 完成版(主控備份 `wsemi221b-backup\`)之規格;**本節為實際處置;上方各表之「建議」「狀態」欄為盤點當時之建議,以本節為準**.下游站點依據 `agent-out/wsemi221b-evidence/downstream.md` §1.
+- **已套(本輪 A,wsemiA2 起已不含 `execCliSession`;改用 `optVal`／`isenum`／`iseint`)**:
+
+| 第 | 檔(盤點時行號見上方各表) | 處置(`_optVal.mjs` 之規則) | 備註 |
+|---|---|---|---|
+| 1 | setTimeoutHp.mjs、setIntervalHp.mjs | `interval`(預設 1):**`isenum { use:'positive' }`(>0,不設上限)**;非預期改用 1 毫秒並照常啟動(原不啟動、回 `null`／空函數) | 主控裁定(221b 報告 §8.2 第 1、16 項):不交給原生計時器,大於 2147483647 之有限正數照原值等待 |
+| 1 | fsEvem.mjs、fsWatchFile.mjs | `opt.timeInterval`(預設 100)、`opt.timeBinaryInterval`(預設 300):**`iseint { use:'timer', min:1 }`**(交給 chokidar,小數亦屬非預期),取消夾限 | `fsEvem` 轉交 `fsWatchFolder`(1.9.36 原碼)者為已解析之有效整數 |
+| 2 | _execPortPids.mjs(execProcessPortPids／Sync 共用) | **必須參數** `port`:`iseint(port, { use:'port' })`,取值 `Number(port)`,處置不變(reject／null);包裝物件、`'0x50'` 改為不合法 | `_execPortPids.mjs` 之 `timeout` 不在清單 |
+| 4 | fsGetFileHashCore.mjs、fsGetFileXxHashCore.mjs | `chunkSize`(預設 64MB):`iseint { use:'count', min:1, max: 2**30 }` | `getFileBasicHash`／`getFileXxHash`(Blob 版,有 `Infinity` 邊界)與 `getFileHash`(僅 JSDoc,轉交前二者)維持原碼 |
+| 4 | pseudoRandomIntsRange.mjs、pseudoRandomsRange.mjs、randomIntsRange.mjs、randomsRange.mjs | `n`(預設 1):`iseint { use:'count', min:1 }` | `Ndp` 系有 `Infinity` 邊界,維持原碼 |
+| 5 | digExp.mjs、cfinancial.mjs | `idig`(預設 0):`iseint { use:'digits' }`,**非預期改用 0**(原回 `''`) | `dig.mjs` 有下游站點(第三級),維持原碼;二者轉交 `dig` 者為已解析之有效 `idig` |
+| 6 | domVirtualCreate.mjs | `opt.width`／`opt.height`(預設 `null`=不設定):`isenum { use:'nonnegative' }` | |
+| 6 | domFadeOut.mjs | `opt.duration`(預設 500):`isenum { use:'nonnegative' }`,**非預期或負數用 500**(原 `'abc'` 為 0、負數為 1000) | `domFadeIn` 有下游站點,維持原碼;`opt.delay`、`opacityIni` 不在清單 |
+| 6 | randomRange／randomsRange／randomIntsRange 與 pseudoRandomRange／pseudoRandomsRange／pseudoRandomIntRange／pseudoRandomIntsRange | `vstart`／`vend`:實數 `isenum`、整數 `iseint { use:'safe' }`;`vstart > vend` 仍 throw | 預設 0／1(實數)、0／100(整數);`randomIntRange`(有下游站點)、`randomIntsNdpRange`／`pseudoRandomIntsNdpRange`(`Infinity` 邊界)維持原碼 |
+| 6 | arrAccum.mjs | **`opt.base`**(預設 0):非有效數字以 base 代入,輸出與輸入逐筆對應;至少 1 個有效數字否則 throw | 第 15 項 |
+
+- **新增或擴充**:`arrFilterByENum`(新增,基於 `isenum`);`arrAdd`(base 0)、`arrMulti`(1)、`arrAccum`(0)、`arrProduct`(0,傳 `base: 0` 給 `arrMulti`)、`arrNorm`(0,傳 `base: 0` 給 `arrProduct`)之 `opt.base` 與「每個輸入陣列至少 1 個有效數字」(內部 `_arrNum.mjs`),**尾端 `undefined`／`null` 視為未給 opt**(`arrAdd`／`arrMulti`／`arrProduct`);`preciseNum` 整數路徑(第 16 項).
+- **未套(本輪 A 排除,維持 1.9.36 原碼;待其後各輪)**:
+  - `Infinity` 邊界(wsemi221b 報告 §8.1 之 14 處,函數整個不納入):`alive`、`cacheSt`、`execCli`、`execCliJsonRpc`、`fsTask`、`fsTreeFolderCore`、`isUserPw`、`strmid`、`domShowImages`、`randomIntsNdpRange`、`pseudoRandomIntsNdpRange`、`cacheBd`、`getFileBasicHash`、`getFileXxHash`、`debounce`、`pmDebounce`、`fsDeleteFileSafeCore`、`fsDeleteFolderSafeCore`、`pmMap`.
+  - 待決第 8 項之 9 站所屬函數:`cache.timeExpired`、`cacheBd.nMax`、`cacheSt.attemptNum`、`waitFun.attemptNum`、`execCli.maxRetries`、`domGetFiles`／`domShowInputAndGetFiles`／`domShowInputAndGetFilesU8Arrs` 之 `sizeMbLimit`.
+  - **`execCliSession`(wsemiA2 移出;第三級,與 `execCliJsonRpc` 同批)**:`opt.timeoutMs`、`opt.exitGraceMs`、`opt.killWaitMs`(上方盤點之 execCliSession.mjs:164／168／172)維持 1.9.36 原碼(`ispint`／`isp0int` 加 `Math.min` 夾至 2147483647);原因: 其改動連帶改變 `execCliJsonRpc` 於 `timeoutMs`／`exitGraceMs` 為 `Infinity`／超過 2147483647 時之行為(整體逾時由夾至 2147483647 改不限時;寬限由 2147483647 改 2000),下游 `w-dispatch-ai` 以 `castPintOr` 直送 `timeoutMs`,須先改下游(使用者流程:第三級一次一函數、先改下游).
+  - 有下游站點(第二、三級):`dig`、`delay`、`pmTimeout`、`evEmitDelay`、`cache`、`waitFun`、`fsWatchFolder`、`execProcess`、`genID`、`queue`、`pmQueue`、`getErrorMessage`、`strleft`(連帶 `strdelright` 不改)、`randomIntRange`、`domRipple`、`domDrag`、`domFadeIn`、`domConvertToPic`、`domShowInputAndGetFiles*`、`fsDeleteFolderSafe`、`fsGetFileXxHash` 等.
+- **其餘盤點站點(本批範圍外,仍沿用 `isnum`／`isint`／`ispint`／`isp0int`)**:三角以外之 `arrAt`、`arrInsert`、`arrPullAt`、`arrSep`、`arrSort`、`arrFilterByNum`、`bufRead`、`bufWrite`、`str2sha`、`addMonth`、`isDate`、`getBufferSize`、`strright`、`strdelleft`、`strdelright`、`strTruncate`、`rep`、`repObj`、`sepInt`、`rang`、`interp1` 等,及第 6 節其餘一般數值運算站點.

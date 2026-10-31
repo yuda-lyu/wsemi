@@ -2,6 +2,15 @@ import assert from 'assert'
 import arrNorm from '../src/arrNorm.mjs'
 
 
+let isErr = (msg) => {
+    return (err) => {
+        assert.strict.deepStrictEqual(err instanceof Error, true)
+        assert.strict.deepStrictEqual(err.message, msg)
+        return true
+    }
+}
+
+
 describe(`arrNorm`, function() {
 
     it(`should return 5.477225575051661 when input [1, 2, 3, 4]`, function() {
@@ -28,12 +37,11 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    //第221項第一批連動(arrNorm、arrProduct本身未改; arrNorm = sqrt(arrProduct(v, v)), arrProduct內呼叫arrMulti):
-    //  arrMulti依使用者2026-10-31裁定改為「非有效數字以預設值1計算」, 同位置皆非有效數字者由null改為1, 故arrProduct加總多1、此處由sqrt(5)變sqrt(7);
-    //  此為連動之現況而非定案, arrProduct/arrNorm對標記之處置待後續批次裁示(見第221項報告〈待裁示〉)
-    it(`should return 2.6457513110645907 when input [1, '2', null, null]`, function() {
+    //第221項第二批(dspec §11第15項, 使用者2026-10-31): arrNorm之基準值opt.base預設0, 非有效數字以0代入、不影響平方和, 故回到sqrt(1 + 4) = sqrt(5)
+    //  (第一批連動曾暫為sqrt(7)=2.6457513110645907, 該期望依第15項改定)
+    it(`should return 2.23606797749979 when input [1, '2', null, null]`, function() {
         let r = arrNorm([1, '2', null, null])
-        let rr = 2.6457513110645907
+        let rr = 2.23606797749979
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -43,10 +51,9 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input []`, function() {
-        let r = arrNorm([])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第二批(第15項): 空陣列視為0個有效數字, 原回null改throw(與arrMax([])一致)
+    it(`should throw when input []`, function() {
+        assert.throws(() => arrNorm([]), isErr('invalid vec: must contain a valid number'))
     })
 
     it(`should return null when input {}`, function() {
@@ -73,65 +80,46 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input [], ''`, function() {
-        let r = arrNorm([], '')
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第二批(第15項): 第2參數視為opt(非物件者視為未給); 空陣列throw(原回null)
+    it(`should throw when input [], ''`, function() {
+        assert.throws(() => arrNorm([], ''), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return null when input [], []`, function() {
-        let r = arrNorm([], [])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], []`, function() {
+        assert.throws(() => arrNorm([], []), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return null when input [], {}`, function() {
-        let r = arrNorm([], {})
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], {}`, function() {
+        assert.throws(() => arrNorm([], {}), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return null when input [], null`, function() {
-        let r = arrNorm([], null)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], null`, function() {
+        assert.throws(() => arrNorm([], null), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return null when input [], undefined`, function() {
-        let r = arrNorm([], undefined)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], undefined`, function() {
+        assert.throws(() => arrNorm([], undefined), isErr('invalid vec: must contain a valid number'))
     })
 
-    //第221項第一批連動(同上): arrMulti(['abc'], ['abc'])由[null]改為[1], arrProduct得1而非null, arrNorm得sqrt(1)=1而非null(待裁示, 非定案)
-    it(`should return 1 when input ['abc'], ''`, function() {
-        let r = arrNorm(['abc'], '')
-        let rr = 1
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第二批(第15項): 向量內沒有任何有效數字(['abc'])時throw(第一批連動曾暫為1、原為null)
+    it(`should throw when input ['abc'], ''`, function() {
+        assert.throws(() => arrNorm(['abc'], ''), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return 1 when input ['abc'], []`, function() {
-        let r = arrNorm(['abc'], [])
-        let rr = 1
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], []`, function() {
+        assert.throws(() => arrNorm(['abc'], []), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return 1 when input ['abc'], {}`, function() {
-        let r = arrNorm(['abc'], {})
-        let rr = 1
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], {}`, function() {
+        assert.throws(() => arrNorm(['abc'], {}), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return 1 when input ['abc'], null`, function() {
-        let r = arrNorm(['abc'], null)
-        let rr = 1
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], null`, function() {
+        assert.throws(() => arrNorm(['abc'], null), isErr('invalid vec: must contain a valid number'))
     })
 
-    it(`should return 1 when input ['abc'], undefined`, function() {
-        let r = arrNorm(['abc'], undefined)
-        let rr = 1
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], undefined`, function() {
+        assert.throws(() => arrNorm(['abc'], undefined), isErr('invalid vec: must contain a valid number'))
     })
 
 })

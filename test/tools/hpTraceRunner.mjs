@@ -336,21 +336,22 @@ let cases = {
         return { results, recTypes: Array.from(new Set(rec.events.map((e) => e.type))).sort() }
     },
 
-    //setIntervalHp: interval為無效值(非正有限數)時不啟動計時、不調用fun, 以console.log記錄Error('interval is not a positive finite number')一次, 仍回傳可呼叫之停止函數
-    //  記錄與回傳為呼叫當下同步可見, 事件(start等)亦同步通知, 故肯定斷言不需等待; 否定斷言(不調用、不通知、不再記錄)保留短暫觀察窗
+    //setIntervalHp: interval為非預期之輸入(非有效數字、0、負數、Infinity等; 不設上限; 第221項第二批g1timer組, K3)時視為未給、改用預設1毫秒並照常啟動, 不記錄
+    //  start事件於呼叫當下同步通知(肯定斷言不需等待); 以事件為同步點: 等第1次調用之result事件(其後才呼叫停止函數, 使事件序列確定), 不以固定等待後檢查
     intervalInvalid: async () => {
         let SI = await imp('setIntervalHp')
         let cap = capLog()
         try {
             let items = []
             for (let v of badIntervals) {
-                let n0 = cap.logs.length
                 let calls = 0
                 let rec = mkRec()
                 let stop = SI(() => {
                     calls++
                 }, v, { onTrace: rec.on })
-                let logs = cap.logs.slice(n0)
+                let startedSync = rec.events.length //start事件為同步可見
+                let fire = await rec.wait((e) => e.type === 'fire')
+                await rec.wait((e) => e.type === 'result')
                 let stopOk = true
                 try {
                     stop()
@@ -358,11 +359,10 @@ let cases = {
                 catch (e) {
                     stopOk = false
                 }
-                items.push({ v: lab(v), ret: typeof stop, stopOk, logs, rec, getCalls: () => calls })
+                items.push({ v: lab(v), ret: typeof stop, stopOk, startedSync, seq: rec.events.map(brief), elapsedOk: fire.elapsed >= 1, calls })
             }
-            await delay(100) //觀察窗(否定斷言)
             return {
-                items: items.map((it) => ({ v: it.v, ret: it.ret, stopOk: it.stopOk, logs: it.logs, events: it.rec.events.length, calls: it.getCalls() })),
+                items,
                 totalLogs: cap.logs.length,
             }
         }
@@ -428,24 +428,27 @@ let cases = {
         }
     },
 
-    //setTimeoutHp: interval為無效值(非正有限數)時不啟動計時、不調用fun, 以console.log記錄Error('interval is not a positive finite number')一次, 回傳null
+    //setTimeoutHp: interval為非預期之輸入(非有效數字、0、負數、Infinity等; 不設上限; 第221項第二批g1timer組, K3)時視為未給、改用預設1毫秒並照常啟動, 不記錄, 回傳null
+    //  start事件於呼叫當下同步通知(肯定斷言不需等待); 以事件為同步點: 等fire與result事件, 不以固定等待後檢查
     timeoutInvalid: async () => {
         let ST = await imp('setTimeoutHp')
         let cap = capLog()
         try {
             let items = []
             for (let v of badIntervals) {
-                let n0 = cap.logs.length
                 let calls = 0
                 let rec = mkRec()
                 let ret = ST(() => {
                     calls++
                 }, v, { onTrace: rec.on })
-                items.push({ v: lab(v), ret, logs: cap.logs.slice(n0), rec, getCalls: () => calls })
+                let startedSync = rec.events.length //start事件為同步可見
+                let fire = await rec.wait((e) => e.type === 'fire')
+                await rec.wait((e) => e.type === 'result')
+                items.push({ v: lab(v), ret, startedSync, elapsedOk: fire.elapsed >= 1, rec, getCalls: () => calls })
             }
-            await delay(100) //觀察窗(否定斷言)
+            await flush() //讓出數輪, 使若有多餘之調用/通知能在回傳前出現(僅使否定斷言更嚴, 不表達規格時間)
             return {
-                items: items.map((it) => ({ v: it.v, ret: it.ret, logs: it.logs, events: it.rec.events.length, calls: it.getCalls() })),
+                items: items.map((it) => ({ v: it.v, ret: it.ret, startedSync: it.startedSync, seq: it.rec.events.map(brief), elapsedOk: it.elapsedOk, calls: it.getCalls() })),
                 totalLogs: cap.logs.length,
             }
         }

@@ -219,16 +219,23 @@ describe(`_execPortPids`, function() {
 
         let ex = () => {}
 
-        it(`port: integer 1~65535, string number and wrapper accepted`, function() {
-            //包裝物件以原型之valueOf取原始值, 不呼叫物件自身(可變)之valueOf, 判定與取值為同一值
-            //包裝物件以Object(原始值)建立(同new Number/new String); n1之自身valueOf每次回不同值(9090、99999), 若判定與取值各自呼叫則範圍外之99999會通過
+        it(`port: integer 1~65535 and string number accepted; wrapper objects are unexpected (iseint { use: 'port' } does not unwrap)`, function() {
+            //2026-10-31 第221項第二批: 必須參數port改用iseint(port, { use: 'port' })判定、取值Number(port); iseint不解包包裝物件, 故包裝物件(Object(原始值), 同new Number/new String)由原本接受改為不合法(port為null)
+            //n1之自身valueOf每次回不同值(9090、99999), 修前以原型valueOf取原始值使判定與取值為同一值; 修後根本不呼叫物件之任何方法(valueOf不被呼叫)
             let n1 = Object(8080)
             let k = 0
-            n1.valueOf = () => [9090, 99999][k++ % 2]
-            let good = [[1, 1], [8080, 8080], ['8080', 8080], [65535, 65535], [Object(8080), 8080], [Object('8080'), 8080], [n1, 8080]]
+            n1.valueOf = () => {
+                k++
+                return 8080
+            }
+            let good = [[1, 1], [8080, 8080], ['8080', 8080], [65535, 65535]]
             for (let [v, n] of good) {
                 assert.strict.deepStrictEqual(kit.readInput(v, {}, ex).port, n, `port ${String(v)}`)
             }
+            for (let v of [Object(8080), Object('8080'), n1]) {
+                assert.strict.deepStrictEqual(kit.readInput(v, {}, ex).port, null, `wrapper ${typeof v}`)
+            }
+            assert.strict.deepStrictEqual(k, 0)
             let pv = Proxy.revocable({}, {})
             pv.revoke()
             let bad = [0, -1, 65536, 80.3, '80.3', '8093|1', '', ' ', 'abc', undefined, null, true, [80], {}, NaN, Infinity, Symbol('p'), 80n, Object(0), new Proxy(Object(80), {}), pv.proxy, {

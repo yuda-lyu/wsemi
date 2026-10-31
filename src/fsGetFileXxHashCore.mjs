@@ -1,10 +1,15 @@
 import xxhashWasm from 'xxhash-wasm'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import errToStr from './_errToStr.mjs'
+import optVal from './_optVal.mjs'
+
+
+//chunkSize: opt類參數, 有效整數且為個數(iseint, use: 'count', 1~2^30), 非預期改用預設64mb
+//  下限: 0時串流不讀任何資料即end而得空內容之雜湊(偽成功), 負數與小數則createReadStream拋highWaterMark錯誤
+//  上限2^30(1gb, 同Node之Readable.read(n)之上限1GiB): Node 24實測highWaterMark為2^31時只發open即永久懸置, 2^32時不讀資料即end而得空內容之雜湊(偽成功), 2^53以上(含Infinity)則reject RangeError
+let RULE_CHUNK_SIZE = { fn: 'fsGetFileXxHashCore', name: 'opt.chunkSize', kind: 'eint', chk: { use: 'count', min: 1, max: 2 ** 30 } }
 
 
 /**
@@ -14,7 +19,9 @@ import errToStr from './_errToStr.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Number} [opt.chunkSize=64*1024*1024] 輸入切片長度數字，單位位元，上限2^30(1024*1024*1024，1gb)，非正整數(0、負數、小數、非數字)或超過上限時使用預設值，預設64*1024*1024(64mb)
+ * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)
+ * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串
  * @example
  * need test in nodejs.
@@ -33,15 +40,8 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
         //fs
         let fs = get(opt, 'fs')
 
-        //chunkSize
-        let chunkSize = get(opt, 'chunkSize')
-        if (!ispint(chunkSize)) {
-            chunkSize = 64 * 1024 * 1024 //64mb, 非正整數一律用預設: 0時串流不讀任何資料即end而得空內容之雜湊(偽成功), 負數與小數則createReadStream拋highWaterMark錯誤
-        }
-        chunkSize = cint(chunkSize)
-        if (chunkSize > 2 ** 30) {
-            chunkSize = 64 * 1024 * 1024 //超過上限2^30(1gb, 同Node之Readable.read(n)之上限1GiB)用預設: Node 24實測highWaterMark為2^31時只發open即永久懸置, 2^32時不讀資料即end而得空內容之雜湊(偽成功), 2^53以上(含Infinity)則reject RangeError
-        }
+        //chunkSize, opt類參數(預設64mb), 須為有效整數且為1~2^30, 非預期(含Infinity、0、負數、小數、超過上限)視為未給、改用預設
+        let chunkSize = optVal(get(opt, 'chunkSize'), 64 * 1024 * 1024, RULE_CHUNK_SIZE, opt)
 
         //check
         if (!fsIsFileCore(fp, { fs })) {

@@ -208,34 +208,44 @@ function getMsg(reason, key, spec) {
 }
 
 
+//輸出一則警告(單一出口, 供本檔與_optVal.mjs共用): 同一id每個行程只輸出一次, 去重表滿了即不再輸出; 有funLog者交funLog(msg, info), 否則console.warn(msg); 出口拋錯一律忽略
+function warnOnce(id, msg, info, funLog) {
+    if (warned.has(id)) {
+        return
+    }
+    if (warned.size >= WARNED_MAX) {
+        return
+    }
+    warned.add(id)
+    try {
+        if (typeof funLog === 'function') {
+            let r = funLog(msg, info)
+
+            //出口回傳thenable(如async函數)時, 其rejection一律忽略, 否則成為unhandledRejection而使行程崩潰
+            if (r !== null && r !== undefined && typeof r.then === 'function') {
+                r.then(undefined, () => {})
+            }
+        }
+        else {
+            console.warn(msg)
+        }
+    }
+    catch (err) {
+        //忽略
+    }
+}
+
+
 //輸出警告: 有funLog者交funLog(msg, info), 否則console.warn(msg); 出口拋錯一律忽略
 function emit(probs, spec, funLog) {
     for (let [reason, key] of probs) {
-        let id = `${spec.fn}|${reason}|${key}`
-        if (warned.has(id)) {
-            continue
-        }
-        if (warned.size >= WARNED_MAX) {
-            return
-        }
-        warned.add(id)
-        let msg = getMsg(reason, key, spec)
-        try {
-            if (funLog !== null) {
-                funLog(msg, { fn: spec.fn, reason, key })
-            }
-            else {
-                console.warn(msg)
-            }
-        }
-        catch (err) {
-            //忽略
-        }
+        warnOnce(`${spec.fn}|${reason}|${key}`, getMsg(reason, key, spec), { fn: spec.fn, reason, key }, funLog)
     }
 }
 
 
 parseNumOpt.resetWarned = resetWarned
+parseNumOpt.warnOnce = warnOnce
 
 
 export default parseNumOpt

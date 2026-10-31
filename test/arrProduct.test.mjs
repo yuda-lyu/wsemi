@@ -16,11 +16,12 @@ describe(`arrProduct`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    //第221項第一批連動(arrProduct本身未改, 僅其內呼叫之arrMulti改依使用者2026-10-31裁定: 非有效數字以預設值1計算):
-    //  同位置皆非有效數字者, arrMulti由null改為1, 故加總多1(0.4 -> 1.4); arrProduct之處置待後續批次裁示(見第221項報告〈待裁示〉)
-    it(`should return 1.4 when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
+    //第221項第二批(dspec §11第15項, 使用者2026-10-31): arrProduct之基準值opt.base預設0(呼叫arrMulti時傳base: 0), 非有效數字之項為0、不影響總和,
+    //  第3位置(null × 0.1)與第4位置(null × null)之乘積皆為0, 故為1 * 0.1 + 2 * 0.1 = 0.30000000000000004
+    //  (修前0.4: 第3位置null被當單位元而計0.1; 第一批連動曾暫為1.4; 兩者依第15項改定)
+    it(`should return 0.30000000000000004 when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
         let r = arrProduct([1, '2', null, null], [0.1, 0.1, 0.1, null])
-        let rr = 1.4
+        let rr = 0.30000000000000004
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -114,9 +115,10 @@ describe(`arrProduct`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 13 when input [1, 'a'], [2, 'b'], [4, '5']`, function() {
+    //第221項第二批(dspec §11第15項): 非有效數字以基準值0代入, 該位置乘積為0, 故只剩1 * 2 * 4 = 8(原以1計算得8 + 5 = 13)
+    it(`should return 8 when input [1, 'a'], [2, 'b'], [4, '5']`, function() {
         let r = arrProduct([1, 'a'], [2, 'b'], [4, '5'])
-        let rr = 13
+        let rr = 8
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -162,10 +164,13 @@ describe(`arrProduct`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input [], []`, function() {
-        let r = arrProduct([], [])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第二批(dspec §11第15項): 每個輸入陣列各自至少1個有效數字(空陣列視為0個), 否則throw(原回null)
+    it(`should throw when input [], []`, function() {
+        assert.throws(() => arrProduct([], []), (err) => {
+            assert.strict.deepStrictEqual(err instanceof Error, true)
+            assert.strict.deepStrictEqual(err.message, 'invalid arrs[0]: must contain a valid number')
+            return true
+        })
     })
 
     it(`should return null when input [], {}`, function() {
