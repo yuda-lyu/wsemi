@@ -40,9 +40,10 @@ describe(`atan2d`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 90 when input 1, Infinity`, function() {
+    //第221項第一批: Infinity不是有效數字(isenum), 回null(修前為90)
+    it(`should return null when input 1, Infinity`, function() {
         let r = atan2d(1, Infinity)
-        let rr = 90
+        let rr = null
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -76,9 +77,10 @@ describe(`atan2d`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return -90 when input 1, -Infinity`, function() {
+    //第221項第一批: -Infinity不是有效數字(isenum), 回null(修前為-90)
+    it(`should return null when input 1, -Infinity`, function() {
         let r = atan2d(1, -Infinity)
-        let rr = -90
+        let rr = null
         assert.strict.deepStrictEqual(r, rr)
     })
 

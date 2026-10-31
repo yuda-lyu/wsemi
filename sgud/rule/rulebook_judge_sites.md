@@ -287,3 +287,43 @@
 4. **文件/契約明載 Infinity,建議保留 isnum**:`atand.mjs`、`atan2d.mjs`(JSDoc 範例)、`cdbl.mjs`、`cint.mjs`、`_optNum.mjs`;`preciseNum.mjs` 現為進行中之決定(JSDoc 明載沿用 isnum)。
 5. **未使用變數(死碼,僅提出不處置)**:`getFileHash.mjs:104-109` 之本地 `chunkSize` 未被後續使用。
 6. 呼叫 isenum / iseint 時第二參數為 opt;把函數本身當回調傳給 filter / every 時索引會被視為未給(不拋錯),但慣例仍建議包成 `(v) => isenum(v)`(見 `arrFilterByNum.mjs:40`)。
+
+---
+
+## 第 221 項第一批處置結果(wsemi221a,2026-10-31,規則 R-ENUM-CALLERS-01)
+
+- 依據:使用者 2026-10-31 指示「先處理:一、無效時的處理不變,只是判斷界線收緊;二、計算函數:無效時報錯,這點不變,只是判斷界線收緊;三、廣義數字陣列的計算.…四至七等 wsemi 改好、自有套件連動改完,再來接著處理」.
+- **本節為實際處置;上方各表之「建議」「狀態」欄為盤點當時(2026-10-31 上午)之建議,二者不同處以本節為準**(見〈與盤點建議不同者〉).
+- 行號為盤點當時(`src` 改前)之行號;改後行號已位移,以函數名定位.
+- 已套 **37** 站;**未套**(本批不動):其餘各節全部站點,及下列 5 站:`dig.mjs:34`、`digExp.mjs:28`、`cfinancial.mjs:33`(`idig`,屬第四～七段)、`preciseNum.mjs:89`(`isint` 整數路徑分流,盤點即建議保留)、`estimateTicks.mjs:422`(`isint`,非本批).
+
+| 檔:行(盤點時) | 處置(狀態) | 備註 |
+|---|---|---|
+| sind.mjs:75、cosd.mjs:75、tand.mjs:75 | `isnum`→`isenum`,取值 `Number(deg)`;無效仍 `null`(**已套**) | |
+| secd.mjs:76、cscd.mjs:76、cotd.mjs:76 | 同上(**已套**) | |
+| asind.mjs:45 | `isenum(v)`(**已套**) | 超出 [-1,1] 仍回 `NaN`(未加 min/max) |
+| atand.mjs:57 | `isenum(v)`(**已套**,盤點原建議保留) | 使用者裁定三角函數收緊;JSDoc 範例 `atand(±Infinity)` 改 `null` |
+| atan2d.mjs:58、atan2d.mjs:62 | `isenum(x)`、`isenum(y)`(**已套**,盤點原建議保留) | 同上 |
+| round.mjs:120、ceil.mjs:75、floor.mjs:75 | `isenum(v)`,字串去頭尾空白後交 Decimal;無效 `''`(**已套**) | 原 `round(' 30 ')` 拋 DecimalError 一併消除 |
+| round.mjs:108、ceil.mjs:69、floor.mjs:69 | `isp0int(idig)` → `iseint(idig, { use: 'digits' })`,無效用 0(**已套**,盤點原為待確認) | 使用者指定 `digits`(0~100);101 以上由可用改回 0 |
+| dig.mjs:31、digExp.mjs:25、cfinancial.mjs:30、cfilesize.mjs:36 | `isenum`,取值 `Number(…)`;無效 `''`(**已套**) | `cfinancial` 之檢測與 `dig` 內重複(等價) |
+| judge.mjs:119、judge.mjs:122 | `isenum(x1)`、`isenum(x2)`,字串去頭尾空白;無效 throw 訊息不改(**已套**,盤點原為待確認) | 包裝物件由放行改 throw |
+| preciseNum.mjs:78 | `isenum(v)`,字串去頭尾空白;無效 throw 訊息不改(**已套**,盤點原為待確認) | 移除包裝物件拆包之分支(孤兒) |
+| estimateTicks.mjs:230、estimateTicks.mjs:236 | `isenum`,取值 `Number(…)`;無效 throw 訊息不改(**已套**) | 必然之限制見 JSDoc |
+| color.mjs:252、color.mjs:258、color.mjs:274、color.mjs:341 | `isnum`→`isenum`,取值 `Number(…)`(**已套**) | 341 依派工單用 `isenum`(盤點建議 `iseint(c, { use: 'byte' })`;`parseInt` 結果本為整數或 NaN,等價) |
+| color.mjs:965、color.mjs:986 | `isint`→`iseint(num)`(默認 `safe`),取值 `Number(num)`(**已套**) | 盤點為待確認(負數是否維持):用默認 `safe`,負數仍收(回 `[rgba]`);連帶修掉 `Infinity` 使迴圈不結束 |
+| arrAdd.mjs:26、arrAdd.mjs:27 | `isenum`,**非有效數字以 0 計算**(**已套**,盤點原為「略過」) | 同位置皆非有效數字由 `null` 改 0 |
+| arrMulti.mjs:26、arrMulti.mjs:27 | `isenum`,**非有效數字以 1 計算**(**已套**) | 同位置皆非有效數字由 `null` 改 1;連動 `arrProduct`、`arrNorm` |
+| arrMax.mjs:110、arrMin.mjs:110 | `isenum`,取值 `Number(…)`;**無有效數字 throw**(**已套**,盤點原為「略過、回 null」) | 非陣列、空陣列亦 throw |
+
+### 與盤點建議不同者(使用者 2026-10-31 裁定)
+
+1. `atand`、`atan2d`:盤點建議保留 `isnum`(JSDoc 範例±90) → 使用者定三角函數收緊,改 `isenum`,範例改 `null`,2＋2 個既有測試改期望.
+2. `round`／`ceil`／`floor` 之 `idig`:盤點待確認(`digits` 或 Decimal 上限) → 使用者指定 `digits`;連動 `estimateTicks`(`rmin === rmax` 且刻度間距小數位數 > 100,即絕對值 < 約 1e-99〔12 位有效數字時約 1e-89〕時 `tickInterval` 為 0).
+3. `judge`／`preciseNum`:盤點待確認 → 使用者指定改 `isenum`.
+4. `arrMax`／`arrMin`:盤點「略過」 → 使用者「若沒法計算與回傳結果,那就報錯」:無有效數字 throw.
+5. `arrAdd`／`arrMulti`:盤點「當缺值略過(結果 `null`)」 → 使用者「非有效數字以該函數之預設值計算」:0／1.
+
+### 本批連動、不在原站點全集內者
+
+- `arrProduct`、`arrNorm`(皆未改)經 `arrMulti` 連動,見 R-ENUM-CALLERS-01〈已知限制／連動〉.

@@ -1,6 +1,6 @@
-# 規則帳本(判斷類專用函數 isenum／iseint 與 preciseNum 精度)
+# 規則帳本(判斷類專用函數 isenum／iseint、preciseNum 精度,及既有函數改用 isenum／iseint 第一批)
 
-本檔記計算類函數判定「數字／整數參數」所用之專用判斷函數 `isenum`、`iseint` 之規則,以及 `preciseNum` 之精度規則.規格為主控 dspec〈輸入參數之檢測機制〉§7.1(單一來源;使用者 2026-10-31 指示)、§7.2、§3.1、K3(opt 非預期之輸入視為未給、`opt.debug` 警告)、K6、§5.3 C2、§6 V20.全部條目之索引見 `sgud/rule/rulebook.md`〈索引〉.
+本檔記計算類函數判定「數字／整數參數」所用之專用判斷函數 `isenum`、`iseint` 之規則,以及 `preciseNum` 之精度規則,及排程第 221 項第一批(24 函數改用,R-ENUM-CALLERS-01).規格為主控 dspec〈輸入參數之檢測機制〉§7.1(單一來源;使用者 2026-10-31 指示)、§7.2、§3.1、K3(opt 非預期之輸入視為未給、`opt.debug` 警告)、K6、§5.3 C2、§6 V20.全部條目之索引見 `sgud/rule/rulebook.md`〈索引〉.
 
 **規格於 wsemieff 執行中途更新**(dspec 檔案時間 2026-10-31 13:57:48,晚於派工單與實作起點):`isenum`／`iseint` 之 opt 非預期輸入原為「throw」,改為「視為未給、改用預設、不拋錯」,並新增 `opt.debug`／`opt.funLog` 警告.本檔依更新後之規格;原 throw 版之碼與測試保存於主控任務 `agent-out/wsemieff-evidence/throw-version/`(供回復).
 
@@ -105,4 +105,44 @@
 - `estimateTicks` 於全距小於約 1e-9 之區間(如 `estimateTicks(0, 1e-8)`)主路徑本就給出與量級無關之間距(`tickInterval 0.001`),改前後相同,非本輪範圍;`rmin === rmax` 且量級小於 1e-9 者(如 `estimateTicks(3e-10, 3e-10)`)改前 `tickInterval` 為 0,改後為 `3e-11`(隨 `preciseNum` 修正而修正).
 - `preciseNum` 超過 12 位有效數字者捨入至 12 位,第 13 位起才不同之兩值視為相等,無法也不應被辨識(試驗數據罕超過 10 位有效數字;JSDoc 必然之限制 1);捨入後比較,跨進位邊界者仍被區分.
 - 整數與非整數之處理不同(整數路徑原樣、不經 12 位): `judge(123456789012345, '===', 123456789012346)` 為 false,而 `judge(123456789012345.6, '===', 123456789012345.7)` 為 true(JSDoc 必然之限制 3);非整數之大量級,整數位亦只留 12 位(`preciseNum(123456789012345.6)` 得 `'123456789012000'`).只列不修.
-- `judge`／`preciseNum`／`estimateTicks` 之數字判定仍沿用 `isnum`(收 `Infinity`、`'0x10'`);三者一致改用 `isenum` 屬排程第 221 項.
+- (已於排程第 221 項第一批處理,見下 R-ENUM-CALLERS-01)`judge`／`preciseNum`／`estimateTicks` 原沿用 `isnum`(收 `Infinity`、`'0x10'`),三者已一致改用 `isenum`.
+
+## R-ENUM-CALLERS-01 既有計算類函數之數字／整數判定改經 `isenum`／`iseint`(排程第 221 項第一批,wsemi221a,2026-10-31;使用者 2026-10-31 指示「先處理一、二、三」)
+
+### 背景與範圍
+
+- 使用者裁定(dspec §3.1 定案、§11):「定義上算數字」(`isnum`)與「可安全計算」(`isenum`)分開判斷;`isenum` 不收十六／八／二進位、`Infinity`;三角函數無效回 `null`,`round` 系列與格式化無效回 `''`(維持現行通道);「基於廣義數字之陣列,於計算處理時,非有效數字就是用該函數之預設值去計算(arrAdd 為 0、arrMulti 為 1)」「若沒法計算與回傳結果,那就報錯」.
+- 本批只做三段:①無效處置不變只收緊界線(三角 9 函數、`round`／`ceil`／`floor`、`dig`／`digExp`／`cfinancial`／`cfilesize`);②計算函數無效仍 throw(`judge`、`preciseNum`、`estimateTicks`、`color`);③廣義數字陣列之計算(`arrAdd`、`arrMulti`、`arrMax`、`arrMin`).**其餘函數(`arrSort`、`arrFilterByNum`、`arrFilterByPnum`、`arrAccum`、`arrProduct`、`arrNorm`、`interp1`、`rang`、計時與個數類參數、`is*`、`c*`、`dig`／`digExp`／`cfinancial` 之 `idig`)一律不動**,待第四～七段.
+
+### 規則
+
+1. **判定**:24 函數之數字參數由 `isnum` 改 `isenum`、整數參數由 `isint`／`isp0int` 改 `iseint`;失敗通道**不變**(三角 → `null`;`round`／`ceil`／`floor`／格式化 → `''`;`judge`、`preciseNum`、`estimateTicks`、`color` → throw,訊息不改).
+2. **取值即檢測之值(K4)**:判定通過後一律以去頭尾空白後之 `Number(…)` 取值,不再用 `cdbl`／`cint`.例外:以 decimal.js 為底之 `round`／`ceil`／`floor`／`judge`／`preciseNum` 對**字串**去頭尾空白後仍交 Decimal 直接解析(保留多餘位數,不經 `Number` 先捨入;如 `round('9.8349999999999999999', 2)` 為 9.83、`Number()` 後會是 9.84),原 `round(' 30 ')` 拋 `[DecimalError]`、`judge(' 30 ', …)` 拋 `[DecimalError]`、`preciseNum(' 30 ')` 回帶空白字串之缺陷隨之消除.
+3. **`round`／`ceil`／`floor` 之 `idig`**:`iseint(idig, { use: 'digits' })`(0~100,數字或數字字串),非有效者**用預設 0**、不拋錯(使用者指定採 `digits` 而非 Decimal 上限 1e9;101 以上由可用改回 0).`dig`／`digExp`／`cfinancial` 之 `idig` 本批不動.
+4. **`arrAdd`／`arrMulti`**:各位置元素以 `isenum` 判定,**凡非有效數字(標記字串、`null`、`undefined`、布林、`NaN`、`Infinity`、`'0x10'`、包裝物件…)一律以 0／1 計算**,不報錯、不略過;同位置兩者皆非有效數字時該位置為 0／1(舊版為 `null`);陣列容器之處置不變(少於 2 個、非陣列、長度不同 → `[]`).
+5. **`arrMax`／`arrMin`**:只取 `isenum` 有效數字比較,其餘略過;**沒有任何有效數字(含空陣列)→ throw `invalid vall: must contain a valid number`**,**非陣列 → throw `invalid vall: must be an array`**(V19、V20:訊息不帶值);`opt.returnIndex`／`opt.compareKey` 之處置不變(`compareKey` 抽出之欄位值同樣依 `isenum`);判斷「沒有有效數字」用 `vRes === null`,不可用 `ind >= 0`(空陣列時 `arrReduce` 回 `null`,`null >= 0` 為 true).
+6. **包裝物件不解包**(R-WRAPPER-01 規則 4 之延伸):`new Number(1.5)`、`new String('1.5')` 於上列函數一律為無效(`judge`／`preciseNum`／`estimateTicks` 由放行改 throw;三角回 `null`;`round` 系回 `''`;`color` 內之數值寫法亦然).
+7. **`color`**:`strCvFromPercent`／`strCvFrom01`／`strParseHex8` 之數值判定 `isnum` → `isenum`;`spreadHue`／`spreadMonochromatic` 之 `num` `isint` → `iseint`(默認 `safe`).連帶修正:舊 `isint` 收 `Infinity`、`'Infinity'`、`'1e400'`(`cdbl` 後為 `Number.MAX_VALUE`),`for (i < num)` 不結束而**記憶體耗盡(離開碼 134)**,改後 `throw Error('num is not an integer')`.
+8. **JSDoc**:24 函數之 `@param`／`@returns` 改寫為新判定(有效數字之定義、無效之處置);`arrAdd`／`arrMulti` 寫明預設值 0／1;`arrMax`／`arrMin` 寫明 throw;`atand`／`atan2d` 之 `Infinity` 範例改 `null`;`estimateTicks` 補必然之限制(見〈已知限制〉).
+
+### 站點全集(`rulebook_judge_sites.md` 末節〈第 221 項第一批處置結果〉)
+
+- 已套 37 站(三角 10、`round`／`ceil`／`floor` 之 `v` 3 與 `idig` 3、`dig`／`digExp`／`cfinancial`／`cfilesize` 之 `v` 4、`judge` 2、`preciseNum` 1、`estimateTicks` 2、`color` 6、`arrAdd` 2、`arrMulti` 2、`arrMax` 1、`arrMin` 1);未套:`dig.mjs:34`、`digExp.mjs:28`、`cfinancial.mjs:33`(`idig`,第四～七段)、`preciseNum.mjs:89`(`isint` 整數路徑分流,保留)、`estimateTicks.mjs:422`(`isint`,非本批)及其餘各節全部站點.
+- 盤點指令(wsemi 內剩餘 `isnum` 站點):`Grep pattern='\b(isnum|isint|ispint|isp0int)\(' path=src glob='!{index,isnum,isint,ispint,isp0int,isenum,iseint}.mjs' output_mode=count`.上列 24 檔應已無 `isnum`／`isint`／`isp0int`(僅 `dig`／`digExp`／`cfinancial` 仍有 `isp0int(idig)`、`preciseNum`／`estimateTicks` 仍有 `isint`).
+- 下游(`C:\opensrc` 其他套件)呼叫站點盤點:`arrMax`／`arrMin`／`arrAdd`／`arrMulti`／`arrProduct`／`preciseNum`／`estimateTicks`／三角函數／`ceil`／`floor`／`digExp`／`cfinancial`／`cfilesize` **0 站點**;`judge` 21 行(全在 w-geo,其中 6 行以原始值直送,極端輸入才由照算改拋錯)、`color` 59 行(無影響)、`round` 3 行、`dig` 81 行(僅 `Infinity` 類輸入由 `'NaN'` 改 `''`);詳見主控任務 20261031121854 `agent-out/wsemi221a-修正報告.md`〈下游影響表〉.
+
+### 測試
+
+- 新增 4 檔 + 2 工具:`test/isenumCallersTrig.test.mjs`、`isenumCallersRound.test.mjs`、`isenumCallersCalc.test.mjs`、`isenumCallersArr.test.mjs`;共用輸入矩陣 `test/tools/enumInputs.mjs`(`Infinity`、`'0x10'`、`'1e400'`、`'1e-400'`、`'-'`、`'NP'`、`''`、`null`、數字字串、包裝物件等 30 項無效 + 9 項有效字串)、子行程執行器 `test/tools/colorSpreadRunner.mjs`(`spreadHue`／`spreadMonochromatic` 於 `--max-old-space-size=64` 子行程驗不再耗盡記憶體).
+- 既有測試因界線改變而改期望 53 案(arrAdd 1、arrMulti 1、arrProduct 1〔連動〕、arrNorm 6〔連動〕、arrMax 18、arrMin 18、atan2d 2、atand 2、judge 1、preciseNum 3),逐案見報告〈既有測試期望值之變更〉.
+- 修前紅:新測試 + 改過期望之既有測試共 1515 案對 HEAD 之 src 跑 **575 failing**(24 函數皆有紅案);修後 0 failing.
+- 變異:73 項評估,擊殺 71,存活 2 皆為等價(`cfinancial` 改回 `isnum`:`dig` 內仍以 `isenum` 擋下;`dig` 不轉 `Number`:lodash `round` 內部轉型).
+
+### 已知限制／連動
+
+- **`arrProduct`、`arrNorm`(皆未改)經 `arrMulti` 連動(最優先待裁示)**:同位置皆非有效數字時 `arrMulti` 由 `null` 改 1,`arrProduct` 加總多 1(`arrProduct([1,'-'],[3,'NP'])` 由 3 變 4、`arrProduct(['-'],['NP'])` 由 `null` 變 1、`arrProduct([1,2,3],[Infinity,'0x10',1])` 由 `Number.MAX_VALUE` 變 6);`arrNorm = sqrt(arrProduct(v, v))` 隨之 `arrNorm(['abc'])` 由 `null` 變 1、`arrNorm([1,'2',null,null])` 由 `sqrt(5)` 變 `sqrt(7)`(標記向量之範數為 1,語意不合理).兩者之測試期望已改為實測新值並註明連動(`test/arrProduct.test.mjs`、`test/arrNorm.test.mjs`),**非定案**;依 dspec Q3-b 內積遇標記宜 throw,待第四～七段裁示(派工單明列 `arrProduct`、`arrNorm` 不得改).wsemi 以外套件對 `arrProduct`、`arrNorm` 0 站點.
+- `estimateTicks` 在 `rmin === rmax` 且刻度間距之小數位數 > 100(絕對值小於約 1e-99,有效位數越多越早,12 位有效數字時約 1e-89,如 `1e-100`、`1.234567e-95`)時,因 `round` 之 `idig` 上限 100,`tickInterval` 為 0、三個刻度位置相同(舊版可算);已寫入 JSDoc 必然之限制.
+- `cfinancial` 之 `v` 檢測與 `dig` 內之檢測重複(等價變異),保留以維持兩函數各自獨立.
+- **原有、本批未改(獨立審查者指出,已實測與 HEAD 相同)**: `preciseNum` 整數路徑以 `isint(v)`(`Number(v)` 後判整數)分流,字串若轉換後為整數(含近整數寫法)則**回傳原字串、位數 0**,不經 12 位有效數字處理——`preciseNum('0.99999999999999999999')` 回 `'0.99999999999999999999'`(位數 0)、`preciseNum('1.0000000000000001')` 回原字串、`judge('0.99999999999999999999', '===', 1)` 為 false(與「第 13 位起才不同視為相等」不符);整數路徑回傳亦未正規化(`'+5.'`→`'+5.'`、`'1e1'`→`'1e1'`、`'007'`→`'007'`,數字 `10` 則 `'10'`).本批僅補去頭尾空白.屬「檢測之值 ≠ 使用之值」,待裁示是否改以 `isenum` ＋ `Number.isInteger(Number(v))` ＋ Decimal 判整數並正規化輸出.
+- `color.interp` 之漸層鍵仍以 `cdbl(k)` 取值(`'0x10'` 為 16、`'abc'` 為 0),非 `isnum`／`isint` 判定站點,本批未動.
+- 既有 JSDoc 範例錯誤(原有、未修): `tand.mjs` 之範例組為 `cosd` 之值(如 `tand(0)` 寫 1、實際 0),`estimateTicks.mjs` 之 `0.89~0.9` 範例 `tickDig` 寫 1、實際 2(HEAD 即如此);本批新增之 `tand(' 45 ')` 等範例已實測正確.

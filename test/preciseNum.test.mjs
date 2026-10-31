@@ -273,7 +273,8 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(preciseNum(1e21), '1e+21')
         assert.strict.deepStrictEqual(preciseNum(123456789012345680), '123456789012345680')
         assert.strict.deepStrictEqual(preciseNum(123456789012345680, { returnDigit: true }), 0)
-        assert.strict.deepStrictEqual(preciseNum(Infinity), 'Infinity')
+        //第221項第一批: Infinity不是有效數字(isenum), throw(修前整數路徑回'Infinity')
+        assert.throws(() => preciseNum(Infinity), { message: 'v is not a number' })
     })
 
     it(`should return '0.3' for 0.1 + 0.2 and keep 12 digits stable`, function() {
@@ -283,25 +284,27 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(preciseNum(1.1 + 2.2, { returnDigit: true }), 1)
     })
 
-    //對應述語P5: 包裝物件(isnum依內部標籤放行, R-WRAPPER-01)與修前相同, 不拋[DecimalError]
-    it(`should accept wrapper objects as before (no internal DecimalError)`, function() {
-        assert.strict.deepStrictEqual(preciseNum(new Number(1.5)), '1.5')
-        assert.strict.deepStrictEqual(preciseNum(new String('1.5')), '1.5')
-        assert.strict.deepStrictEqual(preciseNum(Object('1.5')), '1.5')
-        assert.strict.deepStrictEqual(preciseNum(new Number(1.5), { returnDigit: true }), 1)
-        assert.strict.deepStrictEqual(preciseNum(new Number(5)), '5') //整數路徑
-        assert.strict.deepStrictEqual(preciseNum(vm.runInNewContext('new Number(1.5)')), '1.5') //跨領域
-        assert.strict.deepStrictEqual(preciseNum(vm.runInNewContext('new String(" 2.25 ")')), '2.25')
-        assert.strict.deepStrictEqual(preciseNum(new Number(1e-11)), '0.00000000001')
+    //對應述語P5(第221項第一批改): 判定由isnum改isenum, 包裝物件不解包(R-WRAPPER-01規則4), 一律throw(修前放行並轉為原始數字)
+    it(`should throw v is not a number when input wrapper objects (isenum does not unwrap)`, function() {
+        assert.throws(() => preciseNum(new Number(1.5)), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(new String('1.5')), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(Object('1.5')), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(new Number(1.5), { returnDigit: true }), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(new Number(5)), { message: 'v is not a number' }) //整數路徑
+        assert.throws(() => preciseNum(vm.runInNewContext('new Number(1.5)')), { message: 'v is not a number' }) //跨領域
+        assert.throws(() => preciseNum(vm.runInNewContext('new String(" 2.25 ")')), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(new Number(1e-11)), { message: 'v is not a number' })
     })
 
-    //對應述語P6: 整數路徑(isint為true)原樣返回, 含isnum放行之寫法(修前相同)
-    it(`should return integer-path inputs as they are`, function() {
-        assert.strict.deepStrictEqual(preciseNum('0x10'), '0x10')
-        assert.strict.deepStrictEqual(preciseNum('Infinity'), 'Infinity')
-        assert.strict.deepStrictEqual(preciseNum('1e400'), '1e400')
+    //對應述語P6(第221項第一批改): 整數路徑(isint為true)之有效數字字串原樣返回(去頭尾空白); isnum放行而isenum不收之寫法throw(修前原樣返回)
+    it(`should return integer-path numeric strings as they are and throw for the ones isenum rejects`, function() {
         assert.strict.deepStrictEqual(preciseNum('1.5e3'), '1.5e3')
-        assert.strict.deepStrictEqual(preciseNum('0b11', { returnDigit: true }), 0)
+        assert.strict.deepStrictEqual(preciseNum(' 1.5e3 '), '1.5e3')
+        assert.strict.deepStrictEqual(preciseNum('1e1'), '1e1')
+        for (let s of ['0x10', 'Infinity', '-Infinity', '1e400', '0b11', '0o7']) {
+            assert.throws(() => preciseNum(s), { message: 'v is not a number' }, s)
+            assert.throws(() => preciseNum(s, { returnDigit: true }), { message: 'v is not a number' }, s)
+        }
     })
 
     //對應述語P7: 12位有效數字之捨入(超過者捨入, 含數字字串; 大量級之小數)

@@ -211,9 +211,10 @@ describe(`judge`, function() {
         assert.strict.deepStrictEqual(judge(1.2345678901249, '===', 1.2345678901251), false) //捨入後比較: 相差極微但跨越第12位進位邊界者仍被區分(JSDoc已載)
     })
 
-    it(`should accept wrapper objects as before`, function() {
-        assert.strict.deepStrictEqual(judge(new Number(1.5), '===', 1.5), true) // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(judge(new Number(1.5), '>', 1), true) // eslint-disable-line no-new-wrappers
+    //第221項第一批: 判定由isnum改isenum, 包裝物件不解包(R-WRAPPER-01規則4), 屬無效輸入throw(修前放行為true)
+    it(`should throw x1 is not a number when input wrapper objects (isenum does not unwrap)`, function() {
+        assert.throws(() => judge(new Number(1.5), '===', 1.5), { message: 'x1 is not a number' }) // eslint-disable-line no-new-wrappers
+        assert.throws(() => judge(new Number(1.5), '>', 1), { message: 'x1 is not a number' }) // eslint-disable-line no-new-wrappers
     })
 
     it(`should return '' when input NaN`, function() {

@@ -1,12 +1,12 @@
 import Decimal from 'decimal.js'
 import get from 'lodash-es/get.js'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import isint from './isint.mjs'
 import isbol from './isbol.mjs'
 import cstr from './cstr.mjs'
 
 
-//有效位數(使用者2026-10-31由15位改定12位): 對常見量級與舊版eps = 1e-9同級, 且為相對精度(小數值不歸零)
+//有效位數(使用者2026-10-31由15位改定12位): 相對精度(小數值不歸零, 可吸收多次運算之累積誤差); 舊版eps = 1e-9近似絕對容差, 兩者只在|x|約10~1000同級, |x|>=1000較舊版寬、|x|<1較舊版嚴(見JSDoc必然之限制)
 const PRECISE_DIGITS = 12
 
 
@@ -16,14 +16,14 @@ const PRECISE_DIGITS = 12
  * 【範疇】
  * 計算類函數(judge、estimateTicks使用)。將數字(或數字字串)取12位有效數字後，以不含指數記號之十進位字串回傳，
  * 用以消除浮點運算誤差(如0.1 + 0.2為0.30000000000000004，得'0.3'；0.1累加1000次得99.9999999999986，得'100')，並可取得其小數位數。
- * 判定輸入沿用isnum(收數字與數字字串，含頭尾空白，仍收'0x10'、'Infinity'等isnum之寬鬆寫法，不在本函式變動範圍)，非數字throw Error('v is not a number')。
+ * 判定輸入用isenum(有效數字: 有限數字，或去頭尾空白後為十進位寫法之數字字串，可帶科學記號)，不收Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等，非有效數字throw Error('v is not a number')。
  *
  * 【用法】
  * 1. 整數(isint為true)直接轉字串回傳，小數位數為0，不經12位有效數字處理。
  * 2. 非整數以decimal.js取12位有效數字(new Decimal(v).toSignificantDigits(12)，採ROUND_HALF_UP)，字串為toFixed()，小數位數為decimalPlaces()。
  *    例: 0.1 + 0.2得'0.3'、1e-11得'0.00000000001'(小數位數11)、3.2e-10得'0.00000000032'(小數位數11)、1.23456789012得'1.23456789012'(不補尾零)、
  *    12345678.123456789得'12345678.1235'(小數位數4)、123456789012345.6得'123456789012000'(大量級之非整數，整數位亦只留12位有效數字)。
- * 3. 數字字串先去頭尾空白，以decimal.js直接解析(不經Number轉換，以免多餘位數先被捨入)；包裝物件(new Number(1.5)、new String('1.5'))依isnum放行，先轉為原始數字再處理。
+ * 3. 數字字串先去頭尾空白(整數路徑亦回傳去空白後之字串)，以decimal.js直接解析(不經Number轉換，以免多餘位數先被捨入)；包裝物件(new Number(1.5)、new String('1.5'))不收，throw(isenum不解包)。
  * 4. 供judge使用：judge預設(withPreciseNum為true)以本函式取兩數之12位有效數字後精確比較，故兩數相差落在第12位有效數字之內者可區分(如1e-11與0、1 + 1e-10與1)，
  *    第13位起才不同者視為相等(如1 + 1e-12與1)；浮點誤差累積落在第13位起者(如0.1累加1000次得99.9999999999986)亦視為相等，與100相等。
  *
@@ -37,7 +37,7 @@ const PRECISE_DIGITS = 12
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/preciseNum.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Number} v 輸入數字字串或數字
+ * @param {String|Number} v 輸入數字字串或數字，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnDigit=false] 輸入是否回傳小數位數布林值，預設false
  * @returns {String} 回傳數字字串，若returnDigit=true則回傳小數位數整數
@@ -83,8 +83,13 @@ const PRECISE_DIGITS = 12
 function preciseNum(v, opt = {}) {
 
     //check
-    if (!isnum(v)) {
+    if (!isenum(v)) {
         throw new Error(`v is not a number`)
+    }
+
+    //數字字串去頭尾空白, 其後一律使用去空白後之值(檢測之值即為使用之值)
+    if (typeof v === 'string') {
+        v = v.trim()
     }
 
     //returnDigit
@@ -101,8 +106,8 @@ function preciseNum(v, opt = {}) {
         return cstr(v) //不能用cint, 得要回傳數字字串
     }
 
-    //取12位有效數字, 數字字串去頭尾空白後由decimal.js直接解析(Decimal不接受前後空白), 包裝物件(isnum依內部標籤放行, R-WRAPPER-01)先轉為原始數字(Decimal不接受物件)
-    let d = new Decimal(typeof v === 'string' ? v.trim() : (typeof v === 'object' ? Number(v) : v)).toSignificantDigits(PRECISE_DIGITS)
+    //取12位有效數字, 數字字串已去頭尾空白(Decimal不接受前後空白)由decimal.js直接解析
+    let d = new Decimal(v).toSignificantDigits(PRECISE_DIGITS)
 
     if (returnDigit) {
         return d.decimalPlaces()

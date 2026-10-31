@@ -16,9 +16,11 @@ describe(`arrProduct`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 0.4 when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
+    //第221項第一批連動(arrProduct本身未改, 僅其內呼叫之arrMulti改依使用者2026-10-31裁定: 非有效數字以預設值1計算):
+    //  同位置皆非有效數字者, arrMulti由null改為1, 故加總多1(0.4 -> 1.4); arrProduct之處置待後續批次裁示(見第221項報告〈待裁示〉)
+    it(`should return 1.4 when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
         let r = arrProduct([1, '2', null, null], [0.1, 0.1, 0.1, null])
-        let rr = 0.4
+        let rr = 1.4
         assert.strict.deepStrictEqual(r, rr)
     })
 

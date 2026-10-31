@@ -1,17 +1,19 @@
 import Decimal from 'decimal.js'
-import isnum from './isnum.mjs'
-import isp0int from './isp0int.mjs'
-import cint from './cint.mjs'
+import isenum from './isenum.mjs'
+import iseint from './iseint.mjs'
 
 
 /**
  * 數字或字串無條件進位至指定位數(0位為整數)
  *
+ * v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串；
+ * idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不是則用預設0，不報錯。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ceil.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} v 輸入數字或字串
- * @param {Integer} [idig=0] 輸入指定位數整數，預設0
- * @returns {Number} 回傳無條件進位的數字
+ * @param {Number|String} v 輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串
+ * @param {Integer} [idig=0] 輸入指定位數，需為0~100之有效整數(數字或數字字串，定義見iseint之use為digits)，非有效時改用預設0，預設0
+ * @returns {Number} 回傳無條件進位的數字，v非有效數字時回傳空字串
  * @example
  *
  * console.log(ceil(1.5))
@@ -62,18 +64,32 @@ import cint from './cint.mjs'
  * console.log(ceil(12, 2))
  * // => 12
  *
+ * console.log(ceil(' 1.2 '))
+ * // => 2
+ *
+ * console.log(ceil(Infinity))
+ * // => ''
+ *
+ * console.log(ceil('0x10'))
+ * // => ''
+ *
  */
 function ceil(v, idig = 0) {
 
-    //idig
-    if (!isp0int(idig)) {
+    //idig, 非0~100之有效整數(含數字字串)則用預設0, 其後一律使用轉換值
+    if (!iseint(idig, { use: 'digits' })) {
         idig = 0
     }
-    idig = cint(idig)
+    idig = Number(idig)
 
     //check
-    if (!isnum(v)) {
+    if (!isenum(v)) {
         return ''
+    }
+
+    //v為字串時去頭尾空白(Decimal不接受前後空白), 檢測之值即為使用之值; 直接解析字串可保留多餘位數(不經Number先捨入)
+    if (typeof v === 'string') {
+        v = v.trim()
     }
 
     //r

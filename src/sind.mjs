@@ -1,14 +1,15 @@
-import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+import isenum from './isenum.mjs'
 
 
 /**
  * 輸入角度計算sin值
  *
+ * deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sind.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} deg 輸入角度數字或字串
- * @returns {Number} 回傳sin值
+ * @param {Number|String} deg 輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null
+ * @returns {Number} 回傳sin值，deg非有效數字時回傳null
  * @example
  *
  * console.log(sind(0))
@@ -68,14 +69,23 @@ import cdbl from './cdbl.mjs'
  * console.log(sind(720))
  * // => -4.898587196589413e-16
  *
+ * console.log(sind(' 30 '))
+ * // => 0.49999999999999994
+ *
+ * console.log(sind(Infinity))
+ * // => null
+ *
+ * console.log(sind('0x10'))
+ * // => null
+ *
  */
 function sind(deg) {
 
     //check
-    if (!isnum(deg)) {
+    if (!isenum(deg)) {
         return null
     }
-    deg = cdbl(deg)
+    deg = Number(deg) //檢測之值即為使用之值(去頭尾空白後Number)
 
     return Math.sin(deg * Math.PI / 180)
 }

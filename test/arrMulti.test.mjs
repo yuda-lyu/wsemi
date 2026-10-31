@@ -16,9 +16,10 @@ describe(`arrMulti`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [0.1, 0.2, 0.1, null] when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
+    //第221項第一批: 凡非有效數字一律以預設值1計算(使用者2026-10-31裁定), 同位置皆非有效數字者為1(修前為null)
+    it(`should return [0.1, 0.2, 0.1, 1] when input [1, '2', null, null], [0.1, 0.1, 0.1, null]`, function() {
         let r = arrMulti([1, '2', null, null], [0.1, 0.1, 0.1, null])
-        let rr = [0.1, 0.2, 0.1, null]
+        let rr = [0.1, 0.2, 0.1, 1]
         assert.strict.deepStrictEqual(r, rr)
     })
 

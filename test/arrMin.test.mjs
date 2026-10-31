@@ -47,14 +47,13 @@ describe(`arrMin`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //第221項第一批: 沒有任何有效數字throw(使用者2026-10-31裁定「若沒法計算與回傳結果, 那就報錯」; 修前回null)
     k = 5
     oin[k] = ['March', 'Jan', 'Feb', 'Dec']
-    oout[k] = null
-    it(`should return ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}`, function() {
+    oout[k] = 'invalid vall: must contain a valid number'
+    it(`should throw ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}`, function() {
         k = 5
-        let r = arrMin(oin[k])
-        let rr = oout[k]
-        assert.strict.deepStrictEqual(r, rr)
+        assert.throws(() => arrMin(oin[k]), { message: oout[k] })
     })
 
     k = 6
@@ -97,14 +96,13 @@ describe(`arrMin`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //第221項第一批: compareKey欄位內沒有任何有效數字throw(修前回null)
     k = 10
     oin[k] = [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }]
-    oout[k] = null
-    it(`should return ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}, { compareKey: 's' }`, function() {
+    oout[k] = 'invalid vall: must contain a valid number'
+    it(`should throw ${JSON.stringify(oout[k])} when input ${JSON.stringify(oin[k])}, { compareKey: 's' }`, function() {
         k = 10
-        let r = arrMin(oin[k], { compareKey: 's' })
-        let rr = oout[k]
-        assert.strict.deepStrictEqual(r, rr)
+        assert.throws(() => arrMin(oin[k], { compareKey: 's' }), { message: oout[k] })
     })
 
     k = 11
@@ -147,100 +145,69 @@ describe(`arrMin`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], ''`, function() {
-        let r = arrMin(['abc'], '')
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    //第221項第一批: 沒有任何有效數字(含空陣列)throw 'invalid vall: must contain a valid number'、vall非陣列throw 'invalid vall: must be an array'(修前皆回null)
+    it(`should throw when input ['abc'], ''`, function() {
+        assert.throws(() => arrMin(['abc'], ''), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input ['abc'], []`, function() {
-        let r = arrMin(['abc'], [])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], []`, function() {
+        assert.throws(() => arrMin(['abc'], []), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input ['abc'], {}`, function() {
-        let r = arrMin(['abc'], {})
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], {}`, function() {
+        assert.throws(() => arrMin(['abc'], {}), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input ['abc'], null`, function() {
-        let r = arrMin(['abc'], null)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], null`, function() {
+        assert.throws(() => arrMin(['abc'], null), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input ['abc'], undefined`, function() {
-        let r = arrMin(['abc'], undefined)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ['abc'], undefined`, function() {
+        assert.throws(() => arrMin(['abc'], undefined), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input [], ''`, function() {
-        let r = arrMin([], '')
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], ''`, function() {
+        assert.throws(() => arrMin([], ''), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input [], []`, function() {
-        let r = arrMin([], [])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], []`, function() {
+        assert.throws(() => arrMin([], []), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input [], {}`, function() {
-        let r = arrMin([], {})
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], {}`, function() {
+        assert.throws(() => arrMin([], {}), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input [], null`, function() {
-        let r = arrMin([], null)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], null`, function() {
+        assert.throws(() => arrMin([], null), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input [], undefined`, function() {
-        let r = arrMin([], undefined)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input [], undefined`, function() {
+        assert.throws(() => arrMin([], undefined), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input ''`, function() {
-        let r = arrMin('')
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input ''`, function() {
+        assert.throws(() => arrMin(''), { message: 'invalid vall: must be an array' })
     })
 
-    it(`should return [] when input []`, function() {
-        let r = arrMin([])
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input []`, function() {
+        assert.throws(() => arrMin([]), { message: 'invalid vall: must contain a valid number' })
     })
 
-    it(`should return [] when input {}`, function() {
-        let r = arrMin({})
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input {}`, function() {
+        assert.throws(() => arrMin({}), { message: 'invalid vall: must be an array' })
     })
 
-    it(`should return [] when input null`, function() {
-        let r = arrMin(null)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input null`, function() {
+        assert.throws(() => arrMin(null), { message: 'invalid vall: must be an array' })
     })
 
-    it(`should return [] when input undefined`, function() {
-        let r = arrMin(undefined)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input undefined`, function() {
+        assert.throws(() => arrMin(undefined), { message: 'invalid vall: must be an array' })
     })
 
-    it(`should return [] when input NaN`, function() {
-        let r = arrMin(NaN)
-        let rr = null
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw when input NaN`, function() {
+        assert.throws(() => arrMin(NaN), { message: 'invalid vall: must be an array' })
     })
 
 })

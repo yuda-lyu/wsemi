@@ -9,16 +9,15 @@ import toLower from 'lodash-es/toLower.js'
 import toUpper from 'lodash-es/toUpper.js'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import isarr from './isarr.mjs'
-import isint from './isint.mjs'
+import iseint from './iseint.mjs'
 import strleft from './strleft.mjs'
 import strdelleft from './strdelleft.mjs'
 import replace from './replace.mjs'
 import sep from './sep.mjs'
 import cdbl from './cdbl.mjs'
 import cstr from './cstr.mjs'
-import cint from './cint.mjs'
 import haskey from './haskey.mjs'
 import strmid from './strmid.mjs'
 
@@ -249,16 +248,16 @@ function strCvFrom0360AndPercent(cc) {
 function strCvFromPercent(cc, defValue = 1) {
     if (cc.indexOf('%') >= 0) {
         cc = replace(cc, '%', '')
-        if (!isnum(cc)) {
+        if (!isenum(cc)) {
             throw new Error('invalid color: value is not a number')
         }
-        cc = cdbl(cc) / 100 //百分比值0~100, 轉0~1分佈
+        cc = Number(cc) / 100 //百分比值0~100, 轉0~1分佈
     }
     else {
-        if (!isnum(cc)) {
+        if (!isenum(cc)) {
             throw new Error('invalid color: value is not a number')
         }
-        cc = cdbl(cc) / defValue //基於defValue轉0~1分佈
+        cc = Number(cc) / defValue //基於defValue轉0~1分佈
     }
     if (cc > 1) {
         throw new Error('invalid color: value > 1')
@@ -271,10 +270,10 @@ function strCvFromPercent(cc, defValue = 1) {
 
 
 function strCvFrom01(cc) {
-    if (!isnum(cc)) {
+    if (!isenum(cc)) {
         throw new Error('invalid color: value is not a number')
     }
-    cc = cdbl(cc)
+    cc = Number(cc)
     if (cc > 1) {
         throw new Error('invalid color: value > 1')
     }
@@ -338,10 +337,10 @@ function strParseHex8(cc) {
             throw new Error('hex.length of color is not equal to 2')
         }
         c = parseInt(c, 16)
-        if (!isnum(c)) {
+        if (!isenum(c)) {
             throw new Error('invalid hex of color')
         }
-        c = cdbl(c)
+        c = Number(c)
         return c / 255 //回傳0~1
     }
     let r = gvhex(strmid(cc, 0, 2))
@@ -962,10 +961,10 @@ function modComplement(rgba, fmtOutput = 'toRgbString') {
 
 function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的色相與數量num產生分佈色
-    if (!isint(num)) {
+    if (!iseint(num)) {
         throw new Error('num is not an integer')
     }
-    num = cint(num)
+    num = Number(num)
     if (num <= 1) {
         return [rgba]
     }
@@ -983,10 +982,10 @@ function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
 
 function spreadMonochromatic(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的飽和度與亮度與數量num產生分佈配色
-    if (!isint(num)) {
+    if (!iseint(num)) {
         throw new Error('num is not an integer')
     }
-    num = cint(num)
+    num = Number(num)
     if (num <= 1) {
         return [rgba]
     }

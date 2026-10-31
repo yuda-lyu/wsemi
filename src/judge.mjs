@@ -1,6 +1,6 @@
 import Decimal from 'decimal.js'
 import get from 'lodash-es/get.js'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import isbol from './isbol.mjs'
 import preciseNum from './preciseNum.mjs'
 
@@ -38,9 +38,9 @@ function neq(x1, x2) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/judge.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Number} x1 輸入數字字串或數字，若要精準判識得要用字串
+ * @param {String|Number} x1 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x1 is not a number')
  * @param {String} op 輸入操作符號字串，可使用'==='、'!=='、'>='、'<='、'>'、'<'
- * @param {NuString|Number} x2 輸入數字字串或數字，若要精準判識得要用字串
+ * @param {NuString|Number} x2 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x2 is not a number')
  * @param {Object} [opt={}] 輸設定物件，預設{}
  * @param {Boolean} [opt.withPreciseNum=true] 輸是否自動轉原始精度之數字字串布林值，預設true
  * @returns {Number} 回傳判斷布林值
@@ -120,11 +120,19 @@ function neq(x1, x2) {
 function judge(x1, op, x2, opt = {}) {
 
     //check
-    if (!isnum(x1)) {
+    if (!isenum(x1)) {
         throw new Error(`x1 is not a number`)
     }
-    if (!isnum(x2)) {
+    if (!isenum(x2)) {
         throw new Error(`x2 is not a number`)
+    }
+
+    //數字字串去頭尾空白(Decimal不接受前後空白), 其後一律使用去空白後之值(檢測之值即為使用之值); 不轉Number以保留精準判識
+    if (typeof x1 === 'string') {
+        x1 = x1.trim()
+    }
+    if (typeof x2 === 'string') {
+        x2 = x2.trim()
     }
 
     //withPreciseNum

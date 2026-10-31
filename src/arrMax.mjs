@@ -1,23 +1,25 @@
 import get from 'lodash-es/get.js'
 import map from 'lodash-es/map.js'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
-import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+import isenum from './isenum.mjs'
 import arrReduce from './arrReduce.mjs'
 
 
 /**
  * 找尋陣列內元素最大值
  *
+ * 只取有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)比較，其餘元素(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)略過不參與；
+ * vall內沒有任何有效數字(含空陣列)時throw Error('invalid vall: must contain a valid number')，vall不是陣列時throw Error('invalid vall: must be an array')，訊息不帶值。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrMax.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} vall 輸入原始陣列
+ * @param {Array} vall 輸入原始陣列，需含至少一個有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
  * @param {String} [opt.compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
- * @returns {Number|Object} 回傳最大值數字或判斷具有最大值之物件
+ * @returns {Number|Object} 回傳最大值數字或判斷具有最大值之物件，沒有任何有效數字時throw
  * @example
  *
  * let r
@@ -38,9 +40,13 @@ import arrReduce from './arrReduce.mjs'
  * console.log(r)
  * // => 3
  *
- * r = arrMax(['March', 'Jan', 'Feb', 'Dec'])
- * console.log(r)
- * // => null
+ * try {
+ *     arrMax(['March', 'Jan', 'Feb', 'Dec'])
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid vall: must contain a valid number
  *
  * r = arrMax(['1', '30', '  4  ', '100000', '21'])
  * console.log(r)
@@ -61,12 +67,20 @@ import arrReduce from './arrReduce.mjs'
  * console.log(r)
  * // => { s: 'Feb', i: 100000 }
  *
- * r = arrMax(
- *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],
- *     { compareKey: 's' }
- * )
+ * try {
+ *     arrMax(
+ *         [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],
+ *         { compareKey: 's' }
+ *     )
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid vall: must contain a valid number
+ *
+ * r = arrMax([5, Infinity, '0x10', '-', null, 3])
  * console.log(r)
- * // => null
+ * // => 5 (Infinity與'0x10'不是有效數字, 略過)
  *
  * r = arrMax(
  *     [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],
@@ -79,8 +93,8 @@ import arrReduce from './arrReduce.mjs'
 function arrMax(vall, opt = {}) {
 
     //check
-    if (!isearr(vall)) {
-        return null
+    if (!isarr(vall)) {
+        throw new Error('invalid vall: must be an array')
     }
 
     //returnIndex
@@ -106,13 +120,13 @@ function arrMax(vall, opt = {}) {
         vallTrans,
         (vTemp, vNow) => {
 
-            //check
-            if (!isnum(vNow)) {
+            //check, 只取有效數字
+            if (!isenum(vNow)) {
                 return vTemp
             }
 
-            //cdbl
-            vNow = cdbl(vNow)
+            //取值為去頭尾空白後Number
+            vNow = Number(vNow)
 
             //check
             if (vTemp === null) {
@@ -129,6 +143,11 @@ function arrMax(vall, opt = {}) {
         },
         { returnIndex: true }
     )
+
+    //check, 沒有任何有效數字(含空陣列)無從得出結果, 報錯(vRes於首個有效數字時才設定)
+    if (vRes === null) {
+        throw new Error('invalid vall: must contain a valid number')
+    }
 
     //check
     if (returnIndex) {

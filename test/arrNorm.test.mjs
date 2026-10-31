@@ -28,9 +28,12 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 2.23606797749979 when input [1, '2', null, null]`, function() {
+    //第221項第一批連動(arrNorm、arrProduct本身未改; arrNorm = sqrt(arrProduct(v, v)), arrProduct內呼叫arrMulti):
+    //  arrMulti依使用者2026-10-31裁定改為「非有效數字以預設值1計算」, 同位置皆非有效數字者由null改為1, 故arrProduct加總多1、此處由sqrt(5)變sqrt(7);
+    //  此為連動之現況而非定案, arrProduct/arrNorm對標記之處置待後續批次裁示(見第221項報告〈待裁示〉)
+    it(`should return 2.6457513110645907 when input [1, '2', null, null]`, function() {
         let r = arrNorm([1, '2', null, null])
-        let rr = 2.23606797749979
+        let rr = 2.6457513110645907
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -100,33 +103,34 @@ describe(`arrNorm`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input ['abc'], ''`, function() {
+    //第221項第一批連動(同上): arrMulti(['abc'], ['abc'])由[null]改為[1], arrProduct得1而非null, arrNorm得sqrt(1)=1而非null(待裁示, 非定案)
+    it(`should return 1 when input ['abc'], ''`, function() {
         let r = arrNorm(['abc'], '')
-        let rr = null
+        let rr = 1
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input ['abc'], []`, function() {
+    it(`should return 1 when input ['abc'], []`, function() {
         let r = arrNorm(['abc'], [])
-        let rr = null
+        let rr = 1
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input ['abc'], {}`, function() {
+    it(`should return 1 when input ['abc'], {}`, function() {
         let r = arrNorm(['abc'], {})
-        let rr = null
+        let rr = 1
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input ['abc'], null`, function() {
+    it(`should return 1 when input ['abc'], null`, function() {
         let r = arrNorm(['abc'], null)
-        let rr = null
+        let rr = 1
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return null when input ['abc'], undefined`, function() {
+    it(`should return 1 when input ['abc'], undefined`, function() {
         let r = arrNorm(['abc'], undefined)
-        let rr = null
+        let rr = 1
         assert.strict.deepStrictEqual(r, rr)
     })
 
