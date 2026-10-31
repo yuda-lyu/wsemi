@@ -4,6 +4,16 @@
 
 本檔 2026-10-28 新建;此前各功能之現況未逐一盤點入檔,以 `sgud/rule/rulebook.md` 各條目之「站點全集」「測試」「已知限制」「變更紀錄」為準.之後完成一項功能或結束一輪工作時於此增列或更新.
 
+## 診斷通報輪(主控任務 20261031121854,2026-10-31;package.json version 1.9.33 之工作樹,未提交未發布)
+
+- 現況: ①**`evEmit`、`evEmitDelay`、`debounce`、`pmDebounce` 之自行輸出經 `getDiag(opt)`**(排程第 212 項;R-DIAG-01 規則 14): 新增 `opt.logDetail`、`opt.funLog`(同 getDiag);預設只出固定詞彙 label 與 `{ errType, errCode? }`,事件名不入 label;W3 由 stdout 改 stderr(破壞性變更第 44 項).`pmDebounce` 為同類掃描所得之同形站點(逐字相同),一併修.②**新增 `getDiagShape(v, opt)` 與 `diag.shape`**(排程第 207 項①;R-DIAG-01 規則 15): 資料值之形狀摘要,永不輸出值,不走訪巢狀;`opt.keys:false` 供鍵名亦不宜輸出者;`src/index.mjs` 已以 `toolg/gPackageIndex.mjs` 重產(增 1 個匯出);語料 H01~H16(共 195 案).
+- 規則: `sgud/rule/rulebook_diag.md` R-DIAG-01 規則 14、15(含站點全集與未套之 wsemi 全庫 console 站點 81 處,其中印捕獲之錯誤值 26 處).
+- 測試: 站點表驅動共用層 `test/tools/diagSiteKit.mjs`(由 `test/evEmit.test.mjs`、`test/evEmitDelay.test.mjs`、`test/debounce.test.mjs`、`test/pmDebounce.test.mjs` 引用)、`test/getDiagShape.test.mjs`、語料 H01~H16(`test/getDiag.test.mjs` 鎖定 195 案、13 組).既有之 pm 失敗案改以 `test/tools/pmSettleRunner.mjs` 之 `captureOut` 同時攔 log 與 error.
+- 驗證(2026-10-31 最終碼): 全套 `npm test` 18360 passing、5 pending、0 failing;受影響 6 檔 371 passing;新測試對 HEAD 之 src 202 failing(修前紅);變異 60/60 擊殺;負載試驗(CPU 8 行程 8 輪、阻塞 400ms/1s 8 輪、1500ms/3s 4 輪,每輪 262 案)0 失敗;eslint 改動檔 0 error;sonnet 子代理獨立審查 13 條已處置;**未經第三方外審**.明細見主控任務 20261031121854 `agent-out/wsemi-修正報告.md` 與 `agent-out/wsemi-evidence/`.
+- 待辦(他套件,不在 wsemi): w-sync-webdata 之 `genEmit.mjs`/`WSyncWebdataServer.mjs` 傳 `logDetail`/`funLog`(建議書§4);w-web-api/task/perm 改用 `getDiagShape`(對照表見報告);w-web-api 之 `errBrief` 與 `getDiagBriefErr` 重複(過濾規則不同,報告列示).
+- 待裁示: wsemi 全庫其餘 console 輸出站點(81 處,26 處印捕獲之錯誤值,其中 fsWatchFile/fsWatchFolder/setIntervalHp/setTimeoutHp/fsSrlog/importResources 為伺服端或常駐路徑)是否比照處理.
+- 已知限制: 見 R-DIAG-01 規則 15(無 util 時 Proxy 不可偵測;鍵名視為結構).
+
 ## 小輪 run01 之 9 項(主控任務 20261030143215,2026-10-30;package.json version 1.9.32 之工作樹,未提交未發布)
 
 - `debounce` 之 `cancel()`(第 178 項,R-TRACE-01): 已實作;回傳函數帶 `cancel()`(清偵測計時器、丟棄待執行者、已開始者不受影響),onTrace 增 `cancel`(dropped、stopped).測試 `test/debounce.test.mjs`〈debounce cancel〉6 案.

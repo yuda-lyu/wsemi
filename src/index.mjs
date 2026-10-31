@@ -242,6 +242,7 @@ export { default as getDataFromExcelFileU8ArrDyn } from './getDataFromExcelFileU
 export { default as getDiag } from './getDiag.mjs'
 export { default as getDiagBriefErr } from './getDiagBriefErr.mjs'
 export { default as getDiagSecrets } from './getDiagSecrets.mjs'
+export { default as getDiagShape } from './getDiagShape.mjs'
 export { default as getEnv } from './getEnv.mjs'
 export { default as getErrorMessage } from './getErrorMessage.mjs'
 export { default as getExcelU8ArrFromData } from './getExcelU8ArrFromData.mjs'

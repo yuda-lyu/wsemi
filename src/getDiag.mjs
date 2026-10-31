@@ -3,6 +3,7 @@ import maskDiagText from './maskDiagText.mjs'
 import maskDiagCopy from './maskDiagCopy.mjs'
 import maskDiagErr from './maskDiagErr.mjs'
 import getDiagBriefErr from './getDiagBriefErr.mjs'
+import getDiagShape from './getDiagShape.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import { MASK, NONE, isObjLike, isProxy, gd, hasOwn, declOf, normLabel, normSafe, MODE_KEY, markHandled, markDropped, arrVals, pickList } from './_diagKit.mjs'
 
@@ -210,6 +211,8 @@ let build = (snap, base, extra) => {
 
     //秘密清單取不到時fail-closed: 文字為***、拷貝為[Uncopyable]、對外錯誤值為new Error('***')
     diag.brief = (err) => getDiagBriefErr(err, { codes, types, nested })
+    //形狀摘要(只輸出型別、長度與鍵名, 永不輸出值; 與秘密清單無關, 取不到清單時亦照常)
+    diag.shape = (v, o) => getDiagShape(v, o)
     //(取不到時輸入不交出: 原生Promise以markDropped標記已處理)
     diag.mask = (text) => {
         let ls = getLists()
@@ -269,7 +272,7 @@ let build = (snap, base, extra) => {
  * 出口：funLog→funLog(label, safe, detail)(無getDetail或noDetail時為2引數)，其回傳之原生Promise經_pmMarkHandled標記已處理(不呼叫一般thenable之then)、同步拋錯吞下；
  * 否則logDetail且有getDetail→console[level](label, detail)；否則console[level](label)或console[level](label, safe)；console拋錯時以(label, '(unprintable)')退一次，再失敗放棄
  *
- * 回傳之diag另帶: diag.brief(err)(getDiagBriefErr)、diag.mask(text)(對外文字之遮罩，用reject清單，不用路徑類樣式；非字串如Error依maskDiagErr之規則)、diag.copy(v)(maskDiagCopy，用detail清單)、diag.err(v)(maskDiagErr，用reject清單；對外reject、throw、'error'事件前必經)、
+ * 回傳之diag另帶: diag.brief(err)(getDiagBriefErr)、diag.shape(v, opt)(getDiagShape：資料值之形狀摘要，只輸出型別、長度與鍵名，永不輸出值，與秘密清單無關)、diag.mask(text)(對外文字之遮罩，用reject清單，不用路徑類樣式；非字串如Error依maskDiagErr之規則)、diag.copy(v)(maskDiagCopy，用detail清單)、diag.err(v)(maskDiagErr，用reject清單；對外reject、throw、'error'事件前必經)、
  * diag.with(src)(回傳併入額外秘密來源之新diag)
  *
  * cfg之secrets讀自有或繼承(至Object.prototype止)之資料屬性；宣告類參數(codes、types、nested、patterns、safeKeys)無法讀取(已撤銷之Proxy等)者略過，不影響秘密清單
@@ -291,7 +294,7 @@ let build = (snap, base, extra) => {
  * @param {Array} [cfg.nested=[]] 輸入另讀其code之巢狀錯誤鍵陣列，預設[]
  * @param {Array} [cfg.patterns=[]] 輸入套件樣式陣列，預設[]
  * @param {Array} [cfg.safeKeys=[]] 輸入safe之鍵名白名單陣列(恆含errType、errCode)，預設[]
- * @returns {Function} 回傳診斷輸出函數diag(label, safe, getDetail, level)，並帶brief、mask、copy、err、with方法
+ * @returns {Function} 回傳診斷輸出函數diag(label, safe, getDetail, level)，並帶brief、shape、mask、copy、err、with方法
  * @example
  *
  * let ss = getDiagSecrets({ urls: ['postgres://u1:pw1234@db:5432/app'] })

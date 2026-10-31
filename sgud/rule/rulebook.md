@@ -22,9 +22,9 @@
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
-| 診斷輸出與遮罩 | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 29.4 |
+| 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
-| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 10.4 |
+| 破壞性變更紀錄(第 39 項起) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 12.6 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 
 各條目全標題:

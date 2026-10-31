@@ -4,12 +4,15 @@ import ispint from './ispint.mjs'
 import cint from './cint.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import getTrace from './getTrace.mjs'
+import getDiag from './getDiag.mjs'
 
 
 /**
  * 函數去除抖動
  *
- * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時以console.log記錄而不外拋(不產生未處理之rejection)，不影響後續佇列；輸入非函數時不排入佇列(不影響已排入之任務)，以console.log記錄'func is not a function'
+ * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時記錄而不外拋(不產生未處理之rejection)，不影響後續佇列；輸入非函數時不排入佇列(不影響已排入之任務)，記錄'func is not a function'
+ *
+ * 記錄經getDiag(opt)之出口(診斷輸出與遮罩之單一實作，規則R-DIAG-01)：任務拋出之值常含權杖、使用者識別或資料值，不得原樣輸出。預設以console.error只輸出固定詞彙之label'[wsemi debounce] task threw'與安全摘要{ errType, errCode }；opt.logDetail為true時改輸出遮罩後之拋出值；opt.funLog為函數時輸出只交給它，不寫console。輸入非函數時以console.log輸出固定詞彙'[wsemi debounce] func is not a function'(同樣可由opt.funLog接管)
  *
  * 回傳之函數另帶cancel()：立即停止偵測(清除偵測計時器)並丟棄尚未執行之任務，回傳undefined；已開始執行之任務(含其尚未完成之Promise)不受影響、不被中止；未有待執行之任務時呼叫亦無妨(只通知事件)；cancel之後再呼叫去除抖動函數，則如同初次呼叫重新排入並開始偵測
  *
@@ -18,6 +21,8 @@ import getTrace from './getTrace.mjs'
  * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每10ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'stop'時為佇列已空而停止偵測，'cancel'時為呼叫cancel()(含dropped為被丟棄之待執行任務數、stopped為是否停止了進行中之偵測布林值；cancel不另通知'stop')；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
+ * @param {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之任務拋出值，須為true才生效，同getDiag，建構時取快照，預設false(只輸出安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，給予時記錄只交給它而不寫console，同getDiag，建構時取快照，預設null
  * @returns {Function} 回傳去除抖動函數，格式為(func, ...input)=>undefined，func為欲去除抖動之任務函數，input為呼叫func時之引數；另帶cancel方法
  * @example
  *
@@ -144,6 +149,9 @@ function debounce(ms = 300, opt = {}) {
         //trace, 觀察回調(opt.onTrace), 未給時為null
         let trace = getTrace(opt)
 
+        //diag, 診斷輸出出口(opt.logDetail、opt.funLog, 建構時取快照; 任務拋出之值與固定詞彙之記錄皆經此, 不原樣console輸出)
+        let diag = getDiag(opt)
+
         function detect() {
             if (t !== null) {
                 return
@@ -179,9 +187,9 @@ function debounce(ms = 300, opt = {}) {
                     pm2resolve(m.func)(...m.input)
                         .then((res) => {
                             if (res.state === 'error') {
-                                //記錄本身亦可能拋錯(如值之util.inspect.custom會拋), 須包try, 否則成為未處理之rejection(同evEmit之通報)
+                                //記錄經diag(永不拋錯), 外層try為最後防線, 否則成為未處理之rejection(同evEmit之通報)
                                 try {
-                                    console.log('m.func catch', res.msg)
+                                    diag('[wsemi debounce] task threw', diag.brief(res.msg), () => res.msg, 'error')
                                 }
                                 catch (err) {}
                             }
@@ -199,7 +207,7 @@ function debounce(ms = 300, opt = {}) {
 
             //check
             if (!isfun(func)) {
-                console.log('func is not a function')
+                diag('[wsemi debounce] func is not a function')
                 return
             }
 

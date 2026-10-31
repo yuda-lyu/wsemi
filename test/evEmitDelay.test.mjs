@@ -2,6 +2,7 @@ import assert from 'assert'
 import evem from '../src/evem.mjs'
 import evEmitDelay from '../src/evEmitDelay.mjs'
 import cst from '../src/_const.mjs'
+import { SENT, EVNAME, mkRec, captureOut, mkFunLog, defineDiagSiteCases } from './tools/diagSiteKit.mjs'
 
 
 let delay = (ms) => {
@@ -398,6 +399,48 @@ describe(`evEmitDelay`, function() {
         evEmitDelay(ev, 'ev', [{}])
         await delay(60)
         assert.strict.deepStrictEqual(seq, ['L1'])
+    })
+
+})
+
+
+//通報經getDiag出口(R-DIAG-01規則14; evEmitDelay之opt整包傳入evEmit, logDetail、funLog、tag同evEmit)
+describe(`evEmitDelay 通報經getDiag出口(R-DIAG-01規則14)`, function() {
+
+    defineDiagSiteCases(['W1c'])
+
+    it(`opt整包傳入evEmit: 事件名不入label、tag留於label、funLog收(label, 安全摘要, 細節)且細節含事件名`, async function() {
+        let rec = mkRec()
+        let ev = evem()
+        ev.on(EVNAME, () => {
+            throw new Error(`token=${SENT}`)
+        })
+        evEmitDelay(ev, EVNAME, [], { tag: 'myMod', funLog: mkFunLog(rec) })
+        await rec.wait(1)
+        let a = rec.calls[0].args
+        assert.strict.deepStrictEqual([a[0], a[1], a[2].event], ['[wsemi myMod] listener threw', { errType: 'Error' }, EVNAME])
+    })
+
+    it(`有error監聽者時error事件仍交給監聽者原值, console與funLog皆不輸出`, async function() {
+        let got = mkRec() //error事件之紀錄(同步點: 等error事件抵達)
+        let rec = mkRec() //console與funLog之紀錄(應為空)
+        let cap = captureOut(rec)
+        try {
+            let ev = evem()
+            let thrown = new Error(`token=${SENT}`)
+            ev.on('error', (m) => {
+                got.add(m.msg === thrown)
+            })
+            ev.on(EVNAME, () => {
+                throw thrown
+            })
+            evEmitDelay(ev, EVNAME, [], { funLog: mkFunLog(rec) })
+            await got.wait(1)
+        }
+        finally {
+            cap.restore()
+        }
+        assert.strict.deepStrictEqual([got.calls, rec.calls], [[true], []])
     })
 
 })

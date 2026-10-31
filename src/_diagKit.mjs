@@ -1449,6 +1449,6 @@ export {
     MASK, LIM, TYPES, NONE, STACK_GETTER, ERR_CTORS, RE_INDEX,
     BL_AB, BL_SAB, BL_TA, BL_DV, SZ_MAP, SZ_SET, RE_SOURCE, DATE_TIME, MAP_ENTRIES, SET_VALUES, MAP_IT_NEXT, SET_IT_NEXT,
     gd, hasOwn, tryCall, isObjLike, isProxy, ownData, declOf, protoChain, isErr, unbox, kindOf, className, ctorName, errCtorOf, stackReadable, readStack,
-    isIndexKey, symDesc, isCredKey, pickList, getMatcher, getCtx, maskStr, maskUrlCred, applyIvs, addUrlCred, normLabel, normSafe, hasUtil,
+    isIndexKey, symDesc, isCredKey, pickList, getMatcher, getCtx, maskStr, maskUrlCred, applyIvs, addUrlCred, normLabel, normSafe, hasUtil, cutAt,
     MODE_KEY, BUDGET_KEY, optMode, isClassProto, markHandled, markDropped, freeKey, defKey, arrVals, LIST_FAIL_ITEM
 }

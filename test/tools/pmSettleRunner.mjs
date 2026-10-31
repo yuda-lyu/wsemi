@@ -221,6 +221,24 @@ function captureLog() {
     return { logs, restore }
 }
 
+//captureOut, 攔截console.log與console.error(debounce、pmDebounce之失敗經getDiag出口以console.error記錄, 固定詞彙之記錄為console.log), 回傳記錄陣列與還原函數
+function captureOut() {
+    let logs = []
+    let cl = console.log
+    let ce = console.error
+    console.log = (...a) => {
+        logs.push(a.map((x) => safeStr(x)).join(' '))
+    }
+    console.error = (...a) => {
+        logs.push(a.map((x) => safeStr(x)).join(' '))
+    }
+    let restore = () => {
+        console.log = cl
+        console.error = ce
+    }
+    return { logs, restore }
+}
+
 //最小DOM替身(domPrepend用insertBefore/firstChild, importResources用getElementsByTagName與load事件)
 class El {
     constructor(tag) {
@@ -417,15 +435,12 @@ let cases = {
         return { t1: { s: r1.s, same: r1.v === v }, t2: { s: r2.s, v: r2.v } }
     },
 
-    //pmDebounce: 任務同步拋錯不使計時器回呼拋錯, 失敗以console.log記錄(同debounce, 回傳已撤銷Proxy之任務為成功故不記錄, 預期記錄1次), 後續任務照常
+    //pmDebounce: 任務同步拋錯不使計時器回呼拋錯, 失敗經getDiag出口以console.error記錄(label'[wsemi pmDebounce] task threw'+安全摘要, 不含拋出值; 同debounce, 回傳已撤銷Proxy之任務為成功故不記錄, 預期記錄1次), 後續任務照常
     debounceSyncThrowThenNext: async () => {
         let D = await imp('pmDebounce')
         let d = D(10)
-        let logs = []
-        let cl = console.log
-        console.log = (...a) => {
-            logs.push(a.map((x) => safeStr(x)).join(' '))
-        }
+        let cap = captureOut()
+        let logs = cap.logs
         try {
             let ret = d(() => {
                 throw new Error('sync boom')
@@ -444,22 +459,19 @@ let cases = {
                 next2 = true
             })
             await new Promise((resolve) => setTimeout(resolve, 150))
-            return { ret: ret === undefined ? 'undefined' : typeof ret, next, next2, logged: logs.filter((s) => s.includes('m.func catch')).length }
+            return { ret: ret === undefined ? 'undefined' : typeof ret, next, next2, logged: logs.filter((s) => s === '[wsemi pmDebounce] task threw <object>').length, leaked: logs.filter((s) => s.includes('sync boom')).length }
         }
         finally {
-            console.log = cl
+            cap.restore()
         }
     },
 
-    //debounce: 非同步任務reject不產生未處理之rejection, 以console.log記錄, 後續任務照常
+    //debounce: 非同步任務reject不產生未處理之rejection, 經getDiag出口以console.error記錄(label+安全摘要, 不含拋出值), 後續任務照常
     debounceAsyncReject: async () => {
         let D = await imp('debounce')
         let d = D(10)
-        let logs = []
-        let cl = console.log
-        console.log = (...a) => {
-            logs.push(a.map((x) => safeStr(x)).join(' '))
-        }
+        let cap = captureOut()
+        let logs = cap.logs
         try {
             d(async () => {
                 throw new Error('async boom')
@@ -470,10 +482,10 @@ let cases = {
                 next = true
             })
             await new Promise((resolve) => setTimeout(resolve, 100))
-            return { next, logged: logs.filter((s) => s.includes('m.func catch') && s.includes('async boom')).length }
+            return { next, logged: logs.filter((s) => s === '[wsemi debounce] task threw <object>').length, leaked: logs.filter((s) => s.includes('async boom')).length }
         }
         finally {
-            console.log = cl
+            cap.restore()
         }
     },
 
@@ -1101,7 +1113,7 @@ let cases = {
         }
     },
 
-    //pmDebounce、debounce: 非函數之任務不排入, 回傳undefined並以console.log記錄'func is not a function', 不影響已排入之任務
+    //pmDebounce、debounce: 非函數之任務不排入, 回傳undefined並經getDiag出口以console.log記錄固定詞彙'[wsemi 函數名] func is not a function', 不影響已排入之任務
     nonFunPmDebounce: async () => {
         let PD = await imp('pmDebounce')
         let cap = captureLog()
@@ -1113,7 +1125,7 @@ let cases = {
             })
             let ret = d(undefined)
             await delay(150)
-            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === 'func is not a function').length }
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi pmDebounce] func is not a function').length }
         }
         finally {
             cap.restore()
@@ -1130,7 +1142,7 @@ let cases = {
             })
             let ret = d('abc')
             await delay(150)
-            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === 'func is not a function').length }
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi debounce] func is not a function').length }
         }
         finally {
             cap.restore()

@@ -24,6 +24,11 @@ import cint from './cint.mjs'
  *
  * 因已脫勾，本函數無法同步取得emit之結果，故不回傳值；需要回傳值者請用evEmit。
  *
+ * 【通報之輸出】
+ *
+ * opt整包傳入evEmit，無error監聽者(或拋錯者即error監聽器本身)而須自行輸出時，與evEmit相同經getDiag出口：預設只輸出固定詞彙label與安全摘要，不輸出拋出值與事件名，
+ * opt.logDetail為true才輸出遮罩後細節，opt.funLog為函數時輸出只交給它。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/evEmitDelay.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} ev 輸入事件物件，為evem所建立之eventemitter3實例
@@ -34,6 +39,8 @@ import cint from './cint.mjs'
  * @param {Function} [opt.funSettle=null] 輸入監聽器出錯時之收尾函數，同evEmit
  * @param {Function} [opt.funEmit=null] 輸入實際派發函數，同evEmit
  * @param {String} [opt.tag='evem'] 輸入模組名稱字串，同evEmit
+ * @param {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之細節(事件名與拋出值)，同evEmit(opt整包傳入evEmit，監聽器拋錯之通報經getDiag出口，預設只輸出安全摘要)，預設false
+ * @param {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，同evEmit，預設null
  * @returns {Object} 回傳timer物件，可供呼叫端以clearTimeout取消該次派發
  * @example
  *

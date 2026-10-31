@@ -7,14 +7,14 @@ import { fileURLToPath, pathToFileURL } from 'url'
 
 //_diagCases語料之執行器(getDiag系列測試共用)
 //
-//runCases({ dirSrc, util, ids }): 於本行程載入dirSrc內之8個函數與語料, 逐案執行, 回傳{ id: null(通過)|'失敗原因' }
+//runCases({ dirSrc, util, ids }): 於本行程載入dirSrc內之9個函數與語料, 逐案執行, 回傳{ id: null(通過)|'失敗原因' }
 //runNoUtil({ dirSrc, ids }): 以子行程(載入前刪除process.getBuiltinModule, 模擬瀏覽器與Node<20.16)執行, 回傳同上
 //直接執行本檔(子行程模式): node diagCaseRunner.mjs --noutil --src <dir>, 結果以一行JSON寫至stdout(前綴__DIAG__)
 
 
 let dirThis = path.dirname(fileURLToPath(import.meta.url))
 let dirSrcDef = path.join(dirThis, '..', '..', 'src')
-let names = ['getDiag', 'getDiagSecrets', 'maskDiagText', 'maskDiagCopy', 'maskDiagErr', 'maskDiagUrl', 'getDiagBriefErr', 'genDiagFunLog']
+let names = ['getDiag', 'getDiagSecrets', 'maskDiagText', 'maskDiagCopy', 'maskDiagErr', 'maskDiagUrl', 'getDiagBriefErr', 'genDiagFunLog', 'getDiagShape']
 
 
 //loadApi, 載入dirSrc內之函數與語料與_diagKit

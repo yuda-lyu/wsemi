@@ -12,7 +12,7 @@ import { names } from './tools/diagCaseRunner.mjs'
 
 describe(`getDiag`, function() {
 
-    it(`should export the 8 diag functions from index`, function() {
+    it(`should export the 9 diag functions from index`, function() {
         //R-DIAG-01 規則1: 單一實作由wsemi對外匯出; index於Node內無法整份載入, 故檢查匯出行
         let c = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8')
         for (let n of names) {
@@ -48,16 +48,16 @@ describe(`getDiag`, function() {
         assert.strict.deepStrictEqual(seen.has('_diagKit.mjs') && seen.has('_diagCodes.mjs') && seen.has('_pmMarkHandled.mjs'), true)
     })
 
-    it(`should contain 179 corpus cases with unique ids in 12 groups`, function() {
-        //R-DIAG-01 規則6(dspec D5): 共用語料179案(設計§5.2之99案、§6.9之35案, 與diag-run03外審新增之25案、diag-run04自審與外審新增之12案、wsemi小輪run01新增之8案: C14、U22、R23、R24、O25、A11、A12、A13)
+    it(`should contain 195 corpus cases with unique ids in 13 groups`, function() {
+        //R-DIAG-01 規則6(dspec D5): 共用語料195案(設計§5.2之99案、§6.9之35案, 與diag-run03外審新增之25案、diag-run04自審與外審新增之12案、wsemi小輪run01新增之8案: C14、U22、R23、R24、O25、A11、A12、A13; 診斷通報輪新增H01~H16共16案: 形狀摘要getDiagShape)
         let ids = corpus.cases.map((c) => c.id)
-        assert.strict.deepStrictEqual(ids.length, 179)
-        assert.strict.deepStrictEqual(new Set(ids).size, 179)
+        assert.strict.deepStrictEqual(ids.length, 195)
+        assert.strict.deepStrictEqual(new Set(ids).size, 195)
         let g = {}
         for (let c of corpus.cases) {
             g[c.group] = (g[c.group] || 0) + 1
         }
-        assert.strict.deepStrictEqual(g, { T: 24, K: 10, V: 10, B: 3, E: 14, P: 9, S: 11, C: 14, U: 22, R: 24, O: 25, A: 13 })
+        assert.strict.deepStrictEqual(g, { T: 24, K: 10, V: 10, B: 3, E: 14, P: 9, S: 11, C: 14, U: 22, R: 24, O: 25, A: 13, H: 16 })
     })
 
     it(`should flag 5-character fragments of case-registered secrets and read cross-realm Maps in the corpus checker (diag-run03 terra #30, #31)`, async function() {

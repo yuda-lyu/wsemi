@@ -9,10 +9,10 @@
 //  secrets(): 固定之測試秘密組{ url, username, password, num, token, path }(每次新物件)
 //  cases: 案例陣列, 每案為
 //    { id, group, fn, label, make(ctx), call(api, ctx), expect, need, wire }
-//    id      案例代號(T文字/K鍵/V值/B二進位/E錯誤/P使用端程式/S結構/C摘要/U秘密導出/R對外值/O出口/A轉接器)
+//    id      案例代號(T文字/K鍵/V值/B二進位/E錯誤/P使用端程式/S結構/C摘要/U秘密導出/R對外值/O出口/A轉接器/H形狀)
 //    fn      主要受測之函數名
 //    make    回傳全新之輸入(含Symbol、Proxy、跨realm物件、getter計數器ctx.hit())
-//    call    wsemi自身測試之執行方式: api為{ getDiag, getDiagSecrets, maskDiagText, maskDiagCopy, maskDiagErr, maskDiagUrl, getDiagBriefErr, genDiagFunLog }, 回傳輸出(可為Promise)
+//    call    wsemi自身測試之執行方式: api為{ getDiag, getDiagSecrets, maskDiagText, maskDiagCopy, maskDiagErr, maskDiagUrl, getDiagBriefErr, genDiagFunLog, getDiagShape }, 回傳輸出(可為Promise)
 //    expect  { noSecret: 'detail'|'reject'(輸出之一切字串、鍵、Symbol描述與單字元字串之依序串接皆不含該類秘密), userCode: 0(ctx.hits為0), check(out, ctx)(回傳true或失敗原因字串) }
 //    need    'util'(只在util.types可用時適用其期望; 無util環境以check內之ctx.util分支記錄實際行為)、'realm'(需跨realm產生器ctx.realm)、'child'(需子行程, 由測試另行執行)
 //    wire    true者為各套件接線測試應以其呼叫點重跑之案
@@ -2448,6 +2448,287 @@ add('A13', 'genDiagFunLog', 'safe含自有__proto__鍵(JSON.parse產生, 頂層�
             { protoOk: true, own: '(none)', subOwn: { y: 1 }, a: 2, x: undefined },
             { protoOk: true, own: { x: 1 }, subOwn: '(none)', a: undefined, x: undefined },
         ]) || JSON.stringify(out),
+    },
+})
+
+
+//H 資料值之形狀摘要(getDiagShape; 只輸出型別、長度與鍵名, 永不輸出值)
+//CTL, 控制字元鍵名用之字元(行分隔符以碼點組入, 免於原始碼內出現原字元)
+const LS = String.fromCharCode(0x2028)
+const PS = String.fromCharCode(0x2029)
+add('H01', 'getDiagShape', '原始值: undefined、null、number、boolean、bigint、symbol、function、類別、字串、空字串', {
+    call: (api) => [undefined, null, 1, true, BigInt(1), Symbol('s'), () => 1, class A {}, 'abc', ''].map((x) => api.getDiagShape(x)),
+    expect: { check: (out) => jeq(out, ['(undefined)', '(null)', '(number)', '(boolean)', '(bigint)', '(symbol)', '(function)', '(function)', '(string)', '(string, empty)']) || JSON.stringify(out) },
+})
+add('H02', 'getDiagShape', '一般物件列鍵名(插入序)、空物件、類別實例(只列自有可列舉; 原型方法與繼承之可列舉鍵不列)、原型為null', {
+    call: (api) => {
+        class K {
+            constructor() {
+                this.id = 1
+                this.name = 'n'
+            }
+
+            method() {}
+        }
+        let inh = Object.create({ inherited: 1 })
+        inh.own = 1
+        let hid = { shown: 1 }
+        Object.defineProperty(hid, 'hidden', { value: 1, enumerable: false })
+        let np = Object.create(null)
+        np.x = 1
+        return [{ b: 1, a: 2, 1: 3 }, {}, new K(), inh, hid, np].map((x) => api.getDiagShape(x))
+    },
+    expect: { check: (out) => jeq(out, ['(keys: 1,b,a)', '(keys: none)', '(keys: id,name)', '(keys: own)', '(keys: shown)', '(keys: x)']) || JSON.stringify(out) },
+})
+add('H03', 'getDiagShape', '陣列: 長度、稀疏陣列、陣列子類別、最大長度', {
+    call: (api) => {
+        class MyArr extends Array {}
+        let sp = [1, , 3] // eslint-disable-line no-sparse-arrays
+        let big = []
+        big.length = 4294967295
+        return [[], [1, 2, 3], sp, MyArr.from([1, 2]), big].map((x) => api.getDiagShape(x))
+    },
+    expect: { check: (out) => jeq(out, ['(array, length=0)', '(array, length=3)', '(array, length=3)', '(array, length=2)', '(array, length=4294967295)']) || JSON.stringify(out) },
+})
+add('H04', 'getDiagShape', '不執行使用端程式: 鍵為getter(只列名、不執行)、toString、toJSON、toPrimitive、inspect.custom、constructor與then之getter', {
+    call: (api, ctx) => {
+        let o = {
+            get g() {
+                ctx.hit()
+                throw new Error('getter')
+            },
+            toString() {
+                ctx.hit()
+                return 'x'
+            },
+            toJSON() {
+                ctx.hit()
+                return 'x'
+            },
+            [Symbol.toPrimitive]() {
+                ctx.hit()
+                return 'x'
+            },
+            [Symbol.for('nodejs.util.inspect.custom')]() {
+                ctx.hit()
+                return 'x'
+            },
+        }
+        Object.defineProperty(o, 'constructor', {
+            enumerable: false,
+            get() {
+                ctx.hit()
+                return Object
+            }
+        })
+        Object.defineProperty(o, 'then', {
+            enumerable: true,
+            get() {
+                ctx.hit()
+                return undefined
+            }
+        })
+        return api.getDiagShape(o)
+    },
+    expect: { userCode: 0, check: (out) => eq(out, '(keys: g,toString,toJSON,then)') },
+})
+add('H05', 'getDiagShape', '值不外洩: 物件值、巢狀值、陣列項、Map之鍵值、Set項、Error訊息、字串、Buffer之內容皆不出現於輸出(鍵名除外)', {
+    call: (api, ctx) => {
+        let s = ctx.sec
+        return [
+            { a: s.url, b: s.password, c: { d: s.password }, e: [s.token], f: s.username, g: s.path },
+            [s.password, s.token],
+            new Map([[s.token, s.password]]),
+            new Set([s.password]),
+            Object.assign(new Error(`failed ${s.url}`), { code: s.password, path: s.path }),
+            s.password,
+            Buffer.from(s.password),
+            new String(s.password), // eslint-disable-line no-new-wrappers
+            s.num,
+        ].map((x) => api.getDiagShape(x))
+    },
+    expect: { noSecret: 'detail', check: (out) => jeq(out, ['(keys: a,b,c,e,f,g)', '(array, length=2)', '(map, size=1)', '(set, size=1)', '(error)', '(string)', '(binary, byteLength=8)', '(boxed)', '(number)']) || JSON.stringify(out) },
+})
+add('H06', 'getDiagShape', '鍵數上限20(其餘接,...+N)、鍵名上限32(超過截斷接...)、opt.maxKeys與opt.maxKeyLen(非整數、範圍外、存取器、繼承者用預設)', {
+    call: (api, ctx) => {
+        let o = {}
+        for (let i = 0; i < 25; i++) {
+            o[`k${i}`] = i
+        }
+        let k32 = 'x'.repeat(32)
+        let k33 = 'y'.repeat(33)
+        let getter = {}
+        Object.defineProperty(getter, 'maxKeys', {
+            enumerable: true,
+            get() {
+                ctx.hit()
+                return 2
+            }
+        })
+        let inherit = Object.create({ maxKeys: 2 })
+        let s = (v, opt) => api.getDiagShape(v, opt)
+        return {
+            dflt: s(o),
+            exact20: s(Object.fromEntries(Array.from({ length: 20 }, (_, i) => [`k${i}`, i]))),
+            len: s({ [k32]: 1, [k33]: 2 }),
+            m3: s(o, { maxKeys: 3 }),
+            m100: s(o, { maxKeys: 100 }),
+            bad: [0, 101, 2.5, '5', -1, NaN, null, undefined, {}].map((m) => s(o, { maxKeys: m })),
+            getter: s(o, getter),
+            inherit: s(o, inherit),
+            l1: s({ abcdef: 1 }, { maxKeyLen: 1 }),
+            l200: s({ ['z'.repeat(200)]: 1 }, { maxKeyLen: 200 }).length,
+            lbad: [0, 201, 1.5, '4'].map((m) => s({ [k33]: 1 }, { maxKeyLen: m })),
+        }
+    },
+    expect: {
+        userCode: 0,
+        check: (out) => {
+            let dflt = `(keys: ${Array.from({ length: 20 }, (_, i) => `k${i}`).join(',')},...+5)`
+            let exp20 = `(keys: ${Array.from({ length: 20 }, (_, i) => `k${i}`).join(',')})`
+            let k33dflt = `(keys: ${'y'.repeat(32)}...)`
+            return jeq(out, {
+                dflt,
+                exact20: exp20,
+                len: `(keys: ${'x'.repeat(32)},${'y'.repeat(32)}...)`,
+                m3: '(keys: k0,k1,k2,...+22)',
+                m100: `(keys: ${Array.from({ length: 25 }, (_, i) => `k${i}`).join(',')})`,
+                bad: Array(9).fill(dflt),
+                getter: dflt,
+                inherit: dflt,
+                l1: '(keys: a...)',
+                l200: `(keys: ${'z'.repeat(200)})`.length,
+                lbad: Array(4).fill(k33dflt),
+            }) || JSON.stringify(out)
+        },
+    },
+})
+add('H07', 'getDiagShape', '鍵名之控制字元與格式字元(換行、跳脫、DEL、C1、U+2028、U+2029、雙向覆寫、零寬字元、BOM、軟連字號)換成?, 輸出不含換行(防log注入與重排)', {
+    call: (api) => {
+        let fmt = [0x202e, 0x2066, 0x200b, 0xfeff, 0xad].map((c) => String.fromCharCode(c)).join('')
+        let o = { [`a\nFAKE LOG\r\u001b[31m`]: 1, [`b\u007f\u0085${LS}${PS}c`]: 2, [`x${fmt}y`]: 3 }
+        return api.getDiagShape(o)
+    },
+    expect: { check: (out) => (/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(out) ? `control or format char in output ${JSON.stringify(out)}` : eq(out, '(keys: a?FAKE LOG??[31m,b????c,x?????y)')) },
+})
+add('H08', 'getDiagShape', '不走訪巢狀值: 循環參照、10萬層深巢狀、各層帶getter皆只列頂層鍵', {
+    call: (api, ctx) => {
+        let cyc = { a: 1 }
+        cyc.self = cyc
+        let deep = {}
+        let cur = deep
+        for (let i = 0; i < 100000; i++) {
+            cur.x = {}
+            cur = cur.x
+        }
+        let nest = { top: {} }
+        Object.defineProperty(nest.top, 'g', {
+            enumerable: true,
+            get() {
+                ctx.hit()
+                throw new Error('nested getter')
+            }
+        })
+        let arr = []
+        arr.push(arr)
+        return [cyc, deep, nest, arr].map((x) => api.getDiagShape(x))
+    },
+    expect: { userCode: 0, check: (out) => jeq(out, ['(keys: a,self)', '(keys: x)', '(keys: top)', '(array, length=1)']) || JSON.stringify(out) },
+})
+add('H09', 'getDiagShape', '內建物件以內部槽位辨識: map/set之size、ArrayBuffer/型別陣列/DataView/Buffer之byteLength、date、regexp、promise、error、boxed', {
+    call: (api) => {
+        let pm = Promise.resolve(1)
+        return [new Map([[1, 2]]), new Set([1, 2]), new ArrayBuffer(8), new Uint8Array(4), new DataView(new ArrayBuffer(3)), Buffer.from('abc'), new Date(0), /x/g, pm, new TypeError('e'), new Number(1), Object(Symbol('s'))].map((x) => api.getDiagShape(x)) // eslint-disable-line no-new-wrappers
+    },
+    expect: { check: (out) => jeq(out, ['(map, size=1)', '(set, size=2)', '(binary, byteLength=8)', '(binary, byteLength=4)', '(binary, byteLength=3)', '(binary, byteLength=3)', '(date)', '(regexp)', '(promise)', '(error)', '(boxed)', '(boxed)']) || JSON.stringify(out) },
+})
+add('H10', 'getDiagShape', '內容無法檢查者為(opaque): WeakMap、WeakSet、WeakRef、陣列迭代器、Map迭代器、產生器物件', {
+    call: (api) => [new WeakMap(), new WeakSet(), new WeakRef({}), [][Symbol.iterator](), new Map().entries(), (function * () {})()].map((x) => api.getDiagShape(x)),
+    expect: { check: (out) => jeq(out, Array(6).fill('(opaque)')) || JSON.stringify(out) },
+})
+add('H11', 'getDiagShape', 'Proxy: util可用時為(proxy)且陷阱0次(不列鍵名); 無util時不可偵測, 陷阱被執行(已知限制, 記錄之)', {
+    call: (api, ctx) => {
+        let h = {}
+        for (let t of ['get', 'getOwnPropertyDescriptor', 'getPrototypeOf', 'has', 'ownKeys']) {
+            h[t] = (...args) => {
+                ctx.hit()
+                return Reflect[t](...args)
+            }
+        }
+        return [api.getDiagShape(new Proxy({ a: 1 }, h)), api.getDiagShape(new Proxy([1, 2], h))]
+    },
+    expect: { check: (out, ctx) => (ctx.util ? (jeq(out, ['(proxy)', '(proxy)']) && ctx.hits === 0) : (jeq(out, ['(keys: a)', '(array, length=2)']) && ctx.hits > 0)) || `${JSON.stringify(out)} hits=${ctx.hits}` },
+})
+add('H12', 'getDiagShape', '已撤銷之Proxy與其他無法讀取者: 不拋錯(util可用為(proxy), 無util為(unreadable))', {
+    call: (api) => {
+        let { proxy, revoke } = Proxy.revocable({ a: 1 }, {})
+        revoke()
+        let { proxy: pa, revoke: ra } = Proxy.revocable([1], {})
+        ra()
+        return [api.getDiagShape(proxy), api.getDiagShape(pa)]
+    },
+    expect: { check: (out, ctx) => jeq(out, ctx.util ? ['(proxy)', '(proxy)'] : ['(unreadable)', '(unreadable)']) || JSON.stringify(out) },
+})
+add('H13', 'getDiagShape', '跨realm之陣列、一般物件、Map、Error同本realm之規則', {
+    need: 'realm',
+    call: (api, ctx) => [api.getDiagShape(ctx.realm('[1, 2]')), api.getDiagShape(ctx.realm('({ a: 1 })')), api.getDiagShape(ctx.realm('new Map([[1, 2]])')), api.getDiagShape(ctx.realm('new TypeError("x")'))],
+    expect: { check: (out) => jeq(out, ['(array, length=2)', '(keys: a)', '(map, size=1)', '(error)']) || JSON.stringify(out) },
+})
+add('H14', 'getDiagShape', 'Symbol鍵與不可列舉鍵不列; 自有__proto__鍵(JSON.parse產生)列為__proto__; 只有Symbol鍵者為(keys: none)', {
+    call: (api) => {
+        let o = { a: 1, [Symbol('s')]: 2 }
+        Object.defineProperty(o, 'h', { value: 1, enumerable: false })
+        return [api.getDiagShape(o), api.getDiagShape(JSON.parse('{"__proto__":{"x":1},"b":2}')), api.getDiagShape({ [Symbol('only')]: 1 })]
+    },
+    expect: { check: (out) => jeq(out, ['(keys: a)', '(keys: __proto__,b)', '(keys: none)']) || JSON.stringify(out) },
+})
+add('H15', 'getDiagShape', 'getDiag之diag.shape與getDiagShape同結果; 秘密清單取不到(fail-closed)時照常輸出(形狀與秘密無關); 可作為safe之值(宣告safeKeys)', {
+    call: async (api, ctx) => {
+        let v = { id: 1, name: 'n' }
+        let d1 = api.getDiag({}, {})
+        let d2 = api.getDiag({}, {
+            secrets: () => {
+                throw new Error('x')
+            }
+        })
+        let rs = await capture(async () => {
+            let d3 = api.getDiag({}, { safeKeys: ['shape'] })
+            d3('lb', { shape: d3.shape(v), other: 'x' })
+        })
+        return { same: [d1.shape(v) === api.getDiagShape(v), d2.shape(v) === api.getDiagShape(v), d1.shape(v, { maxKeys: 1 }) === api.getDiagShape(v, { maxKeys: 1 })], rs }
+    },
+    expect: { check: (out) => jeq(out, { same: [true, true, true], rs: [{ m: 'log', args: ['lb', { shape: '(keys: id,name)' }] }] }) || JSON.stringify(out) },
+})
+add('H16', 'getDiagShape', 'opt.keys恰為false時一般物件與類別實例不列鍵名而為(object), 其餘種類(陣列、map、字串等)不變; 非false之值(\'false\'、0、null、undefined、存取器、繼承者)不生效', {
+    call: (api, ctx) => {
+        class K {
+            constructor() {
+                this.id = 1
+            }
+        }
+        let getter = {}
+        Object.defineProperty(getter, 'keys', {
+            enumerable: true,
+            get() {
+                ctx.hit()
+                return false
+            }
+        })
+        let inherit = Object.create({ keys: false })
+        let nk = { keys: false }
+        return {
+            obj: [{ a: 1 }, {}, new K(), Object.create(null)].map((x) => api.getDiagShape(x, nk)),
+            other: [[1, 2], new Map(), 'abc', null, 5].map((x) => api.getDiagShape(x, nk)),
+            ignored: ['false', 0, null, undefined, getter, inherit].map((k) => api.getDiagShape({ a: 1 }, k === getter || k === inherit ? k : { keys: k })),
+        }
+    },
+    expect: {
+        userCode: 0,
+        check: (out) => jeq(out, {
+            obj: ['(object)', '(object)', '(object)', '(object)'],
+            other: ['(array, length=2)', '(map, size=0)', '(string)', '(null)', '(number)'],
+            ignored: Array(6).fill('(keys: a)'),
+        }) || JSON.stringify(out),
     },
 })
 

@@ -2,6 +2,7 @@ import assert from 'assert'
 import debounce from '../src/debounce.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
 import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+import { SENT, mkRec, captureOut, mkFunLog, defineDiagSiteCases } from './tools/diagSiteKit.mjs'
 
 
 describe(`debounce`, function() {
@@ -320,9 +321,9 @@ describe(`debounce cancel`, function() {
 
 describe(`debounce settle(R-PM-SETTLE-01)`, function() {
 
-    it(`debounce: 非同步任務reject不產生未處理之rejection, 以console.log記錄一次, 後續任務照常 [規則2、3、10]`, function() {
+    it(`debounce: 非同步任務reject不產生未處理之rejection, 經getDiag出口以console.error記錄一次(label+安全摘要, 不含拋出值), 後續任務照常 [規則2、3、10; R-DIAG-01]`, function() {
         let { r } = runPmSettle('debounceAsyncReject')
-        assert.strict.deepStrictEqual(r.out, { next: true, logged: 1 })
+        assert.strict.deepStrictEqual(r.out, { next: true, logged: 1, leaked: 0 })
         assert.strict.deepStrictEqual(r.unhandled, [])
     })
 
@@ -338,12 +339,121 @@ describe(`debounce settle(R-PM-SETTLE-01)`, function() {
 
 describe(`debounce 非函數任務(R-PM-SETTLE-01規則12)`, function() {
 
-    it(`非函數之任務不排入佇列, 回傳undefined並以console.log記錄'func is not a function', 已排入之任務照常執行 [規則12]`, function() {
+    it(`非函數之任務不排入佇列, 回傳undefined並經getDiag出口以console.log記錄'[wsemi debounce] func is not a function', 已排入之任務照常執行 [規則12]`, function() {
         let { r } = runPmSettle('nonFunDebounce')
-        //R-PM-SETTLE-01 規則12: debounce回undefined並記錄(寫入JSDoc); JSDoc debounce:11「輸入非函數時不排入佇列(不影響已排入之任務)，以console.log記錄'func is not a function'」
+        //R-PM-SETTLE-01 規則12: debounce回undefined並記錄(寫入JSDoc); JSDoc debounce「輸入非函數時不排入佇列(不影響已排入之任務)，記錄'func is not a function'」(R-DIAG-01: 固定詞彙label)
         assert.strict.deepStrictEqual(r.out, { ret: 'undefined', ran: true, logged: 1 })
         //R-PM-SETTLE-01 規則2
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})
+
+
+//通報經getDiag出口(R-DIAG-01規則14; 建議書W3、W4: 任務拋出值與固定詞彙之記錄原樣console輸出, 洩漏權杖與資料值、且無法由使用端以funLog接管)
+describe(`debounce 通報經getDiag出口(R-DIAG-01規則14)`, function() {
+
+    //三態與形態表(站點W3同步拋錯、W3 reject、W4非函數)
+    defineDiagSiteCases(['W3a', 'W3b', 'W4a'])
+
+    //opt於建構時取快照(getDiag之規則): 建構後改動opt不影響已建立之去除抖動函數
+    it(`opt.logDetail、opt.funLog於debounce()建構時取快照, 建構後改動opt不影響輸出`, async function() {
+        let opt = { logDetail: false }
+        let rec = mkRec()
+        let cap = captureOut(rec)
+        let clock = useFakeClock()
+        try {
+            let d = debounce(10, opt)
+            opt.logDetail = true
+            opt.funLog = mkFunLog(rec)
+            d(() => {
+                throw new Error(`token=${SENT}`)
+            })
+            await clock.advance(40)
+        }
+        finally {
+            clock.restore()
+            cap.restore()
+        }
+        await rec.wait(1)
+        assert.strict.deepStrictEqual(rec.calls, [{ via: 'console.error', args: ['[wsemi debounce] task threw', { errType: 'Error' }] }])
+    })
+
+    it(`兩個debounce實例各帶不同funLog, 輸出各歸其funLog(互不串擾), console不輸出`, async function() {
+        let r1 = mkRec()
+        let r2 = mkRec()
+        let rc = mkRec()
+        let cap = captureOut(rc)
+        let clock = useFakeClock()
+        try {
+            let d1 = debounce(10, { funLog: mkFunLog(r1) })
+            let d2 = debounce(10, { funLog: mkFunLog(r2) })
+            d1(() => {
+                throw new Error('e1')
+            })
+            d2('not-a-function')
+            d2(() => {
+                throw new Error('e2')
+            })
+            await clock.advance(40)
+        }
+        finally {
+            clock.restore()
+            cap.restore()
+        }
+        await r1.wait(1)
+        await r2.wait(2)
+        assert.strict.deepStrictEqual(r1.calls.map((c) => [c.args[0], c.args[1]]), [['[wsemi debounce] task threw', { errType: 'Error' }]])
+        assert.strict.deepStrictEqual(r2.calls.map((c) => [c.args[0], c.args[1]]), [['[wsemi debounce] func is not a function', undefined], ['[wsemi debounce] task threw', { errType: 'Error' }]])
+        assert.strict.deepStrictEqual(rc.calls, [])
+    })
+
+    it(`opt為undefined、null、非物件時取預設(console輸出安全摘要), 不拋錯`, async function() {
+        for (let opt of [undefined, null, 'abc', 5]) {
+            let rec = mkRec()
+            let cap = captureOut(rec)
+            let clock = useFakeClock()
+            try {
+                let d = debounce(10, opt)
+                d(() => {
+                    throw new Error(`token=${SENT}`)
+                })
+                await clock.advance(40)
+            }
+            finally {
+                clock.restore()
+                cap.restore()
+            }
+            await rec.wait(1)
+            assert.strict.deepStrictEqual(rec.calls, [{ via: 'console.error', args: ['[wsemi debounce] task threw', { errType: 'Error' }] }], String(opt))
+        }
+    })
+
+    //記錄後之行為不變: 失敗之任務不影響後續任務(佇列照常), 仍僅記錄一次
+    it(`任務失敗經診斷出口記錄後, 後續任務照常執行且各記錄一次`, async function() {
+        let rec = mkRec()
+        let ran = []
+        let clock = useFakeClock()
+        try {
+            let d = debounce(10, { funLog: mkFunLog(rec) })
+            d(() => {
+                throw new Error('e1')
+            })
+            await clock.advance(40)
+            d(() => {
+                ran.push('ok')
+            })
+            await clock.advance(40)
+            d(async () => {
+                throw new Error('e2')
+            })
+            await clock.advance(40)
+        }
+        finally {
+            clock.restore()
+        }
+        await rec.wait(2)
+        assert.strict.deepStrictEqual([ran, rec.calls.map((c) => [c.via, c.args[0], c.args[1]])], [['ok'], [['funLog', '[wsemi debounce] task threw', { errType: 'Error' }], ['funLog', '[wsemi debounce] task threw', { errType: 'Error' }]]])
     })
 
 })
