@@ -2334,13 +2334,17 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>各陣列內元素相加，可輸入n個同長度陣列，若需輸入之陣列長度不同則回傳空陣列</p>
+<p>各元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與相加；
+凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以該函數之預設值0計算，不報錯、不略過；
+同位置元素皆非有效數字者，該位置結果為0。
+陣列容器之處置不變：參數少於2個、非陣列、長度不同，回傳空陣列。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrAdd.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrAdd.mjs.html">arrAdd.mjs</a>, <a href="arrAdd.mjs.html#line64">line 64</a>
+        <a href="arrAdd.mjs.html">arrAdd.mjs</a>, <a href="arrAdd.mjs.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -2387,7 +2391,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let v1 = [1, 2, 3, 4]let v2 = [0.1, 0.1, 0.1, 0.1]let v3 = [11, 22, 33, 44]console.log(arrAdd(v1, v2))// => [ 1.1, 2.1, 3.1, 4.1 ]console.log(arrAdd(v1, v2, v3))// => [ 12.1, 24.1, 36.1, 48.1 ]</code></pre>
+    <pre class="prettyprint"><code>let v1 = [1, 2, 3, 4]let v2 = [0.1, 0.1, 0.1, 0.1]let v3 = [11, 22, 33, 44]console.log(arrAdd(v1, v2))// => [ 1.1, 2.1, 3.1, 4.1 ]console.log(arrAdd(v1, v2, v3))// => [ 12.1, 24.1, 36.1, 48.1 ]console.log(arrAdd([1, '2', ' 3 ', 4], [10, '-', null, Infinity]))// => [ 11, 2, 3, 4 ] (非有效數字以0計算)console.log(arrAdd(['-', 'NP'], [null, '0x10']))// => [ 0, 0 ] (同位置皆非有效數字為0)</code></pre>
 
 
 
@@ -2434,7 +2438,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入n個陣列，需同長度，其內元素皆會轉為浮點數，各陣列針對各元素進行相加總</p></td>
+            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相加總；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者一律以預設值0計算</p></td>
         </tr>
 
     
@@ -5425,13 +5429,15 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>找尋陣列內元素最大值</p>
+<p>只取有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)比較，其餘元素(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)略過不參與；
+vall內沒有任何有效數字(含空陣列)時throw Error('invalid vall: must contain a valid number')，vall不是陣列時throw Error('invalid vall: must be an array')，訊息不帶值。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrMax.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrMax.mjs.html">arrMax.mjs</a>, <a href="arrMax.mjs.html#line79">line 79</a>
+        <a href="arrMax.mjs.html">arrMax.mjs</a>, <a href="arrMax.mjs.html#line93">line 93</a>
     </li></ul></dd>
     
 
@@ -5478,7 +5484,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let rr = arrMax([100000, 1, 30, 4, 21])console.log(r)// => 100000r = arrMax([1, 30, 4, 21, 100000])console.log(r)// => 100000r = arrMax([1, 30, 4, 100000, 21])console.log(r)// => 100000r = arrMax([1, 30, 4, 100000, 21], { returnIndex: true })console.log(r)// => 3r = arrMax(['March', 'Jan', 'Feb', 'Dec'])console.log(r)// => nullr = arrMax(['1', '30', '  4  ', '100000', '21'])console.log(r)// => 100000r = arrMax(['1', '30', '  4  ', '100000', 21])console.log(r)// => 100000r = arrMax(['a1', 'b30', '  4  ', '100000', 21])console.log(r)// => 100000r = arrMax(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i' })console.log(r)// => { s: 'Feb', i: 100000 }r = arrMax(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 's' })console.log(r)// => nullr = arrMax(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i', returnIndex: true })console.log(r)// => 2</code></pre>
+    <pre class="prettyprint"><code>let rr = arrMax([100000, 1, 30, 4, 21])console.log(r)// => 100000r = arrMax([1, 30, 4, 21, 100000])console.log(r)// => 100000r = arrMax([1, 30, 4, 100000, 21])console.log(r)// => 100000r = arrMax([1, 30, 4, 100000, 21], { returnIndex: true })console.log(r)// => 3try {    arrMax(['March', 'Jan', 'Feb', 'Dec'])}catch (err) {    console.log(err.message)}// => invalid vall: must contain a valid numberr = arrMax(['1', '30', '  4  ', '100000', '21'])console.log(r)// => 100000r = arrMax(['1', '30', '  4  ', '100000', 21])console.log(r)// => 100000r = arrMax(['a1', 'b30', '  4  ', '100000', 21])console.log(r)// => 100000r = arrMax(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i' })console.log(r)// => { s: 'Feb', i: 100000 }try {    arrMax(        [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],        { compareKey: 's' }    )}catch (err) {    console.log(err.message)}// => invalid vall: must contain a valid numberr = arrMax([5, Infinity, '0x10', '-', null, 3])console.log(r)// => 5 (Infinity與'0x10'不是有效數字, 略過)r = arrMax(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i', returnIndex: true })console.log(r)// => 2</code></pre>
 
 
 
@@ -5541,7 +5547,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
                 </td>
             
 
-            <td class="description last"><p>輸入原始陣列</p></td>
+            <td class="description last"><p>輸入原始陣列，需含至少一個有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw</p></td>
         </tr>
 
     
@@ -5717,7 +5723,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳最大值數字或判斷具有最大值之物件</p>
+    <p>回傳最大值數字或判斷具有最大值之物件，沒有任何有效數字時throw</p>
 </div>
 
 
@@ -5758,13 +5764,15 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>找尋陣列內元素最小值</p>
+<p>只取有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)比較，其餘元素(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)略過不參與；
+vall內沒有任何有效數字(含空陣列)時throw Error('invalid vall: must contain a valid number')，vall不是陣列時throw Error('invalid vall: must be an array')，訊息不帶值。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrMin.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrMin.mjs.html">arrMin.mjs</a>, <a href="arrMin.mjs.html#line79">line 79</a>
+        <a href="arrMin.mjs.html">arrMin.mjs</a>, <a href="arrMin.mjs.html#line93">line 93</a>
     </li></ul></dd>
     
 
@@ -5811,7 +5819,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let rr = arrMin([100000, 1, 30, 4, 21])console.log(r)// => 1r = arrMin([1, 30, 4, 21, 100000])console.log(r)// => 1r = arrMin([1, 30, 4, 100000, 21])console.log(r)// => 1r = arrMin([1, 30, 4, 100000, 21], { returnIndex: true })console.log(r)// => 0r = arrMin(['March', 'Jan', 'Feb', 'Dec'])console.log(r)// => nullr = arrMin(['1', '30', '  4  ', '100000', '21'])console.log(r)// => 1r = arrMin(['1', '30', '  4  ', '100000', 21])console.log(r)// => 1r = arrMin(['a1', 'b30', '  4  ', '100000', 21])console.log(r)// => 4r = arrMin(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i' })console.log(r)// => { s: 'March', i: 1 }r = arrMin(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 's' })console.log(r)// => nullr = arrMin(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i', returnIndex: true })console.log(r)// => 0</code></pre>
+    <pre class="prettyprint"><code>let rr = arrMin([100000, 1, 30, 4, 21])console.log(r)// => 1r = arrMin([1, 30, 4, 21, 100000])console.log(r)// => 1r = arrMin([1, 30, 4, 100000, 21])console.log(r)// => 1r = arrMin([1, 30, 4, 100000, 21], { returnIndex: true })console.log(r)// => 0try {    arrMin(['March', 'Jan', 'Feb', 'Dec'])}catch (err) {    console.log(err.message)}// => invalid vall: must contain a valid numberr = arrMin(['1', '30', '  4  ', '100000', '21'])console.log(r)// => 1r = arrMin(['1', '30', '  4  ', '100000', 21])console.log(r)// => 1r = arrMin(['a1', 'b30', '  4  ', '100000', 21])console.log(r)// => 4r = arrMin(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i' })console.log(r)// => { s: 'March', i: 1 }try {    arrMin(        [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],        { compareKey: 's' }    )}catch (err) {    console.log(err.message)}// => invalid vall: must contain a valid numberr = arrMin([5, -Infinity, '0x10', '-', null, 3])console.log(r)// => 3 (-Infinity與'0x10'不是有效數字, 略過)r = arrMin(    [{ s: 'March', i: 1 }, { s: 'Jan', i: 4 }, { s: 'Feb', i: 100000 }, { s: 'Dec', i: 30 }, { s: 'Nov', i: 'a25' }],    { compareKey: 'i', returnIndex: true })console.log(r)// => 0</code></pre>
 
 
 
@@ -5874,7 +5882,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
                 </td>
             
 
-            <td class="description last"><p>輸入原始陣列</p></td>
+            <td class="description last"><p>輸入原始陣列，需含至少一個有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw</p></td>
         </tr>
 
     
@@ -6050,7 +6058,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳最小值數字或判斷具有最小值之物件</p>
+    <p>回傳最小值數字或判斷具有最小值之物件，沒有任何有效數字時throw</p>
 </div>
 
 
@@ -6091,13 +6099,17 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>各陣列同位置元素相乘</p>
+<p>各元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與相乘；
+凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以該函數之預設值1計算，不報錯、不略過；
+同位置元素皆非有效數字者，該位置結果為1。
+陣列容器之處置不變：參數少於2個、非陣列、長度不同，回傳空陣列。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrMulti.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrMulti.mjs.html">arrMulti.mjs</a>, <a href="arrMulti.mjs.html#line64">line 64</a>
+        <a href="arrMulti.mjs.html">arrMulti.mjs</a>, <a href="arrMulti.mjs.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -6144,7 +6156,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let v1 = [1, 2, 3, 4]let v2 = [0.1, 0.1, 0.1, 0.1]let v3 = [11, 22, 33, 44]console.log(arrMulti(v1, v2))// => [ 0.1, 0.2, 0.30000000000000004, 0.4 ]console.log(arrMulti(v1, v2, v3))// => [ 1.1, 4.4, 9.900000000000002, 17.6 ]</code></pre>
+    <pre class="prettyprint"><code>let v1 = [1, 2, 3, 4]let v2 = [0.1, 0.1, 0.1, 0.1]let v3 = [11, 22, 33, 44]console.log(arrMulti(v1, v2))// => [ 0.1, 0.2, 0.30000000000000004, 0.4 ]console.log(arrMulti(v1, v2, v3))// => [ 1.1, 4.4, 9.900000000000002, 17.6 ]console.log(arrMulti([2, '3', ' 4 ', 5], [10, '-', null, Infinity]))// => [ 20, 3, 4, 5 ] (非有效數字以1計算)console.log(arrMulti(['-', 'NP'], [null, '0x10']))// => [ 1, 1 ] (同位置皆非有效數字為1)</code></pre>
 
 
 
@@ -6191,7 +6203,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入n個陣列，需同長度，其內元素皆會轉為浮點數，各陣列針對各元素進行相加總</p></td>
+            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相乘；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者一律以預設值1計算</p></td>
         </tr>
 
     
@@ -6217,7 +6229,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳各元素相加後陣列</p>
+    <p>回傳各元素相乘後陣列</p>
 </div>
 
 
@@ -8030,13 +8042,14 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入浮點數計算asin角度值</p>
+<p>v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null；v超出-1~1(定義域外)時依Math.asin回傳NaN。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/asind.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="asind.mjs.html">asind.mjs</a>, <a href="asind.mjs.html#line42">line 42</a>
+        <a href="asind.mjs.html">asind.mjs</a>, <a href="asind.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -8083,7 +8096,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(asind(0))// => 0console.log(asind(0.5))// => 30.000000000000004console.log(asind(0.7071067811865475))// => 44.99999999999999console.log(asind(0.8660254037844386))// => 59.99999999999999console.log(asind(1))// => 90console.log(asind(-0.5))// => -30.000000000000004console.log(asind(-0.7071067811865475))// => -44.99999999999999console.log(asind(-0.8660254037844386))// => -59.99999999999999console.log(asind(-1))// => -90</code></pre>
+    <pre class="prettyprint"><code>console.log(asind(0))// => 0console.log(asind(0.5))// => 30.000000000000004console.log(asind(0.7071067811865475))// => 44.99999999999999console.log(asind(0.8660254037844386))// => 59.99999999999999console.log(asind(1))// => 90console.log(asind(-0.5))// => -30.000000000000004console.log(asind(-0.7071067811865475))// => -44.99999999999999console.log(asind(-0.8660254037844386))// => -59.99999999999999console.log(asind(-1))// => -90console.log(asind(Infinity))// => nullconsole.log(asind('0x10'))// => null</code></pre>
 
 
 
@@ -8133,7 +8146,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -8159,7 +8172,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳asin角度值</p>
+    <p>回傳asin角度值，v非有效數字時回傳null</p>
 </div>
 
 
@@ -8197,13 +8210,15 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入浮點數x,y計算atan2角度值</p>
+<p>x與y須皆為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，任一不是(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null；
+不再接受Infinity與-Infinity(舊版atan2d(1, Infinity)為90)，需要極限值者請自行以90、-90代入。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/atan2d.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="atan2d.mjs.html">atan2d.mjs</a>, <a href="atan2d.mjs.html#line55">line 55</a>
+        <a href="atan2d.mjs.html">atan2d.mjs</a>, <a href="atan2d.mjs.html#line60">line 60</a>
     </li></ul></dd>
     
 
@@ -8250,7 +8265,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(atan2d(1, 0))// => 0console.log(atan2d(1, 0.5))// => 26.56505117707799console.log(atan2d(1, 0.7071067811865475))// => 35.264389682754654console.log(atan2d(1, 0.8660254037844386))// => 40.89339464913091console.log(atan2d(1, 1))// => 45console.log(atan2d(1, 1.7320508075688767))// => 59.99999999999999console.log(atan2d(1, Infinity))// => 90console.log(atan2d(1, -0.5))// => -26.56505117707799console.log(atan2d(1, -0.7071067811865475))// => -35.264389682754654console.log(atan2d(1, -0.8660254037844386))// => -40.89339464913091console.log(atan2d(1, -1))// => -45console.log(atan2d(1, -1.7320508075688767))// => -59.99999999999999console.log(atan2d(1, -Infinity))// => -90</code></pre>
+    <pre class="prettyprint"><code>console.log(atan2d(1, 0))// => 0console.log(atan2d(1, 0.5))// => 26.56505117707799console.log(atan2d(1, 0.7071067811865475))// => 35.264389682754654console.log(atan2d(1, 0.8660254037844386))// => 40.89339464913091console.log(atan2d(1, 1))// => 45console.log(atan2d(1, 1.7320508075688767))// => 59.99999999999999console.log(atan2d(1, Infinity))// => null (非有效數字；舊版為90)console.log(atan2d(1, -0.5))// => -26.56505117707799console.log(atan2d(1, -0.7071067811865475))// => -35.264389682754654console.log(atan2d(1, -0.8660254037844386))// => -40.89339464913091console.log(atan2d(1, -1))// => -45console.log(atan2d(1, -1.7320508075688767))// => -59.99999999999999console.log(atan2d(1, -Infinity))// => null (非有效數字；舊版為-90)console.log(atan2d('0x10', 1))// => null</code></pre>
 
 
 
@@ -8300,7 +8315,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入點x座標之數字或字串</p></td>
+            <td class="description last"><p>輸入點x座標，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -8327,7 +8342,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入點y座標之數字或字串</p></td>
+            <td class="description last"><p>輸入點y座標，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -8353,7 +8368,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳atan2角度值</p>
+    <p>回傳atan2角度值，x或y非有效數字時回傳null</p>
 </div>
 
 
@@ -8391,13 +8406,15 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入浮點數計算atan角度值</p>
+<p>v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null；
+不再接受Infinity與-Infinity(舊版atand(Infinity)為90)，需要極限值者請自行以90、-90代入。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/atand.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="atand.mjs.html">atand.mjs</a>, <a href="atand.mjs.html#line54">line 54</a>
+        <a href="atand.mjs.html">atand.mjs</a>, <a href="atand.mjs.html#line59">line 59</a>
     </li></ul></dd>
     
 
@@ -8444,7 +8461,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(atand(0))// => 0console.log(atand(0.5))// => 26.56505117707799console.log(atand(0.7071067811865475))// => 35.264389682754654console.log(atand(0.8660254037844386))// => 40.89339464913091console.log(atand(1))// => 45console.log(atand(1.7320508075688767))// => 59.99999999999999console.log(atand(Infinity))// => 90console.log(atand(-0.5))// => -26.56505117707799console.log(atand(-0.7071067811865475))// => -35.264389682754654console.log(atand(-0.8660254037844386))// => -40.89339464913091console.log(atand(-1))// => -45console.log(atand(-1.7320508075688767))// => -59.99999999999999console.log(atand(-Infinity))// => -90</code></pre>
+    <pre class="prettyprint"><code>console.log(atand(0))// => 0console.log(atand(0.5))// => 26.56505117707799console.log(atand(0.7071067811865475))// => 35.264389682754654console.log(atand(0.8660254037844386))// => 40.89339464913091console.log(atand(1))// => 45console.log(atand(1.7320508075688767))// => 59.99999999999999console.log(atand(Infinity))// => null (非有效數字；舊版為90)console.log(atand(-0.5))// => -26.56505117707799console.log(atand(-0.7071067811865475))// => -35.264389682754654console.log(atand(-0.8660254037844386))// => -40.89339464913091console.log(atand(-1))// => -45console.log(atand(-1.7320508075688767))// => -59.99999999999999console.log(atand(-Infinity))// => null (非有效數字；舊版為-90)console.log(atand('0x10'))// => null</code></pre>
 
 
 
@@ -8494,7 +8511,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -8520,7 +8537,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
 
         
 <div class="param-desc">
-    <p>回傳atan角度值</p>
+    <p>回傳atan角度值，v非有效數字時回傳null</p>
 </div>
 
 
@@ -14764,13 +14781,15 @@ await test3()
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>數字或字串無條件進位至指定位數(0位為整數)</p>
+<p>v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串；
+idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不是則用預設0，不報錯。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/ceil.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ceil.mjs.html">ceil.mjs</a>, <a href="ceil.mjs.html#line66">line 66</a>
+        <a href="ceil.mjs.html">ceil.mjs</a>, <a href="ceil.mjs.html#line77">line 77</a>
     </li></ul></dd>
     
 
@@ -14817,7 +14836,7 @@ await test3()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(ceil(1.5))// => 2console.log(ceil('1.5'))// => 2console.log(ceil(-1.5))// => -1console.log(ceil('125abc'))// => ''console.log(ceil(9.83501, 2))// => 9.84console.log(ceil(9.8350, 2))// => 9.84console.log(ceil(9.82501, 2))// => 9.83console.log(ceil(9.8250, 2))// => 9.83console.log(ceil(9.8249, 2))// => 9.83console.log(ceil(12.6449, 2))// => 12.65console.log(ceil(12.645, 2))// => 12.65console.log(ceil(12.6451, 2))// => 12.65console.log(ceil(12.65, 2))// => 12.65console.log(ceil(12.64, 2))// => 12.64console.log(ceil(12.6, 2))// => 12.6console.log(ceil(12, 2))// => 12</code></pre>
+    <pre class="prettyprint"><code>console.log(ceil(1.5))// => 2console.log(ceil('1.5'))// => 2console.log(ceil(-1.5))// => -1console.log(ceil('125abc'))// => ''console.log(ceil(9.83501, 2))// => 9.84console.log(ceil(9.8350, 2))// => 9.84console.log(ceil(9.82501, 2))// => 9.83console.log(ceil(9.8250, 2))// => 9.83console.log(ceil(9.8249, 2))// => 9.83console.log(ceil(12.6449, 2))// => 12.65console.log(ceil(12.645, 2))// => 12.65console.log(ceil(12.6451, 2))// => 12.65console.log(ceil(12.65, 2))// => 12.65console.log(ceil(12.64, 2))// => 12.64console.log(ceil(12.6, 2))// => 12.6console.log(ceil(12, 2))// => 12console.log(ceil(' 1.2 '))// => 2console.log(ceil(Infinity))// => ''console.log(ceil('0x10'))// => ''</code></pre>
 
 
 
@@ -14883,7 +14902,7 @@ await test3()
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -14923,7 +14942,7 @@ await test3()
                 </td>
             
 
-            <td class="description last"><p>輸入指定位數整數，預設0</p></td>
+            <td class="description last"><p>輸入指定位數，需為0~100之有效整數(數字或數字字串，定義見iseint之use為digits)，非有效時改用預設0，預設0</p></td>
         </tr>
 
     
@@ -14949,7 +14968,7 @@ await test3()
 
         
 <div class="param-desc">
-    <p>回傳無條件進位的數字</p>
+    <p>回傳無條件進位的數字，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -14988,14 +15007,14 @@ await test3()
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>檔案大小(bytes)自動轉換單位
 可調整檔案大小為b,kb,mb,gb，並添加單位
-若輸入不是數字或字串時則回傳空字串</p>
+b須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cfilesize.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line33">line 33</a>
+        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line32">line 32</a>
     </li></ul></dd>
     
 
@@ -15092,7 +15111,7 @@ await test3()
 
             
 
-            <td class="description last"><p>輸入單位需為bytes的檔案大小，可為數字或字串</p></td>
+            <td class="description last"><p>輸入單位需為bytes的檔案大小，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -15118,7 +15137,7 @@ await test3()
 
         
 <div class="param-desc">
-    <p>回傳自動轉換單位後的字串</p>
+    <p>回傳自動轉換單位後的字串，b非有效數字時回傳空字串</p>
 </div>
 
 
@@ -15156,7 +15175,7 @@ await test3()
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>數字或字串轉金融格式(百分位添加逗號)表示
-若輸入不是數字或字串時則回傳空字串</p>
+v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cfinancial.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -15276,7 +15295,7 @@ await test3()
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -15342,7 +15361,7 @@ await test3()
 
         
 <div class="param-desc">
-    <p>回傳金融格式的字串</p>
+    <p>回傳金融格式的字串，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -16928,7 +16947,7 @@ console.log(chkOrmStr(123))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="color.mjs.html">color.mjs</a>, <a href="color.mjs.html#line1524">line 1524</a>
+        <a href="color.mjs.html">color.mjs</a>, <a href="color.mjs.html#line1523">line 1523</a>
     </li></ul></dd>
     
 
@@ -18579,13 +18598,14 @@ console.log(chkOrmStr(123))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算cos值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cosd.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cosd.mjs.html">cosd.mjs</a>, <a href="cosd.mjs.html#line72">line 72</a>
+        <a href="cosd.mjs.html">cosd.mjs</a>, <a href="cosd.mjs.html#line82">line 82</a>
     </li></ul></dd>
     
 
@@ -18632,7 +18652,7 @@ console.log(chkOrmStr(123))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(cosd(0))// => 1console.log(cosd(30))// => 0.8660254037844387console.log(cosd(45))// => 0.7071067811865476console.log(cosd(60))// => 0.5000000000000001console.log(cosd(90))// => 6.123233995736766e-17console.log(cosd(120))// => -0.4999999999999998console.log(cosd(135))// => -0.7071067811865475console.log(cosd(150))// => -0.8660254037844387console.log(cosd(180))// => -1console.log(cosd(210))// => -0.8660254037844386console.log(cosd(225))// => -0.7071067811865477console.log(cosd(240))// => -0.5000000000000004console.log(cosd(270))// => -1.8369701987210297e-16console.log(cosd(300))// => 0.5000000000000001console.log(cosd(315))// => 0.7071067811865474console.log(cosd(330))// => 0.8660254037844384console.log(cosd(360))// => 1console.log(cosd(450))// => 3.061616997868383e-16console.log(cosd(720))// => 1</code></pre>
+    <pre class="prettyprint"><code>console.log(cosd(0))// => 1console.log(cosd(30))// => 0.8660254037844387console.log(cosd(45))// => 0.7071067811865476console.log(cosd(60))// => 0.5000000000000001console.log(cosd(90))// => 6.123233995736766e-17console.log(cosd(120))// => -0.4999999999999998console.log(cosd(135))// => -0.7071067811865475console.log(cosd(150))// => -0.8660254037844387console.log(cosd(180))// => -1console.log(cosd(210))// => -0.8660254037844386console.log(cosd(225))// => -0.7071067811865477console.log(cosd(240))// => -0.5000000000000004console.log(cosd(270))// => -1.8369701987210297e-16console.log(cosd(300))// => 0.5000000000000001console.log(cosd(315))// => 0.7071067811865474console.log(cosd(330))// => 0.8660254037844384console.log(cosd(360))// => 1console.log(cosd(450))// => 3.061616997868383e-16console.log(cosd(720))// => 1console.log(cosd(' 60 '))// => 0.5000000000000001console.log(cosd(Infinity))// => nullconsole.log(cosd('0x10'))// => null</code></pre>
 
 
 
@@ -18682,7 +18702,7 @@ console.log(chkOrmStr(123))
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -18708,7 +18728,7 @@ console.log(chkOrmStr(123))
 
         
 <div class="param-desc">
-    <p>回傳cos值</p>
+    <p>回傳cos值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -18746,13 +18766,14 @@ console.log(chkOrmStr(123))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算cot值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cotd.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cotd.mjs.html">cotd.mjs</a>, <a href="cotd.mjs.html#line73">line 73</a>
+        <a href="cotd.mjs.html">cotd.mjs</a>, <a href="cotd.mjs.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -18799,7 +18820,7 @@ console.log(chkOrmStr(123))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(cotd(0))// => Infinityconsole.log(cotd(30))// => 1.7320508075688774console.log(cotd(45))// => 1.0000000000000002console.log(cotd(60))// => 0.577350269189626console.log(cotd(90))// => 6.123233995736766e-17console.log(cotd(120))// => -0.5773502691896254console.log(cotd(135))// => -0.9999999999999998console.log(cotd(150))// => -1.7320508075688774console.log(cotd(180))// => -8165619676597685console.log(cotd(210))// => 1.7320508075688767console.log(cotd(225))// => 1.0000000000000004console.log(cotd(240))// => 0.5773502691896264console.log(cotd(270))// => 1.83697019872103e-16console.log(cotd(300))// => -0.5773502691896258console.log(cotd(315))// => -0.9999999999999996console.log(cotd(330))// => -1.7320508075688754console.log(cotd(360))// => -4082809838298842.5console.log(cotd(450))// => 3.061616997868383e-16console.log(cotd(720))// => -2041404919149421.2</code></pre>
+    <pre class="prettyprint"><code>console.log(cotd(0))// => Infinityconsole.log(cotd(30))// => 1.7320508075688774console.log(cotd(45))// => 1.0000000000000002console.log(cotd(60))// => 0.577350269189626console.log(cotd(90))// => 6.123233995736766e-17console.log(cotd(120))// => -0.5773502691896254console.log(cotd(135))// => -0.9999999999999998console.log(cotd(150))// => -1.7320508075688774console.log(cotd(180))// => -8165619676597685console.log(cotd(210))// => 1.7320508075688767console.log(cotd(225))// => 1.0000000000000004console.log(cotd(240))// => 0.5773502691896264console.log(cotd(270))// => 1.83697019872103e-16console.log(cotd(300))// => -0.5773502691896258console.log(cotd(315))// => -0.9999999999999996console.log(cotd(330))// => -1.7320508075688754console.log(cotd(360))// => -4082809838298842.5console.log(cotd(450))// => 3.061616997868383e-16console.log(cotd(720))// => -2041404919149421.2console.log(cotd(Infinity))// => nullconsole.log(cotd('0x10'))// => null</code></pre>
 
 
 
@@ -18849,7 +18870,7 @@ console.log(chkOrmStr(123))
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -18875,7 +18896,7 @@ console.log(chkOrmStr(123))
 
         
 <div class="param-desc">
-    <p>回傳cot值</p>
+    <p>回傳cot值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -19030,13 +19051,14 @@ console.log(wb)
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算csc值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cscd.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cscd.mjs.html">cscd.mjs</a>, <a href="cscd.mjs.html#line73">line 73</a>
+        <a href="cscd.mjs.html">cscd.mjs</a>, <a href="cscd.mjs.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -19083,7 +19105,7 @@ console.log(wb)
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(cscd(0))// => Infinityconsole.log(cscd(30))// => 2.0000000000000004console.log(cscd(45))// => 1.4142135623730951console.log(cscd(60))// => 1.1547005383792517console.log(cscd(90))// => 1console.log(cscd(120))// => 1.1547005383792515console.log(cscd(135))// => 1.414213562373095console.log(cscd(150))// => 2.0000000000000004console.log(cscd(180))// => 8165619676597685console.log(cscd(210))// => -1.9999999999999996console.log(cscd(225))// => -1.4142135623730951console.log(cscd(240))// => -1.1547005383792517console.log(cscd(270))// => -1console.log(cscd(300))// => -1.1547005383792517console.log(cscd(315))// => -1.4142135623730947console.log(cscd(330))// => -1.9999999999999982console.log(cscd(360))// => -4082809838298842.5console.log(cscd(450))// => 1console.log(cscd(720))// => -2041404919149421.2</code></pre>
+    <pre class="prettyprint"><code>console.log(cscd(0))// => Infinityconsole.log(cscd(30))// => 2.0000000000000004console.log(cscd(45))// => 1.4142135623730951console.log(cscd(60))// => 1.1547005383792517console.log(cscd(90))// => 1console.log(cscd(120))// => 1.1547005383792515console.log(cscd(135))// => 1.414213562373095console.log(cscd(150))// => 2.0000000000000004console.log(cscd(180))// => 8165619676597685console.log(cscd(210))// => -1.9999999999999996console.log(cscd(225))// => -1.4142135623730951console.log(cscd(240))// => -1.1547005383792517console.log(cscd(270))// => -1console.log(cscd(300))// => -1.1547005383792517console.log(cscd(315))// => -1.4142135623730947console.log(cscd(330))// => -1.9999999999999982console.log(cscd(360))// => -4082809838298842.5console.log(cscd(450))// => 1console.log(cscd(720))// => -2041404919149421.2console.log(cscd(Infinity))// => nullconsole.log(cscd('0x10'))// => null</code></pre>
 
 
 
@@ -19133,7 +19155,7 @@ console.log(wb)
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -19159,7 +19181,7 @@ console.log(wb)
 
         
 <div class="param-desc">
-    <p>回傳csc值</p>
+    <p>回傳csc值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -21215,14 +21237,14 @@ console.log(r)
 為字串故可自動補0
 console.log(1.005.toFixed(2)) //1.00
 console.log(dig(1.005, 2)) //1.01
-若輸入不是數字或字串時則回傳空字串</p>
+v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/dig.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="dig.mjs.html">dig.mjs</a>, <a href="dig.mjs.html#line28">line 28</a>
+        <a href="dig.mjs.html">dig.mjs</a>, <a href="dig.mjs.html#line36">line 36</a>
     </li></ul></dd>
     
 
@@ -21269,7 +21291,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(dig(0.123456789, 3))// => '0.123'console.log(dig(0.123456789, 4))// => '0.1235'</code></pre>
+    <pre class="prettyprint"><code>console.log(dig(0.123456789, 3))// => '0.123'console.log(dig(0.123456789, 4))// => '0.1235'console.log(dig(' 1.005 ', 2))// => '1.01'console.log(dig(Infinity, 2))// => '' (舊版為'NaN')console.log(dig('0x10', 2))// => '' (舊版為'16.00')</code></pre>
 
 
 
@@ -21335,7 +21357,7 @@ console.log(dig(1.005, 2)) //1.01
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -21401,7 +21423,7 @@ console.log(dig(1.005, 2)) //1.01
 
         
 <div class="param-desc">
-    <p>回傳取指定小數位的字串</p>
+    <p>回傳取指定小數位的字串，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -21439,14 +21461,14 @@ console.log(dig(1.005, 2)) //1.01
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>數字取指定小數位，小於1e-6改指數顯示
-若輸入不是數字或字串時則回傳空字串</p>
+v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/digExp.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="digExp.mjs.html">digExp.mjs</a>, <a href="digExp.mjs.html#line22">line 22</a>
+        <a href="digExp.mjs.html">digExp.mjs</a>, <a href="digExp.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -21493,7 +21515,7 @@ console.log(dig(1.005, 2)) //1.01
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(digExp(0.000000123456789, 2))// => '1.23e-7'</code></pre>
+    <pre class="prettyprint"><code>console.log(digExp(0.000000123456789, 2))// => '1.23e-7'console.log(digExp(Infinity, 2))// => '' (舊版為'NaN')</code></pre>
 
 
 
@@ -21559,7 +21581,7 @@ console.log(dig(1.005, 2)) //1.01
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -21625,7 +21647,7 @@ console.log(dig(1.005, 2)) //1.01
 
         
 <div class="param-desc">
-    <p>回傳取指定小數位的字串</p>
+    <p>回傳取指定小數位的字串，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -37149,13 +37171,15 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>給予最小與最大值，估計適合的繪圖刻度</p>
+<p>rmin與rmax須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)throw。
+必然之限制: rmin等於rmax時刻度間距取絕對值之1/10並依其小數位數取整(round之idig上限100)，故刻度間距之小數位數超過100者(絕對值小於約1e-99，有效位數越多越早，12位有效數字時約1e-89，如1e-100、1.234567e-95)，tickInterval會為0、三個刻度位置相同。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/./blob/master/test/estimateTicks.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="estimateTicks.mjs.html">estimateTicks.mjs</a>, <a href="estimateTicks.mjs.html#line227">line 227</a>
+        <a href="estimateTicks.mjs.html">estimateTicks.mjs</a>, <a href="estimateTicks.mjs.html#line229">line 229</a>
     </li></ul></dd>
     
 
@@ -37268,7 +37292,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入範圍最小值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('rmin is not a number')</p></td>
         </tr>
 
     
@@ -37307,7 +37331,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入範圍最大值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('rmax is not a number')</p></td>
         </tr>
 
     
@@ -44480,13 +44504,15 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>數字或字串無條件捨去至指定位數(0位為整數)</p>
+<p>v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串；
+idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不是則用預設0，不報錯。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/floor.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="floor.mjs.html">floor.mjs</a>, <a href="floor.mjs.html#line66">line 66</a>
+        <a href="floor.mjs.html">floor.mjs</a>, <a href="floor.mjs.html#line77">line 77</a>
     </li></ul></dd>
     
 
@@ -44533,7 +44559,7 @@ if (true) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(floor(1.5))// => 1console.log(floor('1.5'))// => 1console.log(floor(-1.5))// => -2console.log(floor('125abc'))// => ''console.log(floor(9.83501, 2))// => 9.83console.log(floor(9.8350, 2))// => 9.83console.log(floor(9.82501, 2))// => 9.82console.log(floor(9.8250, 2))// => 9.82console.log(floor(9.8249, 2))// => 9.82console.log(floor(12.6449, 2))// => 12.64console.log(floor(12.645, 2))// => 12.64console.log(floor(12.6451, 2))// => 12.64console.log(floor(12.65, 2))// => 12.65console.log(floor(12.64, 2))// => 12.64console.log(floor(12.6, 2))// => 12.6console.log(floor(12, 2))// => 12</code></pre>
+    <pre class="prettyprint"><code>console.log(floor(1.5))// => 1console.log(floor('1.5'))// => 1console.log(floor(-1.5))// => -2console.log(floor('125abc'))// => ''console.log(floor(9.83501, 2))// => 9.83console.log(floor(9.8350, 2))// => 9.83console.log(floor(9.82501, 2))// => 9.82console.log(floor(9.8250, 2))// => 9.82console.log(floor(9.8249, 2))// => 9.82console.log(floor(12.6449, 2))// => 12.64console.log(floor(12.645, 2))// => 12.64console.log(floor(12.6451, 2))// => 12.64console.log(floor(12.65, 2))// => 12.65console.log(floor(12.64, 2))// => 12.64console.log(floor(12.6, 2))// => 12.6console.log(floor(12, 2))// => 12console.log(floor(' 1.8 '))// => 1console.log(floor(Infinity))// => ''console.log(floor('0x10'))// => ''</code></pre>
 
 
 
@@ -44599,7 +44625,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -44639,7 +44665,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入指定位數整數，預設0</p></td>
+            <td class="description last"><p>輸入指定位數，需為0~100之有效整數(數字或數字字串，定義見iseint之use為digits)，非有效時改用預設0，預設0</p></td>
         </tr>
 
     
@@ -44665,7 +44691,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳無條件進位的數字</p>
+    <p>回傳無條件捨去的數字，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -90214,7 +90240,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
                 </td>
             
 
-            <td class="description last"><p>輸入數字字串或數字，若要精準判識得要用字串</p></td>
+            <td class="description last"><p>輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x1 is not a number')</p></td>
         </tr>
 
     
@@ -90289,7 +90315,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
                 </td>
             
 
-            <td class="description last"><p>輸入數字字串或數字，若要精準判識得要用字串</p></td>
+            <td class="description last"><p>輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x2 is not a number')</p></td>
         </tr>
 
     
@@ -103451,14 +103477,14 @@ test()
 <p>【範疇】
 計算類函數(judge、estimateTicks使用)。將數字(或數字字串)取12位有效數字後，以不含指數記號之十進位字串回傳，
 用以消除浮點運算誤差(如0.1 + 0.2為0.30000000000000004，得'0.3'；0.1累加1000次得99.9999999999986，得'100')，並可取得其小數位數。
-判定輸入沿用isnum(收數字與數字字串，含頭尾空白，仍收'0x10'、'Infinity'等isnum之寬鬆寫法，不在本函式變動範圍)，非數字throw Error('v is not a number')。</p>
+判定輸入用isenum(有效數字: 有限數字，或去頭尾空白後為十進位寫法之數字字串，可帶科學記號)，不收Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等，非有效數字throw Error('v is not a number')。</p>
 <p>【用法】</p>
 <ol>
 <li>整數(isint為true)直接轉字串回傳，小數位數為0，不經12位有效數字處理。</li>
 <li>非整數以decimal.js取12位有效數字(new Decimal(v).toSignificantDigits(12)，採ROUND_HALF_UP)，字串為toFixed()，小數位數為decimalPlaces()。
 例: 0.1 + 0.2得'0.3'、1e-11得'0.00000000001'(小數位數11)、3.2e-10得'0.00000000032'(小數位數11)、1.23456789012得'1.23456789012'(不補尾零)、
 12345678.123456789得'12345678.1235'(小數位數4)、123456789012345.6得'123456789012000'(大量級之非整數，整數位亦只留12位有效數字)。</li>
-<li>數字字串先去頭尾空白，以decimal.js直接解析(不經Number轉換，以免多餘位數先被捨入)；包裝物件(new Number(1.5)、new String('1.5'))依isnum放行，先轉為原始數字再處理。</li>
+<li>數字字串先去頭尾空白(整數路徑亦回傳去空白後之字串)，以decimal.js直接解析(不經Number轉換，以免多餘位數先被捨入)；包裝物件(new Number(1.5)、new String('1.5'))不收，throw(isenum不解包)。</li>
 <li>供judge使用：judge預設(withPreciseNum為true)以本函式取兩數之12位有效數字後精確比較，故兩數相差落在第12位有效數字之內者可區分(如1e-11與0、1 + 1e-10與1)，
 第13位起才不同者視為相等(如1 + 1e-12與1)；浮點誤差累積落在第13位起者(如0.1累加1000次得99.9999999999986)亦視為相等，與100相等。</li>
 </ol>
@@ -103590,7 +103616,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入數字字串或數字</p></td>
+            <td class="description last"><p>輸入數字字串或數字，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw</p></td>
         </tr>
 
     
@@ -108475,13 +108501,15 @@ test()
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>數字或字串四捨五入至指定位數(0位為整數)</p>
+<p>v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串；
+idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不是則用預設0，不報錯。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/round.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="round.mjs.html">round.mjs</a>, <a href="round.mjs.html#line105">line 105</a>
+        <a href="round.mjs.html">round.mjs</a>, <a href="round.mjs.html#line119">line 119</a>
     </li></ul></dd>
     
 
@@ -108528,7 +108556,7 @@ test()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(round(1.5))// => 2console.log(round('1.5'))// => 2console.log(round(-1.5))// => -2 (四捨五入不看正負號得-2)console.log(round('125abc'))// => ''console.log(round(9.83501, 2))// => 9.84console.log(round(9.8350, 2))// => 9.84console.log(round(9.82501, 2))// => 9.83console.log(round(9.8250, 2))// => 9.83console.log(round(9.8249, 2))// => 9.82console.log(round(12.6449, 2))// => 12.64console.log(round(12.645, 2))// => 12.65console.log(round(12.6451, 2))// => 12.65console.log(round(12.65, 2))// => 12.65console.log(round(12.64, 2))// => 12.64console.log(round(12.6, 2))// => 12.6console.log(round(12, 2))// => 12console.log(round(9.83501, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.84console.log(round(9.8350, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.84 (四捨六入五成雙, 第3位5進位得9.84)console.log(round(9.82501, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.83console.log(round(9.8250, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.82 (四捨六入五成雙, 第3位5捨去得9.82)console.log(round(9.8249, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.82console.log(round(12.6449, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64console.log(round(12.645, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64 (四捨六入五成雙, 第3位5捨去得12.64)console.log(round(12.6451, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.65console.log(round(12.65, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.65console.log(round(12.64, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64console.log(round(12.6, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.6console.log(round(12, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12</code></pre>
+    <pre class="prettyprint"><code>console.log(round(1.5))// => 2console.log(round('1.5'))// => 2console.log(round(-1.5))// => -2 (四捨五入不看正負號得-2)console.log(round('125abc'))// => ''console.log(round(9.83501, 2))// => 9.84console.log(round(9.8350, 2))// => 9.84console.log(round(9.82501, 2))// => 9.83console.log(round(9.8250, 2))// => 9.83console.log(round(9.8249, 2))// => 9.82console.log(round(12.6449, 2))// => 12.64console.log(round(12.645, 2))// => 12.65console.log(round(12.6451, 2))// => 12.65console.log(round(12.65, 2))// => 12.65console.log(round(12.64, 2))// => 12.64console.log(round(12.6, 2))// => 12.6console.log(round(12, 2))// => 12console.log(round(9.83501, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.84console.log(round(9.8350, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.84 (四捨六入五成雙, 第3位5進位得9.84)console.log(round(9.82501, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.83console.log(round(9.8250, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.82 (四捨六入五成雙, 第3位5捨去得9.82)console.log(round(9.8249, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 9.82console.log(round(12.6449, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64console.log(round(12.645, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64 (四捨六入五成雙, 第3位5捨去得12.64)console.log(round(12.6451, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.65console.log(round(12.65, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.65console.log(round(12.64, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.64console.log(round(12.6, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12.6console.log(round(12, 2, { rounding: 'ROUND_HALF_EVEN' }))// => 12console.log(round(' 1.5 '))// => 2console.log(round(Infinity))// => ''console.log(round('0x10'))// => ''console.log(round(1.2345, 101))// => 1 (idig非0~100之有效整數, 改用預設0)</code></pre>
 
 
 
@@ -108594,7 +108622,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入數字或字串</p></td>
+            <td class="description last"><p>輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串</p></td>
         </tr>
 
     
@@ -108634,7 +108662,7 @@ test()
                 </td>
             
 
-            <td class="description last"><p>輸入指定位數整數，預設0</p></td>
+            <td class="description last"><p>輸入指定位數，需為0~100之有效整數(數字或數字字串，定義見iseint之use為digits)，非有效時改用預設0，預設0</p></td>
         </tr>
 
     
@@ -108770,7 +108798,7 @@ test()
 
         
 <div class="param-desc">
-    <p>回傳四捨五入的數字</p>
+    <p>回傳四捨五入的數字，v非有效數字時回傳空字串</p>
 </div>
 
 
@@ -108808,13 +108836,14 @@ test()
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算sec值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/secd.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="secd.mjs.html">secd.mjs</a>, <a href="secd.mjs.html#line73">line 73</a>
+        <a href="secd.mjs.html">secd.mjs</a>, <a href="secd.mjs.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -108861,7 +108890,7 @@ test()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(secd(0))// => 1console.log(secd(30))// => 1.1547005383792515console.log(secd(45))// => 1.414213562373095console.log(secd(60))// => 1.9999999999999996console.log(secd(90))// => 16331239353195370console.log(secd(120))// => -2.000000000000001console.log(secd(135))// => -1.4142135623730951console.log(secd(150))// => -1.1547005383792515console.log(secd(180))// => -1console.log(secd(210))// => -1.1547005383792517console.log(secd(225))// => -1.4142135623730947console.log(secd(240))// => -1.9999999999999982console.log(secd(270))// => -5443746451065123console.log(secd(300))// => 1.9999999999999996console.log(secd(315))// => 1.4142135623730954console.log(secd(330))// => 1.154700538379252console.log(secd(360))// => 1console.log(secd(450))// => 3266247870639073.5console.log(secd(720))// => 1</code></pre>
+    <pre class="prettyprint"><code>console.log(secd(0))// => 1console.log(secd(30))// => 1.1547005383792515console.log(secd(45))// => 1.414213562373095console.log(secd(60))// => 1.9999999999999996console.log(secd(90))// => 16331239353195370console.log(secd(120))// => -2.000000000000001console.log(secd(135))// => -1.4142135623730951console.log(secd(150))// => -1.1547005383792515console.log(secd(180))// => -1console.log(secd(210))// => -1.1547005383792517console.log(secd(225))// => -1.4142135623730947console.log(secd(240))// => -1.9999999999999982console.log(secd(270))// => -5443746451065123console.log(secd(300))// => 1.9999999999999996console.log(secd(315))// => 1.4142135623730954console.log(secd(330))// => 1.154700538379252console.log(secd(360))// => 1console.log(secd(450))// => 3266247870639073.5console.log(secd(720))// => 1console.log(secd(Infinity))// => nullconsole.log(secd('0x10'))// => null</code></pre>
 
 
 
@@ -108911,7 +108940,7 @@ test()
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -108937,7 +108966,7 @@ test()
 
         
 <div class="param-desc">
-    <p>回傳sec值</p>
+    <p>回傳sec值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -110079,13 +110108,14 @@ test()
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算sin值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/sind.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="sind.mjs.html">sind.mjs</a>, <a href="sind.mjs.html#line72">line 72</a>
+        <a href="sind.mjs.html">sind.mjs</a>, <a href="sind.mjs.html#line82">line 82</a>
     </li></ul></dd>
     
 
@@ -110132,7 +110162,7 @@ test()
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(sind(0))// => 0console.log(sind(30))// => 0.49999999999999994console.log(sind(45))// => 0.7071067811865475console.log(sind(60))// => 0.8660254037844386console.log(sind(90))// => 1console.log(sind(120))// => 0.8660254037844387console.log(sind(135))// => 0.7071067811865476console.log(sind(150))// => 0.49999999999999994console.log(sind(180))// => 1.2246467991473532e-16console.log(sind(210))// => -0.5000000000000001console.log(sind(225))// => -0.7071067811865475console.log(sind(240))// => -0.8660254037844385console.log(sind(270))// => -1console.log(sind(300))// => -0.8660254037844386console.log(sind(315))// => -0.7071067811865477console.log(sind(330))// => -0.5000000000000004console.log(sind(360))// => -2.4492935982947064e-16console.log(sind(450))// => 1console.log(sind(720))// => -4.898587196589413e-16</code></pre>
+    <pre class="prettyprint"><code>console.log(sind(0))// => 0console.log(sind(30))// => 0.49999999999999994console.log(sind(45))// => 0.7071067811865475console.log(sind(60))// => 0.8660254037844386console.log(sind(90))// => 1console.log(sind(120))// => 0.8660254037844387console.log(sind(135))// => 0.7071067811865476console.log(sind(150))// => 0.49999999999999994console.log(sind(180))// => 1.2246467991473532e-16console.log(sind(210))// => -0.5000000000000001console.log(sind(225))// => -0.7071067811865475console.log(sind(240))// => -0.8660254037844385console.log(sind(270))// => -1console.log(sind(300))// => -0.8660254037844386console.log(sind(315))// => -0.7071067811865477console.log(sind(330))// => -0.5000000000000004console.log(sind(360))// => -2.4492935982947064e-16console.log(sind(450))// => 1console.log(sind(720))// => -4.898587196589413e-16console.log(sind(' 30 '))// => 0.49999999999999994console.log(sind(Infinity))// => nullconsole.log(sind('0x10'))// => null</code></pre>
 
 
 
@@ -110182,7 +110212,7 @@ test()
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -110208,7 +110238,7 @@ test()
 
         
 <div class="param-desc">
-    <p>回傳sin值</p>
+    <p>回傳sin值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -116282,13 +116312,14 @@ console.log(strTruncate('abcdefghij', -1))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入角度計算tan值</p>
+<p>deg須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳null。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/tand.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="tand.mjs.html">tand.mjs</a>, <a href="tand.mjs.html#line72">line 72</a>
+        <a href="tand.mjs.html">tand.mjs</a>, <a href="tand.mjs.html#line82">line 82</a>
     </li></ul></dd>
     
 
@@ -116335,7 +116366,7 @@ console.log(strTruncate('abcdefghij', -1))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(tand(0))// => 1console.log(tand(30))// => 0.8660254037844387console.log(tand(45))// => 0.7071067811865476console.log(tand(60))// => 0.5000000000000001console.log(tand(90))// => 6.123233995736766e-17console.log(tand(120))// => -0.4999999999999998console.log(tand(135))// => -0.7071067811865475console.log(tand(150))// => -0.8660254037844387console.log(tand(180))// => -1console.log(tand(210))// => -0.8660254037844386console.log(tand(225))// => -0.7071067811865477console.log(tand(240))// => -0.5000000000000004console.log(tand(270))// => -1.8369701987210297e-16console.log(tand(300))// => 0.5000000000000001console.log(tand(315))// => 0.7071067811865474console.log(tand(330))// => 0.8660254037844384console.log(tand(360))// => 1console.log(tand(450))// => 3.061616997868383e-16console.log(tand(720))// => 1</code></pre>
+    <pre class="prettyprint"><code>console.log(tand(0))// => 1console.log(tand(30))// => 0.8660254037844387console.log(tand(45))// => 0.7071067811865476console.log(tand(60))// => 0.5000000000000001console.log(tand(90))// => 6.123233995736766e-17console.log(tand(120))// => -0.4999999999999998console.log(tand(135))// => -0.7071067811865475console.log(tand(150))// => -0.8660254037844387console.log(tand(180))// => -1console.log(tand(210))// => -0.8660254037844386console.log(tand(225))// => -0.7071067811865477console.log(tand(240))// => -0.5000000000000004console.log(tand(270))// => -1.8369701987210297e-16console.log(tand(300))// => 0.5000000000000001console.log(tand(315))// => 0.7071067811865474console.log(tand(330))// => 0.8660254037844384console.log(tand(360))// => 1console.log(tand(450))// => 3.061616997868383e-16console.log(tand(720))// => 1console.log(tand(' 45 '))// => 0.9999999999999999console.log(tand(Infinity))// => nullconsole.log(tand('0x10'))// => null</code></pre>
 
 
 
@@ -116385,7 +116416,7 @@ console.log(strTruncate('abcdefghij', -1))
 
             
 
-            <td class="description last"><p>輸入角度數字或字串</p></td>
+            <td class="description last"><p>輸入角度，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳null</p></td>
         </tr>
 
     
@@ -116411,7 +116442,7 @@ console.log(strTruncate('abcdefghij', -1))
 
         
 <div class="param-desc">
-    <p>回傳tan值</p>
+    <p>回傳tan值，deg非有效數字時回傳null</p>
 </div>
 
 
@@ -125833,7 +125864,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Oct 31 2026 15:07:49 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sat Oct 31 2026 16:13:25 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
