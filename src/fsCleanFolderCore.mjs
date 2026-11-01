@@ -3,6 +3,7 @@ import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import toResultError from './_toResultError.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -11,7 +12,7 @@ import toResultError from './_toResultError.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolderCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)；資料夾不存在時自動建立；資料夾內之連結(符號連結、junction，含目標已不存在者)只移除連結本身不跟隨；目標本身為連結時不清空並回傳error
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)；資料夾不存在時自動建立；資料夾內之連結(符號連結、junction，含目標已不存在者)只移除連結本身不跟隨；目標本身為連結時不清空並回傳error，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -19,6 +20,14 @@ import toResultError from './_toResultError.mjs'
  *
  */
 function fsCleanFolderCore(pah, opt = {}) {
+    //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    let msgPah = chkFsPath(pah, 'pah')
+    if (msgPah) {
+        return {
+            error: msgPah,
+        }
+    }
+
     try {
 
         //path, fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即成同步拋錯

@@ -12,7 +12,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fpOut 輸入合併後檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
- * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *

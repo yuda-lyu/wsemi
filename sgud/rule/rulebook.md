@@ -26,6 +26,10 @@
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
 | 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
+| fs 路徑參數無效(非字串、空字串、含 NUL)之處置: 依失敗通道回報、不帶值、與不存在分開(第 216 項①) | `sgud/rule/rulebook_fspath.md` | R-FS-INVALID-PATH-01 | 約 8 |
+| `fsWatchFolder` 被監看資料夾本身消失之 `unlinkDir` 一次消失只派發一次(第 238 項) | `sgud/rule/rulebook_watch.md` | R-WATCH-ROOT-ONCE-01 | 約 4 |
+| UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
+| 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01 | 約 4 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
 | 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191;末節為第一批處置結果) | `sgud/rule/rulebook_judge_sites.md` | R-ENUM-01 之站點全集、R-ENUM-CALLERS-01 之已套／未套、R-OPT-VAL-01 之已套／未套(末節) | 約 53 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;僅下游 0 站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 16 |

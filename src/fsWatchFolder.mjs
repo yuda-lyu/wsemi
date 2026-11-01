@@ -9,6 +9,7 @@ import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -24,7 +25,7 @@ import getTrace from './getTrace.mjs'
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為每次週期輪詢(每timeInterval一次；含watching為是否已有watcher、exists為監看路徑目前是否為資料夾)，'watch'時為chokidar之watcher剛建立，'ready'時為chokidar初始掃描完成(僅傳了onTrace才監聽chokidar之ready，不影響原行為)，'emit'時為即將對change監聽器派發一個事件(含kind為事件種類即change事件之type如add、change、unlink、addDir、unlinkDir，fp為path.resolve後之路徑字串，src為事件來源，'watcher'代表chokidar偵測到、'timer'代表週期輪詢發現監看資料夾已消失而合成之unlinkDir)，'error'時為chokidar之watcher自身出錯(含fun為'watcher'，錯誤物件不傳出，請由error事件取得)，'unwatch'時為unWatch被呼叫且watcher尚存在(開始關閉；關閉完成前重複呼叫會重複通知)，'closed'時為watcher.close()已完成且watcher已設為null(可再次建立watcher)，'clear'時為clear被呼叫(僅首次)；clear後僅會再通知unwatch與closed(資源釋放之回報)，其餘事件不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響監看，預設null
- * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如資料夾內含無權限之子資料夾EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流
+ * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如資料夾內含無權限之子資料夾EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -142,6 +143,12 @@ import getTrace from './getTrace.mjs'
  */
 function fsWatchFolder(fd, opt = {}) {
 
+    //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    let msgFd = chkFsPath(fd, 'fd')
+    if (msgFd) {
+        throw new Error(msgFd)
+    }
+
     //polling
     let polling = get(opt, 'polling')
     if (!isbol(polling)) {
@@ -175,6 +182,10 @@ function fsWatchFolder(fd, opt = {}) {
     //cleared, 是否已clear, 供trace於clear後不再通知(unwatch、closed除外)
     let cleared = false
 
+    //rootGone, 被監看之資料夾本身消失之unlinkDir是否已派發: 輪詢(timer)與chokidar皆可能偵測到該次消失, 而unWatch為延後(setTimeout 1ms)且close為非同步(watcher於其完成後才置null),
+    //  期間下一次輪詢(輪詢回呼內耗時超過timeInterval時, 其到期時刻早於延後之unWatch而先執行)或chokidar之unlinkDir會重複派發, 故一次消失只派發一次, 建立新watcher時歸零
+    let rootGone = false
+
     //timer
     let watcher = null
     let t = setInterval(() => {
@@ -189,7 +200,9 @@ function fsWatchFolder(fd, opt = {}) {
         if (watcher !== null) {
 
             //check, 若watcher已成功監聽fd, 但更名fd時會無法觸發
-            if (!exists) {
+            if (!exists && !rootGone) {
+                rootGone = true //一次消失只派發一次, 見rootGone
+
                 //因監聽觸發狀態不能unWatch, 故要延遲呼叫
 
                 //fpr
@@ -218,6 +231,9 @@ function fsWatchFolder(fd, opt = {}) {
             return
         }
 
+        //rootGone, 新watcher之生命週期重新計算
+        rootGone = false
+
         //watcher
         watcher = chokidar.watch(fpSpe, {
             // persistent: true,
@@ -239,6 +255,15 @@ function fsWatchFolder(fd, opt = {}) {
                 //fp
                 fp = path.resolve(fp)
 
+                //isRoot, 是否為被監看之資料夾本身之unlinkDir; 該次消失已由輪詢派發則不重複派發, 否則標記為已派發(見rootGone)
+                let isRoot = type === 'unlinkDir' && path.resolve(fpSpe) === fp
+                if (isRoot) {
+                    if (rootGone) {
+                        return
+                    }
+                    rootGone = true
+                }
+
                 //emit
                 if (trace && !cleared) {
                     trace('emit', { kind: type, fp, src: 'watcher' })
@@ -246,7 +271,7 @@ function fsWatchFolder(fd, opt = {}) {
                 evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder' })
 
                 //check
-                if (type === 'unlinkDir' && path.resolve(fpSpe) === fp) {
+                if (isRoot) {
                     //因監聽觸發狀態不能unWatch, 故要延遲呼叫
                     setTimeout(() => {
                         unWatch()

@@ -231,7 +231,7 @@ describe(`fsCopyFolder 失敗回報(R-FS-REJECT-01)`, function() {
             { s: 'resolve', keys: ['error'], ek: 'Error', streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
     })
 
-    it(`CD10 should destroy the read stream (release its fd) when creating the write stream throws synchronously (target folder name contains NUL)`, function() {
+    it(`CD10 should destroy the read stream (release its fd) when creating the write stream throws synchronously (the injected createWriteStream throws)`, function() {
         let { r } = runFsFail('CD10')
         let res = r.out.res
         //R-FS-REJECT-01 規則6: 讀取流或寫入流任一端出錯即destroy兩端(釋放檔案控制代碼); 寫入流建構子同步拋錯時, 已建立之讀取流亦須銷毀

@@ -14,7 +14,7 @@ import errToStr from './_errToStr.mjs'
  * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *

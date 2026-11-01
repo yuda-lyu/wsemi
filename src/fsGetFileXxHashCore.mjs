@@ -4,6 +4,7 @@ import genPm from './genPm.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import errToStr from './_errToStr.mjs'
 import optVal from './_optVal.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 //chunkSize: opt類參數, 有效整數且為個數(iseint, use: 'count', 1~2^30), 非預期改用預設64mb
@@ -22,7 +23,7 @@ let RULE_CHUNK_SIZE = { fn: 'fsGetFileXxHashCore', name: 'opt.chunkSize', kind: 
  * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)
  * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -42,6 +43,13 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
 
         //chunkSize, opt類參數(預設64mb), 須為有效整數且為1~2^30, 非預期(含Infinity、0、負數、小數、超過上限)視為未給、改用預設
         let chunkSize = optVal(get(opt, 'chunkSize'), 64 * 1024 * 1024, RULE_CHUNK_SIZE, opt)
+
+        //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+        let msgFp = chkFsPath(fp, 'fp')
+        if (msgFp) {
+            pm.reject(msgFp)
+            return pm
+        }
 
         //check
         if (!fsIsFileCore(fp, { fs })) {

@@ -115,7 +115,7 @@ describe(`fsCopyFile 失敗回報(R-FS-REJECT-01)`, function() {
             { s: 'resolve', keys: ['error'], eisdir: true, streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
     })
 
-    it(`CF11 should destroy the read stream (release its fd) when creating the write stream throws synchronously (target path contains NUL)`, function() {
+    it(`CF11 should destroy the read stream (release its fd) when creating the write stream throws synchronously (the injected createWriteStream throws)`, function() {
         let { r } = runFsFail('CF11')
         let res = r.out.res
         //R-FS-REJECT-01 規則6: 讀取流或寫入流任一端出錯即destroy兩端(釋放檔案控制代碼); 寫入流建構子同步拋錯時, 已建立之讀取流亦須銷毀
@@ -174,11 +174,11 @@ describe(`fsCopyFile 結果物件(R-FS-RESULT-01)`, function() {
         assert.strict.deepStrictEqual({ s: res.s, k: res.k, keys: res.keys, ek: res.error && res.error.k, ...ev(r) }, { s: 'return', k: 'result', keys: ['error'], ek: 'Error', ...ev0 })
     })
 
-    it(`CF09 (守門) should resolve { error: <Error> } with useSync:false when fpTar is undefined`, function() {
+    it(`CF09 (守門) should resolve { error: <string> } (not reject) with useSync:false when fpTar is undefined`, function() {
         let { r } = runFsFail('CF09')
         let res = r.out.res
-        //R-FS-RESULT-01 規則1、6: error為說明字串或Error物件
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, keys: res.keys, ek: res.error && res.error.k, ...ev(r) }, { s: 'resolve', k: 'result', keys: ['error'], ek: 'Error', ...ev0 })
+        //R-FS-RESULT-01 規則1、6: error為說明字串或Error物件; R-FS-INVALID-PATH-01: 無效路徑為固定說明字串(原為Node之TypeError物件), 不觸發reject
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, keys: res.keys, ek: res.error && res.error.k, ev: res.error && res.error.v, ...ev(r) }, { s: 'resolve', k: 'result', keys: ['error'], ek: 'string', ev: 'invalid fpTar: must be a non-empty string', ...ev0 })
     })
 
     it(`CF07 should resolve { error: 'null' } (truthy) and destroy the write stream when the injected read stream errors with null`, function() {

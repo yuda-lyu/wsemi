@@ -963,7 +963,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
     catch (err) {}
 
     //check fpOut, 結尾為路徑分隔符者為資料夾, 非檔案路徑; 檔名不得為空、'.'、'..', Windows下檔名內不得有冒號(替代資料流或磁碟代號而無檔名)
-    if (!isestr(fpOut) || (win32 ? /[\\/]$/ : /\/$/).test(fpOut)) {
+    if (!isestr(fpOut) || fpOut.includes('\0') || (win32 ? /[\\/]$/ : /\/$/).test(fpOut)) { //含NUL者無效(R-FS-INVALID-PATH-01)
         throw bad(`fpOut is not an effective file path`)
     }
     let nameOut = splitPath(fpOut, win32).name

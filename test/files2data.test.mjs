@@ -1,6 +1,6 @@
 import assert from 'assert'
 import files2data from '../src/files2data.mjs'
-import { getRes } from './blob2b64.test.mjs'
+import { getRes } from './tools/resKit.mjs'
 
 
 describe('files2data', function() {

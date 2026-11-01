@@ -1,6 +1,6 @@
 import assert from 'assert'
 import blobs2b64s from '../src/blobs2b64s.mjs'
-import { getRes } from './blob2b64.test.mjs'
+import { getRes } from './tools/resKit.mjs'
 
 
 describe('blobs2b64s', function() {

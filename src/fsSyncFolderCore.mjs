@@ -13,6 +13,7 @@ import fsCopyFolderCore from './fsCopyFolderCore.mjs'
 import fsDeleteFolderCore from './fsDeleteFolderCore.mjs'
 import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -24,7 +25,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
- * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗)
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *
@@ -63,6 +64,12 @@ function resultFailed(rc) {
 //core, 差異同步; 任何失敗由fsSyncFolderCore統一轉字串reject
 async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
     let levelLimit = null
+
+    //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    let msgPah = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
+    if (msgPah) {
+        return Promise.reject(msgPah)
+    }
 
     //check
     if (!fsIsFolderCore(fdSrc, { fs })) {

@@ -7,6 +7,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import fsMissFns from './_fsMissFns.mjs'
 import errToStr from './_errToStr.mjs'
 import getTrace from './getTrace.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -19,7 +20,7 @@ import getTrace from './getTrace.mjs'
  * @param {Object} [opt.fs=null] 輸入fs物件，須提供statSync、lstatSync、unlinkSync，預設null；Core由呼叫端傳入(對外函數fsDeleteFileSafe預設傳入內建fs，呼叫端可再以opt.fs覆蓋)；null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
  * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫unlinkSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為不需(再)刪除而即將resolve或reject(含n與reason；reason為'not-exist'代表前置檢查標的不存在而resolve、'not-file'代表前置檢查標的非檔案而reject，此二者n為0；reason為'vanished'代表第n次嘗試得ENOENT且標的確已不存在(重試期間被他方刪除)而resolve)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
- * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -55,6 +56,15 @@ async function fsDeleteFileSafeCore(pah, opt = {}) {
                 trace('fail', { n: 0, code: null })
             }
             return Promise.reject('opt.fs is invalid: it must be an object providing statSync (and lstatSync, unlinkSync)')
+        }
+
+        //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+        let msgPah = chkFsPath(pah, 'pah')
+        if (msgPah) {
+            if (trace) {
+                trace('fail', { n: 0, code: null })
+            }
+            return Promise.reject(msgPah)
         }
 
         //check, 需先判斷

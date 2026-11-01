@@ -1,6 +1,7 @@
 import fs from 'fs'
 import genPm from './genPm.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -70,7 +71,16 @@ function fsBuildWriteStreamText() {
         //failed
         failed = false
 
-        //createWriteStream, fp無效(非字串等)時同步拋錯, 轉為reject
+        //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01), 以reject回報(不同步拋出)
+        let msgFp = chkFsPath(fp, 'fp')
+        if (msgFp) {
+            stream = null //無開啟中之串流, end直接resolve
+            failed = true
+            pm.reject(msgFp)
+            return pm
+        }
+
+        //createWriteStream, 同步拋錯(無效路徑已於上方檢查, 此處為其他原因)時轉為reject
         try {
             stream = fs.createWriteStream(fp, { flags: 'w', encoding: 'utf8' })
         }

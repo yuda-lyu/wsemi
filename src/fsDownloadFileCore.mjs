@@ -58,7 +58,7 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
     }
 
     //check fpOut
-    if (!isestr(fpOut)) {
+    if (!isestr(fpOut) || fpOut.includes('\0')) { //含NUL者無效(R-FS-INVALID-PATH-01)
         return Promise.reject(`fpOut is not an effective string`)
     }
 

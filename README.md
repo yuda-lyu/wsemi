@@ -75,7 +75,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.40/dist/wsemi.umd.js"></script>
+<script src="https://yuda-lyu.github.io/wsemi/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -90,7 +90,7 @@ Add script for wsemi.
 ```
 
 [Optional] Add script for `ua-parser-js`.
-> **Note:** Include script when using `getUserAgent` function, and the script must be added before the wsemi script.
+> **Note:** Include script when using `getUserAgent` function. The script can be added before or after the wsemi script, since the global `UAParser` is looked up when `getUserAgent` is called.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js"></script>
 ```

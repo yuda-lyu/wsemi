@@ -16,7 +16,7 @@ import toResultError from './_toResultError.mjs'
  * @param {Object|Array} inp 輸入物件或陣列數據
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useFormat=false] 輸入是否格式化(縮排2空白)布林值，預設false
- * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(inp非物件或陣列時為說明字串，序列化或寫檔失敗時為Error物件，toJSON拋出非Error之值時為其字串)
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(inp非物件或陣列時為說明字串，序列化或寫檔失敗時為Error物件，toJSON拋出非Error之值時為其字串)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *

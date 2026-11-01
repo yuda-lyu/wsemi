@@ -3,6 +3,7 @@ import getPathParent from './getPathParent.mjs'
 import iseint from './iseint.mjs'
 import getTrace from './getTrace.mjs'
 import toResultError from './_toResultError.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 //占用類錯誤碼: Windows下防毒、同步軟體或編輯器開著目標檔時, rename會暫時被占用
@@ -40,8 +41,9 @@ function work(fp, c, opt, st) {
 
     //check, fp與c為必須參數, 無效以說明字串回報(不回顯輸入值)
     st.why = 'prepare'
-    if (typeof fp !== 'string' || fp === '') {
-        return { error: 'invalid fp: must be a non-empty string' }
+    let msgFp = chkFsPath(fp, 'fp') //非字串、空字串、含NUL(R-FS-INVALID-PATH-01)
+    if (msgFp) {
+        return { error: msgFp }
     }
     if (typeof c !== 'string') {
         return { error: 'invalid c: must be a string' }

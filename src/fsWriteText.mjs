@@ -9,7 +9,7 @@ import fsWriteTextCore from './fsWriteTextCore.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
  * @param {String} c 輸入utf-8文字數據
- * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(寫檔之Error物件)
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(寫檔之Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *

@@ -3,6 +3,7 @@
 //  withFakeChokidar: 暫以假watcher取代chokidar.watch, 供語意案決定性地送出ready、all、error事件(不經作業系統與穩定期)
 //  fiveOnTrace: P3/P4案用之五種回調(未傳、紀錄器、回調拋錯、回調回傳rejection之Promise、非函數)
 //  waitUntil: 以真實計時器輪詢條件, 逾時拋錯, 只供沒有事件可等之條件(如假watcher被建立), 不用來表達規格之時間要求
+//  blockLoop: 同步阻塞事件迴圈ms毫秒(注入「週期輪詢之回呼內耗時超過timeInterval」之可重現延遲, 同負載試驗之事件迴圈阻塞), 不是等待條件之手段
 import { EventEmitter } from 'events'
 import chokidar from 'chokidar'
 
@@ -112,6 +113,16 @@ function fiveOnTrace(on) {
 
 
 /**
+ * 同步阻塞事件迴圈ms毫秒(Atomics.wait, 不耗CPU但整個行程之計時器皆被擱置), 供注入回呼內之延遲
+ *
+ * @param {Number} ms 輸入毫秒數
+ */
+function blockLoop(ms) {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+}
+
+
+/**
  * 收集執行fun期間之unhandledRejection, 回傳{ result, un }
  *
  * @param {Function} fun 輸入async函數
@@ -138,5 +149,6 @@ export {
     fakeWatcher,
     withFakeChokidar,
     fiveOnTrace,
-    collectUnhandled
+    collectUnhandled,
+    blockLoop
 }

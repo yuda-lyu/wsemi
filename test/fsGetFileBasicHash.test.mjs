@@ -232,7 +232,7 @@ describe(`fsGetFileBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
         { id: 'BH12', when: '注入crypto: readable監聽器內hash.update拋null', want: () => rejected('null'), rule: RULE.r3 },
         { id: 'BH13', when: '注入crypto: readable監聽器內hash.digest拋Error', want: () => rejected('Error: digest boom'), rule: RULE.r3 },
         { id: 'BH14', when: '注入fs: readable監聽器內串流read()拋Error', want: () => rejected('Error: read boom'), rule: RULE.r3 },
-        { id: 'BH15', when: '輸入: fp為數字123', want: () => rejected('fp[123] is not a file'), rule: RULE.r1pre },
+        { id: 'BH15', when: '輸入: fp為數字123', want: () => rejected('invalid fp: must be a non-empty string'), rule: RULE.r1pre }, //R-FS-INVALID-PATH-01: 無效路徑(非字串)為固定說明字串, 與不存在之'fp[<路徑>] is not a file'分開(原為'fp[123] is not a file')
     ])
 
     //監聽器內注入物拋錯之4形, 無處理器時須不崩潰

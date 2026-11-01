@@ -13,6 +13,7 @@ import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import fsWatchFile from './fsWatchFile.mjs'
 import getTrace from './getTrace.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -24,7 +25,7 @@ import getTrace from './getTrace.mjs'
  * @param {String} fdTar 輸入偵測端已紀錄之資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，供buildTar所建立之偵測端使用，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'recv'時為收到來源端紀錄檔之變更(含kind為檔案監看事件種類'add'、'change'或'unlink'，隨後排入300ms之debounce)，'run'時為debounce到期而開始偵測，'skip'時為來源端無紀錄(紀錄檔不存在、內容為空物件或非物件)而不偵測(含reason為'no src')，'emit'時為即將派發change事件(含add、del、diff、same為kpCmp各類件數)，'settle'時為change之pm已settle而即將據以處理(含ok為任務是否成功)，'record'時為任務成功後偵測端紀錄檔已更新，'clear'時為已呼叫偵測端之clear；clear後不再通知(已排入debounce者仍會偵測與派發change，但不再通知)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
- * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }
+ * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *
@@ -189,6 +190,12 @@ import getTrace from './getTrace.mjs'
  *
  */
 function fsTaskCp(fdSrc, fdTar, opt = {}) {
+
+    //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    let msgPah = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
+    if (msgPah) {
+        throw new Error(msgPah)
+    }
 
     //check fdSrc
     // let fdSrc = get(opt, 'fdSrc', '')

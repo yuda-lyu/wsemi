@@ -16,7 +16,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Boolean} [opt.forFile=true] 輸入是否針對檔案計算HASH值，預設true
  * @param {Boolean} [opt.forFolder=false] 輸入是否針對檔案計算HASH值，預設false
- * @returns {Promise} 回傳Promise，resolve回傳檔案或資料夾陣列且含HASH值，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳檔案或資料夾陣列且含HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *

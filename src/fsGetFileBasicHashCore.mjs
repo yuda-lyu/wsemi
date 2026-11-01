@@ -3,6 +3,7 @@ import genPm from './genPm.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import isestr from './isestr.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
- * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -36,6 +37,13 @@ function fsGetFileBasicHashCore(fp, opt = {}) {
         let type = get(opt, 'type', '')
         if (!isestr(type)) {
             type = 'sha512'
+        }
+
+        //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+        let msgFp = chkFsPath(fp, 'fp')
+        if (msgFp) {
+            pm.reject(msgFp)
+            return pm
         }
 
         //check

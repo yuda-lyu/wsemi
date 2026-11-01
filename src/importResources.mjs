@@ -128,7 +128,7 @@ function importResource({ tagName, path, attributes = {}, func }) {
  * pathItems = [
  *     'https://cdn.jsdelivr.net/npm/ag-grid-community@22.0.0/dist/ag-grid-community.noStyle.js',
  *     'https://cdn.jsdelivr.net/npm/ag-grid-vue@22.0.0/dist/ag-grid-vue.umd.js',
- *     'https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.28/dist/w-aggrid-vue.umd.js',
+ *     'https://yuda-lyu.github.io/w-aggrid-vue/dist/w-aggrid-vue.umd.js',
  * ]
  * importResources(pathItems)
  *     .then((res)=>{
@@ -145,7 +145,7 @@ function importResource({ tagName, path, attributes = {}, func }) {
  *         type: 'js',
  *     },
  *     {
- *         path: 'https://cdn.jsdelivr.net/npm/w-aggrid-vue@1.0.28/dist/w-aggrid-vue.umd.js',
+ *         path: 'https://yuda-lyu.github.io/w-aggrid-vue/dist/w-aggrid-vue.umd.js',
  *         type: 'js',
  *     },
  * ]

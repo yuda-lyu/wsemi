@@ -759,12 +759,16 @@ let cases = {
         return o
     },
     CF11: async () => {
-        //寫入流之建構子同步拋錯(fpTar含NUL, 路徑驗證於建構子內): 已建立之讀取流須銷毀(外審 opus F01)
+        //寫入流之建構子同步拋錯(注入之createWriteStream拋Error; 原以fpTar含NUL觸發, 現無效路徑已於入口拒收而不建立讀取流, R-FS-INVALID-PATH-01): 已建立之讀取流須銷毀(外審 opus F01)
         mkFx()
         fs.writeFileSync(fxp('a.txt'), 'abc'.repeat(1000))
-        let { fsP, streams } = captureFs()
+        let { fsP, streams } = captureFs({
+            createWriteStream: () => {
+                throw new Error('ws ctor boom')
+            },
+        })
         let f = await imp('fsCopyFileCore')
-        let res = await run(() => f(fxp('a.txt'), fxp('x\0y.txt'), { path, fs: fsP, useSync: false }))
+        let res = await run(() => f(fxp('a.txt'), fxp('x.txt'), { path, fs: fsP, useSync: false }))
         let sts = await closedState(streams)
         return { res, streams: sts, active: activeFs() }
     },
@@ -842,13 +846,17 @@ let cases = {
         return o
     },
     CD10: async () => {
-        //寫入流之建構子同步拋錯(目標夾名含NUL): 已建立之讀取流須銷毀(外審 opus F01, CF11 對稱)
+        //寫入流之建構子同步拋錯(注入之createWriteStream拋Error; 原以目標夾名含NUL觸發, 現無效路徑已於入口拒收): 已建立之讀取流須銷毀(外審 opus F01, CF11 對稱)
         mkFx()
         fs.mkdirSync(fxp('src'))
         fs.writeFileSync(fxp('src', 'a.txt'), 'abc'.repeat(1000))
-        let { fsP, streams } = captureFs()
+        let { fsP, streams } = captureFs({
+            createWriteStream: () => {
+                throw new Error('ws ctor boom')
+            },
+        })
         let f = await imp('fsCopyFolderCore')
-        let res = await run(() => f(fxp('src'), fxp('ta\0r'), { path, fs: fsP, useSync: false }))
+        let res = await run(() => f(fxp('src'), fxp('tar'), { path, fs: fsP, useSync: false }))
         let sts = await closedState(streams)
         return { res, streams: sts, active: activeFs() }
     },

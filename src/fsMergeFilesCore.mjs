@@ -10,6 +10,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import fsDeleteFileCore from './fsDeleteFileCore.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -22,7 +23,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fpOut 輸入合併後檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
- * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串
+ * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *
@@ -35,6 +36,16 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     //check fpsIn, 與其他出口一致以訊息字串reject(原throw Error使reject值為Error物件)
     if (!isearr(fpsIn)) {
         return Promise.reject(`fpsIn in not an effective array`)
+    }
+
+    //check fpOut與fpsIn各項, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    //  於開檔與刪除任何切片之前檢查, 否則逐片處理到無效項才發現時, 前面之切片已被合併並刪除; 訊息只帶索引不帶值
+    let msgPah = chkFsPath(fpOut, 'fpOut')
+    for (let i = 0; msgPah === null && i < fpsIn.length; i++) {
+        msgPah = chkFsPath(fpsIn[i], `fpsIn[${i}]`)
+    }
+    if (msgPah) {
+        return Promise.reject(msgPah)
     }
 
     //getPathParent

@@ -55,82 +55,14 @@
 - 診斷遮罩之發布前第三方複核(2026-10-29,diag-run03)
 - 診斷遮罩之發布前收斂輪(2026-10-29,diag-run04)
 
-## 查詢埠之監聽者(2026-10-30,主控任務 20261030064553 run01)
+2026-11-02(ws265)再整理: 本檔原約 41.3KB,將 2026-10-30 至 2026-10-31 之 6 節(約 23.9KB)抽出至 `sgud/exp/experience_20261102.md`(節號與標題不變、內容逐字搬移),本檔只留 2026-11-01 起之節.被抽出之節:
 
-- **本機實測(Windows 11 26300.9818＋KB5127936,zh-TW)**: `netstat -ano` 約 25ms,但自起之監聽 0/10 列出;系統之 135、445 有列但狀態字錯(`0.0.0.0:135 0.0.0.0:0 FIN_WAIT_1`、`:445 … CLOSED`).`Get-NetTCPConnection -LocalPort` 約 0.9 秒、10/10 查到,State 為 0.故判定「監聽」只看遠端 `0.0.0.0:0`/`[::]:0`,135 仍由 netstat 查得、新起之監聽一律走備援.
-- **PowerShell 之「查無」與「指令不存在」Category 相同**: 查無為 `CmdletizationQuery_NotFound_LocalPort,Get-NetTCPConnection`,指令不存在為 `CommandNotFoundException`,兩者 `CategoryInfo.Category` 皆為 `ObjectNotFound`;以 Category 判會把指令不存在當無人(fail-open),須以 FullyQualifiedErrorId 之前綴分辨.真機測試以把 cmdlet 名改錯之腳本驗證.
-- **非同步版之第 2 個子指令於微任務後才組成**: 若組成時才讀 `process.env.SystemRoot`,呼叫端於呼叫後改動環境變數會使兩個子指令用不同之系統夾(測試即因「呼叫後立即還原」而走到真實 PowerShell 得 `[]`);入口讀一次存入設定.判準: 非同步流程中凡「呼叫當下之狀態」皆於入口快照.
-- **spawnSync 之 timeout 須為整數**: 小數即拋 `ERR_OUT_OF_RANGE`(Node 24 實測),setTimeout 則接受小數——同一選項兩版行為分歧;入口無條件進位.
-- **攔截 child_process 驗選項與子程序 pid**: 被測模組以 `cp.spawn(...)` 屬性取用時,測試可暫換 `cp.spawn`/`cp.spawnSync`(同一個 CJS 物件)記錄 options(windowsHide、shell、stdio、timeout、killSignal、maxBuffer)與 `pid`,再以 `process.kill(pid, 0)` 輪詢驗子程序已結束;比寫 pid 檔可靠(逾時短時子程序可能未及寫檔).
-- **「事件於 resolve 之前通知」之驗法**: settle 事件與 resolve 同一同步段,await 後兩種順序看不出;於回調內 `util.inspect(pm).includes('<pending>')`.
-- **子代理(sonnet)獨立審查**之 15 條中 1 條為當下之紅測試根因(上列 SystemRoot)、2 條為兩版分歧/TOCTOU;先跑一次再審,審查者可引 quiet-run 之 log 為旁證.
-
-## 小輪 9 項(2026-10-30,主控任務 20261030143215 run01)
-
-- **原型為 null 之原生 Promise 不是 thenable**: 無 `then` 可查,`Promise.resolve`／`.then` 之回傳把它當一般值;`pmSeries`、`pmMap` 依原值交出(結果陣列含該 Promise),其 rejection 不會傳到 pmSeries.品牌判定(`Promise.prototype.then.call`)仍可標記它;測試預期須寫「依原值交出且無未處理之 rejection」,不是「pmSeries reject」(首次寫錯而紅).
-- **無 util 時沿原型鏈讀屬性會執行不可偵測 Proxy 之陷阱**: `markDropped` 擴充跨 realm 時改為走原型鏈找 constructor,語料 A10(`Object.create(new Proxy({}, { getPrototypeOf }))`)於無 util 環境即紅——兩環境都跑語料才抓得到;無 util 時只看值自身與其直接原型(原碼即只讀到這一層).
-- **跨 realm 之內建函數以原始碼辨識**: `Function.prototype.toString.call(f)` 之 `function Promise() { [native code] }`、`function get [Symbol.species]() { [native code] }`(各內建之 species getter 原始碼相同,皆回傳 this);bound function 與 Proxy 之原始碼無名稱,class 為 `class X …`,故不會誤認.
-- **Node 對不存在(或為檔案)之 cwd 一律經 `'error'` 事件回 ENOENT**(Windows,spawn/exec/execFile 三模式實測),同步 catch 不會遇到;`execSpawnError(err, { cwd })` 於兩路皆傳屬防禦(變異於同步路徑必存活,列等價).
-- **變異使計時器永不停止時受測 mocha 不退出**: debounce 之「cancel 不清計時器」變異讓 mocha 寫完報告後掛住,`spawnSync` 等到逾時;變異執行器一律加 `--exit`(只看成敗,不影響判定).中途重啟取鎖鏈時,以 taskkill /T 殺自己之鏈並 `--release-stale` 回收鎖.
-- **守門擋下合併指令中之一段即整條不執行**: `echo x > f; nohup bash chain.sh &` 因 echo 寫檔被擋,nohup 亦未執行;啟動背景鏈後須另行確認(看 log 或行程).
-- **`monitorEventLoopDelay` 之樣本數依行程存活時間**: 數百毫秒即結束之 mocha 可能 `count` 為 0(探測檔仍寫出);負載執行器之測試只斷言探測檔存在.
-- **測試負載執行器本身**: 受測之 mocha 夾具須於有限時間內自行結束(掛住之計時器 20 秒後自清),否則「不終止行程樹」類變異會留下孤兒行程;以「離開碼非 0 且行程已不存在」區分被終止與自行結束.「guard 不帶 NODE_OPTIONS」之測試須以帶 NODE_OPTIONS 之環境啟動 loadTrial 本身,否則變異存活(L7).
-- **以 then 之品牌檢查判型之成本**: 對非 Promise 每次建 TypeError,10 萬個一般值約 296ms(instanceof 約 0.4ms);原始值先早退、`util.types.isPromise` 可用時先預檢.品牌判定「改寫 then 後仍用載入時之內建」須有改寫 then 之測試,否則改成呼叫時取 then 之變異存活(P4).
-- **樣本須涵蓋各分類判準之單獨成立**: conns 之「含 `://` 或 `@`」樣本中含 `://` 者皆含 `@`,使「只認 @」之變異存活;補只有 `://`(`redis://…?token=`、`sqlite:///…`)之樣本.
-- **子代理(sonnet)讀碼審查**於全套已綠後仍找到 8 條(中 3: 無 util 之多餘陷阱、兩個測試缺口;低 5),其中效能退化與「無 util 多一次取原型」為我自己於本輪引入——擴充判定時要以「比修前多執行了哪些使用端程式/多花多少成本」對照 HEAD.
-
-## 診斷通報輪(2026-10-31,主控任務 20261031121854,排程第 212、207① 項)
-
-- **同類掃描要掃「複製出來之程式」**: 建議書只列 evEmit 與 debounce,Grep `m.func catch`/`func is not a function` 即發現 `pmDebounce` 有逐字相同之兩站點(複製來之碼),一併修;全庫 `console.(log|error)(` 非註解站點共 87 處(修後 81),其中印捕獲之錯誤值 26 處未動、列待裁示.盤點用 `grep -vE ":[0-9]+:[[:space:]]*(\*|//)"` 濾掉 JSDoc 與註解行,否則數千行範例噪音.
-- **getDiag 之細節遮罩無秘密宣告時仍會遮 `token=值`**: `maskDiagCopy` 之通用規則(憑證鍵名之值、`key=值` 樣式、網址帳密、Bearer)在 wsemi 自身(無 secrets)之 logDetail 輸出仍生效,測試以 `Error('token=SENT')` 斷言細節含原訊息即紅(實得 `token=***`);細節測試用之拋出值訊息須用非憑證樣式(`user-SENT`),另以 `token=SENT` 單獨驗遮罩.
-- **寫檔工具會把原始碼內之 ` `、` ` 轉成原字元**(第 3 次遇到,前兩次 2026-10-06、10-10 見索引): 正規式字元類內出現原字元即 SyntaxError.改用 Unicode 屬性類別 `/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u`(專案已有先例 `_ormMsgClean.mjs`),或以 `String.fromCharCode(0x2028)` 組入;`Edit` 之 old_string 內寫 ` ` 亦會被轉成原字元而恰好比對得到檔內之原字元(要修時可用).寫完以 `Grep '[\x{2028}\x{2029}]'` 回驗檔內無原字元.
-- **拋出值之安全輸出文法**: 鍵名需濾 Cc(C0、DEL、C1)、Cf(雙向覆寫 U+202A~E、U+2066~9、零寬、BOM、軟連字號)、Zl、Zp——只濾換行與 C0 會被 U+202E 重排 log 行(獨立審查指出,改用屬性類別後以語料 H07 鎖定).字串之長度不輸出(可能反映秘密長度),二進位 byteLength 與陣列 length 輸出(診斷空內容所需)——取捨寫入 JSDoc.
-- **測試之隨機產生器須驗分支命中**: `seed * 1103515245 % 2^31` 超過 2^53 後低位被浮點捨去,20 個分支只命中 9 個而測試仍綠(名實不符);改 `Math.imul(seed, 1664525) + 1013904223 >>> 0` 取高位元,並斷言各分支與各輸出種類皆至少出現一次.
-- **表驅動站點測試之同步方式**: 輸出(console 接管與 funLog)寫入同一紀錄器,測試等「第 N 筆輸出」(防懸置用載入時保存之真實計時器);debounce 系於假時鐘內 `advance(60)` 後再等輸出(輸出在 `.then` 微任務,advance 每步讓出 setImmediate 已足);evEmitDelay 為真實 1ms 計時器,以輸出事件同步.否定斷言(console 0 筆)在 funLog 態成立之理由: 同一次 diag 呼叫於 funLog 與 console 間二擇一,funLog 之紀錄抵達時 console 分支必已不會再執行.
-- **debounce/pmDebounce 之 async reject 站點會執行拒絕值之 `reason` getter**(既有之 `pm2resolve`/`pmConvertResolve`,非診斷出口): 敵意值測試 `hit===0` 於此兩站點不涵蓋 reason,註記於 `diagSiteKit.mjs`.
-- **變異腳本之 from 字串須唯一**: JSDoc 與程式內常有同樣字樣(`'[wsemi debounce] task threw'` 在說明文與程式各一),`BADFROM(count=2)` 時改帶 `diag(` 前綴;刪除一行 `add(...)` 時小心連換行一併刪掉(與下一行黏成一行致 SyntaxError,整批變異作廢重跑).
-- **sonnet 子代理唯讀審查**(約 14 分鐘): 實質有用之 3 條(tag 讀三次、雙向字元、隨機產生器退化)為我自己引入或遺漏;「建議」中之內部呼叫端(cache、alive 等)無法透傳 logDetail/funLog、`getDiag.readOpt` 讀繼承屬性(`Object.prototype.logDetail=true` 會開細節)屬既有設計,列待裁示.審查者之探測腳本放 `tmp/wsemi/review/`,結束後須回驗其已清理.
-
-## 專用判斷函數 isenum／iseint 與 preciseNum 精度(2026-10-31,主控任務 20261031121854,wsemieff)
-
-- **規格 regex 若有可選量詞相鄰須驗回溯**: dspec 原式 `\d+\.?\d*` 於「長串數字＋非法字元」為 O(n²)(`\d+` 與 `\d*` 可互換位置),50000 位約數秒;改無歧義寫法 `\d+(\.\d*)?` 為線性.測試以 50000 位字串＋時間門檻(< 250ms)鎖定,並用「改回規格原式」之變異驗證抓得到;不要用 20 萬位(變異跑法會卡數十秒).
-- **新增 `is*.mjs` 會自動進 R-WRAPPER-01 全表**: `test/tools/wrapperCases.mjs` 以 readdir 取 `src/is*.mjs` 並要求「f(p) 與 f(Object(p)) 之差異只容許帳本列出之格」,全套才抓到(單測 3 檔全綠).新增判斷函數(尤其不拆包者)須先預期全表差異格,補於 `rule3Cells` 與 `rulebook_data.md` R-WRAPPER-01 規則 4.判準: 新增 `src/is*.mjs` 後先跑 `npx mocha --no-parallel test/isstr.test.mjs --grep "全表"`.
-- **邊界測試用 nextUp／nextDown(Float64Array＋BigInt64Array 加減 1)取「下一個可表示之數」**: 「上界外一步」「下界外一步」才能逐 use 精確鎖定;注意端點 ±0.5 在 2^52 以上會被捨入為整數(`-9007199254740991 + 0.5` 為 `-9007199254740990`),非整數測試值改取區間中點＋0.5.
-- **變異執行器之 find 字串須指向程式碼而非 JSDoc**: `toSignificantDigits(15)` 在 JSDoc 與程式各出現一次,`String.replace` 只換第一個(JSDoc),變異未改到程式碼而「存活」;改帶程式碼前後文(`v.trim() : v).toSignificantDigits(15)`).存活變異先查「是否真的改到碼」再補測試.
-- **存活變異之分類**: ①等價(結果相同,以隨機字串對原版逐筆比對 0 差異證明;`tmp/wsemieff/equiv.mjs`);②受真表限制而存活(真表無 `lt`,`use` 合併 `lt` 之分支無從觸發)→ 補直測共用解析之測試檔,以自訂宣告表覆蓋各鍵;③比較時自動型別轉換使「未轉換」不可見(`5 >= '5'`)→ 斷言解析結果 `typeof` 為 number.
-- **no-self-compare**: `n === n`／`n !== n` 判 NaN 被 eslint 擋,改 `Number.isNaN(n)`(V8 內聯,效能無差,已回測).測試中刻意用 `new Number`、改 `Number.prototype.valueOf`、解析時失精度之字面值,於檔頭 `/* eslint-disable no-extend-native, no-new-wrappers, no-loss-of-precision -- 理由 */`(專案有先例 `cvOrmFind.test.mjs`).
-- **decimal.js 不接受前後空白**(`new Decimal(' 5 ')` 拋 `[DecimalError]`),但接受 `'0x10'`、`'0b11'`、`'5.'`、`'.5'`、`'+5.5'`;`preciseNum` 對字串先 `trim()`.對 30 萬隨機字串(`isnum` 為 true 者 21724 個)呼叫無非預期例外.
-- **改前後代表性輸出快照**: `tmp/wsemieff/snap.mjs` 輸出 JSON,改前跑一次、改後再跑,`snapdiff.mjs` 分類差異;HEAD 副本以 `git archive HEAD src | tar -x -C ./tmp/wsemieff/head` 取得(node_modules 由祖先目錄解析),供新舊並列呼叫(`estimateTicks` 小量級探測).
-- **子代理(sonnet)盤點 217 站點**約 12 分鐘、約 31 萬 token: 輸出可用(逐站讀上下文、列風險代號),抽查 7 列行號與內容相符;其「待確認 42」多為 Infinity 當「無上限」之語意反轉,屬改用前須主控裁示之項目.
-- **守門**: 在 Bash 用 `cd`、heredoc 會被擋(訊息 `[主控守門 …]`),不執行亦無副作用;一律絕對路徑、Write 工具寫腳本.
-- **規格會在執行中途被更新,收尾前須再核對規格檔時間與全文**: 本輪 13:35 讀 dspec,13:57 使用者指示 `isenum`／`iseint` 之 opt 非預期改「視為未給、改用預設」並新增 `opt.debug`／`funLog` 警告(原為 throw),我至 14:20 才因子代理審查之引用行號與我所讀不同而察覺,已寫完之 throw 版(碼、600 案、變異、帳本)須重做.判準: 實作前記下規格檔 mtime(`ls -la --time-style=full-iso`),完成前與每次派獨立審查前核對;派審查者讀規格時其行號即為偵測訊號.
-- **獨立審查(sonnet 子代理,15 分鐘)發現的非規格項**: ①`preciseNum` 改 `new Decimal(v)` 使包裝物件(`isnum` 放行)由可運作變拋 `[DecimalError]`(原 `v * multiplier` 自動轉型)——改用 Decimal/BigInt 這類不自動轉型的庫時,逐一盤點呼叫端放行的型別(包裝物件、跨 realm、帶空白字串);②`judge` 之容差語意由絕對 1e-9 改為相對 15 位有效數字〔後經使用者改定 12 位,見下〕,屬行為變更須入破壞性變更與 JSDoc.審查者的 Write 工具曾拒寫其報告檔(要求直接回覆),結果以回覆文字取得.
-- **變異執行器要處理 CRLF**: 專案檔為 CRLF,多行錨點(`\n`)對 CRLF 檔比不到而 `NOT-APPLIED`;執行器讀檔後 `replace(/\r\n/g, '\n')` 再比對與寫出(測試以 LF 檔執行無妨).錨點仍須指向程式碼(`console.warn(msg)` 在檔頭註解也出現一次,取第一個即改到註解而「存活」).
-- **等價變異的辨識**: 比較運算自動轉型使「界值不 `Number()`」不可見(`Math.max('5', -Infinity)` 即回 number);快路徑 regex 少一個選項僅改變走哪條路徑(結果相同).以隨機差分對原版 0 差異證明.
-- **preciseNum 有效位數 15→12(wsemieff2,2026-10-31,使用者改定)**: ①位數以具名常數 `PRECISE_DIGITS` 一處定義,變異錨點取 `const PRECISE_DIGITS = 12` 與 `toSignificantDigits(PRECISE_DIGITS)` 兩行(位數改 15／11／13／10／14 各一項);JSDoc、測試註解、帳本中的「N 位」字樣須同步,收尾用 `Grep '15 ?位有效|第 ?15 ?位'` 掃 `src`、`test`、`sgud`(經驗檔歷史紀錄除外).②**隨機成對差分的改變率取決於產生器的相對差距分布,不可單獨拿來比較位數方案**: 審查者產生器令相對差距均勻分布於 10^-0.5~10^-19.5,舊版 `eps` 對一般 17 位浮點等同精確比較,故 15 位只波及 3 個 decade(3.8%)、12 位波及 5 個(13.7%),二者的改變皆為相對差距小於位數界限之浮點雜訊級配對(`===` 全為「不等→相等」);另須配「容差曲線」(短小數 x 與 x ± 10^-e 之 `===` 比例,依 |x| 量級分組)、「累積誤差對精確和之 `===`」(以 decimal.js 精確和為真值)、「常見資料成對」三種視角才能判斷.③**舊版 `eps = 1e-9` 近似與量級無關之絕對容差**(e=10 約 3~21%、e=11 約 21~48%、e=14 為 100% 判相等),12 位為相對容差: |x|≥1000 較寬、|x|<1 較嚴(`1 + 1e-11 === 1` 由 true 變 false);dspec 稱「對常見量級與舊版同級」僅在 |x| 約 10~1000 成立,已入帳本,下游深度比較(w-geo,量級 1~1000)落在可接受區.④**非整數大量級的整數位亦被捨入**(`preciseNum(123456789012345.6)` 得 `'123456789012000'`),而整數走原樣路徑(`1.23456789012345e20` 得 `'123456789012345000000'`),二者處理不同(JSDoc 限制 3).⑤手算小數位數易錯(`3.2123456789e-20` 為 11 位有效數字、小數位數 30,非 31),斷言應以推導式(首位位置＋有效數字數－1)核對修後碼的輸出,而非為了通過改斷言.⑥修前紅的做法: 改碼前先把新案跑在現行(15 位)碼上存證,再改 src;變異執行器 `tmp/wsemieff2/mutate.mjs` 沿用「複製 src 與測試到 `./tmp/…/mut/` 後逐一改寫」之作法.⑦Edit 工具對 CRLF 檔寫入多行字串時保留 CRLF(改後 `grep -c $'\r'` 與行數相等),不需特別處理.
-
-## 既有函數改用 isenum／iseint 第一批(2026-10-31,主控任務 20261031121854,wsemi221a)
-
-- **內部連動要走傳遞閉包,只看 `import` 一層會漏**: 盤點 `from './arrMulti.mjs'` 只找到 `arrProduct`,聚焦測試 2485 案全綠;全套才發現 `arrNorm`(`sqrt(arrProduct(v, v))`)6 案變動——`arrNorm(['abc'])` 由 `null` 變 1.改共用底層函數(`arrMulti`、`round`、`preciseNum`)後,先 `Grep` 其所有 importer,再對 importer 之 importer 重複,直到無新增;聚焦測試綠不能取代全套.派工單明列「不得改」之函數若被連動,測試期望只能改為實測新值並註明連動、列待裁示,不能改 src.
-- **判定改嚴後,「檢測之值即使用之值」要逐函數驗**: 放寬的 `isnum` 接受 `' 30 '`,但下游庫(decimal.js)不接受前後空白——`round(' 30 ')`、`judge(' 30 ', …)` 修前即拋 `[DecimalError]`,`preciseNum(' 30 ')` 回帶空白字串;改 `isenum` 後這些合法輸入必須能算,故通過後要 `trim()`.**以 Decimal 為底者不轉 `Number`**(多餘位數會先被捨入:`round('9.8349999999999999999', 2)` 為 9.83、經 `Number` 為 9.84),其餘一律 `Number(v)`.
-- **`null >= 0` 為 true**: `arrReduce` 對空陣列回 `null`,`if (ind >= 0)` 會誤判;判斷「沒有有效數字」改用旁路變數 `vRes === null`.
-- **修前紅取證**: `git archive HEAD src | tar -x -C ./tmp/<任務>/head`,把新測試與改過期望之既有測試複製到 `head/test/`(`../src` 即指向 HEAD 副本)再跑,不碰 repo 的 test 夾;會使行程崩潰之輸入(`color.spreadHue(Infinity)` 在 HEAD 為記憶體耗盡、離開碼 134)放子行程(`runChildCase` ＋ `execArgv: ['--max-old-space-size=64']` ＋ `allowNoResult: true`),HEAD 下 `r` 為 `null` 而紅、不拖垮 mocha.
-- **變異執行器**: 以「改 import 路徑」模擬回復舊判定最乾淨(`from './isenum.mjs'` → `from './isnum.mjs'`,`import iseint from './isp0int.mjs'` 等同舊 `isp0int`);src 為 CRLF,多行錨點須先把 `\n` 轉 `\r\n`(第一次跑 8 項 `PATTERN_COUNT=0` 即此因);存活 2 項皆等價(下游函數已再檢一次、lodash 內部轉型).
-- **eslint `quotes`**: 標籤字串含單引號時改用反引號(`` `'30'` ``),雙引號會被擋(25 處).
-- **下游盤點**: Grep 工具對 `C:\opensrc` 全樹搜函數名會被 `docs/*.html`、`dist/` 淹沒(wsemi 自身的產物含所有函數名);交 sonnet 子代理以自寫唯讀掃描器(解析 `import w from 'wsemi'`、本地綁定、UMD 全域 `window.wsemi`)走 120 個套件、5455 檔,約 14 分鐘、31 萬 token,結果與我自己的 Grep 交叉相符(`arrMax`／`arrMin` 0 站點),並抽查 w-geo `judge` 6 行與 WSlider.vue:511 行號屬實.
-- **`isarr`(`Array.isArray`)與 `isearr`(非空陣列)之別**: `arrMax`／`arrMin` 原以 `isearr` 擋掉空陣列與非陣列並一律回 `null`;改 throw 後需區分兩種訊息(非陣列 `must be an array`、空陣列 `must contain a valid number`),故容器檢查改 `isarr`、空陣列交由「無有效數字」統一處理.
-- **`estimateTicks` 的 `tickDig` 受 `round` 之 `idig ≤ 100` 牽連**: 主路徑有最小間距下限不受影響;`rmin === rmax` 路徑間距 = |rmin|/10 並取其小數位數,絕對值 < 約 1e-89 時位數 > 100,`round` 退回 0 位使 `tickInterval` 為 0(探測腳本 `tmp/wsemi221a/tiny.mjs`).改範圍參數(如 `digits` 上限)前,先找呼叫端以「資料本身決定位數」者.
-
-## opt 類數值參數第一級發布 A:自完成版備份切分(2026-10-31,主控任務 20261031121854,wsemiA)
-
-- **自完成版備份切分出子集,先證明「只動納入者」再測試**: 備份為各檔最終版,納入函數之 src 整檔複製即可(納入函數內無排除參數);難處在**測試檔與工具**——一個測試檔常含多個函數(`optValG2fsWatch` 含 `fsWatchFolder`、`optValG3countHashChunk` 含兩個 Blob 版、`optValG4randDomMisc` 含 5 個 DOM 函數、`isenumCallersRound` 的 `dig`／`digExp`／`cfinancial` 共用一個 `for (let f of [...])`).作法: 先 `git status --short` 列出實際變動檔並逐一對照納入清單;測試檔以「行範圍刪除小腳本」(`tmp/wsemiA/cutLines.mjs`,自大到小刪)去掉排除函數之 `describe`,再以 Edit 修 import 與標頭註解,最後 `eslint` 抓裁剪後孤兒 import／變數(本輪抓到 `stubWarn`／`resetWarned` 與一處尾逗號).共用探針工具(`g1timerKit`、`optValG4randDomKit`)同樣裁剪成只含納入函數所需,檔名不改,日後完整版可直接覆蓋.
-- **納入函數之測試不可靠排除函數的實作**: 原 `optValHardening` 以 `delay`(排除)驗 `optVal` 路徑,改以 `setTimeoutHp` 驗同一單一擁有者;`isenumCallersRound` 把 `dig`(原期望,回 `''`)與 `digExp`／`cfinancial`(新期望,回 `'2'`)拆成兩案——`digExp`／`cfinancial` 轉交 `dig` 者為已解析之有效 `idig`,故不受 `dig` 仍是原碼影響.
-- **共用碼牽連排除者要用「HEAD 副本＋覆蓋」實測**: 納入函數被排除函數呼叫時(`execCliJsonRpc` → `execCliSession`),把 `git archive HEAD src` 解到 `tmp/wsemiA/head`、複製成 `overlay` 後只覆蓋納入者之檔(`execCliSession`、`_optVal`、`_numOpt`),以假計時器觀察排除函數的行為差異(`timeoutMs` 為 `Infinity` 或 >2147483647: `[2147483647, 2000]` → `[2000]`,即由夾限變不限時).`Grep` 納入函數名於 `src` 找全部間接呼叫端,逐一判斷是否帶 opt 轉交(`fsTaskCp`→`fsWatchFile`、`domAlert`→`domFadeOut` 皆無 opt,不受影響).
-- **移除上限不等於「非預期」**: `setTimeoutHp`／`setIntervalHp` 改 `{ use:'positive' }` 後,原測試的 `INVALID_TIMER_OVER`(2147483648、`MAX_SAFE_INTEGER`、`1e21`)變成**有效**值,且二分搜尋探針 `minInt` 之上界(2147483664)不夠大;改為把這些值放入 `valid`／專案「不設上限」案,並新增 `probeHpFiresAt(fn, interval, elapsed)` 直接以假 hrtime 驗「經過 elapsed 毫秒是否到期」(`3e9` 於 2147483664 不到期、於 3e9 到期).`1e21 - 1 === 1e21`,精確前後一毫秒之斷言只能用 3e9 量級.
-- **尾端 `undefined`／`null` 只略過最後一個**: `splitArrs` 略過最後一個參數為 `undefined`／`null`,其前之 `undefined` 仍占陣列位置(`arrAdd([1], undefined, [2])` 仍回 `[]`、`arrAdd([1],[2],undefined,undefined)` 仍回 `[]`);測試鎖此語意,變異「略過所有尾端」即被擊殺.
-- **備份檔行尾**: 自備份複製之 src／test 為 LF,working tree 其餘為 CRLF(`core.autocrlf=true`),索引皆 LF;`git ls-files --eol` 對複製檔顯示 `w/lf`,git 僅警告「LF will be replaced by CRLF」,不影響內容;Edit 改既有 CRLF 檔之多行字串保留 CRLF(`w/crlf` 一致).
-- **(wsemiA2,2026-11-01)移出已套回的函數**: 主控裁定 `execCliSession` 移出(其改動連帶改變排除之 `execCliJsonRpc`).做法: ①`git diff HEAD -- <檔>` 看 hunk,以 Edit 逐 hunk 反向還原(553 行整檔轉抄易錯;`git checkout`／`restore` 被禁),再以 `git diff --quiet HEAD -- <檔>`、`git hash-object <檔>` 對 `git rev-parse HEAD:<檔>`、`git show HEAD:<檔>` 比內容三法驗證;②**自備份以 `cp` 複製之檔在工作樹為 LF,即使內容與 HEAD 相同 `git status`／`ls-files -m` 仍列 ` M`(stat 髒、`git diff` 卻無差異)**——以單檔腳本轉為 CRLF(與其餘未動檔一致)後 `git status` 才乾淨,`git hash-object` 仍等於 HEAD blob;③專屬新測試檔刪除後,以 `Grep` 確認 `test/` 內其餘 `execCliSession` 引用皆為未動之既有檔;④帳本要同步改「已套→未套」並刪除與之相連的『間接影響』待裁示,數字(34→31 參數、18→17 檔)以 `Grep` 的實際計數為準.
-- **本機測試鎖會排隊很久**: 他套件常駐持有兩槽(`web-tests`、`web-tests-b`),本套件自己的多個 `--lock` 指令依序排隊;把變異與修前紅各寫成**單一腳本**包在一次 `--lock` 內(`tmp/wsemiA/mutrun.mjs`),比逐項排鎖省數倍時間.
+- 查詢埠之監聽者(2026-10-30,主控任務 20261030064553 run01)
+- 小輪 9 項(2026-10-30,主控任務 20261030143215 run01)
+- 診斷通報輪(2026-10-31,主控任務 20261031121854,排程第 212、207① 項)
+- 專用判斷函數 isenum／iseint 與 preciseNum 精度(2026-10-31,主控任務 20261031121854,wsemieff)
+- 既有函數改用 isenum／iseint 第一批(2026-10-31,主控任務 20261031121854,wsemi221a)
+- opt 類數值參數第一級發布 A:自完成版備份切分(2026-10-31,主控任務 20261031121854,wsemiA)
 
 ## fsEnsureBins 支援壓縮檔類型 tgz(2026-11-01,主控任務 20261031175415,wsemi-tgz,Gitea #32)
 
@@ -173,3 +105,13 @@
 - **CRLF 檔之多行修改**: README.md、state.md、experience.md、rulebook.md、rulebook_breaking.md、`src/index.mjs`、`src/domRenderMarkdownMind.mjs` 為 CRLF;Edit 工具單行內替換安全,多行(含換行)改以 `tmp/` 腳本讀入、斷言命中次數、寫後驗裸 LF 為 0.帳本其餘(rulebook_xss／data／trace)為 LF.
 - **markmap 打包評估取「官方預建檔實測」**: 以 jsDelivr 取 d3@7.8.3(279,580 B)、markmap-view@0.14.4(23,274 B)、markmap-lib@0.14.4 browser(127,101 B),共 429,955 B(gzip 143,491)對現行 UMD 1,364,805 B(gzip 436,290),增約三成;d3 取全量為上限,樹搖後之實測需另建專案安裝相依與可用的 rollup 外掛,本輪未做.
 - **工具坑**: `decision-log.mjs` 之任務資料夾在 Bash 雙引號內寫反斜線被吃掉,用正斜線; Bash 守門連 `cd .` 也擋.
+
+## 整理 sgud 與 4 項待辦:偶發多一筆 timer、全套案數不一、UMD 晚載入、fs 無效路徑(2026-11-02,主控任務 20261102014123,ws265)
+
+- **sgud 整理手法**: 以節為單位(`## ` 起算)用腳本搬移,只搬不刪;驗法為「原檔每一行(多重集合,空行除外)皆仍存在於新檔集合」缺漏 0、搬移段於新檔內逐字包含、新檔無裸 LF(原檔為 CRLF).經驗檔依日期抽出(`experience_<年月日>.md`,索引補一段)、狀態檔依功能類型拆(`state_<類型>.md`,`state.md` 只留索引);引用 `state.md` 之處(`rulebook_trace.md`)同步.教訓: 原備份先存 `./tmp/` 再改;腳本以標題比對歸類並斷言「無未歸類之節」,新增節時不會悄悄漏掉.
+- **「偶發」要先量失敗率再找成因,量不到時用機制重現**: `fsWatchFolder` 之 frozen events 案單案連跑 300 次、整檔連跑 80 次、CPU 壓力 8 行程連跑 80 次(`loadTrial`)皆 0 失敗,自然重現不到(主控 10-31 記 2.5%,環境當時另有他人負載).改查主控記錄之失敗指紋 `['watcher','timer','timer']`,推得成因後以**機制**證明: ①Node 計時器之順序——`setInterval` 回呼內先被阻塞超過 interval 再建立 `setTimeout(…, 1)`,下一次 interval 先於該 timeout(實測 5/5;未阻塞時 timeout 先 5/5;原因是 interval 以回呼**開始前**之時刻重排、`setTimeout` 以**建立當下**之時刻計);②於 `onTrace` 內以 `Atomics.wait` 同步阻塞超過 `timeInterval` 一次(`fsWatchKit.blockLoop`),可重現地使下一次輪詢先於延後 1ms 之 `unWatch`,修前 3 案紅、修後綠、變異 7 項全擊殺.這是負載試驗之「事件迴圈阻塞」之精準版,斷言只看事件內容與次數.
+- **`mocha --parallel` 之案數不一,先查「測試檔被別的測試檔 import」**: ESM 模組快取使被 import 之 `*.test.mjs` 頂層 `describe` 只在各 worker 行程第一次載入時註冊;案數 = 基準 + 3×(分到該批檔案之 worker 數 − 1)(7 檔 `--jobs N` 實測 25/28/31/…/43,`--no-parallel` 25).用 `--parallel --jobs N` 跑相關檔之矩陣(每 N 5 次,約 20 秒)即可證實,不必跑全套;全套連跑只作修後之一致性驗證.共用輔助放 `test/tools/`(不帶 `.test.` 中綴),以 `test/testStructure.test.mjs` 靜態掃描(含 pattern 之正反例;樣本字串以執行時組成,否則掃描會掃到自己).
+- **UMD 之順序測試**: 以 `w-package-tools` 之 `rollupFile`(不給 `fdTar` 為回傳程式碼模式,`bMinify:false`、`targets:'new'`,約 3 秒)把單一 src 檔於記憶體打包成 UMD,再於 `vm.createContext` 之新環境(`self`／`window` 指向頂層物件、無 `require`／`module`)依序載入真實第三方 UMD 與該 UMD;比整包建置快且不寫 `dist/`.ua-parser-js 瀏覽器版只掛 `window.UAParser`(建構子本身無 `UAParser` 屬性),故「先載入」時 `import` 進來之屬性存取得 undefined、落到全域回找;「晚載入」時因子本身 undefined,屬性存取即拋.`getGlobal()` 於無 `self`／`window`／`global` 回 `null`,取全域屬性須用 `get`.
+- **fs 無效路徑之探測法**: 對 73 個站點×84 參數位置,在**子行程之夾具資料夾(cwd)**內逐呼叫重建夾具,餵 11 種無效值,記錄回傳形態與夾具之增刪(副作用快照差);不在 mocha 行程內做,因 `''` 可能被解成工作目錄(`fsCopyFolder(src, '')` 真的把內容複製進 cwd).探得之非顯而易見缺陷: `fsReadText(0)` 讀到 stdin(數字為檔案描述子)、`fsMergeFiles` 逐片處理到無效項才發現而前面切片已被刪、`fsTask` 無效路徑仍建立 `./_tkfs`、Node 之錯誤訊息回顯輸入值(含 NUL 字串原樣).修法: 單一擁有者 `src/_chkFsPath.mjs`,各 Core 入口檢查,依各函數之失敗通道回報;測試以站點表(`test/tools/fsPathSites.mjs`)× 無效值表驅動,另以完整性案(新增 `src/fs*.mjs` 未列入站點表或排除名單即紅)防漏.
+- **批次改檔之工具坑**: CRLF 檔(src 與帳本多為 CRLF,test 多為 LF)用 Edit 工具改多行會混入 LF,一律改以 `tmp/` 腳本讀入、依檔案 EOL 轉換 from／to、斷言命中恰一次、寫前驗裸 LF 為 0(`patch-fs.mjs` 等);變異驗證腳本(`mutate.mjs`)同樣依 EOL 套變異,備份後逐一還原並以內容比對回驗.長時連跑(整檔 200 次約 43 分)期間,不得改動該測試依賴圖內之 src(以 import 遞移閉包腳本列出),其餘檔可先套,依賴圖內者待連跑結束.
+- **新增之測試污染同一 worker 之後續測試**: 首次最終碼全套連跑 3 次,2 次紅於既有之 `maskDiagErr` capi #14(`r === e` 而 stack 仍含秘密),單檔與 CPU 壓力皆不紅.二分: `mocha --no-parallel test/getUserAgentUmd.test.mjs test/maskDiagErr.test.mjs` 同一行程相接即可重現;對 `w-package-tools` 之各相依逐一「只靜態 import」皆不紅(0/3),在 mocha 內探測打包前後之 `Error` 全域,得「打包**執行期間** `Error.prepareStackTrace` 被換成 `stackTraceRewriter` 且不還原」(`stackTraceLimit` 於獨立 node 行程 import 後由 10 變 16,但 mocha 內本為 Infinity 而無變——我先前據此誤以為是 stackTraceLimit,變異證明該還原於 mocha 內等價).修法: 動態 import 並於打包後 `finally` 還原;加一案釘住,並寫入 R-TEST-STRUCT-01 規則 4.教訓: ①全套連跑 3 次是必要的,新增會載入重型相依或改全域之測試檔,其影響只在 `--parallel` 同一 worker 之後續檔案現形,不是單檔或壓力可測出;②判污染源以「同一行程相接 A B」重現,不要以為只有載入時之副作用——執行時之副作用要在執行後量;③探測假說(如 stackTraceLimit)要在實際之 runner(mocha)內量,獨立 node 行程之結果會誤導.

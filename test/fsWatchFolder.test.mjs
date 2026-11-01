@@ -9,7 +9,7 @@ import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsRenameFolder from '../src/fsRenameFolder.mjs'
 import fsWatchFolder from '../src/fsWatchFolder.mjs'
 import { traceRec } from './tools/timeKit.mjs'
-import { sleep, waitUntil, withFakeChokidar, fiveOnTrace, collectUnhandled } from './tools/fsWatchKit.mjs'
+import { sleep, waitUntil, withFakeChokidar, fiveOnTrace, collectUnhandled, blockLoop } from './tools/fsWatchKit.mjs'
 
 
 describe(`fsWatchFolder`, function() {
@@ -114,9 +114,9 @@ describe(`fsWatchFolder`, function() {
         //觀察回調: emit事件(即將派發)與change監聽器收到者一一對應; 除被監看資料夾本身之消失外皆來自chokidar(src為watcher), 該消失chokidar不偵測故由週期輪詢合成(src為timer)
         assert.strict.deepStrictEqual(r.emits.map((e) => ({ type: e.kind, fp: getFileName(e.fp) })), rr)
         assert.strict.deepStrictEqual(r.emits.slice(0, -1).every((e) => e.src === 'watcher'), true)
-        if (process.platform === 'win32') {
-            assert.strict.deepStrictEqual(r.emits[r.emits.length - 1].src, 'timer')
-        }
+        //最後一筆為被監看資料夾本身之消失(R-WATCH-ROOT-ONCE-01: 一次消失只派發一次, 上列一一對應已證僅一筆): 來源為輪詢合成(timer, Windows下chokidar通常不偵測)或chokidar回報(watcher, 偶發先於輪詢到達)皆屬正確, 兩者先後為競態故不斷言來源
+        //  (原斷言Windows下恆為timer, 於chokidar先到時失敗〔2026-11-02 最終碼連跑100次中1次, 'watcher' !== 'timer'〕; 修前同一競態則表現為重複派發; 輪詢合成之src為timer由假chokidar之決定性案釘住)
+        assert.strict.deepStrictEqual(['timer', 'watcher'].includes(r.emits[r.emits.length - 1].src), true)
     })
 
     //
@@ -182,9 +182,8 @@ describe(`fsWatchFolder`, function() {
             //該次輪詢(watching:true, exists:false)緊接emit(unlinkDir, 資料夾本身), 其後依序unwatch、closed
             assert.strict.deepStrictEqual({ w: rest[ie - 1].watching, x: rest[ie - 1].exists, t: rest[ie - 1].type }, { w: true, x: false, t: 'tick' })
             assert.strict.deepStrictEqual({ kind: rest[ie].kind, fp: rest[ie].fp }, { kind: 'unlinkDir', fp: path.resolve(fd) })
-            if (process.platform === 'win32') {
-                assert.strict.deepStrictEqual(rest[ie].src, 'timer')
-            }
+            //來源為輪詢合成(timer)或chokidar先到(watcher)皆可, 只派發一次(下列non-tick事件序證僅一筆emit); timer之src由假chokidar之決定性案釘住(同上第一案之說明)
+            assert.strict.deepStrictEqual(['timer', 'watcher'].includes(rest[ie].src), true)
             assert.strict.deepStrictEqual(rest.filter((e) => e.type !== 'tick').map((e) => e.type), ['emit', 'unwatch', 'closed'])
             assert.strict.deepStrictEqual(ms, ['addDir', 'unlinkDir']) //初始掃描之addDir與消失之unlinkDir, unlinkDir只派發一次
 
@@ -465,6 +464,151 @@ describe(`fsWatchFolder`, function() {
         finally {
             fsDeleteFolder(fd)
         }
+    })
+
+    //
+    //以下為被監看資料夾本身消失之unlinkDir只派發一次(第238項), 各用專屬夾具資料夾與假chokidar
+    //  成因: 輪詢偵測到消失即派發unlinkDir並以setTimeout 1ms延後unWatch, 而unWatch之close為非同步, watcher於其完成後才置null;
+    //  輪詢回呼內耗時超過timeInterval時(同步stat變慢、onTrace或監聽器阻塞), 下一次輪詢之到期時刻(以回呼開始計)早於延後1ms之unWatch(以耗時後計), 先於unWatch執行, 此時watcher仍非null且資料夾仍不存在, 重複派發(原測試之['watcher','timer','timer'])
+    //  chokidar若亦回報該資料夾之unlinkDir(部分平台會)而與輪詢先後到達亦同
+    //  注入: 於特定emit事件之onTrace內以blockLoop同步阻塞事件迴圈超過timeInterval(只一次), 使上述順序可重現; 斷言只看事件內容與次數, 不看時間
+    //
+    let timeInterval = 20
+    let stall = timeInterval * 3
+
+    //runRoot, 於假chokidar下執行fun(ws, ev, rec, fd)並於最後等closed與其後一次輪詢(watching:false), 回傳{ ms, emits, types }
+    let runRoot = async (fd, onTrace, fun) => {
+        fsDeleteFolder(fd)
+        fsCreateFolder(fd)
+        let ms = []
+        let rec = traceRec({ guard })
+        let on = (e) => {
+            rec.on(e)
+            onTrace(e)
+        }
+        try {
+            await withFakeChokidar(async (ws) => {
+                let ev = fsWatchFolder(fd, { onTrace: on, timeInterval })
+                ev.on('change', (msg) => {
+                    ms.push({ type: msg.type, fp: getFileName(msg.fp) })
+                })
+                try {
+                    await rec.wait((e) => e.type === 'watch')
+                    ws[0].emit('ready')
+                    await fun(ws, ev, rec)
+                }
+                finally {
+                    ev.clear()
+                }
+            })
+        }
+        finally {
+            fsDeleteFolder(fd)
+        }
+        return { ms, emits: rec.events.filter((e) => e.type === 'emit').map((e) => ({ kind: e.kind, src: e.src })), types: rec.events.filter((e) => e.type !== 'tick').map((e) => e.type) }
+    }
+
+    //waitClosed, 等第一個closed及其後一次輪詢(watching:false, 此時watcher為null, 其後不應再有派發)
+    let waitClosed = async (rec) => {
+        let ec = await rec.wait((e) => e.type === 'closed')
+        await rec.wait((e) => e.type === 'tick' && !e.watching, rec.events.indexOf(ec) + 1)
+    }
+
+    it(`should notify unlinkDir of the watched folder itself once when the next poll is already due before the delayed unwatch runs (fake chokidar, event loop blocked in the first timer emit)`, async function() {
+        //JSDoc: 被監看之資料夾消失以週期輪詢偵測並派發unlinkDir, 隨後unWatch關閉watcher; 一次消失只派發一次
+        let fd = './_test_fsWatchFolder_r1'
+        let blocked = 0
+        let r = await runRoot(fd, (e) => {
+            if (e.type === 'emit' && e.src === 'timer' && blocked === 0) {
+                blocked++
+                blockLoop(stall)
+            }
+        }, async (ws, ev, rec) => {
+            fsDeleteFolder(fd)
+            await waitClosed(rec)
+        })
+        assert.strict.deepStrictEqual(blocked, 1) //注入確實發生
+        assert.strict.deepStrictEqual(r.ms, [{ type: 'unlinkDir', fp: '_test_fsWatchFolder_r1' }])
+        assert.strict.deepStrictEqual(r.emits, [{ kind: 'unlinkDir', src: 'timer' }])
+        assert.strict.deepStrictEqual(r.types, ['watch', 'ready', 'emit', 'unwatch', 'closed', 'clear'])
+    })
+
+    it(`should notify unlinkDir of the watched folder itself once when chokidar reports it and the next poll is already due before the delayed unwatch runs (fake chokidar, event loop blocked in the first watcher emit)`, async function() {
+        let fd = './_test_fsWatchFolder_r2'
+        let blocked = 0
+        let r = await runRoot(fd, (e) => {
+            if (e.type === 'emit' && e.src === 'watcher' && e.kind === 'unlinkDir' && blocked === 0) {
+                blocked++
+                blockLoop(stall)
+            }
+        }, async (ws, ev, rec) => {
+            fsDeleteFolder(fd)
+            ws[0].emit('all', 'unlinkDir', fd, undefined) //chokidar回報被監看之資料夾本身消失
+            await waitClosed(rec)
+        })
+        assert.strict.deepStrictEqual(blocked, 1)
+        assert.strict.deepStrictEqual(r.ms, [{ type: 'unlinkDir', fp: '_test_fsWatchFolder_r2' }])
+        assert.strict.deepStrictEqual(r.emits, [{ kind: 'unlinkDir', src: 'watcher' }])
+        assert.strict.deepStrictEqual(r.types, ['watch', 'ready', 'emit', 'unwatch', 'closed', 'clear'])
+    })
+
+    it(`should notify unlinkDir of the watched folder itself once when the poll reports it first and chokidar reports it before the delayed unwatch runs (fake chokidar)`, async function() {
+        let fd = './_test_fsWatchFolder_r3'
+        let wsRef = null
+        let sent = 0
+        let r = await runRoot(fd, (e) => {
+            if (e.type === 'emit' && e.src === 'timer' && sent === 0) {
+                sent++
+                //輪詢之emit之後、延後之unWatch之前, chokidar才回報同一次消失(微任務於本輪詢回呼結束後即執行)
+                queueMicrotask(() => wsRef[0].emit('all', 'unlinkDir', fd, undefined))
+            }
+        }, async (ws, ev, rec) => {
+            wsRef = ws
+            fsDeleteFolder(fd)
+            await waitClosed(rec)
+        })
+        assert.strict.deepStrictEqual(sent, 1)
+        assert.strict.deepStrictEqual(r.ms, [{ type: 'unlinkDir', fp: '_test_fsWatchFolder_r3' }])
+        assert.strict.deepStrictEqual(r.emits, [{ kind: 'unlinkDir', src: 'timer' }])
+        assert.strict.deepStrictEqual(r.types, ['watch', 'ready', 'emit', 'unwatch', 'closed', 'clear'])
+    })
+
+    it(`should still notify unlinkDir of a sub folder reported by chokidar and then once the watched folder itself disappears (fake chokidar)`, async function() {
+        //只有被監看之資料夾本身之unlinkDir算一次消失; 子資料夾之unlinkDir照常派發且不影響其後之消失通知
+        let fd = './_test_fsWatchFolder_r4'
+        let r = await runRoot(fd, () => {}, async (ws, ev, rec) => {
+            ws[0].emit('all', 'unlinkDir', `${fd}/sub`, undefined)
+            ws[0].emit('all', 'unlinkDir', `${fd}/sub`, undefined) //同一子資料夾之重複事件不歸本規則(照常派發)
+            fsDeleteFolder(fd)
+            await waitClosed(rec)
+        })
+        assert.strict.deepStrictEqual(r.ms, [
+            { type: 'unlinkDir', fp: 'sub' },
+            { type: 'unlinkDir', fp: 'sub' },
+            { type: 'unlinkDir', fp: '_test_fsWatchFolder_r4' },
+        ])
+        assert.strict.deepStrictEqual(r.emits, [
+            { kind: 'unlinkDir', src: 'watcher' },
+            { kind: 'unlinkDir', src: 'watcher' },
+            { kind: 'unlinkDir', src: 'timer' },
+        ])
+    })
+
+    it(`should notify unlinkDir again for each later disappearance after the folder reappears and a new watcher is created (fake chokidar)`, async function() {
+        //一次消失只一次, 不是整個生命週期只一次: 資料夾再現且重建watcher後再消失須再通知
+        let fd = './_test_fsWatchFolder_r5'
+        let r = await runRoot(fd, () => {}, async (ws, ev, rec) => {
+            fsDeleteFolder(fd)
+            await waitClosed(rec)
+            let from = rec.mark()
+            fsCreateFolder(fd)
+            await rec.wait((e) => e.type === 'watch', from)
+            fsDeleteFolder(fd)
+            let ec = await rec.wait((e) => e.type === 'closed', from)
+            await rec.wait((e) => e.type === 'tick' && !e.watching, rec.events.indexOf(ec) + 1)
+        })
+        assert.strict.deepStrictEqual(r.emits, [{ kind: 'unlinkDir', src: 'timer' }, { kind: 'unlinkDir', src: 'timer' }])
+        assert.strict.deepStrictEqual(r.types, ['watch', 'ready', 'emit', 'unwatch', 'closed', 'watch', 'emit', 'unwatch', 'closed', 'clear'])
     })
 
 })

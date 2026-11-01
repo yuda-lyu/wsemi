@@ -88,8 +88,9 @@ describe(`fsBuildWriteStreamText 失敗回報(R-FS-REJECT-01)`, function() {
     it(`WS03 should return a Promise that rejects a string (not throw synchronously) from create() when the path is undefined`, function() {
         let { r } = runFsFail('WS03')
         let res = r.out.res
-        //R-FS-REJECT-01 規則2: 不得同步拋出; 規則5: create回傳Promise; 規則1: 拒絕值為_errToStr之字串
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, typeError: /^TypeError \[ERR_INVALID_ARG_TYPE\]/.test(res.v), ...ev(r) }, { s: 'reject', k: 'string', typeError: true, ...ev0 })
+        //R-FS-REJECT-01 規則2: 不得同步拋出; 規則5: create回傳Promise; 規則1: 拒絕值為字串
+        //R-FS-INVALID-PATH-01 規則2、3: 無效路徑(此為undefined)reject固定說明字串(不帶輸入值; 原為Node之TypeError訊息)
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, ...ev(r) }, { s: 'reject', k: 'string', v: 'invalid fp: must be a non-empty string', ...ev0 })
     })
 
     it(`WS05 should settle end() (resolve) after create() failed`, function() {
@@ -116,8 +117,8 @@ describe(`fsBuildWriteStreamText 失敗回報(R-FS-REJECT-01)`, function() {
         let o = r.out
         //R-FS-REJECT-01 規則2: 不得同步拋出(create同步失敗後write、end不動作不拋錯, 流程走到await pm); 規則5: end須settle(resolve)
         assert.strict.deepStrictEqual({ stage: o.stage, end: o.end }, { stage: 'awaitPm', end: { s: 'resolve', k: 'undefined' } })
-        //R-FS-REJECT-01 規則1: await pm者收到以字串reject之開檔錯誤(_errToStr之'TypeError [ERR_INVALID_ARG_TYPE]: …')
-        assert.strict.deepStrictEqual({ k: o.caught.k, typeError: /^TypeError \[ERR_INVALID_ARG_TYPE\]/.test(o.caught.v) }, { k: 'string', typeError: true })
+        //R-FS-REJECT-01 規則1: await pm者收到以字串reject之說明字串; R-FS-INVALID-PATH-01: 無效路徑為固定說明字串(原為_errToStr之'TypeError [ERR_INVALID_ARG_TYPE]: …')
+        assert.strict.deepStrictEqual({ k: o.caught.k, v: o.caught.v }, { k: 'string', v: 'invalid fp: must be a non-empty string' })
         //R-FS-REJECT-01 規則7之精神: create之Promise不得成unhandledRejection
         assert.strict.deepStrictEqual(ev(r), ev0)
     })

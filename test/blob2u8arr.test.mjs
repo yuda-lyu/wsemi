@@ -1,6 +1,6 @@
 import assert from 'assert'
 import blob2u8arr from '../src/blob2u8arr.mjs'
-import { getRes } from './blob2b64.test.mjs'
+import { getRes } from './tools/resKit.mjs'
 
 
 describe('blob2u8arr', function() {

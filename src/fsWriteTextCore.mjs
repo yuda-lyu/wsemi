@@ -4,6 +4,7 @@ import getPathParent from './getPathParent.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import toResultError from './_toResultError.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import toResultError from './_toResultError.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
  * @param {String} c 輸入檔案內容utf-8字串
- * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(寫檔或檢查上層資料夾之Error物件，注入之fs拋出非Error之值時為其字串)
+ * @returns {Object} 回傳結果物件，提供鍵success代表寫入之檔案路徑字串，提供鍵error代表錯誤訊息(寫檔或檢查上層資料夾之Error物件，注入之fs拋出非Error之值時為其字串)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -21,6 +22,14 @@ import toResultError from './_toResultError.mjs'
  *
  */
 function fsWriteTextCore(fp, c, opt = {}) {
+    //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
+    let msgFp = chkFsPath(fp, 'fp')
+    if (msgFp) {
+        return {
+            error: msgFp,
+        }
+    }
+
     let bErr = false //是否出錯以布林旗標判定, 不以errTemp是否為null判定(注入之fs可拋出null)
     let errTemp = null
 

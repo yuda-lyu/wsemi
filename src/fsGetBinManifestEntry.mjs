@@ -88,7 +88,7 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         let name = get(opt, 'name')
         let p = get(opt, 'path')
         let u = get(opt, 'url')
-        if (!isestr(fp)) {
+        if (!isestr(fp) || fp.includes('\0')) { //含NUL者無效(R-FS-INVALID-PATH-01)
             throw new Error(`fp is not an effective string`)
         }
         if (name !== undefined && name !== null && (typeof name !== 'string' || name === '')) {

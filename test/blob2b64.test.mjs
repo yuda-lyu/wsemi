@@ -1,28 +1,6 @@
 import assert from 'assert'
 import blob2b64 from '../src/blob2b64.mjs'
-
-
-//getRes, 分辨「同步拋錯」「resolve」「reject」三種結果
-//回傳Promise之函數其失敗一律須走reject: 同步拋錯會使呼叫端之.catch完全接不到(連Promise都還沒回傳), 靜默resolve則使失敗無從辨識
-let getRes = async (fn) => {
-    let r = null
-    try {
-        r = fn()
-    }
-    catch (err) {
-        return { mode: 'throw', msg: String((err && err.message) || err) }
-    }
-    if (r === null || typeof r.then !== 'function') {
-        return { mode: 'notPromise', msg: '' }
-    }
-    return r
-        .then((v) => {
-            return { mode: 'resolve', msg: v }
-        })
-        .catch((err) => {
-            return { mode: 'reject', msg: String((err && err.message) || err) }
-        })
-}
+import { getRes } from './tools/resKit.mjs'
 
 
 describe('blob2b64', function() {
@@ -43,6 +21,3 @@ describe('blob2b64', function() {
     })
 
 })
-
-
-export { getRes }
