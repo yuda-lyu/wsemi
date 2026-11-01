@@ -7,8 +7,8 @@ import getGlobal from './getGlobal.mjs'
 //getFilterXSS, 取得js-xss之filterXSS函數, mod供測試注入, 預設為import進來之xss
 function getFilterXSS(mod = xss) {
     //xss於UMD為external, 打包後對應全域filterXSS且於wsemi載入當下即取值(見toolg/gDistRollup.mjs)
-    //若xss於wsemi之後才載入(如clearXSSDyn、detectXSSDyn以importResources動態載入), import進來者為undefined, 須於執行時再找全域
-    //js-xss瀏覽器版掛於window.filterXSS(見xss/lib/index.js), 舊版只找g.xss, 致動態載入後仍取不到而拋錯, 故先找g.filterXSS, g.xss僅保留相容
+    //若xss於wsemi之後才載入(如UMD之script順序為先wsemi後xss), import進來者為undefined, 須於執行時再找全域
+    //js-xss瀏覽器版掛於window.filterXSS(見xss/lib/index.js), 舊版只找g.xss, 致後載入時仍取不到而拋錯, 故先找g.filterXSS, g.xss僅保留相容
 
     if (isfun(mod)) {
         return mod

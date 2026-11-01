@@ -12,6 +12,9 @@ function getMarkmap() {
 /**
  * 前端針對指定DOM上展示由markdown轉出的心智圖
  *
+ * 本函數不打包markmap亦不動態加載，使用端須先載入markmap(d3、markmap-view與markmap-lib之script，載入後掛於全域markmap)，ele有效而未載入時本函數會拋TypeError
+ * 瀏覽器載入script之寫法見README之Installation，使用npm搭配打包工具者須自行引入markmap-lib與markmap-view，並使全域markmap至少含Transformer、Markmap、loadCSS、loadJS(本函數所取用之欄位)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRenderMarkdownMind.test.mjs Github}
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素

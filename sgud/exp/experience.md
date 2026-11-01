@@ -164,3 +164,12 @@
 - **`strTruncate` 以 UTF-16 碼元計**(`strleft` 用 `substring`),委派後 `n` 落在代理對中間會切成半個字元(修前自寫碼點截斷不會).測試不寫死此瑕疵: 以 `strTruncate(壓平後, n)` 為預期(同函數即契約)加幾條字面錨定(`'中文錯誤訊息'` n=4 → `中文錯誤...`、`'😀😀'` n=4 恰不超長),並於 JSDoc／帳本載明限制.
 - **全套 `npm test` 的通過數偶有 ±3 浮動**(同一碼連跑兩次 22914／22917,皆 0 failing;差的 3 案為 `blob2*` 家族之 `need test in browser`、`should reject with invalid bb…`、`should reject with no window…`,與本案無關);比對兩份 log 之法: 去掉 `(NNNms)` 後以 `✔` 行集合做差(`tmp/wsemi41b/difflogs.mjs`).報告以兩次數字並陳,不挑一次.
 - **守門仍擋 `cd`**: 本輪又兩次(`cd /c/…`、`cd /dev/null`)被「bash-cd」擋下;要在特定目錄跑 `npx eslint` 等,直接在 repo 根下以相對路徑執行即可(工作目錄本就是 repo 根).
+
+## 移除全部 *Dyn 函數(2026-11-01,主控任務 20261101202155,wsemi-rmdyn,Gitea #44)
+
+- **「這機制是否只為 X 而存在」不能只看註解自述**: `_filterXSS` 註解寫「如 clearXSSDyn、detectXSSDyn…」,但機制(執行時找全域 `filterXSS`)對非 X 的函數同樣有效.判法是在 X 之外重現使用情境、看非 X 的函數是否仍依賴它: `vm.createContext` 補 `TextEncoder` 等 Node 全域(`window`／`self` 指向 context),載現行 `dist/wsemi.umd.js` 與 `node_modules/xss/dist/xss.min.js`,三種順序實測——先 xss 後 wsemi、先 wsemi 後 xss 時 `clearXSS`／`detectXSS` 皆可用,僅 wsemi 則拋 `invalid filterXSS`;故保留.同型作法另有 `_getHtmlToText`、`_getDiff2Html`、`domRenderMarkdownMind`(`g.markmap`),皆是「UMD 外部依賴晚載入」之通則,不屬 *Dyn.**`getUserAgent` 看似同型(`UAParser || g.UAParser`)實則無效**: external 以 `e.UAParser` 屬性存取編譯,晚載入 ua-parser-js 時在取全域之前即拋 `Cannot read properties of undefined (reading 'UAParser')`(vm 實測 `umdLateUa.mjs`,既有缺陷,本輪未動,README Note 改為須先於 wsemi 載入).我初稿曾把它寫成「同型作法」,是獨立審查者(sonnet)指出並經實測才改;**判斷「同型」須實測,不能只看程式字面**.
+- **Node 不能載入整份 `src/index.mjs`**(`domShowImages` 引入 `viewerjs/dist/viewer.css`,HEAD 即如此,`ERR_UNKNOWN_FILE_EXTENSION`;index 供 rollup 用): 檢查 index 以文字解析匯出表(對照 `git show HEAD:src/index.mjs`)＋檢查 src 內相對匯入之目標檔皆存在代替;掃相對匯入時 `'./src/…'` 是字串樣板內相對於 cwd 之路徑(如 `fsTaskCp`、`fsWatchFolder`),不是模組匯入,須分開解析否則誤報.
+- **全套前後比對用 ✔ 行多重集合差**(去 `(NNNms)`): 證明消失者恰為刪除之測試;標題含執行當下時間戳或 AES 密文(`aes2str` 之輸入,每次加密鹽不同)的案每次不同,成對出現在「消失」與「新增」兩側,屬噪音.全套通過數基線 22917 → 22907,差 10 即 7 個 *Dyn 測試檔之案數(刪檔前先以 mocha 單跑那 7 檔取得 10).
+- **CRLF 檔之多行修改**: README.md、state.md、experience.md、rulebook.md、rulebook_breaking.md、`src/index.mjs`、`src/domRenderMarkdownMind.mjs` 為 CRLF;Edit 工具單行內替換安全,多行(含換行)改以 `tmp/` 腳本讀入、斷言命中次數、寫後驗裸 LF 為 0.帳本其餘(rulebook_xss／data／trace)為 LF.
+- **markmap 打包評估取「官方預建檔實測」**: 以 jsDelivr 取 d3@7.8.3(279,580 B)、markmap-view@0.14.4(23,274 B)、markmap-lib@0.14.4 browser(127,101 B),共 429,955 B(gzip 143,491)對現行 UMD 1,364,805 B(gzip 436,290),增約三成;d3 取全量為上限,樹搖後之實測需另建專案安裝相依與可用的 rollup 外掛,本輪未做.
+- **工具坑**: `decision-log.mjs` 之任務資料夾在 Bash 雙引號內寫反斜線被吃掉,用正斜線; Bash 守門連 `cd .` 也擋.

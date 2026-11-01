@@ -4,11 +4,10 @@
 
 ## R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 
-- 單一擁有者: `src/getDataFromExcelFileU8Arr.mjs`(`toStr`、`dateToStr`);`getDataFromExcelFileU8ArrDyn` 委派之.Date 物件判斷用 `isDate(v, { onlyCheckDateObject: true })`.
-- 盤點指令: 以 Grep 於 `src/` 搜 `readXlsx\(`(讀取引擎之呼叫點)與 `getDataFromExcelFileU8Arr\(`(委派點).
+- 單一擁有者: `src/getDataFromExcelFileU8Arr.mjs`(`toStr`、`dateToStr`).Date 物件判斷用 `isDate(v, { onlyCheckDateObject: true })`.
+- 盤點指令: 以 Grep 於 `src/` 搜 `readXlsx\(`(讀取引擎之呼叫點)與 `getDataFromExcelFileU8Arr\(`(呼叫點;2026-11-01 移除 `getDataFromExcelFileU8ArrDyn` 後,src 內應僅 `index.mjs` 匯出).
 - 站點全集與判準(2026-10-10 盤點):
   - `src/getDataFromExcelFileU8Arr.mjs`(唯一呼叫 `readXlsx` 者): 已套.
-  - `src/getDataFromExcelFileU8ArrDyn.mjs`: 委派上者,已套.
 - 規則:
   1. `valueToString` 預設 true:一律提取原值轉字串,不用 Excel 之顯示文字(顯示文字會使長整數成科學記號而失精度,2020-05-31 起之既定原則).數值依原值轉字串,布林為 `'true'`/`'false'`,錯誤格為其文字(如 `'#N/A'`).
   2. **日期(引擎讀出之 Date)轉字串一律為 `YYYY-MM-DDTHH:mm:ss.SSS`:不加時區,統一至毫秒,不得依值自行省略至日或秒.** 取 UTC 分量(hucre 以 UTC 分量表示 Excel 儲存格之年月日時分秒),結果與執行環境之時區無關;無效日期為 `''`.
@@ -28,6 +27,7 @@
   - 2020-05-30~2026-08-17(SheetJS): 原值轉字串,日期為序號字串(如 `'45293'`),錯誤格為 `''`.
   - 2026-08-17(改用 hucre): 日期原值變為 Date,`cstr` 回 `''` 致日期遺失(退化);錯誤格成錯誤文字.
   - 2026-10-06: 日期轉 `YYYY-MM-DDTHH:mm:ss.SSS`(規則 2);csv 之日期不再為空;表頭轉換後空鍵跳過;`isDate` 新增 `opt.onlyCheckDateObject`.
+  - 2026-11-01: 移除保留函數 `getDataFromExcelFileU8ArrDyn`(原委派本函數,差異僅在錯誤時 reject 而非 resolve `{ error }`;破壞性變更紀錄第 48 項): 使用端改呼叫 `getDataFromExcelFileU8Arr` 並自行檢查回傳之 `error`.
 
 ## R-UTF8-01 字串與 Uint8Array 之 UTF-8 互轉:原生、失敗不失真
 

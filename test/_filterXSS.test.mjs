@@ -38,7 +38,7 @@ describe(`_filterXSS`, function() {
         })
 
         it(`should fall back to the global filterXSS set by the browser build of xss`, function() {
-            //UMD版若xss於wsemi之後才載入(如Dyn函數動態載入), import者為undefined, 須由全域filterXSS取得
+            //UMD版若xss於wsemi之後才載入(script順序為先wsemi後xss), import者為undefined, 須由全域filterXSS取得
             keepGlobal(() => {
                 let f = () => 'x'
                 globalThis.filterXSS = f

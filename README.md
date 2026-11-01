@@ -28,13 +28,9 @@ To view some examples for more understanding, visit examples:
 
 > **domShowImages:** [ex-domShowImages.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImages.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImages.html)]
 
-> **domShowImagesDyn[dynamic import]:** [ex-domShowImagesDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domShowImagesDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domShowImagesDyn.html)]
-
 > **domConvertToPic:** [ex-domConvertToPic.html](https://yuda-lyu.github.io/wsemi/examples/ex-domConvertToPic.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domConvertToPic.html)]
 
 > **domRenderMarkdownMind:** [ex-domRenderMarkdownMind.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMind.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMind.html)]
-
-> **domRenderMarkdownMindDyn[dynamic import]:** [ex-domRenderMarkdownMindDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-domRenderMarkdownMindDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domRenderMarkdownMindDyn.html)]
 
 > **domCompareText:** [ex-domCompareText.html](https://yuda-lyu.github.io/wsemi/examples/ex-domCompareText.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-domCompareText.html)]
 
@@ -58,15 +54,9 @@ To view some examples for more understanding, visit examples:
 
 > **getUserAgent:** [ex-getUserAgent.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgent.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgent.html)]
 
-> **getUserAgentDyn[dynamic import]:** [ex-getUserAgentDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-getUserAgentDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-getUserAgentDyn.html)]
-
 > **clearXSS:** [ex-clearXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSS.html)]
 
-> **clearXSSDyn[dynamic import]:** [ex-clearXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-clearXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-clearXSSDyn.html)]
-
 > **detectXSS:** [ex-detectXSS.html](https://yuda-lyu.github.io/wsemi/examples/ex-detectXSS.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-detectXSS.html)]
-
-> **detectXSSDyn[dynamic import]:** [ex-detectXSSDyn.html](https://yuda-lyu.github.io/wsemi/examples/ex-detectXSSDyn.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-detectXSSDyn.html)]
 
 > **openlink:** [ex-openLink.html](https://yuda-lyu.github.io/wsemi/examples/ex-openLink.html) [[source code](https://github.com/yuda-lyu/wsemi/blob/master/docs/examples/ex-openLink.html)]
 
@@ -85,7 +75,7 @@ npm i wsemi
 
 Add script for wsemi.
 ```alias
-<script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.39/dist/wsemi.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wsemi@1.9.40/dist/wsemi.umd.js"></script>
 ```
 
 [Optional] Add script for `dayjs`.
@@ -100,19 +90,19 @@ Add script for wsemi.
 ```
 
 [Optional] Add script for `ua-parser-js`.
-> **Note:** Include script when using `getUserAgent` function, and don't include script when using `getUserAgentDyn` function.
+> **Note:** Include script when using `getUserAgent` function, and the script must be added before the wsemi script.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@2.0.3/dist/ua-parser.min.js"></script>
 ```
 
 [Optional] Add script for `xss`.
-> **Note:** Include script when using `clearXSS` or `detectXSS` function, and don't include script when using `clearXSSDyn` or `detectXSSDyn` function.
+> **Note:** Include script when using `clearXSS` or `detectXSS` function.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/xss@1.0.15/dist/xss.min.js"></script>
 ```
 
 [Optional] Add script for `markmap`.
-> **Note:** Include script when using `domRenderMarkdownMind` function, and don't include script when using `domRenderMarkdownMindDyn` function.
+> **Note:** Include script when using `domRenderMarkdownMind` function. The markmap scripts are not bundled in wsemi, and the function reads the global `markmap`.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/d3@7.8.3/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.14.4/dist/index.min.js"></script>
