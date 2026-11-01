@@ -4,6 +4,14 @@
 
 本檔 2026-10-28 新建;此前各功能之現況未逐一盤點入檔,以 `sgud/rule/rulebook.md` 各條目之「站點全集」「測試」「已知限制」「變更紀錄」為準.之後完成一項功能或結束一輪工作時於此增列或更新.
 
+## `fsEnsureBins` 壓縮檔類型支援 `'tgz'`(Gitea #32,新增自有套件 w-canvas;主控任務 20261031175415 wsemi-tgz,2026-11-01;package.json version 1.9.37 之工作樹,未提交未發布)
+
+- 現況(已實作): 清單 `extract.type`(單一檔 `files[].extract`、檔案組 `archives[].extract`)與 `assembled.type` 除 `'zip'` 外接受 `'tgz'`(tar＋gzip);其他值仍 E_MANIFEST;`assembled.type` 須同 `extract.type`;分割檔組合後暫存檔名依類型 `assembled.zip`／`assembled.tgz`;成員路徑可含資料夾,同一 tgz 可列多個成員(檔案組,一次 tar 取出,逾 6000 字元分批);同組可混用 zip 與 tgz;`result.entries` 之 type 依清單原值.`'zip'` 之行為與錯誤語意、快取內容定址、鏡像、離線、校驗、重取主幹清單之流程不變.改動: `src/fsEnsureBinsCore.mjs`(`ARCH_TYPES`、`normManifest`、`getArchive` 加 `type` 參數、`viewArchive`／`viewEntry`、`zipRel`→`arcRel`、JSDoc)、`src/fsEnsureBins.mjs`(JSDoc).
+- 規則: `sgud/rule/rulebook_bin.md` R-BIN-ENSURE-01 規則 18、已知限制 ㉒(`./` 前綴:bsdtar 可比對、GNU tar 不能)、㉓(`type` 為宣告而非強制)、㉔(gzip 炸彈同 zip).w-canvas 清單寫法見規則 18 末與主控任務 `agent-out/wsemi-tgz-修正報告.md`.
+- 測試: `test/fsEnsureBinsTgz.test.mjs`(127.0.0.1:8815,47 案＋1 連網案;真 tar)、`test/tools/tgzStore.mjs`(ustar＋gzip 產生器)、`test/tools/canvasNapiWin32X64.mjs`(官方 canvas v3.2.3 win32-x64 預建檔之清單夾具:canvas.node＋44 dll 之 sha256／size,**issue 所述 43 個 dll 差 1**).連網案預設略過,`WSEMI_TEST_NET_CANVAS=1` 時自 GitHub 取官方資產(15,235,616 位元組)並逐檔校驗 45 個成員(2026-11-01 實跑通過,約 3 秒).
+- 驗證(2026-11-01 最終碼): 新檔 47 passing／1 pending(連網案);fsEnsureBins 相關 6 檔 340 案;**新測試對 HEAD 之 src 46 failing(修前紅;member 路徑類 E_MANIFEST 案修前因 type 先被拒而紅,其保護力以變異證明)**;變異 24 項(沙箱副本)全擊殺;全套 `npm test`(quiet-run --lock)**22723 passing／6 pending／0 failing**(exit 0;較前一輪 22676 多 47 案,pending 多 1 為連網案);eslint 改動檔 0 error;1 次 sonnet 子代理獨立審查 5 條(原始碼 0 缺陷;測試／文件 4 條已修、1 條無關空白已還原);**未經第三方外審**.明細見主控任務 `agent-out/wsemi-tgz-修正報告.md`.
+- 待辦(不在 wsemi): w-canvas 套件本身(manifest 以 `bundles` 列 canvas.node＋44 dll、`dependencies` 釘 canvas 3.2.3、取得後置入 `canvas/build/Release` 或改載入絕對路徑);規格 `外部執行檔之存放下載校驗與離線.md` D5「目前只支援 zip」宜改為「zip 與 tgz」(主控處理);主控 `bin-mirror.mjs` 以 `extract.sha256`／`extract.files` 取最終 sha 與組識別,讀碼判斷與壓縮檔類型無關(未實跑).
+
 ## opt 類數值參數非預期之輸入改用預設、`opt.debug`、廣義數字陣列 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`——第一級發布 A(排程第 221 項第二批;主控任務 20261031121854 wsemiA／wsemiA2,2026-10-31／11-01;package.json version 1.9.36 之工作樹,未提交未發布)
 
 - 背景: wsemi221b 完整版已由主控備份並還原工作樹為 1.9.36;使用者 2026-10-31 改定分級流程(第一級＝下游 0 站點;第二級＝確認下游站點呼叫都不用改;第三級＝一次改一個函數,先改下游),**本輪只做第一級 A**,自備份逐檔套回納入者.

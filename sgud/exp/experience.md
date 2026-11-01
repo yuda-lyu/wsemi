@@ -131,3 +131,15 @@
 - **備份檔行尾**: 自備份複製之 src／test 為 LF,working tree 其餘為 CRLF(`core.autocrlf=true`),索引皆 LF;`git ls-files --eol` 對複製檔顯示 `w/lf`,git 僅警告「LF will be replaced by CRLF」,不影響內容;Edit 改既有 CRLF 檔之多行字串保留 CRLF(`w/crlf` 一致).
 - **(wsemiA2,2026-11-01)移出已套回的函數**: 主控裁定 `execCliSession` 移出(其改動連帶改變排除之 `execCliJsonRpc`).做法: ①`git diff HEAD -- <檔>` 看 hunk,以 Edit 逐 hunk 反向還原(553 行整檔轉抄易錯;`git checkout`／`restore` 被禁),再以 `git diff --quiet HEAD -- <檔>`、`git hash-object <檔>` 對 `git rev-parse HEAD:<檔>`、`git show HEAD:<檔>` 比內容三法驗證;②**自備份以 `cp` 複製之檔在工作樹為 LF,即使內容與 HEAD 相同 `git status`／`ls-files -m` 仍列 ` M`(stat 髒、`git diff` 卻無差異)**——以單檔腳本轉為 CRLF(與其餘未動檔一致)後 `git status` 才乾淨,`git hash-object` 仍等於 HEAD blob;③專屬新測試檔刪除後,以 `Grep` 確認 `test/` 內其餘 `execCliSession` 引用皆為未動之既有檔;④帳本要同步改「已套→未套」並刪除與之相連的『間接影響』待裁示,數字(34→31 參數、18→17 檔)以 `Grep` 的實際計數為準.
 - **本機測試鎖會排隊很久**: 他套件常駐持有兩槽(`web-tests`、`web-tests-b`),本套件自己的多個 `--lock` 指令依序排隊;把變異與修前紅各寫成**單一腳本**包在一次 `--lock` 內(`tmp/wsemiA/mutrun.mjs`),比逐項排鎖省數倍時間.
+
+## fsEnsureBins 支援壓縮檔類型 tgz(2026-11-01,主控任務 20261031175415,wsemi-tgz,Gitea #32)
+
+- **文件先寫「想當然」再實測就會錯**: JSDoc 初稿寫「成員路徑須與壓縮檔內逐字相同、不含 `./`」,隨後以 probe 對 System32 `tar.exe`(bsdtar)與 Git 的 GNU tar 1.35 各跑同一組形狀才發現: bsdtar 會把 `./build/x` 與 `build/x` 視為同一成員,**GNU tar 不會**(`Not found in archive`);兩者對 `..`／絕對路徑項在「只列出特定成員」時皆不寫出暫存夾外;宣告 tgz 而內容為 zip 時 bsdtar 照解、GNU tar 失敗.做法: 手寫 ustar＋`zlib.gzipSync` 的產生器 `test/tools/tgzStore.mjs`(資料夾、符號連結、硬連結、`..`、絕對路徑、`./` 前綴、重複項皆可產),探測腳本放 `./tmp`,先看實測再寫 JSDoc／帳本.
+- **issue 所述數量要以實測為準**: Gitea #32 稱 43 個 dll,官方資產實為 44 個(49 項＝canvas.node＋44 dll＋4 建置中繼檔＋2 資料夾項).夾具由 `./tmp` 腳本自實際解出之檔產生(`test/tools/canvasNapiWin32X64.mjs`),不手抄 45 行雜湊.
+- **修前紅要誠實**: 新測試對 HEAD 之 src 46 failing,但「成員路徑含 `..`／絕對路徑」等 E_MANIFEST 案修前紅是因 `type: 'tgz'` 先被拒(field 不同),並非路徑檢核本身缺漏;這類案的保護力以變異證明(放寬 `isBinRel` 的 M21、M22 被擊殺).不要把這類紅算成「抓到缺陷」.
+- **等價變異與冗餘檢查**: `assembled.type` 先查「在 ARCH_TYPES 內」再查「等於 extract.type」,前者冗餘(變異存活,只差錯誤訊息);合併為單一等式檢查(訊息以 `must be '<extract.type>'` 起頭,相容舊字串)後全擊殺.
+- **路徑穿越案要能真的失敗**: 檔案組之解出夾為 `<暫存>/a0/x`(單一檔為 `<暫存>/x`),`..` 往上 1 層仍在暫存夾內(事後被刪,偵測不到),要用 3～4 層才落在快取夾／套件根;斷言用「套件根下無含 escape 之項目」＋上層夾具根.證明斷言非空轉: 沙箱變異 M24(`tar -x -P` 不限成員,測試副本先移除絕對路徑項以免寫到磁碟根)被單一檔與檔案組兩案擊殺.sonnet 審查者即指出初版檔案組案只檢查了夾具根與其上一層而空轉.
+- **spawn 記錄要排除 ENOENT 嘗試**: 非 Windows 的 `tarProgs` 為 `['bsdtar','tar']`,無 bsdtar 時先 spawn 一次失敗才換 `tar`;測試記錄 `calls.length` 時於 `error`(ENOENT)移除該筆,否則「一次 tar 取多個成員」之斷言在 Linux 變 2.
+- **tgz 無法跳讀**: 成員多而分批(`ARGS_CAP` 6000 字元)時每批各自自頭解壓縮;w-canvas 的 45 個成員約 1.5 KB 一批完成.
+- **變異做法**: 沙箱副本 `./tmp/wsemi-tgz/mut/`(`fs.cpSync` src＋複製測試與工具,不動 repo 檔)、單一驅動腳本包在一次 `--lock`(24 項約 1 分 40 秒);需改測試副本的變異以 `[label, file, from, to, patchTest]` 第五欄處理.修前紅用 `git archive HEAD src` 解到 `./tmp/wsemi-tgz/orig/`,測試副本放 `orig/test/`,從 repo 根執行 mocha(測試用 `path.resolve('./test/_tmp/…')` 仍落在 repo 根)——不需 stash／checkout.
+- **誤用 heredoc 被守門擋下**: 命令中多寫了無用的 `cat >/dev/null <<'EOF'`,被「bash-heredoc」守門擋下(無副作用,已改以 Grep 讀取);多行內容一律 Write／Edit.
