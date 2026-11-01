@@ -12,6 +12,7 @@ import { spawnSync } from 'child_process'
  * @param {String} [opt.exitMode=''] 輸入結束模式字串, 為'natural'時不強制結束子行程而以逾時被終止判定其未自然結束(計時器未釋放), 此時無結果行不視為錯誤
  * @param {Number} [opt.timeout=15000] 輸入子行程逾時毫秒數, natural模式預設8000
  * @param {Object} [opt.env=undefined] 輸入子行程之環境變數物件, 預設undefined代表沿用本進程
+ * @param {String} [opt.cwd=undefined] 輸入子行程之工作目錄, 預設undefined代表沿用本進程(測純檔名等相對於工作目錄之行為時指定夾具資料夾, 不在mocha行程內chdir)
  * @param {Array} [opt.execArgv=[]] 輸入node執行參數陣列(置於執行器路徑之前, 如['--max-old-space-size=64']), 預設[]
  * @param {Boolean} [opt.allowNoResult=false] 輸入無結果行是否不視為錯誤布林值(驗子行程崩潰之離開碼與stderr時用), natural模式恆不視為錯誤
  * @returns {Object} 回傳{ r, ms, status, signal, stderr }, r為子行程輸出之結果物件(無則null), ms為耗時, status為離開碼, signal為被終止之訊號
@@ -21,7 +22,7 @@ function runChildCase(runner, caseName, opt = {}) {
     let timeout = opt.timeout || (exitMode === 'natural' ? 8000 : 15000)
     let t0 = Date.now()
     let execArgv = opt.execArgv || []
-    let cp = spawnSync(process.execPath, [...execArgv, runner, caseName, exitMode], { encoding: 'utf8', timeout, env: opt.env })
+    let cp = spawnSync(process.execPath, [...execArgv, runner, caseName, exitMode], { encoding: 'utf8', timeout, env: opt.env, cwd: opt.cwd })
     let ms = Date.now() - t0
     let line = (cp.stdout || '').split(/\r?\n/).find((l) => l.startsWith('@@R@@'))
     let r = line ? JSON.parse(line.slice(5)) : null

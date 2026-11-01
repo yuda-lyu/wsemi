@@ -12,7 +12,9 @@
 |---|---|---|---|
 | 計時器、佇列與 Promise 流程 | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01 | 20.9 |
 | 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
-| 檔案系統 | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01 | 21.8 |
+| 檔案系統(含 `fsWriteTextAtomic` 原子寫檔) | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01、R-FS-ATOMIC-01 | 約 28 |
+| 顯式時區時鐘 `genClockTZ` | `sgud/rule/rulebook_clock.md` | R-CLOCK-01 | 約 6 |
+| 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
 | 帶期望雜湊之下載 | `sgud/rule/rulebook_dl.md` | R-DL-VERIFY-01 | 23.2 |
 | 外部執行檔取得 | `sgud/rule/rulebook_bin.md` | R-BIN-ENSURE-01 | 25.0 |
 | 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
@@ -36,11 +38,14 @@
 - **不收**:單一套件專用者;帶領域語意者(AI、管線、抓取、資料庫、通知通道,歸 w-dispatch-ai、w-data-pipeline、w-fetch-web、w-orm-* 等);行程層政策與設定載入慣例(屬應用層);與既有函數重複者(改用既有).
 - **處置**:收件(含主控轉交之建議)先判本條;不符者回覆理由與建議落點,不實作.已收而事後僅剩單一使用端者不主動移出,但不再擴充其語意.
 - **why**:使用者:「否則就會變成一堆下游自有套件把函數往wsemi塞, 這樣wsemi就會變大雜燴」.跨套件全文見主控 `C:\opensrcOper\dspec\wsemi收錄原則.md`.
+- **已收清單**(依本條判定後收錄者,附依據;新增時附於此):
+  - 2026-11-01 wsemi41(Gitea #41,tai-kns-trade 自 srcRunner 抽提,主控裁定): ①`genClockTZ`(顯式時區時鐘;②延伸 `now2str` 家族＋①w-dispatch-ai 要求注入之 `stamp`／`getDate`、w-data-pipeline #39 `createLogger`;`createTime` 之預設時區 `'Asia/Taipei'` **不收**,屬專案群慣例)→ `rulebook_clock.md` R-CLOCK-01.②`execCliJsonFile`(結果走 JSON 檔之 CLI 執行;②`execCli` 家族之變體＋①w-knowledge-capture、tai-news-ai;逐行切分器 `_makeLineEmitter` 為**內部模組不匯出**,單一使用端)→ `rulebook_execfile.md` R-EXEC-JSONFILE-01.③`fsWriteTextAtomic`／`fsWriteTextAtomicCore`(原子寫檔;②延伸 `fsWriteText`＋①5 個使用端;**採信封式**,`fsWriteText` 不改)→ `rulebook_fs.md` R-FS-ATOMIC-01.④`execCliFailDetail`(`execCli` 結果之失敗摘要;②＋①三個自有套件使用)→ `rulebook_execfile.md`.**不收**(同案已裁): `readJson`／`writeJson`(與 `fsReadJson`／`fsWriteJson` 重複)、`queueAge`、`firstLineClamp`(單一套件專用).
 
 各條目全標題:
 
 - `破壞性變更紀錄` → `rulebook_breaking.md`(第 39 項起)、`rulebook_breaking_20261021.md`(第 1～38 項): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
 - `R-BIN-ENSURE-01` → `rulebook_bin.md`: R-BIN-ENSURE-01 外部執行檔之取得一律經 `fsEnsureBins`(清單校驗、快取→鏡像→GitHub、離線)
+- `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
 - `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
 - `R-DL-VERIFY-01` → `rulebook_dl.md`: R-DL-VERIFY-01 下載執行檔或二進位資產一律經 `fsDownloadFileVerify` 驗證 SHA-256(與大小)
@@ -49,8 +54,10 @@
 - `R-ENV-01` → `rulebook_data.md`: R-ENV-01 環境判斷函數(回布林)於非目標環境回 false、不拋錯
 - `R-EXCEL-READ-01` → `rulebook_data.md`: R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 - `R-EXEC-FAIL-01` → `rulebook_exec.md`: R-EXEC-FAIL-01 執行外部程序之失敗回報:字串或結果物件、不含參數與環境變數之值、不崩潰
+- `R-EXEC-JSONFILE-01` → `rulebook_execfile.md`: R-EXEC-JSONFILE-01 結果走 JSON 檔之 CLI 執行一律經 `execCliJsonFile`;失敗摘要經 `execCliFailDetail`:失敗以結構化物件回報、必須參數缺漏 reject、半行不黏連、相對輸出路徑與子進程一致
 - `R-FILETYPE-01` → `rulebook_data.md`: R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
 - `R-FIND-01` → `rulebook_orm-find.md`: R-FIND-01 w-orm 系列條件(find)之形狀檢核: 單一擁有者 `cvOrmFind`、白名單、fail-closed、檢查之值即使用之值
+- `R-FS-ATOMIC-01` → `rulebook_fs.md`: R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 - `R-FS-EVEM-NAME-01` → `rulebook_fs.md`: R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達
 - `R-FS-REJECT-01` → `rulebook_fs.md`: R-FS-REJECT-01 fs 系回傳 Promise 者: 拒絕值一律為字串、不同步拋出、失敗不偽成功、不懸置、不殘留資源
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
