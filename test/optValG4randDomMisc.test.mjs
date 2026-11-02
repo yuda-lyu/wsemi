@@ -1,6 +1,7 @@
 import assert from 'assert'
 import domVirtualCreate from '../src/domVirtualCreate.mjs'
 import domFadeOut from '../src/domFadeOut.mjs'
+import domFadeIn from '../src/domFadeIn.mjs'
 import { VALID_STR } from './tools/enumInputs.mjs'
 import { defineOptParam } from './tools/optValKit.mjs'
 import { mkBrowser } from './tools/domFilesKit.mjs'
@@ -8,7 +9,7 @@ import { mkFakeDom, clearFakeDom } from './tools/fakeDom.mjs'
 import { probeVirtualSize, probeFade } from './tools/optValG4randDomKit.mjs'
 
 
-//第221項第二批 g4rand組DOM類(第一級發布A只納入domVirtualCreate、domFadeOut; domConvertToPic、domShowImages、domDrag、domFadeIn屬第二、三級, 其測試不在此)
+//第221項第二批 g4rand組DOM類(第一級發布A只納入domVirtualCreate、domFadeOut; domConvertToPic、domShowImages、domDrag屬第二、三級, 其測試不在此; domFadeIn於第3輪ws271對齊domFadeOut並納入)
 //  皆為opt類(opt之鍵或程式碼有回退), 非預期之輸入(含超出範圍、Infinity、'0x10'、包裝物件等)視為未給、改用預設, 不報錯; opt有debug/funLog
 //  瀏覽器本身之語義(版面、事件派送)非本檔所能驗證, 以假DOM驅動, 只驗各函數對參數的檢測與取值
 
@@ -91,8 +92,10 @@ describe('optVal domVirtualCreate', function() {
 
 
 //fade: 第一次更新寫入初始透明度後加減s=10/duration, 第二次更新寫入之值為初始值加減s(夾在0~1); duration為0時s=Infinity(瞬間完成)
+//  domFadeIn(初始透明度0, 遞增)於第3輪(ws271)對齊domFadeOut, 與其共用同一探針與規則
 for (let [name, fn, expOf] of [
     ['domFadeOut', domFadeOut, (d) => Math.max(1 - 10 / d, 0)],
+    ['domFadeIn', domFadeIn, (d) => Math.min(10 / d, 1)],
 ]) {
 
     describe(`optVal ${name}`, function() {
@@ -116,10 +119,11 @@ for (let [name, fn, expOf] of [
         })
 
         it('should use 500 (not 0 or 1000) for non-numeric and negative durations, and keep a valid 0 as instant', function() {
-            // 現況: 非數字(如'abc')為0(瞬間)、負數為1000; 新: 非預期與負數一律用預設500; 0仍為有效(瞬間完成)
+            // 現況: 非數字(如'abc')為0(瞬間)、負數為1000; 新: 非預期與負數一律用預設500; 0仍為有效(瞬間完成, 淡出至0、淡入至1)
             assert.strict.deepStrictEqual(probeFade(fn, 'abc'), expOf(500))
             assert.strict.deepStrictEqual(probeFade(fn, -5), expOf(500))
-            assert.strict.deepStrictEqual(probeFade(fn, 0), 0)
+            assert.strict.deepStrictEqual(probeFade(fn, 0), expOf(0))
+            assert.strict.deepStrictEqual(probeFade(fn, 0), name === 'domFadeOut' ? 0 : 1)
         })
 
         it('should not read delay as duration and ignore a non-object opt', function() {

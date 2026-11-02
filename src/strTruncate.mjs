@@ -1,8 +1,7 @@
 import get from 'lodash-es/get.js'
-import cint from './cint.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
-import isp0int from './isp0int.mjs'
+import iseint from './iseint.mjs'
 import strleft from './strleft.mjs'
 
 
@@ -10,12 +9,13 @@ import strleft from './strleft.mjs'
  * 字串超長時裁切至指定長度並補上刪節號，可另指定函數生成附註訊息
  *
  * 未超長則原樣回傳，不補刪節號
- * 輸入非有效字串回傳空字串，maxLen非有效非負整數則原樣回傳字串
+ * 輸入非有效字串回傳空字串(先於maxLen之檢查)
+ * maxLen為必須參數(有opt即代表為一般情形，非opt之位置參數為必須)，須為有效整數(iseint，0~4294967295，數字字串亦可，去頭尾空白後取值)；未給或非預期之輸入(null、負數、小數、Infinity、'0x3'、包裝物件、非數字字串等)throw Error('invalid maxLen: must be a non-negative integer')，訊息不帶輸入值
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strTruncate.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str 輸入待裁切字串
- * @param {Integer} maxLen 輸入裁切後最大保留長度非負整數，不含刪節號與附註訊息
+ * @param {String} str 輸入待裁切字串，非有效字串回傳空字串
+ * @param {Integer|String} maxLen 輸入裁切後最大保留長度，必須參數(有效整數，0~4294967295，數字字串亦可)，不含刪節號與附註訊息，非預期之輸入throw Error
  * @param {Object} [opt={}] 輸入設定物件
  * @param {Function} [opt.funWithMsg=null] 輸入生成附註訊息之函數，格式為(str, maxLen)=>String，其中str為原始未裁切字串，回傳字串將接於刪節號之後，回傳非有效字串視為無附註，預設null代表僅補刪節號
  * @returns {String} 回傳裁切後字串
@@ -36,22 +36,30 @@ import strleft from './strleft.mjs'
  * console.log(strTruncate('', 3))
  * // =>
  *
- * console.log(strTruncate('abcdefghij', -1))
- * // => abcdefghij
+ * console.log(strTruncate('abcdefghij', '3'))
+ * // => abc...
+ *
+ * try {
+ *     strTruncate('abcdefghij', -1)
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid maxLen: must be a non-negative integer
  *
  */
 function strTruncate(str, maxLen, opt = {}) {
 
-    //check
+    //check, str非有效字串回傳空字串, 先於maxLen之檢查
     if (!isestr(str)) {
         return ''
     }
-    if (!isp0int(maxLen)) {
-        return str
-    }
 
-    //maxLen
-    maxLen = cint(maxLen)
+    //maxLen為必須參數, 未給或非預期throw(訊息不帶值), 有效則取轉換值(字串型數字不可原樣交給下游)
+    if (!iseint(maxLen, { use: 'count' })) {
+        throw new Error('invalid maxLen: must be a non-negative integer')
+    }
+    maxLen = Number(maxLen)
 
     //check, 未超長就原樣回傳, 不補刪節號
     if (str.length <= maxLen) {

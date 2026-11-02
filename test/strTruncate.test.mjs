@@ -13,12 +13,11 @@ describe(`strTruncate`, function() {
         assert.strict.deepStrictEqual(strTruncate({ a: 1 }, 10), '')
     })
 
-    it(`should return original string when maxLen is not an effective non-negative integer`, function() {
-        assert.strict.deepStrictEqual(strTruncate('abcdefghij', -1), 'abcdefghij')
-        assert.strict.deepStrictEqual(strTruncate('abcdefghij', 1.5), 'abcdefghij')
-        assert.strict.deepStrictEqual(strTruncate('abcdefghij', null), 'abcdefghij')
-        assert.strict.deepStrictEqual(strTruncate('abcdefghij', undefined), 'abcdefghij')
-        assert.strict.deepStrictEqual(strTruncate('abcdefghij', 'abc'), 'abcdefghij')
+    it(`should throw when maxLen is not an effective non-negative integer (a required parameter, since 2026-11-02; formerly returned the original string)`, function() {
+        for (let bad of [-1, 1.5, null, undefined, 'abc', Infinity]) {
+            assert.throws(() => strTruncate('abcdefghij', bad), (err) => err instanceof Error && err.message === 'invalid maxLen: must be a non-negative integer')
+        }
+        assert.throws(() => strTruncate('abcdefghij'), (err) => err instanceof Error && err.message === 'invalid maxLen: must be a non-negative integer')
     })
 
     it(`should return original string without ellipsis when str is shorter than maxLen`, function() {

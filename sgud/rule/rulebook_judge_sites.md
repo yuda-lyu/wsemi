@@ -36,7 +36,7 @@
 | 判斷類站點全集——§6 一般數值運算、§7 不符合、實作時須先處理之耦合與缺陷 | `sgud/rule/rulebook_judge_sites_inv_b.md` | §6、§7 與〈實作時須先處理之耦合與缺陷〉 | 18.4 |
 | 判斷類站點之處置結果——第 221 項第一批、第二批第一級發布 A、已知缺陷先修(ws270) | `sgud/rule/rulebook_judge_sites_r1.md` | 〈第 221 項第一批處置結果〉、〈第 221 項第二批第一級發布 A 處置結果〉、〈第 221 項已知缺陷先修(ws270)處置結果〉 | 16.8 |
 | 判斷類站點之處置結果——第 221 項第 2 輪(ws272a、ws272b) | `sgud/rule/rulebook_judge_sites_r2.md` | 〈第 221 項第 2 輪 ws272a 處置結果〉、〈…ws272b 處置結果〉 | 22.2 |
-| 判斷類站點之處置結果——第 221 項第 2 輪(ws272c;新增之處置結果節附於本檔末,逾 30KB 時再抽出新檔) | `sgud/rule/rulebook_judge_sites_r2c.md` | 〈第 221 項第 2 輪 ws272c 處置結果〉(新增節,非搬移) | 14.9 |
+| 判斷類站點之處置結果——第 221 項第 2 輪(ws272c)、第 3 輪(ws271;新增之處置結果節附於本檔末,逾 30KB 時再抽出新檔) | `sgud/rule/rulebook_judge_sites_r2c.md` | 〈第 221 項第 2 輪 ws272c 處置結果〉(新增節,非搬移)、〈第 221 項第 3 輪 ws271 處置結果〉(新增節) | 20.4 |
 
 各節對應(節號與標題不變):
 
@@ -45,3 +45,4 @@
 - `## 第 221 項第一批處置結果(wsemi221a,…)`、`## 第 221 項第二批第一級發布 A 處置結果(wsemiA,…)`、`## 第 221 項已知缺陷先修(ws270)處置結果(…)` → `rulebook_judge_sites_r1.md`
 - `## 第 221 項第 2 輪 ws272a 處置結果(…)`、`## 第 221 項第 2 輪 ws272b 處置結果(…)` → `rulebook_judge_sites_r2.md`
 - `## 第 221 項第 2 輪 ws272c 處置結果(…)`(新增節,非搬移;其後之處置結果節亦附於該檔) → `rulebook_judge_sites_r2c.md`
+- `## 第 221 項第 3 輪 ws271 處置結果(…)`(新增節,非搬移;`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`) → `rulebook_judge_sites_r2c.md`

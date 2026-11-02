@@ -119,3 +119,13 @@
 - **修前紅取證的副本作法**:`git archive HEAD src | tar -x -C ./tmp/ws272c/head` 與 `cp -r src ./tmp/ws272c/base/src`(動工前工作樹,含 ws272a／ws272b),把 `test/tools` 與要驗的測試檔複製進副本 `test/`,以 `quiet-run --cwd <副本>` 執行(`../src` 即指向副本).mocha 失敗數超過 255 時離開碼固定 255,紅案數改由 log 的 `N) describe` 行彙總(`tmp/ws272c/tallyFail.mjs`).
 - **全套約 1.5 分鐘**(`mocha --parallel`,28000 案級):本輪全套 1m36s,無排鎖等待;前輪記「排鎖等待 20~48 分」屬他套件佔鎖.改完一個大類即可跑全套,不必只靠逐檔.
 - **行尾**:Edit 工具對 CRLF 檔做多行 `new_string` 會夾入裸 LF(混合行尾);本輪以 `tmp/ws272c/normEol.mjs` 於最後統一(檔內出現過 CRLF 者全轉 CRLF),並以 `git ls-files --eol` 驗無 `mixed`.sgud 拆檔用腳本讀入、依錨點行切段、寫後驗「搬移行 + 主檔保留行 = 原檔全部行」逐行相等(`tmp/ws272c/splitSgud.mjs`).
+
+## 第二批第 3 輪「interp1、arrGroupByMaxmin、arrLookupByMaxmin、strTruncate＋domFadeIn」(2026-11-02,主控任務 20261102171617,ws271)
+
+- **「元素以 isenum 判定」與「現況支援之未載明元素形式」要分開**: `interp1` 之 `toArrayX` 與資料點共用寫法,px 元素除數字外還收 `[x,…]`、`{keyX}`(JSDoc 未載).直接把元素換 `isenum` 會悄悄收掉這兩種形式;本輪保留形式、只把「取出之 x」交 `isenum`,並列需裁示.共用輸入矩陣 `INVALID` 內的 `[5]` 因此對 px 元素為有效(測試以 `INVALID.filter` 排除並另立案),寫新矩陣前先看矩陣內每個值在**該函數**是否真的無效.
+- **有限上下限使「Infinity 值被略過」不可觀察**: 想以變異「值接受 `Infinity`」驗證 `arrGroupByMaxmin`／`arrLookupByMaxmin` 之 `isenum(value)`,變異存活——因上下限現必為有限,`Infinity <= max` 恆假,值是否接受不影響輸出(等價變異).要殺此類變異,測試案須用**落在區間內**的 isnum-only 值(`'0x3'`、`'0o3'`、`'0b11'`、`'1e-400'`、`new Number(1)`、`new String('3')`),而非 `Infinity`.凡「收緊後與另一處收緊互相遮蔽」者都要用會落入可觀察範圍之值.
+- **`cloneDeep` 會讀 getter**: 驗「檢測之值即使用之值」(K4)時用 getter 首讀有效、再讀無效,但 `arrGroupByMaxmin` 之 `cloneDeep(maxmins)` 也讀一次,故不可斷言讀取次數為 1;改斷言「結果用的是檢查過的值」(逐元素不重讀).
+- **多位數數字字串才能殺「字串比大小」變異**: 資料點 `x` 為 `'3'`、`'4'` 這類個位數字串時,漏掉 `Number()` 的變異(`x = x`)不可觀察(字串字典序與數值序同);改用 `'9'`、`'10'`、`'100'` 且跑 linear／stairs／blocks 三模式(stairs／blocks 直接回 `p1.y`,`y` 若為字串會原樣外露).
+- **全套修前案數(不實跑)**: 用 `git archive HEAD src "test/*.test.mjs" test/tools` 解到 `./tmp/`,以 `mocha --dry-run --reporter json` 分批計案(`tmp/ws271/countCases.mjs`).`evem.test.mjs` 以相對路徑 `../node_modules/eventemitter3/index.mjs` 載入,在副本下載入失敗;**不要在副本放局部 `node_modules`(會遮蔽 `src/evem.mjs` 的裸套件解析)**,改把該檔自副本排除、案數取自現行(該檔未改).修前 28098 案 → 修後 28500(+402＝新檔 347＋`domFadeIn` 納入 55);實跑 28494 passing／6 pending／0 failing,全套 1m33s.
+- **紅燈取證**: 副本 `tmp/ws271/head/{src,test/tools}`(動工前 `git archive HEAD`),新測試複製進副本 `test/`,逐檔獨立 mocha 行程(`runRed.mjs`):`optValG8level3` 347 案紅 265(interp1 97、arrGroupByMaxmin 69、arrLookupByMaxmin 68、strTruncate 31),`strTruncate.test` 紅 1,`optValG4randDomMisc` 紅 37(皆 `domFadeIn`).修前不終止之輸入(迴圈、記憶體)本輪無,故未用子行程.
+- **變異證明法**: 單行比對字串(工作樹有 CRLF);命中數不為 1 者標 `BAD-PATTERN` 不跑(`I10` 因 `toArrayX` 與 `toArrayXY` 有同一行,改為只換第一處);變異後 `ReferenceError`(TDZ)使 mocha 輸出無法解析時為 `ERROR`,要改寫變異而非當作殺死.51 項: 殺死 46,存活 5 皆等價(數字字串於 `<`／`<=`／`>`／`>=` 比較時 JS 自動轉型,`Number()` 取值不可觀察,仍保留以遵守 K4 一致寫法).

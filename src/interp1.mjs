@@ -3,9 +3,8 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import reverse from 'lodash-es/reverse.js'
-import toNumber from 'lodash-es/toNumber.js'
 import isNumber from 'lodash-es/isNumber.js'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import errToStr from './_errToStr.mjs'
@@ -30,12 +29,12 @@ function toArrayX(ps, opt = {}) {
         keyX = 'x'
     }
 
-    //rs
+    //rs, 與ps逐位對齊(長度恆等於ps長度), 無效元素(isenum判定)於原位記錄err(不帶值), 不丟棄
     let rs = []
-    each(ps, (v) => {
+    each(ps, (v, k) => {
         let x = null
-        if (isnum(v)) {
-            x = toNumber(v)
+        if (isenum(v)) {
+            x = v
         }
         else if (isarr(v) && size(v) >= 1) {
             x = get(v, 0)
@@ -43,10 +42,14 @@ function toArrayX(ps, opt = {}) {
         else {
             x = get(v, keyX, null)
         }
-        if (isnum(x)) {
-            x = toNumber(x)
+        if (isenum(x)) {
             rs.push({
-                x,
+                x: Number(x), //檢測之值即使用之值
+            })
+        }
+        else {
+            rs.push({
+                err: `invalid px[${k}]: must be a valid number`,
             })
         }
     })
@@ -87,9 +90,9 @@ function toArrayXY(ps, opt = {}) {
             x = get(v, keyX, null)
             y = get(v, keyY, null)
         }
-        if (isnum(x) && isnum(y)) {
-            x = toNumber(x)
-            y = toNumber(y)
+        if (isenum(x) && isenum(y)) { //資料點x或y非有效數字者濾除(資料集, 不需對齊)
+            x = Number(x)
+            y = Number(y)
             rs.push({
                 x,
                 y,
@@ -324,8 +327,8 @@ function interp1Blocks(ps, x) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} ps 輸入一維數據，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
- * @param {Number|Array} px 輸入要內插點的數值或數值陣列
+ * @param {Array} ps 輸入一維數據(各點之x與y須為有效數字，非有效數字之點濾除，不計入內插)，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
+ * @param {Number|String|Array} px 輸入要內插點的數值或數值陣列，數值須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)。px為單一數值且非有效數字時回傳{ err: 'px is not a number or an array' }；px為陣列時，無效元素於原位輸出{ err: 'invalid px[索引]: must be a valid number' }(不帶值)，與超出範圍之原位{ err }一致，故回傳陣列長度恆等於px長度
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入內插方法，可選'linear'、'stairs'、'blocks'，預設'linear'
  * @param {String} [opt.keyX='x'] 輸入若數據為物件陣列，取物件x值時的key字串，預設為'x'
@@ -735,6 +738,14 @@ function interp1Blocks(ps, x) {
  * //   }
  * // ]
  *
+ * r = interp1(ps, [1, Infinity, 'abc', 3])
+ * console.log(`linear: px=[1,Infinity,'abc',3]`, 'r=' + JSON.stringify(r))
+ * // => linear: px=[1,Infinity,'abc',3] r=[0.2,{"err":"invalid px[1]: must be a valid number"},{"err":"invalid px[2]: must be a valid number"},1.2]
+ *
+ * r = interp1(ps, Infinity)
+ * console.log(`linear: px=Infinity`, 'r=' + JSON.stringify(r))
+ * // => linear: px=Infinity r={"err":"px is not a number or an array"}
+ *
  */
 function interp1(ps, px, opt = {}) {
 
@@ -747,7 +758,7 @@ function interp1(ps, px, opt = {}) {
 
     //check px
     if (true) {
-        let b1 = !isnum(px)
+        let b1 = !isenum(px)
         let b2 = !isarr(px)
         if (b1 && b2) {
             return {
@@ -818,6 +829,15 @@ function interp1(ps, px, opt = {}) {
 
     //rs
     let rs = map(pxEff, (o, ko) => {
+
+        //無效元素於原位輸出{err}(不帶值), 與超出範圍之原位{err}一致, 輸出長度恆等於px長度
+        let msg = get(o, 'err')
+        if (isestr(msg)) {
+            return {
+                err: msg,
+            }
+        }
+
         let xEff = get(o, 'x')
         // console.log(ko, o, xEff)
         let v = null

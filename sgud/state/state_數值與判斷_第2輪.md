@@ -1,6 +1,15 @@
-# 狀態(數值與判斷,第 2 輪)
+# 狀態(數值與判斷,第 2 輪起;含第 3 輪 ws271)
 
 本檔自 `sgud/state/state_數值與判斷.md` 抽出(2026-11-02 ws272c 依全域設定§14整理;原約 31.3KB):第二批第 2 輪 ws272c、ws272b、ws272a 三節逐字搬移、節號與標題不變;索引見 `sgud/state/state.md`.新增之第 2 輪以後現況附於本檔最前(逾 30KB 時再抽出新檔).
+
+## 第二批第 3 輪 ws271「interp1、arrGroupByMaxmin、arrLookupByMaxmin、strTruncate＋domFadeIn 對齊」(排程第 221 項第二批第 271 項之第 3 輪〔第三級,下游已先行改〕;主控任務 20261102171617 ws271,2026-11-02;package.json version 1.9.44 之工作樹,未提交未發布;待主控複審後發布並再驗下游行為不變)〔本節於 2026-11-02 新增,置於該檔最前〕
+
+- 背景: 使用者 2026-11-02 裁定(dspec〈輸入參數之檢測機制〉§11): `interp1` 之 `px` 定 A(陣列無效元素原位 `{err}`,輸出長度恆等於 `px` 長度);`arrGroupByMaxmin`／`arrLookupByMaxmin`「Infinity 原則上視為非預期……使用方得自己給適當之超大/小值去當邊界」「上下限無效即拋錯」;`strTruncate` 之 `maxLen` 為必須參數(未給或非預期即報錯);第 17 項 `domFadeIn`／`domFadeOut` 之 `opt.duration` 無效或負數用 500.下游先行完成: w-data-pipeline 1.0.25、w-gis 1.1.14、w-knowledge-summarize(發布中)、w-dispatch-ai;w-geo、w-statistic、w-knowledge-extract 傳入值皆為有效值,不用改.
+- 現況(已套): `interp1`(`px` 單值守門與陣列元素、資料點 `ps` 皆 `isenum`＋`Number`;陣列無效元素於原位輸出 `{ err: 'invalid px[i]: must be a valid number' }`,單值無效回 `{ err: 'px is not a number or an array' }`;元素形式 `[x,…]`、`{keyX}` 維持;`opt.xMin`／`xMax` 仍 `isNumber`,本輪不動);`arrGroupByMaxmin`／`arrLookupByMaxmin`(區間上下限經新增內部 `src/_maxminsLimits.mjs` 以 `isenum` 判定,無效或缺鍵 throw `invalid maxmins[i].<鍵>: must be a valid number`,檢測先於 `arr` 檢查、與資料無關;被分組／查找之值以 `isenum` 判定,無效者略過;`isNumber` 閘門已移除);`strTruncate`(`maxLen` 以 `iseint { use:'count' }` 判定,未給或非預期 throw `invalid maxLen: must be a non-negative integer`;`str` 非有效字串先回 `''`);`domFadeIn`(`opt.duration` 比照 `domFadeOut`,補 `opt.debug`／`opt.funLog`).wsemi 內部呼叫端(`execCli`、`execCliFailDetail`、`domAlert`)不受影響.
+- 規則: `sgud/rule/rulebook_optval.md` R-OPT-VAL-01(ws271 後續,規則 18~20);處置明細 `rulebook_judge_sites_r2c.md`〈第 221 項第 3 輪 ws271 處置結果〉;破壞性變更第 56 項(`rulebook_breaking_52on.md`).
+- 測試: 新檔 `optValG8level3.test.mjs`(347 案);既有 `strTruncate.test.mjs`(無效 `maxLen` 改為 throw)、`optValG4randDomMisc.test.mjs`(`domFadeIn` 納入,+55 案).
+- 待裁示/待辦: ①`interp1` 之 `px` 元素形式 `[x,…]`／`{keyX}`(JSDoc 未載、現況支援)是否仍維持(本輪維持;若要只收數字,改 `toArrayX` 一處);②`ps` 層級失敗(資料點不足、趨勢不單調)仍整體回單一 `{err}` 物件(非陣列),「輸出長度恆等於 `px` 長度」只適用於可內插之情形;③`maxmins` 上下限檢測先於 `arr` 檢查(`arr` 為空或非陣列亦拋),是否接受;④`interp1` 單值 `px` 無效之訊息維持 `'px is not a number or an array'`(對 `Infinity` 稍不貼切),是否改為 `invalid px: must be a valid number`.
+- 驗證(2026-11-02): 見主控任務 `agent-out/ws271-修正報告.md`(新測試對 HEAD 副本之紅案數、變異證明、修前修後差分、全套 `npm test` 前後案數、eslint).
 
 ## 第二批第 2 輪 ws272c「DOM 類、`_optNum` 退役、`fsTask`」＋ws272b 回報後續 6 項＋sgud 大檔拆分(排程第 221 項第二批第 272 項之第 2 輪第 3 批〔最末批〕;主控任務 20261102123434 ws272c,2026-11-02;package.json version 1.9.43 之工作樹,未提交未發布;3 批完成,待主控複審後跑全套並發布)〔本節於 2026-11-02 新增,置於該檔最前〕
 

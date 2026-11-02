@@ -1,14 +1,13 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
-import isNumber from 'lodash-es/isNumber.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isearr from './isearr.mjs'
 import isestr from './isestr.mjs'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
-import cdbl from './cdbl.mjs'
 import haskey from './haskey.mjs'
+import maxminsLimits from './_maxminsLimits.mjs'
 
 
 /**
@@ -16,8 +15,8 @@ import haskey from './haskey.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrLookupByMaxmin.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} arr 輸入要被切割的陣列，需為物件陣列，否則無法添加查找結果
- * @param {Array} maxmins 輸入要切分的最大最小值物件陣列，每個元素需為物件，至少得要包含keyMax與keyMin欄位
+ * @param {Array} arr 輸入要被切割的陣列，需為物件陣列，否則無法添加查找結果；各元素之keyValue欄位須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)，非有效數字之元素略過不查找(不添加keyItems)
+ * @param {Array} maxmins 輸入要切分的最大最小值物件陣列，每個元素需為物件，至少得要包含keyMax與keyMin欄位，其值須為有效數字(同上，數字字串亦可)；maxmins屬設定，上下限無效(未給、null、Infinity、'0x10'、包裝物件、非數字字串等)即throw Error(`invalid maxmins[索引].鍵: must be a valid number`，訊息不帶輸入值)，且不論arr內容；欲表示「無上限或無下限」請自行給適當之有限極值(如1e20、-1e20)
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.keyMax='max'] 輸入maxmins內各元素中，儲存最大值欄位字串，預設'max'
  * @param {String} [opt.keyMin='min'] 輸入maxmins內各元素中，儲存最小值欄位字串，預設'min'
@@ -590,11 +589,16 @@ function arrLookupByMaxmin(arr, maxmins, opt = {}) {
     //beforeAddResult for items from maxmins
     let beforeAddResult = get(opt, 'beforeAddResult', null)
 
-    //check
-    if (!isearr(arr)) {
+    //check, maxmins不是有效陣列時維持回傳空陣列
+    if (!isearr(maxmins)) {
         return []
     }
-    if (!isearr(maxmins)) {
+
+    //limits, maxmins為設定, 上下限無效即throw(不帶值), 先於arr檢查, 是否報錯與arr之內容無關
+    let limits = maxminsLimits(maxmins, keyMax, keyMin)
+
+    //check
+    if (!isearr(arr)) {
         return []
     }
 
@@ -607,85 +611,68 @@ function arrLookupByMaxmin(arr, maxmins, opt = {}) {
     //rs
     let rs = cloneDeep(arr)
     each(rs, (v, k) => {
+
+        //value, 查找值為資料, 非有效數字(isenum判定)者略過該筆(不添加keyItems)
         let value = get(v, keyValue)
-        if (isnum(value)) {
-            value = cdbl(value)
+        if (isenum(value)) {
+            value = Number(value)
         }
         else {
+            value = null
             // console.log(`can not find keyValue[${keyValue}] in element of arr(object array)`)
         }
-        if (isNumber(value)) {
+        if (value !== null) {
             each(maxmins, (mm, kmm) => {
 
                 //rmax, rmin
-                let rmax = get(mm, keyMax, null)
-                let rmin = get(mm, keyMin, null)
+                let { rmax, rmin } = limits[kmm]
 
-                //check
-                if (rmax !== null && rmin !== null) {
+                //maxType in mm
+                let maxType = get(mm, 'maxType')
+                if (maxType !== '<=' && maxType !== '<') {
+                    maxType = '<='
+                }
 
-                    //check
-                    if (isnum(rmax) && isnum(rmin)) {
+                //minType in mm
+                let minType = get(mm, 'minType')
+                if (minType !== '>=' && minType !== '>') {
+                    minType = '>='
+                }
 
-                        //maxType in mm
-                        let maxType = get(mm, 'maxType')
-                        if (maxType !== '<=' && maxType !== '<') {
-                            maxType = '<='
-                        }
-
-                        //minType in mm
-                        let minType = get(mm, 'minType')
-                        if (minType !== '>=' && minType !== '>') {
-                            minType = '>='
-                        }
-
-                        //cdbl
-                        rmax = cdbl(rmax)
-                        rmin = cdbl(rmin)
-
-                        //bmin
-                        let bmin
-                        if (minType === '>=') {
-                            bmin = value >= rmin
-                        }
-                        else {
-                            bmin = value > rmin
-                        }
-
-                        //bmax
-                        let bmax
-                        if (maxType === '<=') {
-                            bmax = value <= rmax
-                        }
-                        else {
-                            bmax = value < rmax
-                        }
-
-                        //check
-                        if (bmin && bmax) {
-
-                            //beforeAddResult
-                            if (isfun(beforeAddResult)) {
-                                mm = beforeAddResult(mm, rs[k], k)
-                            }
-
-                            //check
-                            if (!haskey(rs[k], keyItems)) {
-                                rs[k][keyItems] = []
-                            }
-
-                            //save
-                            rs[k][keyItems].push(mm)
-
-                        }
-                    }
-                    else {
-                        // console.log(`maxmins['${kmm}'][${keyMax}] or maxmins['${kmm}'][${keyMin}] is not a number`)
-                    }
-
+                //bmin
+                let bmin
+                if (minType === '>=') {
+                    bmin = value >= rmin
                 }
                 else {
-                    // console.log(`can not find keyMax[${keyMax}] or keyMin[${keyMin}] in element of maxmins`)
+                    bmin = value > rmin
+                }
+
+                //bmax
+                let bmax
+                if (maxType === '<=') {
+                    bmax = value <= rmax
+                }
+                else {
+                    bmax = value < rmax
+                }
+
+                //check
+                if (bmin && bmax) {
+
+                    //beforeAddResult
+                    if (isfun(beforeAddResult)) {
+                        mm = beforeAddResult(mm, rs[k], k)
+                    }
+
+                    //check
+                    if (!haskey(rs[k], keyItems)) {
+                        rs[k][keyItems] = []
+                    }
+
+                    //save
+                    rs[k][keyItems].push(mm)
+
                 }
 
             })
