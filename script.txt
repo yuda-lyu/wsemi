@@ -11,6 +11,8 @@ node toolfp/gDistRollup.mjs
 node toolparfor/gDistRollup.mjs
 node toolg/gDistRollup.mjs
 
+node toolg/genDocsDist.mjs
+
 git add .  -A
 git commit -m 'modify: '
 git push origin master:master
