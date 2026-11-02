@@ -73,7 +73,7 @@ describe(`delay 觀察回調(onTrace)`, function() {
         }
     })
 
-    it(`should notify the ms actually used: 10 by default or for a non-number, and clamped to the timer maximum`, async function() {
+    it(`should notify the ms actually used: 10 by default, for a non-number, or for a value over the timer maximum (not clamped)`, async function() {
         let clock = useFakeClock()
         try {
             let got = []
@@ -87,8 +87,8 @@ describe(`delay 觀察回調(onTrace)`, function() {
                 }
                 got.push(tr.events[0].ms)
             }
-            //JSDoc 預設10ms; 非數字以10ms; 數字字串依其值(轉為數字); 超過計時器上限(2147483647)夾至上限
-            assert.strict.deepStrictEqual(got, [10, 10, 10, 10, 25, 2147483647])
+            //JSDoc 預設10ms; 非數字以10ms; 數字字串依其值(轉為數字); 超過計時器上限(2147483647)視為非預期、改用預設10ms(第221項第二批使用者裁定, 不再夾至上限)
+            assert.strict.deepStrictEqual(got, [10, 10, 10, 10, 25, 10])
         }
         finally {
             clock.restore()

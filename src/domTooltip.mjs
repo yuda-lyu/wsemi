@@ -3,8 +3,7 @@ import 'tippy.js/dist/tippy.css'
 import 'tippy.js/themes/light.css'
 import merge from 'lodash-es/merge.js'
 import iseobj from './iseobj.mjs'
-import isnum from './isnum.mjs'
-import cint from './cint.mjs'
+import isenum from './isenum.mjs'
 
 
 /**
@@ -70,8 +69,8 @@ function domTooltip(ele, content, option = {}) {
     //tippystate
     let tippystate = ele.getAttribute('tippystate')
 
-    //bStop, 若還在倒數中則跳出
-    let bStop = isnum(tippystate)
+    //bStop, 若還在倒數中(tippystate為函數自行寫入之倒數秒數, 有效數字)則跳出
+    let bStop = isenum(tippystate)
 
     //set tippystate, 不論是第一次初始化還是滑鼠移入重複觸發, 皆需重設時間
     ele.setAttribute('tippystate', '5')
@@ -110,10 +109,10 @@ function domTooltip(ele, content, option = {}) {
     //auto destroy
     timer = setInterval(() => {
         let ts = ele.getAttribute('tippystate')
-        if (isnum(ts)) {
+        if (isenum(ts)) {
 
-            //倒數
-            ts = cint(ts)
+            //倒數, 判定有效後取轉換值
+            ts = Number(ts)
             ts -= 1
 
             //set tippystate

@@ -267,7 +267,11 @@ describe(`_execPortPids`, function() {
             for (let v of [0, -5, 'abc', null, NaN]) {
                 assert.strict.deepStrictEqual(kit.readInput(80, { timeout: v }, ex).cfg.timeout, 10000, `timeout ${v}`)
             }
-            assert.strict.deepStrictEqual(kit.readInput(80, { timeout: 2 ** 40 }, ex).cfg.timeout, 2147483647)
+            //計時器上限(2147483647)本身有效; 超過上限、Infinity、'0x10'、包裝物件視為非預期, 改用預設10000, 不夾至上限(第221項第二批)
+            assert.strict.deepStrictEqual(kit.readInput(80, { timeout: 2147483647 }, ex).cfg.timeout, 2147483647)
+            for (let v of [2147483648, 2 ** 40, Infinity, '0x10', new Number(300)]) { // eslint-disable-line no-new-wrappers
+                assert.strict.deepStrictEqual(kit.readInput(80, { timeout: v }, ex).cfg.timeout, 10000, `timeout ${String(v)}`)
+            }
             assert.strict.deepStrictEqual(kit.readInput(80, null, ex).cfg.timeout, 10000)
         })
 

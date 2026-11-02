@@ -6,10 +6,13 @@ import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
 import isEle from './isEle.mjs'
 import iseobj from './iseobj.mjs'
-import isp0int from './isp0int.mjs'
-import cint from './cint.mjs'
 import genPm from './genPm.mjs'
 import waitFun from './waitFun.mjs'
+import optVal from './_optVal.mjs'
+
+
+//disTouchMoveToHide: opt類參數, 有效整數且為個數(iseint, use: 'count', 0~4294967295), 非預期(含負數、小數、Infinity、超出個數範圍、'0x10'、包裝物件等)視為未給、改用預設4, 不報錯
+let RULE_DIS_TOUCH_MOVE_TO_HIDE = { fn: 'domShowImages', name: 'opt.disTouchMoveToHide', kind: 'eint', chk: { use: 'count' } }
 
 //viewer.js工具指定值:
 // 0: 隱藏
@@ -66,7 +69,9 @@ function optMuti() {
  * @param {HTMLElement} eleImg 輸入圖片元素
  * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
- * @param {Integer} [opt.disTouchMoveToHide=4] 輸入手機touch觸發移動距離視為可隱藏整數，單位px，預設4
+ * @param {Integer} [opt.disTouchMoveToHide=4] 輸入手機touch觸發移動距離視為可隱藏整數，單位px，須為0至4294967295之有效整數(可為數字字串)，非預期之輸入(負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯(給Infinity不代表永不因移動而隱藏)，預設4
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.disTouchMoveToHide為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息
  * @example
  * need test in browser
@@ -87,12 +92,8 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
         opt = {}
     }
 
-    //disTouchMoveToHide
-    let disTouchMoveToHide = get(opt, 'disTouchMoveToHide', null)
-    if (!isp0int(disTouchMoveToHide)) {
-        disTouchMoveToHide = 4
-    }
-    disTouchMoveToHide = cint(disTouchMoveToHide)
+    //disTouchMoveToHide, 有效則取Number(v), 非預期(含負數、小數、Infinity、'0x10'、包裝物件)改用預設4
+    let disTouchMoveToHide = optVal(get(opt, 'disTouchMoveToHide', null), 4, RULE_DIS_TOUCH_MOVE_TO_HIDE, opt)
 
     //img and check one
     if (!isEle(eleImg)) {

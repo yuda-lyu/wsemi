@@ -1,10 +1,10 @@
 import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
-import isnum from './isnum.mjs'
+// import isnum from './isnum.mjs'
 import isblob from './isblob.mjs'
 import isfile from './isfile.mjs'
 import haskey from './haskey.mjs'
-import cdbl from './cdbl.mjs'
+// import cdbl from './cdbl.mjs'
 import getFileBasicHash from './getFileBasicHash.mjs'
 import getFileXxHash from './getFileXxHash.mjs'
 
@@ -103,12 +103,12 @@ async function getFileHash(inp, opt = {}) {
         type = 'sha512'
     }
 
-    //chunkSize
-    let chunkSize = get(opt, 'chunkSize')
-    if (!isnum(chunkSize)) {
-        chunkSize = 64 * 1024 * 1024 //64mb
-    }
-    chunkSize = cdbl(chunkSize)
+    //chunkSize, 本函數未使用此區域變數(opt原樣轉交下游, 由getFileBasicHash與getFileXxHash各自解析chunkSize), 先註解保留以免日後需要時重寫
+    // let chunkSize = get(opt, 'chunkSize')
+    // if (!isnum(chunkSize)) {
+    //     chunkSize = 64 * 1024 * 1024 //64mb
+    // }
+    // chunkSize = cdbl(chunkSize)
 
     //kp
     let kp = {

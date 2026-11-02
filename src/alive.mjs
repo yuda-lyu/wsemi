@@ -2,15 +2,19 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import size from 'lodash-es/size.js'
-import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
-import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
-import cint from './cint.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeAlive: opt類參數, 有效整數且為正數(iseint, min: 1), 非預期(含Infinity)改用預設10000; timeAlive只與時間差比較(不交給計時器), 故不設計時器上限(use: 'timer')
+//timeDetect: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setInterval), 非預期改用預設50
+let RULE_TIME_ALIVE = { fn: 'alive', name: 'opt.timeAlive', kind: 'eint', chk: { min: 1 } }
+let RULE_TIME_DETECT = { fn: 'alive', name: 'opt.timeDetect', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -18,8 +22,11 @@ import getTrace from './getTrace.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/alive.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer} [timeAlive=10000] 輸入判斷單元是否斷線之延時整數，單位為毫秒ms，預設為10000
- * @param {Integer} [timeDetect=50] 輸入偵測佇列間隔時間整數，單位為毫秒ms，預設為50
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Integer} [opt.timeAlive=10000] 輸入判斷單元是否斷線之延時正整數(1至9007199254740991，數字字串亦可)，單位為毫秒ms，預設為10000；非預期(0、負數、小數、Infinity、超過安全整數、'0x10'等)視為未給而改用預設10000，不報錯(Infinity不代表永不斷線)；timeAlive只與時間差比較、不交給原生計時器，故不設2147483647之計時器上限
+ * @param {Integer} [opt.timeDetect=50] 輸入偵測佇列間隔時間正整數(1至2147483647，數字字串亦可)，單位為毫秒ms，預設為50；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'等)視為未給而改用預設50，不報錯、不夾至上限
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeAlive或opt.timeDetect為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'enter'或'leave'時為即將發出該message事件(含key、now同事件內容)，'tick'時為每次偵測佇列(含size為偵測前之單元數)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，clear後不再呼叫，預設null
  * @returns {Object} 回傳事件物件，可呼叫函數on、trigger、get、clear。trigger給予單元的唯一key字串與攜帶數據data物件，on為監聽事件，需自行監聽message事件取得單元進出事件。get事件可取得alive內視為存活的單元清單(含剛trigger而尚未發出enter者)。clear為釋放：立即清除偵測計時器、取消尚未發出之enter、清空佇列，本身不發事件，其後不再發出任何事件、trigger無效、get回傳[]，可重複呼叫(釋放為終態，需重新偵測者另建alive)；clear回傳已發出enter且尚未leave之單元陣列[{ key, data }]，供使用端補發離線通知，再次呼叫回傳[]；監聽器於派發中呼叫clear亦安全，同一輪尚未處理之單元不再派發。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
@@ -125,21 +132,11 @@ function alive(opt = {}) {
     let entered = new Set() //已發出enter且尚未leave之單元key, 供clear回傳
     let cleared = false //是否已clear, clear為終態
 
-    //timeAlive
-    let timeAlive = get(opt, 'timeAlive')
-    if (!ispint(timeAlive)) {
-        timeAlive = 10000
-    }
-    timeAlive = cint(timeAlive)
-    timeAlive = Math.min(timeAlive, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeAlive, 有效則取Number(v), 非預期(含Infinity)改用預設, 不代表永不斷線
+    let timeAlive = optVal(get(opt, 'timeAlive'), 10000, RULE_TIME_ALIVE, opt)
 
-    //timeDetect
-    let timeDetect = get(opt, 'timeDetect')
-    if (!ispint(timeDetect)) {
-        timeDetect = 50
-    }
-    timeDetect = cint(timeDetect)
-    timeDetect = Math.min(timeDetect, cst.TIMER_TIME_MAX) //同上
+    //timeDetect, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設, 不夾至上限
+    let timeDetect = optVal(get(opt, 'timeDetect'), 50, RULE_TIME_DETECT, opt)
 
     //trace, 觀察回調(opt.onTrace), 未給時為null
     let trace = getTrace(opt)

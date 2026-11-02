@@ -2,8 +2,7 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import isbol from './isbol.mjs'
-import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+import optVal from './_optVal.mjs'
 import domRemove from './domRemove.mjs'
 import domGetFileAccept from './domGetFileAccept.mjs'
 import domAppend from './domAppend.mjs'
@@ -11,6 +10,10 @@ import domFind from './domFind.mjs'
 import domGetFiles from './domGetFiles.mjs'
 import domTriggerEvent from './domTriggerEvent.mjs'
 import getTrace from './getTrace.mjs'
+
+
+//sizeMbLimit: opt類參數, 有效數字(isenum, 不限範圍; 0與負數由domGetFiles改用預設), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設1000, 不報錯(給Infinity不代表不限大小)
+let RULE_SIZE_MB_LIMIT = { fn: 'domShowInputAndGetFiles', name: 'opt.sizeMbLimit', kind: 'enum' }
 
 
 /**
@@ -22,7 +25,9 @@ import getTrace from './getTrace.mjs'
  * @param {String|Array} [opt.kind='*'] 輸入檔案類型或種類字串或陣列，可選'docums'、'compress'、'image'、'data'，若給予'common'則代表前述4種，也可給予有限的副檔名(詳見getFileAccept)，預設為全部'*'
  * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
- * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+ * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，須為有效數字(可為數字字串)，0或負數視為未給，非預期之輸入(Infinity、'0x10'、包裝物件、非數字等)視為未給而改用預設，不報錯(給Infinity不代表不限大小，要放寬請給足夠大之有限數)，預設為1000mb(約1g)
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.sizeMbLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'open'時為已建立input並綁定監聽而即將觸發點擊開啟選檔視窗(含multiple、entireHierarchy為生效後之布林值)，'cancel'時為收到input之cancel事件(取消選檔之主要偵測)而即將以空檔案結束，'focus'時為收到window之focus事件(舊瀏覽器之備援偵測，entireHierarchy時不綁定)而排定1500ms後判定(含ms固定為1500)，'judge'時為1500ms後之判定(含cancel為此時尚未收到change而視為取消，false代表change已先處理而不再結束)，'settle'時為即將resolve(含by為'change'、'cancel'或'focus'代表由change事件、cancel事件或focus判定結束，files為檔案數量，errs為超過sizeMbLimit之檔案數量)；事件皆於對應動作之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響選檔處理，預設null
  * @returns {Promise} 回傳Promise，resolve回傳各檔案陣列，無reject
  * @example
@@ -110,12 +115,8 @@ function domShowInputAndGetFiles(opt = {}) {
         // return listFoldersAndFiles() //因listFoldersAndFiles所取得file無webkitRelativePath故不使用
     }
 
-    //sizeMbLimit = 1000
-    let sizeMbLimit = get(opt, 'sizeMbLimit')
-    if (!isnum(sizeMbLimit)) {
-        sizeMbLimit = 1000
-    }
-    sizeMbLimit = cdbl(sizeMbLimit)
+    //sizeMbLimit = 1000, 有效則取Number(v), 非預期(含Infinity、'0x10'、包裝物件)改用預設1000
+    let sizeMbLimit = optVal(get(opt, 'sizeMbLimit', null), 1000, RULE_SIZE_MB_LIMIT, opt)
 
     //trace, 觀察回調(opt.onTrace), 未給時為null
     let trace = getTrace(opt)

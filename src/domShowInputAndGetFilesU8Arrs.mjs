@@ -2,11 +2,14 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import genPm from './genPm.mjs'
 import isbol from './isbol.mjs'
-import isnum from './isnum.mjs'
 import iseobj from './iseobj.mjs'
-import cdbl from './cdbl.mjs'
+import optVal from './_optVal.mjs'
 import domShowInputAndGetFiles from './domShowInputAndGetFiles.mjs'
 import blobs2u8arrs from './blobs2u8arrs.mjs'
+
+
+//sizeMbLimit: opt類參數, 有效數字(isenum, 不限範圍; 0與負數由domGetFiles改用預設), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設1000, 不報錯(給Infinity不代表不限大小)
+let RULE_SIZE_MB_LIMIT = { fn: 'domShowInputAndGetFilesU8Arrs', name: 'opt.sizeMbLimit', kind: 'enum' }
 
 
 /**
@@ -18,7 +21,9 @@ import blobs2u8arrs from './blobs2u8arrs.mjs'
  * @param {String|Array} [opt.kind='*'] 輸入檔案類型或種類字串或陣列，預設為全部'*'
  * @param {Boolean} [opt.multiple=false] 輸入是否可選多檔案，預設為false
  * @param {Boolean} [opt.entireHierarchy=false] 輸入是否遍歷資料夾內之資料夾與檔案，使用Chrome實驗性語法webkitdirectory，預設為false
- * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，預設為1000mb(約1g)
+ * @param {Number} [opt.sizeMbLimit=1000] 輸入檔案大小上線，單位mb，須為有效數字(可為數字字串)，0或負數視為未給，非預期之輸入(Infinity、'0x10'、包裝物件、非數字等)視為未給而改用預設，不報錯(給Infinity不代表不限大小，要放寬請給足夠大之有限數)，預設為1000mb(約1g)
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.sizeMbLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Promise} 回傳Promise，resolve回傳各檔案的Uint8Array資料陣列，reject回傳錯誤訊息
  * @example
  * need test in browser
@@ -44,12 +49,8 @@ function domShowInputAndGetFilesU8Arrs(opt = {}) {
         entireHierarchy = false
     }
 
-    //sizeMbLimit = 1000
-    let sizeMbLimit = get(opt, 'sizeMbLimit')
-    if (!isnum(sizeMbLimit)) {
-        sizeMbLimit = 1000
-    }
-    sizeMbLimit = cdbl(sizeMbLimit)
+    //sizeMbLimit = 1000, 有效則取Number(v), 非預期(含Infinity、'0x10'、包裝物件)改用預設1000
+    let sizeMbLimit = optVal(get(opt, 'sizeMbLimit', null), 1000, RULE_SIZE_MB_LIMIT, opt)
 
     //pm
     let pm = genPm()

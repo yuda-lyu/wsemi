@@ -1,6 +1,4 @@
 import get from 'lodash-es/get.js'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
 import delay from './delay.mjs'
 import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
@@ -8,6 +6,11 @@ import fsMissFns from './_fsMissFns.mjs'
 import errToStr from './_errToStr.mjs'
 import getTrace from './getTrace.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import optVal from './_optVal.mjs'
+
+
+//numRetry: opt類參數, 有效整數且為個數(iseint, use: 'count', min: 1), 非預期(含Infinity)改用預設5
+let RULE_NUM_RETRY = { fn: 'fsDeleteFolderSafeCore', name: 'opt.numRetry', kind: 'eint', chk: { use: 'count', min: 1 } }
 
 
 /**
@@ -18,7 +21,9 @@ import chkFsPath from './_chkFsPath.mjs'
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Object} [opt.fs=null] 輸入fs物件，須提供statSync、lstatSync、rmSync，預設null；Core由呼叫端傳入(對外函數fsDeleteFolderSafe預設傳入內建fs，呼叫端可再以opt.fs覆蓋)；null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
- * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
+ * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數(1至4294967295，數字字串亦可)，預設5；非預期(0、負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設5，不報錯(Infinity不代表無限重試)；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.numRetry為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫rmSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為前置檢查即結束而即將resolve或reject(含n為0與reason；reason為'not-exist'代表標的不存在而resolve、'not-folder'代表標的非資料夾而reject)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -35,12 +40,8 @@ async function fsDeleteFolderSafeCore(pah, opt = {}) {
     //讀取opt與check置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出(於async函數內未捕捉即以Error物件reject), 注入之fs之lstatSync可拋出任意值, 皆轉字串reject
     try {
 
-        //numRetry
-        numRetry = get(opt, 'numRetry')
-        if (!ispint(numRetry)) {
-            numRetry = 5
-        }
-        numRetry = cint(numRetry)
+        //numRetry, 有效則取Number(v), 非預期(含Infinity)改用預設
+        numRetry = optVal(get(opt, 'numRetry'), 5, RULE_NUM_RETRY, opt)
 
         //fs
         fs = get(opt, 'fs', null)

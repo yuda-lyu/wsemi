@@ -22,9 +22,10 @@ describe(`arrAt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input [1, 2, 3, '4', 5, 'abc'], 1, -10`, function() {
+    //使用者2026-11-02: iend為opt類參數(JSDoc [iend=null]), 非預期(負數)視為未給, 只取istart一筆
+    it(`should return [2] (only istart) when input [1, 2, 3, '4', 5, 'abc'], 1, -10`, function() {
         let r = arrAt([1, 2, 3, '4', 5, 'abc'], 1, -10)
-        let rr = []
+        let rr = [2]
         assert.strict.deepStrictEqual(r, rr)
     })
 

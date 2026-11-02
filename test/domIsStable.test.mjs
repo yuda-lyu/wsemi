@@ -1,6 +1,8 @@
 import assert from 'assert'
 import domIsStable from '../src/domIsStable.mjs'
 import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+import { INVALID_TIMER_OVER, captureTimers, defineOptParam } from './tools/optValKit.mjs'
+import { defineOptParamAsync } from './tools/optValKitAsyncG3count.mjs'
 
 
 let delay = (ms) => {
@@ -642,7 +644,7 @@ describe(`domIsStable`, function() {
     })
 
     it(`should use the defaults for invalid numeric options, and accept numeric strings`, async function() {
-        //tolerance非有效非負數(含null、布林)→0(靜止元素仍穩定), Infinity保留(任何變化皆容許); timeDiff非有效(含null)→100, 0為有效(w-component-vue亦視0為有效), 負數視為0; 數字字串照常
+        //tolerance非有效非負數(含null、布林、Infinity)→0(靜止元素仍穩定, Infinity不再保留為任何變化皆容許); timeDiff非有效(含null)→100, 0為有效(w-component-vue亦視0為有效), 負數視為0; 數字字串照常
         //  timeDiff之落定時刻(距呼叫之ms)於假時鐘下確定: 無效與null為預設100, 0與負數為立即(第一個計時器時機, 不是預設100), '20'為20(原以真實時間之上界dt<50、dt<100)
         let clock = useFakeClock()
         try {
@@ -667,10 +669,11 @@ describe(`domIsStable`, function() {
                 return (await runPm(clock, el, { tolerance })).v
             }
             let bStrTol = await moving('1')
-            let bInfTol = await moving(Infinity)
+            let bInfTol = await moving(Infinity) //Infinity為非預期之輸入, 改用預設0(使用者2026-11-02定A, ws272c; 原為保留而任何變化皆容許)
+            let bHugeTol = await moving(1e9) //欲容許較大位移者給足夠大之有限數
             let bZeroTol = await moving(0)
             assert.strict.deepStrictEqual(out, [true, true, true, true, true])
-            assert.strict.deepStrictEqual([tBad, tNull, tNeg >= 0 && tNeg <= 1, tZero >= 0 && tZero <= 1, tStr, bStrTol, bInfTol, bZeroTol], [100, 100, true, true, 20, true, true, false], `bad=${tBad} null=${tNull} neg=${tNeg} zero=${tZero} str=${tStr}`)
+            assert.strict.deepStrictEqual([tBad, tNull, tNeg >= 0 && tNeg <= 1, tZero >= 0 && tZero <= 1, tStr, bStrTol, bInfTol, bHugeTol, bZeroTol], [100, 100, true, true, 20, true, false, true, false], `bad=${tBad} null=${tNull} neg=${tNeg} zero=${tZero} str=${tStr}`)
         }
         finally {
             clock.restore()
@@ -903,6 +906,125 @@ describe(`domIsStable`, function() {
         //情境本身須有意義: 各結果如規格, 且記錄器收到各type之事件
         assert.strict.deepStrictEqual([a.still.v, a.moved.v, a.anim.v, a.invalid.err, a.thrown.err, a.seq.map((x) => x[0])], [true, false, false, 'invalid element.getBoundingClientRect', 'rect boom', [true, false, true]])
         assert.strict.deepStrictEqual(Array.from(new Set(rec.types())).sort(), ['anims', 'dispose', 'done', 'emit', 'fail', 'judge', 'rect', 'round', 'skip'])
+    })
+
+})
+
+
+//第221項第二批第2輪第3批(ws272c): _optNum退役, domIsStable之3個數值選項改用_optVal(R-OPT-VAL-01), 使用者2026-11-02定A: tolerance之Infinity(舊inf:'keep')與timeDiff、timeDetect超出計時器上限(舊夾至上限)皆為非預期之輸入, 改用預設(0／100／50)
+//  負數之timeDiff維持文件載明之視為0(valid案例); probe回傳「該選項實際採用之值」之可觀察結果
+describe(`optVal domIsStable (ws272c, formerly _optNum)`, function() {
+
+    //ShiftEle, 第一次取位置left為0, 之後(第2、3次)為d: 三次位置在容許誤差內相同(穩定)當且僅當d不大於tolerance
+    class ShiftEle {
+        constructor(d) {
+            this.nodeType = 1
+            this.n = 0
+            this.d = d
+        }
+
+        getBoundingClientRect() {
+            this.n++
+            return { left: this.n === 1 ? 0 : this.d, top: 0, width: 100, height: 100 }
+        }
+
+        getAnimations() {
+            return []
+        }
+    }
+
+    //tolerance: 位置容許誤差(不小於0之數字, 可帶小數); 位移d(0, 0.5, 1…8)中判為穩定之最大者即實際容許誤差(上限8)
+    defineOptParamAsync({
+        fn: 'domIsStable',
+        name: 'opt.tolerance',
+        def: 0,
+        probe: async (v, extra = {}) => {
+            let best = 0
+            for (let d = 0; d <= 8; d += 0.5) {
+                let stable = await domIsStable(new ShiftEle(d), { tolerance: v, timeDiff: 0, ...extra })
+                if (!stable) {
+                    return best
+                }
+                best = d
+            }
+            return best
+        },
+        extraInvalid: [['-1', -1], [`'-1'`, '-1'], [`-0.5`, -0.5]],
+        valid: [
+            ['0', 0, 0],
+            ['0.5', 0.5, 0.5],
+            ['1', 1, 1],
+            ['2', 2, 2],
+            ['3.5', 3.5, 3.5],
+            [`'3'`, '3', 3],
+            [`' 1.5 '`, ' 1.5 ', 1.5],
+            ['1e9', 1e9, 8],
+        ],
+    })
+
+    //timeDiff: 位置前後比對之時間差(ms), 0為立即比對; delay(ms)所排定之setTimeout毫秒; 有效之負數(JSDoc載明)視為0
+    defineOptParam({
+        fn: 'domIsStable',
+        name: 'opt.timeDiff',
+        def: 100,
+        probe: (v, extra = {}) => {
+            let { calls } = captureTimers(() => {
+                domIsStable(new ShiftEle(0), { timeDiff: v, ...extra }).catch(() => {})
+            })
+            return calls.find((c) => c.kind === 'timeout').ms
+        },
+        extraInvalid: [...INVALID_TIMER_OVER],
+        valid: [
+            ['0', 0, 0],
+            ['0.5', 0.5, 0.5],
+            ['20', 20, 20],
+            [`'30'`, '30', 30],
+            [`' 15 '`, ' 15 ', 15],
+            ['2147483647', 2147483647, 2147483647],
+            ['-5 (documented as 0)', -5, 0],
+            [`'-5' (documented as 0)`, '-5', 0],
+            ['-0.5 (documented as 0)', -0.5, 0],
+        ],
+    })
+
+    //timeDetect: event模式輪詢偵測間隔(須大於0); create後以setInterval排定之毫秒
+    defineOptParamAsync({
+        fn: 'domIsStable',
+        name: 'opt.timeDetect',
+        def: 50,
+        probe: async (v, extra = {}) => {
+            let got = []
+            let osi = globalThis.setInterval
+            globalThis.setInterval = (fn, ms, ...args) => {
+                got.push(ms)
+                return osi(fn, ms, ...args)
+            }
+            try {
+                let ev = domIsStable(new ShiftEle(0), { mode: 'event', timeDiff: 0, timeDetect: v, ...extra })
+                ev.create()
+                await new Promise((resolve) => setImmediate(resolve))
+                ev.dispose()
+            }
+            finally {
+                globalThis.setInterval = osi
+            }
+            return got[0]
+        },
+        extraInvalid: [['0', 0], [`'0'`, '0'], ['-1', -1], [`'-1'`, '-1'], ...INVALID_TIMER_OVER],
+        valid: [
+            ['0.5', 0.5, 0.5],
+            ['1', 1, 1],
+            ['20', 20, 20],
+            [`'30'`, '30', 30],
+            [`' 25 '`, ' 25 ', 25],
+            ['2147483647', 2147483647, 2147483647],
+        ],
+    })
+
+    //Infinity不保留、不夾至計時器上限: tolerance為Infinity時不再「任何變化皆容許」, 位移0.5即不穩定
+    it(`should treat an Infinity tolerance as not expected (default 0), not as "any change is tolerated"`, async function() {
+        assert.strict.deepStrictEqual(await domIsStable(new ShiftEle(0.5), { tolerance: Infinity, timeDiff: 0 }), false)
+        assert.strict.deepStrictEqual(await domIsStable(new ShiftEle(0.5), { tolerance: 1e9, timeDiff: 0 }), true)
     })
 
 })

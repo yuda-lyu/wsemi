@@ -2,10 +2,15 @@
 import get from 'lodash-es/get.js'
 import isfun from './isfun.mjs'
 import getTrace from './getTrace.mjs'
-import optNum from './_optNum.mjs'
+import optVal from './_optVal.mjs'
 import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 import { maskUrlCred } from './_diagKit.mjs'
 import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
+
+
+//manifestMs, extractMs: 取自opt.stallMs與opt.totalMs, opt類參數, 有效數字且為大於0之計時毫秒(isenum, use: 'timer', gt: 0, 可帶小數), 非預期(含0、負數、Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設30000與600000, 不報錯、不夾至上限
+let RULE_STALL_MS = { fn: 'fsEnsureBins', name: 'opt.stallMs', kind: 'enum', chk: { use: 'timer', gt: 0 } }
+let RULE_TOTAL_MS = { fn: 'fsEnsureBins', name: 'opt.totalMs', kind: 'enum', chk: { use: 'timer', gt: 0 } }
 
 
 //GitHub原始檔網址之基底, 自有檔之網址為<RAW>/<repo>/<commit或master>/<path>
@@ -705,8 +710,8 @@ function buildCtx(opt) {
         o.retryDelayMs = get(opt, 'retryDelayMs')
         o.stallMs = get(opt, 'stallMs')
         o.totalMs = get(opt, 'totalMs')
-        o.manifestMs = optNum(opt, 'stallMs', 30000, { min: 0, minOpen: true, timer: true }) //取主幹清單之上限同停滯毫秒數
-        o.extractMs = optNum(opt, 'totalMs', 600000, { min: 0, minOpen: true, timer: true }) //解壓之上限同每檔整體時間上限
+        o.manifestMs = optVal(o.stallMs, 30000, RULE_STALL_MS, opt) //取主幹清單之上限同停滯毫秒數
+        o.extractMs = optVal(o.totalMs, 600000, RULE_TOTAL_MS, opt) //解壓之上限同每檔整體時間上限
         if (!isStr(o.pkgRoot)) {
             throw bad(`opt.pkgRoot must be the root folder of the package (a non-empty string)`)
         }
@@ -2570,7 +2575,7 @@ function offlineErr(ctx, missing) {
  *
  * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from <github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[<組名>] file[<同file之值>])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。
  *
- * 破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。
+ * 破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking_39to44.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs Github}(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs)
  * @memberOf wsemi

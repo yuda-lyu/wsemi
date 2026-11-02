@@ -1,12 +1,20 @@
 import get from 'lodash-es/get.js'
 import throttle from 'lodash-es/throttle.js'
-import isnum from './isnum.mjs'
-import cdbl from './cdbl.mjs'
+import isenum from './isenum.mjs'
 import evem from './evem.mjs'
 import isfun from './isfun.mjs'
 import domIsRendered from './domIsRendered.mjs'
-import optNum from './_optNum.mjs'
+import optVal from './_optVal.mjs'
 import getTrace from './getTrace.mjs'
+
+
+//timeInterval, throttle: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setTimeout、setInterval), 非預期(含0、負數、小數、Infinity、超出計時器上限、'0x10'、包裝物件等)視為未給、改用預設20與0(throttle為0表示不節流), 不報錯、不夾至上限
+let RULE_TIME_INTERVAL = { fn: 'domDetect', name: 'opt.timeInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
+let RULE_THROTTLE = { fn: 'domDetect', name: 'opt.throttle', kind: 'eint', chk: { use: 'timer', min: 1 } }
+
+//tolerancePixel, toleranceBounce: opt類參數, 有效整數且不小於0(iseint, min: 0, 安全整數範圍), 非預期(含負數、小數、Infinity、超出安全整數範圍、'0x10'、包裝物件等)視為未給、改用預設1與3, 不報錯; 欲「幾乎不限」者由呼叫端給足夠大之有限整數
+let RULE_TOLERANCE_PIXEL = { fn: 'domDetect', name: 'opt.tolerancePixel', kind: 'eint', chk: { min: 0 } }
+let RULE_TOLERANCE_BOUNCE = { fn: 'domDetect', name: 'opt.toleranceBounce', kind: 'eint', chk: { min: 0 } }
 
 
 //2020年曾以IntersectionObserver與ResizeObserver實作(詳細請查git紀錄), 因實作缺陷致WTextSelect下拉選單不穩而改為輪詢:
@@ -49,27 +57,27 @@ function waitRemove(fn) {
 }
 
 
-//getTimeInterval, 正整數(可為數字字串), 超過計時器上限(含Infinity)者夾至上限, 無效時20
+//getTimeInterval, 正整數(可為數字字串), 超過計時器上限(含Infinity)者視為非預期, 無效時20
 function getTimeInterval(opt) {
-    return optNum(opt, 'timeInterval', 20, { int: true, min: 0, minOpen: true, timer: true })
+    return optVal(get(opt, 'timeInterval', null), 20, RULE_TIME_INTERVAL, opt)
 }
 
 
-//getTolerancePixel, 不小於0之整數(可為數字字串), 可給0表示任何變化皆發出, Infinity表示任何變化皆不發出, 無效時1
+//getTolerancePixel, 不小於0之整數(可為數字字串), 可給0表示任何變化皆發出, 無效(含Infinity)時1
 function getTolerancePixel(opt) {
-    return optNum(opt, 'tolerancePixel', 1, { int: true, min: 0, inf: 'keep' })
+    return optVal(get(opt, 'tolerancePixel', null), 1, RULE_TOLERANCE_PIXEL, opt)
 }
 
 
-//getToleranceBounce, 容許誤差內來回跳動之次數, 不小於0之整數(可為數字字串), 0表示容許誤差內之變化一律不發出(舊版行為), Infinity表示容許誤差內之變化一律發出(不阻斷回授), 無效時3
+//getToleranceBounce, 容許誤差內來回跳動之次數, 不小於0之整數(可為數字字串), 0表示容許誤差內之變化一律不發出(舊版行為), 無效(含Infinity)時3
 function getToleranceBounce(opt) {
-    return optNum(opt, 'toleranceBounce', 3, { int: true, min: 0, inf: 'keep' })
+    return optVal(get(opt, 'toleranceBounce', null), 3, RULE_TOLERANCE_BOUNCE, opt)
 }
 
 
-//getThrottle, 正整數(可為數字字串), 超過計時器上限(含Infinity)者夾至上限, 未給或0表示不節流
+//getThrottle, 正整數(可為數字字串), 超過計時器上限(含Infinity)者視為非預期, 未給、0或無效表示不節流
 function getThrottle(opt) {
-    return optNum(opt, 'throttle', 0, { int: true, min: 0, minOpen: true, timer: true })
+    return optVal(get(opt, 'throttle', null), 0, RULE_THROTTLE, opt)
 }
 
 
@@ -92,9 +100,9 @@ function getEle(f) {
 }
 
 
-//toNum, 非數字(含拋錯、未給)者為null
+//toNum, 非有效數字(含拋錯、未給、Infinity、'0x10'、包裝物件)者為null
 function toNum(v) {
-    return isnum(v) ? cdbl(v) : null
+    return isenum(v) ? Number(v) : null
 }
 
 
@@ -233,8 +241,8 @@ function createCore(ev, opt, onReobserve) {
     }
 
     //judgeAxis, 該軸是否判定為變化, dAxis為相對比較基準之差, exceed為是否超過容許誤差, step為相鄰兩次量測之差(判定方向用, 不相鄰時為0):
-    //  超過容許誤差者必是, 並使計次歸0; 差為0者否; 容許誤差為Infinity者否(任何變化皆不發出);
-    //  容許誤差內之非0差照常判定, 惟以下兩種使用端於事件內改變尺寸所形成之回授不判定, toleranceBounce為0時容許誤差內一律不判定(舊版行為), 為Infinity時一律判定(不阻斷):
+    //  超過容許誤差者必是, 並使計次歸0; 差為0者否;
+    //  容許誤差內之非0差照常判定, 惟以下兩種使用端於事件內改變尺寸所形成之回授不判定, toleranceBounce為0時容許誤差內一律不判定(舊版行為):
     //  (1)來回回授: 該軸連續反向達toleranceBounce次後不判定, 直到同向變化或超過容許誤差
     //  (2)單向回授: 該軸同向連續判定達RUN_MAX次後不判定, 直到反向或超過容許誤差
     //  每週期含超過容許誤差之變化者(如+1、+1、-2之鋸齒)不在此列, 同超過容許誤差之回授屬使用端版面缺陷
@@ -254,11 +262,8 @@ function createCore(ev, opt, onReobserve) {
             s.m = 0
             return true
         }
-        if (dAxis === 0 || tolerancePixel === Infinity) {
+        if (dAxis === 0) {
             return false
-        }
-        if (toleranceBounce === Infinity) {
-            return true
         }
         if (s.n >= toleranceBounce || s.m >= RUN_MAX) {
             return false
@@ -757,14 +762,16 @@ function domDetectByObserver(f, opt = {}) {
  * @param {Function} f 輸入取得dom函數，可回傳null表示目前取不到
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入偵測模式字串，給'polling'則強制使用定期輪詢，預設''
- * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設20
- * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，差值不超過此值之變化為容許誤差內之變化(是否發出見toleranceBounce)，可給0表示任何變化皆發出(無回授之阻斷)，須為不小於0之整數(可為數字字串，Infinity表示任何變化皆不發出)，無效時用預設，預設1
- * @param {Integer} [opt.toleranceBounce=3] 輸入容許誤差內來回跳動之次數整數，容許誤差內之變化照常發出，惟某軸相鄰兩次量測(同一元素之前後兩次可見量測，元素換新、取不到或隱藏後重新計數)之變化方向連續反向達此次數後(視為使用端於事件內改變尺寸所形成之回授)，該軸容許誤差內之變化不再發出，直到該軸出現同向變化或超過容許誤差；另某軸容許誤差內之同向變化連續發出10次後，不再發出容許誤差內之同向變化，直到該軸反向或超過容許誤差(阻斷單向回授)；給0表示容許誤差內之變化一律不發出(舊版行為)，給Infinity表示容許誤差內之變化一律發出(不阻斷回授)，須為不小於0之整數(可為數字字串)，無效時用預設，預設3
+ * @param {Integer} [opt.timeInterval=20] 輸入定期偵測時間整數，單位毫秒，用於輪詢模式與行內元素，須為1至2147483647(計時器上限)之有效整數(可為數字字串)，非預期之輸入(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設20
+ * @param {Integer} [opt.tolerancePixel=1] 輸入容許誤差整數，單位px，差值不超過此值之變化為容許誤差內之變化(是否發出見toleranceBounce)，可給0表示任何變化皆發出(無回授之阻斷)，須為不小於0之有效整數(可為數字字串)，非預期之輸入(負數、小數、Infinity、超出安全整數範圍、'0x10'、包裝物件等)視為未給而改用預設，不報錯(給Infinity不代表任何變化皆不發出)；欲幾乎不發出任何變化者請給足夠大之有限整數並將toleranceBounce給0，預設1
+ * @param {Integer} [opt.toleranceBounce=3] 輸入容許誤差內來回跳動之次數整數，容許誤差內之變化照常發出，惟某軸相鄰兩次量測(同一元素之前後兩次可見量測，元素換新、取不到或隱藏後重新計數)之變化方向連續反向達此次數後(視為使用端於事件內改變尺寸所形成之回授)，該軸容許誤差內之變化不再發出，直到該軸出現同向變化或超過容許誤差；另某軸容許誤差內之同向變化連續發出10次後，不再發出容許誤差內之同向變化，直到該軸反向或超過容許誤差(阻斷單向回授)；給0表示容許誤差內之變化一律不發出(舊版行為)，須為不小於0之有效整數(可為數字字串)，非預期之輸入(負數、小數、Infinity、超出安全整數範圍、'0x10'、包裝物件等)視為未給而改用預設，不報錯(給Infinity不代表不阻斷回授，單向回授之連續發出上限10次不可關閉)，預設3
  * @param {Boolean} [opt.sync=false] 輸入是否於ResizeObserver回呼內同步發出事件布林值，true時使用端可於瀏覽器繪製前更新版面(例如圖表重繪)，僅ResizeObserver模式有效，預設false
  * @param {Boolean} [opt.watchIdentity=false] 輸入元素可見時是否仍於DOM變動時重新取得元素布林值，f可能於舊元素仍可見時改回傳另一元素者給true，僅ResizeObserver模式有效，預設false
  * @param {Function} [opt.getSize=null] 輸入比較用尺寸函數，傳入元素，回傳{width,height}，供依內容區或特定量測方式繪製之使用端(例如圖表依clientWidth扣除padding)，給予時只改padding、元素內出現或消失捲軸等外框不變之變化亦會發出，回傳非數字或拋錯之軸視為0(不發出)，預設null表示使用offsetWidth、offsetHeight
  * @param {Function} [opt.getBase=null] 輸入比較基準函數，回傳使用端目前套用之尺寸{width,height}，該軸非數字(含拋錯)表示該軸不比較(例如固定寬度)，給予時以其取代上次發出事件時之尺寸，故掛載時尺寸已一致者不發出(其後事件之sold於首次判定變化前為0)，由隱藏恢復顯示時若與使用端尺寸相同亦不發出；使用端須於事件內套用新尺寸(getBase之回傳隨之更新)，否則之後每次回報皆判定為變化而發出，預設null
- * @param {Integer} [opt.throttle=0] 輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，須為正整數(可為數字字串)，超過計時器上限(含Infinity)者夾至上限，其餘視為0，預設0表示不節流
+ * @param {Integer} [opt.throttle=0] 輸入節流時間整數，單位毫秒，首次立即發出，其後每throttle毫秒至多發出一次並以最後一次之量測發出(其sold為最後一次判定變化前之量測，可能未曾發出)，clear時取消待發出者，僅作用於元素尺寸之事件(resize與from為'dom'之resizeWithWindow)，視窗事件不節流，須為1至2147483647(計時器上限)之有效整數(可為數字字串)，非預期之輸入(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設0，不報錯、不夾至上限，預設0表示不節流
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval、opt.tolerancePixel、opt.toleranceBounce、opt.throttle為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於偵測器內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'check'時為每次量測與比較(含source為量測來源：'poll'輪詢、'observer'ResizeObserver回報、'inline'行內元素之定期量測、'refresh'；found為是否取得元素；width、height為比較用尺寸，取不到元素時為0；changed為是否判定為變化而交付發出；seq為判定為變化之序號，否則null)，'emit'時為即將發出resize事件(含seq、width、height，deferred為是否延後發出)，'skip'時為判定為變化而不發出(含seq，reason為'stale'已處理較新之量測、'zero'尺寸為0、'hidden'延後發出前元素已不被繪製、'base'延後發出前與getBase之尺寸已一致)，'inline'時為行內元素之定期量測開始或停止(含on)；節流期間併入後續發出之判定無emit或skip事件；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，clear後不再呼叫，預設null
  * @returns {Object} 回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件
  * @example

@@ -2,11 +2,14 @@ import each from 'lodash-es/each.js'
 import values from 'lodash-es/values.js'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
-import isnint from './isnint.mjs'
-import cint from './cint.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import pmReadItems from './_pmReadItems.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//takeLimit: opt類參數(位置參數, 預設0=不限), 有效整數且為個數(iseint, use: 'count'), 非預期(含Infinity、小數)改用預設0(不限)
+let RULE_TAKE_LIMIT = { fn: 'pmMap', name: 'takeLimit', kind: 'eint', chk: { use: 'count' } }
 
 
 /**
@@ -24,8 +27,10 @@ import getTrace from './getTrace.mjs'
  * @memberOf wsemi
  * @param {Array|Object} rs 輸入資料陣列或鍵值物件，若不給fn則rs需要為Promise陣列(或值為Promise之物件)
  * @param {Function} fun 輸入循序執行值的呼叫async函數
- * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
+ * @param {Integer} [takeLimit=0] 輸入同時處理數量整數(0至4294967295，數字字串亦可)，預設0，代表無限制；非預期(負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設0(無限制)，不報錯
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.debug=false] 輸入是否於takeLimit為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；i為任務於展開後陣列之索引(由0起算)；type為'start'時為派發任務i(含i、running為含該任務之執行中任務數)，'done'時為任務i已完成(含i、ok為是否成功)，'resolve'時為全部n個任務皆成功而即將resolve(含n)，'reject'時為首個失敗之任務i使pmMap即將reject(含i，輸入檢查失敗時i為-1)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響派發，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
@@ -411,11 +416,8 @@ function pmMap(rs, fun, takeLimit = 0, opt = {}) {
         })
     }
 
-    //takeLimit, 同queue之正規化: 非數字或負數視為0(無限制)
-    if (isnint(takeLimit)) {
-        takeLimit = 0
-    }
-    takeLimit = cint(takeLimit)
+    //takeLimit, 同queue之正規化: 有效則取Number(v), 非預期(含Infinity、小數、負數)改用預設0(無限制)
+    takeLimit = optVal(takeLimit, 0, RULE_TAKE_LIMIT, opt)
 
     //不經queue而以索引自行派發(同時執行數至多takeLimit), 以完成計數判定全部完成並只resolve一次(原每次完成皆size(ts)、每個finally皆values(ts)而成平方)
     let n = rs.length

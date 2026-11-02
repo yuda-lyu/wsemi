@@ -1,11 +1,14 @@
 import { snapdom } from '@zumer/snapdom'
 import get from 'lodash-es/get.js'
 import isEle from './isEle.mjs'
-import isnum from './isnum.mjs'
 import isbol from './isbol.mjs'
-import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import domPrepend from './domPrepend.mjs'
+import optVal from './_optVal.mjs'
+
+
+//scale: opt類參數, 有效數字(isenum, 不限範圍; 小於1者另由函數reject), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設1, 不報錯
+let RULE_SCALE = { fn: 'domConvertToPic', name: 'opt.scale', kind: 'enum' }
 
 
 /**
@@ -15,7 +18,9 @@ import domPrepend from './domPrepend.mjs'
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入元素
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1，預設1
+ * @param {Number} [opt.scale=1] 輸入縮放比例數字，需大於等於1(小於1時reject)，須為有效數字(可為數字字串)，非預期之輸入(Infinity、'0x10'、包裝物件、非數字等)視為未給而改用預設，不報錯，預設1
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.scale為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Boolean} [opt.toBase64=true] 輸入是否回傳圖片之data URL字串布林值，給true回傳字串(png與jpeg為base64編碼，svg為utf-8之URL編碼)，給false回傳img元素(HTMLImageElement)，預設true
  * @param {String} [opt.picType='image/png'] 輸入輸出圖片格式字串，可選'image/png'、'image/jpeg'(亦可給'image/jpg')與'svg'，png與svg保留透明背景，jpeg之透明處填白色，給其他值則使用'image/png'，預設'image/png'
  * @returns {Promise} 回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject為失敗訊息
@@ -36,12 +41,8 @@ async function domConvertToPic(ele, opt = {}) {
         return Promise.reject('invalid ele')
     }
 
-    //scale
-    let scale = get(opt, 'scale', null)
-    if (!isnum(scale)) {
-        scale = 1
-    }
-    scale = cdbl(scale)
+    //scale, 有效則取Number(v), 非預期(含Infinity、'0x10'、包裝物件)改用預設1; 小於1仍reject
+    let scale = optVal(get(opt, 'scale', null), 1, RULE_SCALE, opt)
     if (scale < 1) {
         return Promise.reject('opt.scale can not less then 1')
     }

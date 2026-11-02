@@ -1,7 +1,7 @@
 import get from 'lodash-es/get.js'
 import cdbl from './cdbl.mjs'
 import isEle from './isEle.mjs'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import genID from './genID.mjs'
 
 
@@ -48,8 +48,8 @@ function domFadeIn(ele, opt = {}) {
     let useOpacity = get(opt, 'opacityIni', 0)
     useOpacity = cdbl(useOpacity)
     useOpacity = Math.min(Math.max(useOpacity, 0), 1)
-    if (isnum(ele.style.opacity)) {
-        useOpacity = cdbl(ele.style.opacity)
+    if (isenum(ele.style.opacity)) { //元素現行不透明度(有效數字才作漸變起點)
+        useOpacity = Number(ele.style.opacity)
     }
 
     //更新週期(ms)

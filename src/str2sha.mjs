@@ -8,8 +8,7 @@ import enchex from 'crypto-js/enc-hex.js'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
+import iseint from './iseint.mjs'
 import haskey from './haskey.mjs'
 
 
@@ -34,12 +33,12 @@ let kpSha = {
  *
  * n僅可為1、224、256、384、512，分別對應SHA-1、SHA-224、SHA-256、SHA-384、SHA-512
  * 其中SHA-1之1為演算法版本號而非輸出位元數(實際輸出160位元)，且已被證實可構造碰撞，僅適用於非資安用途之校驗
- * n為其餘值時視為程式撰寫錯誤而擲出錯誤，非正整數擲出'n is not a positive integer'，正整數但不在可用範圍則擲出'invalid n[n]'
+ * n為必須參數，須為有效正整數(iseint，數字字串亦可，去頭尾空白後取值)，其餘值時視為程式撰寫錯誤而擲出錯誤，非有效正整數(含小數、Infinity、'0x100'、包裝物件、超過安全整數)擲出'n is not a positive integer'，有效正整數但不在可用範圍則擲出'invalid n: must be one of 1, 224, 256, 384, 512'(訊息固定，不帶輸入值)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串，非有效字串時回傳空字串
- * @param {Number} n 輸入演算法位數，僅可為1、224、256、384、512，其餘一律擲出錯誤，但opt.returnWithStateAndMsg為true時改以error狀態回報而不擲出
+ * @param {Integer|String} n 輸入演算法位數，必須參數(有效正整數，數字字串亦可)，僅可為1、224、256、384、512，其餘一律擲出錯誤，但opt.returnWithStateAndMsg為true時改以error狀態回報而不擲出
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
@@ -69,7 +68,7 @@ let kpSha = {
  * }
  * catch (err) {
  *     console.log(err.message)
- *     // => invalid n[160]
+ *     // => invalid n: must be one of 1, 224, 256, 384, 512
  * }
  *
  * try {
@@ -107,23 +106,23 @@ function str2sha(str, n, base64 = false, opt = {}) {
         return retError('invalid str')
     }
 
-    //check n, 須為正整數
+    //check n, 必須參數, 須為有效正整數(iseint, 預設use: 'safe', min: 1), 有效則取轉換值(檢測之值即使用之值)
     //此檢核須置於haskey之前: haskey內部為key in obj而含原型鏈, 'toString'等鍵會誤判為存在
     //n無效屬呼叫端之程式錯誤, 預設模式維持拋錯之既有契約; 僅returnWithStateAndMsg時改以error狀態回報, 以與該模式「不拋錯」之語意一致
-    if (!ispint(n)) {
+    if (!iseint(n, { min: 1 })) {
         if (returnWithStateAndMsg) {
             return retError('n is not a positive integer')
         }
         throw new Error(`n is not a positive integer`)
     }
-    n = cint(n)
+    n = Number(n)
 
     //check n, 須為kpSha內可用之n
     if (!haskey(kpSha, n)) {
         if (returnWithStateAndMsg) {
-            return retError(`invalid n[${n}]`)
+            return retError('invalid n: must be one of 1, 224, 256, 384, 512')
         }
-        throw new Error(`invalid n[${n}]`)
+        throw new Error('invalid n: must be one of 1, 224, 256, 384, 512')
     }
 
     //check

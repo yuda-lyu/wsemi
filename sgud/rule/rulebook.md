@@ -6,7 +6,9 @@
 
 2026-10-28(wsemi-run08)依全域設定§14整理: 本檔原約 301.4KB,現依類型拆為下列各檔(同目錄);各節之節號與標題不變、內容逐字搬移,既有引用(如 `sgud/rule/rulebook.md R-FIND-01`)改至下表所列之檔查閱.新增條目時附於相近類型之檔,並同步更新本索引.
 
-2026-10-29(wsemi-run10)再整理(各檔約 30KB 以上者): `rulebook_fs.md` 之 R-DL-VERIFY-01 移至 `rulebook_dl.md`、R-BIN-ENSURE-01 移至 `rulebook_bin.md`;`rulebook_timer.md` 之 R-TRACE-01 移至 `rulebook_trace.md`;`rulebook_breaking.md` 之第 1～38 項(2026-10-16 至 2026-10-21)抽至 `rulebook_breaking_20261021.md`(同一節標題、項號不變),新增之破壞性變更仍附於 `rulebook_breaking.md`.節號與標題不變、內容逐字搬移.單節即逾 30KB 之 R-FIND-01、R-ORMSTR-01 與約 30KB 之 `rulebook_exec.md`(二節)未拆.
+2026-10-29(wsemi-run10)再整理(各檔約 30KB 以上者): `rulebook_fs.md` 之 R-DL-VERIFY-01 移至 `rulebook_dl.md`、R-BIN-ENSURE-01 移至 `rulebook_bin.md`;`rulebook_timer.md` 之 R-TRACE-01 移至 `rulebook_trace.md`;`rulebook_breaking.md` 之第 1～38 項(2026-10-16 至 2026-10-21)抽至 `rulebook_breaking_20261021.md`(同一節標題、項號不變).節號與標題不變、內容逐字搬移.單節即逾 30KB 之 R-FIND-01、R-ORMSTR-01 與約 30KB 之 `rulebook_exec.md`(二節)未拆.
+
+2026-11-02(ws272c)再整理(依全域設定 §14,各檔約 30KB 以上者): `rulebook_judge_sites.md`(原約 81.2KB)依類型拆為 `_inv_a`(§1~§5)、`_inv_b`(§6、§7、耦合摘要)、`_r1`(第一批、發布 A、ws270 處置結果)、`_r2`(ws272a、ws272b 處置結果)四檔,主檔只留標題、〈共通說明〉(風險代號)與索引;ws272c 起之處置結果節附於新檔 `_r2c`.`rulebook_breaking.md`(原約 49.4KB)依項號拆為 `rulebook_breaking_39to44.md`、`rulebook_breaking_45to51.md`、`rulebook_breaking_52on.md`(第 52 項起,新增之項附於此檔),主檔只留索引.節號與標題不變、內容逐字搬移(僅檔內指向兩檔特定節或項之引用同步改指新檔).
 
 | 類 | 檔 | 條目 | 約 KB |
 |---|---|---|---|
@@ -31,10 +33,18 @@
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
 | 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01 | 約 4 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
-| 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191;末節為第一批處置結果) | `sgud/rule/rulebook_judge_sites.md` | R-ENUM-01 之站點全集、R-ENUM-CALLERS-01 之已套／未套、R-OPT-VAL-01 之已套／未套(次末節)、第 221 項已知缺陷先修(ws270,7 個函數)處置結果(末節) | 約 59 |
-| opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;僅下游 0 站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 16 |
-| 破壞性變更紀錄(第 39 項起;第 52 項為 ws270) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄 | 約 39 |
+| 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191)——主檔只留〈共通說明〉(風險代號)與本類之索引(2026-11-02 ws272c 拆為下列 5 檔,原約 81.2KB) | `sgud/rule/rulebook_judge_sites.md` | 標題、〈共通說明〉、索引 | 約 6.2 |
+| 同上——§1~§5(計時毫秒、埠號、索引、個數、位元) | `sgud/rule/rulebook_judge_sites_inv_a.md` | R-ENUM-01 之站點全集(§1~§5) | 21.8 |
+| 同上——§6 一般數值運算、§7 不符合、耦合與缺陷 | `sgud/rule/rulebook_judge_sites_inv_b.md` | R-ENUM-01 之站點全集(§6、§7、耦合摘要) | 18.4 |
+| 同上——處置結果:第 221 項第一批、第二批第一級發布 A、已知缺陷先修(ws270,7 個函數) | `sgud/rule/rulebook_judge_sites_r1.md` | R-ENUM-CALLERS-01 之已套／未套、R-OPT-VAL-01 之已套／未套(發布 A)、ws270 處置結果 | 16.8 |
+| 同上——處置結果:第 221 項第 2 輪 ws272a(計時與流程類 19 個函數)、ws272b(字串、陣列、數值、編碼類 19 個函數＋3 項缺陷) | `sgud/rule/rulebook_judge_sites_r2.md` | ws272a、ws272b 處置結果 | 22.2 |
+| 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項);新增之處置結果節附於此檔 | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c 處置結果 | 14.9 |
+| opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
+| 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
+| 破壞性變更紀錄(第 39～44 項) | `sgud/rule/rulebook_breaking_39to44.md` | 破壞性變更紀錄 | 12.2 |
+| 破壞性變更紀錄(第 45～51 項) | `sgud/rule/rulebook_breaking_45to51.md` | 破壞性變更紀錄 | 23.4 |
+| 破壞性變更紀錄(第 52 項起;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c;新增之項附於此檔) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 19.8 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -47,14 +57,14 @@
 
 各條目全標題:
 
-- `破壞性變更紀錄` → `rulebook_breaking.md`(第 39 項起)、`rulebook_breaking_20261021.md`(第 1～38 項): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
+- `破壞性變更紀錄` → `rulebook_breaking.md`(索引)、`rulebook_breaking_20261021.md`(第 1～38 項)、`rulebook_breaking_39to44.md`(第 39～44 項)、`rulebook_breaking_45to51.md`(第 45～51 項)、`rulebook_breaking_52on.md`(第 52 項起): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
 - `R-BIN-ENSURE-01` → `rulebook_bin.md`: R-BIN-ENSURE-01 外部執行檔之取得一律經 `fsEnsureBins`(清單校驗、快取→鏡像→GitHub、離線)
 - `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
 - `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
 - `R-DL-VERIFY-01` → `rulebook_dl.md`: R-DL-VERIFY-01 下載執行檔或二進位資產一律經 `fsDownloadFileVerify` 驗證 SHA-256(與大小)
-- `R-ENUM-01` → `rulebook_judge.md`(站點全集另見 `rulebook_judge_sites.md`): R-ENUM-01 計算類函數判定數字／整數參數一律經 `isenum`／`iseint`(判斷類、單一擁有者、`opt.use` 範圍表單一來源 `_numRange`、opt 無效必拋且不帶值)
-- `R-ENUM-CALLERS-01` → `rulebook_judge.md`(已套／未套站點見 `rulebook_judge_sites.md` 末節): R-ENUM-CALLERS-01 排程第 221 項第一批:24 個既有函數(三角 9、round/ceil/floor、dig 系、judge/preciseNum/estimateTicks/color、arrAdd/arrMulti/arrMax/arrMin)之數字／整數判定改經 `isenum`／`iseint`,失敗通道不變(null／''／throw),陣列計算非有效數字以預設值 0／1,arrMax/arrMin 無有效數字 throw
+- `R-ENUM-01` → `rulebook_judge.md`(站點全集另見 `rulebook_judge_sites_inv_a.md`、`rulebook_judge_sites_inv_b.md`,索引見 `rulebook_judge_sites.md`): R-ENUM-01 計算類函數判定數字／整數參數一律經 `isenum`／`iseint`(判斷類、單一擁有者、`opt.use` 範圍表單一來源 `_numRange`、opt 無效必拋且不帶值)
+- `R-ENUM-CALLERS-01` → `rulebook_judge.md`(已套／未套站點見 `rulebook_judge_sites_r1.md` 〈第 221 項第一批處置結果〉): R-ENUM-CALLERS-01 排程第 221 項第一批:24 個既有函數(三角 9、round/ceil/floor、dig 系、judge/preciseNum/estimateTicks/color、arrAdd/arrMulti/arrMax/arrMin)之數字／整數判定改經 `isenum`／`iseint`,失敗通道不變(null／''／throw),陣列計算非有效數字以預設值 0／1,arrMax/arrMin 無有效數字 throw
 - `R-ENV-01` → `rulebook_data.md`: R-ENV-01 環境判斷函數(回布林)於非目標環境回 false、不拋錯
 - `R-EXCEL-READ-01` → `rulebook_data.md`: R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 - `R-EXEC-FAIL-01` → `rulebook_exec.md`: R-EXEC-FAIL-01 執行外部程序之失敗回報:字串或結果物件、不含參數與環境變數之值、不崩潰
@@ -68,7 +78,7 @@
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`
 - `R-OBJ-ITER-01` → `rulebook_obj.md`: R-OBJ-ITER-01 迭代使用端傳入之物件:只依自有可列舉字串鍵,`length` 鍵不得使走訪改成陣列樣
-- `R-OPT-VAL-01` → `rulebook_optval.md`(已套／未套站點見 `rulebook_judge_sites.md` 末節〈第 221 項第二批第一級發布 A 處置結果〉): R-OPT-VAL-01 opt 類數值參數遇非預期之輸入(含超出範圍)視為未給、改用預設(共用 `_optVal.mjs`、`opt.debug` 警告固定詞彙不含值),必須參數才報錯;廣義數字陣列 `opt.base` 與每陣列至少 1 個有效數字(尾端 `undefined`／`null` 視為未給 opt);`preciseNum` 整數路徑;`arrFilterByENum`;`setTimeoutHp`／`setIntervalHp` 之 `interval` 用 `positive` 不設上限;本輪只含下游 0 站點之函數
+- `R-OPT-VAL-01` → `rulebook_optval.md`(已套／未套站點見 `rulebook_judge_sites_r1.md` 末節〈第 221 項第二批第一級發布 A 處置結果〉): R-OPT-VAL-01 opt 類數值參數遇非預期之輸入(含超出範圍)視為未給、改用預設(共用 `_optVal.mjs`、`opt.debug` 警告固定詞彙不含值),必須參數才報錯;廣義數字陣列 `opt.base` 與每陣列至少 1 個有效數字(尾端 `undefined`／`null` 視為未給 opt);`preciseNum` 整數路徑;`arrFilterByENum`;`setTimeoutHp`／`setIntervalHp` 之 `interval` 用 `positive` 不設上限;發布 A 只含下游 0 站點之函數,ws270(7 個)、ws272a(計時與流程類 19 個,判準:交給原生計時器者 `use:'timer'`、只與時間差比較者不設上限)、ws272b(字串、陣列、數值、編碼類 19 個;`bufWrite` 照 IEEE754 原樣編碼、成功回 `true`)與 ws272c(`_optNum` 退役〔6 個呼叫端 19 處,`inf:'keep'` 移除〕、DOM 類 9 個、`fsTask`、ws272b 回報後續 6 項;`Infinity` 一律非預期)續納入
 - `R-ORMSTR-01` → `rulebook_orm-str.md`: R-ORMSTR-01 w-orm 系列字串良構: 單一擁有者 `chkOrmStr` / `chkOrmData`、契約案例表 `_cvOrmStrCases`、只因良構性拒收
 - `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 Get-NetTCPConnection 備援、失敗與無人嚴格分開
 - `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變〔**第 221 項第二批第一級發布 A 起整數路徑改為保留全部位數並正規化,見 R-OPT-VAL-01 規則 11**〕;`judge`、`estimateTicks` 隨之)

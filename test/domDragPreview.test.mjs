@@ -3,6 +3,7 @@ import domDragPreview from '../src/domDragPreview.mjs'
 import { mkFakeDom, clearFakeDom, trackIntervals } from './tools/fakeDom.mjs'
 import { useFakeClock } from './tools/timeKit.mjs'
 import { mkRec, fiveOnTrace, watchUnhandled, mkMeta, flush, keysByType, allPrimitive } from './tools/domDragTraceKit.mjs'
+import { defineOptParam } from './tools/optValKit.mjs'
 
 
 let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -367,6 +368,65 @@ describe(`domDragPreview onTrace(R-TRACE-01)`, function() {
             return n
         }
         assert.strict.deepStrictEqual([count(undefined), count('abc'), count(null), count(() => {}) > 0], [0, 0, 0, true])
+    })
+
+})
+
+
+//第221項第二批第2輪第3批(ws272c): _optNum退役, domDragPreview之containerOpacity與containerBorderWidth改用_optVal(R-OPT-VAL-01),
+//  使用者2026-11-02定A: Infinity、'0x10'、包裝物件皆為非預期之輸入, 改用預設(0.4／1); probe回傳預覽容器實際採用之樣式值
+describe(`optVal domDragPreview (ws272c, formerly _optNum)`, function() {
+
+    let iv = null
+
+    beforeEach(function() {
+        iv = trackIntervals()
+    })
+
+    afterEach(function() {
+        iv.restore()
+    })
+
+    after(function() {
+        clearFakeDom()
+    })
+
+    //container, 建立預覽後取其容器之樣式
+    let container = (opt) => {
+        let env = mkFakeDom()
+        let src = env.body.appendChild(new env.Ele())
+        let pv = domDragPreview(opt)
+        pv.createPreview(src, 10, 10)
+        let c = env.body.children.find((x) => x.getAttribute('dragpreviewid') !== null)
+        let out = { opacity: c.style.opacity, borderWidth: parseFloat(c.style.border) }
+        pv.clear()
+        return out
+    }
+
+    let VALID_NUM = [
+        ['0', 0, 0],
+        ['0.7', 0.7, 0.7],
+        ['2', 2, 2],
+        ['-0.5', -0.5, -0.5],
+        [`'0.6'`, '0.6', 0.6],
+        [`' 3 '`, ' 3 ', 3],
+        [`'1e0'`, '1e0', 1],
+    ]
+
+    defineOptParam({
+        fn: 'domDragPreview',
+        name: 'opt.containerOpacity',
+        def: 0.4,
+        probe: (v, extra = {}) => container({ containerOpacity: v, ...extra }).opacity,
+        valid: VALID_NUM,
+    })
+
+    defineOptParam({
+        fn: 'domDragPreview',
+        name: 'opt.containerBorderWidth',
+        def: 1,
+        probe: (v, extra = {}) => container({ containerBorderWidth: v, ...extra }).borderWidth,
+        valid: VALID_NUM,
     })
 
 })

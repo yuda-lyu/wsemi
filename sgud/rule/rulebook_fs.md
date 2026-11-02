@@ -54,7 +54,7 @@
   - 只改 JSDoc(規則 9/N11,行為不改): fsTreeFolder、fsGetFilesInFolder、fsGetFoldersInFolder 及其 Core(同步回陣列者,fd 非資料夾或列舉失敗同步拋 Error)、fsBuildReadStreamText(fp 非檔案同步拋 Error)、fsEvem(emit 寫入失敗同步拋 Error).
   - 刻意不套: fsBuildWriteStreamText 之 write 未 create 即同步拋 TypeError(JSDoc 載須於create後呼叫,無規格句);XxHashCore `'end'` 內 digest 為第三方 wasm 不可注入(已包 try,無測試).fsDownloadFileVerify(Core)(2026-10-28 新增)之規則 1 刻意不套: 以 Error 物件(帶 code 等)reject,見 R-DL-VERIFY-01 規則 4;規則 2(不同步拋出、opt 不可讀轉為 reject)、5(不懸置)、6(不殘留)照套.
 - 測試(2026-10-16): 子行程執行器 `test/tools/fsHashFailRunner.mjs`(雜湊族與 fsSyncFolder:BH01–15、XH01–17、FH01–05、GB01–08、TW01–06、FW01–07、SY01–06,無處理器 5 案;XH12 為 pending 之已知限制;Error 來源之期望值於子行程以同一錯誤直接呼叫得 `String(err)`)與 `test/tools/fsFailRunner.mjs` + `test/tools/fsFailRun.mjs`(DF01–09、DD01–08、MG01–05、DL01–08、WS01–07、CF、CD、EV02/EV03 各兩模式);各檔 `describe(\`<函數> 失敗回報(R-FS-REJECT-01)\`)`.Windows 真實觸發(icacls ACL 拒讀、cmd ping 持檔之 EBUSY、他程序 cwd 之 EPERM)於他平台 skip,夾具與子程序 finally 清除並回驗.HEAD 副本紅 88 案(fsh 41、fso 47)、修後綠.守門變異 fso 6/6 被抓.外審補修(2026-10-16)增列: CF11、CD10(寫入流建構子同步拋錯,F01)、opt 不可讀 36 函數 × 2 形(getter 拋錯、已撤銷 Proxy;`fsFailRun.mjs` 之 `itOptUnreadable` 與 fsHashFailRunner 之對應案,F02;修前 36 紅)、SY07–SY08(刪除多出項目失敗,F13)、WS08–WS11(範例流程 × 無效 fp,F14)、MG06–MG07 與 message 非字串 6 案、OU-fsMergeFiles(對外與 Core 同格式,F15)、DF10–DF12、DD09–DD11(EBUSY→成功、EBUSY→EPERM、EBUSY→ENOENT,F18/F19)、XH18–XH20、FH06(chunkSize 2^31、2^32、2^53,F21);變異 13/14 被抓(未抓者為重複 create 之等價變異).指令: `npx mocha --no-parallel test/fsGetFileBasicHash.test.mjs test/fsGetFileXxHash.test.mjs test/fsGetFileHash.test.mjs test/fsGetFolderBasicHash.test.mjs test/fsTreeFolderWithHash.test.mjs test/fsGetFilesWithHashInFolder.test.mjs test/fsSyncFolder.test.mjs test/fsDeleteFileSafe.test.mjs test/fsDeleteFolderSafe.test.mjs test/fsMergeFiles.test.mjs test/fsDownloadFile.test.mjs test/fsBuildWriteStreamText.test.mjs test/fsCopyFile.test.mjs test/fsCopyFolder.test.mjs test/fsSrlog.test.mjs --grep "R-FS-REJECT-01" --timeout 180000`.
-- 變更紀錄: 2026-10-16 依主控 run01 複審裁示 1 與 N1–N7、N9、N11 新訂並實作(破壞性變更見文末〈破壞性變更紀錄〉第 1 條).2026-10-29 wsemi-run09 增規則 10(注入 fs 驗 statSync、重試耗盡不多等 300ms;破壞性變更見 `rulebook_breaking.md` 第 41 項).
+- 變更紀錄: 2026-10-16 依主控 run01 複審裁示 1 與 N1–N7、N9、N11 新訂並實作(破壞性變更見文末〈破壞性變更紀錄〉第 1 條).2026-10-29 wsemi-run09 增規則 10(注入 fs 驗 statSync、重試耗盡不多等 300ms;破壞性變更見 `rulebook_breaking_39to44.md` 第 41 項).
 
 
 ## R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達
@@ -72,7 +72,7 @@
   - 不分大小寫之檔案系統(Windows、macOS 預設)上大小寫不同之名稱(`'Foo'` 與 `'foo'`)為同一事件檔案,收端得到先建立者之大小寫(JSDoc 已載).
   - 多程序共用同一事件資料夾時,一個程序 `clear()` 會刪除整個資料夾而影響其他程序(run08 §8 第 3 項③,既有設計,未改).
   - 其他 `fs*` 函數以呼叫端字串組檔案位置者(如 `fsCreateFile` 之 `fp`)本就以位置為介面,不在本規則範圍.
-- 變更紀錄: 2026-10-29 wsemi-run09 新訂並實作(破壞性變更見 `rulebook_breaking.md` 第 41 項).
+- 變更紀錄: 2026-10-29 wsemi-run09 新訂並實作(破壞性變更見 `rulebook_breaking_39to44.md` 第 41 項).
 
 ## R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 

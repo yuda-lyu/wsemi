@@ -36,10 +36,12 @@ import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Object} [opt.fs=fs] 輸入fs，供測試傳入，須有mkdirSync、realpathSync、openSync、closeSync、createWriteStream、createReadStream、renameSync、unlinkSync、statSync，預設為nodejs之fs
  * @param {Function} [opt.fetch=null] 輸入fetch函數，未給時於每次請求時取用全域fetch，預設null
- * @param {Integer} [opt.maxAttempts=3] 輸入最多嘗試次數，正整數(可為數字字串)，無效時使用預設值，預設3
- * @param {Number} [opt.retryDelayMs=1000] 輸入重試間隔基數毫秒，第n次重試前等待retryDelayMs*n，亦為更名與刪除暫存檔重試間隔之基數(上限200)，非負數，無效時使用預設值，預設1000
- * @param {Number} [opt.stallMs=30000] 輸入連續沒收到資料(含等待回應標頭)視為停滯之毫秒數，正數，無效時使用預設值，預設30000
- * @param {Number} [opt.totalMs=600000] 輸入整體時間上限毫秒數，正數，無效時使用預設值，超過計時器上限(2147483647)時夾至上限，預設600000
+ * @param {Integer} [opt.maxAttempts=3] 輸入最多嘗試次數，有效整數且為1至4294967295(可為數字字串)，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設3
+ * @param {Number} [opt.retryDelayMs=1000] 輸入重試間隔基數毫秒，第n次重試前等待retryDelayMs*n，亦為更名與刪除暫存檔重試間隔之基數(上限200)，有效數字且為0至2147483647(計時器上限)(可帶小數、數字字串)，非預期之輸入(負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設1000
+ * @param {Number} [opt.stallMs=30000] 輸入連續沒收到資料(含等待回應標頭)視為停滯之毫秒數，有效數字且大於0至2147483647(計時器上限)(可帶小數、數字字串)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設30000
+ * @param {Number} [opt.totalMs=600000] 輸入整體時間上限毫秒數，規則同stallMs，預設600000
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.maxAttempts、opt.retryDelayMs、opt.stallMs、opt.totalMs為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Boolean} [opt.retryOnMismatch=true] 輸入雜湊或大小不符時是否重試，預設true
  * @param {Boolean} [opt.useShare=true] 輸入同程序內併發呼叫是否共用同一次下載，預設true
  * @param {Boolean} [opt.useSkipIfMatch=false] 輸入每次嘗試取得期望值後，fpOut已是期望內容時是否不下載直接成功(回傳downloaded為false)，既有檔無法讀取視為不符，預設false

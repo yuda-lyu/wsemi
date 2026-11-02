@@ -150,6 +150,11 @@ function pseudoRandomIntsRange(vstart = 0, vend = 100, n, seed = 'start1') {
         let r = pr * rng + vstart
         r = Math.floor(r)
 
+        //vstart、vend位於安全整數邊界時, pr * rng + vstart超過2^53而捨入, 可能大於vend, 故鉗制至vend, 使結果恆在[vstart, vend]
+        if (r > vend) {
+            r = vend
+        }
+
         //push
         rs.push(r)
 

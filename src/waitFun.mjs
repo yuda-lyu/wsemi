@@ -1,10 +1,14 @@
-import cst from './_const.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isfun from './isfun.mjs'
-import ispint from './ispint.mjs'
 import ispm from './ispm.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//attemptNum: opt類參數, 有效整數且為個數(iseint, use: 'count', min: 1), 非預期(含Infinity)改用預設200; timeInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setInterval), 非預期改用預設1000
+let RULE_ATTEMPT_NUM = { fn: 'waitFun', name: 'opt.attemptNum', kind: 'eint', chk: { use: 'count', min: 1 } }
+let RULE_TIME_INTERVAL = { fn: 'waitFun', name: 'opt.timeInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -14,8 +18,10 @@ import getTrace from './getTrace.mjs'
  * @memberOf wsemi
  * @param {Function} fun 輸入判斷用函數
  * @param {Object} opt 輸入設定物件，預設{}
- * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數，預設200，以輪詢週期計(立即呼叫不計)，計數超過attemptNum後於該次呼叫完成時仍未成立即reject，故fun最多被呼叫attemptNum+2次(立即1次與輪詢)
- * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數，單位為ms，預設1000；每個週期計1次，前一次呼叫未完成時該週期不呼叫fun(輪詢不重疊)但仍計入嘗試次數
+ * @param {Integer} [opt.attemptNum=200] 輸入最大嘗試次數，為正整數(1至4294967295，數字字串亦可)，預設200，以輪詢週期計(立即呼叫不計)，計數超過attemptNum後於該次呼叫完成時仍未成立即reject，故fun最多被呼叫attemptNum+2次(立即1次與輪詢)；非預期(0、負數、小數、Infinity、超過4294967295、'0x10'等)視為未給而改用預設200，不報錯(Infinity不代表無限次輪詢)
+ * @param {Integer} [opt.timeInterval=1000] 輸入嘗試時間週期，為正整數(1至2147483647，數字字串亦可)，單位為ms，預設1000；每個週期計1次，前一次呼叫未完成時該週期不呼叫fun(輪詢不重疊)但仍計入嘗試次數；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'等)視為未給而改用預設1000，不報錯、不夾至上限
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.attemptNum或opt.timeInterval為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, n, ... }，n為當下已計之週期數(立即呼叫為0)，供測試以事件(而非等待時間)同步與診斷；type為'call'時為即將呼叫fun，'result'時為fun已完成(含ok為其回傳是否為true)，'tick'時為每個週期(含busy為前一次呼叫是否仍未完成而本週期不呼叫)，'stop'時為計數超過attemptNum而前一次呼叫仍未完成時停止計時器，'resolve'時為即將resolve，'reject'時為即將reject(含reason為'error'fun拋錯或reject、'exceeded'超過最大嘗試次數、'invalid'fun非函數)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響輪詢與結果，預設null
  * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true；fun拋錯或其Promise被reject時(立即呼叫與輪詢皆同)停止輪詢並reject該錯誤，超過最大嘗試次數時reject字串'exceeded attemptNum[最大嘗試次數]'；fun非函數時reject字串'waitfunction需輸入函數f'；fun回傳永不settle之Promise時亦不settle(不再累積呼叫)，計數超過attemptNum後停止計時器(本函數仍不settle，但不使行程無法結束)，需逾時者以pmTimeout包裝
  * @example
@@ -140,18 +146,11 @@ async function waitFun(fun, opt = {}) {
         return pm
     }
 
-    //attemptNum
-    let attemptNum = get(opt, 'attemptNum', null)
-    if (!ispint(attemptNum)) {
-        attemptNum = 200
-    }
+    //attemptNum, 有效則取Number(v), 非預期(含Infinity、超過個數上限)改用預設
+    let attemptNum = optVal(get(opt, 'attemptNum', null), 200, RULE_ATTEMPT_NUM, opt)
 
-    //timeInterval
-    let timeInterval = get(opt, 'timeInterval', null)
-    if (!ispint(timeInterval)) {
-        timeInterval = 1000
-    }
-    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeInterval, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設, 不夾至上限
+    let timeInterval = optVal(get(opt, 'timeInterval', null), 1000, RULE_TIME_INTERVAL, opt)
 
     //setInterval, 每個週期計1次; 前一次呼叫未完成時該週期只計次不呼叫fun(輪詢不重疊), 逾次仍於呼叫完成時判定
     let n = 0

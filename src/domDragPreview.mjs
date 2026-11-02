@@ -3,8 +3,13 @@ import genID from './genID.mjs'
 import isestr from './isestr.mjs'
 import domGetPointFromEvent from './domGetPointFromEvent.mjs'
 import domGetBoudRect from './domGetBoudRect.mjs'
-import optNum from './_optNum.mjs'
+import optVal from './_optVal.mjs'
 import getTrace from './getTrace.mjs'
+
+
+//containerOpacity, containerBorderWidth: opt類參數, 有效數字(isenum, 不限範圍), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設0.4與1, 不報錯
+let RULE_CONTAINER_OPACITY = { fn: 'domDragPreview', name: 'opt.containerOpacity', kind: 'enum' }
+let RULE_CONTAINER_BORDER_WIDTH = { fn: 'domDragPreview', name: 'opt.containerBorderWidth', kind: 'enum' }
 
 
 /**
@@ -18,10 +23,12 @@ import getTrace from './getTrace.mjs'
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.attIdentify='dragprevid'] 輸入儲存於DOM的識別欄位名稱字串，預覽之拷貝會清除此欄位使其不與來源元素重複，預設'dragprevid'
- * @param {Number} [opt.containerOpacity=0.4] 輸入預覽元素透明度數字，須為有限數字(可為數字字串)，無效時用預設，預設0.4
+ * @param {Number} [opt.containerOpacity=0.4] 輸入預覽元素透明度數字，須為有效數字(可為數字字串)，非預期之輸入(Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設0.4
  * @param {String} [opt.containerBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
- * @param {Number} [opt.containerBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有限數字(可為數字字串)，無效時用預設，預設1
+ * @param {Number} [opt.containerBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有效數字(可為數字字串)，非預期之輸入視為未給而改用預設，不報錯，預設1
  * @param {String} [opt.containerBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.containerOpacity、opt.containerBorderWidth為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'create'時為createPreview已建立預覽並完成監聽、定位與確認來源之計時器排定(含replaced為布林，代表建立前已有預覽而被替換)，'skip'時為createPreview無法建立預覽(含reason；reason為'no-box'代表無法取得來源位置、'build-error'代表建構預覽時拋錯如來源按鈕已自我刪除)，'tick'時為每500毫秒確認來源元素是否仍在頁面中之一次判定(含connected為布林，false時緊接著通知reason為'source-gone'之remove)，'remove'時為確有預覽而已被移除並已停止監聽與計時器(含reason；reason為'remove'代表removeDragPreview、'clear'代表clear、'replace'代表createPreview替換既有預覽、'source-gone'代表來源已被移出頁面；無預覽時重複呼叫不通知)；事件皆於對應動作完成後通知(通知當下預覽、監聽與計時器之狀態已一致)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響預覽，預設null
  * @returns {Object} 回傳物件，內含createPreview、updateDragPreview、pauseDragPreview、removeDragPreview、setNodeStyle、setCoverStyle、setSellStyle、setContainerStyle、clear事件，clear同removeDragPreview
  * @example
@@ -53,8 +60,8 @@ function domDragPreview(opt = {}) {
         attIdentify = 'dragprevid'
     }
 
-    //containerOpacity, 數字或數字字串, 非有限者用預設
-    let containerOpacity = optNum(opt, 'containerOpacity', 0.4)
+    //containerOpacity, 數字或數字字串, 非預期者用預設
+    let containerOpacity = optVal(get(opt, 'containerOpacity', null), 0.4, RULE_CONTAINER_OPACITY, opt)
 
     //containerBackground
     let containerBackground = get(opt, 'containerBackground', null)
@@ -62,8 +69,8 @@ function domDragPreview(opt = {}) {
         containerBackground = 'white'
     }
 
-    //containerBorderWidth, 數字或數字字串, 非有限者用預設
-    let containerBorderWidth = optNum(opt, 'containerBorderWidth', 1)
+    //containerBorderWidth, 數字或數字字串, 非預期者用預設
+    let containerBorderWidth = optVal(get(opt, 'containerBorderWidth', null), 1, RULE_CONTAINER_BORDER_WIDTH, opt)
 
     //containerBorderColor
     let containerBorderColor = get(opt, 'containerBorderColor', null)

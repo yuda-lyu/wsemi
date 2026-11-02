@@ -1394,6 +1394,42 @@ describe(`fsEnsureBins with a local server`, function() {
         }
     })
 
+    //ws272c: _optNum退役, 取主幹清單之上限(manifestMs, 取自opt.stallMs)改依一般opt規則: 非預期之輸入(含Infinity、超過計時器上限、'0x10'、0、負數、包裝物件)視為未給而改用預設30000, 不夾至上限
+    for (let [label, v] of [['Infinity', Infinity], ['2147483648', 2147483648], [`'0x10'`, '0x10'], ['0', 0], ['-5', -5], ['new Number(300)', new Number(300)]]) { // eslint-disable-line no-new-wrappers
+        it(`should give up the trunk manifest after the default 30000ms when opt.stallMs is unexpected: ${label} (ws272c)`, async function() {
+            let root = fx('m5timeoutdef')
+            routes[`${RAWF}${C1}/bin/tool.exe`] = tool
+            let f = (u, init) => {
+                fetchCalls.push(String(u))
+                if (String(u).endsWith('/manifest.json')) {
+                    let body = new ReadableStream({
+                        pull() {
+                            return new Promise(() => {})
+                        },
+                    })
+                    return Promise.resolve(new Response(body, { status: 200 }))
+                }
+                return mapFetch(u, init)
+            }
+            let clock = useFakeClock()
+            try {
+                let tr = traceRec()
+                let pm = ens(mfF([strip(fT(tool))], { commit: C1 }), { pkgRoot: root, fetch: f, stallMs: v, onTrace: tr.on })
+                await tr.wait((e) => e.type === 'trunk' && e.phase === 'fetch')
+                await clock.advance(29999)
+                assert.strict.equal(tr.events.some((e) => e.type === 'trunk' && e.phase === 'fail'), false) //預設30000內不放棄
+                await clock.advance(1)
+                let fail = await tr.wait((e) => e.type === 'trunk' && e.phase === 'fail')
+                assert.strict.equal(fail.code, 'E_TIMEOUT')
+                let r = await pm
+                assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true)
+            }
+            finally {
+                clock.restore()
+            }
+        })
+    }
+
     it(`should not use a trunk manifest larger than 1MB even if it is valid JSON (M5)`, async function() {
         let root = fx('m5bigjson')
         setFloating(JSON.stringify(mfF([strip(fT(tool2))], { commit: C2, note: 'x'.repeat(1024 * 1024) })))
@@ -1430,6 +1466,41 @@ describe(`fsEnsureBins with a local server`, function() {
         assert.strict.equal(e.message.includes('did not finish within 1500ms'), true)
         assert.strict.deepStrictEqual(order, ['kill', 'close', 'cleanup'])
     })
+
+    //ws272c: 解壓之上限(extractMs, 取自opt.totalMs)改依一般opt規則: 非預期之輸入視為未給而改用預設600000, 不夾至上限
+    for (let [label, v] of [['Infinity', Infinity], ['2147483648', 2147483648], [`'0x10'`, '0x10'], ['0', 0], ['-5', -5]]) {
+        it(`should kill the extraction program after the default 600000ms when opt.totalMs is unexpected: ${label} (ws272c)`, async function() {
+            this.timeout(30000)
+            let root = fx('extractdef')
+            let kills = 0
+            let fake = () => {
+                let cp = new EventEmitter()
+                cp.stderr = new EventEmitter()
+                cp.kill = () => {
+                    kills++
+                    setImmediate(() => cp.emit('close', null))
+                }
+                return cp
+            }
+            let clock = useFakeClock()
+            try {
+                let tr = traceRec()
+                let pmErr = catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake, totalMs: v, onTrace: tr.on }))
+                await tr.wait((e) => e.type === 'extract')
+                await clock.advance(599999)
+                assert.strict.equal(kills, 0) //預設600000內不終止
+                await clock.advance(1)
+                await tr.wait((e) => e.type === 'kill')
+                assert.strict.equal(kills, 1)
+                let e = await pmErr
+                assert.strict.equal(e.code, 'E_EXTRACT')
+                assert.strict.equal(e.message.includes('did not finish within 600000ms'), true)
+            }
+            finally {
+                clock.restore()
+            }
+        })
+    }
 
     it(`should mask credentials in the field of E_MANIFEST and in the output of the extraction program (E3)`, async function() {
         let m = mf([fTool()])

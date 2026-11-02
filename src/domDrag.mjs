@@ -2,15 +2,24 @@ import get from 'lodash-es/get.js'
 import isNumber from 'lodash-es/isNumber.js'
 import genID from './genID.mjs'
 import isestr from './isestr.mjs'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
 import cint from './cint.mjs'
 import evem from './evem.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
 import domDragPreview from './domDragPreview.mjs'
-import optNum from './_optNum.mjs'
+import optVal from './_optVal.mjs'
 import getTrace from './getTrace.mjs'
+
+
+//previewOpacity, previewDisabledOpacity, previewBorderWidth: opt類參數, 有效數字(isenum, 不限範圍), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設0.4、0.2與1, 不報錯
+let RULE_PREVIEW_OPACITY = { fn: 'domDrag', name: 'opt.previewOpacity', kind: 'enum' }
+let RULE_PREVIEW_DISABLED_OPACITY = { fn: 'domDrag', name: 'opt.previewDisabledOpacity', kind: 'enum' }
+let RULE_PREVIEW_BORDER_WIDTH = { fn: 'domDrag', name: 'opt.previewBorderWidth', kind: 'enum' }
+
+//timeDragStartDelay: opt類參數, 有效數字且為計時毫秒(isenum, use: 'timer', 0~2147483647, 可帶小數; 交給setTimeout), 非預期(含Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設120, 不報錯、不夾至上限; 負數維持文件載明之視為0(見下方呼叫處)
+let RULE_TIME_DRAG_START_DELAY = { fn: 'domDrag', name: 'opt.timeDragStartDelay', kind: 'enum', chk: { use: 'timer' } }
 
 
 //kpDgs, 各群組: 群組字串 → { gid, members: Map(元素→實例), isActive, drag, teardown }; 用Map使任何字串皆可為群組名, 不與物件原型之鍵衝突
@@ -41,10 +50,10 @@ function attr(ele, k) {
 }
 
 
-//getIndex, 元素之順序指標(四捨五入為整數); 未帶指標或非有限數字者為null, 不可作為拖曳起點或落點
+//getIndex, 元素之順序指標(四捨五入為整數); 未帶指標或非有效數字(含Infinity、'0x10')者為null, 不可作為拖曳起點或落點
 function getIndex(ele, attIndex) {
     let s = attr(ele, attIndex)
-    if (!isnum(s) || !Number.isFinite(Number(s))) {
+    if (!isenum(s)) {
         return null
     }
     return cint(s)
@@ -617,11 +626,13 @@ function onPress(inst, e, touch) {
  * @param {String} [opt.attIndex='dragindex'] 輸入預覽元素順序指標之屬性名稱字串，預設'dragindex'
  * @param {String} [opt.attGroup='draggroup'] 輸入預覽元素群組之屬性名稱字串，預設'draggroup'
  * @param {String} [opt.group='group'] 輸入預覽元素群組字串，預設'group'
- * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，須為數字(可為數字字串)，負數視為0，超過計時器上限(含Infinity)者夾至上限，無效時用預設，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
- * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，須為有限數字(可為數字字串)，無效時用預設，預設0.4
- * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，須為有限數字(可為數字字串)，無效時用預設，預設0.2
+ * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，須為0至2147483647(計時器上限)之有效數字(可為數字字串)，負數視為0，其餘非預期之輸入(Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
+ * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，須為有效數字(可為數字字串)，非預期之輸入(Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設0.4
+ * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，須為有效數字(可為數字字串)，非預期之輸入視為未給而改用預設，不報錯，預設0.2
  * @param {String} [opt.previewBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
- * @param {Number} [opt.previewBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有限數字(可為數字字串)，無效時用預設，預設1
+ * @param {Number} [opt.previewBorderWidth=1] 輸入預覽元素邊框寬度數字，須為有效數字(可為數字字串)，非預期之輸入視為未給而改用預設，不報錯，預設1
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeDragStartDelay、opt.previewOpacity、opt.previewDisabledOpacity、opt.previewBorderWidth為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {String} [opt.previewBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；一次拖曳之事件皆由起手元素之回調通知(落點元素之回調不通知)；type為'start'時為起手(含ind為起點順序指標、touch為布林代表觸控起手；先於start事件之派發通知)，'timer'時為延遲建立預覽之計時器(含phase與ms；phase為'set'代表已排定、'fire'代表到點且確認仍屬本次拖曳而將建立預覽、'cancel'代表拖曳於到點前結束而取消；ms為timeDragStartDelay解析後之毫秒數)，'preview'時為domDrag對預覽之建立或移除(含phase；phase為'create'代表已建立預覽、'remove'代表已移除預覽)，'end'時為拖曳已結束(含ind為起點順序指標、reason；reason為'drop'代表放開於項目上、'release'代表放開於項目外、'buttons'代表移動時主鍵已放開、'touchcancel'代表起手手指被取消、'blur'代表視窗失焦、'inactive'代表群組被停用、'source-gone'代表來源元素解除且未重建、'takeover'代表新的按下接手前一次未收尾之拖曳、'teardown'代表群組刪除時尚有拖曳；通知當下計時器、會話監聽與預覽皆已清除，且先於leave與drop之派發)，'unbind'時為本實例已解除(含drag為布林，代表解除當下是否有以本元素為來源之進行中拖曳；其後該拖曳之事件仍通知至結束，但不再起手新的拖曳，重複呼叫不通知)；內部建立之預覽(domDragPreview)不轉傳回調；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響拖曳，預設null
  * @returns {Object} 回傳物件，可使用on、unbind、clear與setIsActive函數，on可監聽change、start、move、enter、leave、drop事件，unbind與clear相同，為釋放監聽，setIsActive為設定群組是否可拖曳(群組層級，停用時取消進行中之拖曳，解除後呼叫無作用)
@@ -669,18 +680,29 @@ function domDrag(ele, opt = {}) {
         return isestr(v) ? v : def
     }
 
-    //o, 數字選項可為數字或數字字串(如網頁輸入、表格轉存之資料), 非有限者用預設
+    //num, 數字選項可為數字或數字字串(如網頁輸入、表格轉存之資料), 非預期者用預設
+    let num = (k, def, rule) => {
+        return optVal(get(opt, k, null), def, rule, opt)
+    }
+
+    //timeDragStartDelay, 有效之負數(文件載明)視為0
+    let vDelay = get(opt, 'timeDragStartDelay', null)
+    if (isenum(vDelay) && Number(vDelay) < 0) {
+        vDelay = 0
+    }
+
+    //o
     let o = {
         attIdentify: str('attIdentify', 'dragid'),
         attIndex: str('attIndex', 'dragindex'),
         attGroup: str('attGroup', 'draggroup'),
         group: str('group', 'group'),
-        previewOpacity: optNum(opt, 'previewOpacity', 0.4),
-        previewDisabledOpacity: optNum(opt, 'previewDisabledOpacity', 0.2),
+        previewOpacity: num('previewOpacity', 0.4, RULE_PREVIEW_OPACITY),
+        previewDisabledOpacity: num('previewDisabledOpacity', 0.2, RULE_PREVIEW_DISABLED_OPACITY),
         previewBackground: str('previewBackground', 'white'),
-        previewBorderWidth: optNum(opt, 'previewBorderWidth', 1),
+        previewBorderWidth: num('previewBorderWidth', 1, RULE_PREVIEW_BORDER_WIDTH),
         previewBorderColor: str('previewBorderColor', '#f26'),
-        timeDragStartDelay: optNum(opt, 'timeDragStartDelay', 120, { min: 0, below: 'clamp', timer: true }),
+        timeDragStartDelay: optVal(vDelay, 120, RULE_TIME_DRAG_START_DELAY, opt),
     }
 
     //gid, eid

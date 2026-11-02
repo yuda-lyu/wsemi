@@ -6,10 +6,13 @@ import pmSettleByState from './_pmSettleByState.mjs'
 import queue from './queue.mjs'
 import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
-import isp0int from './isp0int.mjs'
-import cint from './cint.mjs'
 import delay from './delay.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//takeLimit: opt類參數(位置參數, 預設0=不限), 有效整數且為個數(iseint, use: 'count'), 非預期(含Infinity)改用預設0(不限)
+let RULE_TAKE_LIMIT = { fn: 'pmQueue', name: 'takeLimit', kind: 'eint', chk: { use: 'count' } }
 
 
 /**
@@ -21,9 +24,11 @@ import getTrace from './getTrace.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmQueue.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer} [takeLimit=0] 輸入同時處理數量整數，預設0，代表無限制
+ * @param {Integer} [takeLimit=0] 輸入同時處理數量整數(0至4294967295，數字字串亦可)，預設0，代表無限制；非預期(負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設0(無限制)，不報錯
  * @param {Boolean} [takeLast=false] 輸入多次觸發時是否只取最後呼叫的非同步函數，預設false，搭配takeLimit=0進行非同步函數防抖
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.debug=false] 輸入是否於takeLimit為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含n為依呼叫順序由1起算之任務序號)，'start'時為任務開始執行(含n、running為含該任務之執行中任務數)，'end'時為任務執行完畢而即將依結果resolve或reject其Promise(含n、running為不含該任務之執行中任務數、ok為任務是否成功)，'cancel'時為takeLast下非最後呼叫者之結果被捨棄而即將reject{ reason: 'cancelled' }(含n)；任務非函數時仍通知start與end(ok為false)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響佇列，預設null
  * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出；第1參數非函數時該任務之Promise以字串'fun is not a function'被reject
  * @example
@@ -376,11 +381,8 @@ function pmQueue(takeLimit = 0, takeLast = false, opt = {}) {
         let seq = 0
         let nRun = 0
 
-        //takeLimit
-        if (!isp0int(takeLimit)) {
-            takeLimit = 0
-        }
-        takeLimit = cint(takeLimit)
+        //takeLimit, 有效則取Number(v), 非預期(含Infinity)改用預設0(無限制)
+        takeLimit = optVal(takeLimit, 0, RULE_TAKE_LIMIT, opt)
 
         //takeLast
         if (!isbol(takeLast)) {

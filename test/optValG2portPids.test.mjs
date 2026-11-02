@@ -176,13 +176,13 @@ describe('optVal execProcessPortPids / execProcessPortPidsSync port (required pa
         resetWarned()
     })
 
-    it('should still use the default for the opt keys that are not in this batch (timeout: unchanged non-positive and non-number handling)', function() {
-        // 同函數之opt.timeout不在本批(readInput內isnum與ceil與夾限維持原樣)
+    it('opt.timeout (opt class; moved into the batch of 2026-11-02 ws272a): default, string, ceil; over the timer upper bound uses the default instead of clamping', function() {
+        // 同函數之opt.timeout於第221項第二批第2輪(ws272a)納入(opt類, isenum { gt: 0, use: 'timer' }); 詳細案例見optValG5timerFlow.test.mjs
         let ex = () => {}
         assert.strict.deepStrictEqual(kit.readInput(80, {}, ex).cfg.timeout, 10000)
         assert.strict.deepStrictEqual(kit.readInput(80, { timeout: '300' }, ex).cfg.timeout, 300)
         assert.strict.deepStrictEqual(kit.readInput(80, { timeout: 1500.5 }, ex).cfg.timeout, 1501)
-        assert.strict.deepStrictEqual(kit.readInput(80, { timeout: 2 ** 40 }, ex).cfg.timeout, 2147483647)
+        assert.strict.deepStrictEqual(kit.readInput(80, { timeout: 2 ** 40 }, ex).cfg.timeout, 10000)
     })
 
 })

@@ -209,13 +209,48 @@ describe(`pmTimeout`, function() {
         assert.strict.deepStrictEqual(r, 'pmok')
     })
 
-    it(`sould reject with 'invalid ms[ms]' when ms is not a non-negative integer`, async function() {
-        await assert.rejects(() => pmTimeout(Promise.resolve(), -1), /^Error: invalid ms\[-1\]$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), 1.5), /^Error: invalid ms\[1.5\]$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), 'abc'), /^Error: invalid ms\[abc\]$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), null), /^Error: invalid ms\[null\]$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), undefined), /^Error: invalid ms\[undefined\]$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), NaN), /^Error: invalid ms\[NaN\]$/)
+    //失敗訊息為固定詞彙、不帶輸入值(dspec K9／V20, 使用者2026-11-02經ws272a回報後定); 含組字串會拋錯之值(Symbol、無原型物件、toString拋錯之物件)亦須reject此訊息(ws272a範圍外發現: 舊訊息以模板字串回顯輸入值而於此類值拋TypeError)
+    const MSG_INVALID_MS = 'invalid ms: must be an integer within 0 to 2147483647'
+
+    it(`sould reject with the fixed message 'invalid ms: must be an integer within 0 to 2147483647' when ms is not a non-negative integer`, async function() {
+        await assert.rejects(() => pmTimeout(Promise.resolve(), -1), { message: MSG_INVALID_MS })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), 1.5), { message: MSG_INVALID_MS })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), 'abc'), { message: MSG_INVALID_MS })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), null), { message: MSG_INVALID_MS })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), undefined), { message: MSG_INVALID_MS })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), NaN), { message: MSG_INVALID_MS })
+    })
+
+    it(`sould not carry the input value in the reject message`, async function() {
+        let secret = 'SECRET-VALUE-123'
+        await assert.rejects(() => pmTimeout(Promise.resolve(), secret), (err) => {
+            assert.ok(!err.message.includes(secret), err.message)
+            assert.strict.deepStrictEqual(err.message, MSG_INVALID_MS)
+            return true
+        })
+        await assert.rejects(() => pmTimeout(Promise.resolve(), 123456.5), (err) => {
+            assert.ok(!err.message.includes('123456'), err.message)
+            return true
+        })
+    })
+
+    it(`sould reject with the fixed message (not a TypeError) when ms is a Symbol, an object without prototype or an object whose toString throws`, async function() {
+        let boom = () => {
+            throw new Error('boom')
+        }
+        let weird = [
+            Symbol('x'),
+            Object.create(null),
+            { toString: boom },
+            { valueOf: boom },
+        ]
+        for (let v of weird) {
+            await assert.rejects(() => pmTimeout(Promise.resolve(), v), (err) => {
+                assert.strict.deepStrictEqual(err instanceof Error, true)
+                assert.strict.deepStrictEqual(err.message, MSG_INVALID_MS)
+                return true
+            })
+        }
     })
 
     it(`sould accept numeric string as ms`, async function() {
@@ -238,7 +273,7 @@ describe(`pmTimeout`, function() {
         //參數檢核置於setTimeout之前, 故參數無效時不得留下計時器
         //以本測試能立即結束反證: 若誤在檢核前就建立60s計時器, mocha將被卡住至逾時
         await assert.rejects(() => pmTimeout(null, 60000), /^Error: invalid pm$/)
-        await assert.rejects(() => pmTimeout(Promise.resolve(), -1), /^Error: invalid ms\[-1\]$/)
+        await assert.rejects(() => pmTimeout(Promise.resolve(), -1), { message: MSG_INVALID_MS })
     })
 
     //以下為觀察回調(opt.onTrace)之案(R-TRACE-01): 逾時門檻本身即規格, 以假時鐘推進(時間只由advance推進, 不受負載影響)
@@ -360,16 +395,19 @@ describe(`pmTimeout`, function() {
         assert.strict.deepStrictEqual(a.r, ['reject', 'undefined:invalid pm'])
         assert.strict.deepStrictEqual(a.events.map(fmt), ['settle:invalid:ng'])
         let b = await go('invalidMs')
-        assert.strict.deepStrictEqual(b.r, ['reject', 'undefined:invalid ms[-1]'])
+        assert.strict.deepStrictEqual(b.r, ['reject', `undefined:${MSG_INVALID_MS}`])
         assert.strict.deepStrictEqual(b.events.map(fmt), ['settle:invalid:ng'])
     })
 
-    it(`should notify start with ms clamped to the timer upper bound`, async function() {
-        //JSDoc: 夾至計時器上限(cst.TIMER_TIME_MAX); start之ms為夾至上限後之逾時毫秒數
+    it(`should notify start with the timer upper bound itself as a valid ms, and reject invalid ms (not clamped) for a value over the bound`, async function() {
+        //JSDoc: ms為必須參數, 須在0至2147483647(cst.TIMER_TIME_MAX)之內; 上限本身有效(start之ms即該值); 超過上限reject固定訊息(第221項第二批: 不再夾至上限, 訊息不帶值), 且只通知settle(invalid)
         let tr = traceRec()
-        let r = await pmTimeout(Promise.resolve('ok'), cst.TIMER_TIME_MAX + 1000, { onTrace: tr.on })
+        let r = await pmTimeout(Promise.resolve('ok'), cst.TIMER_TIME_MAX, { onTrace: tr.on })
         assert.strict.deepStrictEqual(r, 'ok')
         assert.strict.deepStrictEqual(tr.events.map(fmt), [`start${cst.TIMER_TIME_MAX}`, 'settle:pm:ok'])
+        let tr2 = traceRec()
+        await assert.rejects(() => pmTimeout(Promise.resolve('ok'), cst.TIMER_TIME_MAX + 1000, { onTrace: tr2.on }), { message: MSG_INVALID_MS })
+        assert.strict.deepStrictEqual(tr2.events.map(fmt), ['settle:invalid:ng'])
     })
 
     it(`should behave the same without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
@@ -418,7 +456,7 @@ describe(`pmTimeout`, function() {
             pmJustBefore: ['resolve', 'ok'],
             pmReject: ['reject', 'strErr'],
             invalidPm: ['reject', 'undefined:invalid pm'],
-            invalidMs: ['reject', 'undefined:invalid ms[-1]'],
+            invalidMs: ['reject', `undefined:${MSG_INVALID_MS}`],
         }
         assert.strict.deepStrictEqual([rs, un], [[exp, exp, exp, exp, exp, { omitted: ['reject', 'TIMEOUT:timeout[100ms]'] }], []])
     })

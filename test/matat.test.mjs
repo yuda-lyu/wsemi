@@ -42,12 +42,13 @@ describe(`matat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //使用者2026-11-02: arrAt之iend為opt類參數, 非預期(負數)視為未給, 只取istart一筆
     k = 4
     o[k] = {
         in: [['a', 'b', '12.34'], [12, 34.56, 'abc']],
-        out: [[], []]
+        out: [['b'], [34.56]]
     }
-    it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}, 1, -10`, function() {
+    it(`should return ${JSON.stringify(o[k].out)} (only istart) when input ${JSON.stringify(o[k].in)}, 1, -10`, function() {
         k = 4
         let r = matat(o[k].in, 1, -10)
         let rr = o[k].out

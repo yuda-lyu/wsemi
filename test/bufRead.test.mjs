@@ -231,11 +231,18 @@ describe(`bufRead`, function() {
             })
         }
 
-        it(`should accept the largest mLen that still leaves one exponent bit (nBytes * 8 - 2)`, function() {
-            // mLen 62、nBytes 8: eLen = 1, 有留指數位元, 不回null(回出之數值依該位元樣式, 可為NaN)
-            assert.ok(typeof bufRead(b, 0, true, 62, 8) === 'number')
+        it(`should accept the largest mLen that still leaves one exponent bit (nBytes * 8 - 2) while mLen is not above 52`, function() {
             // mLen 6、nBytes 1: eLen = 1
             assert.ok(typeof bufRead(new Uint8Array([0x40]), 0, true, 6, 1) === 'number')
+            // mLen 52、nBytes 8: 標準雙精度, eLen = 11; mLen 52、nBytes 7: eLen = 3(mLen上限52)
+            assert.ok(typeof bufRead(b, 0, true, 52, 8) === 'number')
+            assert.ok(typeof bufRead(b, 0, true, 52, 7) === 'number')
+        })
+
+        it(`should return null when mLen is above 52 even though one exponent bit is left (JS number mantissa is 52 bits; ws272c)`, function() {
+            // mLen 62、nBytes 8: eLen = 1, 修前回出數值(mLen超過尾數位數時Math.pow(2, e - mLen)下溢而失真), 修後回null
+            assert.strict.deepStrictEqual(bufRead(b, 0, true, 62, 8), null)
+            assert.strict.deepStrictEqual(bufRead(b, 0, true, 53, 8), null)
         })
 
     })

@@ -9,7 +9,7 @@
 ### 背景與關係
 
 - `isnum`、`isint`、`ispint`、`isp0int` 屬**定義上**之判斷(`isnum(Infinity)`、`isnum('0x10')`、`isint(Infinity)`、`isint(2 ** 60)`、包裝物件皆為 true),**行為不改**(JSDoc 各補一句指向 `isenum`／`iseint`);計算類函數判定參數須用專用函數,不得用 `isnum`／`isint`、`cdbl`／`cint`(非數字回 0)、`parseFloat`／`parseInt`、`Number(v)`／`+v` 直接轉、全域 `isNaN`(dspec §7.2).
-- 本輪(2026-10-31,主控任務 20261031121854,wsemieff)只新增兩函數與範圍表;既有函數之改用(排程第 221 項)與其他判斷函數之重定義**不在本輪**,站點全集見 `sgud/rule/rulebook_judge_sites.md`.
+- 本輪(2026-10-31,主控任務 20261031121854,wsemieff)只新增兩函數與範圍表;既有函數之改用(排程第 221 項)與其他判斷函數之重定義**不在本輪**,站點全集見 `sgud/rule/rulebook_judge_sites_inv_a.md`、`rulebook_judge_sites_inv_b.md`(索引見 `rulebook_judge_sites.md`).
 
 ### 規則
 
@@ -32,7 +32,7 @@
 
 - 計算類站點(`isnum(`／`isint(`／`ispint(`／`isp0int(` 判定後即做數值運算、計時毫秒、埠號、索引、個數、位數):
   `Grep pattern='\b(isnum|isint|ispint|isp0int)\(' path=src glob='!{index,isnum,isint,ispint,isp0int,isenum,iseint}.mjs' output_mode=count`(2026-10-31:127 檔、220 行)
-- **站點全集與建議之 use 見 `sgud/rule/rulebook_judge_sites.md`**(排程第 221 項之輸入;2026-10-31 逐站讀上下文盤點,抽查 7 列相符):站點 217(Grep 216 行、125 檔,另補回調型 1),**符合 191**(建議改 140、待確認 42、建議保留 9),不符合 26(註解、型別分流、鍵名守門、判斷類函數本身、verifyValue 之型別名對應);分節:計時毫秒 30、埠號 1、索引／位置／切片 8、個數／長度／次數 51、位元／進位／位數／年份／時間戳 13、一般數值運算 88.**規格更新後須留意**: ①盤點當時 opt 無效為 throw,現為改用預設;②K3〈超出範圍亦同〉:計時「夾至 `TIMER_TIME_MAX`」改為「超過者改用預設」,故計時站點依規格宜採 `use: 'timer'`(該檔之「式 B」),「式 A」(保留 `Math.min`)僅為行為最接近之備案.
+- **站點全集與建議之 use 見 `sgud/rule/rulebook_judge_sites_inv_a.md`、`rulebook_judge_sites_inv_b.md`**(索引見 `rulebook_judge_sites.md`;排程第 221 項之輸入;2026-10-31 逐站讀上下文盤點,抽查 7 列相符):站點 217(Grep 216 行、125 檔,另補回調型 1),**符合 191**(建議改 140、待確認 42、建議保留 9),不符合 26(註解、型別分流、鍵名守門、判斷類函數本身、verifyValue 之型別名對應);分節:計時毫秒 30、埠號 1、索引／位置／切片 8、個數／長度／次數 51、位元／進位／位數／年份／時間戳 13、一般數值運算 88.**規格更新後須留意**: ①盤點當時 opt 無效為 throw,現為改用預設;②K3〈超出範圍亦同〉:計時「夾至 `TIMER_TIME_MAX`」改為「超過者改用預設」,故計時站點依規格宜採 `use: 'timer'`(該檔之「式 B」),「式 A」(保留 `Math.min`)僅為行為最接近之備案.
 - 只引用不改:本輪未改任何既有函數之判定;下游 `w-geo` 之 `judge` 站點見 R-PRECISE-01.
 
 ### 測試
@@ -125,7 +125,7 @@
 7. **`color`**:`strCvFromPercent`／`strCvFrom01`／`strParseHex8` 之數值判定 `isnum` → `isenum`;`spreadHue`／`spreadMonochromatic` 之 `num` `isint` → `iseint`(默認 `safe`).連帶修正:舊 `isint` 收 `Infinity`、`'Infinity'`、`'1e400'`(`cdbl` 後為 `Number.MAX_VALUE`),`for (i < num)` 不結束而**記憶體耗盡(離開碼 134)**,改後 `throw Error('num is not an integer')`.
 8. **JSDoc**:24 函數之 `@param`／`@returns` 改寫為新判定(有效數字之定義、無效之處置);`arrAdd`／`arrMulti` 寫明預設值 0／1;`arrMax`／`arrMin` 寫明 throw;`atand`／`atan2d` 之 `Infinity` 範例改 `null`;`estimateTicks` 補必然之限制(見〈已知限制〉).
 
-### 站點全集(`rulebook_judge_sites.md` 末節〈第 221 項第一批處置結果〉)
+### 站點全集(`rulebook_judge_sites_r1.md` 末節〈第 221 項第一批處置結果〉)
 
 - 已套 37 站(三角 10、`round`／`ceil`／`floor` 之 `v` 3 與 `idig` 3、`dig`／`digExp`／`cfinancial`／`cfilesize` 之 `v` 4、`judge` 2、`preciseNum` 1、`estimateTicks` 2、`color` 6、`arrAdd` 2、`arrMulti` 2、`arrMax` 1、`arrMin` 1);未套:`dig.mjs:34`、`digExp.mjs:28`、`cfinancial.mjs:33`(`idig`,第四～七段)、`preciseNum.mjs:89`(`isint` 整數路徑分流,保留)、`estimateTicks.mjs:422`(`isint`,非本批)及其餘各節全部站點.
 - 盤點指令(wsemi 內剩餘 `isnum` 站點):`Grep pattern='\b(isnum|isint|ispint|isp0int)\(' path=src glob='!{index,isnum,isint,ispint,isp0int,isenum,iseint}.mjs' output_mode=count`.上列 24 檔應已無 `isnum`／`isint`／`isp0int`(僅 `dig`／`digExp`／`cfinancial` 仍有 `isp0int(idig)`、`preciseNum`／`estimateTicks` 仍有 `isint`).
@@ -143,6 +143,6 @@
 - **`arrProduct`、`arrNorm`(皆未改)經 `arrMulti` 連動(最優先待裁示)**:同位置皆非有效數字時 `arrMulti` 由 `null` 改 1,`arrProduct` 加總多 1(`arrProduct([1,'-'],[3,'NP'])` 由 3 變 4、`arrProduct(['-'],['NP'])` 由 `null` 變 1、`arrProduct([1,2,3],[Infinity,'0x10',1])` 由 `Number.MAX_VALUE` 變 6);`arrNorm = sqrt(arrProduct(v, v))` 隨之 `arrNorm(['abc'])` 由 `null` 變 1、`arrNorm([1,'2',null,null])` 由 `sqrt(5)` 變 `sqrt(7)`(標記向量之範數為 1,語意不合理).兩者之測試期望已改為實測新值並註明連動(`test/arrProduct.test.mjs`、`test/arrNorm.test.mjs`),**非定案**;依 dspec Q3-b 內積遇標記宜 throw,待第四～七段裁示(派工單明列 `arrProduct`、`arrNorm` 不得改).wsemi 以外套件對 `arrProduct`、`arrNorm` 0 站點.
 - `estimateTicks` 在 `rmin === rmax` 且刻度間距之小數位數 > 100(絕對值小於約 1e-99,有效位數越多越早,12 位有效數字時約 1e-89,如 `1e-100`、`1.234567e-95`)時,因 `round` 之 `idig` 上限 100,`tickInterval` 為 0、三個刻度位置相同(舊版可算);已寫入 JSDoc 必然之限制.
 - `cfinancial` 之 `v` 檢測與 `dig` 內之檢測重複(等價變異),保留以維持兩函數各自獨立.
-- 【**已於第 221 項第二批第一級發布 A 處置**(2026-10-31,§11 第 16 項 A＋B;見 `rulebook_optval.md` 規則 11 與 `rulebook_breaking.md` 第 47 項⑦):以原文判整數並正規化輸出,`judge('0.99999999999999999999', '===', 1)` 由 false 變 true;`judge` 因共用 `preciseNum` 而隨之改變(`judge.mjs` 本身未改)】以下為處置前之敘述: **原有、本批未改(獨立審查者指出,已實測與 HEAD 相同)**: `preciseNum` 整數路徑以 `isint(v)`(`Number(v)` 後判整數)分流,字串若轉換後為整數(含近整數寫法)則**回傳原字串、位數 0**,不經 12 位有效數字處理——`preciseNum('0.99999999999999999999')` 回 `'0.99999999999999999999'`(位數 0)、`preciseNum('1.0000000000000001')` 回原字串、`judge('0.99999999999999999999', '===', 1)` 為 false(與「第 13 位起才不同視為相等」不符);整數路徑回傳亦未正規化(`'+5.'`→`'+5.'`、`'1e1'`→`'1e1'`、`'007'`→`'007'`,數字 `10` 則 `'10'`).本批僅補去頭尾空白.屬「檢測之值 ≠ 使用之值」,待裁示是否改以 `isenum` ＋ `Number.isInteger(Number(v))` ＋ Decimal 判整數並正規化輸出.
+- 【**已於第 221 項第二批第一級發布 A 處置**(2026-10-31,§11 第 16 項 A＋B;見 `rulebook_optval.md` 規則 11 與 `rulebook_breaking_45to51.md` 第 47 項⑦):以原文判整數並正規化輸出,`judge('0.99999999999999999999', '===', 1)` 由 false 變 true;`judge` 因共用 `preciseNum` 而隨之改變(`judge.mjs` 本身未改)】以下為處置前之敘述: **原有、本批未改(獨立審查者指出,已實測與 HEAD 相同)**: `preciseNum` 整數路徑以 `isint(v)`(`Number(v)` 後判整數)分流,字串若轉換後為整數(含近整數寫法)則**回傳原字串、位數 0**,不經 12 位有效數字處理——`preciseNum('0.99999999999999999999')` 回 `'0.99999999999999999999'`(位數 0)、`preciseNum('1.0000000000000001')` 回原字串、`judge('0.99999999999999999999', '===', 1)` 為 false(與「第 13 位起才不同視為相等」不符);整數路徑回傳亦未正規化(`'+5.'`→`'+5.'`、`'1e1'`→`'1e1'`、`'007'`→`'007'`,數字 `10` 則 `'10'`).本批僅補去頭尾空白.屬「檢測之值 ≠ 使用之值」,待裁示是否改以 `isenum` ＋ `Number.isInteger(Number(v))` ＋ Decimal 判整數並正規化輸出.
 - `color.interp` 之漸層鍵仍以 `cdbl(k)` 取值(`'0x10'` 為 16、`'abc'` 為 0),非 `isnum`／`isint` 判定站點,本批未動.
 - 既有 JSDoc 範例錯誤(原有、未修): `tand.mjs` 之範例組為 `cosd` 之值(如 `tand(0)` 寫 1、實際 0),`estimateTicks.mjs` 之 `0.89~0.9` 範例 `tickDig` 寫 1、實際 2(HEAD 即如此);本批新增之 `tand(' 45 ')` 等範例已實測正確.

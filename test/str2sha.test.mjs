@@ -90,15 +90,16 @@ describe(`str2sha`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould throw 'invalid n[n]' when n is a positive integer not available`, function() {
+    it(`sould throw the fixed message 'invalid n: must be one of 1, 224, 256, 384, 512' (without the value) when n is a positive integer not available`, function() {
+        //訊息固定不帶輸入值(dspec K9/V20, 主控2026-11-02判定ws272c; 原為invalid n[n])
         //160為SHA-1之實際輸出位元數但非其演算法名稱, 不可用
-        assert.throws(() => str2sha('test中文', 160), /^Error: invalid n\[160\]$/)
+        assert.throws(() => str2sha('test中文', 160), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
         //128為MD5輸出位元數, 非SHA系列
-        assert.throws(() => str2sha('test中文', 128), /^Error: invalid n\[128\]$/)
+        assert.throws(() => str2sha('test中文', 128), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
         //3為SHA-3之版本號, 因與SHA-2位數重疊產生歧義故不納入
-        assert.throws(() => str2sha('test中文', 3), /^Error: invalid n\[3\]$/)
+        assert.throws(() => str2sha('test中文', 3), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
         //2為SHA-2之版本號, 非單一演算法
-        assert.throws(() => str2sha('test中文', 2), /^Error: invalid n\[2\]$/)
+        assert.throws(() => str2sha('test中文', 2), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
     })
 
     it(`sould throw 'n is not a positive integer' when n is not a positive integer`, function() {
@@ -164,7 +165,7 @@ describe(`str2sha`, function() {
 
     it(`sould still validate n when base64 is invalid`, function() {
         //base64之檢核置於n之後, 故base64無效不會遮蔽n之錯誤
-        assert.throws(() => str2sha('test中文', 160, 'notbool'), /^Error: invalid n\[160\]$/)
+        assert.throws(() => str2sha('test中文', 160, 'notbool'), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
     })
 
     it(`sould produce different digests for different n`, function() {
@@ -190,7 +191,7 @@ describe(`str2sha`, function() {
         //預設模式維持拋錯之既有契約, 僅opt-in模式改以error狀態回報
         let r = str2sha('abc', 999, false, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('invalid n[999]') >= 0, true, `msg 應標明無效之n, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid n: must be one of 1, 224, 256, 384, 512', `msg 應標明n無效且不帶輸入值, got ${r.msg}`)
     })
 
     it(`should return { state: 'error' } instead of throwing when n is not a positive integer with returnWithStateAndMsg`, function() {

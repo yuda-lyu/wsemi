@@ -186,7 +186,7 @@ describe(`isnum 包裝物件(R-WRAPPER-01)`, function() {
     })
 
     it(`should return true when input new Number(1.5) and new String('1.5')`, function() {
-        //R-WRAPPER-01 規則1: 包裝物件視同其型別(本庫_optNum依賴new Number(3)為數字); 規則2: 依其原始值判定
+        //R-WRAPPER-01 規則1: 包裝物件視同其型別(isnum為定義上之是否為數字, new Number(3)為數字; 計算類函數之檢測改用isenum, 不收包裝物件); 規則2: 依其原始值判定
         assert.strict.deepStrictEqual(isnum(new Number(1.5)), true)
         assert.strict.deepStrictEqual(isnum(new String('1.5')), true)
     })

@@ -1,8 +1,12 @@
 import get from 'lodash-es/get.js'
-import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'
 import domRemove from './domRemove.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeDuration: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setTimeout), 非預期(含Infinity、超出計時器上限)改用預設1000
+let RULE_TIME_DURATION = { fn: 'domRipple', name: 'opt.timeDuration', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -12,8 +16,11 @@ import domRemove from './domRemove.mjs'
  * @memberOf wsemi
  * @param {HTMLElement} ele 輸入dom
  * @param {Object} event 輸入dom點擊事件
- * @param {Integer} [opt.timeDuration=1000] 輸入Ripple效果持續時間整數，單位為毫秒ms，預設1000
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Integer} [opt.timeDuration=1000] 輸入Ripple效果持續時間整數，須為1至2147483647之有效整數(數字字串亦可)，單位為毫秒ms，預設1000；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設1000，不報錯、不夾至上限
  * @param {String} [opt.color='rgba(255, 255, 255, 0.5)'] 輸入Ripple顏色字串，預設'rgba(255, 255, 255, 0.5)'
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeDuration為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @example
  * need test in browser
  *
@@ -25,11 +32,8 @@ import domRemove from './domRemove.mjs'
  */
 function domRipple(ele, event, opt = {}) {
 
-    //timeDuration
-    let timeDuration = get(opt, 'timeDuration', null)
-    if (!ispint(timeDuration)) {
-        timeDuration = 1000
-    }
+    //timeDuration, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設
+    let timeDuration = optVal(get(opt, 'timeDuration', null), 1000, RULE_TIME_DURATION, opt)
 
     //color
     let color = get(opt, 'color', null)

@@ -100,6 +100,22 @@ describe(`domShowInputDatatime 觀察回調(R-TRACE-01)`, function() {
         }
     })
 
+    it(`should show the time of the year 0050 as given (ws272c: the former mapping of the two-digit year would show 1950, or the value was not set)`, function() {
+        let clock = useFakeClock()
+        try {
+            for (let [time, opt, value] of [['0050-03-04T10:20:30', {}, '0050-03-04T10:20'], ['0099-12-31T23:59:59', {}, '0099-12-31T23:59'], ['0000-01-01T00:00:00', {}, '0000-01-01T00:00'], ['0050-03-04', { type: 'date' }, '0050-03-04']]) {
+                env.restore()
+                env = mkBrowser()
+                btn = env.mkEle('button')
+                start(time, opt)
+                assert.strict.deepStrictEqual(inpOf().value, value, time)
+            }
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
     it(`should notify change and settle by change with the new time and clean up when the input change event arrives`, async function() {
         let clock = useFakeClock()
         try {

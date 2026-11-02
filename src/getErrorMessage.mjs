@@ -1,8 +1,13 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
-import ispint from './ispint.mjs'
 import isestr from './isestr.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
+
+
+//levelCauseMax、levelJsonMax、lengthMessageMax: opt類參數(opt之鍵), 有效整數且為個數(iseint, use: 'count'; 前兩者min: 1, lengthMessageMax可為0代表不限制長度), 非預期(含小數、超出個數範圍、Infinity、'0x10'、包裝物件等)改用預設8、6、0, 不報錯; opt.debug為true時另以固定詞彙警告
+let RULE_LEVEL_CAUSE_MAX = { fn: 'getErrorMessage', name: 'opt.levelCauseMax', kind: 'eint', chk: { use: 'count', min: 1 } }
+let RULE_LEVEL_JSON_MAX = { fn: 'getErrorMessage', name: 'opt.levelJsonMax', kind: 'eint', chk: { use: 'count', min: 1 } }
+let RULE_LENGTH_MESSAGE_MAX = { fn: 'getErrorMessage', name: 'opt.lengthMessageMax', kind: 'eint', chk: { use: 'count' }, defDesc: '0 (no length limit)' }
 
 
 //本函數刻意不使用isErr、isstr、isobj、isarr等型別守衛做分派
@@ -307,9 +312,11 @@ function core(err, o) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useCause=false] 輸入是否串接cause鏈布林值，若為true則將各層cause之訊息以' <- '串接，預設false。惟外層message為空字串時，不論本項為何皆取cause，因該情形下無其他資訊來源
  * @param {Boolean} [opt.useAggregate=false] 輸入是否附加AggregateError之errors各項訊息布林值，若為true則以'; '串接後置於方括號內，預設false
- * @param {Integer} [opt.levelCauseMax=8] 輸入cause鏈與errors之最大展開層數正整數，預設8
- * @param {Integer} [opt.levelJsonMax=6] 輸入序列化之最大巢狀深度正整數，超過者以'[Deep]'表示，預設6
- * @param {Integer} [opt.lengthMessageMax=0] 輸入回傳字串之最大長度正整數，超過者截斷並以'...'標記，該標記計入本上限內，預設0代表不限制長度
+ * @param {Integer|String} [opt.levelCauseMax=8] 輸入cause鏈與errors之最大展開層數，opt類參數(有效整數，個數1~4294967295，數字字串亦可，去頭尾空白後取值)，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、超出範圍等)視為未給而改用預設，不報錯，預設8
+ * @param {Integer|String} [opt.levelJsonMax=6] 輸入序列化之最大巢狀深度，超過者以'[Deep]'表示，規則同opt.levelCauseMax，預設6
+ * @param {Integer|String} [opt.lengthMessageMax=0] 輸入回傳字串之最大長度，超過者截斷並以'...'標記，該標記計入本上限內，opt類參數(有效整數，個數0~4294967295，數字字串亦可)，非預期之輸入視為未給而改用預設，預設0代表不限制長度
+ * @param {Boolean} [opt.debug=false] 輸入是否於上列三個數值之opt為非預期之輸入而改用預設時輸出警告布林值，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @returns {String} 回傳錯誤訊息字串。無法提取時回傳空字串。序列化時循環參照處以'[Circular]'表示、BigInt轉為字串，此二標記不做跳脫，應用資料內若恰有相同字串將無法分辨
  * @example
  *
@@ -498,26 +505,14 @@ function getErrorMessage(err, opt = {}) {
         useAggregate = false
     }
 
-    //levelCauseMax
-    let levelCauseMax = get(opt, 'levelCauseMax', null)
-    if (!ispint(levelCauseMax, { useLimitSafe: true })) {
-        levelCauseMax = 8
-    }
-    levelCauseMax = cint(levelCauseMax)
+    //levelCauseMax, 非預期改用預設8, 有效則取轉換值
+    let levelCauseMax = optVal(get(opt, 'levelCauseMax', null), 8, RULE_LEVEL_CAUSE_MAX, opt)
 
-    //levelJsonMax
-    let levelJsonMax = get(opt, 'levelJsonMax', null)
-    if (!ispint(levelJsonMax, { useLimitSafe: true })) {
-        levelJsonMax = 6
-    }
-    levelJsonMax = cint(levelJsonMax)
+    //levelJsonMax, 非預期改用預設6, 有效則取轉換值
+    let levelJsonMax = optVal(get(opt, 'levelJsonMax', null), 6, RULE_LEVEL_JSON_MAX, opt)
 
-    //lengthMessageMax
-    let lengthMessageMax = get(opt, 'lengthMessageMax', null)
-    if (!ispint(lengthMessageMax, { useLimitSafe: true })) {
-        lengthMessageMax = 0
-    }
-    lengthMessageMax = cint(lengthMessageMax)
+    //lengthMessageMax, 非預期改用預設0(不限制長度), 有效則取轉換值
+    let lengthMessageMax = optVal(get(opt, 'lengthMessageMax', null), 0, RULE_LENGTH_MESSAGE_MAX, opt)
 
     //optCore
     let optCore = {

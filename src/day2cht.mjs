@@ -1,4 +1,4 @@
-import ot from 'dayjs'
+import ot from './_dayjs.mjs'
 import isday from './isday.mjs'
 
 

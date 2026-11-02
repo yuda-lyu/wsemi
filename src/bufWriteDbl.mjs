@@ -3,21 +3,23 @@ import bufWrite from './bufWrite.mjs'
 
 /**
  * 寫入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)內的浮點數資料，需先依照nBytes宣告Uint8Array或Buffer空間
+ * 參數規則同bufWrite：value照IEEE754原樣編碼(含±Infinity、NaN，字串只收十進位有效數字)，offset、mLen、nBytes須為有效整數且須滿足offset+nBytes不大於buffer長度、mLen不大於52、指數位元數nBytes*8-mLen-1介於1至30；成功回傳true，任一輸入無效回傳null且不寫入
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bufWriteDbl.test.mjs Github}
  * @memberOf wsemi
- * @param {Number} value 輸入數字
+ * @param {Number|String} value 輸入要寫入之數字，number型別照IEEE754原樣編碼(含±Infinity、NaN)，字串只收十進位有效數字
  * @param {Uint8Array|Buffer} buffer 輸入Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料
- * @param {Integer} [offset=0] 輸入平移整數，預設0
+ * @param {Integer|String} [offset=0] 輸入平移整數，預設0
  * @param {Boolean} [isBE=true] 輸入是否為大端序Big-Endian，預設true
- * @param {Integer} [mLen=52] 輸入有效位數整數，預設52
- * @param {Integer} [nBytes=8] 輸入使用位元組整數，預設8
- * @returns {Number} 回傳數字
+ * @param {Integer|String} [mLen=52] 輸入有效位數整數，預設52
+ * @param {Integer|String} [nBytes=8] 輸入使用位元組整數，預設8
+ * @returns {Boolean|null} 回傳寫入成功為true，輸入無效為null
  * @example
  *
  * let i = 1447656645380 //new Uint8Array([66, 117, 16, 240, 246, 48, 64, 0])
  * let b = Buffer.alloc(8)
  * bufWriteDbl(i, b)
+ * // => true
  * console.log(b)
  * // >= <Buffer 42 75 10 f0 f6 30 40 00>
  * console.log(new Uint8Array(b))

@@ -1,5 +1,5 @@
 import isarr from './isarr.mjs'
-import isnum from './isnum.mjs'
+import isenum from './isenum.mjs'
 import arrProduct from './arrProduct.mjs'
 import { getBase, chkValid } from './_arrNum.mjs'
 
@@ -52,8 +52,8 @@ function arrNorm(vec, opt) {
     //arrProduct
     let r = arrProduct(vec, vec, { base })
 
-    //check
-    if (!isnum(r)) {
+    //check, r為arrProduct自算結果(非輸入), 以isenum判定其為有效數字(溢位為Infinity或無法計算為null/NaN者回傳null)
+    if (!isenum(r)) {
         return null
     }
 

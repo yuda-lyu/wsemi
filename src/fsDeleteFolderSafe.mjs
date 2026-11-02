@@ -11,7 +11,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Object} [opt.fs=fs] 輸入fs物件，須提供statSync、lstatSync、rmSync，預設為Node內建fs(供測試注入假fs)；給null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
- * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數，預設5；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
+ * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數(1至4294967295，數字字串亦可)，預設5；非預期(0、負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設5，不報錯(Infinity不代表無限重試)；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject；opt.debug為true時，非預期之numRetry另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫rmSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為前置檢查即結束而即將resolve或reject(含n為0與reason；reason為'not-exist'代表標的不存在而resolve、'not-folder'代表標的非資料夾而reject)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example

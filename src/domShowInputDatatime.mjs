@@ -1,4 +1,4 @@
-import ot from 'dayjs'
+import ot from './_dayjs.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'

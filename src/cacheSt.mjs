@@ -1,12 +1,19 @@
 import get from 'lodash-es/get.js'
-import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import waitFun from './waitFun.mjs'
 import haskey from './haskey.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeExpire: opt類參數, 有效整數且為正數(iseint, min: 1), 非預期(含Infinity)改用預設30分鐘; timeExpire只與時間差比較(不交給計時器), 故不設計時器上限(use: 'timer')
+//timeDetect: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setInterval), 非預期改用預設2000
+//attemptNum、timeInterval: waitExist與waitNotExist之opt類參數, attemptNum為個數(use: 'count', min: 1), 預設30; timeInterval為計時毫秒(use: 'timer', min: 1; 交給waitFun之setInterval), 預設100
+let RULE_TIME_EXPIRE = { fn: 'cacheSt', name: 'opt.timeExpire', kind: 'eint', chk: { min: 1 } }
+let RULE_TIME_DETECT = { fn: 'cacheSt', name: 'opt.timeDetect', kind: 'eint', chk: { use: 'timer', min: 1 } }
+let RULE_WAIT_ATTEMPT_NUM = { fn: 'cacheSt', name: 'optWait.attemptNum', kind: 'eint', chk: { use: 'count', min: 1 } }
+let RULE_WAIT_TIME_INTERVAL = { fn: 'cacheSt', name: 'optWait.timeInterval', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -15,10 +22,12 @@ import getTrace from './getTrace.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cacheSt.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [opt.timeExpire=1800000] 輸入TTL過期時間整數，單位為毫秒ms，key寫入超過此時間後將被內部偵測週期自動刪除，預設30分鐘(1800000ms)
- * @param {Integer} [opt.timeDetect=2000] 輸入TTL偵測週期整數，單位為毫秒ms，預設2000
+ * @param {Integer} [opt.timeExpire=1800000] 輸入TTL過期時間正整數(1至9007199254740991，數字字串亦可)，單位為毫秒ms，key寫入超過此時間後將被內部偵測週期自動刪除，預設30分鐘(1800000ms)；非預期(0、負數、小數、Infinity、超過安全整數、'0x10'等)視為未給而改用預設，不報錯(Infinity不代表永不過期)；timeExpire只與時間差比較、不交給原生計時器，故不設2147483647之計時器上限
+ * @param {Integer} [opt.timeDetect=2000] 輸入TTL偵測週期正整數(1至2147483647，數字字串亦可)，單位為毫秒ms，預設2000；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'等)視為未給而改用預設，不報錯、不夾至上限
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeExpire、opt.timeDetect(以及waitExist、waitNotExist之optWait.attemptNum、optWait.timeInterval)為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數同一行程只警告一次，預設false；waitExist與waitNotExist之debug與funLog取自其自身所傳之optWait
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於TTL偵測週期內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；僅涵蓋TTL偵測週期，不含set、get、check、checkWithSet、setWithFree、del之呼叫(其本身皆為同步完成，並已有同名事件可由on監聽)，亦不含waitExist與waitNotExist之輪詢(其輪詢事件由waitFun之opt.onTrace提供，本函數不轉發，其開始與結束已有waitExist、waitNotExist事件可由on監聽)；type為'expire'時為偵測到key已超過timeExpire而剛被刪除(含key、age為其寫入至本次偵測之毫秒數)，'detect'時為每次偵測週期結束(含n為第幾次偵測、size為偵測前之key數、expired為本次刪除之key數)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響快取，clear後不再呼叫(含clear時正在進行之偵測週期之餘下部分)，預設null
- * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
+ * @returns {Object} 回傳事件物件，內含上述對外方法可呼叫，亦提供on用於監聽各方法之事件。waitExist(key, optWait)與waitNotExist(key, optWait)之optWait.attemptNum為最大嘗試次數正整數(1至4294967295，預設30)、optWait.timeInterval為嘗試週期正整數(1至2147483647，單位ms，預設100)，非預期(含Infinity、超出範圍、'0x10'等)視為未給而改用預設，不報錯(attemptNum為Infinity不代表無限次輪詢)。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection
  * @example
  *
  * let test1 = async () => {
@@ -98,19 +107,11 @@ import getTrace from './getTrace.mjs'
  */
 function cacheSt(opt = {}) {
 
-    let timeExpire = get(opt, 'timeExpire', null)
-    if (!ispint(timeExpire)) {
-        timeExpire = 30 * 60 * 1000
-    }
-    timeExpire = cint(timeExpire)
-    timeExpire = Math.min(timeExpire, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeExpire, 有效則取Number(v), 非預期(含Infinity)改用預設, 不代表永不過期
+    let timeExpire = optVal(get(opt, 'timeExpire', null), 30 * 60 * 1000, RULE_TIME_EXPIRE, opt)
 
-    let timeDetect = get(opt, 'timeDetect', null)
-    if (!ispint(timeDetect)) {
-        timeDetect = 2000
-    }
-    timeDetect = cint(timeDetect)
-    timeDetect = Math.min(timeDetect, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeDetect, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設, 不夾至上限
+    let timeDetect = optVal(get(opt, 'timeDetect', null), 2000, RULE_TIME_DETECT, opt)
 
     let trace = getTrace(opt) //觀察回調, 未傳時為null, 各站點以if (trace)略過而不組事件物件
     let nDetect = 0 //偵測週期序號, 僅於通知時遞增
@@ -207,17 +208,11 @@ function cacheSt(opt = {}) {
 
     let _waitExist = async (key, optWait = {}) => {
 
-        let attemptNum = get(optWait, 'attemptNum', null)
-        if (!ispint(attemptNum)) {
-            attemptNum = 30
-        }
-        attemptNum = cint(attemptNum)
+        //attemptNum, 有效則取Number(v), 非預期(含Infinity)改用預設, 不代表無限次輪詢
+        let attemptNum = optVal(get(optWait, 'attemptNum', null), 30, RULE_WAIT_ATTEMPT_NUM, optWait)
 
-        let timeInterval = get(optWait, 'timeInterval', null)
-        if (!ispint(timeInterval)) {
-            timeInterval = 100
-        }
-        timeInterval = cint(timeInterval)
+        //timeInterval, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設, 不夾至上限
+        let timeInterval = optVal(get(optWait, 'timeInterval', null), 100, RULE_WAIT_TIME_INTERVAL, optWait)
 
         evEmit(ev, 'waitExist', [{ state: 'start' }], { tag: 'cacheSt' })
 
@@ -238,17 +233,11 @@ function cacheSt(opt = {}) {
 
     let _waitNotExist = async (key, optWait = {}) => {
 
-        let attemptNum = get(optWait, 'attemptNum', null)
-        if (!ispint(attemptNum)) {
-            attemptNum = 30
-        }
-        attemptNum = cint(attemptNum)
+        //attemptNum, 同waitExist
+        let attemptNum = optVal(get(optWait, 'attemptNum', null), 30, RULE_WAIT_ATTEMPT_NUM, optWait)
 
-        let timeInterval = get(optWait, 'timeInterval', null)
-        if (!ispint(timeInterval)) {
-            timeInterval = 100
-        }
-        timeInterval = cint(timeInterval)
+        //timeInterval, 同waitExist
+        let timeInterval = optVal(get(optWait, 'timeInterval', null), 100, RULE_WAIT_TIME_INTERVAL, optWait)
 
         evEmit(ev, 'waitNotExist', [{ state: 'start' }], { tag: 'cacheSt' })
 

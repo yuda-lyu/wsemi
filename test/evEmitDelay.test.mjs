@@ -182,29 +182,31 @@ describe(`evEmitDelay`, function() {
         assert.strict.deepStrictEqual(got.length, 1)
     })
 
-    it(`should clamp opt.ms to the timer upper bound instead of firing immediately`, async function() {
-        //超過2^31-1者, nodejs會夾為1ms立即觸發、瀏覽器會環繞, 夾制後應為正常排程
+    //以事件同步: 等派發事件(或防懸置上限3000ms之真實計時器)後回傳派發次數與使用之計時器物件; 使用者2026-10-31裁定: 超過計時器上限(含Infinity)之opt.ms視為非預期、改用預設1ms(不夾至上限, 取消24.8天之計時器)
+    let fireOnce = (optExtra) => new Promise((resolve) => {
         let got = []
         let ev = evem()
+        let tg = setTimeout(() => {
+            resolve({ got, t })
+        }, 3000)
         ev.on('ev', () => {
             got.push(1)
+            clearTimeout(tg)
+            resolve({ got, t })
         })
-        let t = evEmitDelay(ev, 'ev', [], { ms: cst.TIMER_TIME_MAX + 1 })
-        await delay(120)
-        clearTimeout(t) //避免24.8天之計時器吊住行程
-        assert.strict.deepStrictEqual(got, [])
+        let t = evEmitDelay(ev, 'ev', [], optExtra)
     })
 
-    it(`should clamp Infinity for opt.ms`, async function() {
-        let got = []
-        let ev = evem()
-        ev.on('ev', () => {
-            got.push(1)
-        })
-        let t = evEmitDelay(ev, 'ev', [], { ms: Infinity })
-        await delay(120)
+    it(`should use the default 1ms when opt.ms is over the timer upper bound (not clamped to the bound)`, async function() {
+        let { got, t } = await fireOnce({ ms: cst.TIMER_TIME_MAX + 1 })
         clearTimeout(t)
-        assert.strict.deepStrictEqual(got, [])
+        assert.strict.deepStrictEqual(got, [1])
+    })
+
+    it(`should use the default 1ms when opt.ms is Infinity`, async function() {
+        let { got, t } = await fireOnce({ ms: Infinity })
+        clearTimeout(t)
+        assert.strict.deepStrictEqual(got, [1])
     })
 
     //--- 錯誤處置, 與evEmit一致 ---

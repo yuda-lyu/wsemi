@@ -76,12 +76,14 @@ describe(`bufWriteDbl`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should get ${k} from buffer when input NaN, ${Buffer.alloc(8)}`, function() {
+    //使用者2026-11-02定A: value照IEEE754原樣編碼, NaN寫出quiet NaN位元樣式(與Node之Buffer.writeDoubleBE一致), 不再不寫入; 成功回傳true
+    it(`should write the quiet NaN bit pattern 7ff8000000000000 and return true when input NaN, ${Buffer.alloc(8)}`, function() {
         let b = Buffer.alloc(8)
-        bufWriteDbl(NaN, b)
+        let ret = bufWriteDbl(NaN, b)
         let r = new Uint8Array(b)
-        let rr = new Uint8Array(Buffer.alloc(8))
+        let rr = new Uint8Array([127, 248, 0, 0, 0, 0, 0, 0])
         assert.strict.deepStrictEqual(r, rr)
+        assert.strict.deepStrictEqual(ret, true)
     })
 
     it(`should get ${k} from buffer when input ${i}, ${Buffer.alloc(8)}, null, ${isBE}, ${mLen}, ${nBytes}`, function() {

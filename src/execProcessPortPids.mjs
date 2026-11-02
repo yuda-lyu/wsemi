@@ -17,7 +17,7 @@ import kit from './_execPortPids.mjs'
  * @memberOf wsemi
  * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，reject錯誤訊息`port is not an integer between 1 and 65535`，不視為未給、不改用預設
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，可為字串型數字，小數無條件進位為整數，非正數或非數字時為預設值；逾時即強制結束該子指令並視為失敗。Windows下最多依序執行2個子指令，最久約為2倍timeout，預設10000
+ * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，須為大於0至2147483647(計時器上限)之內之有效數字，可為字串型數字，小數無條件進位為整數；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設值，不報錯、不夾至上限；逾時即強制結束該子指令並視為失敗。Windows下最多依序執行2個子指令，最久約為2倍timeout，預設10000；opt.debug為true時，非預期之timeout另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
  * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即reject(不以netstat之部分結果代替)，預設false
  * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與Get-NetTCPConnection，其餘走lsof，供測試，預設process.platform
  * @param {Function} [opt.exec=null] 輸入執行子指令之函數，供測試以固定輸出驗證，格式為(prog, args, { src, timeout, maxBuffer })=>result，src為資料來源字串'netstat'、'powershell'、'lsof'，result(或resolve之值)須為與child_process.spawnSync同形之物件{ status, stdout, error }：status為離開碼數字(因訊號結束者為null)、stdout為字串或Buffer(Buffer以latin1解碼)、error為無法啟動或逾時之Error物件(code為'ETIMEDOUT'者視為逾時)否則為null；拋錯、reject或回傳非物件皆視為該子指令失敗；回傳永不落定之Promise時本函數亦不落定(逾時由該函數自行負責)。預設null為內建之執行函數(隱藏視窗、不經shell、逾時或stdout超過64MB即強制結束子指令)

@@ -1,9 +1,8 @@
-import cst from './_const.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import ispm from './ispm.mjs'
 import isestr from './isestr.mjs'
-import isp0int from './isp0int.mjs'
+import iseint from './iseint.mjs'
 import getTrace from './getTrace.mjs'
 
 
@@ -18,10 +17,10 @@ import getTrace from './getTrace.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmTimeout.test.mjs Github}
  * @memberOf wsemi
  * @param {Promise} pm 輸入Promise物件，非Promise時reject錯誤'invalid pm'
- * @param {Integer} ms 輸入逾時毫秒數，須為非負整數，為0代表下一輪事件迴圈即逾時，其餘reject錯誤'invalid ms[ms數]'
+ * @param {Integer} ms 輸入逾時毫秒數，必須參數，須為有效整數且在0至2147483647(計時器上限)之內(數字字串亦可)，為0代表下一輪事件迴圈即逾時；非預期(負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)reject錯誤'invalid ms: must be an integer within 0 to 2147483647'(訊息固定、不帶輸入值)，不夾至上限
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.label=''] 輸入識別字串，將置於逾時錯誤訊息之前綴以利辨識來源，非有效字串時回退為空字串，預設''
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'start'時為已啟動逾時計時器(含ms為夾至上限後之逾時毫秒數)，'timeout'時為逾時計時器已到期而即將reject逾時錯誤(含ms)，'settle'時為本函數即將resolve或reject(含by為'pm'代表pm先完成、'timeout'代表逾時勝出、'invalid'代表輸入檢核失敗，ok為pm先完成時是否resolve，逾時與檢核失敗皆為false)；每次呼叫恰通知一次settle，檢核失敗時不通知start與timeout；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響逾時判定，預設null
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'start'時為已啟動逾時計時器(含ms為逾時毫秒數)，'timeout'時為逾時計時器已到期而即將reject逾時錯誤(含ms)，'settle'時為本函數即將resolve或reject(含by為'pm'代表pm先完成、'timeout'代表逾時勝出、'invalid'代表輸入檢核失敗，ok為pm先完成時是否resolve，逾時與檢核失敗皆為false)；每次呼叫恰通知一次settle，檢核失敗時不通知start與timeout；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響逾時判定，預設null
  * @returns {Promise} 回傳Promise，pm先完成則resolve或reject其結果，逾時則reject一個code為'TIMEOUT'之Error
  * @example
  * //need test in nodejs
@@ -81,16 +80,16 @@ async function pmTimeout(pm, ms, opt = {}) {
         throw new Error(`invalid pm`)
     }
 
-    //check
-    if (!isp0int(ms)) {
+    //check, 必須參數: 須為有效整數且在0至2147483647(計時器上限)之內(iseint, use: 'timer'), 超過上限、Infinity、'0x10'等非預期之輸入reject, 不夾至上限
+    if (!iseint(ms, { use: 'timer' })) {
         if (trace) {
             trace('settle', { by: 'invalid', ok: false })
         }
-        throw new Error(`invalid ms[${ms}]`)
+        throw new Error('invalid ms: must be an integer within 0 to 2147483647')
     }
 
-    //夾至計時器上限, 見_const.mjs
-    ms = Math.min(ms, cst.TIMER_TIME_MAX)
+    //取值(檢測之值即使用之值)
+    ms = Number(ms)
 
     //label
     let label = get(opt, 'label', null)

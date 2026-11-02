@@ -1,4 +1,4 @@
-import ot from 'dayjs'
+import ot from './_dayjs.mjs'
 import istime from './istime.mjs'
 import time2min from './time2min.mjs'
 

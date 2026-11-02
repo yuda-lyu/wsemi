@@ -2,16 +2,13 @@ import fs from 'fs'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
-import cst from './_const.mjs'
 import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
-import ispnum from './ispnum.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
 import j2o from './j2o.mjs'
 import o2j from './o2j.mjs'
 import sep from './sep.mjs'
@@ -24,6 +21,13 @@ import getTrace from './getTrace.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 
 
+//levelLimit: opt類參數, 有效整數且為個數(iseint, use: 'count', min: 1), 非預期(含0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給、改用預設1, 不報錯
+let RULE_LEVEL_LIMIT = { fn: 'fsTask', name: 'opt.levelLimit', kind: 'eint', chk: { use: 'count', min: 1 } }
+
+//timeInterval: opt類參數, 有效數字且為大於0之計時毫秒(isenum, use: 'timer', gt: 0; 交給setInterval, 小數直接使用不四捨五入), 非預期(含0、負數、Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設60000, 不報錯、不夾至上限
+let RULE_TIME_INTERVAL = { fn: 'fsTask', name: 'opt.timeInterval', kind: 'enum', chk: { use: 'timer', gt: 0 } }
+
+
 /**
  * 後端nodejs偵測指定資料夾下之檔案變化
  *
@@ -31,10 +35,12 @@ import chkFsPath from './_chkFsPath.mjs'
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，預設1
+ * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，須為1至4294967295之有效整數(可為數字字串)，設定1為列舉資料夾下第一層的檔案，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、null等)視為未給而改用預設，不報錯(給Infinity不代表無窮遍歷)，預設1
  * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用
  * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，預設'./_tkfs'
- * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長正整數，單位為毫秒ms，預設60000，為1分鐘
+ * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長數字，單位為毫秒ms，須為大於0至2147483647(計時器上限)之有效數字(可帶小數、數字字串，小數直接使用不四捨五入)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設60000，為1分鐘
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.levelLimit、opt.timeInterval為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為定時器到期一次(含busy為上一輪掃描是否仍在進行，為true時本次到期略過)，'skip'時為因上一個change之pm尚未settle(lock)而本輪不掃描(含reason為'lock')，'scan'時為一輪掃描開始或結束(含phase為'start'或'end'，結束時另含files為掃描到之檔案數、records為紀錄檔之筆數)，'compare'時為新舊比對結果(含add、del、diff、same為各類件數)，'emit'時為即將派發一個change事件(含kind為'add'、'del'或'diff'，fp為檔案路徑字串)，'settle'時為該change之pm已settle而即將據以處理(含kind、fp、ok為任務是否成功)，'record'時為任務成功後紀錄檔fpHash.json已更新(含kind、fp)，'fail'時為一輪掃描因列舉檔案或計算雜湊失敗而中止，'clear'時為已呼叫clear；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
  * @returns {Object} 回傳事件物件，建立後即以timeInterval定時偵測，on可進行監聽change事件，clear為停止偵測函數，另提供setResult與getAndEliminateResult紀錄與取得任務關聯結果。每輪偵測只派發一個變更檔並等待其msg.pm settle後才進行下一個(嚴格順序)，任務失敗(pm被reject)不更新紀錄故下輪會重試同一檔，持續失敗之檔會阻塞其後之檔(既有設計，呼叫端須自行決定重試上限或以resolve略過)。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為任務失敗、不更新紀錄檔並解鎖)再以error事件回報{ fun: 'listener', name, msg, args }，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -208,12 +214,8 @@ function fsTask(fd, opt = {}) {
         fdStorage = './_tkfs'
     }
 
-    //levelLimit
-    let levelLimit = get(opt, 'levelLimit', '')
-    if (!ispint(levelLimit)) {
-        levelLimit = 1
-    }
-    levelLimit = cint(levelLimit)
+    //levelLimit, 有效則取Number(v), 非預期(含0、負數、小數、Infinity、'0x10'、包裝物件、null)改用預設1
+    let levelLimit = optVal(get(opt, 'levelLimit', null), 1, RULE_LEVEL_LIMIT, opt)
 
     //typeHash
     let typeHash = get(opt, 'typeHash', '')
@@ -221,13 +223,8 @@ function fsTask(fd, opt = {}) {
         typeHash = 'md5'
     }
 
-    //timeInterval
-    let timeInterval = get(opt, 'timeInterval')
-    if (!ispnum(timeInterval)) {
-        timeInterval = 60 * 1000 //1min
-    }
-    timeInterval = cint(timeInterval)
-    timeInterval = Math.min(timeInterval, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeInterval, 有效則取Number(v)(小數直接使用, 不四捨五入), 非預期(含0、負數、Infinity、超過計時器上限、'0x10'、包裝物件)改用預設1min, 不夾至上限
+    let timeInterval = optVal(get(opt, 'timeInterval', null), 60 * 1000, RULE_TIME_INTERVAL, opt)
 
     //trace, 觀察回調(opt.onTrace), 未給時為null; clear後設為null不再通知
     let trace = getTrace(opt)

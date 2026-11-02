@@ -1,9 +1,12 @@
-import ispint from './ispint.mjs'
 import isfun from './isfun.mjs'
-import cint from './cint.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import getTrace from './getTrace.mjs'
 import getDiag from './getDiag.mjs'
+import optVal from './_optVal.mjs'
+
+
+//ms: opt類參數(位置參數, 預設300), 有效整數且為正數(iseint, min: 1), 非預期(含Infinity)改用預設300; ms只與時間差比較(不交給計時器, 偵測週期固定20ms), 故不設計時器上限(use: 'timer')
+let RULE_MS = { fn: 'pmDebounce', name: 'ms', kind: 'eint', chk: { min: 1 } }
 
 
 /**
@@ -19,8 +22,9 @@ import getDiag from './getDiag.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmDebounce.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數，預設300ms
+ * @param {Integer} [ms=300] 輸入未有調用的時間區間，為正整數(1至9007199254740991，數字字串亦可)，預設300ms；非預期(0、負數、小數、Infinity、超過安全整數、'0x10'等)視為未給而改用預設300ms，不報錯(Infinity不代表永不觸發)；ms只與時間差比較、不交給原生計時器，故不設2147483647之計時器上限
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.debug=false] 輸入是否於ms為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false；警告出口為opt.funLog，以(msg, { fn, reason, key })呼叫，其形狀同診斷輸出之(label, safe, detail)(msg為固定詞彙之label，{ fn, reason, key }為安全摘要，無detail)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每20ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'done'時為被執行之任務已執行完畢(含ok為是否成功，其後才恢復可執行下一批)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
  * @param {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之任務拋出值，須為true才生效，同getDiag，建構時取快照，預設false(只輸出安全摘要)
  * @param {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，給予時記錄只交給它而不寫console，同getDiag，建構時取快照，預設null
@@ -132,11 +136,8 @@ function pmDebounce(ms = 300, opt = {}) {
         let tLast = null
         let state = 'wait'
 
-        //ms
-        if (!ispint(ms)) {
-            ms = 300
-        }
-        ms = cint(ms)
+        //ms, 有效則取Number(ms), 非預期(含Infinity)改用預設
+        ms = optVal(ms, 300, RULE_MS, opt)
 
         //trace, 觀察回調(opt.onTrace), 未給時為null
         let trace = getTrace(opt)

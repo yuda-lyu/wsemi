@@ -30,29 +30,40 @@
  * 表面上看起來正常運作, 只是時間完全錯了(49.7天變成5秒), 比nodejs之立即觸發更難察覺。
  * 環繞亦非單調: 輸入越大不代表延遲越長, 無法由行為反推輸入。
  *
- * wsemi為同構套件(前後端皆用), 故不可依賴runtime之行為, 必須於進入setTimeout之前自行夾制。
- * 夾制後兩環境行為一致(皆為正常排程至上限), 環境差異消失。
+ * wsemi為同構套件(前後端皆用), 故不可依賴runtime之行為, 必須於進入setTimeout之前自行檢核。
  *
  *
- * 【為何是夾制而非退回預設值或拋錯】
+ * 【如何處置超界值 —— 檢核而非夾制】
  *
- * 呼叫端給出超大值時, 其意圖顯然是「很久」或「幾乎不觸發」, 夾至 24.8 天最接近該意圖;
- * 退回預設值(如50ms)會變成高頻輪詢, 與意圖完全相反且更危險; 拋錯則對既有呼叫端為破壞性變更。
+ * 計時毫秒屬輸入參數之檢測(主控dspec〈輸入參數之檢測機制〉§7.1、K3), 現行處置為:
+ *   1. 判斷: 以isenum(v, { use: 'timer' })(可帶小數)或iseint(v, { use: 'timer' })(須為整數)判定,
+ *      兩者之計時範圍(0 ~ TIMER_TIME_MAX)取自本常數, 集中於_numRange.mjs, 各函數不自寫數字;
+ *      超過上限、Infinity、NaN、負數、'0x10'、包裝物件等皆判定為非有效之計時毫秒。
+ *   2. opt類參數(有預設者, 含JSDoc標[參數=預設]之位置參數): 非預期之輸入(含超界)視為未給, 改用預設,
+ *      不再夾至上限(經_optVal.mjs統一處理, opt.debug為true時輸出警告); 例: delay、debounce、waitFun、cache系、fsTask、domDetect。
+ *   3. 必須參數(無預設者): 超界與其他非預期之輸入同樣報錯, 不夾至上限; 例: pmTimeout。
+ *   舊制「超大值之意圖為很久, 夾至上限最接近其意圖, 退回預設值反而變成高頻輪詢」已隨第221項改為上述處置
+ *   (超大值改用預設; 欲「很久」者由呼叫端給上限內之有限值, 或該參數本身以null等明確值表示不限時, 如execProcess.timeout)。
+ *
+ * 仍使用Math.min夾至本上限者(皆非opt類參數之檢測):
+ *   - 內部計算得之等待時間(如fsDownloadFileVerifyCore依整體時限剩餘時間排定之等待, 其輸入已通過檢測), 為避免計算結果超界;
+ *   - execCli、execCliSession之timeoutMs等: 屬第三級(須先改下游), 尚待下游先行補檢測後再依上述處置改寫, 現況仍夾至上限。
  *
  *
  * 【與安全整數界線之區別 —— 兩者須分開檢核】
  *
- * ispint(v, { useLimitSafe: true }) 擋的是「非安全整數」(Infinity、1e300、超出
+ * iseint(v) 預設use為'safe', 擋的是「非安全整數」(Infinity、1e300、超出
  * Number.MAX_SAFE_INTEGER 者), 但 2^31 本身【是】合法的安全整數, 只是超過計時器之32位元上限。
- * 故型別與安全整數之檢核【擋不住】本上限, 兩層界線必須各自處理:
- *   第一層 ispint / isp0int 等: 擋型別錯誤與非安全整數
- *   第二層 本常數之夾制:       擋超過計時器上限者
+ * 故判定計時毫秒須明給 use: 'timer', 只做安全整數之檢核【擋不住】本上限:
+ *   第一層 iseint/isenum 預設(safe): 擋型別錯誤與非安全整數
+ *   第二層 use: 'timer':             擋超過計時器上限者
  *
  *
  * 【用法】
  *
- *   import cst from './_const.mjs'
- *   timeAlive = Math.min(timeAlive, cst.TIMER_TIME_MAX) //須用min, 用max會把正常值放大為上限
+ *   判定輸入參數:   iseint(ms, { use: 'timer', min: 1 })  //取自_numRange.mjs, 不直接讀本常數
+ *   夾制內部計算值: import cst from './_const.mjs'
+ *                   wait = Math.min(wait, cst.TIMER_TIME_MAX) //須用min, 用max會把正常值放大為上限
  *
  * @type {Integer}
  */

@@ -1,7 +1,9 @@
 import evEmit from './evEmit.mjs'
-import cst from './_const.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
+
+
+//ms: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給setTimeout), 非預期(含Infinity、超出計時器上限)改用預設1
+let RULE_MS = { fn: 'evEmitDelay', name: 'opt.ms', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -35,7 +37,8 @@ import cint from './cint.mjs'
  * @param {String} name 輸入事件名稱字串
  * @param {Array} [args=[]] 輸入事件參數陣列，預設[]
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [opt.ms=1] 輸入延後派發之毫秒正整數，預設1，超過計時器上限者夾至上限，見_const.mjs
+ * @param {Integer} [opt.ms=1] 輸入延後派發之毫秒正整數(1至2147483647計時器上限，數字字串亦可)，預設1；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'等)視為未給而改用預設1，不報錯、不夾至上限
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.ms為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false；警告出口為opt.funLog，以(msg, { fn, reason, key })呼叫，其形狀同診斷輸出之(label, safe, detail)(msg為固定詞彙之label，{ fn, reason, key }為安全摘要，無detail)
  * @param {Function} [opt.funSettle=null] 輸入監聽器出錯時之收尾函數，同evEmit
  * @param {Function} [opt.funEmit=null] 輸入實際派發函數，同evEmit
  * @param {String} [opt.tag='evem'] 輸入模組名稱字串，同evEmit
@@ -63,13 +66,8 @@ import cint from './cint.mjs'
  */
 function evEmitDelay(ev, name, args = [], opt = {}) {
 
-    //ms
-    let ms = opt.ms
-    if (!ispint(ms)) {
-        ms = 1
-    }
-    ms = cint(ms)
-    ms = Math.min(ms, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //ms, 有效則取Number(v), 非預期(含Infinity、超出計時器上限)改用預設, 不夾至上限
+    let ms = optVal(opt.ms, 1, RULE_MS, opt)
 
     //setTimeout, 於新堆疊內仍以evEmit派發, 故監聽器之同步拋錯有攔截
     let t = setTimeout(() => {

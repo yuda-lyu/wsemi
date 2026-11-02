@@ -3,6 +3,8 @@ import domDrag from '../src/domDrag.mjs'
 import { mkFakeDom, clearFakeDom, trackIntervals, tick } from './tools/fakeDom.mjs'
 import { useFakeClock } from './tools/timeKit.mjs'
 import { mkRec, fiveOnTrace, watchUnhandled, mkMeta, flush, keysByType, allPrimitive } from './tools/domDragTraceKit.mjs'
+import { INVALID_TIMER_OVER } from './tools/optValKit.mjs'
+import { defineOptParamAsync } from './tools/optValKitAsyncG3count.mjs'
 
 
 let sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -770,8 +772,8 @@ describe(`domDrag`, function() {
 
     //--- 選項 ---
 
-    it(`should accept numeric strings, use the defaults for invalid numeric options, clamp a negative delay to 0 and a huge one to the timer limit`, async function() {
-        //數字字串(如網頁輸入、表格轉存之資料)轉為數字; 非數字字串、空白字串與NaN用預設(延遲120、不透明度0.4); 負數延遲視為0; Infinity夾至上限(不出現)
+    it(`should accept numeric strings, use the defaults for invalid numeric options (Infinity included), and clamp a negative delay to 0`, async function() {
+        //數字字串(如網頁輸入、表格轉存之資料)轉為數字; 非數字字串、空白字串與NaN用預設(延遲120、不透明度0.4); 負數延遲視為0(JSDoc載明); Infinity為非預期之輸入, 改用預設120(使用者2026-11-02定A, ws272c, 原為夾至上限而不出現)
         let out = []
         for (let opt of [{ timeDragStartDelay: 'x', previewOpacity: NaN }, { timeDragStartDelay: ' ', previewOpacity: ' ' }, { timeDragStartDelay: '5', previewOpacity: '0.7' }, { timeDragStartDelay: -5 }, { timeDragStartDelay: Infinity }]) {
             let env = mkFakeDom()
@@ -789,7 +791,7 @@ describe(`domDrag`, function() {
             b.d.unbind()
             await tick()
         }
-        assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [1, 1, 0.4], [0, 0, null]])
+        assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [1, 1, 0.4], [0, 1, 0.4]])
     })
 
 })
@@ -915,12 +917,12 @@ describe(`domDrag onTrace(R-TRACE-01)`, function() {
         assert.strict.deepStrictEqual([rec.timed(), env.previews(), env.nWinListeners()], [ended, 0, 0])
     })
 
-    it(`should report the resolved delay in timer set: default for invalid values, numeric strings, negative as 0, Infinity clamped to the timer limit`, async function() {
-        //JSDoc timeDragStartDelay: 無效時用預設120, 數字字串依其值, 負數視為0, 超過計時器上限(含Infinity)夾至上限2147483647; timer事件之ms為解析後之值
+    it(`should report the resolved delay in timer set: default for invalid values (Infinity, over the timer limit and '0x10' included), numeric strings, negative as 0`, async function() {
+        //JSDoc timeDragStartDelay: 無效時用預設120, 數字字串依其值, 負數視為0, 超過計時器上限(含Infinity)為非預期之輸入而改用預設120(不夾至上限, ws272c); timer事件之ms為解析後之值
         clock = useFakeClock()
         let got = []
         let i = 0
-        for (let v of ['x', ' ', '5', -5, Infinity]) {
+        for (let v of ['x', ' ', '5', -5, Infinity, 2147483648, '0x10', 2147483647]) {
             let env = mkFakeDom()
             let rec = mkRec()
             let [a, b] = mkItems(env, 2, `tr3_${i++}`, { opt: { onTrace: rec.on, timeDragStartDelay: v } })
@@ -928,7 +930,7 @@ describe(`domDrag onTrace(R-TRACE-01)`, function() {
             mouse(env).press(a)
             got.push(rec.events.filter((e) => e.type === 'timer').map((e) => `${e.phase}/${e.ms}`))
         }
-        assert.strict.deepStrictEqual(got, [['set/120'], ['set/120'], ['set/5'], ['set/0'], ['set/2147483647']])
+        assert.strict.deepStrictEqual(got, [['set/120'], ['set/120'], ['set/5'], ['set/0'], ['set/120'], ['set/120'], ['set/120'], ['set/2147483647']])
     })
 
     it(`should notify end with the reason of each way a drag finishes, always after timer cancel and before leave and drop`, async function() {
@@ -1193,6 +1195,139 @@ describe(`domDrag onTrace(R-TRACE-01)`, function() {
             return n
         }
         assert.strict.deepStrictEqual([count(undefined), count('abc'), count(null), count(() => {}) > 0], [0, 0, 0, true])
+    })
+
+})
+
+
+//第221項第二批第2輪第3批(ws272c): _optNum退役, domDrag之4個數值選項(previewOpacity、previewDisabledOpacity、previewBorderWidth、timeDragStartDelay)與順序指標屬性(getIndex)改用_optVal／isenum(R-OPT-VAL-01),
+//  使用者2026-11-02定A: Infinity、超出計時器上限、'0x10'、包裝物件皆為非預期之輸入, 改用預設(0.4／0.2／1／120); timeDragStartDelay之負數維持JSDoc載明之視為0
+//  probe回傳「該選項實際採用之值」之可觀察結果(假DOM), 以onTrace之preview/timer事件同步, 不以固定等待
+describe(`optVal domDrag (ws272c, formerly _optNum)`, function() {
+
+    let iv = null
+    let nGrp = 0
+
+    beforeEach(function() {
+        iv = trackIntervals()
+    })
+
+    afterEach(async function() {
+        await tick()
+        iv.restore()
+    })
+
+    after(function() {
+        clearFakeDom()
+    })
+
+    //runPreview, 按下項目0、等預覽建立、移到指定點後讀預覽容器之透明度與邊框寬; atDisabled為true時移到非可拖曳之點(無元素堆疊)
+    async function runPreview(optExtra, atDisabled = false) {
+        let env = mkFakeDom()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, `g7opt${nGrp++}`, { opt: { onTrace: rec.on, timeDragStartDelay: 0, ...optExtra } })
+        let m = mouse(env)
+        m.press(a)
+        await rec.wait((e) => e.type === 'preview' && e.phase === 'create')
+        m.move(atDisabled ? { x: 300, y: 300 } : b.pt)
+        let c = env.body.children.find((x) => x.getAttribute('dragpreviewid') !== null)
+        let out = { opacity: c.style.opacity, borderWidth: parseFloat(c.style.border) }
+        m.up(atDisabled ? { x: 300, y: 300 } : b.pt)
+        a.d.unbind()
+        b.d.unbind()
+        await tick()
+        return out
+    }
+
+    //num數字(有效數字, 不限範圍): 數字字串依其值, 負數亦為有效數字(舊_optNum同)
+    let VALID_NUM = [
+        ['0', 0, 0],
+        ['0.7', 0.7, 0.7],
+        ['2', 2, 2],
+        ['-0.5', -0.5, -0.5],
+        [`'0.6'`, '0.6', 0.6],
+        [`' 3 '`, ' 3 ', 3],
+        [`'1e0'`, '1e0', 1],
+    ]
+
+    defineOptParamAsync({
+        fn: 'domDrag',
+        name: 'opt.previewOpacity',
+        def: 0.4,
+        probe: async (v, extra = {}) => (await runPreview({ previewOpacity: v, ...extra })).opacity,
+        valid: VALID_NUM,
+    })
+
+    defineOptParamAsync({
+        fn: 'domDrag',
+        name: 'opt.previewDisabledOpacity',
+        def: 0.2,
+        probe: async (v, extra = {}) => (await runPreview({ previewDisabledOpacity: v, ...extra }, true)).opacity,
+        valid: VALID_NUM,
+    })
+
+    defineOptParamAsync({
+        fn: 'domDrag',
+        name: 'opt.previewBorderWidth',
+        def: 1,
+        probe: async (v, extra = {}) => (await runPreview({ previewBorderWidth: v, ...extra })).borderWidth,
+        valid: VALID_NUM,
+    })
+
+    //timeDragStartDelay: 由onTrace之timer set事件所報之ms(按下即同步通知), 放開使其取消(不等待); 有效之負數(JSDoc載明)視為0
+    defineOptParamAsync({
+        fn: 'domDrag',
+        name: 'opt.timeDragStartDelay',
+        def: 120,
+        probe: async (v, extra = {}) => {
+            let env = mkFakeDom()
+            let rec = mkRec()
+            let [a, b] = mkItems(env, 2, `g7opt${nGrp++}`, { opt: { onTrace: rec.on, timeDragStartDelay: v, ...extra } })
+            let m = mouse(env)
+            m.press(a)
+            let ms = rec.events.filter((e) => e.type === 'timer' && e.phase === 'set').map((e) => e.ms)[0]
+            m.up(a.pt)
+            a.d.unbind()
+            b.d.unbind()
+            await tick()
+            return ms
+        },
+        extraInvalid: [...INVALID_TIMER_OVER],
+        valid: [
+            ['0', 0, 0],
+            ['0.5', 0.5, 0.5],
+            ['5', 5, 5],
+            ['300', 300, 300],
+            [`'30'`, '30', 30],
+            [`' 40 '`, ' 40 ', 40],
+            ['2147483647', 2147483647, 2147483647],
+            ['-5 (documented as 0)', -5, 0],
+            [`'-5' (documented as 0)`, '-5', 0],
+            ['-0.5 (documented as 0)', -0.5, 0],
+        ],
+    })
+
+    //順序指標屬性(getIndex): 有效數字才作拖曳起點或落點, 'Infinity'、'0x10'為非有效(舊isnum: 'Infinity'被Number.isFinite擋下, '0x10'當16)
+    it(`should not take the attribute dragindex '0x10' (16) or 'Infinity' as an index of a drag start`, async function() {
+        let env = mkFakeDom()
+        let rec = mkRec()
+        let [a, b] = mkItems(env, 2, `g7opt${nGrp++}`, { opt: { onTrace: rec.on, timeDragStartDelay: 0 } })
+        let m = mouse(env)
+        for (let bad of ['0x10', 'Infinity', '-Infinity', '', 'abc', '1e400']) {
+            a.el.setAttribute('dragindex', bad)
+            m.press(a)
+            m.up(a.pt)
+        }
+        let starts = rec.events.filter((e) => e.type === 'start')
+        assert.strict.deepStrictEqual(starts, [])
+        a.el.setAttribute('dragindex', ' 3 ')
+        m.press(a)
+        starts = rec.events.filter((e) => e.type === 'start').map((e) => e.ind)
+        m.up(a.pt)
+        a.d.unbind()
+        b.d.unbind()
+        await tick()
+        assert.strict.deepStrictEqual(starts, [3])
     })
 
 })

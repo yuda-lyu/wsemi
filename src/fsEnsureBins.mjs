@@ -30,7 +30,7 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
  *
  * 環境變數(本函數統一讀取process.env): W_BIN_CACHE(共用快取資料夾)、W_BIN_MIRROR(鏡像)、W_BIN_OFFLINE(1或true為離線)。
  *
- * 破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。
+ * 破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking_39to44.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs Github}(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs)
  * @memberOf wsemi
@@ -47,8 +47,10 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
  * @param {String} [opt.floatingManifestUrl=null] 輸入主幹模式之清單網址, 須在https://raw.githubusercontent.com/<repo>/之下, 預設由清單之repo與manifestPath組成
  * @param {Integer} [opt.maxAttempts=3] 輸入下載之最多嘗試次數(交fsDownloadFileVerify)
  * @param {Number} [opt.retryDelayMs=1000] 輸入下載之重試間隔基數毫秒(交fsDownloadFileVerify)
- * @param {Number} [opt.stallMs=30000] 輸入下載之停滯毫秒數(交fsDownloadFileVerify)
- * @param {Number} [opt.totalMs=600000] 輸入每個檔下載之整體時間上限毫秒數(交fsDownloadFileVerify)
+ * @param {Number} [opt.stallMs=30000] 輸入下載之停滯毫秒數(交fsDownloadFileVerify)，亦為取主幹清單之上限毫秒數，須為大於0至2147483647(計時器上限)之有效數字，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限
+ * @param {Number} [opt.totalMs=600000] 輸入每個檔下載之整體時間上限毫秒數(交fsDownloadFileVerify)，亦為解壓之上限毫秒數，規則同stallMs
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.stallMs、opt.totalMs為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Promise} 回傳Promise, resolve回傳物件{ [name]: 絕對路徑 }(檔案組為其組資料夾), 另有不可列舉之屬性: leftovers(刪不掉之暫存夾[{ name, fp, error }])、manifest(本次採用之清單, 凍結: { source('base'、'remote'、'mirror-last'、'baseline'), url(主幹清單或鏡像之manifest-last.json之位置, 否則null), refetched(是否重取主幹清單), pkg, mode, repo, commit, manifestPath, version, note })、entries(所取各項之清單項{ [name]: 依清單之形式, sha256為小寫 }, 凍結, 供呼叫端知所用版本)、bundles(各檔案組{ [name]: { dir, id, files: { [組內路徑]: 絕對路徑 } } }, 凍結), reject回傳帶code之Error
  * @example
  * //need test in nodejs

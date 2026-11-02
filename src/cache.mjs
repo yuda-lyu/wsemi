@@ -5,10 +5,13 @@ import evEmitDelay from './evEmitDelay.mjs'
 import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
 import haskey from './haskey.mjs'
-import ispint from './ispint.mjs'
 import isarr from './isarr.mjs'
-import cint from './cint.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeExpired: set(與getProxy)逐key選項, opt類參數, 有效整數且為正數(iseint, min: 1), 非預期(含Infinity)改用預設5000; timeExpired只與時間差比較(不交給計時器), 故不設計時器上限(use: 'timer')
+let RULE_TIME_EXPIRED = { fn: 'cache', name: 'opt.timeExpired', kind: 'eint', chk: { min: 1 } }
 
 
 /**
@@ -18,7 +21,7 @@ import getTrace from './getTrace.mjs'
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部邏輯事件發生當下同步呼叫(非計時器週期)，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件欄位只含呼叫端傳入之key(通常為字串)、字串、布林與數字，不含fun之輸入與回傳值；type為'set'時為set呼叫(含key、added為是否新增，key已存在而被忽略時為false)，'get'時為get呼叫之判定(含key、n為本實例第幾次get呼叫、mode為'invalid'無效key，'wait'共用執行中之promise，'first'首次或clear後執行，'expired'因超過timeExpired而重新執行，'cache'使用快取，timeDiff為mode是'expired'或'cache'時距快取時間之毫秒數，其餘mode為null)，'start'時為即將呼叫fun(含key、run為本實例第幾次執行)，'end'時為該次fun執行結束(含key、run、ok為fun是否未失敗、stored為本次結果是否寫入快取，失敗而不寫入快取或執行中被update而不覆寫時為false)且早於該次執行之get settle，'update'、'clear'時為對應呼叫(含key、running為該key是否執行中)，'remove'時為對應呼叫(含key)；key無效時update、clear、remove不通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響快取，預設null
- * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數(fun非函數時視為回傳undefined之空函數)、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間整數，單位為毫秒ms，預設5000、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheWhenError為函數執行失敗時是否仍寫入快取，預設false，失敗不寫入快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get會重新執行(fun同步拋錯與其Promise被reject皆同)，故呼叫端需自行catch，若設定true則失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired，呼叫端不會收到錯誤而是取得undefined、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢；fun內(含同步階段)呼叫同key之get亦共用本次執行而不重複執行，惟fun若等待該get之結果則互相等待而永不settle(需逾時者以pmTimeout包裝)，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，視同函數已執行完成並寫入新值，故對已set但尚未執行過(或已clear)之key，其後get取得update之值而不執行函數(直至過期)，於函數執行中呼叫時以update之值為準，不被執行結果覆寫；update之後才呼叫clear者，下次get仍重新執行。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設。事件以timer脫勾派發且事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection；故error事件同時承載本模組自身之錯誤(fun為'get'等且帶key)與監聽器錯誤(fun為'listener'且無key)，監聽error時請先以fun欄位分流
+ * @returns {Object} 回傳事件物件，可呼叫函數on、set、get、getProxy、clear、remove。on為監聽事件，需自行監聽message與error事件。set為加入待執行函數，函數結束回傳欲快取的值，set傳入參數依序為key與快取物件，key為唯一識別字串，可使用函數加上輸入參數作為key，因考慮輸入參數可能為大量數據會有效能問題，由開發者自行決定key，而快取物件需設定欄位fun為待執行的非同步函數(fun非函數時視為回傳undefined之空函數)、inputs為待執行函數fun的傳入參數組、timeExpired為過期時間正整數(1至9007199254740991，數字字串亦可)，單位為毫秒ms，預設5000，非預期(0、負數、小數、Infinity、超過安全整數、'0x10'、包裝物件等)視為未給而改用預設5000，不報錯(Infinity不代表永不過期)，opt.debug為true時另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)、timeFrom為快取時間之起算點，可選'start'或'end'，'start'為自函數開始執行時起算，'end'為自函數執行完畢時起算，預設'start'、useCacheWhenError為函數執行失敗時是否仍寫入快取，預設false，失敗不寫入快取，錯誤會拋給呼叫端(含等待中之併發呼叫)且下次get會重新執行(fun同步拋錯與其Promise被reject皆同)，故呼叫端需自行catch，若設定true則失敗仍寫入快取，此時快取值為undefined並保留整個timeExpired，呼叫端不會收到錯誤而是取得undefined、useCloneDeep為取值時是否複製快取值後才回傳，預設true，因快取值若為物件則可能受外部調用而被修改到快取區的記憶體，若快取值為大量數據可設定false以節省複製開銷，但呼叫端須自行確保不修改所取得之值。get為依照key取得目前快取值，若該key之函數執行中則共用執行中之promise，待其執行完畢即一併取得結果，不另行輪詢；fun內(含同步階段)呼叫同key之get亦共用本次執行而不重複執行，惟fun若等待該get之結果則互相等待而永不settle(需逾時者以pmTimeout包裝)，get傳入參數依序為key與設定物件，設定物件之欄位useCloneDeep可覆寫set時之設定，未指定時沿用set之設定。getProxy為合併set與get功能，直接set註冊待執行函數與取值，傳入參數同set，且會一併傳給get，回傳同get。update為強制更新key所屬快取值，同時也會更新該快取之時間至當前，視同函數已執行完成並寫入新值，故對已set但尚未執行過(或已clear)之key，其後get取得update之值而不執行函數(直至過期)，於函數執行中呼叫時以update之值為準，不被執行結果覆寫；update之後才呼叫clear者，下次get仍重新執行。clear為清除key所屬快取的是否執行標記，使該快取視為需重新執行函數取值，於函數執行中呼叫亦有效，執行中之呼叫仍取得本次結果，下次get才重新執行。remove為直接清除key所屬快取，清除後用set重設。事件以timer脫勾派發且事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯，故其不會使行程崩潰，會改以error事件回報{ fun: 'listener', name, msg, args }，無error監聽者則console.error；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection；故error事件同時承載本模組自身之錯誤(fun為'get'等且帶key)與監聽器錯誤(fun為'listener'且無key)，監聽error時請先以fun欄位分流
  * @example
  *
  * async function topAsync() {
@@ -574,12 +577,8 @@ function cache(opt = {}) {
             inputs = []
         }
 
-        //timeExpired
-        let timeExpired = loGet(opt, 'timeExpired')
-        if (!ispint(timeExpired)) {
-            timeExpired = 5000
-        }
-        timeExpired = cint(timeExpired)
+        //timeExpired, 有效則取Number(v), 非預期(含Infinity)改用預設, 不代表永不過期
+        let timeExpired = optVal(loGet(opt, 'timeExpired'), 5000, RULE_TIME_EXPIRED, opt)
 
         //timeFrom
         let timeFrom = loGet(opt, 'timeFrom')

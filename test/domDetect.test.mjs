@@ -1,6 +1,7 @@
 import assert from 'assert'
 import domDetect from '../src/domDetect.mjs'
 import { traceRec, useFakeClock } from './tools/timeKit.mjs'
+import { INVALID_EINT_EXTRA, INVALID_TIMER_OVER, captureTimers, defineOptParam } from './tools/optValKit.mjs'
 
 
 //本函數於瀏覽器執行, 以ResizeObserver、MutationObserver、window與document偵測元素尺寸, nodejs無此等物件, 故以假環境覆蓋全域
@@ -519,7 +520,7 @@ describe(`domDetect`, function() {
     })
 
     it(`should apply toleranceBounce as given, and fall back to three for an invalid value`, async function() {
-        //給1: 反向第1次起不再發出; 給Infinity: 永不停止; 無效(-1、'x'、1.5、null)用預設3
+        //給1: 反向第1次起不再發出; 給足夠大之有限整數: 反向不再中斷; 無效(-1、'x'、1.5、null、Infinity)用預設3(Infinity為非預期之輸入, 使用者2026-11-02定A, ws272c)
         let seq = [300, 301, 300, 301, 300, 301, 300]
         let run = async (tb) => {
             let env = mkEnv()
@@ -538,23 +539,34 @@ describe(`domDetect`, function() {
         }
         assert.strict.deepStrictEqual(await run(1), [300, 301])
         assert.strict.deepStrictEqual(await run('2'), [300, 301, 300])
-        assert.strict.deepStrictEqual(await run(Infinity), seq)
-        for (let tb of [-1, 'x', 1.5, null]) {
+        assert.strict.deepStrictEqual(await run(1000), seq)
+        for (let tb of [-1, 'x', 1.5, null, Infinity, '0x2']) {
             assert.strict.deepStrictEqual(await run(tb), [300, 301, 300, 301], String(tb))
         }
     })
 
-    it(`should emit nothing within an infinite tolerance regardless of toleranceBounce`, async function() {
-        //容許誤差為Infinity仍為任何變化皆不發出(首次量得亦同)
-        let env = mkEnv()
-        let el = new Ele(300, 40)
-        let r = env.dd(() => el, { tolerancePixel: Infinity, toleranceBounce: Infinity })
-        for (let w of [300, 301, 350, 302]) {
-            el.size(w, 40)
-            env.fireRO(el)
+    it(`should use the default tolerancePixel for Infinity (not expected), and emit nothing for a huge finite tolerance with toleranceBounce 0`, async function() {
+        //使用者2026-11-02定A(ws272c): tolerancePixel/toleranceBounce之Infinity為非預期, 改用預設1/3; 欲幾乎不發出者給足夠大之有限整數並將toleranceBounce給0
+        let run = async (opt) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, opt)
+            for (let w of [300, 301, 350, 302]) {
+                el.size(w, 40)
+                env.fireRO(el)
+            }
+            await sleep(10)
+            let out = ws(r)
+            for (let d of env.dds) {
+                d.clear()
+            }
+            return out
         }
-        await sleep(10)
-        assert.strict.deepStrictEqual(ws(r), [])
+        let def = await run({})
+        assert.strict.deepStrictEqual(await run({ tolerancePixel: Infinity }), def)
+        assert.strict.deepStrictEqual(await run({ tolerancePixel: Infinity, toleranceBounce: Infinity }), def)
+        assert.strict.deepStrictEqual(def.length > 0, true)
+        assert.strict.deepStrictEqual(await run({ tolerancePixel: 1000000, toleranceBounce: 0 }), [])
     })
 
     it(`should stop a one-way feedback within the tolerance after ten emits`, async function() {
@@ -612,8 +624,8 @@ describe(`domDetect`, function() {
         assert.strict.deepStrictEqual(ws(r), [300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 309])
     })
 
-    it(`should not limit within-tolerance changes when toleranceBounce is Infinity`, async function() {
-        //給Infinity: 容許誤差內之變化一律發出(不阻斷回授), 同向連續超過10次亦發出
+    it(`should limit a one-way feedback as by default when toleranceBounce is Infinity (not expected, default 3 is used)`, async function() {
+        //使用者2026-11-02定A(ws272c): toleranceBounce之Infinity為非預期, 改用預設3, 故同向連續10次後之第11次(311)不發出(同預設); 原「Infinity: 同向連續超過10次亦發出」已移除
         let env = mkEnv()
         let el = new Ele(300, 40)
         let r = env.dd(() => el, { toleranceBounce: Infinity })
@@ -626,7 +638,7 @@ describe(`domDetect`, function() {
             env.fireRO(el)
         }
         await sleep(10)
-        assert.strict.deepStrictEqual(ws(r), seq)
+        assert.strict.deepStrictEqual(ws(r), seq.filter((w) => w !== 311))
     })
 
     it(`should not take finding a lost element again as a reversal`, async function() {
@@ -2505,7 +2517,7 @@ describe(`domDetect`, function() {
     it(`should decide every change by the documented rules within the tolerance, on random sequences`, async function() {
         //以固定種子之亂數產生寬之變化序列(多為±1, 含不變、容許誤差外、隱藏), 每次變化後瀏覽器皆回報, 同步與延後各半, 發出之寬須與依JSDoc規則寫成之模型逐筆相同:
         //  超過容許誤差必發出並使計次歸0; 容許誤差內之非0差照常發出, 惟連續反向達toleranceBounce次後不發出(直到同向或超過容許誤差), 同向連續發出10次後不發出(直到反向或超過容許誤差);
-        //  方向取相鄰兩次量測(同一元素且皆可見)之差, 不相鄰(隱藏)時判定狀態歸0; toleranceBounce為0時容許誤差內一律不發出, 為Infinity時一律發出; 容許誤差為Infinity時皆不發出; 尺寸為0不發出
+        //  方向取相鄰兩次量測(同一元素且皆可見)之差, 不相鄰(隱藏)時判定狀態歸0; toleranceBounce為0時容許誤差內一律不發出; 尺寸為0不發出; tolerancePixel與toleranceBounce之Infinity為非預期(改用預設1與3), 不在模型內, 以足夠大之有限值取代(使用者2026-11-02定A, ws272c)
         let seed = 20260930
         let rnd = () => {
             seed = (seed + 0x6D2B79F5) | 0
@@ -2544,11 +2556,8 @@ describe(`domDetect`, function() {
                     m = 0
                     judged = true
                 }
-                else if (d !== 0 && tol !== Infinity) {
-                    if (tb === Infinity) {
-                        judged = true
-                    }
-                    else if (n < tb && m < 10) {
+                else if (d !== 0) {
+                    if (n < tb && m < 10) {
                         if (step !== 0) {
                             m++
                         }
@@ -2566,8 +2575,8 @@ describe(`domDetect`, function() {
             return out
         }
         for (let k = 0; k < 300; k++) {
-            let tol = [0, 1, 1, 2, Infinity][k % 5]
-            let tb = [0, 1, 2, 3, 3, 5, Infinity][k % 7]
+            let tol = [0, 1, 1, 2, 1000][k % 5]
+            let tb = [0, 1, 2, 3, 3, 5, 1000][k % 7]
             let sync = k % 2 === 0
             let oneWay = k % 3 === 0 //多為+1之長單向段, 使同向連續上限亦被驗到
             let env = mkEnv()
@@ -2689,6 +2698,164 @@ describe(`domDetect`, function() {
                 }
             }
         }
+    })
+
+})
+
+
+//第221項第二批第2輪第3批(ws272c): _optNum退役, domDetect之4個數值選項改用_optVal(R-OPT-VAL-01), 使用者2026-11-02定A: inf:'keep'移除, Infinity與超出計時器上限皆為非預期之輸入, 改用預設(1／3／20／0)
+//  probe回傳「該選項實際採用之值」之可觀察結果, 假環境同上方之mkEnv(sync: true使ResizeObserver回呼內同步發出, 免計時器)
+describe(`optVal domDetect (ws272c, formerly _optNum)`, function() {
+
+    let clean = (env) => {
+        for (let d of env.dds) {
+            d.clear()
+        }
+        envCur = null
+    }
+
+    after(function() {
+        delete globalThis.window
+        delete globalThis.document
+    })
+
+    //timeInterval: 輪詢模式之setInterval毫秒(正整數, 上限2147483647)
+    defineOptParam({
+        fn: 'domDetect',
+        name: 'opt.timeInterval',
+        def: 20,
+        probe: (v, extra = {}) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let { calls } = captureTimers(() => {
+                env.dd(() => el, { mode: 'polling', timeInterval: v, ...extra })
+            })
+            clean(env)
+            return calls.find((c) => c.kind === 'interval').ms
+        },
+        extraInvalid: [...INVALID_EINT_EXTRA, ['0', 0], ['-1', -1], ...INVALID_TIMER_OVER],
+        valid: [
+            ['1', 1, 1],
+            ['5', 5, 5],
+            ['500', 500, 500],
+            [`'30'`, '30', 30],
+            [`' 40 '`, ' 40 ', 40],
+            [`'2.0'`, '2.0', 2],
+            ['2147483647', 2147483647, 2147483647],
+        ],
+    })
+
+    //tolerancePixel: 容許誤差(不小於0之整數); toleranceBounce給0使容許誤差內之變化一律不發出, 故第一個被發出之變化量d即為超過容許誤差者, 容許誤差=d-1(上限8)
+    defineOptParam({
+        fn: 'domDetect',
+        name: 'opt.tolerancePixel',
+        def: 1,
+        probe: (v, extra = {}) => {
+            for (let d = 1; d <= 8; d++) {
+                let env = mkEnv()
+                let el = new Ele(300, 40)
+                let r = env.dd(() => el, { tolerancePixel: v, toleranceBounce: 0, sync: true, ...extra })
+                env.fireRO(el)
+                let n0 = r.resize.length
+                el.size(300 + d, 40)
+                env.fireRO(el)
+                let emitted = r.resize.length > n0
+                clean(env)
+                if (emitted) {
+                    return d - 1
+                }
+            }
+            return 8
+        },
+        extraInvalid: [...INVALID_EINT_EXTRA, ['-1', -1], [`'-1'`, '-1']],
+        valid: [
+            ['0', 0, 0],
+            ['1', 1, 1],
+            ['3', 3, 3],
+            ['7', 7, 7],
+            [`'2'`, '2', 2],
+            [`' 4 '`, ' 4 ', 4],
+            [`'3.0'`, '3.0', 3],
+        ],
+    })
+
+    //toleranceBounce: 容許誤差內來回跳動之次數; 寬於300、301間來回12次, 被發出之次數(不含首次)即容許之反向次數(上限12)
+    defineOptParam({
+        fn: 'domDetect',
+        name: 'opt.toleranceBounce',
+        def: 3,
+        probe: (v, extra = {}) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let r = env.dd(() => el, { toleranceBounce: v, sync: true, ...extra })
+            env.fireRO(el)
+            let n0 = r.resize.length
+            for (let i = 0; i < 12; i++) {
+                el.size(i % 2 === 0 ? 301 : 300, 40)
+                env.fireRO(el)
+            }
+            let n = r.resize.length - n0
+            clean(env)
+            return n
+        },
+        extraInvalid: [...INVALID_EINT_EXTRA, ['-1', -1], [`'-1'`, '-1']],
+        valid: [
+            ['0', 0, 0],
+            ['1', 1, 1],
+            ['2', 2, 2],
+            ['5', 5, 5],
+            ['8', 8, 8],
+            [`'4'`, '4', 4],
+            [`' 6 '`, ' 6 ', 6],
+        ],
+    })
+
+    //throttle: 節流毫秒(正整數, 上限2147483647), lodash throttle於首次呼叫後以setTimeout(wait)排定; 未給或非預期為0(不節流, 無此計時器)
+    defineOptParam({
+        fn: 'domDetect',
+        name: 'opt.throttle',
+        def: 0,
+        probe: (v, extra = {}) => {
+            let env = mkEnv()
+            let el = new Ele(300, 40)
+            let { calls } = captureTimers(() => {
+                env.dd(() => el, { throttle: v, sync: true, ...extra })
+                env.fireRO(el)
+            })
+            clean(env)
+            let ms = calls.filter((c) => c.kind === 'timeout').map((c) => c.ms)
+            return ms.length === 0 ? 0 : Math.max(...ms)
+        },
+        extraInvalid: [...INVALID_EINT_EXTRA, ['-1', -1], [`'-1'`, '-1'], ...INVALID_TIMER_OVER],
+        valid: [
+            ['50', 50, 50],
+            ['300', 300, 300],
+            [`'70'`, '70', 70],
+            [`' 25 '`, ' 25 ', 25],
+            ['2147483647', 2147483647, 2147483647],
+        ],
+    })
+
+    //Infinity不夾至計時器上限、不保留: 4個選項皆改用預設(舊_optNum: timer夾至2147483647, tolerancePixel與toleranceBounce之inf:'keep'保留)
+    it(`should use the defaults for Infinity of all four options (no longer clamped to the timer limit or kept)`, function() {
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let { calls } = captureTimers(() => {
+            env.dd(() => el, { mode: 'polling', timeInterval: Infinity, tolerancePixel: Infinity, toleranceBounce: Infinity, throttle: Infinity })
+        })
+        clean(env)
+        assert.strict.deepStrictEqual(calls.filter((c) => c.kind === 'interval').map((c) => c.ms), [20])
+    })
+
+    //有效輸入(含數字字串)之結果與舊制相同: 取值為Number(v), 不再有包裝物件new Number(3)為3之行為
+    it(`should not accept a wrapper object (new Number) as a valid number any more (isenum does not unwrap)`, function() {
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let { calls } = captureTimers(() => {
+            env.dd(() => el, { mode: 'polling', timeInterval: new Number(5) }) // eslint-disable-line no-new-wrappers
+        })
+        clean(env)
+        assert.strict.deepStrictEqual(calls.find((c) => c.kind === 'interval').ms, 20)
     })
 
 })

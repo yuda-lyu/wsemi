@@ -1,4 +1,3 @@
-import cst from './_const.mjs'
 import codec from './_execProcessCodec.mjs'
 import cp from 'child_process'
 import get from 'lodash-es/get.js'
@@ -8,7 +7,6 @@ import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
 import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
-import isnum from './isnum.mjs'
 import strleft from './strleft.mjs'
 import strright from './strright.mjs'
 import arrHas from './arrHas.mjs'
@@ -17,6 +15,11 @@ import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
 import callUser from './_callUser.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
+
+
+//timeout: opt類參數(預設null=不限時), 有效數字且為大於0之計時毫秒(isenum, gt: 0, use: 'timer', 可帶小數; 交給setTimeout), 非預期(含Infinity、超過上限、0、負數)改用預設null(不限時)
+let RULE_TIMEOUT = { fn: 'execProcess', name: 'opt.timeout', kind: 'enum', chk: { gt: 0, use: 'timer' } }
 
 
 /**
@@ -32,7 +35,9 @@ import getTrace from './getTrace.mjs'
  * @param {Function} [opt.cbStderr=null] 輸入回調stderr函數，預設null，行為同cbStdout
  * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除
  * @param {Boolean} [opt.useChcp=false] 輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'
- * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，預設null表示不限制；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
+ * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，須為有效數字且大於0至2147483647(計時器上限)之內，可帶小數，數字字串亦可，預設null表示不限制；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設null(不限時，不報錯、不夾至上限；Infinity不代表有限的逾時)；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeout為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為`spawn[ENOENT]:\ncwd is not an existing folder: <cwd>`(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為`spawn[ERR_INVALID_ARG_TYPE]:\n訊息`
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args型別不符，'codeCmd'代表編碼不支援，'prog'代表spawn模式prog含引號)；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
  * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符(含判型即拋錯之不可讀之值)、codeCmd不支援、spawn模式prog含引號或opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`)時為說明字串；prog不可讀時為`spawn[UNKNOWN]:\n訊息`；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
@@ -108,9 +113,9 @@ function execProcess(prog, args, opt = {}) {
         v = get(opt, 'useChcp')
         useChcp = isbol(v) ? v : false
 
-        //timeout, 夾至計時器上限, 見_const.mjs
+        //timeout, 有效則取Number(v), 非預期(含Infinity、超出計時器上限、0、負數)改用預設null(不限時), 不夾至上限
         v = get(opt, 'timeout')
-        timeout = (!isnum(v) || v <= 0) ? null : Math.min(v, cst.TIMER_TIME_MAX)
+        timeout = optVal(v, null, RULE_TIMEOUT, opt)
 
         //cwd, 非空字串才採用(同execCli), 否則為undefined即本進程之工作目錄(同未給時之既有行為)
         v = get(opt, 'cwd')

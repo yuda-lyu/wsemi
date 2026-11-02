@@ -1,14 +1,13 @@
 import cp from 'child_process'
 import get from 'lodash-es/get.js'
-import cst from './_const.mjs'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
-import isnum from './isnum.mjs'
 import isestr from './isestr.mjs'
 import iseint from './iseint.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
 import getTrace from './getTrace.mjs'
+import optVal from './_optVal.mjs'
 
 
 //本檔為execProcessPortPids與execProcessPortPidsSync共用之內部模組(不由index匯出): 輸入讀取、子指令之組成、輸出解析、判定流程與執行子指令之預設函數, 兩版共用同一套規則
@@ -17,6 +16,9 @@ import getTrace from './getTrace.mjs'
 
 //TIMEOUT_DEF, 每個子指令之預設逾時毫秒數
 let TIMEOUT_DEF = 10000
+
+//RULE_TIMEOUT, opt.timeout為opt類參數: 有效數字且為大於0之計時毫秒(isenum, gt: 0, use: 'timer', 可帶小數; 交給spawnSync之timeout), 非預期(含Infinity、超過上限、0、負數)改用預設TIMEOUT_DEF, 不夾至上限; 小數無條件進位為整數
+let RULE_TIMEOUT = { fn: 'execProcessPortPids', name: 'opt.timeout', kind: 'enum', chk: { gt: 0, use: 'timer' } }
 
 //MAX_BUFFER, 子指令stdout之上限位元組數; netstat於大量連線(TIME_WAIT)時輸出可達數MB, 超過視為失敗(ENOBUFS)而非截斷
 let MAX_BUFFER = 64 * 1024 * 1024
@@ -409,9 +411,9 @@ function readInput(port, opt, execDef) {
     try {
         let v
 
-        //timeout, 每個子指令之逾時, 非正數為預設值, 小數無條件進位為整數(spawnSync之timeout須為整數, 非整數即拋ERR_OUT_OF_RANGE), 夾至計時器上限
+        //timeout, 每個子指令之逾時, 有效則取Number(v), 非預期(含非正數、Infinity、超出計時器上限)為預設值且不夾至上限, 小數無條件進位為整數(spawnSync之timeout須為整數, 非整數即拋ERR_OUT_OF_RANGE; 有效值至多2147483647, 進位後不超過上限)
         v = get(opt, 'timeout')
-        let timeout = (isnum(v) && Number(v) > 0) ? Math.min(Math.ceil(Number(v)), cst.TIMER_TIME_MAX) : TIMEOUT_DEF
+        let timeout = Math.ceil(optVal(v, TIMEOUT_DEF, RULE_TIMEOUT, opt))
 
         //useBoth
         v = get(opt, 'useBoth')
