@@ -54,9 +54,11 @@
 
 - 全套案數一致與測試檔結構(R-TEST-STRUCT-01;排程第 254 項;ws265,2026-11-02)
 
-### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 3.0KB)
+### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 10.2KB)
 
-查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數.所含節:
+查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數,及 DOM 函數必須參數遇非預期之失敗通道.所含節:
 
+- 非計算類函數必須參數遇非預期:第二批 `getTimeRange`／`rep`／`replaceObj`／`replacePlus`／`sepInt`／`cfilesize` 與 5 處文件修正(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286b,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
+- 非計算類函數必須參數遇非預期:第一類 4 個函數 `domIsFocused`／`domAppend`／`domPrepend`／`copyStrToClipboard` 與三個內部呼叫端(排程第 286 項〔第 221 項 §11 第 6 項〕第一類;ws286a,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
 - 移除全部 *Dyn 函數(使用者 2026-11-01 裁示;Gitea #44;主控任務 20261101202155 wsemi-rmdyn,2026-11-01;package.json version 1.9.39 之工作樹,未提交未發布)
 - getUserAgent 之 UMD 晚載入(R-UMD-EXTERNAL-01;排程第 258 項;ws265,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕

@@ -5,7 +5,7 @@
 //  形態:
 //    len    頂層物件帶length(replaceObj與objSortBy: {length,a,b}; interp: {length,0,1})
 //    keys   length極大且另有100個自有鍵(replaceObj與objSortBy與objSortByKeys)
-//    tag    以Symbol.toStringTag偽稱Array之物件(iseobj守門, 不得依length迭代)
+//    tag    以Symbol.toStringTag偽稱Array之物件(非一般物件之守門, 不得依length迭代; replaceObj自ws286b起直接拋錯)
 //    proto  length為原型上之getter的class實例
 //    hidden 不可列舉之自有length
 //    strlen replaceObj專用, length為字串(非陣列樣, 對照)

@@ -97,6 +97,7 @@ describe(`internal callers of the date-time is* functions reject 'Invalid Date' 
     it(`should return '' for day2cht (formerly 民國 NaN 年 NaN 月 NaN 日) and a non-range for getTimeRange`, function() {
         assert.strict.deepStrictEqual(day2cht('Invalid Date'), '')
         assert.notStrictEqual(getTimeRange('Invalid Date'), 'Invalid Date 至 無')
+        assert.strict.deepStrictEqual(getTimeRange('Invalid Date'), '') //ws286b: tstart無效回''(原回中文訊息)
     })
 
     it(`should keep the converters on real date-times`, function() {

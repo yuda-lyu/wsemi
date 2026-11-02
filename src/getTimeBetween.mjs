@@ -12,7 +12,7 @@ import getTimeObject from './getTimeObject.mjs'
  * @param {String} tstart 輸入開始時間字串，不含時區
  * @param {String} tend 輸入結束時間字串，不含時區
  * @param {String} [unit='days'] 輸入切分單位字串，預設為'days'
- * @returns {Array} 回傳切分後各時間陣列
+ * @returns {Array} 回傳切分後各時間陣列；回傳[]代表無可切分之時間點，包含unit、tstart或tend無效，以及起訖相同或起始時間大於結束時間(字串比較tstart >= tend)，故[]不單指輸入無效
  * @example
  *
  * console.log(getTimeBetween('2017', '2019', 'years'))
@@ -23,6 +23,12 @@ import getTimeObject from './getTimeObject.mjs'
  *
  * console.log(getTimeBetween('2019-01-01', '2019-01-03'))
  * // => ['2019-01-01', '2019-01-02', '2019-01-03']
+ *
+ * console.log(getTimeBetween('2019-01-03', '2019-01-03'))
+ * // => []
+ *
+ * console.log(getTimeBetween('2019-01-03', '2019-01-01'))
+ * // => []
  *
  */
 function getTimeBetween(tstart, tend, unit = 'days') {

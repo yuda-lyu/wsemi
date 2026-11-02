@@ -70,3 +70,75 @@
 - 盤點指令:`Grep pattern="strTruncate|interp1|arrGroupByMaxmin|arrLookupByMaxmin|domFadeIn" path=src` 應僅命中上列檔(含各自定義檔與 `index.mjs`);`Grep pattern="maxminsLimits" path=src` 應命中 `_maxminsLimits.mjs`、`arrGroupByMaxmin.mjs`、`arrLookupByMaxmin.mjs`.
 - 測試:新檔 `optValG8level3.test.mjs`(347 案:`interp1` 103、`arrGroupByMaxmin` 105、`arrLookupByMaxmin` 103〔皆含共用上下限矩陣〕、`strTruncate` 36);既有 `strTruncate.test.mjs`(「maxLen 無效回原字串」改為 throw)、`optValG4randDomMisc.test.mjs`(`domFadeIn` 納入與 `domFadeOut` 同一探針,+55 案;原「瞬間完成回 0」改以 `expOf(0)` 與 `domFadeIn` 回 1).執行:`npx mocha --no-parallel test/optValG8level3.test.mjs test/strTruncate.test.mjs test/optValG4randDomMisc.test.mjs test/interp1.test.mjs test/arrGroupByMaxmin.test.mjs test/arrLookupByMaxmin.test.mjs test/execCliFailDetail.test.mjs --timeout 180000`.
 - 驗證:見主控任務 `agent-out/ws271-修正報告.md`(修前紅 303 案、變異 51 項擊殺 46〔存活 5 皆等價〕、有效輸入域差分 22129 列 0 差異、全套 28500 案 0 failing).
+
+## 第 221 項 §11 第 6 項第一類 ws286a 處置結果(2026-11-02,`domIsFocused`／`domAppend`／`domPrepend`／`copyStrToClipboard`:非計算類函數之必須參數遇非預期,「把錯誤訊息當回傳值」改正＋三個內部呼叫端;第一級〔下游 0 站點〕;主控任務 20261031121854 ws286a)
+
+- 依據:使用者 2026-11-02 定分組後逐函數確認(「先修 第一類」);dspec〈輸入參數之檢測機制〉§5.1(回傳 Promise 者 reject 不同步 throw;同步且有副作用者同步 throw Error,先於任何副作用)、§5.3 C18(不以訊息字串作回傳值)、V17(無效時不留副作用)、V19(訊息格式 `invalid <名稱>: must be <種類描述>`)、V20(訊息不回顯輸入值)、「訊息不得洩漏內部錯誤」.第一類之 `getTimeRange` 因 nc1 盤點提出不同建議,正待使用者再確認,**本輪不動**.主控查 `C:\opensrc` 其他套件(9200 檔)字面搜尋這 4 函數為 0 處,僅 wsemi 內部呼叫.
+- 規則(本節):
+  1. 判斷類之 DOM 函數(`domIsFocused`)遇非元素回 `false`(嚴格布林,P1 輸出型別恆定;原回字串 `'invalid element'`,真值會被 `if` 當成有焦點).
+  2. 同步且有副作用之 DOM 函數(`domAppend`、`domPrepend`、`copyStrToClipboard`)遇無效輸入同步 `throw new Error(固定訊息)`,先於任何 DOM 變動;檢測順序固定(先父層、後子項);訊息不帶輸入值.
+  3. `copyStrToClipboard` 之暫存 textarea 於成功與全部失敗路徑(取不到焦點、`execCommand` 拋錯、`execCommand` 回 `false`)皆移除(`finally`);清理失敗(頁面腳本已自行移除)不覆蓋原結果或原錯誤;`execCommand` 之原錯誤不外洩(改拋固定訊息);`execCommand` 以 `!== false` 判失敗(回 `undefined` 視為成功).
+  4. 回傳 Promise 之函數若內部呼叫 `domAppend`／`domPrepend`,須於任何副作用前自行以 `isEle` 檢測 `body`,取不到時依該函數既有失敗形式回報(不得讓 `domAppend`／`domPrepend` 之拋錯同步外洩,亦不得留下半完成之副作用).
+- 逐函數(`file:line` 為本輪工作樹):
+
+| 函數:情形 | 改前 | 改後 | 失敗通道 |
+|---|---|---|---|
+| `domIsFocused(ele)`:`ele` 非元素(`src/domIsFocused.mjs:25-27`) | 回字串 `'invalid element'`(真值) | 回 `false` | 回傳布林 |
+| `domAppend`／`domPrepend`:`eleParent` 非元素(`domAppend.mjs:23-25`、`domPrepend.mjs:22-24`) | 回字串 `'invalid eleParent'` | `throw new Error('invalid eleParent: must be an element')` | 同步 throw |
+| 同上:`itemChild` 非字串亦非元素(`domAppend.mjs:33-35`、`domPrepend.mjs:32-34`) | 回字串 `'invalid itemChild'` | `throw new Error('invalid itemChild: must be a string or an element')` | 同步 throw |
+| `copyStrToClipboard(str)`:`str` 非字串(`copyStrToClipboard.mjs:28-30`) | 回字串 `'invalid input'` | `throw new Error('invalid str: must be a string')`,不建立任何元素 | 同步 throw |
+| 同上:取不到焦點(`:54-56`) | 回字串 `'ele can not be focusd'`,textarea 留在頁面 | `throw new Error('ele can not be focused')`(順改錯字),textarea 必移除 | 同步 throw |
+| 同上:`execCommand` 拋錯(`:60-65,66-68`) | 回字串,textarea 留在頁面 | `throw new Error('can not copy str to clipboard')`(原錯誤不外洩),textarea 必移除 | 同步 throw |
+| 同上:`execCommand` 回 `false`(`:61`) | 視為成功 | 視為複製失敗,同上 | 同步 throw |
+| 同上:成功 | 回 `''`,textarea 移除 | 回 `''`(不變),textarea 移除 | — |
+
+- wsemi 內部呼叫端(逐站確認;`body` 皆取自 `document.querySelector('body')`):
+
+| 站點 | 傳入值來源 | 失敗行為(改後) | 通道 |
+|---|---|---|---|
+| `domShowInputAndGetFiles.mjs:125-129`(檢測)、`:154`(`domAppend(body, hidehtml)`) | `body` 同上;`hidehtml` 為函數內組成之字串(恆為有效子項) | **非 async、回傳 `genPm()` 之 Promise**,改前 `domAppend` 之拋錯會變同步丟出;改為於 `domRemove`（移除前次呼叫之 input）、`genPm`、建立 input、綁定監聽、觸發點擊**之前**檢測,`Promise.reject('can not find body element')`(字串);前次呼叫之 input 不被移除 | reject 字串(JSDoc 同步更新) |
+| `domConvertToPic.mjs:62-66`(檢測)、`:91`(`domPrepend(body, eleOut)`) | `body` 同上;`eleOut` 為函數內建立之元素 | async 函數;檢測置於 `cloneNode` 之前,`Promise.reject('can not find body element')`(字串,與該函數既有之 `'invalid ele'`、`'opt.scale can not less then 1'` 同一形式);不呼叫 snapdom | reject 字串 |
+| `domVirtualCreate.mjs:50-54`(檢測)、`:85`(`domPrepend(body, elePanel)`) | `body` 同上;`elePanel` 為函數內建立之元素 | async 函數;檢測置於建立元素之前,`throw new Error('can not find body element')`(async 故為 reject,與該函數既有之 `Error('invalid fun')` 同一形式);**不呼叫 `fun`**(改前 `domPrepend` 回字串被忽略,`fun` 會對未接上頁面之元素被呼叫並回傳結果) | reject Error |
+| `copyStrToClipboard.mjs:54`(`domIsFocused(ele)`) | `ele` 為函數內建立之 textarea(恆為元素) | 不會走到非元素分支;取不到焦點改拋錯(見上表) | 同步 throw |
+
+- 盤點指令:`Grep pattern="domIsFocused|domAppend|domPrepend|copyStrToClipboard" path=src` 應僅命中 4 個定義檔、`index.mjs`、上列 3 個呼叫端與 `copyStrToClipboard.mjs`;`Grep pattern="can not find body element" path=src` 應命中 3 個呼叫端.
+- 測試:`test/domIsFocused.test.mjs`(20 案)、`domAppend.test.mjs`(32)、`domPrepend.test.mjs`(33)、`copyStrToClipboard.test.mjs`(30)、新檔 `domBodyMissing.test.mjs`(16;三呼叫端)；共用載具新檔 `test/tools/domEditKit.mjs`(`NOT_ELE` 無效值表、`mkEditDom` 於 `mkFakeDom` 之 `Ele` 補 `insertAdjacentHTML`／`insertBefore`／`firstChild`／`select`／嚴格 `removeChild`／`document.body`／`activeElement`／`createElement` 記錄／`execCommand` 記錄,`env.ops` 為 0 代表未動 DOM).執行:`npx mocha --no-parallel test/domIsFocused.test.mjs test/domAppend.test.mjs test/domPrepend.test.mjs test/copyStrToClipboard.test.mjs test/domBodyMissing.test.mjs test/domShowInputAndGetFiles.test.mjs test/domShowInputAndGetFilesU8Arrs.test.mjs test/domConvertToPic.test.mjs test/domVirtualCreate.test.mjs test/domVirtualCreateQueue.test.mjs test/optValG7dom.test.mjs test/optValG4randDomMisc.test.mjs --timeout 180000`(12 檔 677 案).
+- 驗證:見主控任務 `agent-out/ws286a-修正報告.md`(修前紅:5 檔 131 案中 108 紅〔`domIsFocused` 16、`domAppend` 28、`domPrepend` 28、`copyStrToClipboard` 23、呼叫端 13〕、23 綠皆為不變之正常路徑;修後 12 檔 677 案 0 failing;變異 22 項全擊殺;真 headless Chromium 15 項檢查全過;eslint 0 error).
+- 已知殘餘(範圍外,未改):`domShowInputAndGetFiles` 於無 `document` 環境仍同步丟出 `ReferenceError`(既有);`copyStrToClipboard` 於 `eleParent` 無效且 `document.body` 為 `null` 時為原生 `TypeError`;`domIsFocused` 之 `catch` 內 `console.log(err)`(輸出錯誤物件而非輸入值);`execCommand` 回 `false` 之路徑在 headless Chromium 無手勢時實測仍回 `true`,故僅由假 DOM 案與變異覆蓋.
+
+## 第 221 項 §11 第 6 項 ws286b 處置結果(2026-11-02,`getTimeRange`＋字串／日期子類 4 個函數〔`rep`、`replaceObj`、`replacePlus`、`sepInt`〕＋`cfilesize` 新增 `tb`＋5 處文件修正;第一級〔下游 0 站點〕;與 ws286a 同次發布;主控任務 20261031121854 ws286b)
+
+- 依據:使用者 2026-11-02 已定(dspec〈輸入參數之檢測機制〉§5.3 C3、C9、C19、§11 第 6 項):`getTimeRange` 無效回 `''`、不加雙模式;`strCompare`／`strCompareForVersion`／`getTimeBetween` 只修文件;字串與日期子類 4 個函數逐列確認(下表);`replacePlus` 改普通文字;`cfilesize` 新增 `tb`;其餘函數(含 `addMonth`)使用者定不動.ws286a 呼叫端前置檢測(固定訊息 `can not find body element`)主控同意,不改.主控查 `C:\opensrc` 其他套件(含測試碼)這 6 個函數字面搜尋 0 處;wsemi `src/` 內亦無呼叫端(Grep 於 `src/` 僅命中各自檔案與 `index.mjs`).
+- 規則(本節):
+  1. 同步之字串／整數函數之必須參數無效 throw `Error(固定訊息)`(`invalid <名稱>: must be <種類描述>`,不帶值),依參數順序檢測,且皆先於「`c` 為 `''` 回 `''`」之回傳(`''` 是合法的 `c`,但其餘必須參數仍須有效:`rep('', 'x')` 拋 `n` 無效).
+  2. 取代類函數之 key／pattern／value 皆為普通文字:`String.prototype.replaceAll` 之取代字串即使 pattern 為字串仍解讀 `$&`、`` $` ``、`$'`、`$$`(`$1`、`$<a>` 無捕獲群時照字面;實測 `replace('a-b', 'a', '$&$&')` 得 `'aa-b'`),wsemi 之 `replace` 同,**未改**;`replaceObj` 先將 value 之 `$` 逸出為 `$$` 再交 `replace`;`replacePlus` 之 `pre`／`aft` 以 lodash `escapeRegExp` 逸出、`not` 之字元類別內逸出 `\ ] [ ^ -`、旗標 `u`(`not` 內非 BMP 字元以字元為單位,否則其代理對會誤擋共用高代理之其他字元)、取代以函式回傳 `r`.
+  3. 不以人讀訊息作回傳值:`getTimeRange` 無效回 `''`(`tend` 未給視同 `tstart`,正常輸出〔含「起始時間大於結束時間」文字〕不變);`strCompare` 回 `0`(最不相似,亦為合法結果)、`strCompareForVersion` 回 `null`(無法比較;`null >= 0` 為真,不可直接比大小或當 `sort` 比較子)、`getTimeBetween` 回 `[]`(亦表起訖相同或起大於訖)之語意寫入 JSDoc.
+  4. `cfilesize` 以 `tb` 為最高單位(`1099511627775` → `'1024.0 gb'`、`1099511627776` → `'1.0 tb'`、`1024 ** 5` → `'1024.0 tb'`),無效輸入維持 `''`.
+- 逐函數(`file:line` 為本輪工作樹;「改前」皆為 HEAD 實測,見報告〈使用者逐列確認表之實測〉):
+
+| 函數:情形 | 改前 | 改後 | 位置 |
+|---|---|---|---|
+| `getTimeRange(tstart, tend)`:`tstart` 無效 | `'無起始時間'` | `''` | `src/getTimeRange.mjs:42-44` |
+| 同上:`tend` 有給但無效(含 `null`、`''`) | `'結束時間格式錯誤'` | `''` | `:52-54` |
+| 同上:`tend` 未給(`undefined`)、正常輸出 | 視同 `tstart`／各格式文字 | 不變;JSDoc 改標可選 `[tend]` | `:47-49` |
+| `rep(c, n)`:`c` 非字串 | `''` | throw `invalid c: must be a string`(先於 `n`) | `src/rep.mjs:51-53` |
+| 同上:`c` 為 `''` | `''` | 不變(`rep('', 'x')` 因 `n` 無效 throw) | `:56-58` |
+| `replaceObj(c, o)`:`c` 非字串 | `''` | throw `invalid c: must be a string` | `src/replaceObj.mjs:56-58` |
+| 同上:`c` 為 `''` | `''` | 不變(`o` 仍須為一般物件) | `:62-64` |
+| 同上:`o` 非一般物件(含 `null`、陣列) | `''` | throw `invalid o: must be a plain object` | `:59-61` |
+| 同上:`o` 為空物件;鍵為 `''` | `''` | 回 `c`;略過空鍵 | `:71-73` |
+| 同上:value 為數字／布林／物件／陣列／`null`／`undefined` | `''`(原轉換迴圈算完未存回,任何非字串值使結果為 `''`) | `1` → `'1'`、布林 → `'true'`／`'false'`(不經 `cstr`)、物件與陣列 → JSON、`null`／`undefined`／其他型別 → `''`;每值只讀一次 | `:68-88` |
+| 同上:value 含 `$&` 等 | 被特殊解讀(`'aa-b'`) | 原樣輸出 | `:87` |
+| `replacePlus(c, pre, aft, not, r)`:`c`／`pre`／`aft`／`r` 無效 | `''` | throw `invalid c: must be a string`／`invalid pre: must be a non-empty string`／`invalid aft: must be a non-empty string`／`invalid r: must be a string`(依 c、pre、aft、r 序;皆先於 `c` 為 `''` 之回傳) | `src/replacePlus.mjs:48-62` |
+| 同上:`pre`／`aft`／`not`／`r` | 正規表示式(`'(' ')'` → `'XX'`;`'[' ']'` → `'Xdef'`;`r='$&$&'` → `'a1ba1b'`) | 普通文字(`'aXc'`、`'abcXdef'`、`'$&$&'`);`not` 每個字元皆不可出現;貪婪不變 | `:64-75` |
+| 同上:`not` 非字串／空字串 | 忽略 | 不變 | `:64-68` |
+| `sepInt(v, n, breverse)`:`v` 無效 | `[]` | throw `invalid v: must be an integer` | `src/sepInt.mjs:45-47` |
+| 同上:`n` 無效(含 0、小數、`Infinity`) | `[]` | throw `invalid n: must be a positive integer` | `:48-50` |
+| 同上:`breverse` 非布林 | `[]` | 改用預設 `true`(`sepInt(10, 3, 'x')` → `[3, 3, 4]`) | `:51-53` |
+| `cfilesize(b)`:≥ 1 TB 之有效輸入 | `''` | `'x.x tb'`;< 1 TB 與無效輸入不變 | `src/cfilesize.mjs:56-57` |
+| 只修文件:`strCompare`、`strCompareForVersion`、`getTimeBetween`、`getTimeFromUnit`、`getTimeObject` | — | JSDoc 寫明 `0`／`null`／`[]` 之語意；範例 `'…ssZ'` 改為不含 `Z`；`test/getTimeFromUnit.test.mjs` 與 `test/strCompare.test.mjs`(11 案)標題改正;程式行為不動 | 各檔 JSDoc |
+
+- 盤點指令:`Grep pattern="\b(rep|replaceObj|replacePlus|sepInt|cfilesize|getTimeRange)\(" path=src` 應僅命中各自定義檔(JSDoc 範例);`Grep pattern="中文訊息|無起始時間|結束時間格式錯誤" path=src` 於 `getTimeRange.mjs` 應為 0 處.
+- 測試:`test/getTimeRange.test.mjs`(81;15 案改斷言 `''`,另補無效值表〔19 值 × tstart／tend／兩邊〕)、`rep.test.mjs`(49)、`replaceObj.test.mjs`(143)、`replacePlus.test.mjs`(138;含 14 個特殊字元 × pre／aft／not／皆為字面、`r` 含 `$&`／`$1`／`` $` ``／`$'`／`$$`／`$<a>`、貪婪不變、非 BMP)、`sepInt.test.mjs`(74)、`cfilesize.test.mjs`(45;含 1 TB 兩側邊界、1 PB、數字字串)、`intInputHang.test.mjs`(32;7 案改斷言 throw 訊息)、`isInvalidDateStr.test.mjs`(+1 斷言);`test/tools/intInputHangRunner.mjs` 之 `sepInt` 7 案改 `tryThrow`.7 檔案數 HEAD 275 → 562(+287;`mocha --dry-run`).執行:`npx mocha --no-parallel test/getTimeRange.test.mjs test/rep.test.mjs test/replaceObj.test.mjs test/replacePlus.test.mjs test/sepInt.test.mjs test/cfilesize.test.mjs test/intInputHang.test.mjs test/isInvalidDateStr.test.mjs test/dateYear0000.test.mjs test/isenumCallersRound.test.mjs --timeout 180000`.
+- 驗證:見主控任務 `agent-out/ws286b-修正報告.md`(修前紅:344 案;修後該 10 檔 1022 案 0 failing;變異 39 項全擊殺;有效輸入域修前修後差分 130012 列 0 差異;eslint 0 error).
+- 已知殘餘(未改):`replaceObj` 之 value 為循環參照或含巢狀 BigInt 之物件時仍為 `JSON.stringify` 原生 `TypeError`(沿用既有測試鎖定之行為);`replace` 之 `$` 特殊樣式(不在本輪範圍).

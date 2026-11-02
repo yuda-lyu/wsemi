@@ -41,7 +41,7 @@ function parseTime(t, unit) {
  * // => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or moment
  *
  * console.log(getTimeObject('2019-01-01T12:34:56', 'seconds'))
- * // => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment
+ * // => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ss') //use dayjs or moment
  *
  */
 function getTimeObject(t, unit = 'days') {

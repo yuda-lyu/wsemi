@@ -8,9 +8,9 @@ import time2min from './time2min.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeRange.test.mjs Github}
  * @memberOf wsemi
- * @param {String} tstart 輸入開始秒時間字串，不含時區
- * @param {String} tend 輸入結束秒時間字串，不含時區，若不輸入則等同於開始時間字串
- * @returns {String} 回傳合併顯示時間字串
+ * @param {String} tstart 輸入開始秒時間字串，不含時區，須為有效秒時間字串(格式YYYY-MM-DDTHH:mm:ss)，無效則回傳空字串
+ * @param {String} [tend] 輸入結束秒時間字串，不含時區，若不輸入(未給或undefined)則等同於開始時間字串；有給但無效(含null、空字串)則回傳空字串
+ * @returns {String} 回傳合併顯示時間字串，tstart無效或tend有給但無效時回傳空字串(不再回傳中文訊息)
  * @example
  *
  * console.log(getTimeRange('2019-01-01T09:00:00'))
@@ -28,13 +28,19 @@ import time2min from './time2min.mjs'
  * console.log(getTimeRange('2019-01-03T09:00:00', '2019-01-01T12:00:00'))
  * // => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'
  *
+ * console.log(getTimeRange('', '2019-01-01T12:00:00'))
+ * // => ''
+ *
+ * console.log(getTimeRange('2019-01-01T09:00:00', null))
+ * // => ''
+ *
  */
 function getTimeRange(tstart, tend) {
     //可再支援輸入TZ時間
 
     //check
     if (!istime(tstart)) {
-        return '無起始時間'
+        return ''
     }
 
     //set tend
@@ -44,7 +50,7 @@ function getTimeRange(tstart, tend) {
 
     //check
     if (!istime(tend)) {
-        return '結束時間格式錯誤'
+        return ''
     }
 
     //m1, m2

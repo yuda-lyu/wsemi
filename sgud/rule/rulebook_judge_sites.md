@@ -36,7 +36,7 @@
 | 判斷類站點全集——§6 一般數值運算、§7 不符合、實作時須先處理之耦合與缺陷 | `sgud/rule/rulebook_judge_sites_inv_b.md` | §6、§7 與〈實作時須先處理之耦合與缺陷〉 | 18.4 |
 | 判斷類站點之處置結果——第 221 項第一批、第二批第一級發布 A、已知缺陷先修(ws270) | `sgud/rule/rulebook_judge_sites_r1.md` | 〈第 221 項第一批處置結果〉、〈第 221 項第二批第一級發布 A 處置結果〉、〈第 221 項已知缺陷先修(ws270)處置結果〉 | 16.8 |
 | 判斷類站點之處置結果——第 221 項第 2 輪(ws272a、ws272b) | `sgud/rule/rulebook_judge_sites_r2.md` | 〈第 221 項第 2 輪 ws272a 處置結果〉、〈…ws272b 處置結果〉 | 22.2 |
-| 判斷類站點之處置結果——第 221 項第 2 輪(ws272c)、第 3 輪(ws271;新增之處置結果節附於本檔末,逾 30KB 時再抽出新檔) | `sgud/rule/rulebook_judge_sites_r2c.md` | 〈第 221 項第 2 輪 ws272c 處置結果〉(新增節,非搬移)、〈第 221 項第 3 輪 ws271 處置結果〉(新增節) | 20.4 |
+| 判斷類站點之處置結果——第 221 項第 2 輪(ws272c)、第 3 輪(ws271)、§11 第 6 項(ws286a 第一類、ws286b;新增之處置結果節附於本檔末,逾 30KB 時再抽出新檔;本檔 ws286b 後已逾 30KB,其後新增節請另開 `rulebook_judge_sites_r2d.md` 並於本索引增列) | `sgud/rule/rulebook_judge_sites_r2c.md` | 〈第 221 項第 2 輪 ws272c 處置結果〉(新增節,非搬移)、〈第 221 項第 3 輪 ws271 處置結果〉(新增節)、〈第 221 項 §11 第 6 項第一類 ws286a 處置結果〉(新增節)、〈第 221 項 §11 第 6 項 ws286b 處置結果〉(新增節) | 33.8 |
 
 各節對應(節號與標題不變):
 
@@ -46,3 +46,5 @@
 - `## 第 221 項第 2 輪 ws272a 處置結果(…)`、`## 第 221 項第 2 輪 ws272b 處置結果(…)` → `rulebook_judge_sites_r2.md`
 - `## 第 221 項第 2 輪 ws272c 處置結果(…)`(新增節,非搬移;其後之處置結果節亦附於該檔) → `rulebook_judge_sites_r2c.md`
 - `## 第 221 項第 3 輪 ws271 處置結果(…)`(新增節,非搬移;`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`) → `rulebook_judge_sites_r2c.md`
+- `## 第 221 項 §11 第 6 項第一類 ws286a 處置結果(…)`(新增節,非搬移;`domIsFocused`、`domAppend`、`domPrepend`、`copyStrToClipboard` 與三個內部呼叫端) → `rulebook_judge_sites_r2c.md`
+- `## 第 221 項 §11 第 6 項 ws286b 處置結果(…)`(新增節,非搬移;`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize` 與 5 處文件修正) → `rulebook_judge_sites_r2c.md`

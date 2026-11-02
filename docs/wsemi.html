@@ -16645,7 +16645,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>檔案大小(bytes)自動轉換單位
-可調整檔案大小為b,kb,mb,gb，並添加單位
+可調整檔案大小為b,kb,mb,gb,tb，並添加單位，tb為最高單位(1 TB以上皆以tb表示，如1024 ** 5為'1024.0 tb')
 b須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫法之數字字串)，其餘(Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等)回傳空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/cfilesize.test.mjs">Github</a></p></li></ul></dd>
     
@@ -16653,7 +16653,7 @@ b須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line32">line 32</a>
+        <a href="cfilesize.mjs.html">cfilesize.mjs</a>, <a href="cfilesize.mjs.html#line35">line 35</a>
     </li></ul></dd>
     
 
@@ -16700,7 +16700,7 @@ b須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(cfilesize(0))// => '0.0 b'console.log(cfilesize(100))// => '100.0 b'console.log(cfilesize(2048))// => '2.0 kb'console.log(cfilesize(2000000))// => '1.9 mb'console.log(cfilesize(2000000000))// => '1.9 gb'</code></pre>
+    <pre class="prettyprint"><code>console.log(cfilesize(0))// => '0.0 b'console.log(cfilesize(100))// => '100.0 b'console.log(cfilesize(2048))// => '2.0 kb'console.log(cfilesize(2000000))// => '1.9 mb'console.log(cfilesize(2000000000))// => '1.9 gb'console.log(cfilesize(1099511627776))// => '1.0 tb'</code></pre>
 
 
 
@@ -19357,7 +19357,7 @@ console.log(chkOrmStr(123))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="copyStrToClipboard.mjs.html">copyStrToClipboard.mjs</a>, <a href="copyStrToClipboard.mjs.html#line24">line 24</a>
+        <a href="copyStrToClipboard.mjs.html">copyStrToClipboard.mjs</a>, <a href="copyStrToClipboard.mjs.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -19467,7 +19467,7 @@ console.log(chkOrmStr(123))
                 </td>
             
 
-            <td class="description last"><p>輸入欲複製至剪貼簿的字串</p></td>
+            <td class="description last"><p>輸入欲複製至剪貼簿的字串，非字串則拋錯</p></td>
         </tr>
 
     
@@ -19570,7 +19570,7 @@ console.log(chkOrmStr(123))
                 </td>
             
 
-            <td class="description last"><p>輸入臨時插入的父層元素，因例如於鎖定焦點(focus)的區域內要複製字串，會因臨時創建的textarea元素無法聚焦導致無法複製至剪貼簿，故得由外部傳入可聚焦的父層元素供創建textarea之用，預設document.body</p></td>
+            <td class="description last"><p>輸入臨時插入的父層元素，因例如於鎖定焦點(focus)的區域內要複製字串，會因臨時創建的textarea元素無法聚焦導致無法複製至剪貼簿，故得由外部傳入可聚焦的父層元素供創建textarea之用，非元素則使用document.body，預設document.body</p></td>
         </tr>
 
     
@@ -19597,13 +19597,43 @@ console.log(chkOrmStr(123))
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>str非字串拋出Error('invalid str: must be a string')且不建立任何元素；臨時textarea無法取得焦點拋出Error('ele can not be focused')；document.execCommand('copy')拋錯或回傳false拋出Error('can not copy str to clipboard')；訊息不含輸入值且不外洩內部錯誤，臨時建立之textarea不論成敗皆已移除</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳字串，若成功則為空字串，若失敗則回傳錯誤訊息</p>
+    <p>回傳字串，複製成功則為空字串，失敗(含非預期輸入)皆經拋錯回報而不回傳訊息字串</p>
 </div>
 
 
@@ -23714,7 +23744,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domAppend.mjs.html">domAppend.mjs</a>, <a href="domAppend.mjs.html#line19">line 19</a>
+        <a href="domAppend.mjs.html">domAppend.mjs</a>, <a href="domAppend.mjs.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -23808,7 +23838,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
             
 
-            <td class="description last"><p>輸入目標DOM元素</p></td>
+            <td class="description last"><p>輸入目標DOM元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -23835,7 +23865,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
             
 
-            <td class="description last"><p>輸入要插入DOM元素或Html文字等內容</p></td>
+            <td class="description last"><p>輸入要插入DOM元素或Html文字等內容，非字串亦非元素則拋錯</p></td>
         </tr>
 
     
@@ -23855,6 +23885,36 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>eleParent非元素拋出Error('invalid eleParent: must be an element')，itemChild非字串亦非元素拋出Error('invalid itemChild: must be a string or an element')，皆先於任何DOM變動，訊息不含輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -24827,7 +24887,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject為失敗訊息</p>
+    <p>回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject為失敗訊息字串(含取不到body元素之'can not find body element'，此時不截圖、不留DOM殘留)</p>
 </div>
 
 
@@ -31256,7 +31316,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     
 
-    <h4 class="name" id=".domIsFocused"><span class="type-signature type-signature-static">(static) </span>domIsFocused<span class="signature">(ele)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domIsFocused"><span class="type-signature type-signature-static">(static) </span>domIsFocused<span class="signature">(ele)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -31273,7 +31333,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domIsFocused.mjs.html">domIsFocused.mjs</a>, <a href="domIsFocused.mjs.html#line18">line 18</a>
+        <a href="domIsFocused.mjs.html">domIsFocused.mjs</a>, <a href="domIsFocused.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -31320,7 +31380,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet ele = document.querySelector('#id')console.log(domIsFocused(ele))// => true or false</code></pre>
+    <pre class="prettyprint"><code>need test in browserlet ele = document.querySelector('#id')console.log(domIsFocused(ele))// => true or falseconsole.log(domIsFocused(null))// => false</code></pre>
 
 
 
@@ -31367,7 +31427,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
             
 
-            <td class="description last"><p>輸入Element元素</p></td>
+            <td class="description last"><p>輸入Element元素，非元素則視為沒有焦點而回傳false</p></td>
         </tr>
 
     
@@ -31389,6 +31449,29 @@ kind若需使用通用檔案，可使用'common'</p>
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳判斷布林值，ele為聚焦狀態則為true，其餘(含ele非元素、無法取得焦點元素)皆為false</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -32454,7 +32537,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domPrepend.mjs.html">domPrepend.mjs</a>, <a href="domPrepend.mjs.html#line18">line 18</a>
+        <a href="domPrepend.mjs.html">domPrepend.mjs</a>, <a href="domPrepend.mjs.html#line19">line 19</a>
     </li></ul></dd>
     
 
@@ -32548,7 +32631,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入目標DOM元素</p></td>
+            <td class="description last"><p>輸入目標DOM元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -32575,7 +32658,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入要插入DOM元素或Html文字等內容</p></td>
+            <td class="description last"><p>輸入要插入DOM元素或Html文字等內容，非字串亦非元素則拋錯</p></td>
         </tr>
 
     
@@ -32595,6 +32678,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>eleParent非元素拋出Error('invalid eleParent: must be an element')，itemChild非字串亦非元素拋出Error('invalid itemChild: must be a string or an element')，皆先於任何DOM變動，訊息不含輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -34466,7 +34579,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line40">line 40</a>
+        <a href="domShowInputAndGetFiles.mjs.html">domShowInputAndGetFiles.mjs</a>, <a href="domShowInputAndGetFiles.mjs.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -34919,7 +35032,7 @@ ev.on('visible',(visible) => {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳各檔案陣列，無reject</p>
+    <p>回傳Promise，resolve回傳各檔案陣列，取不到body元素時reject字串'can not find body element'(不建立input、不觸發點擊、不動前次呼叫之input)，選檔過程無reject</p>
 </div>
 
 
@@ -36192,7 +36305,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domVirtualCreate.mjs.html">domVirtualCreate.mjs</a>, <a href="domVirtualCreate.mjs.html#line36">line 36</a>
+        <a href="domVirtualCreate.mjs.html">domVirtualCreate.mjs</a>, <a href="domVirtualCreate.mjs.html#line37">line 37</a>
     </li></ul></dd>
     
 
@@ -36564,7 +36677,7 @@ ev.on('visible',(visible) => {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息(Error物件，含取不到body元素之Error('can not find body element')，此時不呼叫fun、不留DOM殘留)</p>
 </div>
 
 
@@ -78206,7 +78319,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getTimeBetween.mjs.html">getTimeBetween.mjs</a>, <a href="getTimeBetween.mjs.html#line28">line 28</a>
+        <a href="getTimeBetween.mjs.html">getTimeBetween.mjs</a>, <a href="getTimeBetween.mjs.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -78253,7 +78366,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(getTimeBetween('2017', '2019', 'years'))// => ['2017', '2018', '2019']console.log(getTimeBetween('2019-01-01', '2019-01-03', 'days'))// => ['2019-01-01', '2019-01-02', '2019-01-03']console.log(getTimeBetween('2019-01-01', '2019-01-03'))// => ['2019-01-01', '2019-01-02', '2019-01-03']</code></pre>
+    <pre class="prettyprint"><code>console.log(getTimeBetween('2017', '2019', 'years'))// => ['2017', '2018', '2019']console.log(getTimeBetween('2019-01-01', '2019-01-03', 'days'))// => ['2019-01-01', '2019-01-02', '2019-01-03']console.log(getTimeBetween('2019-01-01', '2019-01-03'))// => ['2019-01-01', '2019-01-02', '2019-01-03']console.log(getTimeBetween('2019-01-03', '2019-01-03'))// => []console.log(getTimeBetween('2019-01-03', '2019-01-01'))// => []</code></pre>
 
 
 
@@ -78418,7 +78531,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
         
 <div class="param-desc">
-    <p>回傳切分後各時間陣列</p>
+    <p>回傳切分後各時間陣列；回傳[]代表無可切分之時間點，包含unit、tstart或tend無效，以及起訖相同或起始時間大於結束時間(字串比較tstart &gt;= tend)，故[]不單指輸入無效</p>
 </div>
 
 
@@ -78509,7 +78622,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(getTimeFromUnit('years'))// => 'YYYY'console.log(getTimeFromUnit('seconds'))// => 'YYYY-MM-DDTHH:mm:ssZ'</code></pre>
+    <pre class="prettyprint"><code>console.log(getTimeFromUnit('years'))// => 'YYYY'console.log(getTimeFromUnit('seconds'))// => 'YYYY-MM-DDTHH:mm:ss'</code></pre>
 
 
 
@@ -78787,7 +78900,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(getTimeObject('2019-01-01', 'days'))// => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or momentconsole.log(getTimeObject('2019-01-01T12:34:56', 'seconds'))// => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ssZ') //use dayjs or moment</code></pre>
+    <pre class="prettyprint"><code>console.log(getTimeObject('2019-01-01', 'days'))// => dayjs('2019-01-01', 'YYYY-MM-DD') //use dayjs or momentconsole.log(getTimeObject('2019-01-01T12:34:56', 'seconds'))// => dayjs('2019-01-01T12:34:56', 'YYYY-MM-DDTHH:mm:ss') //use dayjs or moment</code></pre>
 
 
 
@@ -78943,7 +79056,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
     
 
-    <h4 class="name" id=".getTimeRange"><span class="type-signature type-signature-static">(static) </span>getTimeRange<span class="signature">(tstart, tend)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    <h4 class="name" id=".getTimeRange"><span class="type-signature type-signature-static">(static) </span>getTimeRange<span class="signature">(tstart, tend<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
 
     
 
@@ -78960,7 +79073,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getTimeRange.mjs.html">getTimeRange.mjs</a>, <a href="getTimeRange.mjs.html#line32">line 32</a>
+        <a href="getTimeRange.mjs.html">getTimeRange.mjs</a>, <a href="getTimeRange.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -79007,7 +79120,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(getTimeRange('2019-01-01T09:00:00'))// => '2019-01-01T09:00 至 無'console.log(getTimeRange('2019-01-01T09:00:00', '2019-01-01T12:34:56'))// => '2019-01-01T09:00 至 12:34'console.log(getTimeRange('2019-01-01T09:00:00', '2019-01-03T12:00:00'))// => '2019-01-01T09:00 至 2019-01-03T12:00'console.log(getTimeRange('2019-01-01T19:00:00', '2019-01-01T12:00:00'))// => '2019-01-01T19:00 至 12:00 (起始時間大於結束時間)'console.log(getTimeRange('2019-01-03T09:00:00', '2019-01-01T12:00:00'))// => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'</code></pre>
+    <pre class="prettyprint"><code>console.log(getTimeRange('2019-01-01T09:00:00'))// => '2019-01-01T09:00 至 無'console.log(getTimeRange('2019-01-01T09:00:00', '2019-01-01T12:34:56'))// => '2019-01-01T09:00 至 12:34'console.log(getTimeRange('2019-01-01T09:00:00', '2019-01-03T12:00:00'))// => '2019-01-01T09:00 至 2019-01-03T12:00'console.log(getTimeRange('2019-01-01T19:00:00', '2019-01-01T12:00:00'))// => '2019-01-01T19:00 至 12:00 (起始時間大於結束時間)'console.log(getTimeRange('2019-01-03T09:00:00', '2019-01-01T12:00:00'))// => '2019-01-03T09:00 至 2019-01-01T12:00 (起始時間大於結束時間)'console.log(getTimeRange('', '2019-01-01T12:00:00'))// => ''console.log(getTimeRange('2019-01-01T09:00:00', null))// => ''</code></pre>
 
 
 
@@ -79024,6 +79137,8 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -79051,10 +79166,18 @@ heic之acp為image/heic，heif之acp為image/heif</p>
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>輸入開始秒時間字串，不含時區</p></td>
+            <td class="description last"><p>輸入開始秒時間字串，不含時區，須為有效秒時間字串(格式YYYY-MM-DDTHH:mm:ss)，無效則回傳空字串</p></td>
         </tr>
 
     
@@ -79075,10 +79198,20 @@ heic之acp為image/heic，heif之acp為image/heif</p>
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>輸入結束秒時間字串，不含時區，若不輸入則等同於開始時間字串</p></td>
+            <td class="description last"><p>輸入結束秒時間字串，不含時區，若不輸入(未給或undefined)則等同於開始時間字串；有給但無效(含null、空字串)則回傳空字串</p></td>
         </tr>
 
     
@@ -79104,7 +79237,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
 
         
 <div class="param-desc">
-    <p>回傳合併顯示時間字串</p>
+    <p>回傳合併顯示時間字串，tstart無效或tend有給但無效時回傳空字串(不再回傳中文訊息)</p>
 </div>
 
 
@@ -111261,14 +111394,14 @@ console.log(r)
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>產生重複n次字串</p>
 <p>n為必須參數(本函數之意圖即重複，重複次數不可省)，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為個數(0~4294967295，0代表重複0次而回傳'')；非預期之輸入(未給、null、負數、小數、Infinity、'0x2'、包裝物件等)throw Error('invalid n: must be a non-negative integer')，訊息不帶輸入值
-c非有效字串(含''、非字串)回傳''，先於n之檢查</p>
+c為必須參數，須為字串，非字串throw Error('invalid c: must be a string')，訊息不帶輸入值，先於n之檢查；c為''回傳''，但n仍須有效(rep('', 'x')因n無效throw)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/rep.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="rep.mjs.html">rep.mjs</a>, <a href="rep.mjs.html#line37">line 37</a>
+        <a href="rep.mjs.html">rep.mjs</a>, <a href="rep.mjs.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -111330,7 +111463,18 @@ try {
 catch (err) {
     console.log(err.message)
 }
-// => invalid n: must be a non-negative integer</code></pre>
+// => invalid n: must be a non-negative integer
+
+try {
+    rep(123, 2)
+}
+catch (err) {
+    console.log(err.message)
+}
+// => invalid c: must be a string
+
+console.log(rep('', 2))
+// => ''</code></pre>
 
 
 
@@ -111377,7 +111521,7 @@ catch (err) {
 
             
 
-            <td class="description last"><p>輸入欲重複的字串，非有效字串回傳''</p></td>
+            <td class="description last"><p>輸入欲重複的字串，必須參數，非字串throw Error，''回傳''</p></td>
         </tr>
 
     
@@ -111889,14 +112033,17 @@ catch (err) {
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>取代字串，由c內大括號會標記為被取代的{key}，再由物件o的key所對應value進行取代，而各value皆需要為有效字串</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>取代字串，由c內出現之key會被物件o的key所對應value進行取代（key與value皆為普通文字，不作正規表示式，value內之$&amp;等亦不特殊解讀），依o之自有可列舉字串鍵順序逐一取代</p>
+<p>c與o皆為必須參數：c非字串throw Error('invalid c: must be a string')，o非一般物件(含陣列、null)throw Error('invalid o: must be a plain object')，訊息不帶輸入值，先檢c再檢o；c為''回傳''，但o仍須為一般物件
+o為空物件則回傳c，空字串之key略過
+value之轉換：字串原樣；數字、BigInt、Symbol依cstr轉字串；布林轉為'true'或'false'；物件與陣列轉為JSON字串；null、undefined及其他型別(函式、Date、Map、NaN等)轉為空字串</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/replaceObj.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="replaceObj.mjs.html">replaceObj.mjs</a>, <a href="replaceObj.mjs.html#line23">line 23</a>
+        <a href="replaceObj.mjs.html">replaceObj.mjs</a>, <a href="replaceObj.mjs.html#line53">line 53</a>
     </li></ul></dd>
     
 
@@ -111943,7 +112090,7 @@ catch (err) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(replaceObj('1.25abc中文', { '5a': '0', '中': '英' }))// => '1.20bc英文'</code></pre>
+    <pre class="prettyprint"><code>console.log(replaceObj('1.25abc中文', { '5a': '0', '中': '英' }))// => '1.20bc英文'console.log(replaceObj('a-b', { a: 1 }))// => '1-b'console.log(replaceObj('a-b', { a: true }))// => 'true-b'console.log(replaceObj('a-b', { a: { k: 1 } }))// => '{"k":1}-b'console.log(replaceObj('a-b', { a: null }))// => '-b'console.log(replaceObj('abc', {}))// => 'abc'console.log(replaceObj('a-b', { a: '$&amp;$&amp;' }))// => '$&amp;$&amp;-b'try {    replaceObj('a-b', null)}catch (err) {    console.log(err.message)}// => invalid o: must be a plain object</code></pre>
 
 
 
@@ -111990,7 +112137,7 @@ catch (err) {
 
             
 
-            <td class="description last"><p>輸入要被取代的字串</p></td>
+            <td class="description last"><p>輸入要被取代的字串，必須參數，非字串throw Error，''回傳''</p></td>
         </tr>
 
     
@@ -112014,7 +112161,7 @@ catch (err) {
 
             
 
-            <td class="description last"><p>輸入用來取代的key,value物件</p></td>
+            <td class="description last"><p>輸入用來取代的key,value物件，必須參數，非一般物件throw Error，空物件回傳c</p></td>
         </tr>
 
     
@@ -112077,14 +112224,17 @@ catch (err) {
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>取代字串，找尋條件為滿足具字首字尾則被取代</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>取代字串，找尋條件為滿足具字首字尾則被取代，自字首比對到最後一個字尾(貪婪)</p>
+<p>pre、aft、not、r皆為普通文字，不作正規表示式(. * + ? ^ $ ( ) [ ] { } | \等特殊字元皆照字面，r內之$&amp;等亦不特殊解讀)；not為其中每個字元皆不可出現在字首與字尾之間</p>
+<p>c、pre、aft、r為必須參數：c非字串throw Error('invalid c: must be a string')，pre或aft非字串或為空字串throw Error('invalid pre: must be a non-empty string')或Error('invalid aft: must be a non-empty string')，r非字串throw Error('invalid r: must be a string')，訊息不帶輸入值，依c、pre、aft、r順序檢查；c為''回傳''，但其餘必須參數仍須有效
+not為選用參數，非字串或為空字串則忽略(視為不使用)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/replacePlus.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="replacePlus.mjs.html">replacePlus.mjs</a>, <a href="replacePlus.mjs.html#line25">line 25</a>
+        <a href="replacePlus.mjs.html">replacePlus.mjs</a>, <a href="replacePlus.mjs.html#line45">line 45</a>
     </li></ul></dd>
     
 
@@ -112131,7 +112281,7 @@ catch (err) {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(replacePlus('1.25mn1.25abc中文結尾', '1', '文', null, 'xyz'))// => 'xyz結尾'console.log(replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz'))// => '1.25mnxyz結尾'</code></pre>
+    <pre class="prettyprint"><code>console.log(replacePlus('1.25mn1.25abc中文結尾', '1', '文', null, 'xyz'))// => 'xyz結尾'console.log(replacePlus('1.25mn1.25abc中文結尾', '1', '文', 'm', 'xyz'))// => '1.25mnxyz結尾'console.log(replacePlus('a(b)c', '(', ')', null, 'X'))// => 'aXc'console.log(replacePlus('a1b', 'a', 'b', null, '$&amp;$&amp;'))// => '$&amp;$&amp;'try {    replacePlus('a1b', '', 'b', null, 'X')}catch (err) {    console.log(err.message)}// => invalid pre: must be a non-empty string</code></pre>
 
 
 
@@ -112194,7 +112344,7 @@ catch (err) {
                 </td>
             
 
-            <td class="description last"><p>輸入要被取代的字串</p></td>
+            <td class="description last"><p>輸入要被取代的字串，必須參數，非字串throw Error，''回傳''</p></td>
         </tr>
 
     
@@ -112230,7 +112380,7 @@ catch (err) {
                 </td>
             
 
-            <td class="description last"><p>輸入需為字首的字串</p></td>
+            <td class="description last"><p>輸入需為字首的字串，必須參數，非字串或空字串throw Error</p></td>
         </tr>
 
     
@@ -112266,7 +112416,7 @@ catch (err) {
                 </td>
             
 
-            <td class="description last"><p>輸入需為字尾的字串</p></td>
+            <td class="description last"><p>輸入需為字尾的字串，必須參數，非字串或空字串throw Error</p></td>
         </tr>
 
     
@@ -112306,7 +112456,7 @@ catch (err) {
                 </td>
             
 
-            <td class="description last"><p>輸入需不包含的字串，預設為不使用</p></td>
+            <td class="description last"><p>輸入需不包含的字串，其中每個字元皆不可出現在字首與字尾之間，非字串或空字串則忽略，預設為不使用</p></td>
         </tr>
 
     
@@ -112342,7 +112492,7 @@ catch (err) {
                 </td>
             
 
-            <td class="description last"><p>輸入要取代的字串</p></td>
+            <td class="description last"><p>輸入要取代的字串，必須參數，非字串throw Error，可為空字串(取代成空字串)</p></td>
         </tr>
 
     
@@ -113097,14 +113247,15 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由整數v切分n個正整數，回傳切分後之整數陣列</p>
-<p>v與n為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)，n為切分數量須為1~4294967295(個數)，無效(含Infinity、0、小數、'0x10'、包裝物件)回傳[]</p>
+<p>v與n為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)，n為切分數量須為1~4294967295(個數)，無效(含Infinity、0、小數、'0x10'、包裝物件)throw Error，v無效為Error('invalid v: must be an integer')，n無效為Error('invalid n: must be a positive integer')，訊息不帶輸入值，先檢v再檢n
+breverse非布林則改用預設true(不報錯)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line30">line 30</a>
+        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line42">line 42</a>
     </li></ul></dd>
     
 
@@ -113151,7 +113302,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(sepInt(10, 3))// => [3, 3, 4]console.log(sepInt('10', '3'))// => [3, 3, 4]console.log(sepInt(10, Infinity))// => []</code></pre>
+    <pre class="prettyprint"><code>console.log(sepInt(10, 3))// => [3, 3, 4]console.log(sepInt('10', '3'))// => [3, 3, 4]console.log(sepInt(10, 3, false))// => [4, 3, 3]console.log(sepInt(10, 3, 'x'))// => [3, 3, 4]try {    sepInt(10, Infinity)}catch (err) {    console.log(err.message)}// => invalid n: must be a positive integer</code></pre>
 
 
 
@@ -113217,7 +113368,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入要被切分的整數，須為有效整數(安全整數，數字字串亦可)，無效回傳[]</p></td>
+            <td class="description last"><p>輸入要被切分的整數，必須參數，須為有效整數(安全整數，數字字串亦可)，無效throw Error</p></td>
         </tr>
 
     
@@ -113256,7 +113407,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入要切分數量的整數，須為有效整數且為1~4294967295(個數，數字字串亦可)，無效回傳[]</p></td>
+            <td class="description last"><p>輸入要切分數量的整數，必須參數，須為有效整數且為1~4294967295(個數，數字字串亦可)，無效throw Error</p></td>
         </tr>
 
     
@@ -113296,7 +113447,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入是否要反轉順序，預設true為由小至大，反序則為由大至小</p></td>
+            <td class="description last"><p>輸入是否要反轉順序，預設true為由小至大，反序則為由大至小，非布林則改用預設true</p></td>
         </tr>
 
     
@@ -117201,7 +117352,8 @@ Secure Hash Algorithm 512位</p>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>計算2字串相似度</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>計算2字串相似度，回傳0~1之相似度(1為完全相同，0為最不相似)</p>
+<p>任一輸入為非字串或空字串則回傳0(視為最不相似，不報錯)；0亦可為合法結果(如2字串無任何相同之雙字元組)，故回傳0不代表輸入無效</p>
 <p>Fork: <a href="https://github.com/aceakash/string-similarity">string-similarity</a></p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.mjs">Github</a></p></li></ul></dd>
     
@@ -117209,7 +117361,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strCompare.mjs.html">strCompare.mjs</a>, <a href="strCompare.mjs.html#line57">line 57</a>
+        <a href="strCompare.mjs.html">strCompare.mjs</a>, <a href="strCompare.mjs.html#line65">line 65</a>
     </li></ul></dd>
     
 
@@ -117256,7 +117408,7 @@ Secure Hash Algorithm 512位</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)'))// => 0.375</code></pre>
+    <pre class="prettyprint"><code>console.log(strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)'))// => 0.375console.log(strCompare('test中文', ''))// => 0console.log(strCompare('ab', 'cd'))// => 0</code></pre>
 
 
 
@@ -117303,7 +117455,7 @@ Secure Hash Algorithm 512位</p>
 
             
 
-            <td class="description last"><p>輸入欲比對之一般字串</p></td>
+            <td class="description last"><p>輸入欲比對之一般字串，非字串或空字串則回傳0</p></td>
         </tr>
 
     
@@ -117327,7 +117479,7 @@ Secure Hash Algorithm 512位</p>
 
             
 
-            <td class="description last"><p>輸入欲比對之一般字串</p></td>
+            <td class="description last"><p>輸入欲比對之一般字串，非字串或空字串則回傳0</p></td>
         </tr>
 
     
@@ -117353,7 +117505,7 @@ Secure Hash Algorithm 512位</p>
 
         
 <div class="param-desc">
-    <p>回傳字串相似度0~1</p>
+    <p>回傳字串相似度0~1，非字串或空字串輸入回傳0(最不相似)，0亦可為合法結果</p>
 </div>
 
 
@@ -117397,7 +117549,7 @@ Secure Hash Algorithm 512位</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strCompareForVersion.mjs.html">strCompareForVersion.mjs</a>, <a href="strCompareForVersion.mjs.html#line54">line 54</a>
+        <a href="strCompareForVersion.mjs.html">strCompareForVersion.mjs</a>, <a href="strCompareForVersion.mjs.html#line59">line 59</a>
     </li></ul></dd>
     
 
@@ -117463,7 +117615,12 @@ console.log(strCompareForVersion('abc', '1.0.0'))
 // => null
 
 console.log(strCompareForVersion('1.2', '1.2.0'))
-// => null</code></pre>
+// => null
+
+let r = strCompareForVersion(v1, v2)
+if (r === null) {
+    // 無法比較，不可寫成 r >= 0（null >= 0 為真）
+}</code></pre>
 
 
 
@@ -117560,7 +117717,7 @@ console.log(strCompareForVersion('1.2', '1.2.0'))
 
         
 <div class="param-desc">
-    <p>回傳比較結果，v1大於v2回傳1，相等回傳0，小於回傳-1，任一方無法解析出三段版本號回傳null</p>
+    <p>回傳比較結果，v1大於v2回傳1，相等回傳0，小於回傳-1，任一方無法解析出三段版本號回傳null；注意null表示無法比較，JS中null &gt;= 0為真(null轉為0)，故不可直接以回傳值比大小(如r &gt;= 0)，也不可直接當Array.sort之比較子(null會被視為0即相等)，須先判斷回傳值是否為null</p>
 </div>
 
 
@@ -130240,7 +130397,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 02 2026 18:15:25 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 02 2026 23:13:54 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

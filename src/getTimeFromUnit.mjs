@@ -11,7 +11,7 @@
  * // => 'YYYY'
  *
  * console.log(getTimeFromUnit('seconds'))
- * // => 'YYYY-MM-DDTHH:mm:ssZ'
+ * // => 'YYYY-MM-DDTHH:mm:ss'
  *
  */
 function getTimeFromUnit(unit) {

@@ -7,8 +7,9 @@ import isEle from './isEle.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAppend.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} eleParent 輸入目標DOM元素
- * @param {HTMLElement|String} itemChild 輸入要插入DOM元素或Html文字等內容
+ * @param {HTMLElement} eleParent 輸入目標DOM元素，非元素則拋錯
+ * @param {HTMLElement|String} itemChild 輸入要插入DOM元素或Html文字等內容，非字串亦非元素則拋錯
+ * @throws {Error} eleParent非元素拋出Error('invalid eleParent: must be an element')，itemChild非字串亦非元素拋出Error('invalid itemChild: must be a string or an element')，皆先於任何DOM變動，訊息不含輸入值
  * @example
  * need test in browser
  *
@@ -20,7 +21,7 @@ function domAppend(eleParent, itemChild) {
 
     //check
     if (!isEle(eleParent)) {
-        return 'invalid eleParent'
+        throw new Error('invalid eleParent: must be an element')
     }
 
     if (isstr(itemChild)) {
@@ -30,7 +31,7 @@ function domAppend(eleParent, itemChild) {
         eleParent.appendChild(itemChild)
     }
     else {
-        return 'invalid itemChild'
+        throw new Error('invalid itemChild: must be a string or an element')
     }
 
 }

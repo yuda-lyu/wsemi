@@ -4,10 +4,11 @@ import { runIntInputHang } from './tools/intInputHangRunner.mjs'
 
 //整數輸入使迴圈不終止之防護(排程第221項第二批已知缺陷先修, ws270; 規格: dspec〈輸入參數之檢測機制〉§3.1 iseint、§7.1必須參數與opt類、K2、K3、§11 Infinity一律非預期)
 //  每案於獨立子行程(堆積上限64mb)加逾時執行: 修前原碼對Infinity、超過個數上限、0、負數之輸入迴圈不終止(或無限配置), 於此為逾時或崩潰之紅燈, 修後須立即回傳
-//  失敗通道維持各函數現行者: sepInt無效回[]; arrSep整數寫法無效回[]、設定物件之numCount與numGroup皆無效throw; 雜湊函數之chunkSize為opt類, 非預期改用預設不報錯
+//  失敗通道: sepInt無效throw(ws286b起, 原回[]); arrSep整數寫法無效回[]、設定物件之numCount與numGroup皆無效throw; 雜湊函數之chunkSize為opt類, 非預期改用預設不報錯
 
 
 const MSG_INVALID_OPT = 'invalid opt.numCount or opt.numGroup'
+const MSG_SEPINT_N = 'invalid n: must be a positive integer'
 
 //內文'xyz'之雜湊(JSDoc範例值), 預設切片與非預期chunkSize皆須得此值
 const H_SHA256 = '3608bca1e44ea6c4d268eb6db02260269892c0b42b86bbf1e77a6fa16c3c9282'
@@ -20,11 +21,11 @@ describe('integer input hang guards (child process)', function() {
 
     describe('sepInt', function() {
 
-        // 規格§7.1必須參數n(切分數量)非預期 → 維持現行失敗通道[]; 修前Infinity與超過上限之n使迴圈不終止
+        // 規格§7.1必須參數n(切分數量)非預期 → throw(ws286b起, 使用者2026-11-02逐列確認; 原回[]); 修前Infinity與超過上限之n使迴圈不終止
         for (let name of ['sepInt-n-inf', 'sepInt-n-neginf', 'sepInt-n-str-inf', 'sepInt-n-2p32', 'sepInt-n-maxsafe', 'sepInt-n-1e21', 'sepInt-n-str-1e21']) {
-            it(`${name} should return [] without hanging`, function() {
+            it(`${name} should throw ${MSG_SEPINT_N} without hanging`, function() {
                 let out = runIntInputHang(name)
-                assert.strict.deepStrictEqual(out, { ret: [] })
+                assert.strict.deepStrictEqual(out, { throwMsg: MSG_SEPINT_N })
             })
         }
 

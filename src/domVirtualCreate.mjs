@@ -1,5 +1,6 @@
 import get from 'lodash-es/get.js'
 import isfun from './isfun.mjs'
+import isEle from './isEle.mjs'
 import ispm from './ispm.mjs'
 import optVal from './_optVal.mjs'
 import domPrepend from './domPrepend.mjs'
@@ -23,7 +24,7 @@ let RULE_HEIGHT = { fn: 'domVirtualCreate', name: 'opt.height', kind: 'enum', ch
  * @param {Number|String} [opt.height=null] 輸入目標DOM元素高度，單位px，規則同opt.width，預設null
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.width或opt.height為非預期之輸入而視為未給時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳為fun處理後數據，reject回傳錯誤訊息(Error物件，含取不到body元素之Error('can not find body element')，此時不呼叫fun、不留DOM殘留)
  * @example
  * need test in browser
  *
@@ -45,6 +46,12 @@ async function domVirtualCreate(fun, opt = {}) {
 
     //height, 非預期視為未給(null)
     let height = optVal(get(opt, 'height'), null, RULE_HEIGHT, opt)
+
+    //body, 取不到body時拋錯(async故為reject), 須先於任何DOM作業, 此時不呼叫fun
+    let body = document.querySelector('body')
+    if (!isEle(body)) {
+        throw new Error('can not find body element')
+    }
 
     //eleTar
     let eleTar = document.createElement('div')
@@ -75,7 +82,6 @@ async function domVirtualCreate(fun, opt = {}) {
     elePanel.appendChild(eleOut)
 
     //domPrepend, 插入最前盡量被遮蔽
-    let body = document.querySelector('body')
     domPrepend(body, elePanel)
 
     //call fun

@@ -39,19 +39,27 @@ function core(s1, s2) {
 
 
 /**
- * 計算2字串相似度
+ * 計算2字串相似度，回傳0~1之相似度(1為完全相同，0為最不相似)
+ *
+ * 任一輸入為非字串或空字串則回傳0(視為最不相似，不報錯)；0亦可為合法結果(如2字串無任何相同之雙字元組)，故回傳0不代表輸入無效
  *
  * Fork: {@link https://github.com/aceakash/string-similarity string-similarity}
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompare.test.mjs Github}
  * @memberOf wsemi
- * @param {String} str1 輸入欲比對之一般字串
- * @param {String} str2 輸入欲比對之一般字串
- * @returns {Number} 回傳字串相似度0~1
+ * @param {String} str1 輸入欲比對之一般字串，非字串或空字串則回傳0
+ * @param {String} str2 輸入欲比對之一般字串，非字串或空字串則回傳0
+ * @returns {Number} 回傳字串相似度0~1，非字串或空字串輸入回傳0(最不相似)，0亦可為合法結果
  * @example
  *
  * console.log(strCompare('The Woodman(樵夫) set to work at once, and so...', 'Wodooman(樵夫)'))
  * // => 0.375
+ *
+ * console.log(strCompare('test中文', ''))
+ * // => 0
+ *
+ * console.log(strCompare('ab', 'cd'))
+ * // => 0
  *
  */
 function strCompare(str1, str2) {

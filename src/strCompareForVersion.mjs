@@ -26,7 +26,7 @@ function parseVersion(v) {
  * @memberOf wsemi
  * @param {String} v1 輸入版本號字串
  * @param {String} v2 輸入版本號字串
- * @returns {Number|null} 回傳比較結果，v1大於v2回傳1，相等回傳0，小於回傳-1，任一方無法解析出三段版本號回傳null
+ * @returns {Number|null} 回傳比較結果，v1大於v2回傳1，相等回傳0，小於回傳-1，任一方無法解析出三段版本號回傳null；注意null表示無法比較，JS中null >= 0為真(null轉為0)，故不可直接以回傳值比大小(如r >= 0)，也不可直接當Array.sort之比較子(null會被視為0即相等)，須先判斷回傳值是否為null
  * @example
  *
  * console.log(strCompareForVersion('1.1.27', '1.1.11'))
@@ -49,6 +49,11 @@ function parseVersion(v) {
  *
  * console.log(strCompareForVersion('1.2', '1.2.0'))
  * // => null
+ *
+ * let r = strCompareForVersion(v1, v2)
+ * if (r === null) {
+ *     // 無法比較，不可寫成 r >= 0（null >= 0 為真）
+ * }
  *
  */
 function strCompareForVersion(v1, v2) {

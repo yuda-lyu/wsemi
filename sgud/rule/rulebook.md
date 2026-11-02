@@ -38,13 +38,14 @@
 | 同上——§6 一般數值運算、§7 不符合、耦合與缺陷 | `sgud/rule/rulebook_judge_sites_inv_b.md` | R-ENUM-01 之站點全集(§6、§7、耦合摘要) | 18.4 |
 | 同上——處置結果:第 221 項第一批、第二批第一級發布 A、已知缺陷先修(ws270,7 個函數) | `sgud/rule/rulebook_judge_sites_r1.md` | R-ENUM-CALLERS-01 之已套／未套、R-OPT-VAL-01 之已套／未套(發布 A)、ws270 處置結果 | 16.8 |
 | 同上——處置結果:第 221 項第 2 輪 ws272a(計時與流程類 19 個函數)、ws272b(字串、陣列、數值、編碼類 19 個函數＋3 項缺陷) | `sgud/rule/rulebook_judge_sites_r2.md` | ws272a、ws272b 處置結果 | 22.2 |
-| 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);新增之處置結果節附於此檔 | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271 處置結果 | 20.4 |
+| 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);第 221 項 §11 第 6 項 ws286a(DOM 4 個函數與 3 個呼叫端)、ws286b(`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize`);新增之處置結果節附於此檔(已逾 30KB,其後新增節另開 `rulebook_judge_sites_r2d.md`) | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271、ws286a、ws286b 處置結果 | 33.8 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
-| 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
+| 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB;ws286b 起第 57 項後另開第 5 檔) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 | 破壞性變更紀錄(第 39～44 項) | `sgud/rule/rulebook_breaking_39to44.md` | 破壞性變更紀錄 | 12.2 |
 | 破壞性變更紀錄(第 45～51 項) | `sgud/rule/rulebook_breaking_45to51.md` | 破壞性變更紀錄 | 23.4 |
-| 破壞性變更紀錄(第 52 項起;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271;新增之項附於此檔) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
+| 破壞性變更紀錄(第 52～56 項;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
+| 破壞性變更紀錄(第 57 項起;第 57 項為 ws286a、第 58 項為 ws286b;新增之項附於此檔) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 6.9 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -57,7 +58,7 @@
 
 各條目全標題:
 
-- `破壞性變更紀錄` → `rulebook_breaking.md`(索引)、`rulebook_breaking_20261021.md`(第 1～38 項)、`rulebook_breaking_39to44.md`(第 39～44 項)、`rulebook_breaking_45to51.md`(第 45～51 項)、`rulebook_breaking_52on.md`(第 52 項起): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
+- `破壞性變更紀錄` → `rulebook_breaking.md`(索引)、`rulebook_breaking_20261021.md`(第 1～38 項)、`rulebook_breaking_39to44.md`(第 39～44 項)、`rulebook_breaking_45to51.md`(第 45～51 項)、`rulebook_breaking_52on.md`(第 52～56 項)、`rulebook_breaking_57on.md`(第 57 項起): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
 - `R-BIN-ENSURE-01` → `rulebook_bin.md`: R-BIN-ENSURE-01 外部執行檔之取得一律經 `fsEnsureBins`(清單校驗、快取→鏡像→GitHub、離線)
 - `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋

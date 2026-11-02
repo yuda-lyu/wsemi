@@ -47,14 +47,14 @@ let b8 = new Uint8Array([66, 117, 16, 240, 246, 48, 64, 0])
 
 let cases = {
 
-    //sepInt: n為Infinity、超過個數上限(2^32)、非安全整數、v為Infinity, 皆回[]
-    'sepInt-n-inf': () => ({ ret: sepInt(10, Infinity) }),
-    'sepInt-n-neginf': () => ({ ret: sepInt(10, -Infinity) }),
-    'sepInt-n-str-inf': () => ({ ret: sepInt(10, 'Infinity') }),
-    'sepInt-n-2p32': () => ({ ret: sepInt(10, 2 ** 32) }),
-    'sepInt-n-maxsafe': () => ({ ret: sepInt(10, Number.MAX_SAFE_INTEGER) }),
-    'sepInt-n-1e21': () => ({ ret: sepInt(10, 1e21) }),
-    'sepInt-n-str-1e21': () => ({ ret: sepInt(10, '1e21') }),
+    //sepInt: n為Infinity、超過個數上限(2^32)、非安全整數、v為Infinity, 皆throw(ws286b起; 原回[])
+    'sepInt-n-inf': () => tryThrow(() => sepInt(10, Infinity)),
+    'sepInt-n-neginf': () => tryThrow(() => sepInt(10, -Infinity)),
+    'sepInt-n-str-inf': () => tryThrow(() => sepInt(10, 'Infinity')),
+    'sepInt-n-2p32': () => tryThrow(() => sepInt(10, 2 ** 32)),
+    'sepInt-n-maxsafe': () => tryThrow(() => sepInt(10, Number.MAX_SAFE_INTEGER)),
+    'sepInt-n-1e21': () => tryThrow(() => sepInt(10, 1e21)),
+    'sepInt-n-str-1e21': () => tryThrow(() => sepInt(10, '1e21')),
 
     //arrSep: 整數寫法與numCount、numGroup為Infinity、超過個數上限
     'arrSep-num-inf': () => ({ ret: arrSep(arr8, Infinity) }),

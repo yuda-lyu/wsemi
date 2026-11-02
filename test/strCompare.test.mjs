@@ -16,67 +16,67 @@ describe(`strCompare`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', ''`, function() {
+    it(`sould return 0 when input 'test中文', ''`, function() {
         let r = strCompare('test中文', '')
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', []`, function() {
+    it(`sould return 0 when input 'test中文', []`, function() {
         let r = strCompare('test中文', [])
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
+    it(`sould return 0 when input 'test中文', {}`, function() {
         let r = strCompare('test中文', {})
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
+    it(`sould return 0 when input 'test中文', null`, function() {
         let r = strCompare('test中文', null)
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '5393554e94bf0eb6436f240a4fd71282' when input 'test中文', undefined`, function() {
+    it(`sould return 0 when input 'test中文', undefined`, function() {
         let r = strCompare('test中文', undefined)
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input ''`, function() {
+    it(`sould return 0 when input ''`, function() {
         let r = strCompare('')
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input []`, function() {
+    it(`sould return 0 when input []`, function() {
         let r = strCompare([])
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input {}`, function() {
+    it(`sould return 0 when input {}`, function() {
         let r = strCompare({})
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input null`, function() {
+    it(`sould return 0 when input null`, function() {
         let r = strCompare(null)
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input undefined`, function() {
+    it(`sould return 0 when input undefined`, function() {
         let r = strCompare(undefined)
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input NaN`, function() {
+    it(`sould return 0 when input NaN`, function() {
         let r = strCompare(NaN)
         let rr = 0
         assert.strict.deepStrictEqual(r, rr)

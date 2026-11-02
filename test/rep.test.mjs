@@ -3,10 +3,11 @@ import rep from '../src/rep.mjs'
 
 
 //n為必須參數(使用者2026-11-02: 「rep repObj 本身意圖就是重複, 重複次數算必要參數」): 有效整數且為個數(iseint, use: 'count', 含0), 非預期throw Error('invalid n: must be a non-negative integer'), 訊息不帶值(K9)
-//c非有效字串回傳'', 先於n之檢查(容器之處置不變)
+//ws286b: c為必須參數(使用者2026-11-02逐列確認): c非字串throw Error('invalid c: must be a string'), 訊息不帶值, 先於n之檢查; c為''回傳''(不變), 但n仍須有效(rep('', 'x')因n無效throw)
 describe(`rep`, function() {
 
     const MSG = 'invalid n: must be a non-negative integer'
+    const MSG_C = 'invalid c: must be a string'
 
     it(`should return 'abcabc' when input 'abc', 2`, function() {
         let r = rep('abc', 2)
@@ -81,42 +82,62 @@ describe(`rep`, function() {
         })
     })
 
-    //c非有效字串回傳'', 先於n之檢查
-    it(`should return '' when input '' (any n, including unexpected ones)`, function() {
+    //c為''回傳'', 但n仍須有效(必須參數於c為''時亦檢測)
+    it(`should return '' when c is '' and n is valid`, function() {
         assert.strict.deepStrictEqual(rep('', 2), '')
-        assert.strict.deepStrictEqual(rep(''), '')
-        assert.strict.deepStrictEqual(rep('', Infinity), '')
+        assert.strict.deepStrictEqual(rep('', 0), '')
+        assert.strict.deepStrictEqual(rep('', '3'), '')
     })
 
-    it(`should return '' when input []`, function() {
-        let r = rep([])
-        assert.strict.deepStrictEqual(r, '')
+    it(`should throw ${MSG} when c is '' but n is unexpected (n is still a required parameter)`, function() {
+        assert.throws(() => rep('', 'x'), { message: MSG })
+        assert.throws(() => rep(''), { message: MSG })
+        assert.throws(() => rep('', Infinity), { message: MSG })
+        assert.throws(() => rep('', -1), { message: MSG })
     })
 
-    it(`should return '' when input {}`, function() {
-        let r = rep({})
-        assert.strict.deepStrictEqual(r, '')
+    //c非字串 -> throw('invalid c: must be a string'), 先於n之檢查(n有效或無效皆然), 訊息固定不帶值
+    for (let [label, c] of [
+        ['123', 123],
+        ['0', 0],
+        ['NaN', NaN],
+        ['true', true],
+        ['null', null],
+        ['undefined', undefined],
+        ['[]', []],
+        [`['abc']`, ['abc']],
+        ['{}', {}],
+        ['() => 1', () => 1],
+        ['Symbol()', Symbol('x')],
+        ['1n', 1n],
+    ]) {
+        it(`should throw '${MSG_C}' when c is not a string: ${label} (n valid, unexpected or not given)`, function() {
+            for (let n of [2, 0, -1, Infinity, 'x', undefined]) {
+                assert.throws(() => rep(c, n), (err) => {
+                    assert.strict.deepStrictEqual(err instanceof Error, true)
+                    assert.strict.deepStrictEqual(err.message, MSG_C)
+                    return true
+                })
+            }
+            assert.throws(() => rep(c), { message: MSG_C })
+        })
+    }
+
+    it(`should throw ${MSG_C} for rep(123, 2), rep([], 2), rep({}), rep(null), rep(undefined), rep(NaN)`, function() {
+        assert.throws(() => rep(123, 2), { message: MSG_C })
+        assert.throws(() => rep([], 2), { message: MSG_C })
+        assert.throws(() => rep({}), { message: MSG_C })
+        assert.throws(() => rep(null), { message: MSG_C })
+        assert.throws(() => rep(undefined), { message: MSG_C })
+        assert.throws(() => rep(NaN), { message: MSG_C })
     })
 
-    it(`should return '' when input null`, function() {
-        let r = rep(null)
-        assert.strict.deepStrictEqual(r, '')
-    })
-
-    it(`should return '' when input undefined`, function() {
-        let r = rep(undefined)
-        assert.strict.deepStrictEqual(r, '')
-    })
-
-    it(`should return '' when input NaN`, function() {
-        let r = rep(NaN)
-        assert.strict.deepStrictEqual(r, '')
-    })
-
-    it(`should return '' when c is not a string even if n is valid or unexpected`, function() {
-        assert.strict.deepStrictEqual(rep(123, 2), '')
-        assert.strict.deepStrictEqual(rep(['abc'], 2), '')
-        assert.strict.deepStrictEqual(rep(123, -1), '')
+    it(`the error message of c should not carry the input value`, function() {
+        assert.throws(() => rep({ secret: 'SECRET-VALUE-123' }, 2), (err) => {
+            assert.ok(!err.message.includes('SECRET'), err.message)
+            assert.strict.deepStrictEqual(err.message, MSG_C)
+            return true
+        })
     })
 
 })

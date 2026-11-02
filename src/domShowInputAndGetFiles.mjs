@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import isbol from './isbol.mjs'
+import isEle from './isEle.mjs'
 import optVal from './_optVal.mjs'
 import domRemove from './domRemove.mjs'
 import domGetFileAccept from './domGetFileAccept.mjs'
@@ -29,7 +30,7 @@ let RULE_SIZE_MB_LIMIT = { fn: 'domShowInputAndGetFiles', name: 'opt.sizeMbLimit
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.sizeMbLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'open'時為已建立input並綁定監聽而即將觸發點擊開啟選檔視窗(含multiple、entireHierarchy為生效後之布林值)，'cancel'時為收到input之cancel事件(取消選檔之主要偵測)而即將以空檔案結束，'focus'時為收到window之focus事件(舊瀏覽器之備援偵測，entireHierarchy時不綁定)而排定1500ms後判定(含ms固定為1500)，'judge'時為1500ms後之判定(含cancel為此時尚未收到change而視為取消，false代表change已先處理而不再結束)，'settle'時為即將resolve(含by為'change'、'cancel'或'focus'代表由change事件、cancel事件或focus判定結束，files為檔案數量，errs為超過sizeMbLimit之檔案數量)；事件皆於對應動作之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響選檔處理，預設null
- * @returns {Promise} 回傳Promise，resolve回傳各檔案陣列，無reject
+ * @returns {Promise} 回傳Promise，resolve回傳各檔案陣列，取不到body元素時reject字串'can not find body element'(不建立input、不觸發點擊、不動前次呼叫之input)，選檔過程無reject
  * @example
  * need test in browser
  *
@@ -121,6 +122,12 @@ function domShowInputAndGetFiles(opt = {}) {
     //trace, 觀察回調(opt.onTrace), 未給時為null
     let trace = getTrace(opt)
 
+    //body, 取不到body時reject(回傳Promise者不同步拋錯), 須先於任何副作用(移除前次input、建立input、綁定監聽、觸發點擊)
+    let body = document.querySelector('body')
+    if (!isEle(body)) {
+        return Promise.reject('can not find body element')
+    }
+
     //pm
     let pm = genPm()
 
@@ -144,7 +151,7 @@ function domShowInputAndGetFiles(opt = {}) {
 
     //append html
     let hidehtml = `<div name="${gname}" style="position:relative; width:0px; height:0px; overflow:hidden;"><input id="${id}" type="file" accept="${acp}" ${mp} ${eh} style="opacity:0; position:absolute; top:-10000px; left:-10000px;"></div>`
-    domAppend(document.querySelector('body'), hidehtml)
+    domAppend(body, hidehtml)
 
     //inp
     let inp = domFind('#' + id)

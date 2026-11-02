@@ -23,7 +23,7 @@ let RULE_SCALE = { fn: 'domConvertToPic', name: 'opt.scale', kind: 'enum' }
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Boolean} [opt.toBase64=true] 輸入是否回傳圖片之data URL字串布林值，給true回傳字串(png與jpeg為base64編碼，svg為utf-8之URL編碼)，給false回傳img元素(HTMLImageElement)，預設true
  * @param {String} [opt.picType='image/png'] 輸入輸出圖片格式字串，可選'image/png'、'image/jpeg'(亦可給'image/jpg')與'svg'，png與svg保留透明背景，jpeg之透明處填白色，給其他值則使用'image/png'，預設'image/png'
- * @returns {Promise} 回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject為失敗訊息
+ * @returns {Promise} 回傳Promise，resolve回傳產出圖片，toBase64為true時為data URL字串，否則為img元素，reject為失敗訊息字串(含取不到body元素之'can not find body element'，此時不截圖、不留DOM殘留)
  * @example
  * need test in browser
  *
@@ -59,6 +59,12 @@ async function domConvertToPic(ele, opt = {}) {
         toBase64 = true
     }
 
+    //body, 取不到body時reject(值為字串, 同上述各檢測), 須先於任何DOM作業
+    let body = document.querySelector('body')
+    if (!isEle(body)) {
+        return Promise.reject('can not find body element')
+    }
+
     //cloneNode
     let elePic = ele.cloneNode(true)
 
@@ -82,7 +88,6 @@ async function domConvertToPic(ele, opt = {}) {
     eleOut.appendChild(eleIn)
 
     //domPrepend, 塞入至body內最前
-    let body = document.querySelector('body')
     domPrepend(body, eleOut)
 
     //pic

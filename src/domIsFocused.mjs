@@ -6,7 +6,8 @@ import isEle from './isEle.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsFocused.test.mjs Github}
  * @memberOf wsemi
- * @param {Element} ele 輸入Element元素
+ * @param {Element} ele 輸入Element元素，非元素則視為沒有焦點而回傳false
+ * @returns {Boolean} 回傳判斷布林值，ele為聚焦狀態則為true，其餘(含ele非元素、無法取得焦點元素)皆為false
  * @example
  * need test in browser
  *
@@ -14,12 +15,15 @@ import isEle from './isEle.mjs'
  * console.log(domIsFocused(ele))
  * // => true or false
  *
+ * console.log(domIsFocused(null))
+ * // => false
+ *
  */
 function domIsFocused(ele) {
 
     //check ele
     if (!isEle(ele)) {
-        return 'invalid element'
+        return false
     }
 
     //r
