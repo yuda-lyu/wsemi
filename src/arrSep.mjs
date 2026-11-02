@@ -1,17 +1,19 @@
 import get from 'lodash-es/get.js'
 import size from 'lodash-es/size.js'
 import isearr from './isearr.mjs'
-import ispint from './ispint.mjs'
+import iseint from './iseint.mjs'
 import iseobj from './iseobj.mjs'
 
 
 /**
  * 依照指定數量切分陣列
  *
+ * 切分數量為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)；無效時，num為整數之舊寫法回傳[]，num為設定物件且numCount與numGroup皆無效則拋錯
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrSep.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} arr 輸入要被切割的陣列
- * @param {Integer|Object} num 輸入要切分數量的正整數或設定物件，可給予鍵'numCount'或'numGroup'而對應值皆為正整數，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量
+ * @param {Integer|String|Object} num 輸入要切分數量的正整數或設定物件，可給予鍵'numCount'或'numGroup'而對應值皆為正整數(有效整數，1~4294967295，數字字串亦可，Infinity、0、小數、'0x10'、包裝物件等為無效)，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量
  * @returns {Array} 回傳切割後的陣列
  * @example
  *
@@ -40,24 +42,25 @@ function arrSep(arr, opt) {
         return []
     }
 
-    //check
-    if (!ispint(opt) && !iseobj(opt)) {
+    //check, 切分數量為必須參數, 判定有效整數後取轉換值使用(檢測之值即使用之值, 數字字串不可直接參與迴圈之+=)
+    let chk = { use: 'count', min: 1 }
+    if (!iseint(opt, chk) && !iseobj(opt)) {
         return []
     }
 
     let mode = ''
     let num = null
-    if (ispint(opt)) {
-        num = opt
+    if (iseint(opt, chk)) {
+        num = Number(opt)
         mode = 'numCount'
     }
     else if (iseobj(opt)) {
-        if (ispint(get(opt, 'numCount'))) {
-            num = opt.numCount
+        if (iseint(get(opt, 'numCount'), chk)) {
+            num = Number(opt.numCount)
             mode = 'numCount'
         }
-        else if (ispint(get(opt, 'numGroup'))) {
-            num = opt.numGroup
+        else if (iseint(get(opt, 'numGroup'), chk)) {
+            num = Number(opt.numGroup)
             mode = 'numGroup'
         }
         else {

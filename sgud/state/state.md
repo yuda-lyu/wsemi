@@ -8,10 +8,11 @@
 
 2026-11-02(ws265)依全域設定§14整理: 本檔原約 53.7KB(13 節),依功能類型拆為下列 5 檔(含同日新增之 `state_測試.md`),各節之節號與標題不變、內容逐字搬移;本檔只留索引.完成一項功能或結束一輪工作時,把現況寫入對應類型檔(無對應類型者新增 `state_<類型>.md` 並於下列增列),不再寫回本檔.
 
-### `sgud/state/state_數值與判斷.md`(數值與判斷;約 15.1KB)
+### `sgud/state/state_數值與判斷.md`(數值與判斷;約 18.6KB)
 
 查: opt 類數值參數之預設與警告、`isenum`／`iseint`、`preciseNum` 與其呼叫端改用.所含節:
 
+- 已知缺陷先修:`sepInt`／`getFileBasicHash`／`getFileXxHash`／`strmid`／`arrSep`／`addMonth`／`bufRead`(排程第 221 項第二批之「已知缺陷先修」;主控任務 20261102112347 ws270,2026-11-02;package.json version 1.9.42 之工作樹,未提交未發布)〔本節於 2026-11-02 新增,置於該檔最前〕
 - opt 類數值參數非預期之輸入改用預設、`opt.debug`、廣義數字陣列 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`——第一級發布 A(排程第 221 項第二批;主控任務 20261031121854 wsemiA／wsemiA2,2026-10-31／11-01;package.json version 1.9.36 之工作樹,未提交未發布)
 - 既有函數改用 `isenum`／`iseint` 第一批(排程第 221 項;主控任務 20261031121854 wsemi221a,2026-10-31;package.json version 1.9.35 之工作樹,未提交未發布)
 - 專用判斷函數 `isenum`／`iseint` 與 `preciseNum` 精度(主控任務 20261031121854 wsemieff,2026-10-31;package.json version 1.9.34 之工作樹,未提交未發布)

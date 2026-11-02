@@ -46,5 +46,6 @@
 5. **`fsWatchFolder` 時序案(`fsWatchFolder.test.mjs`「should notify frozen events … (fake chokidar)」)接受為既有偶發**(1.9.36 副本同失敗率約 2.5%),另案穩定化,本輪不動.
 - `domConvertToPic.scale`、`debounce`／`pmDebounce`／`evEmitDelay` 之 `funLog` 雙用途、`fsTask.levelLimit` 之 `null` 等屬排除函數之待裁示,不在本輪.
 - `fsEvem`、`digExp`、`cfinancial`、`domFadeOut` 之部分參數為位置參數且函數無 opt 物件者,非預期靜默改用預設、無從警告(位置參數無法帶 `debug`).
-- `getFileHash.mjs` 之 `chunkSize` JSDoc 改寫(wsemi221b 版)**未套回**:其 `opt` 原樣交給 `getFileBasicHash`／`getFileXxHash`(皆排除、1.9.36 原碼),改寫後之 JSDoc 描述的新規則與被呼叫者實際行為不符;維持 1.9.36 之 JSDoc,待該二函數納入時再改.
+- **ws270(2026-11-02)後續**:使用者裁定 `Infinity` 一律非預期,規則 7 所列因 `Infinity` 邊界而排除之 `strmid`、`getFileBasicHash`、`getFileXxHash` 已納入(`getFileHash.mjs` 之 JSDoc 同步,下條已過時);另納入 `sepInt`、`arrSep`、`addMonth`、`bufRead`(必須參數,`iseint`);處置見 `rulebook_judge_sites.md` 末節〈第 221 項已知缺陷先修(ws270)處置結果〉、破壞性變更第 52 項.
+- `getFileHash.mjs` 之 `chunkSize` JSDoc 改寫(wsemi221b 版)**未套回**(ws270 已改寫,見上條):其 `opt` 原樣交給 `getFileBasicHash`／`getFileXxHash`(皆排除、1.9.36 原碼),改寫後之 JSDoc 描述的新規則與被呼叫者實際行為不符;維持 1.9.36 之 JSDoc,待該二函數納入時再改.
 - 行尾:自備份套回之 src／test 為 LF(索引為 LF,working tree 有 `LF will be replaced by CRLF` 警告,不影響 git);Edit 改動之檔保留原行尾.

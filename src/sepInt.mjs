@@ -1,17 +1,18 @@
 import floor from 'lodash-es/floor.js'
 import reverse from 'lodash-es/reverse.js'
-import isint from './isint.mjs'
-import isp0int from './isp0int.mjs'
+import iseint from './iseint.mjs'
 import isbol from './isbol.mjs'
 
 
 /**
  * 由整數v切分n個正整數，回傳切分後之整數陣列
  *
+ * v與n為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)，n為切分數量須為1~4294967295(個數)，無效(含Infinity、0、小數、'0x10'、包裝物件)回傳[]
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer} v 輸入要被切分的整數
- * @param {Integer} n 輸入要切分數量的整數
+ * @param {Integer|String} v 輸入要被切分的整數，須為有效整數(安全整數，數字字串亦可)，無效回傳[]
+ * @param {Integer|String} n 輸入要切分數量的整數，須為有效整數且為1~4294967295(個數，數字字串亦可)，無效回傳[]
  * @param {Boolean} [breverse=true] 輸入是否要反轉順序，預設true為由小至大，反序則為由大至小
  * @returns {Array} 回傳切分後的整數陣列
  * @example
@@ -19,19 +20,27 @@ import isbol from './isbol.mjs'
  * console.log(sepInt(10, 3))
  * // => [3, 3, 4]
  *
+ * console.log(sepInt('10', '3'))
+ * // => [3, 3, 4]
+ *
+ * console.log(sepInt(10, Infinity))
+ * // => []
+ *
  */
 function sepInt(v, n, breverse = true) {
 
-    //check
-    if (!isint(v)) {
+    //check, v與n為必須參數, 判定有效整數後取轉換值使用(檢測之值即使用之值), 無效回傳[]
+    if (!iseint(v)) {
         return []
     }
-    if (!isp0int(n)) {
+    if (!iseint(n, { use: 'count', min: 1 })) {
         return []
     }
     if (!isbol(breverse)) {
         return []
     }
+    v = Number(v)
+    n = Number(n)
 
     let q = floor(v / n)
     let s = v - q * n

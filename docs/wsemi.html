@@ -1124,13 +1124,14 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>輸入年月並增加/減少月份數量</p>
+<p>g與n為必須參數，n須為有效整數(iseint，數字字串亦可，去頭尾空白後取值，可為正負值)，無效(含Infinity、小數、'0x10'、包裝物件)回傳''；計算後日期無效(月份數量過大而超出dayjs可表示範圍)亦回傳''</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/addMonth.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addMonth.mjs.html">addMonth.mjs</a>, <a href="addMonth.mjs.html#line23">line 23</a>
+        <a href="addMonth.mjs.html">addMonth.mjs</a>, <a href="addMonth.mjs.html#line31">line 31</a>
     </li></ul></dd>
     
 
@@ -1177,7 +1178,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(addMonth('2019-01', 2))// => '2019-03'console.log(addMonth('2018-12', -1))// => '2018-11'</code></pre>
+    <pre class="prettyprint"><code>console.log(addMonth('2019-01', 2))// => '2019-03'console.log(addMonth('2018-12', -1))// => '2018-11'console.log(addMonth('2019-01', '3'))// => '2019-04'console.log(addMonth('2019-01', Infinity))// => ''</code></pre>
 
 
 
@@ -1238,6 +1239,9 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -1248,7 +1252,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 
             
 
-            <td class="description last"><p>輸入要增加的月份數量整數，可為正負值</p></td>
+            <td class="description last"><p>輸入要增加的月份數量整數，可為正負值，須為有效整數(安全整數，數字字串亦可)，無效回傳''</p></td>
         </tr>
 
     
@@ -8736,13 +8740,14 @@ console.log(arrProduct([1, 2, 3], [4, '-', 6], { base: 1 }))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>依照指定數量切分陣列</p>
+<p>切分數量為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)；無效時，num為整數之舊寫法回傳[]，num為設定物件且numCount與numGroup皆無效則拋錯</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrSep.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrSep.mjs.html">arrSep.mjs</a>, <a href="arrSep.mjs.html#line36">line 36</a>
+        <a href="arrSep.mjs.html">arrSep.mjs</a>, <a href="arrSep.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -8852,6 +8857,9 @@ console.log(arrProduct([1, 2, 3], [4, '-', 6], { base: 1 }))
 <span class="param-type">Integer</span>
 |
 
+<span class="param-type">String</span>
+|
+
 <span class="param-type">Object</span>
 
 
@@ -8863,7 +8871,7 @@ console.log(arrProduct([1, 2, 3], [4, '-', 6], { base: 1 }))
 
             
 
-            <td class="description last"><p>輸入要切分數量的正整數或設定物件，可給予鍵'numCount'或'numGroup'而對應值皆為正整數，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量</p></td>
+            <td class="description last"><p>輸入要切分數量的正整數或設定物件，可給予鍵'numCount'或'numGroup'而對應值皆為正整數(有效整數，1~4294967295，數字字串亦可，Infinity、0、小數、'0x10'、包裝物件等為無效)，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量</p></td>
         </tr>
 
     
@@ -13424,6 +13432,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>讀取Uint8Array(Nodejs,Browser)或Buffer(Nodejs)資料</p>
+<p>全部參數皆為必須參數，數值參數須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)；offset須為索引(0~4294967294)，mLen與nBytes須為個數(1~4294967295)，且須滿足offset+nBytes不大於buffer長度、mLen小於nBytes*8-1(至少留1位元給指數)，否則(含越界、負數、Infinity、小數)回傳null</p>
 <p>Fork: <a href="https://github.com/toots/buffer-browserify/blob/master/buffer_ieee754.js">buffer_ieee754</a></p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/bufRead.test.mjs">Github</a></p></li></ul></dd>
     
@@ -13431,7 +13440,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bufRead.mjs.html">bufRead.mjs</a>, <a href="bufRead.mjs.html#line31">line 31</a>
+        <a href="bufRead.mjs.html">bufRead.mjs</a>, <a href="bufRead.mjs.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -13542,6 +13551,9 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -13552,7 +13564,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
             
 
-            <td class="description last"><p>輸入平移整數</p></td>
+            <td class="description last"><p>輸入平移整數，須為有效整數且為索引(0~4294967294，數字字串亦可)，且offset+nBytes不大於buffer長度，否則回傳null</p></td>
         </tr>
 
     
@@ -13590,6 +13602,9 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -13600,7 +13615,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
             
 
-            <td class="description last"><p>輸入有效位數整數</p></td>
+            <td class="description last"><p>輸入有效位數整數，須為有效整數且為1~4294967295(數字字串亦可)，且小於nBytes*8-1，否則回傳null</p></td>
         </tr>
 
     
@@ -13614,6 +13629,9 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -13624,7 +13642,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
             
 
-            <td class="description last"><p>輸入使用位元組整數</p></td>
+            <td class="description last"><p>輸入使用位元組整數，須為有效整數且為1~4294967295(數字字串亦可)，否則回傳null</p></td>
         </tr>
 
     
@@ -13650,7 +13668,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
         
 <div class="param-desc">
-    <p>回傳數字</p>
+    <p>回傳數字，輸入無效回傳null</p>
 </div>
 
 
@@ -73640,7 +73658,7 @@ console.log(wb2.sheets[0].name)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getFileBasicHash.mjs.html">getFileBasicHash.mjs</a>, <a href="getFileBasicHash.mjs.html#line94">line 94</a>
+        <a href="getFileBasicHash.mjs.html">getFileBasicHash.mjs</a>, <a href="getFileBasicHash.mjs.html#line100">line 100</a>
     </li></ul></dd>
     
 
@@ -73860,6 +73878,129 @@ console.log(wb2.sheets[0].name)
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>chunkSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>64*1024*1024</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入計算時使用之切片長度，單位位元，opt類參數(有效整數，1~2^30即1024<em>1024</em>1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64<em>1024</em>1024(64mb)，雜湊結果不因chunkSize而不同</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debug</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>funLog</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null</p></td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -73935,7 +74076,7 @@ console.log(wb2.sheets[0].name)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getFileHash.mjs.html">getFileHash.mjs</a>, <a href="getFileHash.mjs.html#line90">line 90</a>
+        <a href="getFileHash.mjs.html">getFileHash.mjs</a>, <a href="getFileHash.mjs.html#line92">line 92</a>
     </li></ul></dd>
     
 
@@ -74165,6 +74306,9 @@ console.log(wb2.sheets[0].name)
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -74191,7 +74335,87 @@ console.log(wb2.sheets[0].name)
                 </td>
             
 
-            <td class="description last"><p>輸入計算HASH方法字串為'xxhash64'時，使用切片長度數字，單位位元，預設64<em>1024</em>1024(64mb)</p></td>
+            <td class="description last"><p>輸入計算時使用之切片長度，單位位元，由getFileXxHash(type為'xxhash64')或getFileBasicHash(其他type)解析，opt類參數(有效整數，1~2^30即1024<em>1024</em>1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64<em>1024</em>1024(64mb)，雜湊結果不因chunkSize而不同</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debug</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>funLog</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null</p></td>
         </tr>
 
     
@@ -74955,7 +75179,7 @@ heic之acp為image/heic，heif之acp為image/heif</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getFileXxHash.mjs.html">getFileXxHash.mjs</a>, <a href="getFileXxHash.mjs.html#line70">line 70</a>
+        <a href="getFileXxHash.mjs.html">getFileXxHash.mjs</a>, <a href="getFileXxHash.mjs.html#line75">line 75</a>
     </li></ul></dd>
     
 
@@ -75145,6 +75369,9 @@ heic之acp為image/heic，heif之acp為image/heif</p>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -75171,7 +75398,87 @@ heic之acp為image/heic，heif之acp為image/heif</p>
                 </td>
             
 
-            <td class="description last"><p>輸入切片長度數字，單位位元，預設64<em>1024</em>1024(64mb)</p></td>
+            <td class="description last"><p>輸入切片長度，單位位元，opt類參數(有效整數，1~2^30即1024<em>1024</em>1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64<em>1024</em>1024(64mb)，雜湊結果不因chunkSize而不同</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debug</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>funLog</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>null</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null</p></td>
         </tr>
 
     
@@ -110188,13 +110495,14 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由整數v切分n個正整數，回傳切分後之整數陣列</p>
+<p>v與n為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)，n為切分數量須為1~4294967295(個數)，無效(含Infinity、0、小數、'0x10'、包裝物件)回傳[]</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/sepInt.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line23">line 23</a>
+        <a href="sepInt.mjs.html">sepInt.mjs</a>, <a href="sepInt.mjs.html#line30">line 30</a>
     </li></ul></dd>
     
 
@@ -110241,7 +110549,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(sepInt(10, 3))// => [3, 3, 4]</code></pre>
+    <pre class="prettyprint"><code>console.log(sepInt(10, 3))// => [3, 3, 4]console.log(sepInt('10', '3'))// => [3, 3, 4]console.log(sepInt(10, Infinity))// => []</code></pre>
 
 
 
@@ -110282,6 +110590,9 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -110304,7 +110615,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入要被切分的整數</p></td>
+            <td class="description last"><p>輸入要被切分的整數，須為有效整數(安全整數，數字字串亦可)，無效回傳[]</p></td>
         </tr>
 
     
@@ -110318,6 +110629,9 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -110340,7 +110654,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入要切分數量的整數</p></td>
+            <td class="description last"><p>輸入要切分數量的整數，須為有效整數且為1~4294967295(個數，數字字串亦可)，無效回傳[]</p></td>
         </tr>
 
     
@@ -116704,13 +117018,14 @@ console.log(strTruncate('abcdefghij', -1))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>取字串中位置s開始後n個字元</p>
+<p>s為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為索引(0~4294967294)，無效回傳''；n為opt類參數，須為有效整數且為個數(1~4294967295)，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設1</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/strmid.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="strmid.mjs.html">strmid.mjs</a>, <a href="strmid.mjs.html#line25">line 25</a>
+        <a href="strmid.mjs.html">strmid.mjs</a>, <a href="strmid.mjs.html#line36">line 36</a>
     </li></ul></dd>
     
 
@@ -116757,7 +117072,7 @@ console.log(strTruncate('abcdefghij', -1))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(strmid('test中文', 2, 1))// => 's'console.log(strmid('test中文', 2, 3))// => 'st中'</code></pre>
+    <pre class="prettyprint"><code>console.log(strmid('test中文', 2, 1))// => 's'console.log(strmid('test中文', 2, 3))// => 'st中'console.log(strmid('abcdef', '1', '2'))// => 'bc'console.log(strmid('abcdef', 1, Infinity))// => 'b'</code></pre>
 
 
 
@@ -116834,6 +117149,9 @@ console.log(strTruncate('abcdefghij', -1))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -116856,7 +117174,7 @@ console.log(strTruncate('abcdefghij', -1))
                 </td>
             
 
-            <td class="description last"><p>輸入要由第s個位置開始，為正整數</p></td>
+            <td class="description last"><p>輸入要由第s個位置開始，須為有效整數且為索引(0~4294967294，數字字串亦可)，無效回傳''</p></td>
         </tr>
 
     
@@ -116870,6 +117188,9 @@ console.log(strTruncate('abcdefghij', -1))
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -116896,7 +117217,7 @@ console.log(strTruncate('abcdefghij', -1))
                 </td>
             
 
-            <td class="description last"><p>輸入開始後n個字元，為正整數，預設1</p></td>
+            <td class="description last"><p>輸入開始後n個字元，opt類參數(有效整數，1~4294967295，數字字串亦可)，非預期之輸入視為未給而改用預設，不報錯，預設1</p></td>
         </tr>
 
     
@@ -127026,7 +127347,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 02 2026 10:36:13 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 02 2026 12:31:02 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
