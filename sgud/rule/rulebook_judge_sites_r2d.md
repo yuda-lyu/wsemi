@@ -1,6 +1,6 @@
 # 規則帳本(判斷類站點之處置結果,續 r2c)
 
-本檔自 `sgud/rule/rulebook_judge_sites_r2c.md` 逾 30KB(ws286b 後 33.8KB)後另開(2026-11-03,ws286c,全域設定 §14):其後新增之處置結果節附於本檔末(逾 30KB 時再抽出新檔);共通說明(風險代號)與全檔索引見 `sgud/rule/rulebook_judge_sites.md`.
+本檔自 `sgud/rule/rulebook_judge_sites_r2c.md` 逾 30KB(ws286b 後 33.8KB)後另開(2026-11-03,ws286c,全域設定 §14):其後新增之處置結果節附於本檔末(逾 30KB 時再抽出新檔;**本檔 ws286e 後已逾 30KB〔約 31.5KB〕,其後新增節請另開 `sgud/rule/rulebook_judge_sites_r2e.md` 並於 `rulebook_judge_sites.md`、`rulebook.md` 增列索引**);共通說明(風險代號)與全檔索引見 `sgud/rule/rulebook_judge_sites.md`.
 
 ## 第 221 項 §11 第 6 項 ws286c 處置結果(2026-11-03,差異比對子類 5 個函數:`strDiff`、`strDiffToHtml`、`arrDiff`、`matDiff`、`ltdtDiff`;非計算類函數之必須參數遇非預期;第一級〔下游 0 站點〕;主控任務 20261031121854 ws286c)
 
@@ -92,3 +92,52 @@
 - 測試(16 檔,HEAD 1050 → 1384 案,+334):`test/arrAdd`(35→40)、`arrMulti`(35→40)、`arrAccum`(11→14)、`arrProduct`(35→42)、`ltdtkeys2mat`(18→67)、`ltdtkeysheads2mat`(24→72)、`ltdt2vrtsable`(18→67)、`mat2ltdt`(24→71)、`keysmat2ltdt`(44→133)、`getCsvStrFromData`(1→28)、`getDataFromExcelFileU8Arr`(18→23)、`optValArrBase`／`isenumCallersArr`(案數不變,3 處＋2 處鎖定舊行為者改寫為空進空出)；`arrMax`／`arrMin`／`arrNorm` 測試檔未動(其 `[]` 守護案原已存在)；轉換函數之非陣列表重用 `test/tools/diffInputKit.mjs` 之 `NON_ARR`.執行:`npx mocha --no-parallel <上列 14 檔 + arrNorm、arrMax、arrMin>` 加內部呼叫端測試(`ltdtDiff`、`downloadExcelFileFromData`、`getExcelWorksheetFromData`、`getExcelU8ArrFromData`、`addExcelWorksheetFromData`、`getExcelWorkbookFromData`、`getltdtkeys`)與掃描類(`testStructure`、`optValG7optNumRetire`、`_srcBigIntLiteral`、`loadTrial`、`evemSafe`)共 30 檔.
 - 驗證:見主控任務 `agent-out/ws286d-修正報告.md`(修前紅:新測試於未修之 HEAD src 上 1384 案中 43 紅、1341 綠;修後 30 檔 2696 案 0 failing;變異 35 項全部殺死〔含守護 `arrMax([])`／`arrMin([])`／`arrNorm([])` 改成不拋錯三項〕;前後差分 287020 列:有效域〔非空〕247230 列 0 差異、受影響域〔空陣列〕39790 列全符預測;eslint 0 error).
 - 已知殘餘(未改,需裁示):①`arrAdd(['a'], [])`／`arrAdd([], ['a'])` 因容器(長度不同)先於有效數字檢查而回 `[]`,與派工書列「非空而無有效數字之一邊仍拋錯」不符(HEAD 即如此,測試已鎖;若要改為拋錯須動搖「容器先於有效數字」之既定順序);②`arrProduct` 兩邊皆非空而長度不同仍回 `null`(使用者明示不動);③`mat2ltdt` 只有表頭列(列數少於 2)仍為失敗、`keysmat2ltdt` 之 `keys = []` 仍為失敗(不在本輪,是否也視為「空資料」請使用者定);④`getExcelU8ArrFromData` 輸出之 zip 含時間戳,同一輸入隔秒位元組即不同(HEAD 對 HEAD 亦然,證據 `3-probe-zip-nondeterm.log`),涉及該函數之位元組比對須改比讀回內容.
+
+## 第 221 項 §11 第 6 項 ws286e 處置結果(2026-11-03,陣列與結構子類 6 個函數:`arrFilterByENum`、`arrReverse`、`arrSep`、`matConcat`、`matat`、`ltdtpull`;必須參數無效即拋錯、空資料照常;第一級〔他套件 0 站點〕;主控任務 20261031121854 ws286e)
+
+- 依據:使用者 2026-11-03(dspec〈輸入參數之檢測機制〉§11 第 6 項「陣列與結構子類」):「arrFilterByENum arrReverse arrSep matConcat matat ltdtpull 可再做 但需等前一次連動更新之後」＋逐列確認主控所列表;「ltdtpull([], 'x', 'id') A 仍報錯，因為 'x' 不是陣列。空陣列本身不報錯」→ **型別檢測與資料有無無關**:必須參數型別不對、缺少、給錯即拋錯(訊息不帶值),空陣列照常.前一輪(ws286d,wsemi 1.9.48)全庫連動已跑完並看過結果.主控查其他自有套件(含測試碼)這 6 個函數 0 站點;本輪以 `own-token-search` 重查(9211 檔)結果相同,wsemi `src/` 內亦無呼叫(僅各檔定義、JSDoc 與 `index.mjs` 匯出);wsemi 內僅測試碼有呼叫(6 個測試檔與 `intInputHang.test.mjs`＋子行程 `test/tools/intInputHangRunner.mjs` 之 `arrSep` 3 案).
+- 規則(本節):
+  1. 必須參數無效 throw `Error(固定訊息)`,不帶值(V19／V20),**依參數順序、每個參數先檢型別再檢元素**:`arrFilterByENum` 為 `invalid arr: must be an array`;`arrReverse` 為 `invalid vall: must be an array`;`arrSep` 為 `invalid arr: must be an array`、`invalid opt: must be a positive integer or an object with numCount or numGroup`(非物件且非有效整數)、`invalid opt.numCount or opt.numGroup`(設定物件,含 `{}`,`numCount` 與 `numGroup` 皆無效;**沿用既有訊息,維持**);`matConcat` 依序 `invalid mat1: must be an array`、`invalid mat1: must be an array of arrays`、`invalid mat2: must be an array`、`invalid mat2: must be an array of arrays`;`matat` 依序 `invalid mat: must be an array`、`invalid mat: must be an array of arrays`、`invalid istart: must be an integer index`;`ltdtpull` 依序 `invalid ltdtAll: must be an array`、`… must be an array of objects`、`invalid ltdtDel: must be an array`、`… must be an array of objects`、`invalid key: must be a non-empty string`.
+  2. **空陣列為合法資料,不報錯**:`arrFilterByENum([])`、`arrReverse([])`、`arrSep([], 有效 opt)`、`matConcat([], [])`／`([[1]], [])`／`([], [[1]])`、`matat([], 有效 istart)`、`ltdtpull([], [], 'id')`／`([], [{id:1}], 'id')`／`([{id:1}], [], 'id')` 皆照舊;**型別檢測與資料有無無關**:`arrSep([])`、`arrSep([], 0)`、`matat([], 'x')`、`ltdtpull([], 'x', 'id')`、`ltdtpull([], [], '')` 仍拋錯(空陣列不豁免另一個必須參數).
+  3. 元素檢測用 lodash `every`(依索引走訪,陣列空洞視為 `undefined` 而無效;`Array.prototype.every` 會略過空洞):`matConcat`／`matat` 各元素須為陣列(`isarr`),`ltdtpull` 各元素須為物件(`isobj`,與 `ltdtDiff` 同).
+  4. `arrSep` 之 `opt`:有效整數(`iseint`,use `count`、min 1,數字字串亦可)為整數寫法,**舊式呼叫維持可用**(第 223 項另案);`isobj(opt)` 為設定物件(`{}` 亦是,原回 `[]`);其餘(未給、`0`、`null`、`''`、陣列、布林、函數、包裝物件、`Infinity`、超過 4294967295 等)throw 型別訊息.`arrSep` 之 JSDoc 參數名原寫 `num` 與簽名 `opt` 不符,已更正為 `opt`.
+  5. `matat` 之 `istart` 為必須參數,判定與 `arrAt` 同(`iseint`,use `index`:0~4294967294,數字字串亦可),**負數、小數、`Infinity`、非數字字串一律 throw**;**超出各列長度屬資料範圍而非型別,維持該列回 `[]`**(`matat([[1,2]], 10)` 仍 `[[]]`);`iend` 為 opt 類(K3),非預期視為未給(只取 `istart` 一筆),不報錯.
+  6. **未動:單一廣義無效元素之陣列**:`arrReverse`／`arrSep`／`matat` 於型別檢測通過後仍以 `isearr` 守門——空陣列與僅含單一廣義無效元素(`[null]`、`[undefined]`、`['']`、`[{}]`、`[[]]`、`[NaN]`)之陣列維持原行為回 `[]`(例:`arrReverse([null])` 回 `[]`,`arrReverse([null, null])` 回 `[null, null]`);此為既有怪行為(靜默丟資料),**不在使用者所列表,不改,列需裁示**.`arrFilterByENum`／`matConcat`／`ltdtpull` 原即用 `isarr`,無此問題.
+  7. `ltdtpull`:`ltdtDel` 為 `[]` 時仍回 `ltdtAll` **本身**(非複本,維持);`@returns` 原寫「被刪除的物件陣列」不實,已更正為移除後剩餘之陣列.元素缺 `key`(兩邊皆缺時 `differenceBy` 視為相等而被一併移除,如 `ltdtpull([{a:1},{a:2}], [{b:1}], 'id')` 回 `[]`)為資料層行為,不在使用者所列表,不改,列需裁示.
+  8. 每次回傳新陣列(`arrFilterByENum`、`arrReverse`、`matConcat`、`matat`、`arrSep`);`matConcat([[1]], [])` 之回傳列為新陣列.
+- 逐函數(`file:line` 為本輪工作樹;「改前」皆為 HEAD 實測,見報告〈使用者逐列確認表之實測〉):
+
+| 函數:情形 | 改前 | 改後 | 位置 |
+|---|---|---|---|
+| `arrFilterByENum`:非陣列(`'x'`、`null`、`undefined`、物件…) | `[]` | throw `invalid arr: must be an array` | `src/arrFilterByENum.mjs:47-50` |
+| `arrFilterByENum([])`、`(['a'])` | `[]` | 不變 | — |
+| `arrReverse`:非陣列 | `[]` | throw `invalid vall: must be an array` | `src/arrReverse.mjs:43-46` |
+| `arrReverse([])` | `[]` | 不變(每次新陣列) | `:48-51` |
+| `arrSep`:`arr` 非陣列 | `[]` | throw `invalid arr: must be an array` | `src/arrSep.mjs:53-56` |
+| `arrSep([1,2,3])`、`(…, 0)`、`(…, null)`、`(…, '')`、`(…, [])`、`(…, Infinity)`、`(…, 2 ** 32)`、`([])`、`([], 0)` | `[]` | throw `invalid opt: must be a positive integer or an object with numCount or numGroup` | `:58-62` |
+| `arrSep([1,2,3], {})`、`([], {})`、`([], { numGroup: 0 })` | `[]` | throw `invalid opt.numCount or opt.numGroup`(`([1,2,3], { numGroup: 0 })` 原即此訊息,維持) | `:75-81` |
+| `arrSep([], 2)`、`([], { numGroup: 2 })`、`([null], 2)` | `[]` | 不變 | `:84-87` |
+| `matConcat`:`mat1`／`mat2` 非陣列(含缺 `mat2`) | `[]` | throw `invalid mat1|mat2: must be an array` | `src/matConcat.mjs:66-69`、`:73-75` |
+| `matConcat([1],[2])`、`([1],[])`、`([[1]],[2])`、含 `null` 列 | `[[]]`／`[[]]`／`[[1]]`／補 `null` | throw `… must be an array of arrays` | `:70-72`、`:76-78` |
+| `matConcat([],[])`、`([[1]],[])`、`([],[[1]])` | `[]`／`[[1]]`／`[[1]]` | 不變 | `:81-83` |
+| `matat`:`mat` 非陣列 | `[]` | throw `invalid mat: must be an array` | `src/matat.mjs:43-46` |
+| `matat([1,2], 0)`、`([[1,2], null], 0)` | `[[], []]`／`[[1], []]` | throw `invalid mat: must be an array of arrays` | `:47-49` |
+| `matat([[1,2]], 'x')`、`(…, undefined)`、`(…, -1)`、`(…, 1.5)`、`(…, Infinity)`、`([], 'x')` | `[[]]`／`[[]]`／`[[]]`／…／`[]` | throw `invalid istart: must be an integer index` | `:51-54` |
+| `matat([[1,2]], 0, 'x')`、`(…, 1, -10)`、`([[1,2]], 10)`、`([], 0)` | `[[1]]`／`[[2]]`／`[[]]`／`[]` | 不變 | `:56-63` |
+| `ltdtpull`:`ltdtAll`／`ltdtDel` 非陣列 | `[]` | throw `invalid ltdtAll|ltdtDel: must be an array` | `src/ltdtpull.mjs:42-51` |
+| `ltdtpull(['x'], [], 'id')`、`([{id:1}], ['x'], 'id')`、含 `null`／陣列／`Date` 元素 | `[]` | throw `… must be an array of objects` | `:46-48`、`:52-54` |
+| `ltdtpull`:`key` 非非空字串(含缺少、`''`、`['id']`) | `[]` | throw `invalid key: must be a non-empty string` | `:55-57` |
+| `ltdtpull([],[],'id')`、`([],[{id:1}],'id')`、`([{id:1}],[],'id')`(回 `ltdtAll` 本身) | `[]`／`[]`／`[{id:1}]` | 不變 | `:59-62` |
+
+- 內部呼叫站逐站確認(2026-11-03;`own-token-search arrFilterByENum arrReverse arrSep matConcat matat ltdtpull`,9211 檔):
+
+| 站點 | 結論 |
+|---|---|
+| wsemi `src/`(含 `index.mjs`) | 6 個函數於 `src/` 內只有各自定義、JSDoc 與 `index.mjs` 匯出,**0 個呼叫**;`matat` 內部呼叫 `arrAt`(未改,其 `istart` 無效仍回 `[]`,但本函數先行 throw 故不可達) |
+| 其他自有套件(含測試碼) | **0 站點**(`own-token-search` 結果僅 wsemi 自身) |
+| wsemi 測試碼 | 6 個測試檔;`intInputHang.test.mjs`＋`test/tools/intInputHangRunner.mjs` 之 `arrSep-num-inf`／`arrSep-num-str-inf`／`arrSep-num-2p32` 原期望 `{ ret: [] }`,改為期望 throw(`tryThrow`);其餘測試無引用 |
+
+- 盤點指令:`node C:/opensrcOper/tools/own-token-search.mjs arrFilterByENum arrReverse arrSep matConcat matat ltdtpull`;`Grep pattern="throw new Error\\('invalid (arr|vall|opt|mat1|mat2|mat|istart|ltdtAll|ltdtDel|key)" path=src glob="{arrFilterByENum,arrReverse,arrSep,matConcat,matat,ltdtpull}.mjs"`(應命中 6 檔 17 站);`Grep pattern="every\\((mat1|mat2|mat|ltdtAll|ltdtDel)," path=src`(元素檢測 5 站,皆 lodash `every`).
+- 測試(7 檔,HEAD 243 案 → 637 案,+394;`mocha --dry-run` 計案數):`test/arrFilterByENum`(56→74)、`arrReverse`(18→46)、`arrSep`(95→132)、`matConcat`(9→111)、`matat`(14→107)、`ltdtpull`(19→135)、`intInputHang`(32→32,案數不變,3 案改期望 throw);共用 `test/tools/diffInputKit.mjs`(`NON_ARR`、`NON_OBJ_ELEM`、`LEAK`、`throwsMsg`、`throwsMsgNoLeak`).鎖定舊行為者改寫:`arrSep` 之無效整數寫法、缺參數與非陣列(原斷言 `[]`)改為 throw;`arrReverse`／`matConcat`／`matat`／`ltdtpull` 非陣列與缺參數原斷言 `[]` 改為 throw;`matat` 之 `-1`／`-10` 3 案原斷言 `[[], []]` 改為 throw.
+- 驗證:見主控任務 `agent-out/ws286e-修正報告.md`(修前紅:新測試於未修之 HEAD src 上 637 案中 439 紅、198 綠;修後 637 案 0 failing;受影響 13 檔〔含 `arrAt`、`testStructure`、`optValG7optNumRetire`、`_srcBigIntLiteral`、`loadTrial`、`evemSafe`〕894 案 0 failing;變異 49 項全部殺死、0 存活;前後差分 210000 列:有效域 93048 列 0 差異、受影響域 116952 列全符預測;eslint 除 `arrReverse.mjs` 既有 4 個未使用 import 外 0 error).
+- 已知殘餘(未改,需裁示):①`arrReverse`／`arrSep`／`matat` 對單一廣義無效元素之陣列(`[null]` 等)維持 `isearr` 守門而回 `[]`(靜默丟資料,不在使用者所列表);②`matat` 負數／小數／`Infinity` 之 `istart` 改為 throw(使用者所列僅 `'x'`,依 K2 同判 `iseint` index 無效),請使用者確認;③`arrSep` 設定物件無效之訊息 `invalid opt.numCount or opt.numGroup` 不合 V19 格式(依派工書維持);④`ltdtpull` 元素缺 `key` 時以 `undefined` 視為相等而一併移除;⑤`arrReverse.mjs` 既有 4 個未使用 import(`isstr`、`isbol`、`isnum`、`isobj`,eslint no-unused-vars,HEAD 即有,只提出未刪).

@@ -1,5 +1,11 @@
 import assert from 'assert'
 import arrSep from '../src/arrSep.mjs'
+import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
+
+
+const MSG_ARR = 'invalid arr: must be an array'
+const MSG_OPT = 'invalid opt: must be a positive integer or an object with numCount or numGroup'
+const MSG_OPT_OBJ = 'invalid opt.numCount or opt.numGroup'
 
 
 describe(`arrSep`, function() {
@@ -60,59 +66,153 @@ describe(`arrSep`, function() {
         assert.strict.deepStrictEqual(r, o[k])
     })
 
-    it(`should return [] when input ${JSON.stringify(arr)}, ''`, function() {
-        let r = arrSep(arr, '')
-        assert.strict.deepStrictEqual(r, [])
+    //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): arr與切分數量(opt)皆為必須參數, 無效throw(訊息不帶值); 空陣列為合法資料(切分數量有效時回傳[])
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、K2(必須參數)、V19(訊息格式)、V20(不回顯輸入值)
+    //  原回[]之整數寫法無效值(''、[]、null、undefined、0等)與缺切分數量改為throw; 設定物件無效維持throw, {}(原回[])併入此類
+    it(`should throw invalid opt when input ${JSON.stringify(arr)}, ''`, function() {
+        throwsMsg(() => arrSep(arr, ''), MSG_OPT)
     })
 
-    it(`should return [] when input ${JSON.stringify(arr)}, []`, function() {
-        let r = arrSep(arr, [])
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid opt when input ${JSON.stringify(arr)}, []`, function() {
+        throwsMsg(() => arrSep(arr, []), MSG_OPT)
     })
 
-    it(`should return [] when input ${JSON.stringify(arr)}, {}`, function() {
-        let r = arrSep(arr, {})
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid opt.numCount or opt.numGroup when input ${JSON.stringify(arr)}, {}`, function() {
+        throwsMsg(() => arrSep(arr, {}), MSG_OPT_OBJ)
     })
 
-    it(`should return [] when input ${JSON.stringify(arr)}, null`, function() {
-        let r = arrSep(arr, null)
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid opt when input ${JSON.stringify(arr)}, null`, function() {
+        throwsMsg(() => arrSep(arr, null), MSG_OPT)
     })
 
-    it(`should return [] when input ${JSON.stringify(arr)}, undefined`, function() {
-        let r = arrSep(arr, undefined)
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid opt when input ${JSON.stringify(arr)}, undefined`, function() {
+        throwsMsg(() => arrSep(arr, undefined), MSG_OPT)
     })
 
-    it(`should return [] when input ''`, function() {
-        let r = arrSep('')
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid arr when input ''`, function() {
+        throwsMsg(() => arrSep(''), MSG_ARR)
     })
 
-    it(`should return [] when input []`, function() {
-        let r = arrSep([])
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid opt when input [] (opt not given, even though arr is empty)`, function() {
+        throwsMsg(() => arrSep([]), MSG_OPT)
     })
 
-    it(`should return [] when input {}`, function() {
-        let r = arrSep({})
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid arr when input {}`, function() {
+        throwsMsg(() => arrSep({}), MSG_ARR)
     })
 
-    it(`should return [] when input null`, function() {
-        let r = arrSep(null)
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid arr when input null`, function() {
+        throwsMsg(() => arrSep(null), MSG_ARR)
     })
 
-    it(`should return [] when input undefined`, function() {
-        let r = arrSep(undefined)
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid arr when input undefined`, function() {
+        throwsMsg(() => arrSep(undefined), MSG_ARR)
     })
 
-    it(`should return [] when input NaN`, function() {
-        let r = arrSep(NaN)
-        assert.strict.deepStrictEqual(r, [])
+    it(`should throw invalid arr when input NaN`, function() {
+        throwsMsg(() => arrSep(NaN), MSG_ARR)
+    })
+
+    describe(`required parameters arr and opt (ws286e)`, function() {
+
+        let a3 = [1, 2, 3]
+
+        // 表列: ('x',2)、([1,2,3])、([1,2,3],0)、([1,2,3],{})、([]) → throw; ([],2) → [] 不變; ({numGroup:0})型之無效設定已throw維持
+        it(`should throw when input 'x', 2`, function() {
+            throwsMsg(() => arrSep('x', 2), MSG_ARR)
+        })
+
+        it(`should throw when input [1, 2, 3] (opt not given)`, function() {
+            throwsMsg(() => arrSep([1, 2, 3]), MSG_OPT)
+        })
+
+        it(`should throw when input [1, 2, 3], 0`, function() {
+            throwsMsg(() => arrSep([1, 2, 3], 0), MSG_OPT)
+        })
+
+        it(`should throw when input [1, 2, 3], {}`, function() {
+            throwsMsg(() => arrSep([1, 2, 3], {}), MSG_OPT_OBJ)
+        })
+
+        it(`should throw when input [] (opt not given)`, function() {
+            throwsMsg(() => arrSep([]), MSG_OPT)
+        })
+
+        it(`should still throw when input [1, 2, 3], { numGroup: 0 } (unchanged)`, function() {
+            throwsMsg(() => arrSep([1, 2, 3], { numGroup: 0 }), MSG_OPT_OBJ)
+        })
+
+        it(`should return [] (no throw) when input [], 2`, function() {
+            assert.strict.deepStrictEqual(arrSep([], 2), [])
+        })
+
+        // 空陣列為合法資料, 切分數量有效則回傳[](三種寫法), 每次回傳新陣列
+        it(`should return [] for an empty array in all valid forms and return a new array each call`, function() {
+            let a = []
+            for (let o of [2, '2', { numCount: 2 }, { numGroup: 2 }, { numCount: '3', numGroup: 0 }]) {
+                let r1 = arrSep(a, o)
+                let r2 = arrSep(a, o)
+                assert.strict.deepStrictEqual(r1, [])
+                assert.notStrictEqual(r1, r2)
+            }
+        })
+
+        // 型別檢測與arr有無資料無關: arr為空陣列時, 無效切分數量一樣throw
+        it(`should throw for an empty arr when opt is invalid (type check is independent of data)`, function() {
+            throwsMsg(() => arrSep([], 0), MSG_OPT)
+            throwsMsg(() => arrSep([], null), MSG_OPT)
+            throwsMsg(() => arrSep([], ''), MSG_OPT)
+            throwsMsg(() => arrSep([], {}), MSG_OPT_OBJ)
+            throwsMsg(() => arrSep([], { numGroup: 0 }), MSG_OPT_OBJ)
+            throwsMsg(() => arrSep([], { numCount: 'x', numGroup: -1 }), MSG_OPT_OBJ)
+        })
+
+        // 未列之合法呼叫不得改變: 僅含單一廣義無效元素(isearr為false)之陣列維持原行為回傳[](本次不動, 見報告需裁示)
+        it(`should keep returning [] for an array of a single iser element (unchanged, not in the confirmed table)`, function() {
+            for (let v of [null, undefined, '', {}, [], NaN]) {
+                assert.strict.deepStrictEqual(arrSep([v], 2), [])
+            }
+            assert.strict.deepStrictEqual(arrSep([null, null], 2), [[null, null]])
+        })
+
+        // arr非陣列(NON_ARR 21種 + 數字字串), 搭配有效切分數量
+        for (let [lb, v] of [...NON_ARR, ['5', 5], [`'5'`, '5']]) {
+            it(`should throw invalid arr when arr is ${lb} and opt is 2`, function() {
+                throwsMsg(() => arrSep(v, 2), MSG_ARR)
+            })
+        }
+
+        // 檢測順序: arr先於opt, 兩者皆無效時回報arr
+        it(`should report arr first when both arr and opt are invalid`, function() {
+            throwsMsg(() => arrSep('x', 0), MSG_ARR)
+            throwsMsg(() => arrSep(null, {}), MSG_ARR)
+            throwsMsg(() => arrSep(), MSG_ARR)
+        })
+
+        // 訊息不回顯輸入值(V20)
+        it(`should not echo the input value in the messages`, function() {
+            throwsMsgNoLeak(() => arrSep(LEAK, 2), MSG_ARR)
+            throwsMsgNoLeak(() => arrSep({ LEAK }, 2), MSG_ARR)
+            throwsMsgNoLeak(() => arrSep(a3, LEAK), MSG_OPT)
+            throwsMsgNoLeak(() => arrSep(a3, [LEAK]), MSG_OPT)
+            throwsMsgNoLeak(() => arrSep(a3, { numCount: LEAK }), MSG_OPT_OBJ)
+            throwsMsgNoLeak(() => arrSep(a3, { LEAK }), MSG_OPT_OBJ)
+        })
+
+        // 整數寫法(正整數)舊式呼叫維持可用(第223項另案, 不得移除)
+        it(`should keep the legacy integer form working (not removed; item 223 is a separate task)`, function() {
+            assert.strict.deepStrictEqual(arrSep(a3, 2), [[1, 2], [3]])
+            assert.strict.deepStrictEqual(arrSep(a3, '2'), [[1, 2], [3]])
+            assert.strict.deepStrictEqual(arrSep(a3, { numCount: 2 }), [[1, 2], [3]])
+            assert.strict.deepStrictEqual(arrSep(a3, { numGroup: 2 }), [[1, 3], [2]])
+        })
+
+        it(`should not mutate the input array`, function() {
+            let a = [1, 2, 3, 4, 5]
+            arrSep(a, 2)
+            assert.strict.deepStrictEqual(a, [1, 2, 3, 4, 5])
+        })
+
     })
 
     //第221項已知缺陷先修(ws270): 整數寫法與opt.numCount、opt.numGroup皆改iseint(x, { use: 'count', min: 1 }), 通過後以Number()取值再用於迴圈(修前數字字串與迴圈之+=字串相加而切錯)
@@ -197,8 +297,9 @@ describe(`arrSep`, function() {
             ['function', () => 2],
         ]
         for (let [label, v] of INVALIDS) {
-            it(`should return [] when input a8, ${label}`, function() {
-                assert.strict.deepStrictEqual(arrSep(a8, v), [])
+            // ws286e: 整數寫法之無效值由回傳[]改為throw; 一般物件({})為設定物件, 其numCount與numGroup皆無效, 訊息同設定物件之無效
+            it(`should throw when input a8, ${label}`, function() {
+                throwsMsg(() => arrSep(a8, v), label === '{}' ? MSG_OPT_OBJ : MSG_OPT)
             })
             it(`should throw when input a8, { numCount: ${label} }`, function() {
                 assert.throws(() => arrSep(a8, { numCount: v }), { message: 'invalid opt.numCount or opt.numGroup' })
@@ -210,7 +311,7 @@ describe(`arrSep`, function() {
 
     })
 
-    describe(`invalid num (not iseint count min 1) in the integer form should return []`, function() {
+    describe(`invalid num (not iseint count min 1) in the integer form should throw invalid opt (ws286e; originally returned [])`, function() {
 
         for (let [label, v] of [
             ['0', 0],
@@ -226,8 +327,8 @@ describe(`arrSep`, function() {
             ['NaN', NaN],
             [`'abc'`, 'abc'],
         ]) {
-            it(`should return [] when input a8, ${label}`, function() {
-                assert.strict.deepStrictEqual(arrSep(a8, v), [])
+            it(`should throw when input a8, ${label}`, function() {
+                throwsMsg(() => arrSep(a8, v), MSG_OPT)
             })
         }
 

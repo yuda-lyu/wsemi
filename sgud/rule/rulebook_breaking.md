@@ -16,4 +16,4 @@
 | 第 39～44 項 | `sgud/rule/rulebook_breaking_39to44.md` | 12.2 |
 | 第 45～51 項 | `sgud/rule/rulebook_breaking_45to51.md` | 23.4 |
 | 第 52～56 項 | `sgud/rule/rulebook_breaking_52on.md` | 23.9 |
-| 第 57 項起(第 57 項 ws286a、第 58 項 ws286b、第 59 項 ws286c、第 60 項 ws286d) | `sgud/rule/rulebook_breaking_57on.md` | 14.0 |
+| 第 57 項起(第 57 項 ws286a、第 58 項 ws286b、第 59 項 ws286c、第 60 項 ws286d、第 61 項 ws286e) | `sgud/rule/rulebook_breaking_57on.md` | 17.5 |

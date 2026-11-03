@@ -56,10 +56,10 @@ let cases = {
     'sepInt-n-1e21': () => tryThrow(() => sepInt(10, 1e21)),
     'sepInt-n-str-1e21': () => tryThrow(() => sepInt(10, '1e21')),
 
-    //arrSep: 整數寫法與numCount、numGroup為Infinity、超過個數上限
-    'arrSep-num-inf': () => ({ ret: arrSep(arr8, Infinity) }),
-    'arrSep-num-str-inf': () => ({ ret: arrSep(arr8, 'Infinity') }),
-    'arrSep-num-2p32': () => ({ ret: arrSep(arr8, 2 ** 32) }),
+    //arrSep: 整數寫法與numCount、numGroup為Infinity、超過個數上限(ws286e起整數寫法無效亦throw; 原回[])
+    'arrSep-num-inf': () => tryThrow(() => arrSep(arr8, Infinity)),
+    'arrSep-num-str-inf': () => tryThrow(() => arrSep(arr8, 'Infinity')),
+    'arrSep-num-2p32': () => tryThrow(() => arrSep(arr8, 2 ** 32)),
     'arrSep-numCount-inf': () => tryThrow(() => arrSep(arr8, { numCount: Infinity })),
     'arrSep-numCount-2p32': () => tryThrow(() => arrSep(arr8, { numCount: 2 ** 32 })),
     'arrSep-numCount-maxsafe': () => tryThrow(() => arrSep(arr8, { numCount: Number.MAX_SAFE_INTEGER })),

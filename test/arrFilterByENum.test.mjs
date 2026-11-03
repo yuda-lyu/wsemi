@@ -2,6 +2,10 @@ import assert from 'assert'
 import arrFilterByENum from '../src/arrFilterByENum.mjs'
 import arrFilterByNum from '../src/arrFilterByNum.mjs'
 import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
+import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
+
+
+const MSG_ARR = 'invalid arr: must be an array'
 
 
 //dspec §11(使用者2026-10-31): 「arrFilterByNum 就是基於isnum去判斷 arrFilterByPnum 就是基於ispnum, 應該需創建 arrFilterByENum, 就是基於 isenum」
@@ -46,12 +50,40 @@ describe(`arrFilterByENum`, function() {
         })
     }
 
-    //輸入不是陣列時回傳[](比照arrFilterByNum)
-    for (let [lb, v] of [[`''`, ''], ['{}', {}], ['null', null], ['undefined', undefined], ['NaN', NaN], ['5', 5], [`'5'`, '5'], ['true', true], ['[] (empty)', []], [`{ length: 1, 0: 1 }`, { length: 1, 0: 1 }]]) {
-        it(`should return [] when input ${lb}`, function() {
-            assert.strict.deepStrictEqual(arrFilterByENum(v), [])
+    //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): arr為必須參數, 非陣列throw(訊息不帶值); 空陣列為合法資料, 照常回傳[]
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、V19(訊息格式)、V20(不回顯輸入值)
+    for (let [lb, v] of [...NON_ARR, [`'x'`, 'x'], ['5', 5], [`{ length: 1, 0: 1 }`, { length: 1, 0: 1 }]]) {
+        it(`should throw invalid arr when input ${lb}`, function() {
+            throwsMsg(() => arrFilterByENum(v), MSG_ARR)
         })
     }
+
+    it(`should not echo the input value in the message of an invalid arr`, function() {
+        throwsMsgNoLeak(() => arrFilterByENum(LEAK), MSG_ARR)
+        throwsMsgNoLeak(() => arrFilterByENum({ LEAK }), MSG_ARR)
+        throwsMsgNoLeak(() => arrFilterByENum({ length: 1, 0: LEAK }), MSG_ARR)
+    })
+
+    it(`should throw invalid arr when no argument is given`, function() {
+        throwsMsg(() => arrFilterByENum(), MSG_ARR)
+    })
+
+    //表列: ([]) → [], (['a']) → [] 不變; 空陣列與無有效數字之陣列皆不報錯
+    it(`should return [] (no throw) when input [] and each call returns a new array`, function() {
+        let a = []
+        let r1 = arrFilterByENum(a)
+        let r2 = arrFilterByENum(a)
+        assert.strict.deepStrictEqual(r1, [])
+        assert.strict.deepStrictEqual(r2, [])
+        assert.notStrictEqual(r1, a)
+        assert.notStrictEqual(r1, r2)
+    })
+
+    it(`should return [] (no throw) when input ['a'] or an array without any valid number`, function() {
+        assert.strict.deepStrictEqual(arrFilterByENum(['a']), [])
+        assert.strict.deepStrictEqual(arrFilterByENum([null, undefined, NaN, '', '  ', {}, []]), [])
+        assert.strict.deepStrictEqual(arrFilterByENum([null]), [])
+    })
 
     it(`should not mutate the input array and should return a new array`, function() {
         let arr = ['1', 2, 'x']

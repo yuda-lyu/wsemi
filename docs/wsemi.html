@@ -3818,14 +3818,14 @@ console.log(arrAt([1, 2, 3, '4', 5, 'abc'], 1, Infinity))
 與arrFilterByNum(基於isnum)之差異: Infinity、-Infinity、'Infinity'、'0x10'、'0b11'、'1e400'、'1e-400'(下溢)、包裝物件(new Number(1))、
 空字串與純空白字串、'-'、'NP'等標記字串、null、undefined、NaN、布林、BigInt、物件、陣列等皆不保留。
 與arrFilterByPnum(基於ispnum，僅保留正數)之差異: 不限正數，負數與0亦保留。
-輸入不是陣列時回傳空陣列[]；元素順序與重複皆保留；不改動輸入陣列。</p>
+arr為必須參數，須為陣列，非陣列(含未給、null、字串、物件等)throw Error('invalid arr: must be an array')，訊息不帶輸入值；空陣列為合法資料，回傳空陣列[]，亦不因無有效數字而報錯；元素順序與重複皆保留；不改動輸入陣列。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrFilterByENum.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrFilterByENum.mjs.html">arrFilterByENum.mjs</a>, <a href="arrFilterByENum.mjs.html#line33">line 33</a>
+        <a href="arrFilterByENum.mjs.html">arrFilterByENum.mjs</a>, <a href="arrFilterByENum.mjs.html#line45">line 45</a>
     </li></ul></dd>
     
 
@@ -3880,7 +3880,18 @@ console.log(arrFilterByENum(arr))
 
 arr = [' 12 ', '1.2e-5', '-', 'NP', '', Infinity, '0x10', null, true, new Number(3), 5]
 console.log(arrFilterByENum(arr))
-// => [ 12, 0.000012, 5 ]</code></pre>
+// => [ 12, 0.000012, 5 ]
+
+console.log(arrFilterByENum([]))
+// => []
+
+try {
+    arrFilterByENum('abc')
+}
+catch (err) {
+    console.log(err.message)
+}
+// => invalid arr: must be an array</code></pre>
 
 
 
@@ -3927,7 +3938,7 @@ console.log(arrFilterByENum(arr))
 
             
 
-            <td class="description last"><p>輸入原始陣列</p></td>
+            <td class="description last"><p>輸入原始陣列，必須參數，須為陣列(空陣列合法，回傳[])，非陣列throw Error('invalid arr: must be an array')</p></td>
         </tr>
 
     
@@ -3947,13 +3958,43 @@ console.log(arrFilterByENum(arr))
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>arr非陣列時throw Error('invalid arr: must be an array')，訊息不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳新陣列，元素皆為Number</p>
+    <p>回傳新陣列，元素皆為Number；無有效數字(含空陣列)時為空陣列[]</p>
 </div>
 
 
@@ -8811,7 +8852,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
     
 
-    <h4 class="name" id=".arrReverse"><span class="type-signature type-signature-static">(static) </span>arrReverse<span class="signature">(vsrc)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".arrReverse"><span class="type-signature type-signature-static">(static) </span>arrReverse<span class="signature">(vall)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -8822,13 +8863,14 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>反序排列陣列</p>
+<p>vall為必須參數，須為陣列，非陣列(含未給、null、字串、物件等)throw Error('invalid vall: must be an array')，訊息不帶輸入值；空陣列為合法資料，回傳空陣列[]。回傳深拷貝後反序之新陣列，不改動輸入陣列。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrReverse.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrReverse.mjs.html">arrReverse.mjs</a>, <a href="arrReverse.mjs.html#line26">line 26</a>
+        <a href="arrReverse.mjs.html">arrReverse.mjs</a>, <a href="arrReverse.mjs.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -8875,7 +8917,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(arrReverse([1, 2, 3, 4, 5, 'abc']))// => [ 'abc', 5, 4, 3, 2, 1 ]console.log(arrReverse([1, 2, 3, '4', 5, 'abc']))// => [ 'abc', 5, '4', 3, 2, 1 ]</code></pre>
+    <pre class="prettyprint"><code>console.log(arrReverse([1, 2, 3, 4, 5, 'abc']))// => [ 'abc', 5, 4, 3, 2, 1 ]console.log(arrReverse([1, 2, 3, '4', 5, 'abc']))// => [ 'abc', 5, '4', 3, 2, 1 ]console.log(arrReverse([]))// => []try {    arrReverse('abc')}catch (err) {    console.log(err.message)}// => invalid vall: must be an array</code></pre>
 
 
 
@@ -8905,7 +8947,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
         <tr>
             
-                <td class="name"><code>vsrc</code></td>
+                <td class="name"><code>vall</code></td>
             
 
             <td class="type">
@@ -8922,7 +8964,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
             
 
-            <td class="description last"><p>輸入原始陣列</p></td>
+            <td class="description last"><p>輸入原始陣列，必須參數，須為陣列(空陣列合法，回傳[])，非陣列throw Error('invalid vall: must be an array')</p></td>
         </tr>
 
     
@@ -8942,13 +8984,43 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>vall非陣列時throw Error('invalid vall: must be an array')，訊息不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳移除後陣列</p>
+    <p>回傳反序後之新陣列</p>
 </div>
 
 
@@ -8975,7 +9047,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
     
 
-    <h4 class="name" id=".arrSep"><span class="type-signature type-signature-static">(static) </span>arrSep<span class="signature">(arr, num)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".arrSep"><span class="type-signature type-signature-static">(static) </span>arrSep<span class="signature">(arr, opt)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -8986,14 +9058,14 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>依照指定數量切分陣列</p>
-<p>切分數量為必須參數，須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)；無效時，num為整數之舊寫法回傳[]，num為設定物件且numCount與numGroup皆無效則拋錯</p>
+<p>arr與切分數量(opt)皆為必須參數，型別檢測與arr有無資料無關：arr須為陣列，非陣列throw Error('invalid arr: must be an array')；切分數量須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)，或為設定物件(含空物件{})，非此二者(含未給、0、null、''、陣列等)throw Error('invalid opt: must be a positive integer or an object with numCount or numGroup')，設定物件之numCount與numGroup皆無效(含空物件{})則throw Error('invalid opt.numCount or opt.numGroup')；訊息皆不帶輸入值。檢測順序為arr、opt。arr為空陣列(切分數量有效)時為合法資料，回傳[]</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrSep.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrSep.mjs.html">arrSep.mjs</a>, <a href="arrSep.mjs.html#line38">line 38</a>
+        <a href="arrSep.mjs.html">arrSep.mjs</a>, <a href="arrSep.mjs.html#line51">line 51</a>
     </li></ul></dd>
     
 
@@ -9040,7 +9112,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let arr = ['a', 123, 'xyz', 5.678, null, 'd', [], { x: 'x1', y: 'y1' }]console.log(arrSep(arr, 2))// => [//   [ 'a', 123 ],//   [ 'xyz', 5.678 ],//   [ null, 'd' ],//   [ [], { x: 'x1', y: 'y1' } ]// ]console.log(arrSep(arr, 3))// => [//   [ 'a', 123, 'xyz' ],//   [ 5.678, null, 'd' ],//   [ [], { x: 'x1', y: 'y1' } ]// ]</code></pre>
+    <pre class="prettyprint"><code>let arr = ['a', 123, 'xyz', 5.678, null, 'd', [], { x: 'x1', y: 'y1' }]console.log(arrSep(arr, 2))// => [//   [ 'a', 123 ],//   [ 'xyz', 5.678 ],//   [ null, 'd' ],//   [ [], { x: 'x1', y: 'y1' } ]// ]console.log(arrSep(arr, 3))// => [//   [ 'a', 123, 'xyz' ],//   [ 5.678, null, 'd' ],//   [ [], { x: 'x1', y: 'y1' } ]// ]console.log(arrSep([], 2))// => []try {    arrSep(arr, 0)}catch (err) {    console.log(err.message)}// => invalid opt: must be a positive integer or an object with numCount or numGroup</code></pre>
 
 
 
@@ -9087,14 +9159,14 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
             
 
-            <td class="description last"><p>輸入要被切割的陣列</p></td>
+            <td class="description last"><p>輸入要被切割的陣列，必須參數，須為陣列(空陣列合法，回傳[])，非陣列throw Error('invalid arr: must be an array')</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>num</code></td>
+                <td class="name"><code>opt</code></td>
             
 
             <td class="type">
@@ -9117,7 +9189,7 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
             
 
-            <td class="description last"><p>輸入要切分數量的正整數或設定物件，可給予鍵'numCount'或'numGroup'而對應值皆為正整數(有效整數，1~4294967295，數字字串亦可，Infinity、0、小數、'0x10'、包裝物件等為無效)，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量</p></td>
+            <td class="description last"><p>輸入要切分數量的正整數或設定物件，必須參數，可給予鍵'numCount'或'numGroup'而對應值皆為正整數(有效整數，1~4294967295，數字字串亦可，Infinity、0、小數、'0x10'、包裝物件等為無效)，numCount代表原本num表示每個切割後群組內所擁有的元素數量上限，numGroup代表欲切割成幾個群組數量；整數寫法與設定物件之無效值皆throw</p></td>
         </tr>
 
     
@@ -9137,13 +9209,43 @@ console.log(arrPullAt([1, 2, 3], ['x', 1]))
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>arr非陣列時throw Error('invalid arr: must be an array')；opt既非有效整數亦非物件時throw Error('invalid opt: must be a positive integer or an object with numCount or numGroup')；opt為物件而numCount與numGroup皆無效(含{})時throw Error('invalid opt.numCount or opt.numGroup')；訊息皆不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳切割後的陣列</p>
+    <p>回傳切割後的陣列；arr為空陣列時回傳[]</p>
 </div>
 
 
@@ -97623,13 +97725,14 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由ltdtAll陣列移除ltdtDel陣列，只會針對ltdtDel內各元素的指定key來查找</p>
+<p>ltdtAll、ltdtDel與key皆為必須參數，型別檢測與有無資料無關，檢測順序為ltdtAll(陣列、各元素為物件)、ltdtDel(陣列、各元素為物件)、key(非空字串)，無效throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: must be an array of objects')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: must be an array of objects')或Error('invalid key: must be a non-empty string')，訊息不帶輸入值；空陣列為合法資料不報錯：ltdtAll為[]回傳[]，ltdtDel為[]則不刪除並回傳ltdtAll(原陣列，非複本)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpull.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtpull.mjs.html">ltdtpull.mjs</a>, <a href="ltdtpull.mjs.html#line26">line 26</a>
+        <a href="ltdtpull.mjs.html">ltdtpull.mjs</a>, <a href="ltdtpull.mjs.html#line40">line 40</a>
     </li></ul></dd>
     
 
@@ -97676,7 +97779,7 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(ltdtpull([{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x'))// => [ { x: 2, y: 'y2' } ]console.log(ltdtpull([{ id: 1, v: 'v1' }, { id: 2, v: 'v2' }, { id: 3, v: 'v3' }], [{ id: 1, v: '-v1' }, { id: 3, v: '-v3' }], 'id'))// => [ { id: 2, v: 'v2' } ]</code></pre>
+    <pre class="prettyprint"><code>console.log(ltdtpull([{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x'))// => [ { x: 2, y: 'y2' } ]console.log(ltdtpull([{ id: 1, v: 'v1' }, { id: 2, v: 'v2' }, { id: 3, v: 'v3' }], [{ id: 1, v: '-v1' }, { id: 3, v: '-v3' }], 'id'))// => [ { id: 2, v: 'v2' } ]console.log(ltdtpull([], [{ id: 1 }], 'id'))// => []try {    ltdtpull([], 'x', 'id')}catch (err) {    console.log(err.message)}// => invalid ltdtDel: must be an array</code></pre>
 
 
 
@@ -97723,7 +97826,7 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
 
             
 
-            <td class="description last"><p>輸入要被刪除的物件陣列</p></td>
+            <td class="description last"><p>輸入要被刪除的物件陣列，必須參數，須為物件陣列(空陣列合法)</p></td>
         </tr>
 
     
@@ -97747,7 +97850,7 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
 
             
 
-            <td class="description last"><p>輸入要刪除的物件陣列</p></td>
+            <td class="description last"><p>輸入要刪除的物件陣列，必須參數，須為物件陣列(空陣列合法，代表不刪除)</p></td>
         </tr>
 
     
@@ -97771,7 +97874,7 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
 
             
 
-            <td class="description last"><p>輸入要比對物件的key值</p></td>
+            <td class="description last"><p>輸入要比對物件的key值，必須參數，須為非空字串</p></td>
         </tr>
 
     
@@ -97791,13 +97894,43 @@ console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: 
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>ltdtAll或ltdtDel非陣列、或有元素非物件時throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: must be an array of objects')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: must be an array of objects')；key非非空字串時throw Error('invalid key: must be a non-empty string')；訊息皆不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳被刪除的物件陣列</p>
+    <p>回傳移除後剩餘的物件陣列；ltdtAll為[]時回傳[]，ltdtDel為[]時回傳ltdtAll</p>
 </div>
 
 
@@ -99473,7 +99606,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     
 
-    <h4 class="name" id=".matConcat"><span class="type-signature type-signature-static">(static) </span>matConcat<span class="signature">(mat, istart, iend<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".matConcat"><span class="type-signature type-signature-static">(static) </span>matConcat<span class="signature">(mat1, mat2)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -99484,13 +99617,14 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>合併二維陣列mat1與mat2</p>
+<p>mat1與mat2皆為必須參數，須為二維陣列(陣列且各元素皆為陣列)，檢測順序為mat1(陣列、各元素為陣列)、mat2(陣列、各元素為陣列)，無效throw Error('invalid mat1: must be an array')、Error('invalid mat1: must be an array of arrays')、Error('invalid mat2: must be an array')或Error('invalid mat2: must be an array of arrays')，訊息不帶輸入值；空陣列為合法資料：兩者皆為[]回傳[]，只有一邊為[]則另一邊照常回傳(列數與欄數以另一邊為準)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/matConcat.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="matConcat.mjs.html">matConcat.mjs</a>, <a href="matConcat.mjs.html#line47">line 47</a>
+        <a href="matConcat.mjs.html">matConcat.mjs</a>, <a href="matConcat.mjs.html#line64">line 64</a>
     </li></ul></dd>
     
 
@@ -99537,7 +99671,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let mat1let mat2mat1 = [['a', 'b'], [1.1, 2.2]]mat2 = [['c', 'd'], [10.1, 20.2]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'c', 'd' ],//   [ 1.1, 2.2, 10.1, 20.2 ]// ]mat1 = [['a', 'b', 'c'], [1, 2, 3], [1.1, 2.2, 3.3]]mat2 = [['x', 'y'], [-10.1, -20.2]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'c', 'x', 'y' ],//   [ 1, 2, 3, -10.1, -20.2 ],//   [ 1.1, 2.2, 3.3, null, null ]// ]mat1 = [['a', 'b'], [1.1, 2.2]]mat2 = [['x', 'y', 'z'], [-1, -2, -3], [-10.1, -20.2, -30.3]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'x', 'y', 'z' ],//   [ 1.1, 2.2, -1, -2, -3 ],//   [ null, null, -10.1, -20.2, -30.3 ]// ]</code></pre>
+    <pre class="prettyprint"><code>let mat1let mat2mat1 = [['a', 'b'], [1.1, 2.2]]mat2 = [['c', 'd'], [10.1, 20.2]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'c', 'd' ],//   [ 1.1, 2.2, 10.1, 20.2 ]// ]mat1 = [['a', 'b', 'c'], [1, 2, 3], [1.1, 2.2, 3.3]]mat2 = [['x', 'y'], [-10.1, -20.2]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'c', 'x', 'y' ],//   [ 1, 2, 3, -10.1, -20.2 ],//   [ 1.1, 2.2, 3.3, null, null ]// ]mat1 = [['a', 'b'], [1.1, 2.2]]mat2 = [['x', 'y', 'z'], [-1, -2, -3], [-10.1, -20.2, -30.3]]console.log(matConcat(mat1, mat2))// => [//   [ 'a', 'b', 'x', 'y', 'z' ],//   [ 1.1, 2.2, -1, -2, -3 ],//   [ null, null, -10.1, -20.2, -30.3 ]// ]console.log(matConcat([], [[1, 2]]))// => [ [ 1, 2 ] ]console.log(matConcat([], []))// => []try {    matConcat([1], [2])}catch (err) {    console.log(err.message)}// => invalid mat1: must be an array of arrays</code></pre>
 
 
 
@@ -99555,11 +99689,7 @@ mat第1行需為字串陣列，才能當head</p>
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -99571,7 +99701,7 @@ mat第1行需為字串陣列，才能當head</p>
 
         <tr>
             
-                <td class="name"><code>mat</code></td>
+                <td class="name"><code>mat1</code></td>
             
 
             <td class="type">
@@ -99585,35 +99715,23 @@ mat第1行需為字串陣列，才能當head</p>
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                </td>
-            
 
-            <td class="description last"><p>輸入要被提取的資料陣列</p></td>
+            <td class="description last"><p>輸入左側二維陣列，必須參數，須為二維陣列(空陣列合法)</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>istart</code></td>
+                <td class="name"><code>mat2</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Integer</span>
+<span class="param-type">Array</span>
 
 
 
@@ -99621,62 +99739,10 @@ mat第1行需為字串陣列，才能當head</p>
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                </td>
-            
 
-            <td class="description last"><p>輸入起始的欄位指標整數</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>iend</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Integer</span>
-
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>istart</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>輸入結束的欄位指標整數，若不輸入則等同於istart</p></td>
+            <td class="description last"><p>輸入右側二維陣列，必須參數，須為二維陣列(空陣列合法)</p></td>
         </tr>
 
     
@@ -99696,13 +99762,43 @@ mat第1行需為字串陣列，才能當head</p>
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>mat1或mat2非陣列、或有元素非陣列時throw Error('invalid mat1: must be an array')、Error('invalid mat1: must be an array of arrays')、Error('invalid mat2: must be an array')、Error('invalid mat2: must be an array of arrays')，訊息不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳提取的資料陣列</p>
+    <p>回傳合併後之二維陣列，列數為兩者較大者，缺少之儲存格補null；兩者皆為[]時回傳[]</p>
 </div>
 
 
@@ -100137,13 +100233,14 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由二維陣列mat提取資料。若istart與iend有效則提取istart~iend欄位，而若僅istart有效則提取istart欄位</p>
+<p>mat與istart皆為必須參數，型別檢測與mat有無資料無關，檢測順序為mat(陣列、各元素為陣列)、istart：mat須為二維陣列(陣列且各元素皆為陣列)，無效throw Error('invalid mat: must be an array')或Error('invalid mat: must be an array of arrays')；istart須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為索引(0~4294967294)，無效(含未給、負數、小數、非數字字串等)throw Error('invalid istart: must be an integer index')；訊息皆不帶輸入值。iend為opt類參數，非預期之輸入視為未給而只提取istart一筆，不報錯。mat為空陣列(istart有效)時為合法資料，回傳[]；istart或iend超出各列長度時該列回傳[]</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/matat.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="matat.mjs.html">matat.mjs</a>, <a href="matat.mjs.html#line24">line 24</a>
+        <a href="matat.mjs.html">matat.mjs</a>, <a href="matat.mjs.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -100190,7 +100287,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1))// => [['b'], [34.56]]console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1, 2))// => [['b', '12.34'], [34.56, 'abc']]</code></pre>
+    <pre class="prettyprint"><code>console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1))// => [['b'], [34.56]]console.log(matat([['a', 'b', '12.34'], [12, 34.56, 'abc']], 1, 2))// => [['b', '12.34'], [34.56, 'abc']]console.log(matat([], 0))// => []try {    matat([['a', 'b']], 'x')}catch (err) {    console.log(err.message)}// => invalid istart: must be an integer index</code></pre>
 
 
 
@@ -100253,7 +100350,7 @@ mat第1行需為字串陣列，才能當head</p>
                 </td>
             
 
-            <td class="description last"><p>輸入要被提取的資料陣列</p></td>
+            <td class="description last"><p>輸入要被提取的資料陣列，必須參數，須為二維陣列(空陣列合法，回傳[])</p></td>
         </tr>
 
     
@@ -100267,6 +100364,9 @@ mat第1行需為字串陣列，才能當head</p>
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -100289,7 +100389,7 @@ mat第1行需為字串陣列，才能當head</p>
                 </td>
             
 
-            <td class="description last"><p>輸入起始的欄位指標整數</p></td>
+            <td class="description last"><p>輸入起始的欄位指標整數，必須參數(有效整數，0~4294967294，數字字串亦可)，無效throw Error('invalid istart: must be an integer index')</p></td>
         </tr>
 
     
@@ -100303,6 +100403,9 @@ mat第1行需為字串陣列，才能當head</p>
             
                 
 <span class="param-type">Integer</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -100329,7 +100432,7 @@ mat第1行需為字串陣列，才能當head</p>
                 </td>
             
 
-            <td class="description last"><p>輸入結束的欄位指標整數，若不輸入則等同於istart</p></td>
+            <td class="description last"><p>輸入結束的欄位指標整數，opt類參數(有效整數，0~4294967294，數字字串亦可)，若不輸入或非預期之輸入則視為未給，等同於istart</p></td>
         </tr>
 
     
@@ -100349,6 +100452,36 @@ mat第1行需為字串陣列，才能當head</p>
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>mat非陣列、或有元素非陣列時throw Error('invalid mat: must be an array')、Error('invalid mat: must be an array of arrays')；istart無效時throw Error('invalid istart: must be an integer index')；訊息皆不帶輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
@@ -130607,7 +130740,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 03 2026 11:56:50 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 04 2026 07:17:58 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

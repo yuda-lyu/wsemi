@@ -54,10 +54,11 @@
 
 - 全套案數一致與測試檔結構(R-TEST-STRUCT-01;排程第 254 項;ws265,2026-11-02)
 
-### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 17.7KB)
+### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 21.5KB)
 
 查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數,及 DOM 函數必須參數遇非預期之失敗通道.所含節:
 
+- 陣列與結構子類 6 個函數 `arrFilterByENum`／`arrReverse`／`arrSep`／`matConcat`／`matat`／`ltdtpull` 必須參數無效即 throw、空資料照常(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286e,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕
 - 空資料不是失敗:向量處理 `arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數(`ltdtkeys2mat`／`ltdtkeysheads2mat`／`ltdt2vrtsable`／`mat2ltdt`／`keysmat2ltdt`)狀態模式、`getCsvStrFromData([])`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286d,2026-11-03;更正第 221 項第二批第 15 項「空陣列亦 throw」)〔本節於 2026-11-03 新增,置於該檔最前〕
 - 非計算類函數必須參數遇非預期:差異比對子類 5 個函數 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286c,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕
 - 非計算類函數必須參數遇非預期:第二批 `getTimeRange`／`rep`／`replaceObj`／`replacePlus`／`sepInt`／`cfilesize` 與 5 處文件修正(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286b,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
