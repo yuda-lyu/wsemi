@@ -1,5 +1,6 @@
 import assert from 'assert'
 import ltdtDiff from '../src/ltdtDiff.mjs'
+import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
 describe(`ltdtDiff`, function() {
@@ -206,64 +207,164 @@ describe(`ltdtDiff`, function() {
         })
     }
 
-    it(`sould return '' when input 'test中文', []`, function() {
-        let r = ltdtDiff('test中文', [])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //ws286c: ltdtOld與ltdtNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 元素非物件throw Error, 訊息固定不帶值, 依ltdtOld(陣列, 元素)、ltdtNew(陣列, 元素)序檢測; []為合法輸入
+    const MSG_OLD = 'invalid ltdtOld: must be an array'
+    const MSG_NEW = 'invalid ltdtNew: must be an array'
+    const MSG_OLD_ELE = 'invalid ltdtOld: must be an array of objects'
+    const MSG_NEW_ELE = 'invalid ltdtNew: must be an array of objects'
+    const OK = [{ a: 1 }]
+
+    for (let [label, v] of NON_ARR) {
+        it(`should throw '${MSG_OLD}' when ltdtOld is not an array: ${label} (ltdtNew valid, [] or invalid too)`, function() {
+            throwsMsg(() => ltdtDiff(v, OK), MSG_OLD)
+            throwsMsg(() => ltdtDiff(v, []), MSG_OLD)
+            throwsMsg(() => ltdtDiff(v, v), MSG_OLD)
+            throwsMsg(() => ltdtDiff(v, [1]), MSG_OLD) //ltdtOld先檢
+        })
+
+        it(`should throw '${MSG_NEW}' when ltdtNew is not an array: ${label} (ltdtOld valid or [])`, function() {
+            throwsMsg(() => ltdtDiff(OK, v), MSG_NEW)
+            throwsMsg(() => ltdtDiff([], v), MSG_NEW)
+        })
+    }
+
+    it(`should throw when ltdtOld or ltdtNew is not given (required parameters)`, function() {
+        throwsMsg(() => ltdtDiff(), MSG_OLD)
+        throwsMsg(() => ltdtDiff(OK), MSG_NEW)
+        throwsMsg(() => ltdtDiff([]), MSG_NEW)
+        throwsMsg(() => ltdtDiff(undefined, OK), MSG_OLD)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
-        let r = ltdtDiff('test中文', {})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw the fixed messages without the input value`, function() {
+        for (let v of [LEAK, { secret: LEAK }, Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
+            throwsMsgNoLeak(() => ltdtDiff(v, OK), MSG_OLD)
+            throwsMsgNoLeak(() => ltdtDiff(OK, v), MSG_NEW)
+        }
+        for (let v of [LEAK, 7391.4217, [LEAK], Symbol(LEAK), () => LEAK, new Map([[LEAK, LEAK]])]) {
+            throwsMsgNoLeak(() => ltdtDiff([v], OK), MSG_OLD_ELE)
+            throwsMsgNoLeak(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
+        }
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
-        let r = ltdtDiff('test中文', null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //元素非物件: 修前回傳{ dfs: [] }(看起來像沒有差異)或把該側靜默當成空, 現改throw
+    for (let [label, v] of NON_OBJ_ELEM) {
+        it(`should throw '...must be an array of objects' when an element is not an object: ${label} (as the only element, first, last, in ltdtOld or ltdtNew)`, function() {
+            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE)
+        })
+    }
+
+    it(`should throw for ltdtDiff([1], [2]) with the ltdtOld message (was { dfs: [] } before)`, function() {
+        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([[1]], [[2]]), MSG_OLD_ELE) //列為陣列亦非物件
+        throwsMsg(() => ltdtDiff([{ a: 1 }], [[2]]), MSG_NEW_ELE) //修前: 新側靜默當成空而顯示為全部刪除
     })
 
-    it(`sould return '' when input 'test中文', undefined`, function() {
-        let r = ltdtDiff('test中文', undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw for an array hole as an element (a hole is undefined)`, function() {
+        throwsMsg(() => ltdtDiff([, { a: 1 }], OK), MSG_OLD_ELE) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, , { a: 2 }]), MSG_NEW_ELE) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => ltdtDiff(new Array(2), OK), MSG_OLD_ELE)
     })
 
-    it(`sould return '' when input ''`, function() {
-        let r = ltdtDiff('')
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //檢測順序: ltdtOld陣列, ltdtOld元素, ltdtNew陣列, ltdtNew元素
+    it(`should check in the order of ltdtOld (array, elements) and ltdtNew (array, elements)`, function() {
+        throwsMsg(() => ltdtDiff('x', 'y'), MSG_OLD)
+        throwsMsg(() => ltdtDiff('x', [1]), MSG_OLD)
+        throwsMsg(() => ltdtDiff([1], 'y'), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
+        throwsMsg(() => ltdtDiff(OK, [2]), MSG_NEW_ELE)
     })
 
-    it(`sould return '' when input []`, function() {
-        let r = ltdtDiff([])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //物件元素(含{}與無原型物件)為有效
+    it(`should accept objects as elements, including {} and a prototype-less object`, function() {
+        let np = Object.assign(Object.create(null), { a: 1 })
+        let r = ltdtDiff([np], [{ a: 2 }])
+        assert.strict.deepStrictEqual(r.dfs, [{ a: { p: 'modify', k: 'a', vo: '1', vn: '2' } }])
+        assert.doesNotThrow(() => ltdtDiff([{}], [{}]))
     })
 
-    it(`sould return '' when input {}`, function() {
-        let r = ltdtDiff({})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //兩邊皆為[]: 回傳與正常輸出同形之空結果, 不是{}
+    it(`should return { diff: [], dfs: [] } when both ltdtOld and ltdtNew are [] (whatever opt is)`, function() {
+        for (let opt of [undefined, null, {}, { empty: '-' }, { empty: 1 }, 'x', 123, []]) {
+            let r = ltdtDiff([], [], opt)
+            assert.strict.deepStrictEqual(r, { diff: [], dfs: [] })
+            assert.strict.deepStrictEqual(Object.keys(r), ['diff', 'dfs'])
+        }
+        assert.strict.deepStrictEqual(Object.keys(ltdtDiff([], [])), Object.keys(ltdtDiff([{ a: 1 }], [{ a: 2 }])))
     })
 
-    it(`sould return '' when input null`, function() {
-        let r = ltdtDiff(null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should return a fresh object for each call when both are [] (callers may mutate the result)`, function() {
+        let r1 = ltdtDiff([], [])
+        r1.dfs.push('x')
+        r1.diff.push('y')
+        let r2 = ltdtDiff([], [])
+        assert.strict.deepStrictEqual(r2, { diff: [], dfs: [] })
+        assert.ok(r1 !== r2)
     })
 
-    it(`sould return '' when input undefined`, function() {
-        let r = ltdtDiff(undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //內部站點邊界: [{}] 對 [{}] 無任何鍵, 內部轉成兩個[]矩陣再交給arrDiff, 其兩邊皆空回傳 { diff: [], dfs: [] }(修前因arrDiff回{}而變成 { dfs: [] }, 現與正常輸出同形)
+    it(`should return { diff: [], dfs: [] } when no key can be compared: [{}] vs [{}], [{}, {}] vs [{}]`, function() {
+        assert.strict.deepStrictEqual(ltdtDiff([{}], [{}]), { diff: [], dfs: [] })
+        assert.strict.deepStrictEqual(ltdtDiff([{}, {}], [{}]), { diff: [], dfs: [] })
+        assert.strict.deepStrictEqual(ltdtDiff([{}], []), { diff: [], dfs: [] })
     })
 
-    it(`sould return '' when input NaN`, function() {
-        let r = ltdtDiff(NaN)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //只有一邊為空, 或值為''(兩邊各組出非空字串)照常回傳差異結果(取自修前HEAD之實測)
+    it(`should return the normal diff when only one side is [], or when the values are '' (not both-empty)`, function() {
+        assert.strict.deepStrictEqual(
+            ltdtDiff([], [{ a: 1 }]),
+            { diff: [{ count: 1, added: true, removed: false, value: '0∶1⟋\n' }], dfs: [{ a: { p: 'add', k: 'a', vo: '1', vn: '' } }] }
+        )
+        assert.strict.deepStrictEqual(
+            ltdtDiff([{ a: 1 }], []),
+            { diff: [{ count: 1, added: false, removed: true, value: '0∶1⟋\n' }], dfs: [{ a: { p: 'remove', k: 'a', vo: '1', vn: '' } }] }
+        )
+        assert.strict.deepStrictEqual(
+            ltdtDiff([{ a: '' }], [{ a: '' }]),
+            { diff: [{ count: 1, added: false, removed: false, value: '0∶⟋\n' }], dfs: [{ a: { p: '', k: 'a', vo: '', vn: '' } }] }
+        )
+    })
+
+    //內部站點邊界: 值含換行時, 一對可合併之行兩邊皆為[], 內部以兩個空字串呼叫strDiff, 結果與修前相同
+    it(`should keep the same result as before when a modified line splits into two empty arrays (strDiff is called with two '')`, function() {
+        assert.strict.deepStrictEqual(
+            ltdtDiff([{ k: 'a\nz' }], [{ k: 'b\nz' }]),
+            {
+                diff: [
+                    { count: 1, added: false, removed: true, value: '0∶a\n' },
+                    { count: 1, added: true, removed: false, value: '0∶b\n' },
+                    { count: 1, added: false, removed: false, value: 'z⟋\n' },
+                ],
+                dfs: [{ k: undefined }, { k: { p: '', k: 'k', vo: '', vn: '' } }], //首列無可比對儲存格, 鍵k之值為undefined(修前即如此)
+            }
+        )
+    })
+
+    //opt.empty有效時仍生效, 無效的鍵維持現行(改用預設)
+    it(`should use opt.empty when valid and the default when invalid`, function() {
+        let r1 = ltdtDiff([{ a: 1 }], [{ b: 2 }])
+        assert.strict.deepStrictEqual(r1.dfs, [{
+            a: { p: 'modify', k: 'a', vo: '1', vn: '∗empty∗' },
+            b: { p: 'modify', k: 'b', vo: '∗empty∗', vn: '2' },
+        }])
+        let r2 = ltdtDiff([{ a: 1 }], [{ b: 2 }], { empty: '-' })
+        assert.strict.deepStrictEqual(r2.dfs, [{
+            a: { p: 'modify', k: 'a', vo: '1', vn: '-' },
+            b: { p: 'modify', k: 'b', vo: '-', vn: '2' },
+        }])
+        for (let opt of [undefined, null, 0, 'x', [], true, {}, { empty: '' }, { empty: 1 }, { empty: null }, { other: false }]) {
+            assert.strict.deepStrictEqual(ltdtDiff([{ a: 1 }], [{ b: 2 }], opt), r1)
+        }
     })
 
 })

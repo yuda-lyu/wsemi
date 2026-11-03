@@ -1,5 +1,6 @@
 import assert from 'assert'
 import arrDiff from '../src/arrDiff.mjs'
+import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
 describe(`arrDiff`, function() {
@@ -97,64 +98,143 @@ describe(`arrDiff`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', []`, function() {
-        let r = arrDiff('test中文', [])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //ws286c: arrOld與arrNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依arrOld、arrNew序檢測; []為合法輸入
+    const MSG_OLD = 'invalid arrOld: must be an array'
+    const MSG_NEW = 'invalid arrNew: must be an array'
+    const MSG_MAT_OLD = 'arrOld is not a matrix'
+    const MSG_MAT_NEW = 'arrNew is not a matrix'
+
+    for (let [label, v] of NON_ARR) {
+        it(`should throw '${MSG_OLD}' when arrOld is not an array: ${label} (arrNew valid, [] or invalid too; any mode)`, function() {
+            for (let opt of [undefined, { mode: 'array' }, { mode: 'matrix' }]) {
+                throwsMsg(() => arrDiff(v, ['a'], opt), MSG_OLD)
+                throwsMsg(() => arrDiff(v, [], opt), MSG_OLD)
+                throwsMsg(() => arrDiff(v, v, opt), MSG_OLD)
+            }
+        })
+
+        it(`should throw '${MSG_NEW}' when arrNew is not an array: ${label} (arrOld valid or []; any mode)`, function() {
+            for (let opt of [undefined, { mode: 'array' }, { mode: 'matrix' }]) {
+                throwsMsg(() => arrDiff(['a'], v, opt), MSG_NEW)
+                throwsMsg(() => arrDiff([], v, opt), MSG_NEW)
+            }
+        })
+    }
+
+    it(`should throw when arrOld or arrNew is not given (required parameters)`, function() {
+        throwsMsg(() => arrDiff(), MSG_OLD)
+        throwsMsg(() => arrDiff(['a']), MSG_NEW)
+        throwsMsg(() => arrDiff([]), MSG_NEW)
+        throwsMsg(() => arrDiff(undefined, ['a']), MSG_OLD)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
-        let r = arrDiff('test中文', {})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw the fixed messages without the input value`, function() {
+        for (let v of [LEAK, { secret: LEAK }, Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
+            throwsMsgNoLeak(() => arrDiff(v, ['a']), MSG_OLD)
+            throwsMsgNoLeak(() => arrDiff(['a'], v), MSG_NEW)
+        }
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
-        let r = arrDiff('test中文', null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //兩邊皆為[]: 回傳與正常輸出同形之空結果, 不是{}
+    it(`should return { diff: [], dfs: [] } when both arrOld and arrNew are [] (mode array, matrix and default)`, function() {
+        for (let opt of [undefined, null, {}, { mode: 'array' }, { mode: 'matrix' }, { mode: 'x' }, 'x', 123, []]) {
+            let r = arrDiff([], [], opt)
+            assert.strict.deepStrictEqual(r, { diff: [], dfs: [] })
+            assert.strict.deepStrictEqual(Object.keys(r), ['diff', 'dfs'])
+        }
+        assert.strict.deepStrictEqual(Object.keys(arrDiff([], [])), Object.keys(arrDiff(['a'], ['b'])))
+        assert.strict.deepStrictEqual(Object.keys(arrDiff([], [], { mode: 'matrix' })), Object.keys(arrDiff([['a']], [['b']], { mode: 'matrix' })))
     })
 
-    it(`sould return '' when input 'test中文', undefined`, function() {
-        let r = arrDiff('test中文', undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should return a fresh object for each call when both are [] (callers may mutate the result)`, function() {
+        let r1 = arrDiff([], [])
+        r1.dfs.push('x')
+        r1.diff.push('y')
+        let r2 = arrDiff([], [])
+        assert.strict.deepStrictEqual(r2, { diff: [], dfs: [] })
+        assert.ok(r1 !== r2)
     })
 
-    it(`sould return '' when input ''`, function() {
-        let r = arrDiff('')
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //只有一邊為空, 或兩邊各有一個空元素, 都不是[兩邊皆空], 照常回傳差異結果(取自修前HEAD之實測)
+    it(`should return the normal diff when only one side is []`, function() {
+        assert.strict.deepStrictEqual(
+            arrDiff([], ['a']),
+            { diff: [{ count: 1, added: true, removed: false, value: 'a\n' }], dfs: [{ p: 'add', k: 0, vo: 'a', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            arrDiff(['a'], []),
+            { diff: [{ count: 1, added: false, removed: true, value: 'a\n' }], dfs: [{ p: 'remove', k: 0, vo: 'a', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            arrDiff([[1, 2]], [], { mode: 'matrix' }),
+            {
+                diff: [{ count: 1, added: false, removed: true, value: '0∶1⟋1∶2⟋\n' }],
+                dfs: [[{ p: 'remove', k: 0, vo: '1', vn: '' }, { p: 'remove', k: 1, vo: '2', vn: '' }]],
+            }
+        )
     })
 
-    it(`sould return '' when input []`, function() {
-        let r = arrDiff([])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //內部站點邊界: 內部組出之字串不為''(每個元素後接換行), 故[''] 對 [''] 與 [[]] 對 [[]] 不會走到兩邊皆空, 結果與修前相同
+    it(`should keep the same result as before for [''] vs [''] (array mode) and [[]] vs [[]] (matrix mode)`, function() {
+        assert.strict.deepStrictEqual(
+            arrDiff([''], ['']),
+            { diff: [{ count: 1, added: false, removed: false, value: '\n' }], dfs: [{ p: '', k: 0, vo: '', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            arrDiff([[]], [[]], { mode: 'matrix' }),
+            { diff: [{ count: 1, added: false, removed: false, value: '\n' }], dfs: [[]] }
+        )
     })
 
-    it(`sould return '' when input {}`, function() {
-        let r = arrDiff({})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //內部站點邊界: 儲存格含換行時, 同列拆成兩行, 其中一對可合併之行(去掉分隔字串後)兩邊皆為[], 內部以兩個空字串呼叫strDiff, 結果與修前相同
+    it(`should keep the same result as before when a modified line of a matrix splits into two empty arrays (strDiff is called with two '')`, function() {
+        assert.strict.deepStrictEqual(
+            arrDiff([['a\nz']], [['b\nz']], { mode: 'matrix' }),
+            {
+                diff: [
+                    { count: 1, added: false, removed: true, value: '0∶a\n' },
+                    { count: 1, added: true, removed: false, value: '0∶b\n' },
+                    { count: 1, added: false, removed: false, value: 'z⟋\n' },
+                ],
+                dfs: [[], [{ p: '', k: 0, vo: '', vn: '' }]],
+            }
+        )
     })
 
-    it(`sould return '' when input null`, function() {
-        let r = arrDiff(null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //mode為matrix時各元素須為陣列: 仍throw, 訊息不變, 且不輸出輸入資料至console
+    it(`should throw '${MSG_MAT_OLD}' when mode is matrix and an element of arrOld is not an array, without writing to console`, function() {
+        for (let [, v] of NON_ARR) {
+            throwsMsg(() => arrDiff([v], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+            throwsMsg(() => arrDiff([[1], v], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+        }
     })
 
-    it(`sould return '' when input undefined`, function() {
-        let r = arrDiff(undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw '${MSG_MAT_NEW}' when mode is matrix and an element of arrNew is not an array, without writing to console`, function() {
+        for (let [, v] of NON_ARR) {
+            throwsMsg(() => arrDiff([[1]], [v], { mode: 'matrix' }), MSG_MAT_NEW)
+            throwsMsg(() => arrDiff([], [[1], v], { mode: 'matrix' }), MSG_MAT_NEW)
+        }
     })
 
-    it(`sould return '' when input NaN`, function() {
-        let r = arrDiff(NaN)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw '${MSG_MAT_OLD}' for arrDiff([1], [2], { mode: 'matrix' }) with 0 console calls and without the input value in the message`, function() {
+        throwsMsg(() => arrDiff([1], [2], { mode: 'matrix' }), MSG_MAT_OLD)
+        throwsMsgNoLeak(() => arrDiff([LEAK], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+        throwsMsgNoLeak(() => arrDiff([[1]], [LEAK], { mode: 'matrix' }), MSG_MAT_NEW)
+        throwsMsgNoLeak(() => arrDiff([{ secret: LEAK }], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+    })
+
+    //mode為array時元素不受限(依舊轉字串比對)
+    it(`should not require array elements in array mode`, function() {
+        let r = arrDiff([1, 2], [1, 3], { mode: 'array' })
+        assert.strict.deepStrictEqual(r.dfs, [{ p: '', k: 0, vo: '1', vn: '' }, { p: 'modify', k: 1, vo: '2', vn: '3' }])
+    })
+
+    //opt內無效的鍵維持現行(改用預設)
+    it(`should use the default mode when opt or opt.mode is invalid`, function() {
+        let rr = arrDiff([1, 2], [1, 3], { mode: 'array' })
+        for (let opt of [undefined, null, 0, 'x', [], true, {}, { mode: 'x' }, { mode: null }, { mode: 1 }, { other: false }]) {
+            assert.strict.deepStrictEqual(arrDiff([1, 2], [1, 3], opt), rr)
+        }
     })
 
 })

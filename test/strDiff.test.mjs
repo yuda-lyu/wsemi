@@ -1,5 +1,6 @@
 import assert from 'assert'
 import strDiff from '../src/strDiff.mjs'
+import { NON_STR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
 describe(`strDiff`, function() {
@@ -297,63 +298,104 @@ n3|0.158739038|0.085078711|0.844664253|0.21630142|0.912931341|0.735138313
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', []`, function() {
-        let r = strDiff('test中文', [])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //ws286c: strOld與strNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非字串throw Error, 訊息固定不帶值, 依strOld、strNew序檢測; ''為合法輸入
+    const MSG_OLD = 'invalid strOld: must be a string'
+    const MSG_NEW = 'invalid strNew: must be a string'
+
+    for (let [label, v] of NON_STR) {
+        it(`should throw '${MSG_OLD}' when strOld is not a string: ${label} (strNew valid, '' or invalid too)`, function() {
+            throwsMsg(() => strDiff(v, 'abc'), MSG_OLD)
+            throwsMsg(() => strDiff(v, ''), MSG_OLD)
+            throwsMsg(() => strDiff(v, v), MSG_OLD)
+        })
+
+        it(`should throw '${MSG_NEW}' when strNew is not a string: ${label} (strOld valid or '')`, function() {
+            throwsMsg(() => strDiff('abc', v), MSG_NEW)
+            throwsMsg(() => strDiff('', v), MSG_NEW)
+        })
+    }
+
+    it(`should throw when strOld or strNew is not given (required parameters)`, function() {
+        throwsMsg(() => strDiff(), MSG_OLD)
+        throwsMsg(() => strDiff('abc'), MSG_NEW)
+        throwsMsg(() => strDiff(''), MSG_NEW)
+        throwsMsg(() => strDiff(undefined, 'abc'), MSG_OLD)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
-        let r = strDiff('test中文', {})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw the fixed messages without the input value`, function() {
+        for (let v of [{ secret: LEAK }, [LEAK], Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
+            throwsMsgNoLeak(() => strDiff(v, 'abc'), MSG_OLD)
+            throwsMsgNoLeak(() => strDiff('abc', v), MSG_NEW)
+        }
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
-        let r = strDiff('test中文', null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //兩邊皆為'': 回傳與正常輸出同形之空結果, 不是{}
+    it(`should return { diff: [], dfs: [] } when both strOld and strNew are '' (same keys as a normal result)`, function() {
+        let r = strDiff('', '')
+        assert.strict.deepStrictEqual(r, { diff: [], dfs: [] })
+        assert.strict.deepStrictEqual(Object.keys(r), ['diff', 'dfs'])
+        assert.strict.deepStrictEqual(Object.keys(r), Object.keys(strDiff('a', 'b')))
     })
 
-    it(`sould return '' when input 'test中文', undefined`, function() {
-        let r = strDiff('test中文', undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should return { diff: [], dfs: [] } for both '' whatever opt is`, function() {
+        for (let opt of [undefined, null, {}, { useNormNewline: false }, { useNormNewline: true }, { useNormNewline: 'x' }, 'x', 123, []]) {
+            assert.strict.deepStrictEqual(strDiff('', '', opt), { diff: [], dfs: [] })
+        }
     })
 
-    it(`sould return '' when input ''`, function() {
-        let r = strDiff('')
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should return a fresh object for each call when both are '' (callers may mutate the result)`, function() {
+        let r1 = strDiff('', '')
+        r1.dfs.push('x')
+        r1.diff.push('y')
+        let r2 = strDiff('', '')
+        assert.strict.deepStrictEqual(r2, { diff: [], dfs: [] })
+        assert.ok(r1 !== r2)
     })
 
-    it(`sould return '' when input []`, function() {
-        let r = strDiff([])
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //只有一邊為空(含只有換行、空白)不是[兩邊皆空], 照常回傳差異結果(取自修前HEAD之實測)
+    it(`should return the normal diff when only one side is empty, even if the other side is only a newline or a space`, function() {
+        assert.strict.deepStrictEqual(
+            strDiff('', '\n'),
+            { diff: [{ count: 1, added: true, removed: false, value: '\n' }], dfs: [{ p: 'add', vo: '', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            strDiff('\n', ''),
+            { diff: [{ count: 1, added: false, removed: true, value: '\n' }], dfs: [{ p: 'remove', vo: '', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            strDiff('\r\n', ''),
+            { diff: [{ count: 1, added: false, removed: true, value: '\n' }], dfs: [{ p: 'remove', vo: '', vn: '' }] }
+        )
+        assert.strict.deepStrictEqual(
+            strDiff(' ', ''),
+            { diff: [{ count: 1, added: false, removed: true, value: ' ' }], dfs: [{ p: 'remove', vo: ' ', vn: '' }] }
+        )
     })
 
-    it(`sould return '' when input {}`, function() {
-        let r = strDiff({})
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    //opt內無效的鍵維持現行(改用預設), 有效的鍵仍生效
+    it(`should use the default useNormNewline when opt or opt.useNormNewline is invalid`, function() {
+        let rr = { diff: [{ count: 2, added: false, removed: false, value: 'a\nb' }], dfs: [{ p: '', vo: 'a', vn: '' }, { p: '', vo: 'b', vn: '' }] }
+        for (let opt of [undefined, null, 0, 'x', [], true, {}, { useNormNewline: 'x' }, { useNormNewline: null }, { useNormNewline: 1 }, { other: false }]) {
+            assert.strict.deepStrictEqual(strDiff('a\r\nb', 'a\nb', opt), rr)
+        }
     })
 
-    it(`sould return '' when input null`, function() {
-        let r = strDiff(null)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should respect a valid opt.useNormNewline=false`, function() {
+        let r = strDiff('a\r\nb', 'a\nb', { useNormNewline: false })
+        assert.strict.deepStrictEqual(r.dfs, [{ p: 'modify', vo: 'a\r', vn: 'a' }, { p: '', vo: 'b', vn: '' }])
     })
 
-    it(`sould return '' when input undefined`, function() {
-        let r = strDiff(undefined)
-        let rr = {}
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`sould return '' when input NaN`, function() {
-        let r = strDiff(NaN)
-        let rr = {}
+    //修前修後相同之有效輸入(取自HEAD之實測)
+    it(`should keep the normal result for a plain modify`, function() {
+        let r = strDiff('a\nb', 'a\nc')
+        let rr = {
+            diff: [
+                { count: 1, added: false, removed: false, value: 'a\n' },
+                { count: 1, added: false, removed: true, value: 'b' },
+                { count: 1, added: true, removed: false, value: 'c' },
+            ],
+            dfs: [{ p: '', vo: 'a', vn: '' }, { p: 'modify', vo: 'b', vn: 'c' }],
+        }
         assert.strict.deepStrictEqual(r, rr)
     })
 

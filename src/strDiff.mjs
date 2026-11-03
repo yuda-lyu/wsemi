@@ -10,16 +10,39 @@ import isbol from './isbol.mjs'
 /**
  * 比對新舊文字差異
  *
+ * strOld與strNew皆為必須參數，須為字串，非字串throw Error('invalid strOld: must be a string')或Error('invalid strNew: must be a string')(依strOld、strNew序)，訊息不帶輸入值；空字串為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空字串時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strDiff.test.mjs Github}
  * @memberOf wsemi
- * @param {String} strOld 輸入原始文字字串
- * @param {String} strNew 輸入更新文字字串
+ * @param {String} strOld 輸入原始文字字串，必須參數，非字串throw Error，''為合法輸入
+ * @param {String} strNew 輸入更新文字字串，必須參數，非字串throw Error，''為合法輸入
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useNormNewline=true] 輸入是否正規化換行符號布林值，預設true
- * @returns {Object} 回傳比對結果物件，包含diff與dfs鍵值，diff為比對原始結果字串，dfs為依照各列比對結果陣列
+ * @returns {Object} 回傳比對結果物件，包含diff與dfs鍵值，diff為比對原始結果字串，dfs為依照各列比對結果陣列；strOld與strNew皆為''時回傳{ diff: [], dfs: [] }
+ * @throws {Error} strOld或strNew非字串時throw Error('invalid strOld: must be a string')或Error('invalid strNew: must be a string')，訊息不帶輸入值
  * @example
  *
  * let r
+ *
+ * r = strDiff('', '')
+ * console.log(r)
+ * // => { diff: [], dfs: [] }
+ *
+ * try {
+ *     strDiff(123, 'abc')
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid strOld: must be a string
+ *
+ * try {
+ *     strDiff('abc', null)
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid strNew: must be a string
  *
  * r = strDiff('test中文', '')
  * console.log(r)
@@ -263,15 +286,18 @@ import isbol from './isbol.mjs'
  */
 function strDiff(strOld, strNew, opt = {}) {
 
-    //check
+    //check, strOld與strNew為必須參數(字串, ''合法), 非字串throw(訊息不帶值)
     if (!isstr(strOld)) {
-        return {}
+        throw new Error('invalid strOld: must be a string')
     }
     if (!isstr(strNew)) {
-        return {}
+        throw new Error('invalid strNew: must be a string')
     }
     if (strOld === '' && strNew === '') {
-        return {}
+        return {
+            diff: [],
+            dfs: [],
+        }
     }
 
     //useNormNewline

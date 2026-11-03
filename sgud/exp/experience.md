@@ -117,3 +117,15 @@
 - **變異腳本**: 沿用 ws286a 作法(`tmp/ws286b/mut/` 的 src／test 副本,工作樹 src 為 CRLF 先轉 LF,每個樣式命中恰一次否則拋錯);不做「移除 `sepInt` 的 `n` 檢測」變異——`n` 為 `Infinity` 時迴圈不終止(`intInputHang` 才有子行程逾時防護),改成「`n` 無效回 `[]`」;「值轉換與取代合併為同一趟」為等價變異(循環參照拋錯時不論順序都不回傳),已丟棄.每個測試檔分別 spawn mocha、`--reporter json --reporter-option output=`,彙總紅案.
 - **案數核對**: `git archive HEAD` 解出舊 src／舊測試到 `tmp`,`mocha --dry-run --reporter json` 計舊／新案數(7 檔 275 → 562,+287);舊測試對舊 src 載入需 `../src` 指向舊副本,故副本內 `test/` 與 `src/` 同層.
 - **sgud 整理**: `experience.md` 逾 30KB,依 §14 把 2026-11-02 起之 ws265／ws270／ws272a／ws272b 四節抽至既有之 `experience_20261102.md`(依抽出日期命名,該檔原有 2026-10-30~31 之 6 節),本檔留 ws272c 起之節;腳本驗「搬移前後每一行(多重集合,空行除外)皆在」缺漏 0.
+
+## 非計算類函數必須參數遇非預期:差異比對子類 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(2026-11-03,主控任務 20261031121854,ws286c)
+
+- **「與正常輸出同形的空結果」要先實測正常輸出的鍵**: 派工書要求先量;實測 4 個函數的正常輸出只有 `diff`、`dfs`,`matDiff`／`ltdtDiff` JSDoc 原寫的 `dfrs` 並不存在(`@returns` 一併更正).兩邊皆空回 `{ diff: [], dfs: [] }` 且每次新物件(測試有「改共用常數」變異擊殺:呼叫端對回傳物件 `push` 後第二次呼叫須仍為空).
+- **外層對內層回傳「賦值」會遮住內層的 `{}`**: 舊 `ltdtDiff([{}], [{}])` 內層 `arrDiff` 回 `{}`,外層 `r.dfs = map(...)` 把它補成 `{ dfs: [] }`;內層改回 `{ diff: [], dfs: [] }` 後外層輸出連帶變 `{ diff: [], dfs: [] }`(是同形變更,但屬「回傳值變了」,要在逐站表寫明並鎖測試).凡內層回空物件的改動,都要順著呼叫鏈看外層是補欄位、轉型還是原樣回傳.
+- **內部站點用「儀器化 HEAD 副本」實測,不靠讀碼推論**: 複製 HEAD 的 `src` 到 `tmp`,在 `strDiff` 的兩邊皆空判斷前加 `globalThis` 計數,對邊界輸入各跑一次(`tmp/ws286c/inst.mjs`,證據 `ws286c-evidence/2-*`):`arrDiff([''], [''])`、`matDiff([[]], [[]])`、`matDiff([['']], [['']])` 內部字串為 `'\n'`／`'0∶⟋\n'`,**不會**以兩個 `''` 呼叫 `strDiff`;唯一會的是矩陣某列含換行造成 modify 行對(`matDiff([['a\nz']], [['b\nz']])`,該對去掉分隔字串後兩邊皆 `[]`),而該處只讀回傳的 `.dfs`(舊 `{}` 經 `map(undefined)` 得 `[]`),最終輸出逐字相同.派工書列的「`ltdtDiff([{}], [{}])`」實測 `strDiff` 呼叫 0 次(`ltdtkeys2mat` 無鍵直接回 `[]`,`arrDiff` 頂端即返回).
+- **元素檢測用 lodash `every`,不用 `Array.prototype.every`**: 前者依索引走訪、空洞當 `undefined` 而無效;後者略過空洞,`[ , { a: 1 }]` 會通過(變異 L7／L8 擊殺).`isobj`(`[object Object]`)接受 `{}` 與無原型物件;`iseobj` 拒 `{}`,若誤用則 `ltdtDiff([{}], [{}])` 會拋錯(變異 L5 擊殺).
+- **`ltdtkeys2mat` 靜默回 `[]` 的陷阱未處理(範圍外)**: 它對「任一列為 `{}`(非有效物件)」整側回 `[]`,`ltdtDiff([{ a: 1 }, {}], [{ a: 1 }])` 因此顯示「新增 1 列」而非「刪除 `{}` 列」;改前即如此,`{}` 是物件故不在使用者定的「元素非物件拋錯」內,列入 r2d〈已知殘餘〉與報告需裁示,不順手改(`ltdtkeys2mat` 為共用函數且不在本輪範圍).看到「檢測通過但下游又靜默丟資料」的組合,要在報告明寫而非放行.
+- **差分序列化要標出 `undefined`**: `ltdtDiff` 首列無可比對儲存格時 `dfs` 為 `[{ k: undefined }, …]`,`JSON.stringify` 會隱成 `{}`;測試期望要寫 `{ k: undefined }`(`deepStrictEqual` 區分),差分腳本的序列化加 replacer 把 `undefined`／非有限數標成記號,否則「HEAD 與修後 JSON 相同」不等於物件相同.第一次跑就是這樣紅了一案.
+- **等價變異要先證明再丟**: 移除 `strDiff` 的兩邊皆空提前回傳存活,因 `Diff.diffLines('', '')` 本就回 `[]` 而得 `{ diff: [], dfs: [] }`;移除 `matDiff` 的提前回傳存活,因交給 `arrDiff` 得同結果.兩者是冗餘捷徑,以 `probe-equiv.mjs` 實測後記為等價,不為殺它而刪捷徑(保持與其他三個函數的結構一致,且「兩邊皆空改回 `{}`」的變異 S3／M3 皆殺死).
+- **console 攔截**: 測試用 `countConsole` 同時換掉 `log／info／warn／error／debug` 並在 `finally` 還原,斷言 throw 過程 console 0 次;同步測試期間換掉 `console.log` 不會干擾 mocha 報告器(報告器在測試之間輸出).
+- **測試尾段批次改寫**: 5 個測試檔的舊「無效輸入回 `{}`／`''`」尾段(10 案 × 5 檔)以 `tmp/ws286c/rewriteTails.mjs` 取代——以舊首案標題為 marker(須命中恰一次)截斷、串接新尾段、依各檔 EOL(CRLF)寫入、寫前備份;新尾段與共用載具 `test/tools/diffInputKit.mjs`(無效值表＋`throwsMsg`)分開寫,避免 5 檔各貼一份近似的值表.

@@ -1,6 +1,7 @@
 import assert from 'assert'
 import _ from 'lodash-es'
 import strDiffToHtml from '../src/strDiffToHtml.mjs'
+import { NON_STR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
 describe(`strDiffToHtml`, function() {
@@ -143,64 +144,82 @@ This section has been replaced completely.`,
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`sould return '' when input 'test中文', []`, function() {
-        let r = strDiffToHtml('test中文', [])
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    //ws286c: strOld與strNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非字串throw Error, 訊息固定不帶值, 依strOld、strNew序檢測; ''為合法輸入
+    const MSG_OLD = 'invalid strOld: must be a string'
+    const MSG_NEW = 'invalid strNew: must be a string'
+
+    for (let [label, v] of NON_STR) {
+        it(`should throw '${MSG_OLD}' when strOld is not a string: ${label} (strNew valid, '' or invalid too)`, function() {
+            throwsMsg(() => strDiffToHtml(v, 'abc'), MSG_OLD)
+            throwsMsg(() => strDiffToHtml(v, ''), MSG_OLD)
+            throwsMsg(() => strDiffToHtml(v, v), MSG_OLD)
+        })
+
+        it(`should throw '${MSG_NEW}' when strNew is not a string: ${label} (strOld valid or '')`, function() {
+            throwsMsg(() => strDiffToHtml('abc', v), MSG_NEW)
+            throwsMsg(() => strDiffToHtml('', v), MSG_NEW)
+        })
+    }
+
+    it(`should throw when strOld or strNew is not given (required parameters)`, function() {
+        throwsMsg(() => strDiffToHtml(), MSG_OLD)
+        throwsMsg(() => strDiffToHtml('abc'), MSG_NEW)
+        throwsMsg(() => strDiffToHtml(''), MSG_NEW)
+        throwsMsg(() => strDiffToHtml(undefined, 'abc'), MSG_OLD)
     })
 
-    it(`sould return '' when input 'test中文', {}`, function() {
-        let r = strDiffToHtml('test中文', {})
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should throw the fixed messages without the input value`, function() {
+        for (let v of [{ secret: LEAK }, [LEAK], Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
+            throwsMsgNoLeak(() => strDiffToHtml(v, 'abc'), MSG_OLD)
+            throwsMsgNoLeak(() => strDiffToHtml('abc', v), MSG_NEW)
+        }
     })
 
-    it(`sould return '' when input 'test中文', null`, function() {
-        let r = strDiffToHtml('test中文', null)
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    //兩邊皆為'': 仍回傳''(無差異可呈現), 不拋錯
+    it(`should return '' when both strOld and strNew are '' (whatever opt is)`, function() {
+        for (let opt of [undefined, null, {}, { useNormNewline: false }, { useNormNewline: true }, { useNormNewline: 'x' }, 'x', 123, []]) {
+            assert.strict.deepStrictEqual(strDiffToHtml('', '', opt), '')
+        }
     })
 
-    it(`sould return '' when input 'test中文', undefined`, function() {
-        let r = strDiffToHtml('test中文', undefined)
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    //只有一邊為空(含只有換行、空白)照常回傳html(取自修前HEAD之實測)
+    it(`should return the normal html when only one side is empty, even if the other side is only a newline or a space`, function() {
+        assert.strict.deepStrictEqual(
+            _.trim(strDiffToHtml('\n', '')),
+            _.trim(`
+        <div class="d2h-code-line">
+            <span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-</span>
+            <span class="d2h-code-line-ctn"><br></span>
+        </div>
+`)
+        )
+        assert.strict.deepStrictEqual(
+            _.trim(strDiffToHtml(' ', '')),
+            _.trim(`
+        <div class="d2h-code-line">
+            <span class="d2h-code-line-prefix" style="display:inline-block; width: 0.7rem;">-</span>
+            <span class="d2h-code-line-ctn"> </span>
+        </div>
+`)
+        )
     })
 
-    it(`sould return '' when input ''`, function() {
-        let r = strDiffToHtml('')
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    it(`should return the 'File without changes' html when the two strings are the same (not '')`, function() {
+        let rr = _.trim(`
+        <div class="d2h-code-line">
+            File without changes
+        </div>
+`)
+        assert.strict.deepStrictEqual(_.trim(strDiffToHtml('a', 'a')), rr)
+        assert.strict.deepStrictEqual(_.trim(strDiffToHtml('a\r\nb', 'a\nb')), rr)
     })
 
-    it(`sould return '' when input []`, function() {
-        let r = strDiffToHtml([])
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`sould return '' when input {}`, function() {
-        let r = strDiffToHtml({})
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`sould return '' when input null`, function() {
-        let r = strDiffToHtml(null)
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`sould return '' when input undefined`, function() {
-        let r = strDiffToHtml(undefined)
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
-    it(`sould return '' when input NaN`, function() {
-        let r = strDiffToHtml(NaN)
-        let rr = ''
-        assert.strict.deepStrictEqual(r, rr)
+    //opt內無效的鍵維持現行(改用預設)
+    it(`should use the default useNormNewline when opt or opt.useNormNewline is invalid`, function() {
+        let rr = strDiffToHtml('a\r\nb', 'a\nb')
+        for (let opt of [undefined, null, 0, 'x', [], true, {}, { useNormNewline: 'x' }, { useNormNewline: null }, { useNormNewline: 1 }, { other: false }]) {
+            assert.strict.deepStrictEqual(strDiffToHtml('a\r\nb', 'a\nb', opt), rr)
+        }
     })
 
 })

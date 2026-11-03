@@ -6,19 +6,54 @@ import arrDiff from './arrDiff.mjs'
 /**
  * 比對新舊二維陣列差異處
  *
+ * matOld與matNew皆為必須參數，須為陣列，非陣列throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')(依matOld、matNew序)，訊息不帶輸入值；各列須為陣列，否則throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')，訊息不帶輸入值，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matDiff.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} matOld 輸入原始數據二維陣列
- * @param {Array} matNew 輸入更新數據二維陣列
+ * @param {Array} matOld 輸入原始數據二維陣列，必須參數，非陣列throw Error，[]為合法輸入
+ * @param {Array} matNew 輸入更新數據二維陣列，必須參數，非陣列throw Error，[]為合法輸入
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.dls='⟋'] 輸入若數據為矩陣時各儲存格分隔字串，預設'⟋'
  * @param {String} [opt.dlq='∶'] 輸入若數據為矩陣時各儲存格欄位指標分隔字串，預設'∶'
- * @returns {Object} 回傳比對結果物件，回傳鍵值diff、dfrs與dfs，其中diff一樣為比對原始結果字串，dfrs為各列比對結果陣列，dfs為各儲存格比對結果陣列
+ * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為比對原始結果字串，dfs為各列比對結果陣列(每列為該列各儲存格比對結果陣列)；matOld與matNew皆為[]時回傳{ diff: [], dfs: [] }
+ * @throws {Error} matOld或matNew非陣列時throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')；訊息皆不帶輸入值
  * @example
  *
  * let r
  * let matOld
  * let matNew
+ *
+ * if (true) {
+ *     r = matDiff([], [])
+ *     console.log(r)
+ *     // => { diff: [], dfs: [] }
+ * }
+ *
+ * if (true) {
+ *     try {
+ *         matDiff('x', [])
+ *     }
+ *     catch (err) {
+ *         console.log(err.message)
+ *     }
+ *     // => invalid matOld: must be an array
+ *
+ *     try {
+ *         matDiff([], null)
+ *     }
+ *     catch (err) {
+ *         console.log(err.message)
+ *     }
+ *     // => invalid matNew: must be an array
+ *
+ *     try {
+ *         matDiff([1], [2])
+ *     }
+ *     catch (err) {
+ *         console.log(err.message)
+ *     }
+ *     // => arrOld is not a matrix
+ * }
  *
  * if (true) {
  *     matOld = [
@@ -288,15 +323,18 @@ import arrDiff from './arrDiff.mjs'
  */
 function matDiff(matOld, matNew, opt = {}) {
 
-    //check
+    //check, matOld與matNew為必須參數(陣列, []合法), 非陣列throw(訊息不帶值)
     if (!isarr(matOld)) {
-        return {}
+        throw new Error('invalid matOld: must be an array')
     }
     if (!isarr(matNew)) {
-        return {}
+        throw new Error('invalid matNew: must be an array')
     }
     if (size(matOld) === 0 && size(matNew) === 0) {
-        return {}
+        return {
+            diff: [],
+            dfs: [],
+        }
     }
 
     //arrDiff

@@ -11,19 +11,42 @@ import isbol from './isbol.mjs'
 /**
  * 比對新舊文字差異，並轉成html呈現
  *
+ * strOld與strNew皆為必須參數，須為字串，非字串throw Error('invalid strOld: must be a string')或Error('invalid strNew: must be a string')(依strOld、strNew序)，訊息不帶輸入值；空字串為合法輸入，只有一邊為空者照常回傳html，兩邊皆為空字串時回傳''(無差異可呈現)；opt內無效的鍵一律改用預設
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strDiffToHtml.test.mjs Github}
  * @memberOf wsemi
- * @param {String} strOld 輸入原始文字字串
- * @param {String} strNew 輸入更新文字字串
- * @param {String} [opt={}] 輸入設定物件，預設{}
+ * @param {String} strOld 輸入原始文字字串，必須參數，非字串throw Error，''為合法輸入
+ * @param {String} strNew 輸入更新文字字串，必須參數，非字串throw Error，''為合法輸入
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useNormNewline=true] 輸入是否正規化換行符號布林值，預設true
- * @returns {Object} 回傳比對結果html
+ * @returns {String} 回傳比對結果html字串；strOld與strNew皆為''時回傳''
+ * @throws {Error} strOld或strNew非字串時throw Error('invalid strOld: must be a string')或Error('invalid strNew: must be a string')，訊息不帶輸入值
  * @example
  *
  *
  * let r
  * let sOld
  * let sNew
+ *
+ * r = strDiffToHtml('', '')
+ * console.log(r)
+ * // => ''
+ *
+ * try {
+ *     strDiffToHtml(123, 'abc')
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid strOld: must be a string
+ *
+ * try {
+ *     strDiffToHtml('abc', null)
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid strNew: must be a string
  *
  * r = strDiffToHtml('test中文', 'test')
  * console.log(r)
@@ -84,12 +107,12 @@ import isbol from './isbol.mjs'
  */
 function strDiffToHtml(strOld, strNew, opt = {}) {
 
-    //check
+    //check, strOld與strNew為必須參數(字串, ''合法), 非字串throw(訊息不帶值)
     if (!isstr(strOld)) {
-        return ''
+        throw new Error('invalid strOld: must be a string')
     }
     if (!isstr(strNew)) {
-        return ''
+        throw new Error('invalid strNew: must be a string')
     }
     if (strOld === '' && strNew === '') {
         return ''
