@@ -3,6 +3,7 @@ import take from 'lodash-es/take.js'
 import tail from 'lodash-es/tail.js'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
+import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import keysmat2ltdt from './keysmat2ltdt.mjs'
 
@@ -16,11 +17,14 @@ import keysmat2ltdt from './keysmat2ltdt.mjs'
  * @param {Array} mat 輸入資料陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Array|Object} 回傳物件陣列，mat無效、列數少於2或任一列非有效陣列時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Array|Object} 回傳物件陣列，mat為空陣列(合法資料)、mat無效、列數少於2或任一列非有效陣列時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，mat為空陣列時為{ state: 'success', msg: [] }，mat無效、列數少於2或任一列非有效陣列時為{ state: 'error', msg }
  * @example
  *
  * console.log(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]))
  * // => [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }]
+ *
+ * console.log(mat2ltdt([], { returnWithStateAndMsg: true }))
+ * // => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)
  *
  */
 function mat2ltdt(mat, opt = {}) {
@@ -37,6 +41,19 @@ function mat2ltdt(mat, opt = {}) {
             return {
                 state: 'error',
                 msg,
+            }
+        }
+        else {
+            return []
+        }
+    }
+
+    //空陣列為合法資料, 不是失敗, 轉出空陣列(每次新陣列)
+    if (isarr(mat) && mat.length === 0) {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'success',
+                msg: [],
             }
         }
         else {

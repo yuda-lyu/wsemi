@@ -6,6 +6,7 @@ import each from 'lodash-es/each.js'
 import zipObject from 'lodash-es/zipObject.js'
 import keysmat2ltdt from '../src/keysmat2ltdt.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { NON_ARR } from './tools/diffInputKit.mjs'
 
 let __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -127,6 +128,61 @@ describe(`keysmat2ltdt`, function() {
         let r = keysmat2ltdt(['a', 'b'], [[1, 2]], { returnWithStateAndMsg: 'yes' })
         let rr = [{ a: 1, b: 2 }]
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    //第221項第六項(dspec §11第6項, 使用者2026-11-03): 空陣列為合法資料, 不是失敗(原state為error, msg為invalid mat)
+    describe(`empty array is valid data (ws286d)`, function() {
+        let D = { returnWithStateAndMsg: true }
+
+        it(`should return { state: 'success', msg: [] } when input ['a'], [] with returnWithStateAndMsg`, function() {
+            let r = keysmat2ltdt(['a'], [], D)
+            let rr = { state: 'success', msg: [] }
+            assert.strict.deepStrictEqual(r, rr)
+        })
+
+        it(`should return a new array every time`, function() {
+            let r1 = keysmat2ltdt(['a'], [], D)
+            let r2 = keysmat2ltdt(['a'], [], D)
+            r1.msg.push(1)
+            assert.strict.deepStrictEqual(r2, { state: 'success', msg: [] })
+        })
+
+        it(`should return [] in the plain mode when input ['a'], [] (unchanged)`, function() {
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], []), [])
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [], {}), [])
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [], { returnWithStateAndMsg: false }), [])
+        })
+
+        for (let [lb, v] of NON_ARR) {
+            it(`should return { state: 'error', msg: 'invalid mat' } when mat is ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat' })
+            })
+            it(`should return [] in the plain mode when mat is ${lb} (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v), [])
+            })
+            //其他必須參數無效(keys), 即使mat為空陣列仍為失敗(型別檢測與資料有無無關)
+            it(`should return { state: 'error', msg: 'invalid keys' } when keys is ${lb} and mat is [] with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(v, [], D), { state: 'error', msg: 'invalid keys' })
+            })
+            it(`should return [] in the plain mode when keys is ${lb} and mat is [] (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(v, []), [])
+            })
+        }
+
+        //不在本輪: keys為空陣列(isearr視為無效)維持為失敗; 非空而無效之mat維持為失敗
+        it(`should keep keys [] and non-empty invalid mat as error with returnWithStateAndMsg (unchanged)`, function() {
+            assert.strict.deepStrictEqual(keysmat2ltdt([], [], D), { state: 'error', msg: 'invalid keys' })
+            assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], D), { state: 'error', msg: 'invalid keys' })
+            for (let v of [[{}], [null], [''], [[]]]) {
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat' })
+            }
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [1], D), { state: 'error', msg: 'invalid mat, the first row is not an effective array' })
+        })
+
+        it(`should keep the result of a non-empty mat unchanged`, function() {
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [[1]], D), { state: 'success', msg: [{ a: 1 }] })
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [[1]]), [{ a: 1 }])
+        })
     })
 
     describe(`keysmat2ltdt 使用端物件之迭代(R-OBJ-ITER-01)`, function() {

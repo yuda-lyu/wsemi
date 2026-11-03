@@ -1,5 +1,6 @@
 import assert from 'assert'
 import ltdtkeys2mat from '../src/ltdtkeys2mat.mjs'
+import { NON_ARR } from './tools/diffInputKit.mjs'
 
 
 describe(`ltdtkeys2mat`, function() {
@@ -131,6 +132,62 @@ describe(`ltdtkeys2mat`, function() {
         let r = ltdtkeys2mat([{ a: 1, b: 2 }], null, { returnWithStateAndMsg: 'yes' })
         let rr = [[1, 2]]
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    //第221項第六項(dspec §11第6項, 使用者2026-11-03): 空陣列為合法資料, 不是失敗(原state為error, msg為invalid ltdt)
+    describe(`empty array is valid data (ws286d)`, function() {
+        let D = { returnWithStateAndMsg: true }
+
+        it(`should return { state: 'success', msg: [] } when input [], ['a'] with returnWithStateAndMsg`, function() {
+            let r = ltdtkeys2mat([], ['a'], D)
+            let rr = { state: 'success', msg: [] }
+            assert.strict.deepStrictEqual(r, rr)
+        })
+
+        it(`should return { state: 'success', msg: [] } when input [] with any keys (not given, null, [], string, keys) with returnWithStateAndMsg`, function() {
+            for (let keys of [undefined, null, [], 'x', ['a', 'b']]) {
+                assert.strict.deepStrictEqual(ltdtkeys2mat([], keys, D), { state: 'success', msg: [] })
+            }
+        })
+
+        it(`should return { state: 'success', msg: [] } when input [] and opt.empty is given with returnWithStateAndMsg`, function() {
+            assert.strict.deepStrictEqual(ltdtkeys2mat([], ['a'], { empty: '-', returnWithStateAndMsg: true }), { state: 'success', msg: [] })
+        })
+
+        it(`should return a new array every time`, function() {
+            let r1 = ltdtkeys2mat([], ['a'], D)
+            let r2 = ltdtkeys2mat([], ['a'], D)
+            r1.msg.push(1)
+            assert.strict.deepStrictEqual(r2, { state: 'success', msg: [] })
+        })
+
+        it(`should return [] in the plain mode when input [] (unchanged)`, function() {
+            assert.strict.deepStrictEqual(ltdtkeys2mat([], ['a']), [])
+            assert.strict.deepStrictEqual(ltdtkeys2mat([]), [])
+            assert.strict.deepStrictEqual(ltdtkeys2mat([], ['a'], {}), [])
+            assert.strict.deepStrictEqual(ltdtkeys2mat([], ['a'], { returnWithStateAndMsg: false }), [])
+        })
+
+        for (let [lb, v] of NON_ARR) {
+            it(`should return { state: 'error', msg: 'invalid ltdt' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt' })
+            })
+            it(`should return [] in the plain mode when input ${lb} (unchanged)`, function() {
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a']), [])
+            })
+        }
+
+        it(`should keep non-empty arrays that are not effective as error with returnWithStateAndMsg (unchanged)`, function() {
+            for (let v of [[{}], [null], [''], [[]]]) {
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt' })
+            }
+        })
+
+        it(`should keep the result of a non-empty ltdt unchanged`, function() {
+            assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], ['a'], D), { state: 'success', msg: [[1]] })
+            assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, NaN], ['a'], D).state, 'error')
+            assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], ['a']), [[1]])
+        })
     })
 
 })

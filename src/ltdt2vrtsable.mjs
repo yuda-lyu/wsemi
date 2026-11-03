@@ -21,11 +21,14 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Array|Object} 回傳物件陣列，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Array|Object} 回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }
  * @example
  *
  * console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))
  * // => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]
+ *
+ * console.log(ltdt2vrtsable([], [], { returnWithStateAndMsg: true }))
+ * // => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)
  *
  */
 function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
@@ -49,12 +52,26 @@ function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
         }
     }
 
-    //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨
-    if (!isearr(ltdt)) {
+    //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨; ltdt為空陣列是合法資料(非失敗), 但mergerowkeys型別無效仍為失敗(型別檢測與資料有無無關)
+    let isEmptyLtdt = isarr(ltdt) && ltdt.length === 0
+    if (!isEmptyLtdt && !isearr(ltdt)) {
         return retError('invalid ltdt')
     }
     if (!isarr(mergerowkeys)) {
         return retError('invalid mergerowkeys')
+    }
+
+    //空陣列為合法資料, 轉出空陣列(每次新陣列)
+    if (isEmptyLtdt) {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'success',
+                msg: [],
+            }
+        }
+        else {
+            return []
+        }
     }
 
     //check ltdt

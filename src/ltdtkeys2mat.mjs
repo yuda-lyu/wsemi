@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import size from 'lodash-es/size.js'
+import isarr from './isarr.mjs'
 import isearr from './isearr.mjs'
 import iseobj from './iseobj.mjs'
 import isstr from './isstr.mjs'
@@ -22,11 +23,17 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String|Number|Array|Object} [opt.empty=''] 輸入若無鍵值時給予之預設值，預設''
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Array|Object} 回傳資料陣列，ltdt無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Array|Object} 回傳資料陣列，ltdt為空陣列(合法資料)、無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效、無法取得keys或任一元素非有效物件時為{ state: 'error', msg }
  * @example
  *
  * console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b']))
  * // => [[12, 34.56], ['123', 'xyz']]
+ *
+ * console.log(ltdtkeys2mat([], ['a', 'b'], { returnWithStateAndMsg: true }))
+ * // => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)
+ *
+ * console.log(ltdtkeys2mat('x', ['a', 'b'], { returnWithStateAndMsg: true }))
+ * // => { state: 'error', msg: 'invalid ltdt' }
  *
  */
 function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
@@ -43,6 +50,19 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
             return {
                 state: 'error',
                 msg,
+            }
+        }
+        else {
+            return []
+        }
+    }
+
+    //空陣列為合法資料, 不是失敗, 轉出空陣列(每次新陣列)
+    if (isarr(ltdt) && ltdt.length === 0) {
+        if (returnWithStateAndMsg) {
+            return {
+                state: 'success',
+                msg: [],
             }
         }
         else {

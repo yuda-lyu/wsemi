@@ -2326,7 +2326,8 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     <dd class="tag-description"><ul class="dummy"><li><p>回傳累加後陣列</p>
 <p>各元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與累加；
 凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以基準值opt.base(預設0)代入累加，輸出與輸入逐筆對應，不報錯、不略過、不改成空字串。
-輸入陣列至少要有1個有效數字(含空陣列，視為0個)，否則throw Error('invalid vec: must contain a valid number')，訊息不帶輸入值。
+空陣列為合法資料：輸入空陣列時空進空出，回傳空陣列，不報錯(如arrAccum([])回傳[])。
+有元素的輸入陣列至少要有1個有效數字，否則throw Error('invalid vec: must contain a valid number')，訊息不帶輸入值。
 輸入不是陣列時回傳空陣列(容器之處置不變，先於有效數字之檢查)。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrAccum.test.mjs">Github</a></p></li></ul></dd>
     
@@ -2334,7 +2335,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrAccum.mjs.html">arrAccum.mjs</a>, <a href="arrAccum.mjs.html#line34">line 34</a>
+        <a href="arrAccum.mjs.html">arrAccum.mjs</a>, <a href="arrAccum.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -2388,7 +2389,10 @@ console.log(arrAccum([1, '2', '-', 3]))
 // => [1, 3, 3, 6] (非有效數字以基準值0代入)
 
 console.log(arrAccum([1, '2', '-', 3], { base: 10 }))
-// => [1, 3, 13, 16] (非有效數字以基準值10代入)</code></pre>
+// => [1, 3, 13, 16] (非有效數字以基準值10代入)
+
+console.log(arrAccum([]))
+// => [] (空陣列為合法資料，空進空出)</code></pre>
 
 
 
@@ -2445,7 +2449,7 @@ console.log(arrAccum([1, '2', '-', 3], { base: 10 }))
 
             
 
-            <td class="description last"><p>輸入要被累加計算的陣列，元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；至少1個有效數字，否則throw</p></td>
+            <td class="description last"><p>輸入要被累加計算的陣列，元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；空陣列則回傳空陣列，否則至少1個有效數字，否則throw</p></td>
         </tr>
 
     
@@ -2658,7 +2662,7 @@ console.log(arrAccum([1, '2', '-', 3], { base: 10 }))
 
         
 <div class="param-desc">
-    <p>回傳各元素累加後之陣列</p>
+    <p>回傳各元素累加後之陣列，輸入空陣列或非陣列時回傳空陣列</p>
 </div>
 
 
@@ -2699,8 +2703,9 @@ console.log(arrAccum([1, '2', '-', 3], { base: 10 }))
 <p>各元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與相加；
 凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以基準值opt.base(預設0)代入計算，不報錯、不略過；
 同位置元素皆非有效數字者，該位置結果為2倍opt.base(預設即0)。
-每個輸入陣列各自至少要有1個有效數字(含空陣列，皆視為0個)，否則throw Error('invalid arrs[索引]: must contain a valid number')，訊息不帶輸入值。
-陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同，回傳空陣列(先於有效數字之檢查)。
+空陣列為合法資料：所有輸入陣列皆為空陣列時空進空出，回傳空陣列，不報錯(如arrAdd([], [])回傳[])。
+有元素的陣列各自至少要有1個有效數字，否則throw Error('invalid arrs[索引]: must contain a valid number')，訊息不帶輸入值。
+陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同(含一個為空陣列、另一個非空，如arrAdd([1], []))，回傳空陣列(先於有效數字之檢查)。
 本函數為不定參數，最後一個參數若為一般物件(非陣列)則視為opt；最後一個參數若為undefined或null則視為未給opt(不當成陣列參數)，如arrAdd(a, b, undefined)等同arrAdd(a, b)。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrAdd.test.mjs">Github</a></p></li></ul></dd>
     
@@ -2708,7 +2713,7 @@ console.log(arrAccum([1, '2', '-', 3], { base: 10 }))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrAdd.mjs.html">arrAdd.mjs</a>, <a href="arrAdd.mjs.html#line52">line 52</a>
+        <a href="arrAdd.mjs.html">arrAdd.mjs</a>, <a href="arrAdd.mjs.html#line59">line 59</a>
     </li></ul></dd>
     
 
@@ -2773,6 +2778,12 @@ console.log(arrAdd([1, '-'], [10, 20], { base: 5 }))
 
 console.log(arrAdd(['-', 'NP'], [1, 2]))
 // => [ 1, 2 ]
+
+console.log(arrAdd([], []))
+// => [] (空陣列為合法資料，空進空出)
+
+console.log(arrAdd([1], []))
+// => [] (長度不同)
 
 try {
     arrAdd(['-', 'NP'], [1, 2], [3, 4])
@@ -2839,7 +2850,7 @@ catch (err) {
 
             
 
-            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相加總；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；每個陣列各自至少1個有效數字，否則throw</p></td>
+            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相加總；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；皆為空陣列則回傳空陣列，否則每個陣列各自至少1個有效數字，否則throw</p></td>
         </tr>
 
     
@@ -3052,7 +3063,7 @@ catch (err) {
 
         
 <div class="param-desc">
-    <p>回傳各元素相加後陣列</p>
+    <p>回傳各元素相加後陣列，所有輸入陣列皆為空陣列時回傳空陣列，容器無法運算(陣列少於2個、非陣列、長度不同)時亦回傳空陣列</p>
 </div>
 
 
@@ -6920,8 +6931,9 @@ vall內沒有任何有效數字(含空陣列)時throw Error('invalid vall: must 
 <p>各元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與相乘；
 凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以基準值opt.base(預設1)代入計算，不報錯、不略過；
 同位置元素皆非有效數字者，該位置結果為opt.base的平方(預設即1)。
-每個輸入陣列各自至少要有1個有效數字(含空陣列，皆視為0個)，否則throw Error('invalid arrs[索引]: must contain a valid number')，訊息不帶輸入值。
-陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同，回傳空陣列(先於有效數字之檢查)。
+空陣列為合法資料：所有輸入陣列皆為空陣列時空進空出，回傳空陣列，不報錯(如arrMulti([], [])回傳[])。
+有元素的陣列各自至少要有1個有效數字，否則throw Error('invalid arrs[索引]: must contain a valid number')，訊息不帶輸入值。
+陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同(含一個為空陣列、另一個非空，如arrMulti([1], []))，回傳空陣列(先於有效數字之檢查)。
 本函數為不定參數，最後一個參數若為一般物件(非陣列)則視為opt；最後一個參數若為undefined或null則視為未給opt(不當成陣列參數)，如arrMulti(a, b, undefined)等同arrMulti(a, b)。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrMulti.test.mjs">Github</a></p></li></ul></dd>
     
@@ -6929,7 +6941,7 @@ vall內沒有任何有效數字(含空陣列)時throw Error('invalid vall: must 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrMulti.mjs.html">arrMulti.mjs</a>, <a href="arrMulti.mjs.html#line41">line 41</a>
+        <a href="arrMulti.mjs.html">arrMulti.mjs</a>, <a href="arrMulti.mjs.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -6990,7 +7002,13 @@ console.log(arrMulti([2, '3', ' 4 ', 5], [10, '-', null, Infinity]))
 // => [ 20, 3, 4, 5 ] (非有效數字以基準值1代入)
 
 console.log(arrMulti([2, '-'], [10, 20], { base: 0 }))
-// => [ 20, 0 ] (非有效數字以基準值0代入)</code></pre>
+// => [ 20, 0 ] (非有效數字以基準值0代入)
+
+console.log(arrMulti([], []))
+// => [] (空陣列為合法資料，空進空出)
+
+console.log(arrMulti([1], []))
+// => [] (長度不同)</code></pre>
 
 
 
@@ -7049,7 +7067,7 @@ console.log(arrMulti([2, '-'], [10, 20], { base: 0 }))
 
             
 
-            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相乘；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；每個陣列各自至少1個有效數字，否則throw</p></td>
+            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相乘；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；皆為空陣列則回傳空陣列，否則每個陣列各自至少1個有效數字，否則throw</p></td>
         </tr>
 
     
@@ -7262,7 +7280,7 @@ console.log(arrMulti([2, '-'], [10, 20], { base: 0 }))
 
         
 <div class="param-desc">
-    <p>回傳各元素相乘後陣列</p>
+    <p>回傳各元素相乘後陣列，所有輸入陣列皆為空陣列時回傳空陣列，容器無法運算(陣列少於2個、非陣列、長度不同)時亦回傳空陣列</p>
 </div>
 
 
@@ -7679,8 +7697,9 @@ console.log(arrNorm([3, '-', 4]))
 <p>內部以arrMulti逐位置相乘(傳入基準值base為opt.base，預設0)再加總：
 元素以isenum判定是否為有效數字(有限數字，或去頭尾空白後為十進位寫法之數字字串)，有效者取其數值參與相乘；
 凡非有效數字(含標記字串'-'、'NP'、''、null、undefined、布林、NaN、Infinity、'Infinity'、'0x10'、'1e400'、包裝物件等)，一律以基準值opt.base(預設0)代入，故預設下該位置之乘積為0、不影響總和，不報錯。
+本函數由陣列算出單一數值，空陣列算不出數值：任一輸入陣列為空陣列即throw Error('invalid arrs[索引]: must contain a valid number')，索引為第一個空陣列(如arrProduct([1], [])為arrs[1]、arrProduct([], [1])為arrs[0])，即使另一陣列長度不同亦然。
 每個輸入陣列各自至少要有1個有效數字(含空陣列，皆視為0個)，否則throw Error('invalid arrs[索引]: must contain a valid number')，訊息不帶輸入值。
-陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同，回傳null(先於有效數字之檢查)。
+陣列容器之處置不變：陣列參數少於2個、非陣列、長度不同(陣列皆非空者)，回傳null(先於有效數字之檢查，但後於空陣列之檢查)。
 本函數為不定參數，最後一個參數若為一般物件(非陣列)則視為opt；最後一個參數若為undefined或null則視為未給opt(不當成陣列參數)，如arrProduct(a, b, undefined)等同arrProduct(a, b)。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/arrProduct.test.mjs">Github</a></p></li></ul></dd>
     
@@ -7688,7 +7707,7 @@ console.log(arrNorm([3, '-', 4]))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arrProduct.mjs.html">arrProduct.mjs</a>, <a href="arrProduct.mjs.html#line44">line 44</a>
+        <a href="arrProduct.mjs.html">arrProduct.mjs</a>, <a href="arrProduct.mjs.html#line53">line 53</a>
     </li></ul></dd>
     
 
@@ -7749,7 +7768,15 @@ console.log(arrProduct([1, 2, 3], [4, '-', 6]))
 // => 22 (非有效數字以基準值0代入，該位置乘積為0)
 
 console.log(arrProduct([1, 2, 3], [4, '-', 6], { base: 1 }))
-// => 24 (非有效數字以基準值1代入，該位置乘積為2)</code></pre>
+// => 24 (非有效數字以基準值1代入，該位置乘積為2)
+
+try {
+    arrProduct([1], [])
+}
+catch (err) {
+    console.log(err.message)
+}
+// => invalid arrs[1]: must contain a valid number (空陣列算不出數值)</code></pre>
 
 
 
@@ -7808,7 +7835,7 @@ console.log(arrProduct([1, 2, 3], [4, '-', 6], { base: 1 }))
 
             
 
-            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相乘後加總；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；每個陣列各自至少1個有效數字，否則throw</p></td>
+            <td class="description last"><p>輸入n個陣列，需同長度，各陣列針對各位置元素進行相乘後加總；元素為有效數字(數字或數字字串，定義見isenum)者取其數值，非有效數字者以opt.base代入；任一陣列為空陣列則throw，每個陣列各自至少1個有效數字，否則throw</p></td>
         </tr>
 
     
@@ -71735,7 +71762,7 @@ console.log(genID(Infinity).length)
 
     
 
-    <h4 class="name" id=".getCsvStrFromData"><span class="type-signature type-signature-static">(static) </span>getCsvStrFromData<span class="signature">(data, bom<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".getCsvStrFromData"><span class="type-signature type-signature-static">(static) </span>getCsvStrFromData<span class="signature">(data, bom<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String|Object}</span></h4>
 
     
 
@@ -71746,13 +71773,15 @@ console.log(genID(Infinity).length)
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>由陣列數據轉成為Excel(*.csv)的字串數據</p>
+<p>空陣列為合法資料(內容為空)，不是失敗：data為空陣列時回傳空內容，bom開啟(預設)時為只含BOM(U+FEFF)之字串，bom關閉時為空字串。
+data不是陣列(或為無效陣列，如[null]、[[]])時回傳{ error: 'no data' }物件。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getCsvStrFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="getCsvStrFromData.mjs.html">getCsvStrFromData.mjs</a>, <a href="getCsvStrFromData.mjs.html#line58">line 58</a>
+        <a href="getCsvStrFromData.mjs.html">getCsvStrFromData.mjs</a>, <a href="getCsvStrFromData.mjs.html#line72">line 72</a>
     </li></ul></dd>
     
 
@@ -71799,7 +71828,7 @@ console.log(genID(Infinity).length)
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let data = [    ['a', '123', 456],    [null, 'abc123', '', 111.222333],    [5, '\r\n', true, 'false'],]let c = getCsvStrFromData(data)console.log(c)// => "a","123",456//    ,"abc123","",111.222333//    5,"",true,"false"fs.writeFileSync('temp.csv', c, 'utf8')</code></pre>
+    <pre class="prettyprint"><code>let data = [    ['a', '123', 456],    [null, 'abc123', '', 111.222333],    [5, '\r\n', true, 'false'],]let c = getCsvStrFromData(data)console.log(c)// => "a","123",456//    ,"abc123","",111.222333//    5,"",true,"false"fs.writeFileSync('temp.csv', c, 'utf8')console.log(getCsvStrFromData([]).length)// => 1 (空陣列為合法資料，只含BOM(U+FEFF)之字串)console.log(getCsvStrFromData([], false) === '')// => trueconsole.log(getCsvStrFromData('x'))// => { error: 'no data' }</code></pre>
 
 
 
@@ -71862,7 +71891,7 @@ console.log(genID(Infinity).length)
                 </td>
             
 
-            <td class="description last"><p>輸入內容陣列</p></td>
+            <td class="description last"><p>輸入內容陣列，空陣列則回傳空內容</p></td>
         </tr>
 
     
@@ -71924,6 +71953,32 @@ console.log(genID(Infinity).length)
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳csv字串，data為空陣列時回傳空內容(bom開啟為只含BOM(U+FEFF)之字串、關閉為空字串)；data無效時回傳{ error: 'no data' }物件，轉換發生例外時回傳{ error }物件</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Object</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -94163,7 +94218,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="keysmat2ltdt.mjs.html">keysmat2ltdt.mjs</a>, <a href="keysmat2ltdt.mjs.html#line24">line 24</a>
+        <a href="keysmat2ltdt.mjs.html">keysmat2ltdt.mjs</a>, <a href="keysmat2ltdt.mjs.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -94210,7 +94265,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(keysmat2ltdt(['a', 'b'], [[12, 34.56], ['123', 'xyz']]))// => [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]</code></pre>
+    <pre class="prettyprint"><code>console.log(keysmat2ltdt(['a', 'b'], [[12, 34.56], ['123', 'xyz']]))// => [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }]console.log(keysmat2ltdt(['a', 'b'], [], { returnWithStateAndMsg: true }))// => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)</code></pre>
 
 
 
@@ -94445,7 +94500,7 @@ BigInt與Number在JS為互不相容的算術域(<code>1n + 1</code>、<code>Math
 
         
 <div class="param-desc">
-    <p>回傳物件陣列，keys或mat無效時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
+    <p>回傳物件陣列，mat為空陣列(合法資料)、keys或mat無效時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，keys有效且mat為空陣列時為{ state: 'success', msg: [] }，keys或mat無效時為{ state: 'error', msg }</p>
 </div>
 
 
@@ -95041,7 +95096,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdt2vrtsable.mjs.html">ltdt2vrtsable.mjs</a>, <a href="ltdt2vrtsable.mjs.html#line31">line 31</a>
+        <a href="ltdt2vrtsable.mjs.html">ltdt2vrtsable.mjs</a>, <a href="ltdt2vrtsable.mjs.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -95088,7 +95143,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))// => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]</code></pre>
+    <pre class="prettyprint"><code>console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))// => [{"a":{"rowspan":2,"value":"123","style":{}},"b":{"rowspan":1,"value":34.56,"style":{}}},{"a":{"rowspan":null,"value":"123","style":{}},"b":{"rowspan":1,"value":"xyz","style":{}}}]console.log(ltdt2vrtsable([], [], { returnWithStateAndMsg: true }))// => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)</code></pre>
 
 
 
@@ -95327,7 +95382,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
         
 <div class="param-desc">
-    <p>回傳物件陣列，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
+    <p>回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }</p>
 </div>
 
 
@@ -96179,7 +96234,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtkeys2mat.mjs.html">ltdtkeys2mat.mjs</a>, <a href="ltdtkeys2mat.mjs.html#line32">line 32</a>
+        <a href="ltdtkeys2mat.mjs.html">ltdtkeys2mat.mjs</a>, <a href="ltdtkeys2mat.mjs.html#line39">line 39</a>
     </li></ul></dd>
     
 
@@ -96226,7 +96281,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b']))// => [[12, 34.56], ['123', 'xyz']]</code></pre>
+    <pre class="prettyprint"><code>console.log(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b']))// => [[12, 34.56], ['123', 'xyz']]console.log(ltdtkeys2mat([], ['a', 'b'], { returnWithStateAndMsg: true }))// => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)console.log(ltdtkeys2mat('x', ['a', 'b'], { returnWithStateAndMsg: true }))// => { state: 'error', msg: 'invalid ltdt' }</code></pre>
 
 
 
@@ -96514,7 +96569,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
         
 <div class="param-desc">
-    <p>回傳資料陣列，ltdt無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
+    <p>回傳資料陣列，ltdt為空陣列(合法資料)、無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效、無法取得keys或任一元素非有效物件時為{ state: 'error', msg }</p>
 </div>
 
 
@@ -96561,7 +96616,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ltdtkeysheads2mat.mjs.html">ltdtkeysheads2mat.mjs</a>, <a href="ltdtkeysheads2mat.mjs.html#line29">line 29</a>
+        <a href="ltdtkeysheads2mat.mjs.html">ltdtkeysheads2mat.mjs</a>, <a href="ltdtkeysheads2mat.mjs.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -96608,7 +96663,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' }))// => [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]</code></pre>
+    <pre class="prettyprint"><code>console.log(ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' }))// => [['c1', 'c2'], [12, 34.56], ['123', 'xyz']]console.log(ltdtkeysheads2mat([], ['a', 'b'], { a: 'c1', b: 'c2' }, { returnWithStateAndMsg: true }))// => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗，不含表頭列)</code></pre>
 
 
 
@@ -96887,7 +96942,7 @@ console.log(JSON.stringify(lowerFindEq('flag', true)))
 
         
 <div class="param-desc">
-    <p>回傳資料陣列，ltdt無效或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
+    <p>回傳資料陣列，ltdt為空陣列(合法資料，不含表頭列)、無效或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效或任一元素非有效物件時為{ state: 'error', msg }</p>
 </div>
 
 
@@ -99142,7 +99197,7 @@ mat第1行需為字串陣列，才能當head</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="mat2ltdt.mjs.html">mat2ltdt.mjs</a>, <a href="mat2ltdt.mjs.html#line26">line 26</a>
+        <a href="mat2ltdt.mjs.html">mat2ltdt.mjs</a>, <a href="mat2ltdt.mjs.html#line30">line 30</a>
     </li></ul></dd>
     
 
@@ -99189,7 +99244,7 @@ mat第1行需為字串陣列，才能當head</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>console.log(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]))// => [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }]</code></pre>
+    <pre class="prettyprint"><code>console.log(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]))// => [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }]console.log(mat2ltdt([], { returnWithStateAndMsg: true }))// => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)</code></pre>
 
 
 
@@ -99388,7 +99443,7 @@ mat第1行需為字串陣列，才能當head</p>
 
         
 <div class="param-desc">
-    <p>回傳物件陣列，mat無效、列數少於2或任一列非有效陣列時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件</p>
+    <p>回傳物件陣列，mat為空陣列(合法資料)、mat無效、列數少於2或任一列非有效陣列時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，mat為空陣列時為{ state: 'success', msg: [] }，mat無效、列數少於2或任一列非有效陣列時為{ state: 'error', msg }</p>
 </div>
 
 
@@ -130552,7 +130607,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 03 2026 11:06:19 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 03 2026 11:56:50 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

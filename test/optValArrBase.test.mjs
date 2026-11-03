@@ -84,7 +84,9 @@ describe(`opt.base 與每個陣列至少1個有效數字(第221項第二批 第1
             assert.throws(() => arrAdd(['-'], [1]), isErr('invalid arrs[0]: must contain a valid number'))
             assert.throws(() => arrAdd([1], ['NP']), isErr('invalid arrs[1]: must contain a valid number'))
             assert.throws(() => arrAdd([1], [2], [null]), isErr('invalid arrs[2]: must contain a valid number'))
-            assert.throws(() => arrAdd([], []), isErr('invalid arrs[0]: must contain a valid number'))
+            assert.throws(() => arrAdd(['a'], ['b']), isErr('invalid arrs[0]: must contain a valid number'))
+            //第221項第六項(使用者2026-11-03): 空陣列為合法資料, 空進空出回[](原throw)
+            assert.strict.deepStrictEqual(arrAdd([], []), [])
             //容器先檢查: 長度不同/非陣列/少於2個時仍回[], 不throw
             assert.strict.deepStrictEqual(arrAdd(['-', '-'], [1]), [])
             assert.strict.deepStrictEqual(arrAdd(['-'], 'x'), [])
@@ -123,7 +125,9 @@ describe(`opt.base 與每個陣列至少1個有效數字(第221項第二批 第1
         it(`should throw with the index when an array has no valid number (even empty)`, function() {
             assert.throws(() => arrMulti(['-'], [1]), isErr('invalid arrs[0]: must contain a valid number'))
             assert.throws(() => arrMulti([1], [2], ['abc']), isErr('invalid arrs[2]: must contain a valid number'))
-            assert.throws(() => arrMulti([], []), isErr('invalid arrs[0]: must contain a valid number'))
+            assert.throws(() => arrMulti(['a'], ['b']), isErr('invalid arrs[0]: must contain a valid number'))
+            //第221項第六項(使用者2026-11-03): 空陣列為合法資料, 空進空出回[](原throw)
+            assert.strict.deepStrictEqual(arrMulti([], []), [])
             assert.strict.deepStrictEqual(arrMulti(['-', '-'], [1]), [])
         })
     })
@@ -143,9 +147,10 @@ describe(`opt.base 與每個陣列至少1個有效數字(第221項第二批 第1
             assert.strict.deepStrictEqual(arrAccum(['-', 1, 2]), [0, 1, 3])
         })
 
-        it(`should throw when no valid number or return [] when not an array`, function() {
+        it(`should throw when no valid number, return [] when empty or not an array`, function() {
             assert.throws(() => arrAccum(['-', 'NP']), isErr('invalid vec: must contain a valid number'))
-            assert.throws(() => arrAccum([]), isErr('invalid vec: must contain a valid number'))
+            //第221項第六項(使用者2026-11-03): 空陣列為合法資料, 空進空出回[](原throw)
+            assert.strict.deepStrictEqual(arrAccum([]), [])
             for (let v of ['', null, undefined, {}, 5, 'abc', NaN]) {
                 assert.strict.deepStrictEqual(arrAccum(v), [])
             }

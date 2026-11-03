@@ -129,3 +129,14 @@
 - **等價變異要先證明再丟**: 移除 `strDiff` 的兩邊皆空提前回傳存活,因 `Diff.diffLines('', '')` 本就回 `[]` 而得 `{ diff: [], dfs: [] }`;移除 `matDiff` 的提前回傳存活,因交給 `arrDiff` 得同結果.兩者是冗餘捷徑,以 `probe-equiv.mjs` 實測後記為等價,不為殺它而刪捷徑(保持與其他三個函數的結構一致,且「兩邊皆空改回 `{}`」的變異 S3／M3 皆殺死).
 - **console 攔截**: 測試用 `countConsole` 同時換掉 `log／info／warn／error／debug` 並在 `finally` 還原,斷言 throw 過程 console 0 次;同步測試期間換掉 `console.log` 不會干擾 mocha 報告器(報告器在測試之間輸出).
 - **測試尾段批次改寫**: 5 個測試檔的舊「無效輸入回 `{}`／`''`」尾段(10 案 × 5 檔)以 `tmp/ws286c/rewriteTails.mjs` 取代——以舊首案標題為 marker(須命中恰一次)截斷、串接新尾段、依各檔 EOL(CRLF)寫入、寫前備份;新尾段與共用載具 `test/tools/diffInputKit.mjs`(無效值表＋`throwsMsg`)分開寫,避免 5 檔各貼一份近似的值表.
+
+## 空資料不是失敗:向量處理空進空出、`arrProduct` 任一邊為空即 throw、轉換函數狀態模式、`getCsvStrFromData([])`(2026-11-03,主控任務 20261031121854,ws286d)
+
+- **派工書表列與 HEAD 實測不符時,先量再依既定順序,不憑表改順序**: 表列「`arrAdd(['a'], [])`、`arrAdd([], ['a'])` 非空而無有效數字之一邊仍拋錯」,但 HEAD 實測回 `[]`(容器〔長度不同〕先於有效數字檢查,且已有測試鎖);要照表改成拋錯須動搖該順序(連帶 `arrAdd([1], [])` 與 `arrAdd([1, 2], [3])` 之一致性).維持 HEAD 並列待裁示,不自行改順序.
+- **共用模組放行空陣列的位置要選對**: 空進空出放在 `reduceArrs`(`n === 0` 先於 `chkValid`)與 `arrAccum` 各自,**不改共用的 `chkValid`**——`arrNorm` 也經 `chkValid` 擋空陣列(變異 V5〔`chkValid` 對空陣列放行〕殺死 6 案)。`arrProduct` 內部呼叫 `arrMulti`,後者改成空進空出後會連帶放行 `arrProduct([], [])` 與 `([1], [])`(後者原就回 `null`),故須在 `arrProduct` 自己先以新 `chkNotEmpty` 擋(僅在全為陣列時檢查,非陣列仍交容器處置回 `null`);`errNoValid` 抽為訊息單一擁有者.
+- **「空資料」只認 `isarr && length === 0`,不能用 `isearr`/`iser`**: `isearr` 把 `[{}]`、`[null]`、`['']`、`[[]]` 當無效(長度 1 但元素被視為空),這些仍是失敗;誤把判定放寬成 `isarr`(變異 C4、D4)會讓非空無效陣列被當成功/空內容.
+- **型別檢測與資料有無無關(沿 `ltdtpull` 同日裁示)**: `keysmat2ltdt` 的 `keys` 檢查須先於 `mat` 為空之判定、`ltdt2vrtsable` 的 `mergerowkeys` 檢查須先於 `ltdt` 為空之判定(變異 C8、C12 以「兩區塊對調」殺死;首版變異是「刪除該檢查」,會連帶殺死其他案而不精準,改為對調才只殺目標案).副作用:`ltdt2vrtsable([], 'x', D)` 之錯誤訊息由 `invalid ltdt` 變為 `invalid mergerowkeys`(仍 error).
+- **工具陷阱:Edit/Write 會把輸入中的 `\uXXXX` 轉成真實字元**: 在 JSDoc、測試中寫「反斜線 + u + feff」之跳脫序列時,檔內變成不可見的 BOM 字元(`grep -c "ufeff"` 為 0、`LC_ALL=C grep -c $'\xef\xbb\xbf'` 才查得到).改用 `String.fromCodePoint(0xfeff)`(測試)與文字描述 `BOM(U+FEFF)`(JSDoc);`\r\n`、`\n` 不受影響.寫完檔以位元組搜尋 `$'\xef\xbb\xbf'` 驗.
+- **差分要先確認被比函數對自己是否決定性**: `getExcelU8ArrFromData` 輸出的 zip 含時間戳,同一輸入隔秒位元組即不同(HEAD 對 HEAD 亦然,`tmp` 內 `probe-zip-nondeterm.mjs` 證實),首次差分碰巧同一秒而 0 差異,第二次在秒界出現 1 列「差異」.改以同一支讀取器讀回內容比對;位元組比對 zip 輸出的測試皆應改比讀回內容.
+- **空工作表的判定以讀回為準**: hucre 把只有空儲存格(`[[null]]`、`[[null, null]]`)的工作表讀為無列,與 `rows = []` 同為 `data: []`;差分之「受影響域」須以 HEAD 讀回 `fmt: 'array'` 長度 0 判定,不能用輸入列數.
+- **舊案數計法**: `git show HEAD:test/<檔>` 輸出到 `tmp/<輪>/head/oldtest/`(旁置 `src` 為 HEAD 副本、複製 `test/tools`)後 `mocha --dry-run`,得 16 檔 1050 → 1384(+334);`git archive HEAD src` 解出 HEAD src 供修前紅與差分用,repo 工作樹與索引不動.

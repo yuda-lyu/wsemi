@@ -14,6 +14,10 @@ import optVal from './_optVal.mjs'
  *   基於廣義數字之陣列, 於計算處理時, 僅針對[有效數字類]處理, 非有效數字一律以該函數之基準值opt.base代入(arrAdd 0、arrMulti 1、arrAccum 0、arrProduct 0、arrNorm 0);
  *   每個輸入陣列各自至少要有1個有效數字(含空陣列, 皆視為0個), 否則throw Error(`invalid <名稱>: must contain a valid number`), 多陣列帶索引如invalid arrs[1]
  *   opt.base以isenum判定, 非預期(K3)視為未給、改用預設, opt.debug為true時警告
+ *
+ * 規格: 主控dspec〈輸入參數之檢測機制〉§11 第221項第6項(使用者2026-11-03), 空陣列為合法資料, 不因其為空而報錯, 但由陣列算出單一數值者, 空陣列算不出而報錯
+ *   逐項處理而回陣列者(arrAdd、arrMulti、arrAccum): 空進空出, 空陣列回[](reduceArrs於n=0時回[]; arrAccum自行回[]); 有元素但無有效數字者仍throw
+ *   由陣列算出單一數值者(arrMax、arrMin、arrNorm、arrProduct): 空陣列throw(arrNorm經chkValid視空陣列為0個有效數字; arrProduct另以chkNotEmpty使任一邊為空即throw; arrMax與arrMin不使用本模組, 各自檢查)
  */
 
 
@@ -77,17 +81,38 @@ function hasValid(arr) {
 }
 
 
-//檢查每個陣列各自至少1個有效數字, 否則throw; name為陣列參數名(如'arrs'、'vec'), multi為true時帶索引
+//無有效數字之錯誤(訊息不帶輸入值); name為陣列參數名(如'arrs'、'vec'), multi為true時帶索引
+function errNoValid(name, i, multi) {
+    return new Error(`invalid ${name}${multi ? `[${i}]` : ''}: must contain a valid number`)
+}
+
+
+//檢查每個陣列各自至少1個有效數字, 否則throw(空陣列視為0個有效數字, 故亦throw); name為陣列參數名(如'arrs'、'vec'), multi為true時帶索引
 function chkValid(arrs, name, multi) {
     for (let i = 0; i < arrs.length; i++) {
         if (!hasValid(arrs[i])) {
-            throw new Error(`invalid ${name}${multi ? `[${i}]` : ''}: must contain a valid number`)
+            throw errNoValid(name, i, multi)
         }
     }
 }
 
 
-//n個同長度陣列逐位置運算: 無法運算之容器回傳[](參數少於2個、非陣列、長度不同, 處置不變); 有效數字取值為去頭尾空白後Number, 非有效數字以base代入; fun為(累計值, 元素值)=>新累計值, init為累計初始值
+//由多個陣列算出單一數值者(如arrProduct), 空陣列算不出數值, 任一陣列為空陣列即throw(索引為第一個空陣列); 含非陣列者(容器無效)不處理, 由呼叫端依容器之處置回傳
+function chkNotEmpty(arrs, name, multi) {
+    for (let a of arrs) {
+        if (!isarr(a)) {
+            return
+        }
+    }
+    for (let i = 0; i < arrs.length; i++) {
+        if (arrs[i].length === 0) {
+            throw errNoValid(name, i, multi)
+        }
+    }
+}
+
+
+//n個同長度陣列逐位置運算: 無法運算之容器回傳[](參數少於2個、非陣列、長度不同, 處置不變); 皆為空陣列(長度0)則空進空出回傳[], 先於有效數字之檢查; 有效數字取值為去頭尾空白後Number, 非有效數字以base代入; fun為(累計值, 元素值)=>新累計值, init為累計初始值
 function reduceArrs(arrs, opt, fn, base, init, fun) {
 
     //check
@@ -104,6 +129,11 @@ function reduceArrs(arrs, opt, fn, base, init, fun) {
         if (a.length !== n) {
             return []
         }
+    }
+
+    //空進空出, 空陣列為合法資料, 不因其為空而報錯
+    if (n === 0) {
+        return []
     }
 
     //每個陣列各自至少1個有效數字
@@ -126,4 +156,4 @@ function reduceArrs(arrs, opt, fn, base, init, fun) {
 }
 
 
-export { splitArrs, getBase, chkValid, reduceArrs }
+export { splitArrs, getBase, chkValid, chkNotEmpty, reduceArrs }

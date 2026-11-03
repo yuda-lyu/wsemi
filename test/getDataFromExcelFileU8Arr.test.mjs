@@ -292,4 +292,37 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         assert.strict.deepStrictEqual(offsets, [-480, 0, 300])
     })
 
+    //第221項第六項(dspec §11第6項, 使用者2026-11-03): 空工作表(無任何列)為合法資料, fmt='csv'之data由{ error: 'no data' }改為空字串(內部以bom=false呼叫getCsvStrFromData)
+    describe(`empty worksheet (ws286d)`, function() {
+        let u8aEmpty = buildXlsx([])
+        let u8aEmptyRow = buildXlsx([[]])
+
+        it(`should give '' as data when the worksheet is empty and fmt is 'csv' (no BOM, no error object)`, async function() {
+            let r = await getDataFromExcelFileU8Arr(u8aEmpty, { fmt: 'csv' })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: '' }])
+        })
+
+        it(`should give '' as data when the worksheet is empty and fmt is 'csv' with valueToString false`, async function() {
+            let r = await getDataFromExcelFileU8Arr(u8aEmpty, { fmt: 'csv', valueToString: false })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: '' }])
+        })
+
+        it(`should give '' as data when the worksheet has only an empty row and fmt is 'csv'`, async function() {
+            let r = await getDataFromExcelFileU8Arr(u8aEmptyRow, { fmt: 'csv' })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: '' }])
+        })
+
+        it(`should give [] as data when the worksheet is empty and fmt is 'array' or 'ltdt' (unchanged)`, async function() {
+            for (let fmt of ['array', 'ltdt']) {
+                let r = await getDataFromExcelFileU8Arr(u8aEmpty, { fmt })
+                assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: [] }], fmt)
+            }
+        })
+
+        it(`should keep the csv of a non-empty worksheet unchanged`, async function() {
+            let r = await getDataFromExcelFileU8Arr(buildXlsx([[{ s: 'a' }], [{ s: '1' }]]), { fmt: 'csv' })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: '"a"\r\n"1"\r\n' }])
+        })
+    })
+
 })

@@ -41,3 +41,54 @@
 - 測試:`test/strDiff.test.mjs`(15 → 56)、`strDiffToHtml.test.mjs`(16 → 54)、`arrDiff.test.mjs`(12 → 56)、`matDiff.test.mjs`(11 → 75)、`ltdtDiff.test.mjs`(16 → 80),共 70 → 321(+251;`mocha --dry-run`);共用載具 `test/tools/diffInputKit.mjs`(新檔:無效值表 `NON_STR`／`NON_ARR`／`NON_OBJ_ELEM`、`throwsMsg`〔斷言訊息恰為固定字串且 throw 過程 console 呼叫 0 次〕、`throwsMsgNoLeak`).執行:`npx mocha --no-parallel test/strDiff.test.mjs test/strDiffToHtml.test.mjs test/arrDiff.test.mjs test/matDiff.test.mjs test/ltdtDiff.test.mjs --timeout 180000`.
 - 驗證:見主控任務 `agent-out/ws286c-修正報告.md`(修前紅:新測試於未修之 HEAD src 上 280 紅、41 綠〔綠者為不變之有效路徑〕;修後 5 檔 321 案 0 failing,加掃描類共 12 檔 585 案 0 failing;變異 41 項中 39 項殺死、2 項為等價變異〔移除 `strDiff`／`matDiff` 中冗餘之兩邊皆空提前回傳,輸出相同〕;有效輸入域修前修後差分 76053 列 0 差異;eslint 0 error).
 - 已知殘餘(未改,需裁示):`ltdtDiff` 之列為 `{}`(空物件)而他列有鍵時,`ltdtkeys2mat` 因要求每列為有效物件(非空)而整側回 `[]`,該側被靜默當成空——如 `ltdtDiff([{ a: 1 }, {}], [{ a: 1 }])` 顯示為「新增 1 列」(應為刪除 1 列的 `{}`)、`ltdtDiff([{ a: 1 }], [{ a: 1 }, {}])` 顯示為「刪除 1 列」(實測 `ws286c-evidence/9-probe-out-of-scope.log`);改前即如此,`{}` 依使用者所定「元素為物件」不在本輪拋錯範圍,故維持.另:`arrDiff` 一維模式元素為 `Symbol` 時為原生 `TypeError: Cannot convert a Symbol value to a string`(訊息不含值,但屬內部錯誤外洩)、`strDiff` 的 `isstr` 收字串包裝物件(`new String('a')`)並照常運作;`arrDiff1D`／`arrDiff2D` 內 `return {}` 守門與 `strDiff` 的 `{ eliminateEndLine: true }` 選項(`strDiff` 不讀取)為既有死碼.
+
+## 第 221 項 §11 第 6 項 ws286d 處置結果(2026-11-03,空資料不是失敗:向量處理 `arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 一邊空即報錯、狀態模式轉換函數 `ltdtkeys2mat`／`ltdtkeysheads2mat`／`ltdt2vrtsable`／`mat2ltdt`／`keysmat2ltdt`、`getCsvStrFromData([])`;第一級〔下游僅預設模式或 0 站點〕;主控任務 20261031121854 ws286d)
+
+- 依據:使用者 2026-11-03(dspec〈輸入參數之檢測機制〉§11 第 6 項「空資料不是錯誤」「數值陣列之空陣列」,使用者逐列確認 3 組):「空陣列也依然是陣列,故傳入與回傳皆為空陣列,不像是無法計算出數值的情況」→ 逐項處理而回陣列者空進空出;「arrMax arrMin arrNorm arrProduct 是要基於陣列去計算出單一數值,故傳空陣列進去無法算出數值,這得視為報錯」→ 維持;「arrProduct([1], [])、arrProduct([], [1]) 依你建議報錯」;「同類問題 6 個 依你建議去修」(5 個轉換函數狀態模式、`getCsvStrFromData([])`).主控查:其他自有套件未呼叫向量與彙總這 7 個函數;5 個轉換函數之下游呼叫皆為預設模式(`w-data-csv`、`w-ui-dwload`、`w-aggrid-vue`);`getCsvStrFromData` 下游只有 `w-fft` 範例頁(`examples/ex-spectrum1d.html`)——本輪以 `own-token-search` 重查結果相同(證據夾 `ws286d-evidence/7-own-token-search.txt`;`w-statistic`／`w-geo` 僅註解、`w-web-perm` 為不相關之字串 id).
+- **更正舊記載(第 221 項第二批 §11 第 15 項)**:第 15 項曾記「每個輸入陣列各自至少 1 個有效數字,**空陣列亦然(視為 0 個)→ throw**」(`rulebook_optval.md` R-OPT-VAL-01 ②、`rulebook_breaking_45to51.md` 第 47 項、`rulebook_judge_sites_r1.md` 第 15 項列、`state_數值與判斷.md`)——**對 `arrAdd`／`arrMulti`／`arrAccum` 已由本節取代**(空陣列空進空出回 `[]`),**對 `arrProduct` 維持 throw 並擴及「任一邊為空」**,`arrMax`／`arrMin`／`arrNorm` 維持不變;「有元素但無有效數字仍 throw」不變.各處已加註〔2026-11-03 更正〕.
+- 規則(本節):
+  1. 空陣列為合法資料,不得因其為空而報錯;**由陣列算出單一數值者**(`arrMax`、`arrMin`、`arrNorm`、`arrProduct`)空陣列算不出,報錯(維持);**逐項處理而回陣列者**(`arrAdd`、`arrMulti`、`arrAccum`)空進空出.
+  2. 向量處理:`arrAdd`／`arrMulti` 所有輸入陣列皆為空(長度 0,可 ≥2 個,最後的 `opt` 不計)回 `[]`(每次新陣列);`arrAccum([])` 回 `[]`.**容器處置仍先於有效數字檢查**:陣列少於 2 個、含非陣列、長度不同(含一邊空另一邊非空,如 `arrAdd([1], [])`、`arrAdd(['a'], [])`、`arrAdd([], ['a'])`)回 `[]`;有元素的陣列仍各自須有 1 個有效數字,否則 throw 原訊息(`invalid arrs[索引]: …`／`invalid vec: …`).空進空出先於 `opt.base` 讀取(`opt` 不生效、不警告).
+  3. `arrProduct`:容器含非陣列或陣列少於 2 個仍回 `null`(先於空陣列檢查);**其後任一輸入陣列為空陣列即 throw `invalid arrs[<第一個空陣列之索引>]: must contain a valid number`**(即使另一陣列長度不同或無有效數字:`arrProduct([1,2], [])`→ `arrs[1]`、`arrProduct(['a'], [])`→ `arrs[1]`、`arrProduct([1], [], [2])`→ `arrs[1]`);兩邊皆非空而長度不同仍回 `null`(不在本輪).`arrNorm` 先以 `chkValid` 擋空陣列與無有效數字,再以非空且有效之 `vec` 呼叫 `arrProduct(vec, vec)`,不受影響.
+  4. 轉換函數(狀態模式 `opt.returnWithStateAndMsg === true`):輸入為空陣列(`Array` 且 `length === 0`)回 `{ state: 'success', msg: [] }`(每次新陣列);`ltdtkeysheads2mat` 不含表頭列(與預設模式一致).**預設模式一律不變**(空陣列仍回 `[]`);**非陣列仍為失敗**(狀態模式 `{ state: 'error', msg }`,預設模式 `[]`);**非空而 `isearr` 無效之陣列**(`[{}]`、`[null]`、`['']`、`[[]]`)仍為失敗;`mat2ltdt` 只有表頭列(列數少於 2)仍為失敗(不在本輪).
+  5. **型別檢測與資料有無無關**(沿 `ltdtpull` 同日裁示):其他必須參數型別無效即使資料為空陣列仍為失敗——`keysmat2ltdt` 的 `keys` 無效(含 `[]`)先於 `mat` 為空之判定,仍 `invalid keys`;`ltdt2vrtsable` 的 `mergerowkeys` 非陣列仍 `invalid mergerowkeys`(`ltdt2vrtsable([], 'x', D)` 之錯誤訊息由 `invalid ltdt` 變為 `invalid mergerowkeys`,仍為 error).`ltdtkeys2mat` 的 `keys` 為選用(非陣列時由 `ltdt` 提取),`ltdt` 為空時不論 `keys` 為何皆 success.
+  6. `getCsvStrFromData`:`data` 為 `[]` 回空內容——`bom` 開啟(預設)為只含 BOM(U+FEFF)之字串、關閉為 `''`(沿用 `getCsv` 之 `bom` 判定,與非空輸入同);**非陣列與非空而 `isearr` 無效之陣列**(`[null]`、`['']`、`[[]]`)仍回 `{ error: 'no data' }`.
+  7. 每次回傳新陣列/新物件,不共用常數.
+- 逐函數(`file:line` 為本輪工作樹;「改前」皆為 HEAD 實測,見報告〈使用者逐列確認表之實測〉):
+
+| 函數:情形 | 改前 | 改後 | 位置 |
+|---|---|---|---|
+| `arrAdd`／`arrMulti`:所有輸入陣列皆 `[]`(含 3 個以上、帶 `opt`) | throw `invalid arrs[0]: …` | `[]` | `src/_arrNum.mjs:135-137`(`reduceArrs`) |
+| `arrAccum([])` | throw `invalid vec: …` | `[]` | `src/arrAccum.mjs:46-48` |
+| `arrAdd`／`arrMulti`／`arrAccum`:有元素但無有效數字 | throw | 不變 | `src/_arrNum.mjs:140`(`reduceArrs` 內 `chkValid`)、`:91-97`(`chkValid` 本體) |
+| `arrAdd([1], [])`、`([], [1])`、`(['a'], [])`、`([], ['a'])` | `[]` | 不變(派工書原列「`['a']` 一邊仍拋錯」與 HEAD 實測不符,見報告需裁示 1) | `reduceArrs` 長度檢查 |
+| `arrProduct`:任一邊為空陣列(`([1], [])`、`([], [1])`、`([1,2], [])`、`(['a'], [])`、三個陣列含空) | `null`(`([], [])` 為 throw) | throw `invalid arrs[<第一個空陣列索引>]: must contain a valid number` | `src/arrProduct.mjs:64`、`src/_arrNum.mjs:101-111`(新 `chkNotEmpty`)、`:85-87`(新 `errNoValid`,`chkValid` 改用) |
+| `arrProduct([1,2], [3])`、含非陣列(`([], 'x')`) | `null` | 不變 | — |
+| `arrMax([])`、`arrMin([])`、`arrNorm([])` | throw | 不變(守護:`arrMax.test.mjs:194`、`arrMin.test.mjs:194`、`arrNorm.test.mjs:56`,變異 G1~G3 殺死) | — |
+| `ltdtkeys2mat([], keys, D)` | `{ state: 'error', msg: 'invalid ltdt' }` | `{ state: 'success', msg: [] }` | `src/ltdtkeys2mat.mjs:61-71` |
+| `ltdtkeysheads2mat([], keys, kphead, D)` | 同上 | `{ state: 'success', msg: [] }` | `src/ltdtkeysheads2mat.mjs:55-65` |
+| `ltdt2vrtsable([], mergerowkeys 有效, D)` | 同上 | `{ state: 'success', msg: [] }`(`mergerowkeys` 無效仍 error) | `src/ltdt2vrtsable.mjs:56-75` |
+| `mat2ltdt([], D)` | `{ state: 'error', msg: 'invalid mat' }` | `{ state: 'success', msg: [] }` | `src/mat2ltdt.mjs:52-62` |
+| `keysmat2ltdt(keys 有效, [], D)` | 同上 | `{ state: 'success', msg: [] }` | `src/keysmat2ltdt.mjs:55-65` |
+| 5 個轉換函數:預設模式傳 `[]`、非陣列(有 `D`／無 `D`)、`keysmat2ltdt` 之 `keys` 無效 | `[]`／`error`／`[]`／`invalid keys` | 不變 | — |
+| `getCsvStrFromData([])`／`([], true)` | `{ error: 'no data' }` | 只含 BOM(U+FEFF)之字串 | `src/getCsvStrFromData.mjs:75` |
+| `getCsvStrFromData([], false)` | `{ error: 'no data' }` | `''` | 同上 |
+| `getCsvStrFromData('x')` 等非陣列、`[null]` 等無效陣列 | `{ error: 'no data' }` | 不變 | — |
+
+- 內部呼叫站逐站確認(2026-11-03;`ws286d-evidence/3-diff-result.log` 差分與 `6-excel-*.log` 實測):
+
+| 站點 | 傳入值來源 | 是否依賴舊回傳 | 結論 |
+|---|---|---|---|
+| `ltdtDiff.mjs:868-869` `ltdtkeys2mat(ltdtOld/ltdtNew, keys, { empty })` | 已檢為物件陣列(可為 `[]`);**預設模式**(不給 `returnWithStateAndMsg`) | 空陣列預設模式回 `[]` 與改前相同;不讀 `state` | 無需改;差分 15000 列(含一邊或兩邊為空)0 差異 |
+| `downloadExcelFileFromData.mjs:67` `ltdtkeysheads2mat(data)` | 前置 `isarr(data) && iseobj(get(data, 0))`,必為非空且首列為有效物件之陣列;預設模式 | 否 | 無需改;`downloadExcelFileFromData.test.mjs` 綠 |
+| `getExcelWorksheetFromData.mjs:62` `ltdtkeysheads2mat(data)` | `every(data, iseobj)` 成立才呼叫(`data = []` 亦成立→傳 `[]`);預設模式 | `[]` 預設模式回 `[]` 與改前相同(`rows: []`) | 無需改;差分 10000 列(含 `[]`)0 差異 |
+| `mat2ltdt.mjs` → `keysmat2ltdt(keys, data, D)` | `mat` 已檢列數 ≥2,`data = tail(mat)` 必為非空 | 否(僅 `r.state === 'error'` 時回報) | 無需改 |
+| `ltdtkeysheads2mat.mjs` → `ltdtkeys2mat(ltdt, keys, D)` | `ltdt` 已檢非空(空陣列於本函數先行回傳) | 否 | 無需改 |
+| `arrNorm.mjs:47,53` `chkValid`→`arrProduct(vec, vec, { base })` | `vec` 已經 `chkValid` 證實非空且有有效數字 | 否 | 無需改;`arrNorm([])` 仍 throw `invalid vec: …`(守護案+變異 V5/G3) |
+| `arrProduct.mjs:70` → `arrMulti(...arrs, { base })` | `chkNotEmpty` 之後,陣列皆非空(或含非陣列者,`arrMulti` 回 `[]`→`null`) | 否 | 無需改 |
+| `getDataFromExcelFileU8Arr.mjs:161` `getCsvStrFromData(sh.data, bom)` | `sh.data` 為 `to_array` 之陣列(`bom = false`);空工作表(含只有空儲存格者,hucre 讀為無列)為 `[]` | **依賴舊回傳**:空工作表之 csv `data` 由 `{ error: 'no data' }` 變 `''`(派工書已預告);`fmt='array'`／`'ltdt'` 空工作表仍 `[]` | 已含於改動;補 5 案(空工作表 csv ×3 〔`[]`、`valueToString:false`、只有空列〕、`array`／`ltdt` 不變、非空 csv 不變);差分 48 列空工作表 csv 皆 `''`、672 列非空 0 差異 |
+
+- 盤點指令:`Grep pattern="chkNotEmpty|chkValid|n === 0" path=src glob="{_arrNum,arrAdd,arrMulti,arrAccum,arrProduct,arrNorm}.mjs"`;`Grep pattern="isarr\\((ltdt|mat|data)\\) && .*length === 0" path=src`(應命中 6 檔 6 站:5 個轉換函數與 `getCsvStrFromData`);`Grep pattern="\\.\\./src/(arrMax|arrMin)" path=test` 之守護案見上表.
+- 測試(16 檔,HEAD 1050 → 1384 案,+334):`test/arrAdd`(35→40)、`arrMulti`(35→40)、`arrAccum`(11→14)、`arrProduct`(35→42)、`ltdtkeys2mat`(18→67)、`ltdtkeysheads2mat`(24→72)、`ltdt2vrtsable`(18→67)、`mat2ltdt`(24→71)、`keysmat2ltdt`(44→133)、`getCsvStrFromData`(1→28)、`getDataFromExcelFileU8Arr`(18→23)、`optValArrBase`／`isenumCallersArr`(案數不變,3 處＋2 處鎖定舊行為者改寫為空進空出)；`arrMax`／`arrMin`／`arrNorm` 測試檔未動(其 `[]` 守護案原已存在)；轉換函數之非陣列表重用 `test/tools/diffInputKit.mjs` 之 `NON_ARR`.執行:`npx mocha --no-parallel <上列 14 檔 + arrNorm、arrMax、arrMin>` 加內部呼叫端測試(`ltdtDiff`、`downloadExcelFileFromData`、`getExcelWorksheetFromData`、`getExcelU8ArrFromData`、`addExcelWorksheetFromData`、`getExcelWorkbookFromData`、`getltdtkeys`)與掃描類(`testStructure`、`optValG7optNumRetire`、`_srcBigIntLiteral`、`loadTrial`、`evemSafe`)共 30 檔.
+- 驗證:見主控任務 `agent-out/ws286d-修正報告.md`(修前紅:新測試於未修之 HEAD src 上 1384 案中 43 紅、1341 綠;修後 30 檔 2696 案 0 failing;變異 35 項全部殺死〔含守護 `arrMax([])`／`arrMin([])`／`arrNorm([])` 改成不拋錯三項〕;前後差分 287020 列:有效域〔非空〕247230 列 0 差異、受影響域〔空陣列〕39790 列全符預測;eslint 0 error).
+- 已知殘餘(未改,需裁示):①`arrAdd(['a'], [])`／`arrAdd([], ['a'])` 因容器(長度不同)先於有效數字檢查而回 `[]`,與派工書列「非空而無有效數字之一邊仍拋錯」不符(HEAD 即如此,測試已鎖;若要改為拋錯須動搖「容器先於有效數字」之既定順序);②`arrProduct` 兩邊皆非空而長度不同仍回 `null`(使用者明示不動);③`mat2ltdt` 只有表頭列(列數少於 2)仍為失敗、`keysmat2ltdt` 之 `keys = []` 仍為失敗(不在本輪,是否也視為「空資料」請使用者定);④`getExcelU8ArrFromData` 輸出之 zip 含時間戳,同一輸入隔秒位元組即不同(HEAD 對 HEAD 亦然,證據 `3-probe-zip-nondeterm.log`),涉及該函數之位元組比對須改比讀回內容.

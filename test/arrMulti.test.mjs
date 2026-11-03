@@ -161,13 +161,45 @@ describe(`arrMulti`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    //第221項第二批(dspec §11第15項): 每個輸入陣列各自至少1個有效數字(空陣列視為0個), 否則throw(原回[])
-    it(`should throw when input [], []`, function() {
-        assert.throws(() => arrMulti([], []), (err) => {
+    //第221項第二批(dspec §11第15項): 有元素的陣列各自至少1個有效數字, 否則throw(原回[])
+    it(`should throw when input ['a'], ['b'] (non-empty arrays without a valid number)`, function() {
+        assert.throws(() => arrMulti(['a'], ['b']), (err) => {
             assert.strict.deepStrictEqual(err instanceof Error, true)
             assert.strict.deepStrictEqual(err.message, 'invalid arrs[0]: must contain a valid number')
             return true
         })
+    })
+
+    it(`should throw with the index of the array without a valid number when input [1], ['b']`, function() {
+        assert.throws(() => arrMulti([1], ['b']), { message: 'invalid arrs[1]: must contain a valid number' })
+    })
+
+    //第221項第六項(dspec §11第6項, 使用者2026-11-03): 空陣列為合法資料, 向量處理空進空出, 不報錯
+    it(`should return [] when input [], [] (empty in, empty out)`, function() {
+        let r = arrMulti([], [])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [], [], [] and the opt is given`, function() {
+        assert.strict.deepStrictEqual(arrMulti([], [], []), [])
+        assert.strict.deepStrictEqual(arrMulti([], [], { base: 5 }), [])
+        assert.strict.deepStrictEqual(arrMulti([], [], undefined), [])
+    })
+
+    it(`should return a new array every time for [], []`, function() {
+        let r1 = arrMulti([], [])
+        let r2 = arrMulti([], [])
+        r1.push(1)
+        assert.strict.deepStrictEqual(r2, [])
+    })
+
+    //長度不同屬容器處置(先於有效數字之檢查), 與空陣列無關: 一邊空一邊非空仍回[], 不throw
+    it(`should return [] when input [1], [] or [], [1] (different length, container handling unchanged)`, function() {
+        assert.strict.deepStrictEqual(arrMulti([1], []), [])
+        assert.strict.deepStrictEqual(arrMulti([], [1]), [])
+        assert.strict.deepStrictEqual(arrMulti([], ['a']), [])
+        assert.strict.deepStrictEqual(arrMulti(['a'], []), [])
     })
 
     it(`should return [] when input [], {}`, function() {

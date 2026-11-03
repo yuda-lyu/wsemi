@@ -41,13 +41,33 @@ describe(`arrAccum`, function () {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    //第221項第二批(第15項): 空陣列視為0個有效數字, 原回[]改throw(與arrMax([])一致)
-    it(`should throw when input []`, function () {
-        assert.throws(() => arrAccum([]), (err) => {
+    //第221項第二批(第15項): 有元素但無有效數字者throw(原回[]改throw)
+    it(`should throw when input ['a']`, function () {
+        assert.throws(() => arrAccum(['a']), (err) => {
             assert.strict.deepStrictEqual(err instanceof Error, true)
             assert.strict.deepStrictEqual(err.message, 'invalid vec: must contain a valid number')
             return true
         })
+    })
+
+    //第221項第六項(dspec §11第6項, 使用者2026-11-03): 空陣列為合法資料, 向量處理空進空出, 不報錯(第15項「空陣列依此亦throw」對此函數不適用)
+    it(`should return [] when input [] (empty in, empty out)`, function () {
+        let r = arrAccum([])
+        let rr = []
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return [] when input [] and the opt is given`, function () {
+        assert.strict.deepStrictEqual(arrAccum([], { base: 5 }), [])
+        assert.strict.deepStrictEqual(arrAccum([], {}), [])
+        assert.strict.deepStrictEqual(arrAccum([], undefined), [])
+    })
+
+    it(`should return a new array every time for []`, function () {
+        let r1 = arrAccum([])
+        let r2 = arrAccum([])
+        r1.push(1)
+        assert.strict.deepStrictEqual(r2, [])
     })
 
     it(`should return [] when input {}`, function () {

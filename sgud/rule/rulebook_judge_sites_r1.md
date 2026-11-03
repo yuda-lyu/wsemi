@@ -58,9 +58,9 @@
 | 6 | domVirtualCreate.mjs | `opt.width`／`opt.height`(預設 `null`=不設定):`isenum { use:'nonnegative' }` | |
 | 6 | domFadeOut.mjs | `opt.duration`(預設 500):`isenum { use:'nonnegative' }`,**非預期或負數用 500**(原 `'abc'` 為 0、負數為 1000) | `domFadeIn` 有下游站點,維持原碼;`opt.delay`、`opacityIni` 不在清單 |
 | 6 | randomRange／randomsRange／randomIntsRange 與 pseudoRandomRange／pseudoRandomsRange／pseudoRandomIntRange／pseudoRandomIntsRange | `vstart`／`vend`:實數 `isenum`、整數 `iseint { use:'safe' }`;`vstart > vend` 仍 throw | 預設 0／1(實數)、0／100(整數);`randomIntRange`(有下游站點)、`randomIntsNdpRange`／`pseudoRandomIntsNdpRange`(`Infinity` 邊界)維持原碼 |
-| 6 | arrAccum.mjs | **`opt.base`**(預設 0):非有效數字以 base 代入,輸出與輸入逐筆對應;至少 1 個有效數字否則 throw | 第 15 項 |
+| 6 | arrAccum.mjs | **`opt.base`**(預設 0):非有效數字以 base 代入,輸出與輸入逐筆對應;至少 1 個有效數字否則 throw〔2026-11-03 更正(ws286d,第 60 項):空陣列不 throw,空進空出回 `[]`;有元素但無有效數字仍 throw〕 | 第 15 項 |
 
-- **新增或擴充**:`arrFilterByENum`(新增,基於 `isenum`);`arrAdd`(base 0)、`arrMulti`(1)、`arrAccum`(0)、`arrProduct`(0,傳 `base: 0` 給 `arrMulti`)、`arrNorm`(0,傳 `base: 0` 給 `arrProduct`)之 `opt.base` 與「每個輸入陣列至少 1 個有效數字」(內部 `_arrNum.mjs`),**尾端 `undefined`／`null` 視為未給 opt**(`arrAdd`／`arrMulti`／`arrProduct`);`preciseNum` 整數路徑(第 16 項).
+- **新增或擴充**:`arrFilterByENum`(新增,基於 `isenum`);`arrAdd`(base 0)、`arrMulti`(1)、`arrAccum`(0)、`arrProduct`(0,傳 `base: 0` 給 `arrMulti`)、`arrNorm`(0,傳 `base: 0` 給 `arrProduct`)之 `opt.base` 與「每個輸入陣列至少 1 個有效數字」(內部 `_arrNum.mjs`;〔2026-11-03 更正(ws286d,第 60 項):空陣列對 `arrAdd`／`arrMulti`／`arrAccum` 為空進空出回 `[]`,`arrProduct` 任一邊為空即 throw,`arrNorm` 維持 throw;有元素但無有效數字仍 throw〕),**尾端 `undefined`／`null` 視為未給 opt**(`arrAdd`／`arrMulti`／`arrProduct`);`preciseNum` 整數路徑(第 16 項).
 - **未套(本輪 A 排除,維持 1.9.36 原碼;待其後各輪)**:
   - `Infinity` 邊界(wsemi221b 報告 §8.1 之 14 處,函數整個不納入):`alive`、`cacheSt`、`execCli`、`execCliJsonRpc`、`fsTask`、`fsTreeFolderCore`、`isUserPw`、`strmid`、`domShowImages`、`randomIntsNdpRange`、`pseudoRandomIntsNdpRange`、`cacheBd`、`getFileBasicHash`、`getFileXxHash`、`debounce`、`pmDebounce`、`fsDeleteFileSafeCore`、`fsDeleteFolderSafeCore`、`pmMap`.
   - 待決第 8 項之 9 站所屬函數:`cache.timeExpired`、`cacheBd.nMax`、`cacheSt.attemptNum`、`waitFun.attemptNum`、`execCli.maxRetries`、`domGetFiles`／`domShowInputAndGetFiles`／`domShowInputAndGetFilesU8Arrs` 之 `sizeMbLimit`.

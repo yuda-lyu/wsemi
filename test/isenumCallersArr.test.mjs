@@ -64,7 +64,7 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
             assert.strict.deepStrictEqual(arrAdd([1, 2], [1]), [])
             assert.strict.deepStrictEqual(arrAdd(1, [1]), [])
             assert.strict.deepStrictEqual(arrAdd([1], 'a'), [])
-            assert.throws(() => arrAdd([], []), isErr('invalid arrs[0]: must contain a valid number')) //§11第15項: 空陣列視為0個有效數字, 改throw(原回[])
+            assert.strict.deepStrictEqual(arrAdd([], []), []) //第221項第六項(使用者2026-11-03): 空陣列為合法資料, 空進空出回[](第15項曾改throw, 對本函數不適用)
             assert.strict.deepStrictEqual(arrAdd([1, 2], [1, 2], [1]), [])
         })
 
@@ -110,7 +110,7 @@ describe(`廣義數字陣列之計算改用isenum(第221項第一批)`, function
             assert.strict.deepStrictEqual(arrMulti([1, 2], [1]), [])
             assert.strict.deepStrictEqual(arrMulti(1, [1]), [])
             assert.strict.deepStrictEqual(arrMulti([1], 'a'), [])
-            assert.throws(() => arrMulti([], []), isErr('invalid arrs[0]: must contain a valid number')) //§11第15項: 空陣列視為0個有效數字, 改throw(原回[])
+            assert.strict.deepStrictEqual(arrMulti([], []), []) //第221項第六項(使用者2026-11-03): 空陣列為合法資料, 空進空出回[](第15項曾改throw, 對本函數不適用)
         })
 
     })
