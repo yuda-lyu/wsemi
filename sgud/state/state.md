@@ -27,13 +27,13 @@
 - 既有函數改用 `isenum`／`iseint` 第一批(排程第 221 項;主控任務 20261031121854 wsemi221a,2026-10-31;package.json version 1.9.35 之工作樹,未提交未發布)
 - 專用判斷函數 `isenum`／`iseint` 與 `preciseNum` 精度(主控任務 20261031121854 wsemieff,2026-10-31;package.json version 1.9.34 之工作樹,未提交未發布)
 
-### `sgud/state/state_外部程序與檔案.md`(外部程序與檔案;約 17.4KB)
+### `sgud/state/state_外部程序與檔案.md`(外部程序與檔案;約 25.8KB)
 
 查: 外部執行檔取得與下載校驗、埠查詢、原子寫檔、結果走 JSON 檔之 CLI、`fs*` 系.所含節:
 
 - 自 srcRunner 移入 4 件:`genClockTZ`、`execCliJsonFile`、`fsWriteTextAtomic`／`fsWriteTextAtomicCore`、`execCliFailDetail`(Gitea #41,tai-kns-trade;主控任務 20261101152333 wsemi41,2026-11-01;package.json version 1.9.38 之工作樹,未提交未發布)
 - `fsEnsureBins` 壓縮檔類型支援 `'tgz'`(Gitea #32,新增自有套件 w-canvas;主控任務 20261031175415 wsemi-tgz,2026-11-01;package.json version 1.9.37 之工作樹,未提交未發布)
-- 查詢埠之監聽者 `execProcessPortPids`／`execProcessPortPidsSync`(R-PORT-PIDS-01)
+- 查詢埠之監聽者 `execProcessPortPids`／`execProcessPortPidsSync`(R-PORT-PIDS-01;含 wu312 改以 OS API、wu316 改 Reflection.Emit 兩段現況)
 - 帶期望雜湊之下載 `fsDownloadFileVerify`(R-DL-VERIFY-01)
 - 外部執行檔之取得 `fsEnsureBins` 與清單項產生 `fsGetBinManifestEntry`(R-BIN-ENSURE-01)
 - fs* 路徑參數無效之處置(R-FS-INVALID-PATH-01;排程第 265 項來源第 216 項①;ws265,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕

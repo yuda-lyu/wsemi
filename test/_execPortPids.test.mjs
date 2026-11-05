@@ -164,37 +164,47 @@ describe(`_execPortPids`, function() {
             assert.strict.deepStrictEqual(script.includes('[Console]'), false)
         })
 
-        it(`powershell: primary path = Add-Type + GetExtendedTcpTable (AF_INET 2 and AF_INET6 23, table class 5, retry on 122), port passed as the integer`, function() {
-            //規格①: AF_INET與AF_INET6皆查, table class TCP_TABLE_OWNER_PID_ALL=5; 表大小會變動, ERROR_INSUFFICIENT_BUFFER(122)要重取
+        it(`powershell: primary path = Reflection.Emit P/Invoke of GetExtendedTcpTable (AF_INET 2 and AF_INET6 23, table class 5, PreserveSig, retry on 122), port passed as the integer`, function() {
+            //規格(wu316)①: 主路徑以Reflection.Emit動態組件定義P/Invoke(DefinePInvokeMethod), 不用Add-Type; AF_INET與AF_INET6皆查, table class TCP_TABLE_OWNER_PID_ALL=5; 表大小會變動, ERROR_INSUFFICIENT_BUFFER(122)要重取
             let script = kit.buildPsScript(8080)
-            assert.strict.deepStrictEqual(script.includes('Add-Type -TypeDefinition @\'\n'), true)
-            assert.strict.deepStrictEqual(script.includes('\n\'@\n'), true) //here-string結束符須在行首
-            assert.strict.deepStrictEqual(script.includes('DllImport("iphlpapi.dll")'), true)
-            assert.strict.deepStrictEqual(script.includes('GetExtendedTcpTable(buf, ref size, false, af, 5, 0)'), true)
-            assert.strict.deepStrictEqual(script.includes('new int[] { 2, 23 }'), true)
-            assert.strict.deepStrictEqual(script.includes('if (r != 122) break;'), true)
-            assert.strict.deepStrictEqual(script.includes('[WsemiPortPids]::Query(8080)'), true)
+            assert.strict.deepStrictEqual(script.includes('DefineDynamicAssembly('), true)
+            assert.strict.deepStrictEqual(script.includes(`DefinePInvokeMethod('GetExtendedTcpTable', 'iphlpapi.dll', 'Public,Static,PinvokeImpl', 'Standard', [uint32], [Type[]]@([IntPtr], [int].MakeByRefType(), [bool], [int], [int], [int]), 'Winapi', 'Auto')`), true)
+            //PreserveSig: 回傳值照原樣給呼叫端, 否則回122(緩衝不足)被丟棄而恆得0, 走不到重取(實測見規則帳本R-PORT-PIDS-01規則10②)
+            assert.strict.deepStrictEqual(script.includes('[Reflection.MethodImplAttributes]::PreserveSig'), true)
+            assert.strict.deepStrictEqual(script.includes('$api::GetExtendedTcpTable($buf, [ref]$size, $false, $af, 5, 0)'), true)
+            assert.strict.deepStrictEqual(script.includes('foreach ($af in 2, 23) {'), true)
+            assert.strict.deepStrictEqual(script.includes('if ($r -ne 122) { break }'), true)
+            assert.strict.deepStrictEqual(script.includes('$want = 8080\n'), true)
             //位元組配置: IPv4列24位元組(本地埠@8、遠端位址@12、遠端埠@16、PID@20); IPv6列56位元組(本地埠@20、遠端位址@24、遠端埠@44、PID@52)
-            assert.strict.deepStrictEqual(script.includes('int rs = v6 ? 56 : 24, oLp = v6 ? 20 : 8, oRa = v6 ? 24 : 12, oRp = v6 ? 44 : 16, oPid = v6 ? 52 : 20, lenA = v6 ? 16 : 4;'), true)
-            //埠為網路位元組序: 高位元組在前
-            assert.strict.deepStrictEqual(script.includes('(Marshal.ReadByte(p, off) << 8) | Marshal.ReadByte(p, off + 1)'), true)
-            //不同埠不共用腳本字串中的埠號: 腳本只在呼叫處帶埠號
+            assert.strict.deepStrictEqual(script.includes('if ($af -eq 23) { $rs, $oLp, $oRa, $oRp, $oPid, $la = 56, 20, 24, 44, 52, 16 } else { $rs, $oLp, $oRa, $oRp, $oPid, $la = 24, 8, 12, 16, 20, 4 }'), true)
+            //埠為網路位元組序: 高位元組在前(位移+0為高位元組、+1為低位元組)
+            assert.strict.deepStrictEqual(script.includes('$hi = $want -shr 8; $lo = $want -band 255'), true)
+            assert.strict.deepStrictEqual(script.includes('$b[$o + $oLp] -ne $hi -or $b[$o + $oLp + 1] -ne $lo'), true)
+            assert.strict.deepStrictEqual(script.includes('($b[$o + $oRp] * 256 + $b[$o + $oRp + 1])'), true)
+            //不同埠不共用腳本字串中的埠號: 腳本只在一處帶埠號(退回路徑之-LocalPort與$want)
             assert.strict.deepStrictEqual(kit.buildPsScript(8080).replace(/8080/g, 'P'), kit.buildPsScript(9091).replace(/9091/g, 'P'))
         })
 
-        it(`powershell: script is pure ASCII, the C# part is C# 5 only, the encoded argument stays within the command line limit`, function() {
+        it(`powershell: no compile step and no temp file source (no Add-Type, no C# source, no csc); the script is pure ASCII; the encoded argument stays within the command line limit`, function() {
             let script = kit.buildPsScript(65535)
-            //輸出只有ASCII: 腳本本身(含C#)純ASCII, 避開字碼頁
+            //輸出只有ASCII: 腳本本身純ASCII, 避開字碼頁
             assert.strict.deepStrictEqual(/^[\x20-\x7e\n]*$/.test(script), true)
-            //C#限C# 5語法(Windows PowerShell 5.1含Server 2016): 無字串插值、?.、=>、nameof、out var、內嵌型別推斷之元組、throw運算式、字面值分隔符
-            let cs = script.slice(script.indexOf('using System;'), script.indexOf('\n\'@\n'))
-            assert.strict.deepStrictEqual(cs.length > 500, true)
-            for (let [name, re] of [['interpolated string', /\$"/], ['null-conditional', /\?\./], ['null-coalescing assignment', /\?\?=/], ['lambda/expression body', /=>/], ['nameof', /\bnameof\b/], ['out var', /\bout\s+(var|int|uint)\b/], ['tuple', /\(\s*int\s+\w+\s*,\s*int\s+\w+\s*\)\s*\w/], ['digit separator', /\d_\d/], ['pattern is', /\bis\s+(int|uint|string|null)\s+\w/], ['default literal', /=\s*default\s*;/]]) {
-                assert.strict.deepStrictEqual(re.test(cs), false, name)
+            //不編譯C#: Add-Type被逾時強制結束時會在%TEMP%遺留編譯檔(csc之輸入與輸出); 主路徑與退回路徑皆不得出現(wu316)
+            for (let [name, re] of [['Add-Type', /Add-Type/i], ['TypeDefinition', /TypeDefinition/i], ['C# source (using System)', /using System/], ['DllImport', /DllImport/], ['here-string', /@'|'@/], ['csc / CSharp', /\bcsc\b|CSharp/i], ['Compile', /Compile/i], ['temp path', /\bTEMP\b|\bTMP\b|GetTempPath|GetTempFileName|New-TemporaryFile/i]]) {
+                assert.strict.deepStrictEqual(re.test(script), false, name)
             }
             //-EncodedCommand之引數長度(UTF-16LE之base64): CreateProcess上限32767, 經cmd.exe時8191; 保持在8191以內
             let b64 = kit.buildCmd('powershell', 65535, SR).args[3]
             assert.strict.deepStrictEqual(b64.length < 8191, true, `encoded length ${b64.length}`)
+        })
+
+        it(`powershell: the table loop is bounded and the buffer is always released (retry at most 16 times, free in finally, size check before the row loop)`, function() {
+            let script = kit.buildPsScript(8080)
+            assert.strict.deepStrictEqual(script.includes('for ($k = 0; $k -lt 16; $k++) {'), true)
+            assert.strict.deepStrictEqual(script.includes('$alloc = $size + 4096; $size = $alloc'), true)
+            assert.strict.deepStrictEqual(script.includes('finally { if ($buf -ne [IntPtr]::Zero) { $M::FreeHGlobal($buf) } }'), true)
+            assert.strict.deepStrictEqual(script.includes('if ($cnt -lt 0 -or $len -gt $alloc) { throw "table $af size" }'), true)
+            assert.strict.deepStrictEqual(script.includes('if ($r -ne 0 -or $buf -eq [IntPtr]::Zero) { throw "table $af err $r" }'), true)
         })
 
         it(`powershell: the script puts a VIA marker line before BEGIN (diagnosis; parsePs skips it)`, function() {
@@ -494,15 +504,15 @@ describe(`_execPortPids`, function() {
             await new Promise((resolve) => srv.close(resolve))
             let c = kit.buildCmd('powershell', port, SRR)
             let r = kit.runCmdSync(c.prog, c.args, { timeout: 60000, maxBuffer: kit.MAX_BUFFER })
-            //預設路徑為作業系統API(Add-Type可用時); 開始與結束標記之間無列
+            //預設路徑為作業系統API(Reflection.Emit可用時); 開始與結束標記之間無列
             assert.strict.deepStrictEqual(/^WSEMI-PORTPIDS-VIA api$/m.test(r.stdout), true, JSON.stringify(r))
             assert.strict.deepStrictEqual(/WSEMI-PORTPIDS-BEGIN\r?\nWSEMI-PORTPIDS-END/.test(r.stdout), true, JSON.stringify(r))
         })
 
         it(`primary path unavailable and the cmdlet missing too -> exit 3 with CommandNotFoundException (failure, distinguished from not found)`, async function() {
-            //新腳本以Add-Type/GetExtendedTcpTable為主路徑: 先使Add-Type不可用(退回路徑才會被走到), 再使cmdlet不存在
+            //腳本以Reflection.Emit/GetExtendedTcpTable為主路徑: 先使動態組件不可用(退回路徑才會被走到), 再使cmdlet不存在
             let c = kit.buildCmd('powershell', 8080, SRR)
-            let script = kit.buildPsScript(8080).replace('Add-Type -TypeDefinition', 'Add-TypeWsemiMissing -TypeDefinition').replace('Get-NetTCPConnection -LocalPort', 'Get-NetTCPConnectionWsemiMissing -LocalPort')
+            let script = kit.buildPsScript(8080).replace('DefineDynamicAssembly(', 'DefineDynamicAssemblyWsemiMissing(').replace('Get-NetTCPConnection -LocalPort', 'Get-NetTCPConnectionWsemiMissing -LocalPort')
             let args = [...c.args.slice(0, 3), Buffer.from(script, 'utf16le').toString('base64')]
             let r = kit.runCmdSync(c.prog, args, { timeout: 60000, maxBuffer: kit.MAX_BUFFER })
             let k = kit.classify('powershell', r, 8080, 60000)

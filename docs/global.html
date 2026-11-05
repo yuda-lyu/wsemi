@@ -699,7 +699,7 @@ wait = Math.min(wait, cst.TIMER_TIME_MAX) //須用min, 用max會把正常值放�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line327">line 327</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line323">line 323</a>
     </li></ul></dd>
     
 
@@ -900,7 +900,7 @@ wait = Math.min(wait, cst.TIMER_TIME_MAX) //須用min, 用max會把正常值放�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>產生查詢指定本地埠之PowerShell腳本，只輸出數值與位址等ASCII欄位(避開字碼頁)，不以狀態篩選</p>
-<p>資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，只輸出本地埠相符之列)，耗時約為PowerShell啟動加編譯(不到1秒)，不隨系統連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋、編譯器不可用、API回非預期之錯誤碼)時退回<code>Get-NetTCPConnection -LocalPort</code>，其耗時隨系統內TCP連線數增加(連線數千至上萬時可達十數秒)。兩條路徑輸出同一格式，以開始標記前之<code>WSEMI-PORTPIDS-VIA api|cmdlet</code>標示實際走哪一條(解析時略過)</p>
+<p>資料來源與耗時：優先以System.Reflection.Emit動態定義P/Invoke，呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，只輸出本地埠相符之列)，表於PowerShell內解析；不編譯C#、不產生暫存檔，耗時約為PowerShell啟動加一次查表(不到1秒)，不隨系統連線數明顯增加，系統忙碌時亦無編譯階段之拖累；Reflection.Emit或該API失敗(如受限語言模式下被擋、API回非預期之錯誤碼)時退回<code>Get-NetTCPConnection -LocalPort</code>，其耗時隨系統內TCP連線數增加(連線數千至上萬時可達十數秒)。兩條路徑輸出同一格式，以開始標記前之<code>WSEMI-PORTPIDS-VIA api|cmdlet</code>標示實際走哪一條(解析時略過)</p>
 <p>退回路徑查無連線時Get-NetTCPConnection拋CmdletizationQuery_NotFound_LocalPort，視為查無；其餘錯誤(含指令不存在CommandNotFoundException，其Category亦為ObjectNotFound，故以FullyQualifiedErrorId分辨)輸出錯誤識別碼並以離開碼3結束</p>
 <p>輸出用Write-Output而非[Console]::Out.WriteLine，後者於受限語言模式(Constrained Language Mode)被擋</p></li></ul></dd>
     
@@ -908,7 +908,7 @@ wait = Math.min(wait, cst.TIMER_TIME_MAX) //須用min, 用max會把正常值放�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line194">line 194</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -1952,7 +1952,7 @@ Windows下環境變數大小寫不敏感但JS物件鍵敏感, 故併入前先移
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line540">line 540</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line536">line 536</a>
     </li></ul></dd>
     
 
@@ -6044,7 +6044,7 @@ npm全域安裝的.cmd格式固定, 末行為:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line297">line 297</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line293">line 293</a>
     </li></ul></dd>
     
 
@@ -6582,7 +6582,7 @@ opt本身非一般物件時整份視為{}, 讀不到debug, 故不警告</p></li>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line245">line 245</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line241">line 241</a>
     </li></ul></dd>
     
 
@@ -6929,7 +6929,7 @@ useBoth為true時兩者皆查並取聯集，PowerShell查詢失敗即整體失�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line622">line 622</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line618">line 618</a>
     </li></ul></dd>
     
 
@@ -7669,7 +7669,7 @@ useBoth為true時兩者皆查並取聯集，PowerShell查詢失敗即整體失�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line479">line 479</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line475">line 475</a>
     </li></ul></dd>
     
 
@@ -8277,7 +8277,7 @@ useBoth為true時兩者皆查並取聯集，PowerShell查詢失敗即整體失�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line361">line 361</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line357">line 357</a>
     </li></ul></dd>
     
 
@@ -8558,7 +8558,7 @@ useBoth為true時兩者皆查並取聯集，PowerShell查詢失敗即整體失�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line456">line 456</a>
+        <a href="-_execPortPids.mjs.html">_execPortPids.mjs</a>, <a href="-_execPortPids.mjs.html#line452">line 452</a>
     </li></ul></dd>
     
 
@@ -9433,7 +9433,7 @@ opt.base以isenum判定, 非預期(K3)視為未給、改用預設, opt.debug為t
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 08:50:01 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 14:23:20 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

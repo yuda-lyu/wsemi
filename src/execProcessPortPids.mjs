@@ -9,7 +9,7 @@ import kit from './_execPortPids.mjs'
  *
  * Windows：先執行`netstat -ano`(通常數百毫秒；不加-p TCP，該參數只列IPv4會漏掉以::監聽者)，查到即採用；查無或失敗時再以PowerShell確認，其查無才判無人。netstat之查無不採信，故netstat失敗與查無同樣轉查PowerShell，最終之查無以其結果為準。opt.useBoth為true時兩者皆查並取聯集(netstat可能只列出部分監聽列，須確認「監聽者恰為某程序」時使用)。執行檔以%SystemRoot%下之絕對路徑呼叫，不依PATH
  *
- * Windows之PowerShell資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，含所有狀態之列，只輸出本地埠相符之列)，耗時為PowerShell啟動加編譯(通常不到1秒)，不隨系統內TCP連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋)時退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨系統內TCP連線數增加(連線數千至上萬、系統忙碌時可達十數秒，可能超過opt.timeout而得失敗)。兩者皆只輸出數值與位址欄位，不受字碼頁影響，不依狀態
+ * Windows之PowerShell資料來源與耗時：優先以Reflection.Emit動態定義P/Invoke，呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，含所有狀態之列，只輸出本地埠相符之列)；不編譯C#、不產生暫存檔，耗時為PowerShell啟動加一次查表(通常不到1秒)，不隨系統內TCP連線數明顯增加，系統忙碌時亦無編譯階段之拖累，子指令被逾時強制結束也不在暫存夾遺留檔案；Reflection.Emit或該API失敗(如受限語言模式)時退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨系統內TCP連線數增加(連線數千至上萬、系統忙碌時可達十數秒，可能超過opt.timeout而得失敗)。兩者皆只輸出數值與位址欄位，不受字碼頁影響，不依狀態
  *
  * Linux/macOS：`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`，lsof查無時以離開碼1結束視為無人；非root時lsof看不到他人帳號之程序，故此時之空陣列不代表他人帳號無人監聽(lsof之限制)
  *

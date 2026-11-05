@@ -10,9 +10,10 @@ import { withGuard, waitExit, reapTree } from './tools/execTraceKit.mjs'
 
 
 //_execPortPids之Windows資料來源(作業系統API GetExtendedTcpTable)之真實行為: 以真實監聽/連線驗證查得之PID、位址族、連線不誤判、受限語言模式之退回、無暫存檔殘留
-//規格(wu312, 主控2026-11-05): ①buildPsScript以GetExtendedTcpTable查(AF_INET與AF_INET6皆查, table class 5), 只輸出本地埠相符之列, 格式維持`R <本地埠> <遠端位址> <遠端埠> <PID>`與開始/結束標記;
-//  ②監聽列之判定維持「遠端為萬用位址且遠端埠0」, 不依狀態欄; ③Add-Type或API失敗時退回Get-NetTCPConnection(離開碼3與ERR行同現行); ④對外API、回傳語意(空陣列＝已確認無人, 失敗＝null/reject)不變; ⑤多次呼叫後暫存夾無Add-Type遺留檔
-describe(`_execPortPids OS API(wu312, Windows)`, function() {
+//規格(wu312, 主控2026-11-05; wu316改以Reflection.Emit): ①buildPsScript以GetExtendedTcpTable查(AF_INET與AF_INET6皆查, table class 5), 只輸出本地埠相符之列, 格式維持`R <本地埠> <遠端位址> <遠端埠> <PID>`與開始/結束標記;
+//  ②監聽列之判定維持「遠端為萬用位址且遠端埠0」, 不依狀態欄; ③Reflection.Emit或API失敗時退回Get-NetTCPConnection(離開碼3與ERR行同現行); ④對外API、回傳語意(空陣列＝已確認無人, 失敗＝null/reject)不變;
+//  ⑤(wu316)不編譯C#、不產生暫存檔: 正常結束與被逾時強制結束後暫存夾皆無遺留檔
+describe(`_execPortPids OS API(wu312 wu316, Windows)`, function() {
 
     this.timeout(180000)
 
@@ -371,6 +372,65 @@ describe(`_execPortPids OS API(wu312, Windows)`, function() {
     })
 
 
+    describe(`a port that carries many table rows(規格①: 表於PowerShell內逐列解析, 大表之每一列都要對)`, function() {
+
+        it(`300 accepted connections on one server port: every row of that port comes out once with the right remote address, remote port and pid`, async function() {
+            let accepted = []
+            let N = 300
+            let onAll = null
+            let all = new Promise((resolve) => {
+                onAll = resolve
+            })
+            let srv = net.createServer({ backlog: 1024 }, (s) => {
+                s.on('error', () => {})
+                accepted.push(s)
+                if (accepted.length === N) {
+                    onAll()
+                }
+            })
+            await new Promise((resolve) => srv.listen(0, '127.0.0.1', resolve))
+            let sp = srv.address().port
+            let clients = []
+            try {
+                for (let i = 0; i < N; i++) {
+                    clients.push(await new Promise((resolve, reject) => {
+                        let c = net.connect(sp, '127.0.0.1', () => resolve(c))
+                        c.on('error', reject)
+                    }))
+                }
+                await withGuard(all, 30000, 'all connections accepted')
+                let q = psQuery(sp)
+                assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'api', [process.pid]], q.raw.slice(0, 500))
+                let rows = q.raw.split(/\r?\n/).filter((l) => l.startsWith('R '))
+                //監聽列1筆(遠端為萬用位址、埠0) + 已接受之連線N筆(遠端為客端位址與埠), 全部屬本行程
+                assert.strict.deepStrictEqual(rows.length, N + 1)
+                assert.strict.deepStrictEqual(rows.filter((l) => l === `R ${sp} 0.0.0.0 0 ${process.pid}`).length, 1)
+                let want = clients.map((c) => c.localPort).sort((a, b) => a - b)
+                let got = []
+                for (let l of rows) {
+                    let m = /^R (\d+) (\S+) (\d+) (\d+)$/.exec(l)
+                    assert.strict.deepStrictEqual(m !== null && Number(m[1]) === sp && Number(m[4]) === process.pid, true, l)
+                    if (m[2] !== '0.0.0.0') {
+                        assert.strict.deepStrictEqual(m[2], '127.0.0.1', l)
+                        got.push(Number(m[3]))
+                    }
+                }
+                assert.strict.deepStrictEqual(got.sort((a, b) => a - b), want)
+            }
+            finally {
+                for (let c of clients) {
+                    c.destroy()
+                }
+                for (let s of accepted) {
+                    s.destroy()
+                }
+                await closeSrv(srv)
+            }
+        })
+
+    })
+
+
     describe(`buffer retry on ERROR_INSUFFICIENT_BUFFER(122)(規格①: 表大小會變動, 要重取)`, function() {
 
         let listener = null
@@ -386,21 +446,39 @@ describe(`_execPortPids OS API(wu312, Windows)`, function() {
         })
 
         //第一次(空指標)探測大小必回122, 配置後即成功: 這是每次查詢都走的重取; 下面以改小第一次配置量, 強制出現「第二次回122」, 驗多次重取
-        const GROW = 'alloc = size + 4096; size = alloc;'
+        //  (PreserveSig: 未設時第一次呼叫之122被丟棄而$r恆為0、整體退回, 上面各案的via須為api即已涵蓋; 本組再證明第二次起的重取)
+        const GROW = '$alloc = $size + 4096; $size = $alloc'
+        const HALF = '$alloc = if ($k -eq 0) { [int]($size / 2) } else { $size }; $size = $alloc'
+
+        it(`the script text really contains the allocation statement this group rewrites (guard against a silent no-op rewrite)`, function() {
+            assert.strict.deepStrictEqual(kit.buildPsScript(80).split(GROW).length - 1, 1)
+        })
+
+        it(`PreserveSig is what keeps the first 122 visible: without the flag the 122 is dropped (read as 0), the buffer stays empty and the whole query falls back (the flag is necessary, not decorative)`, function() {
+            //平台行為之證明(實測: 未設時第一次呼叫之回傳值恆為0); 若日後平台改變此行為, 本案紅燈提示重新核對PreserveSig之必要性與說明文字
+            let q = psQuery(port, { script: (s) => s.replace(' -bor [Reflection.MethodImplAttributes]::PreserveSig', () => '') })
+            assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
+        })
 
         it(`a table that grew past the first allocation (second 122) is fetched again and the answer still comes from the OS API`, function() {
             //第1次探測回122並給所需大小S; 改成只配S/2: 第2次呼叫再回122(size=S); 第3次配S後成功
-            let q = psQuery(port, { script: (s) => s.replace(GROW, 'alloc = (t == 0) ? size / 2 : size; size = alloc;') })
+            let q = psQuery(port, { script: (s) => s.replace(GROW, () => HALF) })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'api', [process.pid]], q.raw)
         })
 
         it(`with only one re-allocation allowed the same situation cannot be satisfied -> whole query falls back (no partial answer)`, function() {
-            let q = psQuery(port, { script: (s) => s.replace(GROW, 'alloc = (t == 0) ? size / 2 : size; size = alloc;').replace('t < 16', 't < 2') })
+            let q = psQuery(port, { script: (s) => s.replace(GROW, () => HALF).replace('$k -lt 16', () => '$k -lt 2') })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
         })
 
         it(`retries are bounded: an allocation that never fits ends in the fallback after at most 16 attempts (no endless loop)`, function() {
-            let q = psQuery(port, { script: (s) => s.replace(GROW, 'alloc = 8; size = alloc;') })
+            let q = psQuery(port, { script: (s) => s.replace(GROW, () => '$alloc = 8; $size = $alloc') })
+            assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
+        })
+
+        it(`an entry count that does not fit the allocated buffer is rejected, never read past the buffer -> fallback`, function() {
+            //邊界檢查: 讀到之列數超出配置之緩衝時整體失敗(不讀緩衝以外之記憶體、不以部分結果代替); 多報1000列(IPv4 24KB、IPv6 56KB)已超過配置之餘裕(4096位元組), 但仍在可配置之範圍, 故邊界檢查被拿掉時會讀到緩衝之外而非因配置失敗而僥倖退回
+            let q = psQuery(port, { script: (s) => s.replace('$cnt = $M::ReadInt32($buf);', () => '$cnt = $M::ReadInt32($buf) + 1000;') })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
         })
 
@@ -429,17 +507,18 @@ describe(`_execPortPids OS API(wu312, Windows)`, function() {
             await closeSrv(listener)
         })
 
-        it(`the harness really runs in Constrained Language Mode where Add-Type is refused (precondition of the CLM cases)`, function() {
+        it(`the harness really runs in Constrained Language Mode where the dynamic assembly (Reflection.Emit) and Add-Type are refused (precondition of the CLM cases)`, function() {
             let wrapper = [
                 `$ExecutionContext.SessionState.LanguageMode = 'ConstrainedLanguage'`,
                 `Write-Output ('MODE ' + $ExecutionContext.SessionState.LanguageMode)`,
+                `try { $null = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object Reflection.AssemblyName 'WsemiClmProbe'), 'Run'); Write-Output 'EMIT ok' } catch { Write-Output 'EMIT refused' }`,
                 `try { Add-Type -TypeDefinition 'public class WsemiClmProbe { }'; Write-Output 'ADDTYPE ok' } catch { Write-Output 'ADDTYPE refused' }`,
             ].join('\n')
             let r = cp.spawnSync(`${SR}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`, ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(wrapper, 'utf16le').toString('base64')], { windowsHide: true, encoding: 'latin1', timeout: 60000 })
-            assert.strict.deepStrictEqual(String(r.stdout).split(/\r?\n/).filter((l) => /^(MODE|ADDTYPE)/.test(l)), ['MODE ConstrainedLanguage', 'ADDTYPE refused'])
+            assert.strict.deepStrictEqual(String(r.stdout).split(/\r?\n/).filter((l) => /^(MODE|EMIT|ADDTYPE)/.test(l)), ['MODE ConstrainedLanguage', 'EMIT refused', 'ADDTYPE refused'])
         })
 
-        it(`Constrained Language Mode: Add-Type is blocked, falls back to the cmdlet, result still correct`, async function() {
+        it(`Constrained Language Mode: Reflection.Emit is blocked, falls back to the cmdlet, result still correct`, async function() {
             let q = psQuery(port, { clm: true })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
             //關閉後的埠: 查無(cmdlet之NotFound)仍為確認無人而非失敗
@@ -465,25 +544,30 @@ describe(`_execPortPids OS API(wu312, Windows)`, function() {
             assert.strict.deepStrictEqual([q.c.ok, q.c.reason, q.c.code, q.c.detail], [false, 'code', 3, 'code[3]: CommandNotFoundException'], q.raw)
         })
 
-        it(`Add-Type command missing (compile step cannot run): falls back to the cmdlet`, function() {
-            let q = psQuery(port, { script: (s) => s.replace('Add-Type -TypeDefinition', 'Add-TypeWsemiMissing -TypeDefinition') })
+        it(`dynamic assembly cannot be defined (method missing): falls back to the cmdlet`, function() {
+            let q = psQuery(port, { script: (s) => s.replace('DefineDynamicAssembly(', () => 'DefineDynamicAssemblyWsemiMissing(') })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
         })
 
-        it(`C# compile error: falls back to the cmdlet`, function() {
-            let q = psQuery(port, { script: (s) => s.replace('public static List<string> Query', 'public static List<string> Query_x_not_valid(') })
+        it(`the dynamic type cannot be created: falls back to the cmdlet`, function() {
+            let q = psQuery(port, { script: (s) => s.replace('$tb.CreateType()', () => '$tb.CreateTypeWsemiMissing()') })
+            assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
+        })
+
+        it(`the native library cannot be loaded (DllNotFoundException at the first call): falls back to the cmdlet`, function() {
+            let q = psQuery(port, { script: (s) => s.replace(`'iphlpapi.dll'`, () => `'iphlpapiWsemiMissing.dll'`) })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
         })
 
         it(`API error code (table class invalid -> ERROR_INVALID_PARAMETER): falls back to the cmdlet, not a partial/empty answer`, function() {
-            //table class 5 -> 99: GetExtendedTcpTable回87, C#拋錯, 整體退回(不以單一位址族或空結果代替)
-            let q = psQuery(port, { script: (s) => s.replace('af, 5, 0)', 'af, 99, 0)') })
+            //table class 5 -> 99: GetExtendedTcpTable回87, 腳本拋錯, 整體退回(不以單一位址族或空結果代替)
+            let q = psQuery(port, { script: (s) => s.replace('$af, 5, 0)', () => '$af, 99, 0)') })
             assert.strict.deepStrictEqual([q.c.ok, q.via, q.c.pids], [true, 'cmdlet', [process.pid]], q.raw)
         })
 
         it(`fallback keeps the exit code 3 and the ERR line when the cmdlet fails with another error`, function() {
-            //Add-Type無法執行且Get-NetTCPConnection收到不合法參數: 錯誤識別碼非NotFound -> exit 3 + ERR行
-            let q = psQuery(port, { script: (s) => s.replace('Add-Type -TypeDefinition', 'Add-TypeWsemiMissing -TypeDefinition').replace('-LocalPort ' + port, '-LocalPort 99999999999') })
+            //動態組件無法定義且Get-NetTCPConnection收到不合法參數: 錯誤識別碼非NotFound -> exit 3 + ERR行
+            let q = psQuery(port, { script: (s) => s.replace('DefineDynamicAssembly(', () => 'DefineDynamicAssemblyWsemiMissing(').replace('-LocalPort ' + port, () => '-LocalPort 99999999999') })
             assert.strict.deepStrictEqual([q.c.ok, q.c.reason, q.c.code], [false, 'code', 3], q.raw)
             assert.strict.deepStrictEqual(/^WSEMI-PORTPIDS-ERR \S+/m.test(q.raw), true, q.raw)
         })
@@ -491,7 +575,41 @@ describe(`_execPortPids OS API(wu312, Windows)`, function() {
     })
 
 
-    describe(`no Add-Type leftovers in the temp dir(規格⑤)`, function() {
+    describe(`no leftovers in the temp dir, also when the script is killed by a timeout(規格⑤, wu316: 不編譯C#故無暫存檔)`, function() {
+
+        it(`killed by a timeout at several moments of the run (before the host is up, while it starts, while the script works) leaves no file in the temp dir`, async function() {
+            let dir = path.join(FD, 'tmp-kill')
+            fs.mkdirSync(dir, { recursive: true })
+            let listener = await listenIn('127.0.0.1')
+            let port = listener.address().port
+            try {
+                let cmd = kit.buildCmd('powershell', port, SR)
+                let killed = 0
+                let ds = []
+                //逾時毫秒數涵蓋: PowerShell尚未啟動完成(100、150)、啟動中與腳本開始執行之前後(200～400); 舊作法(Add-Type)於後者被殺會在TEMP遺留6個編譯檔
+                for (let to of [100, 150, 200, 250, 300, 350, 400]) {
+                    for (let k = 0; k < 3; k++) {
+                        let d = path.join(dir, `t${to}_${k}`)
+                        fs.mkdirSync(d)
+                        ds.push(d)
+                        let r = cp.spawnSync(cmd.prog, cmd.args, { windowsHide: true, shell: false, stdio: ['ignore', 'pipe', 'pipe'], timeout: to, killSignal: 'SIGKILL', env: { ...process.env, TEMP: d, TMP: d } })
+                        if (r.error && r.error.code === 'ETIMEDOUT') {
+                            killed++
+                        }
+                    }
+                }
+                //前提: 確有被強制結束者(100毫秒內PowerShell不可能完成)
+                assert.strict.deepStrictEqual(killed >= 6, true, `killed ${killed}`)
+                for (let d of ds) {
+                    //PowerShell主機自身於啟動時建立之執行原則探測檔(__PSScriptPolicyTest_*)不屬腳本內容: 主機於其建立與刪除之間被強制結束時會遺留(與腳本是什麼無關, 修前之版本亦同); 其餘任何檔案皆不得有
+                    let left = fs.readdirSync(d).filter((s) => !/^__PSScriptPolicyTest_[a-z0-9]+\.[a-z0-9]+\.(ps1|psm1)$/.test(s))
+                    assert.strict.deepStrictEqual(left, [], d)
+                }
+            }
+            finally {
+                await closeSrv(listener)
+            }
+        })
 
         it(`6 successful runs (private TEMP/TMP) leave no files; same through the public API`, async function() {
             let dir = path.join(FD, 'tmp-clean')

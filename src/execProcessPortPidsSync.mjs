@@ -4,7 +4,7 @@ import kit from './_execPortPids.mjs'
 /**
  * 查詢監聽指定TCP埠之程序PID之同步版（跨平台，Windows/Linux/macOS），供行程之exit、signal處理器等不可非同步之處使用，非同步版見execProcessPortPids
  *
- * 判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0，不依狀態欄；Windows先`netstat -ano`，查無或失敗時以PowerShell確認(優先以Add-Type編譯一小段C#經P/Invoke呼叫作業系統之GetExtendedTcpTable，通常不到1秒且不隨系統內TCP連線數增加；Add-Type或該API失敗，如受限語言模式，退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨連線數增加，連線數千至上萬、系統忙碌時可達十數秒)，其查無才判無人；Linux/macOS為`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)
+ * 判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0，不依狀態欄；Windows先`netstat -ano`，查無或失敗時以PowerShell確認(優先以Reflection.Emit動態定義P/Invoke呼叫作業系統之GetExtendedTcpTable，不編譯C#、不產生暫存檔，通常不到1秒且不隨系統內TCP連線數明顯增加；Reflection.Emit或該API失敗，如受限語言模式，退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨連線數增加，連線數千至上萬、系統忙碌時可達十數秒)，其查無才判無人；Linux/macOS為`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)
  *
  * 子指令以child_process.spawnSync執行，期間阻塞事件迴圈，Windows下最久約為2倍opt.timeout(預設各10000毫秒)；PowerShell路徑退回Get-NetTCPConnection時耗時可能顯著增加，逾時即視為失敗(回傳null)
  *
