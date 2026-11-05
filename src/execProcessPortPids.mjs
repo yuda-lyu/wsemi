@@ -5,9 +5,11 @@ import kit from './_execPortPids.mjs'
 /**
  * 查詢監聽指定TCP埠之程序PID（跨平台，Windows/Linux/macOS），同步版見execProcessPortPidsSync
  *
- * 監聽列之判定：TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0；不依狀態欄(狀態值可能錯誤，Windows 11 build 26300＋KB5127936實測監聽中之socket狀態值為0、netstat因而整列漏列；狀態文字亦隨語系)。故僅綁定而未監聽之socket(無對端)亦會列入，其同樣佔用該埠
+ * 監聽列之判定：TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0；不依狀態欄(狀態值可能錯誤，Windows 11 build 26300＋KB5127936實測監聽中之socket狀態值為0、netstat因而整列漏列；狀態文字亦隨語系)。Windows之netstat與作業系統API(GetExtendedTcpTable)只列監聽中與已連線之socket，不列僅綁定而未監聽(bind後未listen)者；此類socket雖佔用該埠但查不到(只有退回路徑之Get-NetTCPConnection會列入)，故Windows下空陣列只代表無監聽者，不保證該埠未被僅綁定者占用
  *
- * Windows：先執行`netstat -ano`(約數十毫秒；不加-p TCP，該參數只列IPv4會漏掉以::監聽者)，查到即採用；查無或失敗時再以PowerShell之`Get-NetTCPConnection -LocalPort <埠>`確認(約1秒；只輸出數值與位址欄位，不受字碼頁影響，不以-State篩選)，其查無才判無人。netstat之查無不採信，故netstat失敗與查無同樣轉查Get-NetTCPConnection，最終之查無以其結果為準。opt.useBoth為true時兩者皆查並取聯集(netstat可能只列出部分監聽列，須確認「監聽者恰為某程序」時使用)。執行檔以%SystemRoot%下之絕對路徑呼叫，不依PATH
+ * Windows：先執行`netstat -ano`(通常數百毫秒；不加-p TCP，該參數只列IPv4會漏掉以::監聽者)，查到即採用；查無或失敗時再以PowerShell確認，其查無才判無人。netstat之查無不採信，故netstat失敗與查無同樣轉查PowerShell，最終之查無以其結果為準。opt.useBoth為true時兩者皆查並取聯集(netstat可能只列出部分監聽列，須確認「監聽者恰為某程序」時使用)。執行檔以%SystemRoot%下之絕對路徑呼叫，不依PATH
+ *
+ * Windows之PowerShell資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，含所有狀態之列，只輸出本地埠相符之列)，耗時為PowerShell啟動加編譯(通常不到1秒)，不隨系統內TCP連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋)時退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨系統內TCP連線數增加(連線數千至上萬、系統忙碌時可達十數秒，可能超過opt.timeout而得失敗)。兩者皆只輸出數值與位址欄位，不受字碼頁影響，不依狀態
  *
  * Linux/macOS：`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`，lsof查無時以離開碼1結束視為無人；非root時lsof看不到他人帳號之程序，故此時之空陣列不代表他人帳號無人監聽(lsof之限制)
  *
@@ -18,8 +20,8 @@ import kit from './_execPortPids.mjs'
  * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，reject錯誤訊息`port is not an integer between 1 and 65535`，不視為未給、不改用預設
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，須為大於0至2147483647(計時器上限)之內之有效數字，可為字串型數字，小數無條件進位為整數；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設值，不報錯、不夾至上限；逾時即強制結束該子指令並視為失敗。Windows下最多依序執行2個子指令，最久約為2倍timeout，預設10000；opt.debug為true時，非預期之timeout另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
- * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即reject(不以netstat之部分結果代替)，預設false
- * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與Get-NetTCPConnection，其餘走lsof，供測試，預設process.platform
+ * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以PowerShell(作業系統API，退回Get-NetTCPConnection)再查並取聯集，為true時PowerShell查詢失敗即reject(不以netstat之部分結果代替)，預設false
+ * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與PowerShell，其餘走lsof，供測試，預設process.platform
  * @param {Function} [opt.exec=null] 輸入執行子指令之函數，供測試以固定輸出驗證，格式為(prog, args, { src, timeout, maxBuffer })=>result，src為資料來源字串'netstat'、'powershell'、'lsof'，result(或resolve之值)須為與child_process.spawnSync同形之物件{ status, stdout, error }：status為離開碼數字(因訊號結束者為null)、stdout為字串或Buffer(Buffer以latin1解碼)、error為無法啟動或逾時之Error物件(code為'ETIMEDOUT'者視為逾時)否則為null；拋錯、reject或回傳非物件皆視為該子指令失敗；回傳永不落定之Promise時本函數亦不落定(逾時由該函數自行負責)。預設null為內建之執行函數(隱藏視窗、不經shell、逾時或stdout超過64MB即強制結束子指令)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'run'時為即將執行子指令(含src為資料來源字串、timeout為逾時毫秒數)，'result'時為子指令已結束並判定(含src、ok為是否成功、reason為'ok'、'timeout'、'error'(無法啟動或輸出過大)、'code'(非預期之離開碼)、'parse'(輸出無法解析)、'exec'(執行函數拋錯或回傳不合)、code為離開碼數字或null、count為查到之PID數，失敗為null)，'settle'時為即將resolve或reject(含ok、reason為'ok'、'port'(埠號不合法)、'query'(查詢失敗)、src為採用之資料來源字串'netstat'、'powershell'、'netstat+powershell'、'lsof'(失敗為null)、count為PID數(失敗為null)、msg為reject之訊息字串(成功為空字串))；opt不可讀者屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
  * @returns {Promise} 回傳Promise，resolve回傳PID數字陣列(去重、由小到大)，空陣列代表無人監聽；reject回傳錯誤訊息字串：埠號不合法為`port is not an integer between 1 and 65535`，opt不可讀為`opt is not readable: 訊息`，查詢失敗為`port[N] listener query failed: 各資料來源之說明`(說明之格式不保證固定，呼叫端勿解析)

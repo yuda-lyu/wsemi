@@ -4,9 +4,9 @@ import kit from './_execPortPids.mjs'
 /**
  * 查詢監聽指定TCP埠之程序PID之同步版（跨平台，Windows/Linux/macOS），供行程之exit、signal處理器等不可非同步之處使用，非同步版見execProcessPortPids
  *
- * 判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0，不依狀態欄；Windows先`netstat -ano`，查無或失敗時以PowerShell之`Get-NetTCPConnection -LocalPort <埠>`確認，其查無才判無人；Linux/macOS為`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)
+ * 判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、*)且遠端埠為0(或*)、PID大於0，不依狀態欄；Windows先`netstat -ano`，查無或失敗時以PowerShell確認(優先以Add-Type編譯一小段C#經P/Invoke呼叫作業系統之GetExtendedTcpTable，通常不到1秒且不隨系統內TCP連線數增加；Add-Type或該API失敗，如受限語言模式，退回`Get-NetTCPConnection -LocalPort <埠>`，其耗時隨連線數增加，連線數千至上萬、系統忙碌時可達十數秒)，其查無才判無人；Linux/macOS為`lsof -nP -iTCP:<埠> -sTCP:LISTEN -t`(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)
  *
- * 子指令以child_process.spawnSync執行，期間阻塞事件迴圈，Windows下最久約為2倍opt.timeout(預設各10000毫秒)
+ * 子指令以child_process.spawnSync執行，期間阻塞事件迴圈，Windows下最久約為2倍opt.timeout(預設各10000毫秒)；PowerShell路徑退回Get-NetTCPConnection時耗時可能顯著增加，逾時即視為失敗(回傳null)
  *
  * 失敗與無人嚴格分開：回傳空陣列代表已確認無人監聽；查詢失敗(指令不存在或無法啟動、逾時、非預期之離開碼、輸出無法解析、埠號不合法、opt不可讀)一律回傳null，絕不以空陣列表示失敗，呼叫端可據以fail-closed；失敗之訊息字串(同execProcessPortPids之reject訊息)可由opt.onTrace之settle事件之msg取得。本函數不拋錯
  *
@@ -15,8 +15,8 @@ import kit from './_execPortPids.mjs'
  * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，回傳null(失敗訊息見opt.onTrace之settle事件之msg)，不視為未給、不改用預設
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，須為大於0至2147483647(計時器上限)之內之有效數字，可為字串型數字，小數無條件進位為整數；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設值，不報錯、不夾至上限；逾時即強制結束該子指令並視為失敗，預設10000；opt.debug為true時，非預期之timeout另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
- * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即回傳null(不以netstat之部分結果代替)，預設false
- * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與Get-NetTCPConnection，其餘走lsof，供測試，預設process.platform
+ * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以PowerShell(作業系統API，退回Get-NetTCPConnection)再查並取聯集，為true時PowerShell查詢失敗即回傳null(不以netstat之部分結果代替)，預設false
+ * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與PowerShell，其餘走lsof，供測試，預設process.platform
  * @param {Function} [opt.exec=null] 輸入同步執行子指令之函數，供測試以固定輸出驗證，格式為(prog, args, { src, timeout, maxBuffer })=>result，src為資料來源字串'netstat'、'powershell'、'lsof'，result須為與child_process.spawnSync同形之物件{ status, stdout, error }(說明同execProcessPortPids之opt.exec)；拋錯、回傳非物件或回傳Promise(同步版無法等待)皆視為該子指令失敗。預設null為內建之spawnSync執行函數(隱藏視窗、不經shell、逾時或輸出超過64MB即強制結束子指令)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，type與欄位同execProcessPortPids：'run'(即將執行子指令；src、timeout)、'result'(子指令已結束並判定；src、ok、reason、code、count)、'settle'(即將回傳；ok、reason、src、count、msg，失敗時msg為失敗訊息字串)；opt不可讀者屬取得回調前之失敗，回傳null且不通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
  * @returns {Array|null} 回傳PID數字陣列(去重、由小到大)，空陣列代表無人監聽；查詢失敗回傳null

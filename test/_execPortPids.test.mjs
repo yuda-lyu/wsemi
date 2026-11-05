@@ -93,6 +93,11 @@ describe(`_execPortPids`, function() {
             ['dedup IPv4 and IPv6', ps([[8080, '::', 0, 1111], [8080, '0.0.0.0', 0, 1111], [8080, '0.0.0.0', 0, 999]]), [999, 1111]],
             //標記之前之其他輸出(如進度訊息)略過
             ['preamble before begin ignored', ps([[8080, '0.0.0.0', 0, 1111]], ['#< CLIXML', 'warning text']), [1111]],
+            //標示資料來源之VIA行(OS API或退回之cmdlet)位於開始標記之前, 略過; 兩路徑輸出格式相同
+            ['VIA api marker ignored', ps([[8080, '0.0.0.0', 0, 1111]], ['WSEMI-PORTPIDS-VIA api']), [1111]],
+            ['VIA cmdlet marker ignored', ps([[8080, '::', 0, 2222]], ['WSEMI-PORTPIDS-VIA cmdlet']), [2222]],
+            //OS API輸出之位址形式: IPv4點分、IPv6壓縮(IPAddress.ToString); 萬用位址只認0.0.0.0與::, 其餘位址的列(連線列)不成立
+            ['OS API row forms: ipv4 any / ipv6 any / connection rows (loopback, ipv6 link-local, v4-mapped)', ps([[8080, '0.0.0.0', 0, 11], [8080, '::', 0, 12], [8080, '127.0.0.1', 50000, 13], [8080, '::1', 50001, 14], [8080, 'fe80::1', 50002, 15], [8080, '::ffff:10.0.0.1', 50003, 16], [8080, '0.0.0.0', 50004, 17], [8080, '10.0.0.1', 0, 18]], ['WSEMI-PORTPIDS-VIA api']), [11, 12]],
         ]
         for (let [name, text, want] of tbl) {
             it(`${name}`, function() {
@@ -144,18 +149,59 @@ describe(`_execPortPids`, function() {
             assert.strict.deepStrictEqual(c, { prog: 'D:\\WinX\\System32\\netstat.exe', args: ['-ano'] })
         })
 
-        it(`powershell: encoded script queries -LocalPort without -State, outputs only numeric/address fields`, function() {
+        it(`powershell: encoded script queries the OS API first and the cmdlet -LocalPort as fallback, without state filtering, outputs only numeric/address fields`, function() {
             let c = kit.buildCmd('powershell', 8080, SR)
             assert.strict.deepStrictEqual(c.prog, 'D:\\WinX\\System32\\WindowsPowerShell\\v1.0\\powershell.exe')
             assert.strict.deepStrictEqual(c.args.slice(0, 3), ['-NoProfile', '-NonInteractive', '-EncodedCommand'])
             let script = Buffer.from(c.args[3], 'base64').toString('utf16le')
             assert.strict.deepStrictEqual(script, kit.buildPsScript(8080))
+            //退回路徑: Get-NetTCPConnection -LocalPort(規格③, 輸出欄位與現行相同)
             assert.strict.deepStrictEqual(script.includes('Get-NetTCPConnection -LocalPort 8080 '), true)
-            //狀態值可能錯誤(本機實測為0), 不以-State篩選、不輸出State
-            assert.strict.deepStrictEqual(/-State\b|\.State\b/.test(script), false)
+            //狀態值可能錯誤(本機實測為0), 不以-State篩選、不輸出State(C#與PowerShell皆不讀狀態欄)
+            assert.strict.deepStrictEqual(/-State\b|\.State\b|dwState|\bState\b/.test(script), false)
             assert.strict.deepStrictEqual(script.includes('$r.OwningProcess') && script.includes('$r.RemoteAddress') && script.includes('$r.RemotePort'), true)
             //受限語言模式不可呼叫[Console]之方法, 輸出用Write-Output
             assert.strict.deepStrictEqual(script.includes('[Console]'), false)
+        })
+
+        it(`powershell: primary path = Add-Type + GetExtendedTcpTable (AF_INET 2 and AF_INET6 23, table class 5, retry on 122), port passed as the integer`, function() {
+            //規格①: AF_INET與AF_INET6皆查, table class TCP_TABLE_OWNER_PID_ALL=5; 表大小會變動, ERROR_INSUFFICIENT_BUFFER(122)要重取
+            let script = kit.buildPsScript(8080)
+            assert.strict.deepStrictEqual(script.includes('Add-Type -TypeDefinition @\'\n'), true)
+            assert.strict.deepStrictEqual(script.includes('\n\'@\n'), true) //here-string結束符須在行首
+            assert.strict.deepStrictEqual(script.includes('DllImport("iphlpapi.dll")'), true)
+            assert.strict.deepStrictEqual(script.includes('GetExtendedTcpTable(buf, ref size, false, af, 5, 0)'), true)
+            assert.strict.deepStrictEqual(script.includes('new int[] { 2, 23 }'), true)
+            assert.strict.deepStrictEqual(script.includes('if (r != 122) break;'), true)
+            assert.strict.deepStrictEqual(script.includes('[WsemiPortPids]::Query(8080)'), true)
+            //位元組配置: IPv4列24位元組(本地埠@8、遠端位址@12、遠端埠@16、PID@20); IPv6列56位元組(本地埠@20、遠端位址@24、遠端埠@44、PID@52)
+            assert.strict.deepStrictEqual(script.includes('int rs = v6 ? 56 : 24, oLp = v6 ? 20 : 8, oRa = v6 ? 24 : 12, oRp = v6 ? 44 : 16, oPid = v6 ? 52 : 20, lenA = v6 ? 16 : 4;'), true)
+            //埠為網路位元組序: 高位元組在前
+            assert.strict.deepStrictEqual(script.includes('(Marshal.ReadByte(p, off) << 8) | Marshal.ReadByte(p, off + 1)'), true)
+            //不同埠不共用腳本字串中的埠號: 腳本只在呼叫處帶埠號
+            assert.strict.deepStrictEqual(kit.buildPsScript(8080).replace(/8080/g, 'P'), kit.buildPsScript(9091).replace(/9091/g, 'P'))
+        })
+
+        it(`powershell: script is pure ASCII, the C# part is C# 5 only, the encoded argument stays within the command line limit`, function() {
+            let script = kit.buildPsScript(65535)
+            //輸出只有ASCII: 腳本本身(含C#)純ASCII, 避開字碼頁
+            assert.strict.deepStrictEqual(/^[\x20-\x7e\n]*$/.test(script), true)
+            //C#限C# 5語法(Windows PowerShell 5.1含Server 2016): 無字串插值、?.、=>、nameof、out var、內嵌型別推斷之元組、throw運算式、字面值分隔符
+            let cs = script.slice(script.indexOf('using System;'), script.indexOf('\n\'@\n'))
+            assert.strict.deepStrictEqual(cs.length > 500, true)
+            for (let [name, re] of [['interpolated string', /\$"/], ['null-conditional', /\?\./], ['null-coalescing assignment', /\?\?=/], ['lambda/expression body', /=>/], ['nameof', /\bnameof\b/], ['out var', /\bout\s+(var|int|uint)\b/], ['tuple', /\(\s*int\s+\w+\s*,\s*int\s+\w+\s*\)\s*\w/], ['digit separator', /\d_\d/], ['pattern is', /\bis\s+(int|uint|string|null)\s+\w/], ['default literal', /=\s*default\s*;/]]) {
+                assert.strict.deepStrictEqual(re.test(cs), false, name)
+            }
+            //-EncodedCommand之引數長度(UTF-16LE之base64): CreateProcess上限32767, 經cmd.exe時8191; 保持在8191以內
+            let b64 = kit.buildCmd('powershell', 65535, SR).args[3]
+            assert.strict.deepStrictEqual(b64.length < 8191, true, `encoded length ${b64.length}`)
+        })
+
+        it(`powershell: the script puts a VIA marker line before BEGIN (diagnosis; parsePs skips it)`, function() {
+            let lines = kit.buildPsScript(8080).split('\n')
+            let iv = lines.findIndex((s) => s.includes('WSEMI-PORTPIDS-VIA'))
+            let ib = lines.findIndex((s) => s.includes('Write-Output \'WSEMI-PORTPIDS-BEGIN\''))
+            assert.strict.deepStrictEqual(iv > 0 && iv < ib, true)
         })
 
         it(`lsof: -nP -iTCP:<port> -sTCP:LISTEN -t`, function() {
@@ -441,13 +487,44 @@ describe(`_execPortPids`, function() {
             assert.strict.deepStrictEqual([k.ok, k.reason, k.pids], [true, 'ok', []], JSON.stringify(r))
         })
 
-        it(`cmdlet missing -> exit 3 with CommandNotFoundException (failure, distinguished from not found)`, async function() {
+        it(`not found port -> reports which path answered (VIA api on a normal system) and the OS API path found no row`, async function() {
+            let srv = net.createServer()
+            await new Promise((resolve) => srv.listen(0, '127.0.0.1', resolve))
+            let port = srv.address().port
+            await new Promise((resolve) => srv.close(resolve))
+            let c = kit.buildCmd('powershell', port, SRR)
+            let r = kit.runCmdSync(c.prog, c.args, { timeout: 60000, maxBuffer: kit.MAX_BUFFER })
+            //預設路徑為作業系統API(Add-Type可用時); 開始與結束標記之間無列
+            assert.strict.deepStrictEqual(/^WSEMI-PORTPIDS-VIA api$/m.test(r.stdout), true, JSON.stringify(r))
+            assert.strict.deepStrictEqual(/WSEMI-PORTPIDS-BEGIN\r?\nWSEMI-PORTPIDS-END/.test(r.stdout), true, JSON.stringify(r))
+        })
+
+        it(`primary path unavailable and the cmdlet missing too -> exit 3 with CommandNotFoundException (failure, distinguished from not found)`, async function() {
+            //新腳本以Add-Type/GetExtendedTcpTable為主路徑: 先使Add-Type不可用(退回路徑才會被走到), 再使cmdlet不存在
             let c = kit.buildCmd('powershell', 8080, SRR)
-            let script = kit.buildPsScript(8080).replace('Get-NetTCPConnection -LocalPort', 'Get-NetTCPConnectionWsemiMissing -LocalPort')
+            let script = kit.buildPsScript(8080).replace('Add-Type -TypeDefinition', 'Add-TypeWsemiMissing -TypeDefinition').replace('Get-NetTCPConnection -LocalPort', 'Get-NetTCPConnectionWsemiMissing -LocalPort')
             let args = [...c.args.slice(0, 3), Buffer.from(script, 'utf16le').toString('base64')]
             let r = kit.runCmdSync(c.prog, args, { timeout: 60000, maxBuffer: kit.MAX_BUFFER })
             let k = kit.classify('powershell', r, 8080, 60000)
             assert.strict.deepStrictEqual([k.ok, k.reason, k.code, k.detail], [false, 'code', 3, 'code[3]: CommandNotFoundException'], JSON.stringify(r))
+        })
+
+        it(`cmdlet missing alone does not matter while the OS API path works (answer comes from the API)`, async function() {
+            let srv = net.createServer()
+            await new Promise((resolve) => srv.listen(0, '127.0.0.1', resolve))
+            let port = srv.address().port
+            try {
+                let c = kit.buildCmd('powershell', port, SRR)
+                let script = kit.buildPsScript(port).replace('Get-NetTCPConnection -LocalPort', 'Get-NetTCPConnectionWsemiMissing -LocalPort')
+                let args = [...c.args.slice(0, 3), Buffer.from(script, 'utf16le').toString('base64')]
+                let r = kit.runCmdSync(c.prog, args, { timeout: 60000, maxBuffer: kit.MAX_BUFFER })
+                let k = kit.classify('powershell', r, port, 60000)
+                assert.strict.deepStrictEqual([k.ok, k.pids], [true, [process.pid]], JSON.stringify(r))
+                assert.strict.deepStrictEqual(/^WSEMI-PORTPIDS-VIA api$/m.test(r.stdout), true, JSON.stringify(r))
+            }
+            finally {
+                await new Promise((resolve) => srv.close(resolve))
+            }
         })
 
     })

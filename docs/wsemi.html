@@ -44401,8 +44401,9 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>查詢監聽指定TCP埠之程序PID（跨平台，Windows/Linux/macOS），同步版見execProcessPortPidsSync</p>
-<p>監聽列之判定：TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、<em>)且遠端埠為0(或</em>)、PID大於0；不依狀態欄(狀態值可能錯誤，Windows 11 build 26300＋KB5127936實測監聽中之socket狀態值為0、netstat因而整列漏列；狀態文字亦隨語系)。故僅綁定而未監聽之socket(無對端)亦會列入，其同樣佔用該埠</p>
-<p>Windows：先執行<code>netstat -ano</code>(約數十毫秒；不加-p TCP，該參數只列IPv4會漏掉以::監聽者)，查到即採用；查無或失敗時再以PowerShell之<code>Get-NetTCPConnection -LocalPort &lt;埠&gt;</code>確認(約1秒；只輸出數值與位址欄位，不受字碼頁影響，不以-State篩選)，其查無才判無人。netstat之查無不採信，故netstat失敗與查無同樣轉查Get-NetTCPConnection，最終之查無以其結果為準。opt.useBoth為true時兩者皆查並取聯集(netstat可能只列出部分監聽列，須確認「監聽者恰為某程序」時使用)。執行檔以%SystemRoot%下之絕對路徑呼叫，不依PATH</p>
+<p>監聽列之判定：TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、<em>)且遠端埠為0(或</em>)、PID大於0；不依狀態欄(狀態值可能錯誤，Windows 11 build 26300＋KB5127936實測監聽中之socket狀態值為0、netstat因而整列漏列；狀態文字亦隨語系)。Windows之netstat與作業系統API(GetExtendedTcpTable)只列監聽中與已連線之socket，不列僅綁定而未監聽(bind後未listen)者；此類socket雖佔用該埠但查不到(只有退回路徑之Get-NetTCPConnection會列入)，故Windows下空陣列只代表無監聽者，不保證該埠未被僅綁定者占用</p>
+<p>Windows：先執行<code>netstat -ano</code>(通常數百毫秒；不加-p TCP，該參數只列IPv4會漏掉以::監聽者)，查到即採用；查無或失敗時再以PowerShell確認，其查無才判無人。netstat之查無不採信，故netstat失敗與查無同樣轉查PowerShell，最終之查無以其結果為準。opt.useBoth為true時兩者皆查並取聯集(netstat可能只列出部分監聽列，須確認「監聽者恰為某程序」時使用)。執行檔以%SystemRoot%下之絕對路徑呼叫，不依PATH</p>
+<p>Windows之PowerShell資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，含所有狀態之列，只輸出本地埠相符之列)，耗時為PowerShell啟動加編譯(通常不到1秒)，不隨系統內TCP連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋)時退回<code>Get-NetTCPConnection -LocalPort &lt;埠&gt;</code>，其耗時隨系統內TCP連線數增加(連線數千至上萬、系統忙碌時可達十數秒，可能超過opt.timeout而得失敗)。兩者皆只輸出數值與位址欄位，不受字碼頁影響，不依狀態</p>
 <p>Linux/macOS：<code>lsof -nP -iTCP:&lt;埠&gt; -sTCP:LISTEN -t</code>，lsof查無時以離開碼1結束視為無人；非root時lsof看不到他人帳號之程序，故此時之空陣列不代表他人帳號無人監聽(lsof之限制)</p>
 <p>失敗與無人嚴格分開：resolve之空陣列代表已確認無人監聽；查詢失敗(指令不存在或無法啟動、逾時、非預期之離開碼、輸出無法解析、埠號不合法、opt不可讀)一律reject錯誤訊息字串，絕不以空陣列表示失敗，呼叫端可據以fail-closed。本函數不同步拋錯</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessPortPids.test.mjs">Github</a></p></li></ul></dd>
@@ -44411,7 +44412,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcessPortPids.mjs.html">execProcessPortPids.mjs</a>, <a href="execProcessPortPids.mjs.html#line48">line 48</a>
+        <a href="execProcessPortPids.mjs.html">execProcessPortPids.mjs</a>, <a href="execProcessPortPids.mjs.html#line50">line 50</a>
     </li></ul></dd>
     
 
@@ -44685,7 +44686,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即reject(不以netstat之部分結果代替)，預設false</p></td>
+            <td class="description last"><p>輸入Windows下netstat有查到時是否仍以PowerShell(作業系統API，退回Get-NetTCPConnection)再查並取聯集，為true時PowerShell查詢失敗即reject(不以netstat之部分結果代替)，預設false</p></td>
         </tr>
 
     
@@ -44725,7 +44726,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入作業系統字串，'win32'走netstat與Get-NetTCPConnection，其餘走lsof，供測試，預設process.platform</p></td>
+            <td class="description last"><p>輸入作業系統字串，'win32'走netstat與PowerShell，其餘走lsof，供測試，預設process.platform</p></td>
         </tr>
 
     
@@ -44876,8 +44877,8 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>查詢監聽指定TCP埠之程序PID之同步版（跨平台，Windows/Linux/macOS），供行程之exit、signal處理器等不可非同步之處使用，非同步版見execProcessPortPids</p>
-<p>判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、<em>)且遠端埠為0(或</em>)、PID大於0，不依狀態欄；Windows先<code>netstat -ano</code>，查無或失敗時以PowerShell之<code>Get-NetTCPConnection -LocalPort &lt;埠&gt;</code>確認，其查無才判無人；Linux/macOS為<code>lsof -nP -iTCP:&lt;埠&gt; -sTCP:LISTEN -t</code>(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)</p>
-<p>子指令以child_process.spawnSync執行，期間阻塞事件迴圈，Windows下最久約為2倍opt.timeout(預設各10000毫秒)</p>
+<p>判定規則、資料來源與其順序同execProcessPortPids(兩者共用同一套解析與判定流程)：監聽列為TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0、::、[::]、<em>)且遠端埠為0(或</em>)、PID大於0，不依狀態欄；Windows先<code>netstat -ano</code>，查無或失敗時以PowerShell確認(優先以Add-Type編譯一小段C#經P/Invoke呼叫作業系統之GetExtendedTcpTable，通常不到1秒且不隨系統內TCP連線數增加；Add-Type或該API失敗，如受限語言模式，退回<code>Get-NetTCPConnection -LocalPort &lt;埠&gt;</code>，其耗時隨連線數增加，連線數千至上萬、系統忙碌時可達十數秒)，其查無才判無人；Linux/macOS為<code>lsof -nP -iTCP:&lt;埠&gt; -sTCP:LISTEN -t</code>(非root時看不到他人帳號之程序，此時之空陣列不代表他人帳號無人監聽)</p>
+<p>子指令以child_process.spawnSync執行，期間阻塞事件迴圈，Windows下最久約為2倍opt.timeout(預設各10000毫秒)；PowerShell路徑退回Get-NetTCPConnection時耗時可能顯著增加，逾時即視為失敗(回傳null)</p>
 <p>失敗與無人嚴格分開：回傳空陣列代表已確認無人監聽；查詢失敗(指令不存在或無法啟動、逾時、非預期之離開碼、輸出無法解析、埠號不合法、opt不可讀)一律回傳null，絕不以空陣列表示失敗，呼叫端可據以fail-closed；失敗之訊息字串(同execProcessPortPids之reject訊息)可由opt.onTrace之settle事件之msg取得。本函數不拋錯</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessPortPidsSync.test.mjs">Github</a></p></li></ul></dd>
     
@@ -45160,7 +45161,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入Windows下netstat有查到時是否仍以Get-NetTCPConnection再查並取聯集，為true時Get-NetTCPConnection失敗即回傳null(不以netstat之部分結果代替)，預設false</p></td>
+            <td class="description last"><p>輸入Windows下netstat有查到時是否仍以PowerShell(作業系統API，退回Get-NetTCPConnection)再查並取聯集，為true時PowerShell查詢失敗即回傳null(不以netstat之部分結果代替)，預設false</p></td>
         </tr>
 
     
@@ -45200,7 +45201,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入作業系統字串，'win32'走netstat與Get-NetTCPConnection，其餘走lsof，供測試，預設process.platform</p></td>
+            <td class="description last"><p>輸入作業系統字串，'win32'走netstat與PowerShell，其餘走lsof，供測試，預設process.platform</p></td>
         </tr>
 
     
@@ -130740,7 +130741,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 04 2026 07:17:58 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 08:50:01 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

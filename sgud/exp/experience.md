@@ -117,3 +117,14 @@
 - **測試鎖排隊與背景時限**: 本機 `--lock` 遇他套件 `--lock-exclusive` 排在前面時,排隊可超過 10 分鐘;前景 10 分鐘轉背景後,預設再給 10 分鐘即被終止(連排隊項一起消失).排隊的指令必須 `run_in_background` 並明給 `timeout`(≥ 預估排隊＋執行),且把「受影響測試」與「變異」合併成**一個** wrapper 腳本(`tmp/<輪>/run-all.mjs`,各階段完整輸出寫 `tmp/` 檔、stdout 只印摘要)只排一次;分兩次排會各等一輪.被我 `TaskStop` 的排隊項若在 `locks/queue` 留下死 pid 檔,`quiet-run --release-stale --cwd <repo>` 不會清它,等管理端略過即可,不要手動刪.
 - **環境小陷阱**: 此 bash 的 `grep -c $'\r'` 把 `$'\r'` 展成空字串而計全部行,不能用來判 CRLF,改用 `git ls-files --eol`;`grep -E` 搜含括號的測試標題要改 `grep -F`(`(opt not given)` 被當群組,誤報 0 紅).
 - **前後差分以「規格寫成函數」判受影響域**: `3-diff.mjs` 每列由同一種子生出 HEAD 用與工作樹用兩份獨立物件圖,生成器同時回傳預測(`same` 或 `m`=預期 throw 訊息);有效域逐列比 HEAD(含 `ltdtpull` 的 `result === ltdtAll` 身分),受影響域比預測訊息.
+
+## Windows 查埠改以 OS API(GetExtendedTcpTable),Get-NetTCPConnection 為退回(2026-11-05,主控任務 20261105072000,wu312)
+
+- **耗時隨 TCP 列數,不隨查詢範圍**: `Get-NetTCPConnection -LocalPort` 先列舉全表再篩,1.2 萬列時 11.4～16.5 秒,連線少時 1.0～2.4 秒;OS API 0.4～1.3 秒不隨列數增加.量測要**同一時段新舊交錯**(`tmp/wu312/benchCompare.mjs`),並自建負載才複現:`loadConns.mjs` 起 `listen({ backlog: 8192 })` 伺服端並分批 100 條連線(失敗重試),3500 條已建立(7 千列)＋4500 條立即關閉(TIME_WAIT)得總列數約 1.2 萬;預設 backlog 與一次開 100 條以上會漏連(第一次只得 808＋960).負載行程只結束自己的 PID,關閉後 TIME_WAIT 約 2 分鐘自行消退.
+- **PowerShell 5.1 的 Add-Type**: 編譯在 `%TEMP%` 產 `<亂碼>.0.cs/.cmdline/.dll/.err/.out/.tmp`,正常結束自行清掉(私有 TEMP 夾驗 0 遺留);被 SIGKILL 於編譯中途則 6 檔遺留且無 csc.exe 孤兒.`-EncodedCommand` 長度:2.6 KB 腳本→6888 字元(CreateProcess 上限 32767,經 cmd.exe 為 8191),新增 C# 要留意仍 < 8191.把 `TEMP`/`TMP` 設到不存在之夾 Add-Type 仍成功(退用他處),故驗遺留檔須指向存在之私有夾.中文路徑之 TEMP 亦可編譯.
+- **`Write-Output 'a' + $b` 的陷阱**: 命令模式下 `+` 與 `$b` 是另外兩個引數,不是串接;須 `Write-Output ('a' + $b)`.
+- **受限語言模式(CLM)的真實測法**: `__PSLockdownPolicy=4` 於 Windows 11 build 26300 無效(`$ExecutionContext.SessionState.LanguageMode` 仍 FullLanguage、Add-Type 可用),不可當作已驗.可行手段: 在同一 PowerShell 內先(完整語言模式)把腳本文字解 base64 存變數並 `Import-Module NetTCPIP`,再 `$ExecutionContext.SessionState.LanguageMode = 'ConstrainedLanguage'`,最後 `Invoke-Expression $s`;未先載入 NetTCPIP 則 cmdlet 自動載入被擋(`CouldNotAutoloadMatchingModule`).此為真實 CLM 引擎(Add-Type 被拒),系統層級政策(WDAC/AppLocker)仍未實測.
+- **新舊查法比對要在同一 PowerShell 行程內依序 A=新→B=舊→C=新**(`compareAll.mjs`):A△C 為期間變動,不計入差異.新查法的出貨 C# 只改兩處(去埠過濾、輸出實際本地埠)即可全表傾印,位移與位元組序邏輯為出貨原碼.發現**舊查法之幽靈列**(對外連線之客端埠多一筆遠端萬用、埠 0 的列;`netstat` 無、`connect` 得 ECONNREFUSED),差異判斷要用「獨立證據」(netstat、真 connect、自建真監聽者對照組),不能只看兩者誰多誰少.
+- **僅綁定未 listen 之 socket**: netstat 與 `GetExtendedTcpTable` 皆無,只有 Get-NetTCPConnection(NSI 提供者)有;換資料來源前要用此類 socket 實測(PowerShell `Socket.Bind` 不 listen),舊註解「僅綁定亦會列入」在 OS API 路徑不成立.
+- **變異測試改碼檔的安全作法**: `mutate.mjs` 備份原檔與 sha256、每變異驗 `from` 恰一次、`finally` 與 SIGINT 還原並驗雜湊;變異期間不得跑其他匯入該檔的腳本(會讀到變異碼),也不得編輯 src 與測試.以 `process.execPath + mocha.js` 起 mocha,不經 shell(`--grep` 的 `|` 會被 cmd 當管線).背景 `cmd &` 會使 run_in_background 的工作立即「完成」,實際仍在跑,要看 quiet-run 的 log 判斷.
+- **測試輔助**: 子行程以 stdout 一行一 JSON 通知就緒與事件(`test/tools/portPidsChild.mjs`),客端連線狀態以兩端事件同步(伺服端 `allowHalfOpen: true` 才能製造 FIN_WAIT_2／CLOSE_WAIT;TIME_WAIT 須客端先關、伺服端再 `end()`).

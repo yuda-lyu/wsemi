@@ -27,7 +27,7 @@
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
 | 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
-| 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 9.0 |
+| 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
 | fs 路徑參數無效(非字串、空字串、含 NUL)之處置: 依失敗通道回報、不帶值、與不存在分開(第 216 項①) | `sgud/rule/rulebook_fspath.md` | R-FS-INVALID-PATH-01 | 約 8 |
 | `fsWatchFolder` 被監看資料夾本身消失之 `unlinkDir` 一次消失只派發一次(第 238 項) | `sgud/rule/rulebook_watch.md` | R-WATCH-ROOT-ONCE-01 | 約 4 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
@@ -82,7 +82,7 @@
 - `R-OBJ-ITER-01` → `rulebook_obj.md`: R-OBJ-ITER-01 迭代使用端傳入之物件:只依自有可列舉字串鍵,`length` 鍵不得使走訪改成陣列樣
 - `R-OPT-VAL-01` → `rulebook_optval.md`(已套／未套站點見 `rulebook_judge_sites_r1.md` 末節〈第 221 項第二批第一級發布 A 處置結果〉): R-OPT-VAL-01 opt 類數值參數遇非預期之輸入(含超出範圍)視為未給、改用預設(共用 `_optVal.mjs`、`opt.debug` 警告固定詞彙不含值),必須參數才報錯;廣義數字陣列 `opt.base` 與每陣列至少 1 個有效數字(尾端 `undefined`／`null` 視為未給 opt);`preciseNum` 整數路徑;`arrFilterByENum`;`setTimeoutHp`／`setIntervalHp` 之 `interval` 用 `positive` 不設上限;發布 A 只含下游 0 站點之函數,ws270(7 個)、ws272a(計時與流程類 19 個,判準:交給原生計時器者 `use:'timer'`、只與時間差比較者不設上限)、ws272b(字串、陣列、數值、編碼類 19 個;`bufWrite` 照 IEEE754 原樣編碼、成功回 `true`)與 ws272c(`_optNum` 退役〔6 個呼叫端 19 處,`inf:'keep'` 移除〕、DOM 類 9 個、`fsTask`、ws272b 回報後續 6 項;`Infinity` 一律非預期)續納入
 - `R-ORMSTR-01` → `rulebook_orm-str.md`: R-ORMSTR-01 w-orm 系列字串良構: 單一擁有者 `chkOrmStr` / `chkOrmData`、契約案例表 `_cvOrmStrCases`、只因良構性拒收
-- `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 Get-NetTCPConnection 備援、失敗與無人嚴格分開
+- `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 PowerShell 呼叫 OS API(GetExtendedTcpTable)確認而 Get-NetTCPConnection 為退回、失敗與無人嚴格分開
 - `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變〔**第 221 項第二批第一級發布 A 起整數路徑改為保留全部位數並正規化,見 R-OPT-VAL-01 規則 11**〕;`judge`、`estimateTicks` 隨之)
 - `R-PM-SETTLE-01` → `rulebook_timer.md`: R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放

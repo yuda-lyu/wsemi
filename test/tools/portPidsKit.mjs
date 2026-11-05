@@ -1,5 +1,5 @@
 //execProcessPortPids與execProcessPortPidsSync之測試共用: 固定輸出之夾具、注入之執行函數、判定流程之案例表(兩版跑同一張表, 驗證共用同一套規則)
-//  規格(主控run01規劃): ①監聽列＝TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0/::/[::]/*)且遠端埠0、PID>0, 不依狀態欄; ②Windows先netstat -ano(不加-p TCP), 查無時再以Get-NetTCPConnection -LocalPort確認, 兩者皆查無才判無人;
+//  規格(主控run01規劃): ①監聽列＝TCP、本地埠相符、遠端位址為萬用位址(0.0.0.0/::/[::]/*)且遠端埠0、PID>0, 不依狀態欄; ②Windows先netstat -ano(不加-p TCP), 查無時再以PowerShell確認(資料來源'powershell': 優先作業系統API GetExtendedTcpTable, 失敗時退回Get-NetTCPConnection -LocalPort, 兩路徑輸出同一格式; wu312), 兩者皆查無才判無人;
 //  ③Linux/macOS為lsof -nP -iTCP:<port> -sTCP:LISTEN -t, 離開碼1=無人; ④失敗(指令不存在、逾時、非預期之離開碼、輸出無法解析)與無人嚴格分開, 絕不以空清單表示失敗
 import assert from 'assert'
 
@@ -62,6 +62,12 @@ let PS = {
     other: ps([[8080, '0.0.0.0', 0, 3333]]),
     none: ps([]),
     errCmd: 'WSEMI-PORTPIDS-ERR CommandNotFoundException\r\n',
+    //標示資料來源之VIA行(wu312: 腳本於開始標記前輸出, 兩路徑相同格式, 解析時略過)
+    viaApi: ps([[8080, '0.0.0.0', 0, 1111]], ['WSEMI-PORTPIDS-VIA api']),
+    viaCmdlet: ps([[8080, '::', 0, 2222]], ['WSEMI-PORTPIDS-VIA cmdlet']),
+    viaApiNone: ps([], ['WSEMI-PORTPIDS-VIA api']),
+    //OS API輸出含本埠之連線列與監聽列(僅監聽列成立)
+    viaApiMixed: ps([[8080, '127.0.0.1', 50000, 4444], [8080, '0.0.0.0', 0, 1111], [8080, '::1', 50001, 4445], [8080, '127.0.0.1', 50002, 0]], ['WSEMI-PORTPIDS-VIA api']),
 }
 
 //fakeExec, 注入之同步執行函數: outs為{ netstat, powershell, lsof }之結果(THROW為拋錯, 'promise'為回傳Promise), calls記錄各次呼叫之src與參數
@@ -118,6 +124,11 @@ let CASES = [
     { name: 'D20 useBoth powershell none keeps netstat rows', useBoth: true, outs: { netstat: ok(NS.v4), powershell: ok(PS.none) }, pids: [1111], srcs: ['netstat', 'powershell'], by: 'netstat+powershell' },
     { name: 'D21 useBoth powershell fails -> failure', useBoth: true, outs: { netstat: ok(NS.v4), powershell: err('ETIMEDOUT') }, pids: null, srcs: ['netstat', 'powershell'], msg: /netstat found 1, powershell timeout/ },
     { name: 'D22 useBoth netstat none', useBoth: true, outs: { netstat: ok(NS.none), powershell: ok(PS.v4) }, pids: [1111], srcs: ['netstat', 'powershell'], by: 'powershell' },
+    //wu312: powershell輸出帶VIA行(作業系統API或退回之cmdlet): 與無VIA行同判定; 連線列混在其中不成立
+    { name: 'D35 netstat row missing, powershell via OS API found', outs: { netstat: ok(NS.none), powershell: ok(PS.viaApi) }, pids: [1111], srcs: ['netstat', 'powershell'], by: 'powershell' },
+    { name: 'D36 netstat row missing, powershell via cmdlet fallback found (IPv6)', outs: { netstat: ok(NS.none), powershell: ok(PS.viaCmdlet) }, pids: [2222], srcs: ['netstat', 'powershell'], by: 'powershell' },
+    { name: 'D37 both none, powershell via OS API none -> nobody', outs: { netstat: ok(NS.none), powershell: ok(PS.viaApiNone) }, pids: [], srcs: ['netstat', 'powershell'], by: 'powershell' },
+    { name: 'D38 powershell via OS API: connection rows of the port are not listeners', outs: { netstat: ok(NS.none), powershell: ok(PS.viaApiMixed) }, pids: [1111], srcs: ['netstat', 'powershell'], by: 'powershell' },
     { name: 'D29 useBoth same pid from both -> once', useBoth: true, outs: { netstat: ok(NS.v4), powershell: ok(ps([[8080, '::', 0, 1111], [8080, '0.0.0.0', 0, 999]])) }, pids: [999, 1111], srcs: ['netstat', 'powershell'], by: 'netstat+powershell' },
     { name: 'D30 useBoth netstat fails, powershell found', useBoth: true, outs: { netstat: err('ENOENT'), powershell: ok(PS.v4) }, pids: [1111], srcs: ['netstat', 'powershell'], by: 'powershell' },
     { name: 'D31 useBoth both fail -> failure', useBoth: true, outs: { netstat: err('ETIMEDOUT'), powershell: ok('', 2) }, pids: null, srcs: ['netstat', 'powershell'], msg: /netstat timeout\[\d+ms\], powershell code\[2\]/ },

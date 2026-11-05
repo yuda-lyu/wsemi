@@ -8,7 +8,7 @@ import { withGuard, fiveOnTrace, collectUnhandled } from './tools/execTraceKit.m
 import { thrower } from './tools/codecThrown.mjs'
 
 
-//規格(主控run01規劃,JSDoc): ①監聽列＝TCP、本地埠相符、遠端位址為萬用位址且遠端埠0、PID>0, 不依狀態欄; ②Windows先netstat, 查無時再以Get-NetTCPConnection確認, 兩者皆查無才判無人;
+//規格(主控run01規劃,JSDoc): ①監聽列＝TCP、本地埠相符、遠端位址為萬用位址且遠端埠0、PID>0, 不依狀態欄; ②Windows先netstat, 查無時再以PowerShell確認(作業系統API GetExtendedTcpTable, 失敗時退回Get-NetTCPConnection), 兩者皆查無才判無人;
 //  ③Linux/macOS為lsof; ④失敗(指令不存在、逾時、非預期之離開碼、輸出無法解析)reject字串, 絕不以空清單表示失敗; ⑤子指令帶時限(opt.timeout); ⑥執行函數可注入(opt.exec); ⑦opt.onTrace
 describe(`execProcessPortPids`, function() {
 
@@ -188,7 +188,7 @@ describe(`execProcessPortPids`, function() {
 
     })
 
-    //真實案: 本程序起監聽, 查得到自己的PID; 關閉後查無(本機netstat異常時實際走Get-NetTCPConnection備援, 走哪條路由settle事件之src得知)
+    //真實案: 本程序起監聽, 查得到自己的PID; 關閉後查無(本機netstat異常時實際走PowerShell備援(作業系統API), 走哪條路由settle事件之src得知)
     describe(`real listener of this process(規格①②)`, function() {
 
         //listen, 監聽失敗回null(如主機無IPv6), 該案skip
@@ -222,7 +222,7 @@ describe(`execProcessPortPids`, function() {
                 let { evs, on } = recEvents()
                 let pids = await withGuard(execProcessPortPids(port, { onTrace: on }), 60000, 'query closed')
                 assert.strict.deepStrictEqual(pids, [])
-                //查無須經最終資料來源確認(Windows為Get-NetTCPConnection, 不以netstat之查無判無人)
+                //查無須經最終資料來源確認(Windows為PowerShell, 不以netstat之查無判無人)
                 assert.strict.deepStrictEqual(evs[evs.length - 1].src, isWin ? 'powershell' : 'lsof')
             })
         }

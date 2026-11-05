@@ -59,6 +59,7 @@ import optVal from './_optVal.mjs'
 
 //本檔為execProcessPortPids與execProcessPortPidsSync共用之內部模組(不由index匯出): 輸入讀取、子指令之組成、輸出解析、判定流程與執行子指令之預設函數, 兩版共用同一套規則
 //監聽列之判定: TCP、本地埠相符、遠端位址為萬用位址且遠端埠為0、PID>0; 不依狀態欄(Windows 11 26300＋KB5127936實測狀態值錯誤為0、netstat因而整列漏列, 狀態文字亦隨語系)
+//Windows之資料來源與耗時: netstat -ano約數百毫秒, 但可能整列漏列故其查無不採信; 確認用PowerShell呼叫作業系統之GetExtendedTcpTable(Add-Type編譯一小段C#經P/Invoke), 耗時為PowerShell啟動加編譯, 不到1秒且不隨連線數增加; Add-Type或API失敗(如受限語言模式)時退回Get-NetTCPConnection -LocalPort, 其耗時隨系統內TCP連線數增加(連線數千至上萬時十數秒, 可能超過逾時而得失敗)
 
 
 //TIMEOUT_DEF, 每個子指令之預設逾時毫秒數
@@ -70,13 +71,15 @@ let RULE_TIMEOUT = { fn: 'execProcessPortPids', name: 'opt.timeout', kind: 'enum
 //MAX_BUFFER, 子指令stdout之上限位元組數; netstat於大量連線(TIME_WAIT)時輸出可達數MB, 超過視為失敗(ENOBUFS)而非截斷
 let MAX_BUFFER = 64 * 1024 * 1024
 
-//WILD_HOSTS, 遠端萬用位址: 監聽中(或僅綁定)之socket無對端, netstat顯示0.0.0.0:0或[::]:0, Get-NetTCPConnection顯示0.0.0.0或::
+//WILD_HOSTS, 遠端萬用位址: 監聽中之socket無對端, netstat顯示0.0.0.0:0或[::]:0, Get-NetTCPConnection顯示0.0.0.0或::; 作業系統API(GetExtendedTcpTable)輸出之位址形式為IPAddress.ToString(), 同為0.0.0.0或::
+//  僅綁定而未listen之socket: Get-NetTCPConnection會列(遠端0.0.0.0:0), netstat與GetExtendedTcpTable不列(實測); 另Get-NetTCPConnection於Windows 11 build 26300實測會對已連線之本地埠另報一筆遠端為0.0.0.0或::、埠0之列(State為空、Bound、Closed、FinWait1等, 該埠實際無監聽者: netstat無監聽列、對其connect得ECONNREFUSED), 故退回路徑可能把對外連線之本地埠判為被監聽
 let WILD_HOSTS = ['0.0.0.0', '::', '[::]', '*']
 
-//PS_BEGIN, PS_END, PS_ERR, PowerShell腳本輸出之標記, 缺標記即視為輸出無法解析(未執行完、被截斷或混入其他輸出)
+//PS_BEGIN, PS_END, PS_ERR, PS_VIA, PowerShell腳本輸出之標記, 缺開始或結束標記即視為輸出無法解析(未執行完、被截斷或混入其他輸出); PS_VIA為開始標記之前的一行`WSEMI-PORTPIDS-VIA api|cmdlet`, 標示資料來源為作業系統API或退回之Get-NetTCPConnection, 解析時略過(供診斷與測試)
 let PS_BEGIN = 'WSEMI-PORTPIDS-BEGIN'
 let PS_END = 'WSEMI-PORTPIDS-END'
 let PS_ERR = 'WSEMI-PORTPIDS-ERR'
+let PS_VIA = 'WSEMI-PORTPIDS-VIA'
 
 //MSG_PORT, 埠號不合法之訊息
 let MSG_PORT = 'port is not an integer between 1 and 65535'
@@ -176,10 +179,59 @@ function parseNetstat(text, port) {
 }
 
 
+//CS_SRC, 查TCP連線表之C#原始碼(限C# 5語法: Windows PowerShell 5.1含Server 2016之Add-Type以.NET Framework之csc編譯; 純ASCII)
+//  以iphlpapi.dll之GetExtendedTcpTable(table class 5=TCP_TABLE_OWNER_PID_ALL, 含所有狀態之列, 不依狀態值)分別取IPv4(AF_INET=2)與IPv6(AF_INET6=23)之表, 只輸出本地埠相符之列`R &lt;本地埠> &lt;遠端位址> &lt;遠端埠> &lt;PID>`
+//  表之列數於兩次呼叫之間可能增加: 回122(ERROR_INSUFFICIENT_BUFFER)即以回報之大小加4096位元組重取(最多16次), 其餘非0錯誤一律拋錯(整體退回Get-NetTCPConnection, 不以單一位址族之結果代替)
+//  列的位元組配置(Windows SDK之MIB_TCPROW_OWNER_PID、MIB_TCP6ROW_OWNER_PID; 表頭為4位元組之dwNumEntries, 列自位移4起):
+//    IPv4列24位元組: dwState@0, dwLocalAddr@4, dwLocalPort@8, dwRemoteAddr@12, dwRemotePort@16, dwOwningPid@20
+//    IPv6列56位元組: ucLocalAddr[16]@0, dwLocalScopeId@16, dwLocalPort@20, ucRemoteAddr[16]@24, dwRemoteScopeId@40, dwRemotePort@44, dwState@48, dwOwningPid@52
+//  埠為網路位元組序(big-endian)存於DWORD之低16位元: 記憶體中位移+0為高位元組、+1為低位元組, 故以(byte0 &lt;&lt; 8) | byte1取值; 位址亦為網路位元組序之位元組陣列, 逐位元組交給IPAddress, 不可當整數
+let CS_TYPE = 'WsemiPortPids'
+let CS_SRC = [
+    'using System;',
+    'using System.Collections.Generic;',
+    'using System.Net;',
+    'using System.Runtime.InteropServices;',
+    `public static class ${CS_TYPE} {`,
+    '[DllImport("iphlpapi.dll")] static extern uint GetExtendedTcpTable(IntPtr t, ref int s, bool o, int af, int c, int r);',
+    'static int Port(IntPtr p, int off) { return (Marshal.ReadByte(p, off) &lt;&lt; 8) | Marshal.ReadByte(p, off + 1); }',
+    'static string Addr(IntPtr p, int off, int len) { byte[] b = new byte[len]; Marshal.Copy(IntPtr.Add(p, off), b, 0, len); return new IPAddress(b).ToString(); }',
+    'public static List&lt;string> Query(int want) {',
+    'List&lt;string> res = new List&lt;string>();',
+    'foreach (int af in new int[] { 2, 23 }) {',
+    'bool v6 = af == 23;',
+    'int rs = v6 ? 56 : 24, oLp = v6 ? 20 : 8, oRa = v6 ? 24 : 12, oRp = v6 ? 44 : 16, oPid = v6 ? 52 : 20, lenA = v6 ? 16 : 4;',
+    'int size = 0, alloc = 0; IntPtr buf = IntPtr.Zero; uint r = 0;',
+    'try {',
+    'for (int t = 0; t &lt; 16; t++) {',
+    'r = GetExtendedTcpTable(buf, ref size, false, af, 5, 0);',
+    'if (r != 122) break;',
+    'if (buf != IntPtr.Zero) { Marshal.FreeHGlobal(buf); buf = IntPtr.Zero; }',
+    'alloc = size + 4096; size = alloc;',
+    'buf = Marshal.AllocHGlobal(alloc);',
+    '}',
+    'if (r != 0 || buf == IntPtr.Zero) throw new InvalidOperationException("table " + af + " err " + r);',
+    'int cnt = Marshal.ReadInt32(buf);',
+    'if (cnt &lt; 0 || 4L + (long)cnt * rs > alloc) throw new InvalidOperationException("table " + af + " size");',
+    'for (int i = 0; i &lt; cnt; i++) {',
+    'IntPtr p = IntPtr.Add(buf, 4 + i * rs);',
+    'if (Port(p, oLp) != want) continue;',
+    'res.Add("R " + want + " " + Addr(p, oRa, lenA) + " " + Port(p, oRp) + " " + (uint)Marshal.ReadInt32(p, oPid));',
+    '}',
+    '} finally { if (buf != IntPtr.Zero) Marshal.FreeHGlobal(buf); }',
+    '}',
+    'return res;',
+    '}',
+    '}',
+].join('\n')
+
+
 /**
- * 產生查詢指定本地埠之PowerShell腳本，只輸出數值與位址等ASCII欄位(避開字碼頁)，不以-State篩選
+ * 產生查詢指定本地埠之PowerShell腳本，只輸出數值與位址等ASCII欄位(避開字碼頁)，不以狀態篩選
  *
- * 查無連線時Get-NetTCPConnection拋CmdletizationQuery_NotFound_LocalPort，視為查無；其餘錯誤(含指令不存在CommandNotFoundException，其Category亦為ObjectNotFound，故以FullyQualifiedErrorId分辨)輸出錯誤識別碼並以離開碼3結束
+ * 資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，只輸出本地埠相符之列)，耗時約為PowerShell啟動加編譯(不到1秒)，不隨系統連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋、編譯器不可用、API回非預期之錯誤碼)時退回`Get-NetTCPConnection -LocalPort`，其耗時隨系統內TCP連線數增加(連線數千至上萬時可達十數秒)。兩條路徑輸出同一格式，以開始標記前之`WSEMI-PORTPIDS-VIA api|cmdlet`標示實際走哪一條(解析時略過)
+ *
+ * 退回路徑查無連線時Get-NetTCPConnection拋CmdletizationQuery_NotFound_LocalPort，視為查無；其餘錯誤(含指令不存在CommandNotFoundException，其Category亦為ObjectNotFound，故以FullyQualifiedErrorId分辨)輸出錯誤識別碼並以離開碼3結束
  *
  * 輸出用Write-Output而非[Console]::Out.WriteLine，後者於受限語言模式(Constrained Language Mode)被擋
  *
@@ -191,18 +243,36 @@ function buildPsScript(port) {
         `$ErrorActionPreference = 'Stop'`,
         `$ProgressPreference = 'SilentlyContinue'`,
         `$rows = @()`,
+        `$via = 'cmdlet'`,
         `try {`,
-        `    $rows = @(Get-NetTCPConnection -LocalPort ${port} -ErrorAction Stop)`,
+        `    Add-Type -TypeDefinition @'`,
+        CS_SRC,
+        `'@`,
+        `    $rows = @([${CS_TYPE}]::Query(${port}))`,
+        `    $via = 'api'`,
         `}`,
         `catch {`,
-        `    if ($_.FullyQualifiedErrorId -notlike 'CmdletizationQuery_NotFound_LocalPort*') {`,
-        `        Write-Output ('${PS_ERR} ' + $_.FullyQualifiedErrorId)`,
-        `        exit 3`,
+        `    $rows = @()`,
+        `}`,
+        `if ($via -ne 'api') {`,
+        `    $conns = @()`,
+        `    try {`,
+        `        $conns = @(Get-NetTCPConnection -LocalPort ${port} -ErrorAction Stop)`,
+        `    }`,
+        `    catch {`,
+        `        if ($_.FullyQualifiedErrorId -notlike 'CmdletizationQuery_NotFound_LocalPort*') {`,
+        `            Write-Output ('${PS_ERR} ' + $_.FullyQualifiedErrorId)`,
+        `            exit 3`,
+        `        }`,
+        `    }`,
+        `    foreach ($r in $conns) {`,
+        `        $rows += ('R ' + [string]$r.LocalPort + ' ' + [string]$r.RemoteAddress + ' ' + [string]$r.RemotePort + ' ' + [string]$r.OwningProcess)`,
         `    }`,
         `}`,
+        `Write-Output ('${PS_VIA} ' + $via)`,
         `Write-Output '${PS_BEGIN}'`,
-        `foreach ($r in $rows) {`,
-        `    Write-Output ('R ' + [string]$r.LocalPort + ' ' + [string]$r.RemoteAddress + ' ' + [string]$r.RemotePort + ' ' + [string]$r.OwningProcess)`,
+        `foreach ($s in $rows) {`,
+        `    Write-Output $s`,
         `}`,
         `Write-Output '${PS_END}'`,
         `exit 0`,
@@ -213,7 +283,7 @@ function buildPsScript(port) {
 /**
  * 解析buildPsScript之腳本輸出，取本地埠為port之監聽列PID
  *
- * 須有開始與結束標記，其間每個非空行須為`R &lt;本地埠> &lt;遠端位址> &lt;遠端埠> &lt;PID>`，否則視為無法解析
+ * 須有開始與結束標記，其間每個非空行須為`R &lt;本地埠> &lt;遠端位址> &lt;遠端埠> &lt;PID>`，否則視為無法解析；開始標記之前的行(含`WSEMI-PORTPIDS-VIA api|cmdlet`)略過。遠端位址可為IPv4點分、IPv6(含壓縮與`::ffff:`對映形)或Get-NetTCPConnection顯示之字串，只有0.0.0.0與::且遠端埠0之列成立為監聽列
  *
  * @param {String} text 輸入腳本之stdout字串
  * @param {Number} port 輸入埠號整數
@@ -587,9 +657,9 @@ function union(a, b) {
 /**
  * 判定流程(兩版共用)，以generator逐一交出要執行之資料來源，接收classify之結果，最後回傳{ ok, src, pids, msg }
  *
- * Windows: 先netstat，查到即採用(useBoth為true時仍續查)；netstat查無或失敗時以Get-NetTCPConnection確認，其查無才判無人；
- * 因netstat之查無不採信(系統回報之狀態錯誤時整列漏列)，netstat之失敗與查無同樣轉查Get-NetTCPConnection，最終之查無以其結果為準；Get-NetTCPConnection失敗即整體失敗；
- * useBoth為true時兩者皆查並取聯集，Get-NetTCPConnection失敗即整體失敗(不以netstat之部分結果代替)。
+ * Windows: 先netstat，查到即採用(useBoth為true時仍續查)；netstat查無或失敗時以PowerShell(作業系統API GetExtendedTcpTable，其失敗時退回Get-NetTCPConnection，見buildPsScript；對本流程而言同為'powershell'來源)確認，其查無才判無人；
+ * 因netstat之查無不採信(系統回報之狀態錯誤時整列漏列)，netstat之失敗與查無同樣轉查PowerShell，最終之查無以其結果為準；PowerShell查詢失敗即整體失敗；
+ * useBoth為true時兩者皆查並取聯集，PowerShell查詢失敗即整體失敗(不以netstat之部分結果代替)。
  * 其他平台: lsof，失敗即整體失敗
  *
  * @param {Number} port 輸入埠號整數
@@ -672,7 +742,7 @@ export default kit
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 04 2026 07:17:57 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 08:50:00 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
