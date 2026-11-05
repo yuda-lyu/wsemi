@@ -59,7 +59,7 @@ import optVal from './_optVal.mjs'
 
 //本檔為execProcessPortPids與execProcessPortPidsSync共用之內部模組(不由index匯出): 輸入讀取、子指令之組成、輸出解析、判定流程與執行子指令之預設函數, 兩版共用同一套規則
 //監聽列之判定: TCP、本地埠相符、遠端位址為萬用位址且遠端埠為0、PID>0; 不依狀態欄(Windows 11 26300＋KB5127936實測狀態值錯誤為0、netstat因而整列漏列, 狀態文字亦隨語系)
-//Windows之資料來源與耗時: netstat -ano約數百毫秒, 但可能整列漏列故其查無不採信; 確認用PowerShell呼叫作業系統之GetExtendedTcpTable(Add-Type編譯一小段C#經P/Invoke), 耗時為PowerShell啟動加編譯, 不到1秒且不隨連線數增加; Add-Type或API失敗(如受限語言模式)時退回Get-NetTCPConnection -LocalPort, 其耗時隨系統內TCP連線數增加(連線數千至上萬時十數秒, 可能超過逾時而得失敗)
+//Windows之資料來源與耗時: netstat -ano約數百毫秒, 但可能整列漏列故其查無不採信; 確認用PowerShell呼叫作業系統之GetExtendedTcpTable(Reflection.Emit動態定義P/Invoke, 不編譯C#、不產生暫存檔), 耗時為PowerShell啟動加一次查表, 不到1秒且不隨連線數明顯增加, 系統忙碌時亦無編譯階段之拖累; Reflection.Emit或API失敗(如受限語言模式)時退回Get-NetTCPConnection -LocalPort, 其耗時隨系統內TCP連線數增加(連線數千至上萬時十數秒, 可能超過逾時而得失敗)
 
 
 //TIMEOUT_DEF, 每個子指令之預設逾時毫秒數
@@ -179,57 +179,56 @@ function parseNetstat(text, port) {
 }
 
 
-//CS_SRC, 查TCP連線表之C#原始碼(限C# 5語法: Windows PowerShell 5.1含Server 2016之Add-Type以.NET Framework之csc編譯; 純ASCII)
-//  以iphlpapi.dll之GetExtendedTcpTable(table class 5=TCP_TABLE_OWNER_PID_ALL, 含所有狀態之列, 不依狀態值)分別取IPv4(AF_INET=2)與IPv6(AF_INET6=23)之表, 只輸出本地埠相符之列`R &lt;本地埠> &lt;遠端位址> &lt;遠端埠> &lt;PID>`
-//  表之列數於兩次呼叫之間可能增加: 回122(ERROR_INSUFFICIENT_BUFFER)即以回報之大小加4096位元組重取(最多16次), 其餘非0錯誤一律拋錯(整體退回Get-NetTCPConnection, 不以單一位址族之結果代替)
+//PS_API, 查TCP連線表之PowerShell片段(Windows PowerShell 5.1含Server 2016; 純ASCII; 以$want代入埠號)
+//  以System.Reflection.Emit動態定義P/Invoke(DefinePInvokeMethod)呼叫iphlpapi.dll之GetExtendedTcpTable, 不編譯C#: 免啟動csc(系統忙碌時編譯遠慢於查詢本身)、不產生暫存檔(Add-Type被逾時強制結束時會在%TEMP%遺留編譯檔); 表於PowerShell內解析
+//  分別取IPv4(AF_INET=2)與IPv6(AF_INET6=23)之表(table class 5=TCP_TABLE_OWNER_PID_ALL, 含所有狀態之列, 不依狀態值), 只輸出本地埠相符之列`R &lt;本地埠> &lt;遠端位址> &lt;遠端埠> &lt;PID>`
+//  須設PreserveSig: 否則P/Invoke把回傳值當HRESULT, 回傳值被丟棄而恆得0(實測: 第一次呼叫實為122, 未設時$r為0), 重取走不到、整體因$buf為空而退回Get-NetTCPConnection; 若回傳值為負(NTSTATUS等)則直接拋例外
+//  列迴圈成本(合成表實測): 1千列約4毫秒、1.2萬列約20毫秒、5萬列約70毫秒, 故以byte[]索引逐列過濾即可, 不另以IL或編譯加速
+//  表之列數於兩次呼叫之間可能增加: 回122即以回報之大小加4096位元組重取(最多16次), 其餘非0錯誤一律拋錯(整體退回Get-NetTCPConnection, 不以單一位址族之結果代替)
 //  列的位元組配置(Windows SDK之MIB_TCPROW_OWNER_PID、MIB_TCP6ROW_OWNER_PID; 表頭為4位元組之dwNumEntries, 列自位移4起):
 //    IPv4列24位元組: dwState@0, dwLocalAddr@4, dwLocalPort@8, dwRemoteAddr@12, dwRemotePort@16, dwOwningPid@20
 //    IPv6列56位元組: ucLocalAddr[16]@0, dwLocalScopeId@16, dwLocalPort@20, ucRemoteAddr[16]@24, dwRemoteScopeId@40, dwRemotePort@44, dwState@48, dwOwningPid@52
-//  埠為網路位元組序(big-endian)存於DWORD之低16位元: 記憶體中位移+0為高位元組、+1為低位元組, 故以(byte0 &lt;&lt; 8) | byte1取值; 位址亦為網路位元組序之位元組陣列, 逐位元組交給IPAddress, 不可當整數
-let CS_TYPE = 'WsemiPortPids'
-let CS_SRC = [
-    'using System;',
-    'using System.Collections.Generic;',
-    'using System.Net;',
-    'using System.Runtime.InteropServices;',
-    `public static class ${CS_TYPE} {`,
-    '[DllImport("iphlpapi.dll")] static extern uint GetExtendedTcpTable(IntPtr t, ref int s, bool o, int af, int c, int r);',
-    'static int Port(IntPtr p, int off) { return (Marshal.ReadByte(p, off) &lt;&lt; 8) | Marshal.ReadByte(p, off + 1); }',
-    'static string Addr(IntPtr p, int off, int len) { byte[] b = new byte[len]; Marshal.Copy(IntPtr.Add(p, off), b, 0, len); return new IPAddress(b).ToString(); }',
-    'public static List&lt;string> Query(int want) {',
-    'List&lt;string> res = new List&lt;string>();',
-    'foreach (int af in new int[] { 2, 23 }) {',
-    'bool v6 = af == 23;',
-    'int rs = v6 ? 56 : 24, oLp = v6 ? 20 : 8, oRa = v6 ? 24 : 12, oRp = v6 ? 44 : 16, oPid = v6 ? 52 : 20, lenA = v6 ? 16 : 4;',
-    'int size = 0, alloc = 0; IntPtr buf = IntPtr.Zero; uint r = 0;',
-    'try {',
-    'for (int t = 0; t &lt; 16; t++) {',
-    'r = GetExtendedTcpTable(buf, ref size, false, af, 5, 0);',
-    'if (r != 122) break;',
-    'if (buf != IntPtr.Zero) { Marshal.FreeHGlobal(buf); buf = IntPtr.Zero; }',
-    'alloc = size + 4096; size = alloc;',
-    'buf = Marshal.AllocHGlobal(alloc);',
-    '}',
-    'if (r != 0 || buf == IntPtr.Zero) throw new InvalidOperationException("table " + af + " err " + r);',
-    'int cnt = Marshal.ReadInt32(buf);',
-    'if (cnt &lt; 0 || 4L + (long)cnt * rs > alloc) throw new InvalidOperationException("table " + af + " size");',
-    'for (int i = 0; i &lt; cnt; i++) {',
-    'IntPtr p = IntPtr.Add(buf, 4 + i * rs);',
-    'if (Port(p, oLp) != want) continue;',
-    'res.Add("R " + want + " " + Addr(p, oRa, lenA) + " " + Port(p, oRp) + " " + (uint)Marshal.ReadInt32(p, oPid));',
-    '}',
-    '} finally { if (buf != IntPtr.Zero) Marshal.FreeHGlobal(buf); }',
-    '}',
-    'return res;',
-    '}',
-    '}',
+//  埠為網路位元組序(big-endian)存於DWORD之低16位元: 記憶體中位移+0為高位元組、+1為低位元組, 故以byte0 * 256 + byte1取值; 位址亦為網路位元組序之位元組陣列, 逐位元組交給IPAddress, 不可當整數; PID為小端DWORD
+let PS_API = [
+    `  $M = [Runtime.InteropServices.Marshal]`,
+    `  $tb = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object Reflection.AssemblyName 'WsemiPortPids'), 'Run').DefineDynamicModule('WsemiPortPids').DefineType('WsemiPortPidsApi', 'Public,Class')`,
+    `  $mi = $tb.DefinePInvokeMethod('GetExtendedTcpTable', 'iphlpapi.dll', 'Public,Static,PinvokeImpl', 'Standard', [uint32], [Type[]]@([IntPtr], [int].MakeByRefType(), [bool], [int], [int], [int]), 'Winapi', 'Auto')`,
+    `  $mi.SetImplementationFlags($mi.GetMethodImplementationFlags() -bor [Reflection.MethodImplAttributes]::PreserveSig)`,
+    `  $api = $tb.CreateType()`,
+    `  $hi = $want -shr 8; $lo = $want -band 255`,
+    `  $rows = New-Object 'Collections.Generic.List[string]'`,
+    `  foreach ($af in 2, 23) {`,
+    `    if ($af -eq 23) { $rs, $oLp, $oRa, $oRp, $oPid, $la = 56, 20, 24, 44, 52, 16 } else { $rs, $oLp, $oRa, $oRp, $oPid, $la = 24, 8, 12, 16, 20, 4 }`,
+    `    $size = 0; $alloc = 0; $buf = [IntPtr]::Zero; $r = 0`,
+    `    try {`,
+    `      for ($k = 0; $k -lt 16; $k++) {`,
+    `        $r = $api::GetExtendedTcpTable($buf, [ref]$size, $false, $af, 5, 0)`,
+    `        if ($r -ne 122) { break }`,
+    `        if ($buf -ne [IntPtr]::Zero) { $M::FreeHGlobal($buf); $buf = [IntPtr]::Zero }`,
+    `        $alloc = $size + 4096; $size = $alloc`,
+    `        $buf = $M::AllocHGlobal($alloc)`,
+    `      }`,
+    `      if ($r -ne 0 -or $buf -eq [IntPtr]::Zero) { throw "table $af err $r" }`,
+    `      $cnt = $M::ReadInt32($buf); $len = 4 + $cnt * $rs`,
+    `      if ($cnt -lt 0 -or $len -gt $alloc) { throw "table $af size" }`,
+    `      $b = New-Object byte[] $len`,
+    `      $M::Copy($buf, $b, 0, $len)`,
+    `    }`,
+    `    finally { if ($buf -ne [IntPtr]::Zero) { $M::FreeHGlobal($buf) } }`,
+    `    for ($o = 4; $o -lt $len; $o += $rs) {`,
+    `      if ($b[$o + $oLp] -ne $hi -or $b[$o + $oLp + 1] -ne $lo) { continue }`,
+    `      $ra = New-Object Net.IPAddress (,[byte[]]$b[($o + $oRa)..($o + $oRa + $la - 1)])`,
+    `      $rows.Add('R ' + $want + ' ' + $ra + ' ' + ($b[$o + $oRp] * 256 + $b[$o + $oRp + 1]) + ' ' + [BitConverter]::ToUInt32($b, $o + $oPid))`,
+    `    }`,
+    `  }`,
+    `  $via = 'api'`,
 ].join('\n')
 
 
 /**
  * 產生查詢指定本地埠之PowerShell腳本，只輸出數值與位址等ASCII欄位(避開字碼頁)，不以狀態篩選
  *
- * 資料來源與耗時：優先以Add-Type編譯一小段C#，經P/Invoke呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，只輸出本地埠相符之列)，耗時約為PowerShell啟動加編譯(不到1秒)，不隨系統連線數增加；Add-Type或該API失敗(如受限語言模式下Add-Type被擋、編譯器不可用、API回非預期之錯誤碼)時退回`Get-NetTCPConnection -LocalPort`，其耗時隨系統內TCP連線數增加(連線數千至上萬時可達十數秒)。兩條路徑輸出同一格式，以開始標記前之`WSEMI-PORTPIDS-VIA api|cmdlet`標示實際走哪一條(解析時略過)
+ * 資料來源與耗時：優先以System.Reflection.Emit動態定義P/Invoke，呼叫作業系統之GetExtendedTcpTable(IPv4與IPv6各取一次，只輸出本地埠相符之列)，表於PowerShell內解析；不編譯C#、不產生暫存檔，耗時約為PowerShell啟動加一次查表(不到1秒)，不隨系統連線數明顯增加，系統忙碌時亦無編譯階段之拖累；Reflection.Emit或該API失敗(如受限語言模式下被擋、API回非預期之錯誤碼)時退回`Get-NetTCPConnection -LocalPort`，其耗時隨系統內TCP連線數增加(連線數千至上萬時可達十數秒)。兩條路徑輸出同一格式，以開始標記前之`WSEMI-PORTPIDS-VIA api|cmdlet`標示實際走哪一條(解析時略過)
  *
  * 退回路徑查無連線時Get-NetTCPConnection拋CmdletizationQuery_NotFound_LocalPort，視為查無；其餘錯誤(含指令不存在CommandNotFoundException，其Category亦為ObjectNotFound，故以FullyQualifiedErrorId分辨)輸出錯誤識別碼並以離開碼3結束
  *
@@ -242,14 +241,11 @@ function buildPsScript(port) {
     return [
         `$ErrorActionPreference = 'Stop'`,
         `$ProgressPreference = 'SilentlyContinue'`,
+        `$want = ${port}`,
         `$rows = @()`,
         `$via = 'cmdlet'`,
         `try {`,
-        `    Add-Type -TypeDefinition @'`,
-        CS_SRC,
-        `'@`,
-        `    $rows = @([${CS_TYPE}]::Query(${port}))`,
-        `    $via = 'api'`,
+        PS_API,
         `}`,
         `catch {`,
         `    $rows = @()`,
@@ -742,7 +738,7 @@ export default kit
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 08:50:00 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Thu Nov 05 2026 14:23:19 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
