@@ -10,7 +10,7 @@ import strTruncate from './strTruncate.mjs'
  *
  * 本函數永不拋錯，不回顯result之其他欄位(只讀attempts與stderr)，stderr內容原樣取自子進程輸出(execCli已將其截斷)
  *
- * 契約同srcRunner原cliFailDetail(attempts有值即顯示、stderr以oneline壓單行並由strTruncate截斷補刪節號)，n以字元(UTF-16碼元)計，故落在代理對(如表情符號)中間時可能切成半個字元
+ * 契約同執行殼原cliFailDetail(attempts有值即顯示、stderr以oneline壓單行並由strTruncate截斷補刪節號)，n以字元(UTF-16碼元)計，故落在代理對(如表情符號)中間時可能切成半個字元
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliFailDetail.test.mjs Github}
  * @memberOf wsemi

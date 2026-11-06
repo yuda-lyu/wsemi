@@ -1,5 +1,5 @@
 //官方預建檔canvas v3.2.3(N-API v7, win32-x64)之清單夾具, 供fsEnsureBins之tgz連網案使用(預設不跑, 見test/fsEnsureBinsTgz.test.mjs)
-//來源: Gitea #32(cgsmdb, 新增自有套件w-canvas)之實測, 壓縮檔之sha256與size取自該issue, 各成員之sha256與size取自2026-11-01自該資產解出之實測
+//來源: Gitea #32(使用端, 新增自有套件w-canvas)之實測, 壓縮檔之sha256與size取自該issue, 各成員之sha256與size取自2026-11-01自該資產解出之實測
 //壓縮檔共49項: build/Release/canvas.node、44個dll(皆在build/Release/下)、4個建置中繼檔(binding.sln、canvas.vcxproj、canvas.vcxproj.filters、config.gypi, 執行不需要, 故不列入)與2個資料夾項
 export default {
     url: 'https://github.com/Automattic/node-canvas/releases/download/v3.2.3/canvas-v3.2.3-napi-v7-win32-x64.tar.gz',

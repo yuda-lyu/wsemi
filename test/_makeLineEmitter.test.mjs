@@ -76,7 +76,7 @@ describe(`_makeLineEmitter(內部,execCliJsonFile使用)`, function() {
             assert.strict.deepStrictEqual(lines, ['a', 'b', 'c'])
         })
 
-        //規格(srcRunner原契約 runJsonCli.makeLineEmitter, 逐行trim): 前後空白(含Windows輸出之行尾\r)皆去除, 內部空白保留
+        //規格(執行殼原契約 runJsonCli.makeLineEmitter, 逐行trim): 前後空白(含Windows輸出之行尾\r)皆去除, 內部空白保留
         it(`should trim every line (leading and trailing whitespace, including the CRLF carriage return) and keep the inner whitespace`, function() {
             let { lines, emit } = collect()
             emit('a b \r\n  c\r\n\td e\t\n')
@@ -151,7 +151,7 @@ describe(`_makeLineEmitter(內部,execCliJsonFile使用)`, function() {
             assert.strict.deepStrictEqual(lines, ['a'])
         })
 
-        //規格(srcRunner原契約逐行trim, flush同規則): 殘留半行亦trim, trim後為空不回報, 前綴比對用trim後之字串
+        //規格(執行殼原契約逐行trim, flush同規則): 殘留半行亦trim, trim後為空不回報, 前綴比對用trim後之字串
         it(`should apply the same trim rule to the remaining half line (trimmed; nothing when only whitespace; prefix compared after trim)`, function() {
             let a = collect()
             a.emit('done\n   tail  \t')
@@ -184,7 +184,7 @@ describe(`_makeLineEmitter(內部,execCliJsonFile使用)`, function() {
     //規格(建議檔§2): prefix有給時只回以其開頭之行
     describe(`prefix`, function() {
 
-        //規格(srcRunner原契約): 前綴比對與回報皆用trim後之字串, 故縮排之前綴行亦收, 回報時已去縮排
+        //規格(執行殼原契約): 前綴比對與回報皆用trim後之字串, 故縮排之前綴行亦收, 回報時已去縮排
         it(`should emit only the lines that start with the prefix, compared and reported after trimming`, function() {
             let { lines, emit } = collect('[x]')
             emit('[x] a\nnoise\n [x] indented\n[y] b\n[x]c\n  \t[x] tabbed \r\n[x]')
@@ -215,10 +215,10 @@ describe(`_makeLineEmitter(內部,execCliJsonFile使用)`, function() {
 
     })
 
-    //原測試逐字移植(輸入與期望值逐字相同, 僅斷言函數改用assert.strict): srcRunner之 makeLineEmitter 原測試, 以證本模組契約與原件一致
-    describe(`原契約逐字(srcRunner 原測試)`, function() {
+    //原測試逐字移植(輸入與期望值逐字相同, 僅斷言函數改用assert.strict): 執行殼之 makeLineEmitter 原測試, 以證本模組契約與原件一致
+    describe(`原契約逐字(執行殼原測試)`, function() {
 
-        //srcRunner/test/unit-check-util.test.mjs:60-71
+        //執行殼/test/unit-check-util.test.mjs:60-71
         it(`makeLineEmitter：onLine 非函數拋錯；prefix 非字串視為""(全收)；有效輸入行為不變 (unit-check-util.test.mjs:60-71)`, function() {
             assert.strict.throws(() => makeLineEmitter('not-a-fn', ''), /makeLineEmitter 需要 onLine 函數/)
             const lines = []
@@ -232,7 +232,7 @@ describe(`_makeLineEmitter(內部,execCliJsonFile使用)`, function() {
             assert.strict.deepEqual(lines2, ['hello', 'world'], 'prefix 非字串時視為""(全收);空行與純空白行不回報')
         })
 
-        //srcRunner/test/unit-runner.test.mjs:320-322
+        //執行殼/test/unit-runner.test.mjs:320-322
         it(`空行不回報、半行跨 chunk 接續 (unit-runner.test.mjs:320-322)`, function() {
             const em = []; const emit = makeLineEmitter((l) => em.push(l), '')
             emit('a\r\n\r\n  b'); emit('c\nd')

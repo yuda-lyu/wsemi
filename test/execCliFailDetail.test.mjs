@@ -40,7 +40,7 @@ describe(`execCliFailDetail`, function() {
             assert.strict.deepStrictEqual(execCliFailDetail({ stderr: 'oops' }), ' → oops')
         })
 
-        //規格(srcRunner原契約 cliFailDetail: attempts != null 即顯示, core/ai/caller.mjs:96 零供應商之結果 attempts 為 0; unit-runner.test.mjs:377): attempts為0(含)亦顯示
+        //規格(執行殼原契約 cliFailDetail: attempts != null 即顯示, core/ai/caller.mjs:96 零供應商之結果 attempts 為 0; unit-runner.test.mjs:377): attempts為0(含)亦顯示
         it(`should show '，共試 0 次' when attempts is 0 (a failure that never started, e.g. no provider), alone or with stderr`, function() {
             assert.strict.deepStrictEqual(execCliFailDetail({ attempts: 0 }), '，共試 0 次')
             assert.strict.deepStrictEqual(execCliFailDetail({ attempts: 0, stderr: '' }), '，共試 0 次')
@@ -85,7 +85,7 @@ describe(`execCliFailDetail`, function() {
     //規格(建議檔§5): 取前n字, n預設300; 輸入規格K3(opt類參數非預期輸入改用預設)
     describe(`n(取前幾字,預設300)`, function() {
 
-        //規格(srcRunner原契約: stderr 為 oneline(stderr, n) = 壓空白後由 wsemi strTruncate 截斷, 超長補 '...', 未超長原樣): 前n字之後補刪節號
+        //規格(執行殼原契約: stderr 為 oneline(stderr, n) = 壓空白後由 wsemi strTruncate 截斷, 超長補 '...', 未超長原樣): 前n字之後補刪節號
         it(`should take the first 300 characters of the collapsed stderr by default and append '...' when it is longer`, function() {
             let s = 'abcdefghij'.repeat(40) //400字
             let r = execCliFailDetail({ attempts: 1, stderr: s })
@@ -184,23 +184,23 @@ describe(`execCliFailDetail`, function() {
 
     })
 
-    //原測試逐字移植(輸入與期望值逐字相同, 僅斷言函數改用assert.strict, 函數名cliFailDetail→execCliFailDetail): srcRunner之 cliFailDetail 原測試
-    describe(`原契約逐字(srcRunner 原測試)`, function() {
+    //原測試逐字移植(輸入與期望值逐字相同, 僅斷言函數改用assert.strict, 函數名cliFailDetail→execCliFailDetail): 執行殼之 cliFailDetail 原測試
+    describe(`原契約逐字(執行殼原測試)`, function() {
 
-        //srcRunner/test/unit-runner.test.mjs:67-69
+        //執行殼/test/unit-runner.test.mjs:67-69
         it(`cliFailDetail 帶次數與 stderr (unit-runner.test.mjs:67-69)`, function() {
             assert.strict.equal(execCliFailDetail({ attempts: 3, stderr: 'boom\nat x' }), '，共試 3 次 → boom at x')
             assert.strict.equal(execCliFailDetail({}), '')
             assert.strict.equal(execCliFailDetail({ attempts: 1 }), '，共試 1 次')
         })
 
-        //srcRunner/test/unit-runner.test.mjs:110(logger.cliFail = `${error}${cliFailDetail}`; 本套件以 `${r.error}${execCliFailDetail(r)}` 串接)
+        //執行殼/test/unit-runner.test.mjs:110(logger.cliFail = `${error}${cliFailDetail}`; 本套件以 `${r.error}${execCliFailDetail(r)}` 串接)
         it(`error 字串後串接失敗摘要 (unit-runner.test.mjs:110)`, function() {
             let r = { error: 'Exit code 1', attempts: 2, stderr: 'ENOENT x' }
             assert.strict.equal(`${r.error}${execCliFailDetail(r)}`, 'Exit code 1，共試 2 次 → ENOENT x')
         })
 
-        //srcRunner/test/unit-util.test.mjs:115-117
+        //執行殼/test/unit-util.test.mjs:115-117
         it(`cliFailDetail 只有 stderr、null、自訂保留長度 (unit-util.test.mjs:115-117)`, function() {
             assert.strict.equal(execCliFailDetail({ stderr: 'only stderr' }), ' → only stderr')
             assert.strict.equal(execCliFailDetail(null), '')

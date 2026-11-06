@@ -43,7 +43,7 @@ fs.writeSync(1, '   [p] tail  ')
 fs.writeFileSync(out, JSON.stringify({ ok: 1 }))
 `,
 
-    //srcRunner原測試 unit-runner.test.mjs:301-310 之腳本(逐字): 半行跨兩次寫入、雜訊行、stderr行、mode為fail時失敗
+    //執行殼原測試 unit-runner.test.mjs:301-310 之腳本(逐字): 半行跨兩次寫入、雜訊行、stderr行、mode為fail時失敗
     'verbatim299.mjs': `
 import fs from 'node:fs';
 const out = process.argv[process.argv.length - 1];
@@ -302,7 +302,7 @@ describe(`execCliJsonFile`, function() {
             }
         })
 
-        //規格(srcRunner原契約, 逐行trim): onProgress收到之行已去前後空白(含\r), 純空白行不回報, 前綴比對用trim後之字串, 殘行亦同
+        //規格(執行殼原契約, 逐行trim): onProgress收到之行已去前後空白(含\r), 純空白行不回報, 前綴比對用trim後之字串, 殘行亦同
         it(`should call onProgress with trimmed lines (leading and trailing whitespace including \\r removed), skip whitespace-only lines, and trim the left-over half line too`, async function() {
             let { r, out, err } = await run({ script: sc('progressWs.mjs') })
             assert.strict.deepStrictEqual(r, { ok: 1 })
@@ -375,8 +375,8 @@ describe(`execCliJsonFile`, function() {
 
     })
 
-    //原測試移植: srcRunner之 runJsonCli 原測試(unit-runner.test.mjs:299-323)的斷言逐字相同(onProgress行集、失敗訊息、缺漏拋錯); 僅函數名runJsonCli→execCliJsonFile, 路徑改本測試夾具, 加exe: node(process.execPath)
-    describe(`原契約逐字(srcRunner unit-runner.test.mjs:299-323)`, function() {
+    //原測試移植: 執行殼之 runJsonCli 原測試(unit-runner.test.mjs:299-323)的斷言逐字相同(onProgress行集、失敗訊息、缺漏拋錯); 僅函數名runJsonCli→execCliJsonFile, 路徑改本測試夾具, 加exe: node(process.execPath)
+    describe(`原契約逐字(執行殼 unit-runner.test.mjs:299-323)`, function() {
 
         it(`runJsonCli：子進程寫 JSON 檔讀回；進度行依前綴過濾、stdout/stderr 分流、半行緩衝；失敗回 {status:error} 含共試次數與 stderr 前段 (unit-runner.test.mjs:299-319)`, async function() {
             const script = sc('verbatim299.mjs')

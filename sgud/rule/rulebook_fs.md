@@ -76,7 +76,7 @@
 
 ## R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 
-- 單一擁有者: `src/fsWriteTextAtomicCore.mjs`(注入 `opt.fs`;與其他 fs 函數同為 Fn 加 Core 成對)、`src/fsWriteTextAtomic.mjs`(固定內建 `fs`);皆對外匯出.收錄依據 R-SCOPE-01 ②(延伸 `fsWriteText`:其直接 `fs.writeFileSync`,寫到一半中止會留下半份;本套件原無暫存檔加 rename 之寫法)與 ①(srcCapture、srcSummarize、srcRelate、srcExtract 與專案共 5 個使用端).來源: Gitea #41(tai-kns-trade)§3,主控 2026-11-01 裁定收、**採 `fs*` 家族之信封慣例**(`{ success }`／`{ error }`,不拋錯),`fsWriteText` 之既有路徑不改.
+- 單一擁有者: `src/fsWriteTextAtomicCore.mjs`(注入 `opt.fs`;與其他 fs 函數同為 Fn 加 Core 成對)、`src/fsWriteTextAtomic.mjs`(固定內建 `fs`);皆對外匯出.收錄依據 R-SCOPE-01 ②(延伸 `fsWriteText`:其直接 `fs.writeFileSync`,寫到一半中止會留下半份;本套件原無暫存檔加 rename 之寫法)與 ①(srcCapture、srcSummarize、srcRelate、srcExtract 與專案共 5 個使用端).來源: Gitea #41(使用端)§3,主控 2026-11-01 裁定收、**採 `fs*` 家族之信封慣例**(`{ success }`／`{ error }`,不拋錯),`fsWriteText` 之既有路徑不改.
 - 規則:
   1. 流程: 取上層資料夾(`getPathParent`;空字串＝純檔名＝本進程工作目錄,不需建立)→ `fs.mkdirSync(fd, { recursive: true })`(已存在之資料夾或**指向資料夾之連結**不視為錯誤;**不得**用 `fsIsFolderCore`＋`fsCreateFolderCore`: 前者以 lstat 判定,連結一律為假,後者見 `statSync` 為真而回「已存在」錯誤,審查實測連結上層一律失敗;純檔名時 `getPathParent` 回 `''`,`mkdir('')` 失敗,審查實測純檔名一律失敗)→ 寫同資料夾暫存檔 `<目標檔名>.<pid>-<時間戳base36>-<隨機4碼>.tmp`(`fs.writeFileSync(tmp, c, 'utf8')`)→ `fs.renameSync(tmp, fp)`.
   2. rename 遇占用類錯誤碼(`EPERM`／`EBUSY`／`EACCES`: Windows 下防毒、同步軟體或編輯器開著目標檔)重試至多 `opt.retries`(預設 3)次,間隔依序 50、100、150…ms(`Atomics.wait` 同步阻塞);**非占用類錯誤立即停止**(含 `code` 非字串、無碼、讀 `code` 拋錯者).

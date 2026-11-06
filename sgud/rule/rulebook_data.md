@@ -72,9 +72,9 @@
 
 ## R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
 
-- 依據: Gitea issue #7(rddmanager,2026-10-20;建議檔 `建議wsemi修正.md`);基準 wsemi 1.9.22(實測 21 個副檔名與 `getFileType('z')` 皆回 `null`).
+- 依據: Gitea issue #7(使用端,2026-10-20;建議檔 `建議wsemi修正.md`);基準 wsemi 1.9.22(實測 21 個副檔名與 `getFileType('z')` 皆回 `null`).
 - 單一擁有者: `src/getFileType.mjs` 之 `fts`.`getFileAccept`(取全表、依欄位群組化)與 `domGetFileAccept`(經 `getFileAccept()` 依 `group` / `name` 組 `<input accept>` 字串)皆由其衍生,不另建副檔名表.
-- 盤點指令: Grep `getFileType|getFileAccept|domGetFileAccept`(`C:\opensrc` 下,`*.{mjs,js,vue,ts,cjs}`,2026-10-20 命中: wsemi `src/getFileType.mjs`、`getFileAccept.mjs`、`domGetFileAccept.mjs`、`domShowInputAndGetFiles.mjs`(僅 JSDoc 提及)、`index.mjs`、`test/getFileType.test.mjs`、`test/getFileAccept.test.mjs`、`test/domGetFileAccept.test.mjs`、`dist/wsemi.umd.js`,及 w-tmper-docx 之 `dist` 內嵌 wsemi 副本;**無任何呼叫端以 `null` 判斷後走特殊流程**——唯一依 `null` 者為使用端(rddmanager,不在 `C:\opensrc`)).
+- 盤點指令: Grep `getFileType|getFileAccept|domGetFileAccept`(`C:\opensrc` 下,`*.{mjs,js,vue,ts,cjs}`,2026-10-20 命中: wsemi `src/getFileType.mjs`、`getFileAccept.mjs`、`domGetFileAccept.mjs`、`domShowInputAndGetFiles.mjs`(僅 JSDoc 提及)、`index.mjs`、`test/getFileType.test.mjs`、`test/getFileAccept.test.mjs`、`test/domGetFileAccept.test.mjs`、`dist/wsemi.umd.js`,及 w-tmper-docx 之 `dist` 內嵌 wsemi 副本;**無任何呼叫端以 `null` 判斷後走特殊流程**——唯一依 `null` 者為使用端(不在 `C:\opensrc`)).
 - 規則:
   1. 表內 `name` 為**不含點之副檔名,一律小寫**;唯一既有例外 `Z`(application/x-compress)保留原樣(改名會使 `getFileAccept()` 之 `name`、`getFileAccept('name')` 之鍵與 `domGetFileAccept` 依名稱取 acp 之結果改變),其查詢由規則 2 補足.新增鍵須小寫,小寫後不得與任何既有鍵重複,且不得為 `__proto__`(`getFileAccept` 以 `r[k] = []` 建分組,`__proto__` 會設定原型而非自有鍵; 其餘 `Object.prototype` 成員名如 `constructor` 由規則 6 處理)(以上皆測試鎖定).
   2. `getFileType(name)` **不分大小寫**: 輸入與表內 `name` 皆 `toLowerCase()` 後比對.回傳之列物件為表內原物件,`name` 欄保持表內原樣(`getFileType('z').name === 'Z'`);未命中回 `null`;輸入非有效字串(`undefined`、`''`、非字串)回全表(沿用修前).不處理前導點、前後空白(`'.jpg'`、`' jpg'` 回 `null`,沿用修前).
