@@ -82,6 +82,35 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         return mem
     }
 
+    //mkSlowFs, 寫入串流之關閉(銷毀, 即關閉檔案控制代碼)由測試控制之fs: 資料寫完、串流進入關閉時扣住(arrived為已扣住之事件同步點), 待release()才真正關閉; 供測「寫出尚未完成」期間假時鐘與停滯計時器之關係
+    //  真實寫出耗時(磁碟、防毒掃描)不定, 以此取代「靠負載碰運氣」; 其餘行為同真實fs
+    let mkSlowFs = () => {
+        let open = null
+        let gate = new Promise((resolve) => {
+            open = resolve
+        })
+        let arrive = null
+        let sl = { arrived: null, release: open, fs: null }
+        sl.arrived = new Promise((resolve) => {
+            arrive = resolve
+        })
+        sl.fs = {
+            ...fs,
+            createWriteStream: (p, o) => {
+                let ws = fs.createWriteStream(p, o)
+                let destroy = ws._destroy
+                ws._destroy = function(err, cb) {
+                    arrive()
+                    gate.then(() => {
+                        destroy.call(this, err, cb)
+                    })
+                }
+                return ws
+            },
+        }
+        return sl
+    }
+
     //watchClose, 登記後回傳Promise, 於該網址的下一個回應結束或連線被中止時resolve { ended }, ended為伺服器是否已自行結束回應(false代表連線是被對方中止)
     let watchClose = (key) => {
         return new Promise((resolve) => {
@@ -525,6 +554,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             let rec = mkRec()
             let mem = mkMem(body.length)
             let pm = fsDownloadFileVerify(url('dripok'), fp, exp, { fetch: mem.fetch, stallMs: 400, maxAttempts: 1, onTrace: rec.on })
+            pm.catch(() => {}) //失敗時由guard(pm)取回錯誤; 先掛上處理器, 免得途中落定之失敗成為unhandledRejection而連累本檔最末案
             let len = Math.ceil(body.length / 10)
             let t0 = Date.now()
             for (let i = 0; i < 10; i++) {
@@ -534,11 +564,59 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 await clock.advance(100)
             }
             mem.end()
-            await advanceUntil(clock, () => rec.has('settle'), 5000, 50)
+            //本體放行完畢後只剩真實I/O(寫出最後一塊、關閉暫存檔、重讀核對、更名)待完成, 不再推進假時鐘: 停滯計時器自最後一塊起算stallMs仍在計時, 直到寫入串流關閉才停止(見下方R12兩案),
+            //假時鐘每推進1ms只讓出一次setImmediate, 虛擬時間遠快於真實I/O(實測最後一塊之後約0.6ms真實時間內即可推進300ms虛擬時間), 續推會使停滯先於寫出完成而觸發; 同步點改為被測碼之settle事件(防懸置上限為真實計時器)
+            await rec.wait((e) => e.type === 'settle')
             let r = await guard(pm, 'settle')
             let elapsed = Date.now() - t0
             //R12: 停滯為「連續」stallMs沒收到資料, 每收到資料即重新計時
             assert.strict.deepStrictEqual([r.attempts, fs.readFileSync(fp).equals(body), elapsed >= 1000, rec.has('timeout'), rec.all('touch', (e) => e.from === 'data').length >= 10], [1, true, true, false, true])
+        })
+    })
+
+    it(`R12 should not turn a slow write-out after the last chunk into a stall while it ends within opt.stallMs of the last data`, async function() {
+        let fp = fpOf('slowout1')
+        //寫入串流的關閉由測試扣住(mkSlowFs, 以事件為同步點, 不靠真實耗時或負載): 資料全數收到後, 寫出未完成期間虛擬時間經過399ms(小於stallMs 400)才放行關閉
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let mem = mkMem(body.length)
+            let sl = mkSlowFs()
+            let pm = fsDownloadFileVerify(url('slowout1'), fp, exp, { fetch: mem.fetch, fs: sl.fs, stallMs: 400, maxAttempts: 1, onTrace: rec.on })
+            pm.catch(() => {})
+            mem.write(body)
+            await rec.wait((e) => e.type === 'data' && e.bytes >= body.length) //同步點: 資料全數收到(停滯計時器隨即重設)
+            mem.end()
+            await guard(sl.arrived, 'write stream reached its close') //同步點: 寫入串流已進入關閉而被扣住(寫出尚未完成)
+            await clock.advance(399)
+            sl.release()
+            await rec.wait((e) => e.type === 'settle') //其後只剩真實I/O, 不再推進假時鐘
+            let r = await guard(pm, 'settle')
+            let td = rec.all('touch', (e) => e.from === 'data').pop()
+            let v = rec.find('verify', (e) => e.phase === 'stream')
+            //R12: 停滯為「連續」stallMs沒收到資料; 寫出於最後一塊之後恰399ms(小於stallMs)完成, 故不算停滯
+            assert.strict.deepStrictEqual({ attempts: r.attempts, same: fs.readFileSync(fp).equals(body), stall: rec.has('timeout'), gap: v.at - td.at }, { attempts: 1, same: true, stall: false, gap: 399 })
+        })
+    })
+
+    it(`R12 should reject E_TIMEOUT when the write-out after the last chunk is still pending opt.stallMs after the last data: the stall timer runs until the write stream is closed`, async function() {
+        let fp = fpOf('slowout2')
+        //同上扣住寫入串流的關閉; 最後一塊之後虛擬時間滿stallMs(400)而寫出仍未完成, 停滯計時器照常觸發(停滯計時至寫入串流關閉才停止, 見JSDoc「各等待點皆以此為上限」)
+        await withClock(async (clock) => {
+            let rec = mkRec()
+            let mem = mkMem(body.length)
+            let sl = mkSlowFs()
+            let pm = catchErr(fsDownloadFileVerify(url('slowout2'), fp, exp, { fetch: mem.fetch, fs: sl.fs, stallMs: 400, maxAttempts: 1, onTrace: rec.on }))
+            mem.write(body)
+            await rec.wait((e) => e.type === 'data' && e.bytes >= body.length)
+            mem.end()
+            await guard(sl.arrived, 'write stream reached its close')
+            let adv = await advanceUntil(clock, () => rec.has('timeout'), 1000)
+            sl.release() //停滯已觸發(請求已中止)後才放行關閉, 清理(等寫入串流關閉、刪暫存檔)得以收尾
+            await rec.wait((e) => e.type === 'settle')
+            let err = await guard(pm, 'settle')
+            let td = rec.all('touch', (e) => e.from === 'data').pop()
+            let to = rec.find('timeout')
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, fp: fs.existsSync(fp), parts: parts(fp), advanced: adv.ok, gap: to.at - td.at, kind: to.e.kind, verified: rec.has('verify'), abort: rec.find('abort').e.why }, { code: 'E_TIMEOUT', step: 'download', fp: false, parts: [], advanced: true, gap: 400, kind: 'stall', verified: false, abort: 'E_TIMEOUT' })
         })
     })
 
@@ -1133,6 +1211,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             let rec1 = mkRec()
             let rec2 = mkRec()
             let p1 = fsDownloadFileVerify(u, fp, exp, { fetch: mem.fetch, onTrace: rec1.on })
+            p1.catch(() => {}) //失敗時由guard(p1)取回錯誤; 先掛上處理器, 免得途中落定之失敗成為unhandledRejection而連累本檔最末案
             mem.write(body.subarray(0, 150000))
             await rec1.wait((e) => e.type === 'data') //同步點: 共用之下載已在進行
             let done2 = false
@@ -1148,7 +1227,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             let after = done2
             mem.write(body.subarray(150000)) //共用之下載續行(未被共用者之逾時中止), 放行後半
             mem.end()
-            await advanceUntil(clock, () => rec1.has('settle'), 5000, 50)
+            await rec1.wait((e) => e.type === 'settle') //共用之下載只剩真實I/O(寫出、關閉、重讀、更名)待完成, 不再推進假時鐘(同R12 dripok案: 虛擬時間遠快於真實I/O)
             let r1 = await guard(p1, 'shared settle')
             //共用者以各自之totalMs為等待上限; 共用之下載續行, 訊息不得稱正式檔未被改動
             assert.strict.deepStrictEqual({ code: e2.code, step: e2.step, attempts: e2.attempts, before, after, r1: r1.attempts, hits: mem.calls, note: e2.message.includes('may replace') && !e2.message.includes('was not modified') }, { code: 'E_TIMEOUT_TOTAL', step: 'share', attempts: 0, before: false, after: true, r1: 1, hits: 1, note: true })
