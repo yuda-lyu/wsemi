@@ -1,6 +1,7 @@
 //fsWatchKit.mjs: fs監看類函數(fsWatchFolder、fsWatchFile、fsEvem)之測試工具, 規則見sgud/rule/rulebook.md之R-TRACE-01
 //  真實檔案監看(chokidar, awaitWriteFinish穩定期約2.1秒)之事件來源是作業系統與chokidar而非被測函數之計時器, 不能用假時鐘, 測試以「做一個檔案操作→等被測函數回報已處理該操作之事件→才做下一個」步進
 //  withFakeChokidar: 暫以假watcher取代chokidar.watch, 供語意案決定性地送出ready、all、error事件(不經作業系統與穩定期)
+//  withSpyChokidar: 暫以透傳版取代chokidar.watch(仍呼叫真chokidar並記錄回傳之真watcher), 供驗證被測函數於關閉後新建watcher(chokidar 6起close()為終結態)
 //  fiveOnTrace: P3/P4案用之五種回調(未傳、紀錄器、回調拋錯、回調回傳rejection之Promise、非函數)
 //  waitUntil: 以真實計時器輪詢條件, 逾時拋錯, 只供沒有事件可等之條件(如假watcher被建立), 不用來表達規格之時間要求
 //  blockLoop: 同步阻塞事件迴圈ms毫秒(注入「週期輪詢之回呼內耗時超過timeInterval」之可重現延遲, 同負載試驗之事件迴圈阻塞), 不是等待條件之手段
@@ -53,11 +54,21 @@ async function waitUntil(fun, guard = 20000) {
 function fakeWatcher() {
     let w = new EventEmitter()
     w.unwatched = []
+    w.added = []
     w.closeCount = 0
     w.args = null
     w.unwatch = (p) => {
         w.unwatched.push(p)
     }
+    //chokidar 6起close()為終結態: 其後add()丟錯, closed為true, 故被測函數於關閉後須新建watcher而非沿用
+    w.add = (p) => {
+        if (w.closeCount > 0) {
+            throw new Error('Cannot add paths after FSWatcher.close() has been called')
+        }
+        w.added.push(p)
+        return w
+    }
+    Object.defineProperty(w, 'closed', { get: () => w.closeCount > 0 })
     w.close = () => {
         w.closeCount++
         return Promise.resolve()
@@ -78,6 +89,29 @@ async function withFakeChokidar(fun) {
     chokidar.watch = (p, o) => {
         let w = fakeWatcher()
         w.args = [p, o]
+        ws.push(w)
+        return w
+    }
+    try {
+        return await fun(ws)
+    }
+    finally {
+        chokidar.watch = orig
+    }
+}
+
+
+/**
+ * 執行fun期間以透傳版取代chokidar.watch(仍呼叫真chokidar.watch, 只記錄其回傳之真watcher), 結束後(含拋錯)還原
+ *
+ * @param {Function} fun 輸入async函數, 傳入(ws), ws為依建立順序累積之真watcher陣列
+ * @returns {Promise} 回傳fun之結果
+ */
+async function withSpyChokidar(fun) {
+    let orig = chokidar.watch
+    let ws = []
+    chokidar.watch = (...args) => {
+        let w = orig(...args)
         ws.push(w)
         return w
     }
@@ -148,6 +182,7 @@ export {
     waitUntil,
     fakeWatcher,
     withFakeChokidar,
+    withSpyChokidar,
     fiveOnTrace,
     collectUnhandled,
     blockLoop

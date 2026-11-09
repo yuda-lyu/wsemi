@@ -1,10 +1,10 @@
 {
   "name": "wsemi",
-  "version": "1.9.53",
+  "version": "1.9.54",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
     "@zumer/snapdom": "^3.3.0",
-    "chokidar": "^5.0.0",
+    "chokidar": "^6.0.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.23",
     "decimal.js": "^10.6.0",
@@ -13,7 +13,7 @@
     "eventemitter3": "^5.0.4",
     "fuse.js": "^7.5.0",
     "hash-wasm": "^4.12.0",
-    "he": "^1.2.0",
+    "he": "^2.0.0",
     "html-to-text": "^10.0.1",
     "hucre": "^1.3.0",
     "lodash-es": "^4.18.1",

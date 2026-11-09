@@ -12,7 +12,7 @@ import { stubTimers, withFakeChokidarSync } from './tools/optValG2fsexecKit.mjs'
 
 //fsEvem、fsWatchFile 之 opt.timeInterval(預設100)、opt.timeBinaryInterval(預設300)(fsWatchFolder有下游站點, 屬第二級, 本輪不納入, 其測試不在此; fsEvem內部呼叫之fsWatchFolder為1.9.36原碼, 收到的是fsEvem已解析之有效值):
 //  opt類參數, iseint(use: 'timer', min: 1, 正整數計時毫秒; 交給chokidar須為整數), 非預期(含Infinity、超出範圍、0、負數、小數)視為未給、改用預設, 不夾至上限(原fsWatchFile之timeInterval夾至2147483647、timeBinaryInterval不夾)
-//  可觀察值: timeInterval為週期輪詢之setInterval毫秒(si)與交給chokidar.watch之interval(ci); timeBinaryInterval為交給chokidar.watch之binaryInterval(cb)
+//  可觀察值: timeInterval為週期輪詢之setInterval毫秒(si)與交給chokidar.watch之pollingInterval(ci, chokidar 6起之名, 舊名interval); timeBinaryInterval為交給chokidar.watch之pollingBinaryInterval(cb, 舊名binaryInterval)
 //  以假計時器與假chokidar.watch觀察, 手動呼叫一次輪詢回呼以建立(假)watcher, 不真的等待亦不監看
 let __dirname = dirname(fileURLToPath(import.meta.url))
 let root = join(__dirname, '_tmp', 'optValG2fsWatch')
@@ -40,7 +40,7 @@ function observe(kind, o) {
         iv[0].fn() //輪詢一次, 路徑存在, 建立(假)watcher
         ev.clear()
         assert.strict.deepStrictEqual(ws.length, 1)
-        return { si: iv[0].ms, ci: ws[0].opts.interval, cb: ws[0].opts.binaryInterval }
+        return { si: iv[0].ms, ci: ws[0].opts.pollingInterval, cb: ws[0].opts.pollingBinaryInterval }
     })
 }
 
@@ -167,7 +167,7 @@ describe('optVal fsEvem / fsWatchFile', function() {
                     })
                     calls[0].fn()
                     ev.clear()
-                    return { si: calls[0].ms, ci: ws[0].opts.interval, cb: ws[0].opts.binaryInterval }
+                    return { si: calls[0].ms, ci: ws[0].opts.pollingInterval, cb: ws[0].opts.pollingBinaryInterval }
                 })
                 assert.strict.deepStrictEqual(r, { si: 100, ci: 100, cb: 300 }, `${kind} opt=${String(o)}`)
             }

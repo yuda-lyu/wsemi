@@ -1,5 +1,5 @@
 import isestr from './isestr.mjs'
-import he from 'he'
+import { decode } from 'he'
 
 
 /**
@@ -29,7 +29,7 @@ function htmlDecode(str, opt = {}) {
     }
 
     //decode
-    let r = he.decode(str, opt)
+    let r = decode(str, opt)
 
     return r
 }

@@ -235,8 +235,8 @@ function fsWatchFolder(fd, opt = {}) {
             // persistent: true,
             // ignoreInitial: false,
             usePolling: polling,
-            interval: timeInterval,
-            binaryInterval: timeBinaryInterval,
+            pollingInterval: timeInterval, //chokidar 6起更名(舊名interval保留別名)
+            pollingBinaryInterval: timeBinaryInterval, //chokidar 6起更名(舊名binaryInterval保留別名)
             awaitWriteFinish: true, //須比較多延遲偵測檔案是否變更完成, 但對於連鎖驅動比較保險
             // depth: undefined,
         })

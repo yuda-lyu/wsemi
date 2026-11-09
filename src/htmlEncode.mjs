@@ -1,5 +1,5 @@
 import isestr from './isestr.mjs'
-import he from 'he'
+import { encode } from 'he'
 
 
 /**
@@ -29,7 +29,7 @@ function htmlEncode(str, opt = {}) {
     }
 
     //encode
-    let r = he.encode(str, opt)
+    let r = encode(str, opt)
 
     return r
 }

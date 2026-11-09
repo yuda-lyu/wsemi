@@ -534,7 +534,7 @@ function observeFsWatchFolder(fd, o) {
         if (ws.length !== 1) {
             throw new Error(`fsWatchFolder: expected 1 watcher, got ${ws.length}`)
         }
-        return { si: iv[0].ms, ci: ws[0].opts.interval, cb: ws[0].opts.binaryInterval }
+        return { si: iv[0].ms, ci: ws[0].opts.pollingInterval, cb: ws[0].opts.pollingBinaryInterval }
     })
 }
 

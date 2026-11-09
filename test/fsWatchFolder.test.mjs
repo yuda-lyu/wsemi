@@ -9,7 +9,7 @@ import fsDeleteFolder from '../src/fsDeleteFolder.mjs'
 import fsRenameFolder from '../src/fsRenameFolder.mjs'
 import fsWatchFolder from '../src/fsWatchFolder.mjs'
 import { traceRec } from './tools/timeKit.mjs'
-import { sleep, waitUntil, withFakeChokidar, fiveOnTrace, collectUnhandled, blockLoop } from './tools/fsWatchKit.mjs'
+import { sleep, waitUntil, withFakeChokidar, withSpyChokidar, fiveOnTrace, collectUnhandled, blockLoop } from './tools/fsWatchKit.mjs'
 
 
 describe(`fsWatchFolder`, function() {
@@ -111,10 +111,10 @@ describe(`fsWatchFolder`, function() {
         let r = await test()
         let rr = ms
         assert.strict.deepStrictEqual(r.ms, rr)
-        //觀察回調: emit事件(即將派發)與change監聽器收到者一一對應; 除被監看資料夾本身之消失外皆來自chokidar(src為watcher), 該消失chokidar不偵測故由週期輪詢合成(src為timer)
+        //觀察回調: emit事件(即將派發)與change監聽器收到者一一對應; 除被監看資料夾本身之消失外皆來自chokidar(src為watcher), 該消失可由週期輪詢合成(src為timer)或由chokidar回報(chokidar 5於Windows下不偵測, chokidar 6多先回報)
         assert.strict.deepStrictEqual(r.emits.map((e) => ({ type: e.kind, fp: getFileName(e.fp) })), rr)
         assert.strict.deepStrictEqual(r.emits.slice(0, -1).every((e) => e.src === 'watcher'), true)
-        //最後一筆為被監看資料夾本身之消失(R-WATCH-ROOT-ONCE-01: 一次消失只派發一次, 上列一一對應已證僅一筆): 來源為輪詢合成(timer, Windows下chokidar通常不偵測)或chokidar回報(watcher, 偶發先於輪詢到達)皆屬正確, 兩者先後為競態故不斷言來源
+        //最後一筆為被監看資料夾本身之消失(R-WATCH-ROOT-ONCE-01: 一次消失只派發一次, 上列一一對應已證僅一筆): 來源為輪詢合成(timer, chokidar 5於Windows下通常不偵測)或chokidar回報(watcher, chokidar 6下多先於輪詢到達)皆屬正確, 兩者先後為競態故不斷言來源
         //  (原斷言Windows下恆為timer, 於chokidar先到時失敗〔2026-11-02 最終碼連跑100次中1次, 'watcher' !== 'timer'〕; 修前同一競態則表現為重複派發; 輪詢合成之src為timer由假chokidar之決定性案釘住)
         assert.strict.deepStrictEqual(['timer', 'watcher'].includes(r.emits[r.emits.length - 1].src), true)
     })
@@ -160,7 +160,7 @@ describe(`fsWatchFolder`, function() {
     })
 
     it(`should synthesize a timer unlinkDir when the watched folder itself disappears, then unwatch and closed, and watch again when the folder reappears`, async function() {
-        //JSDoc: 被監看之資料夾消失以週期輪詢偵測並派發unlinkDir(chokidar不會回報被監看之根資料夾消失), 隨後unWatch關閉watcher使之可再次建立
+        //JSDoc: 被監看之資料夾消失以週期輪詢偵測並派發unlinkDir(chokidar 5不會回報被監看之根資料夾消失, chokidar 6則多先回報; 兩者皆只派發一次), 隨後unWatch關閉watcher使之可再次建立
         let fd = './_test_fsWatchFolder_s2'
         fsDeleteFolder(fd)
         fsCreateFolder(fd)
@@ -179,11 +179,14 @@ describe(`fsWatchFolder`, function() {
             await tr.wait((e) => e.type === 'closed', from)
             let rest = tr.events.slice(from)
             let ie = rest.findIndex((e) => e.type === 'emit')
-            //該次輪詢(watching:true, exists:false)緊接emit(unlinkDir, 資料夾本身), 其後依序unwatch、closed
-            assert.strict.deepStrictEqual({ w: rest[ie - 1].watching, x: rest[ie - 1].exists, t: rest[ie - 1].type }, { w: true, x: false, t: 'tick' })
+            //emit(unlinkDir, 資料夾本身)之後依序unwatch、closed
             assert.strict.deepStrictEqual({ kind: rest[ie].kind, fp: rest[ie].fp }, { kind: 'unlinkDir', fp: path.resolve(fd) })
             //來源為輪詢合成(timer)或chokidar先到(watcher)皆可, 只派發一次(下列non-tick事件序證僅一筆emit); timer之src由假chokidar之決定性案釘住(同上第一案之說明)
             assert.strict.deepStrictEqual(['timer', 'watcher'].includes(rest[ie].src), true)
+            //src為timer時, 該次輪詢(watching:true, exists:false)緊接emit; src為watcher時無此前置tick(chokidar 6起Windows下多由chokidar先回報被監看資料夾本身之消失, chokidar 5下恆為timer; 實測20次: chokidar 5為timer 20、chokidar 6為watcher 14~19)
+            if (rest[ie].src === 'timer') {
+                assert.strict.deepStrictEqual({ w: rest[ie - 1].watching, x: rest[ie - 1].exists, t: rest[ie - 1].type }, { w: true, x: false, t: 'tick' })
+            }
             assert.strict.deepStrictEqual(rest.filter((e) => e.type !== 'tick').map((e) => e.type), ['emit', 'unwatch', 'closed'])
             assert.strict.deepStrictEqual(ms, ['addDir', 'unlinkDir']) //初始掃描之addDir與消失之unlinkDir, unlinkDir只派發一次
 
@@ -329,10 +332,69 @@ describe(`fsWatchFolder`, function() {
                     await rec.wait((e) => e.type === 'watch', from2)
                     assert.strict.deepStrictEqual(ws.length, 2)
                     assert.strict.deepStrictEqual(got.length, 1)
+
+                    //chokidar 6起close()為終結態(其後add()丟錯): 新watcher為另一個實例, 舊者維持已關閉且從未被add, 新者以chokidar.watch之新選項名(pollingInterval、pollingBinaryInterval)建立
+                    assert.strict.deepStrictEqual(ws[0] !== ws[1], true)
+                    assert.strict.deepStrictEqual([ws[0].closed, ws[1].closed], [true, false])
+                    assert.strict.deepStrictEqual([ws[0].added, ws[1].added], [[], []])
+                    assert.throws(() => ws[0].add(fd), /after FSWatcher\.close\(\)/)
+                    assert.strict.deepStrictEqual({ pi: ws[1].args[1].pollingInterval, pb: ws[1].args[1].pollingBinaryInterval }, { pi: 20, pb: 300 })
                 }
                 finally {
                     ev.clear()
                 }
+            })
+        }
+        finally {
+            fsDeleteFolder(fd)
+        }
+    })
+
+    it(`should create a new real chokidar watcher after the previous one is closed (close() is terminal since chokidar 6) and keep notifying events from the new one`, async function() {
+        //使用端: 被監看資料夾消失→unWatch關閉watcher→再現須新建(舊watcher已終結不可再add); 以透傳真chokidar之spy取得各次之真watcher實例; 其後於新watcher之下新增檔案須回報add
+        let fd = './_test_fsWatchFolder_c6'
+        fsDeleteFolder(fd)
+        fsCreateFolder(fd)
+        let ms = []
+        try {
+            await withSpyChokidar(async (ws) => {
+                let tr = traceRec({ guard })
+                let ev = fsWatchFolder(fd, { onTrace: tr.on, timeInterval: 20 })
+                ev.on('change', (m) => {
+                    ms.push({ type: m.type, fp: getFileName(m.fp) })
+                })
+                try {
+                    await tr.wait((e) => e.type === 'ready')
+                    assert.strict.deepStrictEqual(ws.length, 1)
+                    assert.strict.deepStrictEqual(ws[0].closed, false)
+
+                    //消失: 關閉第1個watcher, 其為終結態(closed為true, 再add丟錯)
+                    let from = tr.mark()
+                    fsDeleteFolder(fd)
+                    await tr.wait((e) => e.type === 'closed', from)
+                    assert.strict.deepStrictEqual(ws.length, 1)
+                    assert.strict.deepStrictEqual(ws[0].closed, true)
+                    assert.throws(() => ws[0].add(path.resolve(fd)), /after FSWatcher\.close\(\)/)
+
+                    //再現: 新建第2個watcher(另一個實例, 未關閉), 舊者仍為已關閉
+                    let from2 = tr.mark()
+                    fsCreateFolder(fd)
+                    await tr.wait((e) => e.type === 'ready', from2)
+                    assert.strict.deepStrictEqual(ws.length, 2)
+                    assert.strict.deepStrictEqual(ws[0] !== ws[1], true)
+                    assert.strict.deepStrictEqual([ws[0].closed, ws[1].closed], [true, false])
+
+                    //新watcher運作中: 新增檔案回報add(事件由第2個watcher產生)
+                    await act(tr, 1, () => fs.writeFileSync(`${fd}/n.txt`, 'abc', 'utf8'))
+                    assert.strict.deepStrictEqual(ms.map((m) => m.type), ['addDir', 'unlinkDir', 'addDir', 'add'])
+                    assert.strict.deepStrictEqual(ms[3].fp, 'n.txt')
+                }
+                finally {
+                    ev.clear()
+                }
+                //clear後第2個watcher亦關閉, 不再新建
+                await waitUntil(() => ws[1].closed)
+                assert.strict.deepStrictEqual(ws.length, 2)
             })
         }
         finally {

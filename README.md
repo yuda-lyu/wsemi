@@ -71,6 +71,8 @@ To view some examples for more understanding, visit examples:
 npm i wsemi
 ```
 
+> **Note:** Node.js >= 22.22 is required when running in Node.js, because the dependency `chokidar` 6 (file watching) requires it and `he` 2 (HTML entities) is ES module only.
+
 ### In a browser(UMD module):
 
 Add script for wsemi.

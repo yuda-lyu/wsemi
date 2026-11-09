@@ -353,7 +353,7 @@ describe(`evem safe integration (src modules)`, function() {
         assert.strict.deepStrictEqual(files.includes('error'), false, `listener error 不得寫成事件檔廣播, files=${JSON.stringify(files)}`)
     })
 
-    it(`fsWatchFolder: chokidar watcher error (EPERM on a permission-denied subfolder) → error { fun: 'watcher' } instead of crash [windows only]`, async function() {
+    it(`fsWatchFolder: chokidar watcher error (EPERM on a permission-denied subfolder, polling mode) → error { fun: 'watcher' } instead of crash [windows only]`, async function() {
         if (process.platform !== 'win32') {
             this.skip()
         }
@@ -383,7 +383,8 @@ describe(`evem safe integration (src modules)`, function() {
             this.skip() //環境無法製造拒絕存取(如以管理員執行)
         }
         let errs = []
-        let ev = fsWatchFolder(fd, { timeInterval: 50 })
+        //polling: true, chokidar 6之原生監看(Windows)對拒絕存取之子資料夾不再回報EPERM(其backend.js將原生監看之EPERM視為資料夾已消失而靜默處理), 故以輪詢模式使chokidar對該子資料夾回報EPERM(realpath), 驗證watcher之error轉為error事件而非崩潰
+        let ev = fsWatchFolder(fd, { polling: true, timeInterval: 50 })
         ev.on('change', () => {})
         ev.on('error', (e) => {
             errs.push({ fun: e.fun, code: e.msg && e.msg.code })

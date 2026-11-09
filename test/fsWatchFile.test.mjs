@@ -6,7 +6,7 @@ import fsDeleteFile from '../src/fsDeleteFile.mjs'
 import fsRenameFile from '../src/fsRenameFile.mjs'
 import fsWatchFile from '../src/fsWatchFile.mjs'
 import { traceRec } from './tools/timeKit.mjs'
-import { sleep, waitUntil, withFakeChokidar, fiveOnTrace, collectUnhandled } from './tools/fsWatchKit.mjs'
+import { sleep, waitUntil, withFakeChokidar, withSpyChokidar, fiveOnTrace, collectUnhandled } from './tools/fsWatchKit.mjs'
 
 
 describe(`fsWatchFile`, function() {
@@ -157,6 +157,39 @@ describe(`fsWatchFile`, function() {
         }
         finally {
             ev.clear()
+            fsDeleteFile(fp)
+        }
+    })
+
+    it(`should close the real chokidar watcher on clear as a terminal state (closed, add throws since chokidar 6) and not create another watcher afterwards`, async function() {
+        //使用端: clear後watcher已終結不可再用, 被測函數不得沿用或再新建(輪詢已停止); 以透傳真chokidar之spy取得真watcher實例
+        let fp = './_test_fsWatchFile_c6.txt'
+        fsDeleteFile(fp)
+        fs.writeFileSync(fp, 'abc', 'utf8')
+        try {
+            await withSpyChokidar(async (ws) => {
+                let tr = traceRec({ guard })
+                let ev = fsWatchFile(fp, { onTrace: tr.on, timeInterval: 20 })
+                try {
+                    await tr.wait((e) => e.type === 'ready')
+                    assert.strict.deepStrictEqual(ws.length, 1)
+                    assert.strict.deepStrictEqual(ws[0].closed, false)
+                    let iClear = tr.mark()
+                    ev.clear()
+                    await tr.wait((e) => e.type === 'closed', iClear)
+                    assert.strict.deepStrictEqual(ws[0].closed, true)
+                    assert.throws(() => ws[0].add(path.resolve(fp)), /after FSWatcher\.close\(\)/)
+
+                    //檔案仍存在但輪詢已停止: 不再新建watcher(否定斷言, 短暫觀察窗, 約為輪詢週期之數倍)
+                    await sleep(150)
+                    assert.strict.deepStrictEqual(ws.length, 1)
+                }
+                finally {
+                    ev.clear()
+                }
+            })
+        }
+        finally {
             fsDeleteFile(fp)
         }
     })
