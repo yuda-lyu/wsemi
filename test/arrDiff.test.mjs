@@ -101,8 +101,9 @@ describe(`arrDiff`, function() {
     //ws286c: arrOld與arrNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依arrOld、arrNew序檢測; []為合法輸入
     const MSG_OLD = 'invalid arrOld: must be an array'
     const MSG_NEW = 'invalid arrNew: must be an array'
-    const MSG_MAT_OLD = 'arrOld is not a matrix'
-    const MSG_MAT_NEW = 'arrNew is not a matrix'
+    //ws290: mode為matrix時元素非陣列之訊息改為合乎輸入參數規格之「invalid <參數名>: …」格式(修前為'arrOld is not a matrix'/'arrNew is not a matrix')
+    const MSG_MAT_OLD = `invalid arrOld: every element must be an array when opt.mode is 'matrix'`
+    const MSG_MAT_NEW = `invalid arrNew: every element must be an array when opt.mode is 'matrix'`
 
     for (let [label, v] of NON_ARR) {
         it(`should throw '${MSG_OLD}' when arrOld is not an array: ${label} (arrNew valid, [] or invalid too; any mode)`, function() {
@@ -201,7 +202,7 @@ describe(`arrDiff`, function() {
         )
     })
 
-    //mode為matrix時各元素須為陣列: 仍throw, 訊息不變, 且不輸出輸入資料至console
+    //mode為matrix時各元素須為陣列: 仍throw(訊息依ws290改為invalid格式), 且不輸出輸入資料至console
     it(`should throw '${MSG_MAT_OLD}' when mode is matrix and an element of arrOld is not an array, without writing to console`, function() {
         for (let [, v] of NON_ARR) {
             throwsMsg(() => arrDiff([v], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
@@ -221,6 +222,17 @@ describe(`arrDiff`, function() {
         throwsMsgNoLeak(() => arrDiff([LEAK], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
         throwsMsgNoLeak(() => arrDiff([[1]], [LEAK], { mode: 'matrix' }), MSG_MAT_NEW)
         throwsMsgNoLeak(() => arrDiff([{ secret: LEAK }], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+    })
+
+    //ws290: 訊息須為「invalid <參數名>: …」格式(參數名為arrDiff自身之參數arrOld/arrNew), 不再使用舊字樣'is not a matrix'; 檢測序為arrOld整側先於arrNew整側
+    it(`should throw the 'invalid <name>: ...' format (not 'is not a matrix') and check arrOld before arrNew when mode is matrix`, function() {
+        let e1 = throwsMsg(() => arrDiff([1], [[1]], { mode: 'matrix' }), MSG_MAT_OLD)
+        assert.ok(/^invalid arrOld: /.test(e1.message) && !e1.message.includes('is not a matrix'), e1.message)
+        let e2 = throwsMsg(() => arrDiff([[1]], [1], { mode: 'matrix' }), MSG_MAT_NEW)
+        assert.ok(/^invalid arrNew: /.test(e2.message) && !e2.message.includes('is not a matrix'), e2.message)
+        throwsMsg(() => arrDiff([1], [2], { mode: 'matrix' }), MSG_MAT_OLD) //兩側皆無效: arrOld先
+        throwsMsg(() => arrDiff([[1], 2], [3], { mode: 'matrix' }), MSG_MAT_OLD) //arrOld中段無效亦先於arrNew
+        throwsMsg(() => arrDiff([,], [[1]], { mode: 'matrix' }), MSG_MAT_OLD) // eslint-disable-line no-sparse-arrays
     })
 
     //mode為array時元素不受限(依舊轉字串比對)

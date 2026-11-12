@@ -1,10 +1,9 @@
-import optVal from './_optVal.mjs'
+import rangeVal from './_rangeVal.mjs'
 import pseudoRandom from './pseudoRandom.mjs'
 
 
-//vstart, vend: opt類參數(JSDoc [參數=預設]), 須為有效整數(iseint, use: 'safe'), 非預期(含小數、非安全整數、Infinity、'0x10'、包裝物件等)視為未給、改用預設0與100, 不報錯; seed不在此列, 維持原樣
-let RULE_VSTART = { fn: 'pseudoRandomIntRange', name: 'vstart', kind: 'eint', chk: { use: 'safe' } }
-let RULE_VEND = { fn: 'pseudoRandomIntRange', name: 'vend', kind: 'eint', chk: { use: 'safe' } }
+//vstart, vend: 範圍參數, 未給(undefined或null)用預設0與100; 有給則須為有效整數(iseint, use: 'safe'), 否則throw Error('invalid vstart: must be an integer')等, 訊息不帶值(使用者2026-11-12, dspec〈輸入參數之檢測機制〉§11 Q1-b: 隨機範圍無效即同步拋錯, 不再視為opt類而改用預設), 由_rangeVal.mjs統一判定
+//seed不在此列, 維持原樣
 
 
 /**
@@ -12,10 +11,11 @@ let RULE_VEND = { fn: 'pseudoRandomIntRange', name: 'vend', kind: 'eint', chk: {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pseudoRandomIntRange.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} [vstart=0] 輸入範圍最小值，opt類參數(有效整數，安全整數範圍，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小數、超出安全整數範圍、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設0
- * @param {Number|String} [vend=100] 輸入範圍最大值，規則同vstart，預設100；若vstart大於vend則拋出錯誤
+ * @param {Number|String} [vstart=0] 輸入範圍最小值，未給(undefined或null)時用預設0；有給則須為有效整數(安全整數範圍，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小數、超出安全整數範圍、Infinity、'0x10'、包裝物件、非數字字串、布林等)throw Error('invalid vstart: must be an integer')，訊息不帶輸入值
+ * @param {Number|String} [vend=100] 輸入範圍最大值，規則同vstart，未給時用預設100，非預期之輸入throw Error('invalid vend: must be an integer')；若vstart大於vend則拋出錯誤
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
  * @returns {Integer} 回傳位於指定範圍內隨機整數
+ * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('vstart[<vstart>] > vend[<vend>]')
  * @example
  *
  * let r
@@ -119,11 +119,11 @@ let RULE_VEND = { fn: 'pseudoRandomIntRange', name: 'vend', kind: 'eint', chk: {
  */
 function pseudoRandomIntRange(vstart = 0, vend = 100, seed = 'start1') {
 
-    //vstart, 非預期改用預設0
-    vstart = optVal(vstart, 0, RULE_VSTART)
+    //vstart, 未給用預設0, 有給而無效throw(訊息不帶值), 有效則取轉換值
+    vstart = rangeVal(vstart, 0, 'vstart', 'eint')
 
-    //vend, 非預期改用預設100
-    vend = optVal(vend, 100, RULE_VEND)
+    //vend, 未給用預設100, 有給而無效throw(訊息不帶值), 有效則取轉換值
+    vend = rangeVal(vend, 100, 'vend', 'eint')
 
     //check
     if (vstart > vend) {

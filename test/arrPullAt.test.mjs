@@ -88,9 +88,9 @@ describe(`arrPullAt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], ''`, function() {
+    it(`should return [] when input ['abc'], '' (invalid single vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPullAt(['abc'], '')
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -100,21 +100,21 @@ describe(`arrPullAt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], {}`, function() {
+    it(`should return [] when input ['abc'], {} (invalid single vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPullAt(['abc'], {})
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], null`, function() {
+    it(`should return [] when input ['abc'], null (invalid single vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPullAt(['abc'], null)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], undefined`, function() {
+    it(`should return [] when input ['abc'], undefined (invalid single vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPullAt(['abc'], undefined)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 

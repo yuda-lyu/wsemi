@@ -1,4 +1,5 @@
 import size from 'lodash-es/size.js'
+import every from 'lodash-es/every.js'
 import isarr from './isarr.mjs'
 import arrDiff from './arrDiff.mjs'
 
@@ -6,17 +7,17 @@ import arrDiff from './arrDiff.mjs'
 /**
  * 比對新舊二維陣列差異處
  *
- * matOld與matNew皆為必須參數，須為陣列，非陣列throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')(依matOld、matNew序)，訊息不帶輸入值；各列須為陣列，否則throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')，訊息不帶輸入值，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ * matOld與matNew皆為必須參數，須為陣列，非陣列throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')(依matOld、matNew序)，訊息不帶輸入值；各列須為陣列(含陣列空洞視為非陣列)，否則throw Error('invalid matOld: every row must be an array')或Error('invalid matNew: every row must be an array')，檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列，訊息不帶輸入值，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matDiff.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} matOld 輸入原始數據二維陣列，必須參數，非陣列throw Error，[]為合法輸入
- * @param {Array} matNew 輸入更新數據二維陣列，必須參數，非陣列throw Error，[]為合法輸入
+ * @param {Array} matOld 輸入原始數據二維陣列，必須參數，非陣列或有列非陣列throw Error，[]為合法輸入
+ * @param {Array} matNew 輸入更新數據二維陣列，必須參數，非陣列或有列非陣列throw Error，[]為合法輸入
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.dls='⟋'] 輸入若數據為矩陣時各儲存格分隔字串，預設'⟋'
  * @param {String} [opt.dlq='∶'] 輸入若數據為矩陣時各儲存格欄位指標分隔字串，預設'∶'
  * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為比對原始結果字串，dfs為各列比對結果陣列(每列為該列各儲存格比對結果陣列)；matOld與matNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} matOld或matNew非陣列時throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')；訊息皆不帶輸入值
+ * @throws {Error} matOld或matNew非陣列時throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('invalid matOld: every row must be an array')或Error('invalid matNew: every row must be an array')；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -52,7 +53,7 @@ import arrDiff from './arrDiff.mjs'
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => arrOld is not a matrix
+ *     // => invalid matOld: every row must be an array
  * }
  *
  * if (true) {
@@ -323,12 +324,19 @@ import arrDiff from './arrDiff.mjs'
  */
 function matDiff(matOld, matNew, opt = {}) {
 
-    //check, matOld與matNew為必須參數(陣列, []合法), 非陣列throw(訊息不帶值)
+    //check, matOld與matNew為必須參數(陣列且各列為陣列, []合法), 無效throw(訊息不帶值), 檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列
+    //各列於此檢測而非交由arrDiff, 使訊息用本函數之參數名(arrDiff之訊息為arrOld/arrNew)
     if (!isarr(matOld)) {
         throw new Error('invalid matOld: must be an array')
     }
     if (!isarr(matNew)) {
         throw new Error('invalid matNew: must be an array')
+    }
+    if (!every(matOld, isarr)) { //lodash every依索引走訪, 空洞視為undefined而無效
+        throw new Error('invalid matOld: every row must be an array')
+    }
+    if (!every(matNew, isarr)) {
+        throw new Error('invalid matNew: every row must be an array')
     }
     if (size(matOld) === 0 && size(matNew) === 0) {
         return {

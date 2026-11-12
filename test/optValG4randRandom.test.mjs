@@ -10,13 +10,15 @@ import pseudoRandomIntRange from '../src/pseudoRandomIntRange.mjs'
 import pseudoRandomIntsRange from '../src/pseudoRandomIntsRange.mjs'
 import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
 import { defineOptParam, INVALID_EINT_EXTRA } from './tools/optValKit.mjs'
+import { defineRangeParam } from './tools/rangeParamKit.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
 
 
-//隨機系7函數(第一級發布A; 完整為10函數)之vstart、vend、n(皆為opt類位置參數: JSDoc [參數=預設]或程式碼有回退, 函數無opt物件故不帶debug, noDebug)
-//  vstart、vend: 實數系(randomRange、randomsRange、pseudoRandomRange、pseudoRandomsRange)為有效數字(isenum, 無範圍限制), 整數系為有效整數(iseint, use: 'safe')
-//  n: 有效整數且為個數1~4294967295(iseint, use: 'count', min: 1)
-//  非預期之輸入(含超出範圍、Infinity、'0x10'、包裝物件等)視為未給、改用預設(vstart 0、vend 1或100、n 1), 不報錯; vstart > vend 之throw維持
+//隨機系7函數(第一級發布A; 完整為10函數)之vstart、vend、n
+//  vstart、vend(ws426改): 範圍參數, 未給(undefined、null)用預設0與1或100; 有給而無效即throw(使用者2026-11-12, dspec §11 Q1-b: 隨機範圍無效即同步拋錯, 原為opt類而改用預設)
+//    實數系(randomRange、randomsRange、pseudoRandomRange、pseudoRandomsRange)須為有效數字(isenum, 無範圍限制), 訊息'invalid vstart: must be a valid number'; 整數系須為有效整數(iseint, use: 'safe'), 訊息'invalid vstart: must be an integer'
+//  n: opt類位置參數(JSDoc [n=1]或程式碼有回退, 函數無opt物件故不帶debug, noDebug), 有效整數且為個數1~4294967295(iseint, use: 'count', min: 1), 非預期之輸入視為未給、改用預設1, 不報錯
+//  vstart > vend 之throw維持
 //  可觀察值: 隨機值本身不可預期, 故以「vstart > vend 之錯誤訊息 vstart[x] > vend[y]」取出實際採用之邊界(以極小vend取vstart、以極大vstart取vend), n以回傳陣列長度
 let runner = path.join(path.dirname(fileURLToPath(import.meta.url)), 'tools', 'optValG4randHugeNRunner.mjs')
 
@@ -89,26 +91,30 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
 
     describe(`optVal ${name}`, function() {
 
-        defineOptParam({
+        //範圍參數之種類描述(訊息固定詞彙)
+        let desc = kind === 'real' ? 'a valid number' : 'an integer'
+
+        defineRangeParam({
             fn: name,
             name: 'vstart',
             def: 0,
+            desc,
             probe: (v) => {
                 let r = bounds(() => fn(v, K.neg))
                 return Array.isArray(r) ? r[0] : r
             },
             valid: validStart,
             extraInvalid: kind === 'real' ? [] : extraInt,
-            noDebug: true,
         })
 
         //Ndp系之超大vend若被當作有效值會建立巨大範圍而卡死, 程序內矩陣不含超大者, 改由子行程案例驗證
         let invalidEnd = ndp ? INVALID.filter(([, v]) => !huge(v)) : INVALID
         let extraEnd = kind === 'real' ? [] : (ndp ? extraInt.filter(([, v]) => !huge(v)) : extraInt)
-        defineOptParam({
+        defineRangeParam({
             fn: name,
             name: 'vend',
             def: defEnd,
+            desc,
             probe: (v) => {
                 let r = bounds(() => fn(K.pos, v))
                 return Array.isArray(r) ? r[1] : r
@@ -116,7 +122,6 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
             valid: validEnd,
             invalid: invalidEnd,
             extraInvalid: extraEnd,
-            noDebug: true,
         })
 
         if (arr) {
@@ -170,13 +175,16 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
             })
         }
 
-        it('should still throw when vstart > vend, using the effective values', function() {
-            // K3: vstart > vend 之throw維持; 訊息為實際採用之值(非預期之輸入已換為預設)
+        it('should still throw when vstart > vend, using the effective values (not given → default), and report an invalid bound first', function() {
+            // vstart > vend 之throw維持; 訊息為實際採用之值(未給者為預設); 有給而無效之邊界先以invalid訊息拋錯(Q1-b, 2026-11-12), 先檢vstart
             let big = kind === 'real' ? 5.5 : 150
             assert.throws(() => fn(5, 3), /^Error: vstart\[5\] > vend\[3\]$/)
-            assert.throws(() => fn('abc', -1), /^Error: vstart\[0\] > vend\[-1\]$/)
-            assert.throws(() => fn(big, 'abc'), new RegExp(`^Error: vstart\\[${big}\\] > vend\\[${defEnd}\\]$`))
+            assert.throws(() => fn(null, -1), /^Error: vstart\[0\] > vend\[-1\]$/)
+            assert.throws(() => fn(big, null), new RegExp(`^Error: vstart\\[${big}\\] > vend\\[${defEnd}\\]$`))
             assert.throws(() => fn(' 6 ', ' 2 '), /^Error: vstart\[6\] > vend\[2\]$/)
+            assert.throws(() => fn('abc', -1), { message: `invalid vstart: must be ${desc}` })
+            assert.throws(() => fn(big, 'abc'), { message: `invalid vend: must be ${desc}` })
+            assert.throws(() => fn('abc', 'abc'), { message: `invalid vstart: must be ${desc}` })
         })
 
         it('should accept vstart equal to vend', function() {
@@ -187,10 +195,12 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
             assert.strict.deepStrictEqual(v, idx ? 0 : 3)
         })
 
-        it('should fall back to the defaults for unexpected bounds and give values in the default range', function() {
-            // 非預期之vstart、vend改用預設: 實數系[0,1)、整數系[0,100]之整數
+        it('should throw for unexpected bounds (formerly the defaults were used) and give values in the default range only when the bounds are not given', function() {
+            // Q1-b(2026-11-12): 有給而無效之範圍throw(原改用預設而回預設範圍內之值); 未給(undefined、null)仍為預設範圍: 實數系[0,1)、整數系[0,100]之整數
+            assert.throws(() => fn('abc', Infinity), { message: `invalid vstart: must be ${desc}` })
+            assert.throws(() => fn(0, Infinity), { message: `invalid vend: must be ${desc}` })
             for (let i = 0; i < 100; i++) {
-                let r = fn('abc', Infinity)
+                let r = i % 2 === 0 ? fn(null, null) : fn()
                 let vs = arr ? r : [r]
                 for (let x of vs) {
                     if (kind === 'real') {
@@ -251,27 +261,33 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
 
 describe('optVal pseudoRandom* with a fixed seed (deterministic)', function() {
 
-    // seed不在清單內(維持原樣); 以固定seed使結果可重現, 驗非預期之vstart、vend、n與其預設等價
-    it('pseudoRandomRange: unexpected vstart/vend equal the defaults 0/1, numeric strings equal numbers', function() {
-        assert.strict.deepStrictEqual(pseudoRandomRange('abc', Infinity, 123), pseudoRandomRange(0, 1, 123))
+    // seed不在清單內(維持原樣); 以固定seed使結果可重現, 驗未給之vstart、vend(null)與非預期之n與其預設等價, 有給而無效之vstart、vend則throw(Q1-b, 2026-11-12)
+    it('pseudoRandomRange: not given vstart/vend (null) equal the defaults 0/1, numeric strings equal numbers, invalid bounds throw', function() {
+        assert.strict.deepStrictEqual(pseudoRandomRange(null, null, 123), pseudoRandomRange(0, 1, 123))
         assert.strict.deepStrictEqual(pseudoRandomRange(' 2 ', '5', 123), pseudoRandomRange(2, 5, 123))
         assert.strict.deepStrictEqual(pseudoRandomRange(null, null, 123), 0.6964691872708499)
+        assert.throws(() => pseudoRandomRange('abc', 1, 123), { message: 'invalid vstart: must be a valid number' })
+        assert.throws(() => pseudoRandomRange(0, Infinity, 123), { message: 'invalid vend: must be a valid number' })
     })
 
-    it('pseudoRandomsRange: unexpected vstart/vend/n equal the defaults 0/1/1', function() {
-        assert.strict.deepStrictEqual(pseudoRandomsRange('abc', Infinity, 0, 123), pseudoRandomsRange(0, 1, 1, 123))
+    it('pseudoRandomsRange: not given vstart/vend (null) and unexpected n equal the defaults 0/1/1, invalid bounds throw', function() {
+        assert.strict.deepStrictEqual(pseudoRandomsRange(null, null, 0, 123), pseudoRandomsRange(0, 1, 1, 123))
         assert.strict.deepStrictEqual(pseudoRandomsRange(' 2 ', '5', ' 3 ', 123), pseudoRandomsRange(2, 5, 3, 123))
+        assert.throws(() => pseudoRandomsRange('abc', Infinity, 0, 123), { message: 'invalid vstart: must be a valid number' })
     })
 
-    it('pseudoRandomIntRange: unexpected vstart/vend equal the defaults 0/100, integer strings equal numbers', function() {
-        assert.strict.deepStrictEqual(pseudoRandomIntRange(1.5, '0x10', 123), pseudoRandomIntRange(0, 100, 123))
+    it('pseudoRandomIntRange: not given vstart/vend (null) equal the defaults 0/100, integer strings equal numbers, invalid bounds throw', function() {
+        assert.strict.deepStrictEqual(pseudoRandomIntRange(null, null, 123), pseudoRandomIntRange(0, 100, 123))
         assert.strict.deepStrictEqual(pseudoRandomIntRange(' 20 ', '50', 123), pseudoRandomIntRange(20, 50, 123))
         assert.strict.deepStrictEqual(pseudoRandomIntRange(null, null, 123), 70)
+        assert.throws(() => pseudoRandomIntRange(1.5, 100, 123), { message: 'invalid vstart: must be an integer' })
+        assert.throws(() => pseudoRandomIntRange(0, '0x10', 123), { message: 'invalid vend: must be an integer' })
     })
 
-    it('pseudoRandomIntsRange: unexpected vstart/vend/n equal the defaults 0/100/1', function() {
-        assert.strict.deepStrictEqual(pseudoRandomIntsRange(1.5, Infinity, 1.5, 123), pseudoRandomIntsRange(0, 100, 1, 123))
+    it('pseudoRandomIntsRange: not given vstart/vend (null) and unexpected n equal the defaults 0/100/1, invalid bounds throw', function() {
+        assert.strict.deepStrictEqual(pseudoRandomIntsRange(null, null, 1.5, 123), pseudoRandomIntsRange(0, 100, 1, 123))
         assert.strict.deepStrictEqual(pseudoRandomIntsRange(' 20 ', '50', ' 4 ', 123), pseudoRandomIntsRange(20, 50, 4, 123))
+        assert.throws(() => pseudoRandomIntsRange(1.5, Infinity, 1.5, 123), { message: 'invalid vstart: must be an integer' })
     })
 
 })

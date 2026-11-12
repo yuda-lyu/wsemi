@@ -17,6 +17,7 @@ import isestr from './isestr.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {String|Object} 回傳一般字串，輸入非有效字串或解碼失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空字串''；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)；注意：本函數不驗證base64格式，非base64字元於解碼時被略過，格式不合之輸入仍可能以success回傳解碼結果
  * @example
  *
  * console.log(b642str('dGVzdOS4reaWhw=='))

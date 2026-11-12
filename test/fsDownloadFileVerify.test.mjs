@@ -536,12 +536,15 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             let pm = catchErr(fsDownloadFileVerify(url('stall'), fp, exp, { fetch: mem.fetch, stallMs: 300, maxAttempts: 1, onTrace: rec.on }))
             mem.write(body.subarray(0, 100))
             await rec.wait((e) => e.type === 'data')
-            let adv = await advanceUntil(clock, () => rec.has('settle'), 2000)
+            //只推進到停滯計時器觸發為止(虛擬計時器: 觸發時刻僅由假時鐘決定, 與I/O快慢無關); 其後之中止清理(關閉寫入串流、移除暫存檔)為真實I/O, 以settle事件為同步點, 不再推進假時鐘
+            //(修前以settle為推進終點並以推進上限2000ms判定advanced: 真實I/O慢於約2000次讓出時advanced為false而偶發失敗, 同slowout2案之作法)
+            let adv = await advanceUntil(clock, () => rec.has('timeout'), 1000)
+            await rec.wait((e) => e.type === 'settle')
             let err = await guard(pm, 'settle') //未落定時以防懸置上限失敗(使finally還原假時鐘)
             //R12: 自最後一次收到資料(停滯計時器重設)起恰隔stallMs才判停滯, step為download(標頭已到)
             let to = rec.find('timeout')
             let tc = rec.all('touch').filter((v) => v.i < to.i).pop()
-            assert.strict.deepStrictEqual({ code: err.code, step: err.step, fp: fs.existsSync(fp), parts: parts(fp), advanced: adv.ok, from: tc.e.from, gap: to.at - tc.at, kind: to.e.kind, where: to.e.where, ms: to.e.ms }, { code: 'E_TIMEOUT', step: 'download', fp: false, parts: [], advanced: true, from: 'data', gap: 300, kind: 'stall', where: 'request', ms: 300 })
+            assert.strict.deepStrictEqual({ code: err.code, step: err.step, fp: fs.existsSync(fp), parts: parts(fp), stalled: adv.ok, from: tc.e.from, gap: to.at - tc.at, kind: to.e.kind, where: to.e.where, ms: to.e.ms }, { code: 'E_TIMEOUT', step: 'download', fp: false, parts: [], stalled: true, from: 'data', gap: 300, kind: 'stall', where: 'request', ms: 300 })
             //中止原因為停滯, 不重試(maxAttempts 1)而結束
             assert.strict.deepStrictEqual([rec.find('abort').e.why, rec.find('stop').e.why, rec.find('settle').e.code], ['E_TIMEOUT', 'max', 'E_TIMEOUT'])
         })
@@ -2875,7 +2878,9 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 totalMs: 60000,
                 onTrace: rec.on,
             }))
-            let adv = await advanceUntil(clock, () => rec.has('settle'), 8000, 50)
+            //只推進到5000ms放手(fallback abort, 虛擬計時器)為止; 其後之清理(關閉寫入串流、移除暫存檔)為真實I/O, 以settle事件為同步點, 不再推進假時鐘(修前以settle為推進終點並以推進上限8000ms判定, 真實I/O慢時偶發失敗)
+            let adv = await advanceUntil(clock, () => rec.has('abort'), 8000, 50)
+            await rec.wait((e) => e.type === 'settle')
             let err = await guard(pm, 'settle')
             assert.strict.deepStrictEqual([err.code, err.step, adv.ok, parts(fpOf('pipenevertr'))], ['E_FS', 'download', true, []])
             //寫入端先出錯(此時停滯與整體計時停止)後恰5000ms才放手使請求落定; 停滯與整體時限計時器皆未觸發

@@ -74,6 +74,7 @@ function sliceU8arr(u8a, inds) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭記載之分塊資訊區長度非非負整數或逾封包資料區長度(含封包短於8位元組)、分塊資訊非真陣列、含非負有限整數以外之項、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid pks, <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空物件{}，而空物件{}亦為合法輸入之結果(如u8arr2obj(obj2u8arr({ a: undefined }))，值為undefined之欄位於序列化時省略)，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
  * let u8a = new Uint8Array([

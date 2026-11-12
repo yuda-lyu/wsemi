@@ -25,6 +25,12 @@ fxss.getFilterXSS = () => {
     return w
 }
 
+//cpuMsSince, 自c0(process.cpuUsage()之回傳)起本行程之CPU時間(user+system, 毫秒): 效能上限類斷言用它取代牆鐘(ms), 行程被擱置(他任務並行之高負載)之時間不計入, 工作量失控(如指數重走)時仍成比例增長(規則見skill role-coder-for-test references/timer-tests.md 第12節)
+let cpuMsSince = (c0) => {
+    let c = process.cpuUsage(c0)
+    return (c.user + c.system) / 1000
+}
+
 let caseName = process.argv[2] || ''
 let [kind, sub, sn] = caseName.split(':')
 let n = Number(kind === 'cycle' ? sub : sn)
@@ -181,9 +187,11 @@ else if (kind === 'cycle') {
         cur = nx
     }
     cur.next = head
+    let c0 = process.cpuUsage()
     let t0 = process.hrtime.bigint()
     let r = clearXSS(head)
     out.ms = Number(process.hrtime.bigint() - t0) / 1e6
+    out.cpuMs = cpuMsSince(c0)
     //走一圈: 每個節點字串已清除, 第n步回到起點
     let v = r
     let ok = true

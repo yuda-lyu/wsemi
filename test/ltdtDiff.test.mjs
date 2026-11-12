@@ -210,9 +210,18 @@ describe(`ltdtDiff`, function() {
     //ws286c: ltdtOld與ltdtNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 元素非物件throw Error, 訊息固定不帶值, 依ltdtOld(陣列, 元素)、ltdtNew(陣列, 元素)序檢測; []為合法輸入
     const MSG_OLD = 'invalid ltdtOld: must be an array'
     const MSG_NEW = 'invalid ltdtNew: must be an array'
-    const MSG_OLD_ELE = 'invalid ltdtOld: must be an array of objects'
-    const MSG_NEW_ELE = 'invalid ltdtNew: must be an array of objects'
+    //ws290: 元素須為有效物件(iseobj, 即非空物件), 空物件列{}亦無效(使用者2026-11-12裁示: ltdtDiff預期輸入物件陣列內各物件皆為有效物件, 空物件列無法判斷後續之有效物件由哪一筆而來; 修前{}被放行, 內部ltdtkeys2mat整側靜默回[], 結果把整側當成不存在而算錯)
+    const MSG_OLD_ELE = 'invalid ltdtOld: every element must be a non-empty object'
+    const MSG_NEW_ELE = 'invalid ltdtNew: every element must be a non-empty object'
     const OK = [{ a: 1 }]
+
+    //無效物件元素(空物件類): 皆為物件但無可列舉鍵
+    const EMPTY_OBJ_ELEM = [
+        ['{}', {}],
+        ['Object.create(null)', Object.create(null)],
+        ['Object.create({})', Object.create({})],
+        ['an object whose only key is non-enumerable', Object.defineProperty({}, 'a', { value: 1 })],
+    ]
 
     for (let [label, v] of NON_ARR) {
         it(`should throw '${MSG_OLD}' when ltdtOld is not an array: ${label} (ltdtNew valid, [] or invalid too)`, function() {
@@ -248,7 +257,7 @@ describe(`ltdtDiff`, function() {
 
     //元素非物件: 修前回傳{ dfs: [] }(看起來像沒有差異)或把該側靜默當成空, 現改throw
     for (let [label, v] of NON_OBJ_ELEM) {
-        it(`should throw '...must be an array of objects' when an element is not an object: ${label} (as the only element, first, last, in ltdtOld or ltdtNew)`, function() {
+        it(`should throw '...every element must be a non-empty object' when an element is not an object: ${label} (as the only element, first, last, in ltdtOld or ltdtNew)`, function() {
             throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE)
             throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE)
             throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE)
@@ -285,12 +294,63 @@ describe(`ltdtDiff`, function() {
         throwsMsg(() => ltdtDiff(OK, [2]), MSG_NEW_ELE)
     })
 
-    //物件元素(含{}與無原型物件)為有效
-    it(`should accept objects as elements, including {} and a prototype-less object`, function() {
+    //物件元素(含無原型物件)為有效, 但須非空物件
+    it(`should accept non-empty objects as elements, including a prototype-less object`, function() {
         let np = Object.assign(Object.create(null), { a: 1 })
         let r = ltdtDiff([np], [{ a: 2 }])
         assert.strict.deepStrictEqual(r.dfs, [{ a: { p: 'modify', k: 'a', vo: '1', vn: '2' } }])
-        assert.doesNotThrow(() => ltdtDiff([{}], [{}]))
+    })
+
+    //ws290: 空物件列{}無效, 於唯一/首/中/末位置, ltdtOld或ltdtNew側, 對側為有效/[]/空物件列, 皆同步throw固定訊息且不輸出至console
+    for (let [label, v] of EMPTY_OBJ_ELEM) {
+        it(`should throw '...every element must be a non-empty object' when an element is an empty object: ${label} (as the only element, first, middle, last, in ltdtOld or ltdtNew)`, function() {
+            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE)
+            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE)
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE)
+        })
+    }
+
+    //ws290: 修前靜默算錯之原案例(任務書實測): 空物件列使整側被當成不存在, 回「N列新增」; 現改throw
+    it(`should throw instead of silently returning a wrong diff for ltdtDiff([{a:1},{a:2},{}], [{a:1},{a:2}]) and ltdtDiff([{a:1},{}], [{a:1}])`, function() {
+        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }, {}], [{ a: 1 }, { a: 2 }]), MSG_OLD_ELE) //修前: 2列新增
+        throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), MSG_OLD_ELE) //修前: 1列新增
+        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }], [{ a: 1 }, { a: 2 }, {}]), MSG_NEW_ELE) //對稱: 新側
+        throwsMsg(() => ltdtDiff([{ a: 1 }], [{ a: 1 }, {}]), MSG_NEW_ELE)
+    })
+
+    //ws290: 檢測序仍為ltdtOld(陣列, 元素)、ltdtNew(陣列, 元素); 空物件元素與非物件元素同序同訊息
+    it(`should check an empty-object element in the same order as other invalid elements`, function() {
+        throwsMsg(() => ltdtDiff([{}], 'y'), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([{}], [{}]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([{}], [1]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([1], [{}]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
+        throwsMsg(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE)
+        throwsMsg(() => ltdtDiff('x', [{}]), MSG_OLD)
+    })
+
+    //ws290: 訊息固定不帶輸入值(元素為鍵與值皆含洩漏標記但不可列舉之物件時, 訊息亦不含標記)
+    it(`should throw the fixed messages for empty objects without the input value`, function() {
+        throwsMsgNoLeak(() => ltdtDiff([{}], OK), MSG_OLD_ELE)
+        throwsMsgNoLeak(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE)
+        let ne = Object.defineProperty({}, LEAK, { value: LEAK, enumerable: false }) //鍵與值皆為洩漏標記, 但不可列舉故無效
+        throwsMsgNoLeak(() => ltdtDiff([ne], OK), MSG_OLD_ELE)
+        throwsMsgNoLeak(() => ltdtDiff(OK, [ne]), MSG_NEW_ELE)
+    })
+
+    //ws290: 兩側皆為[]仍回傳{ diff: [], dfs: [] }; 只有一側為[]者照常
+    it(`should still return { diff: [], dfs: [] } for [] vs [] and the normal diff for [] vs valid objects`, function() {
+        assert.strict.deepStrictEqual(ltdtDiff([], []), { diff: [], dfs: [] })
+        assert.strict.deepStrictEqual(ltdtDiff([], OK).dfs, [{ a: { p: 'add', k: 'a', vo: '1', vn: '' } }])
+        assert.strict.deepStrictEqual(ltdtDiff(OK, []).dfs, [{ a: { p: 'remove', k: 'a', vo: '1', vn: '' } }])
     })
 
     //兩邊皆為[]: 回傳與正常輸出同形之空結果, 不是{}
@@ -312,12 +372,7 @@ describe(`ltdtDiff`, function() {
         assert.ok(r1 !== r2)
     })
 
-    //內部站點邊界: [{}] 對 [{}] 無任何鍵, 內部轉成兩個[]矩陣再交給arrDiff, 其兩邊皆空回傳 { diff: [], dfs: [] }(修前因arrDiff回{}而變成 { dfs: [] }, 現與正常輸出同形)
-    it(`should return { diff: [], dfs: [] } when no key can be compared: [{}] vs [{}], [{}, {}] vs [{}]`, function() {
-        assert.strict.deepStrictEqual(ltdtDiff([{}], [{}]), { diff: [], dfs: [] })
-        assert.strict.deepStrictEqual(ltdtDiff([{}, {}], [{}]), { diff: [], dfs: [] })
-        assert.strict.deepStrictEqual(ltdtDiff([{}], []), { diff: [], dfs: [] })
-    })
+    //ws290: 原「[{}] 對 [{}] 無任何鍵而回 { diff: [], dfs: [] }」之案已因空物件列無效而改為throw(見上: 空物件列無效); 內部ltdtkeys2mat/arrDiff之「無鍵」站點已不可由ltdtDiff抵達
 
     //只有一邊為空, 或值為''(兩邊各組出非空字串)照常回傳差異結果(取自修前HEAD之實測)
     it(`should return the normal diff when only one side is [], or when the values are '' (not both-empty)`, function() {

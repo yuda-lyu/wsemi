@@ -26,6 +26,7 @@ import isab from './isab.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據；二進位數據於results內以'[BlazeForUint8Array]::<i>'一類標記代表，應用字串若恰與標記格式完整相同則會被前置'[BlazeForPreventEscape]'跳脫，供解碼端還原時區分；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳{ results: '', binarys: [] }；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
  * let data = {

@@ -81,7 +81,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
     let strOld = []
     each(arrOld, (v) => {
         if (!isarr(v)) {
-            throw new Error(`arrOld is not a matrix`) //訊息與例外不帶輸入值, 亦不先console.log輸入資料
+            throw new Error(`invalid arrOld: every element must be an array when opt.mode is 'matrix'`) //訊息與例外不帶輸入值, 亦不先console.log輸入資料
         }
         each(v, (vv, kk) => {
             strOld.push(`${kk}${dlq}${vv}${dls}`) //得要靠kk區隔不同儲存格, 若無kk與有可能出現連續多儲存格為「有無」與「無有」, 導致判識仍為無變化
@@ -95,7 +95,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
     let strNew = []
     each(arrNew, (v) => {
         if (!isarr(v)) {
-            throw new Error(`arrNew is not a matrix`)
+            throw new Error(`invalid arrNew: every element must be an array when opt.mode is 'matrix'`)
         }
         each(v, (vv, kk) => {
             strNew.push(`${kk}${dlq}${vv}${dls}`) //得要靠kk區隔不同儲存格, 若無kk與有可能出現連續多儲存格為「有無」與「無有」, 導致判識仍為無變化
@@ -190,7 +190,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
 /**
  * 比對新舊陣列差異處
  *
- * arrOld與arrNew皆為必須參數，須為陣列，非陣列throw Error('invalid arrOld: must be an array')或Error('invalid arrNew: must be an array')(依arrOld、arrNew序)，訊息不帶輸入值；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設；opt.mode為'matrix'時各元素須為陣列，否則throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')，訊息不帶輸入值，亦不輸出輸入資料至console
+ * arrOld與arrNew皆為必須參數，須為陣列，非陣列throw Error('invalid arrOld: must be an array')或Error('invalid arrNew: must be an array')(依arrOld、arrNew序)，訊息不帶輸入值；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設；opt.mode為'matrix'時各元素須為陣列，否則throw Error("invalid arrOld: every element must be an array when opt.mode is 'matrix'")或Error("invalid arrNew: every element must be an array when opt.mode is 'matrix'")(arrOld整側先於arrNew整側)，訊息不帶輸入值，亦不輸出輸入資料至console
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrDiff.test.mjs Github}
  * @memberOf wsemi
@@ -201,7 +201,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
  * @param {String} [opt.dls='⟋'] 輸入若數據為矩陣時各儲存格分隔字串，預設'⟋'
  * @param {String} [opt.dlq='∶'] 輸入若數據為矩陣時各儲存格欄位指標分隔字串，預設'∶'
  * @returns {Object} 回傳比對結果物件，若為一維陣列則回傳鍵值diff與dfs，其中diff為比對原始結果字串，dfs為依照各列比對結果陣列；若為二維陣列則回傳鍵值diff與dfs，其中diff一樣為比對原始結果字串，dfs為各列與各儲存格比對結果陣列；arrOld與arrNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} arrOld或arrNew非陣列時throw Error('invalid arrOld: must be an array')或Error('invalid arrNew: must be an array')；opt.mode為'matrix'且有元素非陣列時throw Error('arrOld is not a matrix')或Error('arrNew is not a matrix')；訊息皆不帶輸入值
+ * @throws {Error} arrOld或arrNew非陣列時throw Error('invalid arrOld: must be an array')或Error('invalid arrNew: must be an array')；opt.mode為'matrix'且有元素非陣列時throw Error("invalid arrOld: every element must be an array when opt.mode is 'matrix'")或Error("invalid arrNew: every element must be an array when opt.mode is 'matrix'")；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -237,7 +237,7 @@ function arrDiff2D(arrOld, arrNew, opt = {}) {
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => arrOld is not a matrix
+ *     // => invalid arrOld: every element must be an array when opt.mode is 'matrix'
  * }
  *
  * if (true) {

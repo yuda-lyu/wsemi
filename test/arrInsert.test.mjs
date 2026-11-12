@@ -28,9 +28,9 @@ describe(`arrInsert`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [ 1, 2.5, '123' ] when input [1, 2.5, '123'], 4, 'abc'`, function() {
+    it(`should return [] (not the original array) when input [1, 2.5, '123'], 4, 'abc' (ind larger than the length; dspec §11 Q1-c)`, function() {
         let r = arrInsert([1, 2.5, '123'], 4, 'abc')
-        let rr = [1, 2.5, '123']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -112,33 +112,33 @@ describe(`arrInsert`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], ''`, function() {
+    it(`should return [] (not the original array) when input ['abc'], '' (invalid ind; dspec §11 Q1-c)`, function() {
         let r = arrInsert(['abc'], '')
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], []`, function() {
+    it(`should return [] (not the original array) when input ['abc'], [] (invalid ind; dspec §11 Q1-c)`, function() {
         let r = arrInsert(['abc'], [])
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], {}`, function() {
+    it(`should return [] (not the original array) when input ['abc'], {} (invalid ind; dspec §11 Q1-c)`, function() {
         let r = arrInsert(['abc'], {})
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], null`, function() {
+    it(`should return [] (not the original array) when input ['abc'], null (invalid ind; dspec §11 Q1-c)`, function() {
         let r = arrInsert(['abc'], null)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return false when input ['abc'], undefined`, function() {
+    it(`should return [] (not the original array) when input ['abc'], undefined (invalid ind; dspec §11 Q1-c)`, function() {
         let r = arrInsert(['abc'], undefined)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 

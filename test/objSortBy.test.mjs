@@ -324,9 +324,9 @@ describe(`objSortBy`, function() {
                 assert.strict.deepStrictEqual(Object.getOwnPropertySymbols(r), [])
             })
 
-            it(`should still throw for a non-function fun and propagate errors thrown by fun`, function() {
-                assert.throws(() => objSortBy({ length: 1, a: 1 }, 1), /fun is not a function/)
-                assert.throws(() => objSortBy({ length: 1, a: 1 }), /fun is not a function/)
+            it(`should return {} for a non-function fun (formerly throw 'fun is not a function'; dspec §11 Q1-c) and still propagate errors thrown by fun`, function() {
+                assert.strict.deepStrictEqual(objSortBy({ length: 1, a: 1 }, 1), {})
+                assert.strict.deepStrictEqual(objSortBy({ length: 1, a: 1 }), {})
                 assert.throws(() => objSortBy({ length: 1, a: 1 }, (v, k) => {
                     throw new Error('boom ' + k)
                 }), /boom length/)

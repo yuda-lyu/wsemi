@@ -5,7 +5,7 @@ import map from 'lodash-es/map.js'
 import union from 'lodash-es/union.js'
 import size from 'lodash-es/size.js'
 import isarr from './isarr.mjs'
-import isobj from './isobj.mjs'
+import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
 import getltdtkeys from './getltdtkeys.mjs'
 import ltdtkeys2mat from './ltdtkeys2mat.mjs'
@@ -15,18 +15,18 @@ import arrDiff from './arrDiff.mjs'
 /**
  * 比對新舊物件陣列差異處
  *
- * ltdtOld與ltdtNew皆為必須參數，須為陣列，非陣列throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')，且各元素須皆為物件(含{})，有任一元素非物件(數字、字串、null、undefined、陣列、函數等，含陣列空洞)throw Error('invalid ltdtOld: must be an array of objects')或Error('invalid ltdtNew: must be an array of objects')，依ltdtOld(陣列、元素)、ltdtNew(陣列、元素)序，訊息不帶輸入值；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列(或皆無可比對之鍵，如[{}]對[{}])時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ * ltdtOld與ltdtNew皆為必須參數，須為陣列，非陣列throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')，且各元素須皆為有效物件(即至少有一個鍵之非空物件)，有任一元素非有效物件(空物件{}、數字、字串、null、undefined、陣列、函數等，含陣列空洞)throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')，依ltdtOld(陣列、元素)、ltdtNew(陣列、元素)序，訊息不帶輸入值；本函數預期輸入物件陣列內各物件皆為有效物件，故不支援空物件列(空物件列無法判斷後續之有效物件由哪一筆而來)；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtDiff.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} ltdtOld 輸入原始數據物件陣列，必須參數，非陣列或有元素非物件throw Error，[]為合法輸入
- * @param {Array} ltdtNew 輸入更新數據物件陣列，必須參數，非陣列或有元素非物件throw Error，[]為合法輸入
+ * @param {Array} ltdtOld 輸入原始數據物件陣列，必須參數，非陣列或有元素非有效物件(含空物件{})throw Error，[]為合法輸入
+ * @param {Array} ltdtNew 輸入更新數據物件陣列，必須參數，非陣列或有元素非有效物件(含空物件{})throw Error，[]為合法輸入
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.dls='⟋'] 輸入若數據為矩陣時各儲存格分隔字串，預設'⟋'
  * @param {String} [opt.dlq='∶'] 輸入若數據為矩陣時各儲存格欄位指標分隔字串，預設'∶'
  * @param {String} [opt.empty='∗empty∗'] 輸入若無鍵值時給予之預設值，預設'∗empty∗'
  * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為比對原始結果字串，dfs為各列比對結果陣列(每列為以欄位鍵為鍵、值為該儲存格比對結果之物件)；ltdtOld與ltdtNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} ltdtOld或ltdtNew非陣列時throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')；有任一元素非物件時throw Error('invalid ltdtOld: must be an array of objects')或Error('invalid ltdtNew: must be an array of objects')；訊息皆不帶輸入值
+ * @throws {Error} ltdtOld或ltdtNew非陣列時throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')；有任一元素非有效物件(含空物件{})時throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -62,7 +62,7 @@ import arrDiff from './arrDiff.mjs'
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => invalid ltdtOld: must be an array of objects
+ *     // => invalid ltdtOld: every element must be a non-empty object
  *
  *     try {
  *         ltdtDiff([{ a: 1 }], [{ a: 1 }, null])
@@ -70,7 +70,15 @@ import arrDiff from './arrDiff.mjs'
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => invalid ltdtNew: must be an array of objects
+ *     // => invalid ltdtNew: every element must be a non-empty object
+ *
+ *     try {
+ *         ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]) //空物件列無效
+ *     }
+ *     catch (err) {
+ *         console.log(err.message)
+ *     }
+ *     // => invalid ltdtOld: every element must be a non-empty object
  * }
  *
  * if (true) {
@@ -824,18 +832,19 @@ import arrDiff from './arrDiff.mjs'
  */
 function ltdtDiff(ltdtOld, ltdtNew, opt = {}) {
 
-    //check, ltdtOld與ltdtNew為必須參數(陣列且各元素為物件, []合法), 無效throw(訊息不帶值), 依ltdtOld(陣列, 元素), ltdtNew(陣列, 元素)序
+    //check, ltdtOld與ltdtNew為必須參數(陣列且各元素為有效物件即非空物件, []合法), 無效throw(訊息不帶值), 依ltdtOld(陣列, 元素), ltdtNew(陣列, 元素)序
+    //空物件列{}無效: 無法判斷後續之有效物件由哪一筆而來, 且內部ltdtkeys2mat遇{}會整側靜默回[](使用者2026-11-12裁示)
     if (!isarr(ltdtOld)) {
         throw new Error('invalid ltdtOld: must be an array')
     }
-    if (!every(ltdtOld, isobj)) { //lodash every依索引走訪, 空洞視為undefined而無效
-        throw new Error('invalid ltdtOld: must be an array of objects')
+    if (!every(ltdtOld, iseobj)) { //lodash every依索引走訪, 空洞視為undefined而無效
+        throw new Error('invalid ltdtOld: every element must be a non-empty object')
     }
     if (!isarr(ltdtNew)) {
         throw new Error('invalid ltdtNew: must be an array')
     }
-    if (!every(ltdtNew, isobj)) {
-        throw new Error('invalid ltdtNew: must be an array of objects')
+    if (!every(ltdtNew, iseobj)) {
+        throw new Error('invalid ltdtNew: every element must be a non-empty object')
     }
     if (size(ltdtOld) === 0 && size(ltdtNew) === 0) {
         return {

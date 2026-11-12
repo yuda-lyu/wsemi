@@ -12,6 +12,7 @@ import isstr from './isstr.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Integer|Object} 回傳轉換後整數，輸入非字串時回傳null，輸入空字串時回傳0；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳null；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
  * console.log(str2hint('abc'))

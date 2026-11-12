@@ -153,3 +153,28 @@
 - **chokidar 6 之語意差在測試裡現形之處**(皆在 Windows、原生監看): ①被監看資料夾本身消失,先回報者由恆為輪詢(`timer`)變成多為 chokidar(`watcher`,實測 14~19/20),原案「`emit` 前必有 `tick`」只在 `timer` 時成立;②拒絕存取之子資料夾不再回報 EPERM(`backend.js:250` 靜默),輪詢模式仍回報,故 EPERM 案改 `polling: true`.修法是改案裡錯誤之平台假設(來源為競態、改測可穩定觸發之路徑),不是放寬時間門檻;所改之處在案內註明成因與實測.
 - **終結態的測法**: chokidar 6 之 `close()` 後 `closed` 為 true、`add()` 丟錯.被測函數是否沿用已關閉之 watcher,以透傳真 `chokidar.watch` 之 spy(`withSpyChokidar`)取各次之真實例比對(實例不同、舊者 `closed`、新者未關閉),假 watcher 亦擬其終結態;`chokidar.watch` 被取代之手法仍有效是因預設匯出仍為 `{ watch, FSWatcher }` 物件.
 - **選項更名先看是否為別名**: `interval`／`binaryInterval` 在 chokidar 6 仍可用(`pollingInterval ?? interval`),但新版驗證之下限更嚴(`pollingInterval` 須有限且 > 0,否則 TypeError);wsemi 之 `iseint(min:1)` 已先擋,不受影響.
+
+## 假時鐘案的「推進終點」與效能時限案的「量 CPU 不量牆鐘」(2026-11-12,主控任務 20261112065727,ws290)
+
+- **ws314 的盤點漏了兩處**: 當時結論「其餘 `advanceUntil` 站點都是預期計時器觸發或被測碼無待完成之真實 I/O」不成立——停滯案(`stallMs` 判停滯後)與 5 秒 fallback 案,計時器觸發後仍有真實 I/O(中止後關閉寫入串流、移除暫存檔),而它們以 `settle` 為推進終點、以虛擬上限(2000／8000ms)判定 `advanced`,與真實 I/O 賽跑.盤點不要靠讀碼推論「哪裡沒有真實 I/O」,改用**注入真實 I/O 完成延遲**確定性掃全檔(`node --import` 預載模組把 `fs` 回呼式方法之回呼延後 D ms;同步方法不受影響): 修前 D≤3ms 綠、D=5ms 起紅,全檔 D=20ms 紅 2 案;修後 D=80ms 全檔 0 紅.注入法不需獨佔鎖、數秒到兩分鐘一輪,遠勝負載試驗(修前修後皆 0 紅,無從分辨).
+- **修法**: 預期計時器觸發之路徑,推進到該計時器之事件(`timeout`／`abort`)即停,其後以 `settle` 事件為同步點(`slowout2` 案原已如此);預期成功之路徑不推進(ws314 dripok).
+- **效能上限類改量 CPU 時間**: 100 萬節點環 `clearXSS`,無負載牆鐘 1.6~1.9s、CPU 2.9~3.5s(**CPU 大於牆鐘**,GC 等執行緒並行),6 個低優先權 CPU 壓力行程下牆鐘 2.4~3.3s、CPU 3.8~4.8s(CPU 只膨脹約 25%,牆鐘膨脹約 70%);限值訂 12s(負載下最大值之 2.5 倍).不能直接把 `5000` 從牆鐘換成 CPU 值(CPU 本就達 3~5s).變異: 子行程 `Atomics.wait` 阻塞 6s(不耗 CPU)舊牆鐘斷言紅、新斷言綠.
+- **負載試驗工具的限制**: `loadTrial --lag`(忙等阻塞事件迴圈)對「單一同步呼叫跑數秒」之子行程無效(`setInterval` 在同步區間內不會觸發);`loadTrial` 以 `--cwd` 指向 `git archive HEAD src test` 解出之快照,可在工作樹繼續編輯時同時量「修前」基準(快照放 `./tmp/`,內無目錄連結).Git Bash 下 `mocha --grep "/regex/"` 之前導斜線被轉成 `C:/Program Files/Git/…`(MSYS 路徑轉換),改用不含斜線之子字串(中文子字串可用).
+- **外審採計**: sonnet 獨立審 4 點,屬實 2 點(matDiff JSDoc 把檢測序寫成「各自陣列、各列」與實作〔四段〕不符,已修;`removeTemp` 以假計時器 `sleep` 重試〔EBUSY／EPERM／EACCES〕於假時鐘停推後會懸置,與既有 `slowout2` 案同,列已知缺口),1 點(`iseobj` 的 `for…in` 含繼承可列舉鍵與 `getltdtkeys` 自有鍵不一致)為既有不一致、依使用者指定之 `iseobj` 未收緊,列需裁示.
+
+## 依類別統一無效輸入之處置:探針全格比對、修前副本、規格例與既有裁定衝突(2026-11-12,主控任務 20261112065727,ws426)
+
+- **類別級裁示先以探針全格盤點,再動碼**: 對類別內每個函數之每個位置參數代入同一組 13 種無效值(`undefined`、`null`、`''`、`'x'`、`123`、`-1`、`1.5`、`Infinity`、`NaN`、`true`、`{}`、`[]`、函數),回傳歸類為空值／原值(與某輸入深等)／拋錯／其他,另攔 console 計數;修前修後各存一份 JSON 逐格比對.非隨機函數之差異格恰為預期改變之格,即「沒有改到不該改的」之證據;隨機函數只比類別.「回原值」一欄直接列出 Q1-c 要改之站點(`arrInsert`／`arrPull`／`arrPullAt` 之次參數),比讀碼快且不漏.
+- **修前紅不 stash 不 checkout**: 工作樹另有前一輪之未提交改動時,把 `src`、`test` 整份複製到 `./tmp/<案>/before/`,只把本輪改動之 src 檔以 `git show HEAD:<檔>` 覆回(前一輪改動之檔保留工作樹版),刪掉本輪新增之內部檔;副本在 repo 內,`node_modules` 由上層解析,測試以相對路徑 import 而自動指向副本之 src.變異驗證同法(副本內逐一植入、跑後還原並比對內容).
+- **規格之例可能來自過期之「現況」欄**: Q1-c 之例 `strTruncate('abc', -1)` → `''` 取自規格 §5.3 C5 之現況欄(第 271 項前寫的「回原字串」),而 `strTruncate` 之 `maxLen` 已於 11-02 由使用者定為必須參數並拋錯、下游已先改.照例改會推翻已實作之裁定;先讀現行程式碼與 §11 之既有裁定,衝突者維持既有裁定並列需裁示,不自行取捨.
+- **範圍參數之 `null`**: 隨機系 JSDoc 範例與既有測試皆以 `pseudoRandomIntRange(null, null, 123)` 取預設範圍;改為「無效即拋錯」時 `null` 仍依 §1 選填鍵之定義視為未給,否則既有範例與呼叫端一併壞掉.
+- **表驅動建構器換用時之案數差**: `defineOptParam` 之無效清單 `INVALID` 含 `null`、`undefined` 兩項,與其「未給」案重複;新建構器濾掉後每個參數少 2 案.全套案數差要能逐項算出(本輪 +25 新檔、−40＝20 參數 × 2),不能只看 0 failing.
+
+## 字串取代之取代值字面化:先找「補償者」、盤點用 AST、不為求全紅而改測法(2026-11-12,主控任務 20261112065727,wsrep)
+
+- **修被別處補償的缺陷,先找補償者**: `replace` 之 `$` 展開早被 `replaceObj`(預先把 value 之 `$` 逸出為 `$$`)與 `replacePlus`(函式回傳)各自繞開(ws286b,見 `experience_20261103.md` 該節「不改 `replace`〔範圍外〕」).改 `replace` 本身後,`replaceObj` 之逸出反成錯誤來源(每個 `$` 變 `$$`),須同輪移除.盤點不只列「有缺陷的站點」,也列「為繞開缺陷而寫的補償站點」——此例以「取代值為含 `$` 之字面常數(`'$$$$'`)」的掃描分類現形;只改 `replace` 而保留 `replaceObj` 之逸出時(變異 M7)共 16 案紅(含掃描測試 2 案,其餘 14 案為 `replaceObj` 既有案).
+- **盤點用 AST,不用 Grep 行數**: Grep 69 行含 JSDoc 範例與註解 6 行,且單行多呼叫(`getDiagSecrets.mjs:177` 三個);以 `@babel/parser`(estree 外掛,同 `bigintLiteralScan.mjs`)分類第 2 引數(不含 `$` 字面／含 `$` 字面／函式／其餘)得 67 站點.「刻意含 `$` 之全集」釘進測試(新增含 `$` 之字面取代值或變數取代值即紅),掃描器本身另附正反例(註解、字串內文字不計;optional call、computed 成員、鏈式皆計).
+- **`$<x>`、`$1` 於字串 pattern 修前亦字面**(字串 pattern 無捕獲群):派工書要求「各一案修前紅」,實測只有 `$&`、`$'`、`` $` ``、`$$` 四者能紅(新增 11 案中修前 9 案紅),其餘兩案為日後改用正規式之守門;如實回報,不為了「全紅」而改測法.
+- **結構釘住不綁實作形式**: 第一版測試釘「`replace.mjs` 恰有一個 `replaceAll` 函式站點」,等價變異(改 `split/join`)被誤殺;改為只釘規則(無 `dynamic` 站點)與行為,等價變異存活.
+- **變異於 `src` 副本**: 副本放 `./tmp/<案>/mut/{src,test}`(`test/tools` 一併複製),測試以相對路徑 import 自動指向副本,`@babel/parser` 與其他依賴由上層 `node_modules` 解析;mocha 以絕對路徑 `node_modules/mocha/bin/mocha.js` 由腳本 `spawnSync`(`windowsHide`),整支腳本經 `quiet-run --lock` 執行一次(約 1 分鐘).`to` 字串含 `$` 時以函式形式 `text.replace(from, () => to)` 取代,否則變異文字本身被展開(正是本規則所防之事).
+- **eslint `no-template-curly-in-string`**: 測試內以一般引號字串寫含 `${r}` 之樣板字串原始碼會被擋,改 `'…$' + '{r}…'` 拆開(同 `_srcBigIntLiteral.test.mjs` 作法).

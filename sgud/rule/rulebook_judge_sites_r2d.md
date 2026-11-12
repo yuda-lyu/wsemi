@@ -11,6 +11,7 @@
   3. 不回顯輸入資料:`arrDiff`(矩陣模式)／`matDiff` 之某列非陣列仍 throw,**訊息不變**(`arrOld is not a matrix`／`arrNew is not a matrix`,沿用 `arrDiff` 內部名稱),移除其前之兩行 `console.log`(dspec V20).
   4. `ltdtDiff` 元素檢測用 `isobj`(`Object.prototype.toString` 為 `[object Object]`:一般物件,含 `{}` 與無原型物件),走訪用 lodash `every`(依索引,陣列空洞視為 `undefined` 而無效;`Array.prototype.every` 會略過空洞,不可用).陣列、函數、`null`、基本型別、`Date`、`Map` 等皆為非物件.
   5. `opt` 內無效之鍵維持現行(改用預設,不報錯).
+  6. **(ws290 修訂,2026-11-12,使用者裁示;破壞性變更紀錄第 62 項,見 `rulebook_breaking_57on.md`)** 取代上列規則 1 之 `ltdtDiff` 元素訊息、規則 2 之 `[{}]` 句、規則 3 之「訊息不變」、規則 4 之 `isobj`: ①`ltdtDiff` 元素須為**有效物件**(`iseobj`,即非空物件;`{}`、無可列舉鍵之物件、非物件皆無效,陣列空洞仍依 lodash `every` 視為 `undefined` 而無效),無效時 throw `invalid ltdtOld|ltdtNew: every element must be a non-empty object`(序同規則 1),**不支援空物件列**(其會使內部 `ltdtkeys2mat` 整側靜默回 `[]` 而算錯;`ltdtkeys2mat` 之回傳約定不改);`[{}]` 對 `[{}]` 因而改為 throw,內部「兩側皆無可比對之鍵」站點已不可由 `ltdtDiff` 抵達.②`matDiff` 於內部先檢各列(`every(matOld|matNew, isarr)`),throw `invalid matOld|matNew: every row must be an array`(不再沿用 `arrDiff` 之參數名);`arrDiff`(矩陣模式)之元素非陣列訊息改為 `invalid arrOld|arrNew: every element must be an array when opt.mode is 'matrix'`.測試: `ltdtDiff.test.mjs`／`matDiff.test.mjs`／`arrDiff.test.mjs`,變異 16 項全殺死.
 - 逐函數(`file:line` 為本輪工作樹;「改前」皆為 HEAD 實測,見報告〈使用者逐列確認表之實測〉):
 
 | 函數:情形 | 改前 | 改後 | 位置 |

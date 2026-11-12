@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import filter from 'lodash-es/filter.js'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
+import isobj from './isobj.mjs'
 import isbol from './isbol.mjs'
 import haskey from './haskey.mjs'
 
@@ -11,12 +12,12 @@ import haskey from './haskey.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtDiffByKey.test.mjs Github}
  * @memberOf wsemi
- * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件
- * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件
- * @param {String} key 輸入比對的主鍵key值字串
+ * @param {Array|Object} ltdtOld 輸入舊的物件陣列或物件(物件視為單筆，空陣列合法)，非陣列亦非物件(undefined、null、字串、數字等)回傳空結果
+ * @param {Array|Object} ltdtNew 輸入新的物件陣列或物件，規則同ltdtOld
+ * @param {String} key 輸入比對的主鍵key值字串，非有效字串回傳空結果
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.withInfor=true] 輸入是否提供infor資訊布林值，不提供可再加速，預設true
- * @returns {Object} 回傳比對結果物件
+ * @returns {Object} 回傳比對結果物件；ltdtOld、ltdtNew、key任一無效時回傳空結果{ del: [], add: [], same: [], diff: [], infor: {} }(opt.withInfor為false時無infor)，不拋錯
  * @example
  *
  * let ltdtOld = [{ id: 'id-1', a: 'a1' }, { id: 'id-2', a: 'a2' }, { id: 'id-3', a: 'a3' }]
@@ -56,16 +57,16 @@ function ltdtDiffByKey(ltdtOld, ltdtNew, key, opt = {}) {
         diff: [],
     }
 
-    //check
-    if (!isestr(key)) {
-        console.log('invalid key')
+    //check, 主參數(ltdtOld、ltdtNew須為陣列或物件)與次參數(key須為有效字串)無效皆回傳同形之空結果, 不拋錯、不輸出至console(dspec〈輸入參數之檢測機制〉§11 Q1-c, 使用者2026-11-12: 非數值之結構運算之主參數與次參數無效皆回輸出型別之空值)
+    //  原ltdtOld、ltdtNew無效(null、字串、數字等)時被包成單元素陣列再濾除, 等同空陣列而照常比對(如新者全列為add), 現改回空結果; key無效原另以console.log輸出'invalid key', 現移除
+    if (!isestr(key) || !(isarr(ltdtOld) || isobj(ltdtOld)) || !(isarr(ltdtNew) || isobj(ltdtNew))) {
         if (withInfor) {
             r.infor = {}
         }
         return r
     }
 
-    //to array
+    //to array, 物件視為單筆
     if (!isarr(ltdtOld)) { //有可能傳空陣列故使用isarr
         ltdtOld = [ltdtOld]
     }

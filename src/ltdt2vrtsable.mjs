@@ -22,6 +22,7 @@ import getltdtkeys from './getltdtkeys.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Array|Object} 回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空陣列[]，而空陣列[]亦為合法輸入之結果(如ltdt2vrtsable([]))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)；注意：儲存格之值為null等非預期型別時現行實作直接拋出TypeError，預設模式與狀態模式皆同(未經狀態模式，既有行為)
  * @example
  *
  * console.log(ltdt2vrtsable([{"a":{"value":"123","style":{}},"b":{"value":34.56,"style":{}}},{"a":{"value":"123","style":{}},"b":{"value":"xyz","style":{}}}], ['a']))

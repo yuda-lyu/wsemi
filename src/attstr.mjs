@@ -20,6 +20,8 @@ import haskey from './haskey.mjs'
 /**
  * 屬性字串處理
  *
+ * 各方法之輸入無效時回傳輸出型別之空值，不拋錯、不回原值(使用者2026-11-12，dspec〈輸入參數之檢測機制〉§11 Q1-c)：parse之composItems非有效字串回傳[]；join之arrItems非有效陣列回傳''；remove之composItems非有效字串、或removeItemOrId非字串回傳''，removeItemOrId為空字串代表無可移除而回傳原字串；add之composItems1或composItems2非字串回傳''，空字串為合法輸入(代表無屬性)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/attstr.test.mjs Github}
  * @memberOf wsemi
  * @returns {Object} 回傳attstr物件，提供parse、join、remove、add共4種處理函數
@@ -647,6 +649,11 @@ function attstr(opt = {}) {
 
     function atAdd(composItems1, composItems2, opt = {}) {
 
+        //check, composItems1與composItems2須為字串(空字串合法, 代表無屬性); 非字串為無效, 回傳空字串(原於預設模式呼叫indexOf而拋TypeError, '1p'/'2p'模式則視為無屬性而回另一方; dspec §11 Q1-c, 使用者2026-11-12)
+        if (!isstr(composItems1) || !isstr(composItems2)) {
+            return ''
+        }
+
         //mode
         let mode = get(opt, 'mode')
         if (mode !== '1p' && mode !== '2p') {
@@ -727,7 +734,10 @@ function attstr(opt = {}) {
             return ''
         }
 
-        //check removeItemOrId
+        //check removeItemOrId, 非字串為無效, 回傳空字串, 不回原字串(dspec §11 Q1-c, 使用者2026-11-12); 空字串代表無可移除, 回傳原字串(同修前)
+        if (!isstr(removeItemOrId)) {
+            return ''
+        }
         if (!isestr(removeItemOrId)) {
             return composItems
         }

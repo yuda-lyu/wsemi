@@ -2,6 +2,13 @@
 
 本檔自 `sgud/state/state.md` 依功能類型拆出(2026-11-02 ws265 依全域設定§14整理;原約 53.7KB):各節之節號與標題不變、內容逐字搬移;索引見 `sgud/state/state.md`.
 
+## 兩處測試偶發紅之修正:fsDownloadFileVerify 停滯／fallback 案、clearXSS 100 萬節點環案(排程第 393、349 項;主控任務 20261112065727 ws290,2026-11-12;只改測試,`src` 未改;未提交未發布)〔本節於 2026-11-12 新增,置於該檔最前〕
+
+- 現況(已實作): ①`test/fsDownloadFileVerify.test.mjs` 之「R11/R12 should reject E_TIMEOUT when no data arrives for opt.stallMs during the body」與「onTrace should report the 5 seconds fallback abort …」兩案,假時鐘只推進到 `timeout`／`abort` 事件為止,再以 `settle` 事件為同步點,不再以「推進上限內須落定」判定(原 `advanceUntil(…settle, 2000／8000)` 與真實 I/O 賽跑,斷言鍵 `advanced` 改為 `stalled`).②`test/clearXSS.test.mjs`「should clean a cycle of 1000000 nodes and close it」改斷言子行程 `cpuMs < 12000`(`test/tools/clearXssWalkRunner.mjs` 之 cycle 案新增 `cpuMs`,量 `process.cpuUsage()` 之 user＋system),不再斷言牆鐘 `ms < 5000`.
+- 規則: `sgud/rule/rulebook_trace.md` 末段〈2026-11-12 ws290〉(R-TRACE-01 補規則 5,假時鐘推進終點、注入真實 I/O 延遲法、效能上限量 CPU 時間).
+- 驗證(2026-11-12): 注入 `fs` 完成延遲(確定性,非缺陷之時序變異): 修前 D≤3ms 綠、D≥5ms 紅 2 案,修前 D=20ms 全檔 2 案紅;修後 D=80ms 全檔 130 案 0 紅;變異 7 項新舊測試皆殺死;`clearXSS` 計時區間內阻塞 6s 不耗 CPU: 舊斷言紅、新斷言綠,額外耗 CPU 15s: 兩者皆紅;負載試驗(6 CPU 壓力行程／加事件迴圈阻塞 400ms:1000ms／重度阻塞 1500ms:3000ms)修前修後皆 0 失敗(無從分辨,見規則);全套 29965 passing、8 pending、0 failing.
+- 已知缺口與待辦: ①其餘 `advanceUntil` 站點於 D=80ms 全檔 0 紅(裕度夠),未改;②`clearXSS.test.mjs` 之深巢狀 5 案(`ms < 5000`,實測牆鐘最大 508ms)與 DAG 5 案(`ms < 2000`,實測最大 3ms)裕度 ≥ 9.8 倍,仍為牆鐘上限,未改(列觀察);③`removeTemp` 遇 `EBUSY／EPERM／EACCES` 時以假計時器 `sleep` 重試,假時鐘停推後會懸置至 guard(20s)才失敗,與既有 `slowout2` 案同(Windows 防毒短暫占用暫存檔才可能,機率低,未處理).
+
 ## fsWatchFolder 被監看資料夾本身消失之 unlinkDir 一次消失只派發一次(R-WATCH-ROOT-ONCE-01;排程第 238 項;主控任務 20261102014123 ws265,2026-11-02;package.json version 1.9.40 之工作樹,未提交未發布)
 
 - 現況(已實作): `src/fsWatchFolder.mjs` 以旗標 `rootGone` 使輪詢合成(`src: 'timer'`)與 chokidar 回報(`src: 'watcher'`)之被監看資料夾本身之 `unlinkDir` 一次消失只派發一次,建立新 watcher 時歸零(再現後再消失仍通知);子資料夾之 `unlinkDir` 不計;`onTrace` 事件種類與順序、輪詢週期、`unWatch` 延後 1ms 之設計皆不改.成因: 輪詢回呼內耗時超過 `timeInterval` 時,下一次輪詢之到期時刻(以回呼開始前計)早於延後 1ms 之 `unWatch`(以建立當下計),先於它執行而重複派發(Node 24 實測 5/5;主控記錄之失敗指紋 `['watcher','timer','timer']`).`fsWatchFile` 無輪詢合成事件,無此缺陷.

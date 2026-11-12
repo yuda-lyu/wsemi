@@ -18,6 +18,7 @@ import keysmat2ltdt from './keysmat2ltdt.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Array|Object} 回傳物件陣列，mat為空陣列(合法資料)、mat無效、列數少於2或任一列非有效陣列時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，mat為空陣列時為{ state: 'success', msg: [] }，mat無效、列數少於2或任一列非有效陣列時為{ state: 'error', msg }
+ * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空陣列[]，而空陣列[]亦為合法輸入之結果(如mat2ltdt([]))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
  * console.log(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]))

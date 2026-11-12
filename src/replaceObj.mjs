@@ -65,7 +65,7 @@ function replaceObj(c, o) {
 
     //自動轉換, 物件以自有可列舉字串鍵迭代, length與其他鍵同為一般鍵(R-OBJ-ITER-01: lodash each對具非負整數length之物件改走索引, length極大時為CPU無限迴圈)
     //每個值只讀取一次, 轉換後之值即取代時使用之值; 空字串之key略過
-    //取代值為普通文字: replaceAll之取代字串會解讀$&、$'、$`、$$, 故先將$逸出為$$
+    //取代值為普通文字: replace本身即字面取代(不解讀$&、$'、$`、$$, R-REPLACE-LITERAL-01), 此處不需逸出$(逸出會使$變成$$)
     let kvs = []
     for (let k of Object.keys(o)) {
         if (k === '') {
@@ -84,7 +84,7 @@ function replaceObj(c, o) {
         if (!isstr(v)) { //toJSON回undefined等
             v = ''
         }
-        kvs.push([k, v.replaceAll('$', '$$$$')])
+        kvs.push([k, v])
     }
 
     //replace

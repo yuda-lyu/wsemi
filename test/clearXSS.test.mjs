@@ -1601,7 +1601,10 @@ describe(`clearXSS`, function() {
                 assert.strict.strictEqual(rc.status, 0, `status=${rc.status} signal=${rc.signal}`)
                 assert.ok(rc.r !== null, 'no result line')
                 assert.ok(rc.r.cleaned && rc.r.closed && rc.r.inputIntact)
-                assert.ok(rc.r.ms < 5000, `ms=${rc.r.ms}`)
+                //處理量有界(效能上限類): 改量子行程於clearXSS呼叫期間之CPU時間(process.cpuUsage之user+system), 不斷言牆鐘
+                //(修前斷言牆鐘ms<5000: 他任務並行之高負載下行程被擱置, 牆鐘膨脹至7657ms而失敗; CPU時間不計入被擱置之時間, 工作量失控如指數或平方級重走時仍成比例增長)
+                //限值依實測訂定(本機8核): 無負載CPU 2.9~3.5s(牆鐘1.6~1.9s; CPU大於牆鐘因含GC等執行緒), 6個低優先權CPU壓力行程下CPU 3.8~4.8s(牆鐘2.4~3.3s); 限值12s為負載下最大值之2.5倍
+                assert.ok(rc.r.cpuMs < 12000, `cpuMs=${rc.r.cpuMs} (wall ms=${rc.r.ms})`)
             })
 
         })

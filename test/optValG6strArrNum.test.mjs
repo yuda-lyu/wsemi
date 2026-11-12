@@ -13,6 +13,7 @@ import rang from '../src/rang.mjs'
 import arrNorm from '../src/arrNorm.mjs'
 import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
 import { defineOptParam, INVALID_EINT_EXTRA } from './tools/optValKit.mjs'
+import { defineRangeParam } from './tools/rangeParamKit.mjs'
 
 
 //第221項第二批第2輪第2批(ws272b): 陣列、數值、雜湊、隨機、錯誤訊息類函數之數值參數改經isenum／iseint判定
@@ -163,38 +164,44 @@ describe('optVal randomIntRange', function() {
     let validStart = [...EINT_STR, ['0', 0, 0], ['-5', -5, -5], [`'-5'`, '-5', -5], ['MAX_SAFE', Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]]
     let validEnd = [...EINT_STR, ['0', 0, 0], ['-5', -5, -5], [`'-5'`, '-5', -5], ['-MAX_SAFE', -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]]
 
-    defineOptParam({
+    //vstart、vend(ws426改): 範圍參數, 未給(undefined、null)用預設0與100; 有給而非有效整數即throw 'invalid vstart: must be an integer'(使用者2026-11-12, dspec §11 Q1-b; 原為opt類而改用預設)
+    defineRangeParam({
         fn: 'randomIntRange',
         name: 'vstart',
         def: 0,
+        desc: 'an integer',
         probe: (v) => {
             let r = bounds(() => fn(v, -Number.MAX_SAFE_INTEGER))
             return Array.isArray(r) ? r[0] : r
         },
         valid: validStart,
         extraInvalid: EXTRA_SAFE,
-        noDebug: true,
     })
 
-    defineOptParam({
+    defineRangeParam({
         fn: 'randomIntRange',
         name: 'vend',
         def: 100,
+        desc: 'an integer',
         probe: (v) => {
             let r = bounds(() => fn(Number.MAX_SAFE_INTEGER, v))
             return Array.isArray(r) ? r[1] : r
         },
         valid: validEnd,
         extraInvalid: EXTRA_SAFE,
-        noDebug: true,
     })
 
-    it(`should return an integer within [0, 100] by default and for an unexpected vend such as Infinity (formerly a non-integer like 3.6e307)`, function() {
+    it(`should return an integer within [0, 100] by default (not given) and throw for an unexpected bound such as Infinity (formerly the default was used; before that a non-integer like 3.6e307)`, function() {
         for (let i = 0; i < 200; i++) {
-            for (let r of [fn(), fn(0, Infinity), fn(0, '0x10'), fn(0, 1.5), fn(-Infinity, 100)]) {
+            for (let r of [fn(), fn(null, null), fn(undefined, 100)]) {
                 assert.ok(Number.isInteger(r) && r >= 0 && r <= 100, String(r))
             }
         }
+        assert.throws(() => fn(0, Infinity), { message: 'invalid vend: must be an integer' })
+        assert.throws(() => fn(0, '0x10'), { message: 'invalid vend: must be an integer' })
+        assert.throws(() => fn(0, 1.5), { message: 'invalid vend: must be an integer' })
+        assert.throws(() => fn(-Infinity, 100), { message: 'invalid vstart: must be an integer' })
+        assert.throws(() => fn('a', 2), { message: 'invalid vstart: must be an integer' }) //使用者裁示之例(原回0)
     })
 
     it(`should return an integer within [vstart, vend] for valid numeric strings (value used is the converted one)`, function() {
@@ -222,24 +229,26 @@ for (let [name, fn] of [['randomIntsNdpRange', randomIntsNdpRange], ['pseudoRand
         let validStart = [...EINT_STR, ['0', 0, 0], ['-5', -5, -5], [`'-5'`, '-5', -5], ['MAX_SAFE', Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]]
         let validEnd = [...EINT_STR, ['0', 0, 0], ['-5', -5, -5], [`'-5'`, '-5', -5], ['-MAX_SAFE', -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]]
 
-        defineOptParam({
+        //vstart、vend(ws426改): 未給用預設, 有給而無效throw(Q1-b, 2026-11-12)
+        defineRangeParam({
             fn: name,
             name: 'vstart',
             def: 0,
+            desc: 'an integer',
             probe: (v) => {
                 let r = bounds(() => fn(v, -Number.MAX_SAFE_INTEGER))
                 return Array.isArray(r) ? r[0] : r
             },
             valid: validStart,
             extraInvalid: EXTRA_SAFE,
-            noDebug: true,
         })
 
         //超大vend若被當作有效值會建立巨大範圍而卡死, 程序內矩陣不含, 改由子行程案例驗證
-        defineOptParam({
+        defineRangeParam({
             fn: name,
             name: 'vend',
             def: 100,
+            desc: 'an integer',
             probe: (v) => {
                 let r = bounds(() => fn(Number.MAX_SAFE_INTEGER, v))
                 return Array.isArray(r) ? r[1] : r
@@ -247,7 +256,6 @@ for (let [name, fn] of [['randomIntsNdpRange', randomIntsNdpRange], ['pseudoRand
             valid: validEnd,
             invalid: INVALID.filter(notHuge),
             extraInvalid: EXTRA_SAFE.filter(notHuge),
-            noDebug: true,
         })
 
         //n: 個數1~4294967295, 實際採用之n以回傳陣列長度觀察(長度為min(n, vend - vstart + 1)), 取vend 100故最長101
@@ -352,15 +360,16 @@ describe('optVal arrInsert', function() {
 
     let ARR = [1, 2.5, '123']
 
-    //ind為必須參數, 無效回傳原陣列（失敗通道維持）
+    //ind為必須參數, 無效(含超過長度)回傳空陣列, 不回原陣列(ws426改; 使用者2026-11-12, dspec §11 Q1-c: 非數值之結構運算之次參數無效回輸出型別之空值; 原為回傳原陣列之同一參考)
     let INVALID_IND = [...INVALID, ...EXTRA_SAFE, ['-1', -1], [`'-1'`, '-1'], ['1.5', 1.5], ['4294967295 (over index max)', 4294967295], ['4 (valid index but larger than the length)', 4], [`'4'`, '4']]
     for (let [label, v] of INVALID_IND) {
-        it(`should return the original array (same reference) when ind is ${label}`, function() {
+        it(`should return [] (not the original array) when ind is ${label}`, function() {
             let r
             assert.doesNotThrow(() => {
                 r = arrInsert(ARR, v, 'abc')
             })
-            assert.strict.deepStrictEqual(r === ARR, true)
+            assert.strict.deepStrictEqual(r, [])
+            assert.strict.deepStrictEqual(r === ARR, false)
             assert.strict.deepStrictEqual(ARR, [1, 2.5, '123'])
         })
     }
@@ -389,15 +398,16 @@ describe('optVal arrPullAt', function() {
 
     let ARR = [1, 2, 3, 4, 5, 'abc']
 
-    //單值vpull為必須參數, 無效回傳原陣列（同一參考, 失敗通道維持）; 陣列型之輸入另見下方「陣列分支」
+    //單值vpull為必須參數, 無效回傳空陣列, 不回原陣列(ws426改; 使用者2026-11-12, dspec §11 Q1-c; 原為回傳原陣列之同一參考); 陣列型之輸入另見下方「陣列分支」
     let INVALID_SINGLE = [...INVALID.filter(([, v]) => !Array.isArray(v)), ...EXTRA_SAFE, ['-1', -1], [`'-1'`, '-1'], ['1.5', 1.5], ['4294967295 (over index max)', 4294967295]]
     for (let [label, v] of INVALID_SINGLE) {
-        it(`should return the original array (same reference) when vpull is the single value ${label}`, function() {
+        it(`should return [] (not the original array) when vpull is the single value ${label}`, function() {
             let r
             assert.doesNotThrow(() => {
                 r = arrPullAt(ARR, v)
             })
-            assert.strict.deepStrictEqual(r === ARR, true)
+            assert.strict.deepStrictEqual(r, [])
+            assert.strict.deepStrictEqual(r === ARR, false)
             assert.strict.deepStrictEqual(ARR, [1, 2, 3, 4, 5, 'abc'])
         })
     }

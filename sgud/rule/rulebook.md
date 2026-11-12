@@ -28,6 +28,7 @@
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
 | 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
+| 字串取代之取代值須字面化: `replace`／`replaceAll` 站點全集(`$&`、`$'`、`` $` ``、`$$` 不得被展開;2026-11-12 ws427 wsrep 新增) | `sgud/rule/rulebook_replace.md` | R-REPLACE-LITERAL-01 | 約 8 |
 | fs 路徑參數無效(非字串、空字串、含 NUL)之處置: 依失敗通道回報、不帶值、與不存在分開(第 216 項①) | `sgud/rule/rulebook_fspath.md` | R-FS-INVALID-PATH-01 | 約 8 |
 | `fsWatchFolder` 被監看資料夾本身消失之 `unlinkDir` 一次消失只派發一次(第 238 項) | `sgud/rule/rulebook_watch.md` | R-WATCH-ROOT-ONCE-01 | 約 4 |
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
@@ -41,6 +42,7 @@
 | 同上——處置結果:第 221 項第 2 輪 ws272a(計時與流程類 19 個函數)、ws272b(字串、陣列、數值、編碼類 19 個函數＋3 項缺陷) | `sgud/rule/rulebook_judge_sites_r2.md` | ws272a、ws272b 處置結果 | 22.2 |
 | 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);第 221 項 §11 第 6 項 ws286a(DOM 4 個函數與 3 個呼叫端)、ws286b(`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize`);此檔已逾 30KB,其後新增節另開 `rulebook_judge_sites_r2d.md` | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271、ws286a、ws286b 處置結果 | 33.8 |
 | 同上——處置結果:第 221 項 §11 第 6 項 ws286c(差異比對子類 `strDiff`、`strDiffToHtml`、`arrDiff`、`matDiff`、`ltdtDiff` 與內部呼叫鏈逐站確認)、ws286d(空資料不是失敗:`arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數狀態模式、`getCsvStrFromData([])`;更正第 15 項「空陣列亦 throw」)、ws286e(陣列與結構子類 `arrFilterByENum`、`arrReverse`、`arrSep`、`matConcat`、`matat`、`ltdtpull` 必須參數無效即 throw、空資料照常);此檔 ws286e 後已逾 30KB,其後新增之處置結果節另開 `rulebook_judge_sites_r2e.md` | `sgud/rule/rulebook_judge_sites_r2d.md` | ws286c、ws286d、ws286e 處置結果 | 31.9 |
+| 同上——處置結果:第 426 項 ws426(R-SYNC-INVALID-01,同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值不回原值、C6 只補「失敗之辨識」文件;2026-11-12 新開) | `sgud/rule/rulebook_judge_sites_r2e.md` | ws426 處置結果 | 約 7 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
 | 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB;ws286b 起第 57 項後另開第 5 檔) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
@@ -87,6 +89,7 @@
 - `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 PowerShell 呼叫 OS API(GetExtendedTcpTable)確認而 Get-NetTCPConnection 為退回、失敗與無人嚴格分開
 - `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變〔**第 221 項第二批第一級發布 A 起整數路徑改為保留全部位數並正規化,見 R-OPT-VAL-01 規則 11**〕;`judge`、`estimateTicks` 隨之)
 - `R-PM-SETTLE-01` → `rulebook_timer.md`: R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
+- `R-REPLACE-LITERAL-01` → `rulebook_replace.md`: R-REPLACE-LITERAL-01 字串取代之取代值須字面化: `replace`／`replaceAll` 之取代值(第 2 引數)為函式、不含 `$` 之字面值,或刻意之 `$` 樣式(正規式捕獲群、`$&`);`replace(c, t, r)` 之 `r` 為字面文字,`replaceObj` 不再預先逸出 `$`
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放
 - `R-TRACE-01` → `rulebook_trace.md`: R-TRACE-01 計時器相關函數之觀察回調(opt.onTrace)與其測試: 以事件同步、斷言語意,不以延時偵測
 - `R-UTF8-01` → `rulebook_data.md`: R-UTF8-01 字串與 Uint8Array 之 UTF-8 互轉:原生、失敗不失真

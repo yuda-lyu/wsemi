@@ -106,15 +106,15 @@ describe(`arrPull`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], null`, function() {
+    it(`should return [] when input ['abc'], null (invalid vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPull(['abc'], null)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ['abc'], undefined`, function() {
+    it(`should return [] when input ['abc'], undefined (invalid vpull, not the original array; dspec §11 Q1-c)`, function() {
         let r = arrPull(['abc'], undefined)
-        let rr = ['abc']
+        let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 

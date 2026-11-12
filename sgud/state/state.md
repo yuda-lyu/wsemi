@@ -48,6 +48,7 @@
 
 查: 計時器觀察回調 `opt.onTrace`、診斷輸出與遮罩共用函數、`debounce`／`execProcess` 等小輪項目.所含節:
 
+- 兩處測試偶發紅之修正:fsDownloadFileVerify 停滯／fallback 案(假時鐘推進終點)、clearXSS 100 萬節點環案(牆鐘上限改量 CPU 時間)(排程第 393、349 項;ws290,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
 - 診斷通報輪(主控任務 20261031121854,2026-10-31;package.json version 1.9.33 之工作樹,未提交未發布)
 - 小輪 run01 之 9 項(主控任務 20261030143215,2026-10-30;package.json version 1.9.32 之工作樹,未提交未發布)
 - 診斷輸出與遮罩之共用函數(R-DIAG-01)
@@ -64,6 +65,10 @@
 
 查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數,及 DOM 函數必須參數遇非預期之失敗通道.所含節:
 
+- 字串取代之取代值字面化:`replace` 之 `r` 為字面文字、`replaceObj` 不再預先逸出 `$`、`src/` 全庫 67 站點盤點(R-REPLACE-LITERAL-01;排程第 427 項之 wsemi 部分;ws427 wsrep,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
+- 同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值、C6 只補文件(排程第 426 項;使用者 2026-11-12 裁示;ws426,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
+
+- 差異比對子類修訂:`ltdtDiff` 不支援空物件列、`matDiff`／`arrDiff` 錯誤訊息改 invalid 格式(排程第 290 項;使用者 2026-11-12 裁示;ws290,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
 - 陣列與結構子類 6 個函數 `arrFilterByENum`／`arrReverse`／`arrSep`／`matConcat`／`matat`／`ltdtpull` 必須參數無效即 throw、空資料照常(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286e,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕
 - 空資料不是失敗:向量處理 `arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數(`ltdtkeys2mat`／`ltdtkeysheads2mat`／`ltdt2vrtsable`／`mat2ltdt`／`keysmat2ltdt`)狀態模式、`getCsvStrFromData([])`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286d,2026-11-03;更正第 221 項第二批第 15 項「空陣列亦 throw」)〔本節於 2026-11-03 新增,置於該檔最前〕
 - 非計算類函數必須參數遇非預期:差異比對子類 5 個函數 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286c,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕

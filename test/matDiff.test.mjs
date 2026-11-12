@@ -57,8 +57,9 @@ describe(`matDiff`, function() {
     //ws286c: matOld與matNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依matOld、matNew序檢測; []為合法輸入
     const MSG_OLD = 'invalid matOld: must be an array'
     const MSG_NEW = 'invalid matNew: must be an array'
-    const MSG_MAT_OLD = 'arrOld is not a matrix'
-    const MSG_MAT_NEW = 'arrNew is not a matrix'
+    //ws290: 列非陣列之訊息改用matDiff自身之參數名且合乎輸入參數規格之「invalid <參數名>: …」格式(修前沿用內部arrDiff之'arrOld is not a matrix'/'arrNew is not a matrix')
+    const MSG_MAT_OLD = 'invalid matOld: every row must be an array'
+    const MSG_MAT_NEW = 'invalid matNew: every row must be an array'
 
     for (let [label, v] of NON_ARR) {
         it(`should throw '${MSG_OLD}' when matOld is not an array: ${label} (matNew valid, [] or invalid too)`, function() {
@@ -165,7 +166,7 @@ describe(`matDiff`, function() {
         )
     })
 
-    //各列須為陣列: 仍throw, 訊息不變('arrOld is not a matrix'/'arrNew is not a matrix'), 且不輸出輸入資料至console(0次呼叫)
+    //各列須為陣列: 仍throw(訊息依ws290改為invalid matOld/matNew格式), 且不輸出輸入資料至console(0次呼叫)
     it(`should throw '${MSG_MAT_OLD}' with 0 console calls when matOld is not a matrix: matDiff([1], [2])`, function() {
         throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD)
         throwsMsg(() => matDiff([1], [[2]]), MSG_MAT_OLD)
@@ -180,7 +181,7 @@ describe(`matDiff`, function() {
     })
 
     for (let [label, v] of NON_ARR) {
-        it(`should throw 'is not a matrix' with 0 console calls when a row is not an array: ${label}`, function() {
+        it(`should throw 'every row must be an array' with 0 console calls when a row is not an array: ${label}`, function() {
             throwsMsg(() => matDiff([v], [[1]]), MSG_MAT_OLD)
             throwsMsg(() => matDiff([[1], v], [[1]]), MSG_MAT_OLD)
             throwsMsg(() => matDiff([[1]], [v]), MSG_MAT_NEW)
@@ -188,7 +189,32 @@ describe(`matDiff`, function() {
         })
     }
 
-    it(`should call console.log 0 times and not carry the input data when throwing 'is not a matrix'`, function() {
+    //ws290: 訊息不得出現內部函數arrDiff之參數名(arrOld/arrNew)與舊字樣; 檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列
+    it(`should not leak the internal names of arrDiff in the message and should check in the order of matOld (array, rows) and matNew (array, rows)`, function() {
+        for (let f of [
+            () => matDiff([1], [[1]]),
+            () => matDiff([[1]], [1]),
+            () => matDiff([1], [2]),
+        ]) {
+            let err = null
+            try {
+                f()
+            }
+            catch (e) {
+                err = e
+            }
+            assert.ok(err instanceof Error)
+            assert.ok(/^invalid mat(Old|New): /.test(err.message), err.message)
+            assert.ok(!/arrOld|arrNew|is not a matrix/.test(err.message), err.message)
+        }
+        throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD) //兩側各列皆無效: matOld先
+        throwsMsg(() => matDiff([[1], 2], [3]), MSG_MAT_OLD) //matOld中段列無效亦先於matNew
+        throwsMsg(() => matDiff([,], [[1]]), MSG_MAT_OLD) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => matDiff([1], 'x'), MSG_NEW) //matNew非陣列先於matOld各列(同修前順序)
+        throwsMsg(() => matDiff('x', [1]), MSG_OLD)
+    })
+
+    it(`should call console.log 0 times and not carry the input data when throwing 'every row must be an array'`, function() {
         let calls = []
         let orig = console.log
         console.log = (...args) => {

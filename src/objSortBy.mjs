@@ -12,9 +12,9 @@ import arrSort from './arrSort.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/objSortBy.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} obj 輸入物件資料
- * @param {Function} fun 輸入回調的排序函數，將傳入(v,k)代表各物件的值與鍵，回傳排序用的值，可為數字或字串
- * @returns {Object} 回傳排序後物件
+ * @param {Object} obj 輸入物件資料，非有效物件(含空物件)回傳空物件{}
+ * @param {Function} fun 輸入回調的排序函數，將傳入(v,k)代表各物件的值與鍵，回傳排序用的值，可為數字或字串；必須參數，非函數回傳空物件{}(不拋錯)
+ * @returns {Object} 回傳排序後物件(新物件)
  * @example
  *
  * let obj1 = {
@@ -47,7 +47,8 @@ function objSortBy(obj, fun) {
         return {}
     }
     if (!isfun(fun)) {
-        throw new Error('fun is not a function')
+        //fun為必須參數, 非函數回傳空物件, 與obj無效之處置一致(原throw Error('fun is not a function'); dspec〈輸入參數之檢測機制〉§11 Q1-c, 使用者2026-11-12: 非數值之結構運算之次參數無效回輸出型別之空值)
+        return {}
     }
 
     //rs, 物件以自有可列舉字串鍵迭代, length與其他鍵同為一般鍵(R-OBJ-ITER-01: lodash map對具非負整數length之物件改走索引, 遺失真實鍵且length極大時耗盡記憶體)

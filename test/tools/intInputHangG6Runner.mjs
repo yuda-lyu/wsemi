@@ -19,6 +19,17 @@ import { runChildCase } from './runChildCase.mjs'
 
 let fpSelf = fileURLToPath(import.meta.url)
 
+//errMsg, 執行f並回傳其錯誤訊息; 未拋錯回傳'NOTHROW'
+function errMsg(f) {
+    try {
+        f()
+        return 'NOTHROW'
+    }
+    catch (err) {
+        return err.message
+    }
+}
+
 //個數類(iseint, use: 'count')之超大或非有效值: 修前ispint通過後cint, 迴圈近乎無限
 const HUGE_COUNT = [
     Infinity,
@@ -58,14 +69,14 @@ let cases = {
         return { rs: HUGE_COUNT.map((v) => rang(0, 10, v)) }
     },
 
-    //randomIntsNdpRange: vend為Infinity或超大值, 修前建立巨大範圍, 修後用預設100（n預設1, 故回傳1個位於[0,100]之整數）
+    //randomIntsNdpRange: vend為Infinity或超大值, 最初建立巨大範圍; 第2輪(ws272b)改用預設100; ws426(使用者2026-11-12, dspec §11 Q1-b)改為立即throw固定訊息, 故收集各值之錯誤訊息
     'randomIntsNdpRange-vend-huge': () => {
-        return { rs: HUGE_VEND.map((v) => randomIntsNdpRange(0, v)) }
+        return { msgs: HUGE_VEND.map((v) => errMsg(() => randomIntsNdpRange(0, v))) }
     },
 
-    //pseudoRandomIntsNdpRange: vend為Infinity或超大值, 修前迴圈近乎無限, 修後用預設100（n預設1, 故回傳1個位於[0,100]之索引）
+    //pseudoRandomIntsNdpRange: vend為Infinity或超大值, 最初迴圈近乎無限; 第2輪改用預設100; ws426改為立即throw固定訊息
     'pseudoRandomIntsNdpRange-vend-huge': () => {
-        return { rs: HUGE_VEND.map((v) => pseudoRandomIntsNdpRange(0, v)) }
+        return { msgs: HUGE_VEND.map((v) => errMsg(() => pseudoRandomIntsNdpRange(0, v))) }
     },
 
     //repObj: n為4294967296（個數上限+1）或其字串, 修前ispint通過後lodash times配置巨大陣列而耗盡記憶體崩潰, 修後throw固定訊息
