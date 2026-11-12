@@ -42,14 +42,16 @@
 | 同上——處置結果:第 221 項第 2 輪 ws272a(計時與流程類 19 個函數)、ws272b(字串、陣列、數值、編碼類 19 個函數＋3 項缺陷) | `sgud/rule/rulebook_judge_sites_r2.md` | ws272a、ws272b 處置結果 | 22.2 |
 | 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);第 221 項 §11 第 6 項 ws286a(DOM 4 個函數與 3 個呼叫端)、ws286b(`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize`);此檔已逾 30KB,其後新增節另開 `rulebook_judge_sites_r2d.md` | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271、ws286a、ws286b 處置結果 | 33.8 |
 | 同上——處置結果:第 221 項 §11 第 6 項 ws286c(差異比對子類 `strDiff`、`strDiffToHtml`、`arrDiff`、`matDiff`、`ltdtDiff` 與內部呼叫鏈逐站確認)、ws286d(空資料不是失敗:`arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數狀態模式、`getCsvStrFromData([])`;更正第 15 項「空陣列亦 throw」)、ws286e(陣列與結構子類 `arrFilterByENum`、`arrReverse`、`arrSep`、`matConcat`、`matat`、`ltdtpull` 必須參數無效即 throw、空資料照常);此檔 ws286e 後已逾 30KB,其後新增之處置結果節另開 `rulebook_judge_sites_r2e.md` | `sgud/rule/rulebook_judge_sites_r2d.md` | ws286c、ws286d、ws286e 處置結果 | 31.9 |
-| 同上——處置結果:第 426 項 ws426(R-SYNC-INVALID-01,同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值不回原值、C6 只補「失敗之辨識」文件;2026-11-12 新開) | `sgud/rule/rulebook_judge_sites_r2e.md` | ws426 處置結果 | 約 7 |
+| 同上——處置結果:第 426 項 ws426(R-SYNC-INVALID-01,同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值不回原值、C6 只補「失敗之辨識」文件;2026-11-12 新開);第 430 項 ws430(opt 數值改 `iseint` 14 站:`execCli` 4、`execCliJsonRpc` 1、`execCliSession` 4、`fsTreeFolderCore` 1、`isUserPw` 3、`dig` 1,逐站舊 → 新,R-OPT-VAL-01) | `sgud/rule/rulebook_judge_sites_r2e.md` | ws426、ws430 處置結果 | 約 13 |
+| 開分頁類函數(`browserView` 系、`openLink`)與彈窗訊息 `domAlert`: 無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲 60 秒釋放、協定與類型不設白名單而以文件載明責任;`domAlert` 之 D1～D7(2026-11-12 ws430 新增) | `sgud/rule/rulebook_browser.md` | R-BROWSER-OPEN-01、R-DOMALERT-01 | 約 8 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
 | 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB;ws286b 起第 57 項後另開第 5 檔) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
 | 破壞性變更紀錄(第 39～44 項) | `sgud/rule/rulebook_breaking_39to44.md` | 破壞性變更紀錄 | 12.2 |
 | 破壞性變更紀錄(第 45～51 項) | `sgud/rule/rulebook_breaking_45to51.md` | 破壞性變更紀錄 | 23.4 |
 | 破壞性變更紀錄(第 52～56 項;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
-| 破壞性變更紀錄(第 57 項起;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e;新增之項附於此檔) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 17.5 |
+| 破壞性變更紀錄(第 57～64 項;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e、第 62 項為 ws290、第 63 項為 ws426、第 64 項為 ws427;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 約 26 |
+| 破壞性變更紀錄(第 65 項起;第 65 項為 ws430;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 7 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -64,6 +66,8 @@
 
 - `破壞性變更紀錄` → `rulebook_breaking.md`(索引)、`rulebook_breaking_20261021.md`(第 1～38 項)、`rulebook_breaking_39to44.md`(第 39～44 項)、`rulebook_breaking_45to51.md`(第 45～51 項)、`rulebook_breaking_52on.md`(第 52～56 項)、`rulebook_breaking_57on.md`(第 57 項起): 破壞性變更紀錄(2026-10-16,第 39 項,主控 run01 複審裁示)
 - `R-BIN-ENSURE-01` → `rulebook_bin.md`: R-BIN-ENSURE-01 外部執行檔之取得一律經 `fsEnsureBins`(清單校驗、快取→鏡像→GitHub、離線)
+- `R-BROWSER-OPEN-01` → `rulebook_browser.md`: R-BROWSER-OPEN-01 開分頁類函數(`browserView` 系、`openLink`):無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲釋放、協定與類型不設白名單而以文件載明責任
+- `R-DOMALERT-01` → `rulebook_browser.md`: R-DOMALERT-01 `domAlert` 之輸入、關閉與事件綁定(D1～D7)
 - `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
 - `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)

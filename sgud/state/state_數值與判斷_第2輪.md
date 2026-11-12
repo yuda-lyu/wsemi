@@ -2,6 +2,14 @@
 
 本檔自 `sgud/state/state_數值與判斷.md` 抽出(2026-11-02 ws272c 依全域設定§14整理;原約 31.3KB):第二批第 2 輪 ws272c、ws272b、ws272a 三節逐字搬移、節號與標題不變;索引見 `sgud/state/state.md`.新增之第 2 輪以後現況附於本檔最前(逾 30KB 時再抽出新檔).
 
+## 規格第 199 項 Q1-h:`cdbl`／`isint` 家族之文件與測試鎖定、opt 數值改 `iseint` 14 站(排程第 430 項第一批;主控任務 20261112220545 ws430,2026-11-12;package.json version 1.9.58 之工作樹,未提交未發布)
+
+- 背景: 使用者 2026-11-12 定 Q1-h:`is*` 依數學定義判斷(`Infinity` 為 `true`),`ise*` 判斷可用、可計算之值;`cdbl(±Infinity)` 選「甲」維持夾為 `±Number.MAX_VALUE`;「檢查要拿來計算之 opt 一律用 `ise*`」(主控帳本 G17),`Infinity` 依 §11 第 19～21 項改用預設.
+- 現況(已套): `cdbl` 行為不改,JSDoc 寫明 `±Infinity`→`±MAX_VALUE` 與「要排除 Infinity 者先以 `isenum`／`iseint` 判斷」,`test/cdbl.test.mjs` 補 6 案鎖定;`isint`／`ispint`／`isp0int`／`isnint`／`isn0int` 行為不改,JSDoc 各補一句「要判可用、可計算之整數用 `iseint`」,`test/isintFamilyInfinity.test.mjs`(6 案)鎖定 JSDoc 所載.14 站經 `optVal`(`iseint`)判定: `execCli`(`maxRetries` count 預設 0、`retryDelayMs` min1 預設 5000、`timeoutMs` timer 預設 120000 不夾限、`maxBuffer` count min1 預設 10MB)、`execCliJsonRpc`(`timeoutMs`)、`execCliSession`(`timeoutMs` 預設 null、`exitGraceMs` 2000、`killWaitMs` 3000、`stderrKeep` 4000)、`fsTreeFolderCore`(`levelLimit` count min1 預設 1,`null` 仍為無窮)、`isUserPw`(`numLenMin` 8、`numLenMax` 30、`consecutiveCharsMinMatch` 3)、`dig`(`idig` digits 預設 0).有 opt 物件者加 `opt.debug`／`opt.funLog`.`verifyValue`、`estimateTicks` 不改.
+- 帳本: `rulebook_judge_sites_r2e.md`〈第 430 項 ws430 處置結果〉(逐站舊 → 新)、`rulebook_optval.md` R-OPT-VAL-01〈站點全集〉、破壞性變更 `rulebook_breaking_65on.md` 第 65 項.
+- 測試: `test/optValG17eint.test.mjs`(34 案,外審前之 32 案中修前紅 21、相關變異 18/18 被殺;外審 terra 後 `maxBuffer` 改 count、JsonRpc 與 WithHash 轉交 debug、逾時以 `setTimeout` 側錄驗實際值;複核後 `execCliSession`／`execCliJsonRpc` 之 debug 改以 `optVal.defer` 於業務鍵讀完後讀一次、`levelLimit` 之 debug 以 `optDbg` 延後讀);既有 `test/execCliSession.test.mjs`(stderrKeep 包裝物件)、`test/isenumCallersRound.test.mjs`(dig idig)各 1 案依新規格改寫.
+- 已知缺口與待辦: 下游(只盤點未改)使用者給大於 2147483647 之逾時者由「夾至上限」變「預設 120000」(w-ldap `opt.timeout`、w-dispatch-ai `runExecCli` 之 `timeoutMs`);`dig` 之變數第 2 參數(元件 prop 等)原為 `''` 或 RangeError 之值改為 0 位小數;下游 `ispint`／`isp0int`／`isint` 守門 opt 之站依帳本 G17「各套件下次任務時順改」.
+
 ## 第二批第 3 輪 ws271「interp1、arrGroupByMaxmin、arrLookupByMaxmin、strTruncate＋domFadeIn 對齊」(排程第 221 項第二批第 271 項之第 3 輪〔第三級,下游已先行改〕;主控任務 20261102171617 ws271,2026-11-02;package.json version 1.9.44 之工作樹,未提交未發布;待主控複審後發布並再驗下游行為不變)〔本節於 2026-11-02 新增,置於該檔最前〕
 
 - 背景: 使用者 2026-11-02 裁定(dspec〈輸入參數之檢測機制〉§11): `interp1` 之 `px` 定 A(陣列無效元素原位 `{err}`,輸出長度恆等於 `px` 長度);`arrGroupByMaxmin`／`arrLookupByMaxmin`「Infinity 原則上視為非預期……使用方得自己給適當之超大/小值去當邊界」「上下限無效即拋錯」;`strTruncate` 之 `maxLen` 為必須參數(未給或非預期即報錯);第 17 項 `domFadeIn`／`domFadeOut` 之 `opt.duration` 無效或負數用 500.下游先行完成: w-data-pipeline 1.0.25、w-gis 1.1.14、w-knowledge-summarize(發布中)、w-dispatch-ai;w-geo、w-statistic、w-knowledge-extract 傳入值皆為有效值,不用改.

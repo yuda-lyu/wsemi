@@ -1,6 +1,10 @@
 import round from 'lodash-es/round.js'
 import isenum from './isenum.mjs'
-import isp0int from './isp0int.mjs'
+import optVal from './_optVal.mjs'
+
+
+//idig: opt類參數(JSDoc [idig=0]), 有效整數且為小數位數(iseint, use: 'digits', 0~100), 非預期改用預設0
+let RULE_IDIG = { fn: 'dig', name: 'idig', kind: 'eint', chk: { use: 'digits' } }
 
 
 /**
@@ -13,7 +17,7 @@ import isp0int from './isp0int.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/dig.test.mjs Github}
  * @memberOf wsemi
  * @param {Number|String} v 輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串
- * @param {Integer} [idig=0] 輸入指定小數位整數，預設為0
+ * @param {Integer} [idig=0] 輸入指定小數位整數，須為有效整數且介於0至100(iseint之use:'digits'，toFixed之範圍，可為字串型數字)，非預期之輸入(含Infinity、負數、小數、超過100、'0x10'、包裝物件)視為未給而改用預設0(舊版回傳空字串或拋RangeError)，預設為0
  * @returns {String} 回傳取指定小數位的字串，v非有效數字時回傳空字串
  * @example
  *
@@ -32,6 +36,9 @@ import isp0int from './isp0int.mjs'
  * console.log(dig('0x10', 2))
  * // => '' (舊版為'16.00')
  *
+ * console.log(dig(1.25, Infinity))
+ * // => '1' (idig非預期改用預設0; 舊版拋RangeError)
+ *
  */
 function dig(v, idig = 0) {
 
@@ -39,9 +46,9 @@ function dig(v, idig = 0) {
     if (!isenum(v)) {
         return ''
     }
-    if (!isp0int(idig)) {
-        return ''
-    }
+
+    //idig, opt類參數(JSDoc [idig=0])以iseint判定(帳本G17、R-OPT-VAL-01, 同digExp): 須為有效整數且為小數位數(0~100, toFixed之範圍), 非預期(含Infinity、負數、小數、超過100、'0x10'、包裝物件)視為未給、改用預設0(原回空字串或toFixed拋RangeError); 無opt物件可帶debug, 故不警告
+    idig = optVal(idig, 0, RULE_IDIG)
 
     v = Number(v) //檢測之值即為使用之值(去頭尾空白後Number)
     let r = round(v, idig).toFixed(idig) //IEEE754, toFixed回傳為string

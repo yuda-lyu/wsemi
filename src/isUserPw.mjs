@@ -2,9 +2,7 @@ import get from 'lodash-es/get.js'
 import size from 'lodash-es/size.js'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
-import isint from './isint.mjs'
-import ispint from './ispint.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
 import isarr from './isarr.mjs'
 import isStrHasCapital from './isStrHasCapital.mjs'
 import isStrHasLowerCase from './isStrHasLowerCase.mjs'
@@ -12,6 +10,12 @@ import isStrHasNumber from './isStrHasNumber.mjs'
 import isStrHasSymbol from './isStrHasSymbol.mjs'
 import isStrHasLetter from './isStrHasLetter.mjs'
 import isStrHasSpace from './isStrHasSpace.mjs'
+
+
+//opt類數值參數之規則(iseint, 帳本G17、R-OPT-VAL-01), 非預期改用預設
+let RULE_NUM_LEN_MIN = { fn: 'isUserPw', name: 'opt.numLenMin', kind: 'eint', chk: { use: 'count' } }
+let RULE_NUM_LEN_MAX = { fn: 'isUserPw', name: 'opt.numLenMax', kind: 'eint', chk: { use: 'count' } }
+let RULE_CONSECUTIVE_MIN_MATCH = { fn: 'isUserPw', name: 'opt.consecutiveCharsMinMatch', kind: 'eint', chk: { use: 'count', min: 1 } }
 
 
 //defaultCommonPasswordBlacklist
@@ -137,8 +141,8 @@ let defaultCommonPasswordBlacklist = [
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.useKeyForError=false] 輸入是否回傳error key而非中文訊息布林值，預設false
  * @param {Boolean} [opt.useOnlyOneError=false] 輸入是否遇到第一個錯誤即throw布林值，預設false
- * @param {Integer} [opt.numLenMin=8] 輸入密碼最小長度非負整數，預設8
- * @param {Integer} [opt.numLenMax=30] 輸入密碼最大長度非負整數，預設30
+ * @param {Integer} [opt.numLenMin=8] 輸入密碼最小長度非負整數，須為有效整數且介於0至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含Infinity、小數、負數、'0x10'、包裝物件)視為未給而改用預設，預設8
+ * @param {Integer} [opt.numLenMax=30] 輸入密碼最大長度非負整數，須為有效整數且介於0至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含Infinity、小數、負數、'0x10'、包裝物件)視為未給而改用預設(Infinity不視為不限長度，欲不限請給足夠大之有限值)，預設30
  * @param {Boolean} [opt.noSpace=true] 輸入是否禁止空白字元布林值，預設true
  * @param {Boolean} [opt.onlyAscii=true] 輸入是否限制密碼僅可使用ASCII可印刷字元(英文大小寫、數字、特殊符號)布林值，設為true時會擋掉中文、emoji、Unicode等非ASCII字元，預設true
  * @param {Boolean} [opt.requireLetter=false] 輸入是否需包含英文字母(不分大小寫)布林值，預設false
@@ -150,7 +154,9 @@ let defaultCommonPasswordBlacklist = [
  * @param {Array} [opt.commonPasswordBlacklist=預設100組常見弱密碼] 輸入常見弱密碼黑名單字串陣列，比對時不分大小寫，傳入空陣列可關閉，預設內建100組常見弱密碼
  * @param {String} [opt.account=''] 輸入使用者帳號字串，用於帳號連續字元比對，預設''
  * @param {Boolean} [opt.noConsecutiveCharsFromAccount=false] 輸入是否禁止密碼包含與帳號相同之連續字元布林值，比對時不分大小寫，預設false
- * @param {Integer} [opt.consecutiveCharsMinMatch=3] 輸入帳號連續字元最小比對長度正整數，預設3
+ * @param {Integer} [opt.consecutiveCharsMinMatch=3] 輸入帳號連續字元最小比對長度正整數，須為有效整數且介於1至4294967295(可為字串型數字)，非預期之輸入(含Infinity、小數、0、負數、'0x10'、包裝物件)視為未給而改用預設，預設3
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.numLenMin、opt.numLenMax、opt.consecutiveCharsMinMatch為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Boolean} 回傳判斷布林值
  * @example
  *
@@ -291,19 +297,9 @@ function isUserPw(pw, opt = {}) {
         throw new Error(err[0])
     }
 
-    //numLenMin
-    let numLenMin = get(opt, 'numLenMin', '')
-    if (!isint(numLenMin) || cint(numLenMin) < 0) {
-        numLenMin = 8
-    }
-    numLenMin = cint(numLenMin)
-
-    //numLenMax
-    let numLenMax = get(opt, 'numLenMax', '')
-    if (!isint(numLenMax) || cint(numLenMax) < 0) {
-        numLenMax = 30
-    }
-    numLenMax = cint(numLenMax)
+    //numLenMin、numLenMax: opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01), 須為有效整數且為個數(0~4294967295), 有效則取Number(v), 非預期(含Infinity、小數、負數、'0x10'、包裝物件)視為未給、改用預設
+    let numLenMin = optVal(get(opt, 'numLenMin', null), 8, RULE_NUM_LEN_MIN, opt)
+    let numLenMax = optVal(get(opt, 'numLenMax', null), 30, RULE_NUM_LEN_MAX, opt)
 
     //check
     if (numLenMin > numLenMax) {
@@ -523,11 +519,8 @@ function isUserPw(pw, opt = {}) {
     if (!isbol(noConsecutiveCharsFromAccount)) {
         noConsecutiveCharsFromAccount = false
     }
-    let consecutiveCharsMinMatch = get(opt, 'consecutiveCharsMinMatch', '')
-    if (!ispint(consecutiveCharsMinMatch)) {
-        consecutiveCharsMinMatch = 3
-    }
-    consecutiveCharsMinMatch = cint(consecutiveCharsMinMatch)
+    //consecutiveCharsMinMatch: opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01), 須為有效整數且為個數並大於等於1, 非預期(含Infinity、小數、0、負數、'0x10'、包裝物件)視為未給、改用預設3
+    let consecutiveCharsMinMatch = optVal(get(opt, 'consecutiveCharsMinMatch', null), 3, RULE_CONSECUTIVE_MIN_MATCH, opt)
 
     if (noConsecutiveCharsFromAccount && isstr(account) && size(account) >= consecutiveCharsMinMatch) {
         let accChars = [...account.toLowerCase()]

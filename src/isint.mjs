@@ -9,6 +9,7 @@ import cdbl from './cdbl.mjs'
  * 判斷是否為整數
  *
  * 本函式屬定義上之「是否為整數」，isint(Infinity)、isint('0x10')、isint(2 ** 60)皆為true，不代表對計算有效；計算類函數判定整數參數請改用iseint(有效整數，可依用途限定範圍，如個數、索引、埠號、計時毫秒)，不要求整數者用isenum。
+ * 依數學定義判斷，Infinity於數學上是數值，也無法說非整數，故isint(Infinity)、isint(-Infinity)為true(使用者2026-11-12定，行為不改)；要判可用、可計算之整數用iseint。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isint.test.mjs Github}
  * @memberOf wsemi

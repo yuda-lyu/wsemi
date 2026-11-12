@@ -1,15 +1,14 @@
-import isNumber from 'lodash-es/isNumber.js'
 import each from 'lodash-es/each.js'
 import get from 'lodash-es/get.js'
 import filter from 'lodash-es/filter.js'
 import sortBy from 'lodash-es/sortBy.js'
-import getGlobal from './getGlobal.mjs'
 import genID from './genID.mjs'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import replace from './replace.mjs'
 import haskey from './haskey.mjs'
+import optVal from './_optVal.mjs'
 import domFadeIn from './domFadeIn.mjs'
 import domFadeOut from './domFadeOut.mjs'
 
@@ -33,15 +32,68 @@ let q = {} //queue
 let timer = null
 
 
-let g = getGlobal() //於瀏覽器端為window, 若直接存window會因編譯至全域導致無法於nodejs運行, 得使用getGlobal取得window
-g.ttWAlertCancel = function(id) {
-    removeItemByID(id)
+//opt類數值參數之規則(isenum, R-OPT-VAL-01), 非預期(含NaN、Infinity、'0x10'、包裝物件、非數字)視為未給、改用該欄預設
+//time只與經過時間(Date.now之差)比較、不交給原生計時器, 故不設計時器上限; 內寬、邊框寬、圓角為非負; 關閉按鈕平移可為負
+let mkRule = (name, chk, defDesc) => ({ fn: 'domAlert', name, kind: 'enum', chk, defDesc })
+let RULE_TIME = mkRule('opt.time', { use: 'nonnegative' })
+let RULE_BORDER_WIDTH = mkRule('opt.borderWidth', { use: 'nonnegative' })
+let RULE_BORDER_RADIUS = mkRule('opt.borderRadius', { use: 'nonnegative' })
+let PADDING_DEF = { top: 14, right: 26, bottom: 14, left: 14 }
+let RULE_PADDING = {
+    top: mkRule('opt.paddingStyle.top', { use: 'nonnegative' }),
+    right: mkRule('opt.paddingStyle.right', { use: 'nonnegative' }),
+    bottom: mkRule('opt.paddingStyle.bottom', { use: 'nonnegative' }),
+    left: mkRule('opt.paddingStyle.left', { use: 'nonnegative' }),
 }
-g.ttWAlertFadeIn = function(id) {
-    domFadeIn(document.querySelector(`#${id}`))
+//sget, 讀取opt之鍵, 讀取拋錯(拋錯之getter、已撤銷之Proxy)視為未給而回預設(規格§4 V11)
+function sget(o, k, d) {
+    try {
+        return get(o, k, d)
+    }
+    catch (err) {
+        return d
+    }
 }
-g.ttWAlertFadeOut = function(id) {
-    domFadeOut(document.querySelector(`#${id}`))
+
+
+//sstyle, 字串型opt去除分號後放入樣式(行為不改: 非字串得空字串); 判型拋錯(如已撤銷之Proxy)亦得空字串
+function sstyle(v) {
+    try {
+        return replace(v, ';', '')
+    }
+    catch (err) {
+        return ''
+    }
+}
+
+
+//isOptObj, 設定物件: 非null之物件且非陣列; 不依可由Symbol.toStringTag自訂之標籤(帶自訂標籤之一般物件仍為設定物件, 同修前), 判型拋錯(已撤銷之Proxy)視為false
+function isOptObj(v) {
+    try {
+        return typeof v === 'object' && v !== null && !Array.isArray(v)
+    }
+    catch (err) {
+        return false
+    }
+}
+
+
+//sis, 判型, 判型拋錯(如已撤銷之Proxy)視為false
+function sis(f, v) {
+    try {
+        return f(v)
+    }
+    catch (err) {
+        return false
+    }
+}
+
+
+let RULE_SHIFT = {
+    top: mkRule('opt.closeIconShift.top', undefined, '10 unless opt.closeIconShift.bottom is given'),
+    right: mkRule('opt.closeIconShift.right', undefined, '10 unless opt.closeIconShift.left is given'),
+    bottom: mkRule('opt.closeIconShift.bottom', undefined, 'none'),
+    left: mkRule('opt.closeIconShift.left', undefined, 'none'),
 }
 
 
@@ -110,15 +162,19 @@ function calcItemLocation() {
 
 function removeItemByID(id) {
 
+    //check, 已移除者不再處理(時間到與按✕可能先後發生)
+    let v = q[id]
+    if (!v) {
+        return
+    }
+
     //刪除元素
-    if (q[id].ele) {
-        q[id].ele.parentNode.removeChild(q[id].ele)
+    if (v.ele && v.ele.parentNode) {
+        v.ele.parentNode.removeChild(v.ele)
     }
 
     //刪除佇列內key紀錄
-    if (q[id]) {
-        delete q[id]
-    }
+    delete q[id]
 
     //calcItemLocation
     calcItemLocation()
@@ -126,14 +182,31 @@ function removeItemByID(id) {
 }
 
 
-function addItem({ id, position, time, pm }) {
+function closeItemByID(id) {
+
+    //check, 已關閉者(時間到或已按過✕)不再處理
+    let v = q[id]
+    if (!v) {
+        return
+    }
+
+    //先resolve再移除(同時間到之關閉順序)
+    v.pm.resolve()
+
+    //removeItemByID
+    removeItemByID(id)
+
+}
+
+
+function addItem({ id, position, time, pm, ele }) {
     //console.log('addItem', id, position, time)
 
     //push
     q[id] = {
         id,
         position,
-        ele: null,
+        ele: ele || null,
         loc: {
             height: null,
             top: null,
@@ -167,11 +240,8 @@ function addItem({ id, position, time, pm }) {
             //check, 超過指定延時則視為離開
             if (t > v.timeShow) {
 
-                //close
-                v.pm.resolve()
-
-                //removeItemByID
-                removeItemByID(v.id)
+                //close, 先resolve再移除
+                closeItemByID(v.id)
 
             }
 
@@ -191,23 +261,36 @@ function addItem({ id, position, time, pm }) {
 /**
  * 前端彈出訊息視窗
  *
+ * 輸入之處置(使用者2026-11-12定):
+ * 1. msg須為非空之原始字串(包裝物件new String、不可讀之Proxy等皆無效，規格§3.4 S1)，否則不顯示、回傳已完成(resolved)之Promise(不拋錯亦不reject，呼叫端以fire-and-forget方式呼叫時不會產生未處理之rejection)；
+ * 2. opt非物件(含null、陣列、不可讀之Proxy)視為{}(以typeof與Array.isArray判定，帶自訂Symbol.toStringTag之一般物件仍為設定物件)；paddingStyle、closeIconShift同；opt之各鍵讀取拋錯(拋錯之getter、已撤銷之Proxy)視為未給(規格§4 V11)；
+ * 3. 數值類opt(time、paddingStyle各鍵、borderWidth、borderRadius、closeIconShift各鍵)逐一以isenum檢查(有限數字或數字字串)，非預期之輸入(含NaN、Infinity、'0x10'、包裝物件、非數字，及time、paddingStyle、borderWidth、borderRadius之負數)視為未給而改用該欄預設，不報錯；
+ * 4. paddingStyle部分給鍵時，未給或無效之鍵保留該鍵預設(top:14、right:26、bottom:14、left:14)；closeIconShift部分給鍵時，未給之鍵保留預設(top:10、right:10)，但同軸已給有效值者不再套用另一端之預設(給bottom而未給top時不設top，給left而未給right時不設right)，以免上下或左右同時定位；
+ * 5. 關閉: 顯示時間到、或按關閉按鈕(✕)時，皆先resolve回傳之Promise再移除彈窗；關閉按鈕與滑鼠移入移出之淡入淡出以addEventListener綁定，不使用行內事件屬性與全域函數(嚴格CSP下亦可用)；
+ * 6. 外框、內寬層與關閉按鈕以createElement建立，msg與圖標以innerHTML插入內寬層內之內容容器，其HTML之解析限於該容器: msg含未閉合之標籤(如'<textarea>abc')時不再吞入其後之關閉按鈕與版面(修前整段一起解析而會)；正常HTML之外觀、位置與修前相同；
+ * 7. 需於瀏覽器執行: msg有效而無document(nodejs等)時，建立元素失敗而同步拋出執行環境之錯誤(既有行為，不回Promise)。
+ *
+ * 安全注意(行為不改): msg與opt.icon以HTML插入彈窗(innerHTML)，字串型opt(textColor、backgroundColor、borderColor、shadowStyle)去除分號後直接放入樣式；不可傳入未經跳脫之外部文字(使用者輸入、伺服器回應等)，純文字請先以htmlEncode跳脫。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domAlert.test.mjs Github}
  * @memberOf wsemi
- * @param {String} msg 輸入彈窗訊息字串，可為html
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {String} msg 輸入彈窗訊息字串，可為html(以HTML插入，外部文字須先以htmlEncode跳脫)，須為非空之原始字串，否則不顯示並回傳已完成之Promise
+ * @param {Object} [opt={}] 輸入設定物件，非物件(含null)視為{}，預設{}
  * @param {String} [opt.type='success'] 輸入訊息種類字串，可使用'success'、'warning'、'error'，預設'success'
- * @param {String} [opt.icon=''] 輸入圖標字串，可為html，預設依照type給予指定圖標，指定圖標詳見程式碼
+ * @param {String} [opt.icon=''] 輸入圖標字串，可為html(以HTML插入，不可傳未經跳脫之外部文字)，預設依照type給予指定圖標，指定圖標詳見程式碼
  * @param {String} [opt.position='top-right'] 輸入位置字串，可使用'top-right'、'top-left'、'bottom-right'、'bottom-left'，預設'top-right'
- * @param {Number} [opt.time=4000] 輸入顯示時間長度數字，單位為毫秒ms，預設4000
- * @param {Object} [opt.paddingStyle={top:14,right:26,bottom:14,left:14}] 輸入內寬設定物件，可輸入top、bottom、left、right，單位為px，預設{top:14,right:26,bottom:14,left:14}
- * @param {String} [opt.textColor='#000'] 輸入文字顏色字串，預設'#000'
- * @param {String} [opt.backgroundColor='#fff'] 輸入背景顏色字串，預設'#fff'
- * @param {Number} [opt.borderWidth=1] 輸入邊框寬度數字，單位px，預設1
- * @param {String} [opt.borderColor='#ebeef5'] 輸入邊框顏色字串，預設'#ebeef5'
- * @param {Number} [opt.borderRadius=8] 輸入邊框圓角數字，單位px，預設8
- * @param {String} [opt.shadowStyle='0 2px 12px 0 rgba(0,0,0,.1)'] 輸入陰影樣式字串，預設'0 2px 12px 0 rgba(0,0,0,.1)'
- * @param {Object} [opt.closeIconShift={top:10,right:10}] 輸入關閉按鈕平移距離設定物件，可輸入top、bottom、left、right，單位為px，若需要位於右上角則需設定top與right，預設{top:10,right:10}
- * @returns {Promise} 回傳Promise，resolve代表彈窗關閉，無reject
+ * @param {Number} [opt.time=4000] 輸入顯示時間長度數字，單位為毫秒ms，須為有限且非負之數字(可為字串型數字)，非預期之輸入(含NaN、Infinity、負數、非數字)視為未給而改用預設，預設4000
+ * @param {Object} [opt.paddingStyle={top:14,right:26,bottom:14,left:14}] 輸入內寬設定物件，可輸入top、bottom、left、right，單位為px，各鍵須為有限且非負之數字(可為字串型數字)，未給或無效之鍵用該鍵預設，預設{top:14,right:26,bottom:14,left:14}
+ * @param {String} [opt.textColor='#000'] 輸入文字顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#000'
+ * @param {String} [opt.backgroundColor='#fff'] 輸入背景顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#fff'
+ * @param {Number} [opt.borderWidth=1] 輸入邊框寬度數字，單位px，須為有限且非負之數字(可為字串型數字)，非預期之輸入改用預設，預設1
+ * @param {String} [opt.borderColor='#ebeef5'] 輸入邊框顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#ebeef5'
+ * @param {Number} [opt.borderRadius=8] 輸入邊框圓角數字，單位px，須為有限且非負之數字(可為字串型數字)，非預期之輸入改用預設，預設8
+ * @param {String} [opt.shadowStyle='0 2px 12px 0 rgba(0,0,0,.1)'] 輸入陰影樣式字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'0 2px 12px 0 rgba(0,0,0,.1)'
+ * @param {Object} [opt.closeIconShift={top:10,right:10}] 輸入關閉按鈕平移距離設定物件，可輸入top、bottom、left、right，單位為px，各鍵須為有限數字(可為負數、字串型數字)，無效之鍵視為未給；未給之鍵保留預設(top:10、right:10)，但給bottom而未給top時不設top、給left而未給right時不設right，預設{top:10,right:10}
+ * @param {Boolean} [opt.debug=false] 輸入是否於數值類opt為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
+ * @returns {Promise} 回傳Promise，resolve代表彈窗關閉(顯示時間到或按關閉按鈕)，msg無效時回傳已完成之Promise，無reject(無document時之同步拋錯見上方第7點)
  * @example
  * need test in browser
  *
@@ -217,23 +300,30 @@ function addItem({ id, position, time, pm }) {
  *
  * domAlert('提示訊息', {backgroundColor:'rgba(220,220,220,0.3)'})
  *
+ * domAlert(htmlEncode(textFromUser)) //外部文字先跳脫
+ *
  */
 function domAlert(msg, opt = {}) {
 
-    //check
-    if (!isestr(msg)) {
-        return
+    //check, msg須為非空之原始字串(規格§3.4 S1, 以typeof判定不讀取輸入之任何屬性), 無效不顯示, 回傳已完成之Promise(回傳型別恆為Promise)
+    if (typeof msg !== 'string' || msg.length === 0) {
+        return Promise.resolve()
+    }
+
+    //opt, 非物件(含null、陣列、判型拋錯之已撤銷Proxy)視為{}
+    if (!isOptObj(opt)) {
+        opt = {}
     }
 
     //type
-    let type = get(opt, 'type', 'success')
-    if (!haskey(kpIcon, type)) {
+    let type = sget(opt, 'type', 'success')
+    if (!sis((v) => haskey(kpIcon, v), type)) {
         type = 'success'
     }
 
     //icon
-    let icon = get(opt, 'icon', null)
-    if (isestr(icon)) {
+    let icon = sget(opt, 'icon', null)
+    if (sis(isestr, icon)) {
         //若為有效字串, 則優先使用icon
     }
     else {
@@ -241,120 +331,78 @@ function domAlert(msg, opt = {}) {
         icon = kpIcon[type]
     }
 
-    //position
+    //position, 讀取一次
     let position = 'top-right'
-    if (opt.position === 'top-left' || opt.position === 'bottom-right' || opt.position === 'bottom-left') {
-        position = opt.position
+    let optPosition = sget(opt, 'position', null)
+    if (optPosition === 'top-left' || optPosition === 'bottom-right' || optPosition === 'bottom-left') {
+        position = optPosition
     }
 
-    //time
-    let time = get(opt, 'time')
-    if (!isNumber(time)) {
-        time = 4000
-    }
-    if (time < 0) {
-        time = 4000
-    }
+    //time, 有限且非負之數字, 非預期(含NaN、Infinity, 原為永不自動關閉)改用預設4000
+    let col = optVal.defer() //數值類opt判定時只收集, 全部讀完後才至多讀一次opt.debug(V11)
+    let time = col.take(sget(opt, 'time', null), 4000, RULE_TIME)
 
-    //paddingStyle
-    let paddingStyle = get(opt, 'paddingStyle', null)
-    if (paddingStyle === null) {
-        paddingStyle = { top: 14, right: 26, bottom: 14, left: 14 }
+    //paddingStyle, 物件之各鍵逐一檢查, 未給或無效之鍵用該鍵預設(原為部分給鍵時其餘變0)
+    let paddingStyle = sget(opt, 'paddingStyle', null)
+    let pad = { ...PADDING_DEF }
+    if (isOptObj(paddingStyle)) {
+        each(['top', 'right', 'bottom', 'left'], (k) => {
+            pad[k] = col.take(sget(paddingStyle, k, null), PADDING_DEF[k], RULE_PADDING[k])
+        })
     }
 
     //usePaddingStyle
-    let usePaddingStyle = ''
-    if (true) {
-        let top = get(paddingStyle, 'top', 0)
-        let bottom = get(paddingStyle, 'bottom', 0)
-        let left = get(paddingStyle, 'left', 0)
-        let right = get(paddingStyle, 'right', 0)
-        usePaddingStyle = `padding:${top}px ${right}px ${bottom}px ${left}px;`
-    }
+    let usePaddingStyle = `padding:${pad.top}px ${pad.right}px ${pad.bottom}px ${pad.left}px;`
 
     //textColor
-    let textColor = get(opt, 'textColor', '#000')
-    textColor = replace(textColor, ';', '')
+    let textColor = sget(opt, 'textColor', '#000')
+    textColor = sstyle(textColor)
 
     //backgroundColor
-    let backgroundColor = get(opt, 'backgroundColor', '#fff')
-    backgroundColor = replace(backgroundColor, ';', '')
+    let backgroundColor = sget(opt, 'backgroundColor', '#fff')
+    backgroundColor = sstyle(backgroundColor)
 
     //borderWidth
-    let borderWidth = get(opt, 'borderWidth', 1)
+    let borderWidth = col.take(sget(opt, 'borderWidth', null), 1, RULE_BORDER_WIDTH)
 
     //borderColor
-    let borderColor = get(opt, 'borderColor', '#ebeef5')
-    borderColor = replace(borderColor, ';', '')
+    let borderColor = sget(opt, 'borderColor', '#ebeef5')
+    borderColor = sstyle(borderColor)
 
     //borderRadius
-    let borderRadius = get(opt, 'borderRadius', 8)
+    let borderRadius = col.take(sget(opt, 'borderRadius', null), 8, RULE_BORDER_RADIUS)
 
     //shadowStyle
-    let shadowStyle = get(opt, 'shadowStyle', '0 2px 12px 0 rgba(0,0,0,.1)')
-    shadowStyle = replace(shadowStyle, ';', '')
+    let shadowStyle = sget(opt, 'shadowStyle', '0 2px 12px 0 rgba(0,0,0,.1)')
+    shadowStyle = sstyle(shadowStyle)
 
-    //closeIconShift
-    let closeIconShift = get(opt, 'closeIconShift', null)
-    if (closeIconShift === null) {
-        closeIconShift = { top: 10, right: 10 }
+    //closeIconShift, 各鍵逐一檢查(無效視為未給); 未給之鍵保留預設top:10、right:10, 但同軸已給有效值者不套用另一端之預設
+    let closeIconShift = sget(opt, 'closeIconShift', null)
+    let shift = { top: null, right: null, bottom: null, left: null }
+    if (isOptObj(closeIconShift)) {
+        each(['top', 'right', 'bottom', 'left'], (k) => {
+            shift[k] = col.take(sget(closeIconShift, k, null), null, RULE_SHIFT[k])
+        })
     }
+    if (shift.top === null && shift.bottom === null) {
+        shift.top = 10
+    }
+    if (shift.left === null && shift.right === null) {
+        shift.right = 10
+    }
+
+    //debug警告, 有非預期者才讀opt.debug/funLog一次(讀取拋錯視為未給)
+    col.flush(opt)
 
     //useCloseIconPosition
-    let useCloseIconPosition = ''
-    if (true) {
-        let top = get(closeIconShift, 'top', '')
-        let bottom = get(closeIconShift, 'bottom', '')
-        let left = get(closeIconShift, 'left', '')
-        let right = get(closeIconShift, 'right', '')
-        if (isNumber(top)) {
-            top = `top:${top}px;`
-        }
-        if (isNumber(bottom)) {
-            bottom = `bottom:${bottom}px;`
-        }
-        if (isNumber(left)) {
-            left = `left:${left}px;`
-        }
-        if (isNumber(right)) {
-            right = `right:${right}px;`
-        }
-        useCloseIconPosition = `position:absolute; ${top} ${right} ${bottom} ${left}`
+    let cssShift = (k) => {
+        return shift[k] === null ? '' : `${k}:${shift[k]}px;`
     }
+    let useCloseIconPosition = `position:absolute; ${cssShift('top')} ${cssShift('right')} ${cssShift('bottom')} ${cssShift('left')}`
 
     //id
     let id = `alt-${genID()}`
     let idCancel = `alt-${genID()}`
-
-    //message
-    let message = `
-    <div 
-        style="display:inline-block; color:${textColor}; background:${backgroundColor}; border:${borderWidth}px solid ${borderColor}; border-radius:${borderRadius}px; box-shadow:${shadowStyle};"
-        onmouseenter="ttWAlertFadeIn('${idCancel}')"
-        onmouseleave="ttWAlertFadeOut('${idCancel}')"
-    >
-        <div style="position:relative; ${usePaddingStyle}">
-
-            <div style="display:flex; align-items:center;">
-                <div style="margin-right:10px;">
-                    <div style="display:flex;">${icon}</div>
-                </div>
-                <div>${msg}</div>
-            </div>
-
-            <div style="${useCloseIconPosition}">
-                <div 
-                id="${idCancel}" 
-                    style="display:flex; cursor:pointer; opacity:0;" 
-                    onclick="ttWAlertCancel('${id}')"
-                >
-                    ${iconCancel}
-                </div>
-            </div>
-
-        </div>
-    </div>
-    `
 
     //panel
     let div = document.createElement('div')
@@ -369,7 +417,38 @@ function domAlert(msg, opt = {}) {
     else {
         div.style.transform = 'translateX(100%)'
     }
-    div.innerHTML = message
+
+    //box, 外框, 滑鼠移入移出淡入淡出關閉按鈕(以addEventListener綁定)
+    let box = document.createElement('div')
+    box.setAttribute('style', `display:inline-block; color:${textColor}; background:${backgroundColor}; border:${borderWidth}px solid ${borderColor}; border-radius:${borderRadius}px; box-shadow:${shadowStyle};`)
+
+    //inner, 內寬, 內容(圖標與訊息)以HTML插入
+    let inner = document.createElement('div')
+    inner.setAttribute('style', `position:relative; ${usePaddingStyle}`)
+    inner.innerHTML = `<div style="display:flex; align-items:center;"><div style="margin-right:10px;"><div style="display:flex;">${icon}</div></div><div>${msg}</div></div>`
+
+    //btnCancel, 關閉按鈕
+    let shiftWrap = document.createElement('div')
+    shiftWrap.setAttribute('style', useCloseIconPosition)
+    let btnCancel = document.createElement('div')
+    btnCancel.id = idCancel
+    btnCancel.setAttribute('style', 'display:flex; cursor:pointer; opacity:0;')
+    btnCancel.innerHTML = iconCancel
+    shiftWrap.appendChild(btnCancel)
+    inner.appendChild(shiftWrap)
+    box.appendChild(inner)
+    div.appendChild(box)
+
+    //bind
+    box.addEventListener('mouseenter', () => {
+        domFadeIn(btnCancel)
+    })
+    box.addEventListener('mouseleave', () => {
+        domFadeOut(btnCancel)
+    })
+    btnCancel.addEventListener('click', () => {
+        closeItemByID(id)
+    })
 
     //塞入至body
     let body = document.querySelector('body')
@@ -384,6 +463,7 @@ function domAlert(msg, opt = {}) {
         position,
         time,
         pm,
+        ele: div,
     })
 
     return pm

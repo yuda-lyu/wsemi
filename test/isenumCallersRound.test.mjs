@@ -155,13 +155,14 @@ describe(`取整與格式化函數改用isenum/iseint(第221項第一批)`, func
             assert.strict.deepStrictEqual(cfilesize('0b11'), '')
         })
 
-        //對應任務範圍: dig之idig本輪不動(有下游站點, 屬第三級; 仍由isp0int判定, 無效回'')
-        it(`should keep idig handling of dig unchanged in this batch`, function() {
+        //對應任務範圍: dig之idig於第221項第一批未動(有下游站點, 屬第三級; 當時仍由isp0int判定, 無效回'')
+        //ws430(規格第199項Q1-h「檢查要拿來計算之opt一律用ise*」、主控帳本G17)改為iseint(use:'digits'), 非預期(含null)視為未給、改用預設0, 同digExp、cfinancial
+        it(`should use default 0 for invalid idig of dig (ws430, G17; was '' in this batch)`, function() {
             for (let f of [dig]) {
-                assert.strict.deepStrictEqual(f(1.5, 'abc'), '')
-                assert.strict.deepStrictEqual(f(1.5, -1), '')
-                assert.strict.deepStrictEqual(f(1.5, 2.5), '')
-                assert.strict.deepStrictEqual(f(1.5, null), '')
+                assert.strict.deepStrictEqual(f(1.5, 'abc'), '2')
+                assert.strict.deepStrictEqual(f(1.5, -1), '2')
+                assert.strict.deepStrictEqual(f(1.5, 2.5), '2')
+                assert.strict.deepStrictEqual(f(1.5, null), '2')
             }
         })
 

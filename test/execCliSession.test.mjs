@@ -156,7 +156,7 @@ describe(`execCliSession`, function() {
         assert.strict.deepStrictEqual(r.stderr.endsWith('END-OF-ERR'), true)
     })
 
-    it(`should accept stderrKeep given as numeric string or Number wrapper ('0', new Number(0), '3') [數值輸入通則]`, async function() {
+    it(`should accept stderrKeep given as numeric string ('0', '3'), and use default 4000 for Number wrapper (new Number(0), new Number(3)) [數值輸入通則, G17]`, async function() {
         let sc = `process.stderr.write('abcdef')`
         let f = async (stderrKeep) => {
             let s = execCliSession(nodeBin, ['-e', sc], { stderrKeep })
@@ -164,7 +164,9 @@ describe(`execCliSession`, function() {
             return r.stderr
         }
         let rs = [await f('0'), await f(new Number(0)), await f('3'), await f(new Number(3))] // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(rs, ['', '', 'def', 'def']) //使用者通則: 數值輸入一律支援字串型數字(stderrKeep 0為不保留, 3為保留尾端3字元)
+        //使用者通則: 數值輸入一律支援字串型數字(stderrKeep 0為不保留, 3為保留尾端3字元)
+        //ws430(規格第199項Q1-h、主控帳本G17): opt之數值以iseint判定, iseint不拆包(R-WRAPPER-01規則4), 包裝物件屬非預期而改用預設4000(全部保留), 修前isp0int拆包而採其值
+        assert.strict.deepStrictEqual(rs, ['', 'abcdef', 'def', 'abcdef'])
     })
 
     it(`should resolve write() false after exit and return the same promise from repeated stop()`, async function() {

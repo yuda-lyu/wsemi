@@ -5,6 +5,7 @@ import cint from './cint.mjs'
 /**
  * 判斷是否為大於等於0整數(非負整數)
  * 非負整數包含0
+ * 依數學定義判斷(同isint)，故isp0int(Infinity)為true、isp0int('0x10')為true；要判可用、可計算之整數(如計算類參數、opt之數值)用iseint。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isp0int.test.mjs Github}
  * @memberOf wsemi

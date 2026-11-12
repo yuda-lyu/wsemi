@@ -1,4 +1,3 @@
-import cst from './_const.mjs'
 import { spawn } from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
@@ -9,8 +8,7 @@ import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
-import isp0int from './isp0int.mjs'
+import optVal from './_optVal.mjs'
 import strleft from './strleft.mjs'
 import strdelleft from './strdelleft.mjs'
 import strTruncate from './strTruncate.mjs'
@@ -26,6 +24,13 @@ import getTrace from './getTrace.mjs'
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心已抽至execCliCore
 let { buildSpawnArgs, buildSpawnEnv } = execCliCore
+
+
+//opt類數值參數之規則(iseint, 帳本G17、R-OPT-VAL-01), 非預期改用預設
+let RULE_MAX_RETRIES = { fn: 'execCli', name: 'opt.maxRetries', kind: 'eint', chk: { use: 'count' } }
+let RULE_RETRY_DELAY_MS = { fn: 'execCli', name: 'opt.retryDelayMs', kind: 'eint', chk: { min: 1 } }
+let RULE_TIMEOUT_MS = { fn: 'execCli', name: 'opt.timeoutMs', kind: 'eint', chk: { use: 'timer', min: 1 } }
+let RULE_MAX_BUFFER = { fn: 'execCli', name: 'opt.maxBuffer', kind: 'eint', chk: { use: 'count', min: 1 } }
 
 
 //pidOf, 觀察回調事件用之子進程pid(未能啟動者proc.pid為undefined, 事件欄位只放數字或null)
@@ -511,40 +516,18 @@ function parseInput(command, args, opt) {
         onceOpt.onStderr = onStderr
     }
 
-    //maxRetries: 非負整數(可為0), 無效回退預設0
-    if (!isp0int(maxRetries)) {
-        maxRetries = 0
-    }
-    else {
-        maxRetries = cint(maxRetries)
-    }
+    //maxRetries、retryDelayMs、timeoutMs、maxBuffer: opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01), 非預期(含Infinity、小數、超出範圍、'0x10'、包裝物件)視為未給、改用預設, 不夾限; debug警告讀onceOpt(opt展開之副本: 呼叫端之存取器於展開時已各讀一次, 副本為資料屬性, 重讀無副作用, 符合V11; 同onTrace只認自有可列舉鍵)
+    //maxRetries: 有效整數且為個數(0~4294967295, 可為0), 無效回退預設0(Infinity不再視為近乎無限重試)
+    maxRetries = optVal(maxRetries, 0, RULE_MAX_RETRIES, onceOpt)
 
-    //retryDelayMs: 正整數, 無效回退預設5000
-    if (!ispint(retryDelayMs)) {
-        retryDelayMs = 5000
-    }
-    else {
-        retryDelayMs = cint(retryDelayMs)
-    }
+    //retryDelayMs: 有效整數且大於等於1, 無效回退預設5000; 不設計時器上限(實際間隔為retryDelayMs乘以重試次數且夾至15000後才交給計時器)
+    retryDelayMs = optVal(retryDelayMs, 5000, RULE_RETRY_DELAY_MS, onceOpt)
 
-    //timeoutMs: 正整數, 無效回退預設120000
-    let timeoutMs = get(onceOpt, 'timeoutMs', null)
-    if (!ispint(timeoutMs)) {
-        onceOpt.timeoutMs = 120000
-    }
-    else {
-        onceOpt.timeoutMs = cint(timeoutMs)
-    }
-    onceOpt.timeoutMs = Math.min(onceOpt.timeoutMs, cst.TIMER_TIME_MAX) //夾至計時器上限, 見_const.mjs
+    //timeoutMs: 有效整數且為計時毫秒(1~2147483647), 無效(含超過計時器上限)回退預設120000, 不再夾至上限
+    onceOpt.timeoutMs = optVal(get(onceOpt, 'timeoutMs', null), 120000, RULE_TIMEOUT_MS, onceOpt)
 
-    //maxBuffer: 正整數, 無效回退預設10MB
-    let maxBuffer = get(onceOpt, 'maxBuffer', null)
-    if (!ispint(maxBuffer)) {
-        onceOpt.maxBuffer = 10 * 1024 * 1024
-    }
-    else {
-        onceOpt.maxBuffer = cint(maxBuffer)
-    }
+    //maxBuffer: 有效整數且為個數(字元數, 1~4294967295; 同stderrKeep用count, 超過者字串本已無法容納), 無效回退預設10MB
+    onceOpt.maxBuffer = optVal(get(onceOpt, 'maxBuffer', null), 10 * 1024 * 1024, RULE_MAX_BUFFER, onceOpt)
 
     //trace, 觀察回調(opt.onTrace), 取自onceOpt(opt展開之副本, 不再讀取呼叫端之opt), 置於其餘判型之後使既有失敗路徑不變; 未給時為null
     let trace = getTrace(onceOpt)
@@ -564,16 +547,18 @@ function parseInput(command, args, opt) {
  * @param {String} command 輸入執行檔名稱字串，例如'node'、'curl'、'claude'等，可為註冊系統的全域指令或執行檔路徑
  * @param {Array} [args=[]] 輸入參數字串陣列，內容原樣傳遞給目標CLI，預設[]
  * @param {Object} [opt={}] 輸入設定物件
- * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，預設120000
+ * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限、不報錯，預設120000
  * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: cwd is not an existing folder: <cwd>'(未能啟動，不重試)
  * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
  * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean或回傳Promise(以其resolve值判定)，回傳真值為通過；自訂函數拋錯或其Promise被reject視同驗證失敗(error為'OUTPUT_VALIDATION_FAILED'，stderr前綴'validate threw: 錯誤訊息'，訊息截斷至500字元)；自訂函數回傳之Promise不受timeoutMs約束(子進程已結束)，永不落定時本函數亦不落定，durationMs不含驗證時間，預設undefined代表不驗證
- * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，超過部分將不再累積，預設10485760(10MB)
+ * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，以收到之輸出片段為單位截止: 累積量未達上限時該片段整段累積(故最後一段可使累積量略超過上限)，達上限後之片段不再累積，非預期之輸入(含Infinity、小數、超過4294967295、'0x10'、包裝物件)視為未給而改用預設，欲近乎不限制請給足夠大之有限值，預設10485760(10MB)
  * @param {Function} [opt.onStdout=undefined] 輸入stdout串流回調函數，格式為(chunk)=>{}，回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之輸出累積與結果)，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr串流回調函數，格式為(chunk)=>{}，行為同onStdout，預設undefined
  * @param {Object} [opt.env=undefined] 輸入本次調用額外注入之環境變數物件，會併入process.env之後(同名以此為準，含PYTHONIOENCODING)，僅作用於該次子進程而不影響本進程之process.env，故並行調用可各自帶不同值；值為undefined代表移除該變數(可遮蔽繼承值)，值為null會成為字面字串'null'故建議勿傳；Windows下環境變數大小寫不敏感，同名不同大小寫(如Path與PATH)亦視為同名覆蓋，預設undefined代表不覆寫任何變數
- * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在、不存在之.cmd/.bat、npm shim之入口檔不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，預設0
- * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，實際間隔為retryDelayMs乘以重試次數且上限15000ms，預設5000
+ * @param {Number} [opt.maxRetries=0] 輸入失敗後最大重試次數非負整數，遇ENOENT(命令不存在、不存在之.cmd/.bat、npm shim之入口檔不存在)、exit code 2(參數錯誤)或無法啟動子進程之同步錯誤(如參數過長、權限不足、非有效執行檔、參數含空字元)視為不可重試而立即中止，須為有效整數且介於0至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含Infinity、小數、負數、'0x10'、包裝物件)視為未給而改用預設0即不重試(Infinity不視為無限重試)，欲多次重試請給有限值，預設0
+ * @param {Number} [opt.retryDelayMs=5000] 輸入重試間隔毫秒正整數，須為有效整數且大於等於1(可為字串型數字)，實際間隔為retryDelayMs乘以重試次數且上限15000ms，非預期之輸入(含Infinity、小數、'0x10'、包裝物件)視為未給而改用預設，預設5000
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.maxRetries、opt.retryDelayMs、opt.timeoutMs、opt.maxBuffer為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；欄位皆為原始值，不含stdout與stderr之內文(只有長度)；type為'attempt'時為即將啟動第n次嘗試(含n，由1起算)，'retry'時為上次嘗試失敗而即將等待ms毫秒後啟動第n次嘗試(含n、ms；n由2起算，ms即實際間隔)，'spawn'時為子進程已建立(含pid，未能啟動者為null)，'data'時為收到一段已解碼之輸出(含stream為'stdout'或'stderr'、len為該段字元數、size為處理後該串流已累積之字元數、kept為該段是否被累積；累積量已達maxBuffer者kept為false且size不變；子進程結束時殘餘之解碼不通知，settle之後亦不通知)，'full'時為該串流累積量首次達到maxBuffer(含stream、size)，'timeout'時為timeoutMs逾時計時器觸發而即將樹殺(含ms為timeoutMs)，'kill'時為即將以execProcessKillPid樹殺(含pid)，'settle'時為本次嘗試即將定案(含reason：'ok'為離開碼0且通過驗證，'exit'為非零離開碼或被訊號終止，'timeout'為逾時樹殺後close，'validate'為驗證失敗，'error'為子進程未能啟動，'stuck'為樹殺後3秒仍未收到close而強制定案；另含code為離開碼數字或null、signal為終止訊號字串或null)，'done'時為整個呼叫即將回傳(含n為實際嘗試次數、ok、reason：成功為'ok'，失敗為'spawn'(無法啟動子進程之同步錯誤)、'enoent'(命令不存在)、'code2'(離開碼2)等不可重試者，其餘含maxRetries為0者為'exhausted')；command無效或opt不可讀而在啟動前即回報者無事件；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
  * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、npm shim之入口檔不存在、cwd不存在、輸入不可讀等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串時不啟動，attempts為0且不帶pid鍵
  * @example

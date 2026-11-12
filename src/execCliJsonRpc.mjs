@@ -5,10 +5,14 @@ import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
-import ispint from './ispint.mjs'
+import optVal from './_optVal.mjs'
 import execCliSession from './execCliSession.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
+
+
+//opt.timeoutMs: opt類數值參數(iseint, 帳本G17、R-OPT-VAL-01), 計時毫秒1~2147483647, 非預期改用預設120000
+let RULE_TIMEOUT_MS = { fn: 'execCliJsonRpc', name: 'opt.timeoutMs', kind: 'eint', chk: { use: 'timer', min: 1 } }
 
 
 /**
@@ -28,10 +32,12 @@ import execThrownMsg from './_execThrownMsg.mjs'
  * @param {Array} [args=[]] 輸入參數字串陣列，預設[]
  * @param {Array} [requests=[]] 輸入請求物件陣列，每項為{ method, params }(請求，等回應)或{ notify, params }(通知，不等回應)，params可省略，陣列於呼叫時讀取為快照(其後對該陣列之增刪不影響本次送出)，預設[]
  * @param {Object} [opt={}] 輸入設定物件
- * @param {Number} [opt.timeoutMs=120000] 輸入整體逾時毫秒正整數，涵蓋全部請求與收尾，逾時即樹殺，預設120000
+ * @param {Number} [opt.timeoutMs=120000] 輸入整體逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，涵蓋全部請求與收尾，逾時即樹殺，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限、不報錯，預設120000
  * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()
  * @param {Object} [opt.env=undefined] 輸入額外注入之環境變數物件，語意同execCli，預設undefined
- * @param {Number} [opt.exitGraceMs=2000] 輸入收尾stop()之寬限毫秒，語意同execCliSession，預設2000
+ * @param {Number} [opt.exitGraceMs=2000] 輸入收尾stop()之寬限毫秒，語意同execCliSession(原樣轉交，由其判定，非預期之輸入改用預設)，預設2000
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeoutMs為非預期之輸入而改用預設時輸出警告布林值，並與opt.funLog一併轉交execCliSession(其對原樣轉交之opt.exitGraceMs之非預期亦警告)，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {String|Boolean} [opt.jsonrpc=undefined] 輸入每則訊息附加之jsonrpc欄位值，true代表'2.0'(MCP等JSON-RPC 2.0協定需要)，字串則原樣附加，預設undefined代表不附加(codex app-server不需要)
  * @param {Boolean} [opt.continueOnError=false] 輸入回應含error時是否繼續送出後續請求布林值，預設false
  * @param {Function} [opt.onNotify=undefined] 輸入伺服器通知(無id訊息)回調函數，格式為(msg)=>{}，預設undefined
@@ -142,9 +148,11 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
             opt = {}
         }
 
-        //timeoutMs
+        //timeoutMs, opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01): 有效整數且為計時毫秒(1~2147483647)則取Number(v)轉交execCliSession, 非預期(含Infinity、小數、超過計時器上限、'0x10'、包裝物件)改用預設120000, 不夾限
+        //判定時只收集, 業務鍵讀完後才讀一次opt.debug(V11)
+        let col = optVal.defer()
         v = get(opt, 'timeoutMs')
-        timeoutMs = ispint(v) ? v : 120000
+        timeoutMs = col.take(v, 120000, RULE_TIMEOUT_MS)
 
         //jsonrpc
         v = get(opt, 'jsonrpc')
@@ -172,6 +180,11 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
             onStderr: isfun(v) ? v : undefined,
             onTrace: get(opt, 'onTrace'),
         }
+
+        //debug、funLog: 業務鍵全部讀完後讀一次(讀取拋錯視為未給, 不改變既有失敗路徑), 本層timeoutMs之非預期於此警告, 並轉交execCliSession使其對原樣轉交之exitGraceMs之非預期亦能警告
+        let dbg = col.flush(opt, true)
+        optSession.debug = dbg.debug
+        optSession.funLog = dbg.funLog
 
     }
     catch (err) {

@@ -49,12 +49,12 @@ function optVal(v, def, rule, opt) {
 }
 
 
-//讀取opt.debug與opt.funLog(讀取拋錯一律視為未給), debug為true才警告
-function warnInvalid(rule, def, opt) {
+//讀取opt.debug與opt.funLog(讀取拋錯一律視為未給; debug為true才讀funLog), 回傳{ debug, funLog }; 亦供轉交debug、funLog給下層函數之呼叫端使用(optVal.readDbg)
+function readDbg(opt) {
     let debug = false
     let funLog = null
     try {
-        if (typeof opt === 'object' || typeof opt === 'function') {
+        if ((typeof opt === 'object' && opt !== null) || typeof opt === 'function') {
             debug = opt.debug === true
             if (debug) {
                 let f = opt.funLog
@@ -64,12 +64,63 @@ function warnInvalid(rule, def, opt) {
     }
     catch (err) {
         debug = false
+        funLog = null
     }
+    return { debug, funLog }
+}
+
+
+//debug為true才警告
+function warnInvalid(rule, def, opt) {
+    let { debug, funLog } = readDbg(opt)
     if (!debug) {
         return
     }
+    emitWarn(rule, def, funLog)
+}
+
+
+//輸出警告(固定詞彙, 不含值; 去重與出口同_numOpt.mjs之warnOnce)
+function emitWarn(rule, def, funLog) {
     let msg = `[wsemi ${rule.fn}] invalid ${rule.name}: must be ${getDesc(rule)}, using default ${getDefDesc(rule, def)}`
     parseNumOpt.warnOnce(`${rule.fn}|invalid|${rule.name}`, msg, { fn: rule.fn, reason: 'invalid', key: rule.name }, funLog)
+}
+
+
+/**
+ * 延後警告之收集器(optVal.defer): 判定時不讀呼叫端之opt, 業務鍵全部讀完後才至多讀一次opt.debug/funLog並依序警告(規格§4 V11: 每鍵只讀一次, 且debug之讀取不影響其後業務鍵之讀取)
+ *
+ * 用法: let col = optVal.defer(); x = col.take(v, def, rule); ...(其餘業務鍵); col.flush(opt)
+ * take之回傳值同optVal(v, def, rule)(不警告); flush於無非預期者時不讀opt; flush(opt, true)則一律讀一次(供轉交debug、funLog給下層), 回傳{ debug, funLog }
+ *
+ * @returns {Object} 回傳{ take, flush }
+ */
+function defer() {
+    let bad = []
+    let take = (v, def, rule) => {
+        let r = optVal(v, def, rule)
+        if (v !== undefined && v !== null) {
+            let ok = rule.kind === 'eint' ? iseint(v, rule.chk) : isenum(v, rule.chk)
+            if (!ok) {
+                bad.push({ rule, def })
+            }
+        }
+        return r
+    }
+    let flush = (opt, alwaysRead = false) => {
+        if (bad.length === 0 && !alwaysRead) {
+            return { debug: false, funLog: null }
+        }
+        let dbg = readDbg(opt)
+        if (dbg.debug) {
+            for (let b of bad) {
+                emitWarn(b.rule, b.def, dbg.funLog)
+            }
+        }
+        bad = []
+        return dbg
+    }
+    return { take, flush }
 }
 
 
@@ -112,6 +163,8 @@ function getDefDesc(rule, def) {
 
 
 optVal.getDesc = getDesc
+optVal.readDbg = readDbg
+optVal.defer = defer
 
 
 export default optVal

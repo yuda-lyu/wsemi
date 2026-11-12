@@ -85,74 +85,15 @@
 - 非計算類函數必須參數遇非預期:第一類 4 個函數(2026-11-02,主控任務 20261031121854,ws286a)
 - 非計算類函數必須參數遇非預期:第二批 `getTimeRange`＋字串／日期子類 4 個函數＋`cfilesize`(2026-11-02,主控任務 20261031121854,ws286b)
 
-## 非計算類函數必須參數遇非預期:差異比對子類 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(2026-11-03,主控任務 20261031121854,ws286c)
+2026-11-12(ws430)再整理: 本檔原約 38.1KB,將 2026-11-03 至 2026-11-09 之 7 節(約 24.0KB)抽出至 `sgud/exp/experience_20261112.md`(節號與標題不變、內容逐字搬移),本檔只留 2026-11-12 起之節.被抽出之節:
 
-- **「與正常輸出同形的空結果」要先實測正常輸出的鍵**: 派工書要求先量;實測 4 個函數的正常輸出只有 `diff`、`dfs`,`matDiff`／`ltdtDiff` JSDoc 原寫的 `dfrs` 並不存在(`@returns` 一併更正).兩邊皆空回 `{ diff: [], dfs: [] }` 且每次新物件(測試有「改共用常數」變異擊殺:呼叫端對回傳物件 `push` 後第二次呼叫須仍為空).
-- **外層對內層回傳「賦值」會遮住內層的 `{}`**: 舊 `ltdtDiff([{}], [{}])` 內層 `arrDiff` 回 `{}`,外層 `r.dfs = map(...)` 把它補成 `{ dfs: [] }`;內層改回 `{ diff: [], dfs: [] }` 後外層輸出連帶變 `{ diff: [], dfs: [] }`(是同形變更,但屬「回傳值變了」,要在逐站表寫明並鎖測試).凡內層回空物件的改動,都要順著呼叫鏈看外層是補欄位、轉型還是原樣回傳.
-- **內部站點用「儀器化 HEAD 副本」實測,不靠讀碼推論**: 複製 HEAD 的 `src` 到 `tmp`,在 `strDiff` 的兩邊皆空判斷前加 `globalThis` 計數,對邊界輸入各跑一次(`tmp/ws286c/inst.mjs`,證據 `ws286c-evidence/2-*`):`arrDiff([''], [''])`、`matDiff([[]], [[]])`、`matDiff([['']], [['']])` 內部字串為 `'\n'`／`'0∶⟋\n'`,**不會**以兩個 `''` 呼叫 `strDiff`;唯一會的是矩陣某列含換行造成 modify 行對(`matDiff([['a\nz']], [['b\nz']])`,該對去掉分隔字串後兩邊皆 `[]`),而該處只讀回傳的 `.dfs`(舊 `{}` 經 `map(undefined)` 得 `[]`),最終輸出逐字相同.派工書列的「`ltdtDiff([{}], [{}])`」實測 `strDiff` 呼叫 0 次(`ltdtkeys2mat` 無鍵直接回 `[]`,`arrDiff` 頂端即返回).
-- **元素檢測用 lodash `every`,不用 `Array.prototype.every`**: 前者依索引走訪、空洞當 `undefined` 而無效;後者略過空洞,`[ , { a: 1 }]` 會通過(變異 L7／L8 擊殺).`isobj`(`[object Object]`)接受 `{}` 與無原型物件;`iseobj` 拒 `{}`,若誤用則 `ltdtDiff([{}], [{}])` 會拋錯(變異 L5 擊殺).
-- **`ltdtkeys2mat` 靜默回 `[]` 的陷阱未處理(範圍外)**: 它對「任一列為 `{}`(非有效物件)」整側回 `[]`,`ltdtDiff([{ a: 1 }, {}], [{ a: 1 }])` 因此顯示「新增 1 列」而非「刪除 `{}` 列」;改前即如此,`{}` 是物件故不在使用者定的「元素非物件拋錯」內,列入 r2d〈已知殘餘〉與報告需裁示,不順手改(`ltdtkeys2mat` 為共用函數且不在本輪範圍).看到「檢測通過但下游又靜默丟資料」的組合,要在報告明寫而非放行.
-- **差分序列化要標出 `undefined`**: `ltdtDiff` 首列無可比對儲存格時 `dfs` 為 `[{ k: undefined }, …]`,`JSON.stringify` 會隱成 `{}`;測試期望要寫 `{ k: undefined }`(`deepStrictEqual` 區分),差分腳本的序列化加 replacer 把 `undefined`／非有限數標成記號,否則「HEAD 與修後 JSON 相同」不等於物件相同.第一次跑就是這樣紅了一案.
-- **等價變異要先證明再丟**: 移除 `strDiff` 的兩邊皆空提前回傳存活,因 `Diff.diffLines('', '')` 本就回 `[]` 而得 `{ diff: [], dfs: [] }`;移除 `matDiff` 的提前回傳存活,因交給 `arrDiff` 得同結果.兩者是冗餘捷徑,以 `probe-equiv.mjs` 實測後記為等價,不為殺它而刪捷徑(保持與其他三個函數的結構一致,且「兩邊皆空改回 `{}`」的變異 S3／M3 皆殺死).
-- **console 攔截**: 測試用 `countConsole` 同時換掉 `log／info／warn／error／debug` 並在 `finally` 還原,斷言 throw 過程 console 0 次;同步測試期間換掉 `console.log` 不會干擾 mocha 報告器(報告器在測試之間輸出).
-- **測試尾段批次改寫**: 5 個測試檔的舊「無效輸入回 `{}`／`''`」尾段(10 案 × 5 檔)以 `tmp/ws286c/rewriteTails.mjs` 取代——以舊首案標題為 marker(須命中恰一次)截斷、串接新尾段、依各檔 EOL(CRLF)寫入、寫前備份;新尾段與共用載具 `test/tools/diffInputKit.mjs`(無效值表＋`throwsMsg`)分開寫,避免 5 檔各貼一份近似的值表.
-
-## 空資料不是失敗:向量處理空進空出、`arrProduct` 任一邊為空即 throw、轉換函數狀態模式、`getCsvStrFromData([])`(2026-11-03,主控任務 20261031121854,ws286d)
-
-- **派工書表列與 HEAD 實測不符時,先量再依既定順序,不憑表改順序**: 表列「`arrAdd(['a'], [])`、`arrAdd([], ['a'])` 非空而無有效數字之一邊仍拋錯」,但 HEAD 實測回 `[]`(容器〔長度不同〕先於有效數字檢查,且已有測試鎖);要照表改成拋錯須動搖該順序(連帶 `arrAdd([1], [])` 與 `arrAdd([1, 2], [3])` 之一致性).維持 HEAD 並列待裁示,不自行改順序.
-- **共用模組放行空陣列的位置要選對**: 空進空出放在 `reduceArrs`(`n === 0` 先於 `chkValid`)與 `arrAccum` 各自,**不改共用的 `chkValid`**——`arrNorm` 也經 `chkValid` 擋空陣列(變異 V5〔`chkValid` 對空陣列放行〕殺死 6 案)。`arrProduct` 內部呼叫 `arrMulti`,後者改成空進空出後會連帶放行 `arrProduct([], [])` 與 `([1], [])`(後者原就回 `null`),故須在 `arrProduct` 自己先以新 `chkNotEmpty` 擋(僅在全為陣列時檢查,非陣列仍交容器處置回 `null`);`errNoValid` 抽為訊息單一擁有者.
-- **「空資料」只認 `isarr && length === 0`,不能用 `isearr`/`iser`**: `isearr` 把 `[{}]`、`[null]`、`['']`、`[[]]` 當無效(長度 1 但元素被視為空),這些仍是失敗;誤把判定放寬成 `isarr`(變異 C4、D4)會讓非空無效陣列被當成功/空內容.
-- **型別檢測與資料有無無關(沿 `ltdtpull` 同日裁示)**: `keysmat2ltdt` 的 `keys` 檢查須先於 `mat` 為空之判定、`ltdt2vrtsable` 的 `mergerowkeys` 檢查須先於 `ltdt` 為空之判定(變異 C8、C12 以「兩區塊對調」殺死;首版變異是「刪除該檢查」,會連帶殺死其他案而不精準,改為對調才只殺目標案).副作用:`ltdt2vrtsable([], 'x', D)` 之錯誤訊息由 `invalid ltdt` 變為 `invalid mergerowkeys`(仍 error).
-- **工具陷阱:Edit/Write 會把輸入中的 `\uXXXX` 轉成真實字元**: 在 JSDoc、測試中寫「反斜線 + u + feff」之跳脫序列時,檔內變成不可見的 BOM 字元(`grep -c "ufeff"` 為 0、`LC_ALL=C grep -c $'\xef\xbb\xbf'` 才查得到).改用 `String.fromCodePoint(0xfeff)`(測試)與文字描述 `BOM(U+FEFF)`(JSDoc);`\r\n`、`\n` 不受影響.寫完檔以位元組搜尋 `$'\xef\xbb\xbf'` 驗.
-- **差分要先確認被比函數對自己是否決定性**: `getExcelU8ArrFromData` 輸出的 zip 含時間戳,同一輸入隔秒位元組即不同(HEAD 對 HEAD 亦然,`tmp` 內 `probe-zip-nondeterm.mjs` 證實),首次差分碰巧同一秒而 0 差異,第二次在秒界出現 1 列「差異」.改以同一支讀取器讀回內容比對;位元組比對 zip 輸出的測試皆應改比讀回內容.
-- **空工作表的判定以讀回為準**: hucre 把只有空儲存格(`[[null]]`、`[[null, null]]`)的工作表讀為無列,與 `rows = []` 同為 `data: []`;差分之「受影響域」須以 HEAD 讀回 `fmt: 'array'` 長度 0 判定,不能用輸入列數.
-- **舊案數計法**: `git show HEAD:test/<檔>` 輸出到 `tmp/<輪>/head/oldtest/`(旁置 `src` 為 HEAD 副本、複製 `test/tools`)後 `mocha --dry-run`,得 16 檔 1050 → 1384(+334);`git archive HEAD src` 解出 HEAD src 供修前紅與差分用,repo 工作樹與索引不動.
-
-## 陣列與結構子類:必須參數無效即 throw、空資料照常(2026-11-03,主控任務 20261031121854,ws286e)
-
-- **型別檢測通過後仍留 `isearr` 守門,以免改動未列之合法呼叫**: `arrReverse`／`arrSep`／`matat` 原以 `isearr` 一次擋空陣列與非陣列;改為先 `isarr` throw、(`arrSep`／`matat` 再驗其餘必須參數)、最後才 `if (!isearr(x)) return []`——空陣列與僅含單一廣義無效元素(`[null]`、`['']`、`[{}]`、`[[]]`)之陣列維持 `[]`.`arrReverse([null])` 回 `[]` 而 `([null, null])` 回 `[null, null]` 是靜默丟資料的既有怪行為,不在使用者所列表,依「與表衝突或判不了者不改」只列需裁示(HEAD 實測見 `ws286e-evidence/5-rows-head.log`).
-- **舊行為可能藏在子行程 runner**: `arrSep` 整數寫法無效改 throw 後,`test/tools/intInputHangRunner.mjs` 之 `() => ({ ret: arrSep(arr8, Infinity) })` 沒有 try,throw 會讓子行程崩潰;須同改成 `tryThrow` 並更新 `intInputHang.test.mjs` 期望.改回傳為 throw 時,`Grep` 被測函數名於 `test/tools/` 也要查,不只看 `test/*.test.mjs`.
-- **逐參數「先型別、再元素」的檢測順序要寫成測試**: `matConcat`／`matat`／`ltdtpull` 兩個以上參數都無效時回報最前者;變異以「只在另一參數為陣列時才檢這個參數」之條件式擊殺(顛倒順序不必搬動整塊程式).`every(x, isarr)`／`every(x, isobj)` 之 lodash 版把陣列空洞當 `undefined`,測試補 `[[1], , [3]]`.
-- **共用載具已有就重用**: `test/tools/diffInputKit.mjs` 之 `NON_ARR`(21)、`NON_OBJ_ELEM`(20)、`LEAK`、`throwsMsg`、`throwsMsgNoLeak`;`NON_ARR` 不含陣列,可直接當「元素非陣列」值表;`NON_OBJ_ELEM` 含陣列,不能當 `matConcat` 的非陣列元素表.
-- **測試鎖排隊與背景時限**: 本機 `--lock` 遇他套件 `--lock-exclusive` 排在前面時,排隊可超過 10 分鐘;前景 10 分鐘轉背景後,預設再給 10 分鐘即被終止(連排隊項一起消失).排隊的指令必須 `run_in_background` 並明給 `timeout`(≥ 預估排隊＋執行),且把「受影響測試」與「變異」合併成**一個** wrapper 腳本(`tmp/<輪>/run-all.mjs`,各階段完整輸出寫 `tmp/` 檔、stdout 只印摘要)只排一次;分兩次排會各等一輪.被我 `TaskStop` 的排隊項若在 `locks/queue` 留下死 pid 檔,`quiet-run --release-stale --cwd <repo>` 不會清它,等管理端略過即可,不要手動刪.
-- **環境小陷阱**: 此 bash 的 `grep -c $'\r'` 把 `$'\r'` 展成空字串而計全部行,不能用來判 CRLF,改用 `git ls-files --eol`;`grep -E` 搜含括號的測試標題要改 `grep -F`(`(opt not given)` 被當群組,誤報 0 紅).
-- **前後差分以「規格寫成函數」判受影響域**: `3-diff.mjs` 每列由同一種子生出 HEAD 用與工作樹用兩份獨立物件圖,生成器同時回傳預測(`same` 或 `m`=預期 throw 訊息);有效域逐列比 HEAD(含 `ltdtpull` 的 `result === ltdtAll` 身分),受影響域比預測訊息.
-
-## Windows 查埠改以 OS API(GetExtendedTcpTable),Get-NetTCPConnection 為退回(2026-11-05,主控任務 20261105072000,wu312)
-
-- **耗時隨 TCP 列數,不隨查詢範圍**: `Get-NetTCPConnection -LocalPort` 先列舉全表再篩,1.2 萬列時 11.4～16.5 秒,連線少時 1.0～2.4 秒;OS API 0.4～1.3 秒不隨列數增加.量測要**同一時段新舊交錯**(`tmp/wu312/benchCompare.mjs`),並自建負載才複現:`loadConns.mjs` 起 `listen({ backlog: 8192 })` 伺服端並分批 100 條連線(失敗重試),3500 條已建立(7 千列)＋4500 條立即關閉(TIME_WAIT)得總列數約 1.2 萬;預設 backlog 與一次開 100 條以上會漏連(第一次只得 808＋960).負載行程只結束自己的 PID,關閉後 TIME_WAIT 約 2 分鐘自行消退.
-- **PowerShell 5.1 的 Add-Type**: 編譯在 `%TEMP%` 產 `<亂碼>.0.cs/.cmdline/.dll/.err/.out/.tmp`,正常結束自行清掉(私有 TEMP 夾驗 0 遺留);被 SIGKILL 於編譯中途則 6 檔遺留且無 csc.exe 孤兒.`-EncodedCommand` 長度:2.6 KB 腳本→6888 字元(CreateProcess 上限 32767,經 cmd.exe 為 8191),新增 C# 要留意仍 < 8191.把 `TEMP`/`TMP` 設到不存在之夾 Add-Type 仍成功(退用他處),故驗遺留檔須指向存在之私有夾.中文路徑之 TEMP 亦可編譯.
-- **`Write-Output 'a' + $b` 的陷阱**: 命令模式下 `+` 與 `$b` 是另外兩個引數,不是串接;須 `Write-Output ('a' + $b)`.
-- **受限語言模式(CLM)的真實測法**: `__PSLockdownPolicy=4` 於 Windows 11 build 26300 無效(`$ExecutionContext.SessionState.LanguageMode` 仍 FullLanguage、Add-Type 可用),不可當作已驗.可行手段: 在同一 PowerShell 內先(完整語言模式)把腳本文字解 base64 存變數並 `Import-Module NetTCPIP`,再 `$ExecutionContext.SessionState.LanguageMode = 'ConstrainedLanguage'`,最後 `Invoke-Expression $s`;未先載入 NetTCPIP 則 cmdlet 自動載入被擋(`CouldNotAutoloadMatchingModule`).此為真實 CLM 引擎(Add-Type 被拒),系統層級政策(WDAC/AppLocker)仍未實測.
-- **新舊查法比對要在同一 PowerShell 行程內依序 A=新→B=舊→C=新**(`compareAll.mjs`):A△C 為期間變動,不計入差異.新查法的出貨 C# 只改兩處(去埠過濾、輸出實際本地埠)即可全表傾印,位移與位元組序邏輯為出貨原碼.發現**舊查法之幽靈列**(對外連線之客端埠多一筆遠端萬用、埠 0 的列;`netstat` 無、`connect` 得 ECONNREFUSED),差異判斷要用「獨立證據」(netstat、真 connect、自建真監聽者對照組),不能只看兩者誰多誰少.
-- **僅綁定未 listen 之 socket**: netstat 與 `GetExtendedTcpTable` 皆無,只有 Get-NetTCPConnection(NSI 提供者)有;換資料來源前要用此類 socket 實測(PowerShell `Socket.Bind` 不 listen),舊註解「僅綁定亦會列入」在 OS API 路徑不成立.
-- **變異測試改碼檔的安全作法**: `mutate.mjs` 備份原檔與 sha256、每變異驗 `from` 恰一次、`finally` 與 SIGINT 還原並驗雜湊;變異期間不得跑其他匯入該檔的腳本(會讀到變異碼),也不得編輯 src 與測試.以 `process.execPath + mocha.js` 起 mocha,不經 shell(`--grep` 的 `|` 會被 cmd 當管線).背景 `cmd &` 會使 run_in_background 的工作立即「完成」,實際仍在跑,要看 quiet-run 的 log 判斷.
-- **測試輔助**: 子行程以 stdout 一行一 JSON 通知就緒與事件(`test/tools/portPidsChild.mjs`),客端連線狀態以兩端事件同步(伺服端 `allowHalfOpen: true` 才能製造 FIN_WAIT_2／CLOSE_WAIT;TIME_WAIT 須客端先關、伺服端再 `end()`).
-
-## 查埠腳本由 Add-Type 改 Reflection.Emit(2026-11-05,主控任務 20261105072000,wu316)
-
-- **寫法要點**: 主路徑以 `[AppDomain]::CurrentDomain.DefineDynamicAssembly(...).DefineDynamicModule(...).DefineType(...)` ＋ `DefinePInvokeMethod(名稱, dll, 'Public,Static,PinvokeImpl', 'Standard', 回傳型別, 參數型別陣列, 'Winapi', 'Auto')`；**必設 `PreserveSig`**(`SetImplementationFlags(GetMethodImplementationFlags() -bor PreserveSig)`,須在 `CreateType()` 之前)。實測(`psprobe.mjs`)未設時第一次呼叫之 122〔正值〕被丟棄、`$r` 恆為 0,緩衝仍空而整體退回 cmdlet——不是拋例外(reapShardProcesses 的 NTSTATUS 是負值才拋例外,兩者不要混為一談).`[ref]$size` 配 `[int].MakeByRefType()`;`[bool]` 預設封送為 4 位元組 BOOL.
-- **PowerShell 內解析**: `Marshal.Copy` 整表成 `byte[]` 後以索引逐列過濾,合成表實測每列約 1.3～1.6 微秒(1 千列 3～4 ms、1.2 萬列 19～23 ms、5 萬列 64～79 ms);符合列(要建 `IPAddress`、組字串)約 77 微秒/列(5 千列 387 ms,`matchbench.ps1`;改 `::new`＋`Array.Copy` 只快約 10%,不值得),另每列 `Write-Output` 約 84 微秒;同一埠有 809 列時整體 0.69 秒(C# 版 0.60 秒),1 萬列約多 1 秒.故不必為迴圈另寫 IL.**PowerShell 變數不分大小寫**(量測腳本曾因 `$n` 與 `$N` 同名而把迴圈次數洗成 0),腳本內變數名須互異.`-EncodedCommand` 長度: 腳本 2828 字元→7544(上限 8191),改腳本前先量;縮排用 2 空格以省長度.
-- **負載重現不了就不要硬湊,而是並列呈報**: 派工單稱 16 個忙迴圈 worker(CPU 2 倍超載)下查埠中位 12.5 秒,本機同一組條件下舊版僅 0.8 秒(原因推測為 Windows 對剛喚醒之執行緒給予暫時優先權提升而不被同優先權之忙迴圈餓死,需實測確認).注意 `quiet-run`(`tools/low-priority.mjs`,2026-11-05 起)把整棵行程樹降為低於標準優先權,查詢行程與忙迴圈同級;`OPSRC_NORMAL_PRIORITY=1` 可關(只供量測比較),關掉後 16 個 worker 舊版 1.8～2.7 秒、新版 1.1～2.3 秒,仍遠低於 12.5 秒.能把舊版拉到數十秒以上的是**較高優先權之忙迴圈**(`os.setPriority(pid, PRIORITY_ABOVE_NORMAL)`,舊版 51～62 秒〔三次〕與 91～119 秒〔先前探測〕;**違反規格「壓力行程以低於標準優先權執行」,勿再用**);**更多 worker** 亦可(4 倍 32 個:舊版 10.3 秒、8 倍 64 個:14.3 秒).這些負載下改 Reflection.Emit 只省掉 csc 那一段,**PowerShell 自身啟動在吃緊時才是大頭**,故改善幅度僅 15～30%,不可能保證低於 10 秒;報告須如實寫,不可沿用他處「33 秒→5.5 秒」之數字.
-- **Add-Type 遺留檔須在「被殺於編譯階段」才現形**: 閒置時 PowerShell 約 350 毫秒完成,殺在 250～350 毫秒才會中(21 次中舊版 8 次遺留 48 檔);吃緊時整個編譯階段拉長,殺在 8 秒左右才中(舊版 12 次中 4 次).在 PowerShell 還在啟動(吃緊時動輒數十秒)的階段被殺不會有編譯檔.**PowerShell 主機自己的 `__PSScriptPolicyTest_*.ps1／.psm1`(執行原則探測檔)被殺於其建立與刪除之間也會遺留**,新舊腳本皆然,不是本腳本所生;測試須排除此名稱樣式,其餘任何檔皆不得有.
-- **變異測試改在沙箱副本**: `mutate.mjs` 於 `./tmp/wu316/mut/` 複製 `src`＋相關測試後只改沙箱內檔,repo 內檔不動(免去備份還原與雜湊核對之風險);以 `cwd` 指向沙箱、mocha 以絕對路徑呼叫.
-- **疑似的環境風險(未實測)**: `DefineDynamicAssembly`＋`DefinePInvokeMethod` 是 PSReflect 與惡意載入器的典型特徵,Defender／AMSI／EDR 若在腳本編譯階段整份阻擋,腳本內的 try/catch 與 cmdlet 退回都來不及執行,結果是無 BEGIN 標記而失敗(fail-closed,回 `null`,不會誤報無人).本機 Defender 即時防護(`Get-MpComputerStatus` 之 `RealTimeProtectionEnabled` 為 True)下全數通過.
-
-## fsDownloadFileVerify 假時鐘案偶發紅:虛擬時間追過真實 I/O(2026-11-07,主控任務 20261107181536,ws314)
-
-- **結論: 測試手段缺陷,非產品缺陷;`src` 未改.** dripok 案(`R12 should not treat a download as stalled while data keeps arriving…`)在最後一塊放行後以 `advanceUntil(…, 'settle', 5000, 50)` 推進假時鐘;`useFakeClock().advance` 每 1ms 才讓出一次 `setImmediate`,虛擬時間比真實 I/O 快數百倍(實測: 最後一塊之後約 0.6ms 真實時間內即可推進 300ms 虛擬時間),停滯計時器(自最後一塊起算 400ms,至寫入串流關閉才停止)先於暫存檔寫出與關閉完成而觸發,錯誤訊息 `no data received for 400ms`.一般重跑單檔 2/30 次紅(未加負載);每次紅是 3 案同紅: dripok(根因)＋前一案與檔尾「無 unhandled rejection」案(dripok 的 `pm` 途中落定而尚未被 await,成為 unhandledRejection;根因一個、紅三案).
-- **證據取得法**: 測試檔內 `rec` 是區域變數,不改檔就拿不到事件序列——以 `node --import` 的 `module.registerHooks`(Node 24 同步掛鉤)在載入 `test/tools/dlTraceKit.mjs` 時於記憶體內包 `mkRec`/`advanceUntil`,另記每事件的真實時刻(`performance.now`,假時鐘不影響),配 mocha root hooks 在失敗時傾印事件序列;被動、不改任何檔案.兩次失敗序列皆為: 最後一塊 `touch(data)` 虛擬 900 → `timeout stall` 虛擬 1300,中間真實時間僅 1.07～1.09ms,寫出完成(`temp remove`)在其後約 1.2～2.4ms 真實時間.
-- **裕度量化**: 以同一掛鉤記每案「最後一次 touch → 第一個 `verify(stream)`」的虛擬/真實間隔: dripok 舊寫法進入尾段時剩 300ms 虛擬時間,通過的 28 次用掉 30～197(中位 95),全套一次用掉 224——失敗是此厚尾超過 300.修後(尾段不推進)用掉 0.**CPU 壓力幾乎不影響此類失敗**: 5 個負載行程(整機平均 54%)連跑 20 次 0 紅,而未加負載一般重跑 2/30 紅;失敗取決於檔案關閉的尾延遲(防毒掃描、執行緒池),不是 CPU 飽和.故不可靠負載碰運氣證明,以**注入慢關閉**確定性重現: 覆寫寫入串流的 `_destroy` 延後 100ms(真實計時器)——舊尾段 0/10 通過(全是 E_TIMEOUT 停滯),新尾段 10/10 通過,不注入時兩者皆 10/10.
-- **修法與同類**: 預期成功(任何計時器皆不該觸發)之路徑,放行最後一塊後以 `settle` 事件為同步點,不再推進虛擬時間(dripok 與 R14 jointo 案;其餘 `advanceUntil` 站點都是預期計時器觸發或被測碼無待完成之真實 I/O,盤點表見修正報告);假時鐘案中被測 promise 先掛 `.catch(() => {})`;新增兩案以 fs 注入扣住寫入串流關閉(`mkSlowFs`),事件決定先後: 最後一塊後 399ms 才放行不算停滯、滿 400ms 仍未放行則 E_TIMEOUT.變異(僅記憶體內): 移除 `touch('data')` 與不清舊計時器兩項新舊測試皆紅;「本體讀完即停止停滯計時」一項舊測試存活、新 X 案紅.
-- **設計觀察(未改,列需裁示)**: 停滯計時器在本體讀完後仍計到寫入串流關閉才停止(JSDoc「各等待點皆以此為上限」),寫出慢過 `stallMs`(預設 30000)會得 `no data received for …ms` 與「檢查網路與代理」之提示,但資料其實已收齊.屬文件化行為,新 X 案鎖定之.
-- **量測陷阱**: ①`--import` 以相對路徑經 `NODE_OPTIONS` 傳給 mocha `--parallel` 之 worker,測試所起之子行程(cwd 不同)載入失敗,使 7 個與本案無關的案必紅(execCli、execProcess、fsWriteTextAtomic、fsDeleteFolderSafe)——一律用 `pathToFileURL` 的絕對 URL;②本機 `--lock-exclusive` 排隊中,新進之一般 `--lock` 測試會讓路,他任務連續送負載批時一般測試可等超過 30 分鐘,且 `quiet-run --timeout` 不含排鎖但前景/背景等待指令有時限——排鎖指令以 nohup 起、用有界迴圈分段等結果檔;③獨佔鎖每次持有須 < 15 分鐘: 負載批改為一次取鎖連跑 N 次(第 13 分鐘後不再起新的一次);④負載行程佔空比控制器在兩批之間(測試空檔)會爬升,下一個 mocha 啟動時整機瞬間衝到 90～95%(基準批平均 54%、最大 90%、>70% 取樣佔 12%;修後批平均 45%、最大 95%、佔 7.5%),下次應限制佔空比上限與爬升速度;⑤全套期間別台任務同時在跑時,`clearXSS` 的牆鐘上限案(100 萬節點環,`ms < 5000`)曾 7657ms 紅一次(與本案無關,屬牆鐘效能時限類,另案處理).
-
-## 外部依賴跨主版號升級(chokidar 6、he 2):先差分實測再改測試,錯誤之平台假設不等於放寬(2026-11-09,主控任務 20261109223142,ws01)
-
-- **新舊差分法**: he 1.2.0 仍以 mocha 內嵌副本存在於 `node_modules/mocha/node_modules/he`(CJS),可與專案 2.0.0 直接差分(編碼 5436 案 0 差異、解碼 23084 案非 strict 0 差異,只 strict 之錯誤訊息文字變);chokidar 則以 `git archive HEAD src` 解到 `./tmp/` 並在該夾 `npm --prefix <夾> install chokidar@5.0.0`(模組解析由 `./tmp/…/node_modules` 優先、其餘依賴往上找到 repo 之 `node_modules`,不需連接點)得真基線,再以同一探測腳本跑新舊(`FSW=<模組路徑>` 切換).**不要用 `npm init -y --prefix <夾>`**: `npm init` 忽略 `--prefix` 而改寫 cwd 之 `package.json`(本次誤改,已還原並回驗 diff 僅兩行).
-- **chokidar 6 之語意差在測試裡現形之處**(皆在 Windows、原生監看): ①被監看資料夾本身消失,先回報者由恆為輪詢(`timer`)變成多為 chokidar(`watcher`,實測 14~19/20),原案「`emit` 前必有 `tick`」只在 `timer` 時成立;②拒絕存取之子資料夾不再回報 EPERM(`backend.js:250` 靜默),輪詢模式仍回報,故 EPERM 案改 `polling: true`.修法是改案裡錯誤之平台假設(來源為競態、改測可穩定觸發之路徑),不是放寬時間門檻;所改之處在案內註明成因與實測.
-- **終結態的測法**: chokidar 6 之 `close()` 後 `closed` 為 true、`add()` 丟錯.被測函數是否沿用已關閉之 watcher,以透傳真 `chokidar.watch` 之 spy(`withSpyChokidar`)取各次之真實例比對(實例不同、舊者 `closed`、新者未關閉),假 watcher 亦擬其終結態;`chokidar.watch` 被取代之手法仍有效是因預設匯出仍為 `{ watch, FSWatcher }` 物件.
-- **選項更名先看是否為別名**: `interval`／`binaryInterval` 在 chokidar 6 仍可用(`pollingInterval ?? interval`),但新版驗證之下限更嚴(`pollingInterval` 須有限且 > 0,否則 TypeError);wsemi 之 `iseint(min:1)` 已先擋,不受影響.
+- 非計算類函數必須參數遇非預期:差異比對子類 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(2026-11-03,主控任務 20261031121854,ws286c)
+- 空資料不是失敗:向量處理空進空出、`arrProduct` 任一邊為空即 throw、轉換函數狀態模式、`getCsvStrFromData([])`(2026-11-03,主控任務 20261031121854,ws286d)
+- 陣列與結構子類:必須參數無效即 throw、空資料照常(2026-11-03,主控任務 20261031121854,ws286e)
+- Windows 查埠改以 OS API(GetExtendedTcpTable),Get-NetTCPConnection 為退回(2026-11-05,主控任務 20261105072000,wu312)
+- 查埠腳本由 Add-Type 改 Reflection.Emit(2026-11-05,主控任務 20261105072000,wu316)
+- fsDownloadFileVerify 假時鐘案偶發紅:虛擬時間追過真實 I/O(2026-11-07,主控任務 20261107181536,ws314)
+- 外部依賴跨主版號升級(chokidar 6、he 2):先差分實測再改測試,錯誤之平台假設不等於放寬(2026-11-09,主控任務 20261109223142,ws01)
 
 ## 假時鐘案的「推進終點」與效能時限案的「量 CPU 不量牆鐘」(2026-11-12,主控任務 20261112065727,ws290)
 
@@ -178,3 +119,18 @@
 - **結構釘住不綁實作形式**: 第一版測試釘「`replace.mjs` 恰有一個 `replaceAll` 函式站點」,等價變異(改 `split/join`)被誤殺;改為只釘規則(無 `dynamic` 站點)與行為,等價變異存活.
 - **變異於 `src` 副本**: 副本放 `./tmp/<案>/mut/{src,test}`(`test/tools` 一併複製),測試以相對路徑 import 自動指向副本,`@babel/parser` 與其他依賴由上層 `node_modules` 解析;mocha 以絕對路徑 `node_modules/mocha/bin/mocha.js` 由腳本 `spawnSync`(`windowsHide`),整支腳本經 `quiet-run --lock` 執行一次(約 1 分鐘).`to` 字串含 `$` 時以函式形式 `text.replace(from, () => to)` 取代,否則變異文字本身被展開(正是本規則所防之事).
 - **eslint `no-template-curly-in-string`**: 測試內以一般引號字串寫含 `${r}` 之樣板字串原始碼會被擋,改 `'…$' + '{r}…'` 拆開(同 `_srcBigIntLiteral.test.mjs` 作法).
+
+## 瀏覽器函數之假 DOM 單元測試與真 Chromium 並排驗證、opt 改 iseint 之觀察法(2026-11-12,主控任務 20261112220545,ws430)
+
+- **假 DOM 斷言要與 DOM 建構方式無關**: `domAlert` 由「整段 `innerHTML`」改為 `createElement` 建外框與按鈕;若斷言讀「元素之 style 屬性」,修前版(只有 innerHTML 字串)之紅是因結構不同而非行為不同.改為收集「元素 style 屬性＋各元素 `innerHTML` 內之 `style="…"`」後去空白比對(`test/domAlert.test.mjs` 之 `styleTexts`),修前紅之原因即為 D5 之值(如 `padding:5px 0px 0px 0px`).結構本身(✕ 是否為可綁事件之元素)另以 D7 案斷言.
+- **模組層狀態之函數每案載入新模組實例**: `domAlert` 有模組層佇列與 `timer`;`mock.timers.reset()` 丟掉其計時器後 `timer` 仍非 null,下一案不再建計時器.以 `import('../src/domAlert.mjs?ws430=' + n)` 每案取新實例(相依模組共用),互不影響;修前版之 NaN 永不關閉也不會拖累後續案.
+- **`mock.timers` 之單次大步推進不會依序觸發推進期間才建立之計時器**: `domFadeIn` 於事件當下 `setTimeout` 再 `setInterval`,`tick(700)` 一次後透明度未變;改每 10ms `tick` 一次即正常.事件前已存在之計時器(`domAlert` 之偵測 `setInterval`)一次大步推進無妨.
+- **以 Promise 狀態追蹤做事件同步**: `track(p)` 於建立時掛 `then` 記狀態、`flush()` 只跑微任務;按 ✕(同步派送 click)後 flush 即可判定是否已 resolve,不推進時間、修前不懸置(`test/tools/browserFakeKit.mjs`).
+- **真 Chromium 並排比對修前修後**: 起本機 http 伺服器(`listen(0)`),頁面以 import map 對 `lodash-es/`,同時供 `/src/`(本輪)與 `/old/src/`(`git archive HEAD` 解出之修前 src),同一瀏覽器兩個 context 各載一版,比較 `getBoundingClientRect`、`getComputedStyle` 與元素截圖之逐像素差(頁內以 canvas 解 PNG 計數,免 pngjs).嚴格 CSP(`script-src 'self' 'nonce-…'`;import map 帶 nonce)下行內事件屬性被擋,可直接重現修前 ✕ 失效.
+- **Playwright 之 `page.evaluate` 帶使用者啟用**,headless shell 即使不加 `--disable-popup-blocking`、等 6 秒使啟用過期仍不攔 `window.open`;本機只有 headless shell(完整版 chromium 未安裝),「被攔截回 null」無法以真瀏覽器重現,只能以假 `window.open` 回 null 之單元測試覆蓋.`page.clock.install()` 可驗 `revokeObjectURL` 之延遲(59 秒仍可 fetch、60 秒後失敗、已載入分頁內容仍在、重新整理 `ERR_FILE_NOT_FOUND`).
+- **opt 改 iseint 之觀察法**: 能於短時間觀察者以子行程之 `onTrace` 事件斷言(`retry` 之 ms、`stop`／`kill` 之 ms、`full` 之 size、`done` 之 n);只在很久之後才可觀察者(逾時 120 秒、不限時)以 `opt.debug` 警告斷言所採預設(警告與取值同一 `optVal` 路徑).`maxRetries: Infinity` 之修前紅會無限重試:測試以「第 2 次嘗試事件或 done 先到者」resolve,修前副本跑 mocha 加 `--exit`.
+- **前批「本批不改」之鎖定案**: `isenumCallersRound.test.mjs` 鎖「dig 之 idig 本批不改」、`execCliSession.test.mjs` 鎖「stderrKeep 收包裝物件」;本批規格改變時全套才紅,屬規格改變而非退化,改寫預期並於註解寫明出處(規格項、帳本條號).動工前可先以 `Grep` 搜 `unchanged in this batch`、`Number wrapper` 類字樣預找.
+- **判型不可信 `Object.prototype.toString` 之標籤**(外審 terra 指出,屬實): `{ [Symbol.toStringTag]: 'ArrayBuffer' }` 可通過 `isblob`／`isu8arr`／`isstr` 式之標籤判定,`toString` 亦會叫用被檢測值之 `@@toStringTag` 存取器(拋錯之 getter、已撤銷之 Proxy 直接外洩錯誤).入口之品牌判定改用內建存取器之內部槽檢查(`Blob.prototype.size`、`ArrayBuffer.prototype.byteLength`〔SharedArrayBuffer 拋錯〕、`detached`、`ArrayBuffer.isView`＋`%TypedArray%.prototype.buffer`、`%TypedArray%.prototype[@@toStringTag]`),字串用 `typeof`;跨 realm(iframe、`vm.createContext`)之真物件照常可用(`src/_browserData.mjs`).`ArrayBuffer.isView` 對 SharedArrayBuffer 為底之檢視亦為 true,而瀏覽器 `new Blob([view])` 對其拋 TypeError——只看 `isView` 不夠.
+- **複核又抓到之三點**(第二次外審,屬實): ①以 `isobj`(標籤)判「opt 是否為物件」會把帶自訂 `Symbol.toStringTag` 之一般物件誤判為非物件而丟掉其設定——修前直接讀鍵者改為判型時,判型本身不可依標籤,用 `typeof`＋`Array.isArray`(包 try);②新語言特性(`ArrayBuffer.prototype.detached`)不可當唯一判據,無者要有退路(零長度再以 `new Uint8Array(v)` 是否拋錯判分離);③Node 之 `Blob.prototype.size` 以屬性(`kHandle`)判定,Proxy 與以真 Blob 為原型之物件可通過——Node 與瀏覽器之「內建存取器」品牌強度不同,測試在 Node 綠不代表瀏覽器語意,反之亦然.另:「存取器之讀取次數」測試要直接傳入帶存取器之物件,物件展開(`{ ...opt }`)本身就會讀一次.
+- **外審探到之「只驗警告」缺口**: 以 `opt.debug` 警告驗逾時預設,變異「保留警告、仍用舊夾限值」照樣全綠;改以側錄 `globalThis.setTimeout` 之毫秒參數直接驗交給計時器之值(mocha 自身於載入時已取 `setTimeout` 參照,不受側錄影響).
+- **工作樹為 CRLF(autocrlf=true,索引 LF)**: Write 寫出之檔為 LF(提交時正規化,無妨),以腳本拼接既有 CRLF 檔時須以 `/\r?\n/` 切行並依原檔換行接回,否則定位字串比對不到.

@@ -1,4 +1,3 @@
-import cst from './_const.mjs'
 import { spawn } from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
@@ -6,9 +5,7 @@ import isfun from './isfun.mjs'
 import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isestr from './isestr.mjs'
-import ispint from './ispint.mjs'
-import isp0int from './isp0int.mjs'
-import cint from './cint.mjs'
+import optVal from './_optVal.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
@@ -19,6 +16,13 @@ import getTrace from './getTrace.mjs'
 
 //buildSpawnArgs, buildSpawnEnv, 共用核心
 let { buildSpawnArgs, buildSpawnEnv } = execCliCore
+
+
+//opt類數值參數之規則(iseint, 帳本G17、R-OPT-VAL-01), 計時毫秒皆交給原生計時器故用use:'timer', 非預期改用預設
+let RULE_TIMEOUT_MS = { fn: 'execCliSession', name: 'opt.timeoutMs', kind: 'eint', chk: { use: 'timer', min: 1 }, defDesc: 'null (no limit)' }
+let RULE_EXIT_GRACE_MS = { fn: 'execCliSession', name: 'opt.exitGraceMs', kind: 'eint', chk: { use: 'timer' } }
+let RULE_KILL_WAIT_MS = { fn: 'execCliSession', name: 'opt.killWaitMs', kind: 'eint', chk: { use: 'timer' } }
+let RULE_STDERR_KEEP = { fn: 'execCliSession', name: 'opt.stderrKeep', kind: 'eint', chk: { use: 'count' } }
 
 
 /**
@@ -33,10 +37,12 @@ let { buildSpawnArgs, buildSpawnEnv } = execCliCore
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以onExit與stop()之結果回報error為'ENOENT: cwd is not an existing folder: <cwd>'
  * @param {Object} [opt.env=undefined] 輸入本次額外注入之環境變數物件，語意同execCli，預設undefined
- * @param {Number} [opt.timeoutMs=null] 輸入整體逾時毫秒正整數，逾時即樹殺並於結果標timeout:true，預設null代表不限制(工作階段為長駐，不沿用execCli之120000)
- * @param {Number} [opt.exitGraceMs=2000] 輸入stop()關閉stdin後等待子進程自行退出之寬限毫秒非負整數，逾期即樹殺，預設2000
- * @param {Number} [opt.killWaitMs=3000] 輸入樹殺後等待exit事件之上限毫秒非負整數，逾期仍未退出則於結果標exited:false並結束等待，預設3000
- * @param {Number} [opt.stderrKeep=4000] 輸入stderr保留尾端字元數非負整數，預設4000
+ * @param {Number} [opt.timeoutMs=null] 輸入整體逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，逾時即樹殺並於結果標timeout:true，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設null即不限制，不夾至上限，預設null代表不限制(工作階段為長駐，不沿用execCli之120000)
+ * @param {Number} [opt.exitGraceMs=2000] 輸入stop()關閉stdin後等待子進程自行退出之寬限毫秒非負整數，須為有效整數且介於0至2147483647(可為字串型數字)，逾期即樹殺，非預期之輸入(含Infinity、小數、負數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限，預設2000
+ * @param {Number} [opt.killWaitMs=3000] 輸入樹殺後等待exit事件之上限毫秒非負整數，須為有效整數且介於0至2147483647(可為字串型數字)，逾期仍未退出則於結果標exited:false並結束等待，非預期之輸入(含Infinity、小數、負數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限，預設3000
+ * @param {Number} [opt.stderrKeep=4000] 輸入stderr保留尾端字元數非負整數，須為有效整數且介於0至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含Infinity、小數、負數、'0x10'、包裝物件)視為未給而改用預設，預設4000
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeoutMs、opt.exitGraceMs、opt.killWaitMs、opt.stderrKeep為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onLine=undefined] 輸入stdout逐行回調函數，格式為(line)=>{}，line不含換行(\\r\\n與\\n皆視為換行)，子進程結束時殘餘之不完整行亦會發出，預設undefined
  * @param {Function} [opt.onStdout=undefined] 輸入stdout原始片段回調函數，格式為(chunk)=>{}，已經UTF-8跨chunk解碼，供非行式協定(如LSP之Content-Length分幀)自行分幀，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined
@@ -159,21 +165,28 @@ function execCliSession(command, args = [], opt = {}) {
         v = get(opt, 'env')
         envExtra = isobj(v) ? v : undefined
 
-        //timeoutMs, 預設null不限制; 夾至計時器上限, 見_const.mjs
+        //timeoutMs、exitGraceMs、killWaitMs、stderrKeep: opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01), 有效則取Number(v), 非預期(含Infinity、小數、超出範圍、'0x10'、包裝物件)視為未給、改用預設, 不夾限
+        //判定時只收集, 業務鍵讀完後才至多讀一次opt.debug(V11)
+        let col = optVal.defer()
+
+        //timeoutMs, 計時毫秒1~2147483647, 預設null不限制(非預期亦為null)
         v = get(opt, 'timeoutMs')
-        timeoutMs = ispint(v) ? Math.min(v, cst.TIMER_TIME_MAX) : null
+        timeoutMs = col.take(v, null, RULE_TIMEOUT_MS)
 
-        //exitGraceMs, 夾至計時器上限, 見_const.mjs
+        //exitGraceMs, 計時毫秒0~2147483647, 預設2000
         v = get(opt, 'exitGraceMs')
-        exitGraceMs = Math.min(isp0int(v) ? v : 2000, cst.TIMER_TIME_MAX)
+        exitGraceMs = col.take(v, 2000, RULE_EXIT_GRACE_MS)
 
-        //killWaitMs, 夾至計時器上限, 見_const.mjs
+        //killWaitMs, 計時毫秒0~2147483647, 預設3000
         v = get(opt, 'killWaitMs')
-        killWaitMs = Math.min(isp0int(v) ? v : 3000, cst.TIMER_TIME_MAX)
+        killWaitMs = col.take(v, 3000, RULE_KILL_WAIT_MS)
 
-        //stderrKeep, 轉為數字(支援字串型數字與包裝物件, 否則監聽器內之=== 0判定不成立而不截斷)
+        //stderrKeep, 個數0~4294967295, 預設4000; 取值為數字(字串型數字轉為數字, 監聽器內之=== 0判定方成立)
         v = get(opt, 'stderrKeep')
-        stderrKeep = isp0int(v) ? cint(v) : 4000
+        stderrKeep = col.take(v, 4000, RULE_STDERR_KEEP)
+
+        //debug警告, 有非預期者才讀opt.debug/funLog一次(讀取拋錯視為未給, 不改變既有失敗路徑)
+        col.flush(opt)
 
     }
     catch (err) {

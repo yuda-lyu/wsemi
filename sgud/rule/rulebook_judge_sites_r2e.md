@@ -54,3 +54,32 @@
 ### 變更紀錄
 
 - 2026-11-12(ws426):新增本條;破壞性變更紀錄第 63 項.
+
+## 第 430 項 ws430 處置結果(規格第 199 項 Q1-h「檢查要拿來計算之 opt 一律用 ise*」;主控帳本 G17;2026-11-12)
+
+- **依據**: 主控 dspec〈輸入參數之檢測機制〉§11 Q1-h〔使用者 2026-11-12 定〕「wsemi 內 6 檔 14 處改用 `iseint`」、§11 第 19～21 項(Infinity 之 opt 一律改用預設,語意反轉者亦然);本套件 R-OPT-VAL-01(`rulebook_optval.md`;共用 `src/_optVal.mjs`、取值 `Number(v)`、不夾限、`opt.debug` 警告);站點原盤點見 `rulebook_judge_sites_inv_a.md` 第 21～26、74～76、85、93～95 列.
+- **處置(14 站,逐站舊 → 新;預設不變)**:
+
+| 站 | 舊判定 | 新判定(`optVal` 之 `iseint` 規則) | 預設 | 主要差異 |
+|---|---|---|---|---|
+| `execCli.mjs` `maxRetries` | `isp0int` → `cint` | `{ use:'count' }` | 0 | `Infinity`(原 `MAX_VALUE`=近乎無限重試)、`new Number(1)`(原 1)、`'0x10'`(原 16) → 0 |
+| `execCli.mjs` `retryDelayMs` | `ispint` → `cint` | `{ min:1 }`(不設計時器上限:實際間隔先夾 15000 才交計時器) | 5000 | `Infinity`(原實際間隔夾為 15000)、`'0x10'`(原 16) → 5000 |
+| `execCli.mjs` `timeoutMs` | `ispint` → `cint` → 夾至 2147483647 | `{ use:'timer', min:1 }`,移除夾限 | 120000 | `Infinity`／`3e9`／`2147483648`(原夾至上限)、`'0x10'`、`new Number(300)` → 120000 |
+| `execCli.mjs` `maxBuffer` | `ispint` → `cint` | `{ use:'count', min:1 }`(字元數,同 `stderrKeep`;外審 terra 9 後由 `{min:1}` 改定——超過 4294967295 之字串本已無法容納,V8 字串上限約 2^29) | 10485760 | `Infinity`(原 `MAX_VALUE`=不限)、超過 4294967295 → 10MB |
+| `execCliJsonRpc.mjs` `timeoutMs` | `ispint(v) ? v : 120000`(原值轉交,未轉數字) | `{ use:'timer', min:1 }`,轉交 `Number(v)` | 120000 | `Infinity`／`3e9`(原轉交後於 session 夾至 2147483647)、`'0x10'` → 120000;`null` 照舊為預設(下游以 `null` 轉傳) |
+| `execCliSession.mjs` `timeoutMs` | `ispint` → 夾至 2147483647,否則 `null` | `{ use:'timer', min:1 }` | `null`(不限) | `Infinity`／`3e9`(原約 24.8 天後逾時) → 不限時;`'0x10'` → 不限時 |
+| `execCliSession.mjs` `exitGraceMs` | `isp0int` → 夾至上限 | `{ use:'timer' }` | 2000 | `Infinity`(原 2147483647)、`-1`、`1.5`、`'0x10'`(原 16) → 2000 |
+| `execCliSession.mjs` `killWaitMs` | `isp0int` → 夾至上限 | `{ use:'timer' }` | 3000 | `Infinity`、`'0x10'`、`new Number(10)`(原 10) → 3000 |
+| `execCliSession.mjs` `stderrKeep` | `isp0int` → `cint` | `{ use:'count' }` | 4000 | `Infinity`(原全部保留)、`'0x10'`、`new Number(0)`(原 0) → 4000 |
+| `fsTreeFolderCore.mjs` `levelLimit` | `null` 為無窮;`ispint` → `cint`;其餘原值保留(`level <= 原值` 比較) | `null` 保留為無窮;其餘 `{ use:'count', min:1 }` | 1 | `Infinity`(原無窮)、`'0x10'`(原 16 層)、`2.5`(原等於 2 層)、`new Number(3)`(原 3 層) → 1;連帶 `fsTreeFolder`、`fsGetFilesInFolder(Core)`、`fsGetFoldersInFolder(Core)`、`fsTreeFolderWithHash(Core)`、`fsGetFilesWithHashInFolder(Core)` |
+| `isUserPw.mjs` `numLenMin` | `isint` 且 `cint >= 0` → `cint` | `{ use:'count' }` | 8 | `Infinity`(原 `MAX_VALUE` 使任何密碼不合格且 min>max)、`1.5`、`'0x10'`、`new Number(2)` → 8 |
+| `isUserPw.mjs` `numLenMax` | 同上 | `{ use:'count' }` | 30 | `Infinity`(原不限長)、`1.5`、`'0x10'` → 30 |
+| `isUserPw.mjs` `consecutiveCharsMinMatch` | `ispint` → `cint` | `{ use:'count', min:1 }` | 3 | `Infinity`(原恆不比對)、`'0x10'`、`1.5` → 3 |
+| `dig.mjs` `idig` | `isp0int`,無效回 `''` | `{ use:'digits' }`(0～100,同 `digExp`／`cfinancial`) | 0 | `Infinity`／`101`(原 `toFixed` 拋 RangeError)、`-1`／`2.5`／`'abc'`／`null`(原 `''`)、`new Number(2)`(原 2) → 0 |
+
+- **不改**: `verifyValue`(依型別名判斷之判斷類)、`estimateTicks`(傳入為算出之有限刻度)(使用者 2026-11-12).
+- **opt.debug**: 有 opt 物件者(`execCli`、`execCliJsonRpc`、`execCliSession`、`isUserPw`)傳入其 opt,JSDoc 加 `opt.debug`／`opt.funLog`(R-OPT-VAL-01 規則 12);`execCliJsonRpc` 另把 `debug`／`funLog` 轉交 `execCliSession`(其對原樣轉交之 `exitGraceMs` 亦警告;外審 terra 6);`levelLimit` 由 `fsTreeFolderCore` 讀其 opt 之 `debug`,有 opt 物件之對外函數 `fsTreeFolderWithHash(Core)`、`fsGetFilesWithHashInFolder(Core)` 經 `optVal.readDbg` 讀出後轉交(經 `fsGetFilesInFolderCore`),JSDoc 加兩行(外審 terra 7,規則 4);無 opt 之 `fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder` 與 `dig` 不警告.`_optVal.mjs` 新增 `optVal.readDbg(opt)`(自 `warnInvalid` 抽出,行為不變).
+- **debug 讀取時機(外審 terra 第 5 條、複核 N3)**: 本輪入口改為「判定時只收集、業務鍵全部讀完後才至多讀一次 `opt.debug`」——`execCliSession`(4 鍵)、`execCliJsonRpc`(`timeoutMs`;另一律讀一次以轉交 session)、`domAlert`(數值類 opt)以新增之 `optVal.defer()`(`take`／`flush`);`levelLimit` 之 debug 來源以 `optDbg` 轉交(`fsTreeFolderWithHashCore`、`fsGetFilesWithHashInFolderCore` → `fsGetFilesInFolderCore` → `fsTreeFolderCore`),只在非預期時才讀;`execCli` 以 `onceOpt`(展開副本,呼叫端之存取器於展開時各讀一次,其後重讀副本無副作用)維持,與其 `onTrace` 同只認自有可列舉鍵(第 8 條,不改).`isUserPw` 與前輪各函數仍為「第一個非預期鍵當下讀」之既有寫法(全庫約 50 處;是否全庫改用 `defer` 列回饋與需裁示).
+- **孤兒 import 已移除**: `execCli`(`cst`、`ispint`、`isp0int`)、`execCliJsonRpc`(`ispint`)、`execCliSession`(`cst`、`ispint`、`isp0int`、`cint`)、`fsTreeFolderCore`(`ispint`、`cint`)、`isUserPw`(`isint`、`ispint`、`cint`)、`dig`(`isp0int`).
+- **測試**: `test/optValG17eint.test.mjs`(34 案;含 debug 只讀一次且晚於業務鍵、有效值不讀;子行程以 `onTrace` 之 `retry`／`stop`／`kill`／`full`／`done` 事件斷言;逾時另以 `setTimeout` 側錄直接驗交給計時器之值〔外審 terra 11:只驗警告抓不到「仍警告但用舊夾限」〕,不限時以 `opt.debug` 警告斷言;`maxBuffer`、`levelLimit` 之 count 上限;JsonRpc 轉交 debug;WithHash 之 levelLimit 警告);修前紅 21 案(外審前之 32 案中);變異 M12～M17、M21～M24、M33～M37、M43～M45(18 個)皆被殺.既有 2 案改寫預期: `test/execCliSession.test.mjs`(`stderrKeep` 之包裝物件改為預設)、`test/isenumCallersRound.test.mjs`(dig 之 idig 由「本批不改」改為預設 0).
+- **下游(只盤點、未改他套件;ws430 報告附)**: 無呼叫端傳入字面 `Infinity`、小數或超過 2147483647 之字面值;w-ldap 之 `opt.timeout`、w-dispatch-ai `runExecCli` 之 `timeoutMs` 經 `ispint`／`castPintOr` 後轉交,使用者給大於 2147483647 時由「夾至上限」變「預設 120000」;`dig` 之變數第 2 參數(元件 prop 等)來源不明者,原為 `''` 或 RangeError 之值改為 0 位小數.
