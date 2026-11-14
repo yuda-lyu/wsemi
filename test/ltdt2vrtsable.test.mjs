@@ -263,11 +263,12 @@ describe(`ltdt2vrtsable`, function() {
     })
 
     it(`should return { state: 'success', msg } when input a valid ltdt with returnWithStateAndMsg`, function() {
-        //opt為第3參數, 因第2參數mergerowkeys為既有參數
-        let ltdt = [{ a: 1, b: 2 }]
+        //opt為第3參數, 因第2參數mergerowkeys為既有參數; 規格(使用者2026-11-14裁定, 裁定表〈九〉): 每格須為{ value, style }, 原以單純值[{ a: 1, b: 2 }]為「有效」輸入(各格value為undefined), 現該輸入無效, 改以合格式之輸入驗成功
+        let ltdt = [{ a: { value: 1, style: {} }, b: { value: 2, style: {} } }]
         let r = ltdt2vrtsable(ltdt, [], { returnWithStateAndMsg: true })
         let rr = { state: 'success', msg: ltdt2vrtsable(ltdt) }
         assert.strict.deepStrictEqual(r, rr)
+        assert.strict.deepStrictEqual(r.msg, [{ a: { value: 1, style: {}, rowspan: 1 }, b: { value: 2, style: {}, rowspan: 1 } }])
     })
 
     it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {

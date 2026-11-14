@@ -19,7 +19,7 @@ function pad(n, len = 2) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/genClockTZ.test.mjs Github}
  * @memberOf wsemi
  * @param {String} timeZone 輸入IANA時區字串，例如'Asia/Taipei'、'UTC'、'America/New_York'，必須給定且為非空原始字串(不收String包裝物件)
- * @returns {Object} 回傳時鐘物件，內含timeZone(輸入時區字串)與下列方法(每次呼叫皆取當下時間)：iso8()與getISO()回傳'YYYY-MM-DDTHH:mm:ssZ'(如'2026-08-18T12:00:00+08:00'，格式同now2str，UTC為'+00:00')；stamp8()與getNow()回傳'YYYYMMDDHHmmss'(如'20260818120000')；date8()回傳'YYYY-MM-DD'；day8()回傳'YYYYMMDD'；getDay(s)回傳s之前8碼(對字串純切片，不重新解析)，s須為以8位數字開頭之原始字串，未給或非預期輸入視為未給，改用stamp8()；getDate(offsetDay)回傳指定時區今日偏移offsetDay日之'YYYY-MM-DD'(-1為昨日，1為明日，日曆日加減不受夏令時間影響)，offsetDay預設0，非整數或使年份超出0000至9999之偏移視為未給，改用0；formatTime(s)回傳'YYYY/MM/DD HH:mm'(如'2026/08/08 21:44')，s為stamp8()格式(至少12位數字之原始字串)，純切片組字，s非預期輸入時拋出Error；getTimestamp()回傳'YYYY-MM-DD HH:mm:ss'(如'2026-08-08 21:44:08')
+ * @returns {Object} 回傳時鐘物件，內含timeZone(輸入時區字串)與下列方法(每次呼叫皆取當下時間)：iso8()與getISO()回傳'YYYY-MM-DDTHH:mm:ssZ'(如'2026-08-18T12:00:00+08:00'，格式同now2str，UTC為'+00:00')；stamp8()與getNow()回傳'YYYYMMDDHHmmss'(如'20260818120000')；date8()回傳'YYYY-MM-DD'；day8()回傳'YYYYMMDD'；getDay(s)回傳s之前8碼(對字串純切片，不重新解析)，s須為以8位數字開頭之原始字串，未給或非預期輸入視為未給，改用stamp8()；getDate(offsetDay)回傳指定時區今日偏移offsetDay日之'YYYY-MM-DD'(-1為昨日，1為明日，日曆日加減不受夏令時間影響)，offsetDay預設0，非整數或使年份超出0000至9999之偏移視為未給，改用0；formatTime(s)回傳'YYYY/MM/DD HH:mm'(如'2026/08/08 21:44')，s為stamp8()格式(至少12位數字開頭之原始字串)，純切片組字，s非預期輸入(含數字型戳記如20260808214408、String包裝物件、不足12位數字)時回傳''，不拋錯(格式化類，同dspec〈輸入參數之檢測機制〉§5.3 C3)；getTimestamp()回傳'YYYY-MM-DD HH:mm:ss'(如'2026-08-08 21:44:08')
  * @example
  * need test in nodejs.
  *
@@ -45,6 +45,9 @@ function pad(n, len = 2) {
  *
  * console.log(clock.formatTime('20260808214408'))
  * // => 2026/08/08 21:44
+ *
+ * console.log(clock.formatTime(20260808214408))
+ * // => '' (數字型戳記非字串, 回傳空字串)
  *
  * console.log(clock.getTimestamp())
  * // => 2026-08-18 12:00:00
@@ -148,9 +151,9 @@ function genClockTZ(timeZone) {
     }
 
     let formatTime = (s) => {
-        //s為必須參數, 非預期輸入拋錯(不回顯輸入值)
+        //s非「至少12位數字開頭之原始字串」(含數字型戳記)回傳'', 不拋錯(格式化類, dspec §5.3 C3; 使用者2026-11-14, 第430項第二批)
         if (typeof s !== 'string' || !/^\d{12}/.test(s)) {
-            throw new Error('invalid s: must be a stamp string of at least 12 digits (YYYYMMDDHHmm...)')
+            return ''
         }
         return `${s.slice(0, 4)}/${s.slice(4, 6)}/${s.slice(6, 8)} ${s.slice(8, 10)}:${s.slice(10, 12)}`
     }

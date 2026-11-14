@@ -1,4 +1,6 @@
 import isobj from './isobj.mjs'
+import optVal from './_optVal.mjs'
+import parseNumOpt from './_numOpt.mjs'
 
 
 //eq, SameValueZero(同lodash eq)
@@ -105,7 +107,7 @@ function setKey(o, k, v) {
 
 
 //合併值d與s並回傳結果, d為可就地修改之複本(copyDest的產物或類別實例的寫入時複製), s為來源(不修改, 呼叫端保證s不為undefined: 最外層由ltdtmerge過濾、內層於迴圈內處理), stack記錄正在處理之來源容器與其對應結果(處理循環參照)
-//  s為陣列: 基底為d(d為陣列時)否則新陣列, 依索引逐一合併; s為純物件或最外層之物件列(top): 基底為d(d為非陣列之物件時)否則新物件, 依自有與繼承之可列舉字串鍵逐一合併,
+//  s為陣列: 基底為d(d為陣列時)否則新陣列, 依索引逐一合併; s為純物件或最外層之物件列(top): 基底為d(d為非陣列之物件時)否則新物件, 依自有之可列舉字串鍵逐一合併(不含繼承之鍵),
 //  length與其他鍵同為一般鍵(不得使用lodash merge/each等對具length鍵之物件採陣列樣迭代之函數, 見R-OBJ-ITER-01); TypedArray/Buffer取複本; 其他(原始值、Date、Map、類別實例、函數等)直接取s
 function mergeVal(d, s, ctx, top = false) {
     let stack = ctx.stack
@@ -136,14 +138,14 @@ function mergeVal(d, s, ctx, top = false) {
         return base
     }
 
-    //來源為純物件, 最外層(top)是被合併的資料列, lodash merge不論其型別與原型皆依鍵合併(Date、Map、類別實例之自有可列舉鍵亦然), 故最外層放寬為任何非陣列之物件
+    //來源為純物件, 最外層(top)是被合併的資料列, lodash merge不論其型別與原型皆依鍵合併(Date、Map、類別實例之自有可列舉鍵亦然), 故最外層放寬為任何非陣列之物件(最外層之陣列列已由ltdtmerge忽略, 不會進入此處)
     if (isPlain(s) || (top && isObjectLike(s))) {
         if (stack.has(s)) {
             return stack.get(s)
         }
         let base = isPlain(d) ? d : (isobj(d) ? copyInstance(d, ctx.seen) : {}) //d為純物件(已是複本)則沿用; 類別實例寫入時複製; 其餘種類(陣列、Date、Map、原始值等)以來源為準
         stack.set(s, base)
-        for (let k in s) {
+        for (let k of Object.keys(s)) { //只合併來源之自有可列舉字串鍵, 不採lodash merge之繼承鍵(使用者2026-11-14, 第430項第二批)
             let sv = s[k]
             if (sv === undefined) {
                 if (!(k in base)) {
@@ -175,14 +177,17 @@ function mergeVal(d, s, ctx, top = false) {
  * 針對物件陣列ltdt1與ltdt2逐一深度合併
  *
  * 回傳新物件陣列，不修改ltdt1與ltdt2(含其內巢狀陣列與物件)，結果內之陣列與純物件與輸入無共用參照(TypedArray/Buffer取複本，Date、Map、類別實例等其他非純物件之值直接取用)。
- * 合併規則：同路徑之陣列依索引合併、純物件依鍵合併；ltdt2之值為undefined時保留ltdt1之值(ltdt1無該鍵時設為undefined)；同路徑之種類不同(陣列與物件、物件與原始值等)時以ltdt2為準；ltdt2之資料列非陣列非物件(undefined、null、原始值)時忽略。
- * 物件之length與其他鍵同為一般鍵，不會使該物件被當作陣列處理；鍵__proto__與constructor不會污染原型；ltdt1之原型所共用之容器不會被修改(只讀自有鍵之值)。
+ * 合併規則：同路徑之陣列依索引合併(如ltdt1之x為[1, 2, 3]、ltdt2之x為[9]，得[9, 2, 3])、純物件依鍵合併；ltdt2之值為undefined時保留ltdt1之值(ltdt1無該鍵時設為undefined)；同路徑之種類不同(陣列與物件、物件與原始值等)時以ltdt2為準；ltdt2之資料列為陣列或非物件(undefined、null、原始值)時視為非物件列而忽略(得ltdt1之列)。
+ * 只合併ltdt2之自有可列舉字串鍵(繼承而來之可列舉鍵不合併)；物件之length與其他鍵同為一般鍵，不會使該物件被當作陣列處理；鍵__proto__與constructor不會污染原型；ltdt1之原型所共用之容器不會被修改(只讀自有鍵之值)。
  * ltdt1與ltdt2非陣列或長度不同時回傳空陣列。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtmerge.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt1 輸入資料物件陣列
  * @param {Array} ltdt2 輸入資料物件陣列，若與ltdt1內物件有重複的欄位值，優先保留ltdt2內物件的欄位值
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.debug=false] 輸入是否輸出除錯警告布林值，非布林視為false；為true且ltdt1與ltdt2長度不同時，經opt.funLog(函數)或console.warn提示兩者之長度(不含值；同原因每個行程只提示一次)，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告之出口函數，以(msg, info)呼叫，未給則用console.warn，預設null
  * @returns {Array} 回傳處理後物件陣列
  * @example
  *
@@ -190,16 +195,32 @@ function mergeVal(d, s, ctx, top = false) {
  * // => [{ a: '123', b: 34.56, c: 'mn' }, { aa: 'a123', bb: 'bmn' }]
  *
  * console.log(ltdtmerge([{ x: [1, 2, 3], y: { length: 2, a: 1 } }], [{ x: [9], y: { length: 5, b: 2 } }]))
- * // => [{ x: [9, 2, 3], y: { length: 5, a: 1, b: 2 } }]
+ * // => [{ x: [9, 2, 3], y: { length: 5, a: 1, b: 2 } }] (陣列依索引合併)
+ *
+ * console.log(ltdtmerge([{ x: [{ a: 1 }, { b: 2 }] }], [{ x: [{ c: 3 }] }]))
+ * // => [{ x: [{ a: 1, c: 3 }, { b: 2 }] }] (陣列依索引合併, 同索引之物件依鍵合併)
+ *
+ * console.log(ltdtmerge([{ a: 1 }], [['x']]))
+ * // => [{ a: 1 }] (ltdt2之列為陣列時忽略)
+ *
+ * console.log(ltdtmerge([{ a: 1 }], [{ a: 2 }, { a: 3 }]))
+ * // => [] (長度不同)
  *
  */
-function ltdtmerge(ltdt1, ltdt2) {
+function ltdtmerge(ltdt1, ltdt2, opt = {}) {
 
     //check
     if (!Array.isArray(ltdt1) || !Array.isArray(ltdt2)) {
         return []
     }
     if (ltdt1.length !== ltdt2.length) {
+
+        //opt.debug時提示兩者長度(只含長度, 不含值; 使用者2026-11-14, 第430項第二批, 比照arr2dt)
+        let { debug, funLog } = optVal.readDbg(opt)
+        if (debug) {
+            parseNumOpt.warnOnce('ltdtmerge|length|ltdt2', `[wsemi ltdtmerge] invalid ltdt2: must have the same length as ltdt1 (ltdt2 ${ltdt2.length}, ltdt1 ${ltdt1.length}), returning []`, { fn: 'ltdtmerge', reason: 'length', key: 'ltdt2' }, funLog)
+        }
+
         return []
     }
 
@@ -209,11 +230,11 @@ function ltdtmerge(ltdt1, ltdt2) {
         let seen = new Map() //每列各自一份, 列與列之間不共用複本
         let d = copyDest(ltdt1[i], seen)
         let s = ltdt2[i]
-        if (Array.isArray(s) || isObjectLike(s)) {
+        if (!Array.isArray(s) && isObjectLike(s)) {
             r.push(mergeVal(d, s, { stack: new Map(), seen }, true))
         }
         else {
-            r.push(d) //來源列非陣列非物件(undefined、null、原始值等)時忽略來源, 同lodash merge
+            r.push(d) //來源列為陣列或非物件(undefined、null、原始值等)時視為非物件列而忽略來源(使用者2026-11-14, 第430項第二批: 陣列列原以陣列取代該列)
         }
     }
 

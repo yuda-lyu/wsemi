@@ -303,17 +303,16 @@ describe(`genClockTZ`, function() {
             assert.strict.deepStrictEqual(r, '2026/08/18 00:00')
         })
 
-        it(`should throw an Error when s is not a string of at least 12 digits (required parameter), without echoing the value`, function() {
+        //規格: 使用者2026-11-14裁定(排程第430項第二批, 裁定表〈一〉): s非「至少12位數字之字串」(含數字型戳記20260808214408)回傳'', 不拋錯(dspec §5.3 C3); 原為拋錯(K2)
+        it(`should return '' without throwing when s is not a string of at least 12 digits (including a numeric stamp)`, function() {
             let c = genClockTZ('Asia/Taipei')
             let p = Proxy.revocable({}, {})
             p.revoke()
             let bads = [undefined, null, '', 'abc', '2026-08-08 21:44', '2026080821', '2026080821x4', 20260808214408, 5, true, {}, [], ['20260808214408'], ' 20260808214408', Object('20260808214408'), p.proxy]
             for (let v of bads) {
-                assert.throws(() => c.formatTime(v), (err) => {
-                    return err instanceof Error && err.message === 'invalid s: must be a stamp string of at least 12 digits (YYYYMMDDHHmm...)'
-                }, `s=${typeof v}`)
+                assert.strict.deepStrictEqual(c.formatTime(v), '', `s=${typeof v}`)
             }
-            assert.throws(() => c.formatTime(), /invalid s/)
+            assert.strict.deepStrictEqual(c.formatTime(), '')
         })
 
     })

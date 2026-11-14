@@ -22,12 +22,16 @@ describe(`getltdtkeys 列物件只依自有鍵(R-OBJ-ITER-01 候選11)`, functio
         assert.strict.deepStrictEqual(getltdtkeys([{ a: 1, length: -0 }]), ['a', 'length'])
     })
 
-    it(`should keep the behavior for rows that are arrays (including holes), strings, typed arrays, null and primitives`, function() {
-        //列為真陣列者沿用 lodash keys: 含空洞索引(Object.keys 不含)
-        assert.strict.deepStrictEqual(getltdtkeys([[1, 2]]), ['0', '1'])
-        assert.strict.deepStrictEqual(getltdtkeys([[, 1]]), ['0', '1']) // eslint-disable-line no-sparse-arrays
-        assert.strict.deepStrictEqual(getltdtkeys([new Uint8Array(2)]), ['0', '1'])
-        assert.strict.deepStrictEqual(getltdtkeys([null, undefined, 5, true, 'ab', { a: 1 }]), ['0', '1', 'a'])
+    //規格: 使用者2026-11-14裁定(裁定表〈六〉): 列為字串、陣列、TypedArray、函數者不貢獻鍵(只有非陣列、非函數之物件列貢獻); 原陣列列取索引鍵(含空洞)、字串列取字元索引鍵
+    it(`should take no keys from rows that are arrays (including holes), strings, typed arrays, functions, null and primitives`, function() {
+        assert.strict.deepStrictEqual(getltdtkeys([[1, 2]]), [])
+        assert.strict.deepStrictEqual(getltdtkeys([[, 1]]), []) // eslint-disable-line no-sparse-arrays
+        assert.strict.deepStrictEqual(getltdtkeys([new Uint8Array(2)]), [])
+        assert.strict.deepStrictEqual(getltdtkeys([new DataView(new ArrayBuffer(2))]), [])
+        assert.strict.deepStrictEqual(getltdtkeys([null, undefined, 5, true, 'ab', Object('ab'), { a: 1 }]), ['a'])
+        let fn = () => 1
+        fn.k = 1 //函數之自有鍵亦不取
+        assert.strict.deepStrictEqual(getltdtkeys([fn, { b: 2 }]), ['b'])
         assert.strict.deepStrictEqual(getltdtkeys([new Map([['k', 1]]), new Date(0), /a/, () => 1]), [])
     })
 

@@ -31,11 +31,10 @@ describe(`ltdtDiffByKey`, function() {
         new: { id: 'pk', a: 'abc', b: 123 },
         ret: { infor: {}, del: [], same: [], diff: [], add: [] }
     }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'temp'`, function() {
+    //規格: 使用者2026-11-14裁定(裁定表〈八〉): 單一物件參數而缺自有主鍵者拋錯; 原靜默濾除而回空結果
+    it(`should throw when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'temp' (a single object without the primary key)`, function() {
         k = 2
-        let r = ltdtDiffByKey(o[k].old, o[k].new, 'temp')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
+        assert.throws(() => ltdtDiffByKey(o[k].old, o[k].new, 'temp'), (err) => err instanceof Error && err.message === 'invalid ltdtOld: must have the primary key as an own field')
     })
 
     k = 3
@@ -202,11 +201,10 @@ describe(`ltdtDiffByKey`, function() {
             add: []
         }
     }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
+    //規格: 使用者2026-11-14裁定(裁定表〈八〉): 列缺自有主鍵者拋錯並指出第幾列; 原靜默濾除({z:'zz'}不參與比對)
+    it(`should throw when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x' (a row without the primary key)`, function() {
         k = 11
-        let r = ltdtDiffByKey(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
+        assert.throws(() => ltdtDiffByKey(o[k].old, o[k].new, 'x'), (err) => err instanceof Error && err.message === 'invalid ltdtOld[0]: must have the primary key as an own field')
     })
 
     k = 12
@@ -221,11 +219,10 @@ describe(`ltdtDiffByKey`, function() {
             add: [{ x: 'xa', y: 'y1' }]
         }
     }
-    it(`should return ${JSON.stringify(o[k].ret)} when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x'`, function() {
+    //規格: 同上(裁定表〈八〉), 舊資料先檢, 故指出ltdtOld[0]
+    it(`should throw when input ${JSON.stringify(o[k].old)}, ${JSON.stringify(o[k].new)}, 'x' (rows without the primary key)`, function() {
         k = 12
-        let r = ltdtDiffByKey(o[k].old, o[k].new, 'x')
-        let rr = o[k].ret
-        assert.strict.deepStrictEqual(r, rr)
+        assert.throws(() => ltdtDiffByKey(o[k].old, o[k].new, 'x'), (err) => err instanceof Error && err.message === 'invalid ltdtOld[0]: must have the primary key as an own field')
     })
 
     k = 13

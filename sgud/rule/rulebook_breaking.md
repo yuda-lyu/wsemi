@@ -17,4 +17,4 @@
 | 第 45～51 項 | `sgud/rule/rulebook_breaking_45to51.md` | 23.4 |
 | 第 52～56 項 | `sgud/rule/rulebook_breaking_52on.md` | 23.9 |
 | 第 57 項起(第 57 項 ws286a、第 58 項 ws286b、第 59 項 ws286c、第 60 項 ws286d、第 61 項 ws286e、第 62 項 ws290、第 63 項 ws426、第 64 項 ws427〔`replace` 之 `r` 改字面〕;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 約 26 |
-| 第 65 項起(第 65 項 ws430〔`browserView` 系、`openLink`、`domAlert` 之 C18;opt 數值改 `iseint` 14 站〕;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 約 7 |
+| 第 65 項起(第 65 項 ws430〔`browserView` 系、`openLink`、`domAlert` 之 C18;opt 數值改 `iseint` 14 站〕、第 66 項 ws430b〔第 430 項第二批 14 個函數:元素層級與自有鍵,R-ELEM-LEVEL-01〕;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 約 15 |

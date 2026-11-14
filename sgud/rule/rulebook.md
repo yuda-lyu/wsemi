@@ -51,7 +51,8 @@
 | 破壞性變更紀錄(第 45～51 項) | `sgud/rule/rulebook_breaking_45to51.md` | 破壞性變更紀錄 | 23.4 |
 | 破壞性變更紀錄(第 52～56 項;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
 | 破壞性變更紀錄(第 57～64 項;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e、第 62 項為 ws290、第 63 項為 ws426、第 64 項為 ws427;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 約 26 |
-| 破壞性變更紀錄(第 65 項起;第 65 項為 ws430;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 7 |
+| 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
+| 結構函數之元素層級與自有鍵: 參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵、欄位名正規化、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數;2026-11-14 ws430b 新增) | `sgud/rule/rulebook_elem.md` | R-ELEM-LEVEL-01 | 約 10 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -84,6 +85,7 @@
 - `R-FS-ATOMIC-01` → `rulebook_fs.md`: R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 - `R-FS-EVEM-NAME-01` → `rulebook_fs.md`: R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達
 - `R-FS-REJECT-01` → `rulebook_fs.md`: R-FS-REJECT-01 fs 系回傳 Promise 者: 拒絕值一律為字串、不同步拋出、失敗不偽成功、不懸置、不殘留資源
+- `R-ELEM-LEVEL-01` → `rulebook_elem.md`: R-ELEM-LEVEL-01 結構函數:參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵(`__proto__` 經 `_setOwnKey`)、欄位名經 `_normKey`、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數,ws430b)
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

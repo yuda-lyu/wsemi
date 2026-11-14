@@ -101,7 +101,8 @@ describe(`filepathToTree`, function() {
         { 'type': 'file', 'path': '/aaa/mmm/z1.txt', 'ext': 'ext2' },
         { 'type': 'file', 'path': '/aaa/mmm', 'ext': 'ext3' },
     ]
-    let cr9 = `Error: id[root❯aaa❯mmm] is unrecognized from a folder to file`
+    //規格: 使用者2026-11-14裁定(裁定表〈十〉): 同一路徑既是資料夾又是檔案照樣拋錯, 訊息不含路徑、指出第幾個項目; 原訊息含路徑id
+    let cr9 = `Error: invalid fps[2].path: conflicts with fps[1], the same path is both a folder and a file`
     it(`should return ${cr9} when input ${JSON.stringify(fps9)}`, function() {
         let r = ''
         try {
@@ -120,7 +121,7 @@ describe(`filepathToTree`, function() {
         { 'type': 'file', 'path': '/aaa/mmm', 'ext': 'ext3' },
         { 'type': 'file', 'path': '/aaa/mmm/z1.txt', 'ext': 'ext2' },
     ]
-    let cr10 = `Error: id[root❯aaa❯mmm] is unrecognized from a file to folder`
+    let cr10 = `Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder` //規格同上
     it(`should return ${cr10} when input ${JSON.stringify(fps10)}`, function() {
         let r = ''
         try {
@@ -140,7 +141,7 @@ describe(`filepathToTree`, function() {
         { 'type': 'folder', 'path': '/aaa/mmm', 'ext': 'ext4' },
         { 'type': 'file', 'path': '/aaa/mmm/z1.txt', 'ext': 'ext2' },
     ]
-    let cr11 = `Error: id[root❯aaa❯mmm] is unrecognized from a file to folder`
+    let cr11 = `Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder` //規格同上
     it(`should return ${cr11} when input ${JSON.stringify(fps11)}`, function() {
         let r = ''
         try {
@@ -156,37 +157,37 @@ describe(`filepathToTree`, function() {
 
     it(`should return [] when input ''`, function() {
         let r = filepathToTree('')
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input []`, function() {
         let r = filepathToTree([])
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input {}`, function() {
         let r = filepathToTree({})
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input null`, function() {
         let r = filepathToTree(null)
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input undefined`, function() {
         let r = filepathToTree(undefined)
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 
     it(`should return [] when input NaN`, function() {
         let r = filepathToTree(NaN)
-        let rr = {}
+        let rr = { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] } //規格: 使用者2026-11-14裁定(裁定表〈十〉): fps非陣列或[]回同形之空結果; 原回{}
         assert.strict.deepStrictEqual(r, rr)
     })
 

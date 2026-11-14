@@ -134,3 +134,12 @@
 - **複核又抓到之三點**(第二次外審,屬實): ①以 `isobj`(標籤)判「opt 是否為物件」會把帶自訂 `Symbol.toStringTag` 之一般物件誤判為非物件而丟掉其設定——修前直接讀鍵者改為判型時,判型本身不可依標籤,用 `typeof`＋`Array.isArray`(包 try);②新語言特性(`ArrayBuffer.prototype.detached`)不可當唯一判據,無者要有退路(零長度再以 `new Uint8Array(v)` 是否拋錯判分離);③Node 之 `Blob.prototype.size` 以屬性(`kHandle`)判定,Proxy 與以真 Blob 為原型之物件可通過——Node 與瀏覽器之「內建存取器」品牌強度不同,測試在 Node 綠不代表瀏覽器語意,反之亦然.另:「存取器之讀取次數」測試要直接傳入帶存取器之物件,物件展開(`{ ...opt }`)本身就會讀一次.
 - **外審探到之「只驗警告」缺口**: 以 `opt.debug` 警告驗逾時預設,變異「保留警告、仍用舊夾限值」照樣全綠;改以側錄 `globalThis.setTimeout` 之毫秒參數直接驗交給計時器之值(mocha 自身於載入時已取 `setTimeout` 參照,不受側錄影響).
 - **工作樹為 CRLF(autocrlf=true,索引 LF)**: Write 寫出之檔為 LF(提交時正規化,無妨),以腳本拼接既有 CRLF 檔時須以 `/\r?\n/` 切行並依原檔換行接回,否則定位字串比對不到.
+
+## 逐函數裁定之實作:修前行為先實測、字面需求之歧義、寫檔工具吃掉跳脫字元、變異找出漏格(2026-11-14,主控任務 20261114175457,ws430b)
+
+- **「修前」敘述一律以 HEAD 副本實測**: 破壞性變更帳本寫「由 X → Y」時,X 憑讀碼推論常不準——`composeToTree([{id:1},{}])` 修前 `{}` 是照常成為頂層節點(不是拋錯或略過)、`1` 與 `'1'` 修前是把 `parentId: 1` 之子節點掛到 `'1'` 下(kp 以物件鍵共用)、`arrFilterByKeywords` 之陣列元素 `['abc']` 修前會匹配(`Array#indexOf`)而數字元素拋 TypeError.以 `git archive HEAD src` 之副本寫探針實跑後才寫入帳本.
+- **一條規則被實作兩次時,變異會等價存活**: `composeToTree` 之孤兒在「頂層判定」與「循環斷開之防護分支(找不到父即以自身為頂層)」兩處都會被置頂,拿掉前者之變異結果不變;同理 `ltdt2vrtsable` 之缺欄檢查被「格非物件」檢查覆蓋,只有「繼承而來之欄」才分得開.寫變異前先想「另一條路是否會補上」,補一個只有該條路能處理之案(繼承欄、`''` 之 id 與 parentId).
+- **Write 工具把 `　` 寫成真正的全形空白**: 正規式 `/[ 　]/` 與 JSDoc 範例之 `'abc　def'` 落地後是不可見字元,eslint `no-irregular-whitespace` 擋下(字串內不擋,但仍不可讀).改以 `String.fromCharCode(0x3000)` 組成(src 之 `RE_SEP`、測試之 `fw`),寫完以 `grep -c $'\xe3\x80\x80'` 回驗.
+- **裁定表字面之歧義照字面實作並列需確認**: `+a b`「含全部必要關鍵字者才命中;權重依一般關鍵字計算」——含必要者命中而一般關鍵字一個都沒含時權重為 0(`{ hasKeyword: true, weight: 0 }`);另一讀法「仍須含一般關鍵字」與字面不符.照字面做、JSDoc 範例寫明、報告列待主控確認,不自行另定.
+- **測試改寫之判準**: 既有測試之期望值與裁定衝突者(如 `ltdtmerge` 以 lodash merge 為對照之 400 組隨機差分、鎖「繼承鍵亦合併」兩案)改寫時,對照器本身依裁定調整(陣列來源列視為 `undefined` 再交 lodash merge),而不是刪掉差分案;改寫處註明裁定表節號.全套才紅之「乙 未改變者之守門」(`invalidInputQ1`)同樣屬規格改變.
+- **外審額度**: 本輪 Codex 帳號(terra)、Argon、agy 之 Claude/GPT 組皆已用盡,依序改派 agy `gemini-4-hydrogen-high`;查額度用 `quota-agy.mjs`,Codex 則以最小探測之 stderr(`You've hit your usage limit … try again at …`)判定.

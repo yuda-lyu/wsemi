@@ -13,7 +13,7 @@ import cloneDeep from 'lodash-es/cloneDeep.js'
 import sep from './sep.mjs'
 import isestr from './isestr.mjs'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
+import isobj from './isobj.mjs'
 import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
@@ -22,13 +22,17 @@ import haskey from './haskey.mjs'
 /**
  * 轉換檔案路徑陣列成為樹狀物件與關聯資料物件
  *
+ * 路徑以'/'或'\'分段(各段去頭尾空白、略過空段)，'.'與'..'視為一般名稱，不做路徑解析；不改動呼叫端之項目
+ * 下列情形同步拋出Error，訊息指出第幾個項目(如'invalid fps[2].path: ...')，不含路徑：項目非物件；path(自有欄位)缺少、非字串、為空字串，或分段後無任何段(如'/'、'///'、'   '、'\\'，同空字串)；type(自有欄位)缺少或非'folder'、'file'；路徑任一段含分隔字串(opt.delimiter，預設'❯'，請改用路徑中不會出現之opt.delimiter)；
+ * 路徑重複(兩個檔案、兩個皆有數據之資料夾)；同一路徑既是資料夾又是檔案(含檔案路徑被其他項目當作上層資料夾)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/filepathToTree.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} fps 輸入項目陣列，每個項目需為物件，並提供path與type兩鍵值，其中type需為'folder'或'file'
+ * @param {Array} fps 輸入項目陣列，每個項目需為物件，並提供path與type兩鍵值，其中type需為'folder'或'file'；非陣列或空陣列回傳同形之空結果{ treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] }
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [delimiter='❯'] 輸入路徑分隔字串，預設'❯'
- * @param {String} [bindRoot=''] 輸入指定根目錄字串，預設''
- * @param {Function} [soryItems=null] 輸入排序產生樹狀物件函數，預設null
+ * @param {String} [opt.delimiter='❯'] 輸入路徑分隔字串，預設'❯'
+ * @param {String} [opt.bindRoot=''] 輸入指定根目錄字串，預設''
+ * @param {Function} [opt.soryItems=null] 輸入排序產生樹狀物件函數，預設null
  * @returns {Object} 回傳結果物件，其內treeItems為資料夾與檔案之樹狀物件，treeItemsFolder為僅資料夾之樹狀物件，kpPath為各項目id之取樹狀物件路徑物件，fpsNormalize為重新正規化之檔案路徑陣列
  * @example
  *
@@ -632,7 +636,7 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r9.json', JSON.stringify(r9), 'utf8')
  * console.log(r9)
  * console.log('\n\n')
- * // => Error: id[root❯aaa❯mmm] is unrecognized from a folder to file
+ * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a folder and a file
  *
  * //先建檔案再補建虛擬資料夾須報錯
  * let fps10 = [
@@ -650,7 +654,7 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r10.json', JSON.stringify(r10), 'utf8')
  * console.log(r10)
  * console.log('\n\n')
- * // => Error: id[root❯aaa❯mmm] is unrecognized from a file to folder
+ * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder
  *
  * //先建檔案再補建資料夾須報錯
  * let fps11 = [
@@ -669,14 +673,32 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r11.json', JSON.stringify(r11), 'utf8')
  * console.log(r11)
  * console.log('\n\n')
- * // => Error: id[root❯aaa❯mmm] is unrecognized from a file to folder
+ * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder
+ *
+ * //項目無效須報錯(指出第幾個項目, 不含路徑)
+ * try {
+ *     filepathToTree([{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'abc', 'path': '/aaa/b.txt' }])
+ * }
+ * catch (err) {
+ *     console.log(err.toString())
+ * }
+ * // => Error: invalid fps[1].type: must be 'folder' or 'file'
+ *
+ * //非陣列或空陣列回傳同形之空結果
+ * console.log(filepathToTree([]))
+ * // => { treeItems: [], treeItemsFolder: [], kpPath: {}, fpsNormalize: [] }
  *
  */
 function filepathToTree(fps, opt = {}) {
 
-    //check
-    if (!isearr(fps)) {
-        return {}
+    //check, 參數層: 非陣列或空陣列回傳同形之空結果(使用者2026-11-14, 第430項第二批: 原回傳{})
+    if (!isarr(fps) || fps.length === 0) {
+        return {
+            treeItems: [],
+            treeItemsFolder: [],
+            kpPath: {},
+            fpsNormalize: [],
+        }
     }
 
     //delimiter
@@ -727,16 +749,45 @@ function filepathToTree(fps, opt = {}) {
         }
     }
 
+    //getOwn, 只取自有可列舉欄位之值(不取繼承之欄位)
+    let getOwn = (o, k) => {
+        return Object.prototype.propertyIsEnumerable.call(o, k) ? o[k] : undefined
+    }
+
+    //check, 元素層: 各項目須為物件, path須為非空字串, type須為'folder'或'file', 路徑之各段不得含分隔字串; 不符即拋錯並指出第幾個項目, 訊息不含路徑(使用者2026-11-14, 第430項第二批)
+    //  不改動呼叫端之項目(原對無效type寫回v.type = 'file')
+    let vps = []
+    for (let k = 0; k < fps.length; k++) {
+        let v = fps[k]
+        if (!isobj(v)) {
+            throw new Error(`invalid fps[${k}]: must be an object`)
+        }
+        let p = getOwn(v, 'path')
+        if (typeof p !== 'string' || p === '') {
+            throw new Error(`invalid fps[${k}].path: must be a non-empty string`)
+        }
+        let r = parseFp(p)
+        if (r.ss.length === 0) {
+            //分段(去頭尾空白、略過空段)後無任何段者('/'、'///'、'   '等)比照空字串(主控2026-11-14裁定, 第430項第二批ws430b2: 原靜默略過該項目)
+            throw new Error(`invalid fps[${k}].path: must be a non-empty string`)
+        }
+        let t = getOwn(v, 'type')
+        if (t !== 'folder' && t !== 'file') {
+            throw new Error(`invalid fps[${k}].type: must be 'folder' or 'file'`)
+        }
+        for (let s of r.ss) {
+            if (s.indexOf(delimiter) >= 0) {
+                throw new Error(`invalid fps[${k}].path: a path segment must not contain the delimiter, set opt.delimiter to another string`)
+            }
+        }
+        vps.push({ type: t, ss: r.ss })
+    }
+
     //parseFp
     let vfps = map(fps, (v, k) => {
 
-        //check
-        if (v.type !== 'folder' && v.type !== 'file') {
-            v.type = 'file'
-        }
-
-        //parseFp
-        let r = parseFp(v.path)
+        //r, 已檢測之路徑段與type(檢測之值即使用之值)
+        let r = vps[k]
         // console.log('parseFp', v.path, r)
 
         // //ns
@@ -757,7 +808,7 @@ function filepathToTree(fps, opt = {}) {
         //t
         let t = {
             ind: k,
-            type: v.type,
+            type: r.type,
             // name: r.name,
             // ns,
             ss: r.ss,
@@ -809,6 +860,7 @@ function filepathToTree(fps, opt = {}) {
     let ind = -1
     let fpsNormalize = []
     let kpLv = {}
+    let kpBy = {}
     each(vfps, (v) => {
 
         //ts
@@ -902,6 +954,7 @@ function filepathToTree(fps, opt = {}) {
                     }
                 }
                 kpLv[id] = r
+                kpBy[id] = v.ind //建立此路徑之項目
 
                 //push, 新增項目所儲存指標為ind
                 fpsNormalize.push({
@@ -923,33 +976,28 @@ function filepathToTree(fps, opt = {}) {
                 //isFolderOld
                 let isFolderOld = _typeOld === 'folder'
 
-                //update
+                //nameOld, 先前建立此路徑之項目(有原始數據者取其索引, 虛擬資料夾取建立它之項目)
+                let nameOld = `fps[${r._indOri !== null ? r._indOri : kpBy[id]}]`
+
+                //update, 拋錯訊息不含路徑、指出第幾個項目, 不輸出內部物件至console(使用者2026-11-14, 第430項第二批)
                 if (!isFolderOld && isFolder) {
                     //過去已建檔案, 但現在須新建資料夾, 非預期須報錯
-                    console.log('kpLv[id]', r)
-                    console.log('v', v)
-                    throw new Error(`id[${id}] is unrecognized from a file to folder`)
+                    throw new Error(`invalid fps[${v.ind}].path: conflicts with ${nameOld}, the same path is both a file and a folder`)
                 }
                 else if (!isFolderOld && !isFolder) {
                     //過去已建檔案, 但現在又須新建為檔案, 數據有重複, 非預期須報錯
-                    console.log('kpLv[id]', r)
-                    console.log('v', v)
-                    throw new Error(`id[${id}] get repeat data from two files`)
+                    throw new Error(`invalid fps[${v.ind}].path: duplicate file path of ${nameOld}`)
                 }
                 else if (isFolderOld && !isFolder) {
                     //過去已建資料夾或虛擬資料夾, 但現在又須新建為檔案, 數據不一致, 非預期須報錯
-                    console.log('kpLv[id]', r)
-                    console.log('v', v)
-                    throw new Error(`id[${id}] is unrecognized from a folder to file`)
+                    throw new Error(`invalid fps[${v.ind}].path: conflicts with ${nameOld}, the same path is both a folder and a file`)
                 }
                 else { //isFolderOld && isFolder
                     //過去已建資料夾但現在又須新建為資料夾, 預期上是兩次被視為虛擬資料夾
 
                     if (iseobj(kpLv[id].data) && iseobj(data)) {
                         //因視為資料夾data已為實際data, 但又出現新data, 非預期須報錯
-                        console.log('kpLv[id]', r)
-                        console.log('v', v)
-                        throw new Error(`id[${id}] get repeat data from two folders`)
+                        throw new Error(`invalid fps[${v.ind}].path: duplicate folder path of ${nameOld}`)
                     }
                     else if (kpLv[id].data === null && iseobj(data)) {
                         //之前資料夾無data, 但出現資料夾且有data, 預期是原始數據先建置虛擬資料夾, 且後面又提供指定為資料夾數據

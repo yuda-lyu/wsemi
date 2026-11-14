@@ -2,6 +2,14 @@
 
 本檔自 `sgud/state/state.md` 依功能類型拆出(2026-11-02 ws265 依全域設定§14整理;原約 53.7KB):各節之節號與標題不變、內容逐字搬移;索引見 `sgud/state/state.md`.
 
+## 結構函數之元素層級與自有鍵:14 個函數依使用者逐函數裁定(排程第 430 項第二批;主控任務 20261114175457 ws430b,2026-11-14;package.json version 1.9.59 之工作樹,未提交未發布)〔本節於 2026-11-14 新增,置於該檔最前〕
+
+- 現況(已實作): `genClockTZ().formatTime`(無效回 `''`)、`arrFilterByKeywords`(筆數恆等於輸入、非字串不匹配、關鍵字剔空去重、全形空白分隔、`-x`／`+a +b`／`+a b` 新語意)、`arr2dt`(欄位名正規化、函數值為 null、陣列 values 一律配對、新增 `opt.debug`)、`dtmapping`／`ltdtmapping`(只取自有欄位不解析路徑、`__proto__` 為一般欄位、def 物件各一份複本、函數 def 為 null、`[{}]`／`[null]` 列數不變)、`getltdtkeys`(只有物件列貢獻、Set 累積)、`iseobj`(至少一個自有可列舉鍵)、`ltdtDiffByKey`(壞列／無效主鍵／重複／型別混用拋錯、鍵排序比對、`infor` 之 `__proto__`)、`ltdt2vrtsable`(每格 `{value, style}`、style 預設 `{}`、不合格式回 error 不崩潰)、`filepathToTree`(同形空結果、無效項目／分隔字串拋錯、不改呼叫端、衝突訊息不含路徑且不輸出 console)、`composeToTree`(元素須有效物件、0 為有效 id、孤兒與循環置頂、id 嚴格比對)、`ltdtmerge`(陣列列忽略、只合併自有鍵、新增 `opt.debug`)、`dtpick`(只取自有欄位、`__proto__`)、`ltdtpick`(`[{}]`／`[null]` 列數不變).新增內部模組 `src/_normKey.mjs`、`src/_setOwnKey.mjs`(不匯出).`dist/` 已以 `toolg/gDistRollup.mjs` 重建(供全套測試).
+- 規則: R-ELEM-LEVEL-01(`sgud/rule/rulebook_elem.md`);破壞性變更第 66 項(`sgud/rule/rulebook_breaking_65on.md`);R-CLOCK-01 規則 6 與已知限制④(C3 待確認關閉)、R-OBJ-ITER-01 候選 11 與規則 5 已加更正註記.
+- 測試: 新檔 `test/elemLevelRules.test.mjs`(71 案,逐節逐列;ws430b2 增〈十-2〉path 無段案);依新規格改寫 `arrFilterByKeywords`、`filepathToTree`、`genClockTZ`、`getltdtkeys`、`ltdt2vrtsable`、`ltdtDiffByKey`、`ltdtmerge`、`invalidInputQ1` 之測試(改寫處註明裁定表節號).
+- 驗證(2026-11-14): 新檔於 HEAD 之 src 副本 61 紅／9 綠(綠者為修前已如裁定之列與行為鎖定:〈三-2〉〈三-3〉〈四-6〉〈六-2〉〈七-2〉〈九-3〉〈十一-1〉〈十二-4〉〈十四-2〉),連同改寫之舊測試共 88 紅;變異 56/56 被殺;外審 agy-hydrogen(terra、Argon、agy-opus 額度用盡)7 條:採納修正 4(`composeToTree` buildTree 取自有欄位、`ltdt2vrtsable` 之 style 只取自有、`dtpick`／`dtmapping`／`arr2dt`／`composeToTree` 之 JSDoc 精確化),3 條為修前即有、裁定表未列(列已知缺口);全套 `npm test` 30150 passing、8 pending、0 failing(ws430 收尾 30079/8,差 +71＝新檔 70＋`ltdtmerge` 新增 1 案);eslint 改動檔 0 error(`test/filepathToTree.test.mjs` 3 個未使用 import 為 HEAD 既有).
+- 已知缺口與待辦: ①下游(其他自有套件)之盤點已列於報告,修改由主控安排連動(預期 `w-serv-orm` `test/api-pkcast.test.mjs:83` 之 A10 會因 `1`／`'1'` 混型改拋錯而紅;w-data-syncer 之 CSV 空列、重複主鍵將由靜默略過改拋錯);②`filepathToTree` 之 `path` 分段後無任何段(`'/'`)已依主控 2026-11-14 裁定比照空字串拋錯(ws430b2)、`soryItems` 回傳不完整時與 `opt.bindRoot` 為 `'__proto__'` 時之內部拋錯仍帶 console 與值、`composeToTree` 既有子節點欄位非陣列拋原生 TypeError(皆修前即同、裁定表未列,維持;見 R-ELEM-LEVEL-01〈已知限制〉);③`arrFilterByKeywords` 之 `+a b`「含全部必要即命中、權重可為 0」已由主控 2026-11-14 確認(甲,維持);dspec §5.3 C3 已由主控補列 `formatTime`;④w-component-vue `WExplorer` 之 `error` 事件為另輪.
+
 ## 字串取代之取代值字面化:`replace` 之 `r` 為字面文字、`replaceObj` 不再預先逸出 `$`(排程第 427 項之 wsemi 部分;主控任務 20261112065727 wsrep,2026-11-12;package.json version 1.9.57 之工作樹,未提交未發布)〔本節於 2026-11-12 新增,置於該檔最前〕
 
 - 現況(已實作): ①`replace(c, t, r)`(`src/replace.mjs:43`)以 `replaceAll(t, () => String(r))` 取代,`t`、`r` 皆為字面文字,`r` 內 `$&`、`$'`、`` $` ``、`$$`、`$<x>`、`$1` 原樣輸出;JSDoc 寫明並加例 `replace('價格{p}', '{p}', '$&5')` → `'價格$&5'`.②`replaceObj`(原 `src/replaceObj.mjs:87`)移除 value 之 `$` 逸出(`replace` 已字面,逸出會使 `$` 變 `$$`),對外行為不變.③`src/` 全庫 67 站點盤點(AST 掃描): 取代值為變數者 0(修前僅 `replace` 一處)、函式回傳 6、字面常數 54、刻意之 `$` 樣式 7(正規式捕獲群或 `$&`).
@@ -24,7 +32,7 @@
 - 規則: `sgud/rule/rulebook_judge_sites_r2d.md` 〈第 221 項 §11 第 6 項 ws286c 處置結果〉規則 6(ws290 修訂);破壞性變更紀錄第 62 項,見 `sgud/rule/rulebook_breaking_57on.md`.
 - 測試: `ltdtDiff.test.mjs` 80 → 87、`matDiff.test.mjs` 75 → 76、`arrDiff.test.mjs` 56 → 57(共用 `test/tools/diffInputKit.mjs` 未改);新測試對修前 src 61 案紅(221 案中).
 - 驗證(2026-11-12): 變異 16 項全部殺死(`ltdtDiff` 8、`matDiff` 5、`arrDiff` 3);全套 `npm test` 29965 passing、8 pending、0 failing(修前 29956,差 +9 即上列三檔之增量);eslint 改動檔 0 error.他套件(`C:\opensrc` 排除 `node_modules`／`dist`／`docs`／`tmp`)字面搜尋 `ltdtDiff`／`matDiff`／`is not a matrix` 0 處.
-- 已知缺口與待辦: ①`iseobj` 以 `for…in` 判定(含繼承之可列舉鍵)而 `getltdtkeys` 只取自有鍵,故列為「僅有繼承可列舉鍵之物件」(如 `Object.create({ a: 1 })`)者通過檢測卻取不到鍵,兩側皆如此時回 `{ diff: [], dfs: [] }`(看似無差異);極罕見型,依使用者指定之 `iseobj` 未再收緊,待使用者確認是否改以自有可列舉鍵判定;②`ltdtkeys2mat` 本身遇 `{}` 列仍整側回 `[]`(其回傳約定不在本項).
+- 已知缺口與待辦: ①`iseobj` 以 `for…in` 判定(含繼承之可列舉鍵)而 `getltdtkeys` 只取自有鍵,故列為「僅有繼承可列舉鍵之物件」(如 `Object.create({ a: 1 })`)者通過檢測卻取不到鍵,兩側皆如此時回 `{ diff: [], dfs: [] }`(看似無差異);極罕見型,依使用者指定之 `iseobj` 未再收緊,待使用者確認是否改以自有可列舉鍵判定〔2026-11-14 ws430b 已結案: 使用者裁定 `iseobj` 改為至少一個自有可列舉鍵,此類列於 `ltdtDiff` 改為拋錯,見本檔最前節〕;②`ltdtkeys2mat` 本身遇 `{}` 列仍整側回 `[]`(其回傳約定不在本項).
 
 ## 陣列與結構子類:`arrFilterByENum`／`arrReverse`／`arrSep`／`matConcat`／`matat`／`ltdtpull` 必須參數無效即 throw、空資料照常(排程第 286 項〔第 221 項 §11 第 6 項〕;主控任務 20261031121854 ws286e,2026-11-03;package.json version 1.9.48 之工作樹,未提交未發布)
 

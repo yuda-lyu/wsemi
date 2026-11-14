@@ -146,9 +146,9 @@ describe('ltdtmerge', function() {
             return o
         }
 
-        //修前之演算法(lodash merge), 供差分
+        //修前之演算法(lodash merge), 供差分; 規格(使用者2026-11-14裁定, 裁定表〈十二〉): ltdt2之列為陣列時視為非物件列而忽略, 故對照時把陣列之來源列當作undefined(lodash merge對undefined來源保留目的端)
         let legacy = (ltdt1, ltdt2) => {
-            return ltdt1.map((v, k) => merge(cloneDeep(ltdt1[k]), ltdt2[k]))
+            return ltdt1.map((v, k) => merge(cloneDeep(ltdt1[k]), Array.isArray(ltdt2[k]) ? undefined : ltdt2[k]))
         }
 
         describe(`種類不同以來源為準, length 為一般鍵(明確期望值)`, function() {
@@ -473,7 +473,8 @@ describe('ltdtmerge', function() {
                 ['陣列元素來源為undefined而目的端無該索引時補undefined', [{ x: [] }], [{ x: [undefined, 5] }], [{ x: [undefined, 5] }]],
                 ['陣列元素來源為null覆蓋', [{ x: [1, 2] }], [{ x: [null] }], [{ x: [null, 2] }]],
                 ['鍵順序: 目的端鍵在前、來源新鍵依來源順序追加', [{ a: 1, b: 2 }], [{ c: 3, a: 9 }], [{ a: 9, b: 2, c: 3 }]],
-                ['最外層元素為陣列', [[1, 2, 3]], [[9]], [[9, 2, 3]]],
+                ['最外層來源元素為陣列時忽略(得ltdt1之列; 裁定表〈十二〉, 原依索引合併得[[9, 2, 3]])', [[1, 2, 3]], [[9]], [[1, 2, 3]]],
+                ['最外層來源元素為陣列時忽略, 目的端為物件(裁定表〈十二〉, 原以陣列取代)', [{ a: 1 }], [['x']], [{ a: 1 }]],
                 ['最外層來源元素為undefined時保留目的端元素', [{ a: 1 }, { b: { c: 2 } }], [undefined, { b: { d: 3 } }], [{ a: 1 }, { b: { c: 2, d: 3 } }]],
                 ['最外層來源元素為洞(稀疏陣列)時保留目的端元素', [{ a: 1 }, { b: 2 }], (() => {
                     let sp = []
@@ -507,13 +508,14 @@ describe('ltdtmerge', function() {
                 assert.strict.strictEqual(a[0].d.getTime(), 100)
             })
 
-            it(`should include the inherited enumerable keys of the source (same as lodash keysIn)`, function() {
+            //規格: 使用者2026-11-14裁定(裁定表〈十二〉): 合併來源之鍵只合併自有鍵(不採lodash merge之繼承鍵); 原含繼承之可列舉鍵(同lodash keysIn)
+            it(`should merge only the own enumerable keys of the source (not the inherited keys like lodash keysIn)`, function() {
                 let proto = { inh: 1 }
                 let s = Object.create(proto)
                 s.own = 2
                 let r = ltdtmerge([{}], [s])
-                assert.strict.deepStrictEqual(Object.keys(r[0]), ['own', 'inh'])
-                same(r, legacy([{}], [s]))
+                assert.strict.deepStrictEqual(Object.keys(r[0]), ['own'])
+                same(r, [{ own: 2 }])
             })
 
             it(`should handle objects without a prototype on both sides`, function() {
@@ -690,12 +692,12 @@ describe('ltdtmerge', function() {
                 assert.strict.deepStrictEqual(rl, [{ a: 1 }, { c: 3 }])
             })
 
-            it(`should merge a top-level source row that has a non-Object prototype by its enumerable keys (like lodash keysIn), but assign such a nested value as is`, function() {
+            it(`should merge a top-level source row that has a non-Object prototype by its own enumerable keys (inherited keys not merged), but assign such a nested value as is`, function() {
                 let proto = { inh: 1 }
                 let row = Object.create(proto)
                 row.own = 2
                 let r = ltdtmerge([{ a: 0 }], [row])
-                assert.strict.deepStrictEqual(Object.keys(r[0]), ['a', 'own', 'inh'])
+                assert.strict.deepStrictEqual(Object.keys(r[0]), ['a', 'own']) //規格: 裁定表〈十二〉只合併自有鍵; 原含繼承之inh
                 let r2 = ltdtmerge([{ a: 0 }], [{ n: row }])
                 assert.ok(r2[0].n === row)
             })
