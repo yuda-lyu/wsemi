@@ -1,22 +1,37 @@
-import every from 'lodash-es/every.js'
-import differenceBy from 'lodash-es/differenceBy.js'
 import isarr from './isarr.mjs'
-import isestr from './isestr.mjs'
 import isobj from './isobj.mjs'
+
+
+//isKeyVal, 欄位名(key, 有限數字視同字串欄名)與鍵值皆須為非空字串或有限數字(同ltdtDiffByKey之主鍵值)
+function isKeyVal(v) {
+    if (typeof v === 'string') {
+        return v !== ''
+    }
+    return typeof v === 'number' && Number.isFinite(v)
+}
+
+
+//hasOwnEnum, 自有可列舉欄位
+function hasOwnEnum(o, k) {
+    return Object.prototype.propertyIsEnumerable.call(o, k)
+}
 
 
 /**
  * 由ltdtAll陣列移除ltdtDel陣列，只會針對ltdtDel內各元素的指定key來查找
  *
- * ltdtAll、ltdtDel與key皆為必須參數，型別檢測與有無資料無關，檢測順序為ltdtAll(陣列、各元素為物件)、ltdtDel(陣列、各元素為物件)、key(非空字串)，無效throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: must be an array of objects')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: must be an array of objects')或Error('invalid key: must be a non-empty string')，訊息不帶輸入值；空陣列為合法資料不報錯：ltdtAll為[]回傳[]，ltdtDel為[]則不刪除並回傳ltdtAll(原陣列，非複本)
+ * ltdtAll、ltdtDel與key皆為必須參數，型別檢測與有無資料無關，檢測順序為ltdtAll(陣列、各元素為物件)、ltdtDel(陣列、各元素為物件)、key(非空字串或有限數字)、ltdtDel各元素之鍵，無效throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: row[i] is not an object')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: row[i] is not an object')、Error('invalid key: must be a non-empty string or a finite number')、Error('invalid ltdtDel: row[i] has no own key [<key之欄位名>]')或Error('invalid ltdtDel: row[i] has an invalid key value')，訊息只含索引與key之欄位名(參數)，不含資料值；元素非物件含空位與陣列；{}為物件
+ * 取值只讀各列之自有同名欄位(key為欄位名，不解析路徑如'a.b'，不讀繼承鍵如toString)；key為有限數字時視同字串欄位名
+ * ltdtDel之每列須有自有之key欄位且其值為非空字串或有限數字(同ltdtDiffByKey之主鍵值)，否則拋錯；ltdtAll之列缺該欄或其值無效時不被比對而保留
+ * 以嚴格相等比對(1與'1'不同)；與ltdtDel任一列同鍵值之ltdtAll列全部刪除；一律回傳新陣列(列物件本身不複製)：ltdtAll為[]回傳[]，ltdtDel為[]則不刪除而回傳ltdtAll之淺複本
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtpull.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdtAll 輸入要被刪除的物件陣列，必須參數，須為物件陣列(空陣列合法)
- * @param {Array} ltdtDel 輸入要刪除的物件陣列，必須參數，須為物件陣列(空陣列合法，代表不刪除)
- * @param {String} key 輸入要比對物件的key值，必須參數，須為非空字串
- * @returns {Array} 回傳移除後剩餘的物件陣列；ltdtAll為[]時回傳[]，ltdtDel為[]時回傳ltdtAll
- * @throws {Error} ltdtAll或ltdtDel非陣列、或有元素非物件時throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: must be an array of objects')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: must be an array of objects')；key非非空字串時throw Error('invalid key: must be a non-empty string')；訊息皆不帶輸入值
+ * @param {Array} ltdtDel 輸入要刪除的物件陣列，必須參數，須為物件陣列(空陣列合法，代表不刪除)，每列須有自有之key欄位且其值為非空字串或有限數字
+ * @param {String|Number} key 輸入要比對物件的欄位名，必須參數，須為非空字串或有限數字
+ * @returns {Array} 回傳移除後剩餘的物件陣列(新陣列)；ltdtAll為[]時回傳[]，ltdtDel為[]時回傳ltdtAll之淺複本
+ * @throws {Error} ltdtAll或ltdtDel非陣列、或有元素非物件時throw Error('invalid ltdtAll: must be an array')、Error('invalid ltdtAll: row[i] is not an object')、Error('invalid ltdtDel: must be an array')、Error('invalid ltdtDel: row[i] is not an object')；key無效時throw Error('invalid key: must be a non-empty string or a finite number')；ltdtDel之列缺自有key欄位或其值無效時throw Error('invalid ltdtDel: row[i] has no own key [<key之欄位名>]')或Error('invalid ltdtDel: row[i] has an invalid key value')；訊息皆只含索引與key之欄位名(參數)，不含資料值
  * @example
  *
  * console.log(ltdtpull([{ x: 1, y: 'y1' }, { x: 2, y: 'y2' }], [{ x: 1, y: 'y3' }], 'x'))
@@ -24,6 +39,9 @@ import isobj from './isobj.mjs'
  *
  * console.log(ltdtpull([{ id: 1, v: 'v1' }, { id: 2, v: 'v2' }, { id: 3, v: 'v3' }], [{ id: 1, v: '-v1' }, { id: 3, v: '-v3' }], 'id'))
  * // => [ { id: 2, v: 'v2' } ]
+ *
+ * console.log(ltdtpull([{ id: 1 }, { id: '1' }, { v: 'x' }], [{ id: 1 }], 'id'))
+ * // => [ { id: '1' }, { v: 'x' } ] (嚴格相等比對，缺鍵之列保留)
  *
  * console.log(ltdtpull([], [{ id: 1 }], 'id'))
  * // => []
@@ -36,35 +54,71 @@ import isobj from './isobj.mjs'
  * }
  * // => invalid ltdtDel: must be an array
  *
+ * try {
+ *     ltdtpull([{ id: 1 }], [{ v: 1 }], 'id')
+ * }
+ * catch (err) {
+ *     console.log(err.message)
+ * }
+ * // => invalid ltdtDel: row[0] has no own key [id]
+ *
  */
 function ltdtpull(ltdtAll, ltdtDel, key) {
 
-    //check, ltdtAll、ltdtDel、key為必須參數(與有無資料無關), 依ltdtAll(陣列, 元素)、ltdtDel(陣列, 元素)、key序, 無效throw(訊息不帶值)
+    //check, ltdtAll、ltdtDel、key為必須參數(與有無資料無關), 依ltdtAll(陣列, 元素)、ltdtDel(陣列, 元素)、key、ltdtDel之鍵序, 無效throw(訊息只含索引, 不帶值)
+    //snap, 各列之快照(依索引走訪, 空洞視為undefined而無效; 每列只讀一次, 檢查之列即其後使用之列)
+    let snap = (ltdt, name) => {
+        let rows = []
+        for (let i = 0; i < ltdt.length; i++) {
+            let o = ltdt[i]
+            if (!isobj(o)) {
+                throw new Error(`invalid ${name}: row[${i}] is not an object`)
+            }
+            rows.push(o)
+        }
+        return rows
+    }
     if (!isarr(ltdtAll)) { //可能會傳空陣列, 故需要isarr
         throw new Error('invalid ltdtAll: must be an array')
     }
-    if (!every(ltdtAll, isobj)) { //lodash every依索引走訪, 空洞視為undefined而無效
-        throw new Error('invalid ltdtAll: must be an array of objects')
-    }
-    if (!isarr(ltdtDel)) { //可能會傳空陣列, 故需要isarr
+    let rowsAll = snap(ltdtAll, 'ltdtAll')
+    if (!isarr(ltdtDel)) {
         throw new Error('invalid ltdtDel: must be an array')
     }
-    if (!every(ltdtDel, isobj)) {
-        throw new Error('invalid ltdtDel: must be an array of objects')
+    let rowsDel = snap(ltdtDel, 'ltdtDel')
+    if (!isKeyVal(key)) {
+        throw new Error('invalid key: must be a non-empty string or a finite number')
     }
-    if (!isestr(key)) {
-        throw new Error('invalid key: must be a non-empty string')
+    let k = String(key)
+
+    //dels, ltdtDel各列須有自有之key欄位且其值有效, 檢測之鍵值即其後使用之值
+    let dels = new Set()
+    for (let i = 0; i < rowsDel.length; i++) {
+        let o = rowsDel[i]
+        if (!hasOwnEnum(o, k)) {
+            throw new Error(`invalid ltdtDel: row[${i}] has no own key [${k}]`) //帶欄位名(參數, 非資料值; 裁定表〈十六〉)
+        }
+        let v = o[k]
+        if (!isKeyVal(v)) {
+            throw new Error(`invalid ltdtDel: row[${i}] has an invalid key value`)
+        }
+        dels.add(v)
     }
 
-    //check
-    if (ltdtDel.length === 0) { //傳空陣列就不刪除
-        return ltdtAll
+    //r, 一律新陣列; ltdtAll之列缺鍵或鍵值無效者不被比對而保留, 嚴格相等(Set為SameValueZero, 有效鍵值無NaN)
+    let r = []
+    for (let i = 0; i < rowsAll.length; i++) {
+        let o = rowsAll[i]
+        if (hasOwnEnum(o, k)) {
+            let v = o[k]
+            if (isKeyVal(v) && dels.has(v)) {
+                continue
+            }
+        }
+        r.push(o)
     }
 
-    //differenceBy
-    let t = differenceBy(ltdtAll, ltdtDel, key)
-
-    return t
+    return r
 }
 
 

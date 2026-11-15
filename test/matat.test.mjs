@@ -4,7 +4,8 @@ import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.
 
 
 const MSG_MAT = 'invalid mat: must be an array'
-const MSG_MAT_ROWS = 'invalid mat: must be an array of arrays'
+//ws430c(裁定表〈十一〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat: must be an array of arrays' → 新'invalid mat: row[i] is not an array'
+const MSG_MAT_ROW = (i) => `invalid mat: row[${i}] is not an array`
 const MSG_ISTART = 'invalid istart: must be an integer index'
 
 
@@ -36,10 +37,11 @@ describe(`matat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //ws430c(裁定表〈十一〉「iend 超出列長 → 截至該列最後一欄(原整列回 [])」): 原期望[[], []] → 新期望截至各列最後一欄
     k = 3
     o[k] = {
         in: [['a', 'b', '12.34'], [12, 34.56, 'abc']],
-        out: [[], []]
+        out: [['b', '12.34'], [34.56, 'abc']]
     }
     it(`should return ${JSON.stringify(o[k].out)} when input ${JSON.stringify(o[k].in)}, 1, 10`, function() {
         k = 3
@@ -142,7 +144,7 @@ describe(`matat`, function() {
         })
 
         it(`should throw when input [1, 2], 0`, function() {
-            throwsMsg(() => matat([1, 2], 0), MSG_MAT_ROWS)
+            throwsMsg(() => matat([1, 2], 0), MSG_MAT_ROW(0))
         })
 
         it(`should throw when input [[1, 2]], 'x'`, function() {
@@ -186,16 +188,16 @@ describe(`matat`, function() {
         // 元素非陣列: 唯一元素/首/中/末; 含陣列空洞
         for (let [lb, v] of [...NON_ARR, ['5', 5]]) {
             it(`should throw invalid mat rows when an element of mat is ${lb}`, function() {
-                throwsMsg(() => matat([v], 0), MSG_MAT_ROWS)
-                throwsMsg(() => matat([v, [1, 2]], 0), MSG_MAT_ROWS)
-                throwsMsg(() => matat([[1, 2], v, [3, 4]], 0), MSG_MAT_ROWS)
-                throwsMsg(() => matat([[1, 2], v], 0), MSG_MAT_ROWS)
+                throwsMsg(() => matat([v], 0), MSG_MAT_ROW(0))
+                throwsMsg(() => matat([v, [1, 2]], 0), MSG_MAT_ROW(0))
+                throwsMsg(() => matat([[1, 2], v, [3, 4]], 0), MSG_MAT_ROW(1))
+                throwsMsg(() => matat([[1, 2], v], 0), MSG_MAT_ROW(1))
             })
         }
 
         it(`should treat sparse array holes as non-array elements`, function() {
             let h = [[1, 2], , [3, 4]] // eslint-disable-line no-sparse-arrays
-            throwsMsg(() => matat(h, 0), MSG_MAT_ROWS)
+            throwsMsg(() => matat(h, 0), MSG_MAT_ROW(1))
         })
 
         // istart無效(同arrAt之iseint use: 'index'判定): 缺少/undefined/null/NaN/Infinity/負數/小數/超過索引上限/非數字字串/空字串/十六進位/布林/陣列/物件/包裝物件/BigInt/Symbol/函數
@@ -266,14 +268,14 @@ describe(`matat`, function() {
         // 檢測順序: mat(陣列, 元素)、istart; mat無效時不論istart
         it(`should check in the order mat (array, rows) then istart`, function() {
             throwsMsg(() => matat('x', 'x'), MSG_MAT)
-            throwsMsg(() => matat([1], 'x'), MSG_MAT_ROWS)
+            throwsMsg(() => matat([1], 'x'), MSG_MAT_ROW(0))
             throwsMsg(() => matat(null), MSG_MAT)
             throwsMsg(() => matat([[1]], 'x'), MSG_ISTART)
         })
 
-        // 未列之合法呼叫不得改變: 僅含空列之矩陣(isearr為false)維持原行為回傳[](本次不動, 見報告需裁示)
-        it(`should keep returning [] for [[]] and keep [[], []] for two empty rows (unchanged, not in the confirmed table)`, function() {
-            assert.strict.deepStrictEqual(matat([[]], 0), [])
+        //ws430c(裁定表〈十一〉「只有一列空列([[]]) → 回 [[]](原因 isearr 回 [],列數消失)」): 原期望matat([[]], 0)為[] → 新期望[[]](列數不變); [[], []]不變
+        it(`should return [[]] for [[]] and keep [[], []] for two empty rows (row count kept, ws430c 〈十一〉)`, function() {
+            assert.strict.deepStrictEqual(matat([[]], 0), [[]])
             assert.strict.deepStrictEqual(matat([[], []], 0), [[], []])
         })
 
@@ -281,7 +283,7 @@ describe(`matat`, function() {
         it(`should not echo the input value in the messages`, function() {
             throwsMsgNoLeak(() => matat(LEAK, 0), MSG_MAT)
             throwsMsgNoLeak(() => matat({ LEAK }, 0), MSG_MAT)
-            throwsMsgNoLeak(() => matat([LEAK], 0), MSG_MAT_ROWS)
+            throwsMsgNoLeak(() => matat([LEAK], 0), MSG_MAT_ROW(0))
             throwsMsgNoLeak(() => matat([[1]], LEAK), MSG_ISTART)
             throwsMsgNoLeak(() => matat([[1]], { LEAK }), MSG_ISTART)
         })

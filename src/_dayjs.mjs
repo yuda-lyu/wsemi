@@ -41,4 +41,15 @@ function ot(v, ...args) {
 }
 
 
+//assertDayjs, dayjs不可用時拋出與ot相同之錯誤(供istimeTZ、istimemsTZ: 改為不經dayjs驗證後, 維持修前「dayjs不可用即拋錯」之行為, 使timemsTZ2past等之失敗形式不變; ws430c)
+function assertDayjs() {
+    if (typeof dayjs !== 'function') {
+        throw new Error('invalid dayjs')
+    }
+}
+
+
+ot.assertDayjs = assertDayjs
+
+
 export default ot

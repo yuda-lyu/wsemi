@@ -4,28 +4,11 @@ import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isbol from './isbol.mjs'
 import _setOwnKey from './_setOwnKey.mjs'
+import _cellText from './_cellText.mjs'
 
 
-//canon, 對JSON.parse所得之值(只含null、布林、數字、字串、陣列、物件)輸出鍵排序後之JSON字串, 陣列依原順序
-function canon(x) {
-    if (Array.isArray(x)) {
-        return '[' + x.map(canon).join(',') + ']'
-    }
-    if (x !== null && typeof x === 'object') {
-        return '{' + Object.keys(x).sort().map((k) => JSON.stringify(k) + ':' + canon(x[k])).join(',') + '}'
-    }
-    return JSON.stringify(x)
-}
-
-
-//stableStringify, 鍵排序後之JSON(遞迴排序巢狀物件之鍵, 陣列依原順序): 欄位順序不同視為相同; 先以JSON.stringify取得JSON語意(undefined欄位省略、NaN與Infinity為null、Date經toJSON為ISO字串、Map與Set為{}、包裝物件為其值), 再JSON.parse後排序鍵輸出(JSON.parse之__proto__鍵為自有欄位)
-function stableStringify(v) {
-    let s = JSON.stringify(v)
-    if (s === undefined) {
-        return s
-    }
-    return canon(JSON.parse(s))
-}
+//stableStringify, 鍵排序後之JSON(遞迴排序巢狀物件之鍵, 陣列依原順序): 欄位順序不同視為相同; 單一擁有者_cellText.stableStringify(與ltdtDiff/arrDiff之儲存格比對共用, 2026-11-15 ws430c抽出, 行為不變)
+let stableStringify = _cellText.stableStringify
 
 
 //isKeyVal, 主鍵值須為非空字串或有限數字

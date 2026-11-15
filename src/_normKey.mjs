@@ -25,4 +25,27 @@ function _normKey(k) {
 }
 
 
+/**
+ * 欄位鍵之正規化(keysmat2ltdt、mat2ltdt之表頭、ltdtkeys2mat、ltdtkeysheads2mat之keys): 同_normKey, 另略過布林與非有限數字(NaN、±Infinity)
+ *
+ * 規格: 使用者2026-11-15(排程第430項第三批, 裁定表〈一、keysmat2ltdt〉〈四、ltdtkeys2mat〉): keys元素為''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字時該欄略過, 有限數字視同字串;
+ *   函數比照物件略過, BigInt裁定未列而同_normKey以String(k)(同修前zipObject與haskey以字串為鍵)
+ *
+ * @param {*} k 輸入欄位名
+ * @returns {String|null} 回傳欄位名字串, 或null表示略過
+ */
+function normKeyField(k) {
+    if (typeof k === 'boolean') {
+        return null
+    }
+    if (typeof k === 'number' && !Number.isFinite(k)) {
+        return null
+    }
+    return _normKey(k)
+}
+
+
+_normKey.field = normKeyField
+
+
 export default _normKey

@@ -339,7 +339,8 @@ describe('optVal arrAt', function() {
             [`' 3 '`, ' 3 ', [20, 30, 40]],
             [`'3.0'`, '3.0', [20, 30, 40]],
             ['4', 4, [20, 30, 40, 50]],
-            ['5 (valid index but beyond the array)', 5, []],
+            //ws430c(裁定表〈十二〉「iend 超出長度 → 截至最後一個元素(原整個回 [])」): 原期望[] → 新期望[20, 30, 40, 50]
+            ['5 (valid index but beyond the array)', 5, [20, 30, 40, 50]],
         ],
         noDebug: true,
     })
@@ -348,7 +349,7 @@ describe('optVal arrAt', function() {
         assert.strict.deepStrictEqual(arrAt(ARR, 1), [20])
         assert.strict.deepStrictEqual(arrAt(ARR, 1, 3), [20, 30, 40])
         assert.strict.deepStrictEqual(arrAt([1, 2, 3, '4', 5, 'abc'], 1, 4), [2, 3, '4', 5])
-        assert.strict.deepStrictEqual(arrAt(ARR, 1, 10), [])
+        assert.strict.deepStrictEqual(arrAt(ARR, 1, 10), [20, 30, 40, 50]) //ws430c(裁定表〈十二〉「iend 超出長度 → 截至最後一個元素」): 原期望[]
         assert.strict.deepStrictEqual(arrAt(ARR, 10, 12), [])
     })
 

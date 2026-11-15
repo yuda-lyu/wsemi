@@ -362,7 +362,7 @@ describe(`invalidInputQ1 乙 未改變者之守門(現況即應然)`, function()
         assert.strict.deepStrictEqual(sep(null, ','), [])
         assert.strict.deepStrictEqual(split(null, ','), [])
         assert.strict.deepStrictEqual(urlParse(null), {})
-        assert.strict.deepStrictEqual(strFindSimilar(null, ['a']), {})
+        assert.strict.deepStrictEqual(strFindSimilar(null, ['a']), { ratings: [], bestMatch: null, bestMatchIndex: -1 }) //ws430c(裁定表〈三〉「參數層無效 → 回同形之空結果(原 {})」): 原期望{}
         assert.strict.deepStrictEqual(getClearPathName(null), { path: '', isRoot: false })
         // Q1-c: 次參數無效回空值
         assert.strict.deepStrictEqual(strmid('abcdef', 'x'), '')
@@ -370,7 +370,7 @@ describe(`invalidInputQ1 乙 未改變者之守門(現況即應然)`, function()
         assert.strict.deepStrictEqual(replace('abc', 'a', null), '')
         assert.strict.deepStrictEqual(sep('a,b', null), [])
         assert.strict.deepStrictEqual(split('a,b', null), [])
-        assert.strict.deepStrictEqual(strFindSimilar('abc', null), {})
+        assert.strict.deepStrictEqual(strFindSimilar('abc', null), { ratings: [], bestMatch: null, bestMatchIndex: -1 }) //ws430c(裁定表〈三〉): 原期望{}
         // opt類之n(使用者2026-11-02定: 視同opt, 非預期用預設), 不屬「次參數無效」
         assert.strict.deepStrictEqual(strleft('abc', 'x'), 'abc')
         assert.strict.deepStrictEqual(strright('abc', 'x'), 'abc')

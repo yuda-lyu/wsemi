@@ -1,6 +1,6 @@
 import assert from 'assert'
 import ltdtDiff from '../src/ltdtDiff.mjs'
-import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
+import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak, oldDiffToNew } from './tools/diffInputKit.mjs'
 
 
 describe(`ltdtDiff`, function() {
@@ -28,7 +28,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -51,7 +53,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -78,7 +82,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -105,7 +111,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -154,7 +162,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -203,7 +213,9 @@ describe(`ltdtDiff`, function() {
             let r = ltdtDiff(kp[k].oin1, kp[k].oin2)
             r = JSON.parse(JSON.stringify(r))
             let rr = kp[k].oout
-            assert.strict.deepStrictEqual(r, rr)
+            //ws430c(裁定表〈六〉〈七〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+            assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+            assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
         })
     }
 
@@ -374,33 +386,32 @@ describe(`ltdtDiff`, function() {
 
     //ws290: 原「[{}] 對 [{}] 無任何鍵而回 { diff: [], dfs: [] }」之案已因空物件列無效而改為throw(見上: 空物件列無效); 內部ltdtkeys2mat/arrDiff之「無鍵」站點已不可由ltdtDiff抵達
 
-    //只有一邊為空, 或值為''(兩邊各組出非空字串)照常回傳差異結果(取自修前HEAD之實測)
+    //只有一邊為空, 或值為''照常回傳差異結果; ws430c(裁定表〈七〉「回傳之 diff 改以元素陣列表示」): diff之value由'0∶1⟋\n'改為[['1']], dfs不變
     it(`should return the normal diff when only one side is [], or when the values are '' (not both-empty)`, function() {
         assert.strict.deepStrictEqual(
             ltdtDiff([], [{ a: 1 }]),
-            { diff: [{ count: 1, added: true, removed: false, value: '0∶1⟋\n' }], dfs: [{ a: { p: 'add', k: 'a', vo: '1', vn: '' } }] }
+            { diff: [{ count: 1, added: true, removed: false, value: [['1']] }], dfs: [{ a: { p: 'add', k: 'a', vo: '1', vn: '' } }] }
         )
         assert.strict.deepStrictEqual(
             ltdtDiff([{ a: 1 }], []),
-            { diff: [{ count: 1, added: false, removed: true, value: '0∶1⟋\n' }], dfs: [{ a: { p: 'remove', k: 'a', vo: '1', vn: '' } }] }
+            { diff: [{ count: 1, added: false, removed: true, value: [['1']] }], dfs: [{ a: { p: 'remove', k: 'a', vo: '1', vn: '' } }] }
         )
         assert.strict.deepStrictEqual(
             ltdtDiff([{ a: '' }], [{ a: '' }]),
-            { diff: [{ count: 1, added: false, removed: false, value: '0∶⟋\n' }], dfs: [{ a: { p: '', k: 'a', vo: '', vn: '' } }] }
+            { diff: [{ count: 1, added: false, removed: false, value: [['']] }], dfs: [{ a: { p: '', k: 'a', vo: '', vn: '' } }] }
         )
     })
 
-    //內部站點邊界: 值含換行時, 一對可合併之行兩邊皆為[], 內部以兩個空字串呼叫strDiff, 結果與修前相同
-    it(`should keep the same result as before when a modified line splits into two empty arrays (strDiff is called with two '')`, function() {
+    //ws430c(裁定表〈六〉「值含分隔字元而比對錯誤 → 根因於 arrDiff 矩陣模式修」、〈七〉「值內含換行…錯位與截斷一併消除」): 原期望鎖定修前之錯位(一列拆成兩段、首列{ k: undefined }) → 新期望為一列一格之modify
+    it(`should compare a value containing a newline as one cell (no misalignment, ws430c 〈六〉〈七〉)`, function() {
         assert.strict.deepStrictEqual(
             ltdtDiff([{ k: 'a\nz' }], [{ k: 'b\nz' }]),
             {
                 diff: [
-                    { count: 1, added: false, removed: true, value: '0∶a\n' },
-                    { count: 1, added: true, removed: false, value: '0∶b\n' },
-                    { count: 1, added: false, removed: false, value: 'z⟋\n' },
+                    { count: 1, added: false, removed: true, value: [['a\nz']] },
+                    { count: 1, added: true, removed: false, value: [['b\nz']] },
                 ],
-                dfs: [{ k: undefined }, { k: { p: '', k: 'k', vo: '', vn: '' } }], //首列無可比對儲存格, 鍵k之值為undefined(修前即如此)
+                dfs: [{ k: { p: 'modify', k: 'k', vo: 'a\nz', vn: 'b\nz' } }],
             }
         )
     })

@@ -7,6 +7,8 @@ import isestr from './isestr.mjs'
  *
  * 年份限0000~9999(含0000~0099，不依dayjs將兩位數年份對映為1900~1999，見_dayjs.mjs)，須為標準寫法'YYYY-MM-DDTHH:mm:ss'
  *
+ * 時區：輸入不帶時區，依本機時區判定；本機時區之夏令空窗內不存在之本地時刻視為無效(回傳false)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/istime.test.mjs Github}
  * @memberOf wsemi
  * @param {String} v 輸入秒時間字串，不含時區

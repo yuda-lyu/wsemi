@@ -1,6 +1,6 @@
 import assert from 'assert'
 import arrDiff from '../src/arrDiff.mjs'
-import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
+import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak, oldDiffToNew } from './tools/diffInputKit.mjs'
 
 
 describe(`arrDiff`, function() {
@@ -47,7 +47,9 @@ describe(`arrDiff`, function() {
         let r = arrDiff(kp[k].oin1, kp[k].oin2)
         r = JSON.parse(JSON.stringify(r))
         let rr = kp[k].oout
-        assert.strict.deepStrictEqual(r, rr)
+        //ws430c(裁定表〈七〉「回傳之 diff 改以元素陣列表示;dfs 之格式不變」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+        assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+        assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'array'))
     })
 
     let r2in1 = [
@@ -95,7 +97,9 @@ describe(`arrDiff`, function() {
         let r = arrDiff(kp[k].oin1, kp[k].oin2, { mode: 'matrix' })
         r = JSON.parse(JSON.stringify(r))
         let rr = kp[k].oout
-        assert.strict.deepStrictEqual(r, rr)
+        //ws430c(裁定表〈七〉): 同case:1, dfs不變、diff改為元素陣列段
+        assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+        assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
     })
 
     //ws286c: arrOld與arrNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依arrOld、arrNew序檢測; []為合法輸入
@@ -157,47 +161,47 @@ describe(`arrDiff`, function() {
     })
 
     //只有一邊為空, 或兩邊各有一個空元素, 都不是[兩邊皆空], 照常回傳差異結果(取自修前HEAD之實測)
+    //ws430c(裁定表〈七〉「回傳之 diff 改以元素陣列表示」): 原期望diff之value為'a\n'、'0∶1⟋1∶2⟋\n' → 新期望為['a']、[['1', '2']]; dfs不變
     it(`should return the normal diff when only one side is []`, function() {
         assert.strict.deepStrictEqual(
             arrDiff([], ['a']),
-            { diff: [{ count: 1, added: true, removed: false, value: 'a\n' }], dfs: [{ p: 'add', k: 0, vo: 'a', vn: '' }] }
+            { diff: [{ count: 1, added: true, removed: false, value: ['a'] }], dfs: [{ p: 'add', k: 0, vo: 'a', vn: '' }] }
         )
         assert.strict.deepStrictEqual(
             arrDiff(['a'], []),
-            { diff: [{ count: 1, added: false, removed: true, value: 'a\n' }], dfs: [{ p: 'remove', k: 0, vo: 'a', vn: '' }] }
+            { diff: [{ count: 1, added: false, removed: true, value: ['a'] }], dfs: [{ p: 'remove', k: 0, vo: 'a', vn: '' }] }
         )
         assert.strict.deepStrictEqual(
             arrDiff([[1, 2]], [], { mode: 'matrix' }),
             {
-                diff: [{ count: 1, added: false, removed: true, value: '0∶1⟋1∶2⟋\n' }],
+                diff: [{ count: 1, added: false, removed: true, value: [['1', '2']] }],
                 dfs: [[{ p: 'remove', k: 0, vo: '1', vn: '' }, { p: 'remove', k: 1, vo: '2', vn: '' }]],
             }
         )
     })
 
-    //內部站點邊界: 內部組出之字串不為''(每個元素後接換行), 故[''] 對 [''] 與 [[]] 對 [[]] 不會走到兩邊皆空, 結果與修前相同
-    it(`should keep the same result as before for [''] vs [''] (array mode) and [[]] vs [[]] (matrix mode)`, function() {
+    //[''] 對 [''] 與 [[]] 對 [[]] 不會走到兩邊皆空; ws430c(〈七〉): diff之value由'\n'改為['']、[[]], dfs與修前相同
+    it(`should keep the same dfs as before for [''] vs [''] (array mode) and [[]] vs [[]] (matrix mode)`, function() {
         assert.strict.deepStrictEqual(
             arrDiff([''], ['']),
-            { diff: [{ count: 1, added: false, removed: false, value: '\n' }], dfs: [{ p: '', k: 0, vo: '', vn: '' }] }
+            { diff: [{ count: 1, added: false, removed: false, value: [''] }], dfs: [{ p: '', k: 0, vo: '', vn: '' }] }
         )
         assert.strict.deepStrictEqual(
             arrDiff([[]], [[]], { mode: 'matrix' }),
-            { diff: [{ count: 1, added: false, removed: false, value: '\n' }], dfs: [[]] }
+            { diff: [{ count: 1, added: false, removed: false, value: [[]] }], dfs: [[]] }
         )
     })
 
-    //內部站點邊界: 儲存格含換行時, 同列拆成兩行, 其中一對可合併之行(去掉分隔字串後)兩邊皆為[], 內部以兩個空字串呼叫strDiff, 結果與修前相同
-    it(`should keep the same result as before when a modified line of a matrix splits into two empty arrays (strDiff is called with two '')`, function() {
+    //ws430c(裁定表〈七〉「值內含換行、⟋、∶ 時之錯位與截斷一併消除」): 原期望鎖定修前之錯位(同列拆成兩行、dfs為[[], [{…vo:''}]]) → 新期望為一列一格之modify
+    it(`should compare a cell containing a newline as one cell in matrix mode (no misalignment, ws430c 〈七〉)`, function() {
         assert.strict.deepStrictEqual(
             arrDiff([['a\nz']], [['b\nz']], { mode: 'matrix' }),
             {
                 diff: [
-                    { count: 1, added: false, removed: true, value: '0∶a\n' },
-                    { count: 1, added: true, removed: false, value: '0∶b\n' },
-                    { count: 1, added: false, removed: false, value: 'z⟋\n' },
+                    { count: 1, added: false, removed: true, value: [['a\nz']] },
+                    { count: 1, added: true, removed: false, value: [['b\nz']] },
                 ],
-                dfs: [[], [{ p: '', k: 0, vo: '', vn: '' }]],
+                dfs: [[{ p: 'modify', k: 0, vo: 'a\nz', vn: 'b\nz' }]],
             }
         )
     })

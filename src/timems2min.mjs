@@ -7,6 +7,9 @@ import istimems from './istimems.mjs'
 /**
  * 毫秒時間取至分時間
  *
+ * 失敗之辨識：回傳''即失敗，有效輸入必得非空字串(狀態模式另以state === 'error'判定)
+ * 時區：輸入不帶時區，依本機時區判定；本機時區之夏令空窗內不存在之本地時刻視為無效(回傳'')
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timems2min.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入毫秒時間字串，不含時區

@@ -4,10 +4,14 @@ import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak } from './tools
 
 
 const MSG_ALL = 'invalid ltdtAll: must be an array'
-const MSG_ALL_ROWS = 'invalid ltdtAll: must be an array of objects'
 const MSG_DEL = 'invalid ltdtDel: must be an array'
-const MSG_DEL_ROWS = 'invalid ltdtDel: must be an array of objects'
-const MSG_KEY = 'invalid key: must be a non-empty string'
+//ws430c(裁定表〈九〉): 元素非物件之訊息改為指出row[i](原'… must be an array of objects'); key之訊息改為'… or a finite number'(原'invalid key: must be a non-empty string')
+const MSG_ALL_ROW = (i) => `invalid ltdtAll: row[${i}] is not an object`
+const MSG_DEL_ROW = (i) => `invalid ltdtDel: row[${i}] is not an object`
+const MSG_KEY = 'invalid key: must be a non-empty string or a finite number'
+//ws430c3(裁定表〈十六〉「ltdtpull 之訊息帶實際欄位名」): 原期望'… has no own key [key]' → 新期望帶欄位名(參數, 非資料值)
+const MSG_DEL_NOKEY = (i, k) => `invalid ltdtDel: row[${i}] has no own key [${k}]`
+const MSG_DEL_BADVAL = (i) => `invalid ltdtDel: row[${i}] has an invalid key value`
 
 
 describe(`ltdtpull`, function() {
@@ -82,23 +86,23 @@ describe(`ltdtpull`, function() {
     })
 
     it(`should throw invalid ltdtAll rows when input ['abc'], ''`, function() {
-        throwsMsg(() => ltdtpull(['abc'], ''), MSG_ALL_ROWS)
+        throwsMsg(() => ltdtpull(['abc'], ''), MSG_ALL_ROW(0))
     })
 
     it(`should throw invalid ltdtAll rows when input ['abc'], []`, function() {
-        throwsMsg(() => ltdtpull(['abc'], []), MSG_ALL_ROWS)
+        throwsMsg(() => ltdtpull(['abc'], []), MSG_ALL_ROW(0))
     })
 
     it(`should throw invalid ltdtAll rows when input ['abc'], {}`, function() {
-        throwsMsg(() => ltdtpull(['abc'], {}), MSG_ALL_ROWS)
+        throwsMsg(() => ltdtpull(['abc'], {}), MSG_ALL_ROW(0))
     })
 
     it(`should throw invalid ltdtAll rows when input ['abc'], null`, function() {
-        throwsMsg(() => ltdtpull(['abc'], null), MSG_ALL_ROWS)
+        throwsMsg(() => ltdtpull(['abc'], null), MSG_ALL_ROW(0))
     })
 
     it(`should throw invalid ltdtAll rows when input ['abc'], undefined`, function() {
-        throwsMsg(() => ltdtpull(['abc'], undefined), MSG_ALL_ROWS)
+        throwsMsg(() => ltdtpull(['abc'], undefined), MSG_ALL_ROW(0))
     })
 
     describe(`required parameters ltdtAll, ltdtDel and key (ws286e)`, function() {
@@ -121,11 +125,11 @@ describe(`ltdtpull`, function() {
         })
 
         it(`should throw when input ['x'], [], 'id'`, function() {
-            throwsMsg(() => ltdtpull(['x'], [], 'id'), MSG_ALL_ROWS)
+            throwsMsg(() => ltdtpull(['x'], [], 'id'), MSG_ALL_ROW(0))
         })
 
         it(`should throw when input [{ id: 1 }], ['x'], 'id'`, function() {
-            throwsMsg(() => ltdtpull([{ id: 1 }], ['x'], 'id'), MSG_DEL_ROWS)
+            throwsMsg(() => ltdtpull([{ id: 1 }], ['x'], 'id'), MSG_DEL_ROW(0))
         })
 
         // 表列: ([],[],'id')、([],[{id:1}],'id') → []; ([{id:1}],[],'id') → [{id:1}] 不變
@@ -141,10 +145,14 @@ describe(`ltdtpull`, function() {
             assert.strict.deepStrictEqual(ltdtpull([{ id: 1 }], [], 'id'), [{ id: 1 }])
         })
 
-        // 未列之合法呼叫不得改變: ltdtDel為[]時回傳ltdtAll本身(非複本)
-        it(`should return ltdtAll itself (not a copy) when ltdtDel is [] (unchanged)`, function() {
+        //ws430c(裁定表〈九〉「ltdtDel 為 [] → 回新陣列(淺複本;原回 ltdtAll 本身)」): 原期望strictEqual(ltdtAll本身) → 新期望為另一陣列、內容與元素相同
+        it(`should return a shallow copy (not ltdtAll itself) when ltdtDel is [] (ws430c 〈九〉)`, function() {
             let all = [{ id: 1 }, { id: 2 }]
-            assert.strictEqual(ltdtpull(all, [], 'id'), all)
+            let r = ltdtpull(all, [], 'id')
+            assert.notStrictEqual(r, all)
+            assert.strict.deepStrictEqual(r, all)
+            assert.strictEqual(r[0], all[0])
+            assert.strictEqual(r[1], all[1])
         })
 
         it(`should return the rest of ltdtAll as a new array when ltdtDel is not empty`, function() {
@@ -157,13 +165,16 @@ describe(`ltdtpull`, function() {
             assert.strict.deepStrictEqual(del, [{ id: 2 }])
         })
 
-        it(`should return [] (no throw) when ltdtAll is [] and ltdtDel has items, and when nothing in ltdtAll matches`, function() {
-            assert.strict.deepStrictEqual(ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y'), [])
+        //ws430c(裁定表〈九〉「ltdtDel 之列缺該自有鍵 → 拋錯」): 原期望ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y')回[] → 新期望拋row[0] has no own key; 第二式不變
+        it(`should return [] when nothing in ltdtAll matches, and throw when a row of ltdtDel has no own key even if ltdtAll is [] (ws430c 〈九〉)`, function() {
+            throwsMsg(() => ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y'), MSG_DEL_NOKEY(0, 'x.y'))
             assert.strict.deepStrictEqual(ltdtpull([{ id: 1 }, { id: 2 }], [{ id: 3 }], 'id'), [{ id: 1 }, { id: 2 }])
         })
 
-        it(`should accept a nested key path`, function() {
-            assert.strict.deepStrictEqual(ltdtpull([{ a: { b: 1 } }, { a: { b: 2 } }], [{ a: { b: 1 } }], 'a.b'), [{ a: { b: 2 } }])
+        //ws430c(裁定表〈九〉「只讀自有同名鍵, 不經 lodash differenceBy 之路徑解析('a.b' 為欄位名)」): 原期望'a.b'解析為巢狀路徑而刪除{a:{b:1}} → 新期望ltdtDel之{a:{b:1}}無自有'a.b'欄位而拋錯, 自有'a.b'欄位者依欄位名比對
+        it(`should treat a dotted key as a field name, not a nested path (ws430c 〈九〉)`, function() {
+            throwsMsg(() => ltdtpull([{ a: { b: 1 } }, { a: { b: 2 } }], [{ a: { b: 1 } }], 'a.b'), MSG_DEL_NOKEY(0, 'a.b'))
+            assert.strict.deepStrictEqual(ltdtpull([{ 'a.b': 1 }, { 'a.b': 2 }, { a: { b: 1 } }], [{ 'a.b': 1 }], 'a.b'), [{ 'a.b': 2 }, { a: { b: 1 } }])
         })
 
         // ltdtAll非陣列(NON_ARR 21種 + 數字), 其餘有效
@@ -178,36 +189,35 @@ describe(`ltdtpull`, function() {
             })
         }
 
-        // 元素非物件(NON_OBJ_ELEM 20種): 唯一元素/首/中/末, ltdtAll與ltdtDel兩側; ltdtAll或ltdtDel之另一側為空陣列亦throw
+        // 元素非物件(NON_OBJ_ELEM 20種): 唯一元素/首/中/末, ltdtAll與ltdtDel兩側; ltdtAll或ltdtDel之另一側為空陣列亦throw; ws430c(〈九〉): 訊息指出row[i]
         for (let [lb, v] of NON_OBJ_ELEM) {
             it(`should throw invalid ltdtAll rows when an element of ltdtAll is ${lb}`, function() {
-                throwsMsg(() => ltdtpull([v], [], 'id'), MSG_ALL_ROWS)
-                throwsMsg(() => ltdtpull([v, { id: 1 }], [{ id: 1 }], 'id'), MSG_ALL_ROWS)
-                throwsMsg(() => ltdtpull([{ id: 1 }, v, { id: 2 }], [{ id: 1 }], 'id'), MSG_ALL_ROWS)
-                throwsMsg(() => ltdtpull([{ id: 1 }, v], [], 'id'), MSG_ALL_ROWS)
+                throwsMsg(() => ltdtpull([v], [], 'id'), MSG_ALL_ROW(0))
+                throwsMsg(() => ltdtpull([v, { id: 1 }], [{ id: 1 }], 'id'), MSG_ALL_ROW(0))
+                throwsMsg(() => ltdtpull([{ id: 1 }, v, { id: 2 }], [{ id: 1 }], 'id'), MSG_ALL_ROW(1))
+                throwsMsg(() => ltdtpull([{ id: 1 }, v], [], 'id'), MSG_ALL_ROW(1))
             })
             it(`should throw invalid ltdtDel rows when an element of ltdtDel is ${lb}`, function() {
-                throwsMsg(() => ltdtpull([], [v], 'id'), MSG_DEL_ROWS)
-                throwsMsg(() => ltdtpull([{ id: 1 }], [v, { id: 1 }], 'id'), MSG_DEL_ROWS)
-                throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }, v, { id: 2 }], 'id'), MSG_DEL_ROWS)
-                throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }, v], 'id'), MSG_DEL_ROWS)
+                throwsMsg(() => ltdtpull([], [v], 'id'), MSG_DEL_ROW(0))
+                throwsMsg(() => ltdtpull([{ id: 1 }], [v, { id: 1 }], 'id'), MSG_DEL_ROW(0))
+                throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }, v, { id: 2 }], 'id'), MSG_DEL_ROW(1))
+                throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }, v], 'id'), MSG_DEL_ROW(1))
             })
         }
 
         it(`should treat sparse array holes as non-object elements`, function() {
             let h = [{ id: 1 }, , { id: 3 }] // eslint-disable-line no-sparse-arrays
-            throwsMsg(() => ltdtpull(h, [], 'id'), MSG_ALL_ROWS)
-            throwsMsg(() => ltdtpull([{ id: 1 }], h, 'id'), MSG_DEL_ROWS)
+            throwsMsg(() => ltdtpull(h, [], 'id'), MSG_ALL_ROW(1))
+            throwsMsg(() => ltdtpull([{ id: 1 }], h, 'id'), MSG_DEL_ROW(1))
         })
 
-        // key無效(非非空字串): 與ltdtAll、ltdtDel有無資料無關
+        // key無效(非「非空字串或有限數字」): 與ltdtAll、ltdtDel有無資料無關; ws430c(〈九〉「key 為有限數字 視同字串欄名」): 原列為無效之0與1移出, 改於下方之有效案
         for (let [lb, v] of [
             ['undefined', undefined],
             ['null', null],
             [`''`, ''],
-            ['0', 0],
-            ['1', 1],
             ['NaN', NaN],
+            ['Infinity', Infinity],
             ['true', true],
             ['false', false],
             [`['id']`, ['id']],
@@ -226,24 +236,28 @@ describe(`ltdtpull`, function() {
             })
         }
 
-        // 檢測順序: ltdtAll(陣列, 元素)、ltdtDel(陣列, 元素)、key
-        it(`should check in the order ltdtAll (array, rows), ltdtDel (array, rows), key`, function() {
+        // 檢測順序: ltdtAll(陣列, 元素)、ltdtDel(陣列, 元素)、key、ltdtDel之鍵
+        it(`should check in the order ltdtAll (array, rows), ltdtDel (array, rows), key, keys of ltdtDel`, function() {
             throwsMsg(() => ltdtpull('x', 'y', 'z'), MSG_ALL)
-            throwsMsg(() => ltdtpull(['x'], 'y', ''), MSG_ALL_ROWS)
+            throwsMsg(() => ltdtpull(['x'], 'y', ''), MSG_ALL_ROW(0))
             throwsMsg(() => ltdtpull([], 'y', ''), MSG_DEL)
-            throwsMsg(() => ltdtpull([], ['y'], ''), MSG_DEL_ROWS)
+            throwsMsg(() => ltdtpull([], ['y'], ''), MSG_DEL_ROW(0))
             throwsMsg(() => ltdtpull([], [], ''), MSG_KEY)
-            throwsMsg(() => ltdtpull(['x'], ['y'], 'id'), MSG_ALL_ROWS)
+            throwsMsg(() => ltdtpull(['x'], ['y'], 'id'), MSG_ALL_ROW(0))
+            throwsMsg(() => ltdtpull([{ id: 1 }], [{ v: 1 }], ''), MSG_KEY)
         })
 
         // 訊息不回顯輸入值(V20)
         it(`should not echo the input value in the messages`, function() {
             throwsMsgNoLeak(() => ltdtpull(LEAK, [], 'id'), MSG_ALL)
             throwsMsgNoLeak(() => ltdtpull({ LEAK }, [], 'id'), MSG_ALL)
-            throwsMsgNoLeak(() => ltdtpull([LEAK], [], 'id'), MSG_ALL_ROWS)
+            throwsMsgNoLeak(() => ltdtpull([LEAK], [], 'id'), MSG_ALL_ROW(0))
             throwsMsgNoLeak(() => ltdtpull([], LEAK, 'id'), MSG_DEL)
-            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [LEAK], 'id'), MSG_DEL_ROWS)
+            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [LEAK], 'id'), MSG_DEL_ROW(0))
             throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ id: 1 }], { LEAK }), MSG_KEY)
+            throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }], LEAK), MSG_DEL_NOKEY(0, LEAK)) //ws430c3(〈十六〉): 欄位名為參數, 訊息帶之; 資料值仍不帶(下列)
+            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ v: LEAK }], 'id'), MSG_DEL_NOKEY(0, 'id'))
+            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ id: { LEAK } }], 'id'), MSG_DEL_BADVAL(0))
         })
 
     })

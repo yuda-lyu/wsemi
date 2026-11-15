@@ -96,11 +96,10 @@ describe(`mat2ltdt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error' } when mat has less than 2 rows with returnWithStateAndMsg`, function() {
-        //原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨
+    //ws430c(裁定表〈二〉「只有表頭、無資料列([['a','b']]) → success [](原 error at least 2 rows are required)」): 原期望error → 新期望success []
+    it(`should return { state: 'success', msg: [] } when mat has only the header row with returnWithStateAndMsg (ws430c 〈二〉)`, function() {
         let r = mat2ltdt([['a', 'b']], { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('2 rows') >= 0, true, `msg 應標明列數不足, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'success', msg: [] })
     })
 
     it(`should return { state: 'error' } when any row is not an effective array with returnWithStateAndMsg`, function() {
@@ -147,13 +146,13 @@ describe(`mat2ltdt`, function() {
             })
         }
 
-        //不在本輪: 只有表頭列(列數少於2)與非空而無效之陣列維持為失敗
-        it(`should keep non-empty invalid arrays as error with returnWithStateAndMsg (unchanged)`, function() {
+        //ws430c(裁定表〈二〉「任一列無效 → 結果不變(error);訊息指出 mat 之列號」「只有表頭 → success []」): 原期望'invalid mat'與'at least 2 rows are required' → 新期望指出row[0]、只有表頭為success []
+        it(`should keep non-empty invalid arrays as error with the row index, and the header-only mat as success [] (ws430c 〈二〉)`, function() {
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat' })
+                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
             }
             let r = mat2ltdt([['a', 'b']], D)
-            assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid mat, at least 2 rows are required' })
+            assert.strict.deepStrictEqual(r, { state: 'success', msg: [] })
         })
 
         it(`should keep the result of a non-empty mat unchanged`, function() {

@@ -4,9 +4,10 @@ import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.
 
 
 const MSG_M1 = 'invalid mat1: must be an array'
-const MSG_M1_ROWS = 'invalid mat1: must be an array of arrays'
 const MSG_M2 = 'invalid mat2: must be an array'
-const MSG_M2_ROWS = 'invalid mat2: must be an array of arrays'
+//ws430c(裁定表〈十〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat1: must be an array of arrays' → 新'invalid mat1: row[i] is not an array'(mat2同)
+const MSG_M1_ROW = (i) => `invalid mat1: row[${i}] is not an array`
+const MSG_M2_ROW = (i) => `invalid mat2: row[${i}] is not an array`
 
 
 describe(`matConcat`, function() {
@@ -112,7 +113,7 @@ describe(`matConcat`, function() {
         })
 
         it(`should throw when input [1], [2]`, function() {
-            throwsMsg(() => matConcat([1], [2]), MSG_M1_ROWS)
+            throwsMsg(() => matConcat([1], [2]), MSG_M1_ROW(0))
         })
 
         it(`should return [] (no throw) when input [], []`, function() {
@@ -169,31 +170,31 @@ describe(`matConcat`, function() {
         // 元素非陣列(各列須為陣列): 單一元素/首/中/末, 左右兩側; 含陣列空洞
         for (let [lb, v] of [...NON_ARR, ['5', 5]]) {
             it(`should throw invalid mat1 rows when an element of mat1 is ${lb}`, function() {
-                throwsMsg(() => matConcat([v], [[1]]), MSG_M1_ROWS)
-                throwsMsg(() => matConcat([v, [1]], [[1]]), MSG_M1_ROWS)
-                throwsMsg(() => matConcat([[1], v, [2]], [[1]]), MSG_M1_ROWS)
-                throwsMsg(() => matConcat([[1], v], []), MSG_M1_ROWS)
+                throwsMsg(() => matConcat([v], [[1]]), MSG_M1_ROW(0))
+                throwsMsg(() => matConcat([v, [1]], [[1]]), MSG_M1_ROW(0))
+                throwsMsg(() => matConcat([[1], v, [2]], [[1]]), MSG_M1_ROW(1))
+                throwsMsg(() => matConcat([[1], v], []), MSG_M1_ROW(1))
             })
             it(`should throw invalid mat2 rows when an element of mat2 is ${lb}`, function() {
-                throwsMsg(() => matConcat([[1]], [v]), MSG_M2_ROWS)
-                throwsMsg(() => matConcat([[1]], [v, [1]]), MSG_M2_ROWS)
-                throwsMsg(() => matConcat([[1]], [[1], v, [2]]), MSG_M2_ROWS)
-                throwsMsg(() => matConcat([], [[1], v]), MSG_M2_ROWS)
+                throwsMsg(() => matConcat([[1]], [v]), MSG_M2_ROW(0))
+                throwsMsg(() => matConcat([[1]], [v, [1]]), MSG_M2_ROW(0))
+                throwsMsg(() => matConcat([[1]], [[1], v, [2]]), MSG_M2_ROW(1))
+                throwsMsg(() => matConcat([], [[1], v]), MSG_M2_ROW(1))
             })
         }
 
         it(`should treat sparse array holes as non-array elements`, function() {
             let h = [[1], , [3]] // eslint-disable-line no-sparse-arrays
-            throwsMsg(() => matConcat(h, [[1]]), MSG_M1_ROWS)
-            throwsMsg(() => matConcat([[1]], h), MSG_M2_ROWS)
+            throwsMsg(() => matConcat(h, [[1]]), MSG_M1_ROW(1))
+            throwsMsg(() => matConcat([[1]], h), MSG_M2_ROW(1))
         })
 
         // 檢測順序: mat1(陣列, 元素)、mat2(陣列, 元素)
         it(`should check in the order mat1 (array, rows) then mat2 (array, rows)`, function() {
             throwsMsg(() => matConcat('x', 'y'), MSG_M1)
-            throwsMsg(() => matConcat([1], 'y'), MSG_M1_ROWS)
-            throwsMsg(() => matConcat([[1]], [2]), MSG_M2_ROWS)
-            throwsMsg(() => matConcat([1], [2]), MSG_M1_ROWS)
+            throwsMsg(() => matConcat([1], 'y'), MSG_M1_ROW(0))
+            throwsMsg(() => matConcat([[1]], [2]), MSG_M2_ROW(0))
+            throwsMsg(() => matConcat([1], [2]), MSG_M1_ROW(0))
             throwsMsg(() => matConcat('x', [2]), MSG_M1)
         })
 
@@ -202,8 +203,8 @@ describe(`matConcat`, function() {
             throwsMsgNoLeak(() => matConcat(LEAK, [[1]]), MSG_M1)
             throwsMsgNoLeak(() => matConcat({ LEAK }, [[1]]), MSG_M1)
             throwsMsgNoLeak(() => matConcat([[1]], LEAK), MSG_M2)
-            throwsMsgNoLeak(() => matConcat([LEAK], [[1]]), MSG_M1_ROWS)
-            throwsMsgNoLeak(() => matConcat([[1]], [{ LEAK }]), MSG_M2_ROWS)
+            throwsMsgNoLeak(() => matConcat([LEAK], [[1]]), MSG_M1_ROW(0))
+            throwsMsgNoLeak(() => matConcat([[1]], [{ LEAK }]), MSG_M2_ROW(0))
         })
 
         it(`should not mutate the inputs`, function() {

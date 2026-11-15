@@ -1,6 +1,6 @@
 import assert from 'assert'
 import matDiff from '../src/matDiff.mjs'
-import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
+import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak, oldDiffToNew } from './tools/diffInputKit.mjs'
 
 
 describe(`matDiff`, function() {
@@ -51,15 +51,18 @@ describe(`matDiff`, function() {
         let r = matDiff(kp[k].oin1, kp[k].oin2)
         r = JSON.parse(JSON.stringify(r))
         let rr = kp[k].oout
-        assert.strict.deepStrictEqual(r, rr)
+        //ws430c(裁定表〈七〉〈八〉「dfs 之格式不變」「回傳之 diff 改以元素陣列表示」): 原期望diff為字串段 → 新期望為同切分之元素陣列段(oldDiffToNew); dfs原期望不變
+        assert.strict.deepStrictEqual(r.dfs, rr.dfs)
+        assert.strict.deepStrictEqual(r.diff, oldDiffToNew(rr.diff, 'matrix'))
     })
 
     //ws286c: matOld與matNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依matOld、matNew序檢測; []為合法輸入
     const MSG_OLD = 'invalid matOld: must be an array'
     const MSG_NEW = 'invalid matNew: must be an array'
     //ws290: 列非陣列之訊息改用matDiff自身之參數名且合乎輸入參數規格之「invalid <參數名>: …」格式(修前沿用內部arrDiff之'arrOld is not a matrix'/'arrNew is not a matrix')
-    const MSG_MAT_OLD = 'invalid matOld: every row must be an array'
-    const MSG_MAT_NEW = 'invalid matNew: every row must be an array'
+    //ws430c(裁定表〈八〉「列非陣列(含空位) 訊息指出列號(invalid matOld: row[i] is not an array, 只含列號不含值)」): 原'invalid matOld: every row must be an array' → 新'invalid matOld: row[i] is not an array'
+    const MSG_MAT_OLD = (i) => `invalid matOld: row[${i}] is not an array`
+    const MSG_MAT_NEW = (i) => `invalid matNew: row[${i}] is not an array`
 
     for (let [label, v] of NON_ARR) {
         it(`should throw '${MSG_OLD}' when matOld is not an array: ${label} (matNew valid, [] or invalid too)`, function() {
@@ -107,85 +110,85 @@ describe(`matDiff`, function() {
         assert.ok(r1 !== r2)
     })
 
+    //ws430c(裁定表〈七〉「回傳之 diff 改以元素陣列表示」): 原期望diff之value為'0∶a⟋\n' → 新期望為[['a']]; dfs不變
     it(`should return the normal diff when only one side is []`, function() {
         assert.strict.deepStrictEqual(
             matDiff([], [['a']]),
-            { diff: [{ count: 1, added: true, removed: false, value: '0∶a⟋\n' }], dfs: [[{ p: 'add', k: 0, vo: 'a', vn: '' }]] }
+            { diff: [{ count: 1, added: true, removed: false, value: [['a']] }], dfs: [[{ p: 'add', k: 0, vo: 'a', vn: '' }]] }
         )
         assert.strict.deepStrictEqual(
             matDiff([['a']], []),
-            { diff: [{ count: 1, added: false, removed: true, value: '0∶a⟋\n' }], dfs: [[{ p: 'remove', k: 0, vo: 'a', vn: '' }]] }
+            { diff: [{ count: 1, added: false, removed: true, value: [['a']] }], dfs: [[{ p: 'remove', k: 0, vo: 'a', vn: '' }]] }
         )
     })
 
-    //內部站點邊界: [[]] 對 [[]]、[['']] 對 [['']] 內部組出之字串為'\n'與'0∶⟋\n'(非''), 不會走到兩邊皆空, 結果與修前相同(取自HEAD之實測)
-    it(`should keep the same result as before for [[]] vs [[]], [['']] vs [['']] and [[]] vs [['']]`, function() {
+    //內部站點邊界: [[]] 對 [[]]、[['']] 對 [['']], 不會走到兩邊皆空; ws430c(〈七〉): diff之value由'\n'、'0∶⟋\n'改為[[]]、[['']], dfs與修前相同
+    it(`should keep the same dfs as before for [[]] vs [[]], [['']] vs [['']] and [[]] vs [['']]`, function() {
         assert.strict.deepStrictEqual(
             matDiff([[]], [[]]),
-            { diff: [{ count: 1, added: false, removed: false, value: '\n' }], dfs: [[]] }
+            { diff: [{ count: 1, added: false, removed: false, value: [[]] }], dfs: [[]] }
         )
         assert.strict.deepStrictEqual(
             matDiff([['']], [['']]),
-            { diff: [{ count: 1, added: false, removed: false, value: '0∶⟋\n' }], dfs: [[{ p: '', k: 0, vo: '', vn: '' }]] }
+            { diff: [{ count: 1, added: false, removed: false, value: [['']] }], dfs: [[{ p: '', k: 0, vo: '', vn: '' }]] }
         )
         assert.strict.deepStrictEqual(
             matDiff([[]], [['']]),
             {
                 diff: [
-                    { count: 1, added: false, removed: true, value: '\n' },
-                    { count: 1, added: true, removed: false, value: '0∶⟋\n' },
+                    { count: 1, added: false, removed: true, value: [[]] },
+                    { count: 1, added: true, removed: false, value: [['']] },
                 ],
                 dfs: [[{ p: 'add', k: 0, vo: '', vn: '' }]],
             }
         )
     })
 
-    //內部站點邊界: 儲存格含換行時, 一對可合併之行(去掉分隔字串後)兩邊皆為[], 內部以兩個空字串呼叫strDiff, 結果與修前相同
-    it(`should keep the same result as before when a modified line splits into two empty arrays (strDiff is called with two '')`, function() {
+    //ws430c(裁定表〈七〉「值內含換行、⟋、∶ 時之錯位與截斷一併消除」、〈八〉「比對結果隨 arrDiff 之裁定(逐格比對)」): 原期望鎖定修前之錯位(一列拆成兩段、dfs為[[], [{…vo:''}]]) → 新期望為一列一格之modify
+    it(`should compare a cell containing a newline as one cell (no misalignment, ws430c 〈七〉〈八〉)`, function() {
         assert.strict.deepStrictEqual(
             matDiff([['a\nz']], [['b\nz']]),
             {
                 diff: [
-                    { count: 1, added: false, removed: true, value: '0∶a\n' },
-                    { count: 1, added: true, removed: false, value: '0∶b\n' },
-                    { count: 1, added: false, removed: false, value: 'z⟋\n' },
+                    { count: 1, added: false, removed: true, value: [['a\nz']] },
+                    { count: 1, added: true, removed: false, value: [['b\nz']] },
                 ],
-                dfs: [[], [{ p: '', k: 0, vo: '', vn: '' }]],
+                dfs: [[{ p: 'modify', k: 0, vo: 'a\nz', vn: 'b\nz' }]],
             }
         )
         assert.strict.deepStrictEqual(
             matDiff([['a\nz'], ['q']], [['b\nz'], ['q']]),
             {
                 diff: [
-                    { count: 1, added: false, removed: true, value: '0∶a\n' },
-                    { count: 1, added: true, removed: false, value: '0∶b\n' },
-                    { count: 2, added: false, removed: false, value: 'z⟋\n0∶q⟋\n' },
+                    { count: 1, added: false, removed: true, value: [['a\nz']] },
+                    { count: 1, added: true, removed: false, value: [['b\nz']] },
+                    { count: 1, added: false, removed: false, value: [['q']] },
                 ],
-                dfs: [[], [{ p: '', k: 0, vo: '', vn: '' }], [{ p: '', k: 0, vo: 'q', vn: '' }]],
+                dfs: [[{ p: 'modify', k: 0, vo: 'a\nz', vn: 'b\nz' }], [{ p: '', k: 0, vo: 'q', vn: '' }]],
             }
         )
     })
 
-    //各列須為陣列: 仍throw(訊息依ws290改為invalid matOld/matNew格式), 且不輸出輸入資料至console(0次呼叫)
-    it(`should throw '${MSG_MAT_OLD}' with 0 console calls when matOld is not a matrix: matDiff([1], [2])`, function() {
-        throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD)
-        throwsMsg(() => matDiff([1], [[2]]), MSG_MAT_OLD)
-        throwsMsg(() => matDiff([1], []), MSG_MAT_OLD)
-        throwsMsg(() => matDiff([[1], 'abc'], [[1]]), MSG_MAT_OLD)
+    //各列須為陣列: 仍throw, 且不輸出輸入資料至console(0次呼叫); ws430c(〈八〉): 訊息指出列號
+    it(`should throw 'invalid matOld: row[i] is not an array' with 0 console calls when matOld is not a matrix: matDiff([1], [2])`, function() {
+        throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD(0))
+        throwsMsg(() => matDiff([1], [[2]]), MSG_MAT_OLD(0))
+        throwsMsg(() => matDiff([1], []), MSG_MAT_OLD(0))
+        throwsMsg(() => matDiff([[1], 'abc'], [[1]]), MSG_MAT_OLD(1))
     })
 
-    it(`should throw '${MSG_MAT_NEW}' with 0 console calls when matNew is not a matrix`, function() {
-        throwsMsg(() => matDiff([[1]], [2]), MSG_MAT_NEW)
-        throwsMsg(() => matDiff([], [2]), MSG_MAT_NEW)
-        throwsMsg(() => matDiff([[1]], [[1], null]), MSG_MAT_NEW)
+    it(`should throw 'invalid matNew: row[i] is not an array' with 0 console calls when matNew is not a matrix`, function() {
+        throwsMsg(() => matDiff([[1]], [2]), MSG_MAT_NEW(0))
+        throwsMsg(() => matDiff([], [2]), MSG_MAT_NEW(0))
+        throwsMsg(() => matDiff([[1]], [[1], null]), MSG_MAT_NEW(1))
     })
 
     for (let [label, v] of NON_ARR) {
-        it(`should throw 'every row must be an array' with 0 console calls when a row is not an array: ${label}`, function() {
-            throwsMsg(() => matDiff([v], [[1]]), MSG_MAT_OLD)
-            throwsMsg(() => matDiff([[1], v], [[1]]), MSG_MAT_OLD)
-            throwsMsg(() => matDiff([[1]], [v]), MSG_MAT_NEW)
-            throwsMsg(() => matDiff([], [[1], v]), MSG_MAT_NEW)
+        it(`should throw 'row[i] is not an array' with 0 console calls when a row is not an array: ${label}`, function() {
+            throwsMsg(() => matDiff([v], [[1]]), MSG_MAT_OLD(0))
+            throwsMsg(() => matDiff([[1], v], [[1]]), MSG_MAT_OLD(1))
+            throwsMsg(() => matDiff([[1]], [v]), MSG_MAT_NEW(0))
+            throwsMsg(() => matDiff([], [[1], v]), MSG_MAT_NEW(1))
         })
     }
 
@@ -207,14 +210,14 @@ describe(`matDiff`, function() {
             assert.ok(/^invalid mat(Old|New): /.test(err.message), err.message)
             assert.ok(!/arrOld|arrNew|is not a matrix/.test(err.message), err.message)
         }
-        throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD) //兩側各列皆無效: matOld先
-        throwsMsg(() => matDiff([[1], 2], [3]), MSG_MAT_OLD) //matOld中段列無效亦先於matNew
-        throwsMsg(() => matDiff([,], [[1]]), MSG_MAT_OLD) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD(0)) //兩側各列皆無效: matOld先
+        throwsMsg(() => matDiff([[1], 2], [3]), MSG_MAT_OLD(1)) //matOld中段列無效亦先於matNew
+        throwsMsg(() => matDiff([,], [[1]]), MSG_MAT_OLD(0)) // eslint-disable-line no-sparse-arrays
         throwsMsg(() => matDiff([1], 'x'), MSG_NEW) //matNew非陣列先於matOld各列(同修前順序)
         throwsMsg(() => matDiff('x', [1]), MSG_OLD)
     })
 
-    it(`should call console.log 0 times and not carry the input data when throwing 'every row must be an array'`, function() {
+    it(`should call console.log 0 times and not carry the input data when throwing 'row[i] is not an array'`, function() {
         let calls = []
         let orig = console.log
         console.log = (...args) => {
@@ -239,7 +242,7 @@ describe(`matDiff`, function() {
             console.log = orig
         }
         assert.strict.deepStrictEqual(calls.length, 0)
-        assert.strict.deepStrictEqual(errs, [MSG_MAT_OLD, MSG_MAT_NEW, MSG_MAT_OLD])
+        assert.strict.deepStrictEqual(errs, [MSG_MAT_OLD(0), MSG_MAT_NEW(0), MSG_MAT_OLD(0)])
         assert.ok(!JSON.stringify(errs).includes(LEAK))
     })
 

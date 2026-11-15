@@ -1,4 +1,3 @@
-import ot from './_dayjs.mjs'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import istimeTZ from './istimeTZ.mjs'
@@ -7,6 +6,9 @@ import tz from './_tz.mjs'
 
 /**
  * 秒時間取至日時間
+ *
+ * 失敗之辨識：回傳''即失敗，有效輸入必得非空字串(狀態模式另以state === 'error'判定)
+ * 轉換方式：直接取字串中之時刻欄位(所給之牆鐘時刻，即該時區之時刻)，不經本機時間解析，故結果不受執行環境之時區(含夏令空窗)影響
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2day.test.mjs Github}
  * @memberOf wsemi
@@ -53,8 +55,8 @@ function timeTZ2day(t, opt = {}) {
         //delTZ
         t = tz.delTZ(t)
 
-        let d = ot(t, 'YYYY-MM-DDTHH:mm:ss')
-        r = d.format('YYYY-MM-DD')
+        //直接取字串中之時刻欄位(所給之牆鐘時刻), 不經本機時間解析(原以本機時間解析再format, 於本機時區之夏令空窗內差1小時; 使用者2026-11-15裁定表〈十五〉); t已經istimeTZ驗證為標準寫法
+        r = t.slice(0, 10) //'YYYY-MM-DD'
 
     }
     catch (err) {

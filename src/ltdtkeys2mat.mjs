@@ -1,29 +1,26 @@
 import get from 'lodash-es/get.js'
-import each from 'lodash-es/each.js'
-import map from 'lodash-es/map.js'
-import size from 'lodash-es/size.js'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
-import iseobj from './iseobj.mjs'
-import isstr from './isstr.mjs'
-import isnum from './isnum.mjs'
 import isbol from './isbol.mjs'
-import haskey from './haskey.mjs'
-import o2j from './o2j.mjs'
-import getltdtkeys from './getltdtkeys.mjs'
+import _cellText from './_cellText.mjs'
+import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
 
 
 /**
  * 由物件陣列ltdt並使用keys取值轉二維陣列mat
  *
+ * ltdt之每列須為物件，空物件{}與只有繼承鍵之物件為有效列(沒有自有欄位之紀錄，各欄給opt.empty)；任一列非物件(null、陣列、字串、空位等)時視為ltdt無效，訊息指出列號(invalid ltdt, row[i] is not an object，只含索引不含值)
+ * keys為null、undefined或[]時由ltdt提取(各列之自有可列舉字串鍵)；keys非陣列或其元素全部無效時視為keys無效；元素為''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字時該欄略過，有限數字視同字串，重複之鍵產生重複之欄
+ * 取值只讀各列之自有同名欄位(不解析路徑、不讀繼承鍵)；缺該欄或其值為undefined時給opt.empty
+ * 值之表示：字串與有限數字為原值，布林為'true'或'false'，null為'null'(可藉以與缺鍵區分)，NaN與±Infinity為字串'NaN'、'Infinity'、'-Infinity'，物件與陣列為JSON字串，Date為ISO字串(不帶引號)，函數視為null即'null'，BigInt為String(v)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeys2mat.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
- * @param {Array} [keys=null] 輸入字串陣列，若不輸入則由ltdt提取，預設為null
+ * @param {Array} [keys=null] 輸入欄位名陣列(元素為字串或有限數字)，若為null、undefined或[]則由ltdt提取，預設為null
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String|Number|Array|Object} [opt.empty=''] 輸入若無鍵值時給予之預設值，預設''
+ * @param {*} [opt.empty=''] 輸入缺該欄或其值為undefined時給予之值(原樣放入)，函數視為null，預設''
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Array|Object} 回傳資料陣列，ltdt為空陣列(合法資料)、無效、無法取得keys或任一元素非有效物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效、無法取得keys或任一元素非有效物件時為{ state: 'error', msg }
+ * @returns {Array|Object} 回傳資料陣列，ltdt為空陣列(合法資料)、無效、keys無效、無法取得keys或任一列非物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效、keys無效、無法取得keys或任一列非物件時為{ state: 'error', msg }
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空陣列[]，而空陣列[]亦為合法輸入之結果(如ltdtkeys2mat([]))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
@@ -35,6 +32,18 @@ import getltdtkeys from './getltdtkeys.mjs'
  *
  * console.log(ltdtkeys2mat('x', ['a', 'b'], { returnWithStateAndMsg: true }))
  * // => { state: 'error', msg: 'invalid ltdt' }
+ *
+ * console.log(ltdtkeys2mat([{ a: null, b: true }, {}], ['a', 'b']))
+ * // => [['null', 'true'], ['', '']] ({}為有效列，各欄給opt.empty)
+ *
+ * console.log(ltdtkeys2mat([{ a: NaN, b: { y: 1, x: 2 } }], ['a', '', 'b']))
+ * // => [['NaN', '{"y":1,"x":2}']] (略過''欄)
+ *
+ * console.log(ltdtkeys2mat([{ a: 1 }, null], ['a'], { returnWithStateAndMsg: true }))
+ * // => { state: 'error', msg: 'invalid ltdt, row[1] is not an object' }
+ *
+ * console.log(ltdtkeys2mat([{ a: 1 }], 'a', { returnWithStateAndMsg: true }))
+ * // => { state: 'error', msg: 'invalid keys' }
  *
  */
 function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
@@ -71,52 +80,22 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
         }
     }
 
-    //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨
-    if (!isearr(ltdt)) {
+    //check, 參數層非陣列
+    if (!isarr(ltdt)) {
         return retError('invalid ltdt')
     }
 
-    //keys
-    if (!isearr(keys)) {
-        keys = getltdtkeys(ltdt)
+    //check, 列與keys
+    let rk = _ltdtkeys2matCore.chkRowsKeys(ltdt, keys)
+    if (rk.state === 'error') {
+        return retError(rk.msg)
     }
 
-    //check
-    if (size(keys) === 0) {
-        return retError('invalid keys, can not extract any key from ltdt')
-    }
-
-    //check
-    let b = false
-    each(ltdt, function(v) {
-        if (!iseobj(v)) {
-            b = true
-        }
-    })
-    if (b) {
-        return retError('invalid ltdt, every element must be an effective object')
-    }
-
-    //empty
-    let empty = get(opt, 'empty', '')
+    //empty, 函數視為null
+    let empty = _cellText.readFill(opt, 'empty', '')
 
     //mat
-    let mat = []
-    each(ltdt, function(v) {
-        let r = map(keys, function(k) {
-            if (!haskey(v, k)) {
-                return empty
-            }
-            else if (isbol(v[k])) {
-                return v[k] ? 'true' : 'false'
-            }
-            else if (!isstr(v[k]) && !isnum(v[k])) {
-                return o2j(v[k])
-            }
-            return v[k]
-        })
-        mat.push(r)
-    })
+    let mat = _ltdtkeys2matCore.toMat(rk.rows, rk.msg, empty)
 
     if (returnWithStateAndMsg) {
         return {

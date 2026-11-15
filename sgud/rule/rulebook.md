@@ -53,6 +53,7 @@
 | 破壞性變更紀錄(第 57～64 項;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e、第 62 項為 ws290、第 63 項為 ws426、第 64 項為 ws427;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 約 26 |
 | 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
 | 結構函數之元素層級與自有鍵: 參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵、欄位名正規化、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數;2026-11-14 ws430b 新增) | `sgud/rule/rulebook_elem.md` | R-ELEM-LEVEL-01 | 約 10 |
+| 結構函數第三批: 列之訊息指出 row[i]、單一空元素不當空陣列、中性可設定之預設值(`opt.empty`／`opt.emptyHead`)、範圍參數;儲存格文字表示法單一擁有者 `_cellText`;差異比對之 modify 配對單一擁有者 `_diffPair`(arrDiff 逐格比對);帶時區時刻依其時區驗證(排程第 430 項第三批 14 個函數;2026-11-15 ws430c 新增) | `sgud/rule/rulebook_elem_b3.md` | R-ELEM-LEVEL-02、R-CELL-TEXT-01、R-DIFF-PAIR-01、R-TZ-WALL-01 | 約 12 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -86,6 +87,10 @@
 - `R-FS-EVEM-NAME-01` → `rulebook_fs.md`: R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達
 - `R-FS-REJECT-01` → `rulebook_fs.md`: R-FS-REJECT-01 fs 系回傳 Promise 者: 拒絕值一律為字串、不同步拋出、失敗不偽成功、不懸置、不殘留資源
 - `R-ELEM-LEVEL-01` → `rulebook_elem.md`: R-ELEM-LEVEL-01 結構函數:參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵(`__proto__` 經 `_setOwnKey`)、欄位名經 `_normKey`、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數,ws430b)
+- `R-ELEM-LEVEL-02` → `rulebook_elem_b3.md`: R-ELEM-LEVEL-02 結構函數第三批:列之訊息指出位置、單一空元素不當空陣列、欄位鍵經 `_normKey.field`、只讀自有可列舉同名欄位、中性可設定之預設值(`_cellText.readFill`)、函數值視為 null、長度不符之 `opt.debug`、範圍參數(排程第 430 項第三批 14 個函數,ws430c)
+- `R-CELL-TEXT-01` → `rulebook_elem_b3.md`: R-CELL-TEXT-01 儲存格之文字表示法單一擁有者 `_cellText`(`ltdtkeys2mat` 與 `arrDiff` 共用;鍵排序後之 JSON `stableStringify` 與 `ltdtDiffByKey` 共用)
+- `R-DIFF-PAIR-01` → `rulebook_elem_b3.md`: R-DIFF-PAIR-01 差異比對之「先刪後增配對為 modify」單一擁有者 `_diffPair`(`strDiff` 與 `arrDiff` 共用;arrDiff 以 diffArrays 逐元素、逐列再逐格)
+- `R-TZ-WALL-01` → `rulebook_elem_b3.md`: R-TZ-WALL-01 帶時區之時刻依其時區之固定偏移逐欄驗證(`istimeTZ`、`istimemsTZ`;`_tz.isWallTime`),不經本機時間往返比對
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

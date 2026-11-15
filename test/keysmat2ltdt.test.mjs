@@ -173,10 +173,11 @@ describe(`keysmat2ltdt`, function() {
         it(`should keep keys [] and non-empty invalid mat as error with returnWithStateAndMsg (unchanged)`, function() {
             assert.strict.deepStrictEqual(keysmat2ltdt([], [], D), { state: 'error', msg: 'invalid keys' })
             assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], D), { state: 'error', msg: 'invalid keys' })
+            //ws430c(裁定表〈一〉「mat 之任一列非陣列或為 [],不限第一列 → 訊息指出第幾列(invalid mat, row[i] is not an effective array)」): 原期望'invalid mat'、'invalid mat, the first row is not an effective array' → 新期望指出row[0]
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat' })
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
             }
-            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [1], D), { state: 'error', msg: 'invalid mat, the first row is not an effective array' })
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [1], D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
         })
 
         it(`should keep the result of a non-empty mat unchanged`, function() {
@@ -318,6 +319,8 @@ describe(`keysmat2ltdt`, function() {
                     if (i === 0) {
                         nc = Math.max(nc, 2) //第1列需為有效陣列(isearr: 單一元素時不得為無效值)才不會被拒
                     }
+                    nc = Math.max(nc, 1) //ws430c(裁定表〈一〉「任一列為 [] 判輸入無效,不限第一列」): 各列至少1個元素, 使本組只比對有效輸入(修前其餘列之[]靜默補'')
+
                     let r = []
                     for (let j = 0; j < nc; j++) {
                         r.push(keys[j] === 'length' ? pick(lenVals) : pick(vals))

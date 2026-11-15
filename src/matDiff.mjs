@@ -1,5 +1,4 @@
 import size from 'lodash-es/size.js'
-import every from 'lodash-es/every.js'
 import isarr from './isarr.mjs'
 import arrDiff from './arrDiff.mjs'
 
@@ -7,17 +6,16 @@ import arrDiff from './arrDiff.mjs'
 /**
  * 比對新舊二維陣列差異處
  *
- * matOld與matNew皆為必須參數，須為陣列，非陣列throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')(依matOld、matNew序)，訊息不帶輸入值；各列須為陣列(含陣列空洞視為非陣列)，否則throw Error('invalid matOld: every row must be an array')或Error('invalid matNew: every row must be an array')，檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列，訊息不帶輸入值，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ * matOld與matNew皆為必須參數，須為陣列，非陣列throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')(依matOld、matNew序)，訊息不帶輸入值；各列須為陣列(含陣列空洞視為非陣列)，否則throw Error('invalid matOld: row[i] is not an array')或Error('invalid matNew: row[i] is not an array')(i為列號，只含索引不含值)，檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)
+ * 以arrDiff之矩陣模式逐列再逐格比對(值內含換行或任何字元皆不影響對齊)，儲存格以其文字比對、不比型別，文字表示法同arrDiff(字串與有限數字原文、布林'true'/'false'、null為'null'、undefined與空位為''、NaN與±Infinity為字串、物件與陣列為鍵排序後之JSON、Date為ISO字串、函數視為null、BigInt為String(v))
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matDiff.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} matOld 輸入原始數據二維陣列，必須參數，非陣列或有列非陣列throw Error，[]為合法輸入
  * @param {Array} matNew 輸入更新數據二維陣列，必須參數，非陣列或有列非陣列throw Error，[]為合法輸入
- * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.dls='⟋'] 輸入若數據為矩陣時各儲存格分隔字串，預設'⟋'
- * @param {String} [opt.dlq='∶'] 輸入若數據為矩陣時各儲存格欄位指標分隔字串，預設'∶'
- * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為比對原始結果字串，dfs為各列比對結果陣列(每列為該列各儲存格比對結果陣列)；matOld與matNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} matOld或matNew非陣列時throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('invalid matOld: every row must be an array')或Error('invalid matNew: every row must be an array')；訊息皆不帶輸入值
+ * @param {Object} [opt={}] 輸入設定物件(目前無可用之鍵，保留供日後擴充)，預設{}
+ * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為底層比對結果陣列(各段為{ count, added, removed, value }，value為該段各列之儲存格比對文字陣列)，dfs為各列比對結果陣列(每列為該列各儲存格比對結果陣列)；matOld與matNew皆為[]時回傳{ diff: [], dfs: [] }
+ * @throws {Error} matOld或matNew非陣列時throw Error('invalid matOld: must be an array')或Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('invalid matOld: row[i] is not an array')或Error('invalid matNew: row[i] is not an array')；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -53,7 +51,7 @@ import arrDiff from './arrDiff.mjs'
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => invalid matOld: every row must be an array
+ *     // => invalid matOld: row[0] is not an array
  * }
  *
  * if (true) {
@@ -90,85 +88,244 @@ import arrDiff from './arrDiff.mjs'
  *         ['n3', 0.158739038, 0.085078711, 0.844664253, 0.21630142, 0.912931341, 0.735138313],
  *     ]
  *     r = matDiff(matOld, matNew, { mode: 'matrix' })
- *     console.log('diff', r.diff)
- *     // => diff [
+ *     console.dir(r.diff, { depth: null })
+ *     // => [
  *     //   {
  *     //     count: 1,
  *     //     added: false,
  *     //     removed: false,
- *     //     value: '0∶1⟋1∶0.974848293⟋2∶0.791303871⟋3∶0.716898185⟋4∶0.506002098⟋5∶0.137888903⟋6∶0.626724085⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '1',
+ *     //         '0.974848293',
+ *     //         '0.791303871',
+ *     //         '0.716898185',
+ *     //         '0.506002098',
+ *     //         '0.137888903',
+ *     //         '0.626724085'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: false,
  *     //     removed: true,
- *     //     value: '0∶2⟋1∶-0.529408622⟋2∶0.839882385⟋3∶0.663059856⟋4∶0.49047221⟋5∶123⟋6∶0.395763265⟋7∶0.866151835⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '2',
+ *     //         '-0.529408622',
+ *     //         '0.839882385',
+ *     //         '0.663059856',
+ *     //         '0.49047221',
+ *     //         '123',
+ *     //         '0.395763265',
+ *     //         '0.866151835'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
  *     //     removed: false,
- *     //     value: '0∶2⟋1∶-0.529408622⟋2∶0.1839882385⟋3∶0.663059856⟋4∶0.49047221⟋5∶0.395763265⟋6∶45.6⟋7∶0.866151835⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '2',
+ *     //         '-0.529408622',
+ *     //         '0.1839882385',
+ *     //         '0.663059856',
+ *     //         '0.49047221',
+ *     //         '0.395763265',
+ *     //         '45.6',
+ *     //         '0.866151835'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 3,
  *     //     added: false,
  *     //     removed: false,
- *     //     value: '0∶3⟋1∶-0.10320217⟋2∶0.475514539⟋3∶0.969205779⟋4∶0.711250309⟋5∶0.153847069⟋6∶0.410092395⟋\n' +
- *     //       '0∶4⟋1∶-0.121479865⟋2∶0.486179086⟋3∶0.481023842⟋4∶0.467410582⟋5∶0.42602231⟋6∶0.849701641⟋\n' +
- *     //       '0∶5⟋1∶0.757346003⟋2∶0.697242433⟋3∶0.67532802⟋4∶0.174644416⟋5∶0.045652267⟋6∶0.397104668⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '3',
+ *     //         '-0.10320217',
+ *     //         '0.475514539',
+ *     //         '0.969205779',
+ *     //         '0.711250309',
+ *     //         '0.153847069',
+ *     //         '0.410092395'
+ *     //       ],
+ *     //       [
+ *     //         '4',
+ *     //         '-0.121479865',
+ *     //         '0.486179086',
+ *     //         '0.481023842',
+ *     //         '0.467410582',
+ *     //         '0.42602231',
+ *     //         '0.849701641'
+ *     //       ],
+ *     //       [
+ *     //         '5',
+ *     //         '0.757346003',
+ *     //         '0.697242433',
+ *     //         '0.67532802',
+ *     //         '0.174644416',
+ *     //         '0.045652267',
+ *     //         '0.397104668'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: false,
  *     //     removed: true,
- *     //     value: '0∶6⟋1∶0.663032731⟋2∶0.259252779⟋3∶0.566177431⟋4∶0.679637706⟋5∶0.377814487⟋6∶0.400248119⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '6',
+ *     //         '0.663032731',
+ *     //         '0.259252779',
+ *     //         '0.566177431',
+ *     //         '0.679637706',
+ *     //         '0.377814487',
+ *     //         '0.400248119'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 2,
  *     //     added: false,
  *     //     removed: false,
- *     //     value: '0∶7⟋1∶0.72721374⟋2∶0.263793391⟋3∶0.167895215⟋4∶0.794808602⟋5∶0.107070584⟋6∶0.011822872⟋\n' +
- *     //       '0∶8⟋1∶0.247416664⟋2∶0.360426795⟋3∶0.014346373⟋4∶0.000469616⟋5∶0.4082693⟋6∶0.913806611⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '7',
+ *     //         '0.72721374',
+ *     //         '0.263793391',
+ *     //         '0.167895215',
+ *     //         '0.794808602',
+ *     //         '0.107070584',
+ *     //         '0.011822872'
+ *     //       ],
+ *     //       [
+ *     //         '8',
+ *     //         '0.247416664',
+ *     //         '0.360426795',
+ *     //         '0.014346373',
+ *     //         '0.000469616',
+ *     //         '0.4082693',
+ *     //         '0.913806611'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: false,
  *     //     removed: true,
- *     //     value: '0∶9⟋1∶0.345880037⟋2∶0.167996664⟋3∶0.711054429⟋4∶0.363177921⟋5∶0.206849994⟋6∶0.636855344⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '9',
+ *     //         '0.345880037',
+ *     //         '0.167996664',
+ *     //         '0.711054429',
+ *     //         '0.363177921',
+ *     //         '0.206849994',
+ *     //         '0.636855344'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: true,
  *     //     removed: false,
- *     //     value: '0∶9⟋1∶0.345880037⟋2∶0.167996664⟋3∶0.711054429⟋4∶0.363173478⟋5∶0.636855344⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '9',
+ *     //         '0.345880037',
+ *     //         '0.167996664',
+ *     //         '0.711054429',
+ *     //         '0.363173478',
+ *     //         '0.636855344'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 1,
  *     //     added: false,
  *     //     removed: false,
- *     //     value: '0∶10⟋1∶0.576739457⟋2∶0.324665077⟋3∶0.973218005⟋4∶0.883927423⟋5∶0.176906125⟋6∶0.20087887⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '10',
+ *     //         '0.576739457',
+ *     //         '0.324665077',
+ *     //         '0.973218005',
+ *     //         '0.883927423',
+ *     //         '0.176906125',
+ *     //         '0.20087887'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 2,
  *     //     added: false,
  *     //     removed: true,
- *     //     value: '0∶11⟋1∶1.2⟋\n0∶12⟋1∶23.5⟋\n'
+ *     //     value: [ [ '11', '1.2' ], [ '12', '23.5' ] ]
  *     //   },
  *     //   {
  *     //     count: 2,
  *     //     added: false,
  *     //     removed: false,
- *     //     value: '0∶13⟋1∶0.504421248⟋2∶0.984003751⟋3∶0.32549507⟋4∶0.987090751⟋5∶0.192745589⟋6∶0.735133561⟋\n' +
- *     //       '0∶14⟋1∶0.273214614⟋2∶0.083431884⟋3∶0.565146092⟋4∶0.935388666⟋5∶0.637675154⟋6∶0.523815661⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         '13',
+ *     //         '0.504421248',
+ *     //         '0.984003751',
+ *     //         '0.32549507',
+ *     //         '0.987090751',
+ *     //         '0.192745589',
+ *     //         '0.735133561'
+ *     //       ],
+ *     //       [
+ *     //         '14',
+ *     //         '0.273214614',
+ *     //         '0.083431884',
+ *     //         '0.565146092',
+ *     //         '0.935388666',
+ *     //         '0.637675154',
+ *     //         '0.523815661'
+ *     //       ]
+ *     //     ]
  *     //   },
  *     //   {
  *     //     count: 3,
  *     //     added: true,
  *     //     removed: false,
- *     //     value: '0∶n1⟋1∶0.944492151⟋2∶0.89950443⟋3∶0.182709318⟋4∶0.892820757⟋5∶0.709746901⟋6∶0.097385354⟋\n' +
- *     //       '0∶n2⟋1∶0.769805921⟋2∶0.061355308⟋3∶0.314826137⟋4∶0.855857651⟋5∶0.653550539⟋6∶0.772500773⟋\n' +
- *     //       '0∶n3⟋1∶0.158739038⟋2∶0.085078711⟋3∶0.844664253⟋4∶0.21630142⟋5∶0.912931341⟋6∶0.735138313⟋\n'
+ *     //     value: [
+ *     //       [
+ *     //         'n1',
+ *     //         '0.944492151',
+ *     //         '0.89950443',
+ *     //         '0.182709318',
+ *     //         '0.892820757',
+ *     //         '0.709746901',
+ *     //         '0.097385354'
+ *     //       ],
+ *     //       [
+ *     //         'n2',
+ *     //         '0.769805921',
+ *     //         '0.061355308',
+ *     //         '0.314826137',
+ *     //         '0.855857651',
+ *     //         '0.653550539',
+ *     //         '0.772500773'
+ *     //       ],
+ *     //       [
+ *     //         'n3',
+ *     //         '0.158739038',
+ *     //         '0.085078711',
+ *     //         '0.844664253',
+ *     //         '0.21630142',
+ *     //         '0.912931341',
+ *     //         '0.735138313'
+ *     //       ]
+ *     //     ]
  *     //   }
  *     // ]
  *     for (let i = 0; i < r.dfs.length; i++) {
@@ -332,21 +489,29 @@ function matDiff(matOld, matNew, opt = {}) {
     if (!isarr(matNew)) {
         throw new Error('invalid matNew: must be an array')
     }
-    if (!every(matOld, isarr)) { //lodash every依索引走訪, 空洞視為undefined而無效
-        throw new Error('invalid matOld: every row must be an array')
+    //snap, 各列之快照(依索引走訪, 空洞視為undefined而無效; 訊息指出列號, 只含索引不含值; 檢查之列即交arrDiff之列)
+    let snap = (mat, name) => {
+        let rows = []
+        for (let i = 0; i < mat.length; i++) {
+            let r = mat[i]
+            if (!isarr(r)) {
+                throw new Error(`invalid ${name}: row[${i}] is not an array`)
+            }
+            rows.push(r)
+        }
+        return rows
     }
-    if (!every(matNew, isarr)) {
-        throw new Error('invalid matNew: every row must be an array')
-    }
-    if (size(matOld) === 0 && size(matNew) === 0) {
+    let rowsOld = snap(matOld, 'matOld')
+    let rowsNew = snap(matNew, 'matNew')
+    if (size(rowsOld) === 0 && size(rowsNew) === 0) {
         return {
             diff: [],
             dfs: [],
         }
     }
 
-    //arrDiff
-    let r = arrDiff(matOld, matNew, { ...opt, mode: 'matrix' })
+    //arrDiff, 固定矩陣模式(逐列再逐格比對), 不轉傳其他opt(opt.dls、opt.dlq已移除)
+    let r = arrDiff(rowsOld, rowsNew, { mode: 'matrix' })
 
     return r
 }

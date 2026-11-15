@@ -147,3 +147,35 @@ export function throwsMsgNoLeak(fn, msg) {
     let err = throwsMsg(fn, msg)
     assert.ok(!err.message.includes(LEAK), err.message)
 }
+
+
+/**
+ * ws430c(裁定表〈七〉「回傳之 diff 改以元素陣列表示(格式改變);dfs 之格式不變」): 把修前之diff期望值(以字串表示之各段)轉為新格式(各段value為元素陣列),
+ * 段之切分(count、added、removed)不變, 供arrDiff/matDiff/ltdtDiff之既有期望值沿用(只適用值內不含換行、'⟋'、'∶'之資料, 即修前可正確表示者)
+ *
+ * 一維(mode 'array'): value '-0.5\n123\n' → ['-0.5', '123']
+ * 矩陣(mode 'matrix'): value '0∶1⟋1∶a⟋\n0∶2⟋\n' → [['1', 'a'], ['2']](每行為一列, 以'⟋'分格, 去掉各格之「欄位指標∶」)
+ *
+ * @param {Array} diffOld 輸入修前之diff期望值
+ * @param {String} mode 輸入'array'或'matrix'
+ * @returns {Array} 回傳新格式之diff期望值
+ */
+export function oldDiffToNew(diffOld, mode) {
+    return diffOld.map((c) => {
+        let lines = c.value.split('\n')
+        lines.pop() //每行以'\n'結尾
+        let value
+        if (mode === 'matrix') {
+            value = lines.map((l) => {
+                let cs = l.split('⟋')
+                cs.pop() //每格以'⟋'結尾
+                return cs.map((s) => s.slice(s.indexOf('∶') + 1))
+            })
+        }
+        else {
+            value = lines
+        }
+        assert.strict.deepStrictEqual(value.length, c.count) //修前之count即段內元素數
+        return { count: c.count, added: c.added, removed: c.removed, value }
+    })
+}

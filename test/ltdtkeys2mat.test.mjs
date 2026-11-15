@@ -33,11 +33,12 @@ describe(`ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //ws430c(裁定表〈四〉「keys 為非陣列(字串 'a' 等) → 判 keys 無效(預設 []、狀態模式 invalid keys);原默默改為提取全部鍵」): 原期望提取全部鍵 → 新期望[]與invalid keys
     k = 1
-    it(`sould return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ''`, function() {
+    it(`sould return [] (invalid keys) when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '' (ws430c 〈四〉)`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '')
-        let rr = [[12, 34.56], ['123', 'xyz']]
-        assert.strict.deepStrictEqual(r, rr)
+        assert.strict.deepStrictEqual(r, [])
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '', { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys' })
     })
 
     k = 1
@@ -47,11 +48,12 @@ describe(`ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //ws430c(裁定表〈四〉同上): 原期望提取全部鍵 → 新期望[]與invalid keys
     k = 1
-    it(`sould return ${JSON.stringify(o[k].out)} when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}`, function() {
+    it(`sould return [] (invalid keys) when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {} (ws430c 〈四〉)`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {})
-        let rr = [[12, 34.56], ['123', 'xyz']]
-        assert.strict.deepStrictEqual(r, rr)
+        assert.strict.deepStrictEqual(r, [])
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys' })
     })
 
     k = 1
@@ -177,9 +179,11 @@ describe(`ltdtkeys2mat`, function() {
             })
         }
 
-        it(`should keep non-empty arrays that are not effective as error with returnWithStateAndMsg (unchanged)`, function() {
-            for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt' })
+        //ws430c(裁定表〈四〉「列為 {}(含只有一個 {} 之 [{}]) → 視為有效列,各欄給 empty」「列非物件 → 訊息指出列號」): 原期望[{}]、[null]、['']、[[]]皆'invalid ltdt' → 新期望[{}]為[['']]、其餘指出row[0]
+        it(`should treat [{}] as a valid row and report row[0] for the non-object rows (ws430c 〈四〉)`, function() {
+            assert.strict.deepStrictEqual(ltdtkeys2mat([{}], ['a'], D), { state: 'success', msg: [['']] })
+            for (let v of [[null], [''], [[]]]) {
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt, row[0] is not an object' })
             }
         })
 

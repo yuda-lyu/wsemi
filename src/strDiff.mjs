@@ -1,10 +1,11 @@
 import * as Diff from 'diff'
 import get from 'lodash-es/get.js'
+import map from 'lodash-es/map.js'
 import split from 'lodash-es/split.js'
 import take from 'lodash-es/take.js'
-import size from 'lodash-es/size.js'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
+import _diffPair from './_diffPair.mjs'
 
 
 /**
@@ -321,231 +322,20 @@ function strDiff(strOld, strNew, opt = {}) {
     let diff = Diff.diffLines(strOld, strNew)
     // console.log('diff', diff)
 
-    //k
-    let k
-
-    //dfsOld, dfsNew
-    let n = size(diff)
-    let dfsOld = []
-    let dfsNew = []
-    k = -1
-    while (true) {
-        k++
-        if (k > n - 1) {
-            break
-        }
-
-        //s
-        let s = diff[k]
-
-        //count, removed, added
+    //dfs, 依各段之行(take(split(value, '\n'), count))整理, 連續之刪除行與其後之新增行依序配對為modify(單一擁有者_diffPair, 與arrDiff共用; 2026-11-15 ws430c抽出, 行為不變)
+    let chunks = map(diff, (s) => {
         let count = get(s, 'count', 0)
-        let removed = get(s, 'removed', false)
-        let added = get(s, 'added', false)
-
-        //vs
         let v = get(s, 'value', '')
         let vs = split(v, '\n')
         vs = take(vs, count)
-
-        //each
-        for (let i = 1; i <= count; i++) {
-            let v = vs[i - 1]
-
-            if (!removed && !added) { //不變line
-                dfsOld.push({
-                    p: '',
-                    v,
-                })
-                dfsNew.push({
-                    p: '',
-                    v,
-                })
-            }
-            else if (removed && !added) { //有刪除line
-                dfsOld.push({
-                    p: 'remove',
-                    v,
-                })
-                dfsNew.push({
-                    p: 'empty',
-                    v: '',
-                })
-            }
-            else if (!removed && added) { //有新增line
-                dfsOld.push({
-                    p: 'empty',
-                    v: '',
-                })
-                dfsNew.push({
-                    p: 'add',
-                    v,
-                })
-            }
-
+        return {
+            removed: get(s, 'removed', false),
+            added: get(s, 'added', false),
+            count,
+            items: vs,
         }
-    }
-    // console.log('dfsOld(分開彙整)', dfsOld)
-    // console.log('dfsNew(分開彙整)', dfsNew)
-    // each(dfsOld, (_, k) => {
-    //     let vOld = get(dfsOld, k)
-    //     let vNew = get(dfsNew, k)
-    //     console.log('分開彙整', k, vOld, vNew)
-    // })
-
-    //nOld, nNew
-    let nOld = size(dfsOld)
-    // let nNew = size(dfsNew)
-
-    //merge dfsOld, dfsNew
-    let m = nOld //Math.max(nOld, nNew)
-    k = -1
-    while (true) {
-        k++
-        if (k > m - 1) {
-            break
-        }
-
-        //v0
-        let df0Old = get(dfsOld, k, null)
-        let df0New = get(dfsNew, k, null)
-        let p0Old = get(df0Old, 'p', '')
-        let p0New = get(df0New, 'p', '')
-        // let v0Old = get(df0Old, 'v', '')
-        // let v0New = get(df0New, 'v', '')
-
-        //偵測modify
-        if (p0Old === 'remove' && p0New === 'empty') {
-
-            let icOld = 0 //old出現連續可合併列數
-            let icOldStart = k
-            let icOldEnd = -1
-            for (let j = k; j <= m - 1; j++) {
-                let dfOld = get(dfsOld, j, null)
-                let dfNew = get(dfsNew, j, null)
-                let pOld = get(dfOld, 'p', '')
-                let pNew = get(dfNew, 'p', '')
-                if (pOld === 'remove' && pNew === 'empty') {
-                    icOld++
-                    icOldEnd = j
-                }
-                else {
-                    break
-                }
-            }
-            if (icOld <= 0) {
-                continue
-            }
-            // console.log(k, 'icOld', icOld, 'from', icOldStart, `to`, icOldEnd)
-
-            let icNew = 0 //new出現連續可合併列數
-            let icNewState = false
-            let icNewStart = -1
-            // let icNewEnd = -1
-            for (let j = k; j <= icOldEnd + icOld; j++) {
-                let dfOld = get(dfsOld, j, null)
-                let dfNew = get(dfsNew, j, null)
-                let pOld = get(dfOld, 'p', '')
-                let pNew = get(dfNew, 'p', '')
-                if (pOld === 'empty' && pNew === 'add') {
-                    if (!icNewState) {
-                        icNewStart = j
-                    }
-                    icNewState = true
-                    icNew++
-                    if (icNewState) {
-                        // icNewEnd = j
-                    }
-                }
-                else if (icNewState) {
-                    break
-                }
-            }
-            if (icNew <= 0) {
-                continue
-            }
-            // console.log(k, 'icNew', icNew, 'from', icNewStart, `to`, icNewEnd)
-
-            //ic
-            let ic = Math.min(icOld, icNew)
-            // console.log(k, 'ic', ic)
-
-            //combine
-            if (ic >= 1) {
-                for (let j = 0; j <= ic - 1; j++) {
-                    let jOld = icOldStart + j
-                    let jNew = icNewStart + j
-                    dfsOld[jOld] = {
-                        p: 'modify',
-                        vo: get(dfsOld, `${jOld}.v`, ''),
-                        vn: get(dfsNew, `${jNew}.v`, ''),
-                        // b: true,
-                    }
-                    dfsNew[jOld] = null
-                    dfsOld[jNew] = null
-                    dfsNew[jNew] = null
-                }
-                k += ic + 1 //跳過ic行繼續偵測
-            }
-
-        }
-        else {
-            // dfsOld[k].b = true
-            // dfsNew[k].b = true
-        }
-
-    }
-    // console.log('dfsOld(偵測modify)', dfsOld)
-    // console.log('dfsNew(偵測modify)', dfsNew)
-
-    //dfs
-    let dfs = []
-    k = -1
-    while (true) {
-        k++
-        if (k > m - 1) {
-            break
-        }
-
-        let dfOld = get(dfsOld, k, null)
-        let dfNew = get(dfsNew, k, null)
-        let pOld = get(dfOld, 'p', '')
-        let pNew = get(dfNew, 'p', '')
-        let vOld = get(dfOld, 'v', '')
-        let vNew = get(dfNew, 'v', '')
-
-        //check
-        if (dfOld === null && dfNew === null) {
-            continue
-        }
-
-        let p = ''
-        let vo = vOld
-        let vn = ''
-        if (pOld === 'modify') {
-            p = 'modify'
-            vo = dfOld.vo
-            vn = dfOld.vn
-        }
-        else if (pOld === 'remove' && pNew === 'empty') {
-            p = 'remove'
-            vo = vOld
-            vn = ''
-        }
-        else if (pOld === 'empty' && pNew === 'add') {
-            p = 'add'
-            vo = vNew
-            vn = ''
-        }
-        dfs.push({
-            p,
-            vo,
-            vn,
-            // _dfOld: dfOld,
-            // _dfNew: dfNew,
-        })
-    }
-    // console.log('dfs', dfs)
+    })
+    let dfs = _diffPair(chunks)
 
     return {
         diff,

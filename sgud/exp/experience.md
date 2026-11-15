@@ -143,3 +143,14 @@
 - **裁定表字面之歧義照字面實作並列需確認**: `+a b`「含全部必要關鍵字者才命中;權重依一般關鍵字計算」——含必要者命中而一般關鍵字一個都沒含時權重為 0(`{ hasKeyword: true, weight: 0 }`);另一讀法「仍須含一般關鍵字」與字面不符.照字面做、JSDoc 範例寫明、報告列待主控確認,不自行另定.
 - **測試改寫之判準**: 既有測試之期望值與裁定衝突者(如 `ltdtmerge` 以 lodash merge 為對照之 400 組隨機差分、鎖「繼承鍵亦合併」兩案)改寫時,對照器本身依裁定調整(陣列來源列視為 `undefined` 再交 lodash merge),而不是刪掉差分案;改寫處註明裁定表節號.全套才紅之「乙 未改變者之守門」(`invalidInputQ1`)同樣屬規格改變.
 - **外審額度**: 本輪 Codex 帳號(terra)、Argon、agy 之 Claude/GPT 組皆已用盡,依序改派 agy `gemini-4-hydrogen-high`;查額度用 `quota-agy.mjs`,Codex 則以最小探測之 stderr(`You've hit your usage limit … try again at …`)判定.
+
+## 換底層演算法而保留結果:抽出單一擁有者、修前副本差分、範例輸出以實跑重產、時區測試以子行程設 TZ(2026-11-15,主控任務 20261115170127,ws430c/ws430c2)
+
+- **要保留「語意」時先找出語意藏在哪**: `arrDiff` 之矩陣模式原把儲存格串成 `欄位指標∶值⟋`,modify 列再以 `arrDiff1D` 逐格比對——欄位指標是比對鍵的一部分,改用 `diffArrays` 時若只比值,JSDoc 範例之 `dfs` 會由 8 格變 9 格(刪 123、加 45.6 被拆開).格之鍵改為 `[欄位指標, 文字]` 後 `dfs` 逐一相同.判斷依據是修前副本與新碼對 11003 組隨機輸入(值不含分隔字元)之 `dfs` 差分為 0,而不是讀碼推論.
+- **把配對演算法原樣抽出、兩邊共用**: `strDiff` 之「先刪後增配對為 modify」抽為 `_diffPair`(含原 `k += ic + 1` 之跳行),以 Write 寫腳本只改 `src/strDiff.mjs` 之該段(標記字串須唯一),`strDiff` 結果於差分中亦 0 處不同.不要在 `arrDiff` 另寫一份近似版本.
+- **JSDoc 範例輸出以實跑重產**: 寫一支腳本把 `@example` 去掉 ` * ` 前綴後執行,依呼叫行把輸出對應到其後之 `// =>` 區塊;先只列差異(此即「dfs 不變」之證據:`dfs` 區塊 0 處改變,只有 `diff` 區塊與一處 `0 df [` 筆誤),確認後才寫回.巢狀深之輸出用 `console.dir(x, { depth: null })`,否則 Node 預設深度 2 印出 `[Array]`.
+- **時區測試以 node 子行程設定 TZ**: Git Bash 之 `TZ=America/New_York node …` 會把帶 `/` 之 TZ 丟掉(`process.env.TZ` 為 undefined,只有 `TZ=UTC` 有效);改由測試以 `spawnSync(process.execPath, [runner], { env: { ...process.env, TZ } })` 執行,Windows 之 Node 對 IANA 名稱生效(Asia/Taipei 1979-07-01 00:00～00:59、America/New_York 2026-03-08 02:00～02:59 為夏令空窗).
+- **被取代之依賴可能承載別的契約**: `istimeTZ` 改為不經 dayjs 驗證後,`timemsTZ2past` 於 dayjs 不可用時由「拋 `invalid dayjs`」變為「回 `時間轉換失敗`」——原拋錯其實來自 `istimemsTZ` 之 dayjs 呼叫(其自身之 `isfun(ot)` 守門已是死碼).全套之 `dateYear0000` 案抓到;以 `_dayjs.assertDayjs` 保留修前之失敗形式.
+- **修好判斷函數不代表下游轉換也正確**: `istimeTZ` 改接受空窗內之時刻後,`timeTZ2hour` 等仍以本機時間解析去除時區之字串,轉出差 1 小時(修前此類輸入回 `''`).裁定「不改」所依之前提(「改為正常轉換」)不成立時,照裁定不改並列待裁,不自行擴大修改範圍.
+- **外審抓到的是「裁定未列之種類」**: terra 15 條中 6 條為「裁定表未列之輸入種類被順手改掉」(單獨之包裝物件、BigInt／Symbol 候選、BigInt 鍵、無效時區後綴),另 2 條為以 lodash 改寫成原生寫法時引入之差異(呼叫輸入陣列之 `slice`／`reduce`／`map` 可被遮蔽;檢查與使用為兩次讀取).改寫結構函數時:輸入陣列一律以索引讀一次存快照、只操作快照;依型別分流時先列「修前每種型別之結果」再對照裁定逐種決定,裁定未列者以修前副本實測保留.
+- **lodash `range(a, b)` 於 a > b 時反向**: `arrAt` 修前 `iend` 小於 `istart` 並非一律回 `[]`(`iend === istart - 1` 為 `[]`、更小時反向取得),紅測之案若選 `iend === istart - 2` 會修前亦綠;以修前副本實測後改用差距 3 以上之案.

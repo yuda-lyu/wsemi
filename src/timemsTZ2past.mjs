@@ -9,6 +9,9 @@ import errToStr from './_errToStr.mjs'
 /**
  * 毫秒時間轉過去時間
  *
+ * err之值分兩類：'時間格式錯誤'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間未到'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
+ * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timemsTZ2past.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入毫秒時間字串

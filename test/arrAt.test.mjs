@@ -16,9 +16,10 @@ describe(`arrAt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input [1, 2, 3, '4', 5, 'abc'], 1, 10`, function() {
+    //ws430c(裁定表〈十二〉「iend 超出長度 → 截至最後一個元素(原整個回 [])」): 原期望[] → 新期望[2, 3, '4', 5, 'abc']
+    it(`should return [2, 3, '4', 5, 'abc'] when input [1, 2, 3, '4', 5, 'abc'], 1, 10 (ws430c 〈十二〉)`, function() {
         let r = arrAt([1, 2, 3, '4', 5, 'abc'], 1, 10)
-        let rr = []
+        let rr = [2, 3, '4', 5, 'abc']
         assert.strict.deepStrictEqual(r, rr)
     })
 
