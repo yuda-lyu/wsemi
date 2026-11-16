@@ -456,13 +456,13 @@ describe(`opt numeric values judged by iseint(G17): fsTreeFolderCore levelLimit`
         assert.strict.deepStrictEqual(out, [[1, 1], [1, 1]])
     })
 
-    it(`levelLimit: null should traverse all levels, valid values(2, '3') should be used [行為不改]`, function() {
-        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, null)), maxLevel(fsTreeFolder(fd, 2)), maxLevel(fsTreeFolder(fd, '3'))], [4, 2, 3])
+    it(`levelLimit: null should use default 1 (K3; no longer traverses all levels), 4294967295 traverses all levels, valid values(2, '3') should be used [第492項第2批W-11]`, function() {
+        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, null)), maxLevel(fsTreeFolder(fd, 4294967295)), maxLevel(fsTreeFolder(fd, 2)), maxLevel(fsTreeFolder(fd, '3'))], [1, 4, 2, 3])
     })
 
-    it(`fsGetFilesInFolder should pass levelLimit to fsTreeFolderCore(Infinity uses default 1) [接線]`, function() {
+    it(`fsGetFilesInFolder should pass levelLimit to fsTreeFolderCore(Infinity and null use default 1) [接線]`, function() {
         let names = (rs) => rs.map((v) => v.name).sort()
-        assert.strict.deepStrictEqual([names(fsGetFilesInFolder(fd, Infinity)), names(fsGetFilesInFolder(fd, null))], [['f1.txt'], ['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt']])
+        assert.strict.deepStrictEqual([names(fsGetFilesInFolder(fd, Infinity)), names(fsGetFilesInFolder(fd, null)), names(fsGetFilesInFolder(fd, 4294967295))], [['f1.txt'], ['f1.txt'], ['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt']])
     })
 
 })

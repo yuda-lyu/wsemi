@@ -11,6 +11,7 @@ import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import fsDeleteFileCore from './fsDeleteFileCore.mjs'
 import errToStr from './_errToStr.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -18,10 +19,10 @@ import chkFsPath from './_chkFsPath.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsMergeFilesCore.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fn 輸入實際檔名字串
  * @param {Array} fpsIn 輸入合併前各切片檔案路徑陣列
  * @param {String} fpOut 輸入合併後檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、createReadStream、createWriteStream、unlinkSync(合併後刪除切片；資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, createReadStream, createWriteStream, unlinkSync'(不帶輸入值，先於建立資料夾、開啟輸出檔與刪除任何切片)
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
  * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -82,6 +83,12 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
 
         //fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即以Error物件reject
         let fs = get(opt, 'fs')
+
+        //check, 注入之fs缺漏為相依無效(R-FS-DEPS-01), 先於建立資料夾、開啟(截斷)輸出檔與刪除任何切片, 以說明字串reject(不帶輸入值); 缺切片讀取串流或切片刪除方法者, 否則輸出檔已被截空或切片未被刪除仍回成功
+        let msgDeps = chkFsDeps({ fs }, { fs: ['statSync', 'lstatSync', 'createReadStream', 'createWriteStream', 'unlinkSync'] })
+        if (msgDeps) {
+            return Promise.reject(msgDeps)
+        }
 
         //getFileName
         let fnOut = get(opt, 'fnOut', '')

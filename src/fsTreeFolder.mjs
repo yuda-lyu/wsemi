@@ -9,7 +9,7 @@ import fsTreeFolderCore from './fsTreeFolderCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsTreeFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
- * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案或資料夾，設定null為無窮遍歷所有檔案與資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，Infinity不視為無窮遍歷(無窮遍歷請設定null)，預設1
+ * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案或資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，null與Infinity皆不視為無窮遍歷(無窮遍歷請給大有限值，如4294967295)，預設1
  * @returns {Array} 回傳列舉檔案或資料夾陣列，若fd不是資料夾則同步拋出Error(訊息為'fd[...] is not a folder')，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出其Error，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
@@ -47,9 +47,9 @@ import fsTreeFolderCore from './fsTreeFolderCore.mjs'
  *     console.log('fsTreeFolder(levelLimit=1)', ftpaths(r1))
  *     ms.push({ 'fsTreeFolder(evelLimit=1)': ftpaths(r1) })
  *
- *     let rall = fsTreeFolder(fdt, null)
- *     console.log('fsTreeFolder(levelLimit=null)', ftpaths(rall))
- *     ms.push({ 'fsTreeFolder(evelLimit=null)': ftpaths(rall) })
+ *     let rall = fsTreeFolder(fdt, 4294967295)
+ *     console.log('fsTreeFolder(levelLimit=4294967295)', ftpaths(rall))
+ *     ms.push({ 'fsTreeFolder(evelLimit=4294967295)': ftpaths(rall) })
  *
  *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
  *
@@ -63,7 +63,7 @@ import fsTreeFolderCore from './fsTreeFolderCore.mjs'
  * //   { isFolder: true, level: 1, path: './mno', name: 'mno' },
  * //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
  * // ]
- * // fsTreeFolder(levelLimit=null) [
+ * // fsTreeFolder(levelLimit=4294967295) [
  * //   { isFolder: true, level: 1, path: './abc', name: 'abc' },
  * //   { isFolder: false, level: 2, path: './abc/z2.txt', name: 'z2.txt' },
  * //   { isFolder: true, level: 1, path: './def', name: 'def' },
@@ -78,7 +78,7 @@ import fsTreeFolderCore from './fsTreeFolderCore.mjs'
  * //   { isFolder: true, level: 2, path: './mno/pqr', name: 'pqr' },
  * //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
  * // ]
- * // ms [{"fsTreeFolder(evelLimit=1)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]},{"fsTreeFolder(evelLimit=null)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":false,"level":2,"path":"./abc/z2.txt","name":"z2.txt"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":2,"path":"./def/ijk","name":"ijk"},{"isFolder":false,"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":true,"level":2,"path":"./mno/pqr","name":"pqr"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]}]
+ * // ms [{"fsTreeFolder(evelLimit=1)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]},{"fsTreeFolder(evelLimit=4294967295)":[{"isFolder":true,"level":1,"path":"./abc","name":"abc"},{"isFolder":false,"level":2,"path":"./abc/z2.txt","name":"z2.txt"},{"isFolder":true,"level":1,"path":"./def","name":"def"},{"isFolder":true,"level":2,"path":"./def/ijk","name":"ijk"},{"isFolder":false,"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt"},{"isFolder":true,"level":1,"path":"./mno","name":"mno"},{"isFolder":true,"level":2,"path":"./mno/pqr","name":"pqr"},{"isFolder":false,"level":1,"path":"./z1.txt","name":"z1.txt"}]}]
  *
  */
 function fsTreeFolder(fd, levelLimit = 1) {

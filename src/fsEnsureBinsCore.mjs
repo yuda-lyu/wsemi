@@ -713,7 +713,10 @@ function buildCtx(opt) {
         o.manifestMs = optVal(o.stallMs, 30000, RULE_STALL_MS, opt) //取主幹清單之上限同停滯毫秒數
         o.extractMs = optVal(o.totalMs, 600000, RULE_TOTAL_MS, opt) //解壓之上限同每檔整體時間上限
         if (!isStr(o.pkgRoot)) {
-            throw bad(`opt.pkgRoot must be the root folder of the package (a non-empty string)`)
+            throw bad(`invalid opt.pkgRoot: must be a non-empty string`)
+        }
+        if (o.pkgRoot.includes('\0')) { //含NUL者為無效路徑, 於入口判定, 不等到讀檔由Node拋錯而併入E_FS/E_MANIFEST與「不存在」不分(R-FS-INVALID-PATH-01)
+            throw bad(`invalid opt.pkgRoot: must not contain a NUL character`)
         }
         if (given(o.cacheDir) && typeof o.cacheDir !== 'string') {
             throw bad(`opt.cacheDir must be a string when given ('' is the default location)`)
@@ -2619,6 +2622,17 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
 
     let ctx = null
     try {
+
+        //check, 清單檔路徑須為非空字串且不含NUL(R-FS-INVALID-PATH-01): 必須參數之無效先於讀取opt與呼叫任何注入之方法(buildCtx會呼叫注入之path.resolve), 於入口以E_ARG回報, 與「檔案不存在或無法讀取」(E_MANIFEST)分開; 訊息不帶輸入值
+        if (typeof manifest === 'string') {
+            if (manifest === '') {
+                throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must be a non-empty string`, { step: 'argument' })
+            }
+            if (manifest.includes('\0')) {
+                throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must not contain a NUL character`, { step: 'argument' })
+            }
+        }
+
         ctx = buildCtx(opt)
         ctx.trace = trace
         return await ensureMain(ctx, manifest, trace)

@@ -34,7 +34,7 @@ import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
  * @param {String} fpOut 輸入儲存檔案路徑字串, 所在資料夾不存在時自動建立
  * @param {Object|Function} expected 輸入期望值物件{ sha256, size }, 或回傳該物件之函數(可為async, 每次嘗試前呼叫, 收到{ attempt, signal })
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=fs] 輸入fs，供測試傳入，須有mkdirSync、realpathSync、openSync、closeSync、createWriteStream、createReadStream、renameSync、unlinkSync、statSync，預設為nodejs之fs
+ * @param {Object} [opt.fs=fs] 輸入fs，供測試傳入，須有mkdirSync、realpathSync、openSync、closeSync、createWriteStream、createReadStream、renameSync、unlinkSync、statSync，預設為nodejs之fs；給undefined視為未給而取預設，給null、非物件或缺少方法者以E_ARG reject(opt.crypto、opt.Readable、opt.pipeline同)
  * @param {Function} [opt.fetch=null] 輸入fetch函數，未給時於每次請求時取用全域fetch，預設null
  * @param {Integer} [opt.maxAttempts=3] 輸入最多嘗試次數，有效整數且為1至4294967295(可為數字字串)，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設3
  * @param {Number} [opt.retryDelayMs=1000] 輸入重試間隔基數毫秒，第n次重試前等待retryDelayMs*n，亦為更名與刪除暫存檔重試間隔之基數(上限200)，有效數字且為0至2147483647(計時器上限)(可帶小數、數字字串)，非預期之輸入(負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設1000
@@ -149,6 +149,20 @@ async function fsDownloadFileVerify(urlIn, fpOut, expected, opt = {}) {
     let optIn = null
     try {
         optIn = { fs, crypto, Readable, pipeline, ...opt }
+
+        //注入鍵給undefined視為未給取Node內建(展開會以undefined蓋掉預設; V5); null、非函數、缺少方法者仍由Core以E_ARG reject
+        if (optIn.fs === undefined) {
+            optIn.fs = fs
+        }
+        if (optIn.crypto === undefined) {
+            optIn.crypto = crypto
+        }
+        if (optIn.Readable === undefined) {
+            optIn.Readable = Readable
+        }
+        if (optIn.pipeline === undefined) {
+            optIn.pipeline = pipeline
+        }
     }
     catch (err) {
         //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 交Core由讀取opt失敗之同一出口reject(E_ARG)

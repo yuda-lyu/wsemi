@@ -2,8 +2,8 @@ import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import get from 'lodash-es/get.js'
-import isestr from './isestr.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 
 
@@ -14,7 +14,7 @@ import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetBinManifestEntry.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fp 輸入檔案路徑字串
+ * @param {String} fp 輸入檔案路徑字串，須為非空字串且不含NUL字元(非字串含包裝String物件皆無效)；不合者reject說明字串'invalid fp: must be a non-empty string'或'invalid fp: must not contain a NUL character'(不帶輸入值，與路徑不存在分開)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String|null} [opt.name] 輸入清單項之name，預設為fp之檔名; 給null時清單項不含name(檔案組之組內檔與壓縮檔之成員只需path, 其檔名可含空白, 如chrome之'First Run')
  * @param {String} [opt.path] 輸入清單項之path(repo內之相對路徑, 以/分隔)，給了才放入
@@ -85,12 +85,13 @@ import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 async function fsGetBinManifestEntry(fp, opt = {}) {
     let r = null
     try {
+        let msgFp = chkFsPath(fp, 'fp') //非字串(含包裝String物件)、空字串、含NUL者無效(R-FS-INVALID-PATH-01), 訊息依V19且不帶輸入值, 與「不是檔案或不存在」分開; 必須參數之檢查先於讀取opt(opt之getter拋錯不得蓋過之)
+        if (msgFp) {
+            return Promise.reject(msgFp)
+        }
         let name = get(opt, 'name')
         let p = get(opt, 'path')
         let u = get(opt, 'url')
-        if (!isestr(fp) || fp.includes('\0')) { //含NUL者無效(R-FS-INVALID-PATH-01)
-            throw new Error(`fp is not an effective string`)
-        }
         if (name !== undefined && name !== null && (typeof name !== 'string' || name === '')) {
             throw new Error(`opt.name must be a non-empty primitive string or null when given`)
         }

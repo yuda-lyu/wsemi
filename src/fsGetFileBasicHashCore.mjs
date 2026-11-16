@@ -4,6 +4,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import isestr from './isestr.mjs'
 import errToStr from './_errToStr.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -13,6 +14,8 @@ import chkFsPath from './_chkFsPath.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync(讀取串流之createReadStream於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync'(不帶輸入值)
+ * @param {Object} opt.crypto 輸入crypto物件，須提供createHash；缺漏同opt.fs，reject說明字串'invalid opt.crypto: must be an object providing createHash'
  * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
  * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -43,6 +46,13 @@ function fsGetFileBasicHashCore(fp, opt = {}) {
         let msgFp = chkFsPath(fp, 'fp')
         if (msgFp) {
             pm.reject(msgFp)
+            return pm
+        }
+
+        //check, 注入之fs、crypto缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷, 以說明字串reject(不帶輸入值)
+        let msgDeps = chkFsDeps({ fs, crypto }, { fs: ['statSync', 'lstatSync'], crypto: ['createHash'] })
+        if (msgDeps) {
+            pm.reject(msgDeps)
             return pm
         }
 

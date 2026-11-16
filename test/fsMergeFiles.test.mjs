@@ -303,6 +303,10 @@ describe(`fsMergeFilesCore 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         statSync: () => ({}),
         lstatSync,
         createWriteStream,
+        createReadStream: () => {
+            throw new Error('unused: 本案之注入點先於切片讀取') //第492項第2批: 合併須於開啟輸出檔前齊備createReadStream與unlinkSync(R-FS-DEPS-01), 替身補齊但本組案例未走到
+        },
+        unlinkSync: () => {},
     })
 
     //settleShown(test/tools/caseKit.mjs): 5秒內須settle, 結果值經showValue(非字串帶型別前綴, 已撤銷之Proxy等不進入assert之實際值)

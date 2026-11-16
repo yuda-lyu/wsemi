@@ -42,9 +42,9 @@ describe(`fsGetFilesWithHashInFolder`, function() {
         // console.log('fsGetFilesWithHashInFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = await fsGetFilesWithHashInFolder(fdt, null)
-        // console.log('fsGetFilesWithHashInFolder(levelLimit=null)', ftpaths(rall))
-        ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=null)': ftpaths(rall) })
+        let rall = await fsGetFilesWithHashInFolder(fdt, 4294967295)
+        // console.log('fsGetFilesWithHashInFolder(levelLimit=4294967295)', ftpaths(rall))
+        ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=4294967295)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -64,7 +64,7 @@ describe(`fsGetFilesWithHashInFolder`, function() {
     //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
     //   }
     // ]
-    // fsGetFilesWithHashInFolder(levelLimit=null) [
+    // fsGetFilesWithHashInFolder(levelLimit=4294967295) [
     //   {
     //     level: 2,
     //     path: './abc/z2.txt',
@@ -87,7 +87,7 @@ describe(`fsGetFilesWithHashInFolder`, function() {
     //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
     //   }
     // ]
-    let ms = [{ 'fsGetFilesWithHashInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }, { 'fsGetFilesWithHashInFolder(evelLimit=null)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt', 'hashType': 'md5', 'hash': '5cb7e380d019de63c643aef55b8534d0' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt', 'hashType': 'md5', 'hash': 'a61d1457beb4684e254ce60379c8ae7b' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }]
+    let ms = [{ 'fsGetFilesWithHashInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }, { 'fsGetFilesWithHashInFolder(evelLimit=4294967295)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt', 'hashType': 'md5', 'hash': '5cb7e380d019de63c643aef55b8534d0' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt', 'hashType': 'md5', 'hash': 'a61d1457beb4684e254ce60379c8ae7b' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = await test()

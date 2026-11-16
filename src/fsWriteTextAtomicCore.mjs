@@ -4,6 +4,7 @@ import iseint from './iseint.mjs'
 import getTrace from './getTrace.mjs'
 import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 //占用類錯誤碼: Windows下防毒、同步軟體或編輯器開著目標檔時, rename會暫時被占用
@@ -47,6 +48,12 @@ function work(fp, c, opt, st) {
     }
     if (typeof c !== 'string') {
         return { error: 'invalid c: must be a string' }
+    }
+
+    //check, 注入之fs缺漏為相依無效(R-FS-DEPS-01), 先於任何檔案作業, 以說明字串回報(不帶輸入值)
+    let msgDeps = chkFsDeps({ fs }, { fs: ['mkdirSync', 'writeFileSync', 'renameSync', 'unlinkSync'] })
+    if (msgDeps) {
+        return { error: msgDeps }
     }
 
     //retries, fallbackOverwrite, 非預期輸入視為未給

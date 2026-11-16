@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -9,6 +10,8 @@ import chkFsPath from './_chkFsPath.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadTextCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入檔案名稱
+ * @param {Object} opt 輸入設定物件，Core不自行匯入fs，須由呼叫端注入
+ * @param {Object} opt.fs 輸入fs物件，須提供readFileSync；缺漏(未給、null、非物件、缺少readFileSync)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing readFileSync'(不帶輸入值)
  * @returns {Object} 回傳結果物件，提供鍵success代表檔案內容utf-8字串，提供鍵error代表錯誤訊息(讀檔之Error物件，注入之fs拋出非Error之值時為其字串)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
@@ -34,6 +37,14 @@ function fsReadTextCore(fp, opt = {}) {
 
         //fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即成同步拋錯
         let fs = get(opt, 'fs')
+
+        //check, 注入之fs缺漏為相依無效(R-FS-DEPS-01), 以說明字串回報(不帶輸入值)
+        let msgDeps = chkFsDeps({ fs }, { fs: ['readFileSync'] })
+        if (msgDeps) {
+            return {
+                error: msgDeps,
+            }
+        }
 
         j = fs.readFileSync(fp, 'utf8')
     }

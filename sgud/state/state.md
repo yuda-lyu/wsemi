@@ -51,7 +51,8 @@
 - 查詢埠之監聽者 `execProcessPortPids`／`execProcessPortPidsSync`(R-PORT-PIDS-01;含 wu312 改以 OS API、wu316 改 Reflection.Emit 兩段現況)
 - 帶期望雜湊之下載 `fsDownloadFileVerify`(R-DL-VERIFY-01)
 - 外部執行檔之取得 `fsEnsureBins` 與清單項產生 `fsGetBinManifestEntry`(R-BIN-ENSURE-01)
-- fs* 路徑參數無效之處置(R-FS-INVALID-PATH-01;排程第 265 項來源第 216 項①;ws265,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
+- fs 系 Core 注入相依 fail-closed、`levelLimit` 之 `null`、路徑型 opt 鍵、N-A 入口檢測(R-FS-DEPS-01 等;排程第 492 項第 2 批;ws492c,2026-11-17)〔本節於 2026-11-17 新增,置於該檔最前〕
+- fs* 路徑參數無效之處置(R-FS-INVALID-PATH-01;排程第 265 項來源第 216 項①;ws265,2026-11-02)〔本節於 2026-11-02 新增,置於該檔次位〕
 
 ### `sgud/state/state_計時與診斷.md`(計時與診斷;約 18.6KB)
 

@@ -37,7 +37,7 @@ let RULE_TIME_INTERVAL = { fn: 'fsTask', name: 'opt.timeInterval', kind: 'enum',
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，須為1至4294967295之有效整數(可為數字字串)，設定1為列舉資料夾下第一層的檔案，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、null等)視為未給而改用預設，不報錯(給Infinity不代表無窮遍歷)，預設1
  * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用
- * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，預設'./_tkfs'
+ * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，須為非空字串且不含NUL字元，非預期之輸入(非字串、空字串、含NUL字元)視為未給而改用預設，不報錯；有效字串但無法建立或使用為資料夾者(如該路徑已是檔案、無寫入權限)同步拋出Error('fsTask: opt.fdStorage can not be created or used as a folder')，不靜默(否則紀錄寫不出而每輪重複派發同一檔)，預設'./_tkfs'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長數字，單位為毫秒ms，須為大於0至2147483647(計時器上限)之有效數字(可帶小數、數字字串，小數直接使用不四捨五入)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設60000，為1分鐘
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.levelLimit、opt.timeInterval為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
@@ -210,7 +210,7 @@ function fsTask(fd, opt = {}) {
 
     //fdStorage
     let fdStorage = get(opt, 'fdStorage', '')
-    if (!isestr(fdStorage)) {
+    if (typeof fdStorage !== 'string' || !isestr(fdStorage) || chkFsPath(fdStorage, 'opt.fdStorage') !== null) { //先以typeof排除非原始字串, 免得isestr讀取物件之Symbol.toStringTag拋錯 //路徑型opt鍵: 非字串、空字串、含NUL者視為非預期而改用預設(K3、R-FS-INVALID-PATH-01), 否則建立資料夾失敗被忽略而紀錄靜默寫不出(每輪重複派發同一檔)
         fdStorage = './_tkfs'
     }
 
@@ -229,8 +229,24 @@ function fsTask(fd, opt = {}) {
     //trace, 觀察回調(opt.onTrace), 未給時為null; clear後設為null不再通知
     let trace = getTrace(opt)
 
-    //fsCreateFolder
+    //fsCreateFolder, 紀錄資料夾無法建立或使用時同步拋錯(C20, 先於啟動計時器): 否則紀錄讀寫皆靜默失敗, 每輪掃描都視為新增而重複派發同一檔(實測6輪派發6次)
+    //  可用判定: 該路徑經stat(跟隨連結)為資料夾(指向資料夾之符號連結、junction雖使fsCreateFolder回{ error }, 仍可正常讀寫, 不拒), 且紀錄檔位置(fpHash.json、fpResult.json)若已存在須為一般檔案(已是資料夾者永遠寫不進)
     fsCreateFolder(fdStorage)
+    let storageOk = true
+    try {
+        storageOk = fs.statSync(fdStorage).isDirectory()
+        for (let fn of ['fpHash.json', 'fpResult.json']) {
+            if (storageOk && fs.existsSync(`${fdStorage}/${fn}`) && !fs.statSync(`${fdStorage}/${fn}`).isFile()) {
+                storageOk = false
+            }
+        }
+    }
+    catch (err) {
+        storageOk = false
+    }
+    if (!storageOk) {
+        throw new Error('fsTask: opt.fdStorage can not be created or used as a folder')
+    }
 
     //ev
     let ev = evem() //change事件於setInterval定時輪詢之回呼內派發且參數帶pm, 監聽器出錯不得殺行程或使lock懸置, 故派發處以evEmit攔截並先reject pm

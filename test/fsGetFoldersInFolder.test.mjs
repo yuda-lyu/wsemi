@@ -41,9 +41,9 @@ describe(`fsGetFoldersInFolder`, function() {
         // console.log('fsGetFoldersInFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsGetFoldersInFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = fsGetFoldersInFolder(fdt, null)
-        // console.log('fsGetFoldersInFolder(levelLimit=null)', ftpaths(rall))
-        ms.push({ 'fsGetFoldersInFolder(evelLimit=null)': ftpaths(rall) })
+        let rall = fsGetFoldersInFolder(fdt, 4294967295)
+        // console.log('fsGetFoldersInFolder(levelLimit=4294967295)', ftpaths(rall))
+        ms.push({ 'fsGetFoldersInFolder(evelLimit=4294967295)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -56,14 +56,14 @@ describe(`fsGetFoldersInFolder`, function() {
     //   { level: 1, path: './def', name: 'def' },
     //   { level: 1, path: './mno', name: 'mno' }
     // ]
-    // fsGetFoldersInFolder(levelLimit=null) [
+    // fsGetFoldersInFolder(levelLimit=4294967295) [
     //   { level: 1, path: './abc', name: 'abc' },
     //   { level: 1, path: './def', name: 'def' },
     //   { level: 2, path: './def/ijk', name: 'ijk' },
     //   { level: 1, path: './mno', name: 'mno' },
     //   { level: 2, path: './mno/pqr', name: 'pqr' }
     // ]
-    let ms = [{ 'fsGetFoldersInFolder(evelLimit=1)': [{ 'level': 1, 'path': './abc', 'name': 'abc' }, { 'level': 1, 'path': './def', 'name': 'def' }, { 'level': 1, 'path': './mno', 'name': 'mno' }] }, { 'fsGetFoldersInFolder(evelLimit=null)': [{ 'level': 1, 'path': './abc', 'name': 'abc' }, { 'level': 1, 'path': './def', 'name': 'def' }, { 'level': 2, 'path': './def/ijk', 'name': 'ijk' }, { 'level': 1, 'path': './mno', 'name': 'mno' }, { 'level': 2, 'path': './mno/pqr', 'name': 'pqr' }] }]
+    let ms = [{ 'fsGetFoldersInFolder(evelLimit=1)': [{ 'level': 1, 'path': './abc', 'name': 'abc' }, { 'level': 1, 'path': './def', 'name': 'def' }, { 'level': 1, 'path': './mno', 'name': 'mno' }] }, { 'fsGetFoldersInFolder(evelLimit=4294967295)': [{ 'level': 1, 'path': './abc', 'name': 'abc' }, { 'level': 1, 'path': './def', 'name': 'def' }, { 'level': 2, 'path': './def/ijk', 'name': 'ijk' }, { 'level': 1, 'path': './mno', 'name': 'mno' }, { 'level': 2, 'path': './mno/pqr', 'name': 'pqr' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()

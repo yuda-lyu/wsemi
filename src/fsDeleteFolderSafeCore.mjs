@@ -20,7 +20,7 @@ let RULE_NUM_RETRY = { fn: 'fsDeleteFolderSafeCore', name: 'opt.numRetry', kind:
  * @memberOf wsemi
  * @param {String} pah 輸入欲刪除資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=null] 輸入fs物件，須提供statSync、lstatSync、rmSync，預設null；Core由呼叫端傳入(對外函數fsDeleteFolderSafe預設傳入內建fs，呼叫端可再以opt.fs覆蓋)；null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少其他函數時其呼叫之TypeError以字串reject
+ * @param {Object} [opt.fs=null] 輸入fs物件，須提供statSync、lstatSync、rmSync，預設null；Core由呼叫端傳入(對外函數fsDeleteFolderSafe預設傳入內建fs，呼叫端可再以opt.fs覆蓋)；null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少lstatSync(標的存在時)則reject字串'Error: invalid opt.fs: must be an object providing statSync, lstatSync'，缺少其他函數時其呼叫之TypeError以字串reject
  * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數(1至4294967295，數字字串亦可)，預設5；非預期(0、負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設5，不報錯(Infinity不代表無限重試)；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.numRetry為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null

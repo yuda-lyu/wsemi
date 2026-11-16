@@ -41,9 +41,9 @@ describe(`fsGetFilesInFolder`, function() {
         // console.log('fsGetFilesInFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsGetFilesInFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = fsGetFilesInFolder(fdt, null)
-        // console.log('fsGetFilesInFolder(levelLimit=null)', ftpaths(rall))
-        ms.push({ 'fsGetFilesInFolder(evelLimit=null)': ftpaths(rall) })
+        let rall = fsGetFilesInFolder(fdt, 4294967295)
+        // console.log('fsGetFilesInFolder(levelLimit=4294967295)', ftpaths(rall))
+        ms.push({ 'fsGetFilesInFolder(evelLimit=4294967295)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -52,12 +52,12 @@ describe(`fsGetFilesInFolder`, function() {
     }
     // test()
     // fsGetFilesInFolder(levelLimit=1) [ { level: 1, path: './z1.txt', name: 'z1.txt' } ]
-    // fsGetFilesInFolder(levelLimit=null) [
+    // fsGetFilesInFolder(levelLimit=4294967295) [
     //   { level: 2, path: './abc/z2.txt', name: 'z2.txt' },
     //   { level: 3, path: './def/ijk/z3.txt', name: 'z3.txt' },
     //   { level: 1, path: './z1.txt', name: 'z1.txt' }
     // ]
-    let ms = [{ 'fsGetFilesInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsGetFilesInFolder(evelLimit=null)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
+    let ms = [{ 'fsGetFilesInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsGetFilesInFolder(evelLimit=4294967295)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()

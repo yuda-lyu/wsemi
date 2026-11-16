@@ -72,9 +72,9 @@ add({ fn: 'fsGetFileXxHash', kind: 'rej', params: [{ i: 0, name: 'fp' }], args: 
 add({ fn: 'fsBuildWriteStreamText', kind: 'rej', core: false, tag: 'create', params: [{ i: 0, name: 'fp' }], args: (v) => [v], call: (mod, args) => mod().create(...args), ctl: 'nopedir/w.txt' })
 
 //同步拋出
-add({ fn: 'fsGetFilesInFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1], ctl: 'nopedir' })
-add({ fn: 'fsGetFoldersInFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1], ctl: 'nopedir' })
-add({ fn: 'fsTreeFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1], ctl: 'nopedir' })
+add({ fn: 'fsGetFilesInFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
+add({ fn: 'fsGetFoldersInFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
+add({ fn: 'fsTreeFolder', kind: 'thr', params: [{ i: 0, name: 'fd' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
 add({ fn: 'fsBuildReadStreamText', kind: 'thr', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
 add({ fn: 'fsWatchFolder', kind: 'thr', core: false, params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsWatchFile', kind: 'thr', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
@@ -82,9 +82,9 @@ add({ fn: 'fsTask', kind: 'thr', core: false, params: [{ i: 0, name: 'fd' }], ar
 add({ fn: 'fsTaskCp', kind: 'thr', core: false, params: [{ i: 0, name: 'fdSrc' }, { i: 1, name: 'fdTar' }], args: (v, i) => (i === 0 ? [v, T] : [D, v]), ctl: 'nopedir' })
 
 //既有專屬訊息(僅補NUL)
-add({ fn: 'fsDownloadFile', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v], coreArgs: (v) => [URL, v], own: { re: /^fpOut is not an effective string$/ }, ctl: null })
+add({ fn: 'fsDownloadFile', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v], coreArgs: (v) => [URL, v], own: { re: /^invalid fpOut: must (be a non-empty string|not contain a NUL character)$/ }, ctl: null })
 add({ fn: 'fsDownloadFileVerify', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v, { sha256: 'a'.repeat(64) }], coreArgs: (v) => [URL, v, { sha256: 'a'.repeat(64) }], own: { re: /^fpOut is not an effective file path$/ }, ctl: null })
-add({ fn: 'fsGetBinManifestEntry', kind: 'own', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], own: { re: /fp is not an effective string$/ }, ctl: 'nope.exe' })
+add({ fn: 'fsGetBinManifestEntry', kind: 'own', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], own: { re: /^invalid fp: must (be a non-empty string|not contain a NUL character)$/ }, ctl: 'nope.exe' })
 
 
 //expandCore, 各站點展開為(公開函數, Core)兩個站點; Core之引數預設為args後接{ fs }

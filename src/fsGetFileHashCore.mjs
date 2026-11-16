@@ -7,6 +7,7 @@ import fsGetFileXxHashCore from './fsGetFileXxHashCore.mjs'
 import errToStr from './_errToStr.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 //chunkSize: opt類參數, 有效整數且為個數(iseint, use: 'count', 1~2^30, 同fsGetFileXxHashCore), 非預期改用預設64mb; 於此即判定並改用預設, 傳給fsGetFileXxHashCore者為解析後之值
@@ -20,6 +21,8 @@ let RULE_CHUNK_SIZE = { fn: 'fsGetFileHashCore', name: 'opt.chunkSize', kind: 'e
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync(讀取串流之createReadStream於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync'(不帶輸入值)
+ * @param {Object} opt.crypto 輸入crypto物件，須提供createHash(opt.type為'xxhash64'時不需要)；缺漏同opt.fs，reject說明字串'invalid opt.crypto: must be an object providing createHash'
  * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
  * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入計算HASH方法字串為'xxhash64'時，使用切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)
  * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
@@ -63,6 +66,13 @@ function fsGetFileHashCore(fp, opt = {}) {
 
         //chunkSize, opt類參數(預設64mb), 須為有效整數且為1~2^30, 非預期(含Infinity、0、負數、小數、超過上限)視為未給、改用預設
         chunkSize = optVal(get(opt, 'chunkSize'), 64 * 1024 * 1024, RULE_CHUNK_SIZE, opt)
+
+        //check, 注入之fs缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷, 以說明字串reject(不帶輸入值); crypto僅非xxhash64時需要, 由fsGetFileBasicHashCore於相同訊息下檢查(xxhash64不經crypto)
+        let msgDeps = chkFsDeps({ fs }, { fs: ['statSync', 'lstatSync'] })
+        if (msgDeps) {
+            pm.reject(msgDeps)
+            return pm
+        }
 
         //check
         isFile = fsIsFileCore(fp, { fs })

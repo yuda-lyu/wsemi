@@ -578,7 +578,8 @@ let cases = {
     },
     DL03: async () => {
         let f = await imp('fsDownloadFileCore')
-        return { res: await run(() => f('http://127.0.0.1:1/x', fxp('x.bin'), { fs })) }
+        let { Readable } = await import('stream') //第492項第2批: 相依檢查依序fs、Readable、pipeline, 本案專驗pipeline缺漏, 故補齊fs與Readable
+        return { res: await run(() => f('http://127.0.0.1:1/x', fxp('x.bin'), { fs, Readable })) }
     },
     DL04: async () => {
         mkFx()
@@ -612,8 +613,9 @@ let cases = {
     DL08: async () => {
         let f = await imp('fsDownloadFileCore')
         let { pipeline } = await import('stream/promises')
+        let { Readable } = await import('stream') //第492項第2批: 相依須齊全才走到輸出夾之檢查(缺Readable於其前即以相依無效reject)
         let p = fxp('x.bin')
-        return { p, res: await run(() => f('http://fake.invalid/x', p, { fs: lstatBoom(), pipeline })) }
+        return { p, res: await run(() => f('http://fake.invalid/x', p, { fs: lstatBoom(), Readable, pipeline })) }
     },
 
     //======== fsBuildWriteStreamText ========

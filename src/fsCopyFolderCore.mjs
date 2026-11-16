@@ -6,6 +6,7 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 function fsCopyFolderCoreSync(fpSrc, fpTar, opt = {}) {
@@ -39,8 +40,11 @@ function fsCopyFolderCoreSync(fpSrc, fpTar, opt = {}) {
                 //fsCreateFolderCore
                 fsCreateFolderCore(fpTarTemp, { fs })
 
-                //fsCopyFolderCoreSync
-                fsCopyFolderCoreSync(fpSrcTemp, fpTarTemp, { path, fs })
+                //fsCopyFolderCoreSync, 子資料夾之複製失敗須向上傳遞(原丟棄其{ error }, 深層檔案複製失敗仍回成功)
+                let rSub = fsCopyFolderCoreSync(fpSrcTemp, fpTarTemp, { path, fs })
+                if (rSub.error) {
+                    throw rSub.error
+                }
 
             }
             else if (current.isSymbolicLink()) {
@@ -215,6 +219,8 @@ async function fsCopyFolderCoreAsync(fpSrc, fpTar, opt = {}) {
  * @param {String} fpSrc 輸入來源資料夾路徑字串
  * @param {String} fpTar 輸入目的資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、readdirSync，useSync為true另需copyFileSync，為false另需createReadStream、createWriteStream(依內容另用mkdirSync、readlinkSync與symlinkSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing …'(不帶輸入值，useSync=false時以Promise resolve，不reject)
+ * @param {Object} opt.path 輸入path物件，須提供dirname，useSync為true另需resolve，為false另需join；缺漏同opt.fs，回傳error為說明字串'invalid opt.path: must be an object providing …'
  * @param {Boolean} [opt.useSync=true] 輸入是否使用同步函數布林值，預設true
  * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，不觸發reject，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -254,6 +260,18 @@ function fsCopyFolderCore(fpSrc, fpTar, opt = {}) {
     if (msgPah) {
         let rErr = {
             error: msgPah,
+        }
+        return useSync ? rErr : Promise.resolve(rErr)
+    }
+
+    //check, 注入之fs、path缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷與建立; 同步用copyFileSync與path.resolve, 非同步用串流與path.join(符號連結之readlinkSync、symlinkSync僅遇連結才用, 不列必要)
+    let msgDeps = chkFsDeps({ fs, path }, {
+        fs: useSync ? ['statSync', 'lstatSync', 'readdirSync', 'copyFileSync'] : ['statSync', 'lstatSync', 'readdirSync', 'createReadStream', 'createWriteStream'],
+        path: useSync ? ['dirname', 'resolve'] : ['dirname', 'join'],
+    })
+    if (msgDeps) {
+        let rErr = {
+            error: msgDeps,
         }
         return useSync ? rErr : Promise.resolve(rErr)
     }

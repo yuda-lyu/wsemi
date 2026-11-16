@@ -9,7 +9,7 @@ import fsGetFoldersInFolderCore from './fsGetFoldersInFolderCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFoldersInFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
- * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的資料夾，設定null為無窮遍歷所有資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，Infinity不視為無窮遍歷(無窮遍歷請設定null)，預設1
+ * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，null與Infinity皆不視為無窮遍歷(無窮遍歷請給大有限值，如4294967295)，預設1
  * @returns {Array} 回傳列舉資料夾陣列，若fd不是資料夾則同步拋出Error(訊息為'fd[...] is not a folder')，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出其Error，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
@@ -47,9 +47,9 @@ import fsGetFoldersInFolderCore from './fsGetFoldersInFolderCore.mjs'
  *     console.log('fsGetFoldersInFolder(levelLimit=1)', ftpaths(r1))
  *     ms.push({ 'fsGetFoldersInFolder(evelLimit=1)': ftpaths(r1) })
  *
- *     let rall = fsGetFoldersInFolder(fdt, null)
- *     console.log('fsGetFoldersInFolder(levelLimit=null)', ftpaths(rall))
- *     ms.push({ 'fsGetFoldersInFolder(evelLimit=null)': ftpaths(rall) })
+ *     let rall = fsGetFoldersInFolder(fdt, 4294967295)
+ *     console.log('fsGetFoldersInFolder(levelLimit=4294967295)', ftpaths(rall))
+ *     ms.push({ 'fsGetFoldersInFolder(evelLimit=4294967295)': ftpaths(rall) })
  *
  *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
  *
@@ -62,14 +62,14 @@ import fsGetFoldersInFolderCore from './fsGetFoldersInFolderCore.mjs'
  * //   { level: 1, path: './def', name: 'def' },
  * //   { level: 1, path: './mno', name: 'mno' }
  * // ]
- * // fsGetFoldersInFolder(levelLimit=null) [
+ * // fsGetFoldersInFolder(levelLimit=4294967295) [
  * //   { level: 1, path: './abc', name: 'abc' },
  * //   { level: 1, path: './def', name: 'def' },
  * //   { level: 2, path: './def/ijk', name: 'ijk' },
  * //   { level: 1, path: './mno', name: 'mno' },
  * //   { level: 2, path: './mno/pqr', name: 'pqr' }
  * // ]
- * // ms [{"fsGetFoldersInFolder(evelLimit=1)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":1,"path":"./mno","name":"mno"}]},{"fsGetFoldersInFolder(evelLimit=null)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":2,"path":"./def/ijk","name":"ijk"},{"level":1,"path":"./mno","name":"mno"},{"level":2,"path":"./mno/pqr","name":"pqr"}]}]
+ * // ms [{"fsGetFoldersInFolder(evelLimit=1)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":1,"path":"./mno","name":"mno"}]},{"fsGetFoldersInFolder(evelLimit=4294967295)":[{"level":1,"path":"./abc","name":"abc"},{"level":1,"path":"./def","name":"def"},{"level":2,"path":"./def/ijk","name":"ijk"},{"level":1,"path":"./mno","name":"mno"},{"level":2,"path":"./mno/pqr","name":"pqr"}]}]
  *
  */
 function fsGetFoldersInFolder(fd, levelLimit = 1) {

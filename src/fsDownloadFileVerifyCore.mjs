@@ -1214,10 +1214,10 @@ function joinJob(job, ctx) {
  * @param {String} fpOut 輸入儲存檔案路徑字串, 所在資料夾不存在時自動建立
  * @param {Object|Function} expected 輸入期望值物件{ sha256, size }, 或回傳該物件之函數(可為async, 每次嘗試前呼叫, 收到{ attempt, signal })
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=null] 輸入fs，須有mkdirSync、realpathSync、openSync、closeSync、createWriteStream、createReadStream、renameSync、unlinkSync、statSync，預設null
- * @param {Object} [opt.crypto=null] 輸入crypto，須有createHash，預設null
- * @param {Function} [opt.Readable=null] 輸入stream之Readable，須有fromWeb、from，預設null
- * @param {Function} [opt.pipeline=null] 輸入stream/promises之pipeline，預設null
+ * @param {Object} opt.fs 輸入fs，Core不自行匯入須由呼叫端注入(對外函數fsDownloadFileVerify預設傳入Node內建，給undefined視為未給而取預設)，須有mkdirSync、realpathSync、openSync、closeSync、createWriteStream、createReadStream、renameSync、unlinkSync、statSync；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject E_ARG(不下載)
+ * @param {Object} opt.crypto 輸入crypto，須有createHash；缺漏同opt.fs，reject E_ARG
+ * @param {Function} opt.Readable 輸入stream之Readable，須有fromWeb、from；缺漏同opt.fs，reject E_ARG
+ * @param {Function} opt.pipeline 輸入stream/promises之pipeline，須為函數；缺漏同opt.fs，reject E_ARG
  * @param {Function} [opt.fetch=null] 輸入fetch函數，未給時於每次請求時取用全域fetch，預設null
  * @param {Integer} [opt.maxAttempts=3] 輸入最多嘗試次數，有效整數且為1至4294967295(可為數字字串)，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設3
  * @param {Number} [opt.retryDelayMs=1000] 輸入重試間隔基數毫秒，第n次重試前等待retryDelayMs*n，亦為更名與刪除暫存檔重試間隔之基數(上限200)，有效數字且為0至2147483647(計時器上限)(可帶小數、數字字串)，非預期之輸入(負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設1000

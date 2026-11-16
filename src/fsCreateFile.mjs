@@ -9,7 +9,7 @@ import toResultError from './_toResultError.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCreateFile.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入檔案路徑字串
- * @param {Buffer|TypedArray|DataView} data 輸入檔案內容資料
+ * @param {Buffer|TypedArray|DataView|String} [data=''] 輸入檔案內容資料，預設''；未給(undefined)或null視為未給而取預設''；其餘非字串、非Buffer、TypedArray、DataView者(數字、布林、物件、陣列、函數、包裝String等)為無效，回傳error為說明字串'invalid data: must be a string, Buffer, TypedArray or DataView'(不帶輸入值)，於建立上層資料夾與寫檔之前判定
  * @param {Object} [opt={}] 輸入寫入設定物件，只讀取其encoding鍵；非物件(含編碼字串簡寫，如'utf8')不被採用，編碼為預設'utf8'，預設{}
  * @param {String} [opt.encoding='utf8'] 輸入編碼字串，預設'utf8'
  * @param {Integer} [opt.mode=0o666] 目前未實作(給了亦不傳給writeFileSync)，預設0o666

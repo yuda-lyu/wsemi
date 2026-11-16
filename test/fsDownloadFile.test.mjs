@@ -183,8 +183,8 @@ describe(`fsDownloadFile with a local server`, function() {
         catch (e) {
             err = e
         }
-        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
-        assert.strict.deepStrictEqual(err, 'urlIn in not an effective string')
+        //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串; 訊息依V19不帶值(第492項第2批N-A, S4)
+        assert.strict.deepStrictEqual(err, 'invalid urlIn: must be a non-empty string')
     })
 
 })
@@ -252,19 +252,19 @@ describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
         let { r } = runFsFail('DL01')
         //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
         //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'urlIn in not an effective string' }, ...ev0 })
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid urlIn: must be a non-empty string' }, ...ev0 })
     })
 
     it(`DL02 should reject the description string (not an Error) when fpOut is an empty string`, function() {
         let { r } = runFsFail('DL02')
         //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpOut is not an effective string' }, ...ev0 })
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid fpOut: must be a non-empty string' }, ...ev0 })
     })
 
     it(`DL03 should reject the description string (not an Error) when opt.pipeline is not given to fsDownloadFileCore`, function() {
         let { r } = runFsFail('DL03')
         //R-FS-REJECT-01 規則1: fsDownloadFileCore之輸入檢查改為說明字串
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'opt.pipeline is not a function' }, ...ev0 })
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid opt.pipeline: must be a function' }, ...ev0 })
     })
 
     it(`DL04 (守門) should reject 'failed to download …: status[404] Not Found' when the response is 404`, function() {
@@ -287,11 +287,11 @@ describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
         assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://fake.invalid/x', r.out.p)), ...ev(r) }, { s: 'reject', k: 'string', prefix: true, ...ev0 })
     })
 
-    it(`DL07 (守門) should reject 'failed to download …' and leave no file when opt.Readable is not given to fsDownloadFileCore`, function() {
+    it(`DL07 (守門) should reject the description string 'invalid opt.Readable: …' (before fetch) and leave no file when opt.Readable is not given to fsDownloadFileCore`, function() {
         let { r } = runFsFail('DL07')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1之例外: 下載失敗維持'failed to download url[…] to file[…]: <訊息>'(並清除暫存檔, 既載)
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://fake.invalid/x', r.out.p)), leftover: r.out.leftover, ...ev(r) }, { s: 'reject', k: 'string', prefix: true, leftover: [false, false], ...ev0 })
+        //第492項第2批(R-FS-DEPS-01): 缺注入相依於fetch與寫檔之前以說明字串reject(原: fetch後才於Readable.fromWeb以'failed to download …'失敗), 不留任何檔案
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, leftover: r.out.leftover, ...ev(r) }, { s: 'reject', k: 'string', v: 'invalid opt.Readable: must be an object providing fromWeb', leftover: [false, false], ...ev0 })
     })
 
     it(`DL08 should reject a 'failed to download …' string (not an Error) when the injected fs.lstatSync throws while checking the output folder`, function() {

@@ -14,6 +14,7 @@ import fsDeleteFolderCore from './fsDeleteFolderCore.mjs'
 import fsTreeFolderWithHashCore from './fsTreeFolderWithHashCore.mjs'
 import errToStr from './_errToStr.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -24,6 +25,9 @@ import chkFsPath from './_chkFsPath.mjs'
  * @param {String} fdSrc 輸入來源資料夾字串
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、mkdirSync、readdirSync、createReadStream、createWriteStream、unlinkSync、rmSync(刪除目標多出之項目先於複製，故須於第一個刪除或複製之前齊備)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing …'(不帶輸入值，先於任何複製與刪除)
+ * @param {Object} opt.path 輸入path物件，須提供resolve、dirname、join、basename與非空字串sep；缺漏同opt.fs，reject說明字串'invalid opt.path: must be an object providing …'
+ * @param {Object} opt.crypto 輸入crypto物件，須提供createHash；缺漏同opt.fs，reject說明字串'invalid opt.crypto: must be an object providing createHash'
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -63,12 +67,22 @@ function resultFailed(rc) {
 
 //core, 差異同步; 任何失敗由fsSyncFolderCore統一轉字串reject
 async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
-    let levelLimit = null
+    let levelLimit = 4294967295 //全部層級: levelLimit之null取預設1(K3), 無窮遍歷以大有限值(iseint use:'count'之上限)表示
 
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
     let msgPah = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
     if (msgPah) {
         return Promise.reject(msgPah)
+    }
+
+    //check, 注入之fs、path、crypto缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷、複製與刪除, 以說明字串reject(不帶輸入值)
+    let msgDeps = chkFsDeps({ fs, path, crypto }, {
+        fs: ['statSync', 'lstatSync', 'mkdirSync', 'readdirSync', 'createReadStream', 'createWriteStream', 'unlinkSync', 'rmSync'], //多步驟破壞性Core: 刪除目標多出之項目先於複製, 方法須於第一個破壞性動作前齊備
+        path: ['resolve', 'dirname', 'join', 'basename', 'sep:string'],
+        crypto: ['createHash'],
+    })
+    if (msgDeps) {
+        return Promise.reject(msgDeps)
     }
 
     //check

@@ -5,6 +5,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import errToStr from './_errToStr.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 //chunkSize: opt類參數, 有效整數且為個數(iseint, use: 'count', 1~2^30), 非預期改用預設64mb
@@ -20,6 +21,7 @@ let RULE_CHUNK_SIZE = { fn: 'fsGetFileXxHashCore', name: 'opt.chunkSize', kind: 
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync(讀取串流之createReadStream於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync'(不帶輸入值)
  * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)
  * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
@@ -48,6 +50,13 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
         let msgFp = chkFsPath(fp, 'fp')
         if (msgFp) {
             pm.reject(msgFp)
+            return pm
+        }
+
+        //check, 注入之fs缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷, 以說明字串reject(不帶輸入值)
+        let msgDeps = chkFsDeps({ fs }, { fs: ['statSync', 'lstatSync'] })
+        if (msgDeps) {
+            pm.reject(msgDeps)
             return pm
         }
 

@@ -7,6 +7,7 @@ import fsTreeFolderCore from './fsTreeFolderCore.mjs'
 import fsGetFileBasicHashCore from './fsGetFileBasicHashCore.mjs'
 import errToStr from './_errToStr.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -16,6 +17,9 @@ import chkFsPath from './_chkFsPath.mjs'
  * @memberOf wsemi
  * @param {String} fd 輸入資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、readdirSync(讀取串流之createReadStream於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing …'(不帶輸入值)
+ * @param {Object} opt.path 輸入path物件，須提供resolve、basename；缺漏同opt.fs，reject說明字串'invalid opt.path: must be an object providing resolve, basename'
+ * @param {Object} opt.crypto 輸入crypto物件，須提供createHash；缺漏同opt.fs，reject說明字串'invalid opt.crypto: must be an object providing createHash'
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @returns {Promise} 回傳Promise，resolve回傳資料夾HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -47,12 +51,19 @@ async function fsGetFolderBasicHashCore(fd, opt = {}) {
             return Promise.reject(msgFd)
         }
 
+        //check, 注入之fs、path、crypto缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷, 以說明字串reject(不帶輸入值)
+        let msgDeps = chkFsDeps({ fs, path, crypto }, { fs: ['statSync', 'lstatSync', 'readdirSync'], path: ['resolve', 'basename'], crypto: ['createHash'] })
+        if (msgDeps) {
+            return Promise.reject(msgDeps)
+        }
+
         //check, 與其他前置檢查一致以說明字串reject(原由fsTreeFolderCore拋Error)
         if (!fsIsFolderCore(fd, { fs })) {
             return Promise.reject(`fd[${fd}] is not a folder`)
         }
 
-        let vfps = fsTreeFolderCore(fd, null, { path, fs })
+        //全部層級: levelLimit之null改取預設1(K3), 無窮遍歷以大有限值(iseint use:'count'之上限)表示
+        let vfps = fsTreeFolderCore(fd, 4294967295, { path, fs })
         await pmSeries(vfps, async (v) => {
 
             //check

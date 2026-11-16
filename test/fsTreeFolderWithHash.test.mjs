@@ -40,20 +40,20 @@ describe(`fsTreeFolderWithHash`, function() {
         // console.log('fsTreeFolderWithHash(1,file,md5)', vfps1)
         ms.push({ 'fsTreeFolderWithHash(1,file,md5)': vfps1 })
 
-        let vfps2 = await fsTreeFolderWithHash(fdt, null)
+        let vfps2 = await fsTreeFolderWithHash(fdt, 4294967295)
         vfps2 = clns(vfps2)
-        // console.log('fsTreeFolderWithHash(null,file,md5)', vfps2)
-        ms.push({ 'fsTreeFolderWithHash(null,file,md5)': vfps2 })
+        // console.log('fsTreeFolderWithHash(4294967295,file,md5)', vfps2)
+        ms.push({ 'fsTreeFolderWithHash(4294967295,file,md5)': vfps2 })
 
         let vfps3 = await fsTreeFolderWithHash(fdt, 1, { type: 'sha256' })
         vfps3 = clns(vfps3)
         // console.log('fsTreeFolderWithHash(1,file,sha256)', vfps3)
         ms.push({ 'fsTreeFolderWithHash(1,file,sha256)': vfps3 })
 
-        let vfps4 = await fsTreeFolderWithHash(fdt, null, { forFile: true, forFolder: true })
+        let vfps4 = await fsTreeFolderWithHash(fdt, 4294967295, { forFile: true, forFolder: true })
         vfps4 = clns(vfps4)
-        // console.log('fsTreeFolderWithHash(null,file+folder,md5)', vfps4)
-        ms.push({ 'fsTreeFolderWithHash(null,file+folder,md5)': vfps4 })
+        // console.log('fsTreeFolderWithHash(4294967295,file+folder,md5)', vfps4)
+        ms.push({ 'fsTreeFolderWithHash(4294967295,file+folder,md5)': vfps4 })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -74,7 +74,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     hash: '809d4580aaed41565abc38d58f77f840'
     //   }
     // ]
-    // fsTreeFolderWithHash(null,file,md5) [
+    // fsTreeFolderWithHash(4294967295,file,md5) [
     //   { isFolder: true, level: 1, name: 'abc', hash: '' },
     //   {
     //     isFolder: false,
@@ -107,7 +107,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     hash: '512f26ada3c3d634ac3c6b12b7b33cb50bb0963c3f6d9924241619c84ec78ff2'
     //   }
     // ]
-    // fsTreeFolderWithHash(null,file+folder,md5) [
+    // fsTreeFolderWithHash(4294967295,file+folder,md5) [
     //   {
     //     isFolder: true,
     //     level: 1,
@@ -169,7 +169,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     ]
     //   },
     //   {
-    //     "fsTreeFolderWithHash(null,file,md5)": [
+    //     "fsTreeFolderWithHash(4294967295,file,md5)": [
     //       {
     //         "isFolder": true,
     //         "level": 1,
@@ -231,7 +231,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     ]
     //   },
     //   {
-    //     "fsTreeFolderWithHash(null,file+folder,md5)": [
+    //     "fsTreeFolderWithHash(4294967295,file+folder,md5)": [
     //       {
     //         "isFolder": true,
     //         "level": 1,
@@ -295,7 +295,7 @@ describe(`fsTreeFolderWithHash`, function() {
             ]
         },
         {
-            'fsTreeFolderWithHash(null,file,md5)': [
+            'fsTreeFolderWithHash(4294967295,file,md5)': [
                 {
                     'isFolder': true,
                     'level': 1,
@@ -357,7 +357,7 @@ describe(`fsTreeFolderWithHash`, function() {
             ]
         },
         {
-            'fsTreeFolderWithHash(null,file+folder,md5)': [
+            'fsTreeFolderWithHash(4294967295,file+folder,md5)': [
                 {
                     'isFolder': true,
                     'level': 1,

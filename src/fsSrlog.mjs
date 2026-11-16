@@ -20,6 +20,7 @@ import strdelright from './strdelright.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 /**
@@ -29,7 +30,7 @@ import errToStr from './_errToStr.mjs'
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fdSys=path.resolve()] 輸入工作路徑字串，若useLocRela=true時取代用，預設path.resolve()
- * @param {String} [opt.fdLog='./syslog'] 輸入儲存log檔案之資料夾位置字串，預設'./syslog'
+ * @param {String} [opt.fdLog='./syslog'] 輸入儲存log檔案之資料夾位置字串，須為非空字串且不含NUL字元，非預期之輸入(非字串、空字串、含NUL字元)視為未給而改用預設，不報錯，預設'./syslog'
  * @param {String} [opt.dlm='ꓹ'] 輸入分隔log參數字串，預設'ꓹ'
  * @param {Boolean} [opt.useTime=true] 輸入是否給予紀錄時間布林值，預設true
  * @param {Boolean} [opt.useLoc=true] 輸入是否紀錄觸發程式碼位置布林值，預設true
@@ -57,7 +58,7 @@ function fsSrlog(opt = {}) {
 
     //fdLog
     let fdLog = get(opt, 'fdLog', '')
-    if (!isestr(fdLog)) {
+    if (typeof fdLog !== 'string' || !isestr(fdLog) || chkFsPath(fdLog, 'opt.fdLog') !== null) { //先以typeof排除非原始字串, 免得isestr讀取物件之Symbol.toStringTag拋錯 //路徑型opt鍵: 非字串、空字串、含NUL者視為非預期而改用預設(K3、R-FS-INVALID-PATH-01), 否則建立資料夾失敗被忽略而寫檔靜默失敗
         fdLog = `./syslog`
     }
     if (!fsIsFolder(fdLog)) {

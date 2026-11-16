@@ -30,6 +30,7 @@
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
 | 字串取代之取代值須字面化: `replace`／`replaceAll` 站點全集(`$&`、`$'`、`` $` ``、`$$` 不得被展開;2026-11-12 ws427 wsrep 新增) | `sgud/rule/rulebook_replace.md` | R-REPLACE-LITERAL-01 | 約 8 |
 | fs 路徑參數無效(非字串、空字串、含 NUL)之處置: 依失敗通道回報、不帶值、與不存在分開(第 216 項①) | `sgud/rule/rulebook_fspath.md` | R-FS-INVALID-PATH-01 | 約 8 |
+| fs 系 Core 缺注入相依(fs、path、crypto、Readable、pipeline)依家族通道 fail-closed、對外函數注入鍵 undefined 取內建;`levelLimit` 之 `null` 取預設 1;路徑型 opt 鍵非預期取預設;N-A 之 fs 函數入口檢測(第 492 項第 2 批 ws492c,2026-11-17) | `sgud/rule/rulebook_fsdeps.md` | R-FS-DEPS-01、R-LEVEL-LIMIT-01、R-FS-OPT-PATH-01、R-FS-ENTRY-CHECK-01 | 約 12 |
 | `fsWatchFolder` 被監看資料夾本身消失之 `unlinkDir` 一次消失只派發一次(第 238 項) | `sgud/rule/rulebook_watch.md` | R-WATCH-ROOT-ONCE-01 | 約 4 |
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
@@ -94,6 +95,10 @@
 - `R-ENTRY-CONVERT-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492a 處置結果〉): R-ENTRY-CONVERT-01 對外入口之數值參數(必須參數或 opt 鍵)以 `isenum`(整數 `iseint`)判定,通過即 `cdbl`(`cint`)轉型後使用、取值只讀一次;內部已必為數值者(瀏覽器事件屬性、已轉型之值、依型別分流)可用 lodash／原生判斷不改;回布林者無效回 `false`,opt 無效視為未給,訊息不帶值(使用者 2026-11-16;`domIsClientXYIn`、`domGetBoudRectRefSelf`、`interp1` stairs 之 `xMin`／`xMax`)
 - `R-ENTRY-THROW-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492b 處置結果〉): R-ENTRY-THROW-01 必須參數為陣列或物件者無效即同步拋 `invalid <名稱>: must be <種類>`(不帶值,元素帶索引),空陣列／空物件合法;真陣列以 `Array.isArray` 判定(R-OBJ-ITER-01 規則 2);opt 非一般物件視為未給、布林鍵只有 `true` 生效;鍵只看自有可列舉字串鍵(使用者 2026-11-03「都A」;`objSortByKeys`、`treeToFilepath`)
 - `R-RANGE-VALUE-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492b 處置結果〉): R-RANGE-VALUE-01 回傳「範圍內之值」之函數,值域須為 `[vstart, vend]`;`pseudoRandomIntsNdpRange` 排序用之值不含 `vstart`,取 `n` 個後加 `vstart`(`vstart=0` 時與修前逐位相同)
+- `R-FS-DEPS-01` → `rulebook_fsdeps.md`: R-FS-DEPS-01 fs 系 Core 缺注入相依(fs、path、crypto、Readable、pipeline)依家族通道 fail-closed(不回成功、不動檔案、訊息 `invalid opt.<名>: must be …` 不帶值,單一擁有者 `_chkFsDeps`),判斷類 Core 同步拋錯不回 false;對外函數(`fsDeleteFileSafe`、`fsDeleteFolderSafe`、`fsDownloadFileVerify`)注入鍵 undefined 取 Node 內建
+- `R-LEVEL-LIMIT-01` → `rulebook_fsdeps.md`: R-LEVEL-LIMIT-01 `levelLimit` 之 `null` 依 K3 取預設 1(fs 列舉家族 10 函數與 `fsTask`),無窮遍歷給 `4294967295`
+- `R-FS-OPT-PATH-01` → `rulebook_fsdeps.md`: R-FS-OPT-PATH-01 路徑型 opt 鍵(`fsSrlog.fdLog`、`fsTask.fdStorage`、`fsEvem.fd`)非字串、空字串、含 NUL 取預設;`fsTask` 紀錄資料夾無法使用即建構時拋錯
+- `R-FS-ENTRY-CHECK-01` → `rulebook_fsdeps.md`: R-FS-ENTRY-CHECK-01 N-A 之 fs 函數入口檢測先於副作用(`fsCreateFileCore` data、`fsWriteText(Core)` c、`fsDownloadFileCore` urlIn/fpOut、`fsEnsureBins` manifest 路徑與 pkgRoot、`fsGetBinManifestEntry` fp、判斷類非字串路徑回 false)
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

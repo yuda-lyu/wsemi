@@ -2,12 +2,13 @@
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
-import isfun from './isfun.mjs'
 import getPathParent from './getPathParent.mjs'
 import getErrorMessage from './getErrorMessage.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import errToStr from './_errToStr.mjs'
+import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -17,12 +18,12 @@ import errToStr from './_errToStr.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFile.test.mjs Github}
  * @memberOf wsemi
- * @param {String} urlIn 輸入下載網址字串
- * @param {String} fpOut 輸入儲存檔案路徑字串
+ * @param {String} urlIn 輸入下載網址字串，須為非空字串、可解析之http或https網址且不帶帳密(user:password@)；不合者reject說明字串'invalid urlIn: must be a non-empty string'、'invalid urlIn: must be a valid http or https url'、'invalid urlIn: must not contain credentials'(不帶輸入值)，先於fetch與寫檔
+ * @param {String} fpOut 輸入儲存檔案路徑字串，須為非空字串且不含NUL字元(非字串含包裝String物件皆無效)；不合者reject說明字串'invalid fpOut: must be a non-empty string'或'invalid fpOut: must not contain a NUL character'(不帶輸入值，與路徑不存在分開)，先於fetch與寫檔
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=null] 輸入fs，預設null
- * @param {Function} [opt.Readable=null] 輸入stream之Readable，預設null
- * @param {Function} [opt.pipeline=null] 輸入stream/promises之pipeline，預設null
+ * @param {Object} opt.fs 輸入fs，Core不自行匯入須由呼叫端注入，須提供statSync、lstatSync、createWriteStream、renameSync(資料夾之mkdirSync、失敗清理之unlinkSync於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, createWriteStream, renameSync'(不帶輸入值，先於建立資料夾、fetch與寫檔)
+ * @param {Function} opt.Readable 輸入stream之Readable，須提供fromWeb；缺漏同opt.fs，reject說明字串'invalid opt.Readable: must be an object providing fromWeb'
+ * @param {Function} opt.pipeline 輸入stream/promises之pipeline，須為函數；缺漏同opt.fs，reject說明字串'invalid opt.pipeline: must be a function'
  * @returns {Promise} 回傳Promise，resolve回傳下載後檔案路徑，reject回傳錯誤訊息字串
  * @example
  * //need test in nodejs
@@ -31,11 +32,35 @@ import errToStr from './_errToStr.mjs'
  *
  */
 async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
+    //check urlIn, 網址(S4): 須為非空字串、可解析之http或https網址、不帶帳密(使用全域fetch無法安全處理帳密, 與fsDownloadFileVerifyCore一致); 與其他失敗一致以字串reject, 訊息依V19且不帶輸入值(V20)
+    if (typeof urlIn !== 'string' || urlIn.trim() === '') {
+        return Promise.reject(`invalid urlIn: must be a non-empty string`)
+    }
+    let u = null
+    try {
+        u = new URL(urlIn)
+    }
+    catch (err) {
+        return Promise.reject(`invalid urlIn: must be a valid http or https url`)
+    }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+        return Promise.reject(`invalid urlIn: must be a valid http or https url`)
+    }
+    if (u.username !== '' || u.password !== '') {
+        return Promise.reject(`invalid urlIn: must not contain credentials`)
+    }
+
+    //check fpOut, 路徑須為非空字串且不含NUL(R-FS-INVALID-PATH-01; 非字串含包裝String物件皆無效), 先於fetch與寫檔
+    let msgFpOut = chkFsPath(fpOut, 'fpOut')
+    if (msgFpOut) {
+        return Promise.reject(msgFpOut)
+    }
+
     let fs = null
     let Readable = null
     let pipeline = null
 
-    //讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於async函數內未捕捉即以Error物件reject; 非下載失敗, 依通則轉字串
+    //讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於async函數內未捕捉即以Error物件reject; 非下載失敗, 依通則轉字串; 必須參數(urlIn、fpOut)之檢查先於讀取opt(opt之getter拋錯不得蓋過之)
     try {
 
         //fs
@@ -52,19 +77,14 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
         return Promise.reject(errToStr(err))
     }
 
-    //check urlIn, 與其他失敗一致以字串reject(原throw Error使reject值為Error物件, 與文件「reject回傳錯誤訊息字串」不符)
-    if (!isestr(urlIn)) {
-        return Promise.reject(`urlIn in not an effective string`)
-    }
-
-    //check fpOut
-    if (!isestr(fpOut) || fpOut.includes('\0')) { //含NUL者無效(R-FS-INVALID-PATH-01)
-        return Promise.reject(`fpOut is not an effective string`)
-    }
-
-    //check pipeline
-    if (!isfun(pipeline)) {
-        return Promise.reject(`opt.pipeline is not a function`)
+    //check, 注入之fs、Readable、pipeline缺漏為相依無效(R-FS-DEPS-01), 先於建立資料夾、fetch與寫檔, 以說明字串reject(不帶輸入值)
+    let msgDeps = chkFsDeps({ fs, Readable, pipeline }, {
+        fs: ['statSync', 'lstatSync', 'createWriteStream', 'renameSync'],
+        Readable: ['fromWeb'],
+        pipeline: 'function',
+    })
+    if (msgDeps) {
+        return Promise.reject(msgDeps)
     }
 
     //getPathParent

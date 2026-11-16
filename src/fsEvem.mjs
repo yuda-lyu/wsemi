@@ -17,6 +17,7 @@ import evem from './evem.mjs'
 import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
+import chkFsPath from './_chkFsPath.mjs'
 
 
 //timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數會使每個檔案回報ERR_OUT_OF_RANGE, 故小數亦屬非預期), 非預期改用預設(100、300)
@@ -67,7 +68,7 @@ function checkEvName(evName) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsEvem.test.mjs Github}
  * @memberOf wsemi
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，預設'./_evps'
+ * @param {String} [opt.fd='./_evps'] 輸入建置事件檔案所在資料夾路徑字串，須為非空字串且不含NUL字元，非預期之輸入(非字串、空字串、含NUL字元)視為未給而改用預設，不報錯，預設'./_evps'
  * @param {Boolean} [opt.polling=false] 輸入是否使用輪循布林值，代表chokidar的usePolling，預設為false
  * @param {Number|String} [opt.timeInterval=100] 輸入偵測檔案變更間隔時間，opt類參數(有效整數，正整數計時毫秒1~2147483647，須為整數〔交給chokidar〕，數字字串亦可，去頭尾空白後取值)，同時為內部週期輪詢事件資料夾是否存在之週期，與代表chokidar開啟polling時的interval，單位為毫秒ms，非預期之輸入(非有效數字、小數、0、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾至上限、不報錯，預設為100
  * @param {Number|String} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間，opt類參數(規則同opt.timeInterval)，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，非預期之輸入視為未給而改用預設，不夾至上限、不報錯，預設為300
@@ -125,7 +126,7 @@ function fsEvem(opt = {}) {
 
     //fd
     let fd = get(opt, 'fd')
-    if (!isestr(fd)) {
+    if (typeof fd !== 'string' || !isestr(fd) || chkFsPath(fd, 'opt.fd') !== null) { //先以typeof排除非原始字串, 免得isestr讀取物件之Symbol.toStringTag拋錯 //路徑型opt鍵: 非字串、空字串、含NUL者視為非預期而改用預設(K3、R-FS-INVALID-PATH-01), 不再交fsWatchFolder拋錯
         fd = './_evps'
     }
 

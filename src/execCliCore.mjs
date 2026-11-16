@@ -378,18 +378,34 @@ function buildSpawnArgs(command, args = [], opt = {}) {
 
 
 /**
+ * 判定額外環境變數是否為一般物件(非陣列; 讀取型別標籤拋錯者視為否), 供buildSpawnEnv: 型別標籤(Symbol.toStringTag)可被覆寫成'Object'而使陣列通過isobj, 故另排除陣列
+ *
+ * @param {*} v 輸入值
+ * @returns {Boolean} 回傳是否為一般物件布林值
+ */
+function isPlainEnv(v) {
+    try {
+        return isobj(v) && !Array.isArray(v)
+    }
+    catch (err) {
+        return false
+    }
+}
+
+
+/**
  * 建立子進程之環境變數物件: 以process.env為底, 加入PYTHONIOENCODING=utf-8, 再併入envExtra(同名以envExtra為準)
  * 每次呼叫重新求值且不動本進程process.env, 故並行調用可各自帶不同值
  * PYTHONIOENCODING對一般python直譯器有效(sys.stdout.encoding變utf-8); 對PyInstaller打包之exe無效, 其以隔離模式嵌入直譯器且文件明載刻意忽略PYTHONIOENCODING與PYTHONUTF8, 該類程式須於打包時以-X utf8_mode=1指定, 或由本進程以execProcess之codeCmd('auto'或系統字碼頁)解碼其輸出
  * Windows下環境變數大小寫不敏感但JS物件鍵敏感, 故併入前先移除大小寫不同之同名既有鍵, 否則呼叫端傳Path而process.env為PATH時兩鍵並存且Windows取原值, 注入靜默失效
  * 此刪除僅限win32: POSIX環境變數大小寫敏感, Path與PATH為兩個獨立變數, 誤刪即退化
  *
- * @param {Object} [envExtra=undefined] 輸入額外注入之環境變數物件, 值為undefined代表移除該變數, 預設undefined代表不覆寫任何變數
+ * @param {Object} [envExtra=undefined] 輸入額外注入之環境變數物件, 值為undefined代表移除該變數, 預設undefined代表不覆寫任何變數; 非一般物件(null、字串、數字、陣列、函數等)視為未給(K3, opt類參數非預期之輸入不拋錯、不展開為環境變數鍵: 字串'abc'不會變成'0'、'1'、'2'鍵), 回傳不含額外變數之env
  * @returns {Object} 回傳可交給spawn之env物件
  */
 function buildSpawnEnv(envExtra = undefined) {
     let envSpawn = { ...process.env, PYTHONIOENCODING: 'utf-8' }
-    if (envExtra !== undefined) {
+    if (isPlainEnv(envExtra)) {
         if (process.platform === 'win32') {
             let ks = Object.keys(envExtra).map((k) => k.toLowerCase())
             for (let k of Object.keys(envSpawn)) {
@@ -406,6 +422,8 @@ function buildSpawnEnv(envExtra = undefined) {
 
 /**
  * execCli系列函數之共用核心, 提供可獨立使用之函數: buildSpawnArgs(將命令轉為Windows安全之spawn參數)與buildSpawnEnv(建立子進程環境變數)
+ *
+ * 本核心自行匯入fs、path(僅Node環境使用), 不需由呼叫端注入相依(無opt.fs等注入鍵); buildSpawnEnv之envExtra非一般物件視為未給, 不拋錯亦不展開為環境變數鍵
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliCore.test.mjs Github}
  * @memberOf wsemi

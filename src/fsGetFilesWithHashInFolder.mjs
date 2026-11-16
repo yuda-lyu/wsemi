@@ -11,7 +11,7 @@ import errToStr from './_errToStr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsGetFilesWithHashInFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
- * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，設定null為無窮遍歷所有檔案，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，Infinity不視為無窮遍歷(無窮遍歷請設定null)，預設1
+ * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，null與Infinity皆不視為無窮遍歷(無窮遍歷請給大有限值，如4294967295)，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
  * @param {Boolean} [opt.debug=false] 輸入是否於levelLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
@@ -53,9 +53,9 @@ import errToStr from './_errToStr.mjs'
  *     console.log('fsGetFilesWithHashInFolder(levelLimit=1)', ftpaths(r1))
  *     ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=1)': ftpaths(r1) })
  *
- *     let rall = await fsGetFilesWithHashInFolder(fdt, null)
- *     console.log('fsGetFilesWithHashInFolder(levelLimit=null)', ftpaths(rall))
- *     ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=null)': ftpaths(rall) })
+ *     let rall = await fsGetFilesWithHashInFolder(fdt, 4294967295)
+ *     console.log('fsGetFilesWithHashInFolder(levelLimit=4294967295)', ftpaths(rall))
+ *     ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=4294967295)': ftpaths(rall) })
  *
  *     fsDeleteFolder(fdt) //刪除臨時任務資料夾
  *
@@ -75,7 +75,7 @@ import errToStr from './_errToStr.mjs'
  * //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
  * //   }
  * // ]
- * // fsGetFilesWithHashInFolder(levelLimit=null) [
+ * // fsGetFilesWithHashInFolder(levelLimit=4294967295) [
  * //   {
  * //     level: 2,
  * //     path: './abc/z2.txt',
@@ -98,7 +98,7 @@ import errToStr from './_errToStr.mjs'
  * //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
  * //   }
  * // ]
- * // ms [{"fsGetFilesWithHashInFolder(evelLimit=1)":[{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]},{"fsGetFilesWithHashInFolder(evelLimit=null)":[{"level":2,"path":"./abc/z2.txt","name":"z2.txt","hashType":"md5","hash":"5cb7e380d019de63c643aef55b8534d0"},{"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt","hashType":"md5","hash":"a61d1457beb4684e254ce60379c8ae7b"},{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]}]
+ * // ms [{"fsGetFilesWithHashInFolder(evelLimit=1)":[{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]},{"fsGetFilesWithHashInFolder(evelLimit=4294967295)":[{"level":2,"path":"./abc/z2.txt","name":"z2.txt","hashType":"md5","hash":"5cb7e380d019de63c643aef55b8534d0"},{"level":3,"path":"./def/ijk/z3.txt","name":"z3.txt","hashType":"md5","hash":"a61d1457beb4684e254ce60379c8ae7b"},{"level":1,"path":"./z1.txt","name":"z1.txt","hashType":"md5","hash":"3b770ebe9b04f171f0ead0e07d8e2882"}]}]
  *
  */
 async function fsGetFilesWithHashInFolder(fd, levelLimit = 1, opt = {}) {

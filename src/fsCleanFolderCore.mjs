@@ -4,6 +4,7 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkFsDeps from './_chkFsDeps.mjs'
 
 
 /**
@@ -12,6 +13,9 @@ import chkFsPath from './_chkFsPath.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolderCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} pah 輸入欲清空資料夾路徑字串
+ * @param {Object} opt 輸入設定物件，Core不自行匯入fs、path，須由呼叫端注入
+ * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、readdirSync、rmSync、unlinkSync(逐項刪除，缺其一會使先刪之項目已消失而後項失敗，故先於刪除齊備；資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, readdirSync, rmSync, unlinkSync'(不帶輸入值)
+ * @param {Object} opt.path 輸入path物件，須提供join；缺漏同opt.fs，回傳error為說明字串'invalid opt.path: must be an object providing join'
  * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)；資料夾不存在時自動建立；資料夾內之連結(符號連結、junction，含目標已不存在者)只移除連結本身不跟隨；目標本身為連結時不清空並回傳error，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
@@ -33,6 +37,14 @@ function fsCleanFolderCore(pah, opt = {}) {
         //path, fs, 讀取opt置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時get拋出, 於try外即成同步拋錯
         let path = get(opt, 'path')
         let fs = get(opt, 'fs')
+
+        //check, 注入之fs、path缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷與建立
+        let msgDeps = chkFsDeps({ fs, path }, { fs: ['statSync', 'lstatSync', 'readdirSync', 'rmSync', 'unlinkSync'], path: ['join'] })
+        if (msgDeps) {
+            return {
+                error: msgDeps,
+            }
+        }
 
         //check, 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
         if (!fsExistsCore(pah, { fs })) {

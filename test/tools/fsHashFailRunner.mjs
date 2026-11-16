@@ -677,7 +677,7 @@ async function main() {
             let sub = path.join(fd, 'sub')
             fs.mkdirSync(sub)
             denyRead(sub)
-            return { errStr: errReaddir(sub), got: await run(() => f(fd, null)) }
+            return { errStr: errReaddir(sub), got: await run(() => f(fd, 4294967295)) }
         },
 
         //TW06(補列): 對外函數+opt.fs之lstatSync拋null
@@ -731,7 +731,7 @@ async function main() {
             let sub = path.join(fd, 'sub')
             fs.mkdirSync(sub)
             denyRead(sub)
-            return { errStr: errReaddir(sub), got: await run(() => f(fd, null)) }
+            return { errStr: errReaddir(sub), got: await run(() => f(fd, 4294967295)) }
         },
 
         //FW07(補列): 對外函數+opt.fs之lstatSync拋null
