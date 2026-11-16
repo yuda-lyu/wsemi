@@ -3,8 +3,8 @@ import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import reverse from 'lodash-es/reverse.js'
-import isNumber from 'lodash-es/isNumber.js'
 import isenum from './isenum.mjs'
+import cdbl from './cdbl.mjs'
 import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import errToStr from './_errToStr.mjs'
@@ -209,13 +209,14 @@ function interp1Linear(ps, x) {
 function interp1Stairs(ps, x, opt = {}) {
     //每個點為bar中點, 尋找x所在之bar值(y)
 
-    //xMin, 擴充最小x值範圍
+    //xMin, 擴充最小x值範圍, 非有效數字視為未給, 有效數字(含數字字串)以cdbl轉型後使用
     let xMin = get(opt, 'xMin')
-    if (isNumber(xMin)) {
+    if (isenum(xMin)) {
+        xMin = cdbl(xMin)
         //外部已確保x為遞增
         if (xMin > ps[0].x) {
             return {
-                err: `xMin=${xMin} > ps[0].x=${ps[0].x}`
+                err: 'invalid opt.xMin: must be <= the smallest x of ps'
             }
         }
         else if (xMin === ps[0].x) {
@@ -230,13 +231,14 @@ function interp1Stairs(ps, x, opt = {}) {
         }
     }
 
-    //xMax, 擴充最大x值範圍
+    //xMax, 擴充最大x值範圍, 非有效數字視為未給, 有效數字(含數字字串)以cdbl轉型後使用
     let xMax = get(opt, 'xMax')
-    if (isNumber(xMax)) {
+    if (isenum(xMax)) {
+        xMax = cdbl(xMax)
         //外部已確保x為遞增
         if (xMax < ps[size(ps) - 1].x) {
             return {
-                err: `xMax=${xMax} < ps[size(ps)-1].x=${ps[size(ps) - 1].x}`
+                err: 'invalid opt.xMax: must be >= the largest x of ps'
             }
         }
         else if (xMax === ps[size(ps) - 1].x) {
@@ -333,8 +335,8 @@ function interp1Blocks(ps, x) {
  * @param {String} [opt.mode=''] 輸入內插方法，可選'linear'、'stairs'、'blocks'，預設'linear'
  * @param {String} [opt.keyX='x'] 輸入若數據為物件陣列，取物件x值時的key字串，預設為'x'
  * @param {String} [opt.keyY='y'] 輸入若數據為物件陣列，取物件y值時的key字串，預設為'y'
- * @param {Number} [opt.xMin=undefined] 輸入若mode='stairs'，更改x範圍下限值，預設為undefined
- * @param {Number} [opt.xMax=undefined] 輸入若mode='stairs'，更改x範圍上限值，預設為undefined
+ * @param {Number|String} [opt.xMin=undefined] 輸入若mode='stairs'，更改x範圍下限值，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值，判定通過後以cdbl轉為數字再使用；NaN、Infinity、'0x10'、包裝物件、null、非數字字串皆非有效數字，視為未給)，預設為undefined。須小於等於ps之最小x，否則回傳{ err: 'invalid opt.xMin: must be <= the smallest x of ps' }(不帶值)
+ * @param {Number|String} [opt.xMax=undefined] 輸入若mode='stairs'，更改x範圍上限值，規則同opt.xMin。須大於等於ps之最大x，否則回傳{ err: 'invalid opt.xMax: must be >= the largest x of ps' }(不帶值)
  * @returns {Number|Object} 回傳內插結果數值，或是無法內插時之錯誤訊息物件
  * @example
  *

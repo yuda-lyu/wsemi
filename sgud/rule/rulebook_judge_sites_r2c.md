@@ -60,7 +60,7 @@
 | `interp1`:`px` 單值(`interp1.mjs` 守門) | `isnum`(收 `Infinity`、`'0x10'`、包裝物件) | `isenum`;無效回 `{ err: 'px is not a number or an array' }`(訊息照現行) | 必須參數;失敗通道 `{err}` 維持 |
 | `interp1`:`px` 陣列元素(`toArrayX`) | `isnum`→`toNumber`;無效元素**丟棄**(輸出變短、錯位) | `isenum`→`Number`;無效元素於**原位**輸出 `{ err: 'invalid px[i]: must be a valid number' }`(不帶值),長度恆等於 px 長度;元素形式 `[x,…]`、`{keyX}`(JSDoc 未載、現況支援)維持,取出之 x 以 `isenum` 判定 | 必須參數;與超出範圍之原位 `{err}` 一致 |
 | `interp1`:資料點 `ps`(`toArrayXY`) | `isnum(x)&&isnum(y)`→`toNumber` | `isenum`→`Number`;無效點照現行濾除 | 資料集,不需對齊 |
-| `interp1`:`opt.xMin`／`xMax` | `isNumber` | **不動**(派工書) | — |
+| `interp1`:`opt.xMin`／`xMax` | `isNumber` | **不動**(派工書)〔2026-11-16 ws492a 已改 `isenum`＋`cdbl`,見 `rulebook_judge_sites_r2e.md`〈第 492 項 ws492a 處置結果〉〕 | — |
 | `arrGroupByMaxmin`／`arrLookupByMaxmin`:區間上下限(`keyMax`／`keyMin`) | `isnum`＋`cdbl`;無效或缺鍵**靜默略過整個區間** | 共用 `src/_maxminsLimits.mjs`(單一擁有者):`isenum`＋`Number`;無效(含缺鍵、`null`、`Infinity`、`'0x10'`、包裝物件、非物件元素)**throw** `invalid maxmins[i].<鍵>: must be a valid number`(不帶值;先檢 `keyMax`);於 `maxmins` 為有效陣列後、`arr` 檢查前檢測,與 `arr` 內容無關;每個鍵只讀一次 | 必須參數(設定);`maxmins` 非有效陣列仍回 `[]` |
 | 同上:被分組／查找之值 | `isnum`→`cdbl` 再 `isNumber` 閘門(收 `Infinity`→`Number.MAX_VALUE`、`'0x10'`、包裝物件) | `isenum`→`Number`,`isNumber` 閘門改為 `value !== null`;無效者略過該筆(`arrGroupByMaxmin` 欄位無效時退而以元素本身判定,同現行;`arrLookupByMaxmin` 不添加 `keyItems`) | 資料,略過 |
 | `strTruncate`:`maxLen` | `isp0int`＋`cint`;無效**原樣回傳字串** | `iseint { use:'count' }`＋`Number`;未給或非預期 **throw** `invalid maxLen: must be a non-negative integer`(不帶值);`str` 非有效字串仍先回 `''` | 必須參數 |

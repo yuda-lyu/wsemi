@@ -6,7 +6,7 @@ import isIE from './isIE.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domCancelEvent.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLEvent} event 輸入event物件
+ * @param {Event} e 輸入event物件
  * @example
  * need test in browser
  *

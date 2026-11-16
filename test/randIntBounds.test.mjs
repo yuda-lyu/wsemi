@@ -103,9 +103,11 @@ describe(`random integers at the safe integer bounds (ws272c)`, function() {
         }
     })
 
-    it(`pseudoRandomIntsNdpRange should return distinct values in the index range for a small range (observed unchanged by this round)`, function() {
+    it(`pseudoRandomIntsNdpRange should return distinct values within [vstart, vend] for a small range (排程第492項第1批: vstart不為0時亦落在範圍內; 見pseudoRandomIntsNdpRange.test.mjs)`, function() {
         let rs = pseudoRandomIntsNdpRange(0, 9, 10, 'seed')
         assert.strict.deepStrictEqual([...rs].sort((x, y) => x - y), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        let rs2 = pseudoRandomIntsNdpRange(MAX - 5, MAX, 10, 'seed')
+        assert.strict.deepStrictEqual([...rs2].sort((x, y) => x - y), [MAX - 5, MAX - 4, MAX - 3, MAX - 2, MAX - 1, MAX])
     })
 
 })

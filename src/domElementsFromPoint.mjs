@@ -6,7 +6,7 @@
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domElementsFromPoint.test.mjs Github}
  * @memberOf wsemi
  * @param {Number} clientX 輸入指定x座標浮點數，須基於顯示區(viewport)之x座標
- * @param {Number} clientY 輸入指定y座標浮點數，須基於顯示區(viewport)之x座標
+ * @param {Number} clientY 輸入指定y座標浮點數，須基於顯示區(viewport)之y座標
  * @returns {Array} 回傳DOM元素陣列
  * @example
  * need test in browser

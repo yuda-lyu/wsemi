@@ -564,7 +564,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 
     
 
-    <h4 class="name" id=".ab2u8arr"><span class="type-signature type-signature-static">(static) </span>ab2u8arr<span class="signature">(ab, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Unit8Array|Object}</span></h4>
+    <h4 class="name" id=".ab2u8arr"><span class="type-signature type-signature-static">(static) </span>ab2u8arr<span class="signature">(ab, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Uint8Array|Object}</span></h4>
 
     
 
@@ -574,7 +574,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>ArrayBuffer轉Unit8Array</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>ArrayBuffer轉Uint8Array</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/ab2u8arr.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -827,7 +827,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
 
         
 <div class="param-desc">
-    <p>回傳Unit8Array，輸入非ArrayBuffer時回傳空Unit8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+    <p>回傳Uint8Array，輸入非ArrayBuffer時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)，而空Uint8Array(長度0)亦為合法輸入之結果(如ab2u8arr(new ArrayBuffer(0)))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)</p>
 </div>
 
@@ -839,7 +839,7 @@ console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
     </dt>
     <dd>
         
-<span class="param-type">Unit8Array</span>
+<span class="param-type">Uint8Array</span>
 |
 
 <span class="param-type">Object</span>
@@ -2111,7 +2111,7 @@ str與base64須與加密時str2aes所用之設定相同，否則解不出原文�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="arr2dt.mjs.html">arr2dt.mjs</a>, <a href="arr2dt.mjs.html#line58">line 58</a>
+        <a href="arr2dt.mjs.html">arr2dt.mjs</a>, <a href="arr2dt.mjs.html#line61">line 61</a>
     </li></ul></dd>
     
 
@@ -2189,7 +2189,10 @@ console.log(arr2dt(['a', 'a'], [1, 2]))
 // => { a: 2 } (重複時後者覆蓋前者)
 
 console.log(arr2dt(['a'], function() {}))
-// => { a: null } (函數視為null)</code></pre>
+// => { a: null } (函數視為null)
+
+console.log(arr2dt(['a', 'b'], [function() {}, 2]))
+// => { a: null, b: 2 } (值陣列之元素為函數時視為null)</code></pre>
 
 
 
@@ -2295,7 +2298,7 @@ console.log(arr2dt(['a'], function() {}))
                 </td>
             
 
-            <td class="description last"><p>輸入values陣列或需自動展開values成為的陣列，預設''；values為陣列(含['']、[null]、[{}]、[])時一律當作值陣列與keys逐一配對，長度不同時回傳空物件{}；values非陣列時各欄位皆填入values，values為物件(typeof為object且非null)時各欄位各一份以lodash cloneDeep產生之複本(無原型物件之複本為一般物件，同修前)，values為函數時視為null(不執行、不複製)</p></td>
+            <td class="description last"><p>輸入values陣列或需自動展開values成為的陣列，預設''；values為陣列(含['']、[null]、[{}]、[])時一律當作值陣列與keys逐一配對，長度不同時回傳空物件{}，值陣列之元素為函數時該欄位視為null(不執行、不複製)，其餘元素原樣(物件不複製，與輸入共用)；values非陣列時各欄位皆填入values，values為物件(typeof為object且非null)時各欄位各一份以lodash cloneDeep產生之複本(無原型物件之複本為一般物件，同修前)，values為函數時視為null(不執行、不複製)</p></td>
         </tr>
 
     
@@ -13936,7 +13939,7 @@ browserViewFromU8arr(u8a, 'application/pdf')</code></pre>
 
     
 
-    <h4 class="name" id=".bs2u8arr"><span class="type-signature type-signature-static">(static) </span>bs2u8arr<span class="signature">(bs, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Unit8Array|Object}</span></h4>
+    <h4 class="name" id=".bs2u8arr"><span class="type-signature type-signature-static">(static) </span>bs2u8arr<span class="signature">(str, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Uint8Array|Object}</span></h4>
 
     
 
@@ -13946,7 +13949,7 @@ browserViewFromU8arr(u8a, 'application/pdf')</code></pre>
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>BinaryString轉Unit8Array，BinaryString為UTF-16編碼</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>BinaryString轉Uint8Array，BinaryString為UTF-16編碼</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/bs2u8arr.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -14034,7 +14037,7 @@ browserViewFromU8arr(u8a, 'application/pdf')</code></pre>
 
         <tr>
             
-                <td class="name"><code>bs</code></td>
+                <td class="name"><code>str</code></td>
             
 
             <td class="type">
@@ -14199,7 +14202,7 @@ browserViewFromU8arr(u8a, 'application/pdf')</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳Unit8Array資料，輸入非有效字串時回傳空Unit8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+    <p>回傳Uint8Array資料，輸入非有效字串時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)</p>
 </div>
 
@@ -14211,7 +14214,7 @@ browserViewFromU8arr(u8a, 'application/pdf')</code></pre>
     </dt>
     <dd>
         
-<span class="param-type">Unit8Array</span>
+<span class="param-type">Uint8Array</span>
 |
 
 <span class="param-type">Object</span>
@@ -24674,7 +24677,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
     
 
-    <h4 class="name" id=".domCancelEvent"><span class="type-signature type-signature-static">(static) </span>domCancelEvent<span class="signature">(event)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domCancelEvent"><span class="type-signature type-signature-static">(static) </span>domCancelEvent<span class="signature">(e)</span><span class="type-signature"></span></h4>
 
     
 
@@ -24768,13 +24771,13 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
         <tr>
             
-                <td class="name"><code>event</code></td>
+                <td class="name"><code>e</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">HTMLEvent</span>
+<span class="param-type">Event</span>
 
 
 
@@ -25090,7 +25093,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，主要是提供給Diff2Html之設定物件，預設{}</p>
+            <td class="description last"><p>輸入設定物件，主要是提供給Diff2Html之設定物件(整份展開傳入，其中outputFormat若有給則覆蓋由format換算之值)，預設{}</p>
                 <h6>Properties</h6>
                 
 
@@ -25120,7 +25123,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
         <tr>
             
-                <td class="name"><code>fmt</code></td>
+                <td class="name"><code>format</code></td>
             
 
             <td class="type">
@@ -25148,12 +25151,12 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
             
                 <td class="default">
                 
-                    <code>''</code>
+                    <code>'side'</code>
                 
                 </td>
             
 
-            <td class="description last"><p>輸入比對展示模式字串，給予'side'為依照左右對應區塊展示差異，給予'line'為依照各行展示差異，預設'side'</p></td>
+            <td class="description last"><p>輸入比對展示模式字串，給予'side'為依照左右對應區塊展示差異，給予'line'為依照各行展示差異，其他值視為未給，預設'side'</p></td>
         </tr>
 
     
@@ -28895,7 +28898,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳物件，包含emit與off事件，emit可監聽dropIn、dropOut、getFiles，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列，並呼叫其內回調函數cb，方能繼續觸發dropOut事件</p>
+    <p>回傳事件物件(evem產生之EventEmitter)，以on監聽dropIn、dropOut、getFiles、error事件，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列，並呼叫其內回調函數cb，方能繼續觸發dropOut事件；其off為本函數覆寫之函數(不接受事件名)，呼叫後移除ele上之拖曳監聽、不再接收新之拖曳事件(呼叫前已排定之100ms判定與讀取中者，其對ev之派發維持原行為，見opt.onTrace說明)</p>
 </div>
 
 
@@ -29057,7 +29060,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入指定y座標浮點數，須基於顯示區(viewport)之x座標</p></td>
+            <td class="description last"><p>輸入指定y座標浮點數，須基於顯示區(viewport)之y座標</p></td>
         </tr>
 
     
@@ -30134,7 +30137,7 @@ pv.clear()</code></pre>
 
     
 
-    <h4 class="name" id=".domFinds"><span class="type-signature type-signature-static">(static) </span>domFinds<span class="signature">(query)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".domFinds"><span class="type-signature type-signature-static">(static) </span>domFinds<span class="signature">(query)</span><span class="type-signature"> &rarr; {NodeList}</span></h4>
 
     
 
@@ -30271,7 +30274,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳DOM元素陣列</p>
+    <p>回傳符合之DOM元素集合(document.querySelectorAll之NodeList，非Array，無符合時為空NodeList)</p>
 </div>
 
 
@@ -30282,7 +30285,7 @@ pv.clear()</code></pre>
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">NodeList</span>
 
 
 
@@ -30667,7 +30670,7 @@ pv.clear()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domGetBoudRectRefSelf.mjs.html">domGetBoudRectRefSelf.mjs</a>, <a href="domGetBoudRectRefSelf.mjs.html#line28">line 28</a>
+        <a href="domGetBoudRectRefSelf.mjs.html">domGetBoudRectRefSelf.mjs</a>, <a href="domGetBoudRectRefSelf.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -30761,7 +30764,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入座標點物件，主要需有DOM事件(event)的clientX與clientY，此為相對可視區域左上角的座標，單位皆為px</p></td>
+            <td class="description last"><p>輸入座標點物件，主要需有DOM事件(event)的clientX與clientY，此為相對可視區域左上角的座標，單位皆為px。p須為至少有一個自有可列舉鍵之一般物件(如{ clientX, clientY })，傳入事件物件本身(toString標籤非[object Object])回傳null。clientX與clientY須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、包裝物件、null、非數字字串皆非有效數字)，判定通過後以cdbl轉為數字再使用，依序(先clientX後clientY)各只讀取一次</p></td>
         </tr>
 
     
@@ -30811,7 +30814,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳物件，內含x、y、寬度w、高度h，單位皆為px</p>
+    <p>回傳物件，內含x、y、寬度w、高度h，單位皆為px。p非有效物件、p.clientX或p.clientY非有效數字、ele非元素、無法取得元素外框時回傳null</p>
 </div>
 
 
@@ -31870,7 +31873,7 @@ kind若需使用通用檔案，可使用'common'</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domIsClientXYIn.mjs.html">domIsClientXYIn.mjs</a>, <a href="domIsClientXYIn.mjs.html#line26">line 26</a>
+        <a href="domIsClientXYIn.mjs.html">domIsClientXYIn.mjs</a>, <a href="domIsClientXYIn.mjs.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -31917,7 +31920,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet p = {    clientX: 'from event',    clientY: 'from event',}let ele = document.querySelector('#id')let b = domIsClientXYIn(p.clientX, p.clientY, ele)// => true or false</code></pre>
+    <pre class="prettyprint"><code>need test in browserlet p = {    clientX: 'from event',    clientY: 'from event',}let ele = document.querySelector('#id')let b = domIsClientXYIn(p.clientX, p.clientY, ele)// => true or falseconsole.log(domIsClientXYIn('12.3', '45.6', ele))// => true or false (數字字串同數字)console.log(domIsClientXYIn(NaN, 10, ele))// => false</code></pre>
 
 
 
@@ -31954,6 +31957,9 @@ kind若需使用通用檔案，可使用'common'</p>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -31964,7 +31970,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
             
 
-            <td class="description last"><p>輸入點的clientX座標</p></td>
+            <td class="description last"><p>輸入點的clientX座標，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、包裝物件、null、非數字字串皆非有效數字)，判定通過後以cdbl轉為數字再使用；非有效數字則回傳false</p></td>
         </tr>
 
     
@@ -31978,6 +31984,9 @@ kind若需使用通用檔案，可使用'common'</p>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -31988,7 +31997,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
             
 
-            <td class="description last"><p>輸入點的clientY座標</p></td>
+            <td class="description last"><p>輸入點的clientY座標，規則同clientX</p></td>
         </tr>
 
     
@@ -32012,7 +32021,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
             
 
-            <td class="description last"><p>輸入元素</p></td>
+            <td class="description last"><p>輸入元素，非元素則回傳false</p></td>
         </tr>
 
     
@@ -32038,7 +32047,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
         
 <div class="param-desc">
-    <p>回傳是否位於DOM元素內布林值</p>
+    <p>回傳是否位於DOM元素內布林值，位於元素外框內(含邊界)為true，其餘(含clientX、clientY非有效數字，ele非元素，無法取得元素外框)皆為false</p>
 </div>
 
 
@@ -49833,9 +49842,6 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
             
                 
 <span class="param-type">Object</span>
-|
-
-<span class="param-type">String</span>
 
 
 
@@ -49862,7 +49868,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入設定物件或字串，可給予writeFileSync設定物件，或是編碼字串(例如'utf8')，預設{}</p>
+            <td class="description last"><p>輸入寫入設定物件，只讀取其encoding鍵；非物件(含編碼字串簡寫，如'utf8')不被採用，編碼為預設'utf8'，預設{}</p>
                 <h6>Properties</h6>
                 
 
@@ -49965,7 +49971,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入模式數字，預設0o666</p></td>
+            <td class="description last"><p>目前未實作(給了亦不傳給writeFileSync)，預設0o666</p></td>
         </tr>
 
     
@@ -50005,7 +50011,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入標誌字串，預設'w'</p></td>
+            <td class="description last"><p>目前未實作(給了亦不傳給writeFileSync)，預設'w'</p></td>
         </tr>
 
     
@@ -50255,9 +50261,6 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
             
                 
 <span class="param-type">Object</span>
-|
-
-<span class="param-type">String</span>
 
 
 
@@ -50284,7 +50287,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入設定物件或字串，可給予writeFileSync設定物件，或是編碼字串(例如'utf8')，預設{}</p>
+            <td class="description last"><p>輸入寫入設定物件，只讀取其fs與encoding鍵；非物件(含編碼字串簡寫，如'utf8')不被採用，編碼為預設'utf8'，預設{}</p>
                 <h6>Properties</h6>
                 
 
@@ -50387,7 +50390,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入模式數字，預設0o666</p></td>
+            <td class="description last"><p>目前未實作(給了亦不傳給writeFileSync)，預設0o666</p></td>
         </tr>
 
     
@@ -50427,7 +50430,7 @@ idig屬選填參數，須為0~100之有效整數(iseint，use為'digits')，不�
                 </td>
             
 
-            <td class="description last"><p>輸入寫入標誌字串，預設'w'</p></td>
+            <td class="description last"><p>目前未實作(給了亦不傳給writeFileSync)，預設'w'</p></td>
         </tr>
 
     
@@ -68385,7 +68388,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入是否針對檔案計算HASH值，預設false</p></td>
+            <td class="description last"><p>輸入是否針對資料夾計算HASH值(資料夾之HASH值同fsGetFolderBasicHash)，預設false</p></td>
         </tr>
 
     
@@ -68875,7 +68878,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入是否針對檔案計算HASH值，預設false</p></td>
+            <td class="description last"><p>輸入是否針對資料夾計算HASH值(資料夾之HASH值同fsGetFolderBasicHashCore)，預設false</p></td>
         </tr>
 
     
@@ -72846,7 +72849,7 @@ console.log(genID(Infinity).length)
             <td class="type">
             
                 
-<span class="param-type">Unit8Array</span>
+<span class="param-type">Uint8Array</span>
 |
 
 <span class="param-type">Buffer</span>
@@ -82201,7 +82204,7 @@ importResources(pathItems)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="interp1.mjs.html">interp1.mjs</a>, <a href="interp1.mjs.html#line750">line 750</a>
+        <a href="interp1.mjs.html">interp1.mjs</a>, <a href="interp1.mjs.html#line752">line 752</a>
     </li></ul></dd>
     
 
@@ -82550,6 +82553,9 @@ importResources(pathItems)
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -82574,7 +82580,7 @@ importResources(pathItems)
                 </td>
             
 
-            <td class="description last"><p>輸入若mode='stairs'，更改x範圍下限值，預設為undefined</p></td>
+            <td class="description last"><p>輸入若mode='stairs'，更改x範圍下限值，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值，判定通過後以cdbl轉為數字再使用；NaN、Infinity、'0x10'、包裝物件、null、非數字字串皆非有效數字，視為未給)，預設為undefined。須小於等於ps之最小x，否則回傳{ err: 'invalid opt.xMin: must be &lt;= the smallest x of ps' }(不帶值)</p></td>
         </tr>
 
     
@@ -82588,6 +82594,9 @@ importResources(pathItems)
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -82612,7 +82621,7 @@ importResources(pathItems)
                 </td>
             
 
-            <td class="description last"><p>輸入若mode='stairs'，更改x範圍上限值，預設為undefined</p></td>
+            <td class="description last"><p>輸入若mode='stairs'，更改x範圍上限值，規則同opt.xMin。須大於等於ps之最大x，否則回傳{ err: 'invalid opt.xMax: must be &gt;= the largest x of ps' }(不帶值)</p></td>
         </tr>
 
     
@@ -104324,7 +104333,7 @@ console.log(obj2b64(undefined, { returnWithStateAndMsg: true }))
 
     
 
-    <h4 class="name" id=".obj2stru8arr"><span class="type-signature type-signature-static">(static) </span>obj2stru8arr<span class="signature">(data, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".obj2stru8arr"><span class="type-signature type-signature-static">(static) </span>obj2stru8arr<span class="signature">(o, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -104334,8 +104343,8 @@ console.log(obj2b64(undefined, { returnWithStateAndMsg: true }))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>物件資料轉字串與Unit8Array，物件內可含Unit8Array數據，適用於大檔。</p>
-<p>通過JSON序列化物件內非Unit8Array數據成為字串，另分拆Unit8Array數據出來回傳，兩者間通過指標關聯，主要為避免序列化大型Unit8Array數據造成效能或記憶體不足問題</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>物件資料轉字串與Uint8Array，物件內可含Uint8Array數據，適用於大檔。</p>
+<p>通過JSON序列化物件內非Uint8Array數據成為字串，另分拆Uint8Array數據出來回傳，兩者間通過指標關聯，主要為避免序列化大型Uint8Array數據造成效能或記憶體不足問題</p>
 <p>因以JSON.stringify序列化，下列型別會靜默失真且不會拋錯，須由呼叫端自行避免：NaN與Infinity轉為null；值為undefined、函數或Symbol者該鍵會消失(若為唯一鍵則results為'{}')；Map、Set、RegExp轉為{}；Date轉為ISO字串；稀疏陣列之空洞補為null；超出Number精度之大整數會失精。另Error物件(含子類別、DOMException、跨realm之Error)由本函數以toString轉為字串(toString為Object預設或不可呼叫者以Error.prototype.toString之語意得'名稱: 訊息'，其餘欄位不保留)；未繼承Error之物件(含恰帶字串name與message之資料類別或自訂錯誤類別)照一般物件序列化，保留其可列舉之自有欄位</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.mjs">Github</a></p></li></ul></dd>
     
@@ -104447,7 +104456,7 @@ console.log(obj2stru8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 
         <tr>
             
-                <td class="name"><code>data</code></td>
+                <td class="name"><code>o</code></td>
             
 
             <td class="type">
@@ -104615,7 +104624,7 @@ console.log(obj2stru8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 
         
 <div class="param-desc">
-    <p>回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Unit8Array數據；二進位數據於results內以'[BlazeForUint8Array]::<i>'一類標記代表，應用字串若恰與標記格式完整相同則會被前置'[BlazeForPreventEscape]'跳脫，供解碼端還原時區分；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+    <p>回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Uint8Array數據；二進位數據於results內以'[BlazeForUint8Array]::<i>'一類標記代表，應用字串若恰與標記格式完整相同則會被前置'[BlazeForPreventEscape]'跳脫，供解碼端還原時區分；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳{ results: '', binarys: [] }；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)</p>
 </div>
 
@@ -105152,7 +105161,7 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 
     
 
-    <h4 class="name" id=".objSortByKeys"><span class="type-signature type-signature-static">(static) </span>objSortByKeys<span class="signature">(obj, fun)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    <h4 class="name" id=".objSortByKeys"><span class="type-signature type-signature-static">(static) </span>objSortByKeys<span class="signature">(obj, keys, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -105162,14 +105171,15 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>對物件內各鍵進行排序，通過傳入指定鍵值陣列，可基於物件各鍵位於指定鍵值陣列之位置進行排序</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>對物件內各鍵進行排序，通過傳入指定鍵值陣列，將指定鍵依其於指定鍵值陣列之順序放前，未列於指定鍵值陣列之鍵維持原順序放後</p>
+<p>指定鍵值陣列為[]或內含物件不存在之鍵皆為合法，不存在之鍵略過；元素為字串或數字(視為其字串)時才可能對應鍵，其他型別之元素略過；指定鍵重複時依第一次出現之位置，各鍵只出現一次；只對應物件自有可列舉之字串鍵，不含繼承、不可列舉者與Symbol鍵(Symbol鍵不會出現於回傳物件，同修前)；回傳新物件，值原樣放入(不複製)，不修改輸入。注意：JS規定陣列索引樣之整數字串鍵(0至4294967294，如'1'、'2')於物件內恆依數值遞增排在其他鍵之前，不受本函數之排序影響</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/objSortByKeys.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="objSortByKeys.mjs.html">objSortByKeys.mjs</a>, <a href="objSortByKeys.mjs.html#line39">line 39</a>
+        <a href="objSortByKeys.mjs.html">objSortByKeys.mjs</a>, <a href="objSortByKeys.mjs.html#line62">line 62</a>
     </li></ul></dd>
     
 
@@ -105216,7 +105226,46 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let obj1 = {    'x2': 2,    'x1': 1,    'x3': 3,}let arr1 = ['x1', 'x2', 'x3']let robj1 = objSortByKeys(obj1, arr1)console.log(robj1)// => { x1: 1, x2: 2, x3: 3 }let obj2 = {    'x2': 2,    'x111': 1,    'x33': 3,}let arr2 = ['x111', 'x2', 'x33']let robj2 = objSortByKeys(obj2, arr2)console.log(robj2)// => { x111: 1, x2: 2, x33: 3 }</code></pre>
+    <pre class="prettyprint"><code>let obj1 = {
+    'x2': 2,
+    'x1': 1,
+    'x3': 3,
+}
+let arr1 = ['x1', 'x2', 'x3']
+let robj1 = objSortByKeys(obj1, arr1)
+console.log(robj1)
+// => { x1: 1, x2: 2, x3: 3 }
+
+let obj2 = {
+    'x2': 2,
+    'x111': 1,
+    'x33': 3,
+}
+let arr2 = ['x111', 'x2', 'x33']
+let robj2 = objSortByKeys(obj2, arr2)
+console.log(robj2)
+// => { x111: 1, x2: 2, x33: 3 }
+
+let obj3 = { b: 1, a: 2, c: 3 }
+console.log(objSortByKeys(obj3, ['a']))
+// => { a: 2, b: 1, c: 3 } (指定鍵放前, 其餘維持原順序放後)
+
+console.log(objSortByKeys(obj3, ['c', 'a'], { onlyKeys: true }))
+// => { c: 3, a: 2 } (只保留指定鍵)
+
+console.log(objSortByKeys(obj3, []))
+// => { b: 1, a: 2, c: 3 } (空陣列合法, 維持原順序)
+
+console.log(objSortByKeys(obj3, ['x', 'a']))
+// => { a: 2, b: 1, c: 3 } (不存在之鍵略過)
+
+try {
+    objSortByKeys('abc', ['a'])
+}
+catch (err) {
+    console.log(err.message)
+}
+// => invalid obj: must be an object</code></pre>
 
 
 
@@ -105234,7 +105283,11 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -105260,23 +105313,35 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入物件資料</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入物件資料，必須參數，須為物件(Object.prototype.toString為[object Object]且非真陣列)，陣列、函數、字串、null、undefined等非物件throw Error('invalid obj: must be an object')，訊息不帶輸入值；空物件{}為合法，回傳{}</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>fun</code></td>
+                <td class="name"><code>keys</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type">Array</span>
 
 
 
@@ -105284,10 +105349,132 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
             
 
-            <td class="description last"><p>輸入回調的排序函數，將傳入(v,k)代表各物件的值與鍵，回傳排序用的值，可為數字或字串</p></td>
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入指定鍵值陣列，必須參數，須為真陣列(Array.isArray)，非陣列(含以Symbol.toStringTag偽稱Array之物件)throw Error('invalid keys: must be an array')，訊息不帶輸入值；空陣列[]為合法</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opt</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入設定物件，預設{}；非一般物件(含函數、陣列)視為未給</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>onlyKeys</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>false</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入是否只保留列於keys且存在於obj之鍵(依keys之順序)，預設false；只有布林true生效，其他值(含非布林、包裝物件)視為未給(false)，不報錯</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -105307,13 +105494,43 @@ console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>obj非物件throw Error('invalid obj: must be an object')；keys非陣列throw Error('invalid keys: must be an array')(先檢obj)</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
 
         
 <div class="param-desc">
-    <p>回傳排序後物件</p>
+    <p>回傳排序後物件(新物件)；onlyKeys為false時含obj全部之自有可列舉字串鍵，指定鍵依序放前、其餘維持原順序放後；onlyKeys為true時只含指定鍵</p>
 </div>
 
 
@@ -110406,7 +110623,7 @@ rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, �
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="pseudoRandomIntsNdpRange.mjs.html">pseudoRandomIntsNdpRange.mjs</a>, <a href="pseudoRandomIntsNdpRange.mjs.html#line126">line 126</a>
+        <a href="pseudoRandomIntsNdpRange.mjs.html">pseudoRandomIntsNdpRange.mjs</a>, <a href="pseudoRandomIntsNdpRange.mjs.html#line127">line 127</a>
     </li></ul></dd>
     
 
@@ -110453,7 +110670,7 @@ rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, �
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>let rsrs = pseudoRandomIntsNdpRange()console.log('pseudoRandomIntsNdpRange', rs)// => pseudoRandomIntsNdpRange [ 1 ] (預設範圍為0至100)rs = pseudoRandomIntsNdpRange(0, 100)console.log('pseudoRandomIntsNdpRange(0, 100)', rs)// => pseudoRandomIntsNdpRange(0, 100) [ 85 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同rs = pseudoRandomIntsNdpRange(0, 100, 2)console.log('pseudoRandomIntsNdpRange(0, 100)', rs)// => pseudoRandomIntsNdpRange(0, 100) [ 59, 20 ]rs = pseudoRandomIntsNdpRange(123, 4567)console.log('pseudoRandomIntsNdpRange(123, 4567)', rs)// => pseudoRandomIntsNdpRange(123, 4567) [ 3951 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 123)console.log('pseudoRandomIntsNdpRange(null, null, 2, 123)', rs)// => pseudoRandomIntsNdpRange(null, null, 2, 123) [ 94, 76 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 12.3)console.log('pseudoRandomIntsNdpRange(null, null, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(null, null, 2, 12.3) [ 69, 82 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'def')console.log('pseudoRandomIntsNdpRange(null, null, 2, "def")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "def") [ 64, 34 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH01S123')console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH01S123")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "BH01S123") [ 0, 26 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123") [ 71, 77 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 123)console.log('pseudoRandomIntsNdpRange(0, 100, 2, 123)', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, 123) [ 94, 76 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 12.3)console.log('pseudoRandomIntsNdpRange(0, 100, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, 12.3) [ 69, 82 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'def')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "def")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "def") [ 64, 34 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123") [ 71, 77 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 123)console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 123)', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, 123) [ 2528, 3854 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, 12.3) [ 1818, 4334 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'def')console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "def")', rs)// => pseudoRandomIntsNdpRange(123, 456.7, 2, "def") [ 983, 3133 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH01S123')console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123")', rs)// => pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123") [ 2866, 183 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123") [ 3888, 249 ]</code></pre>
+    <pre class="prettyprint"><code>let rsrs = pseudoRandomIntsNdpRange()console.log('pseudoRandomIntsNdpRange', rs)// => pseudoRandomIntsNdpRange [ 1 ] (預設範圍為0至100)rs = pseudoRandomIntsNdpRange(0, 100)console.log('pseudoRandomIntsNdpRange(0, 100)', rs)// => pseudoRandomIntsNdpRange(0, 100) [ 85 ] //因第2次呼叫故值會不同, 但維持呼叫次數順序時重複執行仍會相同rs = pseudoRandomIntsNdpRange(0, 100, 2)console.log('pseudoRandomIntsNdpRange(0, 100)', rs)// => pseudoRandomIntsNdpRange(0, 100) [ 59, 20 ]rs = pseudoRandomIntsNdpRange(123, 4567)console.log('pseudoRandomIntsNdpRange(123, 4567)', rs)// => pseudoRandomIntsNdpRange(123, 4567) [ 4074 ] (值落於[123,4567])rs = pseudoRandomIntsNdpRange(null, null, 2, 123)console.log('pseudoRandomIntsNdpRange(null, null, 2, 123)', rs)// => pseudoRandomIntsNdpRange(null, null, 2, 123) [ 94, 76 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 12.3)console.log('pseudoRandomIntsNdpRange(null, null, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(null, null, 2, 12.3) [ 69, 82 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'abc')console.log('pseudoRandomIntsNdpRange(null, null, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'def')console.log('pseudoRandomIntsNdpRange(null, null, 2, "def")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "def") [ 64, 34 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH01S123')console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH01S123")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "BH01S123") [ 0, 26 ]rs = pseudoRandomIntsNdpRange(null, null, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(null, null, 2, "BH-01:S-123") [ 71, 77 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 123)console.log('pseudoRandomIntsNdpRange(0, 100, 2, 123)', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, 123) [ 94, 76 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 12.3)console.log('pseudoRandomIntsNdpRange(0, 100, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, 12.3) [ 69, 82 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'abc')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "abc") [ 20, 28 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'def')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "def")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "def") [ 64, 34 ]rs = pseudoRandomIntsNdpRange(0, 100, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(0, 100, 2, "BH-01:S-123") [ 71, 77 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 123)console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 123)', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, 123) [ 2651, 3977 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, 12.3) [ 1941, 4457 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, "abc") [ 601, 3426 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "abc")', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, "abc") [ 601, 3426 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'def')console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "def")', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, "def") [ 1106, 3256 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH01S123')console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "BH01S123")', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, "BH01S123") [ 2989, 306 ]rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH-01:S-123')console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "BH-01:S-123")', rs)// => pseudoRandomIntsNdpRange(123, 4567, 2, "BH-01:S-123") [ 4011, 372 ]</code></pre>
 
 
 
@@ -110711,7 +110928,7 @@ rs亦可為鍵值物件，依其自有可列舉字串鍵展開，fn收到(值, �
 
         
 <div class="param-desc">
-    <p>回傳不重複之隨機整數陣列(長度為n與vend-vstart+1之較小者)；注意：現行實作回傳0~(vend-vstart)之索引，未加vstart偏移(既有行為，與randomIntsNdpRange不同)</p>
+    <p>回傳位於指定範圍[vstart,vend]內不重複之偽隨機整數陣列(長度為n與vend-vstart+1之較小者)；vstart為0時與同seed之修前結果相同，vstart不為0時各值為同seed、vstart為0(範圍0至vend-vstart)之結果加上vstart(seed為'start1'時每次呼叫自增，不在此限)</p>
 </div>
 
 
@@ -123096,7 +123313,7 @@ console.log(strright('test中文', -1))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>由字串與Unit8Array陣列轉物件，為對obj2stru8arr序列化之數據進行反序列化</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>由字串與Uint8Array陣列轉物件，為對obj2stru8arr序列化之數據進行反序列化</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/stru8arr2obj.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -123249,7 +123466,7 @@ console.log(strright('test中文', -1))
                 </td>
             
 
-            <td class="description last"><p>輸入Unit8Array陣列</p></td>
+            <td class="description last"><p>輸入Uint8Array陣列</p></td>
         </tr>
 
     
@@ -129037,7 +129254,7 @@ console.log(strright('test中文', -1))
 
     
 
-    <h4 class="name" id=".treeToFilepath"><span class="type-signature type-signature-static">(static) </span>treeToFilepath<span class="signature">(treeItems, opt<span class="signature-attributes">opt</span>, delimiter<span class="signature-attributes">opt</span>, bindRoot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".treeToFilepath"><span class="type-signature type-signature-static">(static) </span>treeToFilepath<span class="signature">(data, opt<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -129054,7 +129271,7 @@ console.log(strright('test中文', -1))
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="treeToFilepath.mjs.html">treeToFilepath.mjs</a>, <a href="treeToFilepath.mjs.html#line240">line 240</a>
+        <a href="treeToFilepath.mjs.html">treeToFilepath.mjs</a>, <a href="treeToFilepath.mjs.html#line241">line 241</a>
     </li></ul></dd>
     
 
@@ -129135,7 +129352,7 @@ console.log(strright('test中文', -1))
 
         <tr>
             
-                <td class="name"><code>treeItems</code></td>
+                <td class="name"><code>data</code></td>
             
 
             <td class="type">
@@ -129164,7 +129381,7 @@ console.log(strright('test中文', -1))
                 </td>
             
 
-            <td class="description last"><p>輸入樹狀物件陣列，每個須提供pathInfors、_type鍵值，其中pathInfors為各所屬(含自己)階層節點資訊，_type需為'folder'或'file'，詳見filepathToTree轉出treeItems</p></td>
+            <td class="description last"><p>輸入樹狀物件陣列(filepathToTree轉出之treeItems)，必須參數，須為真陣列(Array.isArray)，非陣列(含以Symbol.toStringTag偽稱Array之物件)throw Error('invalid data: must be an array')，訊息不帶輸入值；空陣列[]為合法，回傳[]；陣列元素須為物件，元素非物件throw Error('invalid data[&lt;索引&gt;]: must be an object')並指出第幾個，訊息不帶輸入值；無有效_type之物件節點(如{})不轉出，照舊略過。有效節點須提供pathInfors、_type鍵值，其中pathInfors為各所屬(含自己)階層節點資訊，_type需為'folder'或'file'，詳見filepathToTree轉出treeItems</p></td>
         </tr>
 
     
@@ -129204,9 +129421,32 @@ console.log(strright('test中文', -1))
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，預設{}</p></td>
-        </tr>
+            <td class="description last"><p>輸入設定物件，預設{}</p>
+                <h6>Properties</h6>
+                
 
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
     
 
         <tr>
@@ -129291,6 +129531,12 @@ console.log(strright('test中文', -1))
     </tbody>
 </table>
 
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -129304,6 +129550,37 @@ console.log(strright('test中文', -1))
 
 
 
+
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>data非陣列throw Error('invalid data: must be an array')；data之元素非物件throw Error('invalid data[&lt;索引&gt;]: must be an object')(依序檢查，先出現者)</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
@@ -130830,7 +131107,7 @@ console.log(u8arr2b64('abc', { returnWithStateAndMsg: true }))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Unit8Array資料轉Blob資料</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>Uint8Array資料轉Blob資料</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2blob.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -130932,7 +131209,7 @@ console.log(u8arr2blob('abc', { returnWithStateAndMsg: true }))
             <td class="type">
             
                 
-<span class="param-type">Unit8Array</span>
+<span class="param-type">Uint8Array</span>
 
 
 
@@ -130955,7 +131232,7 @@ console.log(u8arr2blob('abc', { returnWithStateAndMsg: true }))
                 </td>
             
 
-            <td class="description last"><p>輸入Unit8Array資料</p></td>
+            <td class="description last"><p>輸入Uint8Array資料</p></td>
         </tr>
 
     
@@ -131091,7 +131368,7 @@ console.log(u8arr2blob('abc', { returnWithStateAndMsg: true }))
 
         
 <div class="param-desc">
-    <p>回傳Blob資料，輸入非Unit8Array時回傳空Blob；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+    <p>回傳Blob資料，輸入非Uint8Array時回傳空Blob；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Blob(size為0)，而空Blob(size為0)亦為合法輸入之結果(如u8arr2blob(new Uint8Array(0)))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)</p>
 </div>
 
@@ -131132,7 +131409,7 @@ console.log(u8arr2blob('abc', { returnWithStateAndMsg: true }))
 <dl class="details">
     
     <dt class="tag-description">Description:</dt>
-    <dd class="tag-description"><ul class="dummy"><li><p>Unit8Array轉BinaryString，BinaryString為UTF-16編碼</p>
+    <dd class="tag-description"><ul class="dummy"><li><p>Uint8Array轉BinaryString，BinaryString為UTF-16編碼</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2bs.test.mjs">Github</a></p></li></ul></dd>
     
 
@@ -131230,7 +131507,7 @@ console.log(u8arr2bs('abc', { returnWithStateAndMsg: true }))
             <td class="type">
             
                 
-<span class="param-type">Unit8Array</span>
+<span class="param-type">Uint8Array</span>
 
 
 
@@ -131253,7 +131530,7 @@ console.log(u8arr2bs('abc', { returnWithStateAndMsg: true }))
                 </td>
             
 
-            <td class="description last"><p>輸入Unit8Array資料</p></td>
+            <td class="description last"><p>輸入Uint8Array資料</p></td>
         </tr>
 
     
@@ -131389,7 +131666,7 @@ console.log(u8arr2bs('abc', { returnWithStateAndMsg: true }))
 
         
 <div class="param-desc">
-    <p>回傳BinaryString字串，輸入非Unit8Array時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+    <p>回傳BinaryString字串，輸入非Uint8Array時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空字串''，而空字串''亦為合法輸入之結果(如u8arr2bs(new Uint8Array(0)))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)</p>
 </div>
 
@@ -133099,7 +133376,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sun Nov 15 2026 21:32:58 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 16 2026 12:43:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

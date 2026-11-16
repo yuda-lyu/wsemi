@@ -10,12 +10,12 @@ import isab from './isab.mjs'
 
 
 /**
- * 由字串與Unit8Array陣列轉物件，為對obj2stru8arr序列化之數據進行反序列化
+ * 由字串與Uint8Array陣列轉物件，為對obj2stru8arr序列化之數據進行反序列化
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/stru8arr2obj.test.mjs Github}
  * @memberOf wsemi
  * @param {String} data.results 輸入待反序列化字串，其內二進位數據之標記為'[BlazeForUint8Array]::<i>'、'[BlazeForUint16Array]::<i>'、'[BlazeForArrayBuffer]::<i>'，須完整匹配整個字串值才視為二進位參照，故應用字串內夾雜標記文字者不受影響；恰與標記格式完整相同之應用字串由編碼端前置'[BlazeForPreventEscape]'跳脫，此處會剝除一層還原；標記格式正確但索引越界者視為壞封包。注意不支援還原舊版之'[Uint8Array]::<i>'、'[Uint16Array]::<i>'、'[ArrayBuffer]::<i>'標記
- * @param {Array} data.binarys 輸入Unit8Array陣列
+ * @param {Array} data.binarys 輸入Uint8Array陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {*} 回傳任意物件，輸入無效或反序列化失敗(如results非合法JSON、同一二進位索引被引用多次)時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件

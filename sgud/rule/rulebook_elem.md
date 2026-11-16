@@ -12,7 +12,7 @@
    - 逐列映射與挑選類(`ltdtmapping`、`ltdtpick`)非物件列以 `{}` 佔位、列數不變;`arrFilterByKeywords` 非字串元素為 `{ hasKeyword: false, weight: 0 }`、結果筆數恆等於輸入長度.
 3. **鍵一律只看自有可列舉字串鍵**:取值以 `Object.prototype.propertyIsEnumerable.call(o, k)` 判定後 `o[k]`,不以 lodash `get` 解析路徑(`'a.b'`、`'a[0]'` 為欄位名),不取繼承之鍵;迭代以 `Object.keys`.鍵 `'__proto__'` 為自有欄位時,寫入結果一律經 `src/_setOwnKey.mjs`(defineProperty 為自有資料屬性,不改原型).適用:`dtmapping`、`ltdtmapping`、`dtpick`、`ltdtpick`、`getltdtkeys`、`ltdtmerge`(來源列)、`ltdtDiffByKey`(主鍵與 `infor`)、`ltdt2vrtsable`(欄與 `value`)、`composeToTree`(`id`／`parentId`)、`filepathToTree`(`path`／`type`)、`iseobj`(至少一個自有可列舉字串鍵).
 4. **欄位名之正規化**(`arr2dt`、`dtmapping`、`ltdtmapping` 之 `keys`;單一擁有者 `src/_normKey.mjs`):`''`、`null`、`undefined`(含空洞)、物件(含陣列、包裝物件)、函數、Symbol 略過;數字(與布林、BigInt)以 `String()` 為欄位名(數字依裁定,布林與 BigInt 同修前).`arr2dt` 略過欄位名時連同其對應之值,其餘配對位置不變、重複者後者覆蓋;`dtmapping` 重複只算一次;`ltdtmapping` 之 `keys` 元素全被略過時視同 keys 無效回 `[]`.
-5. **函數值作為填充值或預設值視為 `null`**(不執行、不複製):`arr2dt` 之 `values`、`dtmapping`／`ltdtmapping` 之 `def`;物件之填充值／預設值每個欄位各一份複本(`cloneDeep`).
+5. **函數值作為填充值或預設值視為 `null`**(不執行、不複製):`arr2dt` 之 `values`(整體為函數,及值陣列之函數元素〔第 492 項 ws492b,2026-11-16 補;非函數之元素原樣〕)、`dtmapping`／`ltdtmapping` 之 `def`;物件之填充值／預設值每個欄位各一份複本(`cloneDeep`).
 6. **長度不符而回空結果者之 `opt.debug` 提示**(`arr2dt` 之 values 與 keys、`ltdtmerge` 之 ltdt2 與 ltdt1):`opt.debug === true` 時經 `optVal.readDbg(opt)` 取 `funLog`,以 `_numOpt.warnOnce` 輸出(出口 `funLog(msg, { fn, reason: 'length', key })` 或 `console.warn`;同原因每行程一次,去重鍵 `<fn>|length|<key>`);訊息固定詞彙,只含兩者長度,不含值;只在長度不符時讀一次 opt(V11).
 7. **錯誤訊息**:`invalid <名稱>[<索引>](.<欄>): must …`,英文、小寫開頭、不含輸入值(路徑、主鍵值、欄位名皆不帶);拋錯前不輸出任何 console.
 
@@ -22,7 +22,7 @@
 |---|---|---|
 | 〈一〉`genClockTZ().formatTime` | 非「至少 12 位數字開頭之原始字串」回 `''`(C3,含數字型戳記) | `genClockTZ.mjs` |
 | 〈二〉`arrFilterByKeywords` | 非字串元素不匹配(String 物件視同字串)、筆數恆等於 arr;keywords 無效回同筆數全 `{false,0}`;半形與全形空白分隔;空白關鍵字先剔除、重複去重;`-x` 只排除含者、其餘依一般關鍵字,只有排除者時不含者權重 1;`+a +b` 全部須含;`+a b` 含全部必要即命中、權重只依一般關鍵字(n、k 只計一般,可為 0;主控 2026-11-14 確認維持),無一般時權重 1;陣列內數字與布林以字串形式為一般關鍵字(不解析前綴),null 等略過 | `arrFilterByKeywords.mjs` |
-| 〈三〉`arr2dt` | 規則 4、5;陣列 values(含 `['']`、`[null]`、`[{}]`、`[]`)一律為值陣列;長度不符 `{}`＋規則 6;新增第 3 參數 `opt` | `arr2dt.mjs` |
+| 〈三〉`arr2dt` | 規則 4、5;陣列 values(含 `['']`、`[null]`、`[{}]`、`[]`)一律為值陣列,值陣列之函數元素視為 `null`(ws492b);長度不符 `{}`＋規則 6;新增第 3 參數 `opt` | `arr2dt.mjs` |
 | 〈四〉`dtmapping` | 規則 3、4、5;值為 `undefined` 填 def;不支援 Map(非 `isobj`) | `dtmapping.mjs` |
 | 〈五〉`ltdtmapping` | 逐列 `dtmapping`;`[{}]`→`[{a:''}]`、`[null]`→`[{}]` | `ltdtmapping.mjs` |
 | 〈六〉`getltdtkeys` | 只有非陣列、非函數之物件列貢獻(字串、String 物件、陣列、TypedArray／DataView、函數不貢獻);`Set` 累積(20000 個相異鍵由約 12 秒降至毫秒級,結果與順序不變) | `getltdtkeys.mjs` |

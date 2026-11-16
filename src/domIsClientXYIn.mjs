@@ -1,4 +1,5 @@
-import isNumber from 'lodash-es/isNumber.js'
+import isenum from './isenum.mjs'
+import cdbl from './cdbl.mjs'
 import isEle from './isEle.mjs'
 
 
@@ -7,10 +8,10 @@ import isEle from './isEle.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domIsClientXYIn.test.mjs Github}
  * @memberOf wsemi
- * @param {Number} clientX 輸入點的clientX座標
- * @param {Number} clientY 輸入點的clientY座標
- * @param {HTMLElement} ele 輸入元素
- * @returns {Boolean} 回傳是否位於DOM元素內布林值
+ * @param {Number|String} clientX 輸入點的clientX座標，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、包裝物件、null、非數字字串皆非有效數字)，判定通過後以cdbl轉為數字再使用；非有效數字則回傳false
+ * @param {Number|String} clientY 輸入點的clientY座標，規則同clientX
+ * @param {HTMLElement} ele 輸入元素，非元素則回傳false
+ * @returns {Boolean} 回傳是否位於DOM元素內布林值，位於元素外框內(含邊界)為true，其餘(含clientX、clientY非有效數字，ele非元素，無法取得元素外框)皆為false
  * @example
  * need test in browser
  *
@@ -22,22 +23,29 @@ import isEle from './isEle.mjs'
  * let b = domIsClientXYIn(p.clientX, p.clientY, ele)
  * // => true or false
  *
+ * console.log(domIsClientXYIn('12.3', '45.6', ele))
+ * // => true or false (數字字串同數字)
+ *
+ * console.log(domIsClientXYIn(NaN, 10, ele))
+ * // => false
+ *
  */
 function domIsClientXYIn(clientX, clientY, ele) {
 
     //check
-    if (!isNumber(clientX)) {
-        console.log('clientX is not a number', clientX)
-        return
+    if (!isenum(clientX)) {
+        return false
     }
-    if (!isNumber(clientY)) {
-        console.log('clientY is not a number', clientY)
-        return
+    if (!isenum(clientY)) {
+        return false
     }
     if (!isEle(ele)) {
-        console.log('ele is not a HTMLElement', ele)
-        return
+        return false
     }
+
+    //cdbl, 檢測之值即使用之值
+    clientX = cdbl(clientX)
+    clientY = cdbl(clientY)
 
     //calc rt
     let rt
@@ -46,7 +54,7 @@ function domIsClientXYIn(clientX, clientY, ele) {
     }
     catch (err) {
         console.log('invalid ele for getBoundingClientRect', err)
-        return
+        return false
     }
 
     //r

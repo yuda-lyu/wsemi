@@ -73,9 +73,6 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
     let K = kind === 'real' ? REAL : INT
     let defEnd = kind === 'real' ? 1 : 100
 
-    //idx, pseudoRandomIntsNdpRange既有行為: 回傳0~(vend-vstart)之索引(不含vstart偏移), 非本批範圍
-    let idx = name === 'pseudoRandomIntsNdpRange'
-
     //vstart: 以極小vend取出實際採用之vstart
     let validStart = kind === 'real'
         ? [...VALID_STR, ['0', 0, 0], ['-5', -5, -5], ['1.5', 1.5, 1.5], ['1e300', 1e300, 1e300], ['Number.MAX_VALUE', Number.MAX_VALUE, Number.MAX_VALUE]]
@@ -189,10 +186,9 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
 
         it('should accept vstart equal to vend', function() {
             // vstart等於vend不拋錯: 實數系值域[vstart,vend)寬度0故回傳vstart, 整數系回傳vstart
-            //  (pseudoRandomIntsNdpRange既有行為為回傳0~(vend-vstart)之索引而不含vstart偏移, 非本批範圍, 見result.md〈發現〉)
             let r = fn(3, 3)
             let v = arr ? r[0] : r
-            assert.strict.deepStrictEqual(v, idx ? 0 : 3)
+            assert.strict.deepStrictEqual(v, 3)
         })
 
         it('should throw for unexpected bounds (formerly the defaults were used) and give values in the default range only when the bounds are not given', function() {
@@ -214,7 +210,7 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
         })
 
         it('should use numeric strings (trimmed) for the bounds', function() {
-            // K4: 數字字串去頭尾空白後取值; 實數系[2,3)、整數系[2,4] (pseudoRandomIntsNdpRange為索引0~2)
+            // K4: 數字字串去頭尾空白後取值; 實數系[2,3)、整數系[2,4]
             for (let i = 0; i < 100; i++) {
                 let r = kind === 'real' ? fn(' 2 ', '3') : fn(' 2 ', '4')
                 let vs = arr ? r : [r]
@@ -223,7 +219,7 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
                         assert.ok(x >= 2 && x < 3, String(x))
                     }
                     else {
-                        assert.ok(Number.isInteger(x) && x >= (idx ? 0 : 2) && x <= (idx ? 2 : 4), String(x))
+                        assert.ok(Number.isInteger(x) && x >= 2 && x <= 4, String(x))
                     }
                 }
             }
@@ -243,14 +239,13 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
 
         if (ndp) {
             it('should give distinct values within the range and at most (vend - vstart + 1) values', function() {
-                // Ndp: 不重複; 最長為vend-vstart+1個(n較大時回傳全部); pseudoRandomIntsNdpRange既有行為為0~(vend-vstart)之索引
-                let lo = idx ? 0 : 5
+                // Ndp: 不重複; 最長為vend-vstart+1個(n較大時回傳全部); 值域為[vstart, vend]
                 let r = fn(5, 9, 100)
-                assert.strict.deepStrictEqual([...r].sort((a, b) => a - b), [lo, lo + 1, lo + 2, lo + 3, lo + 4])
+                assert.strict.deepStrictEqual([...r].sort((a, b) => a - b), [5, 6, 7, 8, 9])
                 let s = fn('5', ' 9 ', '3')
                 assert.strict.deepStrictEqual(s.length, 3)
                 assert.strict.deepStrictEqual(new Set(s).size, 3)
-                assert.ok(s.every((x) => x >= lo && x <= lo + 4))
+                assert.ok(s.every((x) => x >= 5 && x <= 9))
             })
         }
 

@@ -46,6 +46,7 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>import take from 'lodash-es/take.js'
+import map from 'lodash-es/map.js'
 import optVal from './_optVal.mjs'
 import rangeVal from './_rangeVal.mjs'
 import arrSort from './arrSort.mjs'
@@ -67,7 +68,7 @@ let RULE_N = { fn: 'pseudoRandomIntsNdpRange', name: 'n', kind: 'eint', chk: { u
  * @param {Integer|String} [vend=100] 輸入範圍最大值，規則同vstart，未給時用預設100，非預期之輸入throw Error('invalid vend: must be an integer')；若vstart大於vend則拋出錯誤
  * @param {Integer|String} [n=1] 輸入產生數量，opt類參數(有效整數，個數1~4294967295，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小於1、超過4294967295、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，最長為vend-vstart+1個，預設1
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
- * @returns {Array} 回傳不重複之隨機整數陣列(長度為n與vend-vstart+1之較小者)；注意：現行實作回傳0~(vend-vstart)之索引，未加vstart偏移(既有行為，與randomIntsNdpRange不同)
+ * @returns {Array} 回傳位於指定範圍[vstart,vend]內不重複之偽隨機整數陣列(長度為n與vend-vstart+1之較小者)；vstart為0時與同seed之修前結果相同，vstart不為0時各值為同seed、vstart為0(範圍0至vend-vstart)之結果加上vstart(seed為'start1'時每次呼叫自增，不在此限)
  * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('vstart[&lt;vstart>] > vend[&lt;vend>]')
  * @example
  *
@@ -87,7 +88,7 @@ let RULE_N = { fn: 'pseudoRandomIntsNdpRange', name: 'n', kind: 'eint', chk: { u
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567)
  * console.log('pseudoRandomIntsNdpRange(123, 4567)', rs)
- * // => pseudoRandomIntsNdpRange(123, 4567) [ 3951 ]
+ * // => pseudoRandomIntsNdpRange(123, 4567) [ 4074 ] (值落於[123,4567])
  *
  * rs = pseudoRandomIntsNdpRange(null, null, 2, 123)
  * console.log('pseudoRandomIntsNdpRange(null, null, 2, 123)', rs)
@@ -143,31 +144,31 @@ let RULE_N = { fn: 'pseudoRandomIntsNdpRange', name: 'n', kind: 'eint', chk: { u
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 123)
  * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 123)', rs)
- * // => pseudoRandomIntsNdpRange(123, 4567, 2, 123) [ 2528, 3854 ]
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, 123) [ 2651, 3977 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)
  * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, 12.3)', rs)
- * // => pseudoRandomIntsNdpRange(123, 4567, 2, 12.3) [ 1818, 4334 ]
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, 12.3) [ 1941, 4457 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')
- * console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)
- * // => pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]
+ * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "abc")', rs)
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, "abc") [ 601, 3426 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'abc')
- * console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "abc")', rs)
- * // => pseudoRandomIntsNdpRange(123, 456.7, 2, "abc") [ 478, 3303 ]
+ * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "abc")', rs)
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, "abc") [ 601, 3426 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'def')
- * console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "def")', rs)
- * // => pseudoRandomIntsNdpRange(123, 456.7, 2, "def") [ 983, 3133 ]
+ * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "def")', rs)
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, "def") [ 1106, 3256 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH01S123')
- * console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123")', rs)
- * // => pseudoRandomIntsNdpRange(123, 456.7, 2, "BH01S123") [ 2866, 183 ]
+ * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "BH01S123")', rs)
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, "BH01S123") [ 2989, 306 ]
  *
  * rs = pseudoRandomIntsNdpRange(123, 4567, 2, 'BH-01:S-123')
- * console.log('pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123")', rs)
- * // => pseudoRandomIntsNdpRange(123, 456.7, 2, "BH-01:S-123") [ 3888, 249 ]
+ * console.log('pseudoRandomIntsNdpRange(123, 4567, 2, "BH-01:S-123")', rs)
+ * // => pseudoRandomIntsNdpRange(123, 4567, 2, "BH-01:S-123") [ 4011, 372 ]
  *
  */
 function pseudoRandomIntsNdpRange(vstart = 0, vend = 100, n, seed = 'start1') {
@@ -200,7 +201,7 @@ function pseudoRandomIntsNdpRange(vstart = 0, vend = 100, n, seed = 'start1') {
 
         //r
         let rng = vend - vstart + 1 //要額外+1才能使取ceil時讓各整數出現機率一致
-        let r = pr * rng + vstart
+        let r = pr * rng //排序用之值, 不含vstart: 只決定0~(vend-vstart)之排列, vstart於取n個後再加(使結果恆等於同seed、vstart=0之結果平移vstart, 不因vstart很大時浮點捨入而改變排列)
         r = Math.floor(r)
 
         //push
@@ -211,8 +212,11 @@ function pseudoRandomIntsNdpRange(vstart = 0, vend = 100, n, seed = 'start1') {
     //arrSort
     let inds = arrSort(rs, { returnIndex: true })
 
-    //take
+    //take, 取前n個, inds為0~(vend-vstart)之不重複排列(索引), 須加上vstart偏移使值落於[vstart,vend](同randomIntsNdpRange; 原未加偏移而值落在範圍外)
     inds = take(inds, n)
+    inds = map(inds, (ind) => {
+        return ind + vstart
+    })
 
     return inds
 }
@@ -233,7 +237,7 @@ export default pseudoRandomIntsNdpRange
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Sun Nov 15 2026 21:32:58 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Nov 16 2026 12:43:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

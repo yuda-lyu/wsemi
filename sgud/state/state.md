@@ -24,6 +24,8 @@
 
 查: 排程第 221 項第二批第 2 輪(第 272 項)ws272a、ws272b、ws272c 之現況(2026-11-02 ws272c 自 `state_數值與判斷.md` 抽出,逐字搬移),及第 3 輪(第 271 項)ws271 之現況(2026-11-02 新增,置於該檔最前).所含節:
 
+- 已裁定未落實之 `objSortByKeys`、`treeToFilepath`、`arr2dt`,`pseudoRandomIntsNdpRange` 之值域,JSDoc 文字修正(排程第 492 項第 1 批;ws492b,2026-11-16)〔本節於 2026-11-16 新增,置於該檔最前,在下一節之前〕
+- 對外入口之數值參數改 `isenum`＋`cdbl`:`domIsClientXYIn`、`domGetBoudRectRefSelf`、`interp1`(stairs)之 `xMin`／`xMax`(排程第 492 項;ws492a,2026-11-16)〔本節於 2026-11-16 新增,置於該檔最前〕
 - 規格第 199 項 Q1-h:`cdbl`／`isint` 家族之文件與測試鎖定、opt 數值改 `iseint` 14 站(排程第 430 項第一批;ws430,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
 - 第二批第 3 輪 ws271「`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`＋`domFadeIn` 對齊」(排程第 221 項第二批第 271 項之第 3 輪〔第三級,下游已先行改〕;主控任務 20261102171617 ws271,2026-11-02;package.json version 1.9.44 之工作樹,未提交未發布)〔本節於 2026-11-02 新增,置於該檔最前〕
 

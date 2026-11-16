@@ -207,6 +207,35 @@ describe(`裁定表〈三〉arr2dt`, function() {
         assert.strict.strictEqual(called, 0)
     })
 
+    it(`〈三-4b〉should treat a function element of an array values as null (not executed, not copied), like a function values (排程第492項第1批, 盤點R42)`, function() {
+        let called = 0
+        let f = () => {
+            called++
+            return 'x'
+        }
+        //修前得{ a: [Function] }
+        assert.strict.deepStrictEqual(arr2dt(['a'], [() => 1]), { a: null })
+        assert.strict.deepStrictEqual(arr2dt(['a', 'b', 'c'], [f, 2, f]), { a: null, b: 2, c: null })
+        assert.strict.deepStrictEqual(arr2dt(['a', 'b'], [1, function() {}]), { a: 1, b: null })
+        assert.strict.deepStrictEqual(arr2dt(['a', 'b'], [class X {}, Math.max]), { a: null, b: null }) //class與內建函數亦為函數
+        assert.strict.deepStrictEqual(arr2dt(['a'], [async () => 1]), { a: null })
+        assert.strict.strictEqual(called, 0)
+        //被略過之欄位名連同其對應之函數值一併略過, 其餘配對位置不變
+        assert.strict.deepStrictEqual(arr2dt(['', 'b'], [f, f]), { b: null })
+        //非函數之值不受影響: null、undefined、物件(不複製, 與輸入共用)、陣列
+        let o = { x: 1 }
+        let r = arr2dt(['a', 'b', 'c', 'd'], [null, undefined, o, [f]])
+        assert.strict.deepStrictEqual(Object.keys(r), ['a', 'b', 'c', 'd'])
+        assert.strict.strictEqual(r.a, null)
+        assert.strict.strictEqual(r.b, undefined)
+        assert.strict.strictEqual(r.c, o)
+        assert.strict.strictEqual(typeof r.d[0], 'function') //陣列元素內之函數不屬值陣列之元素, 不處理
+        //輸入之values陣列不被修改
+        let vs = [f, 1]
+        arr2dt(['a', 'b'], vs)
+        assert.strict.strictEqual(vs[0], f)
+    })
+
     it(`〈三-5〉should always pair an array values (including [''], [null], [{}], []) and return {} on a length mismatch`, function() {
         assert.strict.deepStrictEqual(arr2dt(['a'], ['']), { a: '' })
         assert.strict.deepStrictEqual(arr2dt(['a'], [null]), { a: null })

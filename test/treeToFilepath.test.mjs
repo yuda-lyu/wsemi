@@ -143,40 +143,120 @@ describe(`treeToFilepath`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input ''`, function() {
-        let r = treeToFilepath('')
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
-    })
-
     it(`should return [] when input []`, function() {
         let r = treeToFilepath([])
         let rr = []
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return [] when input {}`, function() {
-        let r = treeToFilepath({})
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
-    })
+    //使用者2026-11-03(dspec〈輸入參數之檢測機制〉§11 第221項 待決第6項, 「都A」; 排程第492項第1批落實): data非陣列throw、元素非物件throw並指出第幾個(訊息不帶值, V19/V20); []與無_type之物件節點照舊
+    describe(`data非陣列拋錯、元素非物件拋錯(R25: 使用者2026-11-03)`, function() {
 
-    it(`should return [] when input null`, function() {
-        let r = treeToFilepath(null)
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
-    })
+        let msgArr = 'invalid data: must be an array'
 
-    it(`should return [] when input undefined`, function() {
-        let r = treeToFilepath(undefined)
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
-    })
+        //[名稱, 輸入]
+        let notArrs = [
+            [`''`, ''],
+            [`'x'`, 'x'],
+            [`{}`, {}],
+            [`{ length: 1, 0: {} }`, { length: 1, 0: {} }],
+            [`null`, null],
+            [`undefined`, undefined],
+            [`NaN`, NaN],
+            [`0`, 0],
+            [`123`, 123],
+            [`true`, true],
+            [`function`, () => []],
+            [`Symbol`, Symbol('s')],
+            [`new Map`, new Map()],
+        ]
+        for (let [name, v] of notArrs) {
+            it(`should throw '${msgArr}' when data is ${name}`, function() {
+                assert.throws(() => treeToFilepath(v), (err) => err instanceof Error && err.message === msgArr)
+            })
+        }
 
-    it(`should return [] when input NaN`, function() {
-        let r = treeToFilepath(NaN)
-        let rr = []
-        assert.strict.deepStrictEqual(r, rr)
+        it(`should throw (not return []) for a non-array even when opt is given`, function() {
+            assert.throws(() => treeToFilepath('x', { delimiter: '>' }), { message: msgArr })
+            assert.throws(() => treeToFilepath(null, { bindRoot: 'ROOT' }), { message: msgArr })
+        })
+
+        //[名稱, 輸入, 預期訊息]
+        let badElems = [
+            [`[1]`, [1], 'invalid data[0]: must be an object'],
+            [`['a']`, ['a'], 'invalid data[0]: must be an object'],
+            [`[null]`, [null], 'invalid data[0]: must be an object'],
+            [`[undefined]`, [undefined], 'invalid data[0]: must be an object'],
+            [`[[]]`, [[]], 'invalid data[0]: must be an object'],
+            [`[true]`, [true], 'invalid data[0]: must be an object'],
+            [`[function]`, [() => ({})], 'invalid data[0]: must be an object'],
+            [`[{}, 1]`, [{}, 1], 'invalid data[1]: must be an object'],
+            [`[{}, {}, 'x']`, [{}, {}, 'x'], 'invalid data[2]: must be an object'],
+            [`[{}, 1, null] (first bad element is reported)`, [{}, 1, null], 'invalid data[1]: must be an object'],
+            [`sparse [<hole>, {}]`, [, {}], 'invalid data[0]: must be an object'], // eslint-disable-line no-sparse-arrays
+        ]
+        for (let [name, v, msg] of badElems) {
+            it(`should throw '${msg}' when data is ${name}`, function() {
+                assert.throws(() => treeToFilepath(v), (err) => err instanceof Error && err.message === msg)
+            })
+        }
+
+        it(`should not echo the input value in the message (V20)`, function() {
+            let secret = 'SECRET-VALUE-9f3a'
+            let msgs = []
+            for (let v of [secret, [secret], [{}, secret], [{ a: 1 }, 12345678]]) {
+                try {
+                    treeToFilepath(v)
+                    msgs.push('NOTHROW')
+                }
+                catch (err) {
+                    msgs.push(err.message)
+                }
+            }
+            assert.strict.deepStrictEqual(msgs, [msgArr, 'invalid data[0]: must be an object', 'invalid data[1]: must be an object', 'invalid data[1]: must be an object'])
+            for (let m of msgs) {
+                assert.ok(m.indexOf('SECRET') < 0 && m.indexOf('12345678') < 0, m)
+            }
+        })
+
+        it(`should throw at once for an object that fakes an Array by Symbol.toStringTag, as data or as an element, without iterating its length (terra #7; R-OBJ-ITER-01 rule 2)`, function() {
+            let fake = { [Symbol.toStringTag]: 'Array', 0: { _type: 'file', pathInfors: [{ name: 'a' }] }, length: Number.MAX_SAFE_INTEGER }
+            let t0 = Date.now()
+            assert.throws(() => treeToFilepath(fake), { message: msgArr })
+            //元素為偽稱Array之物件或真陣列: 非物件
+            assert.throws(() => treeToFilepath([{}, fake]), { message: 'invalid data[1]: must be an object' })
+            let real = [1]
+            Object.defineProperty(real, Symbol.toStringTag, { value: 'Object' }) //真陣列偽稱Object, 作為元素仍非物件
+            assert.throws(() => treeToFilepath([real]), { message: 'invalid data[0]: must be an object' })
+            assert.ok(Date.now() - t0 < 1000)
+        })
+
+        it(`should keep returning [] for [] and for object nodes without a valid _type (unchanged)`, function() {
+            assert.strict.deepStrictEqual(treeToFilepath([]), [])
+            assert.strict.deepStrictEqual(treeToFilepath([{}]), [])
+            assert.strict.deepStrictEqual(treeToFilepath([{}, {}]), [])
+            assert.strict.deepStrictEqual(treeToFilepath([{ a: 1 }]), [])
+            assert.strict.deepStrictEqual(treeToFilepath([{ _type: 'other', pathInfors: [{ name: 'x' }] }]), [])
+            assert.strict.deepStrictEqual(treeToFilepath([{ _type: 123 }]), [])
+        })
+
+        it(`should keep converting valid nodes when some top-level elements are objects without _type`, function() {
+            let r = treeToFilepath([{}, { _type: 'file', pathInfors: [{ name: 'root' }, { name: 'a.txt' }] }, { x: 1 }])
+            assert.strict.deepStrictEqual(r, [{ type: 'file', path: '/a.txt' }])
+        })
+
+        it(`should only check the top-level elements (children are walked as before and a non-object child is skipped)`, function() {
+            let r = treeToFilepath([{ _type: 'folder', pathInfors: [{ name: 'root' }, { name: 'a' }], children: [1, null, 'x', { _type: 'file', pathInfors: [{ name: 'root' }, { name: 'a' }, { name: 'b.txt' }] }] }])
+            assert.strict.deepStrictEqual(r, [{ type: 'folder', path: '/a' }, { type: 'file', path: '/a/b.txt' }])
+        })
+
+        it(`should accept array-like-length objects only as elements, never as data`, function() {
+            //data帶length鍵之物件不是陣列(isarr為false)
+            assert.throws(() => treeToFilepath({ length: 1, 0: { _type: 'file' } }), { message: msgArr })
+            //元素帶length鍵之物件仍是物件
+            assert.strict.deepStrictEqual(treeToFilepath([{ length: 2 }]), [])
+        })
+
     })
 
 })

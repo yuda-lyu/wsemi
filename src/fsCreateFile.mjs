@@ -10,10 +10,10 @@ import toResultError from './_toResultError.mjs'
  * @memberOf wsemi
  * @param {String} pah 輸入檔案路徑字串
  * @param {Buffer|TypedArray|DataView} data 輸入檔案內容資料
- * @param {Object|String} [opt={}] 輸入寫入設定物件或字串，可給予writeFileSync設定物件，或是編碼字串(例如'utf8')，預設{}
+ * @param {Object} [opt={}] 輸入寫入設定物件，只讀取其encoding鍵；非物件(含編碼字串簡寫，如'utf8')不被採用，編碼為預設'utf8'，預設{}
  * @param {String} [opt.encoding='utf8'] 輸入編碼字串，預設'utf8'
- * @param {Integer} [opt.mode=0o666] 輸入寫入模式數字，預設0o666
- * @param {String} [opt.flag='w'] 輸入寫入標誌字串，預設'w'
+ * @param {Integer} [opt.mode=0o666] 目前未實作(給了亦不傳給writeFileSync)，預設0o666
+ * @param {String} [opt.flag='w'] 目前未實作(給了亦不傳給writeFileSync)，預設'w'
  * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.

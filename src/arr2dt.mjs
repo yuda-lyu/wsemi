@@ -14,7 +14,7 @@ import _setOwnKey from './_setOwnKey.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arr2dt.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} keys 輸入keys字串陣列，非陣列或空陣列回傳空物件{}
- * @param {Array|*} [values=''] 輸入values陣列或需自動展開values成為的陣列，預設''；values為陣列(含['']、[null]、[{}]、[])時一律當作值陣列與keys逐一配對，長度不同時回傳空物件{}；values非陣列時各欄位皆填入values，values為物件(typeof為object且非null)時各欄位各一份以lodash cloneDeep產生之複本(無原型物件之複本為一般物件，同修前)，values為函數時視為null(不執行、不複製)
+ * @param {Array|*} [values=''] 輸入values陣列或需自動展開values成為的陣列，預設''；values為陣列(含['']、[null]、[{}]、[])時一律當作值陣列與keys逐一配對，長度不同時回傳空物件{}，值陣列之元素為函數時該欄位視為null(不執行、不複製)，其餘元素原樣(物件不複製，與輸入共用)；values非陣列時各欄位皆填入values，values為物件(typeof為object且非null)時各欄位各一份以lodash cloneDeep產生之複本(無原型物件之複本為一般物件，同修前)，values為函數時視為null(不執行、不複製)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.debug=false] 輸入是否輸出除錯警告布林值，非布林視為false；為true且values為陣列而長度與keys不同時，經opt.funLog(函數)或console.warn提示兩者之長度(不含值；同原因每個行程只提示一次)，預設false
  * @param {Function} [opt.funLog=null] 輸入警告之出口函數，以(msg, info)呼叫，未給則用console.warn，預設null
@@ -54,6 +54,9 @@ import _setOwnKey from './_setOwnKey.mjs'
  * console.log(arr2dt(['a'], function() {}))
  * // => { a: null } (函數視為null)
  *
+ * console.log(arr2dt(['a', 'b'], [function() {}, 2]))
+ * // => { a: null, b: 2 } (值陣列之元素為函數時視為null)
+ *
  */
 function arr2dt(keys, values = '', opt = {}) {
 
@@ -81,7 +84,8 @@ function arr2dt(keys, values = '', opt = {}) {
             if (key === null) {
                 continue //略過該欄位名連同其對應之值
             }
-            _setOwnKey(r, key, values[i])
+            let v = values[i]
+            _setOwnKey(r, key, typeof v === 'function' ? null : v) //元素為函數時視為null(不執行、不複製; 同values為函數)
         }
         return r
     }

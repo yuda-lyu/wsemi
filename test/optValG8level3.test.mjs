@@ -175,12 +175,14 @@ describe(`optVal interp1 (ws271)`, function() {
         assert.strict.deepStrictEqual(r2, 15) // '0x10'點略過(修前當16而得18)
     })
 
-    it(`should keep opt.xMin and opt.xMax on isNumber (not changed in this round): numbers are used, strings are not`, function() {
+    //ws492a: opt.xMin、opt.xMax改以isenum判定並cdbl轉型(原於ws271停在isNumber, 數字字串不被使用); 數字字串與同值數字結果相同, 完整矩陣見interp1.test.mjs之ws492a一節
+    it(`should use numeric strings of opt.xMin and opt.xMax the same as numbers (changed in ws492a: isenum then cdbl)`, function() {
         let opt = { mode: 'stairs', xMin: 0, xMax: 4.5 }
         assert.strict.deepStrictEqual(interp1(ps, 0, opt), 0.2)
         assert.strict.deepStrictEqual(interp1(ps, 4.5, opt), 2)
         let optS = { mode: 'stairs', xMin: '0', xMax: '4.5' }
-        assert.strict.deepStrictEqual(interp1(ps, 0, optS).err, 'out of x-range')
+        assert.strict.deepStrictEqual(interp1(ps, 0, optS), 0.2)
+        assert.strict.deepStrictEqual(interp1(ps, 4.5, optS), 2)
     })
 
     it(`should match the documented examples of the new px behavior`, function() {
