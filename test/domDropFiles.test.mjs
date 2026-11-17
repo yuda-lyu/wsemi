@@ -3,12 +3,50 @@ import assert from 'assert'
 import domDropFiles from '../src/domDropFiles.mjs'
 import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 import { mkBrowser, mkFile, mkDataTransfer, mkDragEvent, fiveOnTrace, collectUnhandled, mkMeta, flush } from './tools/domFilesKit.mjs'
+import { NOT_ELE } from './tools/domArgKit.mjs'
 
 
+//ws492e: W-17(使用者2026-11-16「甲」): 會掛載事件監聽者比照domAppend, domDropFiles之ele非元素即以固定訊息(V19)拋錯、先於任何監聽之掛載與evem之建立(原ele.addEventListener對null拋原生TypeError)
+//  規格: dspec〈輸入參數之檢測機制〉§11 W-17、V19、V20(不回顯輸入值)、V17(無殘留)
+//  DOM測試作法: 以最小假瀏覽器(test/tools/domFilesKit.mjs之mkBrowser)驅動, 真實拖放事件派送屬瀏覽器語義, 另以真瀏覽器實測
 describe(`domDropFiles`, function() {
 
-    it(`need test in browser`, function() {
-        assert.strict.deepStrictEqual(1, 1)
+    let env = null
+
+    beforeEach(function() {
+        env = mkBrowser()
+    })
+
+    afterEach(function() {
+        env.restore()
+    })
+
+    //spec: ele非元素拋Error('invalid ele: must be an element'), 先於任何動作(觀察回調未被呼叫)
+    for (let [label, v] of NOT_ELE) {
+        it(`should throw invalid ele when ele is ${label}, before any trace notification`, function() {
+            let n = 0
+            assert.throws(() => domDropFiles(v, { onTrace: () => n++ }), (err) => {
+                assert.strict.deepStrictEqual(err instanceof Error, true)
+                assert.strict.deepStrictEqual(err.message, 'invalid ele: must be an element')
+                return true
+            })
+            assert.strict.deepStrictEqual(n, 0)
+        })
+    }
+
+    //spec(V20): 訊息不回顯輸入值
+    it(`should not echo the input value in the error message`, function() {
+        assert.throws(() => domDropFiles('SECRET-ele-9f3a'), (err) => !err.message.includes('SECRET'))
+    })
+
+    //spec: 有效元素掛上4個拖放監聽並回傳事件物件, off移除全部
+    it(`should mount the four drag listeners on a valid element and remove them by off`, function() {
+        let ele = env.document.createElement('div')
+        let ev = domDropFiles(ele)
+        assert.strict.deepStrictEqual(ele.nListeners(), 4)
+        assert.strict.deepStrictEqual(typeof ev.on, 'function')
+        ev.off()
+        assert.strict.deepStrictEqual(ele.nListeners(), 0)
     })
 
 })

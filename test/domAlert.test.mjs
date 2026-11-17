@@ -530,3 +530,169 @@ describe(`domAlert`, function() {
     })
 
 })
+
+
+//ws492e: W-14(使用者2026-11-16「甲」; 縮限2026-11-12 D6之「行為不改」): 四個樣式字串opt(textColor、backgroundColor、borderColor、shadowStyle)給null、非字串、包裝物件 ⇒ K3改用JSDoc之預設; 空字串為合法值(不要該樣式); opt.type只認列出之類型(不經原型鏈判定)
+//  規格: dspec〈輸入參數之檢測機制〉§11〈domAlert之樣式opt〉、K3、V5; 原判型以haskey之key in obj含原型鏈, 'toString'等被判為有效type而icon變成函數(被${icon}插入函數原始碼文字)
+//  測試作法: 同上, 以最小假window/document(browserFakeKit)與假時鐘, 樣式以styleTexts收集; 外觀之實際呈現另以真Chromium實測
+describe(`domAlert 樣式字串opt與type(W-14)`, function() {
+
+    let env = null
+
+    beforeEach(function() {
+        env = mkBrowserFake()
+        mock.timers.enable({ apis: ['setInterval', 'setTimeout', 'Date'], now: 0 })
+    })
+
+    afterEach(function() {
+        mock.timers.reset()
+        clearBrowserFake()
+        env = null
+    })
+
+    //boxStyle, 外框之樣式字串
+    let boxStyle = (panel) => styleTexts(panel).find((s) => s.startsWith('display:inline-block;'))
+
+    //DEF, 四個樣式opt之預設與對應之樣式片段
+    let DEF = {
+        textColor: { def: '#000', seg: (v) => `color:${v};` },
+        backgroundColor: { def: '#fff', seg: (v) => `background:${v};` },
+        borderColor: { def: '#ebeef5', seg: (v) => `border:1px solid ${v};` },
+        shadowStyle: { def: '0 2px 12px 0 rgba(0,0,0,.1)', seg: (v) => `box-shadow:${v};` },
+    }
+
+    //BAD, 非預期之值(null、非字串、包裝物件、函數、Symbol等)
+    let BAD = [
+        ['null', null],
+        ['0', 0],
+        ['5', 5],
+        ['NaN', NaN],
+        ['true', true],
+        ['false', false],
+        ['{}', {}],
+        ['[]', []],
+        [`['red']`, ['red']],
+        ['function', () => 'red'],
+        ['Symbol', Symbol('red')],
+        ['new String', new String('red')], // eslint-disable-line no-new-wrappers
+    ]
+
+    for (let key of Object.keys(DEF)) {
+        for (let [label, v] of BAD) {
+            it(`should use the default of opt.${key} when it is ${label}`, async function() {
+                let domAlert = await load()
+                domAlert('msg', { [key]: v })
+                let s = boxStyle(env.body.children[0])
+                assert.strict.deepStrictEqual(s.includes(DEF[key].seg(DEF[key].def)), true, s)
+                assert.strict.deepStrictEqual(s.includes('[object'), false)
+                assert.strict.deepStrictEqual(s.includes('function'), false)
+                mock.timers.tick(5000)
+            })
+        }
+
+        //空字串為合法值: 表示不要該樣式(樣式片段之值為空)
+        it(`should keep the empty string of opt.${key} as a valid value that means no style`, async function() {
+            let domAlert = await load()
+            domAlert('msg', { [key]: '' })
+            let s = boxStyle(env.body.children[0])
+            assert.strict.deepStrictEqual(s.includes(DEF[key].seg('')), true, s)
+            assert.strict.deepStrictEqual(s.includes(DEF[key].seg(DEF[key].def)), false, s)
+            mock.timers.tick(5000)
+        })
+
+        //有效字串照用, 去除分號(D6行為不改)
+        it(`should use a valid string of opt.${key} and remove semicolons`, async function() {
+            let domAlert = await load()
+            domAlert('msg', { [key]: 'RED;GREEN' })
+            let s = boxStyle(env.body.children[0])
+            assert.strict.deepStrictEqual(s.includes(DEF[key].seg('REDGREEN')), true, s)
+            mock.timers.tick(5000)
+        })
+
+        //讀取拋錯(拋錯之getter)視為未給, 用預設
+        it(`should use the default of opt.${key} when reading it throws`, async function() {
+            let domAlert = await load()
+            let opt = {}
+            Object.defineProperty(opt, key, {
+                get() {
+                    throw new Error('getter-boom')
+                },
+            })
+            domAlert('msg', opt)
+            let s = boxStyle(env.body.children[0])
+            assert.strict.deepStrictEqual(s.includes(DEF[key].seg(DEF[key].def)), true, s)
+            mock.timers.tick(5000)
+        })
+    }
+
+    //四個鍵同時給無效值: 外框樣式與全預設相同(外觀不變)
+    it(`should render exactly the default box style when all four style options are invalid`, async function() {
+        let domAlert = await load()
+        domAlert('msg', { textColor: null, backgroundColor: 5, borderColor: {}, shadowStyle: new String('x') }) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(boxStyle(env.body.children[0]), 'display:inline-block; color:#000; background:#fff; border:1px solid #ebeef5; border-radius:8px; box-shadow:0 2px 12px 0 rgba(0,0,0,.1);')
+        mock.timers.tick(5000)
+    })
+
+    //type: 內建圖標之自有鍵(success、warning、error、infor、cancel)照用
+    let ICON_MARK = {
+        success: 'fill:#6ac259',
+        error: 'fill:#e04f5f',
+        warning: 'fill:#ffcc4d',
+        infor: 'fill="#25B7D3"',
+        cancel: 'viewBox="0 0 512.001 512.001"',
+    }
+    let iconHtml = (panel) => {
+        let out = ''
+        let walk = (e) => {
+            out += String(e.innerHTML)
+            for (let c of e.children) {
+                walk(c)
+            }
+        }
+        walk(panel)
+        return out
+    }
+    let count = (s, sub) => s.split(sub).length - 1
+    for (let [type, mark] of Object.entries(ICON_MARK)) {
+        it(`should use the built-in icon of type ${type}`, async function() {
+            let domAlert = await load()
+            domAlert('msg', { type })
+            //cancel之圖標與關閉按鈕之圖標相同, 故出現2次, 其餘型別之圖標只出現1次
+            assert.strict.deepStrictEqual(count(iconHtml(env.body.children[0]), mark), type === 'cancel' ? 2 : 1)
+            mock.timers.tick(5000)
+        })
+    }
+
+    //type: 非自有鍵(原型鏈成員名)、非字串、包裝物件改用預設'success', 不把函數原始碼插入HTML
+    let BAD_TYPE = [
+        ['toString', 'toString'],
+        ['constructor', 'constructor'],
+        ['valueOf', 'valueOf'],
+        ['hasOwnProperty', 'hasOwnProperty'],
+        ['__proto__', '__proto__'],
+        ['isPrototypeOf', 'isPrototypeOf'],
+        ['an unknown name', 'zzz-unknown'],
+        ['an upper-case name', 'ERROR'],
+        ['the empty string', ''],
+        ['null', null],
+        ['5', 5],
+        ['true', true],
+        ['{}', {}],
+        ['[]', ['error']],
+        ['function', () => 'error'],
+        ['new String', new String('error')], // eslint-disable-line no-new-wrappers
+    ]
+    for (let [label, v] of BAD_TYPE) {
+        it(`should use the default type success when opt.type is ${label}`, async function() {
+            let domAlert = await load()
+            domAlert('msg', { type: v })
+            let html = iconHtml(env.body.children[0])
+            assert.strict.deepStrictEqual(html.includes(ICON_MARK.success), true)
+            assert.strict.deepStrictEqual(html.includes(ICON_MARK.error), false)
+            assert.strict.deepStrictEqual(html.includes('function'), false) //不插入函數原始碼
+            assert.strict.deepStrictEqual(html.includes('[native code]'), false)
+            mock.timers.tick(5000)
+        })
+    }
+
+})

@@ -1,4 +1,5 @@
 import isWindow from './isWindow.mjs'
+import isEle from './isEle.mjs'
 
 
 function init() {
@@ -51,8 +52,9 @@ if (isWindow()) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domTriggerEvent.test.mjs Github}
  * @memberOf wsemi
- * @param {Element} ele 輸入Element元素
- * @param {String} eventName 輸入事件名稱字串
+ * @param {Element} ele 輸入Element元素，非元素則拋錯
+ * @param {String} eventName 輸入事件名稱字串，須為非空之原始字串，否則拋錯
+ * @throws {Error} ele非元素拋出Error('invalid ele: must be an element')，eventName非非空字串拋出Error('invalid eventName: must be a non-empty string')，皆先於建立事件與派發(不觸發任何事件)，訊息不含輸入值；兩者皆無效時先報ele
  * @example
  * need test in browser
  *
@@ -61,6 +63,14 @@ if (isWindow()) {
  *
  */
 function domTriggerEvent(ele, eventName) {
+
+    //check, 會觸發事件, 輸入無效即拋錯且先於任何動作(同domAppend); 原生會把非字串事件名轉成字串(如undefined得'undefined')照常派發
+    if (!isEle(ele)) {
+        throw new Error('invalid ele: must be an element')
+    }
+    if (typeof eventName !== 'string' || eventName === '') {
+        throw new Error('invalid eventName: must be a non-empty string')
+    }
 
     //event
     let event = new MouseEvent(eventName, {

@@ -1,4 +1,5 @@
 import isestr from './isestr.mjs'
+import isblob from './isblob.mjs'
 import isWindow from './isWindow.mjs'
 import isIE from './isIE.mjs'
 
@@ -49,10 +50,13 @@ function coreHTML5(fileName, blob) {
 /**
  * 前端下載Blob資料成為檔案
  *
+ * 會觸發瀏覽器下載(改動畫面)，輸入無效即同步拋Error(固定訊息、不含輸入值、先於建立網址、建立元素與觸發下載)：fileName非非空字串為'invalid fileName: must be a non-empty string'，blob非Blob(File亦為Blob)為'invalid blob: must be a Blob'；檢測順序為fileName、blob，且先於環境檢查；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fileName 輸入檔名字串
- * @param {Blob} blob 輸入資料Blob
+ * @param {String} fileName 輸入檔名字串，須為非空字串
+ * @param {Blob} blob 輸入資料Blob，須為Blob或File
+ * @throws {Error} fileName非非空字串或blob非Blob，見上
  * @example
  * need test in browser
  *
@@ -64,15 +68,17 @@ function coreHTML5(fileName, blob) {
  */
 function downloadFileFromBlob(fileName, blob) {
 
-    //check
-    if (!isWindow()) {
-        console.log('no window')
-        return
+    //check, 會觸發下載, 輸入無效即拋錯且先於任何動作(同domAppend; 原fileName無效僅console.log後return、blob無效卻為原生TypeError, 主次參數處置不一致)
+    if (!isestr(fileName)) {
+        throw new Error('invalid fileName: must be a non-empty string')
+    }
+    if (!isblob(blob)) {
+        throw new Error('invalid blob: must be a Blob')
     }
 
     //check
-    if (!isestr(fileName)) {
-        console.log('no filename')
+    if (!isWindow()) {
+        console.log('no window')
         return
     }
 

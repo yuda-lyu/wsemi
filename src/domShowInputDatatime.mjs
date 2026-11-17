@@ -16,12 +16,12 @@ import getTrace from './getTrace.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowInputDatatime.test.mjs Github}
  * @memberOf wsemi
- * @param {String} [time=''] 輸入時間字串，可不提供，時間視窗預設為今日，預設為''
+ * @param {String} [time=''] 輸入時間字串，可不提供，時間視窗預設為今日，預設為''；type為'date'時須為'YYYY-MM-DD'，否則須為'YYYY-MM-DDTHH:mm:ss'，不合者視為未給(輸入框不帶預設值)，不報錯
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Element} [opt.eleRef=null] 輸入觸發點擊Element元素，若不給則使用document.activeElement取得，預設為null
- * @param {String} [opt.type='datetime-local'] 輸入時間類型字串，可選為'datetime-local'與'date'，預設為'datetime-local'
+ * @param {Element} [opt.eleRef=null] 輸入觸發點擊Element元素，須已接於DOM下，若不給或非元素則使用document.activeElement取得，預設為null；兩者皆非可用之元素(非元素或未接於DOM下)時不建立輸入框、不變動DOM，回傳被reject之Promise
+ * @param {String} [opt.type='datetime-local'] 輸入時間類型字串，可選為'datetime-local'與'date'，其餘值視為未給，預設為'datetime-local'
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'mount'時為已將時間輸入框放入頁面而排定1ms後延遲彈出(含inpType為生效後之輸入框類型'datetime-local'或'date'、withValue為輸入框是否帶有time之預設值)，'picker'時為延遲(1ms)後已綁定change監聽而即將彈出日曆視窗，'focusout'時為觸發元素收到focusout(取消選取之偵測)而排定50ms後觸發(含ms固定為50)，'change'時為收到輸入框之change事件(含value為此次取得之值字串，取值失敗時沿用先前之值，初始為空字串)，'skip'時為觸發時已有先前之觸發而略過(含by為'change'或'focusout'代表略過者之來源)，'settle'時為首次觸發而即將結束(含by為'change'或'focusout'代表觸發來源、changed為是否取得變更時間、value為將resolve之新時間字串，未變更時為null且Promise不會resolve)；事件皆於對應動作之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響時間選取，預設null
- * @returns {Promise} 回傳Promise，resolve回傳選擇新時間，無reject
+ * @returns {Promise} 回傳Promise，resolve回傳選擇新時間(使用者取消選取時不會resolve)；opt.eleRef與document.activeElement皆非可用之元素時，先於任何DOM變動以固定字串'invalid opt.eleRef: must be an element, or document.activeElement must be an element'(不含輸入值)reject，其餘情形無reject
  * @example
  * need test in browser
  *
@@ -54,9 +54,19 @@ function domShowInputDatatime(time, opt = {}) {
     //eleRef
     let eleRef = get(opt, 'eleRef', null)
     if (!isEle(eleRef)) {
-        eleRef = document.activeElement
+        try {
+            eleRef = document.activeElement
+        }
+        catch (err) {
+            eleRef = null //無document(非瀏覽器環境)
+        }
     }
     // console.log('eleRef', eleRef)
+
+    //check, 須有可插入輸入框之參考元素(opt.eleRef或document.activeElement, 須為元素且已接於DOM下), 否則reject固定訊息, 先於任何DOM變動(回傳Promise者reject不同步throw, 同domShowInputAndGetFiles)
+    if (!isEle(eleRef) || !eleRef.parentNode) {
+        return Promise.reject('invalid opt.eleRef: must be an element, or document.activeElement must be an element')
+    }
 
     //pm
     let pm = genPm()
@@ -107,19 +117,8 @@ function domShowInputDatatime(time, opt = {}) {
     //inp, 函數內取用
     let inp = null
 
-    //check
-    if (!isEle(eleRef)) {
-
-        //appendChild
-        document.querySelector('body').appendChild(div)
-
-    }
-    else {
-
-        //insertBefore
-        eleRef.parentNode.insertBefore(div, eleRef.nextSibling)
-
-    }
+    //insertBefore
+    eleRef.parentNode.insertBefore(div, eleRef.nextSibling)
 
     //trace
     if (trace) {

@@ -1,6 +1,8 @@
 import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
 import isEle from './isEle.mjs'
+import isenum from './isenum.mjs'
+import cdbl from './cdbl.mjs'
 import domRemove from './domRemove.mjs'
 import optVal from './_optVal.mjs'
 
@@ -14,8 +16,8 @@ let RULE_TIME_DURATION = { fn: 'domRipple', name: 'opt.timeDuration', kind: 'ein
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domRipple.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} ele 輸入dom
- * @param {Object} event 輸入dom點擊事件
+ * @param {HTMLElement} ele 輸入dom，非元素則不動作(不拋錯)
+ * @param {Object} event 輸入dom點擊事件，須為物件且clientX與clientY為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、布林、包裝物件皆非有效數字)，判定通過後以cdbl轉為數字再使用；否則拋出Error('invalid event: must be an event object with valid clientX and clientY')，訊息不含輸入值，先於任何DOM變動(不改寫ele.style)；ele與event皆無效時ele優先(不動作、不拋錯)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.timeDuration=1000] 輸入Ripple效果持續時間整數，須為1至2147483647之有效整數(數字字串亦可)，單位為毫秒ms，預設1000；非預期(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設1000，不報錯、不夾至上限
  * @param {String} [opt.color='rgba(255, 255, 255, 0.5)'] 輸入Ripple顏色字串，預設'rgba(255, 255, 255, 0.5)'
@@ -46,14 +48,35 @@ function domRipple(ele, event, opt = {}) {
         return
     }
 
+    //check event, 必須參數且會改動畫面: 須為物件且clientX、clientY為有效數字, 否則拋錯, 先於任何DOM變動(V17; 原先改寫ele.style後才讀event.clientX拋原生TypeError, 或寫入'NaNpx')
+    //  clientX、clientY依序各讀一次, 檢測之值即使用之值(判定通過後以cdbl轉為數字); 讀取拋錯(拋錯之getter、已撤銷之Proxy)視為無效
+    let clientX = null
+    let clientY = null
+    try {
+        if (typeof event === 'object' && event !== null) {
+            clientX = event.clientX
+            if (isenum(clientX)) {
+                clientY = event.clientY
+            }
+        }
+    }
+    catch (err) {
+        clientX = null
+    }
+    if (!isenum(clientX) || !isenum(clientY)) {
+        throw new Error('invalid event: must be an event object with valid clientX and clientY')
+    }
+    clientX = cdbl(clientX)
+    clientY = cdbl(clientY)
+
     //更改元素style
     ele.style.position = 'relative' //得要讓ripple的absolute能生效
     ele.style.overflow = 'hidden' //讓ripple的效果不會溢出dom範圍
 
     //let
     let rect = ele.getBoundingClientRect()
-    let left = event.clientX - rect.left
-    let top = event.clientY - rect.top
+    let left = clientX - rect.left
+    let top = clientY - rect.top
 
     //diameter
     let diameter = Math.max(ele.clientWidth, ele.clientHeight) * 2 //半徑為最大長寬, 直徑為半徑*2

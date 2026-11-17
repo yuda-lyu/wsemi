@@ -66,13 +66,13 @@ function optMuti() {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domShowImages.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} eleImg 輸入圖片元素
- * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，預設null
+ * @param {HTMLElement} eleImg 輸入圖片元素，非元素則reject固定字串'invalid eleImg: must be an element'
+ * @param {HTMLElement} [eleGroup=null] 輸入元素內含有多圖片元素，須為元素，非預期之輸入(非元素，含undefined、null、字串、數字、物件等)視為未給而改用預設null(單圖模式)，不reject；為元素但其內無任何img則reject固定字串'invalid eleGroup: must contain at least one img element'，預設null
  * @param {Object} [opt={}] 輸入viewerjs設定物件，預設使用optOne或optMuti，若img僅一個則使用optOne，反之使用optMuti
  * @param {Integer} [opt.disTouchMoveToHide=4] 輸入手機touch觸發移動距離視為可隱藏整數，單位px，須為0至4294967295之有效整數(可為數字字串)，非預期之輸入(負數、小數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯(給Infinity不代表永不因移動而隱藏)，預設4
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.disTouchMoveToHide為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息
+ * @returns {Promise} 回傳Promise，resolve回傳close訊息，reject回傳固定錯誤訊息字串(不含輸入值)
  * @example
  * need test in browser
  *
@@ -97,21 +97,20 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
 
     //img and check one
     if (!isEle(eleImg)) {
-        pm.reject('eleImg is not a HTMLElement')
+        pm.reject('invalid eleImg: must be an element')
         return pm
     }
     else {
         img = eleImg //預設先使用自己
     }
+
+    //eleGroup, 帶預設值(null)之位置參數視同opt鍵(K2/K3): 非元素(含undefined、null與一切非預期之輸入)視為未給, 改用預設null(單圖模式), 不reject
+    if (!isEle(eleGroup)) {
+        eleGroup = null
+    }
     if (eleGroup !== null) {
-        if (!isEle(eleGroup)) {
-            pm.reject('eleGroup is not a HTMLElement')
-            return pm
-        }
-        else {
-            one = false
-            img = eleGroup //若有群組(父層)元素則使用群組(父層)元素
-        }
+        one = false
+        img = eleGroup //若有群組(父層)元素則使用群組(父層)元素
     }
 
     //check one
@@ -119,7 +118,7 @@ async function domShowImages(eleImg, eleGroup = null, opt = {}) {
         let imgs = eleGroup.querySelectorAll('img')
         let n = size(imgs)
         if (n === 0) {
-            pm.reject('eleGroup does not contain any img')
+            pm.reject('invalid eleGroup: must contain at least one img element')
             return pm
         }
         else if (n === 1) {

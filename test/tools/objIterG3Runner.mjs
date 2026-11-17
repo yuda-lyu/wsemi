@@ -9,7 +9,7 @@
 //    proto  length為原型上之getter的class實例
 //    hidden 不可列舉之自有length
 //    strlen replaceObj專用, length為字串(非陣列樣, 對照)
-//    msg    interp專用, {a:'x', length}, 修前丟'color is not a string or an object'、修後丟'can not parse color: x'
+//    msg    interp專用, {a:'x', length}, 修前丟'invalid color: must be a string or an object'、修後丟'invalid color: must be a valid color'(ws492e前之舊訊息為'color is not a string or an object'與'can not parse color: x')
 import replaceObj from '../../src/replaceObj.mjs'
 import objSortBy from '../../src/objSortBy.mjs'
 import objSortByKeys from '../../src/objSortByKeys.mjs'

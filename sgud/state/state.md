@@ -8,6 +8,12 @@
 
 2026-11-02(ws265)依全域設定§14整理: 本檔原約 53.7KB(13 節),依功能類型拆為下列 5 檔(含同日新增之 `state_測試.md`),各節之節號與標題不變、內容逐字搬移;本檔只留索引.完成一項功能或結束一輪工作時,把現況寫入對應類型檔(無對應類型者新增 `state_<類型>.md` 並於下列增列),不再寫回本檔.2026-11-02(ws272c)另把 `state_數值與判斷.md` 之第 2 輪三節(ws272a、ws272b、ws272c)抽至 `state_數值與判斷_第2輪.md`(原檔約 31.3KB),現共 6 檔.
 
+### `sgud/state/state_dom與下載輸入檢測.md`(DOM 與下載函數之輸入檢測;約 7KB;新增於 2026-11-18)
+
+查: 30 個 DOM 與下載函數(`domFind`／`domRemove`／`domTriggerEvent`／`domTooltip`／`domAlert`／`domScroll*`／`domFade*`／`downloadFileFrom*`／`downloadExcelFileFromData`／`files2data`／`color` 等)之輸入檢測現況:改畫面者同步拋固定訊息、查詢類回空、opt 逐鍵檢測、下載族同一通道、修前紅／變異／真 Chromium 並排之驗證數字、外審用盡與內部複審、已知缺口(排程第 492 項第 4 批).所含節:
+
+- 第 492 項第 4 批:DOM 與下載(ws492e,2026-11-18)〔本節於 2026-11-18 新增〕
+
 ### `sgud/state/state_檔案系統安全opt與訊息.md`(fs 之安全相關 opt、錯誤訊息不帶值、原生錯誤固定詞彙;約 5KB;新增於 2026-11-17)
 
 查: 雜湊 `type`／`typeHash` fail-closed、`fsEnsureBins`／`fsDownloadFileVerify` 之安全相關 opt、fs 系訊息不回顯路徑／網址／輸入值、Node 原生錯誤固定詞彙、對外 12 函數之注入鍵 `undefined` 取內建之現況(排程第 492 項第 3 批).所含節:

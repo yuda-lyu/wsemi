@@ -42,7 +42,7 @@
 3. **D3／D5** 數值類 opt 經 `optVal`(`src/_optVal.mjs`,R-OPT-VAL-01)以 `isenum` 逐一判定,非預期(含 NaN、Infinity、`'0x10'`、包裝物件、非數字)用該欄預設: `time`(4000,`nonnegative`,不設計時器上限——只與 `Date.now` 之差比較)、`borderWidth`(1,`nonnegative`)、`borderRadius`(8,`nonnegative`)、`paddingStyle.{top,right,bottom,left}`(14／26／14／14,`nonnegative`)、`closeIconShift.{top,right,bottom,left}`(可為負,無範圍).數字字串可用(K4).`opt.debug === true` 時警告(固定詞彙、不含值).
 4. **D5b** `paddingStyle` 部分給鍵(或為非物件)時未給、無效之鍵用該鍵預設;`closeIconShift` 未給之鍵保留預設(`top:10`、`right:10`),**但同軸已給有效值者不套用另一端之預設**(給 `bottom` 不設 `top`、給 `left` 不設 `right`),以保留置於左下等之用法(主責者決定,列 ws430 報告需裁示).
 5. **D4** 關閉一律經 `closeItemByID`: 先 `pm.resolve()` 再移除;時間到與按 ✕ 同一路徑;已關閉者不再處理(`removeItemByID`／`closeItemByID` 先查佇列).
-6. **D6** 行為不改: `msg`、`opt.icon` 以 HTML 插入,字串型 opt 去分號後直接放入樣式;JSDoc 載明外部文字須先 `htmlEncode`.
+6. **D6** 行為不改: `msg`、`opt.icon` 以 HTML 插入,字串型 opt 去分號後直接放入樣式;JSDoc 載明外部文字須先 `htmlEncode`.**〔2026-11-18 ws492e 縮限,使用者 2026-11-16「W-14:甲」〕**「行為不改」只限 HTML 插入與去分號之安全說明;四個樣式字串 opt(`textColor`／`backgroundColor`／`borderColor`／`shadowStyle`)給 `null`、非字串、包裝物件、讀取拋錯改用 JSDoc 預設(K3),**空字串為合法值(不要該樣式)**;`opt.type` 只認內建圖標之自有鍵(`'toString'` 等原型鏈名稱改 `'success'`);見 `rulebook_domarg.md` R-DOM-OPT-01.
 7. **D7** 外框、內寬層、關閉按鈕以 `createElement` 建立,`mouseenter`／`mouseleave`(淡入淡出 ✕)與 `click`(關閉)以 `addEventListener` 綁定;不得有行內事件屬性,不得掛全域函數(原 `ttWAlertCancel`／`ttWAlertFadeIn`／`ttWAlertFadeOut` 已移除;全庫下游 0 處引用,只見於他套件之打包產物).外觀、位置、淡入淡出與多則排列不變(真 Chromium 修前修後並排: 三則排列之外框尺寸與計算樣式相同、元素截圖逐像素差 0、滑鼠移入後亦 0).**附帶差異**(外審 terra 10,JSDoc 載明): msg／icon 之 HTML 解析限於內寬層內之內容容器,`msg` 含未閉合標籤(如 `'<textarea>abc'`)時修前會吞入其後之關閉按鈕(真 Chromium: 修前無 ✕、修後有 ✕),正常 HTML 不受影響.
 
 ### 測試

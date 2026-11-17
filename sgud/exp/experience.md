@@ -120,6 +120,16 @@
 - **變異於 `src` 副本**: 副本放 `./tmp/<案>/mut/{src,test}`(`test/tools` 一併複製),測試以相對路徑 import 自動指向副本,`@babel/parser` 與其他依賴由上層 `node_modules` 解析;mocha 以絕對路徑 `node_modules/mocha/bin/mocha.js` 由腳本 `spawnSync`(`windowsHide`),整支腳本經 `quiet-run --lock` 執行一次(約 1 分鐘).`to` 字串含 `$` 時以函式形式 `text.replace(from, () => to)` 取代,否則變異文字本身被展開(正是本規則所防之事).
 - **eslint `no-template-curly-in-string`**: 測試內以一般引號字串寫含 `${r}` 之樣板字串原始碼會被擋,改 `'…$' + '{r}…'` 拆開(同 `_srcBigIntLiteral.test.mjs` 作法).
 
+## DOM 與下載函數之輸入檢測:契約先行、假 DOM 仿原生語義、修前紅逐檔執行、真 Chromium 並排(2026-11-18,主控任務 20261116102625,ws492e)
+
+- **假 DOM 之 `querySelector` 要仿原生之「字串強制轉型＋語法錯誤拋 `SyntaxError` 且訊息含選擇器全文」**(`test/tools/domArgKit.mjs` 之 `mkQueryEnv`),測試才能證明「檢測先於呼叫原生 API」:`domFind(null)` 在真瀏覽器不拋錯而得 `null`(`'null'` 被當標籤名)、`domFind(5)` 拋 `SyntaxError`,以呼叫記錄斷言「無效輸入時原生 API 呼叫數為 0」比只驗回傳值可靠.
+- **`Blob.text()` 去 BOM、`mock.timers` 對負數與超限延遲一律當 1 毫秒**:前者使「含 BOM 之下載」案同綠,後者使「非預期延遲改預設」之序列比對抓不到夾限變異;各以 `arrayBuffer()` 位元組解碼、包裝 `globalThis.setTimeout` 觀察引數處理(見 feedback 2026-11-18).
+- **修前紅逐檔以獨立 mocha 行程執行**: 合跑時舊碼於計時器回呼拋未捕捉例外會中止整批(首次只跑到 268 案);腳本 `runEach` 對每檔 `spawnSync` 並彙整 passing／failing,另留 `--exit`.`domShowInputDatatime` 之舊碼仍中止於第 12 案,屬舊碼缺陷之證據而非測試問題.
+- **真 Chromium 並排載入修前／修後之 `src`**: 本機 http 伺服器供 `/new/`、`/old/`(`git archive HEAD src`)與 `/nm/`(`node_modules`),import map 對應 `lodash-es/`、`he`、`seamless-scroll-polyfill`;`eventemitter3`(CJS 之 `index.mjs` 轉出 `index.js`)與 `dayjs` 於瀏覽器無法直接載入,以最小替身供應(只供載入,不用其行為),替身會污染用到它之修前列(`domShowInputDatatime` 修前列即因 `d.isValid` 缺而非真缺陷,報告不採).下載以 Playwright 之 `download` 事件取檔名與位元組,`page.evaluate` 之字串形式避免函式序列化問題.
+- **變異存活要先判是否等價,再決定補案或不補**: `domAlert` 之 `sget(opt, 'textColor', '#000')` 預設值被 `sstyle` 之預設蓋過而等價(不補);`domScrollIntoView` 拿掉 `isOptObj` 因 `read` 對非物件恆回 `undefined` 而等價於僅在「帶屬性之陣列與函數」時可區分,補該案後擊殺;`delay` 之夾限變異則須觀察交給 `setTimeout` 之引數才抓得到.
+- **契約文件作為審查提示詞**: 把「兩條通則＋逐函數契約＋審查重點」寫成單檔 `contract.md` 並附新舊碼副本供審查者唯讀,內部獨立複審(sonnet 子代理)129 次工具呼叫、約 8 分鐘提出 8 條,6 條屬實;其中最有價值者為「既有測試未隨 JSDoc 更新而全套會紅」(未於單檔運行時發現,全套才現形)——**改 JSDoc 型別前先 Grep 測試是否以 `indexOf('@returns {…}')` 斷言 JSDoc 字面**(`test/jsdocFixes.test.mjs`).
+- **下游盤點兩次**: ①呼叫站點(函數名 `\(` 之 Grep,含 `.vue`),逐站判斷引數來源與是否用回傳值;②舊訊息字面對 `src/` 與 `test/` 各 Grep 一次,命中須判斷是否同形之自撰字串(`'invalid filename'`、`'data is not an array'` 於他套件為各自撰寫).
+
 ## 瀏覽器函數之假 DOM 單元測試與真 Chromium 並排驗證、opt 改 iseint 之觀察法(2026-11-12,主控任務 20261112220545,ws430)
 
 - **假 DOM 斷言要與 DOM 建構方式無關**: `domAlert` 由「整段 `innerHTML`」改為 `createElement` 建外框與按鈕;若斷言讀「元素之 style 屬性」,修前版(只有 innerHTML 字串)之紅是因結構不同而非行為不同.改為收集「元素 style 屬性＋各元素 `innerHTML` 內之 `style="…"`」後去空白比對(`test/domAlert.test.mjs` 之 `styleTexts`),修前紅之原因即為 D5 之值(如 `padding:5px 0px 0px 0px`).結構本身(✕ 是否為可綁事件之元素)另以 D7 案斷言.

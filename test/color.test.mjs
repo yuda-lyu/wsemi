@@ -1843,6 +1843,10 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
         return null
     }
 
+    //NAN_MIX, 權重為NaN時之標記(見legacyInterp); same, 與interp之結果相同(NaN權重時interp得含'NaN'之色字串)
+    let NAN_MIX = Symbol('nan-mix')
+    let same = (actual, expected) => actual === expected || (expected === NAN_MIX && actual === 'rgba(NaN, NaN, NaN, NaN)')
+
     //修前之演算法(lodash each迭代), 原樣複製(內部函數改以公開之toRgba、mix取代: toRgba(parseColor(v))同oc.toRgba(v)), 供差分
     let legacyInterp = (gradient) => {
 
@@ -1872,7 +1876,13 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
                 if (r0 <= r && r1 >= r) {
                     let w0 = (r1 - r) / (r1 - r0)
                     let w1 = (r - r0) / (r1 - r0)
-                    color = oc.mix(c0, w0, c1, w1, 'toRgbaString')
+                    //ws492e: 對外之oc.mix已檢測權重(須為0至1之有效數字), 重複之漸變鍵(r0等於r1)使權重為NaN時會拋錯; interp內部自算之權重不經檢測(維持原行為, 得含NaN之色字串), 此處以標記表示, 由nanMix判定
+                    try {
+                        color = oc.mix(c0, w0, c1, w1, 'toRgbaString')
+                    }
+                    catch (err) {
+                        color = NAN_MIX
+                    }
                     break
                 }
             }
@@ -1956,7 +1966,7 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
                 let f = quiet(() => oc.interp(g))
                 let fl = quiet(() => legacyInterp(g))
                 for (let r of rs) {
-                    if (f(r) !== fl(r)) {
+                    if (!same(f(r), fl(r))) {
                         bad.push({ i, r })
                     }
                 }
@@ -2037,7 +2047,7 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
     describe(`漸層帶陣列樣length鍵(非負整數)時, 一律當一般鍵: length值為數字非合法顏色而丟錯`, function() {
 
         //[名稱, 漸層, 預期錯誤訊息]; 預期訊息為手算: 依鍵序第一個無法解析之值決定, 對照組為改名length為foo者
-        let notColor = 'color is not a string or an object'
+        let notColor = 'invalid color: must be a string or an object' //ws492e: V19固定訊息(原'color is not a string or an object')
         let cases = [
             ['{length:2,0:#000000,1:#ffffff} (修前不丟錯並忽略length)', { length: 2, 0: '#000000', 1: '#ffffff' }, notColor],
             ['{length:0,0:#000000,1:#ffffff} (修前length為0而得空漸層)', { length: 0, 0: '#000000', 1: '#ffffff' }, notColor],
@@ -2045,7 +2055,7 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             ['{length:3,0,1,2} 三色皆在(修前依索引0~2走訪而不丟錯)', { length: 3, 0: '#000000', 1: '#808080', 2: '#ffffff' }, notColor],
             ['{length:5,0~4} 五色皆在', { length: 5, 0: '#000000', 1: '#111111', 2: '#222222', 3: '#333333', 4: '#444444' }, notColor],
             ['{length:1,a:x}', { length: 1, a: 'x' }, notColor],
-            ['{a:x,length:1} 鍵序a在前: 先解析a而丟can not parse color: x(修前丟color is not a string or an object)', { a: 'x', length: 1 }, 'can not parse color: x'],
+            ['{a:x,length:1} 鍵序a在前: 先解析a而丟invalid color: must be a valid color(修前丟invalid color: must be a string or an object, 即length之值1非合法顏色)', { a: 'x', length: 1 }, 'invalid color: must be a valid color'],
             ['{length:1}', { length: 1 }, notColor],
             ['{length:1000,0,1} 較大之length(行程內只用小值)', { length: 1000, 0: '#000000', 1: '#ffffff' }, notColor],
         ]
@@ -2134,7 +2144,7 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             let f = quiet(() => oc.interp(g))
             let fl = quiet(() => legacyInterp(g))
             for (let r of rs) {
-                assert.strict.strictEqual(f(r), fl(r))
+                assert.strict.strictEqual(same(f(r), fl(r)), true)
             }
             assert.strict.strictEqual(f(0.5), 'rgb(127.5,127.5,127.5)')
             assert.strict.strictEqual(f(2), 'rgb(255,255,255)')
@@ -2147,15 +2157,15 @@ describe(`color.interp 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
         let runner = join(__dirname, 'tools', 'objIterG3Runner.mjs')
         let MAX = Number.MAX_SAFE_INTEGER
         //limit 64MB; 修前之實作於索引缺漏處即丟錯(索引2無值), 故不致耗盡資源, 但length被忽略或訊息不同
-        let notColor = 'color is not a string or an object'
+        let notColor = 'invalid color: must be a string or an object' //ws492e: V19固定訊息(原'color is not a string or an object')
         let cases = [
             ['len', 1e8, { threw: true, msg: notColor }],
             ['len', MAX, { threw: true, msg: notColor }],
             ['len', 4294967295, { threw: true, msg: notColor }],
             ['len', 4294967296, { threw: true, msg: notColor }],
             ['len', 2 ** 53, { threw: true, msg: notColor }], //超過isLength上限, 修前即以自有鍵迭代, 對照
-            ['msg', MAX, { threw: true, msg: 'can not parse color: x' }], //{a:'x', length}: 修前丟color is not a string or an object
-            ['msg', 4294967295, { threw: true, msg: 'can not parse color: x' }],
+            ['msg', MAX, { threw: true, msg: 'invalid color: must be a valid color' }], //{a:'x', length}: 修前丟invalid color: must be a string or an object
+            ['msg', 4294967295, { threw: true, msg: 'invalid color: must be a valid color' }],
             ['tag', MAX, { threw: false, v05: 'rgb(127.5,127.5,127.5)', v2: 'rgb(255,255,255)' }], //Symbol.toStringTag偽稱Array: iseobj為false, 對照
             ['proto', MAX, { threw: false, v05: 'rgba(128, 128, 128, 1)', v2: null }], //原型上之length getter
             ['proto', 4294967295, { threw: false, v05: 'rgba(128, 128, 128, 1)', v2: null }],
@@ -2197,7 +2207,166 @@ describe(`color.interp 讀值與解析順序(R-OBJ-ITER-01 外審補測)`, funct
                 throw late
             },
         }
-        assert.throws(() => oc.interp(g), (e) => e !== late && /can not parse color: x/.test(String(e.message)))
+        assert.throws(() => oc.interp(g), (e) => e !== late && /invalid color: must be a valid color/.test(String(e.message)))
+    })
+
+})
+
+
+//ws492e: N-A(主控定): color之必須參數amount(modSaturate、modLighten、modBrighten、modHue)與w1、w2(mix)原無檢測(undefined、'abc'、NaN、數字字串'0.5'以+=串接皆通過而得'rgb(NaN, NaN, NaN)', null被當0), 改為須為有效數字且介於0至1(isenum＋cdbl, K4), 無效拋V19固定訊息; 顏色無效之訊息與console原回顯輸入字串與整個物件(V20), 改為固定訊息; num、fmtOutput之訊息改V19格式
+//  規格: dspec〈輸入參數之檢測機制〉K2、K4、V19、V20、§5.3 C8(color屬數值計算依§5.1一律拋錯)
+describe(`color 輸入檢測(ws492e)`, function() {
+
+    let AMOUNT_FNS = ['modSaturate', 'modLighten', 'modBrighten', 'modHue']
+    let BAD = [
+        ['undefined', undefined],
+        ['null', null],
+        ['NaN', NaN],
+        ['Infinity', Infinity],
+        ['-Infinity', -Infinity],
+        [`'abc'`, 'abc'],
+        [`''`, ''],
+        [`' '`, ' '],
+        ['true', true],
+        ['false', false],
+        ['{}', {}],
+        ['[]', []],
+        ['[0.5]', [0.5]],
+        ['function', () => 0.5],
+        ['Symbol', Symbol('x')],
+        ['new Number(0.5)', new Number(0.5)], // eslint-disable-line no-new-wrappers
+        [`'0x10'`, '0x10'],
+        [`'1e400'`, '1e400'],
+        ['-0.1', -0.1],
+        ['1.1', 1.1],
+        ['2', 2],
+        ['-1', -1],
+        [`'1.5'`, '1.5'],
+        [`'-0.5'`, '-0.5'],
+    ]
+
+    //spec: amount無效拋Error('invalid amount: must be a number from 0 to 1'), 不得得到NaN輸出
+    for (let fn of AMOUNT_FNS) {
+        for (let [label, v] of BAD) {
+            it(`should throw invalid amount when ${fn} amount is ${label}`, function() {
+                assert.throws(() => oc[fn]('red', v), (err) => {
+                    assert.strict.deepStrictEqual(err instanceof Error, true)
+                    assert.strict.deepStrictEqual(err.message, 'invalid amount: must be a number from 0 to 1')
+                    return true
+                })
+            })
+        }
+        it(`should throw invalid amount when ${fn} is called without amount (the former rgb(NaN, NaN, NaN))`, function() {
+            assert.throws(() => oc[fn]('red'), { message: 'invalid amount: must be a number from 0 to 1' })
+        })
+
+        //spec(K4): 有效數字(含數字字串, 邊界0與1)轉為數字後使用, 與同值之數字結果相同, 且不含NaN
+        for (let [label, s, n] of [[`'0.5'`, '0.5', 0.5], [`' 0.5 '`, ' 0.5 ', 0.5], [`'.5'`, '.5', 0.5], [`'5e-1'`, '5e-1', 0.5], [`'0'`, '0', 0], [`'1'`, '1', 1], ['0', 0, 0], ['1', 1, 1], ['0.25', 0.25, 0.25]]) {
+            it(`should use ${label} as the number ${n} in ${fn}`, function() {
+                let a = oc[fn]('rgb(120, 60, 200)', s)
+                let b = oc[fn]('rgb(120, 60, 200)', n)
+                assert.strict.deepStrictEqual(a, b)
+                assert.strict.deepStrictEqual(a.includes('NaN'), false)
+            })
+        }
+    }
+
+    //spec: 顏色參數先於amount被檢測(引數求值順序)
+    it(`should report the color before the amount`, function() {
+        assert.throws(() => oc.modLighten(null, 'x'), { message: 'invalid color: must be a string or an object' })
+        assert.throws(() => oc.modLighten('not-a-color-zzz', 'x'), { message: 'invalid color: must be a valid color' })
+    })
+
+    //spec: mix之w1、w2各有自己之訊息(原w2誤報w1), 檢測順序w1、w2
+    for (let [label, v] of BAD) {
+        it(`should throw invalid w1 when mix w1 is ${label}`, function() {
+            assert.throws(() => oc.mix('red', v, 'blue', 0.5), { message: 'invalid w1: must be a number from 0 to 1' })
+        })
+        it(`should throw invalid w2 when mix w2 is ${label}`, function() {
+            assert.throws(() => oc.mix('red', 0.5, 'blue', v), { message: 'invalid w2: must be a number from 0 to 1' })
+        })
+    }
+    it(`should report w1 before w2 and accept numeric strings and the boundaries 0 and 1`, function() {
+        assert.throws(() => oc.mix('red', 'x', 'blue', 'y'), { message: 'invalid w1: must be a number from 0 to 1' })
+        assert.strict.deepStrictEqual(oc.mix('red', '0.5', 'blue', ' 0.5 ', 'toRgbString'), oc.mix('red', 0.5, 'blue', 0.5, 'toRgbString'))
+        assert.strict.deepStrictEqual(oc.mix('red', 0, 'blue', 1, 'toRgbString'), oc.mix('red', '0', 'blue', '1', 'toRgbString'))
+    })
+
+    //spec(V20): 顏色參數無效之訊息與console皆不含輸入值
+    it(`should not echo an invalid color (string or object) in the error message or in console output`, function() {
+        let logs = []
+        let raw = console.log
+        console.log = (...a) => {
+            logs.push(a.map((x) => (x instanceof Error ? x.message : typeof x === 'string' ? x : JSON.stringify(x))).join(' '))
+        }
+        try {
+            assert.throws(() => oc.toRgb('secretvalue-9f3a'), { message: 'invalid color: must be a valid color' })
+            assert.throws(() => oc.toRgb({ r: 'secretobj-9f3a', g: 1, b: 2 }), { message: 'invalid color: must be a valid color' })
+            assert.throws(() => oc.toRgb(null), { message: 'invalid color: must be a string or an object' })
+            assert.throws(() => oc.toRgb(12345678), { message: 'invalid color: must be a string or an object' })
+            assert.throws(() => oc.toRgb(['secretarr-9f3a']), { message: 'invalid color: must be a string or an object' })
+        }
+        finally {
+            console.log = raw
+        }
+        assert.strict.deepStrictEqual(logs.some((s) => s.includes('secret') || s.includes('12345678')), false)
+    })
+
+    //spec: 28個轉換方法與mod、spread、mix皆經同一解析, 顏色無效一律同訊息
+    it(`should throw the same fixed message for an invalid color in every conversion method`, function() {
+        for (let k of Object.keys(oc)) {
+            if (k === 'interp') {
+                continue
+            }
+            let args = ['not-a-color-zzz']
+            if (k.startsWith('mod') && k !== 'modGrey' && k !== 'modComplement') {
+                args.push(0.5)
+            }
+            if (k.startsWith('spread')) {
+                args.push(3)
+            }
+            if (k === 'mix') {
+                args = ['not-a-color-zzz', 0.5, 'red', 0.5]
+            }
+            let raw = console.log
+            console.log = () => {}
+            try {
+                assert.throws(() => oc[k](...args), { message: 'invalid color: must be a valid color' }, k)
+            }
+            finally {
+                console.log = raw
+            }
+        }
+    })
+
+    //spec: fmtOutput須為輸出格式名稱(自有鍵), 非字串與原型鏈成員名('constructor'等)亦無效, 同一V19訊息
+    for (let [label, v] of [[`'toXxx'`, 'toXxx'], [`'constructor'`, 'constructor'], [`'toString'`, 'toString'], [`'__proto__'`, '__proto__'], ['5', 5], ['null', null], ['{}', {}], [`''`, '']]) {
+        it(`should throw invalid fmtOutput when fmtOutput is ${label}`, function() {
+            let raw = console.log
+            console.log = () => {}
+            try {
+                assert.throws(() => oc.modLighten('red', 0.5, v), { message: 'invalid fmtOutput: must be one of the output formats' })
+                assert.throws(() => oc.mix('red', 0.5, 'blue', 0.5, v), { message: 'invalid fmtOutput: must be one of the output formats' })
+            }
+            finally {
+                console.log = raw
+            }
+        })
+    }
+
+    //spec: num須為有效整數, 訊息V19
+    it(`should throw invalid num for spreadHue and spreadMonochromatic`, function() {
+        for (let v of ['x', 1.5, NaN, Infinity, null, undefined, true]) {
+            assert.throws(() => oc.spreadHue('red', v), { message: 'invalid num: must be an integer' })
+            assert.throws(() => oc.spreadMonochromatic('red', v), { message: 'invalid num: must be an integer' })
+        }
+    })
+
+    //spec: interp內部自算之權重不經對外mix之檢測(維持原行為): 重複之漸變鍵使權重為NaN時不拋錯
+    it(`should not throw in interp when the weights computed from duplicated gradient keys are NaN`, function() {
+        let f = oc.interp({ '0.5': 'red', '.5': 'blue', '1': 'green' })
+        assert.doesNotThrow(() => f(0.5))
+        assert.strict.deepStrictEqual(f(0.5), 'rgba(NaN, NaN, NaN, NaN)') //維持修前之輸出(NaN色字串), 不因對外mix之檢測而拋錯
     })
 
 })

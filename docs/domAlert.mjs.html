@@ -54,7 +54,6 @@ import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import replace from './replace.mjs'
-import haskey from './haskey.mjs'
 import optVal from './_optVal.mjs'
 import domFadeIn from './domFadeIn.mjs'
 import domFadeOut from './domFadeOut.mjs'
@@ -103,13 +102,17 @@ function sget(o, k, d) {
 }
 
 
-//sstyle, 字串型opt去除分號後放入樣式(行為不改: 非字串得空字串); 判型拋錯(如已撤銷之Proxy)亦得空字串
-function sstyle(v) {
+//sstyle, 字串型opt去除分號後放入樣式(K3: 只收原始字串, null、非字串、包裝物件new String視為未給而用預設def; 空字串為合法值, 表示不要該樣式; 使用者2026-11-16 W-14)
+//  判型以typeof(不讀取輸入之任何屬性), 判型拋錯(如已撤銷之Proxy)視為未給而用預設
+function sstyle(v, def) {
     try {
+        if (typeof v !== 'string') {
+            return def
+        }
         return replace(v, ';', '')
     }
     catch (err) {
-        return ''
+        return def
     }
 }
 
@@ -314,6 +317,7 @@ function addItem({ id, position, time, pm, ele }) {
  * 3. 數值類opt(time、paddingStyle各鍵、borderWidth、borderRadius、closeIconShift各鍵)逐一以isenum檢查(有限數字或數字字串)，非預期之輸入(含NaN、Infinity、'0x10'、包裝物件、非數字，及time、paddingStyle、borderWidth、borderRadius之負數)視為未給而改用該欄預設，不報錯；
  * 4. paddingStyle部分給鍵時，未給或無效之鍵保留該鍵預設(top:14、right:26、bottom:14、left:14)；closeIconShift部分給鍵時，未給之鍵保留預設(top:10、right:10)，但同軸已給有效值者不再套用另一端之預設(給bottom而未給top時不設top，給left而未給right時不設right)，以免上下或左右同時定位；
  * 5. 關閉: 顯示時間到、或按關閉按鈕(✕)時，皆先resolve回傳之Promise再移除彈窗；關閉按鈕與滑鼠移入移出之淡入淡出以addEventListener綁定，不使用行內事件屬性與全域函數(嚴格CSP下亦可用)；
+ * 5b. 字串型樣式opt(textColor、backgroundColor、borderColor、shadowStyle，使用者2026-11-16 W-14縮限D6)：只認原始字串，null、非字串、包裝物件、讀取拋錯視為未給而改用該欄預設(K3)，空字串''為合法值(表示不要該樣式)；opt.type只認內建圖標之自有鍵，不經原型鏈判定；
  * 6. 外框、內寬層與關閉按鈕以createElement建立，msg與圖標以innerHTML插入內寬層內之內容容器，其HTML之解析限於該容器: msg含未閉合之標籤(如'&lt;textarea>abc')時不再吞入其後之關閉按鈕與版面(修前整段一起解析而會)；正常HTML之外觀、位置與修前相同；
  * 7. 需於瀏覽器執行: msg有效而無document(nodejs等)時，建立元素失敗而同步拋出執行環境之錯誤(既有行為，不回Promise)。
  *
@@ -323,17 +327,17 @@ function addItem({ id, position, time, pm, ele }) {
  * @memberOf wsemi
  * @param {String} msg 輸入彈窗訊息字串，可為html(以HTML插入，外部文字須先以htmlEncode跳脫)，須為非空之原始字串，否則不顯示並回傳已完成之Promise
  * @param {Object} [opt={}] 輸入設定物件，非物件(含null)視為{}，預設{}
- * @param {String} [opt.type='success'] 輸入訊息種類字串，可使用'success'、'warning'、'error'，預設'success'
+ * @param {String} [opt.type='success'] 輸入訊息種類字串，可使用'success'、'warning'、'error'、'infor'、'cancel'(程式內建圖標之全部鍵，只認原始字串且須為其自有鍵，不經原型鏈判定)，其餘(含null、非字串、包裝物件、'toString'、'constructor'等原型鏈成員名、未列之字串)視為未給而改用預設'success'，預設'success'
  * @param {String} [opt.icon=''] 輸入圖標字串，可為html(以HTML插入，不可傳未經跳脫之外部文字)，預設依照type給予指定圖標，指定圖標詳見程式碼
  * @param {String} [opt.position='top-right'] 輸入位置字串，可使用'top-right'、'top-left'、'bottom-right'、'bottom-left'，預設'top-right'
  * @param {Number} [opt.time=4000] 輸入顯示時間長度數字，單位為毫秒ms，須為有限且非負之數字(可為字串型數字)，非預期之輸入(含NaN、Infinity、負數、非數字)視為未給而改用預設，預設4000
  * @param {Object} [opt.paddingStyle={top:14,right:26,bottom:14,left:14}] 輸入內寬設定物件，可輸入top、bottom、left、right，單位為px，各鍵須為有限且非負之數字(可為字串型數字)，未給或無效之鍵用該鍵預設，預設{top:14,right:26,bottom:14,left:14}
- * @param {String} [opt.textColor='#000'] 輸入文字顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#000'
- * @param {String} [opt.backgroundColor='#fff'] 輸入背景顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#fff'
+ * @param {String} [opt.textColor='#000'] 輸入文字顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式，由瀏覽器預設)，預設'#000'
+ * @param {String} [opt.backgroundColor='#fff'] 輸入背景顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式)，預設'#fff'
  * @param {Number} [opt.borderWidth=1] 輸入邊框寬度數字，單位px，須為有限且非負之數字(可為字串型數字)，非預期之輸入改用預設，預設1
- * @param {String} [opt.borderColor='#ebeef5'] 輸入邊框顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#ebeef5'
+ * @param {String} [opt.borderColor='#ebeef5'] 輸入邊框顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式)，預設'#ebeef5'
  * @param {Number} [opt.borderRadius=8] 輸入邊框圓角數字，單位px，須為有限且非負之數字(可為字串型數字)，非預期之輸入改用預設，預設8
- * @param {String} [opt.shadowStyle='0 2px 12px 0 rgba(0,0,0,.1)'] 輸入陰影樣式字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'0 2px 12px 0 rgba(0,0,0,.1)'
+ * @param {String} [opt.shadowStyle='0 2px 12px 0 rgba(0,0,0,.1)'] 輸入陰影樣式字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要陰影)，預設'0 2px 12px 0 rgba(0,0,0,.1)'
  * @param {Object} [opt.closeIconShift={top:10,right:10}] 輸入關閉按鈕平移距離設定物件，可輸入top、bottom、left、right，單位為px，各鍵須為有限數字(可為負數、字串型數字)，無效之鍵視為未給；未給之鍵保留預設(top:10、right:10)，但給bottom而未給top時不設top、給left而未給right時不設right，預設{top:10,right:10}
  * @param {Boolean} [opt.debug=false] 輸入是否於數值類opt為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
@@ -362,9 +366,9 @@ function domAlert(msg, opt = {}) {
         opt = {}
     }
 
-    //type
+    //type, 只認kpIcon之自有鍵(不經原型鏈判定: 'toString'、'constructor'、'__proto__'等視為未給, 否則icon會變成函數而被插入函數原始碼文字), 其餘改用預設'success'(K3)
     let type = sget(opt, 'type', 'success')
-    if (!sis((v) => haskey(kpIcon, v), type)) {
+    if (typeof type !== 'string' || !Object.prototype.hasOwnProperty.call(kpIcon, type)) {
         type = 'success'
     }
 
@@ -401,27 +405,23 @@ function domAlert(msg, opt = {}) {
     //usePaddingStyle
     let usePaddingStyle = `padding:${pad.top}px ${pad.right}px ${pad.bottom}px ${pad.left}px;`
 
-    //textColor
-    let textColor = sget(opt, 'textColor', '#000')
-    textColor = sstyle(textColor)
+    //textColor, 非字串視為未給用預設, 空字串為合法值(不要該樣式)
+    let textColor = sstyle(sget(opt, 'textColor', null), '#000')
 
     //backgroundColor
-    let backgroundColor = sget(opt, 'backgroundColor', '#fff')
-    backgroundColor = sstyle(backgroundColor)
+    let backgroundColor = sstyle(sget(opt, 'backgroundColor', null), '#fff')
 
     //borderWidth
     let borderWidth = col.take(sget(opt, 'borderWidth', null), 1, RULE_BORDER_WIDTH)
 
     //borderColor
-    let borderColor = sget(opt, 'borderColor', '#ebeef5')
-    borderColor = sstyle(borderColor)
+    let borderColor = sstyle(sget(opt, 'borderColor', null), '#ebeef5')
 
     //borderRadius
     let borderRadius = col.take(sget(opt, 'borderRadius', null), 8, RULE_BORDER_RADIUS)
 
     //shadowStyle
-    let shadowStyle = sget(opt, 'shadowStyle', '0 2px 12px 0 rgba(0,0,0,.1)')
-    shadowStyle = sstyle(shadowStyle)
+    let shadowStyle = sstyle(sget(opt, 'shadowStyle', null), '0 2px 12px 0 rgba(0,0,0,.1)')
 
     //closeIconShift, 各鍵逐一檢查(無效視為未給); 未給之鍵保留預設top:10、right:10, 但同軸已給有效值者不套用另一端之預設
     let closeIconShift = sget(opt, 'closeIconShift', null)
@@ -532,7 +532,7 @@ export default domAlert
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 17 2026 10:33:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 18 2026 07:17:40 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

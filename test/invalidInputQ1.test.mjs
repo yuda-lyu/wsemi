@@ -343,7 +343,7 @@ describe(`invalidInputQ1 乙 未改變者之守門(現況即應然)`, function()
         }
         assert.strict.deepStrictEqual(errOf(() => estimateTicks('x', 1)), 'rmin is not a number')
         assert.strict.deepStrictEqual(errOf(() => estimateTicks(0, 'x')), 'rmax is not a number')
-        assert.strict.deepStrictEqual(errOf(() => color.toRgb(null)), 'color is not a string or an object')
+        assert.strict.deepStrictEqual(errOf(() => color.toRgb(null)), 'invalid color: must be a string or an object') //ws492e: V19固定訊息(原'color is not a string or an object')
     })
 
     it(`C10 genID length is an opt-class parameter and keeps using the default 32 for unexpected input (Q1-b)`, function() {

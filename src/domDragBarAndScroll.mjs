@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
+import isEle from './isEle.mjs'
 import evem from './evem.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
 import domDragPointer from './domDragPointer.mjs'
@@ -19,8 +20,8 @@ import domDragPointer from './domDragPointer.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragBarAndScroll.test.mjs Github}
  * @memberOf wsemi
- * @param {HTMLElement} panel 輸入panel元素
- * @param {HTMLElement} bar 輸入bar元素
+ * @param {HTMLElement} panel 輸入panel元素，非元素則同步拋Error('invalid panel: must be an element')
+ * @param {HTMLElement} bar 輸入bar元素，非元素則同步拋Error('invalid bar: must be an element')；兩者皆無效時先報panel，皆先於任何監聽之掛載與evem之建立，訊息不含輸入值
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.getHeighRatio=()=>1] 輸入取得高度比例函數，因組件本身或內容物可能會調整尺寸, 故需由外部給予函數取得當前heighRatio，預設()=>1
  * @param {Function} [opt.getWidthRatio=()=>1] 輸入取得寬度比例函數，因組件本身或內容物可能會調整尺寸, 故需由外部給予函數取得當前widthRatio，預設()=>1
@@ -46,6 +47,14 @@ import domDragPointer from './domDragPointer.mjs'
  *
  */
 function domDragBarAndScroll(panel, bar, opt = {}) {
+
+    //check, 會掛載事件監聽, 輸入無效即同步拋錯且先於任何動作(同domAppend; 原panel無效於掛載時拋原生TypeError而監聽已部分建立, bar無效則靜默通過而於每次按下panel時才拋原生TypeError, 主次參數處置不一致)
+    if (!isEle(panel)) {
+        throw new Error('invalid panel: must be an element')
+    }
+    if (!isEle(bar)) {
+        throw new Error('invalid bar: must be an element')
+    }
 
     //getHeighRatio, 因組件本身或內容物可能會調整尺寸, 故需由外部給予函數取得當前heighRatio
     let getHeighRatio = get(opt, 'getHeighRatio', null)

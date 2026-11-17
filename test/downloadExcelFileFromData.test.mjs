@@ -50,4 +50,68 @@ describe(`downloadExcelFileFromData`, function() {
         assert.strict.deepStrictEqual(typeof r.error === 'string', true)
     })
 
+    //ws492e: N-A(主控定): 失敗走{ error }通道(Excel類既有通道, 2026-11-02定維持現行回傳), error為V19固定字串, 不回顯輸入值(V20; 原console.log帶出fileName與整份data); 含NUL之檔名與寫檔失敗原以Node原生錯誤reject而回顯路徑, 改為{ error }
+    //  規格: dspec〈輸入參數之檢測機制〉V19、V20、R-FS-INVALID-PATH-01(含NUL之路徑為無效)、W-23(原生錯誤固定詞彙加錯誤碼)
+    let quiet = async (fn) => {
+        let logs = []
+        let raw = console.log
+        console.log = (...a) => {
+            logs.push(a.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '))
+        }
+        try {
+            return { r: await fn(), logs }
+        }
+        finally {
+            console.log = raw
+        }
+    }
+
+    for (let [label, v] of [['undefined', undefined], ['null', null], [`''`, ''], ['5', 5], ['true', true], ['{}', {}], ['[]', []]]) {
+        it(`should resolve the fixed invalid fileName error and not log the value when fileName is ${label}`, async function() {
+            let { r, logs } = await quiet(() => downloadExcelFileFromData(v, 'data', [['a']]))
+            assert.strict.deepStrictEqual(r, { error: 'invalid fileName: must be a non-empty string' })
+            assert.strict.deepStrictEqual(logs, [])
+        })
+    }
+
+    it(`should resolve the fixed NUL error for a fileName containing a NUL character, writing nothing`, async function() {
+        let fp = `${fdt}/a\u0000b.xlsx`
+        let { r, logs } = await quiet(() => downloadExcelFileFromData(fp, 'data', [['a']]))
+        assert.strict.deepStrictEqual(r, { error: 'invalid fileName: must not contain a NUL character' })
+        assert.strict.deepStrictEqual(logs, [])
+        assert.strict.deepStrictEqual(fs.readdirSync(fdt).some((n) => n.startsWith('a')), false)
+    })
+
+    for (let [label, v] of [['undefined', undefined], ['null', null], [`'not-valid'`, 'not-valid'], ['5', 5], ['{}', {}]]) {
+        it(`should resolve the fixed invalid data error and not log the data when data is ${label}`, async function() {
+            let { r, logs } = await quiet(() => downloadExcelFileFromData(`${fdt}/x.xlsx`, 'data', v))
+            assert.strict.deepStrictEqual(r, { error: 'invalid data: must be an array' })
+            assert.strict.deepStrictEqual(logs, [])
+        })
+    }
+
+    it(`should check fileName before data and not echo the input values`, async function() {
+        let { r } = await quiet(() => downloadExcelFileFromData('', 'data', 'SECRET-data-9f3a'))
+        assert.strict.deepStrictEqual(r, { error: 'invalid fileName: must be a non-empty string' })
+        let { r: r2, logs } = await quiet(() => downloadExcelFileFromData(`${fdt}/x.xlsx`, 'data', { s: 'SECRET-data-9f3a' }))
+        assert.strict.deepStrictEqual(String(r2.error).includes('SECRET'), false)
+        assert.strict.deepStrictEqual(logs.some((s) => s.includes('SECRET')), false)
+    })
+
+    //spec: 寫檔失敗(如上層資料夾不存在)resolve { error }, 為固定詞彙加錯誤碼, 不含路徑, 不reject
+    it(`should resolve an error object with a fixed message and the error code, without the path, when writing fails`, async function() {
+        let fp = `${fdt}/no-such-folder-SECRETDIR-9f3a/x.xlsx`
+        let { r } = await quiet(() => downloadExcelFileFromData(fp, 'data', [['a']]))
+        assert.strict.deepStrictEqual(r, { error: 'operation failed (code ENOENT)' })
+        assert.strict.deepStrictEqual(r.error.includes('SECRETDIR'), false)
+    })
+
+    //spec: 成功時回傳undefined(既有行為不變)
+    it(`should resolve undefined when the file is written`, async function() {
+        let fp = `${fdt}/ok.xlsx`
+        let r = await downloadExcelFileFromData(fp, 'data', [['a', 'b'], [1, 2]])
+        assert.strict.deepStrictEqual(r, undefined)
+        assert.strict.deepStrictEqual(fs.existsSync(fp), true)
+    })
+
 })

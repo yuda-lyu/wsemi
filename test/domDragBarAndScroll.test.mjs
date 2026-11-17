@@ -10,6 +10,7 @@ import domDragBarAndScroll from '../src/domDragBarAndScroll.mjs'
 //  lastEvent保留最近一次派發之事件物件, 供處理器拋錯(dispatch無回傳)時仍可檢查該事件
 class Ele {
     constructor(name, parent) {
+        this.nodeType = 1 //ws492e: domDragBarAndScroll之panel、bar須為元素(isEle: nodeType為1之非純物件), 假元素須具nodeType
         this.name = name
         this.parent = parent || null
         this.hs = {}
@@ -292,6 +293,66 @@ describe(`domDragBarAndScroll`, function() {
     after(function() {
         delete globalThis.window
         delete globalThis.document
+    })
+
+    //--- 輸入檢測(ws492e, 主控定N-A) ---
+    //  原panel無效於掛載時拋原生TypeError(listen(elePanel,'wheel')對null)而監聽已部分建立, bar無效則建構時靜默通過、於每次按下panel時才由事件監聽外拋原生TypeError(註冊後每次按下panel即出未捕捉錯誤), 主次參數處置不一致(P3/V16)
+    //  改為panel、bar須為元素, 否則同步拋固定訊息之Error(V19), 先於任何監聽之掛載與evem之建立(會掛載事件監聽者拋錯之通則, V17)
+    describe(`argument checks (ws492e)`, function() {
+
+        let BAD = [
+            ['undefined', undefined],
+            ['null', null],
+            [`'div'`, 'div'],
+            ['5', 5],
+            ['true', true],
+            ['{}', {}],
+            ['[]', []],
+            ['{ nodeType: 1 }', { nodeType: 1, addEventListener() {} }],
+            ['function', () => {}],
+        ]
+
+        for (let [label, v] of BAD) {
+            it(`should throw invalid panel when panel is ${label}, mounting nothing on bar`, function() {
+                let bar = new Ele('bar')
+                assert.throws(() => domDragBarAndScroll(v, bar), (err) => {
+                    assert.strict.deepStrictEqual(err instanceof Error, true)
+                    assert.strict.deepStrictEqual(err.message, 'invalid panel: must be an element')
+                    return true
+                })
+                assert.strict.deepStrictEqual(bar.nListeners(), 0)
+            })
+            it(`should throw invalid bar when bar is ${label}, mounting nothing on panel`, function() {
+                let panel = new Ele('panel')
+                assert.throws(() => domDragBarAndScroll(panel, v), (err) => {
+                    assert.strict.deepStrictEqual(err instanceof Error, true)
+                    assert.strict.deepStrictEqual(err.message, 'invalid bar: must be an element')
+                    return true
+                })
+                assert.strict.deepStrictEqual(panel.nListeners(), 0)
+            })
+        }
+
+        it(`should report panel first when both are invalid, and not echo the input values`, function() {
+            assert.throws(() => domDragBarAndScroll(null, null), { message: 'invalid panel: must be an element' })
+            assert.throws(() => domDragBarAndScroll(), { message: 'invalid panel: must be an element' })
+            assert.throws(() => domDragBarAndScroll('SECRET-panel-9f3a', new Ele('bar')), (err) => !err.message.includes('SECRET'))
+            assert.throws(() => domDragBarAndScroll(new Ele('panel'), 'SECRET-bar-9f3a'), (err) => !err.message.includes('SECRET'))
+        })
+
+        it(`should throw before reading opt`, function() {
+            let n = 0
+            let opt = {}
+            Object.defineProperty(opt, 'getHeighRatio', {
+                get() {
+                    n++
+                    return null
+                },
+            })
+            assert.throws(() => domDragBarAndScroll(null, new Ele('bar'), opt), { message: 'invalid panel: must be an element' })
+            assert.strict.deepStrictEqual(n, 0)
+        })
+
     })
 
     //--- 狀態×事件全表 ---

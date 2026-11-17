@@ -5,10 +5,123 @@ import { traceRec, useFakeClock } from './tools/timeKit.mjs'
 import { mkBrowser, fiveOnTrace, collectUnhandled, mkMeta, flush } from './tools/domFilesKit.mjs'
 
 
+//ws492e: W-17(使用者2026-11-16「甲」): domShowInputDatatime依兩通則: 回傳Promise者reject不同步throw(同domShowInputAndGetFiles), 無可用之參考元素(opt.eleRef與document.activeElement皆非元素或未接於DOM下)時先於任何DOM變動以固定字串reject
+//  規格: dspec〈輸入參數之檢測機制〉§11 W-17、§5.1(回傳Promise者reject)、V19、V20、V17(無殘留: 不得先移除前次呼叫建立之輸入框)
+//  DOM測試作法: 以最小假瀏覽器(mkBrowser)驅動, 原生日曆視窗屬瀏覽器語義, 另以真瀏覽器實測
 describe(`domShowInputDatatime`, function() {
 
-    it(`need test in browser`, function() {
-        assert.strict.deepStrictEqual(1, 1)
+    let MSG = 'invalid opt.eleRef: must be an element, or document.activeElement must be an element'
+    let env = null
+
+    beforeEach(function() {
+        env = mkBrowser()
+    })
+
+    afterEach(function() {
+        env.restore()
+    })
+
+    //rej, 取得reject之值('(not rejected)'表示未reject), 並確認為不同步拋錯之Promise
+    let rej = async (fn) => {
+        let p = null
+        assert.doesNotThrow(() => {
+            p = fn()
+        })
+        assert.strict.deepStrictEqual(p instanceof Promise, true)
+        let got = '(not rejected)'
+        await p.then(() => {}, (err) => {
+            got = err
+        })
+        return got
+    }
+
+    //snap, DOM之結構摘要(body下全部元素之標籤)
+    let snap = () => {
+        let out = []
+        let walk = (e) => {
+            for (let c of e.children) {
+                out.push(c.tagName)
+                walk(c)
+            }
+        }
+        walk(env.body)
+        return out.join(',')
+    }
+
+    //spec: opt.eleRef非元素且document.activeElement為null: reject固定字串, 不拋錯, 不建立輸入框, 不掛監聽
+    for (let [label, v] of [['undefined', undefined], ['null', null], ['string', 'not-an-element'], ['number', 5], ['plain object', {}]]) {
+        it(`should reject with the fixed message and leave the DOM untouched when eleRef is ${label} and there is no active element`, async function() {
+            env.document.activeElement = null
+            let n0 = snap()
+            let got = await rej(() => domShowInputDatatime('2000-01-01T00:00:00', { eleRef: v }))
+            assert.strict.deepStrictEqual(got, MSG)
+            assert.strict.deepStrictEqual(snap(), n0)
+            assert.strict.deepStrictEqual(env.body.children.length, 0)
+        })
+    }
+
+    //spec: document.activeElement非元素(如字串)亦無效
+    it(`should reject when document.activeElement is not an element`, async function() {
+        env.document.activeElement = 'not-an-element'
+        assert.strict.deepStrictEqual(await rej(() => domShowInputDatatime('2000-01-01')), MSG)
+        assert.strict.deepStrictEqual(env.body.children.length, 0)
+    })
+
+    //spec: 參考元素已脫離DOM(無parentNode, 無處插入輸入框)亦無效, 原於insertBefore時拋原生TypeError
+    it(`should reject when the reference element is detached (no parentNode)`, async function() {
+        let detached = env.document.createElement('button')
+        let got = await rej(() => domShowInputDatatime('2000-01-01', { eleRef: detached }))
+        assert.strict.deepStrictEqual(got, MSG)
+        assert.strict.deepStrictEqual(env.body.children.length, 0)
+        assert.strict.deepStrictEqual(detached.nListeners(), 0)
+    })
+
+    //spec: 無document(非瀏覽器環境)不同步拋錯, reject固定字串
+    it(`should reject (not throw) when document is not defined and eleRef is not an element`, async function() {
+        env.restore()
+        assert.strict.deepStrictEqual(typeof document, 'undefined')
+        assert.strict.deepStrictEqual(await rej(() => domShowInputDatatime('2000-01-01')), MSG)
+    })
+
+    //spec(V17): 檢測先於任何DOM變動: 無效之呼叫不得先移除前一次呼叫建立之輸入框
+    it(`should not remove the input of an earlier pending call when the reference element is invalid`, async function() {
+        let clock = useFakeClock() //假時鐘: 不讓1ms延遲彈出之計時器於測試結束後於還原之全域上觸發
+        try {
+            let btn = env.mkEle('button')
+            domShowInputDatatime('2000-01-01', { eleRef: btn }) //pending
+            let n1 = env.body.children.length
+            assert.strict.deepStrictEqual(n1, 2) //button與緊接其後之輸入框容器
+            env.document.activeElement = null
+            let got = await rej(() => domShowInputDatatime('2000-01-01', { eleRef: 'x' }))
+            assert.strict.deepStrictEqual(got, MSG)
+            assert.strict.deepStrictEqual(env.body.children.length, n1)
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    //spec(V20): reject字串不回顯輸入值
+    it(`should not echo the input value in the rejection`, async function() {
+        env.document.activeElement = null
+        let got = await rej(() => domShowInputDatatime('2000-01-01', { eleRef: 'SECRET-eleRef-9f3a' }))
+        assert.strict.deepStrictEqual(String(got).includes('SECRET'), false)
+    })
+
+    //spec: eleRef非元素時退回有效之document.activeElement(既有行為不變)
+    it(`should fall back to a valid document.activeElement when eleRef is not an element`, async function() {
+        let clock = useFakeClock()
+        try {
+            let btn = env.mkEle('button')
+            env.document.activeElement = btn
+            let pm = domShowInputDatatime('2000-01-01', { eleRef: 'x' })
+            assert.strict.deepStrictEqual(pm instanceof Promise, true)
+            assert.strict.deepStrictEqual(env.body.children.length, 2)
+            assert.strict.deepStrictEqual(btn.nListeners('focusout'), 1)
+        }
+        finally {
+            clock.restore()
+        }
     })
 
 })

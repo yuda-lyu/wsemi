@@ -195,13 +195,13 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
             assert.strict.deepStrictEqual(color.toRgbaString('rgb(50%, 12%, 8%)'), 'rgba(128, 31, 20, 1)')
         })
 
-        //對應§7.1: 整數個數num由isint改iseint; 無效回'num is not an integer'(訊息不改), 且Infinity類不再使迴圈不結束(修前記憶體耗盡、離開碼134)
+        //對應§7.1: 整數個數num由isint改iseint; 無效回'invalid num: must be an integer'(ws492e: V19固定訊息, 原'num is not an integer'), 且Infinity類不再使迴圈不結束(修前記憶體耗盡、離開碼134)
         for (let fn of ['spreadHue', 'spreadMonochromatic']) {
 
             for (let key of ['inf', 'ninf', 'infstr', 'e400', 'hex', 'wrapper']) {
-                it(`should throw num is not an integer in a child process when ${fn} num is ${key}`, function() {
+                it(`should throw invalid num in a child process when ${fn} num is ${key}`, function() {
                     let { r } = runChildCase(spreadRunner, `${fn}/${key}`, { execArgv: ['--max-old-space-size=64'], timeout: 20000, allowNoResult: true })
-                    assert.strict.deepStrictEqual(r, { ok: false, msg: 'num is not an integer' })
+                    assert.strict.deepStrictEqual(r, { ok: false, msg: 'invalid num: must be an integer' })
                 })
             }
 
@@ -215,7 +215,7 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
             //行程內(無Infinity類輸入): 非整數、非數字仍throw、數字字串同數值
             it(`should keep ${fn} in-process checks (non-integer, non-number) and numeric string equal to number`, function() {
                 for (let bad of [0.5, -1.5, 'abc', '', null, undefined, true, NaN, [3], {}, 3n, '1.5']) {
-                    assert.throws(() => color[fn]('#336699', bad), isErr('num is not an integer'))
+                    assert.throws(() => color[fn]('#336699', bad), isErr('invalid num: must be an integer'))
                 }
                 assert.strict.deepStrictEqual(color[fn]('#336699', ' 4 '), color[fn]('#336699', 4))
                 assert.strict.deepStrictEqual(color[fn]('#336699', '4e0'), color[fn]('#336699', 4))
@@ -231,8 +231,8 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
                 if (typeof v === 'number' || v === 'Infinity' || v === '-Infinity' || v === '1e400' || v === '-1e400') {
                     continue //Infinity類另於子行程驗(修前會使迴圈不結束)
                 }
-                assert.throws(() => color.spreadHue('#336699', v), isErr('num is not an integer'))
-                assert.throws(() => color.spreadMonochromatic('#336699', v), isErr('num is not an integer'))
+                assert.throws(() => color.spreadHue('#336699', v), isErr('invalid num: must be an integer'))
+                assert.throws(() => color.spreadMonochromatic('#336699', v), isErr('invalid num: must be an integer'))
             }
         })
 

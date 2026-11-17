@@ -3,10 +3,88 @@ import domGetFileAccept from '../src/domGetFileAccept.mjs'
 import base, { applyChanges } from './tools/getFileTypeBase.mjs'
 
 
+//ws492e: W-17(使用者2026-11-16「甲」): domGetFileAccept依查詢類通則(同domIsFocused: 不拋錯、不輸出console), JSDoc補寫輸入之處置; 行為不改, 本檔釘住JSDoc所載
+//  規格: dspec〈輸入參數之檢測機制〉§11 W-17(domGetFileAccept依上二通則並補JSDoc)、K3(帶預設值之位置參數非預期視為未給)
 describe(`domGetFileAccept`, function() {
 
-    it(`need test in browser`, function() {
-        assert.strict.deepStrictEqual(1, 1)
+    let quiet = (fn) => {
+        let logs = []
+        let raw = console.log
+        console.log = (...a) => {
+            logs.push(a)
+        }
+        try {
+            return { r: fn(), logs }
+        }
+        finally {
+            console.log = raw
+        }
+    }
+
+    //JSDoc第1點: 未給(undefined)或'*'回'*'
+    it(`should return '*' when kind is not given or is '*'`, function() {
+        assert.strict.deepStrictEqual(domGetFileAccept(), '*')
+        assert.strict.deepStrictEqual(domGetFileAccept(undefined), '*')
+        assert.strict.deepStrictEqual(domGetFileAccept('*'), '*')
+    })
+
+    //JSDoc第2點: kind非字串亦非有效陣列視為未給(K3), 回'*', 不拋錯、不輸出console
+    let BAD = [
+        ['null', null],
+        ['0', 0],
+        ['123', 123],
+        ['NaN', NaN],
+        ['true', true],
+        ['false', false],
+        ['{}', {}],
+        ['{ a: 1 }', { a: 1 }],
+        ['[]', []],
+        ['[null]', [null]],
+        [`['']`, ['']],
+        ['function', () => {}],
+        ['Symbol', Symbol('x')],
+    ]
+    for (let [label, v] of BAD) {
+        it(`should treat kind ${label} as not given and return '*' without throwing or logging`, function() {
+            let o = null
+            assert.doesNotThrow(() => {
+                o = quiet(() => domGetFileAccept(v))
+            })
+            assert.strict.deepStrictEqual(o.r, '*')
+            assert.strict.deepStrictEqual(o.logs, [])
+        })
+    }
+
+    //JSDoc第3點: 字串或有效陣列無任何符合(未知名稱、空字串)回'', 與第2點之'*'不同
+    it(`should return '' when a string or a valid array matches nothing`, function() {
+        assert.strict.deepStrictEqual(domGetFileAccept('zzz-unknown'), '')
+        assert.strict.deepStrictEqual(domGetFileAccept(''), '')
+        assert.strict.deepStrictEqual(domGetFileAccept(['zzz-unknown']), '')
+        assert.strict.deepStrictEqual(domGetFileAccept(['zzz-unknown', 'nope']), '')
+        //兩個以上元素之陣列屬有效陣列(isearr只對單一元素檢查其有效性), 無符合回''而非'*'(內部獨立複審#4; ['', '']之空字串元素會比對到未歸類項目為既有現況, 不凍結於測試)
+        assert.strict.deepStrictEqual(domGetFileAccept([null, null]), '')
+        assert.strict.deepStrictEqual(domGetFileAccept([5, 6]), '')
+        assert.strict.deepStrictEqual(domGetFileAccept([{}, {}]), '')
+    })
+
+    //JSDoc第4點: 陣列內之非字串元素視為無符合, 不影響其餘元素
+    it(`should ignore non-string elements of a valid array without affecting the others`, function() {
+        let want = domGetFileAccept(['jpg'])
+        assert.strict.deepStrictEqual(want, 'image/jpeg')
+        assert.strict.deepStrictEqual(domGetFileAccept(['jpg', 5, null, {}, ['x']]), want)
+        assert.strict.deepStrictEqual(domGetFileAccept([5, 'jpg']), want)
+    })
+
+    //種類與副檔名皆可, 'common'為四大類之聯集
+    it(`should accept a group name, an extension and 'common'`, function() {
+        assert.strict.deepStrictEqual(domGetFileAccept('image').split(',').includes('image/jpeg'), true)
+        assert.strict.deepStrictEqual(domGetFileAccept('jpg'), 'image/jpeg')
+        let common = domGetFileAccept('common').split(',')
+        for (let g of ['docums', 'compress', 'image', 'data']) {
+            for (let acp of domGetFileAccept(g).split(',')) {
+                assert.strict.deepStrictEqual(common.includes(acp), true)
+            }
+        }
     })
 
 })

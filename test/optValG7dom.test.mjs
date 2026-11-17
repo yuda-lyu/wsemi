@@ -276,7 +276,7 @@ describe(`optVal domGetFiles sizeMbLimit (ws272c)`, function() {
     it(`should use the default 1000 for Infinity (formerly no limit at all because cdbl turned it into Number.MAX_VALUE)`, function() {
         let rs = domGetFiles({ files: GRID.map((mb) => mkFile(`f${mb}`, mb)) }, Infinity)
         assert.strict.deepStrictEqual(limitOf(rs.errs), 1000)
-        assert.strict.deepStrictEqual(domGetFiles({ files: [mkFile('a', 2000)] }).errs[0].startsWith('file size['), true)
+        assert.strict.deepStrictEqual(domGetFiles({ files: [mkFile('a', 2000)] }).errs[0], 'invalid files[0]: must be <= sizeMbLimit') //ws492e: V20 超限訊息不帶檔案大小與上限值
     })
 
 })

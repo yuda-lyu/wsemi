@@ -152,19 +152,19 @@ describe(`JSDoc文字修正(排程第492項第1批, 不改行為)`, function() {
 
         it(`domFinds: returns a NodeList (document.querySelectorAll), not an Array`, function() {
             let d = getDoc('domFinds')
-            assert.ok(d.indexOf('@returns {NodeList}') >= 0)
+            assert.ok(d.indexOf('@returns {NodeList|Array}') >= 0) //ws492e: 無效輸入時回空陣列[](查詢類), 有效時為NodeList
             assert.ok(d.indexOf('@returns {Array}') < 0)
             assert.ok(readSrc('domFinds').indexOf('document.querySelectorAll') >= 0)
         })
 
         it(`domElementsFromPoint: clientY is the y coordinate of the viewport`, function() {
             let d = getDoc('domElementsFromPoint')
-            let line = d.split('\n').find((l) => l.indexOf('@param {Number} clientY') >= 0)
+            let line = d.split('\n').find((l) => l.indexOf('@param {Number|String} clientY') >= 0) //ws492e: 型別改為Number|String(有效數字, 數字字串亦可)
             assert.ok(line, 'no clientY line')
             assert.ok(line.indexOf('y座標') >= 0, line)
             assert.ok(line.indexOf('x座標') < 0, line)
             //clientX維持x座標
-            let lineX = d.split('\n').find((l) => l.indexOf('@param {Number} clientX') >= 0)
+            let lineX = d.split('\n').find((l) => l.indexOf('@param {Number|String} clientX') >= 0)
             assert.ok(lineX.indexOf('x座標') >= 0)
         })
 

@@ -14,7 +14,7 @@ let RULE_SIZE_MB_LIMIT = { fn: 'domGetFiles', name: 'sizeMbLimit', kind: 'enum' 
  * @memberOf wsemi
  * @param {Element} ele 輸入Element Input元素
  * @param {Number} [sizeMbLimit=1000] 輸入檔案大小上線，單位mb，須為有效數字(可為數字字串)，0或負數視為未給，非預期之輸入(Infinity、'0x10'、包裝物件、非數字等)視為未給而改用預設，不報錯(給Infinity不代表不限大小，要放寬請給足夠大之有限數)，預設為1000mb(約1g)
- * @returns {Array} 回傳檔案陣列
+ * @returns {Object} 回傳物件{ files, errs }，files為檔案陣列(含超過上限者)，errs為以檔案索引為鍵之錯誤訊息物件，超過上限者之訊息為固定字串`invalid files[索引]: must be <= sizeMbLimit`(不含檔案大小與上限值)，無超過者為{}
  * @example
  * need test in browser
  *
@@ -45,7 +45,7 @@ function domGetFiles(ele, sizeMbLimit = 1000) {
         if (sizeMb > sizeMbLimit) {
 
             //push err
-            errs[k] = `file size[${sizeMb}]mb > ${sizeMbLimit}mb`
+            errs[k] = `invalid files[${k}]: must be <= sizeMbLimit` //V20: 比較類錯誤寫規則不寫數值(不帶檔案大小與上限值), 以檔案索引定位
 
         }
 

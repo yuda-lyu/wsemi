@@ -8,10 +8,13 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 /**
  * 前端下載binary資料成為檔案
  *
+ * 會觸發瀏覽器下載(改動畫面)，輸入無效即同步拋Error(固定訊息、不含輸入值、先於轉成Blob與觸發下載；與downloadFileFromB64、downloadFileFromBlob、downloadFileFromText同一通道)：fileName非非空字串為'invalid fileName: must be a non-empty string'，u8a非Uint8Array為'invalid u8a: must be a Uint8Array'；檢測順序為fileName、u8a，且先於環境檢查；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromU8Arr.test.mjs Github}
  * @memberOf wsemi
- * @param {String} fileName 輸入檔名字串
+ * @param {String} fileName 輸入檔名字串，須為非空字串
  * @param {Uint8Array} u8a 輸入Uint8Array資料
+ * @throws {Error} fileName非非空字串或u8a非Uint8Array，見上
  * @example
  * need test in browser
  *
@@ -22,19 +25,17 @@ import downloadFileFromBlob from './downloadFileFromBlob.mjs'
  */
 function downloadFileFromU8Arr(fileName, u8a) {
 
-    //check
-    if (!isWindow()) {
-        console.log('no window')
-        return
+    //check, 會觸發下載, 輸入無效即拋錯且先於任何動作(同downloadFileFromBlob)
+    if (!isestr(fileName)) {
+        throw new Error('invalid fileName: must be a non-empty string')
+    }
+    if (!isu8arr(u8a)) {
+        throw new Error('invalid u8a: must be a Uint8Array')
     }
 
     //check
-    if (!isestr(fileName)) {
-        console.log('no filename')
-        return
-    }
-    if (!isu8arr(u8a)) {
-        console.log('no data')
+    if (!isWindow()) {
+        console.log('no window')
         return
     }
 
