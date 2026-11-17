@@ -5,6 +5,7 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import { spawn } from 'child_process'
 import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -16,7 +17,7 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
  *
  * 取得順序: ①快取: 位置為<快取>/<sha256>/<name>(內容定址, sha256為最終檔之值, 壓縮檔者為extract之值), 快取資料夾為opt.cacheDir, 否則環境變數W_BIN_CACHE時為<W_BIN_CACHE>/<pkg>, 否則<opt.pkgRoot>/bin-cache; 命中亦校驗大小與SHA-256, 本行程內已校驗且檔案識別(裝置、inode、大小、修改與變更時間)未變者不重複雜湊, 不符者刪除(識別未變才刪)後重新取得。②鏡像: opt.mirror, 否則環境變數W_BIN_MIRROR, 為本地資料夾或http(s)基底網址, 結構為<鏡像>/<pkg>/<sha256>/<name>; 壓縮檔者先找解出之最終檔, 再找壓縮檔(<name>為其path或url之最後一段)或各分割檔; 鏡像之檔不符清單即拒用(不留檔)並續找下一來源。③GitHub或廠商網址(離線時不連)。任何來源皆經fsDownloadFileVerify之暫存檔、校驗、原子更名寫入, 不讀到半檔。檔案組: 位置為<快取>/<組識別>/<path>, 組識別為組內各檔依path排序(字串之碼位順序)後逐行'<sha256>  <path>\n'(同sha256sum之輸出)串接之SHA-256(64碼小寫); 快取命中須組資料夾(非連結)內清單所列之每檔皆為一般檔案且大小與SHA-256符合(只校驗清單所列之檔), 任一檔不符(竄改、缺、非一般檔案)即整組重取: 依序為鏡像之組資料夾<鏡像>/<pkg>/<組識別>/<path>(逐檔; 本地鏡像無組資料夾時略過)、各直接來源檔(鏡像<sha256>/<path之最後一段> → GitHub或廠商網址)、壓縮檔之成員(壓縮檔或各分割: 鏡像 → GitHub或廠商網址, 只解出尚缺之成員, 成員多時分批執行tar, 逐檔校驗), 全部於本次暫存夾內備妥並逐檔校驗後才以一次更名整組原子發布; 不符之舊組於發布時才被替換(移入暫存夾後隨之刪除, 使用中而移不走為E_RENAME), 取得失敗時舊組原樣保留且不回傳; 他方已先發布且整組校驗通過者採用之。
  *
- * 離線: opt.offline, 否則環境變數W_BIN_OFFLINE為1或true時, 只用快取與鏡像, 缺檔時reject E_OFFLINE_MISSING, 訊息列出每個缺檔之名稱、sha256、大小、應放之快取與鏡像完整路徑、來源網址與準備方法(連網機器設W_BIN_CACHE為一資料夾後呼叫ensureBins(), 再把該資料夾帶入設為W_BIN_MIRROR), 錯誤物件之missing為[{ name, sha256, size, cachePath, mirrorPath, url, member, archive, parts, reasons, bundle }](bundle於單一檔為null)。檔案組缺任何一檔時列出全組(須整組備妥): 其項之sha256為null、size為全組總大小、cachePath與mirrorPath為組資料夾, bundle為{ id, files: [{ path, sha256, size, missing(本次未取得), cachePath, mirrorPath, url, archive(壓縮檔之索引或-1) }], archives: [{ archive, parts, assembled, members }] }。
+ * 離線: opt.offline, 否則環境變數W_BIN_OFFLINE為1或true時, 只用快取與鏡像, 缺檔時reject E_OFFLINE_MISSING, 訊息列出每個缺檔之名稱與準備方法(連網機器設W_BIN_CACHE為一資料夾後呼叫ensureBins(), 再把該資料夾帶入設為W_BIN_MIRROR), 不帶路徑、網址與雜湊值(V20), 各缺檔之sha256、大小、應放之快取與鏡像完整路徑、來源網址見錯誤物件之missing, 其為[{ name, sha256, size, cachePath, mirrorPath, url, member, archive, parts, reasons, bundle }](bundle於單一檔為null)。檔案組缺任何一檔時列出全組(須整組備妥): 其項之sha256為null、size為全組總大小、cachePath與mirrorPath為組資料夾, bundle為{ id, files: [{ path, sha256, size, missing(本次未取得), cachePath, mirrorPath, url, archive(壓縮檔之索引或-1) }], archives: [{ archive, parts, assembled, members }] }。
  *
  * 主幹模式(mode為floating): 先取主幹清單(opt.floatingManifestUrl, 否則https://raw.githubusercontent.com/<repo>/master/<manifestPath>, 上限1MB, 時限同opt.stallMs), 同樣檢核schema且須為同一pkg與repo; 成功時其副本存於<快取>/manifest-last.json(紀錄, 不作為校驗依據); 失敗(含離線、無效)時, 有鏡像者先用鏡像之<鏡像>/<pkg>/manifest-last.json(鏡像管理者寫入之主幹清單原文, 信任錨為鏡像管理者; 同樣檢核, 上限1MB, 離線時http鏡像不追隨重導; 規格M5、F5), 無或拒用時用傳入之基準清單; 快取夾之副本只作紀錄, 不作退路(F6)。取得之檔(含解出、組合之檔)與清單不符(E_HASH_MISMATCH、E_SIZE_MISMATCH)、非離線且本次採用之清單亦為主幹模式時重取一次主幹清單再試(規格M5、F7, CDN約5分鐘不同步): raw.githubusercontent.com之CDN快取鍵不含查詢字串且不理會no-cache(2026-10-29實測), 故以https://api.github.com/repos/<repo>/commits/master(Accept: application/vnd.github.sha)解析主幹之提交, 改取該提交之清單, 其無commit之自有檔亦取自該提交; opt.floatingManifestUrl在https://raw.githubusercontent.com/<repo>/master/之下者同樣改取該提交之同一路徑, 其他分支或路徑者重取同一網址(不繞開CDN); 重取失敗時以原錯誤失敗, 重取後仍不符則以其錯誤失敗。主幹清單之信任錨為GitHub主幹(規格M5), 故opt.floatingManifestUrl只能是https://raw.githubusercontent.com/<repo>/之下(同一repo, 可改分支或路徑, 否則E_ARG), 套件之ensureBins不應轉傳使用者之值。
  *
@@ -26,7 +27,7 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
  *
  * 併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者); 跨程序以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。
  *
- * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from <github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[<組名>] file[<同file之值>])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。
+ * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from <github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[<組名>] file[<同file之值>])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。
  *
  * 環境變數(本函數統一讀取process.env): W_BIN_CACHE(共用快取資料夾)、W_BIN_MIRROR(鏡像)、W_BIN_OFFLINE(1或true為離線)。
  *
@@ -37,12 +38,12 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
  * @param {Object|String} manifest 輸入清單物件(schema 1), 或其JSON檔路徑(相對路徑以opt.pkgRoot為基準)
  * @param {Object} opt 輸入設定物件
  * @param {String} opt.pkgRoot 輸入套件根目錄, 必填
- * @param {String|Array} [opt.names=null] 輸入只取部分檔之名稱或其陣列, 預設null為全部
- * @param {String} [opt.cacheDir=''] 輸入快取資料夾(其下為<sha256>/<name>), 優先於W_BIN_CACHE, ''為預設位置, 預設''
- * @param {String} [opt.mirror=undefined] 輸入鏡像(本地資料夾或http(s)基底網址), 給了即優先於W_BIN_MIRROR(空字串為不使用鏡像)
- * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE
- * @param {Function} [opt.fetch=null] 輸入fetch函數(測試注入或處理認證), 未給時用全域fetch
- * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略
+ * @param {String|Array} [opt.names=null] 輸入只取部分檔之名稱或其陣列, 預設null為全部; 安全相關opt(決定取哪些檔), 給了(非undefined與null)須為非空字串或由非空字串組成之陣列(逐一檢查元素, 稀疏陣列之洞無效), 否則E_ARG(不改用預設); 空陣列為合法之空資料(不取任何檔, 回傳空結果; 主幹模式亦不取主幹清單、不連網、不寫manifest-last.json)
+ * @param {String} [opt.cacheDir=''] 輸入快取資料夾(其下為<sha256>/<name>), 優先於W_BIN_CACHE, ''為預設位置, 預設''; 非字串或含NUL字元視為未給而改用預設
+ * @param {String} [opt.mirror=undefined] 輸入鏡像(本地資料夾或http(s)基底網址), 給了即優先於W_BIN_MIRROR(空字串為不使用鏡像); 安全相關opt(決定下載來源), 給了而非字串、或本地資料夾路徑含NUL字元即E_ARG(不改用預設)
+ * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE; 安全相關opt(決定是否連網), 給了而非原始布林(含字串'yes'、new Boolean)即E_ARG(不改用預設, 否則離線之意圖會靜默變成連網)
+ * @param {Function} [opt.fetch=null] 輸入fetch函數(測試注入或處理認證), 未給時用全域fetch; 安全相關opt(決定如何連網), 給了而非函數即E_ARG(不改用全域fetch)
+ * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
  * @param {String} [opt.floatingManifestUrl=null] 輸入主幹模式之清單網址, 須在https://raw.githubusercontent.com/<repo>/之下, 預設由清單之repo與manifestPath組成
  * @param {Integer} [opt.maxAttempts=3] 輸入下載之最多嘗試次數(交fsDownloadFileVerify)
@@ -132,7 +133,7 @@ import fsEnsureBinsCore from './fsEnsureBinsCore.mjs'
 async function fsEnsureBins(manifest, opt = {}) {
     let optIn = null
     try {
-        optIn = { fs, path, crypto, Readable, pipeline, spawn, env: process.env, ...opt }
+        optIn = mergeInject({ fs, path, crypto, Readable, pipeline, spawn, env: process.env }, opt) //注入鍵(含env)給undefined視為未給取Node內建(V5); null、非函數、缺少方法者仍由Core以E_ARG reject
     }
     catch (err) {
         //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 交Core由讀取opt失敗之同一出口reject(E_ARG)

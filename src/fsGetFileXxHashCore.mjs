@@ -2,7 +2,7 @@ import xxhashWasm from 'xxhash-wasm'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import chkFsDeps from './_chkFsDeps.mjs'
@@ -25,7 +25,7 @@ let RULE_CHUNK_SIZE = { fn: 'fsGetFileXxHashCore', name: 'opt.chunkSize', kind: 
  * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)
  * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑不是檔案時reject說明字串'invalid fp: must be an existing file'；Node原生錯誤(讀檔失敗等)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)'
  * @example
  * need test in nodejs.
  *
@@ -62,7 +62,7 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
 
         //check
         if (!fsIsFileCore(fp, { fs })) {
-            pm.reject(`fp is not a file`)
+            pm.reject('invalid fp: must be an existing file')
             return pm
         }
 
@@ -75,7 +75,7 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
 
         //fail, 監聽器內出錯(注入之fs所產串流之data可為非Buffer之值使hasher.update拋錯): 轉字串reject並銷毀串流, 監聽器內未保護之呼叫拋錯即成未捕捉例外且pm不settle
         let fail = (err) => {
-            pm.reject(errToStr(err))
+            pm.reject(fsErrMsg(err))
             try {
                 stream.destroy()
             }
@@ -100,12 +100,12 @@ async function fsGetFileXxHashCore(fp, opt = {}) {
             }
         })
         stream.on('error', (err) => {
-            pm.reject(errToStr(err)) //與fsGetFileBasicHashCore一致, 串流以任意值(含null、undefined)出錯皆轉字串
+            pm.reject(fsErrMsg(err)) //與fsGetFileBasicHashCore一致, 串流以任意值(含null、undefined)出錯皆轉字串; 原生錯誤改固定詞彙加錯誤碼(不帶路徑)
         })
 
     }
     catch (err) {
-        pm.reject(errToStr(err)) //注入之fs與第三方wasm載入可拋出任意值
+        pm.reject(fsErrMsg(err)) //注入之fs與第三方wasm載入可拋出任意值
     }
 
     return pm

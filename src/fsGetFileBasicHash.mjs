@@ -1,7 +1,8 @@
 import fs from 'fs'
 import crypto from 'crypto'
 import fsGetFileBasicHashCore from './fsGetFileBasicHashCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -11,8 +12,8 @@ import errToStr from './_errToStr.mjs'
  * @memberOf wsemi
  * @param {String} fp 輸入檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
- * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時reject說明字串'invalid opt.type: must be one of crypto.getHashes()'(不帶輸入值)，不改用預設、先於讀檔
+ * @returns {Promise} 回傳Promise，resolve回傳檔案HASH值，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑不是檔案時reject說明字串'invalid fp: must be an existing file'；Node原生錯誤(讀檔失敗等)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)'；opt.fs、opt.crypto給undefined視為未給而取Node內建
  * @example
  * need test in nodejs.
  *
@@ -59,10 +60,10 @@ import errToStr from './_errToStr.mjs'
  */
 function fsGetFileBasicHash(fp, opt = {}) {
     try {
-        return fsGetFileBasicHashCore(fp, { fs, crypto, ...opt })
+        return fsGetFileBasicHashCore(fp, mergeInject({ fs, crypto }, opt)) //opt.fs、opt.crypto給undefined視為未給取Node內建(V5)
     }
     catch (err) {
-        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯
+        return Promise.reject(fsErrMsg(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 本函數非async, 於try外即成同步拋錯; 拋出者為Node原生錯誤時改固定詞彙加錯誤碼(W-23)
     }
 }
 

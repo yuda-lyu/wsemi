@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import get from 'lodash-es/get.js'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import { isBinName, isBinRel, binUrlProblem } from './_binRules.mjs'
 
@@ -93,30 +93,30 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         let p = get(opt, 'path')
         let u = get(opt, 'url')
         if (name !== undefined && name !== null && (typeof name !== 'string' || name === '')) {
-            throw new Error(`opt.name must be a non-empty primitive string or null when given`)
+            throw new Error(`invalid opt.name: must be a non-empty string or null`)
         }
         for (let [k, v] of [['path', p], ['url', u]]) {
             if (v !== undefined && (typeof v !== 'string' || v === '')) {
-                throw new Error(`opt.${k} must be a non-empty primitive string when given`)
+                throw new Error(`invalid opt.${k}: must be a non-empty string`)
             }
         }
         if (p !== undefined && u !== undefined) {
             throw new Error(`opt.path and opt.url can not be given together (an entry has exactly one source)`)
         }
         if (u !== undefined && binUrlProblem(u) !== '') {
-            throw new Error(`opt.url[${u}] is not a url that fsEnsureBins accepts: ${binUrlProblem(u)}`)
+            throw new Error(`invalid opt.url: ${binUrlProblem(u)} (the url that fsEnsureBins accepts)`) //問題描述為固定詞彙, 不帶網址(V20)
         }
         if (p !== undefined && !isBinRel(p)) {
-            throw new Error(`opt.path[${p}] is not a relative path that fsEnsureBins accepts (/ separators, letters, digits, spaces and ._+-)`)
+            throw new Error(`invalid opt.path: must be a relative path that fsEnsureBins accepts (/ separators, letters, digits, spaces and ._+-)`)
         }
         if (!fs.statSync(fp).isFile()) {
-            throw new Error(`fp[${fp}] is not a file`)
+            throw new Error(`invalid fp: must be an existing file`)
         }
         r = {}
         if (name !== null) {
             r.name = name !== undefined ? name : path.basename(fp)
             if (!isBinName(r.name)) {
-                throw new Error(`name[${r.name}] is not a file name that fsEnsureBins accepts (letters, digits and ._+-, not a reserved device name), give opt.name`)
+                throw new Error(`invalid opt.name: must be a file name that fsEnsureBins accepts (letters, digits and ._+-, not a reserved device name), give opt.name`)
             }
         }
         if (p !== undefined) {
@@ -127,7 +127,7 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         }
     }
     catch (err) {
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err)) //原生錯誤(如ENOENT)之訊息帶出路徑, 改固定詞彙加錯誤碼(V20)
     }
     let h = crypto.createHash('sha256')
     let size = 0
@@ -140,7 +140,7 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
         }
     }
     catch (err) {
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err))
     }
     finally {
         if (rs !== null) {

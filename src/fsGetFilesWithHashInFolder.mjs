@@ -2,7 +2,8 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import fsGetFilesWithHashInFolderCore from './fsGetFilesWithHashInFolderCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -13,10 +14,10 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，null與Infinity皆不視為無窮遍歷(無窮遍歷請給大有限值，如4294967295)，預設1
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
+ * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為'xxhash64'或crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時reject說明字串'invalid opt.type: must be \'xxhash64\' or one of crypto.getHashes()'(不帶輸入值)，不改用預設、先於列舉與讀檔(資料夾無檔案時亦檢查)
  * @param {Boolean} [opt.debug=false] 輸入是否於levelLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑不是資料夾時reject說明字串'invalid fd: must be an existing folder'；Node原生錯誤(列舉、讀檔失敗等)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)'；opt.path、opt.fs、opt.crypto給undefined視為未給而取Node內建
  * @example
  * //need test in nodejs
  *
@@ -103,10 +104,10 @@ import errToStr from './_errToStr.mjs'
  */
 async function fsGetFilesWithHashInFolder(fd, levelLimit = 1, opt = {}) {
     try {
-        return fsGetFilesWithHashInFolderCore(fd, levelLimit, { path, fs, crypto, ...opt })
+        return fsGetFilesWithHashInFolderCore(fd, levelLimit, mergeInject({ path, fs, crypto }, opt)) //opt.path、opt.fs、opt.crypto給undefined視為未給取Node內建(V5)
     }
     catch (err) {
-        return Promise.reject(errToStr(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject
+        return Promise.reject(fsErrMsg(err)) //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject; 拋出者為Node原生錯誤時改固定詞彙加錯誤碼(W-23)
     }
 }
 

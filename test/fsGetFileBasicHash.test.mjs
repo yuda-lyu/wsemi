@@ -218,12 +218,15 @@ describe(`fsGetFileBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
     this.timeout(60000)
 
     itFsHashFail([
-        { id: 'BH01', when: '真實fs: 路徑不存在', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
-        { id: 'BH02', when: '真實fs: 路徑為資料夾', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
-        { id: 'BH03', when: '真實fs: 上層為檔案(ENOTDIR)', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
-        { id: 'BH04', when: '真實crypto: type不支援(createHash拋Error)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
-        { id: 'BH05', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
-        { id: 'BH06', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        //BH01~BH03: 不存在、不是檔案之訊息固定且不帶路徑(V19、V20), 期望為固定字串(不含o.fp)
+        { id: 'BH01', when: '真實fs: 路徑不存在', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        { id: 'BH02', when: '真實fs: 路徑為資料夾', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        { id: 'BH03', when: '真實fs: 上層為檔案(ENOTDIR)', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        //BH04: type不支援('nope'不在crypto.getHashes())於入口以固定說明字串reject(不再交createHash而得'Error: Digest method not supported', 且不帶輸入值)
+        { id: 'BH04', when: '真實crypto: type不支援(不在crypto.getHashes())', want: () => rejected('invalid opt.type: must be one of crypto.getHashes()'), rule: RULE.rType },
+        //BH05、BH06: 原生錯誤(EPERM、ENOENT)之拒絕值為固定詞彙加錯誤碼(o.errStr為子行程對同一真實錯誤依fsErrStr算出之字串)
+        { id: 'BH05', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1native, win: true },
+        { id: 'BH06', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1native },
         { id: 'BH07', when: '注入fs: 串流以null出錯', want: () => rejected('null'), rule: RULE.r1any },
         { id: 'BH08', when: '注入crypto: createHash拋null', want: () => rejected('null'), rule: RULE.r1any },
         { id: 'BH09', when: 'Core注入fs: lstatSync拋Error(statSync正常)', want: () => rejected('Error: lstat boom'), rule: RULE.r2 },
@@ -232,7 +235,7 @@ describe(`fsGetFileBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
         { id: 'BH12', when: '注入crypto: readable監聽器內hash.update拋null', want: () => rejected('null'), rule: RULE.r3 },
         { id: 'BH13', when: '注入crypto: readable監聽器內hash.digest拋Error', want: () => rejected('Error: digest boom'), rule: RULE.r3 },
         { id: 'BH14', when: '注入fs: readable監聽器內串流read()拋Error', want: () => rejected('Error: read boom'), rule: RULE.r3 },
-        { id: 'BH15', when: '輸入: fp為數字123', want: () => rejected('invalid fp: must be a non-empty string'), rule: RULE.r1pre }, //R-FS-INVALID-PATH-01: 無效路徑(非字串)為固定說明字串, 與不存在之'fp[<路徑>] is not a file'分開(原為'fp[123] is not a file')
+        { id: 'BH15', when: '輸入: fp為數字123', want: () => rejected('invalid fp: must be a non-empty string'), rule: RULE.r1pre }, //R-FS-INVALID-PATH-01: 無效路徑(非字串)為固定說明字串, 與不存在之'invalid fp: must be an existing file'分開(原為'fp[123] is not a file')
     ])
 
     //監聽器內注入物拋錯之4形, 無處理器時須不崩潰

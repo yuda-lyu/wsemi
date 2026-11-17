@@ -12,6 +12,7 @@ import { EventEmitter } from 'events'
 import { spawn, execFileSync } from 'child_process'
 import { pathToFileURL, fileURLToPath } from 'url'
 import { safeStr, revoked, showValue } from './caseKit.mjs'
+import { expectRejectStr } from './fsErrExpect.mjs'
 
 let implDir = fileURLToPath(new URL('../../src/', import.meta.url))
 let fdTmp = fileURLToPath(new URL('../_tmp/', import.meta.url))
@@ -396,7 +397,7 @@ let cases = {
         fs.writeFileSync(p, 'a')
         let e = realErr()
         let f = await imp('fsDeleteFileSafeCore')
-        return { expect: String(e), res: await run(() => f(p, { fs: { ...fs, unlinkSync: thrower(e) } })) }
+        return { expect: expectRejectStr(e), res: await run(() => f(p, { fs: { ...fs, unlinkSync: thrower(e) } })) }
     },
     DF05: async () => {
         mkFx()
@@ -474,7 +475,7 @@ let cases = {
         fs.mkdirSync(p)
         let e = realErr()
         let f = await imp('fsDeleteFolderSafeCore')
-        return { expect: String(e), res: await run(() => f(p, { fs: { ...fs, rmSync: thrower(e) } })) }
+        return { expect: expectRejectStr(e), res: await run(() => f(p, { fs: { ...fs, rmSync: thrower(e) } })) }
     },
     DD05: async () => {
         mkFx()
@@ -955,7 +956,7 @@ let cases = {
     RO29: () => opThrowCase('fsRenameFolderCore', 'renameSync', (k) => [mkDir(k), fxp(k + '-new')]),
     RO30: () => opThrowCase('fsCleanFolderCore', 'readdirSync', (k) => [mkDir(k)], true),
     RO39: async () => {
-        //真Error(跨realm、無原型)原樣回傳(外審 opus F03): 以_isRealError判定, 同R-CODEC-ERR-01規則1之真Error
+        //真Error(跨realm、無原型)之判定(外審 opus F03): 以_isRealError判定, 同R-CODEC-ERR-01規則1之真Error; 帶字串code者(crossRealm, ENOENT)為Node原生錯誤, 回新建之Error(固定訊息, 只保留code, R-FS-ERRMSG-01), 不得轉成字串而失去code; 無code者(nullProto)原樣
         mkFx()
         let vm = await import('vm')
         let f = await imp('fsDeleteFileCore')
@@ -964,7 +965,8 @@ let cases = {
         let o = {}
         for (let [k, v] of [['crossRealm', cross], ['nullProto', nullProto]]) {
             let r = f(mkFile(k + '.txt'), { fs: { ...fs, unlinkSync: thrower(v) } })
-            o[k] = { same: r.error === v, code: typeof r.error === 'object' && r.error !== null ? r.error.code : undefined }
+            let isObj = typeof r.error === 'object' && r.error !== null
+            o[k] = { same: r.error === v, code: isObj ? r.error.code : undefined, message: isObj ? r.error.message : undefined }
         }
         return o
     },

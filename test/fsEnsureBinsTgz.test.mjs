@@ -489,11 +489,14 @@ describe(`fsEnsureBins tgz archives (D5, M6)`, function() {
         assert.strict.deepStrictEqual(leftovers(root), [])
     })
 
-    it(`should reject E_EXTRACT when the member is not in the tgz, naming the member (D5)`, async function() {
+    it(`should reject E_EXTRACT when the member is not in the tgz, with a fixed message that does not carry the member path (D5, V20)`, async function() {
         let root = fx('s-missing')
         let e = await catchErr(ens(mf({ files: [fTgz({ extract: { type: 'tgz', member: 'pkg-1/bin/none.exe', sha256: sha(exe), size: exe.length } })] }), { pkgRoot: root }))
         assert.strict.deepStrictEqual([e.code, e.step, e.bin], ['E_EXTRACT', 'extract', 'tool.exe'])
-        assert.strict.equal(e.message.includes('pkg-1/bin/none.exe'), true, e.message)
+        //訊息為固定詞彙(解壓程式離開碼視平台而異), 不帶成員路徑與解壓程式之標準錯誤輸出(V20)
+        assert.strict.equal(/^fsEnsureBins\[[^\]]+\] file\[tool\.exe\]: can not extract the member: the extraction program exited with code \d+$/.test(e.message), true, e.message)
+        assert.strict.equal(e.message.includes('pkg-1/bin/none.exe'), false, e.message)
+        assert.strict.equal(e.message.includes('none.exe'), false, e.message)
         //路徑只有尾段相同(壓縮檔內為pkg-1/bin/tool.exe)不算成員: 成員須為壓縮檔內之完整路徑
         let e2 = await catchErr(ens(mf({ files: [fTgz({ extract: { type: 'tgz', member: 'bin/tool.exe', sha256: sha(exe), size: exe.length } })] }), { pkgRoot: root }))
         assert.strict.deepStrictEqual([e2.code, e2.step], ['E_EXTRACT', 'extract'])
@@ -646,19 +649,25 @@ describe(`fsEnsureBins tgz archives (D5, M6)`, function() {
         assert.strict.equal(tr.events.filter((e) => e.type === 'extracted' && e.result === 'exit' && e.code === 0).length, nx)
     })
 
-    it(`should reject E_EXTRACT and publish nothing when a listed member is missing from the tgz (M6, D5)`, async function() {
+    it(`should reject E_EXTRACT and publish nothing when a listed member is missing from the tgz, with a fixed message that does not carry the member path (M6, D5, V20)`, async function() {
         let root = fx('b-missing')
         let b = bCanvas()
         b.archives[0].extract.files.push({ path: 'build/Release/not-there.dll', sha256: sha(exe), size: exe.length })
+        let nMember = b.archives[0].extract.files.length
         let e = await catchErr(ens(mf({ bundles: [b] }), { pkgRoot: root }))
         assert.strict.deepStrictEqual([e.code, e.step, e.bin], ['E_EXTRACT', 'extract', 'canvas'])
-        assert.strict.equal(e.message.includes('not-there.dll'), true, e.message)
+        //多成員之批: 訊息為固定詞彙加成員數, 不帶成員路徑(V20)
+        assert.strict.equal(new RegExp(`^fsEnsureBins\\[[^\\]]+\\] bundle\\[canvas\\]: can not extract ${nMember} members of the archive: the extraction program exited with code \\d+$`).test(e.message), true, e.message)
+        assert.strict.equal(e.message.includes('not-there.dll'), false, e.message)
         assert.strict.deepStrictEqual(walk(path.join(root, 'bin-cache')), [])
         assert.strict.deepStrictEqual(leftovers(root), [])
         //單一成員之批: 錯誤帶file(組內路徑)
         let b1 = { name: 'canvas', archives: [{ url: URLC, sha256: sha(tgzC), size: tgzC.length, extract: { type: 'tgz', files: [{ path: 'build/Release/not-there.dll', sha256: sha(exe), size: exe.length }] } }] }
         let e1 = await catchErr(ens(mf({ bundles: [b1] }), { pkgRoot: root }))
         assert.strict.deepStrictEqual([e1.code, e1.file], ['E_EXTRACT', 'build/Release/not-there.dll'])
+        //成員路徑改由file欄位取得, 訊息不帶
+        assert.strict.equal(/^fsEnsureBins\[[^\]]+\] bundle\[canvas\]: can not extract a member: the extraction program exited with code \d+$/.test(e1.message), true, e1.message)
+        assert.strict.equal(e1.message.includes('not-there.dll'), false, e1.message)
     })
 
     it(`should reject the hash or size of a member that differs from the manifest, with the path in the bundle, and publish nothing (M6, D5)`, async function() {

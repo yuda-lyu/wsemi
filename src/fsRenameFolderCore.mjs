@@ -17,7 +17,7 @@ import chkFsDeps from './_chkFsDeps.mjs'
  * @param {String} pahNew 輸入資料夾更名路徑字串
  * @param {Object} opt 輸入設定物件，Core不自行匯入fs，須由呼叫端注入
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、renameSync(新路徑之上層資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, renameSync'(不帶輸入值)
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；pahOld不是資料夾時error為說明字串'invalid pahOld: must be an existing folder'，pahNew已存在時為'invalid pahNew: must not already exist'；Node原生錯誤(如ENOENT、EPERM)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code ENOENT)'(保留其code，不保留path、dest等屬性)；成功訊息'done: <pahNew>'維持
  * @example
  * need test in nodejs.
  *
@@ -49,14 +49,14 @@ function fsRenameFolderCore(pahOld, pahNew, opt = {}) {
         //check, 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
         if (!fsIsFolderCore(pahOld, { fs })) {
             return {
-                error: `pahOld[${pahOld}] is not a folder` //pahOld不是資料夾則視為錯誤
+                error: 'invalid pahOld: must be an existing folder' //pahOld不是資料夾則視為錯誤(訊息不帶路徑, V20)
             }
         }
 
         //check
         if (fsExistsCore(pahNew, { fs })) {
             return {
-                error: `pahNew[${pahNew}] already exists` //pahNew存在則視為錯誤
+                error: 'invalid pahNew: must not already exist' //pahNew存在則視為錯誤(訊息不帶路徑, V20)
             }
         }
 

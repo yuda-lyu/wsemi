@@ -205,14 +205,14 @@ describe(`fsWriteTextAtomicCore`, function() {
             let { fs: f, count } = mkFs({
                 renameSync: () => {
                     k++
-                    throw err('EBUSY', `n${k}`)
+                    throw err(k < 4 ? 'EBUSY' : 'EPERM', `n${k}`) //前3次EBUSY, 第4次(最後一次)EPERM, 同為占用類而皆重試; 結果之message依R-FS-ERRMSG-01改為固定詞彙(不再含'n4'), 改以code辨別最後一次之錯誤
                 }
             })
             let { evs, onTrace } = mkTrace()
             let r = fsWriteTextAtomicCore(fp, 'new', { fs: f, onTrace })
             assert.strict.deepStrictEqual(Object.keys(r), ['error'])
-            assert.strict.deepStrictEqual(r.error.code, 'EBUSY')
-            assert.strict.deepStrictEqual(r.error.message, 'EBUSY: n4') //最後一次(第4次)之錯誤
+            assert.strict.deepStrictEqual(r.error.code, 'EPERM') //最後一次(第4次)之錯誤
+            assert.strict.deepStrictEqual(r.error.message, 'operation failed (code EPERM)') //第492項第3批(W-23): 原生錯誤為新建之Error, 固定訊息, 只保留code
             assert.strict.deepStrictEqual(count('renameSync'), 4)
             assert.strict.deepStrictEqual(rd(fp), 'old')
             assert.strict.deepStrictEqual(tmps(d), [])
@@ -429,7 +429,9 @@ describe(`fsWriteTextAtomicCore`, function() {
             let { evs, onTrace } = mkTrace()
             let r = fsWriteTextAtomicCore(fp, 'new', { fs: f, fallbackOverwrite: true, retries: 0, onTrace })
             assert.strict.deepStrictEqual(Object.keys(r), ['error'])
-            assert.strict.deepStrictEqual(r.error.message, 'EACCES: fallback write denied')
+            //第492項第3批(W-23): 原生錯誤為新建之Error, 固定訊息只保留code; 以code(EACCES, 非rename之EBUSY)辨別為退回覆寫自身之錯誤
+            assert.strict.deepStrictEqual(r.error.code, 'EACCES')
+            assert.strict.deepStrictEqual(r.error.message, 'operation failed (code EACCES)')
             assert.strict.deepStrictEqual(tmps(d), [])
             assert.strict.deepStrictEqual(done(evs), [{ type: 'done', ok: false, reason: 'fallback' }])
         })
@@ -450,7 +452,8 @@ describe(`fsWriteTextAtomicCore`, function() {
             })
             let { evs, onTrace } = mkTrace()
             let r = fsWriteTextAtomicCore(fp, 'new', { fs: f, onTrace })
-            assert.strict.deepStrictEqual(r.error.message, 'ENOSPC: disk full')
+            assert.strict.deepStrictEqual(r.error.code, 'ENOSPC') //第492項第3批(W-23): 原生錯誤為新建之Error, 固定訊息只保留code
+            assert.strict.deepStrictEqual(r.error.message, 'operation failed (code ENOSPC)')
             assert.strict.deepStrictEqual(count('renameSync'), 0)
             assert.strict.deepStrictEqual(rd(fp), 'old')
             assert.strict.deepStrictEqual(tmps(d), [])
@@ -502,7 +505,9 @@ describe(`fsWriteTextAtomicCore`, function() {
                 },
             })
             let r = fsWriteTextAtomicCore(fp, 'x', { fs: f })
-            assert.strict.deepStrictEqual(r.error.message, 'ENOENT: rename failed')
+            //第492項第3批(W-23): 原生錯誤為新建之Error, 固定訊息只保留code; 以code(ENOENT, 非清理時unlink之EPERM)辨別為rename之原錯誤
+            assert.strict.deepStrictEqual(r.error.code, 'ENOENT')
+            assert.strict.deepStrictEqual(r.error.message, 'operation failed (code ENOENT)')
             assert.strict.deepStrictEqual(count('unlinkSync'), 1)
         })
 
@@ -632,7 +637,9 @@ describe(`fsWriteTextAtomicCore`, function() {
             })
             let { evs, onTrace } = mkTrace()
             let r = fsWriteTextAtomicCore(join(d, 'a.txt'), 'x', { fs: f, onTrace })
-            assert.strict.deepStrictEqual(r.error.message, 'EACCES: mkdir boom')
+            //第492項第3批(W-23): 原生錯誤為新建之Error, 固定訊息只保留code
+            assert.strict.deepStrictEqual(r.error.code, 'EACCES')
+            assert.strict.deepStrictEqual(r.error.message, 'operation failed (code EACCES)')
             assert.strict.deepStrictEqual(calls.filter((c) => c[0] === 'writeFileSync'), [])
             assert.strict.deepStrictEqual(done(evs), [{ type: 'done', ok: false, reason: 'prepare' }])
         })
@@ -731,9 +738,9 @@ describe(`fsWriteTextAtomicCore`, function() {
                 })
                 let r1 = fsWriteTextAtomicCore(join(d, 'a.txt'), 'x', { fs, onTrace: t })
                 let r2 = fsWriteTextAtomicCore(join(d, 'b.txt'), 'x', { fs: f, onTrace: t })
-                expectErr.push([r1.success === join(d, 'a.txt'), r2.error.message])
+                expectErr.push([r1.success === join(d, 'a.txt'), r2.error.message]) //第492項第3批(W-23): 原生錯誤(ENOENT)為新建之Error, message為固定詞彙(不再含'same')
             }
-            assert.strict.deepStrictEqual(expectErr, new Array(6).fill([true, 'ENOENT: same']))
+            assert.strict.deepStrictEqual(expectErr, new Array(6).fill([true, 'operation failed (code ENOENT)']))
         })
 
         it(`should call the callback synchronously, before the function returns (not deferred)`, function() {

@@ -17,7 +17,7 @@ import chkFsDeps from './_chkFsDeps.mjs'
  * @param {Object} opt 輸入設定物件，Core不自行匯入fs、path，須由呼叫端注入
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、readdirSync；缺漏(未給、null、非物件、缺少必要方法)為相依無效，同步拋出Error(訊息為'invalid opt.fs: must be an object providing …'，不帶輸入值)
  * @param {Object} opt.path 輸入path物件，須提供resolve、basename；缺漏同opt.fs，同步拋出Error(訊息為'invalid opt.path: must be an object providing resolve, basename')
- * @returns {Array} 回傳列舉資料夾陣列，若fd不是資料夾則同步拋出Error(訊息為'fd[...] is not a folder')，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出其Error，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Array} 回傳列舉資料夾陣列，若fd不是資料夾則同步拋出Error(訊息為'invalid fd: must be an existing folder'，不帶輸入值)，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出Error，其訊息為固定詞彙加錯誤碼'operation failed (code EPERM)'(原生錯誤之訊息帶出路徑，不回傳原文；保留其code)，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
  *
@@ -44,7 +44,7 @@ function fsGetFoldersInFolderCore(fd, levelLimit = 1, opt = {}) {
 
     //check
     if (!fsIsFolderCore(fd, { fs })) {
-        throw new Error(`fd[${fd}] is not a folder`)
+        throw new Error('invalid fd: must be an existing folder')
     }
 
     //fps

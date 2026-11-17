@@ -1,6 +1,6 @@
 import fs from 'fs'
 import fsDeleteFileSafeCore from './fsDeleteFileSafeCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 
 
 /**
@@ -62,7 +62,7 @@ async function fsDeleteFileSafe(pah, opt = {}) {
         }
     }
     catch (err) {
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err)) //拋出者為Node原生錯誤時改固定詞彙加錯誤碼(W-23)
     }
 
     return await fsDeleteFileSafeCore(pah, o)

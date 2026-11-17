@@ -202,13 +202,13 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         assert.strict.deepStrictEqual(fs.lstatSync(fdLnk).isSymbolicLink(), true)
     })
 
-    it(`should return { error } whose message keeps the original full path without the extended-length prefix when a file in the folder is running on win32 [R-FS-RESULT-01]`, async function() {
+    it(`should return { error } whose message is the fixed 'operation failed (code EPERM)' with the code EPERM, without the path and the extended-length prefix, when a file in the folder is running on win32 [R-FS-RESULT-01, R-FS-ERRMSG-01]`, async function() {
         if (process.platform !== 'win32') {
             this.skip()
         }
         this.timeout(60000)
 
-        //守門: 修正前之unlinkSync訊息亦正確, 本案防止逐項刪除改用rmSync之退化(Windows下rmSync之訊息帶\\?\前綴且非ASCII路徑成亂碼)
+        //守門: 本案防止逐項刪除改用rmSync之退化(Windows下rmSync之訊息帶\\?\前綴且非ASCII路徑成亂碼); 現依R-FS-ERRMSG-01(W-23), 原生錯誤(EPERM)之結果物件error改為新建之Error, message為固定詞彙'operation failed (code EPERM)'、僅保留code, 不含路徑(含原路徑與\\?\前綴)
         let fdD = mkd('running-exe')
         let fpExe = path.join(fdD, 'm-running.exe')
         fs.copyFileSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'PING.EXE'), fpExe)
@@ -237,7 +237,11 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         }
         let msg = String((r.error && r.error.message) || r.error)
         assert.strict.deepStrictEqual(Object.keys(r), ['error'])
-        assert.strict.deepStrictEqual(msg.includes(fpExe), true, `message 應含完整原始路徑 ${fpExe}, got ${msg}`)
+        assert.strict.deepStrictEqual(r.error instanceof Error, true, `error 應為 Error, got ${msg}`)
+        assert.strict.deepStrictEqual(msg, 'operation failed (code EPERM)', `message 應為固定詞彙加錯誤碼, got ${msg}`)
+        assert.strict.deepStrictEqual(r.error.code, 'EPERM')
+        assert.strict.deepStrictEqual(msg.includes(fpExe), false, `message 不應含路徑 ${fpExe}, got ${msg}`)
+        assert.strict.deepStrictEqual(msg.includes(fdD), false, `message 不應含資料夾路徑 ${fdD}, got ${msg}`)
         assert.strict.deepStrictEqual(msg.includes('\\\\?\\'), false, `message 不應含 \\\\?\\ 前綴, got ${msg}`)
         assert.strict.deepStrictEqual(fs.existsSync(fpExe), true)
     })

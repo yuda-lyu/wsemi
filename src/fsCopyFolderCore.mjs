@@ -21,7 +21,7 @@ function fsCopyFolderCoreSync(fpSrc, fpTar, opt = {}) {
         //check, 置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
         if (!fsIsFolderCore(fpSrc, { fs })) {
             return {
-                error: `fpSrc[${fpSrc}] is not a folder`
+                error: 'invalid fpSrc: must be an existing folder'
             }
         }
 
@@ -89,7 +89,7 @@ async function fsCopyFolderCoreAsync(fpSrc, fpTar, opt = {}) {
     try {
         if (!fsIsFolderCore(fpSrc, { fs })) {
             return {
-                error: `fpSrc[${fpSrc}] is not a folder`
+                error: 'invalid fpSrc: must be an existing folder'
             }
         }
     }
@@ -222,7 +222,7 @@ async function fsCopyFolderCoreAsync(fpSrc, fpTar, opt = {}) {
  * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、readdirSync，useSync為true另需copyFileSync，為false另需createReadStream、createWriteStream(依內容另用mkdirSync、readlinkSync與symlinkSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing …'(不帶輸入值，useSync=false時以Promise resolve，不reject)
  * @param {Object} opt.path 輸入path物件，須提供dirname，useSync為true另需resolve，為false另需join；缺漏同opt.fs，回傳error為說明字串'invalid opt.path: must be an object providing …'
  * @param {Boolean} [opt.useSync=true] 輸入是否使用同步函數布林值，預設true
- * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，不觸發reject，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Object|Promise} 若useSync=true回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，若useSync=false則回傳Promise，resolve回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，不觸發reject，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；來源不是資料夾時error為說明字串'invalid fpSrc: must be an existing folder'；Node原生錯誤(如ENOENT、EPERM)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code ENOENT)'(保留其code，不保留path等屬性)；成功訊息'done: <fpTar>'維持
  * @example
  * need test in nodejs.
  *

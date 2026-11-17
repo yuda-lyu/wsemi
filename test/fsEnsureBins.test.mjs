@@ -249,7 +249,12 @@ describe(`fsEnsureBins with a local server`, function() {
         assert.strict.deepStrictEqual(Object.keys(r2).sort(), ['k6.exe', 'tool.exe'])
         let e = await catchErr(ens(m, { pkgRoot: root, names: ['nope.exe'] }))
         assert.strict.equal(e.code, 'E_ARG')
-        assert.strict.equal(e.message.includes('nope.exe'), true)
+        //訊息(V20)為固定詞彙, 不列出未知之名稱與清單內之名稱
+        assert.strict.equal(e.message, 'fsEnsureBins[w-t]: invalid opt.names: has names not in the manifest')
+        assert.strict.equal(e.message.includes('nope.exe'), false)
+        assert.strict.equal(e.message.includes('tool.exe'), false)
+        assert.strict.equal(e.message.includes('k6.exe'), false)
+        assert.strict.equal(e.step, 'argument')
     })
 
     it(`should read the manifest from a JSON file relative to opt.pkgRoot (M1, E2①)`, async function() {
@@ -452,7 +457,7 @@ describe(`fsEnsureBins with a local server`, function() {
 
     //---------------- T6 離線 ----------------
 
-    it(`should reject E_OFFLINE_MISSING without the network, listing name, sha256, size, the cache and mirror paths and how to prepare (T6, O3)`, async function() {
+    it(`should reject E_OFFLINE_MISSING without the network, the message naming the missing files and how to prepare, and the missing field listing name, sha256, size, the cache and mirror paths and the url (T6, O3, V20)`, async function() {
         let root = fx('t6')
         let mirror = path.join(root, 'mirror')
         let e = await catchErr(ens(mf([fTool(), fK6()]), { pkgRoot: root, offline: true, mirror, fetch: failFetch }))
@@ -463,17 +468,48 @@ describe(`fsEnsureBins with a local server`, function() {
         assert.strict.deepStrictEqual([m.name, m.sha256, m.size], ['tool.exe', sha(tool), tool.length])
         assert.strict.equal(m.cachePath, cachePath(root, tool, 'tool.exe'))
         assert.strict.equal(m.mirrorPath, path.join(mirror, 'w-t', sha(tool), 'tool.exe'))
-        for (let s of ['tool.exe', sha(tool), `${tool.length} bytes`, m.cachePath, m.mirrorPath, 'k6.exe', sha(exe), 'k6-v1.zip', sha(zip), VURL, 'how to prepare', 'W_BIN_CACHE', 'W_BIN_MIRROR']) {
-            assert.strict.equal(e.message.includes(s), true, s)
+        assert.strict.equal(m.url, `https://raw.githubusercontent.com/yuda-lyu/w-t/${C1}/bin/tool.exe`)
+        //訊息(V20): 只列缺檔之名稱與準備方法(固定詞彙), 不帶sha256、大小、快取與鏡像路徑、來源網址(皆見missing欄位)
+        let lines = e.message.split('\n')
+        assert.strict.equal(lines.length, 5, e.message)
+        assert.strict.deepStrictEqual(lines.slice(0, 4), [
+            'fsEnsureBins[w-t]: offline (W_BIN_OFFLINE or opt.offline), 2 external executable file(s) or bundle(s) are not in the cache or the mirror:',
+            '- tool.exe: missing from the cache and the mirror (the sha256, size, cache path, mirror path and source url are in the missing field of this error)',
+            '- k6.exe: missing from the cache and the mirror (the sha256, size, cache path, mirror path and source url are in the missing field of this error)',
+            '  it is extracted from a member of an archive, which may instead be put in the mirror (see archive of the missing field)',
+        ])
+        for (let s of ['how to prepare: ', 'W_BIN_CACHE', 'W_BIN_MIRROR', 'ensureBins()', 'the cachePath or mirrorPath of the missing field of this error']) {
+            assert.strict.equal(lines[4].includes(s), true, s)
         }
-        assert.strict.equal(e.missing[1].archive.name, 'k6-v1.zip')
+        assert.strict.equal(lines[4].startsWith('how to prepare: '), true, lines[4])
+        for (let s of [sha(tool), `${tool.length} bytes`, m.cachePath, m.mirrorPath, mirror, root, sha(exe), 'k6-v1.zip', sha(zip), VURL, 'raw.githubusercontent.com']) {
+            assert.strict.equal(e.message.includes(s), false, s)
+        }
+        //上述資訊改由missing欄位取得(完全不變)
+        let m1 = e.missing[1]
+        assert.strict.deepStrictEqual([m1.name, m1.sha256, m1.size, m1.cachePath, m1.mirrorPath], ['k6.exe', sha(exe), exe.length, cachePath(root, exe, 'k6.exe'), path.join(mirror, 'w-t', sha(exe), 'k6.exe')])
+        assert.strict.deepStrictEqual([m1.archive.name, m1.archive.sha256, m1.archive.size, m1.archive.url], ['k6-v1.zip', sha(zip), zip.length, VURL])
+        assert.strict.equal(m1.archive.mirrorPath, path.join(mirror, 'w-t', sha(zip), 'k6-v1.zip'))
     })
 
-    it(`should name the mirror structure in E_OFFLINE_MISSING when no mirror is set (T6, O3)`, async function() {
+    it(`should name the mirror structure in E_OFFLINE_MISSING when no mirror is set, without any path, url or hash value in the message (T6, O3, V20)`, async function() {
         let root = fx('t6nomirror')
         let e = await catchErr(ens(mf([fTool()]), { pkgRoot: root, offline: true, fetch: failFetch }))
         assert.strict.equal(e.missing[0].mirrorPath, null)
-        assert.strict.equal(e.message.includes(`<W_BIN_MIRROR>/w-t/${sha(tool)}/tool.exe`), true)
+        //訊息(V20)不帶應放之鏡像位置(舊為<W_BIN_MIRROR>/w-t/<sha256>/tool.exe), 只說明鏡像之結構(how to prepare行之<package>/<sha256>/<name>)與依missing欄位放置
+        assert.strict.equal(e.message.includes(`<W_BIN_MIRROR>/w-t/${sha(tool)}/tool.exe`), false, e.message)
+        assert.strict.equal(e.message.includes(sha(tool)), false, e.message)
+        assert.strict.equal(e.message.includes(root), false, e.message)
+        let lines = e.message.split('\n')
+        assert.strict.equal(lines.length, 3, e.message)
+        assert.strict.deepStrictEqual(lines.slice(0, 2), [
+            'fsEnsureBins[w-t]: offline (W_BIN_OFFLINE or opt.offline), 1 external executable file(s) or bundle(s) are not in the cache or the mirror:',
+            '- tool.exe: missing from the cache and the mirror (the sha256, size, cache path, mirror path and source url are in the missing field of this error)',
+        ])
+        assert.strict.equal(lines[2].includes('the folder holds <package>/<sha256>/<name> and <package>/<bundle id>/<path>'), true, lines[2])
+        assert.strict.equal(lines[2].endsWith('or put each file at the cachePath or mirrorPath of the missing field of this error'), true, lines[2])
+        //應放之位置改由missing欄位取得
+        assert.strict.deepStrictEqual([e.missing[0].sha256, e.missing[0].cachePath], [sha(tool), cachePath(root, tool, 'tool.exe')])
     })
 
     it(`should read W_BIN_OFFLINE as 1 or true, and let opt.offline override it (O3, E1)`, async function() {
@@ -551,9 +587,12 @@ describe(`fsEnsureBins with a local server`, function() {
         let e = await catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake('enoent') }))
         assert.strict.equal(e.code, 'E_EXTRACT')
         assert.strict.equal(e.message.includes('not available'), true)
+        assert.strict.equal(e.message, 'fsEnsureBins[w-t] file[k6.exe]: can not extract the member: the extraction program is not available (Windows 10 1803 and later include tar.exe, other systems need bsdtar of libarchive)')
         let e2 = await catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake('fail') }))
         assert.strict.equal(e2.code, 'E_EXTRACT')
-        assert.strict.equal(e2.message.includes('tar: something failed'), true)
+        //訊息(V20)只有解壓程式之離開碼, 不附其標準錯誤輸出(其文字會帶出暫存夾與壓縮檔之路徑)
+        assert.strict.equal(e2.message, 'fsEnsureBins[w-t] file[k6.exe]: can not extract the member: the extraction program exited with code 2')
+        assert.strict.equal(e2.message.includes('tar: something failed'), false)
         //參數為暫存夾內之相對路徑, 解壓程式於Windows為System32之tar.exe
         let [prog, args, o] = calls[0]
         assert.strict.deepStrictEqual(args, ['-x', '-f', 'archive/k6-v1.zip', '-C', 'x', '--', 'k6-v1/k6.exe'])
@@ -608,7 +647,14 @@ describe(`fsEnsureBins with a local server`, function() {
         let root = fx('partsoff')
         let e = await catchErr(ens(mf([fFf()]), { pkgRoot: root, offline: true, fetch: failFetch }))
         assert.strict.equal(e.missing[0].parts.length, 3)
-        assert.strict.equal(e.message.includes('ff.zip.002'), true)
+        //訊息(V20)只說明成員取自分割成3份之壓縮檔、可改放鏡像並指向missing欄位, 不帶各分割檔之檔名與sha256
+        assert.strict.equal(e.message.includes('  it is extracted from a member of an archive split into 3 parts, which may instead be put in the mirror (see parts of the missing field)'), true, e.message)
+        assert.strict.equal(e.message.includes('ff.zip.002'), false, e.message)
+        for (let b of ffparts) {
+            assert.strict.equal(e.message.includes(sha(b)), false, e.message)
+        }
+        //各分割檔之檔名、sha256與大小仍可由missing欄位取得
+        assert.strict.deepStrictEqual(e.missing[0].parts.map((p) => [p.name, p.sha256, p.size]), ffparts.map((b, i) => [`ff.zip.00${i + 1}`, sha(b), b.length]))
     })
 
     //---------------- 併發 ----------------
@@ -774,7 +820,10 @@ describe(`fsEnsureBins with a local server`, function() {
         let e = await catchErr(fsEnsureBinsCore(mf([fTool()]), { fs, path, crypto, Readable, pipeline, spawn, env: { W_BIN_MIRROR: mirror }, pkgRoot: root }))
         assert.strict.equal(e.code, 'E_ARG')
         assert.strict.equal(e.message.includes('s3cretPW'), false)
-        assert.strict.equal(e.message.includes('***@'), true)
+        //訊息(V20)為固定詞彙, 不帶鏡像之值(網址、主機、遮蔽後之帳密段皆無)
+        assert.strict.equal(e.message, 'fsEnsureBins: invalid opt.mirror (or W_BIN_MIRROR): the url must not contain credentials unless opt.fetch is given to handle them')
+        assert.strict.equal(e.message.includes('127.0.0.1'), false)
+        assert.strict.equal(e.message.includes('user'), false)
         //給opt.fetch: 鏡像檔被竄改而離線, 訊息、missing、進度皆不含密碼
         routes[`/mirror/w-t/${sha(tool)}/tool.exe`] = toolBad
         let seen = []
@@ -790,7 +839,8 @@ describe(`fsEnsureBins with a local server`, function() {
         assert.strict.equal(e2.code, 'E_OFFLINE_MISSING')
         assert.strict.equal(seen[0].includes('s3cretPW'), true) //認證交給傳入之fetch
         assert.strict.equal(JSON.stringify({ m: e2.message, x: e2.missing, ev }).includes('s3cretPW'), false)
-        assert.strict.equal(e2.missing[0].mirrorPath.includes('***@'), true)
+        assert.strict.equal(e2.missing[0].mirrorPath.includes('***@'), true) //鏡像位置見missing欄位(帳密已遮蔽)
+        assert.strict.equal(e2.message.includes('127.0.0.1'), false) //訊息(V20)不帶鏡像之網址與主機
     })
 
     it(`should mask the credentials of a manifest url in the E_MANIFEST message (E3, M2)`, async function() {
@@ -1012,37 +1062,72 @@ describe(`fsEnsureBins with a local server`, function() {
 
     //---------------- E1 參數(E_ARG) ----------------
 
+    //第3欄為訊息(前綴fsEnsureBins: ; W-09, V19: 固定詞彙, 不帶輸入值); 安全相關opt(mirror、offline、fetch、names、floatingManifestUrl)給了而無效即E_ARG, 不改用預設
     let argBads = [
-        ['pkgRoot missing', { pkgRoot: undefined }],
-        ['pkgRoot empty', { pkgRoot: '' }],
-        ['offline not a boolean', { offline: 1 }],
-        ['fetch not a function', { fetch: 'x' }],
-        ['onProgress not a function', { onProgress: 1 }],
-        ['names empty array', { names: [] }],
-        ['names with a non-string', { names: [1] }],
-        ['cacheDir not a string', { cacheDir: 1 }],
-        ['mirror ftp', { mirror: 'ftp://host/bins' }],
-        ['mirror file url', { mirror: 'file:///C:/bins' }],
-        ['mirror with a query', { mirror: 'https://host/bins?x=1' }],
-        ['floatingManifestUrl http', { floatingManifestUrl: 'http://host/manifest.json' }],
-        ['floatingManifestUrl with credentials', { floatingManifestUrl: 'https://u:p@host/manifest.json' }],
+        ['pkgRoot missing', { pkgRoot: undefined }, 'invalid opt.pkgRoot: must be a non-empty string'],
+        ['pkgRoot empty', { pkgRoot: '' }, 'invalid opt.pkgRoot: must be a non-empty string'],
+        ['offline not a boolean', { offline: 1 }, 'invalid opt.offline: must be a boolean'],
+        ['fetch not a function', { fetch: 'x' }, 'invalid opt.fetch: must be a function'],
+        ['names with a non-string', { names: [1] }, 'invalid opt.names: must be a non-empty string or an array of non-empty strings'],
+        ['names with an empty string', { names: [''] }, 'invalid opt.names: must be a non-empty string or an array of non-empty strings'],
+        ['names an empty string', { names: '' }, 'invalid opt.names: must be a non-empty string or an array of non-empty strings'],
+        ['names an object', { names: {} }, 'invalid opt.names: must be a non-empty string or an array of non-empty strings'],
+        ['mirror not a string', { mirror: 1 }, 'invalid opt.mirror: must be a string'],
+        ['mirror ftp', { mirror: 'ftp://host/bins' }, 'invalid opt.mirror (or W_BIN_MIRROR): must be a local folder or an http(s) url'],
+        ['mirror file url', { mirror: 'file:///C:/bins' }, 'invalid opt.mirror (or W_BIN_MIRROR): must be a local folder or an http(s) url'],
+        ['mirror with a query', { mirror: 'https://host/bins?x=1' }, 'invalid opt.mirror (or W_BIN_MIRROR): the url must not have a query or hash'],
+        ['floatingManifestUrl http', { floatingManifestUrl: 'http://host/manifest.json' }, 'invalid opt.floatingManifestUrl: must be an https url without credentials'],
+        ['floatingManifestUrl with credentials', { floatingManifestUrl: 'https://u:p@host/manifest.json' }, 'invalid opt.floatingManifestUrl: must be an https url without credentials'],
         ['fs without lstatSync', { fs: { ...fs, lstatSync: undefined } }],
         ['fs without realpathSync that the download needs', { fs: { ...fs, realpathSync: undefined } }],
         ['Readable without fromWeb', { Readable: { toWeb: Readable.toWeb, from: Readable.from } }],
         ['spawn missing', { spawn: null }],
-        ['offline a Boolean wrapper', { offline: new Boolean(false) }], // eslint-disable-line no-new-wrappers
-        ['pkgRoot a String wrapper', { pkgRoot: new String('x') }], // eslint-disable-line no-new-wrappers
-        ['names with a String wrapper', { names: [new String('tool.exe')] }], // eslint-disable-line no-new-wrappers
+        ['offline a Boolean wrapper', { offline: new Boolean(false) }, 'invalid opt.offline: must be a boolean'], // eslint-disable-line no-new-wrappers
+        ['pkgRoot a String wrapper', { pkgRoot: new String('x') }, 'invalid opt.pkgRoot: must be a non-empty string'], // eslint-disable-line no-new-wrappers
+        ['names with a String wrapper', { names: [new String('tool.exe')] }, 'invalid opt.names: must be a non-empty string or an array of non-empty strings'], // eslint-disable-line no-new-wrappers
     ]
-    for (let [label, o] of argBads) {
+    for (let [label, o, msg] of argBads) {
         it(`should reject E_ARG without any download: ${label} (E1, E3)`, async function() {
             let root = fx('arg')
             let e = await catchErr(ens(mf([fTool()]), { pkgRoot: root, fetch: failFetch, ...o }))
-            assert.strict.deepStrictEqual([e.code, e.step], ['E_ARG', 'argument'], String(e && e.message))
+            assert.strict.deepStrictEqual([e && e.code, e && e.step], ['E_ARG', 'argument'], String(e && e.message))
+            if (msg !== undefined) {
+                assert.strict.equal(e.message, `fsEnsureBins: ${msg}`)
+            }
             assert.strict.deepStrictEqual(fetchCalls, [])
             assert.strict.deepStrictEqual(fs.readdirSync(root), [])
         })
     }
+
+    //非安全相關opt(cacheDir、onProgress)非預期之型別視為未給, 不報錯而改用預設(舊為E_ARG; W-09, K3)
+    let argIgnored = [
+        ['onProgress not a function', { onProgress: 1 }],
+        ['onProgress a string', { onProgress: 'x' }],
+        ['onProgress an object', { onProgress: {} }],
+        ['cacheDir not a string', { cacheDir: 1 }],
+        ['cacheDir an object', { cacheDir: {} }],
+        ['cacheDir a String wrapper', { cacheDir: new String('x') }], // eslint-disable-line no-new-wrappers
+    ]
+    for (let [label, o] of argIgnored) {
+        it(`should ignore an unexpected non-safety opt and use the default instead of E_ARG: ${label} (E1, W-09)`, async function() {
+            let root = fx('argignore')
+            let r = await ens(mf([fTool()]), { pkgRoot: root, ...o })
+            assert.strict.equal(r['tool.exe'], cachePath(root, tool, 'tool.exe')) //cacheDir未給: 預設位置<pkgRoot>/bin-cache
+            assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true)
+            assert.strict.deepStrictEqual(fetchCalls.length, 1)
+        })
+    }
+
+    it(`should return an empty result without any download or folder when opt.names is an empty array (E1, W-09)`, async function() {
+        let root = fx('names-empty')
+        let r = await ens(mf([fTool(), fK6()]), { pkgRoot: root, fetch: failFetch, names: [] })
+        assert.strict.deepStrictEqual(Object.keys(r), [])
+        assert.strict.deepStrictEqual(r.entries, {})
+        assert.strict.deepStrictEqual(r.bundles, {})
+        assert.strict.deepStrictEqual(r.leftovers, [])
+        assert.strict.deepStrictEqual(fetchCalls, [])
+        assert.strict.deepStrictEqual(fs.readdirSync(root), [])
+    })
 
     it(`should reject E_ARG when opt can not be read`, async function() {
         let o = {}
@@ -1202,7 +1287,13 @@ describe(`fsEnsureBins with a local server`, function() {
         }
         let e = await catchErr(ens(mf([fTool()]), { pkgRoot: root, fs: fsDeny, offline: true, retryDelayMs: 1 }))
         assert.strict.deepStrictEqual([e.code, e.step, e.pkg, e.bin], ['E_FS', 'cache', 'w-t', 'tool.exe'])
-        assert.strict.equal(e.message.includes(fp), true)
+        //訊息(V20)不帶快取路徑, 原生錯誤(EACCES, 其message帶路徑)改為固定詞彙加錯誤碼; cause為新建之固定Error(保留code, 不是原拋出之物件)
+        assert.strict.equal(e.message, 'fsEnsureBins[w-t] file[tool.exe]: the cached file does not match the manifest and can not be removed: operation failed (code EACCES); remove it by hand')
+        assert.strict.equal(e.message.includes(fp), false)
+        assert.strict.equal(e.message.includes(root), false)
+        assert.strict.equal(e.cause instanceof Error, true)
+        assert.strict.deepStrictEqual([e.cause.message, e.cause.code], ['operation failed (code EACCES)', 'EACCES'])
+        assert.strict.equal(fs.existsSync(fp), true) //刪不掉者原樣留著
     })
 
     it(`should not follow a redirect of an http mirror while offline (O3)`, async function() {
@@ -1463,7 +1554,9 @@ describe(`fsEnsureBins with a local server`, function() {
         }
         let e = await catchErr(ens(mf([fK6()]), { pkgRoot: root, spawn: fake, fs: fsRec, totalMs: 1500 }))
         assert.strict.equal(e.code, 'E_EXTRACT')
-        assert.strict.equal(e.message.includes('did not finish within 1500ms'), true)
+        //訊息(V20)為固定詞彙, 不帶opt.totalMs之數值(解壓程式已確認結束, 故無「未結束」之附註)
+        assert.strict.equal(e.message, 'fsEnsureBins[w-t] file[k6.exe]: can not extract the member: the extraction did not finish within the time budget (opt.totalMs)')
+        assert.strict.equal(e.message.includes('1500'), false)
         assert.strict.deepStrictEqual(order, ['kill', 'close', 'cleanup'])
     })
 
@@ -1494,7 +1587,9 @@ describe(`fsEnsureBins with a local server`, function() {
                 assert.strict.equal(kills, 1)
                 let e = await pmErr
                 assert.strict.equal(e.code, 'E_EXTRACT')
-                assert.strict.equal(e.message.includes('did not finish within 600000ms'), true)
+                //訊息(V20)為固定詞彙(預設600000ms之生效由上列之終止時點驗證), 不帶opt.totalMs之數值
+                assert.strict.equal(e.message, 'fsEnsureBins[w-t] file[k6.exe]: can not extract the member: the extraction did not finish within the time budget (opt.totalMs)')
+                assert.strict.equal(e.message.includes('600000'), false)
             }
             finally {
                 clock.restore()

@@ -1,4 +1,5 @@
 import fs from 'fs'
+import crypto from 'crypto'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
@@ -19,6 +20,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
 import fsGetFilesWithHashInFolder from './fsGetFilesWithHashInFolder.mjs'
 import getTrace from './getTrace.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import chkHashType from './_chkHashType.mjs'
 
 
 //levelLimit: opt類參數, 有效整數且為個數(iseint, use: 'count', min: 1), 非預期(含0、負數、小數、Infinity、'0x10'、包裝物件等)視為未給、改用預設1, 不報錯
@@ -36,7 +38,7 @@ let RULE_TIME_INTERVAL = { fn: 'fsTask', name: 'opt.timeInterval', kind: 'enum',
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，須為1至4294967295之有效整數(可為數字字串)，設定1為列舉資料夾下第一層的檔案，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、null等)視為未給而改用預設，不報錯(給Infinity不代表無窮遍歷)，預設1
- * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用
+ * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為'xxhash64'或crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時同步拋出Error('invalid opt.typeHash: must be \'xxhash64\' or one of crypto.getHashes()'，不帶輸入值)，不改用預設、先於建立紀錄資料夾與啟動計時器
  * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，須為非空字串且不含NUL字元，非預期之輸入(非字串、空字串、含NUL字元)視為未給而改用預設，不報錯；有效字串但無法建立或使用為資料夾者(如該路徑已是檔案、無寫入權限)同步拋出Error('fsTask: opt.fdStorage can not be created or used as a folder')，不靜默(否則紀錄寫不出而每輪重複派發同一檔)，預設'./_tkfs'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長數字，單位為毫秒ms，須為大於0至2147483647(計時器上限)之有效數字(可帶小數、數字字串，小數直接使用不四捨五入)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設60000，為1分鐘
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.levelLimit、opt.timeInterval為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
@@ -208,6 +210,16 @@ function fsTask(fd, opt = {}) {
         throw new Error(msgFd)
     }
 
+    //typeHash, 雜湊演算法(安全相關opt, W-08): 未給(undefined、null)取預設'md5', 給了而無效即同步拋錯(C20, 先於建立紀錄資料夾與啟動計時器), 不改用預設; 允許集合為'xxhash64'與crypto.getHashes()
+    let typeHash = get(opt, 'typeHash')
+    let msgType = chkHashType(typeHash, { crypto, xx: true, name: 'opt.typeHash' })
+    if (msgType) {
+        throw new Error(msgType)
+    }
+    if (typeHash === undefined || typeHash === null) {
+        typeHash = 'md5'
+    }
+
     //fdStorage
     let fdStorage = get(opt, 'fdStorage', '')
     if (typeof fdStorage !== 'string' || !isestr(fdStorage) || chkFsPath(fdStorage, 'opt.fdStorage') !== null) { //先以typeof排除非原始字串, 免得isestr讀取物件之Symbol.toStringTag拋錯 //路徑型opt鍵: 非字串、空字串、含NUL者視為非預期而改用預設(K3、R-FS-INVALID-PATH-01), 否則建立資料夾失敗被忽略而紀錄靜默寫不出(每輪重複派發同一檔)
@@ -216,12 +228,6 @@ function fsTask(fd, opt = {}) {
 
     //levelLimit, 有效則取Number(v), 非預期(含0、負數、小數、Infinity、'0x10'、包裝物件、null)改用預設1
     let levelLimit = optVal(get(opt, 'levelLimit', null), 1, RULE_LEVEL_LIMIT, opt)
-
-    //typeHash
-    let typeHash = get(opt, 'typeHash', '')
-    if (!isestr(typeHash)) {
-        typeHash = 'md5'
-    }
 
     //timeInterval, 有效則取Number(v)(小數直接使用, 不四捨五入), 非預期(含0、負數、Infinity、超過計時器上限、'0x10'、包裝物件)改用預設1min, 不夾至上限
     let timeInterval = optVal(get(opt, 'timeInterval', null), 60 * 1000, RULE_TIME_INTERVAL, opt)
@@ -604,7 +610,7 @@ function fsTask(fd, opt = {}) {
 
         //check
         if (!isarr(result)) {
-            console.log(`result for key[${key}] is not an array`)
+            console.log('result for the key is not an array') //固定詞彙, 不帶key(含檔案路徑與雜湊, V20)
         }
 
         return result
@@ -641,7 +647,7 @@ function fsTask(fd, opt = {}) {
 
         //check
         if (!isarr(result)) {
-            console.log(`result for key[${key}] is not an array`)
+            console.log('result for the key is not an array') //固定詞彙, 不帶key(含檔案路徑與雜湊, V20)
         }
 
         //eliminateObResult

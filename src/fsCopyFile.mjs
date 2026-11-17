@@ -4,6 +4,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import fsCopyFileCore from './fsCopyFileCore.mjs'
 import toResultError from './_toResultError.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -98,7 +99,7 @@ import toResultError from './_toResultError.mjs'
  */
 function fsCopyFile(fpSrc, fpTar, opt = {}) {
     try {
-        return fsCopyFileCore(fpSrc, fpTar, { path, fs, ...opt })
+        return fsCopyFileCore(fpSrc, fpTar, mergeInject({ path, fs }, opt)) //opt.fs、opt.path給undefined視為未給取Node內建(V5)
     }
     catch (err) {
 

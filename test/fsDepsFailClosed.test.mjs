@@ -745,8 +745,10 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             reset()
             let m = await call('http://127.0.0.1:1/x', R('dl/a.bin'))
             assert.strictEqual(fetchCalls, 1)
-            assert.ok(String(m).startsWith('failed to download url['), String(m))
+            //第492項第3批(V20): 下載失敗之訊息為'failed to download: <原因>', 不帶網址與路徑
+            assert.strictEqual(m, 'failed to download: status[404] nf')
             assert.ok(!String(m).startsWith('invalid '))
+            assert.ok(!String(m).includes('127.0.0.1') && !String(m).includes('a.bin'), String(m))
         })
 
         it(`fsDownloadFile對外函數同行為`, async function() {
@@ -872,7 +874,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             }
         })
 
-        it(`fsGetFilesInFolderCore、fsGetFoldersInFolderCore: 缺path時先報相依(不先報'is not a folder'), 且先於任何fs呼叫`, function() {
+        it(`fsGetFilesInFolderCore、fsGetFoldersInFolderCore: 缺path時先報相依(不先報'invalid fd: must be an existing folder'), 且先於任何fs呼叫`, function() {
             reset()
             let calls = 0
             let fsSpy = {

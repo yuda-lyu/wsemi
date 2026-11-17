@@ -24,11 +24,10 @@ import {
     // createHMAC(hashFunction: Promise<IHasher>, key: IDataType): Promise<IHasher>
 } from 'hash-wasm'
 import get from 'lodash-es/get.js'
-import isestr from './isestr.mjs'
 import isblob from './isblob.mjs'
 import isfile from './isfile.mjs'
-import haskey from './haskey.mjs'
 import optVal from './_optVal.mjs'
+import chkHashType from './_chkHashType.mjs'
 
 
 //chunkSize: opt類參數, 有效整數且為個數(iseint, use: 'count', 1~2^30, 同fsGetFileHashCore), 非預期改用預設64mb
@@ -46,7 +45,7 @@ let RULE_CHUNK_SIZE = { fn: 'getFileBasicHash', name: 'opt.chunkSize', kind: 'ei
  * @memberOf wsemi
  * @param {Blob|File} inp 輸入檔案Blob或File
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'
+ * @param {String} [opt.type='sha512'] 輸入計算HASH方法字串，預設'sha512'；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為'MD5'、'SHA-1'、'SHA-256'、'SHA-384'、'SHA-512'、'md5'、'sha1'、'sha256'、'sha384'、'sha512'之一(原始字串，包裝物件、數字、空字串、原型鏈名稱如'constructor'皆無效)，無效時reject說明字串'invalid opt.type: must be one of ...'(不帶輸入值)，不改用預設
  * @param {Number|String} [opt.chunkSize=64*1024*1024] 輸入計算時使用之切片長度，單位位元，opt類參數(有效整數，1~2^30即1024*1024*1024即1gb，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、0、負數、小數、超過上限、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設64*1024*1024(64mb)，雜湊結果不因chunkSize而不同
  * @param {Boolean} [opt.debug=false] 輸入是否於chunkSize為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
@@ -107,11 +106,8 @@ async function getFileBasicHash(inp, opt = {}) {
         return Promise.reject(`inp is not a Blob or File`)
     }
 
-    //type
-    let type = get(opt, 'type', '')
-    if (!isestr(type)) {
-        type = 'sha512'
-    }
+    //type, 未給(undefined、null)取預設, 給了須通過檢核(安全相關opt, 無效即拒絕不改用預設, 見下)
+    let type = get(opt, 'type')
 
     //chunkSize, opt類參數(預設64mb), 須為有效整數且為1~2^30, 非預期(含Infinity、0、負數、小數、超過上限)視為未給、改用預設; 0或負數會使切片不前進而不終止
     let chunkSize = optVal(get(opt, 'chunkSize'), 64 * 1024 * 1024, RULE_CHUNK_SIZE, opt)
@@ -135,9 +131,13 @@ async function getFileBasicHash(inp, opt = {}) {
     // createSHA512, //createSHA512(): Promise<IHasher>
     // createSHA3 //createSHA3(bits?: 224 | 256 | 384 | 512): Promise<IHasher> // default is 512 bits
 
-    //check
-    if (!haskey(kp, type)) {
-        return Promise.reject(`type[${type}] must be one of [ 'md5', 'sha1', 'sha256', 'sha384', 'sha512' ]`)
+    //check, 雜湊演算法(安全相關opt, W-08): 給了而無效即拒絕, 不改用預設; 成員比對不經物件鍵查找('constructor'、'toString'等原型鏈名稱不被誤判為有效); 訊息不帶輸入值(V20)
+    let msgType = chkHashType(type, { list: Object.keys(kp) })
+    if (msgType) {
+        return Promise.reject(msgType)
+    }
+    if (type === undefined || type === null) {
+        type = 'sha512'
     }
 
     //funCreate

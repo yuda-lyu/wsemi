@@ -75,13 +75,16 @@ describe(`fsGetFolderBasicHash 失敗回報(R-FS-REJECT-01)`, function() {
     this.timeout(60000)
 
     itFsHashFail([
-        { id: 'GB01', when: '真實fs: 資料夾不存在', want: (o) => rejected(`fd[${o.fd}] is not a folder`), rule: RULE.r1pre },
-        { id: 'GB02', when: '真實fs: 路徑為檔案', want: (o) => rejected(`fd[${o.fd}] is not a folder`), rule: RULE.r1pre },
-        { id: 'GB03', when: '真實fs: 夾內含懸空junction', want: (o) => rejected(`fp[${o.fpDangling}] is not a file`), rule: RULE.r1pre },
-        { id: 'GB04', when: '真實crypto: type不支援', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        //GB01~GB03: 不存在、不是資料夾/檔案之訊息固定且不帶路徑(V19、V20), 期望為固定字串(不含o.fd、o.fpDangling)
+        { id: 'GB01', when: '真實fs: 資料夾不存在', want: () => rejected('invalid fd: must be an existing folder'), rule: RULE.r1pre },
+        { id: 'GB02', when: '真實fs: 路徑為檔案', want: () => rejected('invalid fd: must be an existing folder'), rule: RULE.r1pre },
+        { id: 'GB03', when: '真實fs: 夾內含懸空junction', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        //GB04: type不支援('nope'不在crypto.getHashes())於入口以固定說明字串reject(夾內有檔案; 舊為列舉後讀檔時createHash拋'Error: Digest method not supported')
+        { id: 'GB04', when: '真實crypto: type不支援(不在crypto.getHashes())', want: () => rejected('invalid opt.type: must be one of crypto.getHashes()'), rule: RULE.rType },
+        //GB05、GB07: 原生錯誤(EPERM)之拒絕值為固定詞彙加錯誤碼(o.errStr為子行程對同一真實錯誤依fsErrStr算出之字串)
         { id: 'GB05', when: '真實fs: 子資料夾ACL拒列(readdirSync EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r2tree, win: true },
         { id: 'GB06', when: 'Core注入fs: readdirSync拋null', want: () => rejected('null'), rule: RULE.r2tree },
-        { id: 'GB07', when: '真實fs: 夾內檔案ACL拒讀', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
+        { id: 'GB07', when: '真實fs: 夾內檔案ACL拒讀', want: (o) => rejected(o.errStr), rule: RULE.r1native, win: true },
         { id: 'GB08', when: '對外函數+opt.fs: lstatSync拋null', want: () => rejected('null'), rule: RULE.r2 },
     ])
 

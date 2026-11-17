@@ -110,9 +110,10 @@ describe(`fsCopyFile 失敗回報(R-FS-REJECT-01)`, function() {
         let res = r.out.res
         //R-FS-REJECT-01 規則6: 以pipe複製時讀取流或寫入流任一端出錯即destroy兩端(釋放檔案控制代碼)
         //R-FS-RESULT-01 規則1: 失敗回{ error }(Error物件)
+        //R-FS-ERRMSG-01(W-23): 原生錯誤(EISDIR)之結果物件error為新建之Error, message為固定詞彙'operation failed (code EISDIR)'(String(err)即'Error: operation failed (code EISDIR)'), 不帶路徑
         //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
-        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, eisdir: /^Error: EISDIR: /.test(res.error && res.error.v), streams: r.out.streams, active: r.out.active, ...ev(r) },
-            { s: 'resolve', keys: ['error'], eisdir: true, streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
+        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, msg: res.error && res.error.v, streams: r.out.streams, active: r.out.active, ...ev(r) },
+            { s: 'resolve', keys: ['error'], msg: 'Error: operation failed (code EISDIR)', streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
     })
 
     it(`CF11 should destroy the read stream (release its fd) when creating the write stream throws synchronously (the injected createWriteStream throws)`, function() {
@@ -131,8 +132,9 @@ describe(`fsCopyFile 失敗回報(R-FS-REJECT-01)`, function() {
         let { r } = runFsFail('CF08')
         let res = r.out.res
         //R-FS-REJECT-01 規則6: 讀取流出錯即destroy兩端(釋放寫入流之檔案控制代碼); 目標空檔不刪除為已知限制, 不斷言
-        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, eperm: /^Error: EPERM: /.test(res.error && res.error.v), streams: r.out.streams, active: r.out.active, ...ev(r) },
-            { s: 'resolve', keys: ['error'], eperm: true, streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
+        //R-FS-ERRMSG-01(W-23): 原生錯誤(EPERM)之結果物件error為新建之Error, message為固定詞彙'operation failed (code EPERM)', 不帶路徑
+        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, msg: res.error && res.error.v, streams: r.out.streams, active: r.out.active, ...ev(r) },
+            { s: 'resolve', keys: ['error'], msg: 'Error: operation failed (code EPERM)', streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
     })
 
     it(`CF05 should resolve { error } (not reject) with useSync:false when opt.fs.lstatSync throws in the pre-check`, function() {
@@ -157,7 +159,8 @@ describe(`fsCopyFile 結果物件(R-FS-RESULT-01)`, function() {
     it(`CF01 (守門) should resolve { error: <description string> } with useSync:false when the source does not exist`, function() {
         let { r } = runFsFail('CF01')
         //R-FS-RESULT-01 規則1、6: 所有出口回{ success }或{ error }, error為說明字串或Error物件
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'resolve', k: 'result', keys: ['error'], error: { k: 'string', v: `fpSrc[${r.out.p}] is not a file` } }, ...ev0 })
+        //V19、V20(第492項第3批): 「來源不是檔案」之說明字串為固定訊息'invalid fpSrc: must be an existing file'(以invalid起頭, 不帶路徑與輸入值)
+        assert.strict.deepStrictEqual({ res: r.out.res, noPath: !r.out.res.error.v.includes(r.out.p), ...ev(r) }, { res: { s: 'resolve', k: 'result', keys: ['error'], error: { k: 'string', v: 'invalid fpSrc: must be an existing file' } }, noPath: true, ...ev0 })
     })
 
     it(`CF03 (守門) should resolve { error: <Error> } with useSync:false when the parent of the target is a file`, function() {

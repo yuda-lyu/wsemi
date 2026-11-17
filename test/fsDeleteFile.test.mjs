@@ -67,12 +67,12 @@ describe(`fsDeleteFileCore 結果物件(R-FS-RESULT-01)`, function() {
         })
     })
 
-    it(`RO39 should return the thrown real Error as is (cross-realm Error with code, null-prototype Error) when the injected fs.unlinkSync throws it`, function() {
+    it(`RO39 should return a new fixed-message Error keeping the code for a cross-realm Error with code, and the thrown Error as is for a null-prototype Error without code, when the injected fs.unlinkSync throws it`, function() {
         let { r } = runFsFail('RO39')
-        //R-FS-RESULT-01 規則5: 捕捉之值為Error者原樣; Error之判定同R-CODEC-ERR-01規則1之真Error(經_isRealError, 含跨realm與無原型者), 不得轉成字串而失去code
+        //R-FS-RESULT-01 規則5、R-FS-ERRMSG-01(W-23): 捕捉之值為Error者其判定同R-CODEC-ERR-01規則1之真Error(經_isRealError, 含跨realm與無原型者), 不得轉成字串而失去code; 帶字串code(ENOENT)者為Node原生錯誤, 回新建之Error(message為固定詞彙'operation failed (code ENOENT)', 只保留code, 非原拋出之同一物件); 無code者(無原型之Error)原樣(同一物件)
         assert.strict.deepStrictEqual({ ...r.out, ...ev(r) }, {
-            crossRealm: { same: true, code: 'ENOENT' },
-            nullProto: { same: true },
+            crossRealm: { same: false, code: 'ENOENT', message: 'operation failed (code ENOENT)' },
+            nullProto: { same: true, message: 'np' },
             ...ev0,
         })
     })

@@ -14,6 +14,7 @@
 |---|---|---|---|
 | 計時器、佇列與 Promise 流程 | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01 | 20.9 |
 | 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
+| 安全相關 opt 為 K3 之例外(雜湊演算法、`fsEnsureBins`／`fsDownloadFileVerify` 之 offline、mirror、fetch、names 等)、fs 系錯誤訊息不回顯路徑／網址／輸入值、Node 原生錯誤固定詞彙加錯誤碼(第 492 項第 3 批 ws492d,2026-11-17) | `sgud/rule/rulebook_secopt.md` | R-HASH-TYPE-01、R-SEC-OPT-01、R-FS-ERRMSG-01、R-FS-MSG-V20-01 | 約 17 |
 | 檔案系統(含 `fsWriteTextAtomic` 原子寫檔) | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01、R-FS-ATOMIC-01 | 約 28 |
 | 顯式時區時鐘 `genClockTZ` | `sgud/rule/rulebook_clock.md` | R-CLOCK-01 | 約 6 |
 | 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
@@ -95,10 +96,14 @@
 - `R-ENTRY-CONVERT-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492a 處置結果〉): R-ENTRY-CONVERT-01 對外入口之數值參數(必須參數或 opt 鍵)以 `isenum`(整數 `iseint`)判定,通過即 `cdbl`(`cint`)轉型後使用、取值只讀一次;內部已必為數值者(瀏覽器事件屬性、已轉型之值、依型別分流)可用 lodash／原生判斷不改;回布林者無效回 `false`,opt 無效視為未給,訊息不帶值(使用者 2026-11-16;`domIsClientXYIn`、`domGetBoudRectRefSelf`、`interp1` stairs 之 `xMin`／`xMax`)
 - `R-ENTRY-THROW-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492b 處置結果〉): R-ENTRY-THROW-01 必須參數為陣列或物件者無效即同步拋 `invalid <名稱>: must be <種類>`(不帶值,元素帶索引),空陣列／空物件合法;真陣列以 `Array.isArray` 判定(R-OBJ-ITER-01 規則 2);opt 非一般物件視為未給、布林鍵只有 `true` 生效;鍵只看自有可列舉字串鍵(使用者 2026-11-03「都A」;`objSortByKeys`、`treeToFilepath`)
 - `R-RANGE-VALUE-01` → `rulebook_judge_sites_r2e.md`(〈第 492 項 ws492b 處置結果〉): R-RANGE-VALUE-01 回傳「範圍內之值」之函數,值域須為 `[vstart, vend]`;`pseudoRandomIntsNdpRange` 排序用之值不含 `vstart`,取 `n` 個後加 `vstart`(`vstart=0` 時與修前逐位相同)
-- `R-FS-DEPS-01` → `rulebook_fsdeps.md`: R-FS-DEPS-01 fs 系 Core 缺注入相依(fs、path、crypto、Readable、pipeline)依家族通道 fail-closed(不回成功、不動檔案、訊息 `invalid opt.<名>: must be …` 不帶值,單一擁有者 `_chkFsDeps`),判斷類 Core 同步拋錯不回 false;對外函數(`fsDeleteFileSafe`、`fsDeleteFolderSafe`、`fsDownloadFileVerify`)注入鍵 undefined 取 Node 內建
+- `R-FS-DEPS-01` → `rulebook_fsdeps.md`: R-FS-DEPS-01 fs 系 Core 缺注入相依(fs、path、crypto、Readable、pipeline)依家族通道 fail-closed(不回成功、不動檔案、訊息 `invalid opt.<名>: must be …` 不帶值,單一擁有者 `_chkFsDeps`),判斷類 Core 同步拋錯不回 false;對外函數(`fsDeleteFileSafe`、`fsDeleteFolderSafe`、`fsDownloadFileVerify`,第 492 項第 3 批另加 12 個: `fsEnsureBins`、`fsCreateFile`、`fsCopyFile`、`fsCopyFolder`、`fsMergeFiles`、`fsGetFileHash`、`fsGetFileBasicHash`、`fsGetFileXxHash`、`fsGetFolderBasicHash`、`fsGetFilesWithHashInFolder`、`fsTreeFolderWithHash`、`fsSyncFolder`,單一擁有者 `_mergeInject`)注入鍵 undefined 取 Node 內建
 - `R-LEVEL-LIMIT-01` → `rulebook_fsdeps.md`: R-LEVEL-LIMIT-01 `levelLimit` 之 `null` 依 K3 取預設 1(fs 列舉家族 10 函數與 `fsTask`),無窮遍歷給 `4294967295`
 - `R-FS-OPT-PATH-01` → `rulebook_fsdeps.md`: R-FS-OPT-PATH-01 路徑型 opt 鍵(`fsSrlog.fdLog`、`fsTask.fdStorage`、`fsEvem.fd`)非字串、空字串、含 NUL 取預設;`fsTask` 紀錄資料夾無法使用即建構時拋錯
 - `R-FS-ENTRY-CHECK-01` → `rulebook_fsdeps.md`: R-FS-ENTRY-CHECK-01 N-A 之 fs 函數入口檢測先於副作用(`fsCreateFileCore` data、`fsWriteText(Core)` c、`fsDownloadFileCore` urlIn/fpOut、`fsEnsureBins` manifest 路徑與 pkgRoot、`fsGetBinManifestEntry` fp、判斷類非字串路徑回 false)
+- `R-HASH-TYPE-01` → `rulebook_secopt.md`: R-HASH-TYPE-01 雜湊演算法 `opt.type`／`opt.typeHash` 為安全相關 opt,給了而無效即拒絕(不改用預設;`crypto.getHashes()` 成員、`xxhash64` 依路徑,不經物件鍵查找),入口先於任何 IO,同一函數所有路徑一致;單一擁有者 `_chkHashType`(第 492 項第 3 批 ws492d)
+- `R-SEC-OPT-01` → `rulebook_secopt.md`: R-SEC-OPT-01 `fsEnsureBins(Core)`／`fsDownloadFileVerify(Core)` 之安全相關 opt(offline、mirror、fetch、names、floatingManifestUrl、期望值、包裝物件)給了而無效即 E_ARG,`names: []` 合法,非安全 opt(cacheDir、onProgress、布林旗標)依 K3 取預設
+- `R-FS-ERRMSG-01` → `rulebook_secopt.md`: R-FS-ERRMSG-01 Node 原生錯誤(帶 code 之真 Error,不含 `E_` 起頭者)一律改固定詞彙加錯誤碼 `operation failed (code X)`,各通道(結果物件新建 Error、字串 reject、同步拋出、cause);單一擁有者 `_fsErrMsg`
+- `R-FS-MSG-V20-01` → `rulebook_secopt.md`: R-FS-MSG-V20-01 fs 系錯誤訊息、console、reject 不回顯路徑、網址、輸入值(V19 `invalid <名>: must be <種類>`);成功訊息不變;結構欄位(url、fp、expected、actual、leftovers、missing)保留
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

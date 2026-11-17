@@ -3,10 +3,9 @@ import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import isestr from './isestr.mjs'
 import getPathParent from './getPathParent.mjs'
-import getErrorMessage from './getErrorMessage.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg, { fsErrMsgNet } from './_fsErrMsg.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import chkFsDeps from './_chkFsDeps.mjs'
 
@@ -14,7 +13,7 @@ import chkFsDeps from './_chkFsDeps.mjs'
 /**
  * 後端nodejs下載網址成為檔案
  *
- * 下載內容先寫入暫存檔`${fpOut}.download`，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔。回應帶content-length且未經內容編碼與分塊傳輸時，改名前核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串`failed to download url[urlIn] to file[fpOut]: 原因`並清除暫存檔；輸入檢查不通過(urlIn、fpOut非有效字串、未給opt.pipeline)時reject說明字串。同一fpOut之併發下載由呼叫端自行避免
+ * 下載內容先寫入暫存檔`${fpOut}.download`，傳輸完成後才改名為fpOut，故中途失敗時fpOut不會殘留截斷檔。回應帶content-length且未經內容編碼與分塊傳輸時，改名前核對暫存檔大小。任何失敗(非2xx回應、連線被拒、下載中途斷線、大小不符、寫檔錯誤)皆reject字串`failed to download: 原因`並清除暫存檔(訊息不帶網址與檔案路徑，原因為回應狀態、大小核對結果，或Node原生錯誤之固定詞彙加錯誤碼如'operation failed (code ENOENT)'、網路錯誤之'TypeError: fetch failed (code ECONNREFUSED)')；輸入檢查不通過(urlIn、fpOut非有效字串、未給opt.pipeline)時reject說明字串。同一fpOut之併發下載由呼叫端自行避免
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFile.test.mjs Github}
  * @memberOf wsemi
@@ -74,7 +73,7 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
 
     }
     catch (err) {
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err))
     }
 
     //check, 注入之fs、Readable、pipeline缺漏為相依無效(R-FS-DEPS-01), 先於建立資料夾、fetch與寫檔, 以說明字串reject(不帶輸入值)
@@ -98,7 +97,7 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
         }
     }
     catch (err) {
-        return Promise.reject(`failed to download url[${urlIn}] to file[${fpOut}]: ${getErrorMessage(err, { useCause: true })}`)
+        return Promise.reject(`failed to download: ${fsErrMsgNet(err)}`)
     }
 
     //fpTemp, 先寫暫存檔, 成功才改名為正式檔名, 中斷時正式檔名不存在, 下次自然重新下載
@@ -113,7 +112,7 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
             fs.unlinkSync(fpTemp)
         }
         catch (err) {}
-        pm.reject(`failed to download url[${urlIn}] to file[${fpOut}]: ${reason}`)
+        pm.reject(`failed to download: ${reason}`)
     }
 
     //攔截錯誤, 串流錯誤由pipeline轉為reject, 故與fetch、寫檔、改名之錯誤走同一個catch
@@ -160,7 +159,7 @@ async function fsDownloadFileCore(urlIn, fpOut, opt = {}) {
         pm.resolve(fpOut)
     }
     catch (err) {
-        fail(getErrorMessage(err, { useCause: true }))
+        fail(fsErrMsgNet(err))
     }
 
     return pm

@@ -1,6 +1,7 @@
 import fs from 'fs'
 import fsCreateFileCore from './fsCreateFileCore.mjs'
 import toResultError from './_toResultError.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -64,7 +65,7 @@ import toResultError from './_toResultError.mjs'
  */
 function fsCreateFile(pah, data, opt = {}) {
     try {
-        return fsCreateFileCore(pah, data, { fs, ...opt })
+        return fsCreateFileCore(pah, data, mergeInject({ fs }, opt)) //opt.fs給undefined視為未給取Node內建fs(V5)
     }
     catch (err) {
         return {

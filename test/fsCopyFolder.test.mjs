@@ -247,8 +247,9 @@ describe(`fsCopyFolder 失敗回報(R-FS-REJECT-01)`, function() {
         let { r } = runFsFail('CD07')
         let res = r.out.res
         //R-FS-REJECT-01 規則6: 讀取流出錯即destroy兩端(釋放寫入流之檔案控制代碼)
-        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, eperm: /^Error: EPERM: /.test(res.error && res.error.v), streams: r.out.streams, active: r.out.active, ...ev(r) },
-            { s: 'resolve', keys: ['error'], eperm: true, streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
+        //R-FS-ERRMSG-01(W-23): 原生錯誤(EPERM)之結果物件error為新建之Error, message為固定詞彙'operation failed (code EPERM)'(String(err)即'Error: operation failed (code EPERM)'), 不帶路徑
+        assert.strict.deepStrictEqual({ s: res.s, keys: res.keys, msg: res.error && res.error.v, streams: r.out.streams, active: r.out.active, ...ev(r) },
+            { s: 'resolve', keys: ['error'], msg: 'Error: operation failed (code EPERM)', streams: [{ t: 'read', ...closed }, { t: 'write', ...closed }], active: [], ...ev0 })
     })
 
     it(`CD04 should resolve { error } (not reject) with useSync:false when opt.fs.lstatSync throws in the pre-check`, function() {
@@ -273,7 +274,8 @@ describe(`fsCopyFolder 結果物件(R-FS-RESULT-01)`, function() {
     it(`CD01 (守門) should resolve { error: <description string> } with useSync:false when the source does not exist`, function() {
         let { r } = runFsFail('CD01')
         //R-FS-RESULT-01 規則1、6: 所有出口回{ success }或{ error }, error為說明字串或Error物件
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'resolve', k: 'result', keys: ['error'], error: { k: 'string', v: `fpSrc[${r.out.p}] is not a folder` } }, ...ev0 })
+        //V19、V20(第492項第3批): 「來源不是資料夾」之說明字串為固定訊息'invalid fpSrc: must be an existing folder'(以invalid起頭, 不帶路徑與輸入值)
+        assert.strict.deepStrictEqual({ res: r.out.res, noPath: !r.out.res.error.v.includes(r.out.p), ...ev(r) }, { res: { s: 'resolve', k: 'result', keys: ['error'], error: { k: 'string', v: 'invalid fpSrc: must be an existing folder' } }, noPath: true, ...ev0 })
     })
 
     it(`CD03 (守門) should return { error: <Error> } with useSync:true when the parent of the target is a file`, function() {
@@ -289,8 +291,8 @@ describe(`fsCopyFolder 結果物件(R-FS-RESULT-01)`, function() {
         }
         let { r } = runFsFail('CD05')
         let res = r.out.res
-        //R-FS-RESULT-01 規則1、6: error為說明字串或Error物件(捕捉之Error原樣, 規則5)
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, keys: res.keys, eperm: /^Error: EPERM: /.test(res.error && res.error.v), ...ev(r) }, { s: 'resolve', k: 'result', keys: ['error'], eperm: true, ...ev0 })
+        //R-FS-RESULT-01 規則1、6: error為說明字串或Error物件; R-FS-ERRMSG-01(W-23): 捕捉之原生錯誤(EPERM)為新建之Error, message為固定詞彙'operation failed (code EPERM)'(String(err)即'Error: operation failed (code EPERM)'), 不帶路徑
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, keys: res.keys, msg: res.error && res.error.v, ...ev(r) }, { s: 'resolve', k: 'result', keys: ['error'], msg: 'Error: operation failed (code EPERM)', ...ev0 })
     })
 
     it(`CD08 should resolve { error: 'null' } (truthy) and destroy the write stream when the injected read stream errors with null`, function() {

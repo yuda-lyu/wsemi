@@ -82,10 +82,12 @@ describe(`fsGetFileHash 失敗回報(R-FS-REJECT-01)`, function() {
     this.timeout(60000)
 
     itFsHashFail([
-        { id: 'FH01', when: '真實fs: 路徑不存在', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
-        { id: 'FH02', when: '真實fs: 路徑不存在, type=xxhash64', want: (o) => rejected(`fp[${o.fp}] is not a file`), rule: RULE.r1pre },
-        { id: 'FH03', when: '真實fs: ACL拒讀, type=xxhash64', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
-        { id: 'FH04', when: '真實fs: ACL拒讀, type預設sha512', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
+        //FH01、FH02: 不存在之訊息固定且不帶路徑(V19: 以'invalid '起頭, V20: 不帶輸入值), 故期望為固定字串(不含o.fp)
+        { id: 'FH01', when: '真實fs: 路徑不存在', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        { id: 'FH02', when: '真實fs: 路徑不存在, type=xxhash64', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        //FH03、FH04: 原生錯誤(EPERM)之拒絕值為固定詞彙加錯誤碼(o.errStr為子行程對同一真實錯誤依fsErrStr算出之'operation failed (code EPERM)', 不含路徑與系統訊息)
+        { id: 'FH03', when: '真實fs: ACL拒讀, type=xxhash64', want: (o) => rejected(o.errStr), rule: RULE.r1native, win: true },
+        { id: 'FH04', when: '真實fs: ACL拒讀, type預設sha512', want: (o) => rejected(o.errStr), rule: RULE.r1native, win: true },
         { id: 'FH05', when: 'Core注入fs: lstatSync拋Error(非async函數)', want: () => rejected('Error: lstat boom'), rule: RULE.r2 },
         //FH06(外審 opus F21): type=xxhash64分支之chunkSize=2^31(原懸置)與預設chunkSize之雜湊相同, 且createReadStream所收之highWaterMark為預設值64*1024*1024(否則期望值即不成立)
         { id: 'FH06', when: '輸入: type=xxhash64, chunkSize=2^31', want: (o) => resolved(o.hwm.length === 1 && o.hwm[0] === 64 * 1024 * 1024 ? o.hashDefault : `<highWaterMark應為預設值67108864, 實為${JSON.stringify(o.hwm)}>`), rule: RULE.r4aMax },

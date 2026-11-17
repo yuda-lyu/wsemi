@@ -70,19 +70,19 @@ describe(`fsBuildWriteStreamText 失敗回報(R-FS-REJECT-01)`, function() {
     //ev(r)、ev0: 子行程之未處理rejection與未捕捉例外及其期望(皆空)
     this.timeout(60000)
 
-    it(`WS01 should reject String(err) from create() when the path is an existing folder`, function() {
+    it(`WS01 should reject the fixed string 'operation failed (code EISDIR)' (without the path) from create() when the path is an existing folder`, function() {
         let { r } = runFsFail('WS01')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 捕捉之Error(串流'error')經_errToStr得'名稱: 訊息'
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串; R-FS-ERRMSG-01(W-23): 捕捉之Node原生錯誤(串流'error', EISDIR)改固定詞彙加錯誤碼, 不帶'Error: ' 前綴與路徑
         //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, eisdir: /^Error: EISDIR: /.test(res.v), ...ev(r) }, { s: 'reject', k: 'string', eisdir: true, ...ev0 })
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, ...ev(r) }, { s: 'reject', k: 'string', v: 'operation failed (code EISDIR)', ...ev0 })
     })
 
-    it(`WS02 should reject String(err) from create() when the parent of the path is a file`, function() {
+    it(`WS02 should reject the fixed string 'operation failed (code ENOENT|ENOTDIR)' (without the path) from create() when the parent of the path is a file`, function() {
         let { r } = runFsFail('WS02')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 捕捉之Error經_errToStr得'名稱: 訊息'
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, code: /^Error: (ENOENT|ENOTDIR): /.test(res.v), ...ev(r) }, { s: 'reject', k: 'string', code: true, ...ev0 })
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串; R-FS-ERRMSG-01(W-23): 捕捉之Node原生錯誤(ENOENT或ENOTDIR, 依平台)改固定詞彙加錯誤碼, 不帶路徑
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, code: /^operation failed \(code (ENOENT|ENOTDIR)\)$/.test(res.v), ...ev(r) }, { s: 'reject', k: 'string', code: true, ...ev0 })
     })
 
     it(`WS03 should return a Promise that rejects a string (not throw synchronously) from create() when the path is undefined`, function() {
@@ -146,8 +146,8 @@ describe(`fsBuildWriteStreamText 失敗回報(R-FS-REJECT-01)`, function() {
         let o = r.out
         //R-FS-REJECT-01 規則2: 不得同步拋出(串流'error'後之write不動作不拋錯); 規則5: end須settle(resolve)
         assert.strict.deepStrictEqual({ stage: o.stage, end: o.end }, { stage: 'awaitPm', end: { s: 'resolve', k: 'undefined' } })
-        //R-FS-REJECT-01 規則1: await pm者收到以字串reject之開檔錯誤('Error: EISDIR: …')
-        assert.strict.deepStrictEqual({ k: o.caught.k, eisdir: /^Error: EISDIR: /.test(o.caught.v), ...ev(r) }, { k: 'string', eisdir: true, ...ev0 })
+        //R-FS-REJECT-01 規則1、R-FS-ERRMSG-01: await pm者收到以字串reject之開檔錯誤(固定詞彙'operation failed (code EISDIR)', 不帶路徑)
+        assert.strict.deepStrictEqual({ k: o.caught.k, v: o.caught.v, ...ev(r) }, { k: 'string', v: 'operation failed (code EISDIR)', ...ev0 })
     })
 
     it(`WS11 (守門) should throw a TypeError synchronously from write() when create() was never called`, function() {

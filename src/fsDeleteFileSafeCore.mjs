@@ -3,7 +3,7 @@ import delay from './delay.mjs'
 import fsExistsCore from './fsExistsCore.mjs'
 import fsIsFileCore from './fsIsFileCore.mjs'
 import fsMissFns from './_fsMissFns.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 import getTrace from './getTrace.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import optVal from './_optVal.mjs'
@@ -25,7 +25,7 @@ let RULE_NUM_RETRY = { fn: 'fsDeleteFileSafeCore', name: 'opt.numRetry', kind: '
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.numRetry為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫unlinkSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為不需(再)刪除而即將resolve或reject(含n與reason；reason為'not-exist'代表前置檢查標的不存在而resolve、'not-file'代表前置檢查標的非檔案而reject，此二者n為0；reason為'vanished'代表第n次嘗試得ENOENT且標的確已不存在(重試期間被他方刪除)而resolve)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
- * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳成功訊息('done: <pah>'、標的不存在之'file does not exist: <pah>'，維持)，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑存在但不是檔案時reject說明字串'invalid pah: must be a file or not exist'；Node原生錯誤(如EPERM、EBUSY)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EBUSY)'
  * @example
  * need test in nodejs.
  *
@@ -85,7 +85,7 @@ async function fsDeleteFileSafeCore(pah, opt = {}) {
             if (trace) {
                 trace('skip', { n: 0, reason: 'not-file' })
             }
-            return Promise.reject('input path is not a file: ' + pah) //若存在但又不是檔案, 則視為錯誤
+            return Promise.reject('invalid pah: must be a file or not exist') //若存在但又不是檔案, 則視為錯誤(訊息不帶路徑, V20)
         }
     }
     catch (err) {
@@ -97,7 +97,7 @@ async function fsDeleteFileSafeCore(pah, opt = {}) {
             catch (e) {}
             trace('fail', { n: 0, code: typeof code === 'string' ? code : null })
         }
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err))
     }
 
     //retry
@@ -148,7 +148,7 @@ async function fsDeleteFileSafeCore(pah, opt = {}) {
                 if (trace) {
                     trace('fail', { n: i + 1, code: typeof code === 'string' ? code : null })
                 }
-                return Promise.reject(errToStr(err))
+                return Promise.reject(fsErrMsg(err))
             }
         }
     }
@@ -158,7 +158,7 @@ async function fsDeleteFileSafeCore(pah, opt = {}) {
         if (trace) {
             trace('giveup', { n: numRetry, code: 'EBUSY' })
         }
-        return Promise.reject(errToStr(errLast))
+        return Promise.reject(fsErrMsg(errLast))
     }
 
     // return {

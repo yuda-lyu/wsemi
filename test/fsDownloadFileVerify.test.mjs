@@ -423,8 +423,9 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         let shaBad = crypto.createHash('sha256').update(bodyBad).digest('hex')
         //R07/R13: code、step、attempts; 預期與實際(物件內為完整值)
         assert.strict.deepStrictEqual({ code: err.code, step: err.step, attempts: err.attempts, expected: err.expected, actual: err.actual, url: err.url, fp: err.fp }, { code: 'E_HASH_MISMATCH', step: 'verify', attempts: 1, expected: exp, actual: { sha256: shaBad, size: bodyBad.length }, url: url('hashbad'), fp })
-        //R13: 訊息含失敗步驟與截短之預期/實際雜湊(16碼)
-        assert.strict.deepStrictEqual([err instanceof Error, err.message.includes('E_HASH_MISMATCH'), err.message.includes('step verify'), err.message.includes(`expected ${sha.slice(0, 16)}...`), err.message.includes(`received ${shaBad.slice(0, 16)}...`), err.message.includes('attempt 1 of 3')], [true, true, true, true, true, true], err.message)
+        //R13/V20: 訊息含失敗步驟與固定之雜湊不符說明, 不含網址、檔案路徑、期望與實際之雜湊(值見err.expected、err.actual、err.url、err.fp)
+        assert.strict.deepStrictEqual([err instanceof Error, err.message.startsWith('failed to download (code E_HASH_MISMATCH, step verify, attempt 1): sha256 mismatch: the received content does not match expected.sha256'), err.message.includes('E_HASH_MISMATCH'), err.message.includes('step verify'), err.message.includes('attempt 1)'), err.message.includes('attempt 1 of 3')], [true, true, true, true, true, false], err.message)
+        assert.strict.deepStrictEqual([err.message.includes(sha.slice(0, 16)), err.message.includes(shaBad.slice(0, 16)), err.message.includes(url('hashbad')), err.message.includes('127.0.0.1'), err.message.includes(fp), err.message.includes('hashbad.bin')], [false, false, false, false, false, false], err.message)
         //R09/R10: 正式檔名不存在, 暫存檔已清除
         assert.strict.deepStrictEqual([fs.existsSync(fp), parts(fp)], [false, []])
         assert.strict.deepStrictEqual(hits.hashbad, 1)
@@ -455,13 +456,14 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         })
         let err = await catchErr(fsDownloadFileVerify(plan('clwrong', ['ok']), fp, { sha256: sha, size: body.length + 5 }, { fs: fsx, retryOnMismatch: false }))
         //R05: 宣告大小與期望不符即提前中止, 不建立暫存檔
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, actual: err.actual, announces: err.message.includes(`the server announces ${body.length} bytes`), nCreate, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', step: 'verify', actual: { sha256: null, size: body.length }, announces: true, nCreate: 0, fp: false, parts: [] })
+        //V20: 訊息為固定說明, 不含宣告大小與期望大小之數值(值見err.actual、err.expected)
+        assert.strict.deepStrictEqual({ code: err.code, step: err.step, actual: err.actual, expected: err.expected, announces: err.message.includes('size mismatch: the size announced by the server differs from expected.size'), leaks: [err.message.includes(String(body.length)), err.message.includes(String(body.length + 5)), err.message.includes(url('clwrong')), err.message.includes(fp)], nCreate, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', step: 'verify', actual: { sha256: null, size: body.length }, expected: { sha256: sha, size: body.length + 5 }, announces: true, leaks: [false, false, false, false], nCreate: 0, fp: false, parts: [] })
     })
 
     it(`R05 should reject E_SIZE_MISMATCH when the content is shorter than the expected size`, async function() {
         let fp = fpOf('short')
         let err = await catchErr(fsDownloadFileVerify(plan('short', ['short']), fp, exp, { retryOnMismatch: false }))
-        assert.strict.deepStrictEqual({ code: err.code, step: err.step, size: err.actual.size, msg: err.message.includes('received 1000 bytes'), fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', step: 'verify', size: 1000, msg: true, fp: false, parts: [] })
+        assert.strict.deepStrictEqual({ code: err.code, step: err.step, size: err.actual.size, msg: err.message.includes('size mismatch: the received size differs from expected.size'), leaks: [err.message.includes('1000'), err.message.includes(String(body.length)), err.message.includes(url('short')), err.message.includes(fp)], fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', step: 'verify', size: 1000, msg: true, leaks: [false, false, false, false], fp: false, parts: [] })
     })
 
     it(`R05 should abort early with E_SIZE_MISMATCH as soon as the content exceeds the expected size`, async function() {
@@ -470,7 +472,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         let err = await catchErr(fsDownloadFileVerify(plan('over', ['bigslow']), fp, { sha256: sha, size: 1000 }, { retryOnMismatch: false }))
         let ms = Date.now() - t
         //R05: 內容超量即提前中止(伺服器5秒後才送完, 須遠早於此結束)
-        assert.strict.deepStrictEqual({ code: err.code, msg: err.message.includes('received more than that'), early: ms < 3000, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', msg: true, early: true, fp: false, parts: [] }, `ms=${ms}`)
+        assert.strict.deepStrictEqual({ code: err.code, msg: err.message.includes('size mismatch: received more than expected.size'), leaks: [err.message.includes('1000'), err.message.includes(url('over')), err.message.includes(fp)], early: ms < 3000, fp: fs.existsSync(fp), parts: parts(fp) }, { code: 'E_SIZE_MISMATCH', msg: true, leaks: [false, false, false], early: true, fp: false, parts: [] }, `ms=${ms}`)
     })
 
     it(`R11 should not retry a mismatch when opt.retryOnMismatch is false`, async function() {
@@ -504,7 +506,8 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R12 should stop after opt.maxAttempts (numeric string accepted) and report the last error`, async function() {
         let err = await catchErr(fsDownloadFileVerify(plan('max2', ['s500']), fpOf('max2'), exp, { maxAttempts: '2', retryDelayMs: 10 }))
-        assert.strict.deepStrictEqual([err.code, err.status, err.attempts, hits.max2, err.message.includes('attempt 2 of 2')], ['E_HTTP', 500, 2, 2, true])
+        //V20: 訊息之次數為固定形式「attempt 2)」, 不帶上限值(maxAttempts)
+        assert.strict.deepStrictEqual([err.code, err.status, err.attempts, hits.max2, err.message.startsWith('failed to download (code E_HTTP, step request, attempt 2): HTTP 500'), err.message.includes('attempt 2 of 2')], ['E_HTTP', 500, 2, 2, true, false])
     })
 
     it(`R12 should use the default maxAttempts(3) when opt.maxAttempts is invalid`, async function() {
@@ -682,7 +685,8 @@ describe(`fsDownloadFileVerify with a local server`, function() {
 
     it(`R12 should stop retrying when the wait would exceed opt.totalMs`, async function() {
         let err = await catchErr(fsDownloadFileVerify(plan('budget', ['bad', 'ok']), fpOf('budget'), exp, { retryDelayMs: 5000, totalMs: 2000 }))
-        assert.strict.deepStrictEqual([err.code, err.attempts, hits.budget, err.message.includes('retry stopped: waiting 5000ms would exceed the total time budget of 2000ms')], ['E_HASH_MISMATCH', 1, 1, true], err.message)
+        //V20: 停止重試之說明為固定字串, 不帶等待時間與整體時間之數值
+        assert.strict.deepStrictEqual([err.code, err.attempts, hits.budget, err.message.includes('retry stopped: waiting for the next attempt would exceed the total time budget (opt.totalMs)'), err.message.includes('5000'), err.message.includes('2000')], ['E_HASH_MISMATCH', 1, 1, true, false, false], err.message)
     })
 
     //======== 期望值函數 ========
@@ -845,14 +849,15 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             fs.writeFileSync(fp, 'old')
             let e = k === 'oldover' ? { sha256: sha, size: 1000 } : exp
             let err = await catchErr(fsDownloadFileVerify(plan(k, [a]), fp, e, o))
-            rs.push([k, err !== null, fs.readFileSync(fp, 'utf8'), parts(fp), err.message.includes(`note: file[${fp}] was not modified by this call`)])
+            //V20: 說明為固定字串, 不含檔案路徑(路徑見err.fp)
+            rs.push([k, err !== null, fs.readFileSync(fp, 'utf8'), parts(fp), err.message.includes('note: the output file was not modified by this call'), err.message.includes(fp), err.fp === fp])
         }
         assert.strict.deepStrictEqual(rs, [
-            ['oldbad', true, 'old', [], true],
-            ['old404', true, 'old', [], true],
-            ['oldabort', true, 'old', [], true],
-            ['oldshort', true, 'old', [], true],
-            ['oldover', true, 'old', [], true],
+            ['oldbad', true, 'old', [], true, false, true],
+            ['old404', true, 'old', [], true, false, true],
+            ['oldabort', true, 'old', [], true, false, true],
+            ['oldshort', true, 'old', [], true, false, true],
+            ['oldover', true, 'old', [], true, false, true],
         ])
     })
 
@@ -940,7 +945,8 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         let err = await catchErr(fsDownloadFileVerify(plan('leftover', ['bad']), fp, exp, { fs: fsx, retryOnMismatch: false, retryDelayMs: 1 }))
         let left = parts(fp)
         //R10: 錯誤物件帶清除失敗之資訊; 檔案確實仍在(如實回報)
-        assert.strict.deepStrictEqual({ code: err.code, n, left: left.length, leftovers: err.leftovers.length, sameFp: path.basename(err.leftovers[0].fp) === left[0], cleanup: err.cleanupError.code, msg: err.message.includes(`note: the temporary file "${err.leftovers[0].fp}" could not be removed`), fp: fs.existsSync(fp) }, { code: 'E_HASH_MISMATCH', n: 3, left: 1, leftovers: 1, sameFp: true, cleanup: 'EPERM', msg: true, fp: false })
+        //V20/W-23: 訊息為固定說明(原因為固定詞彙加錯誤碼), 不含暫存檔路徑與原錯誤文字; 路徑見err.leftovers[].fp, leftovers[].error為新建之固定Error(只保留code)
+        assert.strict.deepStrictEqual({ code: err.code, n, left: left.length, leftovers: err.leftovers.length, sameFp: path.basename(err.leftovers[0].fp) === left[0], cleanup: err.cleanupError.code, msg: err.message.includes('note: a temporary file could not be removed (operation failed (code EPERM)), it is not a verified file, remove it manually (see leftovers)'), leaks: [err.message.includes(err.leftovers[0].fp), err.message.includes(path.basename(err.leftovers[0].fp)), err.message.includes('injected')], errLeft: [err.leftovers[0].error.message, err.leftovers[0].error.code, err.cleanupError === err.leftovers[0].error], fp: fs.existsSync(fp) }, { code: 'E_HASH_MISMATCH', n: 3, left: 1, leftovers: 1, sameFp: true, cleanup: 'EPERM', msg: true, leaks: [false, false, false], errLeft: ['operation failed (code EPERM)', 'EPERM', true], fp: false })
         fs.unlinkSync(err.leftovers[0].fp)
     })
 
@@ -1736,7 +1742,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         })
         let err = await catchErr(fsDownloadFileVerify(plan('ident', ['ident']), fp, { sha256: sha, size: body.length + 5 }, { fs: fsx, retryOnMismatch: false }))
         //R05: 宣告之大小與期望不同即不下載(不建立暫存檔); identity表示未壓縮, 與無content-encoding同
-        assert.strict.deepStrictEqual([err.code, err.message.includes('announces'), nOpen, hits.ident, fs.existsSync(fp), parts(fp)], ['E_SIZE_MISMATCH', true, 0, 1, false, []])
+        assert.strict.deepStrictEqual([err.code, err.message.includes('size mismatch: the size announced by the server differs from expected.size'), nOpen, hits.ident, fs.existsSync(fp), parts(fp)], ['E_SIZE_MISMATCH', true, 0, 1, false, []])
     })
 
     it(`R11 should wait until the write stream is closed before re-reading and renaming the temporary file`, async function() {
@@ -1877,7 +1883,8 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             return new Response('nf', { status: 404 })
         }
         let err2 = await catchErr(fsDownloadFileVerify(`http://user:secret@127.0.0.1:${port}/cred`, fpOf('cred'), exp, { fetch: fn404 }))
-        assert.strict.deepStrictEqual([err2.code, err2.message.includes('secret'), err2.message.includes(`http://***@127.0.0.1:${port}/cred`), err2.url], ['E_HTTP', false, true, `http://***@127.0.0.1:${port}/cred`])
+        //V20: 訊息不帶網址(連遮蔽後者亦不帶), 遮蔽帳密後之網址見err.url
+        assert.strict.deepStrictEqual([err2.code, err2.message.includes('secret'), err2.message.includes('127.0.0.1'), err2.message.includes('/cred'), err2.url], ['E_HTTP', false, false, false, `http://***@127.0.0.1:${port}/cred`]) //傳入之fetch所拋錯誤之文字帶回網址時之遮蔽見下方「R03 should mask credentials in the message and the url of an error」
     })
 
     it(`R10/R11 should not leak a raw error when a supplied fs throws a value whose code getter throws (rename, unlink, open)`, async function() {
@@ -1973,29 +1980,39 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         return crypto.createHash('sha256').update(v).digest('hex')
     }
 
-    it(`R03 should use the primitive value of a wrapper object (new String/Number/Boolean) for sha256, size, urlIn, fpOut and the boolean options: the checked value is the used value`, async function() {
+    it(`R03 should not unwrap a wrapper object (new String/Number/Boolean): sha256, size, urlIn and fpOut are rejected E_ARG without using the wrapper or sending a request, and the boolean options take their defaults: the checked value is the used value`, async function() {
+        //安全相關之值(校驗值、來源網址、輸出位置)給包裝物件一律拒絕(W-09、W-20), 不解包後接受: 包裝物件之方法不得被呼叫, 不發請求
+        let nFetch = 0
+        let fnFetch = async () => {
+            nFetch++
+            return new Response('x')
+        }
+
         //sha256: 包裝字串之toLowerCase被覆寫成回傳另一雜湊, 不得被呼叫(原先檢查A卻以B驗證並發布)
         let wanted = Buffer.from('wanted content')
         let served = Buffer.from('served content')
+        let callsSha = 0
         let box = new String(shaOf(wanted))
         box.toLowerCase = () => {
+            callsSha++
             return shaOf(served)
         }
         let fp1 = fpOf('box-sha')
-        let err1 = await catchErr(fsDownloadFileVerify('x://box/sha', fp1, { sha256: box, size: served.length }, { fetch: async () => new Response(served), maxAttempts: 1 }))
-        assert.strict.deepStrictEqual([err1.code, fs.existsSync(fp1), parts(fp1)], ['E_HASH_MISMATCH', false, []])
+        let err1 = await catchErr(fsDownloadFileVerify('x://box/sha', fp1, { sha256: box, size: served.length }, { fetch: fnFetch, maxAttempts: 1 }))
+        assert.strict.deepStrictEqual([err1.code, err1.step, err1.attempts, err1.message, callsSha, nFetch, fs.existsSync(fp1), parts(fp1)], ['E_ARG', 'argument', 0, 'expected is invalid: sha256 must be a string of 64 hexadecimal characters', 0, 0, false, []])
 
-        //size: 包裝數字之valueOf每次回傳不同值, 只可轉換一次(此處不得被呼叫, 值為其內部數值1)
+        //size: 包裝數字之valueOf每次回傳不同值, 不得被呼叫(包裝數字不解包, 一律拒絕)
         let calls = 0
         let boxSize = new Number(1)
         boxSize.valueOf = () => {
             calls++
             return calls < 4 ? 1 : 2 ** 53
         }
-        let r2 = await fsDownloadFileVerify('x://box/size', fpOf('box-size'), { sha256: shaOf('x'), size: boxSize }, { fetch: async () => new Response('x'), maxAttempts: 1 })
-        assert.strict.deepStrictEqual([r2.size, calls], [1, 0])
+        let fp2 = fpOf('box-size')
+        let err2 = await catchErr(fsDownloadFileVerify('x://box/size', fp2, { sha256: shaOf('x'), size: boxSize }, { fetch: fnFetch, maxAttempts: 1 }))
+        assert.strict.deepStrictEqual([err2.code, err2.step, err2.attempts, err2.message, calls, nFetch, fs.existsSync(fp2), parts(fp2)], ['E_ARG', 'argument', 0, 'expected is invalid: size must be a non-negative integer when given', 0, 0, false, []])
 
-        //fpOut與urlIn: 包裝字串之方法皆不得被使用(檢查後再切分會使更名到另一個檔)
+        //fpOut與urlIn: 包裝字串之方法皆不得被使用(檢查後再切分會使更名到另一個檔), 兩者皆拒絕
         let fp3 = fpOf('box-path')
         let boxPath = new String(fp3)
         let boxUrl = new String('x://box/url')
@@ -2005,16 +2022,12 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             }
             boxUrl[k] = boxPath[k]
         }
-        let seen = null
-        let r3 = await fsDownloadFileVerify(boxUrl, boxPath, { sha256: shaOf('x') }, {
-            fetch: async (u) => {
-                seen = typeof u
-                return new Response('x')
-            }
-        })
-        assert.strict.deepStrictEqual([r3.fp, fs.readFileSync(fp3, 'utf8'), seen], [fp3, 'x', 'string'])
+        let err3a = await catchErr(fsDownloadFileVerify(boxUrl, fp3, { sha256: shaOf('x') }, { fetch: fnFetch }))
+        assert.strict.deepStrictEqual([err3a.code, err3a.step, err3a.attempts, err3a.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'urlIn is not an effective string', 0, false, []])
+        let err3b = await catchErr(fsDownloadFileVerify('x://box/url', boxPath, { sha256: shaOf('x') }, { fetch: fnFetch }))
+        assert.strict.deepStrictEqual([err3b.code, err3b.step, err3b.attempts, err3b.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'fpOut is not an effective file path', 0, false, []])
 
-        //布林選項: new Boolean(false)為truthy, 須解包為false
+        //布林選項: 非原始布林(含new Boolean)視為未給取預設, 不解包亦不當truthy; retryOnMismatch預設true, 故new Boolean(false)仍重試至maxAttempts
         let n = 0
         let err4 = await catchErr(fsDownloadFileVerify('x://box/bool', fpOf('box-bool'), { sha256: shaOf('expected') }, {
             retryOnMismatch: new Boolean(false),
@@ -2025,11 +2038,16 @@ describe(`fsDownloadFileVerify with a local server`, function() {
                 return new Response('wrong')
             }
         }))
-        assert.strict.deepStrictEqual([err4.code, err4.attempts, n], ['E_HASH_MISMATCH', 1, 1])
-        let fp5 = fpOf('box-skip')
-        fs.writeFileSync(fp5, 'x')
-        let r5 = await fsDownloadFileVerify('x://box/skip', fp5, { sha256: shaOf('x') }, { useSkipIfMatch: new Boolean(false), fetch: async () => new Response('x') })
-        assert.strict.deepStrictEqual(r5.downloaded, true)
+        assert.strict.deepStrictEqual([err4.code, err4.attempts, n], ['E_HASH_MISMATCH', 3, 3])
+        //useSkipIfMatch預設false: new Boolean(true)與new Boolean(false)皆不略過下載(解包為true時會略過而downloaded為false)
+        let rs5 = []
+        for (let v of [true, false]) {
+            let fp5 = fpOf(`box-skip-${v}`)
+            fs.writeFileSync(fp5, 'x')
+            let r5 = await fsDownloadFileVerify('x://box/skip', fp5, { sha256: shaOf('x') }, { useSkipIfMatch: new Boolean(v), fetch: async () => new Response('x') })
+            rs5.push(r5.downloaded)
+        }
+        assert.strict.deepStrictEqual(rs5, [true, true])
         let n6 = 0
         let fn6 = async () => {
             n6++
@@ -2043,7 +2061,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             fsDownloadFileVerify('x://box/share', fp6, { sha256: shaOf('x') }, { useShare: new Boolean(false), fetch: fn6 }),
             fsDownloadFileVerify('x://box/share', fp6, { sha256: shaOf('x') }, { useShare: new Boolean(false), fetch: fn6 }),
         ])
-        assert.strict.deepStrictEqual(n6, 2) //new Boolean(false)視為false: 不共用, 各自下載
+        assert.strict.deepStrictEqual(n6, 1) //new Boolean(false)視為未給取預設true: 共用同一次下載(解包為false時會各自下載而為2)
     })
 
     it(`R03 should accept a decimal integer string as size, and reject E_ARG a size string that is fractional, exponent, hexadecimal, signed or beyond the safe integers`, async function() {

@@ -4,9 +4,10 @@ import isestr from './isestr.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import fsGetFilesInFolderCore from './fsGetFilesInFolderCore.mjs'
 import fsGetFileHashCore from './fsGetFileHashCore.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import chkFsDeps from './_chkFsDeps.mjs'
+import chkHashType from './_chkHashType.mjs'
 
 
 /**
@@ -20,10 +21,10 @@ import chkFsDeps from './_chkFsDeps.mjs'
  * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、readdirSync(讀取串流之createReadStream於用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing …'(不帶輸入值)
  * @param {Object} opt.path 輸入path物件，須提供resolve、basename；缺漏同opt.fs，reject說明字串'invalid opt.path: must be an object providing resolve, basename'
  * @param {Object} opt.crypto 輸入crypto物件，須提供createHash(opt.type為'xxhash64'時不需要)；缺漏同opt.fs，reject說明字串'invalid opt.crypto: must be an object providing createHash'
- * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'
+ * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為'xxhash64'或crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時reject說明字串'invalid opt.type: must be \'xxhash64\' or one of crypto.getHashes()'(不帶輸入值)，不改用預設、先於列舉與讀檔(入口檢查，資料夾無檔案時亦檢查)
  * @param {Boolean} [opt.debug=false] 輸入是否於levelLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
- * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳列舉檔案陣列，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑不是資料夾時reject說明字串'invalid fd: must be an existing folder'；Node原生錯誤(列舉、讀檔失敗等)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)'
  * @example
  * //need test in nodejs
  *
@@ -38,11 +39,8 @@ async function fsGetFilesWithHashInFolderCore(fd, levelLimit = 1, opt = {}) {
         let fs = get(opt, 'fs')
         let crypto = get(opt, 'crypto')
 
-        //type
-        let type = get(opt, 'type', '')
-        if (!isestr(type)) {
-            type = 'md5'
-        }
+        //type, 未給(undefined、null)取預設, 給了須通過檢核(安全相關opt, 無效即拒絕不改用預設, 見下)
+        let type = get(opt, 'type')
 
         //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
         let msgFd = chkFsPath(fd, 'fd')
@@ -56,9 +54,18 @@ async function fsGetFilesWithHashInFolderCore(fd, levelLimit = 1, opt = {}) {
             return Promise.reject(msgDeps)
         }
 
+        //check, 雜湊演算法(安全相關opt, W-08): 給了而無效即拒絕, 先於列舉與讀檔(資料夾無檔案時亦檢查); 允許集合為'xxhash64'與注入之crypto.getHashes()
+        let msgType = chkHashType(type, { crypto, xx: true })
+        if (msgType) {
+            return Promise.reject(msgType)
+        }
+        if (type === undefined || type === null) {
+            type = 'md5'
+        }
+
         //check
         if (!fsIsFolderCore(fd, { fs })) {
-            return Promise.reject(`fd[${fd}] is not a folder`)
+            return Promise.reject('invalid fd: must be an existing folder')
         }
 
         //fps
@@ -90,7 +97,7 @@ async function fsGetFilesWithHashInFolderCore(fd, levelLimit = 1, opt = {}) {
     }
     catch (err) {
         //fsGetFilesInFolderCore之readdirSync(EPERM等)Error、注入之fs拋出之任意值, 一律轉字串; 已為字串者(fsGetFileHashCore之reject)原樣
-        return Promise.reject(errToStr(err))
+        return Promise.reject(fsErrMsg(err))
     }
 }
 

@@ -97,10 +97,12 @@ describe(`fsGetFileXxHash 失敗回報(R-FS-REJECT-01)`, function() {
     let hwmDefault = (o) => (o.hwm.length === 1 && o.hwm[0] === 64 * 1024 * 1024 ? o.hashDefault : `<highWaterMark應為預設值67108864, 實為${JSON.stringify(o.hwm)}>`)
 
     itFsHashFail([
-        { id: 'XH01', when: '真實fs: 路徑不存在', want: () => rejected('fp is not a file'), rule: RULE.r1pre },
-        { id: 'XH02', when: '真實fs: 路徑為資料夾', want: () => rejected('fp is not a file'), rule: RULE.r1pre },
-        { id: 'XH03', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1err, win: true },
-        { id: 'XH04', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        //XH01、XH02: 不存在、不是檔案之訊息固定(V19: 以'invalid '起頭, 舊為'fp is not a file')
+        { id: 'XH01', when: '真實fs: 路徑不存在', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        { id: 'XH02', when: '真實fs: 路徑為資料夾', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        //XH03、XH04: 原生錯誤(EPERM、ENOENT)之拒絕值為固定詞彙加錯誤碼(o.errStr為子行程對同一真實錯誤依fsErrStr算出之字串)
+        { id: 'XH03', when: '真實fs: 檔案ACL拒讀(串流error EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r1native, win: true },
+        { id: 'XH04', when: '注入fs: createReadStream回真實ReadStream(開檔ENOENT)', want: (o) => rejected(o.errStr), rule: RULE.r1native },
         { id: 'XH05', when: '注入fs: 串流以null出錯', want: () => rejected('null'), rule: RULE.r1any },
         { id: 'XH06', when: '注入fs: 串流以undefined出錯', want: () => rejected('undefined'), rule: RULE.r1any },
         { id: 'XH07', when: '注入fs: 串流以字串str出錯', want: () => rejected('str'), rule: RULE.r1any },

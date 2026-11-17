@@ -107,7 +107,9 @@ describe(`fsDownloadFile with a local server`, function() {
         await delay(50)
         process.removeListener('uncaughtException', h)
         assert.strict.deepStrictEqual(typeof err === 'string', true)
-        assert.strict.deepStrictEqual(err.includes(url('/abort.bin')) && err.includes(fp), true, err)
+        //第492項第3批(V20、W-23): 下載失敗之訊息不帶網址與檔案路徑, 為'failed to download: <原因>', 原因為undici之'TypeError: terminated'附其原因之錯誤碼
+        assert.strict.deepStrictEqual(err, 'failed to download: TypeError: terminated (code UND_ERR_SOCKET)')
+        assert.strict.deepStrictEqual(err.includes(url('/abort.bin')) || err.includes(fp) || err.includes(String(port)), false, err)
         assert.strict.deepStrictEqual(leftovers(fp), [false, false])
         assert.strict.deepStrictEqual(uncaught, [])
     })
@@ -121,7 +123,8 @@ describe(`fsDownloadFile with a local server`, function() {
         catch (e) {
             err = e
         }
-        assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('status[404]'), true, err)
+        //第492項第3批(V20): 訊息不帶網址與檔案路徑
+        assert.strict.deepStrictEqual(err, 'failed to download: status[404] Not Found')
         assert.strict.deepStrictEqual(leftovers(fp), [false, false])
     })
 
@@ -129,12 +132,37 @@ describe(`fsDownloadFile with a local server`, function() {
         let fp = `${fdt}/refused.bin`
         let err = null
         try {
-            await fsDownloadFile('http://127.0.0.1:1/refused.bin', fp)
+            await fsDownloadFile('http://127.0.0.1:1/refused.bin', fp) //port 1為undici之禁用埠(bad port), 其原因無錯誤碼
         }
         catch (e) {
             err = e
         }
-        assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('fetch failed') && err.includes(fp), true, err)
+        //第492項第3批(V20): 訊息不帶網址、檔案路徑、主機與埠
+        assert.strict.deepStrictEqual(err, 'failed to download: TypeError: fetch failed')
+        assert.strict.deepStrictEqual(leftovers(fp), [false, false])
+    })
+
+    it(`should reject with the cause code but without the host and port when the connection is refused by a closed port`, async function() {
+        //取一個已關閉之埠(先listen再close), 連線被拒之原因帶錯誤碼ECONNREFUSED(原因之訊息帶主機與埠, 不取)
+        let srv = http.createServer()
+        await new Promise((resolve) => {
+            srv.listen(0, '127.0.0.1', resolve)
+        })
+        let pt = srv.address().port
+        await new Promise((resolve) => {
+            srv.close(resolve)
+        })
+        let fp = `${fdt}/refused2.bin`
+        let err = null
+        try {
+            await fsDownloadFile(`http://127.0.0.1:${pt}/refused2.bin`, fp)
+        }
+        catch (e) {
+            err = e
+        }
+        //第492項第3批(V20): 網路錯誤為'TypeError: fetch failed (code ECONNREFUSED)'(只附原因之code, 無主機與埠)
+        assert.strict.deepStrictEqual(err, 'failed to download: TypeError: fetch failed (code ECONNREFUSED)')
+        assert.strict.deepStrictEqual(err.includes(String(pt)) || err.includes('127.0.0.1') || err.includes(fp), false, err)
         assert.strict.deepStrictEqual(leftovers(fp), [false, false])
     })
 
@@ -245,8 +273,10 @@ describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
     //ev(r)、ev0: 子行程之未處理rejection與未捕捉例外及其期望(皆空)
     this.timeout(60000)
 
-    //fail, 下載失敗之字串前綴(fsDownloadFileCore之既載格式)
-    let fail = (url, fp) => `failed to download url[${url}] to file[${fp}]: `
+    //fail, 下載失敗之字串前綴(第492項第3批V20: 不帶網址與檔案路徑, 'failed to download: <原因>')
+    let fail = 'failed to download: '
+    //noLeak, 訊息不得含網址與檔案路徑
+    let noLeak = (v, url, fp) => !String(v).includes(url) && !String(v).includes(fp)
 
     it(`DL01 should reject the description string (not an Error) when urlIn is an empty string`, function() {
         let { r } = runFsFail('DL01')
@@ -267,24 +297,24 @@ describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
         assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid opt.pipeline: must be a function' }, ...ev0 })
     })
 
-    it(`DL04 (守門) should reject 'failed to download …: status[404] Not Found' when the response is 404`, function() {
+    it(`DL04 (守門) should reject 'failed to download: status[404] Not Found' (without the url and the path) when the response is 404`, function() {
         let { r } = runFsFail('DL04')
-        //R-FS-REJECT-01 規則1之例外: fsDownloadFileCore之下載失敗維持'failed to download url[…] to file[…]: <訊息>'
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail('http://fake.invalid/x', r.out.p) + 'status[404] Not Found' }, ...ev0 })
+        //R-FS-REJECT-01 規則1之例外: fsDownloadFileCore之下載失敗為'failed to download: <原因>'(第492項第3批V20: 不再帶url[…]與file[…])
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail + 'status[404] Not Found' }, ...ev0 })
     })
 
-    it(`DL05 (守門) should reject 'failed to download …' when the connection is refused`, function() {
+    it(`DL05 (守門) should reject 'failed to download: TypeError: fetch failed' (without the url, the host, the port and the path) when the connection is refused`, function() {
         let { r } = runFsFail('DL05')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1之例外: 下載失敗維持'failed to download url[…] to file[…]: <訊息>'
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://127.0.0.1:1/x', r.out.p)), ...ev(r) }, { s: 'reject', k: 'string', prefix: true, ...ev0 })
+        //R-FS-REJECT-01 規則1之例外: 下載失敗為'failed to download: <原因>'; 本案之埠為undici之禁用埠(1), 其原因(bad port)無錯誤碼, 故無code字樣(真正連線被拒之'(code ECONNREFUSED)'見fsDownloadFile with a local server)
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, noLeak: noLeak(res.v, 'http://127.0.0.1:1/x', r.out.p), ...ev(r) }, { s: 'reject', k: 'string', v: fail + 'TypeError: fetch failed', noLeak: true, ...ev0 })
     })
 
-    it(`DL06 (守門) should reject 'failed to download …' when the parent of fpOut is a file`, function() {
+    it(`DL06 (守門) should reject 'failed to download: operation failed (code ENOENT|ENOTDIR)' (without the url and the path) when the parent of fpOut is a file`, function() {
         let { r } = runFsFail('DL06')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1之例外: 下載失敗(寫檔錯誤)維持'failed to download url[…] to file[…]: <訊息>'
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, prefix: String(res.v).startsWith(fail('http://fake.invalid/x', r.out.p)), ...ev(r) }, { s: 'reject', k: 'string', prefix: true, ...ev0 })
+        //R-FS-REJECT-01 規則1之例外: 下載失敗(寫檔錯誤)為'failed to download: <原因>', 原因為Node原生錯誤(ENOENT, 依平台亦可為ENOTDIR)之固定詞彙加錯誤碼(R-FS-ERRMSG-01)
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, code: /^failed to download: operation failed \(code (ENOENT|ENOTDIR)\)$/.test(res.v), noLeak: noLeak(res.v, 'http://fake.invalid/x', r.out.p), ...ev(r) }, { s: 'reject', k: 'string', code: true, noLeak: true, ...ev0 })
     })
 
     it(`DL07 (守門) should reject the description string 'invalid opt.Readable: …' (before fetch) and leave no file when opt.Readable is not given to fsDownloadFileCore`, function() {
@@ -294,10 +324,10 @@ describe(`fsDownloadFile 失敗回報(R-FS-REJECT-01)`, function() {
         assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, leftover: r.out.leftover, ...ev(r) }, { s: 'reject', k: 'string', v: 'invalid opt.Readable: must be an object providing fromWeb', leftover: [false, false], ...ev0 })
     })
 
-    it(`DL08 should reject a 'failed to download …' string (not an Error) when the injected fs.lstatSync throws while checking the output folder`, function() {
+    it(`DL08 should reject a 'failed to download: Error: lstat boom' string (not an Error, without the url and the path) when the injected fs.lstatSync throws while checking the output folder`, function() {
         let { r } = runFsFail('DL08')
-        //R-FS-REJECT-01 規則2: 前置檢查(注入之fs之lstatSync拋錯)一律在try內, 依規則1轉字串(下載失敗之既載格式)
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail('http://fake.invalid/x', r.out.p) + 'lstat boom' }, ...ev0 })
+        //R-FS-REJECT-01 規則2: 前置檢查(注入之fs之lstatSync拋錯)一律在try內, 依規則1轉字串(下載失敗之格式'failed to download: <原因>'); 原因為無code之Error, 取其字串'Error: lstat boom'(原僅取message, 且前綴帶url[…]與file[…])
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: fail + 'Error: lstat boom' }, ...ev0 })
     })
 
     //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 只Core收opt(外審 opus F02; 斷言與規則句見itOptUnreadable: R-FS-REJECT-01 規則2); 讀取opt非下載失敗亦非輸出夾之檢查, 依規則1之通則為String(err)

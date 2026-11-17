@@ -117,6 +117,9 @@ describe(`fs invalid path (R-FS-INVALID-PATH-01)`, function() {
                     assert.strict.deepStrictEqual(diffs, [])
 
                     //對照: 有效但不存在之路徑, 結果(若為失敗)之訊息不得是無效路徑之訊息
+                    //  第492項第3批(V19、V20)起「不是檔案/不是資料夾」之訊息(如'invalid fpSrc: must be an existing file')亦以'invalid '起頭, 不能再以/^invalid /區分,
+                    //  改為: (1)訊息不得等於該參數之任一無效路徑訊息(expMsg之全部值); (2)有固定訊息者(fsPathSites.mjs之ctlMsg)須逐字相符, 即確為新訊息之一;
+                    //  (3)未註明ctlMsg者仍不得以'invalid '起頭(使新增之'invalid ...'對照訊息須註明於ctlMsg, 不被默默放過)
                     if (s.ctl !== null) {
                         let rc = results.find((x) => x.site === s.name && x.param === p.name && x.bad === '__ctl__')
                         let m = ''
@@ -126,7 +129,15 @@ describe(`fs invalid path (R-FS-INVALID-PATH-01)`, function() {
                         else if (rc.type === 'reject' || rc.type === 'throw') {
                             m = msgOf(rc.val)
                         }
-                        assert.strict.deepStrictEqual(/^invalid /.test(m), false, `control(${s.ctl}): ${rc.type} ${JSON.stringify(rc.val).slice(0, 100)}`)
+                        let info = `control(${s.ctl}): ${rc.type} ${JSON.stringify(rc.val).slice(0, 100)}`
+                        let badMsgs = bads.map(([bn]) => expMsg(p.name, bn))
+                        assert.strict.deepStrictEqual(badMsgs.includes(m), false, info)
+                        if (p.ctlMsg !== undefined) {
+                            assert.strict.deepStrictEqual(m, p.ctlMsg, info)
+                        }
+                        else {
+                            assert.strict.deepStrictEqual(/^invalid /.test(m), false, info)
+                        }
                     }
                 })
 

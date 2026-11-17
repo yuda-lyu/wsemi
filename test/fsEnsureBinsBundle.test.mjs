@@ -929,7 +929,7 @@ describe(`fsEnsureBins bundles (M6)`, function() {
 
     //---------------- O3/T6 離線缺組內之檔: 列出全組 ----------------
 
-    it(`should reject E_OFFLINE_MISSING listing the whole bundle with where to put it, and create no folder, offline without a mirror (O3, T6, M6)`, async function() {
+    it(`should reject E_OFFLINE_MISSING naming the whole bundle (where to put it is in the missing field, not in the message), and create no folder, offline without a mirror (O3, T6, M6, V20)`, async function() {
         let root = fx('b-offline')
         let e = await catchErr(ens(mf({ bundles: [bConn()] }), { pkgRoot: root, offline: true, fetch: failFetch }))
         assert.strict.deepStrictEqual([e.code, e.step], ['E_OFFLINE_MISSING', 'offline'])
@@ -938,17 +938,29 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         assert.strict.deepStrictEqual([m.name, m.cachePath, m.mirrorPath, m.bundle.id], ['conn', dir, null, idConn])
         assert.strict.equal(m.size, exeA.length + dllB.length + datC.length)
         assert.strict.deepStrictEqual(m.bundle.files.map((f) => [f.path, f.sha256, f.size, f.missing, f.cachePath]), bConn().files.map((f) => [f.path, f.sha256, f.size, true, path.join(dir, ...f.path.split('/'))]))
-        //訊息: 全組每檔之組內路徑、sha256、大小與應放之組資料夾
-        assert.strict.equal(e.message.includes(`put the whole bundle in: ${dir} (cache)`), true, e.message)
-        assert.strict.equal(e.message.includes(`<W_BIN_MIRROR>/w-b/${idConn}`), true, e.message)
+        //訊息(V20): 只列組名、全組檔數與缺幾檔、須整組備妥與準備方法之固定詞彙; 全組每檔之組內路徑、sha256、大小與應放之組資料夾見missing欄位(上列斷言)
+        let lines = e.message.split('\n')
+        assert.strict.deepStrictEqual(lines.slice(0, 3), [
+            'fsEnsureBins[w-b]: offline (W_BIN_OFFLINE or opt.offline), 1 external executable file(s) or bundle(s) are not in the cache or the mirror:',
+            `- conn: a bundle of ${bConn().files.length} files, ${bConn().files.length} of them missing; the whole bundle is needed`,
+            '  put the whole bundle in the cache or in the mirror (see cachePath, mirrorPath and bundle.files of the missing field of this error)',
+        ])
+        assert.strict.equal(lines.length, 4, e.message)
+        assert.strict.equal(lines[3].startsWith('how to prepare: ') && lines[3].endsWith('or put each file at the cachePath or mirrorPath of the missing field of this error'), true, e.message)
+        //訊息不帶快取路徑、鏡像位置、組識別、各檔之組內路徑、sha256與大小
+        assert.strict.equal(e.message.includes(dir), false, e.message)
+        assert.strict.equal(e.message.includes(root), false, e.message)
+        assert.strict.equal(e.message.includes(idConn), false, e.message)
+        assert.strict.equal(e.message.includes('<W_BIN_MIRROR>/w-b'), false, e.message)
         for (let f of bConn().files) {
-            assert.strict.equal(e.message.includes(`${f.path}: sha256 ${f.sha256}, ${f.size} bytes, missing`), true, e.message)
+            assert.strict.equal(e.message.includes(f.path), false, e.message)
+            assert.strict.equal(e.message.includes(f.sha256), false, e.message)
         }
         assert.strict.deepStrictEqual(fetchCalls, [])
         assert.strict.deepStrictEqual(fs.readdirSync(root), [])
     })
 
-    it(`should list the whole bundle (marking only the missing file) when the mirror lacks one file offline, and leave no empty folder (O3, T6, M6)`, async function() {
+    it(`should list the whole bundle (the message counts the missing files, the missing field marks only the missing file) when the mirror lacks one file offline, and leave no empty folder (O3, T6, M6, V20)`, async function() {
         let mirror = fx('b-offline-m')
         let part = { ...connFiles }
         delete part['sub/data.bin']
@@ -960,8 +972,21 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         assert.strict.equal(m.mirrorPath, path.join(mirror, 'w-b', idConn))
         assert.strict.deepStrictEqual(m.bundle.files.map((f) => [f.path, f.missing]), [['conn.exe', false], ['Newtonsoft.Json.dll', false], ['sub/data.bin', true]])
         assert.strict.deepStrictEqual(m.bundle.files.map((f) => f.mirrorPath), bConn().files.map((f) => path.join(mirror, 'w-b', idConn, ...f.path.split('/'))))
-        assert.strict.equal(e.message.includes(`sub/data.bin: sha256 ${sha(datC)}, ${datC.length} bytes, missing`), true, e.message)
-        assert.strict.equal(e.message.includes(`conn.exe: sha256 ${sha(exeA)}, ${exeA.length} bytes\n`) || e.message.includes(`conn.exe: sha256 ${sha(exeA)}, ${exeA.length} bytes`), true, e.message)
+        //每檔之sha256、大小與缺否見missing欄位(上列斷言: missing標只缺sub/data.bin、各檔之mirrorPath); 其sha256與大小仍為清單值
+        assert.strict.deepStrictEqual(m.bundle.files.map((f) => [f.path, f.sha256, f.size]), [['conn.exe', sha(exeA), exeA.length], ['Newtonsoft.Json.dll', sha(dllB), dllB.length], ['sub/data.bin', sha(datC), datC.length]])
+        //訊息(V20): 全組3檔其中1檔缺, 不帶各檔之組內路徑、sha256、大小與鏡像位置
+        let lines = e.message.split('\n')
+        assert.strict.deepStrictEqual(lines.slice(0, 3), [
+            'fsEnsureBins[w-b]: offline (W_BIN_OFFLINE or opt.offline), 1 external executable file(s) or bundle(s) are not in the cache or the mirror:',
+            '- conn: a bundle of 3 files, 1 of them missing; the whole bundle is needed',
+            '  put the whole bundle in the cache or in the mirror (see cachePath, mirrorPath and bundle.files of the missing field of this error)',
+        ])
+        assert.strict.equal(lines.length, 4, e.message)
+        assert.strict.equal(e.message.includes(mirror), false, e.message)
+        assert.strict.equal(e.message.includes(root), false, e.message)
+        assert.strict.equal(e.message.includes('sub/data.bin'), false, e.message)
+        assert.strict.equal(e.message.includes(sha(datC)), false, e.message)
+        assert.strict.equal(e.message.includes(sha(exeA)), false, e.message)
         //不建組資料夾, 不留本次新建之空資料夾
         assert.strict.deepStrictEqual(fs.readdirSync(root), [])
     })
@@ -972,7 +997,15 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         assert.strict.equal(e && e.code, 'E_OFFLINE_MISSING')
         assert.strict.equal(e.missing[0].bundle.archives[0].parts.length, 3)
         assert.strict.equal(e.message.includes('4 of them are extracted from an archive split into 3 parts'), true, e.message)
-        assert.strict.equal(e.message.includes(`<W_BIN_MIRROR>/w-b/${sha(chParts[0])}/portable.zip.001`), true, e.message)
+        //訊息(V20)只說明可改放鏡像並指向missing欄位, 不帶應放之鏡像位置、各分割檔之sha256與檔名
+        assert.strict.equal(e.message.includes('4 of them are extracted from an archive split into 3 parts, which may instead be put in the mirror (see bundle.archives of the missing field)'), true, e.message)
+        assert.strict.equal(e.message.includes('<W_BIN_MIRROR>/w-b'), false, e.message)
+        assert.strict.equal(e.message.includes('portable.zip'), false, e.message)
+        for (let b of chParts) {
+            assert.strict.equal(e.message.includes(sha(b)), false, e.message)
+        }
+        //各分割檔之檔名、sha256與大小仍可由missing欄位取得(鏡像之子夾為各分割檔之sha256)
+        assert.strict.deepStrictEqual(e.missing[0].bundle.archives[0].parts.map((p) => [p.name, p.sha256, p.size]), chParts.map((b, i) => [`portable.zip.00${i + 1}`, sha(b), b.length]))
     })
 
     //---------------- M1/M6 清單之錯誤(E_MANIFEST, 不發請求、不建夾) ----------------

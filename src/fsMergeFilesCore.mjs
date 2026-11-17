@@ -10,6 +10,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
 import fsCreateFolderCore from './fsCreateFolderCore.mjs'
 import fsDeleteFileCore from './fsDeleteFileCore.mjs'
 import errToStr from './_errToStr.mjs'
+import { fsErrCode } from './_fsErrMsg.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import chkFsDeps from './_chkFsDeps.mjs'
 
@@ -24,7 +25,7 @@ import chkFsDeps from './_chkFsDeps.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Object} opt.fs 輸入fs物件，Core不自行匯入fs須由呼叫端注入，須提供statSync、lstatSync、createReadStream、createWriteStream、unlinkSync(合併後刪除切片；資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，reject說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, createReadStream, createWriteStream, unlinkSync'(不帶輸入值，先於建立資料夾、開啟輸出檔與刪除任何切片)
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
- * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；fpsIn須為非空陣列，否則reject說明字串'invalid fpsIn: must be a non-empty array'；切片不是檔案時reject說明字串'invalid fpsIn[i]: must be an existing file'(i為索引，不帶路徑)；Node原生錯誤(如ENOENT、ENOSPC)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOSPC)'
  * @example
  * //need test in nodejs
  *
@@ -34,16 +35,44 @@ import chkFsDeps from './_chkFsDeps.mjs'
 async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     let errTemp = ''
 
-    //check fpsIn, 與其他出口一致以訊息字串reject(原throw Error使reject值為Error物件)
-    if (!isearr(fpsIn)) {
-        return Promise.reject(`fpsIn in not an effective array`)
+    //getErrMsg, 取錯誤之message, message非字串(無、數字、null等)則轉字串, 恆回字串; 讀取與轉字串皆可能拋錯(注入之fs可拋出或使寫入流以非Error之值出錯: null、無原型物件、已撤銷之Proxy), 寫入流之error監聽與catch共用
+    //不可以get之預設值引數先求值String(err)(其拋錯會跳過catch內之destroy且pm不settle), 監聽器內亦不可直接讀err.message(拋錯即成未捕捉例外且pm不settle)
+    //原為message不為undefined即原樣回傳, 拋出{ message: 42 }、{ message: null }者以數字、null reject
+    //Node原生錯誤(帶code之真Error, 如ENOENT、EPERM、ENOSPC)之message帶出路徑, 改回固定詞彙加錯誤碼'operation failed (code ENOENT)'(R-FS-ERRMSG-01)
+    //置於最前: 入口檢查讀取fpsIn之元素(可為getter)亦可拋出, 其拋出之錯誤同樣依此取字串
+    let getErrMsg = (err) => {
+        let code = fsErrCode(err)
+        if (code !== null) {
+            return `operation failed (code ${code})`
+        }
+        let msg
+        try {
+            msg = err.message
+        }
+        catch (e) {}
+        return typeof msg === 'string' ? msg : errToStr(err)
     }
 
+    //check fpsIn, 與其他出口一致以訊息字串reject(原throw Error使reject值為Error物件)
     //check fpOut與fpsIn各項, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
     //  於開檔與刪除任何切片之前檢查, 否則逐片處理到無效項才發現時, 前面之切片已被合併並刪除; 訊息只帶索引不帶值
-    let msgPah = chkFsPath(fpOut, 'fpOut')
-    for (let i = 0; msgPah === null && i < fpsIn.length; i++) {
-        msgPah = chkFsPath(fpsIn[i], `fpsIn[${i}]`)
+    //  讀取陣列與元素(isearr亦會讀取元素)置於try內: 元素為getter(或陣列為已撤銷之Proxy)而拋出時, 以訊息字串reject(原於try外即以Error物件reject, 違反字串reject契約)
+    let isArr = false
+    let msgPah = null
+    try {
+        isArr = isearr(fpsIn)
+        if (isArr) {
+            msgPah = chkFsPath(fpOut, 'fpOut')
+            for (let i = 0; msgPah === null && i < fpsIn.length; i++) {
+                msgPah = chkFsPath(fpsIn[i], `fpsIn[${i}]`)
+            }
+        }
+    }
+    catch (err) {
+        return Promise.reject(getErrMsg(err))
+    }
+    if (!isArr) {
+        return Promise.reject('invalid fpsIn: must be a non-empty array')
     }
     if (msgPah) {
         return Promise.reject(msgPah)
@@ -65,18 +94,6 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     let bErrWrite = false //寫入流是否已出錯, 不以errWrite是否為null判定(注入之fs所產寫入流可以null出錯)
     let pmWrite = genPm()
     pmWrite.catch(() => {}) //write於兩片之間(無人race時)出錯, pmWrite之reject會成為unhandledRejection, 故先掛空catch標記已處理; 實際處置在下方error監聽與迴圈頂端之bErrWrite檢查
-
-    //getErrMsg, 取錯誤之message, message非字串(無、數字、null等)則轉字串, 恆回字串; 讀取與轉字串皆可能拋錯(注入之fs可拋出或使寫入流以非Error之值出錯: null、無原型物件、已撤銷之Proxy), 寫入流之error監聽與catch共用
-    //不可以get之預設值引數先求值String(err)(其拋錯會跳過catch內之destroy且pm不settle), 監聽器內亦不可直接讀err.message(拋錯即成未捕捉例外且pm不settle)
-    //原為message不為undefined即原樣回傳, 拋出{ message: 42 }、{ message: null }者以數字、null reject
-    let getErrMsg = (err) => {
-        let msg
-        try {
-            msg = err.message
-        }
-        catch (e) {}
-        return typeof msg === 'string' ? msg : errToStr(err)
-    }
 
     //攔截錯誤, 注意stream是非同步故try catch是無法攔截的, 須各自監聽read與write串流的error事件處理, 此處是攔截串流以外的錯誤
     try {
@@ -146,7 +163,7 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
 
             //check
             if (!fsIsFileCore(fpIn, { fs })) {
-                throw new Error(`fpIn[${fpIn}] is not a file`)
+                throw new Error(`invalid fpsIn[${i}]: must be an existing file`)
             }
 
             //使用readFileSync會忽略背壓, 若寫入相對慢就會儲存至記憶體, 導致記憶體超量使用, 得要偵測與控制背壓

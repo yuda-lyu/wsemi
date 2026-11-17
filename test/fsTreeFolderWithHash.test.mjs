@@ -414,10 +414,13 @@ describe(`fsTreeFolderWithHash 失敗回報(R-FS-REJECT-01)`, function() {
     this.timeout(60000)
 
     itFsHashFail([
-        { id: 'TW01', when: '真實fs: 資料夾不存在', want: (o) => rejected(`fd[${o.fd}] is not a folder`), rule: RULE.r1pre },
-        { id: 'TW02', when: '真實fs: 夾內含懸空junction', want: (o) => rejected(`fp[${o.fpDangling}] is not a file`), rule: RULE.r1pre },
-        { id: 'TW03', when: '真實fs: forFolder=true, 子夾內含懸空junction', want: (o) => rejected(`fp[${o.fpDangling}] is not a file`), rule: RULE.r1pre },
-        { id: 'TW04', when: '真實crypto: type不支援', want: (o) => rejected(o.errStr), rule: RULE.r1err },
+        //TW01~TW03: 不存在、不是資料夾/檔案之訊息固定且不帶路徑(V19、V20), 期望為固定字串(不含o.fd、o.fpDangling)
+        { id: 'TW01', when: '真實fs: 資料夾不存在', want: () => rejected('invalid fd: must be an existing folder'), rule: RULE.r1pre },
+        { id: 'TW02', when: '真實fs: 夾內含懸空junction', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        { id: 'TW03', when: '真實fs: forFolder=true, 子夾內含懸空junction', want: () => rejected('invalid fp: must be an existing file'), rule: RULE.r1pre },
+        //TW04: type不支援('nope'不在crypto.getHashes())於入口以固定說明字串reject(夾內有檔案; 舊為讀檔時createHash拋'Error: Digest method not supported')
+        { id: 'TW04', when: '真實crypto: type不支援(不在crypto.getHashes())', want: () => rejected('invalid opt.type: must be one of crypto.getHashes()'), rule: RULE.rType },
+        //TW05: 原生錯誤(EPERM)之拒絕值為固定詞彙加錯誤碼(o.errStr為子行程對同一真實錯誤依fsErrStr算出之字串)
         { id: 'TW05', when: '真實fs: 子資料夾ACL拒列(readdirSync EPERM)', want: (o) => rejected(o.errStr), rule: RULE.r2tree, win: true },
         { id: 'TW06', when: '對外函數+opt.fs: lstatSync拋null', want: () => rejected('null'), rule: RULE.r2 },
     ])

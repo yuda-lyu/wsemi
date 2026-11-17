@@ -157,7 +157,7 @@ describe(`fsMergeFiles error paths`, function() {
         // console.log('dir r', r)
         assert.strict.deepStrictEqual(r.state, 'reject')
         assert.strict.deepStrictEqual(typeof r.e, 'string')
-        assert.strict.deepStrictEqual(r.e.includes('EISDIR'), true)
+        assert.strict.deepStrictEqual(r.e, 'operation failed (code EISDIR)') //原生錯誤(EISDIR)為固定詞彙加錯誤碼(R-FS-ERRMSG-01), 不帶路徑與系統訊息
         assert.strict.deepStrictEqual(nUncaught - before, 0)
         assert.strict.deepStrictEqual(fs.existsSync(`${fdt}/b_0`), true) //失敗時不得誤刪切片
     })
@@ -168,7 +168,7 @@ describe(`fsMergeFiles error paths`, function() {
         let r = await settle(fsMergeFilesCore([`${fdt}/c_0`, `${fdt}/c_1`], `${fdt}/c.out`, { fs: fsProxy }))
         // console.log('missing r', r, st.ws.destroyed, st.ws.fd)
         assert.strict.deepStrictEqual(r.state, 'reject')
-        assert.strict.deepStrictEqual(r.e.includes('is not a file'), true)
+        assert.strict.deepStrictEqual(r.e, 'invalid fpsIn[1]: must be an existing file') //缺少之切片為第2片(索引1), 訊息只帶索引不帶路徑(V19、V20)
         //throw路徑之寫入流已成功開檔, 若未destroy則fd殘留: 等寫入流close(open完成後隨destroy關閉fd; 已關閉者即成立), 取代原固定delay(300)等open完成; 未destroy者永不close, 防懸置上限後reject
         await streamClosed(st.ws)
         assert.strict.deepStrictEqual(st.ws.destroyed, true)
@@ -189,7 +189,7 @@ describe(`fsMergeFiles error paths`, function() {
         fs.chmodSync(`${fdt}/d.out`, 0o666)
         // console.log('readonly r', r)
         assert.strict.deepStrictEqual(r.state, 'reject')
-        assert.strict.deepStrictEqual(/EPERM|EACCES/.test(r.e), true)
+        assert.strict.deepStrictEqual(/^operation failed \(code (EPERM|EACCES)\)$/.test(r.e), true) //原生錯誤為固定詞彙加錯誤碼(R-FS-ERRMSG-01), 不帶路徑與系統訊息
         assert.strict.deepStrictEqual(nUncaught - before, 0)
         assert.strict.deepStrictEqual(fs.readFileSync(`${fdt}/d.out`, 'utf8'), 'OLD')
         assert.strict.deepStrictEqual(fs.existsSync(`${fdt}/d_0`), true)
@@ -205,7 +205,7 @@ describe(`fsMergeFiles error paths`, function() {
         await delay(300)
         // console.log('enospc r', r, st.ws.destroyed)
         assert.strict.deepStrictEqual(r.state, 'reject')
-        assert.strict.deepStrictEqual(r.e.includes('ENOSPC'), true)
+        assert.strict.deepStrictEqual(r.e, 'operation failed (code ENOSPC)') //注入之Error帶原生code(ENOSPC), 為固定詞彙加錯誤碼(R-FS-ERRMSG-01), 不再帶系統訊息'ENOSPC: no space left on device, write'
         assert.strict.deepStrictEqual(nUncaught - before, 0)
         assert.strict.deepStrictEqual(st.ws.destroyed, true)
         //已合併之切片刪除, 出錯與其後之切片保留
@@ -245,7 +245,7 @@ describe(`fsMergeFiles error paths`, function() {
         await delay(300)
         // console.log('drain-fail r', r, st.nWrite)
         assert.strict.deepStrictEqual(r.state, 'reject')
-        assert.strict.deepStrictEqual(r.e.includes('ENOSPC'), true)
+        assert.strict.deepStrictEqual(r.e, 'operation failed (code ENOSPC)') //注入之Error帶原生code(ENOSPC), 為固定詞彙加錯誤碼(R-FS-ERRMSG-01), 不再帶系統訊息'ENOSPC: no space left on device, write'
         assert.strict.deepStrictEqual(nUncaught - before, 0)
         assert.strict.deepStrictEqual(st.ws.destroyed, true)
         assert.strict.deepStrictEqual([0, 1, 2].map((i) => fs.existsSync(`${fdt}/h_${i}`)), [false, true, true])
@@ -387,26 +387,30 @@ describe(`fsMergeFiles 失敗回報(R-FS-REJECT-01)`, function() {
         let { r } = runFsFail('MG01')
         //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 前置檢查為說明字串
         //R-PM-SETTLE-01 規則2: 不得產生unhandledRejection或uncaughtException(以下各案同)
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpsIn in not an effective array' }, ...ev0 })
+        //訊息固定(V19: 以'invalid '起頭; 舊為'fpsIn in not an effective array')
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid fpsIn: must be a non-empty array' }, ...ev0 })
     })
 
     it(`MG02 should reject the description string (not an Error) when fpsIn is an empty array`, function() {
         let { r } = runFsFail('MG02')
         //R-FS-REJECT-01 規則1: 拒絕值一律為字串, 前置檢查為說明字串
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'fpsIn in not an effective array' }, ...ev0 })
+        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid fpsIn: must be a non-empty array' }, ...ev0 })
     })
 
     it(`MG03 (守門) should reject the message string when a slice does not exist`, function() {
         let { r } = runFsFail('MG03')
         //R-FS-REJECT-01 規則1之例外: fsMergeFilesCore之拒絕值為message(R-CODEC-ERR-01 規則2)
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: `fpIn[${r.out.p}] is not a file` }, ...ev0 })
+        //訊息固定且只帶索引不帶路徑(V19、V20; 舊為`fpIn[<路徑>] is not a file`), noPath為拒絕值不含該切片路徑(r.out.p)
+        let res = r.out.res
+        assert.strict.deepStrictEqual({ res, noPath: !String(res.v).includes(r.out.p), ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid fpsIn[0]: must be an existing file' }, noPath: true, ...ev0 })
     })
 
     it(`MG04 (守門) should reject the message string without the 'Error: ' prefix and keep the slice when the output path is a folder`, function() {
         let { r } = runFsFail('MG04')
         let res = r.out.res
-        //R-FS-REJECT-01 規則1之例外: fsMergeFilesCore之拒絕值為message, 不得機械替換成_errToStr而變成'Error: …'(R-CODEC-ERR-01 規則2)
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, msg: /^EISDIR: /.test(res.v), sliceKept: r.out.sliceKept, ...ev(r) }, { s: 'reject', k: 'string', msg: true, sliceKept: true, ...ev0 })
+        //R-FS-REJECT-01 規則1之例外: fsMergeFilesCore之拒絕值為message(原生錯誤為固定詞彙加錯誤碼, R-FS-ERRMSG-01), 不得機械替換成_errToStr而變成'Error: …'(R-CODEC-ERR-01 規則2)
+        //拒絕值為'operation failed (code EISDIR)'(舊為以'EISDIR: '起頭之系統訊息, 帶出輸出路徑), 即不帶'Error: '前綴亦不帶路徑
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, v: res.v, sliceKept: r.out.sliceKept, ...ev(r) }, { s: 'reject', k: 'string', v: 'operation failed (code EISDIR)', sliceKept: true, ...ev0 })
     })
 
     it(`MG05 should reject the message string (not an Error) when opt.fs.lstatSync throws while checking the output folder`, function() {

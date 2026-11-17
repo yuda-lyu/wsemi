@@ -18,6 +18,7 @@ import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import { fsErrSan } from './_fsErrMsg.mjs'
 
 
 //timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數會使每個檔案回報ERR_OUT_OF_RANGE, 故小數亦屬非預期), 非預期改用預設(100、300)
@@ -31,28 +32,28 @@ let reEvNameDevice = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
 let evNameMaxBytes = 200
 
 
-//checkEvName, 回傳事件名稱不合法之原因字串, 合法者回傳空字串
+//checkEvName, 回傳事件名稱不合法之原因字串(V19之期望描述'must ...', 不帶事件名稱, V20), 合法者回傳空字串
 function checkEvName(evName) {
     if (typeof evName !== 'string') {
-        return 'it must be a string'
+        return 'must be a string'
     }
     if (evName === '') {
-        return 'it must not be empty'
+        return 'must not be empty'
     }
     if (Buffer.byteLength(evName, 'utf8') > evNameMaxBytes) {
-        return `it must not be longer than ${evNameMaxBytes} bytes`
+        return `must not be longer than ${evNameMaxBytes} bytes`
     }
     if (reEvNameBadChar.test(evName) || Array.from(evName).some((c) => c.charCodeAt(0) < 32)) {
-        return 'it must not contain a path separator, a control character or any of < > : " | ? *'
+        return 'must not contain a path separator, a control character or any of < > : " | ? *'
     }
     if (evName === '.' || evName === '..') {
-        return 'it must not be . or ..'
+        return 'must not be . or ..'
     }
     if (/[. ]$/.test(evName)) {
-        return 'it must not end with . or a space'
+        return 'must not end with . or a space'
     }
     if (reEvNameDevice.test(evName)) {
-        return 'it must not be a Windows device name'
+        return 'must not be a Windows device name'
     }
     return ''
 }
@@ -75,7 +76,7 @@ function checkEvName(evName) {
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval或opt.timeBinaryInterval為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告出口函數，以(msg, { fn, reason, key })呼叫，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'write'時為emit已寫出事件檔案(含evName為事件名稱，即檔名)，'ready'時為內部監看事件檔案資料夾之watcher已就緒(初始掃描完成，此後寫入之事件檔案才經穩定期後確實被接收；僅傳了onTrace才監聽，不影響原行為，且不轉傳內部fsWatchFolder之事件流)，'skip'時為監看到檔案事件但略過(含reason為略過原因，'kind'代表事件種類非add與change如資料夾本身之addDir或事件檔之unlink，'content'代表檔案內容無法解析為非空物件；kind為監看事件之種類；evName為由檔名推得之事件名稱)，'emit'時為即將對本程序之監聽器派發一個事件(含evName為事件名稱；不含事件內容)，'clear'時為clear被呼叫(僅首次)；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響事件傳遞，預設null
- * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件，呼叫端須自行try
+ * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件(訊息如'invalid evName: must be a string'，不帶事件名稱)，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件(Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EPERM)'，保留其code)，呼叫端須自行try
  * @example
  * need test in nodejs.
  *
@@ -166,15 +167,14 @@ function fsEvem(opt = {}) {
         //check, 事件名稱須為單一安全檔名, 不合者不寫出任何檔案
         let why = checkEvName(evName)
         if (why !== '') {
-            let nm = typeof evName === 'string' ? JSON.stringify(evName.slice(0, 40)) : typeof evName
-            throw new Error(`fsEvem: invalid event name ${nm}: ${why}`)
+            throw new Error(`invalid evName: ${why}`) //訊息不帶事件名稱(V19、V20)
         }
 
         //fp, 解析後之位置須恰在事件資料夾下且檔名即事件名稱(上方檢查之保險)
         let fdAbs = path.resolve(fd)
         let fp = path.resolve(fdAbs, evName)
         if (path.dirname(fp) !== fdAbs || path.basename(fp) !== evName) {
-            throw new Error(`fsEvem: invalid event name ${JSON.stringify(evName.slice(0, 40))}: it must be a single file name inside the event folder`)
+            throw new Error('invalid evName: must be a single file name inside the event folder')
         }
         // console.log('watchEmit fp ', fp)
 
@@ -186,8 +186,13 @@ function fsEvem(opt = {}) {
             msg = o2j(msg)
         }
 
-        //writeFileSync
-        fs.writeFileSync(fp, msg, 'utf8')
+        //writeFileSync, 原生錯誤之訊息帶出路徑, 改拋固定詞彙加錯誤碼之Error(R-FS-ERRMSG-01)
+        try {
+            fs.writeFileSync(fp, msg, 'utf8')
+        }
+        catch (err) {
+            throw fsErrSan(err)
+        }
         // console.log('writeFileSync', fp, msg)
 
         //trace

@@ -1,6 +1,6 @@
 import fs from 'fs'
 import genPm from './genPm.mjs'
-import errToStr from './_errToStr.mjs'
+import fsErrMsg from './_fsErrMsg.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 
 
@@ -87,7 +87,7 @@ function fsBuildWriteStreamText() {
         catch (err) {
             stream = null //無開啟中之串流, end直接resolve
             failed = true
-            pm.reject(errToStr(err))
+            pm.reject(fsErrMsg(err))
             return pm
         }
 
@@ -99,7 +99,7 @@ function fsBuildWriteStreamText() {
         //error
         stream.on('error', (err) => {
             failed = true
-            pm.reject(errToStr(err)) //與fs系其他函數一致以字串reject
+            pm.reject(fsErrMsg(err)) //與fs系其他函數一致以字串reject; Node原生錯誤改固定詞彙加錯誤碼(不帶路徑, V20)
         })
 
         return pm

@@ -1,4 +1,5 @@
 import fs from 'fs'
+import crypto from 'crypto'
 import assert from 'assert'
 import fsDeleteFile from '../src/fsDeleteFile.mjs'
 import fsCreateFolder from '../src/fsCreateFolder.mjs'
@@ -24,6 +25,19 @@ describe(`fsTask 檔案來源之紀錄須為一般物件(R-OBJ-ITER-01 候選9)`
         fs.rmSync(root, { recursive: true, force: true })
         assert.strict.strictEqual(fs.existsSync(root), false)
     })
+
+    //breakHash, 使本行程之crypto.createHash拋錯(模擬雜湊計算失敗, 使掃描失敗); 傳回還原函數(須於finally呼叫)
+    //  原以無效之typeHash('nosuchalg')誘發掃描失敗, 但雜湊演算法屬安全相關opt(R-HASH-TYPE-01): 無效之typeHash現於建構時同步拋錯, 不再能誘發掃描失敗
+    //  mocha以檔為單位分行程並行, 此處只影響本檔所在之行程; 同檔之測試依序執行
+    let breakHash = () => {
+        let orig = crypto.createHash
+        crypto.createHash = () => {
+            throw new Error('hash is broken')
+        }
+        return () => {
+            crypto.createHash = orig
+        }
+    }
 
     //mk, 建立案例資料夾: watch 為監看夾(可預放檔案), _tkfs 為儲存夾(可預寫紀錄檔原文)
     let mk = (name, { hash = null, result = null, files = {} } = {}) => {
@@ -332,15 +346,20 @@ describe(`fsTask 檔案來源之紀錄須為一般物件(R-OBJ-ITER-01 候選9)`
                 evB.clear()
             }
 
-            //情境C: 計算雜湊失敗(無效之雜湊方法), 該輪掃描中止(fail)
+            //情境C: 計算雜湊失敗(crypto.createHash拋錯), 該輪掃描中止(fail)
             k = tr.mark()
             let cC = mk('trace-fields-c', { files: { 'a.txt': 'abc' } })
-            let evC = fsTask(cC.fd, { fdStorage: cC.st, timeInterval: 20, typeHash: 'nosuchalg', onTrace })
+            let restoreC = breakHash()
+            let evC = null
             try {
+                evC = fsTask(cC.fd, { fdStorage: cC.st, timeInterval: 20, onTrace })
                 await tr.wait((e) => e.type === 'fail', k)
             }
             finally {
-                evC.clear()
+                if (evC !== null) {
+                    evC.clear()
+                }
+                restoreC()
             }
 
             //各type之欄位固定(排序後); scan依phase分列
@@ -438,19 +457,24 @@ describe(`fsTask 檔案來源之紀錄須為一般物件(R-OBJ-ITER-01 候選9)`
             assert.strict.deepStrictEqual(Object.keys(readJson(c, 'fpHash.json')).map(getFileName), ['a.txt'])
         })
 
-        it(`should report fail and keep scanning when a scan fails (invalid hash type)`, async function() {
+        it(`should report fail and keep scanning when a scan fails (hash computation fails)`, async function() {
             let c = mk('trace-fail-scan', { files: { 'a.txt': 'abc' } })
             let tr = traceRec()
-            let ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 20, typeHash: 'nosuchalg', onTrace: tr.on })
+            let restore = breakHash()
+            let ev = null
             let changes = 0
-            ev.on('change', () => {
-                changes++
-            })
             try {
+                ev = fsTask(c.fd, { fdStorage: c.st, timeInterval: 20, onTrace: tr.on })
+                ev.on('change', () => {
+                    changes++
+                })
                 await tr.wait((e) => e.type === 'fail', 0, 2)
             }
             finally {
-                ev.clear()
+                if (ev !== null) {
+                    ev.clear()
+                }
+                restore()
             }
             //每輪皆開始掃描後失敗, 不比對、不派發; 失敗後下一輪仍會掃描(定時器不中止)
             assert.strict.deepStrictEqual(seq(tr), ['scan:start', 'fail', 'scan:start', 'fail', 'clear'])

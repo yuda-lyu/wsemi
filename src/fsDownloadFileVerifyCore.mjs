@@ -2,11 +2,11 @@
 import get from 'lodash-es/get.js'
 import isestr from './isestr.mjs'
 import isfun from './isfun.mjs'
-import isbol from './isbol.mjs'
 import optVal from './_optVal.mjs'
 import cst from './_const.mjs'
 import getTrace from './getTrace.mjs'
 import { maskUrlCred } from './_diagKit.mjs'
+import { fsErrCode, fsErrCause, fsErrSan } from './_fsErrMsg.mjs'
 
 
 //maxAttempts: opt類參數, 有效整數且為個數(iseint, use: 'count', min: 1), 非預期(含0、負數、小數、Infinity、超出個數範圍、'0x10'、包裝物件等)視為未給、改用預設3, 不報錯
@@ -55,15 +55,17 @@ function now() {
 }
 
 
-function short(h) {
-    return isestr(h) ? `${h.slice(0, 16)}...` : 'unknown'
-}
-
-
-//errMsg, 任意拋出值之訊息字串
+//errMsg, 任意拋出值之訊息字串; 本函數自建之錯誤(身分判定)取其message(已不含路徑、網址與輸入值); Node原生錯誤(帶code之真Error, 如ENOENT、EPERM)之message帶出路徑與網址, 改回固定詞彙加錯誤碼'operation failed (code ENOENT)'(R-FS-ERRMSG-01, V20)
 function errMsg(err) {
     try {
         let m = get(err, 'message')
+        if (isOwnErr(err) && isestr(m)) {
+            return m
+        }
+        let c = fsErrCode(err)
+        if (c !== null) {
+            return `operation failed (code ${c})`
+        }
         if (isestr(m)) {
             return m
         }
@@ -75,18 +77,18 @@ function errMsg(err) {
 }
 
 
-//describeNet, 網路層錯誤(undici之TypeError: fetch failed/terminated, 原因在cause)轉為簡短說明
+//describeNet, 網路層錯誤(undici之TypeError: fetch failed/terminated, 原因在cause)轉為簡短說明: 只附原因之錯誤碼(如ECONNREFUSED), 不附原因之訊息(帶出主機與埠)
 function describeNet(err) {
     let msg = errMsg(err)
     let d = ''
     try {
-        let c = get(err, 'cause')
-        if (c) {
-            d = `${get(c, 'code', '') || ''} ${get(c, 'message', '') || ''}`.trim()
+        let c = fsErrCode(get(err, 'cause'))
+        if (c !== null) {
+            d = c
         }
     }
     catch (e) {}
-    return maskUrl(d ? `${msg} (${d})` : msg) //底層錯誤文字可能帶回請求之網址, 一併遮蔽帳密
+    return maskUrl(d ? `${msg} (code ${d})` : msg) //底層錯誤文字可能帶回請求之網址, 一併遮蔽帳密
 }
 
 
@@ -110,20 +112,6 @@ function codeOf(err) {
 //maskUrl, 文字內之網址若帶帳密(scheme://user:pass@host)則遮蔽之(全部出現處, 前面可有空白等其他文字), 用於錯誤訊息與錯誤物件, 不讓帳密落入log; 用診斷遮罩共用之網址步驟(R-DIAG-01)
 function maskUrl(s) {
     return maskUrlCred(s)
-}
-
-
-//unwrap, 包裝物件(new String/Number/Boolean)取其內部原始值(不呼叫物件自身可被覆寫之方法), 其餘值原樣回傳; 使檢查之值即使用之值
-function unwrap(v) {
-    if (v !== null && typeof v === 'object') {
-        for (let P of [String, Number, Boolean]) {
-            try {
-                return P.prototype.valueOf.call(v)
-            }
-            catch (e) {}
-        }
-    }
-    return v
 }
 
 
@@ -165,11 +153,11 @@ function statusOf(res) {
 
 
 //normExpected, 檢核期望值, 回傳{ sha256(小寫), size(未給或null則null) }或{ err }
-//各值只讀取一次並解包為原始值(包裝物件之方法可被覆寫, 不可檢查一個值而使用另一個值)
+//各值只讀取一次; 包裝物件(new String、new Number)無效(安全相關之校驗值, 給了而無效即拒絕, 不解包後接受; W-09、W-20): 檢查之值即使用之值
 function normExpected(v) {
-    let sha256 = unwrap(get(v, 'sha256'))
-    let size = unwrap(get(v, 'size'))
-    if (!isestr(sha256) || !/^[0-9a-fA-F]{64}$/.test(sha256)) {
+    let sha256 = get(v, 'sha256')
+    let size = get(v, 'size')
+    if (typeof sha256 !== 'string' || !/^[0-9a-fA-F]{64}$/.test(sha256)) {
         return { err: `sha256 must be a string of 64 hexadecimal characters` }
     }
     if (size === undefined || size === null) {
@@ -182,11 +170,6 @@ function normExpected(v) {
         }
     }
     return { sha256: sha256.toLowerCase(), size }
-}
-
-
-function descExp(exp) {
-    return exp.size === null ? 'size not given' : `${exp.size} bytes`
 }
 
 
@@ -216,7 +199,7 @@ function remainMs(ctx, step) {
         if (ctx.trace) {
             ctx.trace('timeout', { n: ctx.n, kind: 'total', where: 'budget', ms: ctx.totalMs })
         }
-        throw mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up`, { step })
+        throw mkErr('E_TIMEOUT_TOTAL', 'the total time budget (opt.totalMs) is used up', { step })
     }
     return Math.min(remain, cst.TIMER_TIME_MAX)
 }
@@ -279,7 +262,7 @@ function openReq(ctx, step) {
         if (ctx.trace) {
             ctx.trace('timeout', { n, kind: 'total', where: 'request', ms: ctx.totalMs })
         }
-        abort(mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up`))
+        abort(mkErr('E_TIMEOUT_TOTAL', 'the total time budget (opt.totalMs) is used up'))
     }, remain)
     let timerStall = null
     let timerFb = null
@@ -289,7 +272,7 @@ function openReq(ctx, step) {
             if (ctx.trace) {
                 ctx.trace('timeout', { n, kind: 'stall', where: 'request', ms: ctx.stallMs })
             }
-            abort(mkErr('E_TIMEOUT', `no data received for ${ctx.stallMs}ms`))
+            abort(mkErr('E_TIMEOUT', 'no data received within the stall time (opt.stallMs)'))
         }, ctx.stallMs)
         if (ctx.trace) {
             ctx.trace('touch', { n, from, ms: ctx.stallMs })
@@ -340,7 +323,7 @@ function openReq(ctx, step) {
 function tagErr(err, req, step) {
     let e = req.reason() || err
     if (!isOwnErr(e)) {
-        e = mkErr('E_NETWORK', describeNet(e), { cause: e })
+        e = mkErr('E_NETWORK', describeNet(e), { cause: fsErrCause(e) }) //cause不附原錯誤(其message、path、input帶出路徑與網址), 改附固定詞彙加錯誤碼之Error
     }
     if (!e.step) {
         e.step = step
@@ -357,7 +340,7 @@ async function getExpected(ctx, attempt) {
     let remain = remainMs(ctx, 'expected')
     let ac = new AbortController()
     let timer = null
-    let errTimeout = mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up while getting the expected value`, { step: 'expected' })
+    let errTimeout = mkErr('E_TIMEOUT_TOTAL', 'the total time budget (opt.totalMs) is used up while getting the expected value', { step: 'expected' })
     let pmTimeout = new Promise((resolve, reject) => {
         timer = setTimeout(() => {
             if (ctx.trace) {
@@ -424,7 +407,7 @@ async function hashFile(ctx, fp, ms, step) {
                 if (ctx.trace) {
                     ctx.trace('timeout', { n: ctx.n, kind: 'total', where: 'read', ms: Math.max(ms, 1) })
                 }
-                reject(mkErr('E_TIMEOUT_TOTAL', `reading "${fp}" did not finish within ${ms}ms`, { step }))
+                reject(mkErr('E_TIMEOUT_TOTAL', 'reading the file did not finish within the time budget', { step }))
             }, Math.max(ms, 1))
         })
         return await Promise.race([pmRead, pmTimeout])
@@ -503,7 +486,7 @@ async function fetchToTemp(ctx, exp, tmp) {
             let te = res.headers.get('transfer-encoding')
             if (isestr(cl) && /^\d+$/.test(cl.trim()) && (!isestr(ce) || ce.trim().toLowerCase() === 'identity') && !isestr(te) && Number(cl.trim()) !== exp.size) {
                 dropBody(res)
-                throw mkErr('E_SIZE_MISMATCH', `size mismatch: expected ${exp.size} bytes, the server announces ${cl.trim()} bytes`, { step: 'verify', actual: { sha256: null, size: Number(cl.trim()) } })
+                throw mkErr('E_SIZE_MISMATCH', 'size mismatch: the size announced by the server differs from expected.size', { step: 'verify', actual: { sha256: null, size: Number(cl.trim()) } })
             }
         }
 
@@ -515,8 +498,8 @@ async function fetchToTemp(ctx, exp, tmp) {
         }
         catch (err) {
             dropBody(res)
-            let msg = codeOf(err) === 'EEXIST' ? `the temporary file "${tmp.fp}" already exists and does not belong to this call` : `can not create the temporary file "${tmp.fp}": ${errMsg(err)}`
-            throw mkErr('E_FS', msg, { step, cause: err })
+            let msg = codeOf(err) === 'EEXIST' ? 'the temporary file already exists and does not belong to this call' : `can not create the temporary file: ${errMsg(err)}`
+            throw mkErr('E_FS', msg, { step, cause: fsErrCause(err) })
         }
         tmp.owned = true
         if (ctx.trace) {
@@ -534,7 +517,7 @@ async function fetchToTemp(ctx, exp, tmp) {
                 noteClose = `; closing its descriptor also failed: ${errMsg(e)}`
             }
             dropBody(res)
-            throw mkErr('E_FS', `can not write the temporary file "${tmp.fp}": ${errMsg(err)}${noteClose}`, { step, cause: err })
+            throw mkErr('E_FS', `can not write the temporary file: ${errMsg(err)}${noteClose}`, { step, cause: fsErrCause(err) })
         }
 
         //錯誤之歸屬: pipeline因一端出錯而銷毀其他端時, 其他端亦以同一錯誤emit error, 故以最先出錯之一端判定(寫入端最先者為磁碟錯誤, 不論有無syscall)
@@ -558,7 +541,7 @@ async function fetchToTemp(ctx, exp, tmp) {
             }
             catch (err) {
                 //回應本體不是WHATWG ReadableStream(如傳入之fetch回傳Node之Readable本體): 確定性之介面不相容, 不是暫時性之網路錯誤, 不重試(本體由finally取消)
-                throw mkErr('E_ARG', `opt.fetch must return a Response whose body is a WHATWG ReadableStream: ${errMsg(err)}`, { step, cause: err })
+                throw mkErr('E_ARG', `opt.fetch must return a Response whose body is a WHATWG ReadableStream: ${errMsg(err)}`, { step, cause: fsErrCause(err) })
             }
             bodyTaken = true
         }
@@ -575,7 +558,7 @@ async function fetchToTemp(ctx, exp, tmp) {
             for await (let chunk of source) {
                 size += chunk.length
                 if (cap !== null && size > cap) {
-                    throw mkErr('E_SIZE_MISMATCH', `size mismatch: expected ${cap} bytes, received more than that`, { step: 'verify', actual: { sha256: null, size: null } })
+                    throw mkErr('E_SIZE_MISMATCH', 'size mismatch: received more than expected.size', { step: 'verify', actual: { sha256: null, size: null } })
                 }
                 hash.update(chunk)
                 if (ctx.trace) {
@@ -594,7 +577,7 @@ async function fetchToTemp(ctx, exp, tmp) {
         //等檔案控制代碼關閉, 才能重讀與更名
         if (!(await waitClose(ws, 5000))) {
             closeWaited = true
-            throw mkErr('E_FS', `the temporary file "${tmp.fp}" was not closed within 5s`, { step })
+            throw mkErr('E_FS', 'the temporary file was not closed within 5s', { step })
         }
 
         //verify
@@ -604,10 +587,10 @@ async function fetchToTemp(ctx, exp, tmp) {
             ctx.trace('verify', { n: ctx.n, phase: 'stream', size, sizeOk: cap === null || size === cap, hashOk: sha256 === exp.sha256 })
         }
         if (cap !== null && size !== cap) {
-            throw mkErr('E_SIZE_MISMATCH', `size mismatch: expected ${cap} bytes, received ${size} bytes (sha256 ${short(sha256)})`, { step: 'verify', actual })
+            throw mkErr('E_SIZE_MISMATCH', 'size mismatch: the received size differs from expected.size', { step: 'verify', actual })
         }
         if (sha256 !== exp.sha256) {
-            throw mkErr('E_HASH_MISMATCH', `sha256 mismatch: expected ${short(exp.sha256)} (${descExp(exp)}), received ${short(sha256)} (${size} bytes)`, { step: 'verify', actual })
+            throw mkErr('E_HASH_MISMATCH', 'sha256 mismatch: the received content does not match expected.sha256', { step: 'verify', actual })
         }
 
         //重讀暫存檔核對: 寫入後至此暫存檔被改動(防毒處置、同資料夾之其他寫入者)即失敗而不更名
@@ -620,13 +603,13 @@ async function fetchToTemp(ctx, exp, tmp) {
             if (isOwnErr(err)) {
                 throw err
             }
-            throw mkErr('E_FS', `can not read back the temporary file "${tmp.fp}": ${errMsg(err)}`, { step, cause: err })
+            throw mkErr('E_FS', `can not read back the temporary file: ${errMsg(err)}`, { step, cause: fsErrCause(err) })
         }
         if (ctx.trace) {
             ctx.trace('verify', { n: ctx.n, phase: 'disk', size: disk.size, sizeOk: disk.size === size, hashOk: disk.sha256 === sha256 })
         }
         if (disk.sha256 !== sha256 || disk.size !== size) {
-            throw mkErr('E_HASH_MISMATCH', `the temporary file "${tmp.fp}" changed after it was written: received ${short(sha256)} (${size} bytes), on disk ${short(disk.sha256)} (${disk.size} bytes)`, { step, actual: disk })
+            throw mkErr('E_HASH_MISMATCH', 'the temporary file changed after it was written (the content on disk differs from the received one)', { step, actual: disk })
         }
 
         return actual
@@ -642,7 +625,7 @@ async function fetchToTemp(ctx, exp, tmp) {
         }
 
         if (req.reason() === null && !isOwnErr(err) && side === 'ws') {
-            throw mkErr('E_FS', `can not write the temporary file "${tmp.fp}": ${errMsg(errWs)}`, { step: 'download', cause: errWs })
+            throw mkErr('E_FS', `can not write the temporary file: ${errMsg(errWs)}`, { step: 'download', cause: fsErrCause(errWs) })
         }
         throw tagErr(err, req, step)
     }
@@ -686,7 +669,7 @@ async function renameFinal(ctx, fpTmp, exp) {
             }
         }
     }
-    throw mkErr('E_RENAME', `the verified temporary file can not be renamed to "${ctx.fp}": ${errMsg(lastErr)}`, { step: 'rename', cause: lastErr })
+    throw mkErr('E_RENAME', `the verified temporary file can not be renamed to the output path: ${errMsg(lastErr)}`, { step: 'rename', cause: fsErrCause(lastErr) })
 }
 
 
@@ -757,7 +740,7 @@ async function attemptOnce(ctx, attempt) {
             ctx.trace('temp', { n: attempt, act: 'remove', ok: errClean === null })
         }
         if (errClean !== null) {
-            ctx.leftovers.push({ fp: tmp.fp, error: errClean })
+            ctx.leftovers.push({ fp: tmp.fp, error: fsErrCause(errClean) }) //error不附原錯誤(其message、path帶出路徑), 位置見fp欄位
         }
     }
 
@@ -824,10 +807,10 @@ function hintOf(err, ctx) {
         return `hint: the connection is too slow for the total time budget(opt.totalMs), check the network or raise opt.totalMs`
     }
     if (code === 'E_FS') {
-        return `hint: check the free disk space and the write permission of the folder of "${ctx.fp}"`
+        return 'hint: check the free disk space and the write permission of the folder of the output file'
     }
     if (code === 'E_RENAME') {
-        return `hint: "${ctx.fp}" may be in use or locked by antivirus, close the programs using it and retry`
+        return 'hint: the output file may be in use or locked by antivirus, close the programs using it and retry'
     }
     return ''
 }
@@ -837,7 +820,7 @@ function hintOf(err, ctx) {
 function finalErr(ctx, errLast, nAttempt, noteStop) {
     let code = get(errLast, 'code')
     let step = get(errLast, 'step') || 'unknown'
-    let lines = [`failed to download url[${ctx.urlShow}] to file[${ctx.fp}] (code ${code}, step ${step}, attempt ${nAttempt} of ${ctx.maxAttempts}): ${errMsg(errLast)}`]
+    let lines = [`failed to download (code ${code}, step ${step}, attempt ${nAttempt}): ${errMsg(errLast)}`] //訊息不帶網址與檔案路徑(V20); 網址(已遮蔽帳密)與路徑見錯誤物件之url、fp欄位
     let hint = hintOf(errLast, ctx)
     if (hint) {
         lines.push(hint)
@@ -846,13 +829,13 @@ function finalErr(ctx, errLast, nAttempt, noteStop) {
         lines.push(noteStop)
     }
     if (step === 'share') {
-        lines.push(`note: the shared download is still in progress and may replace file[${ctx.fp}] later`)
+        lines.push('note: the shared download is still in progress and may replace the output file later')
     }
     else {
-        lines.push(`note: file[${ctx.fp}] was not modified by this call`)
+        lines.push('note: the output file was not modified by this call')
     }
     for (let v of ctx.leftovers) {
-        lines.push(`note: the temporary file "${v.fp}" could not be removed (${errMsg(v.error)}), it is not a verified file, remove it manually`)
+        lines.push(`note: a temporary file could not be removed (${errMsg(v.error)}), it is not a verified file, remove it manually (see leftovers)`)
     }
     let err = mkErr(code, maskUrl(lines.join('\n')), { //訊息內任何出現處之網址帳密皆遮蔽(含底層錯誤文字帶回之網址)
         step,
@@ -918,7 +901,7 @@ async function run(ctx) {
         }
         let delay = ctx.retryDelayMs * i
         if (now() + delay >= ctx.deadline) {
-            noteStop = `retry stopped: waiting ${delay}ms would exceed the total time budget of ${ctx.totalMs}ms`
+            noteStop = 'retry stopped: waiting for the next attempt would exceed the total time budget (opt.totalMs)'
             if (ctx.trace) {
                 ctx.trace('stop', { n: i, why: 'budget', code: codeStr(errLast) })
             }
@@ -957,10 +940,8 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         return mkErr('E_ARG', msg, extra)
     }
 
-    //check urlIn, fpOut, 包裝字串(new String)先解包為原始值, 其後之檢查、切分、請求、更名皆用同一個值(包裝物件之方法可被覆寫)
-    urlIn = unwrap(urlIn)
-    fpOut = unwrap(fpOut)
-    if (!isestr(urlIn)) {
+    //check urlIn, fpOut, 須為原始字串(下載來源與輸出位置屬安全相關, 包裝字串new String無效, 不解包後接受; W-09、W-20), 其後之檢查、切分、請求、更名皆用同一個值
+    if (typeof urlIn !== 'string' || urlIn === '') {
         throw bad(`urlIn is not an effective string`)
     }
 
@@ -974,7 +955,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
     catch (err) {}
 
     //check fpOut, 結尾為路徑分隔符者為資料夾, 非檔案路徑; 檔名不得為空、'.'、'..', Windows下檔名內不得有冒號(替代資料流或磁碟代號而無檔名)
-    if (!isestr(fpOut) || fpOut.includes('\0') || (win32 ? /[\\/]$/ : /\/$/).test(fpOut)) { //含NUL者無效(R-FS-INVALID-PATH-01)
+    if (typeof fpOut !== 'string' || fpOut === '' || fpOut.includes('\0') || (win32 ? /[\\/]$/ : /\/$/).test(fpOut)) { //含NUL者無效(R-FS-INVALID-PATH-01)
         throw bad(`fpOut is not an effective file path`)
     }
     let nameOut = splitPath(fpOut, win32).name
@@ -997,7 +978,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
             r = normExpected(expected)
         }
         catch (err) {
-            throw bad(`expected can not be read: ${errMsg(err)}`, err)
+            throw bad(`expected can not be read: ${errMsg(err)}`, fsErrSan(err)) //cause: 使用端自拋之錯誤(無code)原物件保留, Node原生錯誤(帶code)改為固定詞彙加錯誤碼之新Error(V20)
         }
         if (r.err) {
             throw bad(`expected is invalid: ${r.err}`)
@@ -1056,9 +1037,9 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         o.retryDelayMs = optVal(get(opt, 'retryDelayMs', null), 1000, RULE_RETRY_DELAY_MS, opt)
         o.stallMs = optVal(get(opt, 'stallMs', null), 30000, RULE_STALL_MS, opt)
         o.totalMs = optVal(get(opt, 'totalMs', null), 600000, RULE_TOTAL_MS, opt)
-        o.retryOnMismatch = unwrap(get(opt, 'retryOnMismatch')) //包裝布林(new Boolean(false))解包為原始值, 否則其為truthy
-        o.useShare = unwrap(get(opt, 'useShare'))
-        o.useSkipIfMatch = unwrap(get(opt, 'useSkipIfMatch'))
+        o.retryOnMismatch = get(opt, 'retryOnMismatch') //布林類opt: 非原始布林(含包裝布林new Boolean, W-20)視為未給, 改用預設(K3)
+        o.useShare = get(opt, 'useShare')
+        o.useSkipIfMatch = get(opt, 'useSkipIfMatch')
         o.onRetry = get(opt, 'onRetry')
 
         //trace, 觀察回調(opt.onTrace), 未給時為null; 置於其他選項之讀取之後, 使opt不可讀之既有失敗路徑不變
@@ -1068,7 +1049,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         if (isOwnErr(err)) {
             throw err
         }
-        throw bad(`opt can not be read: ${errMsg(err)}`, err)
+        throw bad(`opt can not be read: ${errMsg(err)}`, fsErrSan(err)) //同上: Node原生錯誤之cause改固定詞彙加錯誤碼, 使用端自拋者原樣
     }
 
     //fetch, 未給時於每次請求時取用全域fetch; 此時網址須可解析且為http或https(其餘為參數錯誤, 不視為可重試之網路錯誤)
@@ -1084,10 +1065,10 @@ function buildCtx(urlIn, fpOut, expected, opt) {
             u = new URL(urlIn)
         }
         catch (err) {
-            throw bad(`urlIn is not a valid url: ${errMsg(err)}`, err)
+            throw bad(`urlIn is not a valid url: ${errMsg(err)}`, fsErrCause(err))
         }
         if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-            throw bad(`urlIn must be an http or https url when the global fetch is used, got ${u.protocol}`)
+            throw bad('urlIn must be an http or https url when the global fetch is used')
         }
         if (u.username !== '' || u.password !== '') {
             throw bad(`urlIn must not contain credentials (user:password@) when the global fetch is used, give opt.fetch to handle authentication`)
@@ -1123,9 +1104,9 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         stallMs: o.stallMs,
         totalMs: o.totalMs,
         renameAttempts: 5,
-        retryOnMismatch: isbol(o.retryOnMismatch) ? o.retryOnMismatch : true,
-        useShare: isbol(o.useShare) ? o.useShare : true,
-        useSkipIfMatch: isbol(o.useSkipIfMatch) ? o.useSkipIfMatch : false,
+        retryOnMismatch: typeof o.retryOnMismatch === 'boolean' ? o.retryOnMismatch : true,
+        useShare: typeof o.useShare === 'boolean' ? o.useShare : true,
+        useSkipIfMatch: typeof o.useSkipIfMatch === 'boolean' ? o.useSkipIfMatch : false,
         onRetry: isfun(o.onRetry) ? o.onRetry : null,
         trace: o.trace,
         n: 0,
@@ -1166,7 +1147,7 @@ function joinJob(job, ctx) {
             if (ctx.trace) {
                 ctx.trace('timeout', { n: 0, kind: 'total', where: 'share', ms: ctx.totalMs })
             }
-            let e = mkErr('E_TIMEOUT_TOTAL', `the total time budget of ${ctx.totalMs}ms is used up while waiting for the shared download`, { step: 'share' })
+            let e = mkErr('E_TIMEOUT_TOTAL', 'the total time budget (opt.totalMs) is used up while waiting for the shared download', { step: 'share' })
             reject(finalErr(ctx, e, 0, ''))
         }, ctx.totalMs)
     })
@@ -1206,7 +1187,7 @@ function joinJob(job, ctx) {
  *
  * 網址與請求: 未給opt.fetch而使用全域fetch時, 網址須為可解析之http或https且不得帶帳密(user:password@, E_ARG), 需要認證時請傳入自訂之opt.fetch; 錯誤訊息與錯誤物件之url會遮蔽網址內之帳密。傳入之opt.fetch須回傳本體(body)為WHATWG ReadableStream之Response(如undici之fetch), 回傳Node之Readable本體者不支援(E_ARG, step為download, 不重試); opt.fetch給了卻不是函數者為E_ARG(只有undefined或null才使用全域fetch)。傳入之函數(期望值函數、fetch、pipeline、onRetry)皆不帶接收者呼叫(this為undefined)。共用之下載以最先呼叫者之totalMs計時, totalMs較長之後到者亦收到該次下載因其totalMs用盡之失敗。本體寫完後等待暫存檔寫入串流關閉至多5秒(同時輪詢串流之closed屬性, 以emitClose:false建立而不發出close事件者亦可判定), 失敗清理時不重複等待; 該等待不受totalMs約束。
  *
- * 參數之包裝物件(new String、new Number、new Boolean)一律先解包為原始值再檢查與使用(不呼叫其可被覆寫之方法), 檢查之值即使用之值。size為非負安全整數, 或十進位整數字串(前後空白可); 小數、指數、十六進位、帶正負號、超過安全整數之字串為E_ARG。本函數自建之錯誤以身分判定(傳入元件所拋值即使帶同名code, 亦不視為本函數之錯誤: 傳入fs之getter拋出者為E_ARG, 傳入fetch拋出者為E_NETWORK, 先出錯之寫入端為E_FS)。錯誤訊息內任何出現處之網址帳密(含底層錯誤文字帶回者)皆遮蔽, 但cause仍為原始錯誤物件。
+ * 安全相關之參數(影響下載來源、校驗與輸出位置者: urlIn、fpOut、expected之sha256與size、opt.fetch與注入之fs、crypto、Readable、pipeline)給了而無效即E_ARG拒絕(fail-closed), 不改用預設; 包裝物件(new String、new Number、new Boolean)一律無效, 不解包後接受(檢查之值即使用之值); opt.retryOnMismatch、opt.useShare、opt.useSkipIfMatch之非原始布林(含包裝布林)視為未給而改用預設。size為非負安全整數, 或十進位整數字串(前後空白可); 小數、指數、十六進位、帶正負號、超過安全整數之字串為E_ARG。本函數自建之錯誤以身分判定(傳入元件所拋值即使帶同名code, 亦不視為本函數之錯誤: 傳入fs之getter拋出者為E_ARG, 傳入fetch拋出者為E_NETWORK, 先出錯之寫入端為E_FS)。錯誤訊息一律不帶網址、檔案路徑、期望值與實際值(V20), Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'、'TypeError: fetch failed (code ECONNREFUSED)'), cause亦為只含固定詞彙與錯誤碼之Error(不保留原錯誤之path、input、cause鏈); 網址(已遮蔽帳密)、路徑與期望值、實際值、刪不掉之暫存檔位置見錯誤物件之url、fp、expected、actual、leftovers欄位。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFileVerify.test.mjs Github}
  * @memberOf wsemi
@@ -1230,7 +1211,7 @@ function joinJob(job, ctx) {
  * @param {Boolean} [opt.useSkipIfMatch=false] 輸入每次嘗試取得期望值後，fpOut已是期望內容時是否不下載直接成功(回傳downloaded為false)，既有檔無法讀取視為不符，預設false
  * @param {Function} [opt.onRetry=null] 輸入重試前之通知函數，收到{ attempt, maxAttempts, delayMs, error }，其拋錯或回傳之rejection皆忽略，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，與給使用者之進度通知opt.onRetry是兩回事(互不影響)；n為由1起算之嘗試序號(共用等待者與參數通過後之準備失敗為0)；type為'attempt'時為第n次嘗試開始(含n、max為maxAttempts)，'skip'時為opt.useSkipIfMatch成立而fpOut已是期望內容故不下載(含n、size)，'request'時為即將送出請求且整體時限計時器與停滯計時器已設定(含n、stallMs、remainMs為整體時限剩餘毫秒數)，'touch'時為停滯計時器剛重設(自此起連續stallMs沒有資料即停滯；含n、from為'request'|'headers'|'data'、ms為stallMs)，'headers'時為回應標頭已到(含n、ok、status為數字或null)，'data'時為本體又收到一塊資料(含n、bytes為本次嘗試累計位元組數；其後隨即重設停滯計時器)，'temp'時為暫存檔建立(act為'create')或清除(act為'remove'；含n、act、ok為是否成功)，'verify'時為校驗結果(phase為'stream'代表本體讀完之大小與SHA-256比對、'disk'代表重讀暫存檔核對；含n、phase、size、sizeOk、hashOk，皆為布林或數字，不含雜湊內容)，'rename'時為第i次更名嘗試(含n、i、ok)，'timeout'時為時限計時器觸發(kind為'stall'代表停滯、'total'代表整體時限；where為'request'代表請求階段之計時器、'expected'代表取期望值階段、'read'代表重讀檔案比對階段、'share'代表共用等待者逾時、'budget'代表檢查時整體時限已用盡；含n、kind、where、ms)，'abort'時為請求之中止實際執行(why為中止原因代碼'E_TIMEOUT'|'E_TIMEOUT_TOTAL'、'fallback'代表一端先出錯後5秒仍未落定而放手、'close'代表本次嘗試結束時釋放未讀完之本體與連線；含n、why)，'retry'時為第n次嘗試失敗而即將等待ms毫秒後重試(含n、ms；與opt.onRetry同一時點但不論有無給onRetry皆通知)，'stop'時為不再重試(why為'fatal'代表不可重試之錯誤、'max'代表次數用盡、'budget'代表等待會超過整體時限；含n、why、code為該錯誤代碼)，'share'時為同程序共用之登記(act為'own'代表本次為進行中之工作、'join'代表加入進行中之同一工作、'off'代表opt.useShare為false而各自下載；含act)，'settle'時為本次呼叫即將resolve(ok為true)或reject(含ok、code為錯誤代碼或null、attempts)；入口之參數錯誤(E_ARG)不通知任何事件；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響下載，預設null
- * @returns {Promise} 回傳Promise，resolve回傳結果物件{ fp, sha256, size, attempts, downloaded, leftovers }，sha256為小寫，leftovers為先前嘗試刪不掉之暫存檔陣列[{ fp, error }]；reject回傳Error物件，其code為'E_ARG'、'E_EXPECTED'、'E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'、'E_RENAME'之一，另帶step('argument'、'prepare'、'expected'、'request'、'download'、'verify'、'rename'、'share')、attempts(已嘗試次數，參數錯誤、建立資料夾錯誤與共用等待逾時為0)；E_ARG以外另帶url、fp、expected(最後使用之期望值)、actual(已計算之實際值或null)、leftovers、cleanupError(有刪不掉之暫存檔時為第一個之錯誤)、status(HTTP錯誤時)、cause，message含失敗步驟、預期與實際(雜湊截短為16碼)、建議與刪不掉之暫存檔；E_ARG(入口之參數錯誤)只另帶cause(有時); 下載途中之E_ARG(回應本體不是WHATWG ReadableStream)與其他代碼同帶上述欄位
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件{ fp, sha256, size, attempts, downloaded, leftovers }，sha256為小寫，leftovers為先前嘗試刪不掉之暫存檔陣列[{ fp, error }]；reject回傳Error物件，其code為'E_ARG'、'E_EXPECTED'、'E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'、'E_RENAME'之一，另帶step('argument'、'prepare'、'expected'、'request'、'download'、'verify'、'rename'、'share')、attempts(已嘗試次數，參數錯誤、建立資料夾錯誤與共用等待逾時為0)；E_ARG以外另帶url、fp、expected(最後使用之期望值)、actual(已計算之實際值或null)、leftovers、cleanupError(有刪不掉之暫存檔時為第一個之錯誤)、status(HTTP錯誤時)、cause，message含失敗步驟、失敗原因、建議與是否有刪不掉之暫存檔(不含網址、路徑、期望值與實際值，見上);E_ARG(入口之參數錯誤)只另帶cause(有時); 下載途中之E_ARG(回應本體不是WHATWG ReadableStream)與其他代碼同帶上述欄位
  * @example
  * //need test in nodejs
  *
@@ -1270,7 +1251,7 @@ async function fsDownloadFileVerifyCore(urlIn, fpOut, expected, opt = {}) {
         ctx.fpAbs = (ctx.win32 ? /[\\/]$/ : /\/$/).test(real) ? `${real}${name}` : `${real}${ctx.win32 ? '\\' : '/'}${name}`
     }
     catch (err) {
-        let e = mkErr('E_FS', `can not prepare folder "${fd === '' ? '.' : fd}": ${errMsg(err)}`, { step: 'prepare', attempts: 0, cause: err })
+        let e = mkErr('E_FS', `can not prepare the output folder: ${errMsg(err)}`, { step: 'prepare', attempts: 0, cause: fsErrCause(err) })
         let errFinal = finalErr(ctx, e, 0, '')
         if (ctx.trace) {
             ctx.trace('settle', { ok: false, code: codeStr(errFinal), attempts: 0 })

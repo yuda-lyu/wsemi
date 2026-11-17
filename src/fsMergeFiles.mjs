@@ -1,6 +1,8 @@
 import fs from 'fs'
 import fsMergeFilesCore from './fsMergeFilesCore.mjs'
 import errToStr from './_errToStr.mjs'
+import fsErrMsg, { fsErrCode } from './_fsErrMsg.mjs'
+import mergeInject from './_mergeInject.mjs'
 
 
 /**
@@ -12,7 +14,7 @@ import errToStr from './_errToStr.mjs'
  * @param {String} fpOut 輸入合併後檔案路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.fnOut=getFileName(fpOut)] 輸入合併後檔案名稱字串，僅回傳時會使用，預設getFileName(fpOut)
- * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Promise} 回傳Promise，resolve回傳合併後物件，reject回傳錯誤訊息字串，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；fpsIn須為非空陣列，否則reject說明字串'invalid fpsIn: must be a non-empty array'；切片不是檔案時reject說明字串'invalid fpsIn[i]: must be an existing file'(i為索引，不帶路徑)；Node原生錯誤(如ENOENT、ENOSPC)之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOSPC)'；opt.fs給undefined視為未給而取Node內建fs
  * @example
  * //need test in nodejs
  *
@@ -74,11 +76,15 @@ import errToStr from './_errToStr.mjs'
  */
 async function fsMergeFiles(fpsIn, fpOut, opt = {}) {
     try {
-        return fsMergeFilesCore(fpsIn, fpOut, { fs, ...opt })
+        return fsMergeFilesCore(fpsIn, fpOut, mergeInject({ fs }, opt)) //opt.fs給undefined視為未給取Node內建fs(V5)
     }
     catch (err) {
         //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject; 展開失敗不經fsMergeFilesCore, 與其拒絕值同格式(同fsMergeFilesCore之getErrMsg): message為字串者取message, 否則轉字串
         //原依通則轉字串, 同一不可讀之opt於對外得'Error: 訊息'而於Core得'訊息'
+        //拋出者為Node原生錯誤(帶code之真Error)時其message帶出路徑, 改固定詞彙加錯誤碼(W-23)
+        if (fsErrCode(err) !== null) {
+            return Promise.reject(fsErrMsg(err))
+        }
         let msg
         try {
             msg = err.message

@@ -97,8 +97,8 @@ describe(`fsDeleteFolderSafe 失敗回報(R-FS-REJECT-01)`, function() {
 
     it(`DD02 (守門) should reject the description string when the path is a file`, function() {
         let { r } = runFsFail('DD02')
-        //R-FS-REJECT-01 規則1: 前置檢查為說明字串
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'input path is not a folder: ' + r.out.p }, ...ev0 })
+        //R-FS-REJECT-01 規則1: 前置檢查為說明字串; ws492d V20: 固定訊息'invalid pah: must be a folder or not exist', 以invalid起頭且不帶路徑(舊為'input path is not a folder: <路徑>')
+        assert.strict.deepStrictEqual({ res: r.out.res, noPath: !String(r.out.res.v).includes(r.out.p), ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid pah: must be a folder or not exist' }, noPath: true, ...ev0 })
     })
 
     it(`DD03 should reject a string of the EPERM error and keep the folder when the folder is the cwd of another process`, function() {
@@ -107,15 +107,17 @@ describe(`fsDeleteFolderSafe 失敗回報(R-FS-REJECT-01)`, function() {
         }
         let { r } = runFsFail('DD03') //執行器於子行程已啟動並輸出就緒標記(其cwd把手於行程啟動時即持有)後才呼叫被測函數(不以固定毫秒猜子行程何時成為該資料夾之cwd; 見fsFailRunner.mjs之spawnHold)
         let res = r.out.res
-        //R-FS-REJECT-01 規則1: 捕捉之Error經_errToStr得String(err)即'名稱: 訊息'(rmSync之EPERM非EBUSY, 不重試即reject)
+        //R-FS-REJECT-01 規則1: 捕捉之原生錯誤(rmSync之EPERM非EBUSY, 不重試即reject)得字串; ws492d W-23: 原生錯誤改固定詞彙加錯誤碼'operation failed (code EPERM)'(無'Error: '前綴、不含路徑; 舊為String(err)即'Error: EPERM: …, rmdir <路徑>')
         //R-FS-REJECT-01 規則4: 不得偽成功(資料夾仍在)
-        assert.strict.deepStrictEqual({ s: res.s, k: res.k, eperm: /^Error: EPERM/.test(res.v), exists: r.out.exists, ...ev(r) }, { s: 'reject', k: 'string', eperm: true, exists: true, ...ev0 })
+        assert.strict.deepStrictEqual({ s: res.s, k: res.k, eperm: res.v === 'operation failed (code EPERM)', exists: r.out.exists, ...ev(r) }, { s: 'reject', k: 'string', eperm: true, exists: true, ...ev0 })
     })
 
-    it(`DD04 should reject String(err) when the injected fs.rmSync throws a real SystemError`, function() {
+    it(`DD04 should reject the fixed string 'operation failed (code ENOENT)' without the path when the injected fs.rmSync throws a real SystemError`, function() {
         let { r } = runFsFail('DD04')
-        //R-FS-REJECT-01 規則1: 拒絕值一律為字串, Error得String(err)即'名稱: 訊息'
-        assert.strict.deepStrictEqual({ res: r.out.res, ...ev(r) }, { res: { s: 'reject', k: 'string', v: r.out.expect }, ...ev0 })
+        //R-FS-REJECT-01 規則1: 拒絕值一律為字串; ws492d W-23: 原生錯誤(帶code之真Error)改固定詞彙加錯誤碼(執行器以test/tools/fsErrExpect.mjs之expectRejectStr算出期望), 不含路徑(夾具之實體錯誤路徑含__no_such_dir__)
+        let res = r.out.res
+        assert.strict.deepStrictEqual({ res, noPath: !String(res.v).includes('__no_such_dir__'), ...ev(r) }, { res: { s: 'reject', k: 'string', v: r.out.expect }, noPath: true, ...ev0 })
+        assert.strict.deepStrictEqual(r.out.expect, 'operation failed (code ENOENT)')
     })
 
     it(`DD05 should reject 'null' when the injected fs.rmSync throws null`, function() {
@@ -126,8 +128,8 @@ describe(`fsDeleteFolderSafe 失敗回報(R-FS-REJECT-01)`, function() {
 
     it(`DD06 should reject the last error string after numRetry attempts and keep the folder when the injected fs.rmSync always throws EBUSY`, function() {
         let { r } = runFsFail('DD06')
-        //R-FS-REJECT-01 規則4b: 重試耗盡而標的仍在時reject字串(含最後一次之錯誤, 第2次之'busy 2'), 不得resolve 'done: …'
-        assert.strict.deepStrictEqual({ res: r.out.res, calls: r.out.calls, exists: r.out.exists, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'Error: busy 2' }, calls: 2, exists: true, ...ev0 })
+        //R-FS-REJECT-01 規則4b: 重試耗盡而標的仍在時reject字串(最後一次之錯誤, 共呼叫2次), 不得resolve 'done: …'; ws492d W-23: 原生錯誤(code為EBUSY)改固定詞彙加錯誤碼, 不含原訊息'busy 2'
+        assert.strict.deepStrictEqual({ res: r.out.res, calls: r.out.calls, exists: r.out.exists, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'operation failed (code EBUSY)' }, calls: 2, exists: true, ...ev0 })
     })
 
     it(`DD07 should reject a string (not an Error, not a sync throw) when opt.fs.lstatSync throws in the pre-check`, function() {
@@ -151,8 +153,8 @@ describe(`fsDeleteFolderSafe 失敗回報(R-FS-REJECT-01)`, function() {
 
     it(`DD10 should reject the EPERM error string after 2 calls (no further retry) and keep the folder when the injected fs.rmSync throws EBUSY and then EPERM`, function() {
         let { r } = runFsFail('DD10')
-        //R-FS-REJECT-01 規則4b: 非EBUSY之錯誤立即reject(不再重試, numRetry=3而只呼叫2次), 拒絕值為該錯誤之字串(規則1); 標的仍在
-        assert.strict.deepStrictEqual({ res: r.out.res, calls: r.out.calls, exists: r.out.exists, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'Error: perm 2' }, calls: 2, exists: true, ...ev0 })
+        //R-FS-REJECT-01 規則4b: 非EBUSY之錯誤立即reject(不再重試, numRetry=3而只呼叫2次), 拒絕值為該錯誤之字串(規則1; ws492d W-23: 原生錯誤固定詞彙加錯誤碼'operation failed (code EPERM)', 與第1次之EBUSY可分辨); 標的仍在
+        assert.strict.deepStrictEqual({ res: r.out.res, calls: r.out.calls, exists: r.out.exists, ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'operation failed (code EPERM)' }, calls: 2, exists: true, ...ev0 })
     })
 
     it(`DD11 (守門) should resolve 'done: <path>' when the folder vanishes during the retry (EBUSY, then the real rmSync with force)`, function() {
@@ -195,8 +197,8 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         let { r, tr, st } = await go(['EBUSY', 'EBUSY', 'EBUSY'], { opt: { numRetry: 3 }, ms: 600 })
         //JSDoc onTrace: retry為第n次遇EBUSY而即將等待ms毫秒(只在之後還有下一次嘗試時通知, n小於numRetry); giveup為重試耗盡而即將reject(含n為numRetry、code為EBUSY), 於最後一次嘗試失敗當下通知, 其後不再有事件
         assert.strict.deepStrictEqual(tr.lines(), ['attempt1@0', 'retry1/EBUSY/300@0', 'attempt2@300', 'retry2/EBUSY/300@300', 'attempt3@600', 'giveup3/EBUSY@600'])
-        //JSDoc @returns: 重試耗盡仍被占用reject錯誤訊息字串(最後一次之錯誤); 不偽成功
-        assert.strict.deepStrictEqual({ r, calls: st.calls, exists: st.exists }, { r: { s: 'reject', v: 'Error: EBUSY 3' }, calls: 3, exists: true })
+        //JSDoc @returns: 重試耗盡仍被占用reject錯誤訊息字串(最後一次之錯誤; ws492d W-23: 原生錯誤固定詞彙加錯誤碼, 不含原訊息'EBUSY 3', 呼叫次數3另由calls斷言); 不偽成功
+        assert.strict.deepStrictEqual({ r, calls: st.calls, exists: st.exists }, { r: { s: 'reject', v: 'operation failed (code EBUSY)' }, calls: 3, exists: true })
     })
 
     it(`should reject a string and notify fail with n 0, instead of resolving as if the folder did not exist, when opt.fs is null or has no statSync`, async function() {
@@ -226,9 +228,10 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
 
     it(`should notify fail with the error code and reject at once (no retry) when the attempt throws a non-retryable error`, async function() {
         //JSDoc onTrace: fail為第n次遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串, 無或非字串則null); 資料夾版不另判ENOENT(rmSync以force吞ENOENT), 注入之ENOENT亦不重試
+        //ws492d W-23: 帶字串code之原生錯誤(EPERM、ENOENT)reject固定詞彙加錯誤碼; 無code者(null、已撤銷之Proxy)與code非字串者(num)維持舊行為(_errToStr)
         let cases = [
-            ['EPERM', 'fail1/EPERM', 'Error: EPERM 1'],
-            ['ENOENT', 'fail1/ENOENT', 'Error: ENOENT 1'],
+            ['EPERM', 'fail1/EPERM', 'operation failed (code EPERM)'],
+            ['ENOENT', 'fail1/ENOENT', 'operation failed (code ENOENT)'],
             ['null', 'fail1/null', 'null'], //拋出null: 讀code須可承受(R-FS-REJECT-01 規則8)
             ['revoked', 'fail1/null', 'unknown error'], //拋出已撤銷之Proxy: 讀code即拋錯, 以null通知
             ['num', 'fail1/null', 'Error: num 1'], //code非字串: 以null通知
@@ -244,7 +247,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         let a = await go([], { fakeOpt: { missing: true } })
         assert.strict.deepStrictEqual({ lines: a.tr.lines(), r: a.r, calls: a.st.calls }, { lines: ['skip:not-exist/0@0'], r: { s: 'resolve', v: 'folder does not exist: x' }, calls: 0 })
         let b = await go([], { fakeOpt: { wrongKind: true } })
-        assert.strict.deepStrictEqual({ lines: b.tr.lines(), r: b.r, calls: b.st.calls }, { lines: ['skip:not-folder/0@0'], r: { s: 'reject', v: 'input path is not a folder: x' }, calls: 0 })
+        assert.strict.deepStrictEqual({ lines: b.tr.lines(), r: b.r, calls: b.st.calls }, { lines: ['skip:not-folder/0@0'], r: { s: 'reject', v: 'invalid pah: must be a folder or not exist' }, calls: 0 }) //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: x')
     })
 
     it(`should notify fail with n 0 and reject the string when the pre-check throws (opt.fs.lstatSync throws)`, async function() {
@@ -252,7 +255,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         let tr = mkRec()
         let fsBoom = { statSync: () => ({}), lstatSync: thrower(Object.assign(new Error('lstat boom'), { code: 'EACCES' })) }
         let r = await runFake(() => fsDeleteFolderSafeCore('x', { fs: fsBoom, onTrace: tr.on }), 0)
-        assert.strict.deepStrictEqual({ lines: tr.lines(), r }, { lines: ['fail0/EACCES@0'], r: { s: 'reject', v: 'Error: lstat boom' } })
+        assert.strict.deepStrictEqual({ lines: tr.lines(), r }, { lines: ['fail0/EACCES@0'], r: { s: 'reject', v: 'operation failed (code EACCES)' } }) //ws492d W-23: 帶code之原生錯誤固定詞彙加錯誤碼(舊為'Error: lstat boom')
     })
 
     it(`should give the same results without onTrace, with a recording onTrace, and with a throwing, rejecting or invalid onTrace`, async function() {
@@ -280,10 +283,11 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         finally {
             process.off('unhandledRejection', onUn)
         }
+        //ws492d W-23: 帶字串code之原生錯誤(EBUSY、EPERM)為固定詞彙加錯誤碼; 無code之Error(getter boom、此處前置檢查之lstat boom)維持'Error: 訊息'
         let one = [
             { s: 'resolve', v: 'done: x' }, 2,
-            { s: 'reject', v: 'Error: EBUSY 2' }, 2,
-            { s: 'reject', v: 'Error: EPERM 1' }, 1,
+            { s: 'reject', v: 'operation failed (code EBUSY)' }, 2,
+            { s: 'reject', v: 'operation failed (code EPERM)' }, 1,
             { s: 'resolve', v: 'folder does not exist: x' },
             { s: 'reject', v: 'Error: getter boom' },
             { s: 'reject', v: 'Error: lstat boom' },
@@ -361,7 +365,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
                 r1: 'done: ' + fd,
                 exists: false,
                 r2: 'folder does not exist: ' + fdt + 'nope',
-                r3: 'rejected: input path is not a folder: ' + fp,
+                r3: 'rejected: invalid pah: must be a folder or not exist', //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: <路徑>')
                 lines: ['attempt1', 'done1', 'skip:not-exist/0', 'skip:not-folder/0'],
             })
         })
