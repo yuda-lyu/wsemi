@@ -923,25 +923,27 @@ function maxmin(v) {
 
 
 function fmtColor(rgba, fmtOutput) {
-    if (!isestr(fmtOutput)) {
-        throw new Error('fmtOutput is not a string')
-    }
-    if (kpCv[fmtOutput]) {
-        rgba = kpCv[fmtOutput](rgba)
-    }
-    else {
+    //fmtOutput須為輸出格式名稱(kpCv之自有鍵), 非字串與未列之名稱同一訊息(V19, 不帶值)
+    if (!isestr(fmtOutput) || !Object.prototype.hasOwnProperty.call(kpCv, fmtOutput)) {
         console.log(`fmtOutput must be [${keys(kpCv)}]`)
-        throw new Error('invalid fmtOutput')
+        throw new Error('invalid fmtOutput: must be one of the output formats')
     }
-    return rgba
+    return kpCv[fmtOutput](rgba)
+}
+
+
+//toRatio, 必須參數amount、w1、w2須為有效數字(isenum)且介於0至1(含端點), 判定通過後以cdbl轉為數字再使用(K4: 原數字字串'0.5'以+=串接、undefined/'abc'/NaN得'rgb(NaN, NaN, NaN)'、null被當0), 無效拋錯(V19, 不帶值)
+function toRatio(v, name) {
+    if (!isenum(v, { use: 'ratio' })) {
+        throw new Error(`invalid ${name}: must be a number from 0 to 1`)
+    }
+    return cdbl(v)
 }
 
 
 function modSaturate(rgba, amount, fmtOutput = 'toRgbString') {
     //調整飽和度, amount介於0~1
-    if (amount &lt; 0 || amount > 1) {
-        throw new Error('amount &lt; 0 or > 1')
-    }
+    amount = toRatio(amount, 'amount')
     let hsla = rgba2Hsla(rgba)
     hsla.s += amount
     hsla.s = maxmin(hsla.s)
@@ -960,9 +962,7 @@ function modGrey(rgba, fmtOutput = 'toRgbString') {
 
 function modLighten(rgba, amount, fmtOutput = 'toRgbString') {
     //調整亮度, amount介於0~1
-    if (amount &lt; 0 || amount > 1) {
-        throw new Error('amount &lt; 0 or > 1')
-    }
+    amount = toRatio(amount, 'amount')
     let hsla = rgba2Hsla(rgba)
     hsla.l += amount
     hsla.l = maxmin(hsla.l)
@@ -973,9 +973,7 @@ function modLighten(rgba, amount, fmtOutput = 'toRgbString') {
 
 function modBrighten(rgba, amount, fmtOutput = 'toRgbString') {
     //調整亮度, amount介於0~1
-    if (amount &lt; 0 || amount > 1) {
-        throw new Error('amount &lt; 0 or > 1')
-    }
+    amount = toRatio(amount, 'amount')
     rgba.r += amount
     rgba.r = maxmin(rgba.r)
     rgba.g += amount
@@ -989,9 +987,7 @@ function modBrighten(rgba, amount, fmtOutput = 'toRgbString') {
 
 function modHue(rgba, amount, fmtOutput = 'toRgbString') {
     //調整色相, amount介於0~1
-    if (amount &lt; 0 || amount > 1) {
-        throw new Error('amount &lt; 0 or > 1')
-    }
+    amount = toRatio(amount, 'amount')
     let hsla = rgba2Hsla(rgba)
     hsla.h += amount
     hsla.h = hsla.h % 1
@@ -1009,7 +1005,7 @@ function modComplement(rgba, fmtOutput = 'toRgbString') {
 function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的色相與數量num產生分佈色
     if (!iseint(num)) {
-        throw new Error('num is not an integer')
+        throw new Error('invalid num: must be an integer')
     }
     num = Number(num)
     if (num &lt;= 1) {
@@ -1030,7 +1026,7 @@ function spreadHue(rgba, num, fmtOutput = 'toRgbString') {
 function spreadMonochromatic(rgba, num, fmtOutput = 'toRgbString') {
     //依照顏色的飽和度與亮度與數量num產生分佈配色
     if (!iseint(num)) {
-        throw new Error('num is not an integer')
+        throw new Error('invalid num: must be an integer')
     }
     num = Number(num)
     if (num &lt;= 1) {
@@ -1052,12 +1048,14 @@ function spreadMonochromatic(rgba, num, fmtOutput = 'toRgbString') {
 
 function mix(rgba1, w1, rgba2, w2, fmtOutput = 'toRgbString') {
     //混合顏色, w1與w2需介於0~1, 兩者合可不等於1
-    if (w1 &lt; 0 || w1 > 1) {
-        throw new Error('w1 &lt; 0 or > 1')
-    }
-    if (w2 &lt; 0 || w2 > 1) {
-        throw new Error('w1 &lt; 0 or > 1')
-    }
+    w1 = toRatio(w1, 'w1')
+    w2 = toRatio(w2, 'w2')
+    return mixCore(rgba1, w1, rgba2, w2, fmtOutput)
+}
+
+
+function mixCore(rgba1, w1, rgba2, w2, fmtOutput) {
+    //混合顏色核心, 權重由呼叫端保證為數字(對外之mix已檢測; interp內部自算之權重不經檢測, 維持原行為)
     let rt = {
         r: rgba1.r * w1 + rgba2.r * w2,
         g: rgba1.g * w1 + rgba2.g * w2,
@@ -1299,8 +1297,7 @@ function parseColor(color) {
         co = color
     }
     else {
-        console.log('color=', color)
-        throw new Error('color is not a string or an object')
+        throw new Error('invalid color: must be a string or an object') //V20: 不輸出、不回顯輸入值
     }
 
     //parse
@@ -1309,8 +1306,8 @@ function parseColor(color) {
             rgba = parseString(cc)
         }
         catch (err) {
-            console.log(err)
-            throw new Error(`can not parse color: ${cc}`)
+            console.log(err) //解析器自拋之固定訊息(不含輸入值)
+            throw new Error('invalid color: must be a valid color') //V20: 不回顯輸入字串
         }
     }
     else if (co !== null) {
@@ -1318,8 +1315,8 @@ function parseColor(color) {
             rgba = parseObject(co)
         }
         catch (err) {
-            console.log(err)
-            throw new Error(`can not parse color: ${JSON.stringify(co)}`)
+            console.log(err) //解析器自拋之固定訊息(不含輸入值)
+            throw new Error('invalid color: must be a valid color') //V20: 不回顯輸入物件
         }
     }
 
@@ -1359,7 +1356,7 @@ function interp(gradient) {
             if (r0 &lt;= r &amp;&amp; r1 >= r) {
                 let w0 = (r1 - r) / (r1 - r0)
                 let w1 = (r - r0) / (r1 - r0)
-                color = mix(parseColor(c0), w0, parseColor(c1), w1, 'toRgbaString')
+                color = mixCore(parseColor(c0), w0, parseColor(c1), w1, 'toRgbaString')
                 break
             }
         }
@@ -1402,6 +1399,13 @@ let kpCv = {
 
 /**
  * 顏色轉換
+ *
+ * 輸入無效一律同步拋Error，訊息為固定字串、不含輸入值(V19、V20；原訊息回顯顏色字串與整個物件並以console.log輸出輸入值)：
+ * 1. 顏色參數(c、c1、c2)非字串亦非一般物件為'invalid color: must be a string or an object'，字串或物件無法解析為顏色為'invalid color: must be a valid color'；
+ * 2. 調整量amount(modSaturate、modLighten、modBrighten、modHue)與權重w1、w2(mix)為必須參數，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、undefined、布林、包裝物件皆非有效數字)且介於0至1(含端點)，判定通過後以cdbl轉為數字再使用(數字字串'0.5'與0.5結果相同，原以字串串接而得'rgb(NaN, NaN, NaN)')，否則為'invalid amount: must be a number from 0 to 1'、'invalid w1: must be a number from 0 to 1'、'invalid w2: must be a number from 0 to 1'；
+ * 3. 個數num(spreadHue、spreadMonochromatic)須為有效整數，否則為'invalid num: must be an integer'；
+ * 4. 輸出格式fmtOutput須為輸出格式名稱之一(如'toRgbString'，只認自有鍵，'constructor'等原型鏈成員名無效)，否則為'invalid fmtOutput: must be one of the output formats'；
+ * 5. 檢測順序為顏色參數(解析)、amount或w1與w2、num、fmtOutput(轉出時)。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/color.test.mjs Github}
  * @memberOf wsemi
@@ -1627,7 +1631,7 @@ export default color()
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 17 2026 10:33:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 18 2026 07:17:40 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

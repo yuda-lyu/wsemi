@@ -13003,7 +13003,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
     
 
-    <h4 class="name" id=".bodyLog"><span class="type-signature type-signature-static">(static) </span>bodyLog<span class="signature">(c)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".bodyLog"><span class="type-signature type-signature-static">(static) </span>bodyLog<span class="signature">(&hellip;c)</span><span class="type-signature"></span></h4>
 
     
 
@@ -13014,13 +13014,14 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端顯示log訊息，預設插入至body</p>
+<p>歸DOM類(C18)：無document(非瀏覽器環境)或取不到body元素時不動作、不拋錯、不輸出console，回傳undefined</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/bodyLog.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="bodyLog.mjs.html">bodyLog.mjs</a>, <a href="bodyLog.mjs.html#line18">line 18</a>
+        <a href="bodyLog.mjs.html">bodyLog.mjs</a>, <a href="bodyLog.mjs.html#line24">line 24</a>
     </li></ul></dd>
     
 
@@ -13067,7 +13068,11 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>bodyLog('show訊息')// => 由html顯示'show訊息'</code></pre>
+    <pre class="prettyprint"><code>bodyLog('show訊息')
+// => 由html顯示'show訊息'
+
+bodyLog('a', 123, { x: 1 })
+// => 由html顯示'a, 123, {"x":1}'</code></pre>
 
 
 
@@ -13084,6 +13089,8 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
 
         <th>Type</th>
 
+        
+        <th>Attributes</th>
         
 
         
@@ -13103,7 +13110,7 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">*</span>
 
 
 
@@ -13111,10 +13118,20 @@ console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>輸入字串</p></td>
+            <td class="description last"><p>輸入不定個數之任意資料(以arguments讀取，各項經o2j轉成字串後以', '串接，再經htmlEncode跳脫後顯示)，未給任何引數時仍顯示一行空log</p></td>
         </tr>
 
     
@@ -18942,13 +18959,21 @@ console.log(chkOrmStr(123))
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>顏色轉換</p>
+<p>輸入無效一律同步拋Error，訊息為固定字串、不含輸入值(V19、V20；原訊息回顯顏色字串與整個物件並以console.log輸出輸入值)：</p>
+<ol>
+<li>顏色參數(c、c1、c2)非字串亦非一般物件為'invalid color: must be a string or an object'，字串或物件無法解析為顏色為'invalid color: must be a valid color'；</li>
+<li>調整量amount(modSaturate、modLighten、modBrighten、modHue)與權重w1、w2(mix)為必須參數，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、undefined、布林、包裝物件皆非有效數字)且介於0至1(含端點)，判定通過後以cdbl轉為數字再使用(數字字串'0.5'與0.5結果相同，原以字串串接而得'rgb(NaN, NaN, NaN)')，否則為'invalid amount: must be a number from 0 to 1'、'invalid w1: must be a number from 0 to 1'、'invalid w2: must be a number from 0 to 1'；</li>
+<li>個數num(spreadHue、spreadMonochromatic)須為有效整數，否則為'invalid num: must be an integer'；</li>
+<li>輸出格式fmtOutput須為輸出格式名稱之一(如'toRgbString'，只認自有鍵，'constructor'等原型鏈成員名無效)，否則為'invalid fmtOutput: must be one of the output formats'；</li>
+<li>檢測順序為顏色參數(解析)、amount或w1與w2、num、fmtOutput(轉出時)。</li>
+</ol>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/color.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="color.mjs.html">color.mjs</a>, <a href="color.mjs.html#line1523">line 1523</a>
+        <a href="color.mjs.html">color.mjs</a>, <a href="color.mjs.html#line1527">line 1527</a>
     </li></ul></dd>
     
 
@@ -23677,7 +23702,8 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 <li>opt非物件(含null、陣列、不可讀之Proxy)視為{}(以typeof與Array.isArray判定，帶自訂Symbol.toStringTag之一般物件仍為設定物件)；paddingStyle、closeIconShift同；opt之各鍵讀取拋錯(拋錯之getter、已撤銷之Proxy)視為未給(規格§4 V11)；</li>
 <li>數值類opt(time、paddingStyle各鍵、borderWidth、borderRadius、closeIconShift各鍵)逐一以isenum檢查(有限數字或數字字串)，非預期之輸入(含NaN、Infinity、'0x10'、包裝物件、非數字，及time、paddingStyle、borderWidth、borderRadius之負數)視為未給而改用該欄預設，不報錯；</li>
 <li>paddingStyle部分給鍵時，未給或無效之鍵保留該鍵預設(top:14、right:26、bottom:14、left:14)；closeIconShift部分給鍵時，未給之鍵保留預設(top:10、right:10)，但同軸已給有效值者不再套用另一端之預設(給bottom而未給top時不設top，給left而未給right時不設right)，以免上下或左右同時定位；</li>
-<li>關閉: 顯示時間到、或按關閉按鈕(✕)時，皆先resolve回傳之Promise再移除彈窗；關閉按鈕與滑鼠移入移出之淡入淡出以addEventListener綁定，不使用行內事件屬性與全域函數(嚴格CSP下亦可用)；</li>
+<li>關閉: 顯示時間到、或按關閉按鈕(✕)時，皆先resolve回傳之Promise再移除彈窗；關閉按鈕與滑鼠移入移出之淡入淡出以addEventListener綁定，不使用行內事件屬性與全域函數(嚴格CSP下亦可用)；
+5b. 字串型樣式opt(textColor、backgroundColor、borderColor、shadowStyle，使用者2026-11-16 W-14縮限D6)：只認原始字串，null、非字串、包裝物件、讀取拋錯視為未給而改用該欄預設(K3)，空字串''為合法值(表示不要該樣式)；opt.type只認內建圖標之自有鍵，不經原型鏈判定；</li>
 <li>外框、內寬層與關閉按鈕以createElement建立，msg與圖標以innerHTML插入內寬層內之內容容器，其HTML之解析限於該容器: msg含未閉合之標籤(如'<textarea>abc')時不再吞入其後之關閉按鈕與版面(修前整段一起解析而會)；正常HTML之外觀、位置與修前相同；</li>
 <li>需於瀏覽器執行: msg有效而無document(nodejs等)時，建立元素失敗而同步拋出執行環境之錯誤(既有行為，不回Promise)。</li>
 </ol>
@@ -23688,7 +23714,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domAlert.mjs.html">domAlert.mjs</a>, <a href="domAlert.mjs.html#line306">line 306</a>
+        <a href="domAlert.mjs.html">domAlert.mjs</a>, <a href="domAlert.mjs.html#line310">line 310</a>
     </li></ul></dd>
     
 
@@ -23901,7 +23927,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入訊息種類字串，可使用'success'、'warning'、'error'，預設'success'</p></td>
+            <td class="description last"><p>輸入訊息種類字串，可使用'success'、'warning'、'error'、'infor'、'cancel'(程式內建圖標之全部鍵，只認原始字串且須為其自有鍵，不經原型鏈判定)，其餘(含null、非字串、包裝物件、'toString'、'constructor'等原型鏈成員名、未列之字串)視為未給而改用預設'success'，預設'success'</p></td>
         </tr>
 
     
@@ -24101,7 +24127,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入文字顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#000'</p></td>
+            <td class="description last"><p>輸入文字顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式，由瀏覽器預設)，預設'#000'</p></td>
         </tr>
 
     
@@ -24141,7 +24167,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入背景顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#fff'</p></td>
+            <td class="description last"><p>輸入背景顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式)，預設'#fff'</p></td>
         </tr>
 
     
@@ -24221,7 +24247,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入邊框顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'#ebeef5'</p></td>
+            <td class="description last"><p>輸入邊框顏色字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要該樣式)，預設'#ebeef5'</p></td>
         </tr>
 
     
@@ -24301,7 +24327,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入陰影樣式字串，直接放入樣式(不可傳未經檢查之外部文字)，預設'0 2px 12px 0 rgba(0,0,0,.1)'</p></td>
+            <td class="description last"><p>輸入陰影樣式字串，直接放入樣式(不可傳未經檢查之外部文字)，只認原始字串，null、非字串、包裝物件視為未給而改用預設，空字串''為合法值(不要陰影)，預設'0 2px 12px 0 rgba(0,0,0,.1)'</p></td>
         </tr>
 
     
@@ -24679,7 +24705,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
     
 
-    <h4 class="name" id=".domCancelEvent"><span class="type-signature type-signature-static">(static) </span>domCancelEvent<span class="signature">(e)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domCancelEvent"><span class="type-signature type-signature-static">(static) </span>domCancelEvent<span class="signature">(e)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -24690,13 +24716,14 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對DOM元素事件設定停止傳遞事件</p>
+<p>回傳布林值表示是否已取消：e無效(假值、非物件)或不可取消(e.cancelable為假值或無此屬性，如拖曳自己會捲動螢幕而觸發之不可取消事件)時不動作回傳false(判定為真值而非嚴格等於true，同修改前)；可取消者呼叫stopPropagation(IE11為設cancelBubble)與preventDefault後回傳true，呼叫過程拋錯(有些情形preventDefault是passive無法呼叫)回傳false，不外拋；passive監聽器內preventDefault被瀏覽器忽略而不拋錯者無從偵測，仍回傳true。不以訊息字串作回傳值</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domCancelEvent.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domCancelEvent.mjs.html">domCancelEvent.mjs</a>, <a href="domCancelEvent.mjs.html#line18">line 18</a>
+        <a href="domCancelEvent.mjs.html">domCancelEvent.mjs</a>, <a href="domCancelEvent.mjs.html#line21">line 21</a>
     </li></ul></dd>
     
 
@@ -24743,7 +24770,11 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserwindow.addEventListener('touchstart', (e) => {    domCancelEvent(e)})</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+window.addEventListener('touchstart', (e) => {
+    domCancelEvent(e)
+})</code></pre>
 
 
 
@@ -24812,6 +24843,29 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳是否已取消，true為已呼叫stopPropagation與preventDefault且未拋錯，其餘(含e無效、事件不可取消、呼叫拋錯)皆為false</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -24831,13 +24885,14 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對指定DOM上展示2文字差異比對資訊</p>
+<p>失敗一律同步拋Error(固定訊息、不含輸入值、先於任何DOM變動，不回傳被reject之Promise，輸出型別恆為物件)：ele非元素為'invalid ele: must be an element'，strOld、strNew非字串(空字串合法)為'invalid strOld: must be a string'與'invalid strNew: must be a string'；檢測順序為ele、strOld、strNew</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domCompareText.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domCompareText.mjs.html">domCompareText.mjs</a>, <a href="domCompareText.mjs.html#line28">line 28</a>
+        <a href="domCompareText.mjs.html">domCompareText.mjs</a>, <a href="domCompareText.mjs.html#line30">line 30</a>
     </li></ul></dd>
     
 
@@ -24947,7 +25002,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入元素</p></td>
+            <td class="description last"><p>輸入元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -24983,7 +25038,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入比對標題字串</p></td>
+            <td class="description last"><p>輸入比對標題字串，非非空字串視為未給而用'Text'</p></td>
         </tr>
 
     
@@ -25019,7 +25074,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入舊文字字串</p></td>
+            <td class="description last"><p>輸入舊文字字串，非字串則拋錯，空字串合法</p></td>
         </tr>
 
     
@@ -25055,7 +25110,7 @@ v須為有效數字(isenum: 有限數字，或去頭尾空白後為十進位寫�
                 </td>
             
 
-            <td class="description last"><p>輸入新文字字串</p></td>
+            <td class="description last"><p>輸入新文字字串，非字串則拋錯，空字串合法</p></td>
         </tr>
 
     
@@ -27214,7 +27269,7 @@ de.clear()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domDragBarAndScroll.mjs.html">domDragBarAndScroll.mjs</a>, <a href="domDragBarAndScroll.mjs.html#line48">line 48</a>
+        <a href="domDragBarAndScroll.mjs.html">domDragBarAndScroll.mjs</a>, <a href="domDragBarAndScroll.mjs.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -27337,7 +27392,7 @@ das.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入panel元素</p></td>
+            <td class="description last"><p>輸入panel元素，非元素則同步拋Error('invalid panel: must be an element')</p></td>
         </tr>
 
     
@@ -27373,7 +27428,7 @@ das.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入bar元素</p></td>
+            <td class="description last"><p>輸入bar元素，非元素則同步拋Error('invalid bar: must be an element')；兩者皆無效時先報panel，皆先於任何監聽之掛載與evem之建立，訊息不含輸入值</p></td>
         </tr>
 
     
@@ -28654,7 +28709,7 @@ pv.clear()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domDropFiles.mjs.html">domDropFiles.mjs</a>, <a href="domDropFiles.mjs.html#line179">line 179</a>
+        <a href="domDropFiles.mjs.html">domDropFiles.mjs</a>, <a href="domDropFiles.mjs.html#line181">line 181</a>
     </li></ul></dd>
     
 
@@ -28764,7 +28819,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入dom元素</p></td>
+            <td class="description last"><p>輸入dom元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -28894,6 +28949,36 @@ pv.clear()</code></pre>
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>ele非元素拋出Error('invalid ele: must be an element')，先於任何監聽之掛載與evem之建立，訊息不含輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 <h5 class="h5-returns">Returns:</h5>
@@ -28938,13 +29023,14 @@ pv.clear()</code></pre>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對DOM元素事件內座標(clientX, clientY)取得DOM元素陣列</p>
+<p>屬查詢類(同domIsFocused)：clientX與clientY須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、布林、陣列、包裝物件皆非有效數字)，判定通過後以cdbl轉為數字再交給document.elementsFromPoint；任一無效不呼叫原生API(原生會把null、''、true、[]強制轉成0或1)，不拋錯、不輸出console，回傳空陣列[]；原生API拋錯(如無document)亦不拋錯、不輸出console，回傳空陣列[]</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domElementsFromPoint.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domElementsFromPoint.mjs.html">domElementsFromPoint.mjs</a>, <a href="domElementsFromPoint.mjs.html#line19">line 19</a>
+        <a href="domElementsFromPoint.mjs.html">domElementsFromPoint.mjs</a>, <a href="domElementsFromPoint.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -28991,7 +29077,11 @@ pv.clear()</code></pre>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserwindow.addEventListener('mousemove', (e) => {  console.log(domElementsFromPoint(e.clientX, e.clientY))})</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+window.addEventListener('mousemove', (e) => {
+  console.log(domElementsFromPoint(e.clientX, e.clientY))
+})</code></pre>
 
 
 
@@ -29028,6 +29118,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29038,7 +29131,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入指定x座標浮點數，須基於顯示區(viewport)之x座標</p></td>
+            <td class="description last"><p>輸入指定x座標，須為有效數字，須基於顯示區(viewport)之x座標</p></td>
         </tr>
 
     
@@ -29052,6 +29145,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29062,7 +29158,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入指定y座標浮點數，須基於顯示區(viewport)之y座標</p></td>
+            <td class="description last"><p>輸入指定y座標，須為有效數字，須基於顯示區(viewport)之y座標</p></td>
         </tr>
 
     
@@ -29088,7 +29184,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳DOM元素陣列</p>
+    <p>回傳DOM元素陣列(由上而下)，clientX或clientY無效、無document或取得失敗時回傳空陣列[]</p>
 </div>
 
 
@@ -29132,7 +29228,7 @@ pv.clear()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domFadeIn.mjs.html">domFadeIn.mjs</a>, <a href="domFadeIn.mjs.html#line33">line 33</a>
+        <a href="domFadeIn.mjs.html">domFadeIn.mjs</a>, <a href="domFadeIn.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -29388,7 +29484,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入是否於opt.duration為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
+            <td class="description last"><p>輸入是否於opt.duration、opt.delay、opt.opacityIni為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
         </tr>
 
     
@@ -29442,6 +29538,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29468,7 +29567,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入動畫延遲啟動時間毫秒整數，預設0</p></td>
+            <td class="description last"><p>輸入動畫延遲啟動時間毫秒，opt類參數(有效數字，0至2147483647，可帶小數，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效數字、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾限、不報錯，預設0</p></td>
         </tr>
 
     
@@ -29482,6 +29581,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29508,7 +29610,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入初始透明度浮點數，介於0至1之間，預設0</p></td>
+            <td class="description last"><p>輸入初始透明度，opt類參數(有效數字，介於0至1之間，數字字串亦可)，非預期之輸入(非有效數字、小於0或大於1、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾限、不報錯，預設0；元素現行style.opacity為有效數字時改以其為漸變起點</p></td>
         </tr>
 
     
@@ -29562,7 +29664,7 @@ pv.clear()</code></pre>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domFadeOut.mjs.html">domFadeOut.mjs</a>, <a href="domFadeOut.mjs.html#line33">line 33</a>
+        <a href="domFadeOut.mjs.html">domFadeOut.mjs</a>, <a href="domFadeOut.mjs.html#line38">line 38</a>
     </li></ul></dd>
     
 
@@ -29818,7 +29920,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入是否於opt.duration為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
+            <td class="description last"><p>輸入是否於opt.duration、opt.delay、opt.opacityIni為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false</p></td>
         </tr>
 
     
@@ -29872,6 +29974,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29898,7 +30003,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入動畫延遲啟動時間毫秒整數，預設0</p></td>
+            <td class="description last"><p>輸入動畫延遲啟動時間毫秒，opt類參數(有效數字，0至2147483647，可帶小數，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效數字、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾限、不報錯，預設0</p></td>
         </tr>
 
     
@@ -29912,6 +30017,9 @@ pv.clear()</code></pre>
             
                 
 <span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
 
 
 
@@ -29938,7 +30046,7 @@ pv.clear()</code></pre>
                 </td>
             
 
-            <td class="description last"><p>輸入初始透明度浮點數，介於0至1之間，預設1</p></td>
+            <td class="description last"><p>輸入初始透明度，opt類參數(有效數字，介於0至1之間，數字字串亦可)，非預期之輸入(非有效數字、小於0或大於1、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾限、不報錯，預設1；元素現行style.opacity為有效數字時改以其為漸變起點</p></td>
         </tr>
 
     
@@ -29975,7 +30083,7 @@ pv.clear()</code></pre>
 
     
 
-    <h4 class="name" id=".domFind"><span class="type-signature type-signature-static">(static) </span>domFind<span class="signature">(query)</span><span class="type-signature"> &rarr; {Element}</span></h4>
+    <h4 class="name" id=".domFind"><span class="type-signature type-signature-static">(static) </span>domFind<span class="signature">(query)</span><span class="type-signature"> &rarr; {Element|null}</span></h4>
 
     
 
@@ -29986,13 +30094,14 @@ pv.clear()</code></pre>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端找尋DOM元素</p>
+<p>屬查詢類(同domIsFocused)：query須為非空之原始字串(包裝物件new String無效)，其餘輸入(非字串、空字串)、選擇器語法錯誤、無document(非瀏覽器環境)皆不拋錯、訊息不含輸入值，一律回傳null；有效但無符合元素亦回傳null</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domFind.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domFind.mjs.html">domFind.mjs</a>, <a href="domFind.mjs.html#line14">line 14</a>
+        <a href="domFind.mjs.html">domFind.mjs</a>, <a href="domFind.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -30039,7 +30148,9 @@ pv.clear()</code></pre>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet ele = domFind('#id')</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+let ele = domFind('#id')</code></pre>
 
 
 
@@ -30086,7 +30197,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入查詢字串</p></td>
+            <td class="description last"><p>輸入查詢字串，須為非空之CSS選擇器字串</p></td>
         </tr>
 
     
@@ -30112,7 +30223,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳DOM元素</p>
+    <p>回傳DOM元素，無符合元素、query無效、選擇器語法錯誤或無document時回傳null</p>
 </div>
 
 
@@ -30124,6 +30235,9 @@ pv.clear()</code></pre>
     <dd>
         
 <span class="param-type">Element</span>
+|
+
+<span class="param-type">null</span>
 
 
 
@@ -30139,7 +30253,7 @@ pv.clear()</code></pre>
 
     
 
-    <h4 class="name" id=".domFinds"><span class="type-signature type-signature-static">(static) </span>domFinds<span class="signature">(query)</span><span class="type-signature"> &rarr; {NodeList}</span></h4>
+    <h4 class="name" id=".domFinds"><span class="type-signature type-signature-static">(static) </span>domFinds<span class="signature">(query)</span><span class="type-signature"> &rarr; {NodeList|Array}</span></h4>
 
     
 
@@ -30150,13 +30264,14 @@ pv.clear()</code></pre>
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端找尋多DOM元素</p>
+<p>屬查詢類(同domIsFocused)：query須為非空之原始字串(包裝物件new String無效)，其餘輸入(非字串、空字串)、選擇器語法錯誤、無document(非瀏覽器環境)皆不拋錯、訊息不含輸入值，一律回傳空陣列[]；有效但無符合元素時回傳空NodeList</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domFinds.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domFinds.mjs.html">domFinds.mjs</a>, <a href="domFinds.mjs.html#line14">line 14</a>
+        <a href="domFinds.mjs.html">domFinds.mjs</a>, <a href="domFinds.mjs.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -30203,7 +30318,9 @@ pv.clear()</code></pre>
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet eles = domFinds('[name="abc"]')</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+let eles = domFinds('[name="abc"]')</code></pre>
 
 
 
@@ -30250,7 +30367,7 @@ pv.clear()</code></pre>
 
             
 
-            <td class="description last"><p>輸入查詢字串</p></td>
+            <td class="description last"><p>輸入查詢字串，須為非空之CSS選擇器字串</p></td>
         </tr>
 
     
@@ -30276,7 +30393,7 @@ pv.clear()</code></pre>
 
         
 <div class="param-desc">
-    <p>回傳符合之DOM元素集合(document.querySelectorAll之NodeList，非Array，無符合時為空NodeList)</p>
+    <p>回傳符合之DOM元素集合(document.querySelectorAll之NodeList，非Array，無符合時為空NodeList)；query無效、選擇器語法錯誤或無document時回傳空陣列[]，皆可用length與索引存取</p>
 </div>
 
 
@@ -30288,6 +30405,9 @@ pv.clear()</code></pre>
     <dd>
         
 <span class="param-type">NodeList</span>
+|
+
+<span class="param-type">Array</span>
 
 
 
@@ -30856,13 +30976,20 @@ pv.clear()</code></pre>
     <dd class="tag-description"><ul class="dummy"><li><p>前端依照檔案類型或種類回傳input file的accept欄位所用字串
 kind若需使用種類，可選為'docums', 'compress', 'image', 'data'，或複選以陣列儲存傳入
 kind若需使用通用檔案，可使用'common'</p>
+<p>屬查詢類(同domIsFocused)，不拋錯、不輸出console，輸入之處置如下：</p>
+<ol>
+<li>kind未給(undefined)或為'<em>'回傳'</em>'；</li>
+<li>kind非字串亦非有效陣列(null、數字、布林、物件、空陣列[]、只有單一無效元素之陣列如[null]、['']，後兩者由isearr視為空陣列)視為未給(K3)，回傳'*'(不限檔案類型)；含兩個以上元素之陣列屬有效陣列，依第3點處理(如[null, null]無符合回傳''；['', '']之空字串元素會比對到未歸類(group為空字串)之項目，為既有現況)；</li>
+<li>kind為字串或有效陣列時逐一依種類(group)與副檔名(name)取得對應之accept字串，無任何符合(含未知名稱、空字串)回傳''(此為「無符合」，與第2點之「視為未給」不同；accept為''之input不限檔案類型)；</li>
+<li>陣列內之非字串元素視為無符合，不影響其餘元素。</li>
+</ol>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domGetFileAccept.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domGetFileAccept.mjs.html">domGetFileAccept.mjs</a>, <a href="domGetFileAccept.mjs.html#line25">line 25</a>
+        <a href="domGetFileAccept.mjs.html">domGetFileAccept.mjs</a>, <a href="domGetFileAccept.mjs.html#line31">line 31</a>
     </li></ul></dd>
     
 
@@ -30979,7 +31106,7 @@ kind若需使用通用檔案，可使用'common'</p>
                 </td>
             
 
-            <td class="description last"><p>輸入檔案類型或種類字串或陣列</p></td>
+            <td class="description last"><p>輸入檔案類型或種類字串或陣列，非字串亦非有效陣列視為未給，預設'*'</p></td>
         </tr>
 
     
@@ -31005,7 +31132,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
         
 <div class="param-desc">
-    <p>回傳input file的accept欄位所用字串</p>
+    <p>回傳input file的accept欄位所用字串，'*'代表不限，''代表無符合</p>
 </div>
 
 
@@ -31032,7 +31159,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
     
 
-    <h4 class="name" id=".domGetFiles"><span class="type-signature type-signature-static">(static) </span>domGetFiles<span class="signature">(ele, sizeMbLimit<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".domGetFiles"><span class="type-signature type-signature-static">(static) </span>domGetFiles<span class="signature">(ele, sizeMbLimit<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></h4>
 
     
 
@@ -31225,7 +31352,7 @@ kind若需使用通用檔案，可使用'common'</p>
 
         
 <div class="param-desc">
-    <p>回傳檔案陣列</p>
+    <p>回傳物件{ files, errs }，files為檔案陣列(含超過上限者)，errs為以檔案索引為鍵之錯誤訊息物件，超過上限者之訊息為固定字串<code>invalid files[索引]: must be &lt;= sizeMbLimit</code>(不含檔案大小與上限值)，無超過者為{}</p>
 </div>
 
 
@@ -31236,7 +31363,7 @@ kind若需使用通用檔案，可使用'common'</p>
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">Object</span>
 
 
 
@@ -33478,7 +33605,7 @@ ev.on('visible',(visible) => {
 
     
 
-    <h4 class="name" id=".domRemove"><span class="type-signature type-signature-static">(static) </span>domRemove<span class="signature">(inp)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domRemove"><span class="type-signature type-signature-static">(static) </span>domRemove<span class="signature">(inp)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
@@ -33489,13 +33616,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端找尋DOM元素並刪除</p>
+<p>回傳布林值表示是否有元素被移除：已脫離DOM(無父節點)之元素、非元素亦非字串之輸入、選擇器語法錯誤、無符合元素皆不動作、不拋錯，回傳false；輸入為選擇器字串時，符合之元素各自移除，至少移除一個回傳true</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domRemove.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domRemove.mjs.html">domRemove.mjs</a>, <a href="domRemove.mjs.html#line20">line 20</a>
+        <a href="domRemove.mjs.html">domRemove.mjs</a>, <a href="domRemove.mjs.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -33542,7 +33670,14 @@ ev.on('visible',(visible) => {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet ele = document.querySelector('#id')domRemove(ele)</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+let ele = document.querySelector('#id')
+domRemove(ele)
+// => true
+
+domRemove(ele)
+// => false (已脫離DOM)</code></pre>
 
 
 
@@ -33614,6 +33749,29 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-returns">Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>回傳是否有元素被移除，true為至少移除一個元素，其餘(含元素已脫離DOM、輸入無效、無符合元素)皆為false</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -33633,15 +33791,16 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端針對指定DOM上展示由markdown轉出的心智圖</p>
-<p>本函數不打包markmap亦不動態加載，使用端須先載入markmap(d3、markmap-view與markmap-lib之script，載入後掛於全域markmap)，ele有效而未載入時本函數會拋TypeError
+<p>本函數不打包markmap亦不動態加載，使用端須先載入markmap(d3、markmap-view與markmap-lib之script，載入後掛於全域markmap)，輸入有效而未載入時本函數拋Error('invalid markmap: must be loaded as a global object with Transformer and Markmap')
 瀏覽器載入script之寫法見README之Installation，使用npm搭配打包工具者須自行引入markmap-lib與markmap-view，並使全域markmap至少含Transformer、Markmap、loadCSS、loadJS(本函數所取用之欄位)</p>
+<p>失敗一律同步拋Error(固定訊息、不含輸入值、先於任何DOM變動，不回傳被reject之Promise，輸出型別恆為物件)：ele非元素為'invalid ele: must be an element'，markdown非字串(空字串合法)為'invalid markdown: must be a string'，未載入markmap為'invalid markmap: …'；檢測順序為ele、markdown、markmap</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domRenderMarkdownMind.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domRenderMarkdownMind.mjs.html">domRenderMarkdownMind.mjs</a>, <a href="domRenderMarkdownMind.mjs.html#line55">line 55</a>
+        <a href="domRenderMarkdownMind.mjs.html">domRenderMarkdownMind.mjs</a>, <a href="domRenderMarkdownMind.mjs.html#line58">line 58</a>
     </li></ul></dd>
     
 
@@ -33751,7 +33910,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入元素</p></td>
+            <td class="description last"><p>輸入元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -33787,7 +33946,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入markdown字串</p></td>
+            <td class="description last"><p>輸入markdown字串，非字串則拋錯，空字串合法</p></td>
         </tr>
 
     
@@ -33827,7 +33986,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，預設{}</p></td>
+            <td class="description last"><p>輸入設定物件，預設{}(目前無使用之鍵)</p></td>
         </tr>
 
     
@@ -33897,7 +34056,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domRipple.mjs.html">domRipple.mjs</a>, <a href="domRipple.mjs.html#line33">line 33</a>
+        <a href="domRipple.mjs.html">domRipple.mjs</a>, <a href="domRipple.mjs.html#line35">line 35</a>
     </li></ul></dd>
     
 
@@ -34007,7 +34166,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入dom</p></td>
+            <td class="description last"><p>輸入dom，非元素則不動作(不拋錯)</p></td>
         </tr>
 
     
@@ -34043,7 +34202,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入dom點擊事件</p></td>
+            <td class="description last"><p>輸入dom點擊事件，須為物件且clientX與clientY為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、布林、包裝物件皆非有效數字)，判定通過後以cdbl轉為數字再使用；否則拋出Error('invalid event: must be an event object with valid clientX and clientY')，訊息不含輸入值，先於任何DOM變動(不改寫ele.style)；ele與event皆無效時ele優先(不動作、不拋錯)</p></td>
         </tr>
 
     
@@ -34314,13 +34473,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端平滑捲動至元素，讓指定元素出現在可視範圍中，為自動捲動父容器</p>
+<p>opt逐鍵檢測(使用者2026-11-16/主控W-05)：只取behavior、block、inline三個鍵，其餘未知鍵不轉交給原生scrollIntoView；各鍵只認原始字串且為原生值域之成員，非預期(null、非字串、包裝物件、值域外之字串如'SMOOTH'、讀取拋錯)視為未給(K3)：behavior改用預設'smooth'，block與inline不傳(由瀏覽器用其預設'start'與'nearest')，不報錯</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollIntoView.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domScrollIntoView.mjs.html">domScrollIntoView.mjs</a>, <a href="domScrollIntoView.mjs.html#line21">line 21</a>
+        <a href="domScrollIntoView.mjs.html">domScrollIntoView.mjs</a>, <a href="domScrollIntoView.mjs.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -34367,7 +34527,10 @@ ev.on('visible',(visible) => {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet ele = document.querySelector('#id')domScrollIntoView(ele, {})</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+let ele = document.querySelector('#id')
+domScrollIntoView(ele, {})</code></pre>
 
 
 
@@ -34430,7 +34593,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入Element元素</p></td>
+            <td class="description last"><p>輸入Element元素，非元素則不動作</p></td>
         </tr>
 
     
@@ -34465,12 +34628,158 @@ ev.on('visible',(visible) => {
             
                 <td class="default">
                 
-                    <code>{behavior:'smooth'}</code>
+                    <code>{}</code>
                 
                 </td>
             
 
-            <td class="description last"><p>輸入scrollIntoView的設定物件，預設{behavior:'smooth'}</p></td>
+            <td class="description last"><p>輸入設定物件，非一般物件視為{}，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>behavior</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'smooth'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入捲動方式字串，可為'auto'、'instant'、'smooth'，非預期視為未給，預設'smooth'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>block</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入垂直對齊字串，可為'start'、'center'、'end'、'nearest'，非預期視為未給(瀏覽器預設'start')</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>inline</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入水平對齊字串，可為'start'、'center'、'end'、'nearest'，非預期視為未給(瀏覽器預設'nearest')</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -34511,13 +34820,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端平滑捲動至元素，讓捲動容器元素，捲動到特定座標(left或top)位置</p>
+<p>opt逐鍵檢測(使用者2026-11-16/主控W-05)：只取behavior、left、top三個鍵，其餘未知鍵不轉交給原生scrollTo；behavior只認原始字串且為原生值域之成員，非預期(null、非字串、包裝物件、值域外之字串、讀取拋錯)視為未給(K3)而改用預設'smooth'；left與top須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、布林、包裝物件皆非有效數字)，判定通過後以cdbl轉為數字再使用，非預期視為未給(該軸不捲動，不傳給原生API而被轉成0)，不報錯</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/domScrollTo.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domScrollTo.mjs.html">domScrollTo.mjs</a>, <a href="domScrollTo.mjs.html#line21">line 21</a>
+        <a href="domScrollTo.mjs.html">domScrollTo.mjs</a>, <a href="domScrollTo.mjs.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -34564,7 +34874,10 @@ ev.on('visible',(visible) => {
 
     <h5 class="h5-examples">Example</h5>
     
-    <pre class="prettyprint"><code>need test in browserlet ele = document.querySelector('#id')domScrollTo(ele, { left: 0, top: 100 })</code></pre>
+    <pre class="prettyprint"><code>need test in browser
+
+let ele = document.querySelector('#id')
+domScrollTo(ele, { left: 0, top: 100 })</code></pre>
 
 
 
@@ -34627,7 +34940,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入Element元素</p></td>
+            <td class="description last"><p>輸入Element元素，非元素則不動作</p></td>
         </tr>
 
     
@@ -34662,12 +34975,164 @@ ev.on('visible',(visible) => {
             
                 <td class="default">
                 
-                    <code>{behavior:'smooth'}</code>
+                    <code>{}</code>
                 
                 </td>
             
 
-            <td class="description last"><p>輸入scrollTo的設定物件，預設{behavior:'smooth'}</p></td>
+            <td class="description last"><p>輸入設定物件，非一般物件視為{}，預設{}</p>
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>behavior</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>'smooth'</code>
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入捲動方式字串，可為'auto'、'instant'、'smooth'，非預期視為未給，預設'smooth'</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>left</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入水平捲動座標，單位px，須為有效數字，非預期視為未給(該軸維持現狀)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>top</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+|
+
+<span class="param-type">String</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last"><p>輸入垂直捲動座標，單位px，須為有效數字，非預期視為未給(該軸維持現狀)</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -34859,7 +35324,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入值字串或數字</p></td>
+            <td class="description last"><p>輸入值字串或數字，空字串''為合法值(用於布林屬性，如disabled、hidden，設為空字串即屬性存在)，非字串亦非數字則不動作</p></td>
         </tr>
 
     
@@ -34885,7 +35350,7 @@ ev.on('visible',(visible) => {
 
         
 <div class="param-desc">
-    <p>回傳屬性值</p>
+    <p>回傳屬性值(val為''時回傳''，與屬性不存在之null不同)，ele非元素、attr非非空字串、val無效或設定失敗時回傳null</p>
 </div>
 
 
@@ -35039,7 +35504,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入圖片元素</p></td>
+            <td class="description last"><p>輸入圖片元素，非元素則reject固定字串'invalid eleImg: must be an element'</p></td>
         </tr>
 
     
@@ -35079,7 +35544,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入元素內含有多圖片元素，預設null</p></td>
+            <td class="description last"><p>輸入元素內含有多圖片元素，須為元素，非預期之輸入(非元素，含undefined、null、字串、數字、物件等)視為未給而改用預設null(單圖模式)，不reject；為元素但其內無任何img則reject固定字串'invalid eleGroup: must contain at least one img element'，預設null</p></td>
         </tr>
 
     
@@ -35295,7 +35760,7 @@ ev.on('visible',(visible) => {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳close訊息，reject回傳錯誤訊息</p>
+    <p>回傳Promise，resolve回傳close訊息，reject回傳固定錯誤訊息字串(不含輸入值)</p>
 </div>
 
 
@@ -36407,7 +36872,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入時間字串，可不提供，時間視窗預設為今日，預設為''</p></td>
+            <td class="description last"><p>輸入時間字串，可不提供，時間視窗預設為今日，預設為''；type為'date'時須為'YYYY-MM-DD'，否則須為'YYYY-MM-DDTHH:mm:ss'，不合者視為未給(輸入框不帶預設值)，不報錯</p></td>
         </tr>
 
     
@@ -36510,7 +36975,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入觸發點擊Element元素，若不給則使用document.activeElement取得，預設為null</p></td>
+            <td class="description last"><p>輸入觸發點擊Element元素，須已接於DOM下，若不給或非元素則使用document.activeElement取得，預設為null；兩者皆非可用之元素(非元素或未接於DOM下)時不建立輸入框、不變動DOM，回傳被reject之Promise</p></td>
         </tr>
 
     
@@ -36550,7 +37015,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入時間類型字串，可選為'datetime-local'與'date'，預設為'datetime-local'</p></td>
+            <td class="description last"><p>輸入時間類型字串，可選為'datetime-local'與'date'，其餘值視為未給，預設為'datetime-local'</p></td>
         </tr>
 
     
@@ -36623,7 +37088,7 @@ ev.on('visible',(visible) => {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳選擇新時間，無reject</p>
+    <p>回傳Promise，resolve回傳選擇新時間(使用者取消選取時不會resolve)；opt.eleRef與document.activeElement皆非可用之元素時，先於任何DOM變動以固定字串'invalid opt.eleRef: must be an element, or document.activeElement must be an element'(不含輸入值)reject，其餘情形無reject</p>
 </div>
 
 
@@ -36650,7 +37115,7 @@ ev.on('visible',(visible) => {
 
     
 
-    <h4 class="name" id=".domTooltip"><span class="type-signature type-signature-static">(static) </span>domTooltip<span class="signature">(ele, content, option<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".domTooltip"><span class="type-signature type-signature-static">(static) </span>domTooltip<span class="signature">(ele, content<span class="signature-attributes">opt</span>, option<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -36667,7 +37132,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domTooltip.mjs.html">domTooltip.mjs</a>, <a href="domTooltip.mjs.html#line24">line 24</a>
+        <a href="domTooltip.mjs.html">domTooltip.mjs</a>, <a href="domTooltip.mjs.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -36777,7 +37242,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入DOM元素</p></td>
+            <td class="description last"><p>輸入DOM元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -36800,6 +37265,8 @@ ev.on('visible',(visible) => {
             
                 <td class="attributes">
                 
+                    &lt;optional><br>
+                
 
                 
 
@@ -36813,7 +37280,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入提示html訊息字串，若不給則使用ele.innerHTML</p></td>
+            <td class="description last"><p>輸入提示html訊息字串，若不給(undefined、null)或為空字串則使用ele.innerHTML，給了而非字串則拋錯</p></td>
         </tr>
 
     
@@ -36873,6 +37340,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>ele非元素拋出Error('invalid ele: must be an element')，content給了而非字串拋出Error('invalid content: must be a string')，皆先於任何DOM變動(不設tippystate屬性、不建立提示、不起計時器)，訊息不含輸入值</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -36900,7 +37397,7 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="domTriggerEvent.mjs.html">domTriggerEvent.mjs</a>, <a href="domTriggerEvent.mjs.html#line63">line 63</a>
+        <a href="domTriggerEvent.mjs.html">domTriggerEvent.mjs</a>, <a href="domTriggerEvent.mjs.html#line65">line 65</a>
     </li></ul></dd>
     
 
@@ -36994,7 +37491,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入Element元素</p></td>
+            <td class="description last"><p>輸入Element元素，非元素則拋錯</p></td>
         </tr>
 
     
@@ -37018,7 +37515,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入事件名稱字串</p></td>
+            <td class="description last"><p>輸入事件名稱字串，須為非空之原始字串，否則拋錯</p></td>
         </tr>
 
     
@@ -37038,6 +37535,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>ele非元素拋出Error('invalid ele: must be an element')，eventName非非空字串拋出Error('invalid eventName: must be a non-empty string')，皆先於建立事件與派發(不觸發任何事件)，訊息不含輸入值；兩者皆無效時先報ele</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -37590,13 +38117,14 @@ ev.on('visible',(visible) => {
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>下載資料成為Excel檔案，前後端都可用</p>
 <p>本函數為async function，前端觸發瀏覽器下載，後端寫入檔案(fileName可含路徑)</p>
+<p>失敗一律resolve { error }(不reject、不拋錯)，error為固定字串、不含輸入值(V19、V20；原console.log帶出fileName與整份data，含NUL之檔名與寫檔失敗以Node原生錯誤reject而回顯路徑)：fileName非非空字串為'invalid fileName: must be a non-empty string'，fileName含NUL字元為'invalid fileName: must not contain a NUL character'，data非陣列為'invalid data: must be an array'，寫檔失敗為'operation failed (code &lt;錯誤碼&gt;)'(如ENOENT、EPERM，不帶路徑)；轉換失敗回傳下游之{ error }；檢測順序為fileName、data，且先於任何轉換與寫檔</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line41">line 41</a>
+        <a href="downloadExcelFileFromData.mjs.html">downloadExcelFileFromData.mjs</a>, <a href="downloadExcelFileFromData.mjs.html#line44">line 44</a>
     </li></ul></dd>
     
 
@@ -37846,13 +38374,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端下載base64資料成為檔案</p>
+<p>會觸發瀏覽器下載(改動畫面)，輸入無效即同步拋Error(固定訊息、不含輸入值、先於建立元素與觸發下載)：fileName非非空字串為'invalid fileName: must be a non-empty string'，b64非非空字串為'invalid b64: must be a non-empty string'；檢測順序為fileName、b64，且先於環境檢查；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromB64.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadFileFromB64.mjs.html">downloadFileFromB64.mjs</a>, <a href="downloadFileFromB64.mjs.html#line20">line 20</a>
+        <a href="downloadFileFromB64.mjs.html">downloadFileFromB64.mjs</a>, <a href="downloadFileFromB64.mjs.html#line23">line 23</a>
     </li></ul></dd>
     
 
@@ -37946,7 +38475,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入檔名字串</p></td>
+            <td class="description last"><p>輸入檔名字串，須為非空字串</p></td>
         </tr>
 
     
@@ -37970,7 +38499,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入base64資料字串</p></td>
+            <td class="description last"><p>輸入base64資料字串，須為非空字串</p></td>
         </tr>
 
     
@@ -37990,6 +38519,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>fileName或b64非非空字串，見上</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -38011,13 +38570,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端下載Blob資料成為檔案</p>
+<p>會觸發瀏覽器下載(改動畫面)，輸入無效即同步拋Error(固定訊息、不含輸入值、先於建立網址、建立元素與觸發下載)：fileName非非空字串為'invalid fileName: must be a non-empty string'，blob非Blob(File亦為Blob)為'invalid blob: must be a Blob'；檢測順序為fileName、blob，且先於環境檢查；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromBlob.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadFileFromBlob.mjs.html">downloadFileFromBlob.mjs</a>, <a href="downloadFileFromBlob.mjs.html#line65">line 65</a>
+        <a href="downloadFileFromBlob.mjs.html">downloadFileFromBlob.mjs</a>, <a href="downloadFileFromBlob.mjs.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -38111,7 +38671,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入檔名字串</p></td>
+            <td class="description last"><p>輸入檔名字串，須為非空字串</p></td>
         </tr>
 
     
@@ -38135,7 +38695,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入資料Blob</p></td>
+            <td class="description last"><p>輸入資料Blob，須為Blob或File</p></td>
         </tr>
 
     
@@ -38155,6 +38715,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>fileName非非空字串或blob非Blob，見上</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -38176,13 +38766,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端下載text資料成為utf-8(含BOM)檔案</p>
+<p>會觸發瀏覽器下載(改動畫面)，必須參數無效即同步拋Error(固定訊息、不含輸入值、先於建立Blob與觸發下載；與downloadFileFromB64、downloadFileFromBlob、downloadFileFromU8Arr同一通道)：fileName非非空字串為'invalid fileName: must be a non-empty string'，ccont非字串(空字串合法)為'invalid ccont: must be a string'；檢測順序為fileName、ccont，且先於環境檢查；withBOM為帶預設值之位置參數(視同opt鍵)，非布林視為未給而改用預設true、照常下載(原為放棄下載)；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromText.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadFileFromText.mjs.html">downloadFileFromText.mjs</a>, <a href="downloadFileFromText.mjs.html#line26">line 26</a>
+        <a href="downloadFileFromText.mjs.html">downloadFileFromText.mjs</a>, <a href="downloadFileFromText.mjs.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -38292,7 +38883,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入檔名字串</p></td>
+            <td class="description last"><p>輸入檔名字串，須為非空字串</p></td>
         </tr>
 
     
@@ -38328,7 +38919,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入內容字串</p></td>
+            <td class="description last"><p>輸入內容字串，須為字串，可為空字串</p></td>
         </tr>
 
     
@@ -38368,7 +38959,7 @@ ev.on('visible',(visible) => {
                 </td>
             
 
-            <td class="description last"><p>輸入是否添加BOM，預設true</p></td>
+            <td class="description last"><p>輸入是否添加BOM，須為布林值，非布林視為未給，預設true</p></td>
         </tr>
 
     
@@ -38388,6 +38979,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>fileName非非空字串或ccont非字串，見上</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -38409,13 +39030,14 @@ ev.on('visible',(visible) => {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端下載binary資料成為檔案</p>
+<p>會觸發瀏覽器下載(改動畫面)，輸入無效即同步拋Error(固定訊息、不含輸入值、先於轉成Blob與觸發下載；與downloadFileFromB64、downloadFileFromBlob、downloadFileFromText同一通道)：fileName非非空字串為'invalid fileName: must be a non-empty string'，u8a非Uint8Array為'invalid u8a: must be a Uint8Array'；檢測順序為fileName、u8a，且先於環境檢查；非瀏覽器環境(無window)有效輸入時不動作、不拋錯(輸出'no window'，維持原行為)</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/downloadFileFromU8Arr.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="downloadFileFromU8Arr.mjs.html">downloadFileFromU8Arr.mjs</a>, <a href="downloadFileFromU8Arr.mjs.html#line23">line 23</a>
+        <a href="downloadFileFromU8Arr.mjs.html">downloadFileFromU8Arr.mjs</a>, <a href="downloadFileFromU8Arr.mjs.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -38509,7 +39131,7 @@ ev.on('visible',(visible) => {
 
             
 
-            <td class="description last"><p>輸入檔名字串</p></td>
+            <td class="description last"><p>輸入檔名字串，須為非空字串</p></td>
         </tr>
 
     
@@ -38553,6 +39175,36 @@ ev.on('visible',(visible) => {
 
 
 
+<h5 class="h5-throws">Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc usertext">
+        <p>fileName非非空字串或u8a非Uint8Array，見上</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl class="param-type">
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type">Error</span>
+
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
 
 
 
@@ -46595,13 +47247,14 @@ if (true) {
     
     <dt class="tag-description">Description:</dt>
     <dd class="tag-description"><ul class="dummy"><li><p>前端input檔案物件陣列轉資料物件陣列，各檔案將轉為Base64字串</p>
+<p>失敗一律以固定字串reject(不同步throw、不含輸入值、不外洩原生錯誤)：files非陣列為'invalid files: must be an array of File'，陣列內有非File元素(含Blob、null、undefined、空洞)為'invalid files[i]: must be a File'(i為第一個無效元素之索引)，讀取或轉換失敗為'can not convert files to base64'；空陣列為合法輸入，resolve空陣列</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/files2data.test.mjs">Github</a></p></li></ul></dd>
     
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="files2data.mjs.html">files2data.mjs</a>, <a href="files2data.mjs.html#line19">line 19</a>
+        <a href="files2data.mjs.html">files2data.mjs</a>, <a href="files2data.mjs.html#line22">line 22</a>
     </li></ul></dd>
     
 
@@ -46695,7 +47348,7 @@ if (true) {
 
             
 
-            <td class="description last"><p>輸入File陣列</p></td>
+            <td class="description last"><p>輸入File陣列，元素須為File(Blob無name，不收)</p></td>
         </tr>
 
     
@@ -46721,7 +47374,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳File的資料物件陣列，各檔案將轉為Base64字串</p>
+    <p>回傳Promise，resolve回傳File的資料物件陣列，各檔案將轉為Base64字串，各項含name、size、type、b64；reject回傳固定字串，見上述</p>
 </div>
 
 
@@ -135277,7 +135930,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 17 2026 10:33:44 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 18 2026 07:17:41 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>
