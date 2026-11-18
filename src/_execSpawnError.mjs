@@ -1,5 +1,6 @@
 import fs from 'fs'
 import isestr from './isestr.mjs'
+import { fsErrCode } from './_fsErrMsg.mjs'
 
 
 //execProcess、execCli、execCliSession回報「無法啟動子進程」之共用核心, 獨立成模組以便直接餵錯誤物件做單元測試
@@ -12,6 +13,7 @@ import isestr from './isestr.mjs'
 //execSpawnError, 輸入錯誤物件, 回傳{ code, message }, 缺code時為'UNKNOWN', 缺message時以code代之, 任何輸入皆不拋錯
 //  opt.cwd: 子進程之工作目錄; node以不存在(或非資料夾)之cwd spawn時回ENOENT而訊息指向執行檔, 故ENOENT且cwd非既存資料夾時改寫訊息指明cwd(碼仍為ENOENT, 分類不變)
 //  cwd之判定以stat跟隨連結(junction、符號連結指向既存資料夾者為有效之cwd); 不用fsIsFolder, 其以lstat判定且連結一律為假, 會把有效之junction誤報為cwd不存在
+//  opt.fixed: 為true時, 帶錯誤碼之Node原生錯誤(真Error且code為英數字與底線之字串, 不含本套件E_起頭者, 判定同_fsErrMsg之fsErrCode)其message改為固定詞彙'operation failed (code ENOENT)', 不含執行檔路徑、參數名稱與環境變數之值(V20, R-EXEC-FAIL-01規則15; 同fs家族之W-23作法); 無錯誤碼者(呼叫端自拋之非Error值、已撤銷之Proxy等)與cwd不存在之說明依舊; 未給或非true時行為不變(execCli、execCliSession不傳)
 function execSpawnError(err, opt = {}) {
     let code = ''
     let message = ''
@@ -43,6 +45,17 @@ function execSpawnError(err, opt = {}) {
         }
         if (!bCwd) {
             return { code, message: `cwd is not an existing folder: ${cwd}` }
+        }
+    }
+    let fixed = false
+    try {
+        fixed = opt.fixed === true
+    }
+    catch (e) {}
+    if (fixed) {
+        let c = fsErrCode(err)
+        if (c !== null) {
+            return { code: c, message: `operation failed (code ${c})` }
         }
     }
     if (!isestr(code)) {

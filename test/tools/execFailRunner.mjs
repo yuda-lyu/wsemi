@@ -987,7 +987,7 @@ let cases = {
         return out
     },
 
-    //R-EXEC-FAIL-01之13: execProcess之opt之getter拋出非Error之值時reject 'opt is not readable: <該值之文字>'; prog不可讀而拋出字串時'spawn[UNKNOWN]:\n<該字串>'
+    //R-EXEC-FAIL-01之13: execProcess之opt之getter拋出非Error之值時reject 'opt is not readable: <該值之文字>'; prog為getter拋字串之Proxy時(ws492f起)為'invalid prog: must be a non-empty string'(不觸及其內容)
     procThrownValues: async () => {
         let execProcess = await imp('execProcess')
         let out = {}

@@ -5,6 +5,8 @@ import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import execProcess from '../src/execProcess.mjs'
 import { runExecFail } from './tools/execFailRun.mjs'
+import { runChildCase } from './tools/runChildCase.mjs'
+import { resetWarned, capture } from './tools/numOptKit.mjs'
 import { useFakeClock } from './tools/timeKit.mjs'
 import { revoked, thrower } from './tools/codecThrown.mjs'
 import { withGuard, realSleep, reapTree, recTrace, fiveOnTrace, collectUnhandled, gateScript, mkGate, finishCase } from './tools/execTraceKit.mjs'
@@ -121,9 +123,9 @@ describe(`execProcess`, function() {
             err = e
         }
         // console.log('nonexistent err', err)
-        //P02a: 無法啟動子程序時reject字串`spawn[錯誤碼]:\n訊息`, 訊息含程式名, 不含args
-        assert.strict.deepStrictEqual(typeof err === 'string' && err.startsWith('spawn[ENOENT]:\n'), true)
-        assert.strict.deepStrictEqual(err.includes('non_existent_command_xyz_12345'), true)
+        //P02a: 無法啟動子程序時reject字串`spawn[錯誤碼]:\n訊息`; ws492f(V20): Node原生錯誤之訊息改固定詞彙加錯誤碼, 不含程式名與args
+        assert.strict.deepStrictEqual(err, 'spawn[ENOENT]:\noperation failed (code ENOENT)')
+        assert.strict.deepStrictEqual(err.includes('non_existent_command_xyz_12345'), false)
         assert.strict.deepStrictEqual(err.includes('SECRET_ARG_7d1f'), false)
     })
 
@@ -234,16 +236,11 @@ describe(`execProcess`, function() {
         assert.strict.deepStrictEqual(r, 'abcdef\n')
     })
 
-    it(`should reject before spawning when codeCmd is unsupported, in all modes`, async function() {
+    it(`should use the default utf-8 without rejecting when codeCmd is an unsupported encoding, in all modes`, async function() {
+        //ws492f: K3(opt鍵給了非預期之輸入視為未給, 改用預設utf-8, 不報錯、不回顯該標籤); 原為執行前reject並帶標籤
         for (let mode of ['spawn', 'exec', 'execFile']) {
-            let err = null
-            try {
-                await execProcess(mode === 'exec' ? nodeBinQuoted : nodeBin, ['-e', '1'], { mode, codeCmd: 'no-such-encoding' })
-            }
-            catch (e) {
-                err = e
-            }
-            assert.strict.deepStrictEqual(typeof err === 'string' && err.includes('no-such-encoding'), true, mode)
+            let r = await execProcess(mode === 'exec' ? nodeBinQuoted : nodeBin, ['-e', sUtf8], { mode, codeCmd: 'no-such-encoding' })
+            assert.strict.deepStrictEqual(r, '無', mode)
         }
     })
 
@@ -438,12 +435,11 @@ describe(`execProcess`, function() {
     }
 
     for (let [name, opt] of [['spawn', {}], ['execFile', { mode: 'execFile' }], ['spawn with codeCmd auto', { codeCmd: 'auto' }]]) {
-        it(`should reject a string spawn[ENOENT] with the program path but without args for a missing program (${name})`, async function() {
+        it(`should reject a string spawn[ENOENT] with the fixed wording and the code but without the program path or args for a missing program (${name})`, async function() {
             let err = await catchErr(() => execProcess(progMissing, ['a', SA], opt))
-            //P02a、P02f
-            assert.strict.deepStrictEqual(typeof err, 'string')
-            assert.strict.deepStrictEqual(err.startsWith('spawn[ENOENT]:\n'), true)
-            assert.strict.deepStrictEqual(err.includes('zz_no_such_prog_123'), true)
+            //P02a、P02f; ws492f(V20): 原生錯誤訊息改固定詞彙加錯誤碼, 不含程式路徑
+            assert.strict.deepStrictEqual(err, 'spawn[ENOENT]:\noperation failed (code ENOENT)')
+            assert.strict.deepStrictEqual(err.includes('zz_no_such_prog_123'), false)
             assert.strict.deepStrictEqual(err.includes(SA), false)
         })
     }
@@ -455,16 +451,15 @@ describe(`execProcess`, function() {
             assert.strict.deepStrictEqual(typeof err, 'string')
             assert.strict.deepStrictEqual(err.startsWith(process.platform === 'win32' ? 'spawn[ENAMETOOLONG]:\n' : 'spawn['), true)
             assert.strict.deepStrictEqual(err.includes(SA), false)
+            //ws492f(V20): 原生錯誤訊息改固定詞彙加錯誤碼
+            assert.strict.deepStrictEqual(/^spawn\[(\w+)\]:\noperation failed \(code \1\)$/.test(err), true, err)
         })
 
-        it(`should reject spawn[ERR_INVALID_ARG_VALUE] naming the argument but not its value for a null byte (${mode})`, async function() {
+        it(`should reject the fixed message naming the argument index but not its value for a null byte, before spawning (${mode})`, async function() {
             let err = await catchErr(() => execProcess(nodeBin, ['-e', '1', argNul], { mode }))
-            //P02c、P02d: node訊息之「Received 值」須去除, exec模式之參數名為command
-            assert.strict.deepStrictEqual(typeof err, 'string')
-            assert.strict.deepStrictEqual(err.startsWith('spawn[ERR_INVALID_ARG_VALUE]:\n'), true)
-            assert.strict.deepStrictEqual(err.includes(mode === 'exec' ? `'command'` : `'args[2]'`), true)
+            //P02c、P02d; ws492f: 先於啟動子程序由本函數檢測(原為node之spawn[ERR_INVALID_ARG_VALUE]), 訊息只帶元素索引不帶值(V19、V20)
+            assert.strict.deepStrictEqual(err, 'invalid args[2]: must not contain a NUL character')
             assert.strict.deepStrictEqual(err.includes(SA), false)
-            assert.strict.deepStrictEqual(err.includes('Received'), false)
         })
     }
 
@@ -483,20 +478,18 @@ describe(`execProcess`, function() {
         assert.strict.deepStrictEqual(o.e.includes(SA), false)
     })
 
-    it(`should reject a string when prog is an empty string or not a string`, async function() {
+    it(`should reject the fixed message when prog is an empty string or not a string`, async function() {
         let err1 = await catchErr(() => execProcess('', ['-e', '1']))
         let err2 = await catchErr(() => execProcess(undefined, ['-e', '1']))
-        //P02e
-        assert.strict.deepStrictEqual([typeof err1, typeof err2], ['string', 'string'])
-        assert.strict.deepStrictEqual(err1.startsWith('spawn[ERR_INVALID_ARG_VALUE]:\n'), true)
-        assert.strict.deepStrictEqual(err2.startsWith('spawn[ERR_INVALID_ARG_TYPE]:\n'), true)
+        //P02e; ws492f: 本函數先於啟動檢測(原為node之spawn[ERR_INVALID_ARG_VALUE|TYPE]), 三種模式一致(見〈prog與args之輸入檢測〉)
+        assert.strict.deepStrictEqual([err1, err2], ['invalid prog: must be a non-empty string', 'invalid prog: must be a non-empty string'])
     })
 
-    it(`should reject a string when prog is quoted in spawn mode`, async function() {
+    it(`should reject the fixed message without the program value when prog is quoted in spawn mode`, async function() {
         let err = await catchErr(() => execProcess(`"${nodeBin}"`, ['-e', '1']))
-        //P07: spawn模式prog含引號時reject說明字串, 字誤已修
-        assert.strict.deepStrictEqual(typeof err, 'string')
-        assert.strict.deepStrictEqual(err.includes('does not need to add quotes'), true)
+        //P07: spawn模式prog含引號時reject固定說明字串(ws492f: 不回顯prog)
+        assert.strict.deepStrictEqual(err, 'invalid prog: must not start or end with a quote in spawn mode')
+        assert.strict.deepStrictEqual(err.includes(nodeBin), false)
     })
 
     for (let [name, opt] of [['spawn', {}], ['execFile', { mode: 'execFile' }], ['exec', { mode: 'exec' }], ['spawn with codeCmd auto', { codeCmd: 'auto' }]]) {
@@ -534,8 +527,8 @@ describe(`execProcess`, function() {
             })
             rs.push(await catchErr(() => p))
         }
-        //P11c
-        assert.strict.deepStrictEqual(rs, new Array(5).fill('args is not an array or string'))
+        //P11c; ws492f: V19格式
+        assert.strict.deepStrictEqual(rs, new Array(5).fill('invalid args: must be an array or a string'))
     })
 
     //--- 觀察回調(opt.onTrace): 事件語意與P3/P4(規則見sgud/rule/rulebook_timer.md之R-TRACE-01) ---
@@ -661,17 +654,24 @@ describe(`execProcess`, function() {
             assert.strict.deepStrictEqual(a.tr.types(), ['spawn', 'data', 'settle'])
         })
 
-        it(`should notify only settle when the call ends before spawning (args, codeCmd, quoted prog, synchronous spawn failure)`, async function() {
-            //JSDoc onTrace: settle之reason為'args'(args型別不符)、'codeCmd'(編碼不支援)、'prog'(spawn模式prog含引號)、'spawn'(無法啟動), 此類結束早於子程序建立, 無spawn事件
+        it(`should notify only settle when the call ends before spawning (args, prog, quoted prog, synchronous spawn failure)`, async function() {
+            //JSDoc onTrace: settle之reason為'args'(args無效: 型別不符、元素無效、含NUL)、'prog'(prog無效: 非有效字串、含NUL、spawn模式含引號)、'spawn'(無法啟動), 此類結束早於子程序建立, 無spawn事件
+            //ws492f: 'codeCmd'已移除(不支援之編碼依K3改用預設, 不再於執行前reject), 含NUL之args改為'args'(由本函數先於spawn檢測)
             let a = await run(nodeBin, 123, {})
-            let b = await run(nodeBin, ['-e', '1'], { codeCmd: 'no-such-encoding' })
+            let b = await run(undefined, ['-e', '1'], {})
             let c = await run(`"${nodeBin}"`, ['-e', '1'], {})
             let d = await run(nodeBin, ['-e', '1', 'x\u0000y'], {})
+            let e = await run(nodeBin, ['-e', '1', undefined], {})
+            let f = await run('a\u0000b', ['-e', '1'], {})
+            let g = await run(nodeBin, ['-e', '1'], { cwd: new String(process.cwd()) }) // eslint-disable-line no-new-wrappers -- 包裝字串之cwd不拆包, node拒收而同步拋錯
             let one = (reason) => [{ type: 'settle', ok: false, reason, code: null }]
             assert.strict.deepStrictEqual([a.r.s, a.tr.events], ['reject', one('args')])
-            assert.strict.deepStrictEqual([b.r.s, b.tr.events], ['reject', one('codeCmd')])
+            assert.strict.deepStrictEqual([b.r.s, b.tr.events], ['reject', one('prog')])
             assert.strict.deepStrictEqual([c.r.s, c.tr.events], ['reject', one('prog')])
-            assert.strict.deepStrictEqual([d.r.s, d.tr.events], ['reject', one('spawn')])
+            assert.strict.deepStrictEqual([d.r.s, d.tr.events], ['reject', one('args')])
+            assert.strict.deepStrictEqual([e.r.s, e.tr.events], ['reject', one('args')])
+            assert.strict.deepStrictEqual([f.r.s, f.tr.events], ['reject', one('prog')])
+            assert.strict.deepStrictEqual([g.r.s, g.tr.events], ['reject', one('spawn')])
         })
 
         it(`should notify spawn with a null pid and settle once with reason spawn when the program cannot be started, without a second settle from the following close`, async function() {
@@ -680,7 +680,7 @@ describe(`execProcess`, function() {
             for (let opt of [{}, { codeCmd: 'auto' }, { mode: 'execFile' }]) {
                 let { r, tr } = await run(progMissing2, ['a'], opt)
                 assert.strict.deepStrictEqual(r.s, 'reject')
-                assert.strict.deepStrictEqual(r.v.startsWith('spawn[ENOENT]:\n'), true)
+                assert.strict.deepStrictEqual(r.v, 'spawn[ENOENT]:\noperation failed (code ENOENT)')
                 assert.strict.deepStrictEqual(tr.events, [
                     { type: 'spawn', mode: opt.mode || 'spawn', pid: null },
                     { type: 'settle', ok: false, reason: 'spawn', code: null },
@@ -761,7 +761,8 @@ describe(`execProcess`, function() {
             for (let k = 1; k < 5; k++) {
                 assert.strict.deepStrictEqual(got[k], got[0], `variant ${k}`)
             }
-            assert.strict.deepStrictEqual(got[0].map((x) => x.s), ['resolve', 'reject', 'reject', 'reject', 'reject', 'reject', 'reject', 'reject', 'resolve'])
+            //ws492f: e(不支援之codeCmd)依K3改用預設utf-8而resolve(原為reject)
+            assert.strict.deepStrictEqual(got[0].map((x) => x.s), ['resolve', 'reject', 'reject', 'reject', 'resolve', 'reject', 'reject', 'reject', 'resolve'])
             assert.strict.deepStrictEqual([got[0][0].v, got[0][1].v, got[0][6].v, got[0][8].v], ['hello', 'code[2]:\nboom', 'timeout[300ms]:\n', 'u'])
             assert.strict.deepStrictEqual(un, [])
             //紀錄器確有收到事件(spawn、data、settle、timeout、kill)
@@ -774,7 +775,7 @@ describe(`execProcess`, function() {
             let rs = []
             rs.push(await run(nodeBin, ['-e', 'process.stdout.write("a");process.stderr.write("b")'], {})) //spawn、data、settle
             rs.push(await run(nodeBin, ['-e', 'setTimeout(()=>{},30000)'], { timeout: 300 })) //timeout、kill
-            rs.push(await run(nodeBin, ['-e', '1', 'x\u0000y'], {})) //settle(spawn)
+            rs.push(await run(nodeBin, ['-e', '1', 'x\u0000y'], {})) //settle(args)
             rs.push(await runGated(`fields-switch`, `o:b54c`, { codeCmd: 'auto' }, [])) //switch
             let trs = rs.map((x) => x.tr)
             let all = trs.flatMap((t) => t.events)
@@ -811,14 +812,14 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual([status, stderr.includes('cb boom')], [1, true], `status=${status}, signal=${signal}, stderr=${stderr.slice(0, 300)}`)
     })
 
-    it(`execProcess: opt之getter拋錯、opt本身或其選項值、args、prog為已撤銷之Proxy時以reject說明字串回報, 不同步拋錯、不成為未捕捉例外 [R-EXEC-FAIL-01之5、13]`, function() {
+    it(`execProcess: opt之getter拋錯、opt本身或其選項值、args、prog為已撤銷之Proxy時以reject說明字串回報, 不同步拋錯、不成為未捕捉例外 [R-EXEC-FAIL-01之5、13、15]`, function() {
         let { r } = runExecFail('inputUnreadableProc')
         assert.strict.deepStrictEqual(r.out, {
             procGetter: { s: 'reject', v: 'opt is not readable: getter boom codeCmd' }, //規則13: reject 'opt is not readable: <訊息>'
             procOptRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 同上(opt本身不可讀)
-            procArgsRevoked: { s: 'reject', v: 'args is not an array or string' }, //規則13、5: args判型拋錯視同型別不符, reject且不帶值
-            procProgRevoked: { s: 'reject', v: 'spawn[UNKNOWN]:' }, //規則13: prog不可讀為'spawn[UNKNOWN]:\n<訊息>'(取首行)
-            procProgRevokedAuto: { s: 'reject', v: 'spawn[UNKNOWN]:' }, //規則13: 同上, codeCmd為auto(於取得系統字碼頁後啟動)亦同
+            procArgsRevoked: { s: 'reject', v: 'invalid args: must be an array or a string' }, //規則13、5: args判型拋錯視同型別不符, reject且不帶值(ws492f: V19格式)
+            procProgRevoked: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //規則13: ws492f起prog須為原始字串, 已撤銷之Proxy(typeof為object)即無效, 不再觸及其內容(原為'spawn[UNKNOWN]:\n<訊息>')
+            procProgRevokedAuto: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //同上, codeCmd為auto亦同(且先於取系統字碼頁之chcp)
             procCbStdoutRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 回調於入口判型一次, 不可讀者為opt不可讀
             uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
         })
@@ -838,7 +839,7 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不產生未處理之rejection
     })
 
-    it(`execProcess: opt之getter拋出非Error之值(null、undefined、字串)或prog不可讀而拋出字串時, reject字串保留拋出值之文字、不同步拋錯 [R-EXEC-FAIL-01之13]`, function() {
+    it(`execProcess: opt之getter拋出非Error之值(null、undefined、字串)時, reject字串保留拋出值之文字、不同步拋錯; prog為getter拋字串之Proxy者為無效prog(不觸及其內容) [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('procThrownValues')
         //規則13: execProcess reject 'opt is not readable: <訊息>'(訊息取getErrorMessage, 為空退_errToStr)
         let x = (m) => ({ s: 'reject', v: `opt is not readable: ${m}` })
@@ -846,7 +847,7 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             null: x('null'), //規則13: 拋出null
             undefined: x('undefined'), //規則13: 拋出undefined
             string: x('thrown-x'), //規則13: 拋出字串
-            progThrowsString: { s: 'reject', v: 'spawn[UNKNOWN]:\nthrown-x' }, //規則13: prog不可讀為'spawn[UNKNOWN]:\n<訊息>'
+            progThrowsString: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //ws492f: prog須為原始字串, Proxy(typeof為object)即無效, 不再觸及其內容(原為'spawn[UNKNOWN]:\nthrown-x')
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外
     })
@@ -941,6 +942,241 @@ describe(`execProcess opt.cwd`, function() {
         let r = await execProcess(process.execPath, ['-e', js], opt).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
         //R-EXEC-FAIL-01規則13: opt之選項值不可讀時reject 'opt is not readable: <訊息>'
         assert.strict.deepStrictEqual(r, { s: 'reject', v: 'opt is not readable: cwd getter boom' })
+    })
+
+})
+
+
+//prog與args之輸入檢測(R-EXEC-ARG-01; 排程第492項第5批ws492f; 規格dspec〈輸入參數之檢測機制〉K1~K5、K9、V17、V19、V20、§5.1)
+//  驗法: 子行程以攔截替身取代child_process之spawn、exec、execFile(test/tools/execArgGuardRunner.mjs; 替身不呼叫真實函數, 任何輸入皆不可能真的建立程序),
+//  「先於任何程序之建立」以攔截記錄為空判定(含取系統字碼頁之chcp), 並以有效輸入之陽性對照證明替身確實計到呼叫
+describe(`execProcess prog與args之輸入檢測(R-EXEC-ARG-01)`, function() {
+
+    let runner = fileURLToPath(new URL('./tools/execArgGuardRunner.mjs', import.meta.url))
+    let runCase = (name) => {
+        let { r } = runChildCase(runner, name, { timeout: 120000 })
+        assert.strict.deepStrictEqual(Array.isArray(r.out), true, JSON.stringify(r.out).slice(0, 300))
+        return r.out
+    }
+    let SECRET = 'SECRET_7d1f'
+    let nodeBin = process.execPath
+
+    //軸: 5種模式組合(spawn、exec、execFile、spawn+auto、exec+auto) × 各無效值
+    let nModes = 5
+
+    it(`should reject the fixed message of prog and create no process for any invalid prog, in all modes (prog must be a non-empty primitive string without NUL)`, function() {
+        //K2必須參數、K4/K5不轉型(exec模式不得把undefined、null、物件轉成字串當指令)、V17先於任何程序、V19格式、V20不回顯值
+        let cells = runCase('procBad')
+        assert.strict.deepStrictEqual(cells.length, nModes * 19)
+        let bad = []
+        for (let c of cells) {
+            let nul = c.k.endsWith('|nul') || c.k.endsWith('|nulOnly')
+            let want = nul ? 'invalid prog: must not contain a NUL character' : 'invalid prog: must be a non-empty string'
+            if (c.s !== 'reject' || c.v !== want || c.calls.length !== 0) {
+                bad.push(`${c.k}: ${c.s} ${JSON.stringify(c.v)} calls=${JSON.stringify(c.calls)}`)
+            }
+            assert.strict.deepStrictEqual(JSON.stringify(c).includes(SECRET), false, c.k)
+        }
+        assert.strict.deepStrictEqual(bad, [])
+    })
+
+    it(`should reject the fixed message of args with the element index and create no process for any invalid args, in all modes`, function() {
+        //args依宣告之種類檢測: 容器須為陣列或原始字串, 元素須為字串(不含NUL)或有限數字, 字串不含NUL; 訊息只帶索引不帶值; 先於任何程序
+        let cells = runCase('argsBad')
+        assert.strict.deepStrictEqual(cells.length, nModes * (12 + 14 + 3))
+        let bad = []
+        for (let c of cells) {
+            let [, kind, what] = c.k.split('|')
+            let want
+            if (kind === 'container') {
+                want = 'invalid args: must be an array or a string'
+            }
+            else if (kind === 'element') {
+                want = what === 'nul' ? 'invalid args[1]: must not contain a NUL character' : 'invalid args[1]: must be a string or a valid number'
+            }
+            else if (kind === 'string') {
+                want = 'invalid args: must not contain a NUL character'
+            }
+            else if (kind === 'sparse') {
+                want = 'invalid args[0]: must be a string or a valid number'
+            }
+            else {
+                want = 'invalid args: must be an array or a string' //lengthThrows: 讀取拋錯視同型別不符
+            }
+            if (c.s !== 'reject' || c.v !== want || c.calls.length !== 0) {
+                bad.push(`${c.k}: ${c.s} ${JSON.stringify(c.v)} calls=${JSON.stringify(c.calls)}`)
+            }
+            assert.strict.deepStrictEqual(JSON.stringify(c).includes(SECRET), false, c.k)
+        }
+        assert.strict.deepStrictEqual(bad, [])
+    })
+
+    it(`should create exactly one process for valid input in each mode (positive control of the interception, numbers in args accepted)`, function() {
+        //陽性對照: 替身確實計到呼叫, 使上兩案之「0次」非空洞; auto於win32另有取系統字碼頁之chcp(exec)
+        let cells = runCase('procOk')
+        assert.strict.deepStrictEqual(cells.length, nModes * 3)
+        for (let c of cells) {
+            let [mk] = c.k.split('|')
+            let main = c.calls.filter((x) => !x.startsWith('exec chcp'))
+            let fn = mk.startsWith('execFile') ? 'execFile' : (mk.startsWith('exec') ? 'exec' : 'spawn')
+            assert.strict.deepStrictEqual([c.s, main.length, main[0].split(' ')[0]], ['resolve', 1, fn], c.k)
+        }
+    })
+
+    it(`should reject a quoted prog before creating any process in spawn mode (the chcp of auto included) and leave exec and execFile modes unchecked`, function() {
+        //spawn不經shell, prog以引號起頭或結尾會被當成檔名之一部分; 檢測與其他prog檢測同於入口(先於chcp), 不在啟動處; exec(shell語法)與execFile不檢引號, 陽性對照為建立一個程序
+        let cells = runCase('procQuote')
+        assert.strict.deepStrictEqual(cells.length, nModes * 6)
+        let bad = []
+        for (let c of cells) {
+            let [mk] = c.k.split('|')
+            let main = c.calls.filter((x) => !x.startsWith('exec chcp'))
+            if (mk === 'spawn' || mk === 'spawn+auto') {
+                if (c.s !== 'reject' || c.v !== 'invalid prog: must not start or end with a quote in spawn mode' || c.calls.length !== 0) {
+                    bad.push(`${c.k}: ${c.s} ${c.v} ${JSON.stringify(c.calls)}`)
+                }
+            }
+            else if (c.s !== 'resolve' || main.length !== 1) {
+                bad.push(`${c.k}: ${c.s} ${c.v} ${JSON.stringify(c.calls)}`)
+            }
+        }
+        assert.strict.deepStrictEqual(bad, [])
+    })
+
+    it(`should have live interception stubs in the guard runner (every stub records when called directly)`, function() {
+        //替身之陽性對照: 含同步版、fork與process.kill(win32上tree-kill走exec, process.kill之對照只在此)
+        let calls = runCase('stubControl')
+        assert.strict.deepStrictEqual(calls.map((x) => x.split(' ')[0]), ['spawn', 'exec', 'execFile', 'spawnSync', 'execSync', 'execFileSync', 'fork', 'kill'])
+    })
+
+    it(`should read the length and each element of args only once and use that snapshot`, async function() {
+        //K4檢測之值即使用之值: 第二次讀取即回undefined之Proxy; 若檢測後再讀(使用時重讀)會得無效元素或少參數
+        let reads = {}
+        let p = new Proxy(['-p', '1+1'], {
+            get(t, k, r) {
+                if (typeof k === 'string') {
+                    reads[k] = (reads[k] || 0) + 1
+                    if (reads[k] > 1) {
+                        return undefined
+                    }
+                }
+                return Reflect.get(t, k, r)
+            },
+        })
+        let r = await execProcess(nodeBin, p)
+        assert.strict.deepStrictEqual(r.trim(), '2')
+        assert.strict.deepStrictEqual([reads['0'], reads['1'], reads.length], [1, 1, 1])
+    })
+
+    for (let mode of ['spawn', 'execFile', 'exec']) {
+        it(`should pass finite numbers in args as decimal strings and keep other elements as given (${mode})`, async function() {
+            //K4檢測之值即使用之值: 有限數字轉為十進位字串(1.5、-1、0、5), 字串原樣; exec模式空字串元素會被shell吃掉(既有行為), 故不含
+            let js = 'process.stdout.write(JSON.stringify(process.argv.slice(1)))'
+            let q = (s) => (mode === 'exec' ? `"${s}"` : s)
+            let r = await execProcess(mode === 'exec' ? `"${nodeBin}"` : nodeBin, ['-e', q(js), 5, 1.5, -1, 0, 'a b'], { mode })
+            assert.strict.deepStrictEqual(JSON.parse(r), ['5', '1.5', '-1', '0', 'a b'])
+        })
+    }
+
+    it(`should keep a non-empty string args as a raw command line in exec mode (no quoting even with spaces) and quote a spaced array element`, async function() {
+        //JSDoc mode: 字串型args視為呼叫端已自組之指令列, 原樣串接不加引號(含空白而不含雙引號者亦然: `-p 1+1`為兩個參數, 若被當單一元素會成為`"-p 1+1"`而node拒收); 變異「字串型args不視為指令列」存活者(ws492f變異P24)補此案
+        let r = await execProcess(`"${nodeBin}"`, '-p 1+1', { mode: 'exec' })
+        assert.strict.deepStrictEqual(r.trim(), '2')
+        //對照: 陣列型args之含空白元素自動加雙引號, 為單一參數(`1 + 1`)
+        let r2 = await execProcess(`"${nodeBin}"`, ['-p', '1 + 1'], { mode: 'exec' })
+        assert.strict.deepStrictEqual(r2.trim(), '2')
+    })
+
+    it(`should report an invalid prog before an invalid args, and an unreadable opt before both`, async function() {
+        //檢測順序: opt(取回調前之失敗)→ prog → args
+        let r1 = await execProcess(undefined, 5).then((v) => v, (v) => v)
+        let r2 = await execProcess(nodeBin, 5).then((v) => v, (v) => v)
+        let optBad = Object.defineProperty({}, 'timeout', {
+            enumerable: true,
+            get() {
+                throw new Error('getter boom')
+            },
+        })
+        let r3 = await execProcess(undefined, 5, optBad).then((v) => v, (v) => v)
+        assert.strict.deepStrictEqual([r1, r2, r3], ['invalid prog: must be a non-empty string', 'invalid args: must be an array or a string', 'opt is not readable: getter boom'])
+    })
+
+    it(`should not throw synchronously and should not echo prog, args or env for any failure path`, async function() {
+        //V20: 失敗訊息不含prog、args之值; 原生錯誤(帶code)改固定詞彙; 無效prog/args之檢測訊息同; 路徑含機密標記而不存在者
+        let progSecret = `${SECRET}_no_such_prog`
+        let rs = []
+        for (let mode of ['spawn', 'execFile', 'exec']) {
+            for (let [prog, args] of [[progSecret, [SECRET]], [`${progSecret}\u0000`, [SECRET]], [nodeBin, [`${SECRET}\u0000`]], [nodeBin, [SECRET, undefined]], [`"${progSecret}"`, [SECRET]]]) {
+                let p = null
+                assert.doesNotThrow(() => {
+                    p = execProcess(prog, args, { mode })
+                })
+                let v = await p.then((x) => `resolve:${x}`, (x) => `reject:${x}`)
+                //子程序之輸出(離開碼非0之`code[N]:\n輸出`: exec模式之shell會回顯找不到之指令名)屬子程序自身之輸出, 不在本函數之保證內(R-EXEC-FAIL-01已知限制), 不計
+                if (v.startsWith('reject:code[')) {
+                    continue
+                }
+                rs.push([mode, v.includes(SECRET)])
+            }
+        }
+        assert.strict.deepStrictEqual(rs.length >= 10, true) //至少有檢測訊息與spawn失敗之案例被計入(非全被略過)
+        assert.strict.deepStrictEqual(rs.filter(([, leak]) => leak), [])
+    })
+
+    it(`should use the fixed wording with the code when the original error carries a code, in the unreadable-opt message too`, async function() {
+        //V20: opt之getter拋出帶錯誤碼之Error時訊息改固定詞彙加錯誤碼(其message可能含路徑); 無錯誤碼者仍保留拋出值之文字(呼叫端自拋)
+        let opt = Object.defineProperty({}, 'mode', {
+            enumerable: true,
+            get() {
+                throw Object.assign(new Error(`open ${SECRET}.txt failed`), { code: 'EACCES' })
+            },
+        })
+        let r = await execProcess(nodeBin, ['-e', '1'], opt).then((v) => v, (v) => v)
+        assert.strict.deepStrictEqual(r, 'opt is not readable: operation failed (code EACCES)')
+    })
+
+    //--- opt.codeCmd之K3: 不支援之編碼視為未給, 改用預設utf-8 ---
+
+    it(`should treat an unsupported codeCmd as unset, use the default utf-8 and warn once only when opt.debug is true, without the label`, async function() {
+        let label = `no-such-encoding-${SECRET}`
+        let sUtf8 = 'process.stdout.write(Buffer.from([231,132,161]))' //utf-8「無」
+        resetWarned()
+        let cap = capture()
+        let warned = []
+        let ow = console.warn
+        console.warn = (m) => {
+            warned.push(m)
+        }
+        try {
+            //debug未開: 不警告
+            let r0 = await execProcess(nodeBin, ['-e', sUtf8], { codeCmd: label, funLog: cap.funLog })
+            assert.strict.deepStrictEqual([r0, cap.logs.length, warned.length], ['無', 0, 0])
+            //debug開: 經funLog警告一次(固定詞彙, 不含標籤之值), 同一行程同一鍵不重複, 有funLog時不走console.warn
+            let r1 = await execProcess(nodeBin, ['-e', sUtf8], { codeCmd: label, debug: true, funLog: cap.funLog })
+            let r2 = await execProcess(nodeBin, ['-e', sUtf8], { codeCmd: label, debug: true, funLog: cap.funLog })
+            assert.strict.deepStrictEqual([r1, r2, cap.logs.length, warned.length], ['無', '無', 1, 0])
+            assert.strict.deepStrictEqual(cap.logs[0].info, { fn: 'execProcess', reason: 'invalid', key: 'opt.codeCmd' })
+            assert.strict.deepStrictEqual(cap.logs[0].msg, `[wsemi execProcess] invalid opt.codeCmd: must be a supported encoding label, 'system' or 'auto', using default 'utf8'`)
+            //未給funLog: 走console.warn(去重表重設後再警告一次)
+            resetWarned()
+            let r3 = await execProcess(nodeBin, ['-e', sUtf8], { codeCmd: label, debug: true })
+            assert.strict.deepStrictEqual([r3, warned.length], ['無', 1])
+            assert.strict.deepStrictEqual(JSON.stringify([cap.logs, warned]).includes('no-such-encoding'), false)
+        }
+        finally {
+            console.warn = ow
+            resetWarned()
+        }
+    })
+
+    it(`should not warn for supported or non-string codeCmd values even when opt.debug is true`, async function() {
+        resetWarned()
+        let cap = capture()
+        for (let codeCmd of ['utf8', 'big5', 'cp950', 'auto', 'system', undefined, null, '', 123, {}]) {
+            await execProcess(nodeBin, ['-e', '1'], { codeCmd, debug: true, funLog: cap.funLog })
+        }
+        assert.strict.deepStrictEqual(cap.logs.length, 0)
+        resetWarned()
     })
 
 })

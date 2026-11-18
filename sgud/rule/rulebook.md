@@ -16,6 +16,7 @@
 | 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
 | 安全相關 opt 為 K3 之例外(雜湊演算法、`fsEnsureBins`／`fsDownloadFileVerify` 之 offline、mirror、fetch、names 等)、fs 系錯誤訊息不回顯路徑／網址／輸入值、Node 原生錯誤固定詞彙加錯誤碼(第 492 項第 3 批 ws492d,2026-11-17) | `sgud/rule/rulebook_secopt.md` | R-HASH-TYPE-01、R-SEC-OPT-01、R-FS-ERRMSG-01、R-FS-MSG-V20-01 | 約 17 |
 | DOM 與下載函數之輸入檢測:改畫面者同步拋固定訊息、查詢類回空、回 Promise 者 reject;opt 逐鍵檢測(`domAlert` 樣式字串 opt 與 `type`、`domScroll*`、`domFade*`);下載族同一通道;`color` 之 `amount`／`w1`／`w2` 與訊息不帶值(第 492 項第 4 批 ws492e,2026-11-18) | `sgud/rule/rulebook_domarg.md` | R-DOM-ARG-01、R-DOM-OPT-01、R-DL-ARG-01、R-COLOR-ARG-01 | 約 14 |
+| 執行外部程序三函數之輸入檢測:`execProcess` 之 `prog`(三模式一致,exec 不再轉型)與 `args`、`opt.codeCmd` 依 K3、原生錯誤固定詞彙;`execProcessKillPid` 之 `pid` 須 1~2147483647 之整數(0、負數 fail-closed 先於殺程序);`execJsCode` 之 `fpJsCode` 與 `opt` 直通(第 492 項第 5 批 ws492f,2026-11-18) | `sgud/rule/rulebook_execarg.md` | R-EXEC-ARG-01 | 約 10 |
 | 檔案系統(含 `fsWriteTextAtomic` 原子寫檔) | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01、R-FS-ATOMIC-01 | 約 28 |
 | 顯式時區時鐘 `genClockTZ` | `sgud/rule/rulebook_clock.md` | R-CLOCK-01 | 約 6 |
 | 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
@@ -109,6 +110,8 @@
 - `R-DOM-OPT-01` → `rulebook_domarg.md`: R-DOM-OPT-01 opt 逐鍵檢測:`domAlert` 四個樣式字串 opt(只認原始字串、空字串合法)與 `type`(自有鍵)、`domScrollIntoView`／`domScrollTo`(列舉與數值鍵、不直通未知鍵、單一擁有者 `_scrollOpt`)、`domFadeIn`／`domFadeOut` 之 `delay`／`opacityIni`(不夾限)
 - `R-DL-ARG-01` → `rulebook_domarg.md`: R-DL-ARG-01 下載族(`downloadFileFromB64`／`Blob`／`Text`／`U8Arr`)同一通道,輸入無效同步拋固定訊息,先於環境檢查;`withBOM` 非布林取預設;`downloadExcelFileFromData` 走 `{ error }` 通道、含 NUL 之檔名與寫檔失敗固定詞彙
 - `R-COLOR-ARG-01` → `rulebook_domarg.md`: R-COLOR-ARG-01 `color` 之 `amount`／`w1`／`w2` 須為 0~1 之有效數字(單一擁有者 `toRatio`)、顏色無效之訊息與 console 不回顯輸入、`num`／`fmtOutput` 訊息 V19、`interp` 內部權重不檢測
+- `R-EXEC-ARG-01` → `rulebook_execarg.md`: R-EXEC-ARG-01 外部程序三函數之輸入檢測:`execProcess.prog` 非空原始字串且不含 NUL(三模式一致,exec 不再把非字串轉成指令)、`args` 元素為字串或有限數字、先於任何子程序之建立(含 chcp);`opt.codeCmd` 不支援依 K3 取預設;`execProcessKillPid.pid` 須 1~2147483647 之整數(0、負數、環繞值先於殺程序拒絕);`execJsCode.fpJsCode` 固定訊息與「不存在」分開、`opt` 整份直通;驗法為子行程攔截替身(`test/tools/execArgGuardRunner.mjs`,第 492 項第 5 批 ws492f)
+- `R-EXEC-FAIL-01` 規則 15 → `rulebook_exec.md`: `execProcess` 無法啟動子進程之原生錯誤(帶錯誤碼)改固定詞彙 `spawn[ENOENT]:\noperation failed (code ENOENT)`(`execSpawnError` 之 `opt.fixed`;`execCli` 系不傳,行為不變)
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

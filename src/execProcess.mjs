@@ -2,10 +2,8 @@ import codec from './_execProcessCodec.mjs'
 import cp from 'child_process'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
-import isarr from './isarr.mjs'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
-import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
 import strleft from './strleft.mjs'
 import strright from './strright.mjs'
@@ -13,6 +11,8 @@ import arrHas from './arrHas.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execSpawnError from './_execSpawnError.mjs'
 import execThrownMsg from './_execThrownMsg.mjs'
+import chkFsPath from './_chkFsPath.mjs'
+import parseNumOpt from './_numOpt.mjs'
 import callUser from './_callUser.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
@@ -27,20 +27,20 @@ let RULE_TIMEOUT = { fn: 'execProcess', name: 'opt.timeout', kind: 'enum', chk: 
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcess.test.mjs Github}
  * @memberOf wsemi
- * @param {String} prog 輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收
- * @param {String|Array} args 輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數；非陣列亦非字串時reject錯誤訊息(不拋錯)
+ * @param {String} prog 輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收。必須參數，須為非空之原始字串且不含NUL字元，三種模式一致：undefined、null、數字、物件、陣列、函數、包裝字串(new String)、空字串、含NUL字元者皆無效，不轉型(exec模式亦不再把非字串轉成字串當指令)；無效時於建立任何子程序之前reject固定訊息'invalid prog: must be a non-empty string'或'invalid prog: must not contain a NUL character'(不含prog之值)；spawn模式prog以引號起頭或結尾者亦於建立子程序之前reject'invalid prog: must not start or end with a quote in spawn mode'
+ * @param {String|Array} args 輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數。陣列元素須為字串(不含NUL字元，可為空字串)或有限數字(轉為十進位字串後使用)，不轉型其餘種類(undefined、null、布林、物件、陣列、函數、NaN、Infinity、BigInt、包裝字串皆無效)；字串型args不含NUL字元；非陣列亦非字串時reject'invalid args: must be an array or a string'，元素無效時reject'invalid args[i]: must be a string or a valid number'或'invalid args[i]: must not contain a NUL character'(i為元素索引，不含值)，字串型args含NUL字元時reject'invalid args: must not contain a NUL character'；args須為真陣列(Array.isArray，帶Symbol.toStringTag之偽陣列物件無效)，判型、讀取length或元素拋錯(已撤銷之Proxy、getter)視同型別不符而reject'invalid args: must be an array or a string'(非元素訊息)，每個元素只讀一次並以快照使用；皆於建立任何子程序之前，不拋錯
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.mode='spawn'] 輸入執行模式字串，可選'spawn'、'exec'、'execFile'，預設'spawn'。'spawn'不經shell直接執行，輸出以串流處理，適合大量輸出或長時間執行，prog與args不需也不可加引號；'exec'經shell執行，prog與args以空白串接成指令字串，適合須用到shell語法之情形，陣列型args之元素含空白且未含雙引號者會自動以雙引號包住，prog含空白亦同，已含雙引號者視為呼叫端自行處理而原樣串接，字串型args視為呼叫端已自組之指令列，原樣串接不加引號；'execFile'不經shell直接執行可執行檔，args須為陣列，給字串會被當成單一參數。三種模式之stdout與stderr皆以Buffer接收後走同一條解碼路徑；惟'exec'與'execFile'之stdout或stderr超過1MB(node之maxBuffer預設值)時子程序會被node終止，reject為`code[null]:\n訊息`，大量輸出請用'spawn'
  * @param {Function} [opt.cbStdout=null] 輸入回調stdout函數，預設null。收到的是經串流解碼之字串，多位元組字元跨chunk時會等到完整才給，故不會收到空字串；codeCmd為'auto'時回調為盡力判定，該串流首次遇到非utf-8位元組後才改用系統字碼頁，之前已回調之字串不追溯，最終結果以resolve或reject之字串為準。回調內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響本函數之落定與結果字串)
  * @param {Function} [opt.cbStderr=null] 輸入回調stderr函數，預設null，行為同cbStdout
- * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除
+ * @param {String} [opt.codeCmd='utf8'] 輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串或不支援之編碼(非TextDecoder支援之標籤、非字碼頁編號寫法、非'system'與'auto')一律視為未設定而用預設值'utf8'(K3，不報錯、不回顯該標籤；opt.debug為true時警告一次)。輸出開頭之utf-8 BOM會被移除
  * @param {Boolean} [opt.useChcp=false] 輸入是否於指令前置chcp 65001，僅'exec'模式生效，預設false。可使主控台工具改以utf-8輸出，副作用是其訊息語言可能變為英文；使用時codeCmd請維持預設'utf8'或給'auto'，不要搭配'system'
  * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，須為有效數字且大於0至2147483647(計時器上限)之內，可帶小數，數字字串亦可，預設null表示不限制；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設null(不限時，不報錯、不夾至上限；Infinity不代表有限的逾時)；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
- * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeout為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeout或opt.codeCmd為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程同一鍵只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為`spawn[ENOENT]:\ncwd is not an existing folder: <cwd>`(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為`spawn[ERR_INVALID_ARG_TYPE]:\n訊息`
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args型別不符，'codeCmd'代表編碼不支援，'prog'代表spawn模式prog含引號)；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
- * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符(含判型即拋錯之不可讀之值)、codeCmd不支援、spawn模式prog含引號或opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`)時為說明字串；prog不可讀時為`spawn[UNKNOWN]:\n訊息`；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為`spawn[ENOENT]:\ncwd is not an existing folder: <cwd>`(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為`spawn[ERR_INVALID_ARG_TYPE]:\noperation failed (code ERR_INVALID_ARG_TYPE)`
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args無效(型別不符、元素無效或含NUL)，'prog'代表prog無效(非有效字串、含NUL、spawn模式含引號))；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
+ * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，Node原生錯誤(帶錯誤碼者)之訊息改為固定詞彙加錯誤碼`operation failed (code ENOENT)`，不含執行檔路徑、args與環境變數之內容(V20)；cwd不存在或非資料夾時訊息為`cwd is not an existing folder: <cwd>`；prog無效(非有效字串、含NUL、spawn模式含引號)、args無效(型別不符、元素無效、含NUL)時為固定說明字串(格式見prog與args參數，不含其值)，皆於建立子程序之前；opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`，訊息為呼叫端所拋出之文字，帶錯誤碼者同樣改為固定詞彙)時為說明字串；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
  * @example
  * //need test in nodejs
  *
@@ -87,6 +87,7 @@ function execProcess(prog, args, opt = {}) {
     let cbStderr
     let codeCmd
     let cc = null
+    let bCodeCmdBad = false
     let useChcp = false
     let timeout = null
     let cwd
@@ -105,9 +106,13 @@ function execProcess(prog, args, opt = {}) {
         v = get(opt, 'cbStderr')
         cbStderr = isfun(v) ? v : undefined
 
-        //codeCmd, 正規化為{ mode, label }, 非有效字串為utf-8, 不支援之標籤為null於下方reject
+        //codeCmd, 正規化為{ mode, label }, 非有效字串為utf-8; 有效字串但不支援之標籤(null)依K3視為未給而改用預設utf-8, 不報錯、不回顯標籤(opt.debug為true時於下方警告)
         codeCmd = get(opt, 'codeCmd')
         cc = codec.normalizeCodeCmd(codeCmd)
+        if (cc === null) {
+            bCodeCmdBad = true
+            cc = codec.normalizeCodeCmd(undefined)
+        }
 
         //useChcp
         v = get(opt, 'useChcp')
@@ -126,45 +131,91 @@ function execProcess(prog, args, opt = {}) {
 
     }
     catch (err) {
-        pm.reject(`opt is not readable: ${execThrownMsg(execSpawnError(err), err)}`)
+        pm.reject(`opt is not readable: ${execThrownMsg(execSpawnError(err, { fixed: true }), err)}`)
         return pm
     }
 
-    //check args, 須為陣列(可為空陣列)或字串(可為空字串), 空陣列與空字串代表無參數; 其餘型別(含判型即拋錯之不可讀之值)以reject回報, 不同步拋錯, 訊息不帶args之值
-    let bArgsOk = false
+    //check prog, 必須參數, 三種模式一致(R-EXEC-ARG-01): 須為非空之原始字串且不含NUL, 不轉型(K4、K5; exec模式不再把undefined、null、物件轉成字串當指令), 無效以固定訊息reject(V19、V20: 不含prog之值), 先於任何子程序之建立(V17, 含取系統字碼頁之chcp)
+    //  spawn不經shell, prog以引號起頭或結尾會被當成檔名之一部分, 同樣於啟動前reject; 不同步拋錯
+    let msgProg = chkFsPath(prog, 'prog')
+    if (msgProg === null && mode === 'spawn') {
+        let cr = strleft(prog, 1)
+        let cl = strright(prog, 1)
+        if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
+            msgProg = 'invalid prog: must not start or end with a quote in spawn mode'
+        }
+    }
+    if (msgProg !== null) {
+        if (trace) {
+            trace('settle', { ok: false, reason: 'prog', code: null })
+        }
+        pm.reject(msgProg)
+        return pm
+    }
+
+    //check args, 須為陣列(可為空陣列)或原始字串(可為空字串), 空陣列與空字串代表無參數; 陣列元素須為字串(不含NUL)或有限數字(轉為十進位字串, 檢測之值即使用之值), 其餘種類不轉型而視為無效
+    //  先於任何子程序之建立, 不同步拋錯, 訊息只帶索引不帶值; 判型或讀取元素拋錯(已撤銷之Proxy、getter)視同型別不符; 每個元素只讀一次並以快照使用
+    let msgArgs = null
+    let bArgsStr = false //非空字串型args於exec模式視為呼叫端已自組之指令列
+    let list = []
     try {
-        bArgsOk = isarr(args) || isstr(args)
+        if (typeof args === 'string') {
+            if (args.includes('\0')) {
+                msgArgs = 'invalid args: must not contain a NUL character'
+            }
+            else if (args !== '') {
+                bArgsStr = true
+                list = [args]
+            }
+        }
+        else if (Array.isArray(args)) { //不用isarr(以Object.prototype.toString判定, 帶Symbol.toStringTag之物件可偽冒為陣列而以空參數放行)
+            let n = args.length
+            for (let i = 0; i < n; i++) {
+                let v = args[i]
+                if (typeof v === 'string') {
+                    if (v.includes('\0')) {
+                        msgArgs = `invalid args[${i}]: must not contain a NUL character`
+                        break
+                    }
+                    list.push(v)
+                }
+                else if (typeof v === 'number' && Number.isFinite(v)) {
+                    list.push(String(v))
+                }
+                else {
+                    msgArgs = `invalid args[${i}]: must be a string or a valid number`
+                    break
+                }
+            }
+        }
+        else {
+            msgArgs = 'invalid args: must be an array or a string'
+        }
     }
     catch (err) {
-        bArgsOk = false //判型拋錯視同型別不符
+        msgArgs = 'invalid args: must be an array or a string'
     }
-    if (!bArgsOk) {
+    if (msgArgs !== null) {
         if (trace) {
             trace('settle', { ok: false, reason: 'args', code: null })
         }
-        pm.reject(`args is not an array or string`)
+        pm.reject(msgArgs)
         return pm
     }
-    let bArgsStr = isestr(args) //非空字串型args於exec模式視為呼叫端已自組之指令列
-    if (isestr(args)) {
-        args = [args]
-    }
-    else if (isstr(args)) {
-        args = [] //空字串代表無參數
+    args = list
+
+    //check mode(K3已正規化, 實為不可達之防線, 訊息不帶值)
+    if (!arrHas(mode, ['spawn', 'exec', 'execFile'])) {
+        pm.reject(`invalid opt.mode: must be one of 'spawn', 'exec', 'execFile'`)
+        return pm
     }
 
-    //check
-    if (!arrHas(mode, ['spawn', 'exec', 'execFile'])) {
-        pm.reject(`invalid mode[${mode}]`)
-        return pm
-    }
-    if (cc === null) {
-        //不支援之編碼於執行前reject, 不得等到data事件才拋, 因事件處理器內之拋錯不在try catch範圍也不會進error事件, 會拉倒整個程序
-        if (trace) {
-            trace('settle', { ok: false, reason: 'codeCmd', code: null })
+    //codeCmd非預期(有效字串但不支援之編碼)已改用預設, opt.debug為true時警告一次(固定詞彙, 不含標籤之值; 警告出口為opt.funLog或console.warn; 讀取debug與funLog拋錯一律視為不警告)
+    if (bCodeCmdBad) {
+        let dbg = optVal.readDbg(opt)
+        if (dbg.debug) {
+            parseNumOpt.warnOnce('execProcess|invalid|opt.codeCmd', `[wsemi execProcess] invalid opt.codeCmd: must be a supported encoding label, 'system' or 'auto', using default 'utf8'`, { fn: 'execProcess', reason: 'invalid', key: 'opt.codeCmd' }, dbg.funLog)
         }
-        pm.reject(`codeCmd[${codeCmd}] is not a supported encoding`)
-        return pm
     }
 
     //start, 建立子進程並接線, labelSystem為系統字碼頁標籤, 僅codeCmd為'auto'或'system'時需要
@@ -174,19 +225,7 @@ function execProcess(prog, args, opt = {}) {
         let r = null
         try {
 
-            //spawn不經shell, prog含引號會被當成檔名之一部分, 於啟動前reject; 須在try內, prog不可讀(如已撤銷之Proxy)時同spawn同步拋錯回報而不同步拋出(codeCmd為auto/system時start於then內, 兩路一致)
-            if (mode === 'spawn') {
-                let cr = strleft(prog, 1)
-                let cl = strright(prog, 1)
-                if (cr === `"` || cl === `"` || cr === `'` || cl === `'`) {
-                    if (trace) {
-                        trace('settle', { ok: false, reason: 'prog', code: null })
-                    }
-                    pm.reject(`prog[${prog}] of spawn does not need to add quotes`)
-                    return
-                }
-            }
-
+            //prog與args已於入口檢測(原始字串、不含NUL、元素為字串, 檢測之值即使用之值), 此處不再轉型
             if (mode === 'spawn') {
                 // console.log('mode',mode)
                 r = cp.spawn(prog, args, {
@@ -203,7 +242,6 @@ function execProcess(prog, args, opt = {}) {
                 }
                 //quote, 含空白且未含雙引號者以雙引號包住, 使陣列型args之元素與spawn/execFile之參數語意一致(否則shell會把'IMAGENAME eq X'拆成三個參數); 已含雙引號者視為呼叫端自行處理; 字串型args為呼叫端自組之指令列, 原樣串接
                 let quote = (s) => {
-                    s = String(s)
                     if (/\s/.test(s) && !s.includes('"')) {
                         return `"${s}"`
                     }
@@ -228,8 +266,8 @@ function execProcess(prog, args, opt = {}) {
             }
         }
         catch (err) {
-            //同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG、參數檢查錯誤等), 轉為不含參數值之字串; prog不可讀而拋出非Error之值者保留該值之文字(_execThrownMsg); cwd不存在所致之ENOENT改指cwd(R-EXEC-FAIL-01規則7)
-            let e = execSpawnError(err, { cwd })
+            //同步拋錯(EPERM、UNKNOWN、ENAMETOOLONG等), 帶錯誤碼之Node原生錯誤改固定詞彙加錯誤碼(fixed, 不含路徑與參數值, R-EXEC-FAIL-01規則15); 無錯誤碼而拋出非Error之值者保留該值之文字(_execThrownMsg); cwd不存在所致之ENOENT改指cwd(R-EXEC-FAIL-01規則7)
+            let e = execSpawnError(err, { cwd, fixed: true })
             if (trace) {
                 trace('settle', { ok: false, reason: 'spawn', code: null })
             }
@@ -252,7 +290,7 @@ function execProcess(prog, args, opt = {}) {
             if (timer !== null) {
                 clearTimeout(timer)
             }
-            let e = execSpawnError(err, { cwd }) //cwd不存在所致之ENOENT改指cwd(R-EXEC-FAIL-01規則7)
+            let e = execSpawnError(err, { cwd, fixed: true }) //cwd不存在所致之ENOENT改指cwd(R-EXEC-FAIL-01規則7); 帶錯誤碼之原生錯誤改固定詞彙(規則15)
             if (trace) {
                 trace('settle', { ok: false, reason: 'spawn', code: null })
                 trace = null //已落定, 其後node仍會發出close(無法啟動者error後必有close), 不再通知
@@ -413,7 +451,7 @@ function execProcess(prog, args, opt = {}) {
         codec.getSystemCodePage()
             .then(start)
             .catch((err) => {
-                let e = execSpawnError(err)
+                let e = execSpawnError(err, { fixed: true })
                 if (trace) {
                     trace('settle', { ok: false, reason: 'spawn', code: null })
                 }

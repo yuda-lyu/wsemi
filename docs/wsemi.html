@@ -44690,7 +44690,7 @@ Windows下npm全域安裝之命令為.cmd批次檔，內部經execCliCore.buildS
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execJsCode.mjs.html">execJsCode.mjs</a>, <a href="execJsCode.mjs.html#line45">line 45</a>
+        <a href="execJsCode.mjs.html">execJsCode.mjs</a>, <a href="execJsCode.mjs.html#line60">line 60</a>
     </li></ul></dd>
     
 
@@ -44823,7 +44823,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入待執行mjs檔之路徑字串，相對於專案根(process.cwd())解析</p></td>
+            <td class="description last"><p>輸入待執行mjs檔之路徑字串，相對於專案根(process.cwd())解析。必須參數，須為非空之原始字串且不含NUL字元(undefined、null、數字、布林、物件、陣列、函數、包裝字串、空字串皆無效，不轉型)，無效時於載入任何檔案之前reject固定訊息之Error'invalid fpJsCode: must be a non-empty string'或'invalid fpJsCode: must not contain a NUL character'(不含路徑之值，與「檔案不存在」分開)；路徑不是既存之檔案時reject'invalid fpJsCode: must be an existing file'；目標檔之default匯出不是函數時reject'invalid fpJsCode: must be a module whose default export is a function'；載入目標檔時之Node原生錯誤(帶錯誤碼且碼為ERR_起頭之Node內部錯誤碼或帶syscall之系統錯誤者，如目標檔所依賴之模組不存在ERR_MODULE_NOT_FOUND)改為固定詞彙加錯誤碼'operation failed (code ERR_MODULE_NOT_FOUND)'(其message帶出路徑，保留code)，其餘(如目標檔之語法錯誤、目標檔頂層求值時自拋之自訂錯誤碼之錯誤)原樣向外</p></td>
         </tr>
 
     
@@ -44863,7 +44863,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入設定物件，將整包傳入目標mjs之default函數作為其輸入參數，預設{}</p></td>
+            <td class="description last"><p>輸入設定物件，預設{}。整份原樣交給目標mjs之default函數作為其輸入參數(同一個物件、不複製、不檢測、不改寫)，逐鍵由目標函數自行處置(V8轉傳之鍵由下游檢)，故null、字串、陣列等亦原樣傳入，只有undefined取預設{}</p></td>
         </tr>
 
     
@@ -44889,7 +44889,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳目標mjs之default函數執行結果，reject回傳錯誤訊息(如檔案不存在、無default匯出、或目標函數內部拋錯)</p>
+    <p>回傳Promise，resolve回傳目標mjs之default函數執行結果，reject為Error：參數無效、檔案不存在、無default匯出為上述固定訊息，載入錯誤見fpJsCode，目標函數內部拋出之錯誤原樣向外傳遞(不經本函數處置)；本函數不同步拋錯</p>
 </div>
 
 
@@ -45043,7 +45043,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收</p></td>
+            <td class="description last"><p>輸入執行檔或程式語言位置字串，若為註冊系統的全域指令，例如可直接給'Python'，腳本需自行接收呼叫引數，並將回傳資料轉json字串後print/log到dos視窗，即可由nodejs接收。必須參數，須為非空之原始字串且不含NUL字元，三種模式一致：undefined、null、數字、物件、陣列、函數、包裝字串(new String)、空字串、含NUL字元者皆無效，不轉型(exec模式亦不再把非字串轉成字串當指令)；無效時於建立任何子程序之前reject固定訊息'invalid prog: must be a non-empty string'或'invalid prog: must not contain a NUL character'(不含prog之值)；spawn模式prog以引號起頭或結尾者亦於建立子程序之前reject'invalid prog: must not start or end with a quote in spawn mode'</p></td>
         </tr>
 
     
@@ -45082,7 +45082,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數；非陣列亦非字串時reject錯誤訊息(不拋錯)</p></td>
+            <td class="description last"><p>輸入參數陣列或字串，例如腳本檔案位置字串，空陣列或空字串代表無參數。陣列元素須為字串(不含NUL字元，可為空字串)或有限數字(轉為十進位字串後使用)，不轉型其餘種類(undefined、null、布林、物件、陣列、函數、NaN、Infinity、BigInt、包裝字串皆無效)；字串型args不含NUL字元；非陣列亦非字串時reject'invalid args: must be an array or a string'，元素無效時reject'invalid args[i]: must be a string or a valid number'或'invalid args[i]: must not contain a NUL character'(i為元素索引，不含值)，字串型args含NUL字元時reject'invalid args: must not contain a NUL character'；args須為真陣列(Array.isArray，帶Symbol.toStringTag之偽陣列物件無效)，判型、讀取length或元素拋錯(已撤銷之Proxy、getter)視同型別不符而reject'invalid args: must be an array or a string'(非元素訊息)，每個元素只讀一次並以快照使用；皆於建立任何子程序之前，不拋錯</p></td>
         </tr>
 
     
@@ -45305,7 +45305,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串視為未設定而用預設值，有效字串但不支援之編碼則於執行前reject並帶該標籤。輸出開頭之utf-8 BOM會被移除</p></td>
+            <td class="description last"><p>輸入解碼stdout與stderr之編碼字串，預設'utf8'。可給TextDecoder支援之標籤，例如'utf8'、'big5'、'gbk'、'gb18030'、'shift_jis'、'euc-kr'、'euc-jp'、'latin1'、'utf-16le'，亦可給Windows字碼頁編號寫法如'cp950'、'950'、'cp936'、'cp932'、'cp949'、'cp437'、'cp1252'；給'system'表示用當前作業系統字碼頁，win32以chcp查詢一次後快取，其他平台為utf-8；給'auto'表示先以utf-8嚴格解碼，遇非utf-8位元組之串流改用系統字碼頁，適合不確定子程序輸出編碼之情形，例如Windows原生指令與以ANSI字碼頁輸出之打包程式。非有效字串或不支援之編碼(非TextDecoder支援之標籤、非字碼頁編號寫法、非'system'與'auto')一律視為未設定而用預設值'utf8'(K3，不報錯、不回顯該標籤；opt.debug為true時警告一次)。輸出開頭之utf-8 BOM會被移除</p></td>
         </tr>
 
     
@@ -45425,7 +45425,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入是否於opt.timeout為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false</p></td>
+            <td class="description last"><p>輸入是否於opt.timeout或opt.codeCmd為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程同一鍵只警告一次，預設false</p></td>
         </tr>
 
     
@@ -45505,7 +45505,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為<code>spawn[ENOENT]:\ncwd is not an existing folder: &lt;cwd&gt;</code>(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為<code>spawn[ERR_INVALID_ARG_TYPE]:\n訊息</code></p></td>
+            <td class="description last"><p>輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為<code>spawn[ENOENT]:\ncwd is not an existing folder: &lt;cwd&gt;</code>(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為<code>spawn[ERR_INVALID_ARG_TYPE]:\noperation failed (code ERR_INVALID_ARG_TYPE)</code></p></td>
         </tr>
 
     
@@ -45545,7 +45545,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args型別不符，'codeCmd'代表編碼不支援，'prog'代表spawn模式prog含引號)；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null</p></td>
+            <td class="description last"><p>輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args無效(型別不符、元素無效或含NUL)，'prog'代表prog無效(非有效字串、含NUL、spawn模式含引號))；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null</p></td>
         </tr>
 
     
@@ -45578,7 +45578,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為<code>code[N]:\n訊息</code>，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為<code>timeout[Nms]:\n訊息</code>；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、參數含空字元、系統資源用盡等)為<code>spawn[錯誤碼]:\n訊息</code>，訊息為node之錯誤說明(可含執行檔路徑)，不含args之內容；args型別不符(含判型即拋錯之不可讀之值)、codeCmd不支援、spawn模式prog含引號或opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為<code>opt is not readable: 訊息</code>)時為說明字串；prog不可讀時為<code>spawn[UNKNOWN]:\n訊息</code>；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯</p>
+    <p>回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為<code>code[N]:\n訊息</code>，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為<code>timeout[Nms]:\n訊息</code>；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、系統資源用盡等)為<code>spawn[錯誤碼]:\n訊息</code>，Node原生錯誤(帶錯誤碼者)之訊息改為固定詞彙加錯誤碼<code>operation failed (code ENOENT)</code>，不含執行檔路徑、args與環境變數之內容(V20)；cwd不存在或非資料夾時訊息為<code>cwd is not an existing folder: &lt;cwd&gt;</code>；prog無效(非有效字串、含NUL、spawn模式含引號)、args無效(型別不符、元素無效、含NUL)時為固定說明字串(格式見prog與args參數，不含其值)，皆於建立子程序之前；opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為<code>opt is not readable: 訊息</code>，訊息為呼叫端所拋出之文字，帶錯誤碼者同樣改為固定詞彙)時為說明字串；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯</p>
 </div>
 
 
@@ -45622,7 +45622,7 @@ if (true) {
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="execProcessKillPid.mjs.html">execProcessKillPid.mjs</a>, <a href="execProcessKillPid.mjs.html#line31">line 31</a>
+        <a href="execProcessKillPid.mjs.html">execProcessKillPid.mjs</a>, <a href="execProcessKillPid.mjs.html#line37">line 37</a>
     </li></ul></dd>
     
 
@@ -45746,7 +45746,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入程序pid</p></td>
+            <td class="description last"><p>輸入程序pid，必須參數，須為1至2147483647(作業系統pid_t之上限，大於其者經int轉換會環繞成負值而殺行程群組)之整數，可為十進位數字字串(去頭尾空白後轉為數字使用，如' 12 '為12，'+12'為12，'1.0'為1，'4.2e5'為420000，判定同iseint)；0、負數、小數(如1.5)、超出範圍、'0x10'等非十進位寫法、尾綴雜字、''、null、undefined、布林、陣列、物件、NaN、Infinity、BigInt、Symbol、包裝物件皆無效，無效時於呼叫tree-kill(殺任何程序)之前reject，不做任何殺程序之動作(POSIX之kill(0)、kill(-1)為殺行程群組或全部可殺之程序，故不得以轉型放行)</p></td>
         </tr>
 
     
@@ -45849,7 +45849,7 @@ if (true) {
                 </td>
             
 
-            <td class="description last"><p>輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'start'時為即將呼叫tree-kill(含pid為傳給tree-kill之數字，非有限數字者為null)，'done'時為tree-kill回報成功而即將resolve(含pid)，'fail'時為tree-kill回報失敗而即將reject(含pid；msg為reject訊息中冒號後之錯誤訊息字串)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數；opt或onTrace不可讀(getter拋錯、已撤銷之Proxy)時視同未給回調，預設null</p></td>
+            <td class="description last"><p>輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'start'時為即將呼叫tree-kill(含pid為傳給tree-kill之數字，pid無效時不會發出)，'done'時為tree-kill回報成功而即將resolve(含pid)，'fail'時為tree-kill回報失敗或pid無效而即將reject(含pid，pid無效者為null；msg為reject訊息中冒號後之錯誤訊息字串，pid無效者為整句固定訊息)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數；opt或onTrace不可讀(getter拋錯、已撤銷之Proxy)時視同未給回調，預設null</p></td>
         </tr>
 
     
@@ -45882,7 +45882,7 @@ if (true) {
 
         
 <div class="param-desc">
-    <p>回傳Promise，resolve回傳成功訊息<code>pid[N] killed</code>，reject回傳錯誤訊息字串<code>pid[N] kill failed: 訊息</code>；Windows下訊息含taskkill之輸出，其為系統字碼頁而可能無法正確顯示</p>
+    <p>回傳Promise，resolve回傳成功訊息<code>pid[N] killed</code>(N為轉換後之數字)，reject回傳錯誤訊息字串：pid無效為固定訊息<code>invalid pid: must be an integer from 1 to 2147483647</code>(不含pid之值，且不殺任何程序)；殺程序失敗為<code>pid[N] kill failed: 訊息</code>(N為轉換後之數字)；Windows下訊息含taskkill之輸出，其為系統字碼頁而可能無法正確顯示；本函數不同步拋錯</p>
 </div>
 
 
@@ -135930,7 +135930,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 18 2026 07:17:41 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 18 2026 15:37:52 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

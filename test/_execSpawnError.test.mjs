@@ -161,3 +161,82 @@ describe(`execSpawnError 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
     })
 
 })
+
+
+//opt.fixed: execProcess使用之固定詞彙模式(R-EXEC-FAIL-01規則15; 排程第492項第5批ws492f; 規格dspec〈輸入參數之檢測機制〉V20「Node原生錯誤之訊息改以固定詞彙加錯誤碼呈現」, 同fs家族W-23之_fsErrMsg)
+describe(`execSpawnError opt.fixed(R-EXEC-FAIL-01之15)`, function() {
+
+    let SA = 'SECRET_ARG_7d1f'
+    let mk = (props) => Object.assign(new Error(props.message), props)
+
+    it(`should replace the message of an error that carries a code with the fixed wording and keep the code`, function() {
+        let es = [
+            mk({ message: `spawn C:\\${SA}\\x.exe ENOENT`, code: 'ENOENT', errno: -4058, syscall: `spawn C:\\${SA}\\x.exe`, path: `C:\\${SA}\\x.exe`, spawnargs: ['a', SA] }),
+            mk({ message: `The "file" argument must be of type string. Received '${SA}'`, code: 'ERR_INVALID_ARG_TYPE' }),
+            mk({ message: `spawn ${SA} EPERM`, code: 'EPERM', errno: -4048 }),
+        ]
+        let r = es.map((e) => execSpawnError(e, { fixed: true }))
+        assert.strict.deepStrictEqual(r, [
+            { code: 'ENOENT', message: 'operation failed (code ENOENT)' },
+            { code: 'ERR_INVALID_ARG_TYPE', message: 'operation failed (code ERR_INVALID_ARG_TYPE)' },
+            { code: 'EPERM', message: 'operation failed (code EPERM)' },
+        ])
+        assert.strict.deepStrictEqual(JSON.stringify(r).includes(SA), false)
+    })
+
+    it(`should leave the result unchanged when fixed is absent or not true (execCli and execCliSession do not pass it)`, function() {
+        let e = mk({ message: `spawn ${SA} ENOENT`, code: 'ENOENT', errno: -4058 })
+        let want = { code: 'ENOENT', message: `spawn ${SA} ENOENT` }
+        for (let opt of [undefined, null, {}, { fixed: false }, { fixed: 'true' }, { fixed: 1 }, { fixed: {} }, { cwd: process.cwd() }]) {
+            assert.strict.deepStrictEqual(execSpawnError(e, opt), want, JSON.stringify(opt))
+        }
+    })
+
+    it(`should keep the message of an error without a usable code (not a Node native error)`, function() {
+        //無錯誤碼(呼叫端自拋之非Error值、已撤銷之Proxy、普通Error)、E_起頭(本套件自建錯誤之碼)、含非英數底線字元之碼: 依舊
+        let cases = [
+            new TypeError(`plain ${SA}`),
+            'thrown-string',
+            null,
+            undefined,
+            42,
+            mk({ message: `own ${SA}`, code: 'E_ARG' }),
+            mk({ message: `odd ${SA}`, code: 'has space' }),
+            mk({ message: `num ${SA}`, code: 5 }),
+        ]
+        for (let c of cases) {
+            assert.strict.deepStrictEqual(execSpawnError(c, { fixed: true }), execSpawnError(c), String(c))
+        }
+    })
+
+    it(`should keep the cwd explanation of an ENOENT caused by a missing cwd (documented contract, the cwd is named)`, function() {
+        let fdMissing = path.resolve('./test/_tmp/execSpawnError-fixed/no-such-dir')
+        let e = mk({ message: `spawn x ENOENT`, code: 'ENOENT', errno: -4058 })
+        assert.strict.deepStrictEqual(execSpawnError(e, { cwd: fdMissing, fixed: true }), { code: 'ENOENT', message: `cwd is not an existing folder: ${fdMissing}` })
+        //cwd為既存資料夾時為固定詞彙
+        assert.strict.deepStrictEqual(execSpawnError(e, { cwd: process.cwd(), fixed: true }), { code: 'ENOENT', message: 'operation failed (code ENOENT)' })
+    })
+
+    it(`should not throw when reading fixed throws, and treat it as not fixed`, function() {
+        let e = mk({ message: `spawn ${SA} ENOENT`, code: 'ENOENT', errno: -4058 })
+        let opt = {
+            get fixed() {
+                throw new Error('boom')
+            },
+        }
+        assert.strict.deepStrictEqual(execSpawnError(e, opt), { code: 'ENOENT', message: `spawn ${SA} ENOENT` })
+    })
+
+    it(`should not contain the argument value for the real error thrown by node spawn with a null byte`, function() {
+        let err = null
+        try {
+            cp.spawn(process.execPath, ['-e', '1', SA + '\u0000x'])
+        }
+        catch (e) {
+            err = e
+        }
+        assert.strict.deepStrictEqual(err !== null, true)
+        assert.strict.deepStrictEqual(execSpawnError(err, { fixed: true }), { code: 'ERR_INVALID_ARG_VALUE', message: 'operation failed (code ERR_INVALID_ARG_VALUE)' })
+    })
+
+})

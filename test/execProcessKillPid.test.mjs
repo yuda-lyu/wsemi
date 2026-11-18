@@ -1,6 +1,8 @@
 import assert from 'assert'
 import cp from 'child_process'
+import { fileURLToPath } from 'url'
 import execProcessKillPid from '../src/execProcessKillPid.mjs'
+import { runChildCase } from './tools/runChildCase.mjs'
 import { revoked, thrower } from './tools/codecThrown.mjs'
 import { withGuard, untilTrue, reapTree, waitExit, waitStdout, recTrace, fiveOnTrace, collectUnhandled } from './tools/execTraceKit.mjs'
 
@@ -139,7 +141,7 @@ describe(`execProcessKillPid`, function() {
 
     //--- 失敗回報: reject錯誤訊息字串, 與resolve之pid[N] killed對稱 ---
 
-    it(`should reject a string pid[N] kill failed when pid is not a number`, async function() {
+    it(`should reject the fixed message without the value when pid is not a number`, async function() {
         let rs = []
         for (let pid of ['abc', undefined]) {
             try {
@@ -150,8 +152,8 @@ describe(`execProcessKillPid`, function() {
                 rs.push(e)
             }
         }
-        //P08a
-        assert.strict.deepStrictEqual(rs, ['pid[abc] kill failed: pid must be a number', 'pid[undefined] kill failed: pid must be a number'])
+        //P08a; ws492f: 本函數先於殺程序檢測, 固定訊息不回顯值(原為`pid[abc] kill failed: pid must be a number`); 完整輸入空間見〈pid之輸入檢測(R-EXEC-ARG-01)〉
+        assert.strict.deepStrictEqual(rs, ['invalid pid: must be an integer from 1 to 2147483647', 'invalid pid: must be an integer from 1 to 2147483647'])
     })
 
     it(`should reject a string pid[N] kill failed when killing a non-existent pid on win32`, async function() {
@@ -202,13 +204,14 @@ describe(`execProcessKillPid`, function() {
             }
         })
 
-        it(`should notify start with a null pid then fail with the message when pid is not a finite number`, async function() {
-            //JSDoc onTrace: start之pid為傳給tree-kill之數字, 非有限數字者為null; fail為tree-kill回報失敗而即將reject(pid、msg為reject訊息冒號後之錯誤訊息)
+        it(`should notify only fail with a null pid and the whole fixed message, and no start, when pid is invalid`, async function() {
+            //JSDoc onTrace: start為即將呼叫tree-kill(pid無效時不會發出); fail為tree-kill回報失敗或pid無效而即將reject(pid無效者pid為null, msg為整句固定訊息); ws492f: 原為start(pid:null)加fail(msg:'pid must be a number')
+            let msg = 'invalid pid: must be an integer from 1 to 2147483647'
             for (let pid of ['abc', undefined, Infinity]) {
                 let tr = recTrace({ guard: 12000 })
                 let r = await toRes(execProcessKillPid(pid, { onTrace: tr.on }))
-                assert.strict.deepStrictEqual(r, { s: 'reject', v: `pid[${pid}] kill failed: pid must be a number` }, String(pid))
-                assert.strict.deepStrictEqual(tr.events, [{ type: 'start', pid: null }, { type: 'fail', pid: null, msg: 'pid must be a number' }], String(pid))
+                assert.strict.deepStrictEqual(r, { s: 'reject', v: msg }, String(pid))
+                assert.strict.deepStrictEqual(tr.events, [{ type: 'fail', pid: null, msg }], String(pid))
             }
         })
 
@@ -261,12 +264,12 @@ describe(`execProcessKillPid`, function() {
             finally {
                 un = un.stop()
             }
-            let bad = { s: 'reject', v: 'pid[abc] kill failed: pid must be a number' }
+            let bad = { s: 'reject', v: 'invalid pid: must be an integer from 1 to 2147483647' }
             let one = [{ s: 'resolve', v: 'pid[N] killed' }, bad, bad, bad, [bad, bad, bad, bad], false]
             assert.strict.deepStrictEqual(got, [one, one, one, one, one])
             assert.strict.deepStrictEqual(un, [])
-            //紀錄器確有收到事件
-            assert.strict.deepStrictEqual(rec.types(), ['start', 'done', 'start', 'fail'])
+            //紀錄器確有收到事件(ws492f: pid無效者只發fail, 不發start)
+            assert.strict.deepStrictEqual(rec.types(), ['start', 'done', 'fail'])
         })
 
         it(`should notify frozen events of primitive fields fixed per type, with no receiver`, async function() {
@@ -289,6 +292,92 @@ describe(`execProcessKillPid`, function() {
             assert.strict.deepStrictEqual(keys, { start: 'pid,type', done: 'pid,type', fail: 'msg,pid,type' })
             assert.strict.deepStrictEqual(tr.events.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), true)
             assert.strict.deepStrictEqual(tr.meta.length === tr.events.length && tr.meta.every(([self, frozen]) => self === undefined && frozen), true)
+        })
+
+    })
+
+    //--- pid之輸入檢測(R-EXEC-ARG-01; 排程第492項第5批ws492f; 規格dspec〈輸入參數之檢測機制〉K2、K4、K6、K7、V17、V19、V20、§11 fail-closed) ---
+    //驗法: 無效pid(含0、負數: POSIX之kill(0)為殺行程群組、kill(-1)為殺所有可殺之程序)一律於子行程內以「攔截替身」測試(test/tools/execArgGuardRunner.mjs),
+    //  替身取代child_process之spawn、exec、execFile與process.kill且不呼叫真實函數, 故任何輸入皆不可能真的殺程序(含修前之碼); 「先於任何殺程序之動作」以攔截記錄為空判定,
+    //  並以有效pid之陽性對照證明替身確實計到呼叫; 真的殺程序之案例只對本測試自己啟動之子進程
+
+    describe(`pid之輸入檢測(R-EXEC-ARG-01)`, function() {
+
+        let runner = fileURLToPath(new URL('./tools/execArgGuardRunner.mjs', import.meta.url))
+        let runCase = (name) => {
+            let { r } = runChildCase(runner, name, { timeout: 120000 })
+            assert.strict.deepStrictEqual(Array.isArray(r.out), true, JSON.stringify(r.out).slice(0, 300))
+            return r.out
+        }
+        let MSG = 'invalid pid: must be an integer from 1 to 2147483647'
+
+        it(`should reject the fixed message and neither spawn nor kill anything for every invalid pid (0, negative, fractional, out of range, non-decimal, non-number kinds)`, function() {
+            let cells = runCase('killBad')
+            assert.strict.deepStrictEqual(cells.length, 39)
+            let bad = []
+            for (let c of cells) {
+                if (c.s !== 'reject' || c.v !== MSG || c.calls.length !== 0) {
+                    bad.push(`${c.k}: ${c.s} ${JSON.stringify(c.v)} calls=${JSON.stringify(c.calls)}`)
+                }
+            }
+            assert.strict.deepStrictEqual(bad, [])
+        })
+
+        it(`should hand the converted positive integer to tree-kill for every valid pid form (positive control of the interception)`, function() {
+            //K4: 去頭尾空白之十進位數字字串轉為數字後使用(' 424242 '→424242); 邊界1與2147483647有效; 陽性對照使上案之「0次」非空洞
+            let cells = runCase('killOk')
+            assert.strict.deepStrictEqual(cells.length, 9)
+            for (let c of cells) {
+                assert.strict.deepStrictEqual([c.s, c.v], ['resolve', `pid[${c.expect}] killed`], c.k)
+                let re = new RegExp(`(pid |kill )${c.expect}( |$)`)
+                assert.strict.deepStrictEqual(c.calls.some((x) => re.test(x)), true, `${c.k}: ${JSON.stringify(c.calls)}`)
+            }
+        })
+
+        it(`should kill the child process started by this test when pid is a decimal string with surrounding spaces, and report the converted number`, async function() {
+            let { child, ready, exited } = startChild(sReady)
+            try {
+                await withGuard(ready, 15000, 'child ready')
+                let r = await execProcessKillPid(` ${child.pid} `)
+                await withGuard(exited, 15000, 'child exit')
+                assert.strict.deepStrictEqual(r, `pid[${child.pid}] killed`)
+                assert.strict.deepStrictEqual(isAlive(child.pid), false)
+            }
+            finally {
+                await reapChild(child, exited)
+            }
+        })
+
+        it(`should leave a live child untouched when the pid is invalid (the call after a rejected one still works)`, async function() {
+            //無效pid不殺任何程序: 以本測試自己啟動之子進程為對象, 傳入其pid之無效寫法(小數、'0x'十六進位、陣列、尾綴雜字)後子進程仍存活, 再以有效pid殺之(0與負值只在攔截替身案測, 不對真實程序呼叫)
+            let { child, ready, exited } = startChild(sReady)
+            try {
+                await withGuard(ready, 15000, 'child ready')
+                for (let bad of [child.pid + 0.5, `0x${child.pid.toString(16)}`, [child.pid], String(child.pid) + 'x']) {
+                    let r = await toResOf(execProcessKillPid(bad))
+                    assert.strict.deepStrictEqual(r, { s: 'reject', v: MSG })
+                }
+                assert.strict.deepStrictEqual(isAlive(child.pid), true)
+                let r2 = await execProcessKillPid(child.pid)
+                await withGuard(exited, 15000, 'child exit')
+                assert.strict.deepStrictEqual(r2, `pid[${child.pid}] killed`)
+            }
+            finally {
+                await reapChild(child, exited)
+            }
+        })
+
+        let toResOf = (pm) => pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
+
+        it(`should not throw synchronously for an invalid pid`, function() {
+            //只取「修前之碼亦不會殺任何程序」之值(NaN類與Symbol): 0、負數、null、''、[]、BigInt等於修前之碼會被Number()轉成真實pid或0, 此類只在攔截替身案測試, 不對真實程序呼叫
+            for (let bad of [undefined, 'abc', NaN, {}, Symbol('s')]) {
+                let p = null
+                assert.doesNotThrow(() => {
+                    p = execProcessKillPid(bad)
+                })
+                p.catch(() => {})
+            }
         })
 
     })

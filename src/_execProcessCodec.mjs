@@ -64,7 +64,7 @@ function codePageToLabel(n) {
 
 //normalizeCodeCmd, 回傳{ mode, label }, mode為'fixed'|'auto'|'system', fixed時label為TextDecoder之正規名稱, 不支援之標籤回null
 //  非有效字串(未給、非字串、空字串)視為未設定, 回utf-8, 維持wsemi「無效設定用預設值」慣例
-//  有效字串但無法解碼者回null, 由呼叫端於執行前reject並帶標籤, 因用錯編碼解碼會靜默產生亂碼, 不宜改用預設值掩蓋
+//  有效字串但無法解碼者回null, 由呼叫端處置: execProcess依K3視為未給而改用預設utf-8(opt.debug為true時警告, 不回顯標籤; ws492f起, 原為於執行前reject並帶標籤)
 function normalizeCodeCmd(codeCmd) {
     if (!isestr(codeCmd)) {
         return { mode: 'fixed', label: 'utf-8' }
