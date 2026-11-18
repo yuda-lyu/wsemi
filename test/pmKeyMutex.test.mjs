@@ -1,5 +1,6 @@
 import assert from 'assert'
 import pmKeyMutex from '../src/pmKeyMutex.mjs'
+import { nonFunValues } from './tools/caseKit.mjs'
 
 
 describe(`pmKeyMutex`, function() {
@@ -213,6 +214,72 @@ describe(`pmKeyMutex`, function() {
     it(`should return '${JSON.stringify(ms6)}' when run test6'`, async function() {
         let ms = await test6()
         assert.strict.deepStrictEqual(ms, ms6)
+    })
+
+})
+
+
+describe(`pmKeyMutex 非函數之任務(dspec §11 W-15甲②; 比照pmQueue、pmThrottle)`, function() {
+
+    it(`fn非函數(12值,含isfun拋錯之已撤銷Proxy)時不同步拋錯, 回傳之Promise以固定字串'invalid fn: must be a function'被reject [W-15甲②]`, async function() {
+        //dspec §11 W-15甲②「執行期提交之工作無效即以固定訊息(V19)reject該工作(…pmKeyMutex比照，不再排隊後拋原生TypeError)」; V20不回顯值
+        let mx = pmKeyMutex()
+        for (let [k, v] of nonFunValues()) {
+            let p = null
+            let threw = false
+            try {
+                p = mx('K', v)
+            }
+            catch (err) {
+                threw = true
+            }
+            let r = threw ? 'sync-throw' : await p.then(() => 'resolve', (e) => e)
+            assert.strict.deepStrictEqual([k, threw, r], [k, false, 'invalid fn: must be a function'])
+        }
+    })
+
+    it(`非函數之fn不排入該key之佇列: 不等待同key執行中之任務即reject, 不影響同key其後有效任務之順序與結果 [W-15甲②]`, async function() {
+        //以事件迴圈之一輪(setImmediate)而非延時判定: 若非函數之呼叫被排入同key之佇列(原行為), 須等gate放行後才輪到並reject, 於放行前不會reject
+        let mx = pmKeyMutex()
+        let order = []
+        let release = null
+        let gate = new Promise((resolve) => {
+            release = resolve
+        })
+        let pa = mx('K', async () => {
+            order.push('a-start')
+            await gate
+            order.push('a-end')
+            return 'A'
+        })
+        let bad = []
+        let pb = mx('K', 5).then(() => {
+            bad.push('resolve')
+        }, (e) => {
+            bad.push(e)
+        })
+        let pc = mx('K', async () => {
+            order.push('c')
+            return 'C'
+        })
+        //讓出事件迴圈一輪: 非函數者已reject(gate尚未放行, a尚未結束, c尚未開始)
+        await new Promise((resolve) => setImmediate(resolve))
+        assert.strict.deepStrictEqual({ bad, order }, { bad: ['invalid fn: must be a function'], order: ['a-start'] })
+        release()
+        let rs = await Promise.all([pa, pb, pc])
+        assert.strict.deepStrictEqual({ rs, order }, { rs: ['A', undefined, 'C'], order: ['a-start', 'a-end', 'c'] })
+    })
+
+    it(`非函數之呼叫不留下該key之記錄: 其後同key之有效任務立即執行(不被無效呼叫佔住鏈尾) [W-15甲②]`, async function() {
+        let mx = pmKeyMutex()
+        let order = []
+        for (let [, v] of nonFunValues()) {
+            await mx('Z', v).catch(() => {})
+        }
+        await mx('Z', async () => {
+            order.push('z')
+        })
+        assert.strict.deepStrictEqual(order, ['z'])
     })
 
 })

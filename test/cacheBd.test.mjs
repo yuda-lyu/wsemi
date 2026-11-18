@@ -450,12 +450,28 @@ describe(`cacheBd 並發與寫入序(R-PM-SETTLE-01規則15)`, function() {
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })
 
-    it(`fun非函數時get以TypeError被reject, getFromCache輪詢至nMax後reject Error('exceeded nMax[nMax]') [規則12]`, async function() {
-        let bc = cacheBd('abc', { nMax: 2, nTrigger: 1 })
-        let r1 = await bc.get().then(() => 'resolve', (e) => (e instanceof TypeError ? 'TypeError' : String(e)))
-        let r2 = await bc.getFromCache().then(() => 'resolve', (e) => (e instanceof Error ? e.message : String(e)))
-        //R-PM-SETTLE-01 規則12: cacheBd.get以TypeError reject而getFromCache輪詢至nMax(寫入JSDoc); JSDoc cacheBd:18「fun非函數時get以TypeError被reject，getFromCache吞下其錯誤而持續輪詢至nMax後reject」
-        assert.strict.deepStrictEqual({ r1, r2 }, { r1: 'TypeError', r2: 'exceeded nMax[2]' })
+})
+
+
+describe(`cacheBd 非函數(dspec §11 W-15甲①; 原R-PM-SETTLE-01規則12)`, function() {
+
+    let r = null
+    before(function() {
+        r = runPmSettle('nonFunCacheBd').r
+    })
+
+    it(`fun非函數(12值,含isfun拋錯之已撤銷Proxy)時於cacheBd呼叫當下同步拋Error('invalid fun: must be a function'), 不再延後至get之TypeError與getFromCache之輪詢至nMax [W-15甲①]`, function() {
+        //dspec §11 W-15甲①「建立物件或立即啟動之參數無效即同步拋錯(…cacheBd之fun…)」; 原行為: get以TypeError reject、getFromCache吞下錯誤而輪詢至nMax(預設約200秒)才reject 'exceeded nMax[N]'
+        //先於任何副作用: opt.nMax為無效值且opt.debug為true時funLog未收到警告(warns為[]), onTrace未收到任何事件(events為[]), 即fun之檢測先於opt之解析
+        let bad = { threw: true, isError: true, msg: 'invalid fun: must be a function', warns: [], events: [] }
+        let keys = ['undefined', 'null', 'zero', 'num', 'str', 'bool', 'obj', 'arr', 'pm', 'asyncGen', 'revokedObj', 'revokedFn']
+        assert.strict.deepStrictEqual(r.out.out, Object.fromEntries(keys.map((k) => [k, bad])))
+    })
+
+    it(`陽性對照: 有效fun時警告(opt.nMax為'abc'者1則)與onTrace事件確實運作, 回傳物件含get與getFromCache, get照常取得結果`, function() {
+        //證明上案之warns為[]、events為[]不是opt.debug、funLog或onTrace失效所致
+        assert.strict.deepStrictEqual(r.out.ctl, { keys: ['get', 'getFromCache'], warns: 1, events: ['get', 'done'], r: { s: 'resolve', v: '<number>' } })
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })
 
 })

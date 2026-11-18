@@ -8,6 +8,12 @@
 
 2026-11-02(ws265)依全域設定§14整理: 本檔原約 53.7KB(13 節),依功能類型拆為下列 5 檔(含同日新增之 `state_測試.md`),各節之節號與標題不變、內容逐字搬移;本檔只留索引.完成一項功能或結束一輪工作時,把現況寫入對應類型檔(無對應類型者新增 `state_<類型>.md` 並於下列增列),不再寫回本檔.2026-11-02(ws272c)另把 `state_數值與判斷.md` 之第 2 輪三節(ws272a、ws272b、ws272c)抽至 `state_數值與判斷_第2輪.md`(原檔約 31.3KB),現共 6 檔.
 
+### `sgud/state/state_計時與流程函數參數檢測.md`(計時與流程函數之函數參數檢測、`importResources` 之 `pathItems` 檢測;約 4KB;新增於 2026-11-18)
+
+查: `setTimeoutHp`／`setIntervalHp`／`cacheBd`／`pmHook`／`pmHookReject`(`fun` 無效同步拋、先於副作用)、`pmQueue`／`pmThrottle`／`pmKeyMutex`(任務無效 reject 固定字串、不排隊)、`pmChain`／`pmMap`／`pmSeries`(視為未給)、`importResources`(進入時驗證並複製、不改寫輸入)之現況:內部 `_isFunSafe`、修前紅／變異驗證數字、獨立複審未執行之原因、已知缺口與待裁示(排程第 492 項第 6 批).所含節:
+
+- 第 492 項第 6 批:計時與流程(ws492g,2026-11-18;ws492g2 修正輪同日續改:`pmThrottle` 執行點再驗、`importResources` 載入事件內判定與 V19 訊息、`pmChain` 判準一致)〔本節於 2026-11-18 新增〕
+
 ### `sgud/state/state_外部程序三函數輸入檢測.md`(外部程序三函數之輸入檢測;約 5KB;新增於 2026-11-18)
 
 查: `execProcess`(`prog`、`args`、`opt.codeCmd`、原生錯誤固定詞彙)、`execProcessKillPid`(`pid` 1~2147483647、0 與負數先於殺程序拒絕)、`execJsCode`(`fpJsCode`、`opt` 直通)之輸入檢測現況:子行程攔截替身之驗法、修前紅／變異／全套之驗證數字、獨立複審、已知缺口與待裁示(排程第 492 項第 5 批).所含節:

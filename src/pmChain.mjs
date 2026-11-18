@@ -1,5 +1,6 @@
 import genPm from './genPm.mjs'
 import pmReadItems from './_pmReadItems.mjs'
+import isFunSafe from './_isFunSafe.mjs'
 
 
 /**
@@ -7,8 +8,8 @@ import pmReadItems from './_pmReadItems.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmChain.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} pms 輸入函數陣列，各函數依序接收前一結果，回傳一般值或Promise(同Promise之then)；元素須為函數，傳入Promise(而非回傳Promise之函數)將被忽略，該Promise之reject亦不會被處理；元素於進入時即取值，呼叫後改動pms不影響執行，讀取元素拋錯時以該錯誤reject
- * @param {*} initial 輸入循序執行函數陣列的初始值
+ * @param {Array} pms 輸入函數陣列，各函數依序接收前一結果，回傳一般值或Promise(同Promise之then)；元素須為函數(以isfun判定，與pmMap、pmSeries、pmQueue同一判準)，非函數之元素(含傳入Promise而非回傳Promise之函數、async generator函數、已撤銷之函數Proxy)視為未給而略過(清單之元素，不報錯、不reject；前一結果原樣傳給下一個)，該Promise之reject亦不會被處理；元素於進入時即取值，呼叫後改動pms不影響執行，讀取元素拋錯時以該錯誤reject
+ * @param {*} [initial=null] 輸入循序執行函數陣列的初始值，選填，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *
@@ -144,7 +145,8 @@ function pmChain(pms, initial = null) {
             return pm
         }
         return rd.items.reduce((pm, v) => {
-            return pm.then(v)
+            //元素以isFunSafe判定(同pmMap、pmSeries、pmQueue之判準): 非函數(含async generator函數、已撤銷之函數Proxy)視為未給, 略過(then(undefined)原樣傳遞前一結果)
+            return pm.then(isFunSafe(v) ? v : undefined)
         }, Promise.resolve(initial))
     }
     catch (err) {

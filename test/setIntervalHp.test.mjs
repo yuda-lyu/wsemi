@@ -40,15 +40,30 @@ describe(`setIntervalHp settle(R-PM-SETTLE-01)`, function() {
 })
 
 
-describe(`setIntervalHp 非函數(R-PM-SETTLE-01規則12)`, function() {
+describe(`setIntervalHp 非函數(dspec §11 W-15甲①; 原R-PM-SETTLE-01規則12)`, function() {
 
-    it(`fun非函數時每次到期皆以console.log記錄Error('fn is not a function'), 呼叫停止函數後不再記錄 [規則12]`, function() {
-        let r = runHp('intervalNonFun')
-        let { seq, logsAt2, minElapsed, minGap, after } = r.out
-        //R-PM-SETTLE-01 規則12: setIntervalHp每次到期記錄(寫入JSDoc); JSDoc setIntervalHp「fun非函數時每次到期皆以console.log記錄Error('fn is not a function')，直至呼叫停止函數」
-        //每次到期皆記錄: 第2次到期之結果(即將記錄)時已記錄2筆, 到期與結果一一對應(fun非函數之state為invalid)
+    it(`fun非函數(12值)時同步拋Error('invalid fun: must be a function'), 不啟動計時器、不通知onTrace、不輸出opt.debug警告、不記錄 [W-15甲①]`, function() {
+        let { r } = runPmSettle('nonFunHp')
+        //dspec §11 W-15甲①「建立物件或立即啟動之參數無效即同步拋錯、先於任何副作用(setTimeoutHp／setIntervalHp不啟動計時器…)」; 訊息為V19固定格式不回顯值(V20)
+        //(原: 每次到期皆以console.log記錄Error('fn is not a function')直至呼叫停止函數, 即無效fun使計時器持續運轉且靜默失敗)
+        //替身計數計時器之啟動點(timers為0), onTrace未收到任何事件(events為[]), interval為無效值且opt.debug為true時funLog未收到警告(warns為[]): fun之檢測先於interval之檢測
+        let bad = { threw: true, isError: true, msg: 'invalid fun: must be a function', timers: 0, warns: [], events: [] }
+        let keys = ['undefined', 'null', 'zero', 'num', 'str', 'bool', 'obj', 'arr', 'pm', 'asyncGen', 'revokedObj', 'revokedFn']
+        assert.strict.deepStrictEqual(r.out.out.interval, Object.fromEntries(keys.map((k) => [k, bad])))
+        //陽性對照: 有效fun時替身確實攔得到計時器之啟動(1次)、opt.debug警告(interval為'abc'者1則)與onTrace之start事件
+        assert.strict.deepStrictEqual(r.out.ctl.interval, { timers: 1, warns: 1, events: ['start'] })
+        //全程無console.log記錄, 無未處理之rejection與未捕捉例外(R-PM-SETTLE-01規則2)
+        assert.strict.deepStrictEqual(r.out.logs, [])
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+    it(`should notify and log an invalid result at each expiry for a fun revoked after creation, and stop notifying and logging once the stop function is called`, function() {
+        let r = runHp('intervalRevokedAfterStart')
+        let { seq, nLogsAt2, minElapsed, minGap, after } = r.out
+        //JSDoc 'result'的state為'invalid'(到期時fun已無法判定為函數, 如建立後才被撤銷之Proxy, 即將console.log記錄); 建立時之無效fun已同步拋錯(見上案)
+        //每次到期皆記錄: 第2次到期之結果(即將記錄)時已記錄2筆, 到期與結果一一對應
         assert.strict.deepStrictEqual(seq, ['start', 'fire#1', 'result#1:invalid', 'fire#2', 'result#2:invalid', 'stop'])
-        assert.strict.deepStrictEqual(logsAt2, ['fn is not a function', 'fn is not a function'])
+        assert.strict.deepStrictEqual(nLogsAt2, 2)
         //JSDoc interval「時間間隔」: 到期不早於interval(下界, 不受負載影響), 相鄰兩次到期之間隔亦不小於interval
         assert.strict.deepStrictEqual(minElapsed >= 20, true)
         assert.strict.deepStrictEqual(minGap >= 20 - tol, true)
@@ -129,7 +144,8 @@ describe(`setIntervalHp 觀察回調(onTrace)`, function() {
         //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變(第3參數可省略, 同舊版之setIntervalHp(fun, interval)); P4: 回調之拋錯與回傳值不影響計時與調用、不產生未處理之rejection
         //假時鐘控制不了hrtime計時, 故五種模式於真實計時器下各跑同一情境, 以事件(fun之第3次調用、記錄筆數)為同步點
         let r = runHp('intervalP34')
-        let exp = { calls: [1, 2, 3], logs: ['boom2', 'fn is not a function', 'fn is not a function'], stops: ['function', 'function'] }
+        //fun非函數(W-15甲①)於五種模式皆同步拋Error('invalid fun: must be a function')、不通知回調(evB為0)且不記錄(logs只有boom2)
+        let exp = { calls: [1, 2, 3], logs: ['boom2'], stops: ['function'], thrownB: 'invalid fun: must be a function', evB: 0 }
         assert.strict.deepStrictEqual(r.out.results, [exp, exp, exp, exp, exp])
         //紀錄器確實收到事件
         assert.strict.deepStrictEqual(r.out.recTypes, ['fire', 'result', 'start', 'stop'])

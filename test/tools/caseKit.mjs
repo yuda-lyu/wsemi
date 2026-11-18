@@ -107,4 +107,52 @@ function settleShown(pm, ms = 5000) {
 }
 
 
-export { safeStr, revoked, showValue, showDeep, settleShown }
+/**
+ * 產生已撤銷之函數Proxy: typeof仍為'function', 但lodash isFunction(isfun)對其拋TypeError
+ *
+ * @returns {Function} 回傳已撤銷之函數Proxy
+ */
+function revokedFn() {
+    let { proxy, revoke } = Proxy.revocable(function() {}, {})
+    revoke()
+    return proxy
+}
+
+
+/**
+ * 產生尚未撤銷之函數Proxy及其撤銷器: 撤銷前為有效函數(isfun為true、可通過入口之函數檢測), 呼叫revoke()後lodash isFunction(isfun)對其拋TypeError;
+ * 供「通過檢測後才失效」之測試(入口通過檢測、執行點或事件回呼內才被撤銷)
+ *
+ * @returns {Object} 回傳{ proxy, revoke }
+ */
+function revocableFn() {
+    let { proxy, revoke } = Proxy.revocable(function() {}, {})
+    return { proxy, revoke }
+}
+
+
+/**
+ * 非函數值軸(計時與流程函數之函數參數無效值, dspec §11 W-15; 單一定義供測試檔與子行程執行器共用), 每項為[標籤, 值]
+ * 含: undefined、null、0、數字、字串、布林、物件、陣列、Promise、async generator函數(isfun為false)、已撤銷之物件Proxy與函數Proxy(isfun拋TypeError)
+ *
+ * @returns {Array} 回傳[標籤, 值]之陣列, 共12項
+ */
+function nonFunValues() {
+    return [
+        ['undefined', undefined],
+        ['null', null],
+        ['zero', 0],
+        ['num', 5],
+        ['str', 'abc'],
+        ['bool', true],
+        ['obj', {}],
+        ['arr', []],
+        ['pm', Promise.resolve(1)],
+        ['asyncGen', async function* () {}],
+        ['revokedObj', revoked()],
+        ['revokedFn', revokedFn()],
+    ]
+}
+
+
+export { safeStr, revoked, revokedFn, revocableFn, nonFunValues, showValue, showDeep, settleShown }

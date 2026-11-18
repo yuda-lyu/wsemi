@@ -1,7 +1,7 @@
 import drop from 'lodash-es/drop.js'
 import each from 'lodash-es/each.js'
 import genPm from './genPm.mjs'
-import isfun from './isfun.mjs'
+import isFunSafe from './_isFunSafe.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import pmReadItems from './_pmReadItems.mjs'
 
@@ -19,7 +19,7 @@ import pmReadItems from './_pmReadItems.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmSeries.test.mjs Github}
  * @memberOf wsemi
  * @param {Array|Object} rs 輸入資料陣列或鍵值物件，若不給fn則rs需要為Promise陣列(或值為Promise之物件)
- * @param {Function} fun 輸入循序執行值的呼叫函數
+ * @param {Function} [fun] 輸入循序執行值的呼叫函數，選填；未給或非函數(清單處理之參數，視為未給，不報錯、不reject)時rs之元素(Promise或一般值)原樣作為各步之結果
  * @returns {Promise} 回傳Promise，resolve回傳成功結果，reject回傳失敗結果
  * @example
  *
@@ -233,8 +233,8 @@ function pmSeries(rs, fun) {
         return pm
     }
 
-    //default fun
-    if (!isfun(fun)) {
+    //default fun, fun為選填(清單處理之參數), 非函數視為未給, 判定本身拋錯(如已撤銷之Proxy)亦視為未給而不同步外拋(W-15甲③)
+    if (!isFunSafe(fun)) {
 
         //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則排在後面者先reject時於取用前成為未處理之rejection
         each(rs, (v) => {
@@ -247,7 +247,7 @@ function pmSeries(rs, fun) {
     }
 
     //isFunFun, 於迴圈外判定一次, 不於逐元素回呼內重複判定(lodash之isFunction對async函數每次皆經getRawTag賦值拋錯再捕捉, V8擷取之非同步堆疊隨promise鏈加深而成平方)
-    let isFunFun = isfun(fun)
+    let isFunFun = isFunSafe(fun)
 
     //ts
     let k = -1

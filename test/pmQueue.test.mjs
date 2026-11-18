@@ -468,7 +468,7 @@ describe(`pmQueue`, function() {
             ].map((p) => p.then((v) => ['resolve', v], (e) => ['reject', e]))
             await clock.advance(50)
             let rs = await settled(Promise.all(ps))
-            assert.strict.deepStrictEqual(rs, [['reject', { reason: 'cancelled' }], ['reject', { reason: 'cancelled' }], ['reject', 'fun is not a function']])
+            assert.strict.deepStrictEqual(rs, [['reject', { reason: 'cancelled' }], ['reject', { reason: 'cancelled' }], ['reject', 'invalid fun: must be a function']])
         }
         finally {
             clock.restore()
@@ -483,7 +483,7 @@ describe(`pmQueue`, function() {
         assert.strict.deepStrictEqual(tr.events.every((e) => Object.values(e).every((v) => v === null || ['number', 'string', 'boolean'].includes(typeof v))), true)
         //事件為凍結物件, 回調不帶接收者(this為undefined)
         assert.strict.deepStrictEqual(meta.length > 0 && meta.every(([self, frozen]) => self === undefined && frozen), true)
-        //任務序號依呼叫順序由1起算; 失敗者與非函數者ok為false; 非函數者仍通知start與end
+        //任務序號依呼叫順序由1起算; 失敗者與非函數者ok為false; 非函數者仍通知start與end(W-15甲②: 照常排入)
         assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'end').map((e) => `${e.n}:${e.ok}`), ['2:false', '3:false', '1:true'])
         assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'start').map((e) => e.n), [1, 2, 3])
         //takeLast: 非最後呼叫者(1、2)被cancel, 最後者(3)不cancel
@@ -524,22 +524,24 @@ describe(`pmQueue settle(R-PM-SETTLE-01)`, function() {
 })
 
 
-describe(`pmQueue 非函數任務(R-PM-SETTLE-01規則12)`, function() {
+describe(`pmQueue 非函數任務(dspec §11 W-15甲②; 原R-PM-SETTLE-01規則12)`, function() {
 
-    it(`非函數之任務(7值)以字串'fun is not a function'被reject, 後續任務照常 [規則12]`, function() {
+    it(`非函數之任務(12值,含isfun拋錯之已撤銷Proxy)以固定字串'invalid fun: must be a function'被reject(不同步拋錯、不回顯值), 後續任務照常 [W-15甲②]`, function() {
         let { r } = runPmSettle('nonFunQueue')
-        //R-PM-SETTLE-01 規則12: pmQueue之任務非函數時回傳之Promise以字串'fun is not a function' reject; JSDoc pmQueue:25「第1參數非函數時該任務之Promise以字串'fun is not a function'被reject」
-        let rj = { s: 'reject', v: 'fun is not a function' }
-        assert.strict.deepStrictEqual(r.out, { undefined: rj, null: rj, zero: rj, str: rj, obj: rj, pm: rj, asyncGen: rj, next: { s: 'resolve', v: 'good' } })
+        //dspec §11 W-15甲②「執行期提交之工作無效即以固定訊息(V19)reject該工作(pmQueue、pmThrottle維持並改訊息格式)」; JSDoc pmQueue「第1參數(任務)非函數時…其Promise以固定字串'invalid fun: must be a function'被reject」
+        //(原訊息'fun is not a function'; 已撤銷之Proxy原於佇列監聽器內因isfun拋錯而使該任務與其後任務懸置)
+        let rj = { s: 'reject', v: 'invalid fun: must be a function' }
+        let keys = ['undefined', 'null', 'zero', 'num', 'str', 'bool', 'obj', 'arr', 'pm', 'asyncGen', 'revokedObj', 'revokedFn']
+        assert.strict.deepStrictEqual(r.out, { ...Object.fromEntries(keys.map((k) => [k, rj])), next: { s: 'resolve', v: 'good' } })
         //R-PM-SETTLE-01 規則2
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })
 
-    it(`pmQueue(0, true)排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'fun is not a function'被reject [規則12]`, function() {
+    it(`pmQueue(0, true)排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'invalid fun: must be a function'被reject [W-15甲②]`, function() {
         let { r } = runPmSettle('nonFunQueueTakeLast')
-        //R-PM-SETTLE-01 規則12: pmQueue照常排入, 輪到時以同一字串reject(takeLast下非函數為最後一筆時其前之任務照常被取消); 規則4: 取消一律以{ reason: 'cancelled' }傳出
+        //dspec §11 W-15甲②「pmQueue維持(照常排入, 輪到時reject)並改訊息格式」(takeLast下非函數為最後一筆時其前之任務照常被取消); R-PM-SETTLE-01規則4: 取消一律以{ reason: 'cancelled' }傳出
         let cancelled = { s: 'reject', reason: 'cancelled' }
-        assert.strict.deepStrictEqual(r.out, { t1: cancelled, t2: cancelled, t3: { s: 'reject', v: 'fun is not a function' } })
+        assert.strict.deepStrictEqual(r.out, { t1: cancelled, t2: cancelled, t3: { s: 'reject', v: 'invalid fun: must be a function' } })
         //R-PM-SETTLE-01 規則2
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })

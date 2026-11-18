@@ -2,6 +2,7 @@ import assert from 'assert'
 import { fileURLToPath } from 'url'
 import pmChain from '../src/pmChain.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { nonFunValues } from './tools/caseKit.mjs'
 
 
 describe(`pmChain`, function() {
@@ -265,6 +266,38 @@ describe(`pmChain 輸入於進入時取值(R-PM-SETTLE-01規則17、R-OBJ-ITER-0
         let r = await call(() => pm)
         //R-PM-SETTLE-01 規則17: 於進入時取值(複製), 其後只處理複本
         assert.strict.deepStrictEqual(r, { s: 'resolve', v: 'xab' })
+    })
+
+})
+
+
+describe(`pmChain 非函數之元素(dspec §11 W-15甲③: 清單之元素維持視為未給)`, function() {
+
+    it(`非函數之元素(12值: 含Promise、null、undefined、數字、字串、物件、陣列、async generator函數、已撤銷之物件與函數Proxy)視為未給而略過: 前一結果原樣傳給下一個函數, 不報錯、不reject [W-15甲③; ws492g2 第4點]`, async function() {
+        //dspec §11 W-15甲③「清單之元素維持『視為未給』(pmChain、pmMap、pmSeries之非函數元素略過)」; JSDoc pmChain「非函數之元素(含async generator函數、已撤銷之函數Proxy)視為未給而略過」
+        //ws492g2 第4點: 元素以isFunSafe判定, 與pmMap、pmSeries、pmQueue同一判準; async generator函數(isfun為false)與已撤銷之函數Proxy(isfun拋TypeError)皆略過, 不被then呼叫(原行為: 前者回傳generator物件、後者拋TypeError而reject)
+        let keys = []
+        for (let [k, v] of nonFunValues()) {
+            keys.push(k)
+            let r = await pmChain([(x) => x + 1, v, (x) => x * 10], 4).then((x) => ({ s: 'resolve', v: x }), (e) => ({ s: 'reject', v: e }))
+            assert.strict.deepStrictEqual([k, r], [k, { s: 'resolve', v: 50 }])
+        }
+        //12值全測(不排除任何值): 鎖定值集合含async generator函數與已撤銷之函數Proxy
+        assert.strict.deepStrictEqual(keys.length, 12)
+        assert.strict.deepStrictEqual(keys.includes('asyncGen') && keys.includes('revokedFn') && keys.includes('revokedObj'), true)
+        //全為非函數之元素: 結果為initial原樣
+        let r2 = await pmChain([5, null, 'x'], 'init').then((x) => ({ s: 'resolve', v: x }), (e) => ({ s: 'reject', v: e }))
+        assert.strict.deepStrictEqual(r2, { s: 'resolve', v: 'init' })
+    })
+
+    it(`initial為選填(預設null): 未給時第1個函數收到null`, async function() {
+        //JSDoc pmChain「@param {*} [initial=null]」(原簽名有預設而JSDoc未標選填)
+        let got = 'not-called'
+        let r = await pmChain([(x) => {
+            got = x
+            return 'done'
+        }])
+        assert.strict.deepStrictEqual([got, r], [null, 'done'])
     })
 
 })

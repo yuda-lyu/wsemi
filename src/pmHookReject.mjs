@@ -1,4 +1,4 @@
-import isfun from './isfun.mjs'
+import isFunSafe from './_isFunSafe.mjs'
 import pmHook from './pmHook.mjs'
 
 
@@ -7,9 +7,9 @@ import pmHook from './pmHook.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmHookReject.test.mjs Github}
  * @memberOf wsemi
- * @param {Function} fun 輸入非同步Promise函數
- * @param {Function} [cb=()=>{}] 輸入回調函數，預設()={}，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'abc'，將msg='def'再return msg即可
- * @returns {Function|null} 回傳包裝函數，呼叫後回傳Promise，resolve為回傳成功結果，reject為回傳失敗訊息；fun非函數時回傳null
+ * @param {Function} fun 輸入非同步Promise函數，必須參數，須為函數(async generator函數不算)；非函數時於本函數呼叫當下同步拋出Error('invalid fun: must be a function')，不回傳null
+ * @param {Function} [cb=()=>{}] 輸入回調函數，預設()={}，非函數視為未給而改用預設，cb函數之輸入為監聽reject到的資訊數據。若想於cb函數修改reject數據，則由cb函數的輸入修改完回傳即可。例如收到reject的msg為'abc'，將msg='def'再return msg即可
+ * @returns {Function} 回傳包裝函數，呼叫後回傳Promise，resolve為回傳成功結果，reject為回傳失敗訊息
  * @example
  *
  * async function topAsync() {
@@ -102,11 +102,11 @@ import pmHook from './pmHook.mjs'
  */
 function pmHookReject(fun, cb = () => {}) {
 
-    //check
-    if (!isfun(fun)) {
-        return null
+    //check, fun為必須參數(建立包裝函數者), 無效即同步拋錯而不回傳null(同pmHook); cb為選填, 非函數視為未給(K3)
+    if (!isFunSafe(fun)) {
+        throw new Error('invalid fun: must be a function')
     }
-    if (!isfun(cb)) {
+    if (!isFunSafe(cb)) {
         cb = () => {}
     }
 

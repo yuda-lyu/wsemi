@@ -381,7 +381,7 @@ describe(`pmThrottle`, function() {
             ].map((p) => p.then((v) => ['resolve', v], (e) => ['reject', e instanceof Error ? e.message : e]))
             await clock.advance(100)
             let rs = await settled(Promise.all(ps))
-            assert.strict.deepStrictEqual(rs, [['reject', { reason: 'cancelled' }], ['reject', 'boom'], ['reject', 'fun is not a function']])
+            assert.strict.deepStrictEqual(rs, [['reject', { reason: 'cancelled' }], ['reject', 'boom'], ['reject', 'invalid fun: must be a function']])
         }
         finally {
             clock.restore()
@@ -400,7 +400,7 @@ describe(`pmThrottle`, function() {
     })
 
     it(`should reject a non-function task before queueing, so the queue never holds one and the detect timer never starts for it`, async function() {
-        //JSDoc 「輸入非函數時不排入佇列，回傳之Promise以字串'fun is not a function'被reject」: 偵測(tick)只會取到已排入之函數任務, 故tick內不需處理非函數(不可達); 非函數呼叫後無任何事件(未push、未start偵測計時器), 任務序號亦不被佔用(其後第一個有效任務n=1)
+        //JSDoc 「輸入非函數時不排入佇列，回傳之Promise以固定字串'invalid fun: must be a function'被reject」: 偵測(tick)只會取到已排入之函數任務, 故tick內不需處理非函數(不可達); 非函數呼叫後無任何事件(未push、未start偵測計時器), 任務序號亦不被佔用(其後第一個有效任務n=1)
         let clock = useFakeClock()
         try {
             let tr = traceRec()
@@ -409,7 +409,7 @@ describe(`pmThrottle`, function() {
             for (let v of [undefined, null, 0, 'abc', {}, [], Promise.resolve(1)]) {
                 rs.push(await pmt(v).then(() => 'resolve', (e) => e))
             }
-            assert.strict.deepStrictEqual(rs, Array(7).fill('fun is not a function'))
+            assert.strict.deepStrictEqual(rs, Array(7).fill('invalid fun: must be a function'))
             await clock.advance(100)
             assert.strict.deepStrictEqual(tr.events, []) //非函數任務未入列, 偵測計時器未啟動
             //其後的有效任務照常排入與執行, 序號自1起
@@ -447,17 +447,19 @@ describe(`pmThrottle settle(R-PM-SETTLE-01)`, function() {
 })
 
 
-describe(`pmThrottle 非函數任務(R-PM-SETTLE-01規則12)`, function() {
+describe(`pmThrottle 非函數任務(dspec §11 W-15甲②; 原R-PM-SETTLE-01規則12)`, function() {
 
     let r = null
     before(function() {
         r = runPmSettle('nonFunThrottle').r
     })
 
-    it(`非函數之任務(7值)回傳Promise並以字串'fun is not a function'被reject [規則12]`, function() {
-        //R-PM-SETTLE-01 規則12: pmThrottle之任務非函數時不排入, 回傳之Promise以字串'fun is not a function' reject; JSDoc pmThrottle:16「輸入非函數時不排入佇列，回傳之Promise以字串'fun is not a function'被reject」
-        let rj = { s: 'reject', v: 'fun is not a function' }
-        assert.strict.deepStrictEqual(r.out.out, { undefined: rj, null: rj, zero: rj, str: rj, obj: rj, pm: rj, asyncGen: rj })
+    it(`非函數之任務(12值,含isfun拋錯之已撤銷Proxy)回傳Promise並以固定字串'invalid fun: must be a function'被reject(不同步拋錯、不回顯值) [W-15甲②]`, function() {
+        //dspec §11 W-15甲②「執行期提交之工作無效即以固定訊息(V19)reject該工作(pmQueue、pmThrottle維持並改訊息格式)」; JSDoc pmThrottle「輸入非函數時不排入佇列，回傳之Promise以固定字串'invalid fun: must be a function'被reject」
+        //(已撤銷之Proxy原於run內因isfun拋錯而同步外拋, 非回傳reject之Promise)
+        let rj = { s: 'reject', v: 'invalid fun: must be a function' }
+        let keys = ['undefined', 'null', 'zero', 'num', 'str', 'bool', 'obj', 'arr', 'pm', 'asyncGen', 'revokedObj', 'revokedFn']
+        assert.strict.deepStrictEqual(r.out.out, Object.fromEntries(keys.map((k) => [k, rj])))
     })
 
     it(`非函數之任務不排入: 不取消已排入之任務, 後續任務照常, 不以console.log記錄 [規則12]`, function() {
@@ -470,6 +472,65 @@ describe(`pmThrottle 非函數任務(R-PM-SETTLE-01規則12)`, function() {
     it(`無未處理之rejection與未捕捉例外 [規則2]`, function() {
         //R-PM-SETTLE-01 規則2
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+})
+
+
+describe(`pmThrottle 通過檢測後才被撤銷之任務(ws492g2 第1點: 執行點以isFunSafe再驗)`, function() {
+
+    let r = null
+    before(function() {
+        r = runPmSettle('throttleRevokedAfterCheck').r
+    })
+
+    it(`任務於run()通過檢測後、輪到執行前被撤銷(函數Proxy revoke): 該任務以'invalid fun: must be a function'reject, 事件序為push→start→run→done(ok為false)→stop(計時器停止) [W-15甲②]`, function() {
+        //ws492g2 第1點「執行點以isFunSafe再驗, 無效則該任務以'invalid fun: must be a function'reject, 佇列續行、計時器照常停止」
+        //修前: 計時器回呼內pm2resolve(m.func)同步拋TypeError → 該任務永不settle('pending')、running停在true、無'done'/'stop'事件
+        assert.strict.deepStrictEqual({ a: r.out.a, aStop: r.out.aStop, aEvents: r.out.aEvents }, {
+            a: { s: 'reject', v: 'invalid fun: must be a function' },
+            aStop: 'stop',
+            aEvents: ['push:1', 'start', 'run:1', 'done:1:fail', 'stop'],
+        })
+    })
+
+    it(`其後之任務照常settle(佇列續行、running已釋放、計時器重新啟動後再停止) [W-15甲②]`, function() {
+        //ws492g2 第7點①「須含其後之任務仍settle」
+        assert.strict.deepStrictEqual({ b: r.out.b, bStop: r.out.bStop, bEvents: r.out.bEvents }, {
+            b: { s: 'resolve', v: 'good' },
+            bStop: 'stop',
+            bEvents: ['push:2', 'start', 'run:2', 'done:2:ok', 'stop'],
+        })
+    })
+
+    it(`節流語意不變: 先排入有效任務、最後排入通過檢測後撤銷者, 先者被取消、最後者執行時被判無效; 撤銷者非最後排入時依節流被取消(不被呼叫), 其後之有效任務照常; 收尾後再提交仍照常`, function() {
+        assert.strict.deepStrictEqual({ c: r.out.c, cStop: r.out.cStop, d: r.out.d, dStop: r.out.dStop, e: r.out.e }, {
+            c: { x: { s: 'reject', reason: 'cancelled' }, last: { s: 'reject', v: 'invalid fun: must be a function' } },
+            cStop: 'stop',
+            d: { revokedNotLast: { s: 'reject', reason: 'cancelled' }, last: { s: 'resolve', v: 'e' } },
+            dStop: 'stop',
+            e: { s: 'resolve', v: 'again' },
+        })
+    })
+
+    it(`無未處理之rejection與未捕捉例外 [規則2]`, function() {
+        //R-PM-SETTLE-01 規則2; 修前於計時器回呼內外拋 → 1則unhandledRejection
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
+    })
+
+    it(`V19訊息之名稱等於實際參數名: run之第1個參數名為fun, 與'invalid fun: must be a function'之名稱一致 [W-15甲②、V19]`, async function() {
+        //ws492g2 第3點: run(func, ...input)之參數改名fun; dspec §6 V19「名稱為參數名」
+        let run = pmThrottle()
+        let m = /^\s*function\s*[\w$]*\s*\(\s*([A-Za-z_$][\w$]*)/.exec(Function.prototype.toString.call(run))
+        let name = m ? m[1] : null
+        let msg = await run(5).then(() => null, (e) => e)
+        assert.strict.deepStrictEqual({ name, msg }, { name: 'fun', msg: `invalid ${name}: must be a function` })
+    })
+
+    it(`計時器釋放: 通過檢測後撤銷之任務執行後行程自然結束 [規則3、5]`, function() {
+        //以是否被逾時終止判定(殘留之interval會使行程永不結束), 不以牆鐘門檻判定
+        let { status, signal } = runPmSettle('exitThrottleRevoked', 'natural')
+        assert.strict.deepStrictEqual({ status, signal }, { status: 0, signal: null })
     })
 
 })

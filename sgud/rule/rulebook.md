@@ -12,7 +12,7 @@
 
 | 類 | 檔 | 條目 | 約 KB |
 |---|---|---|---|
-| 計時器、佇列與 Promise 流程 | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01 | 20.9 |
+| 計時器、佇列與 Promise 流程(含第 492 項第 6 批 ws492g,2026-11-18: 計時與流程函數之函數參數三種處理、`importResources` 之 `pathItems` 檢測) | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01、R-PM-ARG-01 | 約 30 |
 | 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
 | 安全相關 opt 為 K3 之例外(雜湊演算法、`fsEnsureBins`／`fsDownloadFileVerify` 之 offline、mirror、fetch、names 等)、fs 系錯誤訊息不回顯路徑／網址／輸入值、Node 原生錯誤固定詞彙加錯誤碼(第 492 項第 3 批 ws492d,2026-11-17) | `sgud/rule/rulebook_secopt.md` | R-HASH-TYPE-01、R-SEC-OPT-01、R-FS-ERRMSG-01、R-FS-MSG-V20-01 | 約 17 |
 | DOM 與下載函數之輸入檢測:改畫面者同步拋固定訊息、查詢類回空、回 Promise 者 reject;opt 逐鍵檢測(`domAlert` 樣式字串 opt 與 `type`、`domScroll*`、`domFade*`);下載族同一通道;`color` 之 `amount`／`w1`／`w2` 與訊息不帶值(第 492 項第 4 批 ws492e,2026-11-18) | `sgud/rule/rulebook_domarg.md` | R-DOM-ARG-01、R-DOM-OPT-01、R-DL-ARG-01、R-COLOR-ARG-01 | 約 14 |
@@ -120,6 +120,7 @@
 - `R-ORMSTR-01` → `rulebook_orm-str.md`: R-ORMSTR-01 w-orm 系列字串良構: 單一擁有者 `chkOrmStr` / `chkOrmData`、契約案例表 `_cvOrmStrCases`、只因良構性拒收
 - `R-PORT-PIDS-01` → `rulebook_port.md`: R-PORT-PIDS-01 查詢「誰在監聽某 TCP 埠」一律經 `execProcessPortPids`／`execProcessPortPidsSync`: 不依狀態欄、Windows 以 PowerShell 呼叫 OS API(GetExtendedTcpTable)確認而 Get-NetTCPConnection 為退回、失敗與無人嚴格分開
 - `R-PRECISE-01` → `rulebook_judge.md`: R-PRECISE-01 `preciseNum` 以 decimal.js 之 12 位有效數字(`PRECISE_DIGITS`;使用者 2026-10-31 由 15 位改定)取代固定 `eps = 1e-9`(小數值不歸零;整數路徑不變〔**第 221 項第二批第一級發布 A 起整數路徑改為保留全部位數並正規化,見 R-OPT-VAL-01 規則 11**〕;`judge`、`estimateTicks` 隨之)
+- `R-PM-ARG-01` → `rulebook_timer.md`: R-PM-ARG-01 計時與流程函數之函數參數檢測(dspec §11 W-15「甲」): ①建立或立即啟動者(`setTimeoutHp`、`setIntervalHp`、`cacheBd`、`pmHook`、`pmHookReject`)之 `fun` 無效同步拋固定訊息、先於任何副作用;②執行期提交之任務(`pmQueue`、`pmThrottle`、`pmKeyMutex`)reject 固定字串、不同步拋錯、`pmKeyMutex` 不排隊、`pmThrottle` 於執行點再驗(通過檢測後才撤銷者同以固定字串 reject、佇列續行);③清單元素(`pmChain`、`pmMap`、`pmSeries`)視為未給;函數判定經內部 `_isFunSafe`(已撤銷 Proxy 視為非函數;`pmChain` 同族一致);`importResources.pathItems` 進入時驗證並複製、無效 reject 固定字串(V19,`type` 明示優先於副檔名、只有未給／`null`／`''` 視為未給)、不改寫呼叫端輸入、載入事件內之 `func` 判定經 `isFunSafe`(第 492 項第 6 批 ws492g 與修正輪 ws492g2)
 - `R-PM-SETTLE-01` → `rulebook_timer.md`: R-PM-SETTLE-01 以呼叫端函數或 Promise 之結果決定流程者:必定 settle、不產生未處理之 rejection/例外、佇列必定續行、失敗路徑必清理且可重試
 - `R-REPLACE-LITERAL-01` → `rulebook_replace.md`: R-REPLACE-LITERAL-01 字串取代之取代值須字面化: `replace`／`replaceAll` 之取代值(第 2 引數)為函式、不含 `$` 之字面值,或刻意之 `$` 樣式(正規式捕獲群、`$&`);`replace(c, t, r)` 之 `r` 為字面文字,`replaceObj` 不再預先逸出 `$`
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放

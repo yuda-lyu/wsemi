@@ -4,7 +4,7 @@ import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import pmSettleByState from './_pmSettleByState.mjs'
 import queue from './queue.mjs'
-import isfun from './isfun.mjs'
+import isFunSafe from './_isFunSafe.mjs'
 import isbol from './isbol.mjs'
 import delay from './delay.mjs'
 import getTrace from './getTrace.mjs'
@@ -30,7 +30,7 @@ let RULE_TAKE_LIMIT = { fn: 'pmQueue', name: 'takeLimit', kind: 'eint', chk: { u
  * @param {Boolean} [opt.debug=false] 輸入是否於takeLimit為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含n為依呼叫順序由1起算之任務序號)，'start'時為任務開始執行(含n、running為含該任務之執行中任務數)，'end'時為任務執行完畢而即將依結果resolve或reject其Promise(含n、running為不含該任務之執行中任務數、ok為任務是否成功)，'cancel'時為takeLast下非最後呼叫者之結果被捨棄而即將reject{ reason: 'cancelled' }(含n)；任務非函數時仍通知start與end(ok為false)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響佇列，預設null
- * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出；第1參數非函數時該任務之Promise以字串'fun is not a function'被reject
+ * @returns {Function} 回傳Function，第1參數為非同步函數，第2參數之後為欲輸入非同步函數之參數。回傳為Promise，resolve回傳成功結果而reject回傳失敗訊息；任務之取消(其reject值之reason為'cancelled')以{ reason: 'cancelled' }傳出；第1參數(任務)非函數時(執行期提交之工作，不同步拋錯)該任務照常排入佇列(takeLast下非函數為最後一筆時其前之任務照常被取消)，輪到時其Promise以固定字串'invalid fun: must be a function'被reject，不影響佇列中其他任務
  * @example
  *
  * async function topAsync() {
@@ -420,12 +420,12 @@ function pmQueue(takeLimit = 0, takeLast = false, opt = {}) {
                 trace('start', { n: v.n, running: nRun })
             }
 
-            //res
+            //res, 任務為執行期提交之工作: 無效以固定字串(不回顯值)reject該任務, 判定本身拋錯(如已撤銷之Proxy)亦視為無效
             let res
-            if (!isfun(fun)) {
+            if (!isFunSafe(fun)) {
                 res = {
                     state: 'error',
-                    msg: 'fun is not a function',
+                    msg: 'invalid fun: must be a function',
                 }
             }
             else {

@@ -6,6 +6,7 @@ import isarr from '../src/isarr.mjs'
 import isobj from '../src/isobj.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { nonFunValues } from './tools/caseKit.mjs'
 
 
 describe(`pmSeries`, function() {
@@ -580,6 +581,28 @@ describe(`pmSeries 輸入於進入時取值(R-PM-SETTLE-01規則17)`, function()
         let r = await pm.then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
         //R-PM-SETTLE-01 規則17: 同上
         assert.strict.deepStrictEqual(r, { s: 'resolve', v: ['a', 'b', 'c'] })
+    })
+
+})
+
+
+describe(`pmSeries 非函數之fun(dspec §11 W-15甲③: 清單處理之fun為選填, 視為未給)`, function() {
+
+    it(`fun非函數(12值,含isfun拋錯之已撤銷Proxy)視為未給: 不同步拋錯、不reject, rs之元素(一般值或Promise)原樣依序作為結果 [W-15甲③]`, async function() {
+        //dspec §11 W-15甲③「fun於JSDoc標為選填」「視為未給」; JSDoc pmSeries「@param {Function} [fun]…未給或非函數時rs之元素原樣作為各步之結果」
+        //(已撤銷之Proxy原於isfun拋TypeError而使pmSeries同步外拋)
+        for (let [k, v] of nonFunValues()) {
+            let pm = null
+            let threw = false
+            try {
+                pm = pmSeries([1, Promise.resolve(2), 'c'], v)
+            }
+            catch (err) {
+                threw = true
+            }
+            let r = threw ? { s: 'sync-throw' } : await pm.then((x) => ({ s: 'resolve', v: x }), (e) => ({ s: 'reject', v: e }))
+            assert.strict.deepStrictEqual([k, r], [k, { s: 'resolve', v: [1, 2, 'c'] }])
+        }
     })
 
 })

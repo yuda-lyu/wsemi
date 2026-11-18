@@ -1,6 +1,7 @@
 import assert from 'assert'
 import pmHook from '../src/pmHook.mjs'
 import { runPmSettle } from './tools/pmSettleRun.mjs'
+import { nonFunValues } from './tools/caseKit.mjs'
 
 
 describe(`pmHook`, function() {
@@ -280,16 +281,37 @@ describe(`pmHook settle(R-PM-SETTLE-01)`, function() {
 })
 
 
-describe(`pmHook 回傳型別與非函數(R-PM-SETTLE-01規則12)`, function() {
+describe(`pmHook 回傳型別與非函數(dspec §11 W-15甲①; 原R-PM-SETTLE-01規則12)`, function() {
 
-    it(`回傳包裝函數, 呼叫後回傳Promise; fun非函數(7值)時回傳null [規則12]`, async function() {
+    it(`回傳包裝函數, 呼叫後回傳Promise`, async function() {
         let f = pmHook(async (a) => a + 1)
-        //R-PM-SETTLE-01 規則12: @returns之型別與實回相符(pmHook實回Function, 另可回null); JSDoc pmHook:15「@returns {Function|null} 回傳包裝函數，呼叫後回傳Promise」
+        //JSDoc pmHook「@returns {Function} 回傳包裝函數，呼叫後回傳Promise」(不再有null)
         assert.strict.deepStrictEqual(typeof f, 'function')
         assert.strict.deepStrictEqual(await f(1), 2)
-        for (let v of [undefined, null, 0, 'abc', {}, Promise.resolve(1), async function* () {}]) {
-            //R-PM-SETTLE-01 規則12: pmHook回null(寫入JSDoc); JSDoc pmHook:15「fun非函數時回傳null」
-            assert.strict.deepStrictEqual(pmHook(v), null)
+    })
+
+    it(`fun非函數(12值,含isfun拋錯之已撤銷Proxy)時同步拋Error('invalid fun: must be a function'), 不回傳null、不回顯值 [W-15甲①]`, function() {
+        //dspec §11 W-15甲①「建立物件或立即啟動之參數無效即同步拋錯、先於任何副作用(…pmHook／pmHookReject不再回null)」; V19格式、V20不回顯值
+        for (let [k, v] of nonFunValues()) {
+            let e = null
+            let ret = 'not-called'
+            try {
+                ret = pmHook(v)
+            }
+            catch (err) {
+                e = err
+            }
+            assert.strict.deepStrictEqual([k, e instanceof Error, e && e.message, ret], [k, true, 'invalid fun: must be a function', 'not-called'])
+            //fun為必須參數: 即使cb有效亦同(不因cb而改變通道)
+            assert.strict.throws(() => pmHook(v, () => {}), (err) => err instanceof Error && err.message === 'invalid fun: must be a function')
+        }
+    })
+
+    it(`cb非函數(12值,含isfun拋錯之已撤銷Proxy)視為未給: 照常包裝與呼叫, 不拋錯 [K3, W-15甲①之cb為選填]`, async function() {
+        //cb為選填之回調(opt類參數), 依K3非預期之輸入視為未給、改用預設(空回調)
+        for (let [k, v] of nonFunValues()) {
+            let f = pmHook(async (a) => a + 1, v)
+            assert.strict.deepStrictEqual([k, typeof f, await f(1)], [k, 'function', 2])
         }
     })
 

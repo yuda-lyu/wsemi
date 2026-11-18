@@ -7,7 +7,7 @@
 /* eslint-disable no-throw-literal */ //本執行器刻意拋出非Error之值(null、字串、取消物件)作為受測輸入
 import path from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
-import { safeStr, revoked } from './caseKit.mjs'
+import { safeStr, revoked, revocableFn, nonFunValues } from './caseKit.mjs'
 
 let implDir = fileURLToPath(new URL('../../src/', import.meta.url))
 let [caseName, exitMode] = process.argv.slice(2)
@@ -161,18 +161,8 @@ function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-//nonFuns, 非函數之任務值軸(R-PM-SETTLE-01規則12): undefined、null、0、字串、物件、Promise、async generator函數(isfun為false)
-function nonFuns() {
-    return [
-        ['undefined', undefined],
-        ['null', null],
-        ['zero', 0],
-        ['str', 'abc'],
-        ['obj', {}],
-        ['pm', Promise.resolve(1)],
-        ['asyncGen', async function* () {}],
-    ]
-}
+//nonFuns, 非函數之任務/函數參數值軸(R-PM-SETTLE-01規則12; ws492g W-15), 單一定義於caseKit之nonFunValues(12值, 含isfun拋錯之已撤銷Proxy)
+let nonFuns = nonFunValues
 
 //mkTask, 依呼叫序k(由0起)決定耗時ms與結果之任務函數, 記錄呼叫次數、執行中數與最大並行數
 //  durOf(k)為0時同步回傳(不計並行), 為Infinity時回傳永不settle之Promise; okOf(k)為false時reject Error('down'+k), 否則resolve valOf(k)(預設'v'+k)
@@ -1048,7 +1038,7 @@ let cases = {
         return out
     },
 
-    //pmThrottle: 非函數之任務不排入, 回傳之Promise以'fun is not a function'被reject, 不記錄, 不影響已排入與後續之有效任務
+    //pmThrottle: 非函數之任務不排入, 回傳之Promise以'invalid fun: must be a function'被reject, 不記錄, 不影響已排入與後續之有效任務
     nonFunThrottle: async () => {
         let T = await imp('pmThrottle')
         let cap = captureLog()
@@ -1078,14 +1068,87 @@ let cases = {
             }
             let ra = await pa
             let rg = await settle(t(async () => 'good'), 1500)
-            return { out, queued: shown(ra), next: shown(rg), logged: cap.logs.filter((s) => s.includes('is not a function')).length }
+            return { out, queued: shown(ra), next: shown(rg), logged: cap.logs.filter((s) => s.includes('is not a function') || s.includes('invalid fun')).length }
         }
         finally {
             cap.restore()
         }
     },
 
-    //pmQueue: 非函數之任務以'fun is not a function'被reject
+    //pmThrottle(ws492g2 第1點): run()通過檢測後、輪到執行前(最長一個偵測週期)才被撤銷之函數Proxy(isfun於其上拋TypeError)
+    //  執行點再驗: 該任務以'invalid fun: must be a function'reject(不於計時器回呼內外拋), 佇列續行(其後之有效任務照常settle)、無未處理之rejection、running釋放、計時器照常停止('stop'事件)
+    //  事件同步: 以觀察回調(onTrace)等'stop', 不以牆鐘等待判定成功(牆鐘逾時只作懸置之兜底)
+    throttleRevokedAfterCheck: async () => {
+        let T = await imp('pmThrottle')
+        let tr = mkTrace()
+        let t = T({ onTrace: tr.on })
+        let desc = (evs) => evs.map((e) => e.type + (e.n ? ':' + e.n : '') + (e.type === 'done' ? (e.ok ? ':ok' : ':fail') : ''))
+        let waitStop = () => new Promise((resolve) => tr.sub((e) => e.type === 'stop' && resolve('stop')))
+        let withLimit = (p) => Promise.race([p, delay(1500).then(() => 'timeout')])
+        let rsn = (r) => (r.s === 'reject' && r.v && typeof r.v === 'object' ? { s: 'reject', reason: r.v.reason } : shown(r))
+        let out = {}
+
+        //a: 單一任務通過檢測後撤銷, 執行時被判無效
+        let n0 = tr.events.length
+        let sa = waitStop()
+        let fa = revocableFn()
+        let pa = t(fa.proxy)
+        fa.revoke()
+        out.a = shown(await settle(pa, 1500))
+        out.aStop = await withLimit(sa)
+        out.aEvents = desc(tr.events.slice(n0))
+        if (out.a.s === 'pending') {
+            //懸置(running停在true, 其後之任務皆不會settle): 不續跑以免逾子行程時限, 以已得之欄位判紅
+            return out
+        }
+
+        //b: 其後之有效任務照常settle(佇列續行、running已釋放)
+        let n1 = tr.events.length
+        let sb = waitStop()
+        out.b = shown(await settle(t(async () => 'good'), 1500))
+        out.bStop = await withLimit(sb)
+        out.bEvents = desc(tr.events.slice(n1))
+        if (out.b.s === 'pending') {
+            return out
+        }
+
+        //c: 先排入有效任務x、最後排入通過檢測後撤銷者: x被取消(節流語意不變), 最後者執行時被判無效
+        let sc = waitStop()
+        let fc = revocableFn()
+        let px = t(async () => 'x')
+        let pc = t(fc.proxy)
+        fc.revoke()
+        let rx = rsn(await settle(px, 1500))
+        let rc = shown(await settle(pc, 1500))
+        out.c = { x: rx, last: rc }
+        out.cStop = await withLimit(sc)
+
+        //d: 通過檢測後撤銷、但非最後排入者: 依節流語意被取消(不被呼叫), 最後之有效任務照常
+        let sd = waitStop()
+        let fd = revocableFn()
+        let pd = t(fd.proxy)
+        fd.revoke()
+        let pe = t(async () => 'e')
+        let rd = rsn(await settle(pd, 1500))
+        let re = shown(await settle(pe, 1500))
+        out.d = { revokedNotLast: rd, last: re }
+        out.dStop = await withLimit(sd)
+
+        //e: 收尾後再提交有效任務仍照常
+        out.e = shown(await settle(t(async () => 'again'), 1500))
+        return out
+    },
+
+    //pmThrottle計時器釋放(ws492g2 第1點): 通過檢測後撤銷之任務執行後, 計時器已停止, 行程自然結束(未釋放則被父行程逾時終止)
+    exitThrottleRevoked: async () => {
+        let T = await imp('pmThrottle')
+        let f = revocableFn()
+        let p = T()(f.proxy)
+        p.catch(() => {})
+        f.revoke()
+    },
+
+    //pmQueue: 非函數之任務以'invalid fun: must be a function'被reject
     nonFunQueue: async () => {
         let Q = await imp('pmQueue')
         let q = Q(1)
@@ -1098,15 +1161,64 @@ let cases = {
         return out
     },
 
-    //setTimeoutHp: fun非函數時到期以console.log記錄Error('fn is not a function')一次, 回傳null(setIntervalHp之非函數案改由hpTraceRunner的intervalNonFun以事件同步)
+    //setTimeoutHp、setIntervalHp: fun非函數(W-15甲①, 立即啟動計時器者)於呼叫當下同步拋Error('invalid fun: must be a function'), 先於任何副作用:
+    //  以替身計數計時器啟動點(globalThis.setTimeout, getGlobal於Node取得global), 呼叫為同步拋錯故只於呼叫前後包住; 有效fun之陽性對照確認替身確實攔得到(啟動即1次)
+    //  opt.debug為true且interval為無效值時, 若fun之檢測晚於interval之檢測則會輸出警告(副作用), 以funLog收集驗證不輸出; 另驗全程無console.log記錄、無未處理之rejection與例外
     nonFunHp: async () => {
         let ST = await imp('setTimeoutHp')
+        let SI = await imp('setIntervalHp')
         let cap = captureLog()
         try {
-            let ret = ST(null, 10)
-            await delay(80)
-            let n3 = cap.logs.filter((s) => s === 'fn is not a function').length
-            return { timeoutLogs: n3, timeoutRet: ret }
+            let out = {}
+            for (let [name, F] of [['timeout', ST], ['interval', SI]]) {
+                let items = {}
+                for (let [k, v] of nonFuns()) {
+                    let timers = 0
+                    let warns = []
+                    let events = []
+                    let st = globalThis.setTimeout
+                    globalThis.setTimeout = (...a) => {
+                        timers += 1
+                        return st(...a)
+                    }
+                    let c
+                    try {
+                        c = call(() => F(v, 'abc', { debug: true, funLog: (m) => warns.push(String(m)), onTrace: (e) => events.push(e.type) }))
+                    }
+                    finally {
+                        globalThis.setTimeout = st
+                    }
+                    items[k] = { threw: !c.ok, isError: !c.ok && c.e instanceof Error, msg: c.ok ? null : safeStr(c.e), timers, warns, events }
+                }
+                out[name] = items
+            }
+
+            //陽性對照: 有效fun時替身攔得到計時器之啟動(1次), 且debug警告與觀察回調確實運作(interval為'abc'者有1則警告、start事件)
+            let ctl = {}
+            for (let [name, F] of [['timeout', ST], ['interval', SI]]) {
+                let timers = 0
+                let warns = []
+                let events = []
+                let st = globalThis.setTimeout
+                globalThis.setTimeout = (...a) => {
+                    timers += 1
+                    return st(...a)
+                }
+                let ret
+                try {
+                    ret = F(() => {}, 'abc', { debug: true, funLog: (m) => warns.push(String(m)), onTrace: (e) => events.push(e.type) })
+                }
+                finally {
+                    globalThis.setTimeout = st
+                }
+                if (typeof ret === 'function') {
+                    ret()
+                }
+                ctl[name] = { timers, warns: warns.length, events: events.slice(0, 1) }
+            }
+
+            await delay(60) //觀察窗(否定斷言): 無效fun不應有延遲到期之記錄或例外
+            return { out, ctl, logs: cap.logs.slice() }
         }
         finally {
             cap.restore()
@@ -1284,7 +1396,181 @@ let cases = {
         return { s: r.s, code: (r.v !== null && typeof r.v === 'object') ? r.v.code : null, calls: a.st.calls }
     },
 
-    //pmQueue(F23): takeLast下排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'fun is not a function'被reject
+    //cacheBd(W-15甲①): fun非函數於呼叫當下同步拋Error('invalid fun: must be a function'), 先於opt.debug警告與onTrace; 陽性對照(有效fun)確認警告與事件確實運作
+    //  置於子行程: opt.debug之警告每行程只輸出一次(去重), 子行程內無他案污染, 陽性對照之警告數才有鑑別力
+    nonFunCacheBd: async () => {
+        let CB = await imp('cacheBd')
+        let out = {}
+        for (let [k, v] of nonFuns()) {
+            let warns = []
+            let events = []
+            let c = call(() => CB(v, { nMax: 'abc', debug: true, funLog: (m) => warns.push(String(m)), onTrace: (e) => events.push(e.type) }))
+            out[k] = c.ok
+                ? { threw: false, warns, events }
+                : { threw: true, isError: c.e instanceof Error, msg: safeStr(c.e), warns, events }
+        }
+        let warns = []
+        let events = []
+        let bc = CB(async () => 1, { nMax: 'abc', debug: true, funLog: (m) => warns.push(String(m)), onTrace: (e) => events.push(e.type) })
+        let r = await settle(bc.get(), 1500)
+        return { out, ctl: { keys: Object.keys(bc).sort(), warns: warns.length, events, r: shown(r) } }
+    },
+
+    //importResources(W-15 C13): pathItems依宣告種類檢測, 無效以固定字串reject(不回顯值、不console.log), 先於任何載入與標記登記; 不改寫呼叫端之輸入(凍結之輸入亦可)
+    importResourcesInvalid: async () => {
+        installDom()
+        let I = await imp('importResources')
+        let head = document.getElementsByTagName('head')[0]
+        let cap = captureLog()
+        try {
+            let secret = 'secretTypeXYZ'
+            let holes = ['h1.css']
+            holes[2] = 'h3.css'
+            let elemGetter = ['e1.css']
+            Object.defineProperty(elemGetter, 0, {
+                get() {
+                    throw new Error('elem getter boom')
+                },
+            })
+            let pathGetter = {
+                get path() {
+                    throw new Error('path getter boom')
+                },
+            }
+            class Cls {
+                constructor() {
+                    this.path = 'cls.css'
+                }
+            }
+            let bads = [
+                ['undefined', undefined],
+                ['null', null],
+                ['num', 5],
+                ['bool', true],
+                ['emptyStr', ''],
+                ['fn', () => {}],
+                ['revokedObj', revoked()],
+                ['objNoPath', {}],
+                ['objPathNum', { path: 5 }],
+                ['objPathEmpty', { path: '' }],
+                ['classInstance', new Cls()],
+                ['pathGetter', pathGetter],
+                ['arrNull', [null]],
+                ['arrNum', ['a1.css', 5]],
+                ['arrEmptyStr', ['a2.css', '']],
+                ['arrNested', [['a3.css']]],
+                ['arrMidPathNum', [{ path: 'm1.css' }, { path: 7 }]],
+                ['arrBadType', [{ path: 'a4.css', type: 'x' }]],
+                ['arrTypeNum', [{ path: 'a5.css', type: 5 }]],
+                ['arrTypeSecret', [{ path: 'a6.css', type: secret }]],
+                ['arrTypeCase', [{ path: 'a7.css', type: 'CSS' }]],
+                ['arrTypeFalse', [{ path: 'b1.css', type: false }]],
+                ['arrTypeZero', [{ path: 'b2.css', type: 0 }]],
+                ['arrTypeNaN', [{ path: 'b3.css', type: NaN }]],
+                ['arrNoExt', ['a8.css', 'noext']],
+                ['arrHole', holes],
+                ['arrElemGetter', elemGetter],
+            ]
+            let invalid = {}
+            for (let [k, v] of bads) {
+                let n0 = head.childNodes.length
+                let c = call(() => I(v))
+                if (!c.ok) {
+                    invalid[k] = { syncThrow: true, msg: safeStr(c.e) }
+                    continue
+                }
+                let r = await settle(c.p, 1500)
+                invalid[k] = { ...shown(r), headAdded: head.childNodes.length - n0 }
+            }
+
+            //無效之呼叫不登記載入狀態: 同一路徑之其後有效呼叫仍照常載入(head新增1個)
+            let n1 = head.childNodes.length
+            let afterInvalid = await settle(I(['u1.css', 5]), 1500)
+            let nAfterBad = head.childNodes.length - n1
+            let rU = await settle(I(['u1.css']), 1500)
+            let nAfterGood = head.childNodes.length - n1
+
+            //有效輸入: 凍結之陣列與物件(不改寫呼叫端輸入), 單一字串、單一物件、空陣列、type為null或空字串依副檔名推斷、func非函數視為未給
+            let frozen = Object.freeze(['f1.css', Object.freeze({ path: 'f2.css' }), Object.freeze({ path: 'f3.css', type: 'css' })])
+            let snap = JSON.stringify(frozen)
+            let nF0 = head.childNodes.length
+            let rFrozen = await settle(I(frozen), 1500)
+            let nF = head.childNodes.length - nF0
+            let loose = ['g1.css', { path: 'g2.css', type: null }, { path: 'g3.css', type: '' }, { path: 'g4.css', func: 5 }]
+            let looseSnap = JSON.stringify(loose)
+            let looseFirst = loose[0]
+            let rLoose = await settle(I(loose), 1500)
+            let rStr = await settle(I('s1.css'), 1500)
+            let rObj = await settle(I({ path: 's2.css' }), 1500)
+            let rEmpty = await settle(I([]), 1500)
+            let nJ0 = head.childNodes.length
+            let rJs = await settle(I([{ path: 'j1.js', func: 5 }]), 2500)
+            let jsTag = head.childNodes.length - nJ0 === 1 ? head.childNodes[head.childNodes.length - 1].tagName : null
+            let res = (r) => (r.s === 'resolve' ? { s: 'resolve', n: Array.isArray(r.v) ? r.v.length : r.v } : shown(r))
+            return {
+                invalid,
+                afterInvalid: { r: shown(afterInvalid), nAfterBad, rU: res(rU), nAfterGood },
+                valid: {
+                    frozen: { r: res(rFrozen), added: nF, unchanged: JSON.stringify(frozen) === snap },
+                    loose: { r: res(rLoose), unchanged: JSON.stringify(loose) === looseSnap, firstStillString: loose[0] === looseFirst && typeof loose[0] === 'string' },
+                    singleStr: res(rStr),
+                    singleObj: res(rObj),
+                    emptyArr: res(rEmpty),
+                    js: { r: res(rJs), tag: jsTag },
+                },
+                logs: cap.logs.slice(),
+            }
+        }
+        finally {
+            cap.restore()
+        }
+    },
+
+    //importResources(ws492g2 第2點): pathItem.func通過入口檢測(尚有效之函數Proxy)、呼叫後立即撤銷, 於載入事件(DOM替身於appendChild後5ms觸發load)內才被判定
+    //  進入後才被撤銷者視為未給(K3): 該資源照常完成(不懸置、無未捕捉例外), _paths不卡在載入中(同路徑之其後呼叫立即回'loaded', 不再載入)
+    importResourcesRevokedFunc: async () => {
+        installDom()
+        let I = await imp('importResources')
+        let head = document.getElementsByTagName('head')[0]
+        let res = (r) => (r.s === 'resolve' ? (Array.isArray(r.v) ? { s: 'resolve', n: r.v.length } : { s: 'resolve', v: r.v }) : shown(r))
+        let f = revocableFn()
+        let n0 = head.childNodes.length
+        let p = I([{ path: 'rv1.js', func: f.proxy }])
+        f.revoke()
+        let r1 = await settle(p, 3000)
+        let nAdded = head.childNodes.length - n0
+        let r2 = await settle(I(['rv1.js']), 1500)
+        let nAfter = head.childNodes.length - n0
+        return { r1: res(r1), nAdded, r2: res(r2), nAfter }
+    },
+
+    //importResources(ws492g2 第7點②): 明示之type優先於副檔名({ path: 'x.js', type: 'css' }以link載入, 反之以script載入), 未給/null/空字串依副檔名推斷(.css為link、.js為script), 明示type時不限副檔名
+    importResourcesTypePrecedence: async () => {
+        installDom()
+        let I = await imp('importResources')
+        let head = document.getElementsByTagName('head')[0]
+        let res = (r) => (r.s === 'resolve' ? { s: 'resolve', n: Array.isArray(r.v) ? r.v.length : r.v } : shown(r))
+        let items = [
+            ['jsAsCss', { path: 'tp1.js', type: 'css' }],
+            ['cssAsJs', { path: 'tp2.css', type: 'js' }],
+            ['cssInfer', { path: 'tp3.css' }],
+            ['jsInfer', { path: 'tp4.js' }],
+            ['pngAsCss', { path: 'tp5.png', type: 'css' }],
+            ['jsTypeNull', { path: 'tp6.js', type: null }],
+            ['cssTypeEmpty', { path: 'tp7.css', type: '' }],
+            ['strCss', 'tp8.css'],
+        ]
+        let out = {}
+        for (let [k, v] of items) {
+            let n0 = head.childNodes.length
+            let r = await settle(I(v), 3000)
+            let added = head.childNodes.length - n0
+            out[k] = { r: res(r), added, tag: added === 1 ? head.childNodes[head.childNodes.length - 1].tagName : null }
+        }
+        return out
+    },
+
+    //pmQueue(F23): takeLast下排兩有效任務後排非函數(最後一筆): 前兩者照常被取消, 非函數者以'invalid fun: must be a function'被reject
     nonFunQueueTakeLast: async () => {
         let Q = await imp('pmQueue')
         let q = Q(0, true)

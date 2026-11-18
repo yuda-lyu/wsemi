@@ -37,14 +37,21 @@ describe(`setTimeoutHp settle(R-PM-SETTLE-01)`, function() {
 })
 
 
-describe(`setTimeoutHp 非函數(R-PM-SETTLE-01規則12)`, function() {
+describe(`setTimeoutHp 非函數(dspec §11 W-15甲①; 原R-PM-SETTLE-01規則12)`, function() {
 
-    it(`fun非函數時到期以console.log記錄Error('fn is not a function')一次, 回傳null [規則12]`, function() {
+    it(`fun非函數(12值)時同步拋Error('invalid fun: must be a function'), 不啟動計時器、不通知onTrace、不輸出opt.debug警告、不記錄 [W-15甲①]`, function() {
         let { r } = runPmSettle('nonFunHp')
-        let { timeoutLogs, timeoutRet } = r.out
-        //R-PM-SETTLE-01 規則12: setTimeoutHp到期記錄(寫入JSDoc); JSDoc setTimeoutHp:23「回傳null(無停止函數)…fun非函數時到期以console.log記錄Error('fn is not a function')」
-        assert.strict.deepStrictEqual({ timeoutLogs, timeoutRet }, { timeoutLogs: 1, timeoutRet: null })
-        //R-PM-SETTLE-01 規則2
+        //dspec §11 W-15甲①「建立物件或立即啟動之參數無效即同步拋錯、先於任何副作用(setTimeoutHp／setIntervalHp不啟動計時器…)」; 訊息為V19固定格式不回顯值(V20)
+        //替身計數計時器之啟動點(timers為0), onTrace未收到任何事件(events為[]), interval為無效值且opt.debug為true時funLog未收到警告(warns為[]): fun之檢測先於interval之檢測
+        let bad = { threw: true, isError: true, msg: 'invalid fun: must be a function', timers: 0, warns: [], events: [] }
+        let keys = ['undefined', 'null', 'zero', 'num', 'str', 'bool', 'obj', 'arr', 'pm', 'asyncGen', 'revokedObj', 'revokedFn']
+        let all = Object.fromEntries(keys.map((k) => [k, bad]))
+        assert.strict.deepStrictEqual(r.out.out.timeout, all)
+        assert.strict.deepStrictEqual(r.out.out.interval, all)
+        //陽性對照: 有效fun時替身確實攔得到計時器之啟動(1次)、opt.debug警告(interval為'abc'者1則)與onTrace之start事件, 證明上列0與[]不是替身或回調失效
+        assert.strict.deepStrictEqual(r.out.ctl.timeout, { timers: 1, warns: 1, events: ['start'] })
+        //全程無console.log記錄(原到期才記錄Error('fn is not a function')), 無未處理之rejection與未捕捉例外(R-PM-SETTLE-01規則2)
+        assert.strict.deepStrictEqual(r.out.logs, [])
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
     })
 
@@ -77,13 +84,13 @@ describe(`setTimeoutHp interval驗證`, function() {
 
 describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
 
-    it(`should notify start, expiry and an invalid result once for a non-function fun, log it once, never fire earlier than interval, and return null`, function() {
-        let r = runHp('timeoutNonFun')
-        let { ret, seq, logsAt, minElapsed, after } = r.out
-        //JSDoc 回傳null; 'fire'僅通知一次、'result'的state為'invalid'(fun非函數, 即將console.log記錄)
+    it(`should notify start, expiry and an invalid result once for a fun revoked after creation, log it once, never fire earlier than interval, and return null`, function() {
+        let r = runHp('timeoutRevokedAfterStart')
+        let { ret, seq, nLogsAt, minElapsed, after } = r.out
+        //JSDoc 回傳null; 'fire'僅通知一次、'result'的state為'invalid'(到期時fun已無法判定為函數, 如建立後才被撤銷之Proxy, 即將console.log記錄); 建立時之無效fun已同步拋錯(見nonFunHp案)
         assert.strict.deepStrictEqual(ret, null)
         assert.strict.deepStrictEqual(seq, ['start', 'fire', 'result:invalid'])
-        assert.strict.deepStrictEqual(logsAt, ['fn is not a function'])
+        assert.strict.deepStrictEqual(nLogsAt, 1)
         //JSDoc elapsed「必不小於interval」(下界, 不受負載影響)
         assert.strict.deepStrictEqual(minElapsed >= 30, true)
         //到期後不再調用與記錄(觀察窗內; 到期只一次已由事件序列斷言)
@@ -101,14 +108,14 @@ describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
             calls,
             logs,
         })
-        let pick = (o) => ({ seq: o.seq, order: o.order, calls: o.calls, logs: o.logs })
+        let pick = (o) => ({ seq: o.seq, order: o.order, calls: o.calls, logs: o.logs.length === 1 && o.calls === 0 ? ['<one log>'] : o.logs })
         assert.strict.deepStrictEqual(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, pick(v)])), {
             sync: ok('success', 1, []),
             async: ok('success', 1, []),
             syncThrow: ok('error', 1, ['b1']),
             asyncReject: ok('error', 1, ['b2']),
             cancelled: ok('cancelled', 1, []),
-            nonFun: ok('invalid', 0, ['fn is not a function']),
+            revoked: ok('invalid', 0, ['<one log>']), //建立後才被撤銷之函數Proxy: 不調用、記錄一筆(內容為引擎之原生錯誤, 不斷言)
         })
         //JSDoc elapsed「必不小於interval」
         assert.strict.deepStrictEqual(Object.values(out).every((v) => v.minElapsed >= 20), true)
@@ -119,7 +126,8 @@ describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
         //R-TRACE-01 P3: 未傳觀察回調時之對外行為不變(第3參數可省略, 同舊版之setTimeoutHp(fun, interval)); P4: 回調之拋錯與回傳值不影響計時與調用、不產生未處理之rejection
         //假時鐘控制不了hrtime計時, 故五種模式於真實計時器下各跑同一情境, 以事件(fun被調用、記錄筆數)為同步點
         let r = runHp('timeoutP34')
-        let exp = { rets: [null, null, null], calls: 1, logs: ['boom', 'fn is not a function'] }
+        //fun非函數(W-15甲①)於五種模式皆同步拋Error('invalid fun: must be a function')且不記錄(logs只有boom)
+        let exp = { rets: [null, null], calls: 1, logs: ['boom'], thrownC: 'invalid fun: must be a function' }
         assert.strict.deepStrictEqual(r.out.results, [exp, exp, exp, exp, exp])
         //紀錄器確實收到事件
         assert.strict.deepStrictEqual(r.out.recTypes, ['fire', 'result', 'start'])

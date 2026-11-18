@@ -1,3 +1,4 @@
+import isFunSafe from './_isFunSafe.mjs'
 
 
 /**
@@ -9,7 +10,7 @@
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmKeyMutex.test.mjs Github}
  * @memberOf wsemi
- * @returns {Function} 回傳run函數，第1參數key為分組識別字串(相同key循序執行，不同key並行)，第2參數fn為待執行之非同步函數(回傳Promise)。run回傳為Promise，resolve回傳fn成功結果而reject回傳fn失敗結果
+ * @returns {Function} 回傳run函數，第1參數key為分組識別字串(相同key循序執行，不同key並行)，第2參數fn為待執行之非同步函數(回傳Promise)。run回傳為Promise，resolve回傳fn成功結果而reject回傳fn失敗結果；fn非函數時(執行期提交之工作，不同步拋錯)該次呼叫之Promise立即以固定字串'invalid fn: must be a function'被reject，不排入該key之佇列、不等待同key前面之呼叫、不影響同key其他呼叫(修前為排隊輪到時以引擎原生TypeError被reject)
  * @example
  *
  * async function topAsync() {
@@ -98,6 +99,11 @@ function pmKeyMutex() {
         let counts = new Map()
 
         let run = async (key, fn) => {
+
+            //fn 為執行期提交之工作: 無效以固定字串 (不回顯值) reject 該次呼叫, 不排隊 (不動 chains、counts), 判定本身拋錯 (如已撤銷之 Proxy) 亦視為無效
+            if (!isFunSafe(fn)) {
+                return Promise.reject('invalid fn: must be a function')
+            }
 
             //取得當前 chain 尾; 若無則以 resolved promise 起頭
             let prev = chains.get(key) || Promise.resolve()

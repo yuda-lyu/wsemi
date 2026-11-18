@@ -195,15 +195,17 @@ function modes() {
 
 let cases = {
 
-    //setIntervalHp: fun非函數時每次到期皆以console.log記錄Error('fn is not a function'), 呼叫停止函數後不再記錄
-    //  同步點為第2個result事件(即將記錄); 原案以「120ms內須觸發至少2次」判定, 負載下鏈驅動之計時器延誤即偏離
-    intervalNonFun: async () => {
+    //setIntervalHp: 建立時為函數而啟動後才變為無法判定者(已撤銷之函數Proxy, isfun對其拋錯; 建立時之無效fun已於W-15甲①同步拋錯, 見pmSettleRunner之nonFunHp)之防禦路徑:
+    //  每次到期皆以'invalid'結果與console.log記錄(計時器回呼內不得外拋), 呼叫停止函數後不再記錄; 同步點為第2個result事件(即將記錄)
+    intervalRevokedAfterStart: async () => {
         let SI = await imp('setIntervalHp')
         let cap = capLog()
         try {
             let ms = 20
             let rec = mkRec()
-            let stop = SI(undefined, ms, { onTrace: rec.on })
+            let { proxy, revoke } = Proxy.revocable(function() {}, {})
+            let stop = SI(proxy, ms, { onTrace: rec.on })
+            revoke() //建立時已驗為函數; 撤銷於計時器之首次到期前(同步)
             await rec.wait((e) => e.type === 'result', 2)
             let logsAt2 = cap.logs.slice()
             stop()
@@ -212,7 +214,7 @@ let cases = {
             await delay(100) //觀察窗(否定斷言): 停止後不再到期、不再記錄
             return {
                 seq: rec.events.slice(0, nStop).map(brief),
-                logsAt2,
+                nLogsAt2: logsAt2.length,
                 minElapsed: minElapsed(rec),
                 minGap: minGap(rec),
                 after: { events: rec.events.length - nStop, logs: cap.logs.length - nLogs },
@@ -322,12 +324,17 @@ let cases = {
                 })
                 await doneA
                 await delay(40) //觀察窗(否定斷言): 停止後不再調用
-                //b: fun非函數, 記錄2筆後停止
-                let stopB = SI(undefined, 5, ...args)
-                await cap.wait(3)
-                stopB()
-                await delay(40)
-                results.push({ calls, logs: cap.logs.slice(), stops: [typeof stopA, typeof stopB] })
+                //b: fun非函數(W-15甲①): 同步拋錯而不啟動計時器、不通知回調(五種回調模式結果相同), 無記錄
+                let thrownB = null
+                let nEvB = rec.events.length
+                try {
+                    SI(undefined, 5, ...args)
+                }
+                catch (e) {
+                    thrownB = e instanceof Error ? e.message : '<not an Error>'
+                }
+                await delay(40) //觀察窗(否定斷言): 無效fun不應有計時器到期之記錄
+                results.push({ calls, logs: cap.logs.slice(), stops: [typeof stopA], thrownB, evB: rec.events.length - nEvB })
             }
             finally {
                 cap.restore()
@@ -477,14 +484,17 @@ let cases = {
         }
     },
 
-    //setTimeoutHp: fun非函數時到期以console.log記錄Error('fn is not a function')一次, 回傳null
-    timeoutNonFun: async () => {
+    //setTimeoutHp: 建立時為函數而啟動後才變為無法判定者(已撤銷之函數Proxy, isfun對其拋錯; 建立時之無效fun已於W-15甲①同步拋錯, 見pmSettleRunner之nonFunHp)之防禦路徑:
+    //  到期以'invalid'結果與console.log記錄一次(計時器回呼內不得外拋), 回傳null
+    timeoutRevokedAfterStart: async () => {
         let ST = await imp('setTimeoutHp')
         let cap = capLog()
         try {
             let ms = 30
             let rec = mkRec()
-            let ret = ST(null, ms, { onTrace: rec.on })
+            let { proxy, revoke } = Proxy.revocable(function() {}, {})
+            let ret = ST(proxy, ms, { onTrace: rec.on })
+            revoke() //建立時已驗為函數; 撤銷於計時器到期前(同步)
             await rec.wait((e) => e.type === 'result')
             await flush()
             let nAt = rec.events.length
@@ -493,7 +503,7 @@ let cases = {
             return {
                 ret,
                 seq: rec.events.slice(0, nAt).map(brief),
-                logsAt,
+                nLogsAt: logsAt.length,
                 minElapsed: minElapsed(rec),
                 after: { events: rec.events.length - nAt, logs: cap.logs.length - logsAt.length },
             }
@@ -503,7 +513,7 @@ let cases = {
         }
     },
 
-    //setTimeoutHp: 各種fun之結果(success、error、cancelled、invalid)與記錄, fire於調用前、result於調用後記錄前通知, 到期不早於interval
+    //setTimeoutHp: 各種fun之結果(success、error、cancelled、invalid(建立後才被撤銷之函數Proxy))與記錄, fire於調用前、result於調用後記錄前通知, 到期不早於interval
     timeoutStates: async () => {
         let ST = await imp('setTimeoutHp')
         let cap = capLog()
@@ -519,7 +529,7 @@ let cases = {
                     throw new Error('b2')
                 }],
                 ['cancelled', () => Promise.reject({ reason: 'cancelled' })],
-                ['nonFun', 123],
+                ['revoked', 'revocable'],
             ]
             let out = {}
             let fields = null
@@ -528,7 +538,13 @@ let cases = {
                 let rec = mkRec(order)
                 let calls = 0
                 let fun = f
-                if (typeof f === 'function') {
+                let revoke = null
+                if (f === 'revocable') {
+                    let r = Proxy.revocable(function() {}, {})
+                    fun = r.proxy
+                    revoke = r.revoke
+                }
+                else if (typeof f === 'function') {
                     fun = (...a) => {
                         calls++
                         order.push('call')
@@ -537,6 +553,9 @@ let cases = {
                 }
                 let nLogs = cap.logs.length
                 ST(fun, ms, { onTrace: rec.on })
+                if (revoke) {
+                    revoke() //建立時已驗為函數; 撤銷於計時器到期前(同步)
+                }
                 await rec.wait((e) => e.type === 'result')
                 await flush()
                 out[name] = {
@@ -580,11 +599,17 @@ let cases = {
                     }, 5, ...args))
                 })
                 await doneB
-                //c: fun非函數
-                rets.push(ST(null, 5, ...args))
-                await cap.wait(2)
-                await delay(40) //觀察窗(否定斷言): 到期只調用一次、只記錄一次
-                results.push({ rets, calls, logs: cap.logs.slice() })
+                //c: fun非函數(W-15甲①): 同步拋錯而不啟動計時器(五種回調模式結果相同), 不記錄
+                await cap.wait(1)
+                let thrownC = null
+                try {
+                    ST(null, 5, ...args)
+                }
+                catch (e) {
+                    thrownC = e instanceof Error ? e.message : '<not an Error>'
+                }
+                await delay(40) //觀察窗(否定斷言): 到期只調用一次、只記錄一次(boom), 無效fun無任何記錄
+                results.push({ rets, calls, logs: cap.logs.slice(), thrownC })
             }
             finally {
                 cap.restore()
