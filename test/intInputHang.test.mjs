@@ -8,7 +8,7 @@ import { runIntInputHang } from './tools/intInputHangRunner.mjs'
 
 
 const MSG_INVALID_OPT = 'invalid opt.numCount or opt.numGroup'
-const MSG_INVALID_NUM = 'invalid opt: must be a positive integer or an object with numCount or numGroup'
+const MSG_INVALID_NUM = 'invalid opt: must be an object with numCount or numGroup' //ws492h W-07: 舊式整數寫法已移除, 整數opt一律以此訊息throw(原'must be a positive integer or an object …')
 const MSG_SEPINT_N = 'invalid n: must be a positive integer'
 
 //內文'xyz'之雜湊(JSDoc範例值), 預設切片與非預期chunkSize皆須得此值
@@ -34,7 +34,7 @@ describe('integer input hang guards (child process)', function() {
 
     describe('arrSep', function() {
 
-        // 規格§7.1必須參數: 整數寫法之Infinity、超過上限 → throw(ws286e起, 使用者2026-11-03逐列確認; 原回[])
+        // 規格§7.1必須參數: 整數寫法之Infinity、超過上限 → throw(ws286e起, 使用者2026-11-03逐列確認; 原回[]); ws492h(W-07)起整數寫法已整個移除, 任何整數opt皆throw而不迴圈
         for (let name of ['arrSep-num-inf', 'arrSep-num-str-inf', 'arrSep-num-2p32']) {
             it(`${name} should throw ${MSG_INVALID_NUM} without hanging`, function() {
                 let out = runIntInputHang(name)

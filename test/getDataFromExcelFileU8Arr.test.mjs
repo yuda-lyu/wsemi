@@ -160,14 +160,37 @@ describe(`getDataFromExcelFileU8Arr`, function() {
         assert.strict.deepStrictEqual(r.error, 'can not read data from u8a')
     })
 
-    it(`should return error object when opt.fmt is invalid`, async function() {
-        let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'xxx' })
-        assert.strict.deepStrictEqual(r.error, `opt.fmt is not one of 'ltdt', 'csv', 'array'`)
+    //ws492h(第492項第7批, N-B; dspec〈輸入參數之檢測機制〉K3、V5、B1): opt.fmt與opt.valueToString為非安全相關之opt, 非預期之輸入視為未給而改用預設('ltdt'、true), 不再回{ error }(原'opt.fmt is not one of …'與'opt.valueToString is not a boolean')
+    it(`should use the default fmt 'ltdt' (no error object) when opt.fmt is invalid`, async function() {
+        let expected = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt' })
+        assert.ok(Array.isArray(expected))
+        for (let v of ['xxx', null, 5, true, {}, [], ['ltdt'], NaN, '', 'LTDT', new String('csv')]) { // eslint-disable-line no-new-wrappers
+            let r = await getDataFromExcelFileU8Arr(u8a, { fmt: v })
+            assert.strict.deepStrictEqual(r, expected)
+        }
     })
 
-    it(`should return error object when opt.valueToString is invalid`, async function() {
-        let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array', valueToString: 'x' })
-        assert.strict.deepStrictEqual(r.error, 'opt.valueToString is not a boolean')
+    it(`should use the default valueToString true (no error object) when opt.valueToString is invalid`, async function() {
+        let expected = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array', valueToString: true })
+        assert.ok(Array.isArray(expected))
+        for (let v of ['x', null, 1, 0, 'y', {}, [], NaN, new Boolean(false)]) { // eslint-disable-line no-new-wrappers
+            let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array', valueToString: v })
+            assert.strict.deepStrictEqual(r, expected)
+        }
+    })
+
+    it(`should treat opt null or a non-object as {} (the defaults) without throwing`, async function() {
+        let expected = await getDataFromExcelFileU8Arr(u8a, { fmt: 'ltdt', valueToString: true })
+        for (let v of [null, undefined, 5, 'x', true, []]) {
+            assert.strict.deepStrictEqual(await getDataFromExcelFileU8Arr(u8a, v), expected)
+        }
+    })
+
+    it(`should still honor a valid opt.fmt and a valid boolean opt.valueToString`, async function() {
+        let a = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })
+        let c = await getDataFromExcelFileU8Arr(u8a, { fmt: 'csv' })
+        assert.ok(Array.isArray(a[0].data))
+        assert.strict.strictEqual(typeof c[0].data, 'string')
     })
 
     //各型別儲存格, 以test/tools/buildXlsx.mjs依OOXML原文組出(仿Excel存檔: 內建格式只給numFmtId、數值原文含17位有效數字), 不經任何xlsx套件寫出

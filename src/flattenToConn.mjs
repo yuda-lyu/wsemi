@@ -8,7 +8,6 @@ import isSymbol from 'lodash-es/isSymbol.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
-import isearr from './isearr.mjs'
 import isnum from './isnum.mjs'
 import isobj from './isobj.mjs'
 import isarr from './isarr.mjs'
@@ -21,7 +20,7 @@ import treeObj from './treeObj.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/flattenToConn.test.mjs Github}
  * @memberOf wsemi
- * @param {Array|Object} data 輸入項目物件或陣列
+ * @param {Array|Object} data 輸入項目物件或陣列，須為非空物件或非空陣列，否則回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，轉出該元素之節點(不被當成空陣列)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [bindKey='id'] 輸入識別用欄位字串，預設'id'
  * @param {String} [bindParent='parentId'] 輸入存放父節點識別用欄位字串，預設'parentId'
@@ -612,8 +611,8 @@ import treeObj from './treeObj.mjs'
  */
 function flattenToConn(data, opt = {}) {
 
-    //check
-    if (!iseobj(data) && !isearr(data)) {
+    //check, data須為非空物件或非空陣列, 否則回傳[](空結果); 單一空元素之陣列([null]、['']、[{}]、[[]])為一個元素, 不得被當成空陣列而丟棄(W-19, 比照第三批)
+    if (!iseobj(data) && !(isarr(data) && data.length > 0)) {
         return []
     }
 

@@ -97,7 +97,7 @@
 | 站點 | 傳入值來源 | 失敗行為(改後) | 通道 |
 |---|---|---|---|
 | `domShowInputAndGetFiles.mjs:125-129`(檢測)、`:154`(`domAppend(body, hidehtml)`) | `body` 同上;`hidehtml` 為函數內組成之字串(恆為有效子項) | **非 async、回傳 `genPm()` 之 Promise**,改前 `domAppend` 之拋錯會變同步丟出;改為於 `domRemove`（移除前次呼叫之 input）、`genPm`、建立 input、綁定監聽、觸發點擊**之前**檢測,`Promise.reject('can not find body element')`(字串);前次呼叫之 input 不被移除 | reject 字串(JSDoc 同步更新) |
-| `domConvertToPic.mjs:62-66`(檢測)、`:91`(`domPrepend(body, eleOut)`) | `body` 同上;`eleOut` 為函數內建立之元素 | async 函數;檢測置於 `cloneNode` 之前,`Promise.reject('can not find body element')`(字串,與該函數既有之 `'invalid ele'`、`'opt.scale can not less then 1'` 同一形式);不呼叫 snapdom | reject 字串 |
+| `domConvertToPic.mjs:62-66`(檢測)、`:91`(`domPrepend(body, eleOut)`) | `body` 同上;`eleOut` 為函數內建立之元素 | async 函數;檢測置於 `cloneNode` 之前,`Promise.reject('can not find body element')`(字串,與該函數既有之 `'invalid ele'`、`'opt.scale can not less then 1'` 同一形式〔`'opt.scale can not less then 1'` 自 2026-11-19 ws492h 起已移除: `scale` 小於 1 改用預設 1,見 R-OPT-RANGE-01〕);不呼叫 snapdom | reject 字串 |
 | `domVirtualCreate.mjs:50-54`(檢測)、`:85`(`domPrepend(body, elePanel)`) | `body` 同上;`elePanel` 為函數內建立之元素 | async 函數;檢測置於建立元素之前,`throw new Error('can not find body element')`(async 故為 reject,與該函數既有之 `Error('invalid fun')` 同一形式);**不呼叫 `fun`**(改前 `domPrepend` 回字串被忽略,`fun` 會對未接上頁面之元素被呼叫並回傳結果) | reject Error |
 | `copyStrToClipboard.mjs:54`(`domIsFocused(ele)`) | `ele` 為函數內建立之 textarea(恆為元素) | 不會走到非元素分支;取不到焦點改拋錯(見上表) | 同步 throw |
 

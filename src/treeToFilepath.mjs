@@ -13,12 +13,12 @@ import treeObj from './treeObj.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/treeToFilepath.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} data 輸入樹狀物件陣列(filepathToTree轉出之treeItems)，必須參數，須為真陣列(Array.isArray)，非陣列(含以Symbol.toStringTag偽稱Array之物件)throw Error('invalid data: must be an array')，訊息不帶輸入值；空陣列[]為合法，回傳[]；陣列元素須為物件，元素非物件throw Error('invalid data[<索引>]: must be an object')並指出第幾個，訊息不帶輸入值；無有效_type之物件節點(如{})不轉出，照舊略過。有效節點須提供pathInfors、_type鍵值，其中pathInfors為各所屬(含自己)階層節點資訊，_type需為'folder'或'file'，詳見filepathToTree轉出treeItems
+ * @param {Array} data 輸入樹狀物件陣列(filepathToTree轉出之treeItems)，須為真陣列(Array.isArray)，非陣列(含未給、null、字串、物件及以Symbol.toStringTag偽稱Array之物件)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)；空陣列[]為合法，回傳[]；陣列元素須為物件，元素非物件throw Error('invalid data[<索引>]: must be an object')並指出第幾個，訊息不帶輸入值；無有效_type之物件節點(如{})不轉出，照舊略過。有效節點須提供pathInfors、_type鍵值，其中pathInfors為各所屬(含自己)階層節點資訊，_type需為'folder'或'file'，詳見filepathToTree轉出treeItems
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.delimiter='/'] 輸入路徑分隔字串，預設'/'
  * @param {String} [opt.bindRoot='root'] 輸入臨時封裝用根目錄字串，詳見filepathToTree內設定，預設'root'
  * @returns {Array} 回傳檔案路徑陣列，每個項目為物件並提供path與type兩鍵值，其中type為'folder'或'file'
- * @throws {Error} data非陣列throw Error('invalid data: must be an array')；data之元素非物件throw Error('invalid data[<索引>]: must be an object')(依序檢查，先出現者)
+ * @throws {Error} data為陣列而其元素非物件(含[null]、[''])throw Error('invalid data[<索引>]: must be an object')(依序檢查，先出現者)；data非陣列不拋錯，回傳[]
  * @example
  *
  * let fps1 = [{ 'type': 'folder', 'path': '/aaa' }, { 'type': 'file', 'path': '/aaa/mmm/z1.txt' }]
@@ -240,10 +240,10 @@ import treeObj from './treeObj.mjs'
  */
 function treeToFilepath(data, opt = {}) {
 
-    //check, data為必須參數, 非陣列throw、元素非物件throw並指出第幾個(訊息不帶值; 使用者2026-11-03, dspec〈輸入參數之檢測機制〉§11), 空陣列與無有效_type之物件節點照舊
+    //check, data為第1參數, 非陣列回傳空結果[](不拋錯; dspec〈輸入參數之檢測機制〉§11 W-16乙, 使用者2026-11-16); 陣列之元素非物件throw並指出第幾個(元素層, 訊息不帶值; 使用者2026-11-03), 空陣列與無有效_type之物件節點照舊
     //  真陣列以Array.isArray判定(R-OBJ-ITER-01規則2: 以Symbol.toStringTag偽稱Array之物件不得依其length迭代)
     if (!Array.isArray(data)) {
-        throw new Error('invalid data: must be an array')
+        return []
     }
     for (let i = 0; i < data.length; i++) {
         let v = data[i]

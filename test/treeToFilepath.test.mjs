@@ -150,9 +150,9 @@ describe(`treeToFilepath`, function() {
     })
 
     //使用者2026-11-03(dspec〈輸入參數之檢測機制〉§11 第221項 待決第6項, 「都A」; 排程第492項第1批落實): data非陣列throw、元素非物件throw並指出第幾個(訊息不帶值, V19/V20); []與無_type之物件節點照舊
-    describe(`data非陣列拋錯、元素非物件拋錯(R25: 使用者2026-11-03)`, function() {
-
-        let msgArr = 'invalid data: must be an array'
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): data為第1參數, 非陣列一律回輸出型別之空結果[], 不拋錯(原R25為throw invalid data); 陣列之元素非物件(元素層)依第二批維持throw並指出第幾個
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    describe(`data非陣列回[]、元素非物件拋錯(R25: 使用者2026-11-03; ws492h W-16乙: data非陣列改回[])`, function() {
 
         //[名稱, 輸入]
         let notArrs = [
@@ -171,14 +171,16 @@ describe(`treeToFilepath`, function() {
             [`new Map`, new Map()],
         ]
         for (let [name, v] of notArrs) {
-            it(`should throw '${msgArr}' when data is ${name}`, function() {
-                assert.throws(() => treeToFilepath(v), (err) => err instanceof Error && err.message === msgArr)
+            it(`should return [] (no throw) when data is ${name}`, function() {
+                let r = treeToFilepath(v)
+                assert.strict.deepStrictEqual(r, [])
+                assert.ok(Array.isArray(r))
             })
         }
 
-        it(`should throw (not return []) for a non-array even when opt is given`, function() {
-            assert.throws(() => treeToFilepath('x', { delimiter: '>' }), { message: msgArr })
-            assert.throws(() => treeToFilepath(null, { bindRoot: 'ROOT' }), { message: msgArr })
+        it(`should return [] (no throw) for a non-array even when opt is given`, function() {
+            assert.strict.deepStrictEqual(treeToFilepath('x', { delimiter: '>' }), [])
+            assert.strict.deepStrictEqual(treeToFilepath(null, { bindRoot: 'ROOT' }), [])
         })
 
         //[名稱, 輸入, 預期訊息]
@@ -213,16 +215,16 @@ describe(`treeToFilepath`, function() {
                     msgs.push(err.message)
                 }
             }
-            assert.strict.deepStrictEqual(msgs, [msgArr, 'invalid data[0]: must be an object', 'invalid data[1]: must be an object', 'invalid data[1]: must be an object'])
+            assert.strict.deepStrictEqual(msgs, ['NOTHROW', 'invalid data[0]: must be an object', 'invalid data[1]: must be an object', 'invalid data[1]: must be an object'])
             for (let m of msgs) {
                 assert.ok(m.indexOf('SECRET') < 0 && m.indexOf('12345678') < 0, m)
             }
         })
 
-        it(`should throw at once for an object that fakes an Array by Symbol.toStringTag, as data or as an element, without iterating its length (terra #7; R-OBJ-ITER-01 rule 2)`, function() {
+        it(`should return [] at once as data and throw as an element for an object that fakes an Array by Symbol.toStringTag, without iterating its length (terra #7; R-OBJ-ITER-01 rule 2)`, function() {
             let fake = { [Symbol.toStringTag]: 'Array', 0: { _type: 'file', pathInfors: [{ name: 'a' }] }, length: Number.MAX_SAFE_INTEGER }
             let t0 = Date.now()
-            assert.throws(() => treeToFilepath(fake), { message: msgArr })
+            assert.strict.deepStrictEqual(treeToFilepath(fake), [])
             //元素為偽稱Array之物件或真陣列: 非物件
             assert.throws(() => treeToFilepath([{}, fake]), { message: 'invalid data[1]: must be an object' })
             let real = [1]
@@ -252,7 +254,7 @@ describe(`treeToFilepath`, function() {
 
         it(`should accept array-like-length objects only as elements, never as data`, function() {
             //data帶length鍵之物件不是陣列(isarr為false)
-            assert.throws(() => treeToFilepath({ length: 1, 0: { _type: 'file' } }), { message: msgArr })
+            assert.strict.deepStrictEqual(treeToFilepath({ length: 1, 0: { _type: 'file' } }), [])
             //元素帶length鍵之物件仍是物件
             assert.strict.deepStrictEqual(treeToFilepath([{ length: 2 }]), [])
         })

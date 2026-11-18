@@ -9,12 +9,12 @@ import _setOwnKey from './_setOwnKey.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/objSortByKeys.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} obj 輸入物件資料，必須參數，須為物件(Object.prototype.toString為[object Object]且非真陣列)，陣列、函數、字串、null、undefined等非物件throw Error('invalid obj: must be an object')，訊息不帶輸入值；空物件{}為合法，回傳{}
- * @param {Array} keys 輸入指定鍵值陣列，必須參數，須為真陣列(Array.isArray)，非陣列(含以Symbol.toStringTag偽稱Array之物件)throw Error('invalid keys: must be an array')，訊息不帶輸入值；空陣列[]為合法
+ * @param {Object} obj 輸入物件資料，須為物件(Object.prototype.toString為[object Object]且非真陣列)，陣列、函數、字串、null、undefined等非物件回傳{}，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查keys；空物件{}為合法，回傳{}
+ * @param {Array} keys 輸入指定鍵值陣列，必須參數(obj為物件時才檢查)，須為真陣列(Array.isArray)，非陣列(含以Symbol.toStringTag偽稱Array之物件)throw Error('invalid keys: must be an array')，訊息不帶輸入值；空陣列[]為合法；[null]、['']、[{}]視為一個元素(非字串非數字之元素略過，不影響其餘鍵之順序)
  * @param {Object} [opt={}] 輸入設定物件，預設{}；非一般物件(含函數、陣列)視為未給
  * @param {Boolean} [opt.onlyKeys=false] 輸入是否只保留列於keys且存在於obj之鍵(依keys之順序)，預設false；只有布林true生效，其他值(含非布林、包裝物件)視為未給(false)，不報錯
  * @returns {Object} 回傳排序後物件(新物件)；onlyKeys為false時含obj全部之自有可列舉字串鍵，指定鍵依序放前、其餘維持原順序放後；onlyKeys為true時只含指定鍵
- * @throws {Error} obj非物件throw Error('invalid obj: must be an object')；keys非陣列throw Error('invalid keys: must be an array')(先檢obj)
+ * @throws {Error} obj為物件而keys非陣列throw Error('invalid keys: must be an array')
  * @example
  *
  * let obj1 = {
@@ -50,21 +50,24 @@ import _setOwnKey from './_setOwnKey.mjs'
  * console.log(objSortByKeys(obj3, ['x', 'a']))
  * // => { a: 2, b: 1, c: 3 } (不存在之鍵略過)
  *
+ * console.log(objSortByKeys('abc', ['a']))
+ * // => {} (obj非物件回傳空結果, 不拋錯)
+ *
  * try {
- *     objSortByKeys('abc', ['a'])
+ *     objSortByKeys(obj3, 'a')
  * }
  * catch (err) {
  *     console.log(err.message)
  * }
- * // => invalid obj: must be an object
+ * // => invalid keys: must be an array
  *
  */
 function objSortByKeys(obj, keys, opt = {}) {
 
-    //check, obj與keys為必須參數, 非預期throw(訊息不帶值; 使用者2026-11-03, dspec〈輸入參數之檢測機制〉§11), 空物件與空陣列為合法資料
+    //check, obj為第1參數, 非物件回傳空結果{}(不拋錯; dspec〈輸入參數之檢測機制〉§11 W-16乙, 使用者2026-11-16), 不檢查keys; obj為物件時keys為必須參數, 非預期throw(訊息不帶值; 使用者2026-11-03), 空物件與空陣列為合法資料
     //  真陣列以Array.isArray判定(R-OBJ-ITER-01規則2: 依Object.prototype.toString為真而非真陣列者, 如以Symbol.toStringTag偽稱Array之物件, 不得依其length迭代)
     if (!isobj(obj) || Array.isArray(obj)) {
-        throw new Error('invalid obj: must be an object')
+        return {}
     }
     if (!Array.isArray(keys)) {
         throw new Error('invalid keys: must be an array')

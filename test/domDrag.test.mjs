@@ -772,8 +772,9 @@ describe(`domDrag`, function() {
 
     //--- 選項 ---
 
-    it(`should accept numeric strings, use the defaults for invalid numeric options (Infinity included), and clamp a negative delay to 0`, async function() {
-        //數字字串(如網頁輸入、表格轉存之資料)轉為數字; 非數字字串、空白字串與NaN用預設(延遲120、不透明度0.4); 負數延遲視為0(JSDoc載明); Infinity為非預期之輸入, 改用預設120(使用者2026-11-02定A, ws272c, 原為夾至上限而不出現)
+    it(`should accept numeric strings and use the defaults for invalid numeric options (Infinity and a negative delay included)`, async function() {
+        //數字字串(如網頁輸入、表格轉存之資料)轉為數字; 非數字字串、空白字串與NaN用預設(延遲120、不透明度0.4); Infinity為非預期之輸入, 改用預設120(使用者2026-11-02定A, ws272c, 原為夾至上限而不出現)
+        //ws492h(第492項第7批, W-13; dspec K3「超出範圍亦同」, 使用者2026-11-16): 負數延遲為超出範圍, 同改用預設120(原視為0)
         let out = []
         for (let opt of [{ timeDragStartDelay: 'x', previewOpacity: NaN }, { timeDragStartDelay: ' ', previewOpacity: ' ' }, { timeDragStartDelay: '5', previewOpacity: '0.7' }, { timeDragStartDelay: -5 }, { timeDragStartDelay: Infinity }]) {
             let env = mkFakeDom()
@@ -791,7 +792,7 @@ describe(`domDrag`, function() {
             b.d.unbind()
             await tick()
         }
-        assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [1, 1, 0.4], [0, 1, 0.4]])
+        assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [0, 1, 0.4], [0, 1, 0.4]]) //第4筆(-5)原為[1, 1, 0.4](視為0), W-13改為預設120而與第1、2、5筆同
     })
 
 })
@@ -917,8 +918,8 @@ describe(`domDrag onTrace(R-TRACE-01)`, function() {
         assert.strict.deepStrictEqual([rec.timed(), env.previews(), env.nWinListeners()], [ended, 0, 0])
     })
 
-    it(`should report the resolved delay in timer set: default for invalid values (Infinity, over the timer limit and '0x10' included), numeric strings, negative as 0`, async function() {
-        //JSDoc timeDragStartDelay: 無效時用預設120, 數字字串依其值, 負數視為0, 超過計時器上限(含Infinity)為非預期之輸入而改用預設120(不夾至上限, ws272c); timer事件之ms為解析後之值
+    it(`should report the resolved delay in timer set: default for invalid values (negative, Infinity, over the timer limit and '0x10' included), numeric strings`, async function() {
+        //JSDoc timeDragStartDelay: 無效時用預設120, 數字字串依其值, 負數(ws492h W-13起)與超過計時器上限(含Infinity)為非預期之輸入而改用預設120(不夾至上限, ws272c); timer事件之ms為解析後之值
         clock = useFakeClock()
         let got = []
         let i = 0
@@ -930,7 +931,7 @@ describe(`domDrag onTrace(R-TRACE-01)`, function() {
             mouse(env).press(a)
             got.push(rec.events.filter((e) => e.type === 'timer').map((e) => `${e.phase}/${e.ms}`))
         }
-        assert.strict.deepStrictEqual(got, [['set/120'], ['set/120'], ['set/5'], ['set/0'], ['set/120'], ['set/120'], ['set/120'], ['set/2147483647']])
+        assert.strict.deepStrictEqual(got, [['set/120'], ['set/120'], ['set/5'], ['set/120'], ['set/120'], ['set/120'], ['set/120'], ['set/2147483647']]) //第4筆(-5)原為set/0
     })
 
     it(`should notify end with the reason of each way a drag finishes, always after timer cancel and before leave and drop`, async function() {
@@ -1274,7 +1275,7 @@ describe(`optVal domDrag (ws272c, formerly _optNum)`, function() {
         valid: VALID_NUM,
     })
 
-    //timeDragStartDelay: 由onTrace之timer set事件所報之ms(按下即同步通知), 放開使其取消(不等待); 有效之負數(JSDoc載明)視為0
+    //timeDragStartDelay: 由onTrace之timer set事件所報之ms(按下即同步通知), 放開使其取消(不等待); 負數為超出範圍而改用預設120(ws492h W-13, K3超出範圍亦同; 原視為0)
     defineOptParamAsync({
         fn: 'domDrag',
         name: 'opt.timeDragStartDelay',
@@ -1292,7 +1293,7 @@ describe(`optVal domDrag (ws272c, formerly _optNum)`, function() {
             await tick()
             return ms
         },
-        extraInvalid: [...INVALID_TIMER_OVER],
+        extraInvalid: [...INVALID_TIMER_OVER, ['-5', -5], [`'-5'`, '-5'], ['-0.5', -0.5], ['-1e-9', -1e-9], [`' -1 '`, ' -1 ']],
         valid: [
             ['0', 0, 0],
             ['0.5', 0.5, 0.5],
@@ -1301,9 +1302,6 @@ describe(`optVal domDrag (ws272c, formerly _optNum)`, function() {
             [`'30'`, '30', 30],
             [`' 40 '`, ' 40 ', 40],
             ['2147483647', 2147483647, 2147483647],
-            ['-5 (documented as 0)', -5, 0],
-            [`'-5' (documented as 0)`, '-5', 0],
-            ['-0.5 (documented as 0)', -0.5, 0],
         ],
     })
 

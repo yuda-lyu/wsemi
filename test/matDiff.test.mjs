@@ -57,18 +57,20 @@ describe(`matDiff`, function() {
     })
 
     //ws286c: matOld與matNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依matOld、matNew序檢測; []為合法輸入
-    const MSG_OLD = 'invalid matOld: must be an array'
     const MSG_NEW = 'invalid matNew: must be an array'
     //ws290: 列非陣列之訊息改用matDiff自身之參數名且合乎輸入參數規格之「invalid <參數名>: …」格式(修前沿用內部arrDiff之'arrOld is not a matrix'/'arrNew is not a matrix')
     //ws430c(裁定表〈八〉「列非陣列(含空位) 訊息指出列號(invalid matOld: row[i] is not an array, 只含列號不含值)」): 原'invalid matOld: every row must be an array' → 新'invalid matOld: row[i] is not an array'
     const MSG_MAT_OLD = (i) => `invalid matOld: row[${i}] is not an array`
     const MSG_MAT_NEW = (i) => `invalid matNew: row[${i}] is not an array`
 
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): matOld為第1參數, 非陣列一律回與正常輸出同形之空結果{ diff: [], dfs: [] }, 不拋錯(且不檢查matNew); matNew為次參數, 非陣列仍throw
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    const EMPTY_RESULT = { diff: [], dfs: [] }
     for (let [label, v] of NON_ARR) {
-        it(`should throw '${MSG_OLD}' when matOld is not an array: ${label} (matNew valid, [] or invalid too)`, function() {
-            throwsMsg(() => matDiff(v, [['a']]), MSG_OLD)
-            throwsMsg(() => matDiff(v, []), MSG_OLD)
-            throwsMsg(() => matDiff(v, v), MSG_OLD)
+        it(`should return ${JSON.stringify(EMPTY_RESULT)} (no throw) when matOld is not an array: ${label} (matNew valid, [] or invalid too)`, function() {
+            assert.strict.deepStrictEqual(matDiff(v, [['a']]), EMPTY_RESULT)
+            assert.strict.deepStrictEqual(matDiff(v, []), EMPTY_RESULT)
+            assert.strict.deepStrictEqual(matDiff(v, v), EMPTY_RESULT)
         })
 
         it(`should throw '${MSG_NEW}' when matNew is not an array: ${label} (matOld valid or [])`, function() {
@@ -77,16 +79,16 @@ describe(`matDiff`, function() {
         })
     }
 
-    it(`should throw when matOld or matNew is not given (required parameters)`, function() {
-        throwsMsg(() => matDiff(), MSG_OLD)
+    it(`should return the empty result when matOld is not given, and throw when matNew is not given while matOld is an array`, function() {
+        assert.strict.deepStrictEqual(matDiff(), EMPTY_RESULT)
         throwsMsg(() => matDiff([['a']]), MSG_NEW)
         throwsMsg(() => matDiff([]), MSG_NEW)
-        throwsMsg(() => matDiff(undefined, [['a']]), MSG_OLD)
+        assert.strict.deepStrictEqual(matDiff(undefined, [['a']]), EMPTY_RESULT)
     })
 
-    it(`should throw the fixed messages without the input value`, function() {
+    it(`should throw the fixed message without the input value when matNew is invalid, and not throw when matOld is invalid`, function() {
         for (let v of [LEAK, { secret: LEAK }, Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
-            throwsMsgNoLeak(() => matDiff(v, [['a']]), MSG_OLD)
+            assert.strict.deepStrictEqual(matDiff(v, [['a']]), EMPTY_RESULT)
             throwsMsgNoLeak(() => matDiff([['a']], v), MSG_NEW)
         }
     })
@@ -214,7 +216,7 @@ describe(`matDiff`, function() {
         throwsMsg(() => matDiff([[1], 2], [3]), MSG_MAT_OLD(1)) //matOld中段列無效亦先於matNew
         throwsMsg(() => matDiff([,], [[1]]), MSG_MAT_OLD(0)) // eslint-disable-line no-sparse-arrays
         throwsMsg(() => matDiff([1], 'x'), MSG_NEW) //matNew非陣列先於matOld各列(同修前順序)
-        throwsMsg(() => matDiff('x', [1]), MSG_OLD)
+        assert.strict.deepStrictEqual(matDiff('x', [1]), EMPTY_RESULT) //ws492h: matOld非陣列回空結果, 不檢查matNew
     })
 
     it(`should call console.log 0 times and not carry the input data when throwing 'row[i] is not an array'`, function() {

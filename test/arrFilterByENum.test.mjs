@@ -2,10 +2,7 @@ import assert from 'assert'
 import arrFilterByENum from '../src/arrFilterByENum.mjs'
 import arrFilterByNum from '../src/arrFilterByNum.mjs'
 import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
-import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
-
-
-const MSG_ARR = 'invalid arr: must be an array'
+import { NON_ARR, LEAK } from './tools/diffInputKit.mjs'
 
 
 //dspec §11(使用者2026-10-31): 「arrFilterByNum 就是基於isnum去判斷 arrFilterByPnum 就是基於ispnum, 應該需創建 arrFilterByENum, 就是基於 isenum」
@@ -50,22 +47,24 @@ describe(`arrFilterByENum`, function() {
         })
     }
 
-    //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): arr為必須參數, 非陣列throw(訊息不帶值); 空陣列為合法資料, 照常回傳[]
-    //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、V19(訊息格式)、V20(不回顯輸入值)
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): arr為第1參數, 非陣列一律回輸出型別之空結果[], 不拋錯(原ws286e為throw invalid arr); 空陣列為合法資料, 照常回傳[]
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
     for (let [lb, v] of [...NON_ARR, [`'x'`, 'x'], ['5', 5], [`{ length: 1, 0: 1 }`, { length: 1, 0: 1 }]]) {
-        it(`should throw invalid arr when input ${lb}`, function() {
-            throwsMsg(() => arrFilterByENum(v), MSG_ARR)
+        it(`should return [] (no throw) when input ${lb}`, function() {
+            let r = arrFilterByENum(v)
+            assert.strict.deepStrictEqual(r, [])
+            assert.ok(Array.isArray(r))
         })
     }
 
-    it(`should not echo the input value in the message of an invalid arr`, function() {
-        throwsMsgNoLeak(() => arrFilterByENum(LEAK), MSG_ARR)
-        throwsMsgNoLeak(() => arrFilterByENum({ LEAK }), MSG_ARR)
-        throwsMsgNoLeak(() => arrFilterByENum({ length: 1, 0: LEAK }), MSG_ARR)
+    it(`should not throw nor echo anything when the input is a non-array carrying a leak mark`, function() {
+        assert.strict.deepStrictEqual(arrFilterByENum(LEAK), [])
+        assert.strict.deepStrictEqual(arrFilterByENum({ LEAK }), [])
+        assert.strict.deepStrictEqual(arrFilterByENum({ length: 1, 0: LEAK }), [])
     })
 
-    it(`should throw invalid arr when no argument is given`, function() {
-        throwsMsg(() => arrFilterByENum(), MSG_ARR)
+    it(`should return [] when no argument is given`, function() {
+        assert.strict.deepStrictEqual(arrFilterByENum(), [])
     })
 
     //表列: ([]) → [], (['a']) → [] 不變; 空陣列與無有效數字之陣列皆不報錯

@@ -1,7 +1,6 @@
 import pullAll from 'lodash-es/pullAll.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
 import isstr from './isstr.mjs'
 import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
@@ -13,8 +12,8 @@ import isobj from './isobj.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrPull.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} vsrc 輸入原始陣列，非有效陣列回傳空陣列[]
- * @param {Array|Object|Number|String|Boolean} vpull 輸入要被移除的元素或陣列，必須參數，單值(物件、數字、字串、布林)自動轉陣列，其餘非陣列(undefined、null、NaN、函數等)為無效而回傳空陣列[]，不回傳原陣列；空陣列代表無可移除，回傳原陣列之複本；限制(既有行為)：以isearr判定待移除之陣列，故單一無效值(''、{}，或['']、[null]、[{}]等)視為無可移除而回傳原陣列之複本，不會移除陣列內之''或null
+ * @param {Array} vall 輸入原始陣列，非陣列回傳空陣列[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，照常處理而保留(不被當成空陣列)
+ * @param {Array|Object|Number|String|Boolean} vpull 輸入要被移除的元素或陣列，必須參數，單值(物件、數字、字串、布林，含''與{})自動轉陣列，其餘非陣列(undefined、null、NaN、函數等)為無效而回傳空陣列[]，不回傳原陣列；空陣列代表無可移除，回傳原陣列之複本；單一空元素之陣列([null]、[''])視為一個待移除值，會移除vall內之null與''(以SameValueZero比對，{}為新物件故無法以值移除)；單值''亦同(移除vall內之'')
  * @returns {Array} 回傳移除後陣列(新陣列，不改動原陣列)
  * @example
  *
@@ -33,11 +32,17 @@ import isobj from './isobj.mjs'
  * console.log(arrPull([1, 2, 3, '4', 5, 'abc'], [6, 7]))
  * // => [ 1, 2, 3, '4', 5, 'abc' ]
  *
+ * console.log(arrPull([1, null, 2, '', 3], [null, '']))
+ * // => [ 1, 2, 3 ] (單一空元素視為一個待移除值)
+ *
+ * console.log(arrPull([null], [1]))
+ * // => [ null ] (單一空元素視為一個元素, 不被當成空陣列)
+ *
  */
 function arrPull(vall, vpull) {
 
-    //check
-    if (!isearr(vall)) {
+    //check, vall非陣列回傳空結果[]; 空陣列照常(下方回傳複本[]); 單一空元素([null]、['']、[{}])為一個元素, 不得被當成空陣列而丟棄(W-19, 比照第三批)
+    if (!isarr(vall)) {
         return []
     }
 
@@ -52,8 +57,8 @@ function arrPull(vall, vpull) {
     //cloneDeep
     let rs = cloneDeep(vall)
 
-    //vpull為陣列但無有效元素(空陣列, 或isearr視為空之['']、[null]、[{}]等單一無效元素): 無可移除, 回傳複本(內容同修前之原陣列)
-    if (!isearr(vpull)) {
+    //vpull為空陣列: 無可移除, 回傳複本; 單一空元素([null]、['']、[{}])為一個待移除值, 不得被當成空陣列而忽略(W-19, 比照第三批)
+    if (vpull.length === 0) {
         return rs
     }
 

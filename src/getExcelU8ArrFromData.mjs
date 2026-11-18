@@ -1,5 +1,5 @@
 import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import haskey from './haskey.mjs'
 import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
 import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
@@ -13,7 +13,7 @@ import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getExcelU8ArrFromData.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} data 輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)
+ * @param {Array} data 輸入數據陣列，可為二維陣列(mat)或物件陣列(ltdt)；非陣列或空陣列resolve { error: 'no data' }；單一空元素之陣列([null]、['']、[{}])視為一個元素，照一般流程轉換(結果同多個空元素)，不被當成空陣列
  * @param {String} [sheetName='data'] 輸入輸出為Excel時所在分頁(sheet)名稱字串，預設為'data'
  * @returns {Promise} 回傳Promise，resolve回傳Excel檔案的Uint8Array數據，輸入無效或轉換失敗時resolve回傳{ error }物件
  * @example
@@ -43,8 +43,8 @@ import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
  */
 async function getExcelU8ArrFromData(data, sheetName = 'data') {
 
-    //check
-    if (!isearr(data)) {
+    //check, 非陣列或空陣列無資料可寫(維持{ error: 'no data' }, Excel類函數之失敗通道); 單一空元素([null]、['']、[{}])為一個元素, 不得被當成空陣列而回'no data', 依一般流程轉換(W-19, 比照第三批)
+    if (!isarr(data) || data.length === 0) {
         let msg = 'no data'
         return {
             error: msg

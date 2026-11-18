@@ -2,7 +2,6 @@ import each from 'lodash-es/each.js'
 import pullAt from 'lodash-es/pullAt.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isarr from './isarr.mjs'
-import isearr from './isearr.mjs'
 import iseint from './iseint.mjs'
 
 
@@ -14,7 +13,7 @@ import iseint from './iseint.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrPullAt.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} vsrc 輸入原始陣列，非有效陣列回傳空陣列[]
+ * @param {Array} vall 輸入原始陣列，非陣列回傳空陣列[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，照常處理而保留(不被當成空陣列)
  * @param {Array|Integer|String} vpull 輸入要被移除的指定位置或陣列的指定位置，必須參數(有效整數，0~4294967294，數字字串亦可)，單值無效回傳空陣列[]，陣列中之無效索引略過
  * @returns {Array} 回傳移除後陣列(新陣列，不改動原陣列)
  * @example
@@ -37,8 +36,8 @@ import iseint from './iseint.mjs'
  */
 function arrPullAt(vall, vpull) {
 
-    //check
-    if (!isearr(vall)) {
+    //check, vall非陣列回傳空結果[]; 空陣列照常(下方回傳複本[]); 單一空元素([null]、['']、[{}])為一個元素, 不得被當成空陣列而丟棄(W-19, 比照第三批)
+    if (!isarr(vall)) {
         return []
     }
 

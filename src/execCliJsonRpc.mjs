@@ -30,7 +30,7 @@ let RULE_TIMEOUT_MS = { fn: 'execCliJsonRpc', name: 'opt.timeoutMs', kind: 'eint
  * @memberOf wsemi
  * @param {String} command 輸入執行檔名稱字串
  * @param {Array} [args=[]] 輸入參數字串陣列，預設[]
- * @param {Array} [requests=[]] 輸入請求物件陣列，每項為{ method, params }(請求，等回應)或{ notify, params }(通知，不等回應)，params可省略，陣列於呼叫時讀取為快照(其後對該陣列之增刪不影響本次送出)，預設[]
+ * @param {Array} [requests=[]] 輸入請求物件陣列，每項為{ method, params }(請求，等回應)或{ notify, params }(通知，不等回應)，params可省略，陣列於呼叫時讀取為快照(其後對該陣列之增刪不影響本次送出)；非陣列(含null、字串、物件)視為未給而改用預設[]，同args，不報錯；陣列內有元素非含method或notify之物件時errorType為params，預設[]
  * @param {Object} [opt={}] 輸入設定物件
  * @param {Number} [opt.timeoutMs=120000] 輸入整體逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，涵蓋全部請求與收尾，逾時即樹殺，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限、不報錯，預設120000
  * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()
@@ -131,9 +131,9 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
             args = []
         }
 
-        //requests
+        //requests, opt類(簽名預設[]且JSDoc標可選; W-06): 非陣列(含null)視為未給改用預設[], 同args(K3); 陣列內元素不符仍以params回報
         if (!isarr(requests)) {
-            return rFail('params', 'requests 須為陣列')
+            requests = []
         }
         for (let i = 0; i < requests.length; i++) {
             let q = requests[i]

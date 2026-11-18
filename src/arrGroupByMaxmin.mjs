@@ -1,7 +1,7 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import isenum from './isenum.mjs'
 import haskey from './haskey.mjs'
@@ -13,8 +13,8 @@ import maxminsLimits from './_maxminsLimits.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrGroupByMaxmin.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} arr 輸入要被切割的陣列，元素本身或其keyValue欄位須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)，非有效數字之元素略過不分組
- * @param {Array} maxmins 輸入要切分的最大最小值物件陣列，每個元素需為物件，至少得要包含keyMax與keyMin欄位，其值須為有效數字(同上，數字字串亦可)；maxmins屬設定，上下限無效(未給、null、Infinity、'0x10'、包裝物件、非數字字串等)即throw Error(`invalid maxmins[索引].鍵: must be a valid number`，訊息不帶輸入值)，且不論arr內容；欲表示「無上限或無下限」請自行給適當之有限極值(如1e20、-1e20)
+ * @param {Array} arr 輸入要被切割的陣列，元素本身或其keyValue欄位須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)，非有效數字之元素略過不分組；非陣列或空陣列回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素(非有效數字而略過不分組)，回傳各組(皆無items)，不被當成空陣列
+ * @param {Array} maxmins 輸入要切分的最大最小值物件陣列，每個元素需為物件，至少得要包含keyMax與keyMin欄位，其值須為有效數字(同上，數字字串亦可)；maxmins屬設定，上下限無效(未給、null、Infinity、'0x10'、包裝物件、非數字字串等)即throw Error(`invalid maxmins[索引].鍵: must be a valid number`，訊息不帶輸入值)，且不論arr內容；欲表示「無上限或無下限」請自行給適當之有限極值(如1e20、-1e20)；maxmins非陣列或空陣列回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，缺上下限而throw(同[null, null])，不被當成空陣列
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.keyMax='max'] 輸入maxmins內各元素中，儲存最大值欄位字串，預設'max'
  * @param {String} [opt.keyMin='min'] 輸入maxmins內各元素中，儲存最小值欄位字串，預設'min'
@@ -479,16 +479,16 @@ function arrGroupByMaxmin(arr, maxmins, opt = {}) {
         keyItems = 'items'
     }
 
-    //check, maxmins不是有效陣列時維持回傳空陣列
-    if (!isearr(maxmins)) {
+    //check, maxmins不是陣列或為空陣列時維持回傳空陣列; 單一空元素([null]、['']、[{}])為一個元素, 交limits檢測上下限而throw, 不得被當成空陣列(W-19, 比照第三批)
+    if (!isarr(maxmins) || maxmins.length === 0) {
         return []
     }
 
     //limits, maxmins為設定, 上下限無效即throw(不帶值), 先於arr檢查, 是否報錯與arr之內容無關
     let limits = maxminsLimits(maxmins, keyMax, keyMin)
 
-    //check
-    if (!isearr(arr)) {
+    //check, arr不是陣列或為空陣列時維持回傳空陣列; 單一空元素([null]、['']、[{}])為一個元素(非有效數字而略過不分組), 不得被當成空陣列(W-19, 比照第三批)
+    if (!isarr(arr) || arr.length === 0) {
         return []
     }
 

@@ -3,7 +3,6 @@ import ltdtpull from '../src/ltdtpull.mjs'
 import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
-const MSG_ALL = 'invalid ltdtAll: must be an array'
 const MSG_DEL = 'invalid ltdtDel: must be an array'
 //ws430c(裁定表〈九〉): 元素非物件之訊息改為指出row[i](原'… must be an array of objects'); key之訊息改為'… or a finite number'(原'invalid key: must be a non-empty string')
 const MSG_ALL_ROW = (i) => `invalid ltdtAll: row[${i}] is not an object`
@@ -37,32 +36,34 @@ describe(`ltdtpull`, function() {
     //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): ltdtAll、ltdtDel、key皆為必須參數, 無效throw(訊息不帶值); 空陣列為合法資料, 不報錯
     //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「ltdtpull([], 'x', 'id') 仍報錯, 因為 'x' 不是陣列。空陣列本身不報錯」(型別檢測與資料有無無關)、K2(必須參數)、V19(訊息格式)、V20(不回顯輸入值)
     //  原回[]之非陣列、元素非物件、key無效與缺參數一律改為throw
-    it(`should throw invalid ltdtAll when input ''`, function() {
-        throwsMsg(() => ltdtpull(''), MSG_ALL)
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): ltdtAll為第1參數, 非陣列一律回輸出型別之空結果[], 不拋錯(且不檢查ltdtDel與key); ltdtAll為陣列時其餘必須參數之檢測不變(如ltdtpull([], 'x', 'id')仍throw)
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    it(`should return [] (no throw) when input ''`, function() {
+        assert.strict.deepStrictEqual(ltdtpull(''), [])
     })
 
     it(`should throw invalid ltdtDel when input [] (ltdtDel not given)`, function() {
         throwsMsg(() => ltdtpull([]), MSG_DEL)
     })
 
-    it(`should throw invalid ltdtAll when input {}`, function() {
-        throwsMsg(() => ltdtpull({}), MSG_ALL)
+    it(`should return [] (no throw) when input {}`, function() {
+        assert.strict.deepStrictEqual(ltdtpull({}), [])
     })
 
-    it(`should throw invalid ltdtAll when input null`, function() {
-        throwsMsg(() => ltdtpull(null), MSG_ALL)
+    it(`should return [] (no throw) when input null`, function() {
+        assert.strict.deepStrictEqual(ltdtpull(null), [])
     })
 
-    it(`should throw invalid ltdtAll when input undefined`, function() {
-        throwsMsg(() => ltdtpull(undefined), MSG_ALL)
+    it(`should return [] (no throw) when input undefined`, function() {
+        assert.strict.deepStrictEqual(ltdtpull(undefined), [])
     })
 
-    it(`should throw invalid ltdtAll when input NaN`, function() {
-        throwsMsg(() => ltdtpull(NaN), MSG_ALL)
+    it(`should return [] (no throw) when input NaN`, function() {
+        assert.strict.deepStrictEqual(ltdtpull(NaN), [])
     })
 
-    it(`should throw invalid ltdtAll when no argument is given`, function() {
-        throwsMsg(() => ltdtpull(), MSG_ALL)
+    it(`should return [] (no throw) when no argument is given`, function() {
+        assert.strict.deepStrictEqual(ltdtpull(), [])
     })
 
     it(`should throw invalid ltdtDel when input [], ''`, function() {
@@ -108,8 +109,8 @@ describe(`ltdtpull`, function() {
     describe(`required parameters ltdtAll, ltdtDel and key (ws286e)`, function() {
 
         // 表列: ('x',[],'id')、([],'x','id')、([{id:1}],[{id:1}],'')、([],[],'')、(['x'],[],'id')、([{id:1}],['x'],'id') → throw
-        it(`should throw when input 'x', [], 'id'`, function() {
-            throwsMsg(() => ltdtpull('x', [], 'id'), MSG_ALL)
+        it(`should return [] (no throw, ws492h) when input 'x', [], 'id'`, function() {
+            assert.strict.deepStrictEqual(ltdtpull('x', [], 'id'), [])
         })
 
         it(`should throw when input [], 'x', 'id'`, function() {
@@ -177,11 +178,13 @@ describe(`ltdtpull`, function() {
             assert.strict.deepStrictEqual(ltdtpull([{ 'a.b': 1 }, { 'a.b': 2 }, { a: { b: 1 } }], [{ 'a.b': 1 }], 'a.b'), [{ 'a.b': 2 }, { a: { b: 1 } }])
         })
 
-        // ltdtAll非陣列(NON_ARR 21種 + 數字), 其餘有效
+        // ltdtAll非陣列(NON_ARR 21種 + 數字): 回[](不拋錯, ws492h), 不論ltdtDel與key是否有效(第1參數無效時不檢查其餘)
         for (let [lb, v] of [...NON_ARR, ['5', 5]]) {
-            it(`should throw invalid ltdtAll when ltdtAll is ${lb}`, function() {
-                throwsMsg(() => ltdtpull(v, [], 'id'), MSG_ALL)
-                throwsMsg(() => ltdtpull(v, [{ id: 1 }], 'id'), MSG_ALL)
+            it(`should return [] (no throw) when ltdtAll is ${lb}`, function() {
+                assert.strict.deepStrictEqual(ltdtpull(v, [], 'id'), [])
+                assert.strict.deepStrictEqual(ltdtpull(v, [{ id: 1 }], 'id'), [])
+                assert.strict.deepStrictEqual(ltdtpull(v, 'x', ''), [])
+                assert.strict.deepStrictEqual(ltdtpull(v), [])
             })
             it(`should throw invalid ltdtDel when ltdtDel is ${lb}`, function() {
                 throwsMsg(() => ltdtpull([], v, 'id'), MSG_DEL)
@@ -237,8 +240,8 @@ describe(`ltdtpull`, function() {
         }
 
         // 檢測順序: ltdtAll(陣列, 元素)、ltdtDel(陣列, 元素)、key、ltdtDel之鍵
-        it(`should check in the order ltdtAll (array, rows), ltdtDel (array, rows), key, keys of ltdtDel`, function() {
-            throwsMsg(() => ltdtpull('x', 'y', 'z'), MSG_ALL)
+        it(`should check in the order ltdtAll (array, rows), ltdtDel (array, rows), key, keys of ltdtDel, and return [] when ltdtAll is not an array`, function() {
+            assert.strict.deepStrictEqual(ltdtpull('x', 'y', 'z'), []) //ws492h: ltdtAll非陣列回[], 不再檢查ltdtDel與key
             throwsMsg(() => ltdtpull(['x'], 'y', ''), MSG_ALL_ROW(0))
             throwsMsg(() => ltdtpull([], 'y', ''), MSG_DEL)
             throwsMsg(() => ltdtpull([], ['y'], ''), MSG_DEL_ROW(0))
@@ -249,8 +252,8 @@ describe(`ltdtpull`, function() {
 
         // 訊息不回顯輸入值(V20)
         it(`should not echo the input value in the messages`, function() {
-            throwsMsgNoLeak(() => ltdtpull(LEAK, [], 'id'), MSG_ALL)
-            throwsMsgNoLeak(() => ltdtpull({ LEAK }, [], 'id'), MSG_ALL)
+            assert.strict.deepStrictEqual(ltdtpull(LEAK, [], 'id'), []) //ltdtAll非陣列不拋錯, 無訊息可回顯
+            assert.strict.deepStrictEqual(ltdtpull({ LEAK }, [], 'id'), [])
             throwsMsgNoLeak(() => ltdtpull([LEAK], [], 'id'), MSG_ALL_ROW(0))
             throwsMsgNoLeak(() => ltdtpull([], LEAK, 'id'), MSG_DEL)
             throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [LEAK], 'id'), MSG_DEL_ROW(0))

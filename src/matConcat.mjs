@@ -5,17 +5,17 @@ import _cellText from './_cellText.mjs'
 /**
  * 合併二維陣列mat1與mat2
  *
- * mat1與mat2皆為必須參數，須為二維陣列(陣列且各元素皆為陣列)，檢測順序為mat1(陣列、各列為陣列)、mat2(陣列、各列為陣列)，無效throw Error('invalid mat1: must be an array')、Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')或Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值(外層空位視為非陣列)；空陣列為合法資料：兩者皆為[]回傳[]，只有一邊為[]則另一邊照常回傳(列數與欄數以另一邊為準)
+ * mat1為第1參數：非陣列(含未給、null、字串、物件等)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查mat2。mat1為陣列時，mat1與mat2須為二維陣列(陣列且各元素皆為陣列)，檢測順序為mat1(各列為陣列)、mat2(陣列、各列為陣列)，無效throw Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')或Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值(外層空位視為非陣列)；空陣列為合法資料：兩者皆為[]回傳[]，只有一邊為[]則另一邊照常回傳(列數與欄數以另一邊為準)
  * 列數取兩者較大者；各矩陣之欄數取其最長之列，較短之列、缺少之列、列內空位與undefined之儲存格補opt.empty(預設null)，null原樣；物件與陣列之儲存格不深拷貝；每列皆為新陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matConcat.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} mat1 輸入左側二維陣列，必須參數，須為二維陣列(空陣列合法)
- * @param {Array} mat2 輸入右側二維陣列，必須參數，須為二維陣列(空陣列合法)
+ * @param {Array} mat1 輸入左側二維陣列，須為二維陣列(空陣列合法)，非陣列回傳[]，有列非陣列throw
+ * @param {Array} mat2 輸入右側二維陣列，必須參數，須為二維陣列(空陣列合法)；mat1非陣列時不檢查
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {*} [opt.empty=null] 輸入補值(原樣放入)，函數視為null，預設null
- * @returns {Array} 回傳合併後之二維陣列，列數為兩者較大者，各矩陣之欄數為其最長之列，缺少之儲存格補opt.empty；兩者皆為[]時回傳[]
- * @throws {Error} mat1或mat2非陣列、或有列非陣列時throw Error('invalid mat1: must be an array')、Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')、Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值
+ * @returns {Array} 回傳合併後之二維陣列，列數為兩者較大者，各矩陣之欄數為其最長之列，缺少之儲存格補opt.empty；兩者皆為[]或mat1非陣列時回傳[]
+ * @throws {Error} mat1為陣列而有列非陣列、或mat2非陣列、或mat2有列非陣列時throw Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')、Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值
  * @example
  *
  * let mat1
@@ -58,6 +58,9 @@ import _cellText from './_cellText.mjs'
  * console.log(matConcat([], []))
  * // => []
  *
+ * console.log(matConcat('abc', [[1]]))
+ * // => [] (mat1非陣列回傳空結果, 不拋錯)
+ *
  * try {
  *     matConcat([1], [2])
  * }
@@ -69,7 +72,8 @@ import _cellText from './_cellText.mjs'
  */
 function matConcat(mat1, mat2, opt = {}) {
 
-    //check, mat1與mat2為必須參數, 依mat1(陣列, 各列為陣列)、mat2(陣列, 各列為陣列)序, 無效throw(訊息只含索引, 不帶值)
+    //check, mat1為第1參數, 非陣列回傳空結果[](不拋錯; dspec〈輸入參數之檢測機制〉§11 W-16乙, 使用者2026-11-16), 不檢查mat2
+    //mat1為陣列時, 依mat1(各列為陣列)、mat2(陣列, 各列為陣列)序, 無效throw(訊息只含索引, 不帶值)
     //rows1, rows2, 各列之快照(每列只讀一次, 檢查之列即其後使用之列, 不呼叫輸入陣列之方法)
     let snap = (mat, name) => {
         let rows = []
@@ -83,7 +87,7 @@ function matConcat(mat1, mat2, opt = {}) {
         return rows
     }
     if (!isarr(mat1)) {
-        throw new Error('invalid mat1: must be an array')
+        return []
     }
     let rows1 = snap(mat1, 'mat1')
     if (!isarr(mat2)) {

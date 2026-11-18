@@ -328,12 +328,13 @@ describe(`objSortByKeys`, function() {
 
     })
 
-    describe(`obj非物件、keys非陣列拋錯(R23: 使用者2026-11-03; 訊息依V19、不帶值V20)`, function() {
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): obj為第1參數, 非物件一律回輸出型別之空結果{}, 不拋錯(且不檢查keys與opt); keys為次參數, obj為物件時非陣列仍throw(R23)
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    describe(`obj非物件回{}、keys非陣列拋錯(R23: 使用者2026-11-03; ws492h W-16乙: obj非物件改回{}; 訊息依V19、不帶值V20)`, function() {
 
-        let msgObj = 'invalid obj: must be an object'
         let msgKeys = 'invalid keys: must be an array'
 
-        //obj無效: 規格「obj非物件拋錯」; 修前一律回{}
+        //obj無效: 回{}(W-16乙; 原throw invalid obj)
         let badObjs = [
             [`'x'`, 'x'],
             [`''`, ''],
@@ -361,8 +362,12 @@ describe(`objSortByKeys`, function() {
             ['Symbol.toStringTag Array', { [Symbol.toStringTag]: 'Array', length: 2, a: 3, b: 1 }],
         ]
         for (let [name, v] of badObjs) {
-            it(`should throw '${msgObj}' when obj is ${name}`, function() {
-                assert.throws(() => objSortByKeys(v, ['a']), (err) => err instanceof Error && err.message === msgObj)
+            it(`should return {} (no throw) when obj is ${name}`, function() {
+                let r = objSortByKeys(v, ['a'])
+                assert.strict.deepStrictEqual(r, {})
+                assert.strict.deepStrictEqual(Object.getPrototypeOf(r), Object.prototype)
+                assert.strict.deepStrictEqual(objSortByKeys(v, 'not-an-array'), {}) //第1參數無效時不檢查keys
+                assert.strict.deepStrictEqual(objSortByKeys(v, ['a'], { onlyKeys: true }), {})
             })
         }
 
@@ -397,7 +402,7 @@ describe(`objSortByKeys`, function() {
             let real = ['b', 'a']
             Object.defineProperty(real, Symbol.toStringTag, { value: 'Object' })
             assert.strict.deepStrictEqual(Object.keys(objSortByKeys({ a: 1, b: 2, c: 3 }, real)), ['b', 'a', 'c'])
-            assert.throws(() => objSortByKeys(real, ['a']), { message: msgObj })
+            assert.strict.deepStrictEqual(objSortByKeys(real, ['a']), {}) //真陣列偽稱Object仍非obj, 回{}(W-16乙, 不拋錯)
             assert.ok(Date.now() - t0 < 1000)
         })
 
@@ -406,14 +411,14 @@ describe(`objSortByKeys`, function() {
             assert.throws(() => objSortByKeys({}), { message: msgKeys })
         })
 
-        it(`should throw on obj first when both obj and keys are invalid`, function() {
-            assert.throws(() => objSortByKeys('x', 'y'), { message: msgObj })
-            assert.throws(() => objSortByKeys(null), { message: msgObj })
-            assert.throws(() => objSortByKeys(), { message: msgObj })
+        it(`should return {} on obj first (without checking keys) when both obj and keys are invalid`, function() {
+            assert.strict.deepStrictEqual(objSortByKeys('x', 'y'), {})
+            assert.strict.deepStrictEqual(objSortByKeys(null), {})
+            assert.strict.deepStrictEqual(objSortByKeys(), {})
         })
 
-        it(`should throw for an invalid obj or keys even when opt.onlyKeys is true`, function() {
-            assert.throws(() => objSortByKeys('x', ['a'], { onlyKeys: true }), { message: msgObj })
+        it(`should return {} for an invalid obj, and throw for an invalid keys, even when opt.onlyKeys is true`, function() {
+            assert.strict.deepStrictEqual(objSortByKeys('x', ['a'], { onlyKeys: true }), {})
             assert.throws(() => objSortByKeys({ a: 1 }, 'a', { onlyKeys: true }), { message: msgKeys })
         })
 
@@ -429,7 +434,7 @@ describe(`objSortByKeys`, function() {
                     msgs.push(err.message)
                 }
             }
-            assert.strict.deepStrictEqual(msgs, [msgObj, msgKeys, msgObj, msgKeys])
+            assert.strict.deepStrictEqual(msgs, ['NOTHROW', msgKeys, 'NOTHROW', msgKeys])
         })
 
     })
@@ -441,7 +446,7 @@ describe(`objSortByKeys`, function() {
             assert.ok(d.indexOf('@param {Array} keys') >= 0)
             assert.ok(d.indexOf('opt.onlyKeys') >= 0)
             assert.ok(d.indexOf('@throws') >= 0)
-            assert.ok(d.indexOf('invalid obj: must be an object') >= 0)
+            assert.ok(d.indexOf('回傳{}') >= 0) //ws492h: obj非物件回傳{}, 不拋錯
             assert.ok(d.indexOf('invalid keys: must be an array') >= 0)
             //修前之簽名說明為fun(回調排序函數)而非keys
             assert.ok(d.indexOf('輸入回調的排序函數') < 0)
@@ -532,9 +537,9 @@ describe(`objSortByKeys`, function() {
                 assert.ok(r !== o)
             })
 
-            it(`should throw for an object that only pretends to be an Array (Symbol.toStringTag) and for a keys that is an object with length (not an array); [] as keys is legal`, function() {
+            it(`should return {} for an object that only pretends to be an Array (Symbol.toStringTag) and throw for a keys that is an object with length (not an array); [] as keys is legal`, function() {
                 let o = { [Symbol.toStringTag]: 'Array', length: 2, a: 3, b: 1 }
-                assert.throws(() => objSortByKeys(o, ['b', 'a']), { message: 'invalid obj: must be an object' })
+                assert.strict.deepStrictEqual(objSortByKeys(o, ['b', 'a']), {}) //ws492h W-16乙: obj非物件回{}
                 assert.strict.deepStrictEqual(objSortByKeys({ length: 1, a: 3 }, []), { length: 1, a: 3 })
                 assert.throws(() => objSortByKeys({ length: 1, a: 3 }, { 0: 'a', length: 1 }), { message: 'invalid keys: must be an array' })
             })
@@ -643,13 +648,13 @@ describe(`objSortByKeys`, function() {
                 })
             }
 
-            it(`should throw at once (invalid obj) for an object that only pretends to be an Array, tag:${MAX}, without iterating its length`, function() {
-                //Symbol.toStringTag偽稱Array: 非物件, 同步拋錯(修前回{})
+            it(`should return {} at once (invalid obj, no throw) for an object that only pretends to be an Array, tag:${MAX}, without iterating its length`, function() {
+                //Symbol.toStringTag偽稱Array: 非物件, 回{}(ws492h W-16乙: 原同步拋invalid obj; 修前更早為回{})
                 let rc = runChildCase(runner, `objSortByKeys:tag:${MAX}`, { execArgv: ['--expose-gc', '--max-old-space-size=64'], allowNoResult: true, timeout: 20000 })
                 assert.strict.strictEqual(rc.status, 0, `status=${rc.status} signal=${rc.signal}`)
                 assert.ok(rc.r !== null, 'no result line')
-                assert.strict.strictEqual(rc.r.threw, true)
-                assert.strict.strictEqual(rc.r.msg, 'invalid obj: must be an object')
+                assert.strict.strictEqual(rc.r.threw, false)
+                assert.strict.deepStrictEqual(rc.r.keys, []) //回傳{}, 不依其length迭代
                 assert.ok(rc.r.ms < 1000, `ms=${rc.r.ms}`)
             })
 

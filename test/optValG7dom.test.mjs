@@ -60,23 +60,18 @@ describe(`optVal domConvertToPic (ws272c)`, function() {
         ],
     })
 
-    it(`should still reject a valid scale below 1 (0, 0.5, negative, numeric strings of them), unchanged`, async function() {
-        let env = mkFakeDom()
-        env.body.insertBefore = (c) => env.body.appendChild(c)
-        Object.defineProperty(env.body, 'firstChild', { get: () => env.body.children[0] || null })
-        let ele = env.body.appendChild(new env.Ele('div'))
-        for (let v of [0, 0.5, -1, '0.5', ' 0 ', '-3']) {
-            resetStub()
-            let msg = null
-            try {
-                await domConvertToPic(ele, { scale: v })
-            }
-            catch (err) {
-                msg = err
-            }
-            assert.strict.deepStrictEqual(msg, 'opt.scale can not less then 1', String(v))
-            assert.strict.deepStrictEqual(stub().snapCalls.length, 0)
+    //ws492h(第492項第7批, W-13; dspec K3「超出範圍亦同」): scale小於1視為超出範圍, 改用預設1, 不再reject(原'opt.scale can not less then 1')
+    it(`should use the default scale 1 for a valid scale below 1 (0, 0.5, negative, numeric strings of them) instead of rejecting`, async function() {
+        for (let v of [0, 0.5, -1, '0.5', ' 0 ', '-3', 0.999999, -0, '0.0']) {
+            assert.strict.deepStrictEqual(await probe(v), 1, String(v))
         }
+    })
+
+    it(`should keep accepting 1 and values above 1 as given`, async function() {
+        assert.strict.deepStrictEqual(await probe(1), 1)
+        assert.strict.deepStrictEqual(await probe('1'), 1)
+        assert.strict.deepStrictEqual(await probe(1.5), 1.5)
+        assert.strict.deepStrictEqual(await probe(3), 3)
     })
 
     it(`should use the default scale 1 (not the range-error reject) for -Infinity and '-Infinity' (not expected inputs)`, async function() {

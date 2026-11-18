@@ -4,7 +4,7 @@ import map from 'lodash-es/map.js'
 import sortBy from 'lodash-es/sortBy.js'
 import size from 'lodash-es/size.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
@@ -119,7 +119,7 @@ function orderInds(vs, localeCompare) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrSort.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} vall 輸入要被提取的任意資料陣列
+ * @param {Array} vall 輸入要被提取的任意資料陣列，非陣列或空陣列回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素而保留(回傳該陣列，returnIndex為true時回傳[0])，不被當成空陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.localeCompare=false] 輸入是否使用localeCompare排序布林值，預設false
  * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
@@ -246,8 +246,8 @@ function orderInds(vs, localeCompare) {
  */
 function arrSort(vall, opt = {}) {
 
-    //check
-    if (!isearr(vall)) {
+    //check, vall非陣列或空陣列回傳[]; 單一空元素([null]、['']、[{}])為一個元素, 不得被當成空陣列而丟棄, 依下方size為1之規則原樣回傳(null屬無法排序者, 依N1放最末, 只有一個時即其本身; W-19, 比照第三批)
+    if (!isarr(vall) || vall.length === 0) {
         return []
     }
 

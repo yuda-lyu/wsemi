@@ -220,7 +220,9 @@ describe(`ltdtDiff`, function() {
     }
 
     //ws286c: ltdtOld與ltdtNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 元素非物件throw Error, 訊息固定不帶值, 依ltdtOld(陣列, 元素)、ltdtNew(陣列, 元素)序檢測; []為合法輸入
-    const MSG_OLD = 'invalid ltdtOld: must be an array'
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): ltdtOld為第1參數, 非陣列一律回與正常輸出同形之空結果{ diff: [], dfs: [] }, 不拋錯(且不檢查ltdtNew); ltdtNew為次參數, 非陣列仍throw; 元素層(陣列內元素非有效物件)依第二批維持throw
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    const EMPTY_RESULT = { diff: [], dfs: [] }
     const MSG_NEW = 'invalid ltdtNew: must be an array'
     //ws290: 元素須為有效物件(iseobj, 即非空物件), 空物件列{}亦無效(使用者2026-11-12裁示: ltdtDiff預期輸入物件陣列內各物件皆為有效物件, 空物件列無法判斷後續之有效物件由哪一筆而來; 修前{}被放行, 內部ltdtkeys2mat整側靜默回[], 結果把整側當成不存在而算錯)
     const MSG_OLD_ELE = 'invalid ltdtOld: every element must be a non-empty object'
@@ -236,11 +238,11 @@ describe(`ltdtDiff`, function() {
     ]
 
     for (let [label, v] of NON_ARR) {
-        it(`should throw '${MSG_OLD}' when ltdtOld is not an array: ${label} (ltdtNew valid, [] or invalid too)`, function() {
-            throwsMsg(() => ltdtDiff(v, OK), MSG_OLD)
-            throwsMsg(() => ltdtDiff(v, []), MSG_OLD)
-            throwsMsg(() => ltdtDiff(v, v), MSG_OLD)
-            throwsMsg(() => ltdtDiff(v, [1]), MSG_OLD) //ltdtOld先檢
+        it(`should return ${JSON.stringify(EMPTY_RESULT)} (no throw) when ltdtOld is not an array: ${label} (ltdtNew valid, [] or invalid too)`, function() {
+            assert.strict.deepStrictEqual(ltdtDiff(v, OK), EMPTY_RESULT)
+            assert.strict.deepStrictEqual(ltdtDiff(v, []), EMPTY_RESULT)
+            assert.strict.deepStrictEqual(ltdtDiff(v, v), EMPTY_RESULT)
+            assert.strict.deepStrictEqual(ltdtDiff(v, [1]), EMPTY_RESULT) //ltdtOld先檢, 無效即回空結果, 不檢查ltdtNew
         })
 
         it(`should throw '${MSG_NEW}' when ltdtNew is not an array: ${label} (ltdtOld valid or [])`, function() {
@@ -249,16 +251,16 @@ describe(`ltdtDiff`, function() {
         })
     }
 
-    it(`should throw when ltdtOld or ltdtNew is not given (required parameters)`, function() {
-        throwsMsg(() => ltdtDiff(), MSG_OLD)
+    it(`should return the empty result when ltdtOld is not given, and throw when ltdtNew is not given while ltdtOld is an array`, function() {
+        assert.strict.deepStrictEqual(ltdtDiff(), EMPTY_RESULT)
         throwsMsg(() => ltdtDiff(OK), MSG_NEW)
         throwsMsg(() => ltdtDiff([]), MSG_NEW)
-        throwsMsg(() => ltdtDiff(undefined, OK), MSG_OLD)
+        assert.strict.deepStrictEqual(ltdtDiff(undefined, OK), EMPTY_RESULT)
     })
 
     it(`should throw the fixed messages without the input value`, function() {
         for (let v of [LEAK, { secret: LEAK }, Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
-            throwsMsgNoLeak(() => ltdtDiff(v, OK), MSG_OLD)
+            assert.strict.deepStrictEqual(ltdtDiff(v, OK), EMPTY_RESULT) //ltdtOld非陣列不拋錯, 無訊息可回顯
             throwsMsgNoLeak(() => ltdtDiff(OK, v), MSG_NEW)
         }
         for (let v of [LEAK, 7391.4217, [LEAK], Symbol(LEAK), () => LEAK, new Map([[LEAK, LEAK]])]) {
@@ -298,8 +300,8 @@ describe(`ltdtDiff`, function() {
 
     //檢測順序: ltdtOld陣列, ltdtOld元素, ltdtNew陣列, ltdtNew元素
     it(`should check in the order of ltdtOld (array, elements) and ltdtNew (array, elements)`, function() {
-        throwsMsg(() => ltdtDiff('x', 'y'), MSG_OLD)
-        throwsMsg(() => ltdtDiff('x', [1]), MSG_OLD)
+        assert.strict.deepStrictEqual(ltdtDiff('x', 'y'), EMPTY_RESULT) //ws492h: ltdtOld非陣列回空結果, 不檢查ltdtNew
+        assert.strict.deepStrictEqual(ltdtDiff('x', [1]), EMPTY_RESULT)
         throwsMsg(() => ltdtDiff([1], 'y'), MSG_OLD_ELE)
         throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE)
         throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
@@ -346,7 +348,7 @@ describe(`ltdtDiff`, function() {
         throwsMsg(() => ltdtDiff([1], [{}]), MSG_OLD_ELE)
         throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
         throwsMsg(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE)
-        throwsMsg(() => ltdtDiff('x', [{}]), MSG_OLD)
+        assert.strict.deepStrictEqual(ltdtDiff('x', [{}]), EMPTY_RESULT) //ws492h: ltdtOld非陣列回空結果, 不檢查ltdtNew之元素
     })
 
     //ws290: 訊息固定不帶輸入值(元素為鍵與值皆含洩漏標記但不可列舉之物件時, 訊息亦不含標記)

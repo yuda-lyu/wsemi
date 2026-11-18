@@ -103,18 +103,20 @@ describe(`arrDiff`, function() {
     })
 
     //ws286c: arrOld與arrNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依arrOld、arrNew序檢測; []為合法輸入
-    const MSG_OLD = 'invalid arrOld: must be an array'
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): arrOld為第1參數, 非陣列一律回與正常輸出同形之空結果{ diff: [], dfs: [] }, 不拋錯(且不檢查arrNew與opt); arrNew為次參數, 非陣列仍throw
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    const EMPTY_RESULT = { diff: [], dfs: [] }
     const MSG_NEW = 'invalid arrNew: must be an array'
     //ws290: mode為matrix時元素非陣列之訊息改為合乎輸入參數規格之「invalid <參數名>: …」格式(修前為'arrOld is not a matrix'/'arrNew is not a matrix')
     const MSG_MAT_OLD = `invalid arrOld: every element must be an array when opt.mode is 'matrix'`
     const MSG_MAT_NEW = `invalid arrNew: every element must be an array when opt.mode is 'matrix'`
 
     for (let [label, v] of NON_ARR) {
-        it(`should throw '${MSG_OLD}' when arrOld is not an array: ${label} (arrNew valid, [] or invalid too; any mode)`, function() {
+        it(`should return ${JSON.stringify(EMPTY_RESULT)} (no throw) when arrOld is not an array: ${label} (arrNew valid, [] or invalid too; any mode)`, function() {
             for (let opt of [undefined, { mode: 'array' }, { mode: 'matrix' }]) {
-                throwsMsg(() => arrDiff(v, ['a'], opt), MSG_OLD)
-                throwsMsg(() => arrDiff(v, [], opt), MSG_OLD)
-                throwsMsg(() => arrDiff(v, v, opt), MSG_OLD)
+                assert.strict.deepStrictEqual(arrDiff(v, ['a'], opt), EMPTY_RESULT)
+                assert.strict.deepStrictEqual(arrDiff(v, [], opt), EMPTY_RESULT)
+                assert.strict.deepStrictEqual(arrDiff(v, v, opt), EMPTY_RESULT)
             }
         })
 
@@ -126,16 +128,16 @@ describe(`arrDiff`, function() {
         })
     }
 
-    it(`should throw when arrOld or arrNew is not given (required parameters)`, function() {
-        throwsMsg(() => arrDiff(), MSG_OLD)
+    it(`should return the empty result when arrOld is not given, and throw when arrNew is not given while arrOld is an array`, function() {
+        assert.strict.deepStrictEqual(arrDiff(), EMPTY_RESULT)
         throwsMsg(() => arrDiff(['a']), MSG_NEW)
         throwsMsg(() => arrDiff([]), MSG_NEW)
-        throwsMsg(() => arrDiff(undefined, ['a']), MSG_OLD)
+        assert.strict.deepStrictEqual(arrDiff(undefined, ['a']), EMPTY_RESULT)
     })
 
-    it(`should throw the fixed messages without the input value`, function() {
+    it(`should throw the fixed message without the input value when arrNew is invalid, and not throw when arrOld is invalid`, function() {
         for (let v of [LEAK, { secret: LEAK }, Symbol(LEAK), () => LEAK, 7391.4217, new Map([[LEAK, LEAK]])]) {
-            throwsMsgNoLeak(() => arrDiff(v, ['a']), MSG_OLD)
+            assert.strict.deepStrictEqual(arrDiff(v, ['a']), EMPTY_RESULT)
             throwsMsgNoLeak(() => arrDiff(['a'], v), MSG_NEW)
         }
     })

@@ -3,7 +3,6 @@ import matConcat from '../src/matConcat.mjs'
 import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
-const MSG_M1 = 'invalid mat1: must be an array'
 const MSG_M2 = 'invalid mat2: must be an array'
 //ws430c(裁定表〈十〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat1: must be an array of arrays' → 新'invalid mat1: row[i] is not an array'(mat2同)
 const MSG_M1_ROW = (i) => `invalid mat1: row[${i}] is not an array`
@@ -73,39 +72,41 @@ describe(`matConcat`, function() {
     //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): mat1與mat2為必須參數(二維陣列), 無效throw(訊息不帶值); 空陣列為合法資料
     //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、K2(必須參數)、V19(訊息格式)、V20(不回顯輸入值)
     //  原回[]之單參數呼叫(缺mat2)與非陣列改為throw
-    it(`should throw invalid mat1 when input ''`, function() {
-        throwsMsg(() => matConcat(''), MSG_M1)
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): mat1為第1參數, 非陣列一律回輸出型別之空結果[], 不拋錯(且不檢查mat2); mat1為陣列時mat2之檢測不變
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    it(`should return [] (no throw) when input ''`, function() {
+        assert.strict.deepStrictEqual(matConcat(''), [])
     })
 
     it(`should throw invalid mat2 when input [] (mat2 not given)`, function() {
         throwsMsg(() => matConcat([]), MSG_M2)
     })
 
-    it(`should throw invalid mat1 when input {}`, function() {
-        throwsMsg(() => matConcat({}), MSG_M1)
+    it(`should return [] (no throw) when input {}`, function() {
+        assert.strict.deepStrictEqual(matConcat({}), [])
     })
 
-    it(`should throw invalid mat1 when input null`, function() {
-        throwsMsg(() => matConcat(null), MSG_M1)
+    it(`should return [] (no throw) when input null`, function() {
+        assert.strict.deepStrictEqual(matConcat(null), [])
     })
 
-    it(`should throw invalid mat1 when input undefined`, function() {
-        throwsMsg(() => matConcat(undefined), MSG_M1)
+    it(`should return [] (no throw) when input undefined`, function() {
+        assert.strict.deepStrictEqual(matConcat(undefined), [])
     })
 
-    it(`should throw invalid mat1 when input NaN`, function() {
-        throwsMsg(() => matConcat(NaN), MSG_M1)
+    it(`should return [] (no throw) when input NaN`, function() {
+        assert.strict.deepStrictEqual(matConcat(NaN), [])
     })
 
-    it(`should throw invalid mat1 when no argument is given`, function() {
-        throwsMsg(() => matConcat(), MSG_M1)
+    it(`should return [] (no throw) when no argument is given`, function() {
+        assert.strict.deepStrictEqual(matConcat(), [])
     })
 
     describe(`required parameters mat1 and mat2 (ws286e)`, function() {
 
         // 表列: ('x',[])、([],'x')、([1],[2]) → throw; ([],[]) → [] 不變; ([[1]],[])、([],[[1]]) → [[1]] 不變
-        it(`should throw when input 'x', []`, function() {
-            throwsMsg(() => matConcat('x', []), MSG_M1)
+        it(`should return [] (no throw, ws492h) when input 'x', []`, function() {
+            assert.strict.deepStrictEqual(matConcat('x', []), [])
         })
 
         it(`should throw when input [], 'x'`, function() {
@@ -159,8 +160,10 @@ describe(`matConcat`, function() {
 
         // mat1非陣列(NON_ARR 21種 + 數字), mat2有效
         for (let [lb, v] of [...NON_ARR, ['5', 5]]) {
-            it(`should throw invalid mat1 when mat1 is ${lb} and mat2 is [[1]]`, function() {
-                throwsMsg(() => matConcat(v, [[1]]), MSG_M1)
+            it(`should return [] (no throw) when mat1 is ${lb} whatever mat2 is`, function() {
+                assert.strict.deepStrictEqual(matConcat(v, [[1]]), [])
+                assert.strict.deepStrictEqual(matConcat(v, 'x'), [])
+                assert.strict.deepStrictEqual(matConcat(v), [])
             })
             it(`should throw invalid mat2 when mat2 is ${lb} and mat1 is [[1]]`, function() {
                 throwsMsg(() => matConcat([[1]], v), MSG_M2)
@@ -190,18 +193,18 @@ describe(`matConcat`, function() {
         })
 
         // 檢測順序: mat1(陣列, 元素)、mat2(陣列, 元素)
-        it(`should check in the order mat1 (array, rows) then mat2 (array, rows)`, function() {
-            throwsMsg(() => matConcat('x', 'y'), MSG_M1)
+        it(`should check in the order mat1 (array, rows) then mat2 (array, rows), and return [] before checking mat2 when mat1 is not an array`, function() {
+            assert.strict.deepStrictEqual(matConcat('x', 'y'), []) //ws492h: mat1非陣列回[], 不檢查mat2
             throwsMsg(() => matConcat([1], 'y'), MSG_M1_ROW(0))
             throwsMsg(() => matConcat([[1]], [2]), MSG_M2_ROW(0))
             throwsMsg(() => matConcat([1], [2]), MSG_M1_ROW(0))
-            throwsMsg(() => matConcat('x', [2]), MSG_M1)
+            assert.strict.deepStrictEqual(matConcat('x', [2]), [])
         })
 
         // 訊息不回顯輸入值(V20)
         it(`should not echo the input value in the messages`, function() {
-            throwsMsgNoLeak(() => matConcat(LEAK, [[1]]), MSG_M1)
-            throwsMsgNoLeak(() => matConcat({ LEAK }, [[1]]), MSG_M1)
+            assert.strict.deepStrictEqual(matConcat(LEAK, [[1]]), []) //mat1非陣列不拋錯, 無訊息可回顯
+            assert.strict.deepStrictEqual(matConcat({ LEAK }, [[1]]), [])
             throwsMsgNoLeak(() => matConcat([[1]], LEAK), MSG_M2)
             throwsMsgNoLeak(() => matConcat([LEAK], [[1]]), MSG_M1_ROW(0))
             throwsMsgNoLeak(() => matConcat([[1]], [{ LEAK }]), MSG_M2_ROW(0))

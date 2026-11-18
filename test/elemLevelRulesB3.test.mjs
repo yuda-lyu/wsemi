@@ -490,8 +490,8 @@ describe(`裁定表〈五〉ltdtkeysheads2mat`, function() {
 
 describe(`裁定表〈六〉ltdtDiff`, function() {
 
-    it(`〈六-1〉should keep throwing for non-arrays, {} elements, holes and objects with only inherited keys`, function() {
-        throwsMsg(() => ltdtDiff('x', []), 'invalid ltdtOld: must be an array')
+    it(`〈六-1〉should return the empty result for a non-array ltdtOld (ws492h W-16乙, originally throwing), and keep throwing for {} elements, holes and objects with only inherited keys`, function() {
+        assert.strict.deepStrictEqual(ltdtDiff('x', []), { diff: [], dfs: [] })
         throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), 'invalid ltdtOld: every element must be a non-empty object')
         throwsMsg(() => ltdtDiff([{ a: 1 }], holed(2, [[0, { a: 1 }]])), 'invalid ltdtNew: every element must be a non-empty object')
         throwsMsg(() => ltdtDiff([Object.create({ a: 1 })], [{ a: 1 }]), 'invalid ltdtOld: every element must be a non-empty object')
@@ -597,7 +597,7 @@ describe(`裁定表〈七〉arrDiff`, function() {
     })
 
     it(`〈七-6〉should keep the other behaviors (required parameters, non-array rows in matrix mode, invalid mode, normal comparison, added/removed rows and cells)`, function() {
-        throwsMsg(() => arrDiff('x', []), 'invalid arrOld: must be an array')
+        assert.strict.deepStrictEqual(arrDiff('x', []), { diff: [], dfs: [] }) //ws492h W-16乙: 第1參數arrOld非陣列回空結果(原throw)
         throwsMsg(() => arrDiff([], null), 'invalid arrNew: must be an array')
         throwsMsg(() => arrDiff([1], [[2]], { mode: 'matrix' }), `invalid arrOld: every element must be an array when opt.mode is 'matrix'`)
         throwsMsg(() => arrDiff([[1]], [2], { mode: 'matrix' }), `invalid arrNew: every element must be an array when opt.mode is 'matrix'`)
@@ -636,7 +636,7 @@ describe(`裁定表〈八〉matDiff`, function() {
     })
 
     it(`〈八-4〉should keep the other behaviors (required parameters, matrix mode, normal comparison and added rows)`, function() {
-        throwsMsg(() => matDiff('x', []), 'invalid matOld: must be an array')
+        assert.strict.deepStrictEqual(matDiff('x', []), { diff: [], dfs: [] }) //ws492h W-16乙: 第1參數matOld非陣列回空結果(原throw)
         throwsMsg(() => matDiff([], 'x'), 'invalid matNew: must be an array')
         assert.strict.deepStrictEqual(matDiff([[1, 2]], [[1, 2], [3]], { mode: 'array' }).dfs, [[{ p: '', k: 0, vo: '1', vn: '' }, { p: '', k: 1, vo: '2', vn: '' }], [{ p: 'add', k: 0, vo: '3', vn: '' }]])
     })
@@ -692,7 +692,7 @@ describe(`裁定表〈九〉ltdtpull`, function() {
     })
 
     it(`〈九-8〉should keep the other behaviors (required parameters, strict equality 1 vs '1', delete every row of the same key value, {} kept) and say so in JSDoc`, function() {
-        throwsMsg(() => ltdtpull('x', [], 'id'), 'invalid ltdtAll: must be an array')
+        assert.strict.deepStrictEqual(ltdtpull('x', [], 'id'), []) //ws492h W-16乙: 第1參數ltdtAll非陣列回[](原throw)
         throwsMsg(() => ltdtpull([], 'x', 'id'), 'invalid ltdtDel: must be an array')
         assert.strict.deepStrictEqual(ltdtpull([{ id: 1 }, { id: '1' }], [{ id: 1 }], 'id'), [{ id: '1' }])
         assert.strict.deepStrictEqual(ltdtpull([{ id: 1, v: 'a' }, { id: 1, v: 'b' }, { id: 2 }], [{ id: 1 }], 'id'), [{ id: 2 }])
@@ -764,7 +764,7 @@ describe(`裁定表〈十一〉matat`, function() {
     })
 
     it(`〈十一-6〉should keep the other behaviors (required parameters and istart, numeric strings, invalid iend as not given, holes give undefined, cells beyond the row give []) and say so in JSDoc`, function() {
-        throwsMsg(() => matat('x', 0), 'invalid mat: must be an array')
+        assert.strict.deepStrictEqual(matat('x', 0), []) //ws492h W-16乙: 第1參數mat非陣列回[](原throw)
         throwsMsg(() => matat([[1]], 'x'), 'invalid istart: must be an integer index')
         assert.strict.deepStrictEqual(matat([['a', 'b', 'c']], ' 1 ', '2'), [['b', 'c']])
         assert.strict.deepStrictEqual(matat([['a', 'b', 'c']], 1, 'x'), [['b']])

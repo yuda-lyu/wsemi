@@ -18,7 +18,7 @@ let RULE_PREVIEW_OPACITY = { fn: 'domDrag', name: 'opt.previewOpacity', kind: 'e
 let RULE_PREVIEW_DISABLED_OPACITY = { fn: 'domDrag', name: 'opt.previewDisabledOpacity', kind: 'enum' }
 let RULE_PREVIEW_BORDER_WIDTH = { fn: 'domDrag', name: 'opt.previewBorderWidth', kind: 'enum' }
 
-//timeDragStartDelay: opt類參數, 有效數字且為計時毫秒(isenum, use: 'timer', 0~2147483647, 可帶小數; 交給setTimeout), 非預期(含Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設120, 不報錯、不夾至上限; 負數維持文件載明之視為0(見下方呼叫處)
+//timeDragStartDelay: opt類參數, 有效數字且為計時毫秒(isenum, use: 'timer', 0~2147483647, 可帶小數; 交給setTimeout), 非預期(含Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設120, 不報錯、不夾至上限; 負數亦為超出範圍而改用預設120(K3超出範圍亦同; W-13, 使用者2026-11-16, 原視為0)
 let RULE_TIME_DRAG_START_DELAY = { fn: 'domDrag', name: 'opt.timeDragStartDelay', kind: 'enum', chk: { use: 'timer' } }
 
 
@@ -626,7 +626,7 @@ function onPress(inst, e, touch) {
  * @param {String} [opt.attIndex='dragindex'] 輸入預覽元素順序指標之屬性名稱字串，預設'dragindex'
  * @param {String} [opt.attGroup='draggroup'] 輸入預覽元素群組之屬性名稱字串，預設'draggroup'
  * @param {String} [opt.group='group'] 輸入預覽元素群組字串，預設'group'
- * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，須為0至2147483647(計時器上限)之有效數字(可為數字字串)，負數視為0，其餘非預期之輸入(Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
+ * @param {Number} [opt.timeDragStartDelay=120] 輸入預覽元素由點擊後延遲出現的時間數字，單位為毫秒ms，須為0至2147483647(計時器上限)之有效數字(可為數字字串)，非預期之輸入(負數、Infinity、超過2147483647、'0x10'、包裝物件等超出範圍或非數字者)視為未給而改用預設120，不報錯、不夾限，預設120。使用pointerEvents會導致游標樣式失效，故延遲顯示可用來讓點擊事件穿透
  * @param {Number} [opt.previewOpacity=0.4] 輸入預覽元素透明度數字，須為有效數字(可為數字字串)，非預期之輸入(Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，預設0.4
  * @param {Number} [opt.previewDisabledOpacity=0.2] 輸入無效時(位於非可拖曳元素內)預覽元素透明度數字，須為有效數字(可為數字字串)，非預期之輸入視為未給而改用預設，不報錯，預設0.2
  * @param {String} [opt.previewBackground='white'] 輸入預覽元素背景顏色字串，預設'white'
@@ -685,12 +685,6 @@ function domDrag(ele, opt = {}) {
         return optVal(get(opt, k, null), def, rule, opt)
     }
 
-    //timeDragStartDelay, 有效之負數(文件載明)視為0
-    let vDelay = get(opt, 'timeDragStartDelay', null)
-    if (isenum(vDelay) && Number(vDelay) < 0) {
-        vDelay = 0
-    }
-
     //o
     let o = {
         attIdentify: str('attIdentify', 'dragid'),
@@ -702,7 +696,7 @@ function domDrag(ele, opt = {}) {
         previewBackground: str('previewBackground', 'white'),
         previewBorderWidth: num('previewBorderWidth', 1, RULE_PREVIEW_BORDER_WIDTH),
         previewBorderColor: str('previewBorderColor', '#f26'),
-        timeDragStartDelay: optVal(vDelay, 120, RULE_TIME_DRAG_START_DELAY, opt),
+        timeDragStartDelay: num('timeDragStartDelay', 120, RULE_TIME_DRAG_START_DELAY), //負數為超出範圍, 同其他非預期之輸入改用預設120(W-13)
     }
 
     //gid, eid

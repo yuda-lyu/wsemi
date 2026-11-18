@@ -15,19 +15,19 @@ import _setOwnKey from './_setOwnKey.mjs'
 /**
  * 比對新舊物件陣列差異處
  *
- * ltdtOld與ltdtNew皆為必須參數，須為陣列，非陣列throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')，且各元素須皆為有效物件(即至少有一個鍵之非空物件)，有任一元素非有效物件(空物件{}、數字、字串、null、undefined、陣列、函數等，含陣列空洞)throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')，依ltdtOld(陣列、元素)、ltdtNew(陣列、元素)序，訊息不帶輸入值；本函數預期輸入物件陣列內各物件皆為有效物件，故不支援空物件列(空物件列無法判斷後續之有效物件由哪一筆而來)；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
+ * ltdtOld為第1參數：非陣列(含未給、null、字串、物件等)回傳同形之空結果{ diff: [], dfs: [] }，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查ltdtNew。ltdtOld為陣列時ltdtNew為必須參數，須為陣列，非陣列throw Error('invalid ltdtNew: must be an array')，且各元素須皆為有效物件(即至少有一個鍵之非空物件)，有任一元素非有效物件(空物件{}、數字、字串、null、undefined、陣列、函數等，含陣列空洞)throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')，依ltdtOld(元素)、ltdtNew(陣列、元素)序，訊息不帶輸入值；本函數預期輸入物件陣列內各物件皆為有效物件，故不支援空物件列(空物件列無法判斷後續之有效物件由哪一筆而來)；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設
  * 欄位為兩側各列之自有可列舉字串鍵之聯集，取值只讀各列之自有同名欄位；缺該欄或其值為undefined時視為缺鍵，以opt.empty之標記表示；值等於缺鍵標記時無法與缺鍵區分，必要時以opt.empty自訂
  * 以儲存格文字比對、不比型別(1與'1'、true與'true'視為相同；需區分型別請用ltdtDiffByKey)，文字表示法同ltdtkeys2mat：字串與有限數字為原文，布林為'true'或'false'，null為'null'(與缺鍵區分)，NaN與±Infinity為字串，物件與陣列為鍵排序後之JSON(鍵之順序不同視為相同，dfs顯示排序後之JSON)，Date為ISO字串，函數視為null，BigInt為String(v)
  * 依列序對齊比對(以arrDiff之矩陣模式逐列再逐格比對，值內含任何字元皆不影響對齊；需依主鍵對齊請用ltdtDiffByKey)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtDiff.test.mjs Github}
  * @memberOf wsemi
- * @param {Array} ltdtOld 輸入原始數據物件陣列，必須參數，非陣列或有元素非有效物件(含空物件{})throw Error，[]為合法輸入
- * @param {Array} ltdtNew 輸入更新數據物件陣列，必須參數，非陣列或有元素非有效物件(含空物件{})throw Error，[]為合法輸入
+ * @param {Array} ltdtOld 輸入原始數據物件陣列，非陣列回傳{ diff: [], dfs: [] }，有元素非有效物件(含空物件{})throw Error，[]為合法輸入
+ * @param {Array} ltdtNew 輸入更新數據物件陣列，必須參數，非陣列或有元素非有效物件(含空物件{})throw Error，[]為合法輸入；ltdtOld非陣列時不檢查
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.empty='∗empty∗'] 輸入缺鍵時之標記字串，非有效字串用預設，預設'∗empty∗'
  * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為底層比對結果陣列(各段為{ count, added, removed, value }，value為該段各列之儲存格比對文字陣列，欄位依欄位聯集之順序)，dfs為各列比對結果陣列(每列為以欄位鍵為鍵、值為該儲存格比對結果之物件)；ltdtOld與ltdtNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} ltdtOld或ltdtNew非陣列時throw Error('invalid ltdtOld: must be an array')或Error('invalid ltdtNew: must be an array')；有任一元素非有效物件(含空物件{})時throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')；訊息皆不帶輸入值
+ * @throws {Error} ltdtOld為陣列而ltdtNew非陣列時throw Error('invalid ltdtNew: must be an array')；有任一元素非有效物件(含空物件{})時throw Error('invalid ltdtOld: every element must be a non-empty object')或Error('invalid ltdtNew: every element must be a non-empty object')；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -41,13 +41,8 @@ import _setOwnKey from './_setOwnKey.mjs'
  * }
  *
  * if (true) {
- *     try {
- *         ltdtDiff('x', [])
- *     }
- *     catch (err) {
- *         console.log(err.message)
- *     }
- *     // => invalid ltdtOld: must be an array
+ *     console.log(ltdtDiff('x', []))
+ *     // => { diff: [], dfs: [] } (ltdtOld非陣列回傳空結果, 不拋錯)
  *
  *     try {
  *         ltdtDiff([{ a: 1 }], null)
@@ -1296,7 +1291,8 @@ import _setOwnKey from './_setOwnKey.mjs'
  */
 function ltdtDiff(ltdtOld, ltdtNew, opt = {}) {
 
-    //check, ltdtOld與ltdtNew為必須參數(陣列且各元素為有效物件即非空物件, []合法), 無效throw(訊息不帶值), 依ltdtOld(陣列, 元素), ltdtNew(陣列, 元素)序
+    //check, ltdtOld為第1參數, 非陣列回傳同形之空結果(不拋錯; dspec〈輸入參數之檢測機制〉§11 W-16乙, 使用者2026-11-16), 不檢查ltdtNew
+    //ltdtOld為陣列時, ltdtOld(元素)與ltdtNew(陣列且各元素為有效物件即非空物件, []合法)無效throw(訊息不帶值), 依ltdtOld(元素), ltdtNew(陣列, 元素)序
     //空物件列{}無效: 無法判斷後續之有效物件由哪一筆而來(使用者2026-11-12裁示; 2026-11-15第三批維持)
     //snap, 各列之快照(依索引走訪, 空洞視為undefined而無效; 每列只讀一次, 檢查之列即其後使用之列, 不呼叫輸入陣列之方法)
     let snap = (ltdt, name) => {
@@ -1311,7 +1307,10 @@ function ltdtDiff(ltdtOld, ltdtNew, opt = {}) {
         return rows
     }
     if (!isarr(ltdtOld)) {
-        throw new Error('invalid ltdtOld: must be an array')
+        return {
+            diff: [],
+            dfs: [],
+        }
     }
     ltdtOld = snap(ltdtOld, 'ltdtOld')
     if (!isarr(ltdtNew)) {

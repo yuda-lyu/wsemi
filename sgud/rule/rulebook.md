@@ -58,6 +58,7 @@
 | 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b、第 67 項為 ws430c、第 68 項為 ws492a、第 69 項為 ws492b;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
 | 結構函數之元素層級與自有鍵: 參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵、欄位名正規化、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數;2026-11-14 ws430b 新增) | `sgud/rule/rulebook_elem.md` | R-ELEM-LEVEL-01 | 約 10 |
 | 結構函數第三批: 列之訊息指出 row[i]、單一空元素不當空陣列、中性可設定之預設值(`opt.empty`／`opt.emptyHead`)、範圍參數;儲存格文字表示法單一擁有者 `_cellText`;差異比對之 modify 配對單一擁有者 `_diffPair`(arrDiff 逐格比對);帶時區時刻依其時區驗證(排程第 430 項第三批 14 個函數;2026-11-15 ws430c 新增) | `sgud/rule/rulebook_elem_b3.md` | R-ELEM-LEVEL-02、R-CELL-TEXT-01、R-DIFF-PAIR-01、R-TZ-WALL-01 | 約 12 |
+| 結構運算與參數定義(排程第 492 項第 7 批 ws492h,2026-11-19): C7 第 1 參數型別不對回輸出型別之空結果、單一空元素視為一個元素(18 函數)、`arrSep` 只收設定物件、範圍型 opt 超出範圍改預設與帶預設值之位置參數視同 opt(N-B 19 列處置表)、W-06 簽名／JSDoc／行為一致 | `sgud/rule/rulebook_struct7.md` | R-STRUCT-ARG1-01、R-ELEM-LEVEL-03、R-ARRSEP-OBJ-01、R-OPT-RANGE-01 | 約 12 |
 
 ## R-SCOPE-01 收錄判準:函數須符合其一才收進 wsemi(使用者 2026-11-01)
 
@@ -112,6 +113,10 @@
 - `R-COLOR-ARG-01` → `rulebook_domarg.md`: R-COLOR-ARG-01 `color` 之 `amount`／`w1`／`w2` 須為 0~1 之有效數字(單一擁有者 `toRatio`)、顏色無效之訊息與 console 不回顯輸入、`num`／`fmtOutput` 訊息 V19、`interp` 內部權重不檢測
 - `R-EXEC-ARG-01` → `rulebook_execarg.md`: R-EXEC-ARG-01 外部程序三函數之輸入檢測:`execProcess.prog` 非空原始字串且不含 NUL(三模式一致,exec 不再把非字串轉成指令)、`args` 元素為字串或有限數字、先於任何子程序之建立(含 chcp);`opt.codeCmd` 不支援依 K3 取預設;`execProcessKillPid.pid` 須 1~2147483647 之整數(0、負數、環繞值先於殺程序拒絕);`execJsCode.fpJsCode` 固定訊息與「不存在」分開、`opt` 整份直通;驗法為子行程攔截替身(`test/tools/execArgGuardRunner.mjs`,第 492 項第 5 批 ws492f)
 - `R-EXEC-FAIL-01` 規則 15 → `rulebook_exec.md`: `execProcess` 無法啟動子進程之原生錯誤(帶錯誤碼)改固定詞彙 `spawn[ENOENT]:\noperation failed (code ENOENT)`(`execSpawnError` 之 `opt.fixed`;`execCli` 系不傳,行為不變)
+- `R-STRUCT-ARG1-01` → `rulebook_struct7.md`: R-STRUCT-ARG1-01 C7 結構運算之第 1 參數型別不對,一律回輸出型別之空結果、不拋錯,且先於次參數檢測(次參數與元素層依各函數既有裁定仍拋;`arrDiff`／`arrFilterByENum`／`arrReverse`／`arrSep`／`ltdtDiff`／`ltdtpull`／`matConcat`／`matDiff`／`matat`／`objSortByKeys`／`treeToFilepath`;ws492h)
+- `R-ELEM-LEVEL-03` → `rulebook_struct7.md`: R-ELEM-LEVEL-03 單一空元素之陣列(`[null]`、`['']`、`[{}]` 等)視為一個元素,參數層一律 `isarr`＋長度,不得以 `isearr` 當空陣列(18 函數之逐函數處置;ws492h)
+- `R-ARRSEP-OBJ-01` → `rulebook_struct7.md`: R-ARRSEP-OBJ-01 `arrSep` 之 `opt` 只收設定物件,舊式整數寫法移除,`numCount`／`numGroup` 二擇一必給(ws492h)
+- `R-OPT-RANGE-01` → `rulebook_struct7.md`: R-OPT-RANGE-01 範圍型 opt 超出範圍改預設(`domDrag.timeDragStartDelay`、`domConvertToPic.scale`、`color.spread*` 之 `num`)、帶預設值之位置參數視同 opt、N-B 19 列處置表、W-06 判定原則之落實(ws492h)
 - `R-FS-RESULT-01` → `rulebook_fs.md`: R-FS-RESULT-01 fs 結果物件之形狀與文件;逐項刪除不跟隨連結
 - `R-KEYMAP-01` → `rulebook_obj.md`: R-KEYMAP-01 以呼叫端字串為鍵之長期內部表須用無原型物件
 - `R-LOWER-01` → `rulebook_orm-lower.md`: R-LOWER-01 SQL 族後端共用之方言中立條件 IR: 單一擁有者 `lowerFind` / `lowerFindEq`、契約案例表 `_lowerFindCases`、IR 快照 `_lowerFindSnapshots`

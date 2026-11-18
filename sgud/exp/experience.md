@@ -120,6 +120,18 @@
 - **變異於 `src` 副本**: 副本放 `./tmp/<案>/mut/{src,test}`(`test/tools` 一併複製),測試以相對路徑 import 自動指向副本,`@babel/parser` 與其他依賴由上層 `node_modules` 解析;mocha 以絕對路徑 `node_modules/mocha/bin/mocha.js` 由腳本 `spawnSync`(`windowsHide`),整支腳本經 `quiet-run --lock` 執行一次(約 1 分鐘).`to` 字串含 `$` 時以函式形式 `text.replace(from, () => to)` 取代,否則變異文字本身被展開(正是本規則所防之事).
 - **eslint `no-template-curly-in-string`**: 測試內以一般引號字串寫含 `${r}` 之樣板字串原始碼會被擋,改 `'…$' + '{r}…'` 拆開(同 `_srcBigIntLiteral.test.mjs` 作法).
 
+## 結構運算與參數定義:盤點之「被吞」須以實呼叫核實、判定原則優先於前批回退、修前紅以 HEAD 副本跑同批測試、不能直接跑之變異(2026-11-19,主控任務 20261116102625,ws492h)
+
+- **盤點報告之「單一空元素被吞」須逐函數實呼叫核實,不照單全收**: 報告列 18 函數,實呼叫 18 × 6 種(`[null]`、`[undefined]`、`['']`、`[{}]`、`[[]]`、`[NaN]`)與多個空元素比對後,`addExcelWorksheetFromData`、`arrInsert`、`flattenTree`、`objSortByKeys`、`treeToFilepath` 原即不被吞(盤點之探測因另一參數無效而得同結果,或已於前批改);另 `binstr`、`arrLookupByMaxmin` 之結果與 `[x, x]` 相同(元素無效而非被當空陣列),測試以「與兩個同種元素結果相同」鎖定,不硬斷言「保留」.探針腳本以 `[]` 與 `[x]` 與 `[x, x]` 三列並排,一眼分出.
+- **`treeObj` 從未拋錯**: 規格列「原拋錯 12 個」含 `treeObj`,實呼叫其 `data` 為任意值(傳入 hook,不拋錯);列規格與實況之差於報告,不為「符合清單」而改程式.`arrFind` 純量自動轉陣列為 JSDoc 明載之收法,逐字適用會改有效輸入之結果,列待裁示而不改.
+- **「第 1 參數無效先回空、不檢查次參數」讀法**: 規格字面「一律回空結果、不拋錯;次參數依既有裁定」,取最小改動——於既有第 1 參數檢測處把 `throw` 換成 `return`(順序不變);兩者皆無效時回空.另一讀法(先檢次參數再回空)會使 `arrSep('x', 0)` 拋錯而與「一律」字面不合.
+- **判定原則優先於前批之 K3 回退**: 第 221 項第 5 項「簽名預設或 JSDoc `[]` 才算 opt,程式碼回退不單獨作依據」——`domCompareText.title`(無預設、JSDoc 未標可選)批 4 以 K3 回退 `'Text'`,依原則為必須參數;我初版反向把 JSDoc 改成 `[title='Text']`(正是原則禁止之以回退為依據),sonnet 複審指出後改為拋錯.判 opt 與否先看簽名與 JSDoc,不看函數體.
+- **修前紅以 HEAD 副本跑「同批之新與改測試」**: `git archive HEAD src | tar -x -C ./tmp/<任務>/head` 後 `cp -r test ./tmp/<任務>/head/test`(帶 `test/tools/`),以 `npx mocha ./tmp/<任務>/head/test/<檔>…` 一次跑 18 檔,得 2095 案中 686 紅(同檔對新碼 0 紅);不必逐檔另備副本.
+- **變異不可直接跑會使被測函數無窮迴圈或巨量配置者**: `arrSep` 拿掉 `use: 'count'`／`min: 1`、`color.spread*` 拿掉個數上限,測試內之 `4294967296` 輸入會使變異版迴圈或配置數十億個空陣列;改變異「預設值」(`num = 1` → `2`)、「守門」(`if (false)`)或單行回退(`return [rgba]`),先確認每個變異之最壞輸入有限.
+- **等價變異要列**: `arrSort` 之 `vall.length === 0` 捷徑拿掉後,空陣列仍經後續流程回 `[]`(`every` 對空陣列為真、`orderInds([])` 為 `[]`),結果同,為等價;報告列「48 擊殺、1 等價」,不為擊殺它而補無鑑別力之斷言.
+- **測試不納入尚未裁定之議題**: `isestr(new String('x'))` 目前為 `true`(包裝物件政策屬 W-20 另批),本批之 `domCompareText.title` 案不含包裝物件,以免日後 W-20 改動時此案無謂失敗.
+- **Edit 於 CRLF 工作樹**: 以 Edit 改過之檔變 `w/lf`(`git ls-files --eol` 見),`git diff` 不受影響(autocrlf);變異腳本之比對字串仍只取單行片段.
+
 ## 計時與流程函數之函數參數檢測:已撤銷 Proxy 使 isfun 拋錯、檢測須先於 opt 警告、以替身計數驗「不啟動」、事件迴圈一輪驗「不排隊」(2026-11-18,主控任務 20261116102625,ws492g)
 
 - **`isfun`(lodash `isFunction`)對已撤銷之 Proxy 拋 `TypeError`,而 `typeof` 仍為 `'function'`(函數 Proxy)**: 實測 HEAD 之 `pmQueue` 以已撤銷 Proxy 為任務時,佇列監聽器內 `isfun` 拋錯,該任務與其後任務永不 settle 並產生 unhandledRejection;`pmThrottle` 之 `run` 同步外拋;`pmMap`／`pmSeries` 同步外拋.故以 reject 或建構通道回報之函數,函數判定須經 try 包裝(內部 `src/_isFunSafe.mjs`),不可直接用 `isfun`;`isfun` 本身不改(裁示 10).測試值軸須含「已撤銷之物件 Proxy」與「已撤銷之函數 Proxy」兩項(`test/tools/caseKit.mjs` 之 `nonFunValues()`),只有 `undefined`、`null`、數字、字串者測不到此路徑.

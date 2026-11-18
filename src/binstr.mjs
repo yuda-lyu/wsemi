@@ -1,7 +1,7 @@
 import each from 'lodash-es/each.js'
 import isstr from './isstr.mjs'
 import isestr from './isestr.mjs'
-import isearr from './isearr.mjs'
+import isarr from './isarr.mjs'
 
 
 /**
@@ -10,8 +10,8 @@ import isearr from './isearr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/binstr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} s 輸入要判斷的字串
- * @param {Array|String} keys 輸入字串陣列或字串
- * @param {String} mode 輸入模式，可選'anyone'與'all'，預設為'anyone'
+ * @param {Array|String} keys 輸入字串陣列或字串，須為非空字串，或內含元素皆為非空字串之非空陣列，否則回傳false；單一空元素之陣列([null]、['']、[{}])視為一個無效元素(非有效字串)而回傳false，與[null, null]相同，不被當成空陣列
+ * @param {String} [mode='anyone'] 輸入模式字串，可選'anyone'與'all'，其他值(含null、數字、布林、物件、陣列、包裝物件、不在可選集合之字串)視為未給而改用預設'anyone'，不報錯，預設為'anyone'
  * @returns {Boolean} 回傳判斷布林值
  * @example
  *
@@ -26,9 +26,9 @@ function binstr(s, keys, mode = 'anyone') {
         return false
     }
 
-    //check mode
+    //check mode, opt類位置參數(簽名預設'anyone'): 非預期之輸入視為未給, 改用預設'anyone'(K3, W-13/N-B, 使用者2026-11-16)
     if (mode !== 'anyone' && mode !== 'all') {
-        return false
+        mode = 'anyone'
     }
 
     //keys為字串不是陣列時自動轉陣列
@@ -41,8 +41,8 @@ function binstr(s, keys, mode = 'anyone') {
         }
     }
 
-    //keys需為有效陣列
-    if (!isearr(keys)) {
+    //keys需為非空陣列; 單一空元素([null]、['']、[{}])為一個元素, 不得被當成空陣列, 其不是有效字串而於下方回傳false(同[null, null]; W-19, 比照第三批)
+    if (!isarr(keys) || keys.length === 0) {
         return false
     }
 

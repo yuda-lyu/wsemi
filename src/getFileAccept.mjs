@@ -7,8 +7,8 @@ import getFileType from './getFileType.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getFileAccept.test.mjs Github}
  * @memberOf wsemi
- * @param {string} [groupBy=''] 輸入群組化關鍵字字串，預設''，可選用'name','group','acp','exec'
- * @returns {Array} 回傳檔案關聯性資訊陣列，若有給groupBy則自動群組化
+ * @param {string} [groupBy=''] 輸入群組化關鍵字字串，可選用'name','group','acp','exec'，空字串或其他值(含null、數字、布林、物件、陣列、包裝物件、不在可選集合之字串)視為未給而改用預設''(不群組化，回傳陣列)，不報錯，預設''
+ * @returns {Array|Object} 回傳檔案關聯性資訊陣列，若有給有效groupBy則自動群組化(回傳以該欄位值為鍵、各組陣列為值之物件)
  * @example
  *
  * console.log(getFileAccept()[2])
@@ -30,7 +30,7 @@ import getFileType from './getFileType.mjs'
  */
 function getFileAccept(groupBy = '') {
 
-    //check
+    //groupBy, opt類位置參數(簽名預設''): 非預期(非字串, 或不在name、group、acp、exec之字串)視為未給, 改用預設''(不群組化, 回傳陣列; K3, W-13/N-B, 使用者2026-11-16)
     if (
         groupBy !== '' &&
         groupBy !== 'name' &&
@@ -38,7 +38,7 @@ function getFileAccept(groupBy = '') {
         groupBy !== 'acp' &&
         groupBy !== 'exec'
     ) {
-        return []
+        groupBy = ''
     }
 
     //getFileType

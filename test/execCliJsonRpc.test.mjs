@@ -127,10 +127,26 @@ describe(`execCliJsonRpc`, function() {
     it(`should report errorType 'params' for invalid command/requests without spawning`, async function() {
         let r1 = await execCliJsonRpc('', [], [{ method: 'x' }])
         assert.strict.deepStrictEqual([r1.ok, r1.errorType, r1.error], [false, 'params', 'command 須為非空字串'])
-        let r2 = await execCliJsonRpc(nodeBin, ['-e', scServer], 'not-array')
-        assert.strict.deepStrictEqual([r2.ok, r2.errorType, r2.error], [false, 'params', 'requests 須為陣列'])
         let r3 = await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'ok' }, { bad: 1 }])
         assert.strict.deepStrictEqual([r3.ok, r3.errorType, r3.error], [false, 'params', 'requests[1] 須為含method或notify之物件'])
+    })
+
+    //ws492h(第492項第7批, W-06): requests為opt類(簽名預設[]且JSDoc標[requests=[]]), 非陣列(含null、字串、物件)視為未給而改用預設[](同args), 不再以params回報(原'requests 須為陣列'); 啟動後不送請求即結束, 與requests為[]相同
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11 第221項第5項判定原則(簽名預設或JSDoc []才算opt)、K3
+    for (let [lb, v] of [['null', null], ['undefined', undefined], [`'not-array'`, 'not-array'], ['5', 5], ['{ method: "x" }', { method: 'x' }], ['true', true], ['NaN', NaN], ['function', () => []]]) {
+        it(`should treat requests ${lb} as not given (default []), the same as an empty array`, async function() {
+            let r = await execCliJsonRpc(nodeBin, ['-e', scServer], v)
+            assert.strict.deepStrictEqual(r.ok, true)
+            assert.strict.deepStrictEqual(r.results, {})
+            assert.strict.deepStrictEqual(r.responses, [])
+            assert.strict.deepStrictEqual(r.exitCode, 0)
+        })
+    }
+
+    it(`should still report errorType 'params' with the old wording gone: no 'requests 須為陣列' is produced for a non-array requests`, async function() {
+        let r = await execCliJsonRpc(nodeBin, ['-e', scServer], 'not-array')
+        assert.ok(r.error !== 'requests 須為陣列')
+        assert.strict.deepStrictEqual(r.ok, true)
     })
 
     it(`should succeed with empty results when requests is empty (just start and stop)`, async function() {

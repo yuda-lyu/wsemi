@@ -76,12 +76,23 @@ describe(`domCompareText`, function() {
         assert.strict.deepStrictEqual(typeof r2.html, 'string')
     })
 
-    //spec(K3): title非非空字串用'Text'; format非'side'與'line'用'side'
-    it(`should use Text as the title when title is not a non-empty string`, function() {
-        let r = domCompareText(ele, null, 'a\n', 'b\n')
-        assert.strict.deepStrictEqual(r.diff.includes('--- Text'), true)
+    //spec(K3): format非'side'與'line'用'side'
+    //ws492h(第492項第7批, W-06; dspec §11 第221項第5項「由此之判定原則」): title簽名無預設且JSDoc未標可選, 為必須參數, 程式碼之回退(原非非空字串用'Text')不作為opt之依據 → 無效即同步拋固定訊息(V19), 先於任何DOM變動(原用'Text')
+    it(`should throw invalid title (before any DOM change) when title is not a non-empty string`, function() {
+        for (let v of [undefined, null, '', 5, true, {}, [], NaN, () => 'x', Symbol('x')]) { //包裝物件之收否依W-20(判斷函數只收原始值)另批裁定, 不在此
+            ele.innerHTML = 'KEEP'
+            assert.throws(() => domCompareText(ele, v, 'a\n', 'b\n'), (err) => err instanceof Error && err.message === 'invalid title: must be a non-empty string')
+            assert.strict.deepStrictEqual(ele.innerHTML, 'KEEP')
+        }
         let r2 = domCompareText(ele, 'MyTitle', 'a\n', 'b\n')
         assert.strict.deepStrictEqual(r2.diff.includes('--- MyTitle'), true)
+    })
+
+    it(`should check in the order ele, title, strOld, strNew`, function() {
+        assert.throws(() => domCompareText(null, null, 5, 5), { message: 'invalid ele: must be an element' })
+        assert.throws(() => domCompareText(ele, null, 5, 5), { message: 'invalid title: must be a non-empty string' })
+        assert.throws(() => domCompareText(ele, 't', 5, 5), { message: 'invalid strOld: must be a string' })
+        assert.throws(() => domCompareText(ele, 't', 'a', 5), { message: 'invalid strNew: must be a string' })
     })
 
     it(`should render side-by-side by default and line-by-line for format line`, function() {

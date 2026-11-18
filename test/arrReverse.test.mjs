@@ -1,9 +1,6 @@
 import assert from 'assert'
 import arrReverse from '../src/arrReverse.mjs'
-import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
-
-
-const MSG_VALL = 'invalid vall: must be an array'
+import { NON_ARR, LEAK } from './tools/diffInputKit.mjs'
 
 
 describe(`arrReverse`, function() {
@@ -22,8 +19,10 @@ describe(`arrReverse`, function() {
 
     //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): vall為必須參數, 非陣列throw(訊息不帶值); 空陣列為合法資料, 回傳[]
     //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、V19(訊息格式)、V20(不回顯輸入值)
-    it(`should throw invalid vall when input ''`, function() {
-        throwsMsg(() => arrReverse(''), MSG_VALL)
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): vall為第1參數, 非陣列一律回輸出型別之空結果[], 不拋錯(原throw invalid vall)
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    it(`should return [] when input ''`, function() {
+        assert.strict.deepStrictEqual(arrReverse(''), [])
     })
 
     it(`should return [] when input []`, function() {
@@ -32,36 +31,38 @@ describe(`arrReverse`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should throw invalid vall when input {}`, function() {
-        throwsMsg(() => arrReverse({}), MSG_VALL)
+    it(`should return [] when input {}`, function() {
+        assert.strict.deepStrictEqual(arrReverse({}), [])
     })
 
-    it(`should throw invalid vall when input null`, function() {
-        throwsMsg(() => arrReverse(null), MSG_VALL)
+    it(`should return [] when input null`, function() {
+        assert.strict.deepStrictEqual(arrReverse(null), [])
     })
 
-    it(`should throw invalid vall when input undefined`, function() {
-        throwsMsg(() => arrReverse(undefined), MSG_VALL)
+    it(`should return [] when input undefined`, function() {
+        assert.strict.deepStrictEqual(arrReverse(undefined), [])
     })
 
-    it(`should throw invalid vall when input NaN`, function() {
-        throwsMsg(() => arrReverse(NaN), MSG_VALL)
+    it(`should return [] when input NaN`, function() {
+        assert.strict.deepStrictEqual(arrReverse(NaN), [])
     })
 
-    it(`should throw invalid vall when no argument is given`, function() {
-        throwsMsg(() => arrReverse(), MSG_VALL)
+    it(`should return [] when no argument is given`, function() {
+        assert.strict.deepStrictEqual(arrReverse(), [])
     })
 
     for (let [lb, v] of [...NON_ARR, [`'x'`, 'x'], ['5', 5]]) {
-        it(`should throw invalid vall when input ${lb}`, function() {
-            throwsMsg(() => arrReverse(v), MSG_VALL)
+        it(`should return [] (no throw) when input ${lb}`, function() {
+            let r = arrReverse(v)
+            assert.strict.deepStrictEqual(r, [])
+            assert.ok(Array.isArray(r))
         })
     }
 
-    it(`should not echo the input value in the message of an invalid vall`, function() {
-        throwsMsgNoLeak(() => arrReverse(LEAK), MSG_VALL)
-        throwsMsgNoLeak(() => arrReverse({ LEAK }), MSG_VALL)
-        throwsMsgNoLeak(() => arrReverse({ length: 1, 0: LEAK }), MSG_VALL)
+    it(`should not throw nor echo anything when the input is a non-array carrying a leak mark`, function() {
+        assert.strict.deepStrictEqual(arrReverse(LEAK), [])
+        assert.strict.deepStrictEqual(arrReverse({ LEAK }), [])
+        assert.strict.deepStrictEqual(arrReverse({ length: 1, 0: LEAK }), [])
     })
 
     //表列: ([]) → [] 不變, 回傳新陣列
@@ -83,12 +84,20 @@ describe(`arrReverse`, function() {
         assert.notStrictEqual(r[1], a[1])
     })
 
-    //未列之合法呼叫不得改變: 僅含單一廣義無效元素(isearr為false)之陣列維持原行為回傳[](本次不動, 見報告需裁示)
-    it(`should keep returning [] for an array of a single iser element (unchanged, not in the confirmed table)`, function() {
+    //ws492h(W-19, 比照第三批「單一空元素不再當空陣列」): 僅含單一空元素([null]、[undefined]、['']、[{}]、[[]]、[NaN])之陣列視為一個元素, 照常反序而保留(原靜默回傳[])
+    it(`should keep an array of a single empty element as one element (not treated as an empty array)`, function() {
         for (let v of [null, undefined, '', {}, [], NaN]) {
-            assert.strict.deepStrictEqual(arrReverse([v]), [])
+            let a = [v]
+            let r = arrReverse(a)
+            assert.strict.deepStrictEqual(r, [v])
+            assert.notStrictEqual(r, a)
+            assert.strict.deepStrictEqual(a, [v]) //不改動輸入
         }
         assert.strict.deepStrictEqual(arrReverse([null, null]), [null, null])
+    })
+
+    it(`should reverse an array whose elements are all empty elements in order`, function() {
+        assert.strict.deepStrictEqual(arrReverse([null, '', {}, [], undefined]), [undefined, [], {}, '', null])
     })
 
     it(`should return [] when input [], ''`, function() {

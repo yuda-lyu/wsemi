@@ -3,7 +3,6 @@ import matat from '../src/matat.mjs'
 import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
-const MSG_MAT = 'invalid mat: must be an array'
 //ws430c(裁定表〈十一〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat: must be an array of arrays' → 新'invalid mat: row[i] is not an array'
 const MSG_MAT_ROW = (i) => `invalid mat: row[${i}] is not an array`
 const MSG_ISTART = 'invalid istart: must be an integer index'
@@ -106,41 +105,43 @@ describe(`matat`, function() {
     //ws286e(第221項§11第6項, 使用者2026-11-03逐列確認): mat與istart為必須參數, 無效throw(訊息不帶值); 空陣列為合法資料
     //  對應規格: dspec〈輸入參數之檢測機制〉§11第6項「型別檢測與資料有無無關; 空陣列本身不報錯」、K2(必須參數)、K3(iend為opt類, 非預期視為未給)、V19(訊息格式)、V20(不回顯輸入值)
     //  原回[]之非陣列與缺istart改為throw
-    it(`should throw invalid mat when input ''`, function() {
-        throwsMsg(() => matat(''), MSG_MAT)
+    //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): mat為第1參數, 非陣列(含未給)一律回輸出型別之空結果[], 不拋錯, 且不檢查istart; mat為陣列時istart缺漏仍throw
+    //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
+    it(`should return [] (no throw) when input ''`, function() {
+        assert.strict.deepStrictEqual(matat(''), [])
     })
 
     it(`should throw invalid istart when input [] (istart not given)`, function() {
         throwsMsg(() => matat([]), MSG_ISTART)
     })
 
-    it(`should throw invalid mat when input {}`, function() {
-        throwsMsg(() => matat({}), MSG_MAT)
+    it(`should return [] (no throw) when input {}`, function() {
+        assert.strict.deepStrictEqual(matat({}), [])
     })
 
-    it(`should throw invalid mat when input null`, function() {
-        throwsMsg(() => matat(null), MSG_MAT)
+    it(`should return [] (no throw) when input null`, function() {
+        assert.strict.deepStrictEqual(matat(null), [])
     })
 
-    it(`should throw invalid mat when input undefined`, function() {
-        throwsMsg(() => matat(undefined), MSG_MAT)
+    it(`should return [] (no throw) when input undefined`, function() {
+        assert.strict.deepStrictEqual(matat(undefined), [])
     })
 
-    it(`should throw invalid mat when input NaN`, function() {
-        throwsMsg(() => matat(NaN), MSG_MAT)
+    it(`should return [] (no throw) when input NaN`, function() {
+        assert.strict.deepStrictEqual(matat(NaN), [])
     })
 
-    describe(`required parameters mat and istart, opt-like iend (ws286e)`, function() {
+    describe(`required parameters mat and istart, opt-like iend (ws286e; mat non-array returns [] since ws492h)`, function() {
 
         let m = [['a', 'b', '12.34'], [12, 34.56, 'abc']]
 
-        // 表列: ('x',0)、(null,0)、([1,2],0)、([[1,2]],'x') → throw; ([[1,2]],0,'x') → [[1]]; ([],0) → []
-        it(`should throw when input 'x', 0`, function() {
-            throwsMsg(() => matat('x', 0), MSG_MAT)
+        // 表列: ('x',0)、(null,0)均回[](ws492h); ([1,2],0)、([[1,2]],'x') → throw; ([[1,2]],0,'x') → [[1]]; ([],0) → []
+        it(`should return [] (no throw) when input 'x', 0`, function() {
+            assert.strict.deepStrictEqual(matat('x', 0), [])
         })
 
-        it(`should throw when input null, 0`, function() {
-            throwsMsg(() => matat(null, 0), MSG_MAT)
+        it(`should return [] (no throw) when input null, 0`, function() {
+            assert.strict.deepStrictEqual(matat(null, 0), [])
         })
 
         it(`should throw when input [1, 2], 0`, function() {
@@ -178,10 +179,12 @@ describe(`matat`, function() {
             throwsMsg(() => matat([]), MSG_ISTART)
         })
 
-        // mat非陣列(NON_ARR 21種 + 數字), istart有效
+        // mat非陣列(NON_ARR 21種 + 數字): 回[](不拋錯), 不論istart有效(0)、無效('x')或未給
         for (let [lb, v] of [...NON_ARR, ['5', 5]]) {
-            it(`should throw invalid mat when mat is ${lb} and istart is 0`, function() {
-                throwsMsg(() => matat(v, 0), MSG_MAT)
+            it(`should return [] (no throw) when mat is ${lb} whatever istart is`, function() {
+                assert.strict.deepStrictEqual(matat(v, 0), [])
+                assert.strict.deepStrictEqual(matat(v, 'x'), [])
+                assert.strict.deepStrictEqual(matat(v), [])
             })
         }
 
@@ -265,11 +268,11 @@ describe(`matat`, function() {
             })
         }
 
-        // 檢測順序: mat(陣列, 元素)、istart; mat無效時不論istart
-        it(`should check in the order mat (array, rows) then istart`, function() {
-            throwsMsg(() => matat('x', 'x'), MSG_MAT)
+        // 檢測順序: mat(陣列, 元素)、istart; mat非陣列時回[]而不檢查istart(ws492h)
+        it(`should check in the order mat (array, rows) then istart, and return [] before checking istart when mat is not an array`, function() {
+            assert.strict.deepStrictEqual(matat('x', 'x'), [])
             throwsMsg(() => matat([1], 'x'), MSG_MAT_ROW(0))
-            throwsMsg(() => matat(null), MSG_MAT)
+            assert.strict.deepStrictEqual(matat(null), [])
             throwsMsg(() => matat([[1]], 'x'), MSG_ISTART)
         })
 
@@ -281,8 +284,8 @@ describe(`matat`, function() {
 
         // 訊息不回顯輸入值(V20)
         it(`should not echo the input value in the messages`, function() {
-            throwsMsgNoLeak(() => matat(LEAK, 0), MSG_MAT)
-            throwsMsgNoLeak(() => matat({ LEAK }, 0), MSG_MAT)
+            assert.strict.deepStrictEqual(matat(LEAK, 0), []) //mat非陣列不拋錯, 無訊息可回顯
+            assert.strict.deepStrictEqual(matat({ LEAK }, 0), [])
             throwsMsgNoLeak(() => matat([LEAK], 0), MSG_MAT_ROW(0))
             throwsMsgNoLeak(() => matat([[1]], LEAK), MSG_ISTART)
             throwsMsgNoLeak(() => matat([[1]], { LEAK }), MSG_ISTART)
