@@ -90,7 +90,7 @@ describe(`裁定表〈一〉genClockTZ().formatTime`, function() {
 
 describe(`裁定表〈二〉arrFilterByKeywords`, function() {
 
-    it(`〈二-1〉should give {false,0} to holes, null, undefined, numbers, NaN, booleans, functions, Symbols, objects and arrays (including ['abc']), and treat a String object as a string`, function() {
+    it(`〈二-1〉should give {false,0} to holes, null, undefined, numbers, NaN, booleans, functions, Symbols, objects and arrays (including ['abc']), and a String object (W-20: wrapper objects are not strings)`, function() {
         let a = new Array(12)
         a[1] = null
         a[2] = undefined
@@ -104,7 +104,8 @@ describe(`裁定表〈二〉arrFilterByKeywords`, function() {
         a[10] = 'abc'
         a[11] = Object('xabc')
         let r = arrFilterByKeywords(a, 'abc')
-        assert.strict.deepStrictEqual(r, [F, F, F, F, F, F, F, F, F, F, { hasKeyword: true, weight: 1 }, { hasKeyword: true, weight: 1 }])
+        //W-20(包裝物件為無效, 判斷函數只收原始值): a[11]之String物件為{false,0}; 修前視為字串而{true,1}
+        assert.strict.deepStrictEqual(r, [F, F, F, F, F, F, F, F, F, F, { hasKeyword: true, weight: 1 }, F])
     })
 
     it(`〈二-2〉should return one {false,0} for [''], [null], [{}], [[]], and [] only for [] (length equals arr's length)`, function() {

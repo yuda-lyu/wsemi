@@ -1,6 +1,4 @@
 import isarr from './isarr.mjs'
-import isestr from './isestr.mjs'
-import isnum from './isnum.mjs'
 import cstr from './cstr.mjs'
 import strCompare from './strCompare.mjs'
 
@@ -8,15 +6,6 @@ import strCompare from './strCompare.mjs'
 //isFin, 有限數字
 function isFin(v) {
     return typeof v === 'number' && Number.isFinite(v)
-}
-
-
-//isWrapScalar, 單獨傳入之String/Number包裝物件(值為非空字串或有限數字): 修前以isestr/isnum接受並經cstr取字串(R-WRAPPER-01), 裁定表未列而維持(ws430c2外審T2)
-function isWrapScalar(v) {
-    if (typeof v !== 'object' || v === null) {
-        return false
-    }
-    return isestr(v) || (isnum(v) && Number.isFinite(Number(v)))
 }
 
 
@@ -119,9 +108,7 @@ function strFindSimilar(ar, strkeys) {
         }
         c = ss.join('')
     }
-    else if (isWrapScalar(ar)) {
-        c = cstr(ar)
-    }
+    //單獨傳入之String/Number包裝物件非原始值而無效(W-20: 判斷函數只收原始值; 修前經isestr/isnum接受並由cstr取字串), 同未給之空結果
     if (!isNonBlank(c)) {
         return emptyResult()
     }
@@ -133,9 +120,6 @@ function strFindSimilar(ar, strkeys) {
     }
     else if (isFin(strkeys)) {
         targets = [String(strkeys)]
-    }
-    else if (isWrapScalar(strkeys)) {
-        targets = [cstr(strkeys)]
     }
     else if (isarr(strkeys) && strkeys.length > 0) {
         targets = []

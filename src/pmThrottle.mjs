@@ -2,7 +2,7 @@ import genPm from './genPm.mjs'
 import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import pmSettleByState from './_pmSettleByState.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import evem from './evem.mjs'
 import getTrace from './getTrace.mjs'
 
@@ -312,10 +312,10 @@ function pmThrottle(opt = {}) {
                     trace('run', { n: m.n })
                 }
 
-                //fun, 執行點再驗: run()通過檢測後、輪到執行前(最長一個偵測週期)函數可能已失效(如函數Proxy被revoke, isfun於其上拋TypeError), 此處不可假設m.func仍為函數;
+                //fun, 執行點再驗: run()通過檢測後、輪到執行前(最長一個偵測週期)函數可能已失效(如函數Proxy被revoke, isfun對其回false而不拋錯), 此處不可假設m.func仍為函數;
                 //無效者不呼叫, 該任務以固定字串reject(同run()之拒絕值, 不回顯值), 佇列續行、running照常釋放、計時器照常停止; 判定拋錯亦視為無效, 不於計時器回呼內外拋
                 let res = null
-                if (isFunSafe(m.func)) {
+                if (isfun(m.func)) {
                     res = await pm2resolve(m.func)(...m.input)
                 }
                 else {
@@ -354,7 +354,7 @@ function pmThrottle(opt = {}) {
         let pm = genPm()
 
         //check, 非函數之任務(執行期提交之工作)不排入佇列, 回傳之Promise以固定字串reject(同pmQueue之拒絕值, 不回顯值), 不回傳undefined(呼叫端.then會同步拋錯); 判定本身拋錯(如已撤銷之Proxy)亦視為無效, 不同步外拋; 參數名fun即訊息'invalid fun: ...'之名稱(V19)
-        if (!isFunSafe(fun)) {
+        if (!isfun(fun)) {
             pm.reject('invalid fun: must be a function')
             return pm
         }

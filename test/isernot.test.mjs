@@ -128,18 +128,20 @@ describe(`isernot`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isernot 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isernot 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
-    it(`should return false when input new String('') and new Number(NaN)`, function() {
-        //R-WRAPPER-01 規則2: isernot隨iser一致, 同isernot('')、isernot(NaN)為false
-        assert.strict.deepStrictEqual(isernot(new String('')), false)
-        assert.strict.deepStrictEqual(isernot(new Number(NaN)), false)
+    it(`should treat new String(''), new Number(NaN) as not empty (an object is a value, only the primitive '' and NaN are empty): isernot is true`, function() {
+        //W-20: isstr0、isnan只收原始值, 包裝物件非空字串、非NaN, 故不屬無值; 修前此2格isernot為false
+        assert.strict.deepStrictEqual(isernot(''), false)
+        assert.strict.deepStrictEqual(isernot(NaN), false)
+        assert.strict.deepStrictEqual(isernot(new String('')), true)
+        assert.strict.deepStrictEqual(isernot(new Number(NaN)), true)
     })
 
-    it(`should return true when input new String('a') and new Number(0)`, function() {
-        //R-WRAPPER-01 規則2: 依其原始值判定, 同isernot('a')、isernot(0)為true
-        assert.strict.deepStrictEqual(isernot(new String('a')), true)
-        assert.strict.deepStrictEqual(isernot(new Number(0)), true)
+    it(`should keep the other wrappers (new String('a'), new Number(0), new Boolean(false)) as values: isernot is true`, function() {
+        for (let v of [new String('a'), new String(' '), new Number(0), new Number(1), new Boolean(false), new Boolean(true)]) {
+            assert.strict.deepStrictEqual(isernot(v), true)
+        }
     })
 
 })

@@ -1,7 +1,7 @@
 import each from 'lodash-es/each.js'
 import values from 'lodash-es/values.js'
 import genPm from './genPm.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import pmReadItems from './_pmReadItems.mjs'
 import getTrace from './getTrace.mjs'
@@ -407,7 +407,7 @@ function pmMap(rs, fun, takeLimit = 0, opt = {}) {
     }
 
     //isFunFun, 於派發前判定一次, 不於逐元素回呼內重複判定(lodash之isFunction對async函數每次皆經getRawTag賦值拋錯再捕捉, V8擷取之非同步堆疊隨promise鏈加深而成平方); fun為選填(清單處理之參數), 非函數視為未給, 判定本身拋錯(如已撤銷之Proxy)亦視為未給而不同步外拋(W-15甲③)
-    let isFunFun = isFunSafe(fun)
+    let isFunFun = isfun(fun)
 
     //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則takeLimit限量時排後者於取用前先reject、或中止後不再取用者, 皆成為未處理之rejection
     if (!isFunFun) {

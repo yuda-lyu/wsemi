@@ -1,5 +1,10 @@
+import tagOf from './_tagOf.mjs'
+
+
 /**
  * 判斷是否為Blob或其子型別(File)
+ *
+ * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取內部標籤即拋錯之物件)，判定拋錯者回傳false
  *
  * File繼承自Blob，具備Blob全部方法，由input type=file取得者皆為File，故一併視為Blob；若須區分File請用isfile。瀏覽器與NodeJS(18以上)皆有Blob，NodeJS 20以上有File
  *
@@ -21,7 +26,7 @@
 function isblob(v) {
 
     //以標籤判定, 跨iframe等不同realm時instanceof會失效而標籤仍有效; File之標籤為[object File]而非[object Blob], 須一併列入
-    let c = Object.prototype.toString.call(v)
+    let c = tagOf(v)
     if (c === '[object Blob]' || c === '[object File]') {
         return true
     }

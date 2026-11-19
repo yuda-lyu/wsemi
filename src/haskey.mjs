@@ -27,7 +27,13 @@ function haskey(obj, key) {
         return false
     }
 
-    return (key in obj)
+    //key in obj會觸發Proxy之has陷阱, 陷阱拋錯者無法判定, 回傳false(判斷函數不拋錯, R-JUDGE-NOTHROW-01)
+    try {
+        return (key in obj)
+    }
+    catch (err) {
+        return false
+    }
 }
 
 

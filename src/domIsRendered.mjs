@@ -26,13 +26,20 @@ import isfun from './isfun.mjs'
  */
 function domIsRendered(ele) {
 
-    //check
-    if (!ele || ele.nodeType !== 1 || !ele.isConnected) {
+    //check, 讀取nodeType、isConnected、checkVisibility可能觸發已撤銷之Proxy等而拋錯, 視為非元素回傳false(判斷函數不拋錯, R-JUDGE-NOTHROW-01)
+    let cv = null
+    try {
+        if (!ele || ele.nodeType !== 1 || !ele.isConnected) {
+            return false
+        }
+        cv = ele.checkVisibility
+    }
+    catch (err) {
         return false
     }
 
     //checkVisibility
-    if (isfun(ele.checkVisibility)) {
+    if (isfun(cv)) {
         try {
             return ele.checkVisibility()
         }

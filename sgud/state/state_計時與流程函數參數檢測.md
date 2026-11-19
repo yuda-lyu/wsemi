@@ -2,6 +2,8 @@
 
 本檔記 `setTimeoutHp`、`setIntervalHp`、`cacheBd`、`pmHook`、`pmHookReject`、`pmQueue`、`pmThrottle`、`pmKeyMutex`、`pmChain`、`pmMap`、`pmSeries`、`importResources` 輸入檢測之現況(自 `sgud/state/state.md` 之索引指入;只記現況,過程見 `sgud/exp/experience.md`).
 
+> **2026-11-19(ws492i)更新**: 本節所述內部模組 `_isFunSafe` **已移除**——`isfun` 本身判定拋錯即回 `false`(批 6 裁定③),17 個使用站點改回 `isfun`,失敗通道不變;`test/_isFunSafe.test.mjs` 之 3 案移入 `test/isfun.test.mjs`.下文提及 `_isFunSafe` 者為 ws492g 當時之紀錄,以本註為準;現況見 `sgud/state/state_判斷與轉型.md`.
+
 ## 第 492 項第 6 批:計時與流程(ws492g;盤點報告 W-15 與〈不符清單〉C13／C14／C20 之計時與流程函數各列、第 4 批交件併入之 `importResources`;主控任務 20261116102625,2026-11-18;package.json version 1.9.66 之工作樹,未提交未發布)〔本節於 2026-11-18 新增〕
 
 - **現況(已實作)**: 依 dspec〈輸入參數之檢測機制〉§11 W-15「甲」(使用者 2026-11-16)三種處理——①建立物件或立即啟動之 `fun` 無效同步拋 `Error('invalid fun: must be a function')`、先於任何副作用:`setTimeoutHp`、`setIntervalHp`(不啟動計時器、不通知 `onTrace`、不輸出 `opt.debug` 警告)、`cacheBd`、`pmHook`、`pmHookReject`(不再回 `null`;`cb` 非函數視為未給);②執行期提交之任務無效 reject 固定字串、不同步拋錯:`pmQueue`、`pmThrottle` 為 `'invalid fun: must be a function'`,`pmKeyMutex` 為 `'invalid fn: must be a function'` 且不排入該 key 之佇列;③清單之元素視為未給(JSDoc 標選填;`pmChain`、`pmMap`、`pmSeries` 同以 `isFunSafe` 判定):`pmChain`、`pmMap`、`pmSeries`.函數判定一律經內部 `src/_isFunSafe.mjs`(已撤銷 Proxy 視為非函數).`importResources`:`pathItems` 進入時一次讀取、驗證並複製,無效以固定字串 reject(先於任何載入與狀態登記),不改寫呼叫端輸入,不再 `console.log` 回顯.

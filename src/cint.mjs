@@ -3,11 +3,16 @@ import round from 'lodash-es/round.js'
 import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
+import unbox from './_unbox.mjs'
 
 
 /**
  * 數字或字串四捨五入轉整數
  * 若輸入非數字則回傳0
+ * 轉型函數照舊拆包: 包裝物件new Number(1)、new String('1')先取出原始值再轉換(判斷函數isnum只收原始值，轉型函數不受影響)
+ *
+ * 注意: 超出安全整數範圍(絕對值大於Number.MAX_SAFE_INTEGER)之數值轉換後會失真(如cint(2 ** 60)為1152921504606847000，已非原值；字串'9007199254740993'轉為9007199254740992)，本函數行為不改。
+ * 要精確、可安全計算之整數，請先以iseint判斷(iseint(v)為true者其安全整數轉換無損，字串並檢查精度遺失)，再以cint轉換；亦可用opt.useClampSafe鉗制或opt.useLimitSafe視為錯誤
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/cint.test.mjs Github}
  * @memberOf wsemi
@@ -94,6 +99,9 @@ function cint(v, opt = {}) {
             throw new Error(msg)
         }
     }
+
+    //拆包, 轉型函數照舊轉換包裝物件(isnum只收原始值)
+    v = unbox(v)
 
     //check
     if (!isnum(v)) {

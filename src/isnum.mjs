@@ -14,7 +14,8 @@ import isnan from './isnan.mjs'
  * (如arrMax/arrMin/round/randomRange等)，若放寬isnum認BigInt將導致這些callsite執行期錯誤。
  * 此設計與lodash `_.isNumber` 將BigInt排除的處理一致。BigInt請另作獨立判斷。
  *
- * 本函式屬定義上之「是否為數字」，收Infinity、'Infinity'、'0x10'、'0b11'與包裝物件new Number(1)，不代表對計算有效；計算類函數判定參數請改用isenum(有效數字，可限定範圍)，整數參數用iseint。
+ * 本函式屬定義上之「是否為數字」，收Infinity、'Infinity'、'0x10'、'0b11'，不代表對計算有效；計算類函數判定參數請改用isenum(有效數字，可限定範圍)，整數參數用iseint。
+ * 只收原始數字與數字字串，包裝物件new Number(1)、new String('1')為false(判斷函數只收原始值，與isenum、iseint一致)；對任何輸入皆不拋錯(含已撤銷之Proxy)。要把包裝物件轉成數字請用轉型函數cdbl(轉型函數照舊拆包)。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnum.test.mjs Github}
  * @memberOf wsemi

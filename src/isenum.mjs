@@ -74,7 +74,7 @@ let SPEC = {
  * 1. 原始型別number, 且為有限數(排除NaN、Infinity、-Infinity)。
  * 2. 原始型別字串, 去頭尾空白後符合十進位寫法(可帶正負號、小數點、科學記號, 即/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/), 轉換後為有限數, 且未下溢(轉換後為0而尾數含非零數字者, 如'1e-400'、'4.9e-325')。
  *
- * 與isnum之差異: isnum屬定義上之「是否為數字」, 收Infinity(經isnbr)、'Infinity'、'0x10'、'0b11'、包裝物件new Number(1), 且上述寫法經Number()轉換後即可用於計算時會出錯或失真;
+ * 與isnum之差異: isnum屬定義上之「是否為數字」, 收Infinity(經isnbr)、'Infinity'、'0x10'、'0b11'(包裝物件new Number(1)與isenum一致皆為false, 判斷函數只收原始值), 且上述寫法經Number()轉換後即可用於計算時會出錯或失真;
  * isenum屬「對計算是否有效」, 一律不收上述各項。計算類函數判定參數請用isenum, 不要用isnum、cdbl、cint、parseFloat、Number(v)直接轉。
  * 要求整數者另見iseint。
  *

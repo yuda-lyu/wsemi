@@ -324,8 +324,9 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
 
         it(`fsMergeFilesCore should reject a string (not an Error object) when reading an element of fpsIn throws a native error`, async function() {
             let nat = nativeErr('ENOENT', fpNope)
-            let arr = [fpFile]
-            Object.defineProperty(arr, 0, {
+            //第2個元素之讀取拋原生錯誤(isearr只於長度為1時讀取第1個元素, 長度為2時不讀, 故錯誤於合併處理讀取元素時才拋出, 走固定詞彙之失敗通道)
+            let arr = [fpFile, fpFile]
+            Object.defineProperty(arr, 1, {
                 get() {
                     throw nat
                 }
@@ -333,6 +334,19 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
             let r = await rej(fsMergeFiles(arr, path.join(fdT, 'merge-out2.txt')))
             assert.strict.deepStrictEqual([typeof r.err, r.err], ['string', 'operation failed (code ENOENT)'])
             assert.strict.deepStrictEqual(fs.existsSync(path.join(fdT, 'merge-out2.txt')), false)
+        })
+
+        it(`fsMergeFilesCore should reject 'invalid fpsIn: must be a non-empty array' when the only element of fpsIn is unreadable (isearr judges unreadable content as invalid and never throws; was the native error form before W-20/批6裁定③)`, async function() {
+            let nat = nativeErr('ENOENT', fpNope)
+            let arr = [fpFile]
+            Object.defineProperty(arr, 0, {
+                get() {
+                    throw nat
+                }
+            })
+            let r = await rej(fsMergeFiles(arr, path.join(fdT, 'merge-out3.txt')))
+            assert.strict.deepStrictEqual([typeof r.err, r.err], ['string', 'invalid fpsIn: must be a non-empty array'])
+            assert.strict.deepStrictEqual(fs.existsSync(path.join(fdT, 'merge-out3.txt')), false)
         })
 
         it(`an Error without a code (own fixed messages, injected TypeError) and non-Error values keep their old form`, function() {

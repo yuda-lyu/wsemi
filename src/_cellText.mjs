@@ -49,7 +49,7 @@ function cellRep(v, sortKeys = false) {
         return Number.isNaN(tm) ? 'null' : new Date(tm).toISOString()
     }
 
-    //包裝物件(R-WRAPPER-01規則3, 不保證拆包): 以內部槽判定(偽造Symbol.toStringTag之一般物件不算, 照物件為JSON; ws430c2外審T9), Boolean包裝以其原始布林值, String/Number包裝依修前之原值
+    //包裝物件(R-WRAPPER-01規則5, 顯式拆包處; 判斷函數不拆包): 以內部槽判定(偽造Symbol.toStringTag之一般物件不算, 照物件為JSON; ws430c2外審T9), Boolean包裝以其原始布林值, String/Number包裝依修前之原值
     let b = boolOf(v)
     if (b !== undefined) {
         return b ? 'true' : 'false'

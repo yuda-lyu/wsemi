@@ -81,9 +81,24 @@ describe(`cstr 包裝物件(R-WRAPPER-01)`, function() {
     })
 
     it(`should return '1.5' when input new Number(1.5) and 'a' when input new String('a')`, function() {
-        //R-WRAPPER-01 規則1: 包裝物件視同其型別, 依其原始值轉字串(同cstr(1.5)、cstr('a'))
+        //W-20(R-WRAPPER-01 規則2): 轉型函數照舊拆包(經_unbox), 依其原始值轉字串(同cstr(1.5)、cstr('a'))
         assert.strict.deepStrictEqual(cstr(new Number(1.5)), '1.5')
         assert.strict.deepStrictEqual(cstr(new String('a')), 'a')
+    })
+
+    it(`should unwrap by the internal slot and never call the toString or valueOf the caller put on the wrapper`, function() {
+        let w = new String('x')
+        w.toString = () => 'evil'
+        w.valueOf = () => 'evil2'
+        assert.strict.deepStrictEqual(cstr(w), 'x')
+        let n = new Number(7)
+        n.toString = () => 'evil'
+        assert.strict.deepStrictEqual(cstr(n), '7')
+    })
+
+    it(`should return '' for the wrapper of an empty string and of a non-convertible value (same as the primitive), keep Symbol and BigInt conversion unchanged`, function() {
+        assert.strict.deepStrictEqual([cstr(new String('')), cstr(''), cstr(new Boolean(true)), cstr(true)], ['', '', '', ''])
+        assert.strict.deepStrictEqual([cstr(Symbol('a')), cstr(Object(Symbol('a'))), cstr(10n), cstr(Object(10n))], ['Symbol(a)', 'Symbol(a)', '10', '10']) //BigInt與Symbol之包裝物件不在W-20範圍(只有String、Number、Boolean), 行為與修前相同
     })
 
 })

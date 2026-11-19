@@ -213,16 +213,19 @@ describe(`isp0int`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isp0int 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isp0int 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
-    it(`should return false when input new Number(NaN)`, function() {
-        //R-WRAPPER-01 規則2: isnum族隨之一致, 同isp0int(NaN)為false
-        assert.strict.deepStrictEqual(isp0int(new Number(NaN)), false)
+    it(`should return false for the wrapper of every primitive that gives true (the primitive itself stays true)`, function() {
+        //W-20(dspec §11 包裝物件): new String、new Number、new Boolean判為false; 修前此5格之包裝物件為true
+        for (let p of ['0', '1', 0, 1, Infinity]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isp0int(p), isp0int(Object(p))], [typeof p, String(p), true, false])
+        }
     })
 
-    it(`should return true when input new Number(2)`, function() {
-        //R-WRAPPER-01 規則1: 包裝物件視同其型別, 依其原始值判定(同isp0int(2))
-        assert.strict.deepStrictEqual(isp0int(new Number(2)), true)
+    it(`should return false for the wrapper of every primitive on the whole axis`, function() {
+        for (let p of ['', ' ', 'a', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', 0, 1, -1, 1.5, NaN, Infinity, true, false]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isp0int(Object(p))], [typeof p, String(p), false])
+        }
     })
 
 })

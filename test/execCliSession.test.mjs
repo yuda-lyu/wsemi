@@ -363,8 +363,10 @@ describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             cwdGetter: x('getter boom cwd'), //規則13: cwd不可讀
             stderrKeepGetter: x('getter boom stderrKeep'), //規則13: stderrKeep不可讀
             onLineGetter: x('getter boom onLine'), //規則13: 他項回調不可讀時, 可讀之onExit仍回報
-            envRevoked: x('<revoked>'), //規則13: env為已撤銷之Proxy
+            //env為已撤銷之Proxy(批6裁定③: isobj對其回false而不拋錯): 非一般物件, 依K3視為未給而繼承環境變數, 子進程照常啟動並結束(修前判型時拋TypeError而不spawn)
+            envRevoked: { error: '', pid: r.out.envRevoked.pid, pidAtCreate: r.out.envRevoked.pidAtCreate, onExitCalls: 1, onExitSameAsStop: true, lines: ['child-ran'] },
         })
+        assert.strict.deepStrictEqual([typeof r.out.envRevoked.pid, typeof r.out.envRevoked.pidAtCreate], ['number', 'number'])
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取與判型一律在try內, 不throw、不成為未捕捉例外
     })
 

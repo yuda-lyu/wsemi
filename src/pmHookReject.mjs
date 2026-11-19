@@ -1,4 +1,4 @@
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import pmHook from './pmHook.mjs'
 
 
@@ -103,10 +103,10 @@ import pmHook from './pmHook.mjs'
 function pmHookReject(fun, cb = () => {}) {
 
     //check, fun為必須參數(建立包裝函數者), 無效即同步拋錯而不回傳null(同pmHook); cb為選填, 非函數視為未給(K3)
-    if (!isFunSafe(fun)) {
+    if (!isfun(fun)) {
         throw new Error('invalid fun: must be a function')
     }
-    if (!isFunSafe(cb)) {
+    if (!isfun(cb)) {
         cb = () => {}
     }
 

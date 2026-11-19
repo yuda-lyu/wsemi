@@ -878,7 +878,7 @@ describe(`isenum`, function() {
             ['0b11', true, false],
             ['0o7', true, false],
             ['1e400', true, false],
-            [new Number(1), true, false],
+            [new Number(1), false, false], //W-20: 判斷函數一律只收原始值, 包裝物件isnum與isenum一致為false(修前isnum為true, 已非兩者之差異)
             ['1e-400', true, false],
             ['1.5', true, true],
             [1.5, true, true],

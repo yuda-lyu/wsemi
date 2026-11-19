@@ -687,17 +687,20 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         let cli = (m) => ({ ok: false, code: null, error: `UNKNOWN: ${m}`, attempts: 1, hasPidKey: true, pidType: 'undefined' })
         //規則13: execCliSession不spawn, 以onExit與stop()之結果回報(pid null, error同形)
         let ses = (m) => ({ code: null, error: `UNKNOWN: ${m}`, pid: null, exited: true })
+        //已撤銷之Proxy(批6裁定③: 判斷函數isobj、isstr、isfun對其回false而不拋錯)屬「非一般物件／非字串／非函數」之非預期輸入, 依K3視為未給, 照常執行(修前判型時拋TypeError, 以結果物件回報錯誤)
+        let cliOk = { ok: true, code: 0, error: '', attempts: 1, hasPidKey: true, pidType: 'number' }
+        let sesOk = { code: 0, error: '', pid: 'number', exited: true }
         assert.strict.deepStrictEqual(r.out, {
-            cliGetter: cli('getter boom cwd'),
-            cliOptRevoked: cli('<revoked>'),
-            cliEnvRevoked: cli('<revoked>'), //規則13: attempts 1(maxRetries 2亦不重試)
-            cliOnStdoutRevoked: cli('<revoked>'),
-            cliCommandRevoked: cli('<revoked>'),
+            cliGetter: cli('getter boom cwd'), //getter拋錯仍為錯誤(讀取本身失敗, 非型別問題)
+            cliOptRevoked: cliOk, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給
+            cliEnvRevoked: cliOk, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數
+            cliOnStdoutRevoked: cliOk, //onStdout為已撤銷之函數Proxy: 非函數, 視為未給
+            cliCommandRevoked: { ok: false, code: null, error: 'command 須為非空字串', attempts: 0, hasPidKey: false, pidType: 'undefined' }, //command為必須參數: 非字串即無效, 不啟動(attempts 0; 修前為UNKNOWN: <revoked>)
             sesGetter: ses('getter boom onExit'),
-            sesOptRevoked: ses('<revoked>'),
-            sesEnvRevoked: ses('<revoked>'),
-            sesOnLineRevoked: ses('<revoked>'),
-            sesOnExitRevoked: ses('<revoked>'),
+            sesOptRevoked: sesOk,
+            sesEnvRevoked: sesOk,
+            sesOnLineRevoked: sesOk,
+            sesOnExitRevoked: sesOk,
             uncaught: [], //規則13: 呼叫端之回調於入口判型一次, 監聽器與計時器內不再觸及呼叫端之值
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取與判型一律在try內, 不reject、不成為未捕捉例外
@@ -727,11 +730,13 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })
 
-    it(`execCli: opt.input為包裝字串(new String)時子進程收到其內容且結果ok(不reject、子進程不殘留), 偽String標籤物件轉字串拋錯時以結果物件回報 [R-EXEC-FAIL-01之13]`, function() {
+    it(`execCli: opt.input為包裝字串(new String)或偽String標籤物件時視為未給(W-20: 判斷函數只收原始值, 子進程收到空輸入), 結果ok(不reject、子進程不殘留) [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('cliInputWrapper')
         assert.strict.deepStrictEqual(r.out, {
-            stringWrapper: { ok: true, stdout: 'got:abc', error: '', childAliveAfter: false }, //規則13: 輸入之讀取與判型(含轉為原始字串)一律在try內, spawn後不得於try外拋錯而reject並使子進程殘留
-            fakeStringThrows: { ok: false, code: null, error: 'UNKNOWN: toString boom', attempts: 1, hasPidKey: true, pidType: 'undefined' }, //規則13: 讀取或轉換拋錯以規則4之結果物件回報(attempts 1、pid鍵undefined、不重試)
+            //W-20: 包裝字串非原始字串, opt.input依K3視為未給, 子進程之stdin無內容(修前收到'abc'); 不reject、子進程不殘留
+            stringWrapper: { ok: true, stdout: 'got:', error: '', childAliveAfter: false },
+            //偽造Symbol.toStringTag之物件非字串(修前依標籤判為字串, 轉字串時拋錯而以結果物件回報), 同上視為未給而照常執行
+            fakeStringThrows: { ok: true, code: 0, error: '', attempts: 1, hasPidKey: true, pidType: 'number' },
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })

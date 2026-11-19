@@ -95,42 +95,50 @@ describe(`timemsTZ2past`, function() {
 })
 
 
-describe(`timemsTZ2past 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
+describe(`timemsTZ2past 非字串之tNow為物件(R-CODEC-ERR-01之2, W-20: 判斷函數只收原始值)`, function() {
 
     let t = '2020-10-18T12:34:54.987+08:00'
 
-    //tNow由呼叫端給定, try內core經istimemsTZ(tNow)之isestr之Object.prototype.toString.call讀其Symbol.toStringTag時拋出指定值
-    //thrownCases(test/tools/codecThrown.mjs)為呼叫端可拋出之各種值, msg為_errToStr應得之字串; 修正前catch內err.toString()遇其任一皆再拋TypeError, 使函數同步外拋至呼叫端
-    let mkTNow = (v) => ({
+    //tNow由呼叫端給定: 讀其Symbol.toStringTag時拋出指定值之物件(修前isestr以Object.prototype.toString.call判型, 會觸發此getter而拋出, 函數以失敗形狀回報;
+    //  修後以typeof判型, 函數不讀物件之任何內容, 視同非字串之tNow改取目前時間, 不拋錯; catch與_errToStr保留為防線, 但呼叫端給定之值已不可能抵達)
+    //thrownCases(test/tools/codecThrown.mjs)為呼叫端可拋出之各種值
+    let mkTNow = (v, counter) => ({
         get [Symbol.toStringTag]() {
+            counter.n++
             throw v
         },
     })
 
-    //預設模式沿用既有失敗形狀{ today, msg, err }, 錯誤字串不外露, 故任何拋出值皆為同一結果
-    it(`should not throw but return { today: null, msg: '', err: '時間轉換失敗' } whatever tNow throws on reading Symbol.toStringTag without opt [R-CODEC-ERR-01之2]`, function() {
+    it(`should not throw, never read the object tNow (its getter is not called) and give the same result as the default tNow whatever it throws on reading Symbol.toStringTag [R-CODEC-ERR-01之2]`, function() {
+        let want = showDeep(timemsTZ2past(t, null))
         for (let c of thrownCases) {
+            let counter = { n: 0 }
             let r = null
             assert.doesNotThrow(() => {
-                r = timemsTZ2past(t, mkTNow(c.mk()))
+                r = timemsTZ2past(t, mkTNow(c.mk(), counter))
             }, c.name)
-            assert.strict.deepStrictEqual(showDeep(r), { today: null, msg: '', err: '時間轉換失敗' }, c.name)
+            assert.strict.deepStrictEqual([c.name, counter.n, showDeep(r)], [c.name, 0, want])
         }
     })
 
-    for (let c of thrownCases) {
-        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when tNow throws ${c.name} on reading Symbol.toStringTag with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    it(`should return { state: 'success', msg: <the default result> } with returnWithStateAndMsg, never an error state, when tNow is such an object [R-CODEC-ERR-01之2]`, function() {
+        let want = showDeep(timemsTZ2past(t, null, { returnWithStateAndMsg: true }))
+        assert.strict.deepStrictEqual(want.state, 'success')
+        for (let c of thrownCases) {
+            let counter = { n: 0 }
             let r = null
             assert.doesNotThrow(() => {
-                r = timemsTZ2past(t, mkTNow(c.mk()), { returnWithStateAndMsg: true })
-            })
-            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
-        })
-    }
+                r = timemsTZ2past(t, mkTNow(c.mk(), counter), { returnWithStateAndMsg: true })
+            }, c.name)
+            assert.strict.deepStrictEqual([c.name, counter.n, showDeep(r)], [c.name, 0, want])
+        }
+    })
 
-    it(`(守門) should return { state: 'error', msg: 'Error: boom' } (same as err.toString()) when tNow throws an Error on reading Symbol.toStringTag with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
-        let r = timemsTZ2past(t, mkTNow(new Error('boom')), { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'Error: boom' })
+    it(`should treat a revoked Proxy as tNow like any non-string: no throw, same result as the default tNow`, function() {
+        let r = Proxy.revocable({}, {})
+        r.revoke()
+        let want = showDeep(timemsTZ2past(t, null))
+        assert.strict.deepStrictEqual(showDeep(timemsTZ2past(t, r.proxy)), want)
     })
 
 })

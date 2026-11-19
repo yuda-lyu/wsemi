@@ -1005,9 +1005,9 @@ describe(`pmMap 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', isTypeError: true }, unhandled: [], uncaught: [] })
         })
 
-        it(`Symbol.toStringTag讀取即拋錯: 以該錯誤reject, 不同步拋出`, function() {
+        it(`Symbol.toStringTag讀取即拋錯: 型別無法判定(isobj、isarr不拋錯而回false, 批6裁定③), 視為非陣列或物件而以固定字串reject, 不同步拋出(修前以該錯誤reject)`, function() {
             let r = runChildCase(runner, 'tagGetterContainer').r
-            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: true, msg: null }, unhandled: [], uncaught: [] })
+            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'rs is not an array or object' }, unhandled: [], uncaught: [] })
         })
 
     })

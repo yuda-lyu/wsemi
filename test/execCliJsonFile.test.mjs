@@ -530,13 +530,18 @@ describe(`execCliJsonFile`, function() {
             }
             let revArgs = Proxy.revocable([], {})
             revArgs.revoke()
-            let cases = [p.proxy, g('script'), g('outputPath'), g('timeoutMs'), g('cwd'), g('onProgress'), g('onTrace'), g('args'), g('exe'), { script: sc('echo.mjs'), outputPath: outp('o-unread.json'), exe: node, args: revArgs.proxy }]
+            let cases = [p.proxy, g('script'), g('outputPath'), g('timeoutMs'), g('cwd'), g('onProgress'), g('onTrace'), g('args'), g('exe')]
             for (let o of cases) {
                 let r = await execCliJsonFile(o)
                 assert.strict.deepStrictEqual(Object.keys(r), ['status', 'message'])
                 assert.strict.deepStrictEqual(r.status, 'error')
                 assert.ok(/^UNKNOWN: /.test(r.message), r.message)
             }
+
+            //args為已撤銷之Proxy(批6裁定③: isarr對其回false而不拋錯): 非陣列, 依K3視為未給(不帶引數), 腳本照常執行並回傳其輸出(修前isarr拋TypeError而以結構化錯誤回報)
+            let r2 = await execCliJsonFile({ script: sc('echo.mjs'), outputPath: outp('o-unread2.json'), exe: node, args: revArgs.proxy })
+            assert.strict.deepStrictEqual(r2.status, undefined)
+            assert.strict.deepStrictEqual(r2.args, [])
         })
 
         it(`should use opt.cwd only when it is an existing folder (the execCli rule), else report a structured error`, async function() {

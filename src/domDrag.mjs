@@ -1,6 +1,6 @@
 import get from 'lodash-es/get.js'
-import isNumber from 'lodash-es/isNumber.js'
 import genID from './genID.mjs'
+import isnbr from './isnbr.mjs'
 import isestr from './isestr.mjs'
 import isenum from './isenum.mjs'
 import isfun from './isfun.mjs'
@@ -79,7 +79,7 @@ function findTouch(list, id) {
 function toPoint(o) {
     let x = get(o, 'clientX', null)
     let y = get(o, 'clientY', null)
-    if (!isNumber(x) || !isNumber(y)) {
+    if (!isnbr(x) || !isnbr(y)) {
         return null
     }
     return { clientX: x, clientY: y }
@@ -253,7 +253,7 @@ function onMove(g, d, e) {
     let p = null
     if (!d.touch) {
         //主鍵已放開(於視窗外放開等收不到mouseup)即結束; 只看真實事件, 以new MouseEvent合成之移動其buttons預設為0, 既有以合成事件模擬拖曳者不因此中斷
-        if (e.isTrusted === true && isNumber(e.buttons) && (e.buttons & 1) === 0) {
+        if (e.isTrusted === true && isnbr(e.buttons) && (e.buttons & 1) === 0) {
             endDrag(g, e, null, 'buttons')
             return
         }

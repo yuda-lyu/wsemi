@@ -721,7 +721,7 @@ describe(`iseint`, function() {
             ['0x10', true, false],
             [2 ** 60, true, false],
             [1e21, true, false],
-            [new Number(5), true, false],
+            [new Number(5), false, false], //W-20: 判斷函數一律只收原始值, 包裝物件isint與iseint一致為false(修前isint為true, 已非兩者之差異)
             ['1e400', true, false],
             ['9007199254740993', true, false],
             [125, true, true],

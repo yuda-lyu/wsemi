@@ -304,10 +304,11 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         let { r } = runExecFail('inputUnreadableRpc')
         assert.strict.deepStrictEqual(r.out, {
             rpcGetter: { ok: false, errorType: 'params', error: 'UNKNOWN: getter boom timeoutMs' }, //規則13: 自身讀取失敗為errorType params
-            rpcOptRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: 同上(opt本身不可讀)
-            rpcEnvRevoked: { ok: false, errorType: 'notfound', error: 'initialize: UNKNOWN: <revoked>' }, //規則13: env原樣交Session判定, 不可讀為notfound(規則10: 未啟動一律notfound)
-            rpcOnNotifyRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: 回調於入口判型, 不可讀為params
-            rpcRequestRevoked: { ok: false, errorType: 'params', error: 'UNKNOWN: <revoked>' }, //規則13: requests之元素不可讀為params
+            //已撤銷之Proxy(批6裁定③: 判斷函數對其回false而不拋錯)屬「非一般物件／非函數」之非預期輸入, 依K3視為未給(修前isobj、isfun於判型時拋TypeError, 以errorType params／notfound回報)
+            rpcOptRevoked: { ok: true, errorType: '', error: '' }, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給(修前params)
+            rpcEnvRevoked: { ok: true, errorType: '', error: '' }, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數(修前notfound)
+            rpcOnNotifyRevoked: { ok: true, errorType: '', error: '' }, //onNotify為已撤銷之函數Proxy: 非函數, 視為未給(修前params)
+            rpcRequestRevoked: { ok: false, errorType: 'params', error: 'requests[0] 須為含method或notify之物件' }, //requests之元素為已撤銷之Proxy: 非一般物件, 為無效請求而errorType params(必須參數, 不得視為未給; 錯誤訊息改為固定字串)
             uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
@@ -364,7 +365,7 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual(r.out, {
             noCmd: { ok: false, errorType: 'notfound', error: 'ENOENT: spawn wsemi-not-exist-zz ENOENT' }, //規則10: 未啟動(session pid為null)一律notfound, 不以錯誤字樣判定
             cwdMissing: { ok: false, errorType: 'notfound', error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir` }, //規則10、7: 同上(cwd不存在, error指明cwd)
-            envRevoked: { ok: false, errorType: 'notfound', error: 'UNKNOWN: <revoked>' }, //規則13: env原樣交Session判定, 不可讀為notfound
+            envRevoked: { ok: true, errorType: '', error: '' }, //env為已撤銷之Proxy: 非一般物件, 依K3視為未給而繼承環境變數, 子進程照常啟動(批6裁定③: isobj不拋錯而回false; 修前notfound)
             started: { ok: true, errorType: '', error: '' }, //規則10(對照): 已啟動且無請求者照常成功
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外

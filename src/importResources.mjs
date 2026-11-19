@@ -1,7 +1,7 @@
 import each from 'lodash-es/each.js'
 import map from 'lodash-es/map.js'
 import join from 'lodash-es/join.js'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import genPm from './genPm.mjs'
 import pmSeries from './pmSeries.mjs'
 import waitFun from './waitFun.mjs'
@@ -66,7 +66,7 @@ function readPathItem(v, nm, desc) {
         }
 
         //func, 選填(僅js用): 非函數視為未給(K3)
-        if (!isFunSafe(func)) {
+        if (!isfun(func)) {
             func = undefined
         }
 
@@ -167,8 +167,8 @@ function importResource({ tagName, path, attributes = {}, func }) {
         ele.src = path
         ele.addEventListener('load', () => {
             let wf
-            //進入後func才被撤銷者(函數Proxy, isfun於其上拋TypeError)視為未給(K3), 該資源照常完成, 不得於事件回呼內外拋而使Promise懸置、_paths卡在載入中
-            if (isFunSafe(func)) {
+            //進入後func才被撤銷者(函數Proxy, isfun對其回false而不拋錯)視為未給(K3), 該資源照常完成, 不得於事件回呼內外拋而使Promise懸置、_paths卡在載入中
+            if (isfun(func)) {
                 wf = waitFun(func)
             }
             else {

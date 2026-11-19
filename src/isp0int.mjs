@@ -7,6 +7,8 @@ import cint from './cint.mjs'
  * 非負整數包含0
  * 依數學定義判斷(同isint)，故isp0int(Infinity)為true、isp0int('0x10')為true；要判可用、可計算之整數(如計算類參數、opt之數值)用iseint。
  *
+ * 只收原始數字與數字字串，包裝物件new Number(5)、new String('5')為false(判斷函數只收原始值)；對任何輸入皆不拋錯
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isp0int.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料

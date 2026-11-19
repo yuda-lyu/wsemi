@@ -1,5 +1,10 @@
+import tagOf from './_tagOf.mjs'
+
+
 /**
  * 判斷是否為BigInt
+ *
+ * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取內部標籤即拋錯之物件)，判定拋錯者回傳false
  *
  * BigInt為ES2020新增之原生型別，typeof值為'bigint'，與Number(typeof 'number')互不相容。
  * 由於BigInt與Number無法直接做混合算術運算(`1n + 1`、`Math.floor(1n)` 皆擲TypeError)，
@@ -29,7 +34,7 @@
  *
  */
 function isbigint(v) {
-    let c = Object.prototype.toString.call(v)
+    let c = tagOf(v)
     return c === '[object BigInt]'
 }
 

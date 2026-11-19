@@ -2,7 +2,7 @@ import get from 'lodash-es/get.js'
 import delay from './delay.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 
 
 //fun: 必須參數(建立快取物件者), 須為函數(isfun, async generator函數為false), 無效即同步拋錯Error('invalid fun: must be a function'), 先於任何副作用(不建立實例、不輸出opt.debug警告)
@@ -186,7 +186,7 @@ let RULE_N_TRIGGER = { fn: 'cacheBd', name: 'opt.nTrigger', kind: 'eint', chk: {
 function cacheBd(fun, opt = {}) {
 
     //fun, 必須參數且建立快取物件, 無效即同步拋錯, 先於任何副作用(下方optVal於opt.debug時會輸出警告)
-    if (!isFunSafe(fun)) {
+    if (!isfun(fun)) {
         throw new Error('invalid fun: must be a function')
     }
 

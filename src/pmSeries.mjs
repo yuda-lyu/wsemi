@@ -1,7 +1,7 @@
 import drop from 'lodash-es/drop.js'
 import each from 'lodash-es/each.js'
 import genPm from './genPm.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import pmMarkHandled from './_pmMarkHandled.mjs'
 import pmReadItems from './_pmReadItems.mjs'
 
@@ -234,7 +234,7 @@ function pmSeries(rs, fun) {
     }
 
     //default fun, fun為選填(清單處理之參數), 非函數視為未給, 判定本身拋錯(如已撤銷之Proxy)亦視為未給而不同步外拋(W-15甲③)
-    if (!isFunSafe(fun)) {
+    if (!isfun(fun)) {
 
         //未給fun時rs為Promise陣列, 先行產生之Promise於進入時即標記已處理, 否則排在後面者先reject時於取用前成為未處理之rejection
         each(rs, (v) => {
@@ -247,7 +247,7 @@ function pmSeries(rs, fun) {
     }
 
     //isFunFun, 於迴圈外判定一次, 不於逐元素回呼內重複判定(lodash之isFunction對async函數每次皆經getRawTag賦值拋錯再捕捉, V8擷取之非同步堆疊隨promise鏈加深而成平方)
-    let isFunFun = isFunSafe(fun)
+    let isFunFun = isfun(fun)
 
     //ts
     let k = -1

@@ -1,5 +1,8 @@
 //R-WRAPPER-01 之輸入空間表: src內is*與cbol、cdbl、cint、cstr函數 × 原始值軸, 比較f(p)與f(Object(p))(包裝物件new String/Number/Boolean)
-//  由tmp/run01-1016/self/probe-wrapper.mjs收斂, 即帳本R-WRAPPER-01之盤點指令(以readdir自src取函數全集, 新增之is*函數自動入表)
+//  即帳本R-WRAPPER-01之盤點指令(以readdir自src取函數全集, 新增之is*函數自動入表)
+//  契約(使用者2026-11-16 W-20; dspec〈輸入參數之檢測機制〉§11 包裝物件):
+//    判斷函數(is*)只收原始值, 包裝物件一律為無效(判斷結果為false, 以判斷函數守門者依其類別之失敗通道處理);
+//    轉型函數(cbol、cdbl、cint、cstr)照舊拆包, f(Object(p))與f(p)結果相同
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
@@ -17,26 +20,20 @@ let skip = new Set(['isDev', 'isIE', 'isWindow', 'isEle', 'isEleExistByID', 'isN
 let prims = ['', ' ', 'a', 'abc', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', '2020-01-01', '2020-01-01T00:00:00', 'a@b.cc', 0, 1, -1, 1.5, -1.5, NaN, Infinity, true, false]
 
 
-//rule2Fns, R-WRAPPER-01 規則2涵蓋之函數: 值判定函數(isestr、isstr0、isnan)與cbol, 及其上之iser、isernot、isnum族、cstr、isUserName、isUserIdentify
-let rule2Fns = ['isestr', 'isstr0', 'isnan', 'cbol', 'iser', 'isernot', 'isnum', 'isint', 'isn0int', 'isn0num', 'isp0int', 'isp0num', 'cstr', 'isUserName', 'isUserIdentify']
+//converters, 轉型函數(照舊拆包): 包裝物件與其原始值之結果相同
+let converters = ['cbol', 'cdbl', 'cint', 'cstr']
 
 
-//noUnwrapPrims, 專用判斷函數isenum、iseint(R-ENUM-01 規則1, dspec 輸入參數之檢測機制 §7.1: 包裝物件不解包、一律false)對原始值為true之格, 即其f(p)與f(Object(p))之差異格
-//  isenum: 數字字串'0'、'1'、'1.5'、'-1'與數字0、1、-1、1.5、-1.5; iseint: 整數字串'0'、'1'、'-1'與整數0、1、-1('1.5'、1.5、-1.5非整數, 兩者皆false故無差異)
-let noUnwrapPrims = {
-    isenum: ['string:0', 'string:1', 'string:1.5', 'string:-1', 'number:0', 'number:1', 'number:-1', 'number:1.5', 'number:-1.5'],
-    iseint: ['string:0', 'string:1', 'string:-1', 'number:0', 'number:1', 'number:-1'],
+//judgeWrapExpect, 判斷函數(is*)對任一包裝物件之期望結果: 預設一律false; 例外為語意相反或回傳非布林者
+//  isernot: iser之反面, 包裝物件為有值(非空字串、非NaN), iser為false故isernot為true
+//  isUserName、isUserIdentify: 驗證函數, 回傳Promise, 包裝字串為無效輸入故reject(同非字串輸入之失敗通道)
+//  isUserPw: 驗證函數, 非原始字串即同步拋固定訊息(既有契約)
+let judgeWrapExpect = {
+    isernot: 'boolean:true',
+    isUserName: 'reject:string:請填入姓名',
+    isUserIdentify: 'reject:string:身份證字號非有效字串',
+    isUserPw: 'THROW:密碼非有效字串',
 }
-
-
-//rule3Cells, R-WRAPPER-01 規則3所列不保證拆包之格(設計限制): cbol(new Number(1))為false、isday與istime對包裝字串為false;
-//  及isenum、iseint對包裝物件一律false(專用判斷函數不拆包, R-ENUM-01 規則1)
-let rule3Cells = [
-    { fn: 'cbol', prim: 'number:1', resPrim: 'boolean:true', resWrap: 'boolean:false' },
-    { fn: 'isday', prim: 'string:2020-01-01', resPrim: 'boolean:true', resWrap: 'boolean:false' },
-    { fn: 'istime', prim: 'string:2020-01-01T00:00:00', resPrim: 'boolean:true', resWrap: 'boolean:false' },
-    ...Object.keys(noUnwrapPrims).flatMap((fn) => noUnwrapPrims[fn].map((prim) => ({ fn, prim, resPrim: 'boolean:true', resWrap: 'boolean:false' }))),
-]
 
 
 //show, 結果轉可比較之字串: 原始值帶typeof, 物件帶內部標籤(故回傳包裝物件本身者與回傳原始值者可區分)
@@ -75,8 +72,8 @@ function listFns() {
 }
 
 
-//diffTable, 跑全表: 回傳函數全集與f(p)、f(Object(p))結果不同之格
-async function diffTable() {
+//fullTable, 跑全表: 回傳函數全集與每格(函數 × 原始值)之f(p)、f(Object(p))結果
+async function fullTable() {
     let names = listFns()
     let rows = []
     for (let n of names) {
@@ -85,13 +82,31 @@ async function diffTable() {
         for (let p of prims) {
             let rp = await call(f, p)
             let rw = await call(f, Object(p))
-            if (rp !== rw) {
-                rows.push({ fn: n, prim: show(p), resPrim: rp, resWrap: rw })
-            }
+            rows.push({ fn: n, prim: show(p), resPrim: rp, resWrap: rw })
         }
     }
     return { names, rows }
 }
 
 
-export { skip, prims, rule2Fns, rule3Cells, show, call, listFns, diffTable }
+//wrapViolations, 逐格核對契約, 回傳違反者(空陣列表示全表符合)
+//  轉型函數: resWrap須等於resPrim; 判斷函數: resWrap須等於judgeWrapExpect(預設'boolean:false')
+function wrapViolations(rows) {
+    let vs = []
+    for (let c of rows) {
+        if (converters.indexOf(c.fn) >= 0) {
+            if (c.resWrap !== c.resPrim) {
+                vs.push({ ...c, want: c.resPrim })
+            }
+            continue
+        }
+        let want = judgeWrapExpect[c.fn] !== undefined ? judgeWrapExpect[c.fn] : 'boolean:false'
+        if (c.resWrap !== want) {
+            vs.push({ ...c, want })
+        }
+    }
+    return vs
+}
+
+
+export { skip, prims, converters, judgeWrapExpect, show, call, listFns, fullTable, wrapViolations }

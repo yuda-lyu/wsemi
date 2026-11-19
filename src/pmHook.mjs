@@ -1,6 +1,6 @@
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import isnull from './isnull.mjs'
 import isundefined from './isundefined.mjs'
 
@@ -258,10 +258,10 @@ import isundefined from './isundefined.mjs'
 function pmHook(fun, cb = () => {}) {
 
     //check, fun為必須參數(建立包裝函數者), 無效即同步拋錯而不回傳null; cb為選填, 非函數視為未給(K3)
-    if (!isFunSafe(fun)) {
+    if (!isfun(fun)) {
         throw new Error('invalid fun: must be a function')
     }
-    if (!isFunSafe(cb)) {
+    if (!isfun(cb)) {
         cb = () => {}
     }
 

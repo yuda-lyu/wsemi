@@ -10,6 +10,7 @@ import cdbl from './cdbl.mjs'
  *
  * 本函式屬定義上之「是否為整數」，isint(Infinity)、isint('0x10')、isint(2 ** 60)皆為true，不代表對計算有效；計算類函數判定整數參數請改用iseint(有效整數，可依用途限定範圍，如個數、索引、埠號、計時毫秒)，不要求整數者用isenum。
  * 依數學定義判斷，Infinity於數學上是數值，也無法說非整數，故isint(Infinity)、isint(-Infinity)為true(使用者2026-11-12定，行為不改)；要判可用、可計算之整數用iseint。
+ * 只收原始數字與數字字串，包裝物件new Number(5)、new String('5')為false(判斷函數只收原始值)；對任何輸入皆不拋錯(含已撤銷之Proxy，opt亦同，讀取即拋錯之opt視為未給)。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isint.test.mjs Github}
  * @memberOf wsemi
@@ -40,8 +41,14 @@ import cdbl from './cdbl.mjs'
  */
 function isint(v, opt = {}) {
 
-    //useLimitSafe
-    let useLimitSafe = get(opt, 'useLimitSafe', null)
+    //useLimitSafe, opt為已撤銷之Proxy等讀取即拋錯者視為未給(判斷函數不拋錯)
+    let useLimitSafe = null
+    try {
+        useLimitSafe = get(opt, 'useLimitSafe', null)
+    }
+    catch (err) {
+        useLimitSafe = null
+    }
     if (!isbol(useLimitSafe)) {
         useLimitSafe = false
     }

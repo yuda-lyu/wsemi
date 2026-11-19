@@ -620,6 +620,16 @@ describe(`domDragPointer`, function() {
         assert.strict.deepStrictEqual(t.full[3][1].reason, 'buttonsLost')
     })
 
+    it(`should treat a wrapper object in buttons as a non-number (synthetic event, still held; W-20: isnbr only accepts primitives) and keep dragging`, function() {
+        //W-20: isContactLost原以lodash isNumber判buttons, 包裝數字為true而依其值判定(new Number(0)即接觸消失); 改isnbr後包裝物件視為非數字(合成事件), 視為仍按住
+        let t = mk({})
+        t.ele.dispatch('pointerdown', md(130))
+        t.win.dispatch('pointermove', { ...mm(200), buttons: new Number(0) }) // eslint-disable-line no-new-wrappers
+        t.win.dispatch('pointermove', { ...mm(210), buttons: 0 })
+        assert.strict.deepStrictEqual(t.seq, ['press:130', 'drag:200', 'free'])
+        assert.strict.deepStrictEqual(t.full[2][1].reason, 'buttonsLost')
+    })
+
     it(`should keep dragging with the pen eraser and free when its contact bit is gone`, function() {
         let t = mk({})
         t.ele.dispatch('pointerdown', { ...td(9, 130, true, 'pen'), button: 5, buttons: 32 })

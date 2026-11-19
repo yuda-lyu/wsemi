@@ -1,10 +1,12 @@
 import toFinite from 'lodash-es/toFinite.js'
 import isnum from './isnum.mjs'
+import unbox from './_unbox.mjs'
 
 
 /**
  * 數字或字串轉浮點數
  * 若輸入非數字則回傳0
+ * 轉型函數照舊拆包: 包裝物件new Number(1)、new String('1')先取出原始值再轉換(判斷函數isnum只收原始值，轉型函數不受影響)
  * 轉換結果恆為有限數(可用、可計算之數值): Infinity於數學上是數值(isnum為true)故屬可轉換者, 但非可計算之值, 故±Infinity(含'Infinity'、'1e400'等超出浮點範圍之字串)夾為±Number.MAX_VALUE(1.7976931348623157e+308), 不回Infinity亦不回0
  * 要排除Infinity者(如計算類參數), 先以isenum(有效數字)或iseint(有效整數)判斷, 不要以cdbl之結果判斷
  *
@@ -28,6 +30,9 @@ import isnum from './isnum.mjs'
  *
  */
 function cdbl(v) {
+
+    //拆包, 轉型函數照舊轉換包裝物件(isnum只收原始值)
+    v = unbox(v)
 
     //check
     if (!isnum(v)) {

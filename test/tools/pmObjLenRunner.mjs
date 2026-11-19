@@ -243,7 +243,7 @@ let cases = {
         }
     },
 
-    //三個函數: 容器之Symbol.toStringTag讀取即拋錯(isobj、isarr之判定即拋); pmChain以Array.isArray判定而不讀標籤, 為not an array
+    //三個函數: 容器之Symbol.toStringTag讀取即拋錯(批6裁定③後isobj、isarr對其不拋錯而回false, 故pmMap、pmSeries以固定字串'rs is not an array or object' reject, 修前為該錯誤本身); pmChain以Array.isArray判定而不讀標籤, 為not an array
     tagGetterContainer: async () => {
         let e = new Error('tag boom')
         let mk = () => ({

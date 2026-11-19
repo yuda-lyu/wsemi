@@ -109,7 +109,7 @@ let SPEC = {
  * 4. 數字以Number.isSafeInteger判定; 字串轉換後須無精度遺失(見下列〈用法〉第3點);
  * 5. BigInt一律false(JS中BigInt與Number為互不相容之算術域)。
  *
- * 與isint之差異: isint屬定義上之「是否為整數」, 先經cdbl、lodash isInteger, 故isint(Infinity)為true、isint('0x10')為true、isint(2 ** 60)為true、isint(new Number(5))為true;
+ * 與isint之差異: isint屬定義上之「是否為整數」, 先經cdbl、lodash isInteger, 故isint(Infinity)為true、isint('0x10')為true、isint(2 ** 60)為true(判斷函數只收原始值，isint(new Number(5))與iseint一致為false);
  * iseint一律不收這些(Infinity、'0x10'、非安全整數、包裝物件皆false)。計算類函數判定整數參數請用iseint, 不要用isint、ispint、isp0int、cint、parseInt。
  * 不要求整數者請用isenum。
  *

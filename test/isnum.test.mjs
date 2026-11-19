@@ -178,17 +178,19 @@ describe(`isnum`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isnum 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isnum 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
-    it(`should return false when input new Number(NaN)`, function() {
-        //R-WRAPPER-01 規則2: isnum族隨isnan拆包而一致, 同isnum(NaN)為false(JSDoc「只有數字(NaN除外)」)
-        assert.strict.deepStrictEqual(isnum(new Number(NaN)), false)
+    it(`should return false for the wrapper of every primitive that gives true (the primitive itself stays true)`, function() {
+        //W-20(dspec §11 包裝物件): new String、new Number、new Boolean判為false; 修前此10格之包裝物件為true
+        for (let p of ['0', '1', '1.5', '-1', 0, 1, -1, 1.5, -1.5, Infinity]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isnum(p), isnum(Object(p))], [typeof p, String(p), true, false])
+        }
     })
 
-    it(`should return true when input new Number(1.5) and new String('1.5')`, function() {
-        //R-WRAPPER-01 規則1: 包裝物件視同其型別(isnum為定義上之是否為數字, new Number(3)為數字; 計算類函數之檢測改用isenum, 不收包裝物件); 規則2: 依其原始值判定
-        assert.strict.deepStrictEqual(isnum(new Number(1.5)), true)
-        assert.strict.deepStrictEqual(isnum(new String('1.5')), true)
+    it(`should return false for the wrapper of every primitive on the whole axis`, function() {
+        for (let p of ['', ' ', 'a', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', 0, 1, -1, 1.5, NaN, Infinity, true, false]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isnum(Object(p))], [typeof p, String(p), false])
+        }
     })
 
 })

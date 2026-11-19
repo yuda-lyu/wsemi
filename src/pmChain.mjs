@@ -1,6 +1,6 @@
 import genPm from './genPm.mjs'
 import pmReadItems from './_pmReadItems.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 
 
 /**
@@ -145,8 +145,8 @@ function pmChain(pms, initial = null) {
             return pm
         }
         return rd.items.reduce((pm, v) => {
-            //元素以isFunSafe判定(同pmMap、pmSeries、pmQueue之判準): 非函數(含async generator函數、已撤銷之函數Proxy)視為未給, 略過(then(undefined)原樣傳遞前一結果)
-            return pm.then(isFunSafe(v) ? v : undefined)
+            //元素以isfun判定(同pmMap、pmSeries、pmQueue之判準): 非函數(含async generator函數、已撤銷之函數Proxy)視為未給, 略過(then(undefined)原樣傳遞前一結果)
+            return pm.then(isfun(v) ? v : undefined)
         }, Promise.resolve(initial))
     }
     catch (err) {

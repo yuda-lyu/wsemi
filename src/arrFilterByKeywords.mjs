@@ -11,7 +11,7 @@ let RE_SEP = new RegExp('[ ' + String.fromCharCode(0x3000) + ']')
  * 對arr陣列內各字串進行關鍵字計算，計算是否含有關鍵字與程度，多關鍵字用空白區隔，必要關鍵字可於字首添加「+」，不要關鍵字可於字首添加「-」
  *
  * 規則(使用者2026-11-14裁定)：
- * 結果筆數恆等於arr之長度(只有arr非陣列或為空陣列[]時回傳[])；arr之元素非字串(空位、null、undefined、數字、NaN、布林、函數、Symbol、物件、陣列等)者該筆為{ hasKeyword: false, weight: 0 }，String包裝物件視同字串；
+ * 結果筆數恆等於arr之長度(只有arr非陣列或為空陣列[]時回傳[])；arr之元素非字串(空位、null、undefined、數字、NaN、布林、函數、Symbol、物件、陣列等)者該筆為{ hasKeyword: false, weight: 0 }，String包裝物件亦非字串而同為{ hasKeyword: false, weight: 0 }(判斷函數只收原始值，修前視同字串)；
  * keywords為字串時以半形空白或全形空白(U+3000)分隔出各關鍵字，為陣列時各元素為一個關鍵字(關鍵字內可含空白)；陣列內之數字(與布林)以其字串形式當作一般關鍵字比對(不解析+、-前綴)，null、undefined、物件、陣列、函數、Symbol等元素略過；
  * 空白關鍵字(含只有+或-之前綴)先剔除，重複之關鍵字去重後再計算；keywords無效(''、null、數字、[]、['']、[null]、[{}]等)或剔除後無任何關鍵字時，回傳與arr同筆數且全為{ hasKeyword: false, weight: 0 }；
  * 不要關鍵字(-x)：含任一不要關鍵字者不命中；必要關鍵字(+a)：須含全部必要關鍵字才命中；其餘依一般關鍵字判斷：
@@ -308,7 +308,7 @@ function arrFilterByKeywords(arr, keywords) {
         }
     }
 
-    //rs, 結果筆數恆等於arr之長度(以索引迴圈, 空位亦佔一筆); 非字串元素不匹配, String包裝物件視同字串
+    //rs, 結果筆數恆等於arr之長度(以索引迴圈, 空位亦佔一筆); 非字串元素(含String包裝物件, 判斷函數只收原始值)不匹配
     let rs = []
     for (let i = 0; i < arr.length; i++) {
         let c = arr[i]

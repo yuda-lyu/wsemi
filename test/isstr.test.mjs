@@ -1,6 +1,6 @@
 import assert from 'assert'
 import isstr from '../src/isstr.mjs'
-import { rule2Fns, rule3Cells, diffTable } from './tools/wrapperCases.mjs'
+import { converters, judgeWrapExpect, fullTable, wrapViolations } from './tools/wrapperCases.mjs'
 
 
 describe(`isstr`, function() {
@@ -164,53 +164,66 @@ describe(`isstr`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isstr 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isstr 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
-    it(`should return true when input new String('') and new String('a')`, function() {
-        //R-WRAPPER-01 規則1: isstr依內部標籤判型, 包裝物件視同其型別(既有, 下游依賴new String('boxed')為有效字串)
-        assert.strict.deepStrictEqual(isstr(new String('')), true)
-        assert.strict.deepStrictEqual(isstr(new String('a')), true)
+    it(`should return false for the wrapper of every primitive that gives true (the primitive itself stays true)`, function() {
+        //W-20(dspec §11 包裝物件): new String、new Number、new Boolean判為false; 修前此16格之包裝物件為true
+        for (let p of ['', ' ', 'a', 'abc', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', 'TRUE', '2020-01-01', '2020-01-01T00:00:00', '2020-01-01T00:00:00+08:00', 'a@b.cc']) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isstr(p), isstr(Object(p))], [typeof p, String(p), true, false])
+        }
     })
 
-    it(`should return false when input new Number(1) and new Boolean(true)`, function() {
-        //R-WRAPPER-01 規則1: 包裝物件依內部標籤視同其型別, 數字與布林之包裝物件非字串
-        assert.strict.deepStrictEqual(isstr(new Number(1)), false)
-        assert.strict.deepStrictEqual(isstr(new Boolean(true)), false)
+    it(`should return false for the wrapper of every primitive on the whole axis`, function() {
+        for (let p of ['', ' ', 'a', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', 0, 1, -1, 1.5, NaN, Infinity, true, false]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isstr(Object(p))], [typeof p, String(p), false])
+        }
+    })
+
+    it(`should return false when input an object spoofing Symbol.toStringTag as String (typeof based, not tag based)`, function() {
+        assert.strict.deepStrictEqual(isstr({ [Symbol.toStringTag]: 'String' }), false)
     })
 
 })
 
 
-describe(`包裝物件全表 f(p) 與 f(Object(p))(R-WRAPPER-01)`, function() {
+describe(`包裝物件全表 f(p) 與 f(Object(p))(R-WRAPPER-01, W-20: 判斷函數只收原始值, 轉型函數照舊拆包)`, function() {
 
     //全表: src內is*與cbol、cdbl、cint、cstr(扣除環境與DOM、Blob、Promise判斷) × 23個原始值, 見tools/wrapperCases.mjs
     let tb = null
     before(async function() {
-        tb = await diffTable()
+        tb = await fullTable()
     })
 
-    //key, 格之排序鍵
-    let key = (c) => `${c.fn}|${c.prim}`
-    let sortCells = (cs) => [...cs].sort((a, b) => key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)
-
-    it(`should include every function covered by R-WRAPPER-01 規則2 in the table`, function() {
-        //R-WRAPPER-01 規則2: 值判定函數與cbol, 及其上之iser、isernot、isnum族、cstr、isUserName、isUserIdentify皆須入表受檢
-        let miss = rule2Fns.filter((n) => tb.names.indexOf(n) < 0)
+    it(`should include every judge function (is*) and every converter in the table`, function() {
+        //W-20: 判斷函數與轉型函數皆須入表受檢; 新增之is*函數自動入表
+        let must = ['isstr', 'isestr', 'isstr0', 'isbol', 'isnbr', 'isnan', 'isnum', 'isint', 'ispint', 'isp0int', 'isnint', 'isn0int', 'isnnum', 'isn0num', 'ispnum', 'isp0num', 'isenum', 'iseint', 'iser', 'isernot', 'isDate', 'isday', 'istime', 'istimems', 'istimeTZ', 'istimemsTZ', 'isUserName', 'isUserIdentify', 'isUserPw', 'isEmail', 'isStrHasSpace', ...converters]
+        let miss = must.filter((n) => tb.names.indexOf(n) < 0)
         assert.strict.deepStrictEqual(miss, [])
+        assert.strict.deepStrictEqual(tb.rows.length, tb.names.length * 23)
     })
 
-    it(`should give f(p) === f(Object(p)) for every function covered by R-WRAPPER-01 規則2 except cells listed in 規則3`, function() {
-        //R-WRAPPER-01 規則2: 值判定函數對包裝物件拆包後判定, 其上之函數隨之一致; 規則3: cbol(new Number(1))為false屬設計限制
-        let ks3 = rule3Cells.map(key)
-        let diffs = tb.rows.filter((c) => rule2Fns.indexOf(c.fn) >= 0 && ks3.indexOf(key(c)) < 0)
-        assert.strict.deepStrictEqual(diffs, [])
+    it(`should give false for the wrapper object of every primitive in every judge function (is*), except the listed inverse or Promise or throwing validators`, function() {
+        //W-20(使用者2026-11-16; dspec §11 包裝物件): 判斷函數一律只收原始值, new String、new Number、new Boolean為無效, 判斷結果為false;
+        //  例外只有語意相反者(isernot為true)與驗證函數(isUserName、isUserIdentify以reject、isUserPw以拋固定訊息回報無效)
+        let judgeRows = tb.rows.filter((c) => converters.indexOf(c.fn) < 0)
+        let vs = wrapViolations(judgeRows)
+        assert.strict.deepStrictEqual(vs, [])
+        assert.strict.deepStrictEqual(Object.keys(judgeWrapExpect).sort(), ['isUserIdentify', 'isUserName', 'isUserPw', 'isernot'])
     })
 
-    it(`should differ exactly at the cells listed in R-WRAPPER-01 規則3 over the whole table`, function() {
-        //R-WRAPPER-01 規則3: 其餘函數不保證拆包, 全表差異只容許cbol(new Number(1))、isday、istime之包裝字串3格(帳本盤點指令之判準);
-        //另isenum、iseint(R-ENUM-01 規則1, 專用判斷函數包裝物件不解包)對原始值為true之15格(isenum 9、iseint 6)
-        assert.strict.deepStrictEqual(sortCells(tb.rows), sortCells(rule3Cells))
-        assert.strict.deepStrictEqual(rule3Cells.length, 3 + 9 + 6)
+    it(`should give f(Object(p)) === f(p) for every converter (cbol, cdbl, cint, cstr): converters still unwrap wrapper objects`, function() {
+        //W-20: 轉型函數照舊拆包, 轉型本即盡力轉成可用之值
+        let rows = tb.rows.filter((c) => converters.indexOf(c.fn) >= 0)
+        assert.strict.deepStrictEqual(rows.length, converters.length * 23)
+        assert.strict.deepStrictEqual(wrapViolations(rows), [])
+    })
+
+    it(`should have a primitive axis that distinguishes the converters (cdbl, cint, cstr, cbol give different results across the axis)`, function() {
+        //鑑別力前提: 若各原始值對轉型函數結果皆相同, 上案之f(Object(p)) === f(p)測不到拆包與否
+        for (let n of converters) {
+            let rs = new Set(tb.rows.filter((c) => c.fn === n).map((c) => c.resPrim))
+            assert.strict.ok(rs.size >= 2, n)
+        }
     })
 
 })

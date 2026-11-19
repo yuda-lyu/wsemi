@@ -78,19 +78,16 @@ describe(`isUserName`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isUserName 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isUserName 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
     //settle, 取Promise之落定結果字串
     let settle = (pm) => pm.then(() => 'resolve', (e) => `reject:${e}`)
 
-    it(`should reject '請填入姓名' when input new String('')`, async function() {
-        //R-WRAPPER-01 規則2: isUserName隨isestr拆包而一致, 同isUserName('')為reject'請填入姓名'
+    it(`should reject '請填入姓名' when input new String('') or new String('我的名稱') (isestr only accepts primitive strings)`, async function() {
+        //W-20: isUserName以isestr守門, 包裝字串為無效輸入, 同非字串之失敗通道(reject); 修前new String('我的名稱')為resolve
+        assert.strict.deepStrictEqual(await settle(isUserName('我的名稱')), 'resolve')
+        assert.strict.deepStrictEqual(await settle(isUserName(new String('我的名稱'))), 'reject:請填入姓名')
         assert.strict.deepStrictEqual(await settle(isUserName(new String(''))), 'reject:請填入姓名')
-    })
-
-    it(`should resolve when input new String('我的名稱')`, async function() {
-        //R-WRAPPER-01 規則1: 包裝物件視同字串, 依其原始值判定(同isUserName('我的名稱')為resolve)
-        assert.strict.deepStrictEqual(await settle(isUserName(new String('我的名稱'))), 'resolve')
     })
 
 })

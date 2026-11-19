@@ -1,39 +1,25 @@
-// import isNaN from 'lodash-es/isNaN.js'
-
-
 /**
  * 判斷是否為NaN
+ *
+ * 只收原始值NaN，包裝物件new Number(NaN)為false(判斷函數只收原始值)；對任何輸入皆不拋錯(不呼叫被檢測值之任何方法)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnan.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
- * @returns {Boolean} 回傳判斷布林值，包裝物件依其原始值判定
+ * @returns {Boolean} 回傳判斷布林值
  * @example
  *
  * console.log(isnan(NaN))
  * // => true
  *
+ * console.log(isnan(new Number(NaN)))
+ * // => false (包裝物件, 判斷函數只收原始值)
+ *
  */
 function isnan(v) {
 
-    // return isNaN(v)
-    if (v !== v) {
-        return true
-    }
-
-    //包裝物件(new Number(NaN))以Number.prototype.valueOf取原始值, 非Number物件即拋錯而為false
-    //  不呼叫物件自身之valueOf、不以內部標籤判定, 防一般物件偽裝
-    if (v !== null && typeof v === 'object') {
-        try {
-            let p = Number.prototype.valueOf.call(v)
-            return Number.isNaN(p)
-        }
-        catch (err) {
-            return false
-        }
-    }
-
-    return false
+    //Number.isNaN不轉型, 只有原始值NaN為true; 物件(含包裝物件new Number(NaN)、已撤銷之Proxy)一律false, 不呼叫其任何方法、不觸發任何陷阱
+    return Number.isNaN(v)
 }
 
 

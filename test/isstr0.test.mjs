@@ -163,17 +163,19 @@ describe(`isstr0`, function() {
 
 
 /* eslint-disable no-new-wrappers */ //本段刻意建立包裝物件以驗R-WRAPPER-01
-describe(`isstr0 包裝物件(R-WRAPPER-01)`, function() {
+describe(`isstr0 包裝物件(R-WRAPPER-01, W-20: 判斷函數只收原始值)`, function() {
 
-    it(`should return true when input new String('')`, function() {
-        //R-WRAPPER-01 規則2: isstr0對包裝物件拆包後判定(以v.length === 0); JSDoc「包裝物件依其原始值判定」, 同isstr0('')為true
-        assert.strict.deepStrictEqual(isstr0(new String('')), true)
+    it(`should return false for the wrapper of every primitive that gives true (the primitive itself stays true)`, function() {
+        //W-20(dspec §11 包裝物件): new String、new Number、new Boolean判為false; 修前此1格之包裝物件為true
+        for (let p of ['']) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isstr0(p), isstr0(Object(p))], [typeof p, String(p), true, false])
+        }
     })
 
-    it(`should return false when input new String('a') and new String(' ')`, function() {
-        //R-WRAPPER-01 規則2: 依其原始值判定, 非空之包裝字串不為空字串(同isstr0('a')、isstr0(' '))
-        assert.strict.deepStrictEqual(isstr0(new String('a')), false)
-        assert.strict.deepStrictEqual(isstr0(new String(' ')), false)
+    it(`should return false for the wrapper of every primitive on the whole axis`, function() {
+        for (let p of ['', ' ', 'a', '0', '1', '1.5', '-1', 'NaN', 'true', 'false', 0, 1, -1, 1.5, NaN, Infinity, true, false]) {
+            assert.strict.deepStrictEqual([typeof p, String(p), isstr0(Object(p))], [typeof p, String(p), false])
+        }
     })
 
 })

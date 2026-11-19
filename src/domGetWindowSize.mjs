@@ -1,8 +1,8 @@
 import get from 'lodash-es/get.js'
 import filter from 'lodash-es/filter.js'
 import min from 'lodash-es/min.js'
-import isNumber from 'lodash-es/isNumber.js'
 import getGlobal from './getGlobal.mjs'
+import isnbr from './isnbr.mjs'
 
 
 /**
@@ -33,7 +33,7 @@ function domGetWindowSize() {
         let w2 = get(g, 'document.documentElement.clientWidth')
         let w3 = get(g, 'document.body.clientWidth')
         let ws = [w1, w2, w3]
-        ws = filter(ws, isNumber)
+        ws = filter(ws, isnbr)
         let w = min(ws)
         return w
     }
@@ -44,7 +44,7 @@ function domGetWindowSize() {
         let h2 = get(g, 'document.documentElement.clientHeight')
         let h3 = get(g, 'document.body.clientHeight')
         let hs = [h1, h2, h3]
-        hs = filter(hs, isNumber)
+        hs = filter(hs, isnbr)
         let h = min(hs)
         return h
     }

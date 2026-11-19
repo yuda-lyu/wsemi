@@ -1,4 +1,4 @@
-import isNumber from 'lodash-es/isNumber.js'
+import isnbr from './isnbr.mjs'
 import cstr from './cstr.mjs'
 import str2hint from './str2hint.mjs'
 
@@ -75,7 +75,7 @@ function pseudoRandom(seed = 'start1', returnFun = false) {
 
     /* initializes mt[N] with a seed */
     let init_genrand = (s) => {
-        if (isNumber(s)) {
+        if (isnbr(s)) {
             mt[0] = s >>> 0
         }
         else {

@@ -1027,11 +1027,13 @@ describe(`外審補案(ws430c2): 裁定表「其餘不變」之邊界與檢查�
         return a
     }
 
-    it(`〈三-9〉(外審T2、T3) should keep accepting a single String/Number wrapper as ar or strkeys, and comparing BigInt and Symbol candidates as strings (unchanged)`, function() {
-        let one = { ratings: [{ target: 'abc', rating: 1 }], bestMatch: { target: 'abc', rating: 1 }, bestMatchIndex: 0 }
-        assert.strict.deepStrictEqual(strFindSimilar(new String('abc'), ['abc']), one) // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(strFindSimilar('abc', new String('abc')), one) // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(strFindSimilar(new Number(12), ['12']).ratings, [{ target: '12', rating: 1 }]) // eslint-disable-line no-new-wrappers
+    it(`〈三-9〉(外審T2、T3) should treat a single String/Number wrapper as an invalid ar or strkeys (W-20: wrapper objects are invalid, same empty result as undefined), and keep comparing BigInt and Symbol candidates as strings (unchanged)`, function() {
+        //W-20(判斷函數只收原始值): 修前單一String/Number包裝物件視同字串而比對得one; 修後為無效輸入, 同未給之空結果
+        let none = { ratings: [], bestMatch: null, bestMatchIndex: -1 }
+        assert.strict.deepStrictEqual(strFindSimilar('abc', undefined), none)
+        assert.strict.deepStrictEqual(strFindSimilar(new String('abc'), ['abc']), none) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(strFindSimilar('abc', new String('abc')), none) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(strFindSimilar(new Number(12), ['12']), none) // eslint-disable-line no-new-wrappers
         assert.strict.deepStrictEqual(strFindSimilar('123', [123n]).ratings, [{ target: '123', rating: 1 }])
         assert.strict.deepStrictEqual(strFindSimilar('Symbol(x)', [Symbol('x')]).ratings, [{ target: 'Symbol(x)', rating: 1 }])
     })

@@ -180,10 +180,16 @@ describe(`getFileType 不分大小寫(R-FILETYPE-01)`, function() {
         assert.strict.deepStrictEqual(getFileType('Docx').exec, 'word')
     })
 
-    it(`包裝字串物件(new String)同原始字串`, function() {
-        assert.strict.strictEqual(getFileType(new String('html')), getFileType('html')) // eslint-disable-line no-new-wrappers
-        assert.strict.strictEqual(getFileType(new String('JPG')), getFileType('jpg')) // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(getFileType(new String('nonexist')), null) // eslint-disable-line no-new-wrappers
+    it(`包裝字串物件(new String)為無效輸入, 同非有效字串回全表(W-20: 判斷函數只收原始值; 修前同原始字串)`, function() {
+        let all = getFileType()
+        assert.strict.ok(Array.isArray(all) && all.length > 100)
+        assert.strict.strictEqual(getFileType(new String('html')), all) // eslint-disable-line no-new-wrappers
+        assert.strict.strictEqual(getFileType(new String('JPG')), all) // eslint-disable-line no-new-wrappers
+        assert.strict.strictEqual(getFileType(new String('nonexist')), all) // eslint-disable-line no-new-wrappers
+        assert.strict.strictEqual(getFileType(5), all)
+        //原始字串之行為不變
+        assert.strict.notStrictEqual(getFileType('html'), all)
+        assert.strict.deepStrictEqual(getFileType('nonexist'), null)
     })
 
     it(`回傳列之 name 保持表內原樣`, function() {

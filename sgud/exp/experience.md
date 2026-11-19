@@ -199,3 +199,13 @@
 - **修好判斷函數不代表下游轉換也正確**: `istimeTZ` 改接受空窗內之時刻後,`timeTZ2hour` 等仍以本機時間解析去除時區之字串,轉出差 1 小時(修前此類輸入回 `''`).裁定「不改」所依之前提(「改為正常轉換」)不成立時,照裁定不改並列待裁,不自行擴大修改範圍.
 - **外審抓到的是「裁定未列之種類」**: terra 15 條中 6 條為「裁定表未列之輸入種類被順手改掉」(單獨之包裝物件、BigInt／Symbol 候選、BigInt 鍵、無效時區後綴),另 2 條為以 lodash 改寫成原生寫法時引入之差異(呼叫輸入陣列之 `slice`／`reduce`／`map` 可被遮蔽;檢查與使用為兩次讀取).改寫結構函數時:輸入陣列一律以索引讀一次存快照、只操作快照;依型別分流時先列「修前每種型別之結果」再對照裁定逐種決定,裁定未列者以修前副本實測保留.
 - **lodash `range(a, b)` 於 a > b 時反向**: `arrAt` 修前 `iend` 小於 `istart` 並非一律回 `[]`(`iend === istart - 1` 為 `[]`、更小時反向取得),紅測之案若選 `iend === istart - 2` 會修前亦綠;以修前副本實測後改用差距 3 以上之案.
+
+
+## 第 492 項第 8 批 ws492i(判斷與轉型,2026-11-19)
+
+- **把底層判型由 `Object.prototype.toString.call` 改 `typeof` 後,既有測試之「靠拋錯進入 catch」會整批失效**: `timeTZ2past` 等 4 函數之測試以「`tNow` 之 `Symbol.toStringTag` getter 拋出指定值」逼 `isestr`(經 `Object.prototype.toString.call`)拋錯、進入 `catch` 驗 `_errToStr`;`typeof` 不觸及物件,該 `catch` 於呼叫端給定之值已不可達,28 案假紅.改法不是補一個新的拋錯入口,而是改斷言「函數不讀物件內容(getter 計數為 0)、結果同非字串 `tNow`」.凡測試以「讓某底層判斷函數拋錯」為手段者,底層判型改寫時須一併盤點(Grep 測試中之 `Symbol.toStringTag`、`Proxy.revocable`、`get [Symbol`).
+- **判斷函數不拋錯會連動「以拋錯作為失敗訊號」之呼叫端**: 已撤銷之 Proxy 原使 `isobj`／`isstr`／`isfun` 拋 `TypeError`,exec 系(`execCli`、`execCliSession`、`execCliJsonRpc`、`execCliJsonFile`、`execProcess`)與 `pmMap`／`pmSeries`、`fsMergeFiles` 恰以該拋錯為「不可讀」之偵測,修後改視為非預期型別而依 K3 視為未給(照常執行)或以固定字串回報.這是裁定③之必然後果,不是缺陷;但屬行為變更,須列入破壞性變更與報告之待裁示.判別法: 全套跑完後,失敗案之共同點為「`<revoked>`」字樣者即此類.
+- **變異證明須含「函數變異 × 全部相關測試檔」**: 首輪對轉型函數之變異(`cint` 去拆包)存活,因變異只配了 `cint` 自己之測試檔,而逐格鎖定拆包之測試在 `isstr.test.mjs`〈包裝物件全表〉;配測試檔時把全表檔一併納入,並對每個轉型函數補自有之包裝物件案.另兩個存活者為等價變異(`isstr0` 於 `isstr` 守門後之 `instanceof String` 分支不可達;`pmThrottle` 入口以 `typeof` 取代 `isfun` 時,執行點之 `isfun` 再驗得同一結果)——判斷存活者時先查是否可達與是否有第二道檢查.
+- **修前紅用「HEAD 之 `src` ＋現行測試」逐檔跑**(`git archive HEAD src` 解到 `./tmp/`,測試檔與 `test/tools` 複製過去,`node mocha.js --no-parallel <檔>`,以 `node_modules` 逐層向上解析不需連結);新增之內部模組(`_unbox`)於 HEAD 為載入失敗亦算紅,另 1 檔(`isintMathDefinition`)為「核實不改」故修前亦綠,屬預期,報告須分開寫.
+- **下游盤點之「固定舊行為」不能只 Grep `new String(`**: 建構式字面於 `src` 命中 0 行,真正受影響者是 `isestr(opt.*)` 守門後再往下走之分支(`w-orm-*` 建構子、`w-dispatch-ai` 之旗標與金鑰篩選),需沿資料流追;兩個子代理(一個專查 `cbol`／`isDate`、一個專查包裝物件與固定舊行為)各約 6~24 分鐘,與實作並行以背景方式派出、以檔案存在輪詢.
+- **`Number.isNaN(v)` 取代 `v !== v`**: 專案之 eslint `no-self-compare` 會擋後者;前者不轉型,對包裝物件與已撤銷之 Proxy 皆為 `false`、不觸發陷阱.

@@ -3,12 +3,12 @@ import map from 'lodash-es/map.js'
 import join from 'lodash-es/join.js'
 import size from 'lodash-es/size.js'
 import keys from 'lodash-es/keys.js'
-import isNumber from 'lodash-es/isNumber.js'
 import isSymbol from 'lodash-es/isSymbol.js'
 import cloneDeep from 'lodash-es/cloneDeep.js'
 import isestr from './isestr.mjs'
 import iseobj from './iseobj.mjs'
 import isnum from './isnum.mjs'
+import isnbr from './isnbr.mjs'
 import isobj from './isobj.mjs'
 import isarr from './isarr.mjs'
 import cstr from './cstr.mjs'
@@ -708,7 +708,7 @@ function flattenToConn(data, opt = {}) {
         }
 
         //bindBelong
-        if (isestr(key) || isNumber(key)) {
+        if (isestr(key) || isnbr(key)) {
             node[bindBelong] = key
         }
 

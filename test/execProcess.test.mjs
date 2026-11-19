@@ -663,7 +663,8 @@ describe(`execProcess`, function() {
             let d = await run(nodeBin, ['-e', '1', 'x\u0000y'], {})
             let e = await run(nodeBin, ['-e', '1', undefined], {})
             let f = await run('a\u0000b', ['-e', '1'], {})
-            let g = await run(nodeBin, ['-e', '1'], { cwd: new String(process.cwd()) }) // eslint-disable-line no-new-wrappers -- 包裝字串之cwd不拆包, node拒收而同步拋錯
+            let g = await run(nodeBin, ['-e', '1'], { cwd: 'a\u0000b' }) //含NUL之cwd為非空字串而交node, node拒收(ERR_INVALID_ARG_VALUE)而同步拋錯(同步無法啟動; W-20前以包裝字串cwd觸發, 現包裝字串cwd非原始字串而視為未給)
+            let h = await run(nodeBin, ['-e', '1'], { cwd: new String(process.cwd()) }) // eslint-disable-line no-new-wrappers -- W-20: 包裝字串非原始字串, cwd視為未給(用預設), 子程序照常啟動
             let one = (reason) => [{ type: 'settle', ok: false, reason, code: null }]
             assert.strict.deepStrictEqual([a.r.s, a.tr.events], ['reject', one('args')])
             assert.strict.deepStrictEqual([b.r.s, b.tr.events], ['reject', one('prog')])
@@ -672,6 +673,8 @@ describe(`execProcess`, function() {
             assert.strict.deepStrictEqual([e.r.s, e.tr.events], ['reject', one('args')])
             assert.strict.deepStrictEqual([f.r.s, f.tr.events], ['reject', one('prog')])
             assert.strict.deepStrictEqual([g.r.s, g.tr.events], ['reject', one('spawn')])
+            //對照: 包裝字串之cwd視為未給, 不是無效輸入, 子程序照常啟動(事件含spawn)
+            assert.strict.deepStrictEqual([h.r.s, h.tr.types()], ['resolve', ['spawn', 'settle']])
         })
 
         it(`should notify spawn with a null pid and settle once with reason spawn when the program cannot be started, without a second settle from the following close`, async function() {
@@ -820,7 +823,7 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             procArgsRevoked: { s: 'reject', v: 'invalid args: must be an array or a string' }, //規則13、5: args判型拋錯視同型別不符, reject且不帶值(ws492f: V19格式)
             procProgRevoked: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //規則13: ws492f起prog須為原始字串, 已撤銷之Proxy(typeof為object)即無效, 不再觸及其內容(原為'spawn[UNKNOWN]:\n<訊息>')
             procProgRevokedAuto: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //同上, codeCmd為auto亦同(且先於取系統字碼頁之chcp)
-            procCbStdoutRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 回調於入口判型一次, 不可讀者為opt不可讀
+            procCbStdoutRevoked: { s: 'resolve', v: 'x' }, //cbStdout為已撤銷之函數Proxy(批6裁定③: isfun對其回false而不拋錯): 非函數, 依K3視為未給而照常執行(修前判型時拋TypeError, 以opt不可讀reject)
             uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外

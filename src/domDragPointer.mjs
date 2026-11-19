@@ -1,6 +1,6 @@
 import get from 'lodash-es/get.js'
-import isNumber from 'lodash-es/isNumber.js'
 import isbol from './isbol.mjs'
+import isnbr from './isnbr.mjs'
 import isfun from './isfun.mjs'
 import evem from './evem.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
@@ -165,7 +165,7 @@ function domDragPointer(ele, opt = {}) {
 
     //isContactLost, 接觸位元(筆尖或主鍵為1、橡皮擦端為32)是否已消失; buttons非數字(合成事件)視為仍按住
     function isContactLost(e) {
-        if (!isNumber(e.buttons)) {
+        if (!isnbr(e.buttons)) {
             return false
         }
         return (e.buttons & 33) === 0

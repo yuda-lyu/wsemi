@@ -5,6 +5,8 @@ import iser from './iser.mjs'
 /**
  * 判斷是否為有效陣列，長度至少大於等於1，各元素至少皆為有效
  *
+ * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取長度或元素即拋錯者)，判定拋錯者回傳false
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isearr.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
@@ -25,16 +27,24 @@ function isearr(v) {
         return false
     }
 
-    //check length
-    if (v.length === 0) {
-        return false
-    }
+    //讀取length與v[0]可能觸發Proxy之陷阱或存取器而拋錯, 無法判定者回傳false
+    try {
 
-    //check length=1
-    if (v.length === 1) {
-        if (iser(v[0])) {
+        //check length
+        if (v.length === 0) {
             return false
         }
+
+        //check length=1
+        if (v.length === 1) {
+            if (iser(v[0])) {
+                return false
+            }
+        }
+
+    }
+    catch (err) {
+        return false
     }
 
     return true

@@ -525,6 +525,25 @@ describe(`domDrag`, function() {
         assert.strict.deepStrictEqual([enterSynthetic, events(b.rec), pv, env.nWinListeners()], [['enter'], ['enter', 'leave'], 0, 0])
     })
 
+    it(`should treat a wrapper object in buttons or clientX as a non-number (W-20: isnbr only accepts primitives): a real move with a wrapper buttons keeps the drag, a move with a wrapper clientX gives no point`, async function() {
+        //W-20: toPoint與buttons判型原用lodash isNumber(包裝數字為true), 改isnbr; 包裝物件之buttons視為非數字(不因buttons為0而結束), 包裝物件之clientX無法取點(該次移動不處理)
+        let env = mkFakeDom()
+        let [a, b] = mkItems(env, 2, 't15w')
+        all.push(a.d, b.d)
+        let m = mouse(env)
+        m.press(a)
+        await sleep(20)
+        //包裝物件之clientX: toPoint回null, 移動不處理(b未收到enter); 修前包裝數字為數字, 取得點而enter
+        env.winDispatch('mousemove', { clientX: new Number(b.pt.x), clientY: b.pt.y, buttons: 1, isTrusted: true }) // eslint-disable-line no-new-wrappers
+        let afterWrappedX = events(b.rec)
+        //包裝物件之buttons為new Number(0): 視為非數字, 不因buttons為0而結束, 移動照常處理
+        m.move(b.pt, { buttons: new Number(0) }) // eslint-disable-line no-new-wrappers
+        let afterMove = events(b.rec)
+        m.up(b.pt)
+        let afterUp = events(b.rec)
+        assert.strict.deepStrictEqual([afterWrappedX, afterMove, afterUp], [[], ['enter'], ['enter', 'drop']])
+    })
+
     it(`should follow only the finger that started, ignoring other fingers`, async function() {
         //觸控以起手手指鎖定: 他指落下(另一項目)不接手, 他指移動與放開不影響, 起手手指放開才發drop
         let env = mkFakeDom()

@@ -4,7 +4,7 @@ import getTimeHp from './getTimeHp.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 
 
 //fun: 必須參數(立即啟動計時器者), 須為函數(isfun, async generator函數為false), 無效即同步拋錯Error('invalid fun: must be a function'), 先於任何副作用(不啟動計時器、不發觀察回調、不輸出opt.debug警告)
@@ -48,7 +48,7 @@ function logErr(err) {
 function setIntervalHp(fun, interval = 1, opt = {}) {
 
     //fun, 必須參數且立即啟動計時器, 無效即同步拋錯, 先於任何副作用(下方optVal於opt.debug時會輸出警告)
-    if (!isFunSafe(fun)) {
+    if (!isfun(fun)) {
         throw new Error('invalid fun: must be a function')
     }
 

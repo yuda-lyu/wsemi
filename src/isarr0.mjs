@@ -4,6 +4,8 @@ import isarr from './isarr.mjs'
 /**
  * 判斷是否為無內容陣列
  *
+ * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取長度即拋錯者)，判定拋錯者回傳false
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isarr0.test.mjs Github}
  * @memberOf wsemi
  * @param {*} v 輸入任意資料
@@ -20,8 +22,14 @@ import isarr from './isarr.mjs'
 function isarr0(v) {
 
     if (isarr(v)) {
-        if (v.length === 0) {
-            return true
+        //讀取length可能觸發Proxy之陷阱而拋錯, 無法判定者回傳false
+        try {
+            if (v.length === 0) {
+                return true
+            }
+        }
+        catch (err) {
+            return false
         }
         return false
     }

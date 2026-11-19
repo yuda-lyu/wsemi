@@ -25,7 +25,7 @@
 | 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
-| 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01、R-FILETYPE-01 | 24.3 |
+| 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01(ws492i 起: 判斷函數只收原始值、轉型函數照舊拆包)、R-FILETYPE-01 | 約 26 |
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
@@ -38,6 +38,7 @@
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
 | 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01 | 約 4 |
+| 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01 | 約 9 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
 | 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191)——主檔只留〈共通說明〉(風險代號)與本類之索引(2026-11-02 ws272c 拆為下列 5 檔,原約 81.2KB) | `sgud/rule/rulebook_judge_sites.md` | 標題、〈共通說明〉、索引 | 約 6.2 |
 | 同上——§1~§5(計時毫秒、埠號、索引、個數、位元) | `sgud/rule/rulebook_judge_sites_inv_a.md` | R-ENUM-01 之站點全集(§1~§5) | 21.8 |
@@ -131,6 +132,8 @@
 - `R-TIMER-RELEASE-01` → `rulebook_timer.md`: R-TIMER-RELEASE-01 回傳事件物件且持有重複計時器者須可釋放
 - `R-TRACE-01` → `rulebook_trace.md`: R-TRACE-01 計時器相關函數之觀察回調(opt.onTrace)與其測試: 以事件同步、斷言語意,不以延時偵測
 - `R-UTF8-01` → `rulebook_data.md`: R-UTF8-01 字串與 Uint8Array 之 UTF-8 互轉:原生、失敗不失真
-- `R-WRAPPER-01` → `rulebook_data.md`: R-WRAPPER-01 包裝物件(new String/Number/Boolean)之值判定
+- `R-WRAPPER-01` → `rulebook_data.md`: R-WRAPPER-01 包裝物件(new String/Number/Boolean)之處理: 判斷函數只收原始值(包裝物件為 false)、轉型函數(cdbl/cint/cstr/cbol)照舊拆包、直接判型之入口依同原則(2026-11-19 ws492i 改寫,取代 A-lite)
+- `R-JUDGE-NOTHROW-01` → `rulebook_judge_nothrow.md`: R-JUDGE-NOTHROW-01 判斷函數(`is*`)對任何輸入皆不拋錯(型別無法判定回 false、內容檢查拋錯回 false);內部 `_isFunSafe` 已移除(ws492i)
+- `R-C1C2-DEF-01` → `rulebook_judge_nothrow.md`: R-C1C2-DEF-01 C1／C2 之定義: `cbol` 依 B2、`isDate` 收嚴、`cint` 行為不改而 JSDoc 寫明失真(ws492i)
 - `R-XSS-01` → `rulebook_xss.md`: R-XSS-01 js-xss 之取得與設定單一出處;偵測回報清洗會轉義或刪除之可疑項目
 - `R-XSS-WALK-01` → `rulebook_xss.md`: R-XSS-WALK-01 clearXSS 之走訪: 顯式堆疊、來源物件只處理一次、複製後依終態清除、型別處置表

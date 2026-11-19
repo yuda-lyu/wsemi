@@ -1,4 +1,4 @@
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 
 
 /**
@@ -101,7 +101,7 @@ function pmKeyMutex() {
         let run = async (key, fn) => {
 
             //fn 為執行期提交之工作: 無效以固定字串 (不回顯值) reject 該次呼叫, 不排隊 (不動 chains、counts), 判定本身拋錯 (如已撤銷之 Proxy) 亦視為無效
-            if (!isFunSafe(fn)) {
+            if (!isfun(fn)) {
                 return Promise.reject('invalid fn: must be a function')
             }
 

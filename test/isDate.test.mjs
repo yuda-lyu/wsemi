@@ -15,9 +15,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
-    it(`should return true when input '2019-01-01T12:34+08:00'`, function() {
+    it(`should return false when input '2019-01-01T12:34+08:00'`, function() {
         let r = isDate('2019-01-01T12:34+08:00')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12+08:00'`, function() {
@@ -50,9 +50,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
-    it(`should return true when input '2019-01-01T12:34Z'`, function() {
+    it(`should return false when input '2019-01-01T12:34Z'`, function() {
         let r = isDate('2019-01-01T12:34Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12Z'`, function() {
@@ -60,19 +60,19 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01Z'`, function() {
+    it(`should return false when input '2019-01-01Z'`, function() {
         let r = isDate('2019-01-01Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01Z'`, function() {
+    it(`should return false when input '2019-01Z'`, function() {
         let r = isDate('2019-01Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019Z'`, function() {
+    it(`should return false when input '2019Z'`, function() {
         let r = isDate('2019Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12:34:56:789'`, function() {
@@ -85,9 +85,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
-    it(`should return true when input '2019-01-01T12:34'`, function() {
+    it(`should return false when input '2019-01-01T12:34'`, function() {
         let r = isDate('2019-01-01T12:34')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12'`, function() {
@@ -100,14 +100,14 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
-    it(`should return true when input '2019-01'`, function() {
+    it(`should return false when input '2019-01'`, function() {
         let r = isDate('2019-01')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019'`, function() {
+    it(`should return false when input '2019'`, function() {
         let r = isDate('2019')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-01-01T12:34:56A'`, function() {
@@ -1045,9 +1045,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.4321Z'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.4321Z'`, function() {
         let r = isDate('2019-01-01T12:34:56.4321Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.4321Z'`, function() {
@@ -1055,9 +1055,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.4321+08:00'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.4321+08:00'`, function() {
         let r = isDate('2019-01-01T12:34:56.4321+08:00')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.4321+08:00'`, function() {
@@ -1065,9 +1065,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.4321'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.4321'`, function() {
         let r = isDate('2019-01-01T12:34:56.4321')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.4321'`, function() {
@@ -1525,9 +1525,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.21Z'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.21Z'`, function() {
         let r = isDate('2019-01-01T12:34:56.21Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.21Z'`, function() {
@@ -1535,9 +1535,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.21+08:00'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.21+08:00'`, function() {
         let r = isDate('2019-01-01T12:34:56.21+08:00')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.21+08:00'`, function() {
@@ -1545,9 +1545,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34:56.21'`, function() {
+    it(`should return false when input '2019-01-01T12:34:56.21'`, function() {
         let r = isDate('2019-01-01T12:34:56.21')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34:56.21'`, function() {
@@ -2725,9 +2725,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34Z'`, function() {
+    it(`should return false when input '2019-01-01T12:34Z'`, function() {
         let r = isDate('2019-01-01T12:34Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34Z'`, function() {
@@ -2735,9 +2735,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34+08:00'`, function() {
+    it(`should return false when input '2019-01-01T12:34+08:00'`, function() {
         let r = isDate('2019-01-01T12:34+08:00')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34+08:00'`, function() {
@@ -2745,9 +2745,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01T12:34'`, function() {
+    it(`should return false when input '2019-01-01T12:34'`, function() {
         let r = isDate('2019-01-01T12:34')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01T12:34'`, function() {
@@ -2905,9 +2905,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01-01Z'`, function() {
+    it(`should return false when input '2019-01-01Z'`, function() {
         let r = isDate('2019-01-01Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21-01Z'`, function() {
@@ -2935,9 +2935,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01Z'`, function() {
+    it(`should return false when input '2019-01Z'`, function() {
         let r = isDate('2019-01Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21Z'`, function() {
@@ -2955,9 +2955,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019-01'`, function() {
+    it(`should return false when input '2019-01'`, function() {
         let r = isDate('2019-01')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019-21'`, function() {
@@ -2965,9 +2965,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019Z'`, function() {
+    it(`should return false when input '2019Z'`, function() {
         let r = isDate('2019Z')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '2019+08:00'`, function() {
@@ -2975,9 +2975,9 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '2019'`, function() {
+    it(`should return false when input '2019'`, function() {
         let r = isDate('2019')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input function() {}`, function() {
@@ -2985,54 +2985,54 @@ describe(`isDate`, function() {
         assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input 0`, function() {
+    it(`should return false when input 0`, function() {
         let r = isDate(0)
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input 125`, function() {
+    it(`should return false when input 125`, function() {
         let r = isDate(125)
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input -125`, function() {
+    it(`should return false when input -125`, function() {
         let r = isDate(-125)
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input 1.25`, function() {
+    it(`should return false when input 1.25`, function() {
         let r = isDate(1.25)
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input -1.25`, function() {
+    it(`should return false when input -1.25`, function() {
         let r = isDate(-1.25)
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '0'`, function() {
+    it(`should return false when input '0'`, function() {
         let r = isDate('0')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '125'`, function() {
+    it(`should return false when input '125'`, function() {
         let r = isDate('125')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '-125'`, function() {
+    it(`should return false when input '-125'`, function() {
         let r = isDate('-125')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '1.25'`, function() {
+    it(`should return false when input '1.25'`, function() {
         let r = isDate('1.25')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
-    it(`should return true when input '-1.25'`, function() {
+    it(`should return false when input '-1.25'`, function() {
         let r = isDate('-1.25')
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
     })
 
     it(`should return false when input '125abc'`, function() {

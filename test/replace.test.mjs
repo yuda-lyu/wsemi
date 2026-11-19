@@ -140,9 +140,12 @@ describe(`replace`, function() {
         assert.strict.deepStrictEqual(replace('a(b)c', '(b)', '$1'), 'a$1c')
     })
 
-    it(`should accept String object r and keep its '$' literal`, function() {
+    it(`should treat a String object r as invalid and return '' like any non-string r (W-20: wrapper objects are invalid; a primitive r keeps its '$' literal)`, function() {
+        //W-20(判斷函數只收原始值): 修前String物件r視同字串而回'a$&b'; 修後為無效輸入, 同非字串r回''
+        assert.strict.deepStrictEqual(replace('a{x}b', '{x}', '$&'), 'a$&b')
+        assert.strict.deepStrictEqual(replace('a{x}b', '{x}', 5), '')
         let r = replace('a{x}b', '{x}', new String('$&')) // eslint-disable-line no-new-wrappers
-        assert.strict.deepStrictEqual(r, 'a$&b')
+        assert.strict.deepStrictEqual(r, '')
     })
 
     it(`should match split/join oracle on seeded random strings containing '$' patterns`, function() {

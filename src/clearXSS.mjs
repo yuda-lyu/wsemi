@@ -60,14 +60,14 @@ function setKey(o, k, val) {
 }
 
 
-//isBoxedString, 以內部槽確認為包裝String(以Symbol.toStringTag偽稱String者無內部槽, 交由lodash複製後依終態處理)
-function isBoxedString(v) {
+//boxedStringOf, 以內部槽確認為包裝String並取其原始字串, 否則回傳null(以Symbol.toStringTag偽稱String者無內部槽, 交由lodash複製後依終態處理)
+//  clearXSS為清除函數非判斷函數, 包裝String屬資料樹內之字串值, 須清除而不可略過(isestr只收原始值, 故此處自行拆包)
+function boxedStringOf(v) {
     try {
-        String.prototype.valueOf.call(v)
-        return true
+        return String.prototype.valueOf.call(v)
     }
     catch (err) {
-        return false
+        return null
     }
 }
 
@@ -244,10 +244,13 @@ function clearXSS(inp) {
             stack.push({ t: 1, s: v, d, ks, es: null, i: 0, n: ks.length })
             return d
         }
-        if (tag === '[object String]' && isBoxedString(v) && isestr(v)) {
-            let r = ftxss(v) //包裝String, 清除後為原始字串
-            memo.set(v, r)
-            return r
+        if (tag === '[object String]') {
+            let s = boxedStringOf(v)
+            if (s !== null && s !== '') {
+                let r = ftxss(s) //包裝String, 清除後為原始字串
+                memo.set(v, r)
+                return r
+            }
         }
         let brand = (tag === '[object Map]' || tag === '[object Set]' || v instanceof Map || v instanceof Set) ? brandOf(v, tag) : ''
         if (brand !== '') {

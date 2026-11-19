@@ -4,7 +4,7 @@ import genID from './genID.mjs'
 import pm2resolve from './pm2resolve.mjs'
 import pmSettleByState from './_pmSettleByState.mjs'
 import queue from './queue.mjs'
-import isFunSafe from './_isFunSafe.mjs'
+import isfun from './isfun.mjs'
 import isbol from './isbol.mjs'
 import delay from './delay.mjs'
 import getTrace from './getTrace.mjs'
@@ -422,7 +422,7 @@ function pmQueue(takeLimit = 0, takeLast = false, opt = {}) {
 
             //res, 任務為執行期提交之工作: 無效以固定字串(不回顯值)reject該任務, 判定本身拋錯(如已撤銷之Proxy)亦視為無效
             let res
-            if (!isFunSafe(fun)) {
+            if (!isfun(fun)) {
                 res = {
                     state: 'error',
                     msg: 'invalid fun: must be a function',

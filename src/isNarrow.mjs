@@ -37,7 +37,14 @@ function isNarrow(ele) {
     //bele
     let bele = false
     if (ele) {
-        let clientWidth = get(ele, 'clientWidth', 0)
+        //讀取clientWidth可能觸發已撤銷之Proxy等而拋錯, 視為取不到寬度(判斷函數不拋錯, R-JUDGE-NOTHROW-01)
+        let clientWidth = 0
+        try {
+            clientWidth = get(ele, 'clientWidth', 0)
+        }
+        catch (err) {
+            clientWidth = 0
+        }
         bele = clientWidth > 0 && clientWidth <= rwdWidthEle
     }
 

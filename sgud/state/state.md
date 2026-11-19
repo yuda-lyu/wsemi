@@ -8,6 +8,12 @@
 
 2026-11-02(ws265)依全域設定§14整理: 本檔原約 53.7KB(13 節),依功能類型拆為下列 5 檔(含同日新增之 `state_測試.md`),各節之節號與標題不變、內容逐字搬移;本檔只留索引.完成一項功能或結束一輪工作時,把現況寫入對應類型檔(無對應類型者新增 `state_<類型>.md` 並於下列增列),不再寫回本檔.2026-11-02(ws272c)另把 `state_數值與判斷.md` 之第 2 輪三節(ws272a、ws272b、ws272c)抽至 `state_數值與判斷_第2輪.md`(原檔約 31.3KB),現共 6 檔.
 
+### `sgud/state/state_判斷與轉型.md`(判斷與轉型;約 5KB;新增於 2026-11-19)
+
+查: 判斷函數只收原始值(包裝物件一律 `false`,轉型函數 `cdbl`／`cint`／`cstr`／`cbol` 照舊拆包)、判斷函數不拋錯(`_tagOf`、`isfun` 不拋錯、`_isFunSafe` 已移除)、`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc 之現況:驗證數字(全套／HEAD 基準／修前紅／變異)、獨立複審之處置、已知缺口與待裁示、下游固定舊行為(排程第 492 項第 8 批).所含節:
+
+- 第 492 項第 8 批:判斷與轉型(ws492i,2026-11-19)〔本節於 2026-11-19 新增〕
+
 ### `sgud/state/state_結構運算與參數定義.md`(結構運算與參數定義;約 6KB;新增於 2026-11-19)
 
 查: C7 結構運算第 1 參數無效回輸出型別之空結果(11 函數)、單一空元素之陣列視為一個元素(18 函數)、`arrSep` 只收設定物件、範圍型 opt 超出範圍改預設與帶預設值之位置參數視同 opt(N-B 19 列)、W-06 簽名／JSDoc／行為一致(`domCompareText.title`、`execCliJsonRpc.requests`)之現況:驗證數字(修前紅／變異／全套)、獨立複審之處置、已知缺口與待裁示(排程第 492 項第 7 批).所含節:
@@ -16,7 +22,7 @@
 
 ### `sgud/state/state_計時與流程函數參數檢測.md`(計時與流程函數之函數參數檢測、`importResources` 之 `pathItems` 檢測;約 4KB;新增於 2026-11-18)
 
-查: `setTimeoutHp`／`setIntervalHp`／`cacheBd`／`pmHook`／`pmHookReject`(`fun` 無效同步拋、先於副作用)、`pmQueue`／`pmThrottle`／`pmKeyMutex`(任務無效 reject 固定字串、不排隊)、`pmChain`／`pmMap`／`pmSeries`(視為未給)、`importResources`(進入時驗證並複製、不改寫輸入)之現況:內部 `_isFunSafe`、修前紅／變異驗證數字、獨立複審未執行之原因、已知缺口與待裁示(排程第 492 項第 6 批).所含節:
+查: `setTimeoutHp`／`setIntervalHp`／`cacheBd`／`pmHook`／`pmHookReject`(`fun` 無效同步拋、先於副作用)、`pmQueue`／`pmThrottle`／`pmKeyMutex`(任務無效 reject 固定字串、不排隊)、`pmChain`／`pmMap`／`pmSeries`(視為未給)、`importResources`(進入時驗證並複製、不改寫輸入)之現況(ws492g 當時;`_isFunSafe` 已於 ws492i 移除,見 `state_判斷與轉型.md`):內部 `_isFunSafe`、修前紅／變異驗證數字、獨立複審未執行之原因、已知缺口與待裁示(排程第 492 項第 6 批).所含節:
 
 - 第 492 項第 6 批:計時與流程(ws492g,2026-11-18;ws492g2 修正輪同日續改:`pmThrottle` 執行點再驗、`importResources` 載入事件內判定與 V19 訊息、`pmChain` 判準一致)〔本節於 2026-11-18 新增〕
 
