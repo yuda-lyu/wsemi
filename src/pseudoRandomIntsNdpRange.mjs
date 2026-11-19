@@ -22,7 +22,7 @@ let RULE_N = { fn: 'pseudoRandomIntsNdpRange', name: 'n', kind: 'eint', chk: { u
  * @param {Integer|String} [n=1] 輸入產生數量，opt類參數(有效整數，個數1~4294967295，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小於1、超過4294967295、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯，最長為vend-vstart+1個，預設1
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
  * @returns {Array} 回傳位於指定範圍[vstart,vend]內不重複之偽隨機整數陣列(長度為n與vend-vstart+1之較小者)；vstart為0時與同seed之修前結果相同，vstart不為0時各值為同seed、vstart為0(範圍0至vend-vstart)之結果加上vstart(seed為'start1'時每次呼叫自增，不在此限)
- * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('vstart[<vstart>] > vend[<vend>]')
+ * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('invalid vstart: must be <= vend')(訊息不帶值)
  * @example
  *
  * let rs
@@ -137,7 +137,7 @@ function pseudoRandomIntsNdpRange(vstart = 0, vend = 100, n, seed = 'start1') {
 
     //check
     if (vstart > vend) {
-        throw new Error(`vstart[${vstart}] > vend[${vend}]`)
+        throw new Error('invalid vstart: must be <= vend')
     }
 
     //fpr function, [0,1)

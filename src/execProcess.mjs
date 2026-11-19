@@ -38,9 +38,9 @@ let RULE_TIMEOUT = { fn: 'execProcess', name: 'opt.timeout', kind: 'enum', chk: 
  * @param {Number} [opt.timeout=null] 輸入逾時毫秒數，須為有效數字且大於0至2147483647(計時器上限)之內，可帶小數，數字字串亦可，預設null表示不限制；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設null(不限時，不報錯、不夾至上限；Infinity不代表有限的逾時)；逾時觸發時會調用execProcessKillPid強制關閉子進程及其子孫程序，並reject回傳逾時訊息
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeout或opt.codeCmd為非預期之輸入(不含未給)時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一行程同一鍵只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為`spawn[ENOENT]:\ncwd is not an existing folder: <cwd>`(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為`spawn[ERR_INVALID_ARG_TYPE]:\noperation failed (code ERR_INVALID_ARG_TYPE)`
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串(同execCli)，預設process.cwd()，非非空字串時亦用預設；三種模式皆生效('exec'為shell之工作目錄)；不存在或非資料夾時(符號連結與junction依其目標判定)reject為`spawn[ENOENT]:\ninvalid cwd: must be an existing folder`(未能啟動子程序，onTrace之settle其reason為'spawn')；包裝字串(new String)不拆包，請傳原始字串(同execCli，R-WRAPPER-01規則3)，node拒收時reject為`spawn[ERR_INVALID_ARG_TYPE]:\noperation failed (code ERR_INVALID_ARG_TYPE)`
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷，事件不含args之內容；type為'spawn'時為子程序已建立(含mode為執行模式字串、pid為子程序pid數字，無pid者為null；exec模式之pid為shell之pid)，'data'時為收到stdout或stderr之一個chunk並已解碼(含which為'out'或'err'、bytes為chunk位元組數、text為解碼後字串，該chunk僅含尚未完整之多位元組序列時為空字串；於呼叫cbStdout、cbStderr之前通知)，'switch'時為codeCmd為'auto'之該串流首次遇到非utf-8位元組而改用系統字碼頁(含which、label為改用之解碼標籤；每串流至多一次，通知於觸發改判之那個data事件之前)，'timeout'時為已達opt.timeout而即將殺子進程(含ms為逾時毫秒數)，'kill'時為即將調用execProcessKillPid殺整棵程序樹(含pid；不轉傳onTrace，其事件不混入本回調)，'settle'時為即將resolve或reject(含ok為是否resolve、reason為落定原因字串、code為子程序離開碼數字，因訊號結束或未執行至結束者為null；reason為'ok'代表離開碼0而resolve，'code'代表離開碼非0，'timeout'代表逾時，'spawn'代表無法啟動子程序(同步拋錯、error事件或取系統字碼頁失敗；error事件者其後node仍會發出之close不再通知，故每次呼叫至多一個settle)，'args'代表args無效(型別不符、元素無效或含NUL)，'prog'代表prog無效(非有效字串、含NUL、spawn模式含引號))；opt不可讀者(含onTrace屬性之getter拋錯)屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
- * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，Node原生錯誤(帶錯誤碼者)之訊息改為固定詞彙加錯誤碼`operation failed (code ENOENT)`，不含執行檔路徑、args與環境變數之內容(V20)；cwd不存在或非資料夾時訊息為`cwd is not an existing folder: <cwd>`；prog無效(非有效字串、含NUL、spawn模式含引號)、args無效(型別不符、元素無效、含NUL)時為固定說明字串(格式見prog與args參數，不含其值)，皆於建立子程序之前；opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等，為`opt is not readable: 訊息`，訊息為呼叫端所拋出之文字，帶錯誤碼者同樣改為固定詞彙)時為說明字串；不可讀而拋出非Error之值時訊息為該值之文字；本函數不同步拋錯
+ * @returns {Promise} 回傳Promise，resolve回傳stdout與stderr依到達順序合併之字串，不另加換行，子程序自己的換行原樣保留；reject回傳錯誤訊息字串：離開碼非0時為`code[N]:\n訊息`，訊息為子程序之輸出，子程序因訊號結束時N為null；逾時為`timeout[Nms]:\n訊息`；無法啟動子程序時(找不到執行檔、權限不足、非有效執行檔、參數過長、系統資源用盡等)為`spawn[錯誤碼]:\n訊息`，Node原生錯誤(帶錯誤碼者)之訊息改為固定詞彙加錯誤碼`operation failed (code ENOENT)`，不含執行檔路徑、args與環境變數之內容(V20)；cwd不存在或非資料夾時訊息為`invalid cwd: must be an existing folder`；prog無效(非有效字串、含NUL、spawn模式含引號)、args無效(型別不符、元素無效、含NUL)時為固定說明字串(格式見prog與args參數，不含其值)，皆於建立子程序之前；opt不可讀(opt或其選項值之getter拋錯、已撤銷之Proxy等)時為固定說明字串`invalid opt: must be a readable object`(不含呼叫端所拋出之文字)；本函數不同步拋錯
  * @example
  * //need test in nodejs
  *
@@ -131,7 +131,7 @@ function execProcess(prog, args, opt = {}) {
 
     }
     catch (err) {
-        pm.reject(`opt is not readable: ${execThrownMsg(execSpawnError(err, { fixed: true }), err)}`)
+        pm.reject('invalid opt: must be a readable object') //固定訊息, 不含呼叫端getter所拋出之文字(V20)
         return pm
     }
 

@@ -129,7 +129,7 @@ describe(`domConvertToPic without body (ws286a)`, function() {
     })
 
     for (let [label, v] of NO_BODY) {
-        //spec §5.1: reject不同步throw, reject值為字串(同本函數既有之'invalid ele'等); 無效時不截圖、不留DOM殘留
+        //spec §5.1: reject不同步throw, reject值為字串(同本函數既有之'invalid ele: must be an element'等); 無效時不截圖、不留DOM殘留
         it(`should reject with a fixed string when body is ${label}, without calling snapdom or leaving DOM residue`, async function() {
             env.document.querySelector = () => v
             let ele = env.mkParent()
@@ -178,7 +178,7 @@ describe(`domVirtualCreate without body (ws286a)`, function() {
     })
 
     for (let [label, v] of NO_BODY) {
-        //spec §5.1: reject不同步throw, reject值為Error(同本函數既有之Error('invalid fun')); 無效時不呼叫fun(原會對未接上頁面之元素呼叫fun)、不留DOM殘留
+        //spec §5.1: reject不同步throw, reject值為Error(同本函數既有之Error('invalid fun: must be a function')); 無效時不呼叫fun(原會對未接上頁面之元素呼叫fun)、不留DOM殘留
         it(`should reject with an Error of a fixed message when body is ${label}, without calling fun or leaving DOM residue`, async function() {
             env.document.querySelector = () => v
             env.resetOps()

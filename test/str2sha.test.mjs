@@ -102,33 +102,33 @@ describe(`str2sha`, function() {
         assert.throws(() => str2sha('test中文', 2), /^Error: invalid n: must be one of 1, 224, 256, 384, 512$/)
     })
 
-    it(`sould throw 'n is not a positive integer' when n is not a positive integer`, function() {
-        assert.throws(() => str2sha('test中文', 0), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', -512), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', 511.5), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', 512.4), /^Error: n is not a positive integer$/)
+    it(`sould throw 'invalid n: must be a positive integer' when n is not a positive integer`, function() {
+        assert.throws(() => str2sha('test中文', 0), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', -512), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', 511.5), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', 512.4), /^Error: invalid n: must be a positive integer$/)
     })
 
-    it(`sould throw 'n is not a positive integer' when n is an invalid type`, function() {
-        assert.throws(() => str2sha('test中文', 'abc'), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', ''), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', []), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', {}), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', null), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', undefined), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', NaN), /^Error: n is not a positive integer$/)
+    it(`sould throw 'invalid n: must be a positive integer' when n is an invalid type`, function() {
+        assert.throws(() => str2sha('test中文', 'abc'), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', ''), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', []), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', {}), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', null), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', undefined), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', NaN), /^Error: invalid n: must be a positive integer$/)
     })
 
-    it(`sould throw 'n is not a positive integer' when n is not given`, function() {
-        assert.throws(() => str2sha('test中文'), /^Error: n is not a positive integer$/)
+    it(`sould throw 'invalid n: must be a positive integer' when n is not given`, function() {
+        assert.throws(() => str2sha('test中文'), /^Error: invalid n: must be a positive integer$/)
     })
 
     it(`sould not be fooled by keys inherited from Object.prototype as n`, function() {
         //haskey內部為key in obj而含原型鏈, 'toString'等鍵會誤判為存在,
         //故ispint檢核須置於haskey之前; 以錯誤訊息斷言確實由ispint先攔下, 藉此鎖住兩檢核之先後次序
-        assert.throws(() => str2sha('test中文', 'toString'), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', 'constructor'), /^Error: n is not a positive integer$/)
-        assert.throws(() => str2sha('test中文', 'valueOf'), /^Error: n is not a positive integer$/)
+        assert.throws(() => str2sha('test中文', 'toString'), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', 'constructor'), /^Error: invalid n: must be a positive integer$/)
+        assert.throws(() => str2sha('test中文', 'valueOf'), /^Error: invalid n: must be a positive integer$/)
     })
 
     it(`sould fallback base64 to false when base64 is an invalid type`, function() {
@@ -181,9 +181,9 @@ describe(`str2sha`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid str' } when str is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a non-empty string' } when str is not a string with returnWithStateAndMsg`, function() {
         let r = str2sha(NaN, 256, false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid str' }
+        let rr = { state: 'error', msg: 'invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -196,7 +196,7 @@ describe(`str2sha`, function() {
 
     it(`should return { state: 'error' } instead of throwing when n is not a positive integer with returnWithStateAndMsg`, function() {
         let r = str2sha('abc', 'x', false, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid n: must be a positive integer' })
     })
 
     it(`should still throw when n is invalid by default`, function() {

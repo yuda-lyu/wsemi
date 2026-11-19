@@ -10,7 +10,7 @@ import pmSettleByState from './_pmSettleByState.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmInvResolve.test.mjs Github}
  * @memberOf wsemi
- * @param {Promise} pm 輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料，物件欄位有state與msg；pm非Promise時同步拋出Error('pm is not a promise')
+ * @param {Promise} pm 輸入pmConvertResolve所轉出的Promise，其皆使用resolve回傳物件資料，物件欄位有state與msg；pm非Promise時同步拋出Error('invalid pm: must be a Promise')
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.thenExtractData=false] 輸入是否於then提取data欄位值布林值，主要用於轉換axios取得之pm，預設false
  * @returns {Promise} 回傳Promise，state為success時resolve其msg，為cancelled時reject { reason: 'cancelled' }，其餘(含error、缺state或非結果物件)reject其msg；msg原樣傳遞(含undefined)；輸入之pm被reject時原樣reject其值
@@ -95,7 +95,7 @@ function pmInvResolve(pm, opt = {}) {
 
     //check
     if (!ispm(pm)) {
-        throw new Error(`pm is not a promise`)
+        throw new Error('invalid pm: must be a Promise')
     }
 
     //thenExtractData

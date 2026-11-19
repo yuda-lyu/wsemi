@@ -158,7 +158,7 @@ function normExpected(v) {
     let sha256 = get(v, 'sha256')
     let size = get(v, 'size')
     if (typeof sha256 !== 'string' || !/^[0-9a-fA-F]{64}$/.test(sha256)) {
-        return { err: `sha256 must be a string of 64 hexadecimal characters` }
+        return { err: `invalid expected.sha256: must be a string of 64 hexadecimal characters` }
     }
     if (size === undefined || size === null) {
         size = null
@@ -166,7 +166,7 @@ function normExpected(v) {
     else {
         size = parseSize(size)
         if (size < 0) {
-            return { err: `size must be a non-negative integer when given` }
+            return { err: `invalid expected.size: must be a non-negative integer` }
         }
     }
     return { sha256: sha256.toLowerCase(), size }
@@ -942,7 +942,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
 
     //check urlIn, fpOut, 須為原始字串(下載來源與輸出位置屬安全相關, 包裝字串new String無效, 不解包後接受; W-09、W-20), 其後之檢查、切分、請求、更名皆用同一個值
     if (typeof urlIn !== 'string' || urlIn === '') {
-        throw bad(`urlIn is not an effective string`)
+        throw bad(`invalid urlIn: must be a non-empty string`)
     }
 
     //平台, 決定路徑分隔符(Windows為/與\, 其他為/)與檔名限制
@@ -956,14 +956,14 @@ function buildCtx(urlIn, fpOut, expected, opt) {
 
     //check fpOut, 結尾為路徑分隔符者為資料夾, 非檔案路徑; 檔名不得為空、'.'、'..', Windows下檔名內不得有冒號(替代資料流或磁碟代號而無檔名)
     if (typeof fpOut !== 'string' || fpOut === '' || fpOut.includes('\0') || (win32 ? /[\\/]$/ : /\/$/).test(fpOut)) { //含NUL者無效(R-FS-INVALID-PATH-01)
-        throw bad(`fpOut is not an effective file path`)
+        throw bad(`invalid fpOut: must be a non-empty file path without NUL that does not end with a path separator`)
     }
     let nameOut = splitPath(fpOut, win32).name
     if (nameOut === '' || nameOut === '.' || nameOut === '..') {
-        throw bad(`fpOut is not an effective file path: its file name is empty, '.' or '..'`)
+        throw bad(`invalid fpOut: must have a file name that is not empty, '.' or '..'`)
     }
     if (win32 && nameOut.includes(':')) {
-        throw bad(`fpOut is not an effective file path: its file name contains ':'`)
+        throw bad(`invalid fpOut: must have a file name that does not contain ':'`)
     }
 
     //expected
@@ -978,10 +978,10 @@ function buildCtx(urlIn, fpOut, expected, opt) {
             r = normExpected(expected)
         }
         catch (err) {
-            throw bad(`expected can not be read: ${errMsg(err)}`, fsErrSan(err)) //cause: 使用端自拋之錯誤(無code)原物件保留, Node原生錯誤(帶code)改為固定詞彙加錯誤碼之新Error(V20)
+            throw bad(`invalid expected: must be a readable value`, fsErrSan(err)) //cause: 使用端自拋之錯誤(無code)原物件保留, Node原生錯誤(帶code)改為固定詞彙加錯誤碼之新Error(V20)
         }
         if (r.err) {
-            throw bad(`expected is invalid: ${r.err}`)
+            throw bad(r.err)
         }
         expStatic = r
     }
@@ -997,7 +997,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         for (let k of fnsFs) {
             let f = get(o.fsRaw, k)
             if (!isfun(f)) {
-                throw bad(`opt.fs is not an effective fs (needs ${fnsFs.join(', ')})`)
+                throw bad(`invalid opt.fs: must be an object providing ${fnsFs.join(', ')}`)
             }
             o.refs.push(f)
             o.fs[k] = f.bind(o.fsRaw)
@@ -1007,7 +1007,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         o.cryptoRaw = get(opt, 'crypto')
         let createHash = get(o.cryptoRaw, 'createHash')
         if (!isfun(createHash)) {
-            throw bad(`opt.crypto is not an effective crypto (needs createHash)`)
+            throw bad(`invalid opt.crypto: must be an object providing createHash`)
         }
         o.refs.push(createHash)
         o.crypto = { createHash: createHash.bind(o.cryptoRaw) }
@@ -1017,7 +1017,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         let fromWeb = get(o.ReadableRaw, 'fromWeb')
         let from = get(o.ReadableRaw, 'from')
         if (!isfun(fromWeb) || !isfun(from)) {
-            throw bad(`opt.Readable is not an effective stream.Readable`)
+            throw bad(`invalid opt.Readable: must be an object providing fromWeb and from`)
         }
         o.refs.push(fromWeb, from)
         o.Readable = { fromWeb: fromWeb.bind(o.ReadableRaw), from: from.bind(o.ReadableRaw) }
@@ -1025,13 +1025,13 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         //pipeline
         o.pipeline = get(opt, 'pipeline')
         if (!isfun(o.pipeline)) {
-            throw bad(`opt.pipeline is not a function`)
+            throw bad(`invalid opt.pipeline: must be a function`)
         }
 
         //fetch, 未給(undefined或null)才用全域fetch, 給了卻不是函數者為參數錯誤(不靜默改用全域fetch)
         o.fetchRaw = get(opt, 'fetch')
         if (o.fetchRaw !== undefined && o.fetchRaw !== null && !isfun(o.fetchRaw)) {
-            throw bad(`opt.fetch is not a function`)
+            throw bad(`invalid opt.fetch: must be a function`)
         }
         o.maxAttempts = optVal(get(opt, 'maxAttempts', null), 3, RULE_MAX_ATTEMPTS, opt)
         o.retryDelayMs = optVal(get(opt, 'retryDelayMs', null), 1000, RULE_RETRY_DELAY_MS, opt)
@@ -1049,7 +1049,7 @@ function buildCtx(urlIn, fpOut, expected, opt) {
         if (isOwnErr(err)) {
             throw err
         }
-        throw bad(`opt can not be read: ${errMsg(err)}`, fsErrSan(err)) //同上: Node原生錯誤之cause改固定詞彙加錯誤碼, 使用端自拋者原樣
+        throw bad(`invalid opt: must be a readable object`, fsErrSan(err)) //同上: Node原生錯誤之cause改固定詞彙加錯誤碼, 使用端自拋者原樣
     }
 
     //fetch, 未給時於每次請求時取用全域fetch; 此時網址須可解析且為http或https(其餘為參數錯誤, 不視為可重試之網路錯誤)
@@ -1065,13 +1065,13 @@ function buildCtx(urlIn, fpOut, expected, opt) {
             u = new URL(urlIn)
         }
         catch (err) {
-            throw bad(`urlIn is not a valid url: ${errMsg(err)}`, fsErrCause(err))
+            throw bad(`invalid urlIn: must be a valid url`, fsErrCause(err))
         }
         if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-            throw bad('urlIn must be an http or https url when the global fetch is used')
+            throw bad('invalid urlIn: must be an http or https url when opt.fetch is not given')
         }
         if (u.username !== '' || u.password !== '') {
-            throw bad(`urlIn must not contain credentials (user:password@) when the global fetch is used, give opt.fetch to handle authentication`)
+            throw bad(`invalid urlIn: must not contain credentials when opt.fetch is not given (give opt.fetch to handle authentication)`)
         }
         fetchFn = (u, init) => {
             return globalThis.fetch(u, init)

@@ -7,7 +7,7 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFolder.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入路徑字串
+ * @param {String} fd 輸入路徑字串
  * @returns {Boolean} 回傳是否布林值
  * @example
  * need test in nodejs.
@@ -39,8 +39,8 @@ import fsIsFolderCore from './fsIsFolderCore.mjs'
  * // ms [ { 'fsIsFolder(before)': false }, { 'fsIsFolder(after)': true } ]
  *
  */
-function fsIsFolder(pah) {
-    return fsIsFolderCore(pah, { fs })
+function fsIsFolder(fd) {
+    return fsIsFolderCore(fd, { fs })
 }
 
 

@@ -11,7 +11,7 @@ import isEle from './isEle.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/bodyLog.test.mjs Github}
  * @memberOf wsemi
- * @param {...*} c 輸入不定個數之任意資料(以arguments讀取，各項經o2j轉成字串後以', '串接，再經htmlEncode跳脫後顯示)，未給任何引數時仍顯示一行空log
+ * @param {...*} arguments 輸入不定個數之任意資料(以arguments讀取，各項經o2j轉成字串後以', '串接，再經htmlEncode跳脫後顯示)，未給任何引數時仍顯示一行空log
  * @example
  *
  * bodyLog('show訊息')

@@ -47,7 +47,7 @@ function str2b64(str, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid str')
+        return retError('invalid str: must be a non-empty string')
     }
 
     //base64, 須攔截非預期錯誤(如crypto-js對過大資料拋錯), 否則會外拋至呼叫端

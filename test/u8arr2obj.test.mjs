@@ -205,9 +205,9 @@ describe(`u8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid u8a' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid u8a: must be a Uint8Array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = u8arr2obj(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid u8a' }
+        let rr = { state: 'error', msg: 'invalid u8a: must be a Uint8Array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -226,13 +226,13 @@ describe(`u8arr2obj`, function() {
         let r = u8arr2obj(bad, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(Object.keys(r).sort(), ['msg', 'state'])
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid u8a: must have chunk info that is a valid JSON text') //V20: 固定訊息, 不帶封包標頭文字
     })
 
-    it(`should return { state: 'error', msg: 'invalid pks, head length …' } when the head length is not a non-negative integer with returnWithStateAndMsg (R-OBJ-ITER-01 規則6)`, function() {
+    it(`should return { state: 'error', msg: 'invalid u8a: must have a head length …' } when the head length is not a non-negative integer with returnWithStateAndMsg (R-OBJ-ITER-01 規則6)`, function() {
         //標頭前8位元組以大端double讀取: [1..8]為極小非整數, 修前由JSON.parse失敗(SyntaxError)擋下, 現於分割前即拒收
         let r = u8arr2obj(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]), { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid pks, head length must be a non-negative integer not exceeding the packet' })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid u8a: must have a head length that is a non-negative integer not exceeding the packet' })
     })
 
     it(`should return { state: 'error', msg: 'stru8arr2obj: <SyntaxError>' } when the inner stru8arr2obj fails with returnWithStateAndMsg`, function() {
@@ -241,7 +241,7 @@ describe(`u8arr2obj`, function() {
         bad[bad.length - 1] = 123 //破壞results尾端使其非合法JSON, 但分塊結構仍完好
         let r = u8arr2obj(bad, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('stru8arr2obj: ') === 0, true, `msg 應標明來源函數, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'stru8arr2obj: invalid data.results: must be a valid JSON text') //來源函數前綴加V19固定訊息
     })
 
     it(`should return ${cdata} when input ${cu8a} with invalid returnWithStateAndMsg`, function() {
@@ -299,7 +299,7 @@ describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
 describe(`u8arr2obj 標頭長度lenHead須為非負整數且不逾封包(R-OBJ-ITER-01 規則6)`, function() {
 
     //標頭前8位元組為大端double: 分塊資訊區之位元組數; 來自封包(不可信), 小數與負數經slice被靜默截斷或自尾端算而得同一分割(非正規編碼), 須拒收
-    let INV = 'invalid pks, head length must be a non-negative integer not exceeding the packet'
+    let INV = 'invalid u8a: must have a head length that is a non-negative integer not exceeding the packet'
     let packet = obj2u8arr({ a: 1, b: new Uint8Array([7, 8, 9]) })
     let good = new DataView(packet.buffer, packet.byteOffset, 8).getFloat64(0, false)
     let others = packet.length - 8
@@ -400,10 +400,10 @@ describe(`u8arr2obj 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
 
     let enc = new TextEncoder()
     let R = '{"a":1}' //合法主區塊(7位元組), 解出{ a: 1 }
-    let NOTARR = 'invalid pks, not an array'
-    let BADITEM = 'invalid pks, every item must be a non-negative finite integer'
-    let TOTAL = 'invalid pks, total length exceeds the packet'
-    let MANY = 'invalid pks, too many chunks for the main block'
+    let NOTARR = 'invalid u8a: must have chunk info that is an array'
+    let BADITEM = 'invalid u8a: must have chunk info whose every item is a non-negative finite integer'
+    let TOTAL = 'invalid u8a: must have chunk info whose total length does not exceed the packet'
+    let MANY = 'invalid u8a: must not have too many chunks for the main block'
     let MAX = Number.MAX_SAFE_INTEGER
 
     //偽造封包建構器(獨立於src內之編碼函數): [8 bytes大端double=標頭長度][標頭JSON文字(UTF-8)][資料區bytes]
@@ -455,7 +455,7 @@ describe(`u8arr2obj 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             }
         }
         if (!isu8arr(u8a)) {
-            return retError('invalid u8a')
+            return retError('invalid u8a: must be a Uint8Array')
         }
         try {
             let ibHead = 8
@@ -617,7 +617,7 @@ describe(`u8arr2obj 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
 
         it(`should keep failing with the unchanged error of the empty pks []`, function() {
             //[]為真陣列且各項(無)合法、總量0不逾, 通過驗證; 無主區塊故由後續步驟回報(現狀, 行為鎖定)
-            failsWith(buildPacket('[]'), 'u8arr2str: invalid u8a', '[]')
+            failsWith(buildPacket('[]'), 'u8arr2str: invalid u8a: must be a Uint8Array', '[]')
             sameAsLegacy(buildPacket('[]'), '[]')
         })
 
@@ -957,8 +957,8 @@ describe(`u8arr2obj 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
 describe(`u8arr2obj 封包資源耗用: 二進位索引重複引用與分塊數量(R-OBJ-ITER-01規則6 外審補測)`, function() {
 
     let enc = new TextEncoder()
-    let REF = 'stru8arr2obj: Error: binary index referenced more than once[0]'
-    let MANY = 'invalid pks, too many chunks for the main block'
+    let REF = 'stru8arr2obj: invalid data.results: must not reference the same binary index more than once'
+    let MANY = 'invalid u8a: must not have too many chunks for the main block'
 
     //偽造封包建構器(獨立於src內之編碼函數): [8 bytes大端double=標頭長度][標頭JSON文字][資料區bytes]
     let build = (headerText, dataBytes) => {

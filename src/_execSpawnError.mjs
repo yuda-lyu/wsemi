@@ -44,7 +44,7 @@ function execSpawnError(err, opt = {}) {
             bCwd = !(c === 'ENOENT' || c === 'ENOTDIR')
         }
         if (!bCwd) {
-            return { code, message: `cwd is not an existing folder: ${cwd}` }
+            return { code, message: 'invalid cwd: must be an existing folder' }
         }
     }
     let fixed = false

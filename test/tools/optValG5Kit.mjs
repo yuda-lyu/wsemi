@@ -154,10 +154,15 @@ async function driveInterval(iv, settledRef, max = 6000) {
     return settledRef.v === null ? { st: 'unsettled', v: null } : settledRef.v
 }
 
+//有效之attemptNum由fun被呼叫之次數反推(立即1次+輪詢attemptNum+1次, 計數超過attemptNum後該次完成時判定, 故呼叫attemptNum+2次); reject訊息為固定詞彙'exceeded attemptNum'(不帶數值, V19/V20)
 async function waitFunAttempt(v, extra) {
     return stubTimersAsync(async (calls) => {
         let ref = { v: null }
-        waitFun(() => false, { attemptNum: v, ...extra }).then(() => {
+        let nCall = 0
+        waitFun(() => {
+            nCall++
+            return false
+        }, { attemptNum: v, ...extra }).then(() => {
             ref.v = { st: 'res', v: null }
         }, (e) => {
             ref.v = { st: 'rej', v: e }
@@ -168,8 +173,7 @@ async function waitFunAttempt(v, extra) {
         if (r.st !== 'rej') {
             return r.st
         }
-        let m = /^exceeded attemptNum\[(\d+)\]$/.exec(String(r.v))
-        return m ? Number(m[1]) : `unexpected:${String(r.v)}`
+        return String(r.v) === 'exceeded attemptNum' ? nCall - 2 : `unexpected:${String(r.v)}`
     })
 }
 

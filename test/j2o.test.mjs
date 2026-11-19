@@ -94,9 +94,9 @@ describe(`j2o`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid v' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid v: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = j2o(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid v' }
+        let rr = { state: 'error', msg: 'invalid v: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -104,7 +104,7 @@ describe(`j2o`, function() {
         //原碼catch吞掉解析錯誤而回{}, 與「輸入本就是{}」無從分辨
         let r = j2o('not-json', { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid v: must be a valid JSON text') //V20: 固定訊息, 不帶輸入片段
     })
 
     it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {

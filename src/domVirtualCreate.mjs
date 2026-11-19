@@ -38,7 +38,7 @@ async function domVirtualCreate(fun, opt = {}) {
 
     //check
     if (!isfun(fun)) {
-        throw new Error('invalid fun')
+        throw new Error('invalid fun: must be a function')
     }
 
     //width, 非預期視為未給(null)

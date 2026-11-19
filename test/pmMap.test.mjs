@@ -506,7 +506,7 @@ describe(`pmMap`, function() {
             limit1Fail: '[{"call":1},{"resolve":1},{"call":2},{"resolve":2},{"call":3},{"reject":3},{"err":"#3"}]',
             limit0Fail: '[{"call":1},{"call":2},{"call":3},{"call":4},{"call":5},{"reject":5},{"err":"#5"},{"resolve":4},{"reject":3},{"resolve":2},{"resolve":1}]',
             obj: '[{"call":1},{"call":2},{"resolve":2},{"resolve":1},{"res":["#1","#2"]}]',
-            invalid: ['reject', 'rs is not an array or object'],
+            invalid: ['reject', 'invalid rs: must be an array or an object'],
             empty: ['resolve', []],
             noOpt: [2, 4, 6],
         }
@@ -845,7 +845,7 @@ describe(`pmMap 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             assert.strict.deepStrictEqual({ empties, sparse, rb }, {
                 empties: [{ s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }],
                 sparse: { s: 'resolve', v: ['0=undefined', '1=undefined', '2=undefined'] }, //真陣列(稀疏)仍依其length逐一呼叫
-                rb: bads.map(() => ({ s: 'reject', v: 'rs is not an array or object' })),
+                rb: bads.map(() => ({ s: 'reject', v: 'invalid rs: must be an array or an object' })),
             })
         })
 
@@ -1007,7 +1007,7 @@ describe(`pmMap 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
 
         it(`Symbol.toStringTag讀取即拋錯: 型別無法判定(isobj、isarr不拋錯而回false, 批6裁定③), 視為非陣列或物件而以固定字串reject, 不同步拋出(修前以該錯誤reject)`, function() {
             let r = runChildCase(runner, 'tagGetterContainer').r
-            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'rs is not an array or object' }, unhandled: [], uncaught: [] })
+            assert.strict.deepStrictEqual({ out: r.out.map, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'invalid rs: must be an array or an object' }, unhandled: [], uncaught: [] })
         })
 
     })

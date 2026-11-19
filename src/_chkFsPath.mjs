@@ -5,7 +5,7 @@
  * 回傳之說明字串不帶輸入值(Node之錯誤訊息會回顯輸入值，且含NUL之字串會原樣帶入)，格式依輸入規格V19: `invalid <名稱>: must be <種類描述>`
  *
  * @param {*} v 輸入路徑值
- * @param {String} name 輸入參數名稱，如'pah'、'fp'、'fd'、'fpSrc'
+ * @param {String} name 輸入參數名稱，如'fp'、'fd'、'fpSrc'
  * @returns {String|null} 有效回傳null，無效回傳說明字串
  */
 function chkFsPath(v, name) {

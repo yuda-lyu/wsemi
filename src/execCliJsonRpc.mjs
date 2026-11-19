@@ -123,7 +123,7 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
 
         //command
         if (!isestr(command)) {
-            return rFail('params', 'command 須為非空字串')
+            return rFail('params', 'invalid command: must be a non-empty string')
         }
 
         //args
@@ -138,7 +138,7 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
         for (let i = 0; i < requests.length; i++) {
             let q = requests[i]
             if (!isobj(q) || (!isestr(q.method) && !isestr(q.notify))) {
-                return rFail('params', `requests[${i}] 須為含method或notify之物件`)
+                return rFail('params', `invalid requests[${i}]: must be an object with a non-empty string method or notify`)
             }
             reqs.push(q)
         }

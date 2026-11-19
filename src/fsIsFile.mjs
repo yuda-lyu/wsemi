@@ -7,7 +7,7 @@ import fsIsFileCore from './fsIsFileCore.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsIsFile.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入路徑字串
+ * @param {String} fp 輸入路徑字串
  * @returns {Boolean} 回傳是否布林值
  * @example
  * need test in nodejs.
@@ -45,8 +45,8 @@ import fsIsFileCore from './fsIsFileCore.mjs'
  * // ms [ { 'fsIsFile(before)': false }, { 'fsIsFile(after)': true } ]
  *
  */
-function fsIsFile(pah) {
-    return fsIsFileCore(pah, { fs })
+function fsIsFile(fp) {
+    return fsIsFileCore(fp, { fs })
 }
 
 

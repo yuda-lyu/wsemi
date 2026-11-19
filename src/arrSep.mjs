@@ -8,7 +8,7 @@ import isobj from './isobj.mjs'
 /**
  * 依照指定數量切分陣列
  *
- * arr須為陣列，非陣列(含未給、null、字串、物件等)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查opt。opt為必須參數且與arr有無資料無關：須為設定物件(含空物件{})，非物件(含未給、null、整數、字串、陣列等)throw Error('invalid opt: must be an object with numCount or numGroup')；舊式整數寫法arrSep(arr, 3)已移除(自有套件不做舊版相容)，請改用{ numCount: 3 }。設定物件之numCount(每組個數上限)與numGroup(組數)為二擇一必給，各須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)，兩者皆無效(含未給、空物件{})則throw Error('invalid opt.numCount or opt.numGroup')，兩者皆有效時採numCount；訊息皆不帶輸入值。檢測順序為arr、opt。arr為空陣列(opt有效)時為合法資料，回傳[]；單一空元素之陣列([null]、['']、[{}]、[[]]、[undefined])視為一個元素，照常切分而保留
+ * arr須為陣列，非陣列(含未給、null、字串、物件等)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查opt。opt為必須參數且與arr有無資料無關：須為設定物件(含空物件{})，非物件(含未給、null、整數、字串、陣列等)throw Error('invalid opt: must be an object with numCount or numGroup')；舊式整數寫法arrSep(arr, 3)已移除(自有套件不做舊版相容)，請改用{ numCount: 3 }。設定物件之numCount(每組個數上限)與numGroup(組數)為二擇一必給，各須為有效整數(iseint，數字字串亦可，去頭尾空白後取值)且為1~4294967295(個數)，兩者皆無效(含未給、空物件{})則同樣throw Error('invalid opt: must be an object with numCount or numGroup')，兩者皆有效時採numCount；訊息皆不帶輸入值。檢測順序為arr、opt。arr為空陣列(opt有效)時為合法資料，回傳[]；單一空元素之陣列([null]、['']、[{}]、[[]]、[undefined])視為一個元素，照常切分而保留
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrSep.test.mjs Github}
  * @memberOf wsemi
@@ -17,7 +17,7 @@ import isobj from './isobj.mjs'
  * @param {Integer|String} opt.numCount 輸入每個切割後群組內所擁有的元素數量上限，與opt.numGroup二擇一必給，兩者皆有效時採用numCount
  * @param {Integer|String} opt.numGroup 輸入欲切割成幾個群組之數量，與opt.numCount二擇一必給，numCount無效時才採用
  * @returns {Array} 回傳切割後的陣列；arr非陣列或為空陣列時回傳[]
- * @throws {Error} arr為陣列而opt非物件時throw Error('invalid opt: must be an object with numCount or numGroup')；opt為物件而numCount與numGroup皆無效(含{})時throw Error('invalid opt.numCount or opt.numGroup')；訊息皆不帶輸入值
+ * @throws {Error} arr為陣列而opt非物件時throw Error('invalid opt: must be an object with numCount or numGroup')；opt為物件而numCount與numGroup皆無效(含{})時同樣throw Error('invalid opt: must be an object with numCount or numGroup')；訊息皆不帶輸入值
  * @example
  *
  * let arr = ['a', 123, 'xyz', 5.678, null, 'd', [], { x: 'x1', y: 'y1' }]
@@ -63,7 +63,7 @@ import isobj from './isobj.mjs'
  * catch (err) {
  *     console.log(err.message)
  * }
- * // => invalid opt.numCount or opt.numGroup
+ * // => invalid opt: must be an object with numCount or numGroup
  *
  */
 function arrSep(arr, opt) {
@@ -94,7 +94,7 @@ function arrSep(arr, opt) {
             mode = 'numGroup'
         }
         else {
-            throw new Error('invalid opt.numCount or opt.numGroup')
+            throw new Error('invalid opt: must be an object with numCount or numGroup')
         }
     }
 

@@ -57,7 +57,7 @@ function str2hint(str, opt = {}) {
         if (returnWithStateAndMsg) {
             return {
                 state: 'error',
-                msg: 'invalid str',
+                msg: 'invalid str: must be a string',
             }
         }
         else {

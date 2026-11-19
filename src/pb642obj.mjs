@@ -47,10 +47,10 @@ function pb642obj(b64, key, opt = {}) {
 
     //check
     if (!isestr(b64)) {
-        return retError('invalid b64')
+        return retError('invalid b64: must be a non-empty string')
     }
     if (!isestr(key)) {
-        return retError('invalid key')
+        return retError('invalid key: must be a non-empty string')
     }
 
     //data, 須攔截非預期錯誤, 否則會外拋至呼叫端

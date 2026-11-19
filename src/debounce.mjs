@@ -13,9 +13,9 @@ let RULE_MS = { fn: 'debounce', name: 'ms', kind: 'eint', chk: { min: 1 } }
 /**
  * 函數去除抖動
  *
- * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時記錄而不外拋(不產生未處理之rejection)，不影響後續佇列；輸入非函數時不排入佇列(不影響已排入之任務)，記錄'func is not a function'
+ * 呼叫無回傳值，任務不被等待；任務同步拋錯或其Promise被reject時記錄而不外拋(不產生未處理之rejection)，不影響後續佇列；輸入非函數時不排入佇列(不影響已排入之任務)，記錄'invalid func: must be a function'
  *
- * 記錄經getDiag(opt)之出口(診斷輸出與遮罩之單一實作，規則R-DIAG-01)：任務拋出之值常含權杖、使用者識別或資料值，不得原樣輸出。預設以console.error只輸出固定詞彙之label'[wsemi debounce] task threw'與安全摘要{ errType, errCode }；opt.logDetail為true時改輸出遮罩後之拋出值；opt.funLog為函數時輸出只交給它，不寫console。輸入非函數時以console.log輸出固定詞彙'[wsemi debounce] func is not a function'(同樣可由opt.funLog接管)
+ * 記錄經getDiag(opt)之出口(診斷輸出與遮罩之單一實作，規則R-DIAG-01)：任務拋出之值常含權杖、使用者識別或資料值，不得原樣輸出。預設以console.error只輸出固定詞彙之label'[wsemi debounce] task threw'與安全摘要{ errType, errCode }；opt.logDetail為true時改輸出遮罩後之拋出值；opt.funLog為函數時輸出只交給它，不寫console。輸入非函數時以console.log輸出固定詞彙'[wsemi debounce] invalid func: must be a function'(同樣可由opt.funLog接管)
  *
  * 回傳之函數另帶cancel()：立即停止偵測(清除偵測計時器)並丟棄尚未執行之任務，回傳undefined；已開始執行之任務(含其尚未完成之Promise)不受影響、不被中止；未有待執行之任務時呼叫亦無妨(只通知事件)；cancel之後再呼叫去除抖動函數，則如同初次呼叫重新排入並開始偵測
  *
@@ -208,7 +208,7 @@ function debounce(ms = 300, opt = {}) {
 
             //check
             if (!isfun(func)) {
-                diag('[wsemi debounce] func is not a function')
+                diag('[wsemi debounce] invalid func: must be a function')
                 return
             }
 

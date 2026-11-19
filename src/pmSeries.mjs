@@ -222,7 +222,7 @@ function pmSeries(rs, fun) {
     try {
         let rd = pmReadItems(rs)
         if (rd === null) {
-            pm.reject('rs is not an array or object')
+            pm.reject('invalid rs: must be an array or an object')
             return pm
         }
         rs = rd.items

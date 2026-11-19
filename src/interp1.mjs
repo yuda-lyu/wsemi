@@ -120,7 +120,7 @@ function checkTrend(ps) {
         }
         if (p0.x === p1.x) {
             return {
-                err: `x can not be equal: i=${i}, x=${p0.x}`
+                err: `invalid ps[${i}]: must have a distinct x` //i為濾除無效點後(psEff)之索引, 不帶x值
             }
         }
     }
@@ -135,7 +135,7 @@ function checkTrend(ps) {
 }
 
 
-function checkLimit(ps, x) {
+function checkLimit(ps, x, name) { //name為px之名稱(單一px為'px', 陣列px為'px[i]'), 僅用於超出範圍之msg(不帶值)
 
     //xmin, xmax, 外部已確保x為遞增
     let xmin = null
@@ -147,7 +147,7 @@ function checkLimit(ps, x) {
     if (x < xmin) {
         return {
             err: outOfXRange,
-            msg: `x[${x}] less than lower limit[${xmin}]`,
+            msg: `invalid ${name}: must be within the x range of ps`,
             data: {
                 ps,
                 x,
@@ -161,7 +161,7 @@ function checkLimit(ps, x) {
     if (x > xmax) {
         return {
             err: outOfXRange,
-            msg: `x[${x}] greater than upper limit[${xmax}]`,
+            msg: `invalid ${name}: must be within the x range of ps`,
             data: {
                 ps,
                 x,
@@ -175,11 +175,11 @@ function checkLimit(ps, x) {
 }
 
 
-function interp1Linear(ps, x) {
+function interp1Linear(ps, x, name) {
     //尋找x對應y值, 採各點之間線性內插
 
     //checkLimit
-    let cl = checkLimit(ps, x)
+    let cl = checkLimit(ps, x, name)
     if (cl !== inXRange) {
         return cl
     }
@@ -206,7 +206,7 @@ function interp1Linear(ps, x) {
 }
 
 
-function interp1Stairs(ps, x, opt = {}) {
+function interp1Stairs(ps, x, opt, name) {
     //每個點為bar中點, 尋找x所在之bar值(y)
 
     //xMin, 擴充最小x值範圍, 非有效數字視為未給, 有效數字(含數字字串)以cdbl轉型後使用
@@ -255,7 +255,7 @@ function interp1Stairs(ps, x, opt = {}) {
     }
 
     //checkLimit
-    let cl = checkLimit(ps, x)
+    let cl = checkLimit(ps, x, name)
     if (cl !== inXRange) {
         return cl
     }
@@ -291,11 +291,11 @@ function interp1Stairs(ps, x, opt = {}) {
 }
 
 
-function interp1Blocks(ps, x) {
+function interp1Blocks(ps, x, name) {
     //第1點為起點, 其餘各點為各bar終點, 尋找x所在之bar值(y)
 
     //checkLimit
-    let cl = checkLimit(ps, x)
+    let cl = checkLimit(ps, x, name)
     if (cl !== inXRange) {
         return cl
     }
@@ -330,7 +330,7 @@ function interp1Blocks(ps, x) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/interp1.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} ps 輸入一維數據(各點之x與y須為有效數字，非有效數字之點濾除，不計入內插)，格式可支援兩種，第一種各點為陣列[[x1,y1],[x2,y2],...]，例如[[0.1,5],[0.2,12],...]，第二種各點為物件，屬性至少要有x與y，格式為[{x:x1,y:y1},{x:x2,y:y2},...]，例如[{x:0.1,y:5},{x:0.2,y:12},...]，key值x與y可由opt更換
- * @param {Number|String|Array} px 輸入要內插點的數值或數值陣列，數值須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)。px為單一數值且非有效數字時回傳{ err: 'px is not a number or an array' }；px為陣列時，無效元素於原位輸出{ err: 'invalid px[索引]: must be a valid number' }(不帶值)，與超出範圍之原位{ err }一致，故回傳陣列長度恆等於px長度
+ * @param {Number|String|Array} px 輸入要內插點的數值或數值陣列，數值須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)。px為單一數值且非有效數字時回傳{ err: 'invalid px: must be a valid number or an array' }；px為陣列時，無效元素於原位輸出{ err: 'invalid px[索引]: must be a valid number' }(不帶值)，與超出範圍之原位{ err }一致，故回傳陣列長度恆等於px長度。px超出ps之x範圍時回傳{ err: 'out of x-range', msg, data }，msg為'invalid px: must be within the x range of ps'(單一px)或'invalid px[索引]: must be within the x range of ps'(陣列px，索引為px之實際索引)，msg不帶值，範圍與數值見data
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode=''] 輸入內插方法，可選'linear'、'stairs'、'blocks'，預設'linear'
  * @param {String} [opt.keyX='x'] 輸入若數據為物件陣列，取物件x值時的key字串，預設為'x'
@@ -396,22 +396,22 @@ function interp1Blocks(ps, x) {
  * x = 0
  * r = interp1(psErr, x)
  * console.log(`linear(error data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(error data): x=0 r={"err":"ps(length=0) is not an effective array","ps":[{"x":"a","y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[]}
+ * // => linear(error data): x=0 r={"err":"invalid ps: must contain at least 1 point with a valid x and y","ps":[{"x":"a","y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[]}
  *
  * x = 0
  * r = interp1(psEmpty, x)
  * console.log(`linear(empty data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(empty data): x=0 r={"err":"ps(length=0) is not an effective array","ps":[],"psEff":[]}
+ * // => linear(empty data): x=0 r={"err":"invalid ps: must contain at least 1 point with a valid x and y","ps":[],"psEff":[]}
  *
  * x = 0
  * r = interp1(psEffOne, x)
  * console.log(`linear(one point): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(one point): x=0 r={"err":"ps(length=1) is one point only","ps":[{"x":1,"y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[{"x":1,"y":0.2}]}
+ * // => linear(one point): x=0 r={"err":"invalid ps: must have at least 2 points","ps":[{"x":1,"y":0.2},{"x":"mnop","y":1.2},{"x":"xyz","y":2}],"psEff":[{"x":1,"y":0.2}]}
  *
  * x = 0
  * r = interp1(ps, x)
  * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
+ * // => linear: x=0 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(ps, x)
@@ -446,12 +446,12 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(ps, x)
  * console.log(`linear: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
+ * // => linear: x=5 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
  *
  * x = 0
  * r = interp1(psInv, x)
  * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(inverse data): x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
+ * // => linear(inverse data): x=0 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(psInv, x)
@@ -486,17 +486,17 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(psInv, x)
  * console.log(`linear(inverse data): x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear(inverse data): x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
+ * // => linear(inverse data): x=5 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
  *
  * x = -1
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"xmin":1,"xmax":4}}
+ * // => stairs: x=-1 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":-1,"xmin":1,"xmax":4}}
  *
  * x = 0.51
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=0.51 r={"err":"out of x-range","msg":"x[0.51] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"xmin":1,"xmax":4}}
+ * // => stairs: x=0.51 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0.51,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(ps, x, opt)
@@ -551,12 +551,12 @@ function interp1Blocks(ps, x) {
  * x = 4.5
  * r = interp1(ps, x, opt)
  * console.log(`stairs: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs: x=4.5 r={"err":"out of x-range","msg":"x[4.5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"xmin":1,"xmax":4}}
+ * // => stairs: x=4.5 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":4.5,"xmin":1,"xmax":4}}
  *
  * x = -1
  * r = interp1(ps, x, optX)
  * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs with x-limit: x=-1 r={"err":"out of x-range","msg":"x[-1] less than lower limit[0]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"xmin":0,"xmax":4.5}}
+ * // => stairs with x-limit: x=-1 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":-1,"xmin":0,"xmax":4.5}}
  *
  * x = 0
  * r = interp1(ps, x, optX)
@@ -641,12 +641,12 @@ function interp1Blocks(ps, x) {
  * x = 4.51
  * r = interp1(ps, x, optX)
  * console.log(`stairs with x-limit: x=${x}`, 'r=' + JSON.stringify(r))
- * // => stairs with x-limit: x=4.51 r={"err":"out of x-range","msg":"x[4.51] greater than upper limit[4.5]","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"xmin":0,"xmax":4.5}}
+ * // => stairs with x-limit: x=4.51 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":0,"y":0.2},{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2},{"x":4.5,"y":2}],"x":4.51,"xmin":0,"xmax":4.5}}
  *
  * x = 0
  * r = interp1(psP, x, optP)
  * console.log(`linear by keyX & keyY: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear by keyX & keyY: x=0 r={"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
+ * // => linear by keyX & keyY: x=0 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}}
  *
  * x = 1
  * r = interp1(psP, x, optP)
@@ -681,14 +681,14 @@ function interp1Blocks(ps, x) {
  * x = 5
  * r = interp1(psP, x, optP)
  * console.log(`linear by keyX & keyY: x=${x}`, 'r=' + JSON.stringify(r))
- * // => linear by keyX & keyY: x=5 r={"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
+ * // => linear by keyX & keyY: x=5 r={"err":"out of x-range","msg":"invalid px: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}
  *
  * r = interp1(ps, px)
  * console.log(`linear: px=${JSON.stringify(px)}`, 'r=' + JSON.stringify(r, null, 2))
  * // => linear: px=[0,1,2,2.6,3,3.5,4,5] r=[
  * //   {
  * //     "err": "out of x-range",
- * //     "msg": "x[0] less than lower limit[1]",
+ * //     "msg": "invalid px[0]: must be within the x range of ps",
  * //     "data": {
  * //       "ps": [
  * //         {
@@ -717,7 +717,7 @@ function interp1Blocks(ps, x) {
  * //   2,
  * //   {
  * //     "err": "out of x-range",
- * //     "msg": "x[5] greater than upper limit[4]",
+ * //     "msg": "invalid px[7]: must be within the x range of ps",
  * //     "data": {
  * //       "ps": [
  * //         {
@@ -746,7 +746,7 @@ function interp1Blocks(ps, x) {
  *
  * r = interp1(ps, Infinity)
  * console.log(`linear: px=Infinity`, 'r=' + JSON.stringify(r))
- * // => linear: px=Infinity r={"err":"px is not a number or an array"}
+ * // => linear: px=Infinity r={"err":"invalid px: must be a valid number or an array"}
  *
  */
 function interp1(ps, px, opt = {}) {
@@ -754,7 +754,7 @@ function interp1(ps, px, opt = {}) {
     //check ps
     if (!isarr(ps)) {
         return {
-            err: 'ps is not an array'
+            err: 'invalid ps: must be an array'
         }
     }
 
@@ -764,7 +764,7 @@ function interp1(ps, px, opt = {}) {
         let b2 = !isarr(px)
         if (b1 && b2) {
             return {
-                err: 'px is not a number or an array'
+                err: 'invalid px: must be a valid number or an array'
             }
         }
     }
@@ -781,14 +781,14 @@ function interp1(ps, px, opt = {}) {
     //check
     if (size(psEff) === 0) {
         return {
-            err: 'ps(length=0) is not an effective array',
+            err: 'invalid ps: must contain at least 1 point with a valid x and y',
             ps,
             psEff,
         }
     }
     else if (size(psEff) === 1) {
         return {
-            err: 'ps(length=1) is one point only',
+            err: 'invalid ps: must have at least 2 points',
             ps,
             psEff,
         }
@@ -800,7 +800,7 @@ function interp1(ps, px, opt = {}) {
     //check
     if (trend === 'no') {
         return {
-            err: 'psEff is not increasing or decreasing'
+            err: 'invalid ps: must be monotonic in x'
         }
     }
 
@@ -842,16 +842,17 @@ function interp1(ps, px, opt = {}) {
 
         let xEff = get(o, 'x')
         // console.log(ko, o, xEff)
+        let name = isOne ? 'px' : `px[${ko}]` //超出範圍訊息所指之px名稱(陣列px為其實際索引, 與px等長對齊)
         let v = null
         try {
             if (mode === 'linear') {
-                v = interp1Linear(psEff, xEff)
+                v = interp1Linear(psEff, xEff, name)
             }
             else if (mode === 'blocks') {
-                v = interp1Blocks(psEff, xEff)
+                v = interp1Blocks(psEff, xEff, name)
             }
             else if (mode === 'stairs') {
-                v = interp1Stairs(psEff, xEff, opt)
+                v = interp1Stairs(psEff, xEff, opt, name)
             }
         }
         catch (err) {

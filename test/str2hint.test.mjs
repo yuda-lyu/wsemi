@@ -113,9 +113,9 @@ describe(`str2hint`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = str2hint(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid str' }
+        let rr = { state: 'error', msg: 'invalid str: must be a string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

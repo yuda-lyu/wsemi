@@ -67,7 +67,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -79,7 +79,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -91,7 +91,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -103,7 +103,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -115,7 +115,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -127,7 +127,7 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -212,9 +212,9 @@ describe(`judge`, function() {
     })
 
     //第221項第一批: 判定由isnum改isenum, 包裝物件不解包(R-WRAPPER-01規則4), 屬無效輸入throw(修前放行為true)
-    it(`should throw x1 is not a number when input wrapper objects (isenum does not unwrap)`, function() {
-        assert.throws(() => judge(new Number(1.5), '===', 1.5), { message: 'x1 is not a number' }) // eslint-disable-line no-new-wrappers
-        assert.throws(() => judge(new Number(1.5), '>', 1), { message: 'x1 is not a number' }) // eslint-disable-line no-new-wrappers
+    it(`should throw invalid x1: must be a valid number when input wrapper objects (isenum does not unwrap)`, function() {
+        assert.throws(() => judge(new Number(1.5), '===', 1.5), { message: 'invalid x1: must be a valid number' }) // eslint-disable-line no-new-wrappers
+        assert.throws(() => judge(new Number(1.5), '>', 1), { message: 'invalid x1: must be a valid number' }) // eslint-disable-line no-new-wrappers
     })
 
     it(`should return '' when input NaN`, function() {
@@ -225,8 +225,34 @@ describe(`judge`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'x1 is not a number'
+        let rr = 'invalid x1: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
+    })
+
+    //ws492j V19/V20: 運算子無效訊息列舉允許之集合而不帶輸入值, 且不再console.log輸入值
+    it(`should throw "invalid op: must be one of '===', '!==', '>=', '<=', '>', '<'" without the input value and without console output when op is invalid`, function() {
+        let msg = `invalid op: must be one of '===', '!==', '>=', '<=', '>', '<'`
+        let calls = []
+        let orig = console.log
+        console.log = (...args) => {
+            calls.push(args)
+        }
+        let errs = []
+        try {
+            for (let op of ['LEAK-MARK-7391', '=', '==', '', undefined, null, 5]) {
+                try {
+                    judge(1, op, 2)
+                }
+                catch (err) {
+                    errs.push(err.message)
+                }
+            }
+        }
+        finally {
+            console.log = orig
+        }
+        assert.strict.deepStrictEqual(errs, [msg, msg, msg, msg, msg, msg, msg])
+        assert.strict.deepStrictEqual(calls, [])
     })
 
 })

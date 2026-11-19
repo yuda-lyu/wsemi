@@ -12,6 +12,7 @@
 
 | 類 | 檔 | 條目 | 約 KB |
 |---|---|---|---|
+| 輸入無效之失敗訊息格式(V19,第 492 項第 9 批 ws492j,2026-11-19: `invalid <名稱>: must …`、不帶輸入值、描述詞彙表、轉交前綴為合規、fs 系參數名 `pah` 更正為 `fp`／`fd`)與共用可讀性探針 `chkReadable`(第 558 項:可讀回 `''`、不可讀回固定原因字串、永不拋錯、不呼叫存取器與 `toJSON`、讀取範圍與判斷函數同源) | `sgud/rule/rulebook_msg.md` | R-MSG-V19-01、R-READABLE-01 | 約 11 |
 | 計時器、佇列與 Promise 流程(含第 492 項第 6 批 ws492g,2026-11-18: 計時與流程函數之函數參數三種處理、`importResources` 之 `pathItems` 檢測) | `sgud/rule/rulebook_timer.md` | R-TIMER-RELEASE-01、R-PM-SETTLE-01、R-PM-ARG-01 | 約 30 |
 | 計時器相關函數之觀察回調 | `sgud/rule/rulebook_trace.md` | R-TRACE-01 | 24.6 |
 | 安全相關 opt 為 K3 之例外(雜湊演算法、`fsEnsureBins`／`fsDownloadFileVerify` 之 offline、mirror、fetch、names 等)、fs 系錯誤訊息不回顯路徑／網址／輸入值、Node 原生錯誤固定詞彙加錯誤碼(第 492 項第 3 批 ws492d,2026-11-17) | `sgud/rule/rulebook_secopt.md` | R-HASH-TYPE-01、R-SEC-OPT-01、R-FS-ERRMSG-01、R-FS-MSG-V20-01 | 約 17 |

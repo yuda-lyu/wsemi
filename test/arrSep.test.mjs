@@ -6,7 +6,7 @@ import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.
 //ws492h(第492項第7批): W-16乙(arr為第1參數, 非陣列回[], 不拋錯, 不檢查opt)、W-19(單一空元素視為一個元素)、W-07(numCount、numGroup改iseint use:'count' min:1並維持二擇一必給V10, 舊式整數opt依原則14移除, 第223項併結)
 //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」、V10(跨鍵依賴)、V19(訊息格式)、V20(不回顯輸入值)、處理原則14(自有套件不做舊版相容)
 const MSG_OPT = 'invalid opt: must be an object with numCount or numGroup'
-const MSG_OPT_OBJ = 'invalid opt.numCount or opt.numGroup'
+const MSG_OPT_OBJ = 'invalid opt: must be an object with numCount or numGroup' //ws492j V19: opt為物件而兩鍵皆無效時與非物件opt統一為同一則訊息(原'invalid opt.numCount or opt.numGroup')
 
 
 describe(`arrSep`, function() {
@@ -135,7 +135,7 @@ describe(`arrSep`, function() {
 
         let a3 = [1, 2, 3]
 
-        it(`should throw invalid opt.numCount or opt.numGroup when opt is an object without a valid key`, function() {
+        it(`should throw invalid opt: must be an object with numCount or numGroup when opt is an object without a valid key`, function() {
             throwsMsg(() => arrSep(a3, {}), MSG_OPT_OBJ)
             throwsMsg(() => arrSep([], {}), MSG_OPT_OBJ)
             throwsMsg(() => arrSep(a3, { numGroup: 0 }), MSG_OPT_OBJ)

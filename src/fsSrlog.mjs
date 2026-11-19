@@ -20,6 +20,7 @@ import strdelright from './strdelright.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
 import errToStr from './_errToStr.mjs'
+import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 
 
@@ -257,7 +258,7 @@ function fsSrlog(opt = {}) {
         core(time, loc, ...args)
             .catch((err) => {
                 try {
-                    console.log('fsSrlog: can not save log:', errToStr(err))
+                    console.log('fsSrlog: can not save log:', errToStr(toResultError(err)))
                 }
                 catch (e) {}
             })

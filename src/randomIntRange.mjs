@@ -13,7 +13,7 @@ import random from './random.mjs'
  * @param {Integer|String} [vstart=0] 輸入範圍最小值，未給(undefined或null)時用預設0；有給則須為有效整數(安全整數範圍，數字字串亦可，去頭尾空白後取值)，非預期之輸入(非有效整數、小數、超出安全整數範圍、Infinity、'0x10'、包裝物件、非數字字串、布林等)throw Error('invalid vstart: must be an integer')，訊息不帶輸入值
  * @param {Integer|String} [vend=100] 輸入範圍最大值，規則同vstart，未給時用預設100，非預期之輸入throw Error('invalid vend: must be an integer')；若vstart大於vend則拋出錯誤
  * @returns {Integer} 回傳位於指定範圍內隨機整數
- * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('vstart[<vstart>] > vend[<vend>]')
+ * @throws {Error} vstart或vend有給而非有效整數時throw Error('invalid vstart: must be an integer')或Error('invalid vend: must be an integer')(先檢vstart)；vstart大於vend時throw Error('invalid vstart: must be <= vend')(訊息不帶值)
  * @example
  *
  * let r
@@ -53,7 +53,7 @@ function randomIntRange(vstart = 0, vend = 100) {
 
     //check
     if (vstart > vend) {
-        throw new Error(`vstart[${vstart}] > vend[${vend}]`)
+        throw new Error('invalid vstart: must be <= vend')
     }
 
     //random, [0,1)

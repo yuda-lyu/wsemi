@@ -101,7 +101,7 @@ async function fsGetBinManifestEntry(fp, opt = {}) {
             }
         }
         if (p !== undefined && u !== undefined) {
-            throw new Error(`opt.path and opt.url can not be given together (an entry has exactly one source)`)
+            throw new Error(`invalid opt.url: must not be given together with opt.path (an entry has exactly one source)`)
         }
         if (u !== undefined && binUrlProblem(u) !== '') {
             throw new Error(`invalid opt.url: ${binUrlProblem(u)} (the url that fsEnsureBins accepts)`) //問題描述為固定詞彙, 不帶網址(V20)

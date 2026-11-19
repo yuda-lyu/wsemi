@@ -7,7 +7,7 @@ import fsExistsCore from './fsExistsCore.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsExists.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入路徑字串
+ * @param {String} fp 輸入路徑字串
  * @returns {Boolean} 回傳是否布林值
  * @example
  * need test in nodejs.
@@ -66,8 +66,8 @@ import fsExistsCore from './fsExistsCore.mjs'
  * // ]
  *
  */
-function fsExists(pah) {
-    return fsExistsCore(pah, { fs })
+function fsExists(fp) {
+    return fsExistsCore(fp, { fs })
 }
 
 

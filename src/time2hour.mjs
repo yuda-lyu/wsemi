@@ -45,7 +45,7 @@ function time2hour(t, opt = {}) {
 
     //check
     if (!istime(t)) {
-        return retError('invalid t')
+        return retError('invalid t: must be a time string YYYY-MM-DDTHH:mm:ss')
     }
 
     //r, 須攔截非預期錯誤(如dayjs解析或格式化異常), 否則會外拋至呼叫端

@@ -179,7 +179,7 @@ describe(`domIsStable`, function() {
             catch (e) {
                 err = e
             }
-            assert.strict.deepStrictEqual(err, 'invalid element', String(v))
+            assert.strict.deepStrictEqual(err, 'invalid ele: must be an element', String(v))
         }
     })
 
@@ -193,7 +193,7 @@ describe(`domIsStable`, function() {
         catch (e) {
             err = e
         }
-        assert.strict.deepStrictEqual(err, 'invalid element.getBoundingClientRect')
+        assert.strict.deepStrictEqual(err, 'invalid ele: must have a getBoundingClientRect function')
     })
 
     //--- promise模式 ---
@@ -526,7 +526,7 @@ describe(`domIsStable`, function() {
         }
         await delay(250)
         let rs = evs.map((ev) => ev.dispose())
-        assert.strict.deepStrictEqual([evs.map((ev) => ev instanceof Promise), evs.map((ev) => ev.error), got, rs], [[false, false], ['invalid element', 'invalid element.getBoundingClientRect'], [], [true, true]])
+        assert.strict.deepStrictEqual([evs.map((ev) => ev instanceof Promise), evs.map((ev) => ev.error), got, rs], [[false, false], ['invalid ele: must be an element', 'invalid ele: must have a getBoundingClientRect function'], [], [true, true]])
     })
 
     it(`should start the first round right after create, before any timer, and only once however often create is called`, async function() {
@@ -644,8 +644,8 @@ describe(`domIsStable`, function() {
     })
 
     it(`should use the defaults for invalid numeric options, and accept numeric strings`, async function() {
-        //tolerance非有效非負數(含null、布林、Infinity)→0(靜止元素仍穩定, Infinity不再保留為任何變化皆容許); timeDiff非有效(含null)→100, 0為有效(w-component-vue亦視0為有效), 負數視為0; 數字字串照常
-        //  timeDiff之落定時刻(距呼叫之ms)於假時鐘下確定: 無效與null為預設100, 0與負數為立即(第一個計時器時機, 不是預設100), '20'為20(原以真實時間之上界dt<50、dt<100)
+        //tolerance非有效非負數(含null、布林、Infinity)→0(靜止元素仍穩定, Infinity不再保留為任何變化皆容許); timeDiff非有效(含null與負數, ws492j依K3)→100, 0為有效(w-component-vue亦視0為有效); 數字字串照常
+        //  timeDiff之落定時刻(距呼叫之ms)於假時鐘下確定: 無效、null與負數為預設100, 0為立即(第一個計時器時機, 不是預設100), '20'為20(原以真實時間之上界dt<50、dt<100)
         let clock = useFakeClock()
         try {
             let el = new FakeEle()
@@ -673,7 +673,7 @@ describe(`domIsStable`, function() {
             let bHugeTol = await moving(1e9) //欲容許較大位移者給足夠大之有限數
             let bZeroTol = await moving(0)
             assert.strict.deepStrictEqual(out, [true, true, true, true, true])
-            assert.strict.deepStrictEqual([tBad, tNull, tNeg >= 0 && tNeg <= 1, tZero >= 0 && tZero <= 1, tStr, bStrTol, bInfTol, bHugeTol, bZeroTol], [100, 100, true, true, 20, true, false, true, false], `bad=${tBad} null=${tNull} neg=${tNeg} zero=${tZero} str=${tStr}`)
+            assert.strict.deepStrictEqual([tBad, tNull, tNeg, tZero >= 0 && tZero <= 1, tStr, bStrTol, bInfTol, bHugeTol, bZeroTol], [100, 100, 100, true, 20, true, false, true, false], `bad=${tBad} null=${tNull} neg=${tNeg} zero=${tZero} str=${tStr}`)
         }
         finally {
             clock.restore()
@@ -904,7 +904,7 @@ describe(`domIsStable`, function() {
         assert.strict.deepStrictEqual(rs, [a, a, a, a])
         assert.strict.deepStrictEqual(un, [])
         //情境本身須有意義: 各結果如規格, 且記錄器收到各type之事件
-        assert.strict.deepStrictEqual([a.still.v, a.moved.v, a.anim.v, a.invalid.err, a.thrown.err, a.seq.map((x) => x[0])], [true, false, false, 'invalid element.getBoundingClientRect', 'rect boom', [true, false, true]])
+        assert.strict.deepStrictEqual([a.still.v, a.moved.v, a.anim.v, a.invalid.err, a.thrown.err, a.seq.map((x) => x[0])], [true, false, false, 'invalid ele: must have a getBoundingClientRect function', 'rect boom', [true, false, true]])
         assert.strict.deepStrictEqual(Array.from(new Set(rec.types())).sort(), ['anims', 'dispose', 'done', 'emit', 'fail', 'judge', 'rect', 'round', 'skip'])
     })
 
@@ -912,7 +912,7 @@ describe(`domIsStable`, function() {
 
 
 //第221項第二批第2輪第3批(ws272c): _optNum退役, domIsStable之3個數值選項改用_optVal(R-OPT-VAL-01), 使用者2026-11-02定A: tolerance之Infinity(舊inf:'keep')與timeDiff、timeDetect超出計時器上限(舊夾至上限)皆為非預期之輸入, 改用預設(0／100／50)
-//  負數之timeDiff維持文件載明之視為0(valid案例); probe回傳「該選項實際採用之值」之可觀察結果
+//  負數之timeDiff為非預期之輸入, 改用預設100(ws492j依K3; 原視為0, invalid案例); probe回傳「該選項實際採用之值」之可觀察結果
 describe(`optVal domIsStable (ws272c, formerly _optNum)`, function() {
 
     //ShiftEle, 第一次取位置left為0, 之後(第2、3次)為d: 三次位置在容許誤差內相同(穩定)當且僅當d不大於tolerance
@@ -962,7 +962,7 @@ describe(`optVal domIsStable (ws272c, formerly _optNum)`, function() {
         ],
     })
 
-    //timeDiff: 位置前後比對之時間差(ms), 0為立即比對; delay(ms)所排定之setTimeout毫秒; 有效之負數(JSDoc載明)視為0
+    //timeDiff: 位置前後比對之時間差(ms), 0為立即比對; delay(ms)所排定之setTimeout毫秒; 負數為非預期之輸入而改用預設100
     defineOptParam({
         fn: 'domIsStable',
         name: 'opt.timeDiff',
@@ -973,7 +973,7 @@ describe(`optVal domIsStable (ws272c, formerly _optNum)`, function() {
             })
             return calls.find((c) => c.kind === 'timeout').ms
         },
-        extraInvalid: [...INVALID_TIMER_OVER],
+        extraInvalid: [...INVALID_TIMER_OVER, ['-5', -5], [`'-5'`, '-5'], ['-0.5', -0.5]],
         valid: [
             ['0', 0, 0],
             ['0.5', 0.5, 0.5],
@@ -981,9 +981,6 @@ describe(`optVal domIsStable (ws272c, formerly _optNum)`, function() {
             [`'30'`, '30', 30],
             [`' 15 '`, ' 15 ', 15],
             ['2147483647', 2147483647, 2147483647],
-            ['-5 (documented as 0)', -5, 0],
-            [`'-5' (documented as 0)`, '-5', 0],
-            ['-0.5 (documented as 0)', -0.5, 0],
         ],
     })
 

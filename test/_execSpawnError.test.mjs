@@ -113,20 +113,23 @@ describe(`execSpawnError 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         return Object.assign(new Error(`spawn x ${code}`), { code, errno, syscall: 'spawn x', path: 'x' })
     }
 
-    it(`ENOENT且cwd不存在: 訊息改為'cwd is not an existing folder: <cwd>', 碼仍為ENOENT [R-EXEC-FAIL-01之7]`, function() {
+    it(`ENOENT且cwd不存在: 訊息改為'invalid cwd: must be an existing folder'(不帶cwd之值), 碼仍為ENOENT [R-EXEC-FAIL-01之7]`, function() {
         let r = execSpawnError(mkErr('ENOENT', -4058), { cwd: fdMissing })
-        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'cwd is not an existing folder: ' + fdMissing })
+        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'invalid cwd: must be an existing folder' })
+        assert.strict.deepStrictEqual(r.message.includes(fdMissing), false)
     })
 
     it(`ENOENT且cwd為檔案: 同形改寫 [R-EXEC-FAIL-01之7]`, function() {
         let r = execSpawnError(mkErr('ENOENT', -4058), { cwd: fpFile })
-        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'cwd is not an existing folder: ' + fpFile })
+        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'invalid cwd: must be an existing folder' })
+        assert.strict.deepStrictEqual(r.message.includes(fpFile), false)
     })
 
     it(`ENOENT且cwd之上層為檔案(stat回ENOTDIR或ENOENT): 同形改寫 [R-EXEC-FAIL-01之7]`, function() {
         let cwd = path.join(fpFile, 'sub')
         let r = execSpawnError(mkErr('ENOENT', -4058), { cwd })
-        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'cwd is not an existing folder: ' + cwd })
+        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'invalid cwd: must be an existing folder' })
+        assert.strict.deepStrictEqual(r.message.includes(cwd), false)
     })
 
     it(`ENOENT且cwd為既存資料夾: 訊息原樣(指向執行檔, 非cwd之問題) [R-EXEC-FAIL-01之7, 對照]`, function() {
@@ -141,7 +144,8 @@ describe(`execSpawnError 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`ENOENT且cwd為懸空junction(目標已刪): 同形改寫 [R-EXEC-FAIL-01之7]`, function() {
         let r = execSpawnError(mkErr('ENOENT', -4058), { cwd: fdDang })
-        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'cwd is not an existing folder: ' + fdDang })
+        assert.strict.deepStrictEqual(r, { code: 'ENOENT', message: 'invalid cwd: must be an existing folder' })
+        assert.strict.deepStrictEqual(r.message.includes(fdDang), false)
     })
 
     it(`碼非ENOENT(如EACCES)而cwd不存在: 訊息原樣(只改寫ENOENT) [R-EXEC-FAIL-01之7]`, function() {
@@ -209,10 +213,10 @@ describe(`execSpawnError opt.fixed(R-EXEC-FAIL-01之15)`, function() {
         }
     })
 
-    it(`should keep the cwd explanation of an ENOENT caused by a missing cwd (documented contract, the cwd is named)`, function() {
+    it(`should keep the cwd explanation of an ENOENT caused by a missing cwd (documented contract, the cwd is named but its value is not echoed)`, function() {
         let fdMissing = path.resolve('./test/_tmp/execSpawnError-fixed/no-such-dir')
         let e = mk({ message: `spawn x ENOENT`, code: 'ENOENT', errno: -4058 })
-        assert.strict.deepStrictEqual(execSpawnError(e, { cwd: fdMissing, fixed: true }), { code: 'ENOENT', message: `cwd is not an existing folder: ${fdMissing}` })
+        assert.strict.deepStrictEqual(execSpawnError(e, { cwd: fdMissing, fixed: true }), { code: 'ENOENT', message: 'invalid cwd: must be an existing folder' })
         //cwd為既存資料夾時為固定詞彙
         assert.strict.deepStrictEqual(execSpawnError(e, { cwd: process.cwd(), fixed: true }), { code: 'ENOENT', message: 'operation failed (code ENOENT)' })
     })

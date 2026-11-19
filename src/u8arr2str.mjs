@@ -21,7 +21,7 @@ import isu8arr from './isu8arr.mjs'
  * // => test中文
  *
  * console.log(u8arr2str('abc', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid u8a' }
+ * // => { state: 'error', msg: 'invalid u8a: must be a Uint8Array' }
  *
  */
 function u8arr2str(u8a, opt = {}) {
@@ -47,7 +47,7 @@ function u8arr2str(u8a, opt = {}) {
 
     //check
     if (!isu8arr(u8a)) {
-        return retError('invalid u8a')
+        return retError('invalid u8a: must be a Uint8Array')
     }
 
     //r, fatal模式於非合法UTF-8時拋錯而視為失敗, 不靜默換成U+FFFD; ignoreBOM保留開頭之BOM, 與str2u8arr往返一致; 須攔截錯誤, 否則會外拋至呼叫端

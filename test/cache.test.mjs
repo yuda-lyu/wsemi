@@ -633,7 +633,7 @@ describe(`cache`, function() {
     }
     it(`should keep in-flight get working when key removed during execution when run test6'`, async function() {
         let r = await test6()
-        assert.strict.deepStrictEqual(r, { v1: 'v1', v2: null, v3: 'v2', n: 2, errs: ['fun:invalid key'] })
+        assert.strict.deepStrictEqual(r, { v1: 'v1', v2: null, v3: 'v2', n: 2, errs: ['fun:invalid key: must be a key that has been set'] })
     })
 
     async function test7() {

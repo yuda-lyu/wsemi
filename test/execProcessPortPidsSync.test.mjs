@@ -75,7 +75,7 @@ describe(`execProcessPortPidsSync`, function() {
                 let { evs, on } = recEvents()
                 let r = execProcessPortPidsSync(v, { exec: thrower(new Error('exec must not be called')), onTrace: on })
                 assert.strict.deepStrictEqual(r, null)
-                assert.strict.deepStrictEqual(evs, [{ type: 'settle', ok: false, reason: 'port', src: null, count: null, msg: 'port is not an integer between 1 and 65535' }])
+                assert.strict.deepStrictEqual(evs, [{ type: 'settle', ok: false, reason: 'port', src: null, count: null, msg: 'invalid port: must be an integer from 1 to 65535' }])
             }
         })
 

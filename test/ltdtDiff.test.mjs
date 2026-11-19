@@ -225,8 +225,9 @@ describe(`ltdtDiff`, function() {
     const EMPTY_RESULT = { diff: [], dfs: [] }
     const MSG_NEW = 'invalid ltdtNew: must be an array'
     //ws290: 元素須為有效物件(iseobj, 即非空物件), 空物件列{}亦無效(使用者2026-11-12裁示: ltdtDiff預期輸入物件陣列內各物件皆為有效物件, 空物件列無法判斷後續之有效物件由哪一筆而來; 修前{}被放行, 內部ltdtkeys2mat整側靜默回[], 結果把整側當成不存在而算錯)
-    const MSG_OLD_ELE = 'invalid ltdtOld: every element must be a non-empty object'
-    const MSG_NEW_ELE = 'invalid ltdtNew: every element must be a non-empty object'
+    //ws492j V19: 訊息帶第一個無效元素之實際索引i(原'invalid ltdtOld: every element must be a non-empty object')
+    const MSG_OLD_ELE = (i) => `invalid ltdtOld[${i}]: must be a non-empty object`
+    const MSG_NEW_ELE = (i) => `invalid ltdtNew[${i}]: must be a non-empty object`
     const OK = [{ a: 1 }]
 
     //無效物件元素(空物件類): 皆為物件但無可列舉鍵
@@ -264,48 +265,48 @@ describe(`ltdtDiff`, function() {
             throwsMsgNoLeak(() => ltdtDiff(OK, v), MSG_NEW)
         }
         for (let v of [LEAK, 7391.4217, [LEAK], Symbol(LEAK), () => LEAK, new Map([[LEAK, LEAK]])]) {
-            throwsMsgNoLeak(() => ltdtDiff([v], OK), MSG_OLD_ELE)
-            throwsMsgNoLeak(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
+            throwsMsgNoLeak(() => ltdtDiff([v], OK), MSG_OLD_ELE(0))
+            throwsMsgNoLeak(() => ltdtDiff(OK, [v]), MSG_NEW_ELE(0))
         }
     })
 
     //元素非物件: 修前回傳{ dfs: [] }(看起來像沒有差異)或把該側靜默當成空, 現改throw
     for (let [label, v] of NON_OBJ_ELEM) {
-        it(`should throw '...every element must be a non-empty object' when an element is not an object: ${label} (as the only element, first, last, in ltdtOld or ltdtNew)`, function() {
-            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE)
+        it(`should throw 'invalid <name>[i]: must be a non-empty object' when an element is not an object: ${label} (as the only element, first, last, in ltdtOld or ltdtNew)`, function() {
+            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE(1))
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE(1))
+            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE(1))
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE(1))
         })
     }
 
     it(`should throw for ltdtDiff([1], [2]) with the ltdtOld message (was { dfs: [] } before)`, function() {
-        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE)
-        throwsMsg(() => ltdtDiff([[1]], [[2]]), MSG_OLD_ELE) //列為陣列亦非物件
-        throwsMsg(() => ltdtDiff([{ a: 1 }], [[2]]), MSG_NEW_ELE) //修前: 新側靜默當成空而顯示為全部刪除
+        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE(0))
+        throwsMsg(() => ltdtDiff([[1]], [[2]]), MSG_OLD_ELE(0)) //列為陣列亦非物件
+        throwsMsg(() => ltdtDiff([{ a: 1 }], [[2]]), MSG_NEW_ELE(0)) //修前: 新側靜默當成空而顯示為全部刪除
     })
 
     it(`should throw for an array hole as an element (a hole is undefined)`, function() {
-        throwsMsg(() => ltdtDiff([, { a: 1 }], OK), MSG_OLD_ELE) // eslint-disable-line no-sparse-arrays
-        throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, , { a: 2 }]), MSG_NEW_ELE) // eslint-disable-line no-sparse-arrays
-        throwsMsg(() => ltdtDiff(new Array(2), OK), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([, { a: 1 }], OK), MSG_OLD_ELE(0)) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, , { a: 2 }]), MSG_NEW_ELE(1)) // eslint-disable-line no-sparse-arrays
+        throwsMsg(() => ltdtDiff(new Array(2), OK), MSG_OLD_ELE(0))
     })
 
     //檢測順序: ltdtOld陣列, ltdtOld元素, ltdtNew陣列, ltdtNew元素
     it(`should check in the order of ltdtOld (array, elements) and ltdtNew (array, elements)`, function() {
         assert.strict.deepStrictEqual(ltdtDiff('x', 'y'), EMPTY_RESULT) //ws492h: ltdtOld非陣列回空結果, 不檢查ltdtNew
         assert.strict.deepStrictEqual(ltdtDiff('x', [1]), EMPTY_RESULT)
-        throwsMsg(() => ltdtDiff([1], 'y'), MSG_OLD_ELE)
-        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([1], 'y'), MSG_OLD_ELE(0))
+        throwsMsg(() => ltdtDiff([1], [2]), MSG_OLD_ELE(0))
         throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
-        throwsMsg(() => ltdtDiff(OK, [2]), MSG_NEW_ELE)
+        throwsMsg(() => ltdtDiff(OK, [2]), MSG_NEW_ELE(0))
     })
 
     //物件元素(含無原型物件)為有效, 但須非空物件
@@ -317,47 +318,47 @@ describe(`ltdtDiff`, function() {
 
     //ws290: 空物件列{}無效, 於唯一/首/中/末位置, ltdtOld或ltdtNew側, 對側為有效/[]/空物件列, 皆同步throw固定訊息且不輸出至console
     for (let [label, v] of EMPTY_OBJ_ELEM) {
-        it(`should throw '...every element must be a non-empty object' when an element is an empty object: ${label} (as the only element, first, middle, last, in ltdtOld or ltdtNew)`, function() {
-            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE)
-            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE)
-            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE)
+        it(`should throw 'invalid <name>[i]: must be a non-empty object' when an element is an empty object: ${label} (as the only element, first, middle, last, in ltdtOld or ltdtNew)`, function() {
+            throwsMsg(() => ltdtDiff([v], [v]), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v], OK), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v], []), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([v, { a: 1 }], OK), MSG_OLD_ELE(0))
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v], OK), MSG_OLD_ELE(1))
+            throwsMsg(() => ltdtDiff([{ a: 1 }, v, { a: 2 }], OK), MSG_OLD_ELE(1))
+            throwsMsg(() => ltdtDiff(OK, [v]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff([], [v]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff(OK, [v, { a: 1 }]), MSG_NEW_ELE(0))
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v]), MSG_NEW_ELE(1))
+            throwsMsg(() => ltdtDiff(OK, [{ a: 1 }, v, { a: 2 }]), MSG_NEW_ELE(1))
         })
     }
 
     //ws290: 修前靜默算錯之原案例(任務書實測): 空物件列使整側被當成不存在, 回「N列新增」; 現改throw
     it(`should throw instead of silently returning a wrong diff for ltdtDiff([{a:1},{a:2},{}], [{a:1},{a:2}]) and ltdtDiff([{a:1},{}], [{a:1}])`, function() {
-        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }, {}], [{ a: 1 }, { a: 2 }]), MSG_OLD_ELE) //修前: 2列新增
-        throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), MSG_OLD_ELE) //修前: 1列新增
-        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }], [{ a: 1 }, { a: 2 }, {}]), MSG_NEW_ELE) //對稱: 新側
-        throwsMsg(() => ltdtDiff([{ a: 1 }], [{ a: 1 }, {}]), MSG_NEW_ELE)
+        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }, {}], [{ a: 1 }, { a: 2 }]), MSG_OLD_ELE(2)) //修前: 2列新增
+        throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), MSG_OLD_ELE(1)) //修前: 1列新增
+        throwsMsg(() => ltdtDiff([{ a: 1 }, { a: 2 }], [{ a: 1 }, { a: 2 }, {}]), MSG_NEW_ELE(2)) //對稱: 新側
+        throwsMsg(() => ltdtDiff([{ a: 1 }], [{ a: 1 }, {}]), MSG_NEW_ELE(1))
     })
 
     //ws290: 檢測序仍為ltdtOld(陣列, 元素)、ltdtNew(陣列, 元素); 空物件元素與非物件元素同序同訊息
     it(`should check an empty-object element in the same order as other invalid elements`, function() {
-        throwsMsg(() => ltdtDiff([{}], 'y'), MSG_OLD_ELE)
-        throwsMsg(() => ltdtDiff([{}], [{}]), MSG_OLD_ELE)
-        throwsMsg(() => ltdtDiff([{}], [1]), MSG_OLD_ELE)
-        throwsMsg(() => ltdtDiff([1], [{}]), MSG_OLD_ELE)
+        throwsMsg(() => ltdtDiff([{}], 'y'), MSG_OLD_ELE(0))
+        throwsMsg(() => ltdtDiff([{}], [{}]), MSG_OLD_ELE(0))
+        throwsMsg(() => ltdtDiff([{}], [1]), MSG_OLD_ELE(0))
+        throwsMsg(() => ltdtDiff([1], [{}]), MSG_OLD_ELE(0))
         throwsMsg(() => ltdtDiff(OK, 'y'), MSG_NEW)
-        throwsMsg(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE)
+        throwsMsg(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE(0))
         assert.strict.deepStrictEqual(ltdtDiff('x', [{}]), EMPTY_RESULT) //ws492h: ltdtOld非陣列回空結果, 不檢查ltdtNew之元素
     })
 
     //ws290: 訊息固定不帶輸入值(元素為鍵與值皆含洩漏標記但不可列舉之物件時, 訊息亦不含標記)
     it(`should throw the fixed messages for empty objects without the input value`, function() {
-        throwsMsgNoLeak(() => ltdtDiff([{}], OK), MSG_OLD_ELE)
-        throwsMsgNoLeak(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE)
+        throwsMsgNoLeak(() => ltdtDiff([{}], OK), MSG_OLD_ELE(0))
+        throwsMsgNoLeak(() => ltdtDiff(OK, [{}]), MSG_NEW_ELE(0))
         let ne = Object.defineProperty({}, LEAK, { value: LEAK, enumerable: false }) //鍵與值皆為洩漏標記, 但不可列舉故無效
-        throwsMsgNoLeak(() => ltdtDiff([ne], OK), MSG_OLD_ELE)
-        throwsMsgNoLeak(() => ltdtDiff(OK, [ne]), MSG_NEW_ELE)
+        throwsMsgNoLeak(() => ltdtDiff([ne], OK), MSG_OLD_ELE(0))
+        throwsMsgNoLeak(() => ltdtDiff(OK, [ne]), MSG_NEW_ELE(0))
     })
 
     //ws290: 兩側皆為[]仍回傳{ diff: [], dfs: [] }; 只有一側為[]者照常

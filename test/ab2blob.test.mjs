@@ -36,13 +36,13 @@ describe(`ab2blob`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid ab' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid ab: must be an ArrayBuffer' } when input NaN with returnWithStateAndMsg`, function() {
         //原碼無前置檢查, 直接把ab2u8arr之空值包成空Blob, 使無效輸入無從辨識
         if (typeof Blob === 'undefined') {
             this.skip()
         }
         let r = ab2blob(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid ab' }
+        let rr = { state: 'error', msg: 'invalid ab: must be an ArrayBuffer' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

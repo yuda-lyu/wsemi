@@ -194,7 +194,7 @@ describe('optVal timer/flow functions (ws272a)', function() {
             extraInvalid: TIMER_INVALID_EXTRA,
         })
 
-        it('reverse: attemptNum Infinity is 200 attempts (exceeded attemptNum[200] after 201 polls and 202 calls of fun), not endless polling', async function() {
+        it('reverse: attemptNum Infinity is 200 attempts (exceeded attemptNum after 201 polls and 202 calls of fun), not endless polling', async function() {
             let calls = 0
             let msg = await K.stubTimersAsync(async (cs) => {
                 let ref = { v: null }
@@ -214,7 +214,7 @@ describe('optVal timer/flow functions (ws272a)', function() {
                 }
                 return ref.v
             })
-            assert.strict.deepStrictEqual(msg, 'exceeded attemptNum[200]')
+            assert.strict.deepStrictEqual(msg, 'exceeded attemptNum')
             assert.strict.deepStrictEqual(calls, 202) //立即1次+輪詢201次(計數超過attemptNum後該次完成時判定)
         })
 

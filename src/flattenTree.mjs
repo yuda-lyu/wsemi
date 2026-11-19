@@ -14,8 +14,8 @@ import isobj0 from './isobj0.mjs'
  * @memberOf wsemi
  * @param {Array|Object} data 輸入樹狀物件或陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [bindKey='id'] 輸入節點物件識別用欄位字串，預設'id'
- * @param {String} [bindChildren='children'] 輸入節點物件內存放子節點欄位字串，預設'children'
+ * @param {String} [opt.bindKey='id'] 輸入節點物件識別用欄位字串，預設'id'
+ * @param {String} [opt.bindChildren='children'] 輸入節點物件內存放子節點欄位字串，預設'children'
  * @returns {Array} 回傳節點物件陣列
  * @example
  *

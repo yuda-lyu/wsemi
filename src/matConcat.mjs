@@ -5,7 +5,7 @@ import _cellText from './_cellText.mjs'
 /**
  * 合併二維陣列mat1與mat2
  *
- * mat1為第1參數：非陣列(含未給、null、字串、物件等)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查mat2。mat1為陣列時，mat1與mat2須為二維陣列(陣列且各元素皆為陣列)，檢測順序為mat1(各列為陣列)、mat2(陣列、各列為陣列)，無效throw Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')或Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值(外層空位視為非陣列)；空陣列為合法資料：兩者皆為[]回傳[]，只有一邊為[]則另一邊照常回傳(列數與欄數以另一邊為準)
+ * mat1為第1參數：非陣列(含未給、null、字串、物件等)回傳空陣列[]，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查mat2。mat1為陣列時，mat1與mat2須為二維陣列(陣列且各元素皆為陣列)，檢測順序為mat1(各列為陣列)、mat2(陣列、各列為陣列)，無效throw Error('invalid mat1[i]: must be an array')、Error('invalid mat2: must be an array')或Error('invalid mat2[i]: must be an array')，訊息只含索引不含值(外層空位視為非陣列)；空陣列為合法資料：兩者皆為[]回傳[]，只有一邊為[]則另一邊照常回傳(列數與欄數以另一邊為準)
  * 列數取兩者較大者；各矩陣之欄數取其最長之列，較短之列、缺少之列、列內空位與undefined之儲存格補opt.empty(預設null)，null原樣；物件與陣列之儲存格不深拷貝；每列皆為新陣列
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matConcat.test.mjs Github}
@@ -15,7 +15,7 @@ import _cellText from './_cellText.mjs'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {*} [opt.empty=null] 輸入補值(原樣放入)，函數視為null，預設null
  * @returns {Array} 回傳合併後之二維陣列，列數為兩者較大者，各矩陣之欄數為其最長之列，缺少之儲存格補opt.empty；兩者皆為[]或mat1非陣列時回傳[]
- * @throws {Error} mat1為陣列而有列非陣列、或mat2非陣列、或mat2有列非陣列時throw Error('invalid mat1: row[i] is not an array')、Error('invalid mat2: must be an array')、Error('invalid mat2: row[i] is not an array')，訊息只含索引不含值
+ * @throws {Error} mat1為陣列而有列非陣列、或mat2非陣列、或mat2有列非陣列時throw Error('invalid mat1[i]: must be an array')、Error('invalid mat2: must be an array')、Error('invalid mat2[i]: must be an array')，訊息只含索引不含值
  * @example
  *
  * let mat1
@@ -67,7 +67,7 @@ import _cellText from './_cellText.mjs'
  * catch (err) {
  *     console.log(err.message)
  * }
- * // => invalid mat1: row[0] is not an array
+ * // => invalid mat1[0]: must be an array
  *
  */
 function matConcat(mat1, mat2, opt = {}) {
@@ -80,7 +80,7 @@ function matConcat(mat1, mat2, opt = {}) {
         for (let i = 0; i < mat.length; i++) { //依索引走訪, 空洞視為undefined而無效
             let r = mat[i]
             if (!isarr(r)) {
-                throw new Error(`invalid ${name}: row[${i}] is not an array`)
+                throw new Error(`invalid ${name}[${i}]: must be an array`)
             }
             rows.push(r)
         }

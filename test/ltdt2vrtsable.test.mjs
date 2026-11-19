@@ -271,21 +271,22 @@ describe(`ltdt2vrtsable`, function() {
         assert.strict.deepStrictEqual(r.msg, [{ a: { value: 1, style: {}, rowspan: 1 }, b: { value: 2, style: {}, rowspan: 1 } }])
     })
 
-    it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid ltdt: must be an array of non-empty objects' } when input NaN with returnWithStateAndMsg`, function() {
         let r = ltdt2vrtsable(NaN, [], { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid ltdt' }
+        let rr = { state: 'error', msg: 'invalid ltdt: must be an array of non-empty objects' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid mergerowkeys' } when mergerowkeys is not an array with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid mergerowkeys: must be an array' } when mergerowkeys is not an array with returnWithStateAndMsg`, function() {
         let r = ltdt2vrtsable([{ a: 1 }], NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid mergerowkeys' }
+        let rr = { state: 'error', msg: 'invalid mergerowkeys: must be an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error' } when any element is not an effective object with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid ltdt[1]: must be a non-empty object' } when any element is not an effective object with returnWithStateAndMsg (the index of the first invalid element)`, function() {
         let r = ltdt2vrtsable([{ a: 1 }, NaN], [], { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid ltdt[1]: must be a non-empty object' })
+        assert.strict.deepStrictEqual(ltdt2vrtsable([{ a: 1 }, {}, NaN], [], { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid ltdt[1]: must be a non-empty object' })
     })
 
     it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
@@ -312,9 +313,9 @@ describe(`ltdt2vrtsable`, function() {
         })
 
         //型別檢測與資料有無無關: ltdt為空陣列, mergerowkeys型別無效仍為失敗
-        it(`should return { state: 'error', msg: 'invalid mergerowkeys' } when input [], 'x' with returnWithStateAndMsg (type check is independent of emptiness)`, function() {
+        it(`should return { state: 'error', msg: 'invalid mergerowkeys: must be an array' } when input [], 'x' with returnWithStateAndMsg (type check is independent of emptiness)`, function() {
             for (let v of ['x', 123, null, {}, true, NaN]) {
-                assert.strict.deepStrictEqual(ltdt2vrtsable([], v, D), { state: 'error', msg: 'invalid mergerowkeys' })
+                assert.strict.deepStrictEqual(ltdt2vrtsable([], v, D), { state: 'error', msg: 'invalid mergerowkeys: must be an array' })
             }
         })
 
@@ -333,8 +334,8 @@ describe(`ltdt2vrtsable`, function() {
         })
 
         for (let [lb, v] of NON_ARR) {
-            it(`should return { state: 'error', msg: 'invalid ltdt' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
-                assert.strict.deepStrictEqual(ltdt2vrtsable(v, [], D), { state: 'error', msg: 'invalid ltdt' })
+            it(`should return { state: 'error', msg: 'invalid ltdt: must be an array of non-empty objects' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(ltdt2vrtsable(v, [], D), { state: 'error', msg: 'invalid ltdt: must be an array of non-empty objects' })
             })
             it(`should return [] in the plain mode when input ${lb} (unchanged)`, function() {
                 assert.strict.deepStrictEqual(ltdt2vrtsable(v, []), [])
@@ -343,7 +344,7 @@ describe(`ltdt2vrtsable`, function() {
 
         it(`should keep non-empty arrays that are not effective as error with returnWithStateAndMsg (unchanged)`, function() {
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(ltdt2vrtsable(v, [], D), { state: 'error', msg: 'invalid ltdt' })
+                assert.strict.deepStrictEqual(ltdt2vrtsable(v, [], D), { state: 'error', msg: 'invalid ltdt: must be an array of non-empty objects' })
             }
         })
 

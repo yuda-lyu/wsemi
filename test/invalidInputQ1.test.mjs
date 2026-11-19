@@ -288,7 +288,7 @@ describe(`invalidInputQ1 甲 C10 隨機範圍(本輪改變)`, function() {
             assert.strict.deepStrictEqual(errOf(() => f(undefined, undefined)), 'NOTHROW')
             assert.strict.deepStrictEqual(errOf(() => f(null, null)), 'NOTHROW')
             assert.strict.deepStrictEqual(errOf(() => f(' 1 ', '3')), 'NOTHROW')
-            assert.strict.deepStrictEqual(errOf(() => f(5, 3)), 'vstart[5] > vend[3]')
+            assert.strict.deepStrictEqual(errOf(() => f(5, 3)), 'invalid vstart: must be <= vend')
         })
     }
 
@@ -330,9 +330,9 @@ describe(`invalidInputQ1 乙 未改變者之守門(現況即應然)`, function()
     })
 
     it(`C8 preciseNum, judge, estimateTicks, color keep throwing (Q1-b)`, function() {
-        assert.strict.deepStrictEqual(errOf(() => preciseNum('x')), 'v is not a number')
-        assert.strict.deepStrictEqual(errOf(() => judge('x', '>', 0)), 'x1 is not a number')
-        assert.strict.deepStrictEqual(errOf(() => judge(1, '>', 'x')), 'x2 is not a number')
+        assert.strict.deepStrictEqual(errOf(() => preciseNum('x')), 'invalid v: must be a valid number')
+        assert.strict.deepStrictEqual(errOf(() => judge('x', '>', 0)), 'invalid x1: must be a valid number')
+        assert.strict.deepStrictEqual(errOf(() => judge(1, '>', 'x')), 'invalid x2: must be a valid number')
         let lg = console.log
         console.log = () => {}
         try {
@@ -341,8 +341,8 @@ describe(`invalidInputQ1 乙 未改變者之守門(現況即應然)`, function()
         finally {
             console.log = lg
         }
-        assert.strict.deepStrictEqual(errOf(() => estimateTicks('x', 1)), 'rmin is not a number')
-        assert.strict.deepStrictEqual(errOf(() => estimateTicks(0, 'x')), 'rmax is not a number')
+        assert.strict.deepStrictEqual(errOf(() => estimateTicks('x', 1)), 'invalid rmin: must be a valid number')
+        assert.strict.deepStrictEqual(errOf(() => estimateTicks(0, 'x')), 'invalid rmax: must be a valid number')
         assert.strict.deepStrictEqual(errOf(() => color.toRgb(null)), 'invalid color: must be a string or an object') //ws492e: V19固定訊息(原'color is not a string or an object')
     })
 

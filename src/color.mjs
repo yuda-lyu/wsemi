@@ -249,21 +249,21 @@ function strCvFromPercent(cc, defValue = 1) {
     if (cc.indexOf('%') >= 0) {
         cc = replace(cc, '%', '')
         if (!isenum(cc)) {
-            throw new Error('invalid color: value is not a number')
+            throw new Error('invalid color: must have numeric component values')
         }
         cc = Number(cc) / 100 //百分比值0~100, 轉0~1分佈
     }
     else {
         if (!isenum(cc)) {
-            throw new Error('invalid color: value is not a number')
+            throw new Error('invalid color: must have numeric component values')
         }
         cc = Number(cc) / defValue //基於defValue轉0~1分佈
     }
     if (cc > 1) {
-        throw new Error('invalid color: value > 1')
+        throw new Error('invalid color: must have component values within the valid range')
     }
     else if (cc < 0) {
-        throw new Error('invalid color: value < 0')
+        throw new Error('invalid color: must have component values within the valid range')
     }
     return cc //回傳0~1
 }
@@ -271,14 +271,14 @@ function strCvFromPercent(cc, defValue = 1) {
 
 function strCvFrom01(cc) {
     if (!isenum(cc)) {
-        throw new Error('invalid color: value is not a number')
+        throw new Error('invalid color: must have numeric component values')
     }
     cc = Number(cc)
     if (cc > 1) {
-        throw new Error('invalid color: value > 1')
+        throw new Error('invalid color: must have component values within the valid range')
     }
     else if (cc < 0) {
-        throw new Error('invalid color: value < 0')
+        throw new Error('invalid color: must have component values within the valid range')
     }
     return cc //回傳0~1
 }
@@ -329,7 +329,7 @@ function strParseHex8(cc) {
         //hex含alpha
     }
     else {
-        throw new Error('invalid hex color')
+        throw new Error('invalid color: must be a valid hex color')
     }
     function gvhex(c) {
         //if (size(c) !== 2) {
@@ -338,7 +338,7 @@ function strParseHex8(cc) {
         }
         c = parseInt(c, 16)
         if (!isenum(c)) {
-            throw new Error('invalid hex of color')
+            throw new Error('invalid color: must be a valid hex color')
         }
         c = Number(c)
         return c / 255 //回傳0~1
@@ -507,7 +507,7 @@ function parseString(cc) {
     else if (strIsHsva(cc)) {
         return strParseHsva(cc)
     }
-    throw new Error('format of color string is not hex-color, name-color, rgba, hsla, hsva')
+    throw new Error('invalid color: must be a hex color, a color name, rgba, hsla or hsva')
 }
 
 
@@ -631,7 +631,7 @@ function parseObject(co) {
         return objParseHsva(co)
     }
     else {
-        throw new Error('color object is not one of rgba, hsla, hsva')
+        throw new Error('invalid color: must be an rgba, hsla or hsva object')
     }
 }
 
@@ -642,7 +642,7 @@ function getBrightness(rgba) {
     //r,g,b都0~1, 回傳0~1
 
     if (rgba.a !== 1) {
-        throw new Error('alpha of color can not be equal to 1')
+        throw new Error('invalid color: must have an alpha of 1')
     }
     return (rgba.r * 299 + rgba.g * 587 + rgba.b * 114) / 1000
 }
@@ -655,7 +655,7 @@ function getLuminance(rgba) {
     //r,g,b都0~1, 回傳0~1
 
     if (rgba.a !== 1) {
-        throw new Error('alpha of color can not be equal to 1')
+        throw new Error('invalid color: must have an alpha of 1')
     }
     let r01 = rgba.r
     let g01 = rgba.g
@@ -878,7 +878,7 @@ function maxmin(v) {
 function fmtColor(rgba, fmtOutput) {
     //fmtOutput須為輸出格式名稱(kpCv之自有鍵), 非字串與未列之名稱同一訊息(V19, 不帶值)
     if (!isestr(fmtOutput) || !Object.prototype.hasOwnProperty.call(kpCv, fmtOutput)) {
-        console.log(`fmtOutput must be [${keys(kpCv)}]`)
+        console.log(`invalid fmtOutput: must be one of [${keys(kpCv)}]`)
         throw new Error('invalid fmtOutput: must be one of the output formats')
     }
     return kpCv[fmtOutput](rgba)
@@ -1289,7 +1289,7 @@ function interp(gradient) {
 
     //check gradient
     if (!iseobj(gradient)) {
-        console.log('gradient is not an effective object')
+        console.log('invalid gradient: must be a non-empty object') //固定訊息, 不含輸入值; 仍回傳灰階函數(不拋錯)
         return (r) => {
             r = Math.min(Math.max(r, 0), 1)
             return `rgb(${r * 255},${r * 255},${r * 255})`
@@ -1366,7 +1366,8 @@ let kpCv = {
  * 2. 調整量amount(modSaturate、modLighten、modBrighten、modHue)與權重w1、w2(mix)為必須參數，須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；NaN、Infinity、'0x10'、null、undefined、布林、包裝物件皆非有效數字)且介於0至1(含端點)，判定通過後以cdbl轉為數字再使用(數字字串'0.5'與0.5結果相同，原以字串串接而得'rgb(NaN, NaN, NaN)')，否則為'invalid amount: must be a number from 0 to 1'、'invalid w1: must be a number from 0 to 1'、'invalid w2: must be a number from 0 to 1'；
  * 3. 個數num(spreadHue、spreadMonochromatic)須為有效整數(數字字串亦可)，否則為'invalid num: must be an integer'；個數範圍為1至4294967295(use: 'count'且不小於1)，超出範圍(0、負數、超過4294967295)視為未給而改用預設1，回傳只含輸入色一色之陣列(經fmtOutput轉出，不再回傳未轉出之rgba物件；修前超過上限者迴圈無上限而耗盡記憶體)；
  * 4. 輸出格式fmtOutput須為輸出格式名稱之一(如'toRgbString'，只認自有鍵，'constructor'等原型鏈成員名無效)，否則為'invalid fmtOutput: must be one of the output formats'；
- * 5. 檢測順序為顏色參數(解析)、amount或w1與w2、num、fmtOutput(轉出時)。
+ * 5. 檢測順序為顏色參數(解析)、amount或w1與w2、num、fmtOutput(轉出時)；
+ * 6. getBrightness、getLuminance之顏色須為不透明(alpha為1)，否則為'invalid color: must have an alpha of 1'。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/color.test.mjs Github}
  * @memberOf wsemi

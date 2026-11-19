@@ -26,8 +26,8 @@ describe(`getExcelWorkbookFromWorksheet`, function() {
     })
 
     it(`should return error object when sheet is invalid`, function() {
-        assert.strict.deepStrictEqual(getExcelWorkbookFromWorksheet(null).error, 'sheet is not an object')
-        assert.strict.deepStrictEqual(getExcelWorkbookFromWorksheet({}).error, 'sheet.rows is not an array')
+        assert.strict.deepStrictEqual(getExcelWorkbookFromWorksheet(null).error, 'invalid sheet: must be an object')
+        assert.strict.deepStrictEqual(getExcelWorkbookFromWorksheet({}).error, 'invalid sheet.rows: must be an array')
     })
 
 })

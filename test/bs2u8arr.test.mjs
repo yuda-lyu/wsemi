@@ -64,9 +64,9 @@ describe(`bs2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid bs' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = bs2u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid bs' }
+        let rr = { state: 'error', msg: 'invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -89,10 +89,10 @@ describe(`str2sha512`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'str2sha: invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'str2sha: invalid str: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         //內部呼叫之錯誤須前置來源函數名
         let r = str2sha512(NaN, false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'str2sha: invalid str' }
+        let rr = { state: 'error', msg: 'str2sha: invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

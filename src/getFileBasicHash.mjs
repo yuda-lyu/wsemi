@@ -102,8 +102,7 @@ async function getFileBasicHash(inp, opt = {}) {
 
     //check
     if (!isblob(inp) && !isfile(inp)) {
-        console.log('inp', inp)
-        return Promise.reject(`inp is not a Blob or File`)
+        return Promise.reject('invalid inp: must be a Blob or a File')
     }
 
     //type, 未給(undefined、null)取預設, 給了須通過檢核(安全相關opt, 無效即拒絕不改用預設, 見下)

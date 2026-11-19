@@ -115,10 +115,13 @@ describe(`b642u8arr`, function() {
 
     it(`should return { state: 'error' } with a reason for invalid base64 with returnWithStateAndMsg`, function() {
         let r1 = b642u8arr('!!!!', { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r1.state, 'error')
-        assert.strict.deepStrictEqual(r1.msg.indexOf('invalid b64') === 0, true, `msg 應標明無效base64, got ${r1.msg}`)
+        assert.strict.deepStrictEqual(r1, { state: 'error', msg: 'invalid b64: must be a base64 string using only the base64 alphabet, with padding only at the end' })
         let r2 = b642u8arr('QmFzQ', { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r2.state, 'error')
+        assert.strict.deepStrictEqual(r2, { state: 'error', msg: 'invalid b64: must be a base64 string whose last chunk is not a single character' })
+        let r3 = b642u8arr('QQ=', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r3, { state: 'error', msg: 'invalid b64: must be a base64 string whose last chunk has 3 characters when it has 1 padding' })
+        let r4 = b642u8arr('QUI==', { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r4, { state: 'error', msg: 'invalid b64: must be a base64 string whose last chunk has 2 characters when it has 2 paddings' })
     })
 
     it(`[oracle] should agree with core-js Uint8Array.fromBase64 on accept/reject and bytes`, async function() {
@@ -165,9 +168,9 @@ describe(`b642u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid b64' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid b64: must be a string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = b642u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid b64' }
+        let rr = { state: 'error', msg: 'invalid b64: must be a string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

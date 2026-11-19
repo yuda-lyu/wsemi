@@ -38,7 +38,7 @@ async function domConvertToPic(ele, opt = {}) {
 
     //check
     if (!isEle(ele)) {
-        return Promise.reject('invalid ele')
+        return Promise.reject('invalid ele: must be an element')
     }
 
     //scale, 有效且不小於1則取Number(v), 非預期(含Infinity、'0x10'、包裝物件、小於1)一律改用預設1(K3超出範圍亦同, W-13)

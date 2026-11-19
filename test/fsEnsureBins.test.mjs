@@ -250,7 +250,7 @@ describe(`fsEnsureBins with a local server`, function() {
         let e = await catchErr(ens(m, { pkgRoot: root, names: ['nope.exe'] }))
         assert.strict.equal(e.code, 'E_ARG')
         //訊息(V20)為固定詞彙, 不列出未知之名稱與清單內之名稱
-        assert.strict.equal(e.message, 'fsEnsureBins[w-t]: invalid opt.names: has names not in the manifest')
+        assert.strict.equal(e.message, 'fsEnsureBins[w-t]: invalid opt.names: must only contain names in the manifest')
         assert.strict.equal(e.message.includes('nope.exe'), false)
         assert.strict.equal(e.message.includes('tool.exe'), false)
         assert.strict.equal(e.message.includes('k6.exe'), false)

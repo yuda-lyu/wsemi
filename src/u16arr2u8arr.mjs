@@ -19,7 +19,7 @@ import isu16arr from './isu16arr.mjs'
  * // => new Uint8Array([66, 97, 115])
  *
  * console.log(u16arr2u8arr('abc', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid u16a' }
+ * // => { state: 'error', msg: 'invalid u16a: must be a Uint16Array' }
  *
  */
 function u16arr2u8arr(u16a, opt = {}) {
@@ -45,7 +45,7 @@ function u16arr2u8arr(u16a, opt = {}) {
 
     //check
     if (!isu16arr(u16a)) {
-        return retError('invalid u16a')
+        return retError('invalid u16a: must be a Uint16Array')
     }
 
     //u8a, 須攔截非預期錯誤(如過大資料配置失敗RangeError), 否則會外拋至呼叫端

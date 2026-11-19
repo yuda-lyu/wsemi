@@ -1512,9 +1512,9 @@ describe(`time2hour`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss' } when input NaN with returnWithStateAndMsg`, function() {
         let r = time2hour(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid t' }
+        let rr = { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

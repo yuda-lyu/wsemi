@@ -21,7 +21,7 @@ import j2o from './j2o.mjs'
  * // => { a: 1 }
  *
  * console.log(b642obj(NaN, { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid b64' }
+ * // => { state: 'error', msg: 'invalid b64: must be a string' }
  *
  */
 function b642obj(b64, opt = {}) {
@@ -47,7 +47,7 @@ function b642obj(b64, opt = {}) {
 
     //check
     if (!isstr(b64)) {
-        return retError('invalid b64')
+        return retError('invalid b64: must be a string')
     }
 
     //obj, 內部一律以returnWithStateAndMsg取狀態, 逐一判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端

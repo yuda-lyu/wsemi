@@ -24,6 +24,13 @@ import haskey from './haskey.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/attstr.test.mjs Github}
  * @memberOf wsemi
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.uniqItems=false] 輸入是否對屬性項目去重之布林值，非布林視為false，預設false
+ * @param {String} [opt.dlmItem=';'] 輸入屬性項目間之分隔字串，須為非空字串才採用，預設';'
+ * @param {String} [opt.dlmSep='@'] 輸入單一屬性項目內表名與識別值間之分隔字串，須為非空字串才採用，預設'@'
+ * @param {String} [opt.keyTable='table'] 輸入2p模式之屬性物件中存放表名之鍵名字串，須為非空字串才採用，預設'table'
+ * @param {String} [opt.keyId='id'] 輸入2p模式之屬性物件中存放識別值之鍵名字串，須為非空字串才採用，預設'id'
+ * @param {String} [opt.mode='auto'] 輸入預設處理模式字串，'1p'為屬性項目視為單一字串，'2p'為屬性項目由表名與識別值組成，非'1p'與'2p'者視為'auto'；'auto'時parse依輸入字串、add依任一輸入字串、remove依removeItemOrId是否含dlmSep判定，join依首項是否同時含keyTable與keyId鍵判定；parse、join、remove、add各自可於最後一個參數opt.mode逐次覆寫，預設'auto'
  * @returns {Object} 回傳attstr物件，提供parse、join、remove、add共4種處理函數
  * @example
  *

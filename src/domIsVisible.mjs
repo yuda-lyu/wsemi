@@ -72,7 +72,7 @@ function getVisible(entries) {
  *
  * 以IntersectionObserver判定元素是否與視窗可視區相交；同一次回報含多筆狀態時以時間最新者為準
  *
- * 元素無效或瀏覽器不支援IntersectionObserver時：promise模式回傳被拒絕之Promise(原因為'invalid element'或'invalid IntersectionObserver')；event模式仍回傳可使用create、on、dispose之物件但永不觸發，其error為原因，可偵測時error為null
+ * 元素無效或瀏覽器不支援IntersectionObserver時：promise模式回傳被拒絕之Promise(原因為'invalid ele: must be an element'或環境缺失之'invalid IntersectionObserver')；event模式仍回傳可使用create、on、dispose之物件但永不觸發，其error為原因，可偵測時error為null
  *
  * event模式之create於microtask啟動觀察(晚於本次同步流程，故create後才插入之元素、create後才掛之監聽皆可)，重複呼叫無效，dispose後呼叫亦無效；觀察器建立失敗時不拋錯，error為所拋之值；visible之監聽器拋錯時有error監聽者則發出error事件，否則console.error，不中斷偵測
  *
@@ -112,7 +112,7 @@ function domIsVisible(ele, opt = {}) {
 
     //check ele
     if (!isEle(ele)) {
-        return detector.detectorFail(mode, 'invalid element')
+        return detector.detectorFail(mode, 'invalid ele: must be an element')
     }
 
     //check IntersectionObserver

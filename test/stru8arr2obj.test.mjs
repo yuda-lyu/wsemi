@@ -133,8 +133,7 @@ describe(`stru8arr2obj`, function() {
     it(`should return { state: 'error', msg: <out of range> } for an out-of-range index with returnWithStateAndMsg`, function() {
         let B = [new Uint8Array([66])]
         let r = stru8arr2obj({ results: '{"t":"[BlazeForUint8Array]::1"}', binarys: B }, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('binary index out of range[1]') >= 0, true, `msg 應標明越界索引, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid data.results: must only reference binary indexes that exist in data.binarys' })
     })
 
     it(`should treat a bare marker as a binary reference (application strings are escaped by the encoder instead)`, function() {
@@ -169,8 +168,7 @@ describe(`stru8arr2obj`, function() {
 
     it(`should treat an odd byteLength as a broken packet when the marker says Uint16Array`, function() {
         let r = stru8arr2obj({ results: '{"a":"[BlazeForUint16Array]::0"}', binarys: [new Uint8Array([1, 2, 3])] }, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('is not even') >= 0, true, `msg 應標明位元組長度非偶數, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid data.binarys[0]: must have an even byteLength to be restored to a Uint16Array' })
     })
 
     it(`should unescape an escaped marker back to the original application string`, function() {
@@ -206,9 +204,9 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data: must be a non-empty object' } when input NaN with returnWithStateAndMsg`, function() {
         let r = stru8arr2obj(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data' }
+        let rr = { state: 'error', msg: 'invalid data: must be a non-empty object' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -225,15 +223,15 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid results' } when input results is empty with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data.results: must be a non-empty string' } when input results is empty with returnWithStateAndMsg`, function() {
         let r = stru8arr2obj({ results: '', binarys: [] }, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid results' }
+        let rr = { state: 'error', msg: 'invalid data.results: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid binarys' } when input binarys is not an array with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data.binarys: must be an array' } when input binarys is not an array with returnWithStateAndMsg`, function() {
         let r = stru8arr2obj({ results: '{"a":1}', binarys: 'x' }, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid binarys' }
+        let rr = { state: 'error', msg: 'invalid data.binarys: must be an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -241,7 +239,7 @@ describe(`stru8arr2obj`, function() {
         let r = stru8arr2obj({ results: 'not-json', binarys: [] }, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(Object.keys(r).sort(), ['msg', 'state'])
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid data.results: must be a valid JSON text') //V20: 固定訊息, 不帶輸入片段
     })
 
     it(`should return ${cout} when input ${JSON.stringify(inp)} with invalid returnWithStateAndMsg`, function() {
@@ -323,7 +321,7 @@ describe(`stru8arr2obj 二進位索引只可被引用一次(R-OBJ-ITER-01規則6
         it(`should reject a binary index referenced twice (${type}): {} by default, error with the reason when returnWithStateAndMsg`, function() {
             let inp = mk([`[BlazeFor${type}]::0`, `[BlazeFor${type}]::0`], [b])
             assert.strict.deepStrictEqual(stru8arr2obj(inp), {})
-            assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+            assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid data.results: must not reference the same binary index more than once' })
         })
 
         it(`should restore distinct indexes each referenced once (${type})`, function() {
@@ -336,12 +334,12 @@ describe(`stru8arr2obj 二進位索引只可被引用一次(R-OBJ-ITER-01規則6
 
     it(`should reject the same index referenced by markers of different types`, function() {
         let inp = mk(['[BlazeForUint8Array]::0', '[BlazeForArrayBuffer]::0'], [new Uint8Array([1, 2])])
-        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid data.results: must not reference the same binary index more than once' })
     })
 
     it(`should reject a repeated reference even when it is nested deep inside the results`, function() {
         let inp = { results: JSON.stringify({ a: [{ x: '[BlazeForArrayBuffer]::0' }], b: { y: { z: '[BlazeForArrayBuffer]::0' } } }), binarys: [new Uint8Array([1, 2])] }
-        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'Error: binary index referenced more than once[0]' })
+        assert.strict.deepStrictEqual(stru8arr2obj(inp, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid data.results: must not reference the same binary index more than once' })
     })
 
     it(`should not count escaped application strings as references`, function() {

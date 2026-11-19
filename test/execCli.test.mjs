@@ -50,7 +50,7 @@ describe(`execCli`, function() {
         let r = await execCli('')
         // console.log('nocmd r', JSON.stringify(r))
         assert.strict.deepStrictEqual(r.ok, false)
-        assert.strict.deepStrictEqual(r.error, 'command 須為非空字串')
+        assert.strict.deepStrictEqual(r.error, 'invalid command: must be a non-empty string')
         assert.strict.deepStrictEqual(r.attempts, 0)
     })
 
@@ -586,11 +586,12 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         }
         let { r } = runExecFail('cwdNotFolder')
         assert.strict.deepStrictEqual(r.out, {
-            missing: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
-            isFile: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}user.cmd`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
-            session: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, pid: null },
-            bareBatch: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
-            sessionBareBatch: { error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir`, pid: null },
+            //V19固定格式, 不帶cwd之值(V20; 夾具路徑於runner內以<fx>遮蔽, 故逐字相等即證明訊息不含路徑)
+            missing: { error: 'ENOENT: invalid cwd: must be an existing folder', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            isFile: { error: 'ENOENT: invalid cwd: must be an existing folder', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            session: { error: 'ENOENT: invalid cwd: must be an existing folder', pid: null },
+            bareBatch: { error: 'ENOENT: invalid cwd: must be an existing folder', code: null, attempts: 1, hasPidKey: true, pidType: 'undefined' },
+            sessionBareBatch: { error: 'ENOENT: invalid cwd: must be an existing folder', pid: null },
         })
     })
 
@@ -695,7 +696,7 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             cliOptRevoked: cliOk, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給
             cliEnvRevoked: cliOk, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數
             cliOnStdoutRevoked: cliOk, //onStdout為已撤銷之函數Proxy: 非函數, 視為未給
-            cliCommandRevoked: { ok: false, code: null, error: 'command 須為非空字串', attempts: 0, hasPidKey: false, pidType: 'undefined' }, //command為必須參數: 非字串即無效, 不啟動(attempts 0; 修前為UNKNOWN: <revoked>)
+            cliCommandRevoked: { ok: false, code: null, error: 'invalid command: must be a non-empty string', attempts: 0, hasPidKey: false, pidType: 'undefined' }, //command為必須參數: 非字串即無效, 不啟動(attempts 0; 修前為UNKNOWN: <revoked>)
             sesGetter: ses('getter boom onExit'),
             sesOptRevoked: sesOk,
             sesEnvRevoked: sesOk,
@@ -903,7 +904,7 @@ describe(`execCli 觀察回調(R-TRACE-01)`, function() {
         let r2 = await execCli(nodeBin, ['-e', '1'], optGetter)
         let optTraceGetter = badProp({}, 'onTrace', 'trace getter boom')
         let r3 = await execCli(nodeBin, ['-e', '1'], optTraceGetter)
-        assert.strict.deepStrictEqual([r1.ok, r1.error, r1.attempts], [false, 'command 須為非空字串', 0])
+        assert.strict.deepStrictEqual([r1.ok, r1.error, r1.attempts], [false, 'invalid command: must be a non-empty string', 0])
         assert.strict.deepStrictEqual([r2.ok, r2.error, r2.attempts], [false, 'UNKNOWN: cwd getter boom', 1])
         assert.strict.deepStrictEqual([r3.ok, r3.error, r3.attempts], [false, 'UNKNOWN: trace getter boom', 1]) //onTrace屬性本身不可讀亦以結果物件回報, 不reject
         assert.strict.deepStrictEqual(tr.events, [])

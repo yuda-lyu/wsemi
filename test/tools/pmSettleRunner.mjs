@@ -812,7 +812,7 @@ let cases = {
         return { s: r.s, same: r.v === e, left: body.childNodes.length }
     },
 
-    //ispm回傳false之使用端效果(複審R19): pmTimeout輸入讀取即拋錯之值為invalid pm、waitFun謂詞回傳之為未就緒
+    //ispm回傳false之使用端效果(複審R19): pmTimeout輸入讀取即拋錯之值為invalid pm: must be a Promise、waitFun謂詞回傳之為未就緒
     ispmCallers: async () => {
         let PT = await imp('pmTimeout')
         let W = await imp('waitFun')
@@ -1225,7 +1225,7 @@ let cases = {
         }
     },
 
-    //pmDebounce、debounce: 非函數之任務不排入, 回傳undefined並經getDiag出口以console.log記錄固定詞彙'[wsemi 函數名] func is not a function', 不影響已排入之任務
+    //pmDebounce、debounce: 非函數之任務不排入, 回傳undefined並經getDiag出口以console.log記錄固定詞彙'[wsemi 函數名] invalid func: must be a function', 不影響已排入之任務
     nonFunPmDebounce: async () => {
         let PD = await imp('pmDebounce')
         let cap = captureLog()
@@ -1237,7 +1237,7 @@ let cases = {
             })
             let ret = d(undefined)
             await delay(150)
-            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi pmDebounce] func is not a function').length }
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi pmDebounce] invalid func: must be a function').length }
         }
         finally {
             cap.restore()
@@ -1254,7 +1254,7 @@ let cases = {
             })
             let ret = d('abc')
             await delay(150)
-            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi debounce] func is not a function').length }
+            return { ret: typeof ret, ran, logged: cap.logs.filter((s) => s === '[wsemi debounce] invalid func: must be a function').length }
         }
         finally {
             cap.restore()

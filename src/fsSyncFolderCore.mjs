@@ -67,9 +67,9 @@ async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
     let levelLimit = 4294967295 //全部層級: levelLimit之null取預設1(K3), 無窮遍歷以大有限值(iseint use:'count'之上限)表示
 
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
-    if (msgPah) {
-        return Promise.reject(msgPah)
+    let msgPath = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
+    if (msgPath) {
+        return Promise.reject(msgPath)
     }
 
     //check, 注入之fs、path、crypto缺漏為相依無效(R-FS-DEPS-01), 先於任何判斷、複製與刪除, 以說明字串reject(不帶輸入值)

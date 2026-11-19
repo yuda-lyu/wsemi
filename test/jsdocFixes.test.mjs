@@ -133,6 +133,72 @@ describe(`JSDoc文字修正(排程第492項第1批, 不改行為)`, function() {
 
     })
 
+    describe(`@param名稱須與函數簽名一致(全庫斷言, ws492j: 由20個函數擴至src全部對外函數)`, function() {
+
+        //getDocOf, 取緊接於函數宣告之前之JSDoc區塊(第一個JSDoc區塊可能屬輔助函數, 如execCli之buildValidator)
+        let getDocOf = (name) => {
+            let c = readSrc(name)
+            let m = new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\(`).exec(c)
+            if (!m) {
+                return null
+            }
+            let before = c.slice(0, m.index)
+            let j = before.lastIndexOf('*/')
+            let i = before.lastIndexOf('\n/**', j) //JSDoc區塊之起點須在行首(範例文字內之'//***@'等不算)
+            if (j < 0 || i < 0 || before.slice(j + 2).trim() !== '') {
+                return null
+            }
+            return before.slice(i + 1, j)
+        }
+
+        let rootsOf = (d) => {
+            let names = []
+            for (let m of d.matchAll(/@param\s+\{[^}]*\}\s+\[?([A-Za-z_$][\w$.]*)/g)) {
+                let root = m[1].split('.')[0]
+                if (!names.includes(root)) {
+                    names.push(root)
+                }
+            }
+            return names
+        }
+
+        //以arguments讀取之不定參數函數: 簽名無具名參數, JSDoc以arguments為名
+        let variadic = ['arrAdd', 'arrMulti', 'arrProduct', 'bodyLog']
+
+        let all = fs.readdirSync(fdSrc).filter((f) => f.endsWith('.mjs') && f[0] !== '_' && f !== 'index.mjs').map((f) => f.slice(0, -4)).sort()
+
+        it(`should cover every public function file of src (guard against an empty list)`, function() {
+            assert.ok(all.length > 400, String(all.length))
+        })
+
+        it(`every public function whose name equals the file name: the top-level @param names (of the JSDoc right above the declaration) equal the signature names`, function() {
+            let bad = []
+            let checked = 0
+            for (let name of all) {
+                let d = getDocOf(name)
+                if (d === null) {
+                    continue //非「名稱同檔名之function」或其前無JSDoc者(如以const匯出之物件)不在本斷言範圍
+                }
+                checked++
+                let sig = getSigNames(name)
+                let doc = rootsOf(d)
+                if (variadic.includes(name)) {
+                    //簽名無具名參數: JSDoc以arguments為名, 可另帶opt(以最後一個一般物件參數辨識, 如arrAdd)
+                    if (sig.length !== 0 || (doc.join() !== 'arguments' && doc.join() !== 'arguments,opt')) {
+                        bad.push(`${name}: sig [${sig}] doc [${doc}]`)
+                    }
+                    continue
+                }
+                if (sig.join() !== doc.join()) {
+                    bad.push(`${name}: sig [${sig}] doc [${doc}]`)
+                }
+            }
+            assert.ok(checked > 400, `checked ${checked}`)
+            assert.strict.deepStrictEqual(bad, [])
+        })
+
+    })
+
     describe(`逐項`, function() {
 
         it(`domCancelEvent: the event parameter is e and its type is Event`, function() {
@@ -220,7 +286,7 @@ describe(`JSDoc文字修正(排程第492項第1批, 不改行為)`, function() {
                 assert.strict.deepStrictEqual([...fs.readFileSync(fp)], [0xE9])
             })
 
-            it(`opt.mode and opt.flag are not passed to writeFileSync (the JSDoc says they are not implemented)`, function() {
+            it(`opt.mode and opt.flag are not passed to writeFileSync, and the JSDoc does not mention them (ws492j: removed from the JSDoc, formerly marked 'not implemented')`, function() {
                 let fp = join(fd, 'mode-flag.txt')
                 let captured = null
                 let wrapped = {
@@ -235,9 +301,8 @@ describe(`JSDoc文字修正(排程第492項第1批, 不改行為)`, function() {
                 assert.strict.deepStrictEqual(captured, { encoding: 'utf8' })
                 for (let name of ['fsCreateFile', 'fsCreateFileCore']) {
                     let d = getDoc(name)
-                    for (let k of ['opt.mode', 'opt.flag']) {
-                        let line = d.split('\n').find((l) => l.indexOf(k) >= 0)
-                        assert.ok(line && line.indexOf('目前未實作') >= 0, `${name} ${k}`)
+                    for (let k of ['opt.mode', 'opt.flag', '目前未實作']) {
+                        assert.ok(d.indexOf(k) < 0, `${name} ${k}`)
                     }
                 }
             })

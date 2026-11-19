@@ -23,7 +23,7 @@ let RULE_TIME_INTERVAL = { fn: 'waitFun', name: 'opt.timeInterval', kind: 'eint'
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.attemptNum或opt.timeInterval為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數同一行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, n, ... }，n為當下已計之週期數(立即呼叫為0)，供測試以事件(而非等待時間)同步與診斷；type為'call'時為即將呼叫fun，'result'時為fun已完成(含ok為其回傳是否為true)，'tick'時為每個週期(含busy為前一次呼叫是否仍未完成而本週期不呼叫)，'stop'時為計數超過attemptNum而前一次呼叫仍未完成時停止計時器，'resolve'時為即將resolve，'reject'時為即將reject(含reason為'error'fun拋錯或reject、'exceeded'超過最大嘗試次數、'invalid'fun非函數)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響輪詢與結果，預設null
- * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true；fun拋錯或其Promise被reject時(立即呼叫與輪詢皆同)停止輪詢並reject該錯誤，超過最大嘗試次數時reject字串'exceeded attemptNum[最大嘗試次數]'；fun非函數時reject字串'waitfunction需輸入函數f'；fun回傳永不settle之Promise時亦不settle(不再累積呼叫)，計數超過attemptNum後停止計時器(本函數仍不settle，但不使行程無法結束)，需逾時者以pmTimeout包裝
+ * @returns {Promise} 回傳Promise，resolve回傳為空代表f函數回傳true；fun拋錯或其Promise被reject時(立即呼叫與輪詢皆同)停止輪詢並reject該錯誤，超過最大嘗試次數時reject固定字串'exceeded attemptNum'(不帶數值)；fun非函數時reject字串'invalid fun: must be a function'；fun回傳永不settle之Promise時亦不settle(不再累積呼叫)，計數超過attemptNum後停止計時器(本函數仍不settle，但不使行程無法結束)，需逾時者以pmTimeout包裝
  * @example
  *
  * async function topAsync() {
@@ -109,7 +109,7 @@ async function waitFun(fun, opt = {}) {
         if (trace) {
             trace('reject', { n: 0, reason: 'invalid' })
         }
-        pm.reject('waitfunction需輸入函數f')
+        pm.reject('invalid fun: must be a function')
         return pm
     }
 
@@ -211,7 +211,7 @@ async function waitFun(fun, opt = {}) {
             if (trace) {
                 trace('reject', { n, reason: 'exceeded' })
             }
-            pm.reject(`exceeded attemptNum[${attemptNum}]`) //已超過最大次數
+            pm.reject('exceeded attemptNum') //已超過最大次數, 固定詞彙不帶數值
         }
 
     }, timeInterval)

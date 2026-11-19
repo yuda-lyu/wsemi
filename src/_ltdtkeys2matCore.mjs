@@ -12,9 +12,9 @@ import _cellText from './_cellText.mjs'
  * ltdtkeys2mat之列與keys之判定(單一擁有者, 供ltdtkeys2mat與ltdtkeysheads2mat共用同一判定)
  *
  * 規格: 使用者2026-11-15(排程第430項第三批, 裁定表〈四、ltdtkeys2mat〉〈五、ltdtkeysheads2mat〉):
- *   每列須為物件(isobj): {}與只有繼承鍵者為有效列(沒有自有欄位之紀錄); 非物件(null、陣列、字串、空位等)→ error 'invalid ltdt, row[i] is not an object'(只含索引)
- *   keys為null、undefined或[]時由ltdt提取(getltdtkeys, 只取自有可列舉字串鍵), 提取不到任何鍵 → error 'invalid keys, can not extract any key from ltdt'(同修前)
- *   keys非陣列 → error 'invalid keys'; 元素依_normKey.field略過('', null, undefined, 空位, 物件, 陣列, 布林, Symbol, 非有限數字), 有限數字視同字串, 重複者保留(重複之欄); 全被略過 → error 'invalid keys'
+ *   每列須為物件(isobj): {}與只有繼承鍵者為有效列(沒有自有欄位之紀錄); 非物件(null、陣列、字串、空位等)→ error 'invalid ltdt[i]: must be an object'(只含索引)
+ *   keys為null、undefined或[]時由ltdt提取(getltdtkeys, 只取自有可列舉字串鍵), 提取不到任何鍵 → error 'invalid keys: must be a non-empty array when no key can be extracted from ltdt'
+ *   keys非陣列 → error 'invalid keys: must be an array'; 元素依_normKey.field略過('', null, undefined, 空位, 物件, 陣列, 布林, Symbol, 非有限數字), 有限數字視同字串, 重複者保留(重複之欄); 全被略過 → error 'invalid keys: must contain at least one non-empty string or finite number'
  *   檢測序: 列 → keys
  *
  * @param {Array} ltdt 輸入物件陣列(呼叫端已確認為非空陣列)
@@ -28,7 +28,7 @@ function chkRowsKeys(ltdt, keys) {
     for (let i = 0; i < ltdt.length; i++) {
         let r = ltdt[i]
         if (!isobj(r)) {
-            return { state: 'error', msg: `invalid ltdt, row[${i}] is not an object` }
+            return { state: 'error', msg: `invalid ltdt[${i}]: must be an object` }
         }
         rows.push(r)
     }
@@ -37,14 +37,14 @@ function chkRowsKeys(ltdt, keys) {
     if (keys === null || keys === undefined || (isarr(keys) && keys.length === 0)) {
         let ks = getltdtkeys(rows)
         if (ks.length === 0) {
-            return { state: 'error', msg: 'invalid keys, can not extract any key from ltdt' }
+            return { state: 'error', msg: 'invalid keys: must be a non-empty array when no key can be extracted from ltdt' }
         }
         return { state: 'success', msg: ks, rows }
     }
 
     //keys非陣列無效; 元素無效者該欄略過, 全被略過視同無效
     if (!isarr(keys)) {
-        return { state: 'error', msg: 'invalid keys' }
+        return { state: 'error', msg: 'invalid keys: must be an array' }
     }
     let ks = []
     for (let j = 0; j < keys.length; j++) {
@@ -59,7 +59,7 @@ function chkRowsKeys(ltdt, keys) {
         }
     }
     if (ks.length === 0) {
-        return { state: 'error', msg: 'invalid keys' }
+        return { state: 'error', msg: 'invalid keys: must contain at least one non-empty string or finite number' }
     }
     return { state: 'success', msg: ks, rows }
 }

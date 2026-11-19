@@ -38,7 +38,7 @@ describe(`ltdtkeys2mat`, function() {
     it(`sould return [] (invalid keys) when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '' (ws430c 〈四〉)`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '')
         assert.strict.deepStrictEqual(r, [])
-        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '', { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], '', { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys: must be an array' })
     })
 
     k = 1
@@ -53,7 +53,7 @@ describe(`ltdtkeys2mat`, function() {
     it(`sould return [] (invalid keys) when input [{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {} (ws430c 〈四〉)`, function() {
         let r = ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {})
         assert.strict.deepStrictEqual(r, [])
-        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], {}, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid keys: must be an array' })
     })
 
     k = 1
@@ -119,9 +119,9 @@ describe(`ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid ltdt' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid ltdt: must be an array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = ltdtkeys2mat(NaN, null, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid ltdt' }
+        let rr = { state: 'error', msg: 'invalid ltdt: must be an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -171,8 +171,8 @@ describe(`ltdtkeys2mat`, function() {
         })
 
         for (let [lb, v] of NON_ARR) {
-            it(`should return { state: 'error', msg: 'invalid ltdt' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
-                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt' })
+            it(`should return { state: 'error', msg: 'invalid ltdt: must be an array' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt: must be an array' })
             })
             it(`should return [] in the plain mode when input ${lb} (unchanged)`, function() {
                 assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a']), [])
@@ -183,7 +183,7 @@ describe(`ltdtkeys2mat`, function() {
         it(`should treat [{}] as a valid row and report row[0] for the non-object rows (ws430c 〈四〉)`, function() {
             assert.strict.deepStrictEqual(ltdtkeys2mat([{}], ['a'], D), { state: 'success', msg: [['']] })
             for (let v of [[null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt, row[0] is not an object' })
+                assert.strict.deepStrictEqual(ltdtkeys2mat(v, ['a'], D), { state: 'error', msg: 'invalid ltdt[0]: must be an object' })
             }
         })
 

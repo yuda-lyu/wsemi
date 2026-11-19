@@ -48,7 +48,7 @@ function getExcelWorksheetFromData(data) {
     //check
     if (!isarr(data)) {
         return {
-            error: 'data is not an array',
+            error: 'invalid data: must be an array',
         }
     }
 

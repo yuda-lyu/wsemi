@@ -512,10 +512,10 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
 
         it(`should reject E_ARG without fetching for wrapper objects of urlIn, fpOut and the expected sha256 and size (no unwrapping)`, async function() {
             let cases = [
-                [new String('https://example.com/a.bin'), fpOut, { sha256: sha }, 'urlIn is not an effective string'],
-                ['https://example.com/a.bin', new String(fpOut), { sha256: sha }, 'fpOut is not an effective file path'],
-                ['https://example.com/a.bin', fpOut, { sha256: new String(sha) }, 'expected is invalid: sha256 must be a string of 64 hexadecimal characters'],
-                ['https://example.com/a.bin', fpOut, { sha256: sha, size: new Number(3) }, 'expected is invalid: size must be a non-negative integer when given'],
+                [new String('https://example.com/a.bin'), fpOut, { sha256: sha }, 'invalid urlIn: must be a non-empty string'],
+                ['https://example.com/a.bin', new String(fpOut), { sha256: sha }, 'invalid fpOut: must be a non-empty file path without NUL that does not end with a path separator'],
+                ['https://example.com/a.bin', fpOut, { sha256: new String(sha) }, 'invalid expected.sha256: must be a string of 64 hexadecimal characters'],
+                ['https://example.com/a.bin', fpOut, { sha256: sha, size: new Number(3) }, 'invalid expected.size: must be a non-negative integer'],
             ]
             for (let [u, f, x, msg] of cases) {
                 let e = await rej(fsDownloadFileVerify(u, f, x, { fetch: fetchSpy }))
@@ -596,7 +596,7 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
             assert.strict.deepStrictEqual(fsCreateFile(path.join(fdI, 'cfn', 'a.txt'), 'x', { fs: null }).error, 'invalid opt.fs: must be an object providing statSync, lstatSync, writeFileSync')
             let m = { schema: 1, pkg: 'w-sec-test', mode: 'pinned', repo: 'o/r', files: [{ name: 'a.bin', url: 'https://github.com/o/r/releases/download/v1/a.bin', sha256: '40f576db36632cf550d7d99bd6599c88a131ba725f46b29a95ae2d5359bb9913', size: 3 }] }
             let e = await rej(fsEnsureBins(m, { pkgRoot: path.join(fdI, 'eb2'), names: [], fs: null }))
-            assert.strict.deepStrictEqual([e.code, e.message], ['E_ARG', 'fsEnsureBins: opt.fs is not an effective fs (needs mkdirSync, lstatSync, statSync, realpathSync, openSync, closeSync, writeSync, readFileSync, createReadStream, createWriteStream, renameSync, unlinkSync, rmSync)'])
+            assert.strict.deepStrictEqual([e.code, e.message], ['E_ARG', 'fsEnsureBins: invalid opt.fs: must be an object providing mkdirSync, lstatSync, statSync, realpathSync, openSync, closeSync, writeSync, readFileSync, createReadStream, createWriteStream, renameSync, unlinkSync, rmSync'])
         })
 
     })

@@ -38,12 +38,12 @@ function getExcelWorkbookFromWorksheet(sheet, sheetName = 'data') {
     //check
     if (!isobj(sheet)) {
         return {
-            error: 'sheet is not an object',
+            error: 'invalid sheet: must be an object',
         }
     }
     if (!isarr(get(sheet, 'rows'))) {
         return {
-            error: 'sheet.rows is not an array',
+            error: 'invalid sheet.rows: must be an array',
         }
     }
     if (!isestr(sheetName)) {

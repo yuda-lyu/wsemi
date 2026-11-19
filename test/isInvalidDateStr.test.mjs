@@ -90,8 +90,8 @@ describe(`internal callers of the date-time is* functions reject 'Invalid Date' 
     })
 
     it(`should return the format error (formerly msg 剛剛／即將到來) for timemsTZ2past and timemsTZ2expire`, function() {
-        assert.strict.deepStrictEqual(timemsTZ2past('Invalid DateZ'), { today: null, msg: '', err: '時間格式錯誤' })
-        assert.strict.deepStrictEqual(timemsTZ2expire('Invalid DateZ'), { today: null, msg: '', err: '時間格式錯誤' })
+        assert.strict.deepStrictEqual(timemsTZ2past('Invalid DateZ'), { today: null, msg: '', err: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' })
+        assert.strict.deepStrictEqual(timemsTZ2expire('Invalid DateZ'), { today: null, msg: '', err: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' })
     })
 
     it(`should return '' for day2cht (formerly 民國 NaN 年 NaN 月 NaN 日) and a non-range for getTimeRange`, function() {

@@ -1999,7 +1999,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         }
         let fp1 = fpOf('box-sha')
         let err1 = await catchErr(fsDownloadFileVerify('x://box/sha', fp1, { sha256: box, size: served.length }, { fetch: fnFetch, maxAttempts: 1 }))
-        assert.strict.deepStrictEqual([err1.code, err1.step, err1.attempts, err1.message, callsSha, nFetch, fs.existsSync(fp1), parts(fp1)], ['E_ARG', 'argument', 0, 'expected is invalid: sha256 must be a string of 64 hexadecimal characters', 0, 0, false, []])
+        assert.strict.deepStrictEqual([err1.code, err1.step, err1.attempts, err1.message, callsSha, nFetch, fs.existsSync(fp1), parts(fp1)], ['E_ARG', 'argument', 0, 'invalid expected.sha256: must be a string of 64 hexadecimal characters', 0, 0, false, []])
 
         //size: 包裝數字之valueOf每次回傳不同值, 不得被呼叫(包裝數字不解包, 一律拒絕)
         let calls = 0
@@ -2010,7 +2010,7 @@ describe(`fsDownloadFileVerify with a local server`, function() {
         }
         let fp2 = fpOf('box-size')
         let err2 = await catchErr(fsDownloadFileVerify('x://box/size', fp2, { sha256: shaOf('x'), size: boxSize }, { fetch: fnFetch, maxAttempts: 1 }))
-        assert.strict.deepStrictEqual([err2.code, err2.step, err2.attempts, err2.message, calls, nFetch, fs.existsSync(fp2), parts(fp2)], ['E_ARG', 'argument', 0, 'expected is invalid: size must be a non-negative integer when given', 0, 0, false, []])
+        assert.strict.deepStrictEqual([err2.code, err2.step, err2.attempts, err2.message, calls, nFetch, fs.existsSync(fp2), parts(fp2)], ['E_ARG', 'argument', 0, 'invalid expected.size: must be a non-negative integer', 0, 0, false, []])
 
         //fpOut與urlIn: 包裝字串之方法皆不得被使用(檢查後再切分會使更名到另一個檔), 兩者皆拒絕
         let fp3 = fpOf('box-path')
@@ -2023,9 +2023,9 @@ describe(`fsDownloadFileVerify with a local server`, function() {
             boxUrl[k] = boxPath[k]
         }
         let err3a = await catchErr(fsDownloadFileVerify(boxUrl, fp3, { sha256: shaOf('x') }, { fetch: fnFetch }))
-        assert.strict.deepStrictEqual([err3a.code, err3a.step, err3a.attempts, err3a.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'urlIn is not an effective string', 0, false, []])
+        assert.strict.deepStrictEqual([err3a.code, err3a.step, err3a.attempts, err3a.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'invalid urlIn: must be a non-empty string', 0, false, []])
         let err3b = await catchErr(fsDownloadFileVerify('x://box/url', boxPath, { sha256: shaOf('x') }, { fetch: fnFetch }))
-        assert.strict.deepStrictEqual([err3b.code, err3b.step, err3b.attempts, err3b.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'fpOut is not an effective file path', 0, false, []])
+        assert.strict.deepStrictEqual([err3b.code, err3b.step, err3b.attempts, err3b.message, nFetch, fs.existsSync(fp3), parts(fp3)], ['E_ARG', 'argument', 0, 'invalid fpOut: must be a non-empty file path without NUL that does not end with a path separator', 0, false, []])
 
         //布林選項: 非原始布林(含new Boolean)視為未給取預設, 不解包亦不當truthy; retryOnMismatch預設true, 故new Boolean(false)仍重試至maxAttempts
         let n = 0

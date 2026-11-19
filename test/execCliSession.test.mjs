@@ -102,7 +102,7 @@ describe(`execCliSession`, function() {
         let w = await s.write('x')
         let r = await s.stop()
         assert.strict.deepStrictEqual(w, false)
-        assert.strict.deepStrictEqual(r.error, 'command 須為非空字串')
+        assert.strict.deepStrictEqual(r.error, 'invalid command: must be a non-empty string')
         assert.strict.deepStrictEqual(r.pid, null)
         assert.strict.deepStrictEqual(s.exited, true)
     })
@@ -570,7 +570,7 @@ describe(`execCliSession 觀察回調(R-TRACE-01)`, function() {
         }
         let plain = (tr, onExit) => ({ onExit, onTrace: tr.on })
         let a = await go('', [], plain)
-        assert.strict.deepStrictEqual([a.tr.events, a.w, a.sameExit], [[{ type: 'settle', code: null, signal: null, exited: true, timeout: false, killed: false, error: 'command 須為非空字串' }], false, true])
+        assert.strict.deepStrictEqual([a.tr.events, a.w, a.sameExit], [[{ type: 'settle', code: null, signal: null, exited: true, timeout: false, killed: false, error: 'invalid command: must be a non-empty string' }], false, true])
         let b = await go(nodeBin, ['-e', '1', 'a\u0000x'], plain)
         assert.strict.deepStrictEqual([b.tr.types(), b.tr.events[0].error.startsWith('ERR_INVALID_ARG_VALUE: ')], [['settle'], true])
         let c = await go(nodeBin, ['-e', '1'], (tr, onExit) => badProp({ onExit, onTrace: tr.on }, 'cwd', 'getter boom cwd'))

@@ -172,16 +172,16 @@ let lowerDoc = (doc, path, st, out) => {
  *
  * 4. 所有輸出節點為null原型，陣列以defineProperty附加(不用push與索引指派)，不受Array.prototype數字索引setter與Object.prototype汙染影響；純JS，無任何import。
  *
- * 錯誤一律為同步拋出之Error('invalid find: 原因 at [路徑]')，與cvOrmFind同格式，不回顯值；opt.maxParams缺漏或非法拋Error('lowerFind: opt.maxParams is required (use Infinity for no limit)')。
+ * 錯誤一律為同步拋出之Error('invalid find: 原因 at [路徑]')，與cvOrmFind同格式，不回顯值；opt.maxParams缺漏或非法(非正數)拋Error('invalid opt.maxParams: must be a positive number (use Infinity for no limit)')。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/lowerFind.test.mjs Github}
  * @memberOf wsemi
- * @param {Object} copy 輸入cvOrmFind回傳之複本物件，無自有鍵代表無條件
+ * @param {Object} copy 輸入cvOrmFind回傳之複本物件，無自有鍵代表無條件；未給或null時throw TypeError('invalid copy: must be an object')(檢測順序在opt之後)
  * @param {Object} opt 輸入設定物件
  * @param {Number} opt.maxParams 輸入單一語句綁定參數上限正數，不限者傳Infinity，必填
  * @param {Function} [opt.checkColumn] 輸入欄名檢核函數，傳入欄名字串，回傳空字串表通過，其餘為拒收原因字串，預設全過
  * @returns {Object|null} 回傳IR根節點(null原型)，無條件回傳null
- * @throws {Error} 越限或欄名不合者拋出Error('invalid find: 原因 at [路徑]')，opt.maxParams缺漏者拋出Error('lowerFind: opt.maxParams is required (use Infinity for no limit)')
+ * @throws {Error} 越限或欄名不合者拋出Error('invalid find: 原因 at [路徑]')，opt.maxParams缺漏或非法者拋出Error('invalid opt.maxParams: must be a positive number (use Infinity for no limit)')
  * @example
  *
  * console.log(lowerFind(cvOrmFind({}), { maxParams: 100 }))
@@ -206,7 +206,7 @@ let lowerDoc = (doc, path, st, out) => {
 function lowerFind(copy, opt) {
     let maxParams = own(opt, 'maxParams')
     if (typeof maxParams !== 'number' || !(maxParams > 0)) {
-        throw new Error('lowerFind: opt.maxParams is required (use Infinity for no limit)')
+        throw new Error('invalid opt.maxParams: must be a positive number (use Infinity for no limit)')
     }
     let checkColumn = own(opt, 'checkColumn')
     let st = {
@@ -214,6 +214,12 @@ function lowerFind(copy, opt) {
         maxParams, //必填: 核心不預設任何方言之上限
         checkColumn: typeof checkColumn === 'function' ? checkColumn : () => '',
     }
+
+    //check, copy須為cvOrmFind回傳之複本物件(檢測順序: opt之後); 未給或null原由Object.keys拋原生TypeError, 改為V19固定訊息(同為TypeError, 其餘型別之行為不變; ws492j)
+    if (copy === undefined || copy === null) {
+        throw new TypeError('invalid copy: must be an object')
+    }
+
     let out = []
     lowerDoc(copy, 'find', st, out)
     if (out.length === 0) {

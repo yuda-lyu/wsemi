@@ -126,9 +126,9 @@ describe(`execCliJsonRpc`, function() {
 
     it(`should report errorType 'params' for invalid command/requests without spawning`, async function() {
         let r1 = await execCliJsonRpc('', [], [{ method: 'x' }])
-        assert.strict.deepStrictEqual([r1.ok, r1.errorType, r1.error], [false, 'params', 'command 須為非空字串'])
+        assert.strict.deepStrictEqual([r1.ok, r1.errorType, r1.error], [false, 'params', 'invalid command: must be a non-empty string'])
         let r3 = await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'ok' }, { bad: 1 }])
-        assert.strict.deepStrictEqual([r3.ok, r3.errorType, r3.error], [false, 'params', 'requests[1] 須為含method或notify之物件'])
+        assert.strict.deepStrictEqual([r3.ok, r3.errorType, r3.error], [false, 'params', 'invalid requests[1]: must be an object with a non-empty string method or notify'])
     })
 
     //ws492h(第492項第7批, W-06): requests為opt類(簽名預設[]且JSDoc標[requests=[]]), 非陣列(含null、字串、物件)視為未給而改用預設[](同args), 不再以params回報(原'requests 須為陣列'); 啟動後不送請求即結束, 與requests為[]相同
@@ -308,7 +308,7 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             rpcOptRevoked: { ok: true, errorType: '', error: '' }, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給(修前params)
             rpcEnvRevoked: { ok: true, errorType: '', error: '' }, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數(修前notfound)
             rpcOnNotifyRevoked: { ok: true, errorType: '', error: '' }, //onNotify為已撤銷之函數Proxy: 非函數, 視為未給(修前params)
-            rpcRequestRevoked: { ok: false, errorType: 'params', error: 'requests[0] 須為含method或notify之物件' }, //requests之元素為已撤銷之Proxy: 非一般物件, 為無效請求而errorType params(必須參數, 不得視為未給; 錯誤訊息改為固定字串)
+            rpcRequestRevoked: { ok: false, errorType: 'params', error: 'invalid requests[0]: must be an object with a non-empty string method or notify' }, //requests之元素為已撤銷之Proxy: 非一般物件, 為無效請求而errorType params(必須參數, 不得視為未給; 錯誤訊息改為固定字串)
             uncaught: [], //規則13: 監聽器內不再觸及呼叫端之值
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
@@ -364,7 +364,7 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         let { r } = runExecFail('rpcEmptyRequests')
         assert.strict.deepStrictEqual(r.out, {
             noCmd: { ok: false, errorType: 'notfound', error: 'ENOENT: spawn wsemi-not-exist-zz ENOENT' }, //規則10: 未啟動(session pid為null)一律notfound, 不以錯誤字樣判定
-            cwdMissing: { ok: false, errorType: 'notfound', error: `ENOENT: cwd is not an existing folder: <fx>${path.sep}no-such-dir` }, //規則10、7: 同上(cwd不存在, error指明cwd)
+            cwdMissing: { ok: false, errorType: 'notfound', error: 'ENOENT: invalid cwd: must be an existing folder' }, //規則10、7: 同上(cwd不存在, error指明cwd; V19固定格式, 夾具路徑於runner內以<fx>遮蔽, 逐字相等即證明不含路徑)
             envRevoked: { ok: true, errorType: '', error: '' }, //env為已撤銷之Proxy: 非一般物件, 依K3視為未給而繼承環境變數, 子進程照常啟動(批6裁定③: isobj不拋錯而回false; 修前notfound)
             started: { ok: true, errorType: '', error: '' }, //規則10(對照): 已啟動且無請求者照常成功
         })

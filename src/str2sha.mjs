@@ -33,7 +33,7 @@ let kpSha = {
  *
  * n僅可為1、224、256、384、512，分別對應SHA-1、SHA-224、SHA-256、SHA-384、SHA-512
  * 其中SHA-1之1為演算法版本號而非輸出位元數(實際輸出160位元)，且已被證實可構造碰撞，僅適用於非資安用途之校驗
- * n為必須參數，須為有效正整數(iseint，數字字串亦可，去頭尾空白後取值)，其餘值時視為程式撰寫錯誤而擲出錯誤，非有效正整數(含小數、Infinity、'0x100'、包裝物件、超過安全整數)擲出'n is not a positive integer'，有效正整數但不在可用範圍則擲出'invalid n: must be one of 1, 224, 256, 384, 512'(訊息固定，不帶輸入值)
+ * n為必須參數，須為有效正整數(iseint，數字字串亦可，去頭尾空白後取值)，其餘值時視為程式撰寫錯誤而擲出錯誤，非有效正整數(含小數、Infinity、'0x100'、包裝物件、超過安全整數)擲出'invalid n: must be a positive integer'，有效正整數但不在可用範圍則擲出'invalid n: must be one of 1, 224, 256, 384, 512'(訊息固定，不帶輸入值)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2sha.test.mjs Github}
  * @memberOf wsemi
@@ -77,7 +77,7 @@ let kpSha = {
  * }
  * catch (err) {
  *     console.log(err.message)
- *     // => n is not a positive integer
+ *     // => invalid n: must be a positive integer
  * }
  *
  */
@@ -104,7 +104,7 @@ function str2sha(str, n, base64 = false, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid str')
+        return retError('invalid str: must be a non-empty string')
     }
 
     //check n, 必須參數, 須為有效正整數(iseint, 預設use: 'safe', min: 1), 有效則取轉換值(檢測之值即使用之值)
@@ -112,9 +112,9 @@ function str2sha(str, n, base64 = false, opt = {}) {
     //n無效屬呼叫端之程式錯誤, 預設模式維持拋錯之既有契約; 僅returnWithStateAndMsg時改以error狀態回報, 以與該模式「不拋錯」之語意一致
     if (!iseint(n, { min: 1 })) {
         if (returnWithStateAndMsg) {
-            return retError('n is not a positive integer')
+            return retError('invalid n: must be a positive integer')
         }
-        throw new Error(`n is not a positive integer`)
+        throw new Error('invalid n: must be a positive integer')
     }
     n = Number(n)
 

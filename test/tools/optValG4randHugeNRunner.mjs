@@ -3,10 +3,11 @@
 //  故於子行程執行並由呼叫端逾時終止判定; 被測實作固定為本檔往上兩層之src/
 //  用法: node test/tools/optValG4randHugeNRunner.mjs <函數名> <n|vend>
 //    n: 以超大n呼叫產生n個之函數, 結果{ lens }為各回傳陣列長度(全部應為1, 即視為未給用預設1)
-//    vend: 以vstart=Number.MAX_SAFE_INTEGER與超大vend呼叫Ndp函數, 結果{ msgs }為各錯誤訊息(全部應為vend用預設100之vstart>vend錯誤)
+//    vend: 以超大vend呼叫Ndp函數, 結果{ adopted100 }為各超大vend是否被視為未給而採用預設100(全部應為true; 判定見randBounds.mjs: f(100, v)不拋錯且f(101, v)因vstart > vend拋錯)
 //  結果以一行'@@R@@'開頭之JSON輸出至stdout, 由test/tools/runChildCase.mjs剖析
 import path from 'path'
 import { pathToFileURL, fileURLToPath } from 'url'
+import { run } from './randBounds.mjs'
 
 
 let dirSrc = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'src')
@@ -52,16 +53,13 @@ if (mode === 'n') {
     out = { lens }
 }
 else {
-    let msgs = []
+    //採用之vend為預設100 ⇔ f(100, v)不拋錯(範圍寬度0)且f(101, v)因vstart > vend以固定詞彙拋錯(訊息不帶值, 見randBounds.mjs)
+    let adopted100 = []
     for (let v of HUGE_VEND) {
-        try {
-            f(Number.MAX_SAFE_INTEGER, v)
-            msgs.push('NOTHROW')
-        }
-        catch (err) {
-            msgs.push(err.message)
-        }
+        let a = run(() => f(100, v))
+        let b = run(() => f(101, v))
+        adopted100.push(a === 'ok' && b === 'bound')
     }
-    out = { msgs }
+    out = { adopted100 }
 }
 console.log('@@R@@' + JSON.stringify(out))

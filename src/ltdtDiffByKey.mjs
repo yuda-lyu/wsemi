@@ -60,7 +60,7 @@ function isKeyVal(v) {
  * catch (err) {
  *     console.log(err.message)
  * }
- * // => invalid ltdtOld[1]: primary key must be unique, duplicated with ltdtOld[0]
+ * // => invalid ltdtOld[1]: must have a unique primary key (duplicated with ltdtOld[0])
  *
  */
 function ltdtDiffByKey(ltdtOld, ltdtNew, key, opt = {}) {
@@ -111,7 +111,7 @@ function ltdtDiffByKey(ltdtOld, ltdtNew, key, opt = {}) {
             //主鍵值須為非空字串或有限數字
             let kv = v[key]
             if (!isKeyVal(kv)) {
-                throw new Error(`invalid ${name}: primary key must be a non-empty string or a finite number`)
+                throw new Error(`invalid ${name}: must have a primary key of a non-empty string or a finite number`)
             }
 
             //轉字串相同而型別不同者不得並存
@@ -122,12 +122,12 @@ function ltdtDiffByKey(ltdtOld, ltdtNew, key, opt = {}) {
                 kpType.set(ks, { type: tp, name })
             }
             else if (t.type !== tp) {
-                throw new Error(`invalid ${name}: primary key must not mix a number and a string of the same text, conflicts with ${t.name}`)
+                throw new Error(`invalid ${name}: must not have a primary key that mixes a number and a string of the same text (conflicts with ${t.name})`)
             }
 
             //同側不得重複
             if (kpInd.has(kv)) {
-                throw new Error(`invalid ${name}: primary key must be unique, duplicated with ${kpInd.get(kv)}`)
+                throw new Error(`invalid ${name}: must have a unique primary key (duplicated with ${kpInd.get(kv)})`)
             }
             kpInd.set(kv, name)
 

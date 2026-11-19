@@ -449,7 +449,7 @@ function parseInput(command, args, opt) {
                 stdout: '',
                 stderr: '',
                 code: null,
-                error: 'command 須為非空字串',
+                error: 'invalid command: must be a non-empty string',
                 durationMs: 0,
                 attempts: 0,
             },
@@ -548,7 +548,7 @@ function parseInput(command, args, opt) {
  * @param {Array} [args=[]] 輸入參數字串陣列，內容原樣傳遞給目標CLI，預設[]
  * @param {Object} [opt={}] 輸入設定物件
  * @param {Number} [opt.timeoutMs=120000] 輸入逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，逾時將調用execProcessKillPid強制關閉子進程及其子孫程序，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限、不報錯，預設120000
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: cwd is not an existing folder: <cwd>'(未能啟動，不重試)
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以結果物件回報error為'ENOENT: invalid cwd: must be an existing folder'(未能啟動，不重試)
  * @param {String} [opt.input=undefined] 輸入傳入子進程stdin之字串，預設undefined代表不寫入stdin
  * @param {String|Function} [opt.validate=undefined] 輸入stdout驗證規則字串或自訂驗證函數，規則字串支援'nonempty'(非空)、'json'(可JSON.parse)、'min:100'(長度下限)，多規則可用逗號串接例如'nonempty,json'，自訂函數為(stdout)=>Boolean或回傳Promise(以其resolve值判定)，回傳真值為通過；自訂函數拋錯或其Promise被reject視同驗證失敗(error為'OUTPUT_VALIDATION_FAILED'，stderr前綴'validate threw: 錯誤訊息'，訊息截斷至500字元)；自訂函數回傳之Promise不受timeoutMs約束(子進程已結束)，永不落定時本函數亦不落定，durationMs不含驗證時間，預設undefined代表不驗證
  * @param {Number} [opt.maxBuffer=10485760] 輸入stdout與stderr各自累積之最大字元數正整數，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，以收到之輸出片段為單位截止: 累積量未達上限時該片段整段累積(故最後一段可使累積量略超過上限)，達上限後之片段不再累積，非預期之輸入(含Infinity、小數、超過4294967295、'0x10'、包裝物件)視為未給而改用預設，欲近乎不限制請給足夠大之有限值，預設10485760(10MB)

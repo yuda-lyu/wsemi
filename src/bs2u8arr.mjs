@@ -42,7 +42,7 @@ function bs2u8arr(str, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid bs')
+        return retError('invalid str: must be a non-empty string')
     }
 
     //u8a, 須攔截非預期錯誤, 否則會外拋至呼叫端

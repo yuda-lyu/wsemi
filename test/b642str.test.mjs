@@ -76,9 +76,9 @@ describe(`b642str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid b64' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid b64: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = b642str(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid b64' }
+        let rr = { state: 'error', msg: 'invalid b64: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

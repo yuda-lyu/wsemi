@@ -14,6 +14,7 @@ import arrNorm from '../src/arrNorm.mjs'
 import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
 import { defineOptParam, INVALID_EINT_EXTRA } from './tools/optValKit.mjs'
 import { defineRangeParam } from './tools/rangeParamKit.mjs'
+import { BOUND_MSG, probeVstart, probeVend } from './tools/randBounds.mjs'
 
 
 //第221項第二批第2輪第2批(ws272b): 陣列、數值、雜湊、隨機、錯誤訊息類函數之數值參數改經isenum／iseint判定
@@ -38,17 +39,7 @@ const notHuge = ([, v]) => !huge(v)
 
 let EINT_STR = VALID_STR.filter(([, , n]) => Number.isInteger(n))
 
-//bounds, 呼叫f並解析其 vstart > vend 之錯誤訊息, 回傳 [vstart, vend] (實際採用之值); 未拋錯回傳'NOTHROW', 其他錯誤回傳'ERR:訊息'
-function bounds(f) {
-    try {
-        f()
-        return 'NOTHROW'
-    }
-    catch (err) {
-        let m = /^vstart\[(.*)\] > vend\[(.*)\]$/.exec(err.message)
-        return m ? [Number(m[1]), Number(m[2])] : `ERR:${err.message}`
-    }
-}
+//實際採用之邊界之觀察見test/tools/randBounds.mjs(訊息不帶值後, 以 vstart <= vend 才不拋錯之性質驗證, ws492j)
 
 //整數系另有之無效: 小數、精度遺失之字串、非安全整數、超大
 const EXTRA_SAFE = [...INVALID_EINT_EXTRA, ['1e21', 1e21], [`'1e21'`, '1e21'], ['-(2 ** 53)', -(2 ** 53)]]
@@ -170,10 +161,7 @@ describe('optVal randomIntRange', function() {
         name: 'vstart',
         def: 0,
         desc: 'an integer',
-        probe: (v) => {
-            let r = bounds(() => fn(v, -Number.MAX_SAFE_INTEGER))
-            return Array.isArray(r) ? r[0] : r
-        },
+        probe: (v, exp) => probeVstart(fn, 'int', v, exp),
         valid: validStart,
         extraInvalid: EXTRA_SAFE,
     })
@@ -183,10 +171,7 @@ describe('optVal randomIntRange', function() {
         name: 'vend',
         def: 100,
         desc: 'an integer',
-        probe: (v) => {
-            let r = bounds(() => fn(Number.MAX_SAFE_INTEGER, v))
-            return Array.isArray(r) ? r[1] : r
-        },
+        probe: (v, exp) => probeVend(fn, 'int', v, exp),
         valid: validEnd,
         extraInvalid: EXTRA_SAFE,
     })
@@ -213,9 +198,9 @@ describe('optVal randomIntRange', function() {
         assert.strict.deepStrictEqual(fn('3', '3'), 3)
     })
 
-    it(`should throw vstart[..] > vend[..] when vstart > vend (kept)`, function() {
-        assert.throws(() => fn(5, 4), { message: 'vstart[5] > vend[4]' })
-        assert.throws(() => fn('5', '4'), { message: 'vstart[5] > vend[4]' })
+    it(`should throw the fixed message without values when vstart > vend (kept; V19, V20)`, function() {
+        assert.throws(() => fn(5, 4), { message: BOUND_MSG })
+        assert.throws(() => fn('5', '4'), { message: BOUND_MSG })
     })
 
 })
@@ -235,10 +220,7 @@ for (let [name, fn] of [['randomIntsNdpRange', randomIntsNdpRange], ['pseudoRand
             name: 'vstart',
             def: 0,
             desc: 'an integer',
-            probe: (v) => {
-                let r = bounds(() => fn(v, -Number.MAX_SAFE_INTEGER))
-                return Array.isArray(r) ? r[0] : r
-            },
+            probe: (v, exp) => probeVstart(fn, 'int', v, exp),
             valid: validStart,
             extraInvalid: EXTRA_SAFE,
         })
@@ -249,10 +231,7 @@ for (let [name, fn] of [['randomIntsNdpRange', randomIntsNdpRange], ['pseudoRand
             name: 'vend',
             def: 100,
             desc: 'an integer',
-            probe: (v) => {
-                let r = bounds(() => fn(Number.MAX_SAFE_INTEGER, v))
-                return Array.isArray(r) ? r[1] : r
-            },
+            probe: (v, exp) => probeVend(fn, 'int', v, exp),
             valid: validEnd,
             invalid: INVALID.filter(notHuge),
             extraInvalid: EXTRA_SAFE.filter(notHuge),
@@ -285,8 +264,8 @@ for (let [name, fn] of [['randomIntsNdpRange', randomIntsNdpRange], ['pseudoRand
             }
         })
 
-        it(`should throw vstart[..] > vend[..] when vstart > vend (kept)`, function() {
-            assert.throws(() => fn(5, 4), { message: 'vstart[5] > vend[4]' })
+        it(`should throw the fixed message without values when vstart > vend (kept; V19, V20)`, function() {
+            assert.throws(() => fn(5, 4), { message: BOUND_MSG })
         })
 
     })
@@ -483,7 +462,7 @@ describe('optVal arrPullAt', function() {
 describe('optVal str2sha', function() {
 
     let SHA256_ABC = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'
-    const MSG = 'n is not a positive integer'
+    const MSG = 'invalid n: must be a positive integer'
 
     //n為必須參數: 無效throw MSG（訊息不帶值）; returnWithStateAndMsg時改回error狀態
     let INVALID_N = [...INVALID, ...EXTRA_SAFE, ['0', 0], [`'0'`, '0'], ['-1', -1], ['1.5', 1.5], [`'1.5'`, '1.5'], [`'toString'`, 'toString'], [`'constructor'`, 'constructor']]

@@ -59,9 +59,9 @@ describe(`matDiff`, function() {
     //ws286c: matOld與matNew為必須參數(使用者2026-11-03逐列確認: 差異比對子類), 非陣列throw Error, 訊息固定不帶值, 依matOld、matNew序檢測; []為合法輸入
     const MSG_NEW = 'invalid matNew: must be an array'
     //ws290: 列非陣列之訊息改用matDiff自身之參數名且合乎輸入參數規格之「invalid <參數名>: …」格式(修前沿用內部arrDiff之'arrOld is not a matrix'/'arrNew is not a matrix')
-    //ws430c(裁定表〈八〉「列非陣列(含空位) 訊息指出列號(invalid matOld: row[i] is not an array, 只含列號不含值)」): 原'invalid matOld: every row must be an array' → 新'invalid matOld: row[i] is not an array'
-    const MSG_MAT_OLD = (i) => `invalid matOld: row[${i}] is not an array`
-    const MSG_MAT_NEW = (i) => `invalid matNew: row[${i}] is not an array`
+    //ws430c(裁定表〈八〉「列非陣列(含空位) 訊息指出列號, 只含列號不含值」): 原'invalid matOld: every row must be an array' → 'invalid matOld: row[i] is not an array' → ws492j V19新'invalid matOld[i]: must be an array'
+    const MSG_MAT_OLD = (i) => `invalid matOld[${i}]: must be an array`
+    const MSG_MAT_NEW = (i) => `invalid matNew[${i}]: must be an array`
 
     //ws492h(第492項第7批, 使用者2026-11-16「W-16:乙」): matOld為第1參數, 非陣列一律回與正常輸出同形之空結果{ diff: [], dfs: [] }, 不拋錯(且不檢查matNew); matNew為次參數, 非陣列仍throw
     //  對應規格: dspec〈輸入參數之檢測機制〉§11「C7結構運算之第1參數(使用者2026-11-16 W-16:乙)」
@@ -172,21 +172,21 @@ describe(`matDiff`, function() {
     })
 
     //各列須為陣列: 仍throw, 且不輸出輸入資料至console(0次呼叫); ws430c(〈八〉): 訊息指出列號
-    it(`should throw 'invalid matOld: row[i] is not an array' with 0 console calls when matOld is not a matrix: matDiff([1], [2])`, function() {
+    it(`should throw 'invalid matOld[i]: must be an array' with 0 console calls when matOld is not a matrix: matDiff([1], [2])`, function() {
         throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD(0))
         throwsMsg(() => matDiff([1], [[2]]), MSG_MAT_OLD(0))
         throwsMsg(() => matDiff([1], []), MSG_MAT_OLD(0))
         throwsMsg(() => matDiff([[1], 'abc'], [[1]]), MSG_MAT_OLD(1))
     })
 
-    it(`should throw 'invalid matNew: row[i] is not an array' with 0 console calls when matNew is not a matrix`, function() {
+    it(`should throw 'invalid matNew[i]: must be an array' with 0 console calls when matNew is not a matrix`, function() {
         throwsMsg(() => matDiff([[1]], [2]), MSG_MAT_NEW(0))
         throwsMsg(() => matDiff([], [2]), MSG_MAT_NEW(0))
         throwsMsg(() => matDiff([[1]], [[1], null]), MSG_MAT_NEW(1))
     })
 
     for (let [label, v] of NON_ARR) {
-        it(`should throw 'row[i] is not an array' with 0 console calls when a row is not an array: ${label}`, function() {
+        it(`should throw 'invalid <name>[i]: must be an array' with 0 console calls when a row is not an array: ${label}`, function() {
             throwsMsg(() => matDiff([v], [[1]]), MSG_MAT_OLD(0))
             throwsMsg(() => matDiff([[1], v], [[1]]), MSG_MAT_OLD(1))
             throwsMsg(() => matDiff([[1]], [v]), MSG_MAT_NEW(0))
@@ -209,7 +209,7 @@ describe(`matDiff`, function() {
                 err = e
             }
             assert.ok(err instanceof Error)
-            assert.ok(/^invalid mat(Old|New): /.test(err.message), err.message)
+            assert.ok(/^invalid mat(Old|New)\[0\]: must be an array$/.test(err.message), err.message)
             assert.ok(!/arrOld|arrNew|is not a matrix/.test(err.message), err.message)
         }
         throwsMsg(() => matDiff([1], [2]), MSG_MAT_OLD(0)) //兩側各列皆無效: matOld先
@@ -219,7 +219,7 @@ describe(`matDiff`, function() {
         assert.strict.deepStrictEqual(matDiff('x', [1]), EMPTY_RESULT) //ws492h: matOld非陣列回空結果, 不檢查matNew
     })
 
-    it(`should call console.log 0 times and not carry the input data when throwing 'row[i] is not an array'`, function() {
+    it(`should call console.log 0 times and not carry the input data when throwing 'invalid <name>[i]: must be an array'`, function() {
         let calls = []
         let orig = console.log
         console.log = (...args) => {

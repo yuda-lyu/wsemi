@@ -8,6 +8,7 @@ import { decode } from 'he'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/htmlDecode.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入編碼後html字串
+ * @param {Object} [opt={}] 輸入設定物件，原樣傳給he套件之decode(可用鍵見he套件說明)，預設{}
  * @returns {String} 回傳html字串
  * @example
  *

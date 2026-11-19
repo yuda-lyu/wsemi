@@ -11,7 +11,7 @@ describe('blobs2u8arrs', function() {
 
     it('should reject with invalid bbs when input is not an array', async function() {
         let r = await getRes(() => blobs2u8arrs(NaN))
-        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bbs' })
+        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bbs: must be an array' })
     })
 
     it('should resolve [] when input is an empty array', async function() {

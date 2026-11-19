@@ -11,7 +11,7 @@ describe('blob2b64', function() {
 
     it('should reject with invalid bb when input is not a blob', async function() {
         let r = await getRes(() => blob2b64(NaN))
-        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bb' })
+        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bb: must be a Blob' })
     })
 
     it('should reject with no window when not in a browser', async function() {

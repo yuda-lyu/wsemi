@@ -14,23 +14,23 @@ import chkFsDeps from './_chkFsDeps.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsRenameFileCore.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pahOld 輸入檔案原本路徑字串
- * @param {String} pahNew 輸入檔案更名路徑字串
+ * @param {String} fpOld 輸入檔案原本路徑字串
+ * @param {String} fpNew 輸入檔案更名路徑字串
  * @param {Object} opt 輸入設定物件，Core不自行匯入fs，須由呼叫端注入
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、renameSync(新路徑之上層資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, renameSync'(不帶輸入值)
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；pahOld不是檔案時error為說明字串'invalid pahOld: must be an existing file'，pahNew已存在時為'invalid pahNew: must not already exist'；Node原生錯誤(如ENOENT、EPERM)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code ENOENT)'(保留其code，不保留path、dest等屬性)；成功訊息'done: <pahNew>'維持
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；fpOld不是檔案時error為說明字串'invalid fpOld: must be an existing file'，fpNew已存在時為'invalid fpNew: must not already exist'；Node原生錯誤(如ENOENT、EPERM)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code ENOENT)'(保留其code，不保留path、dest等屬性)；成功訊息'done: <fpNew>'維持
  * @example
  * need test in nodejs.
  *
  * //see fsRenameFile
  *
  */
-function fsRenameFileCore(pahOld, pahNew, opt = {}) {
+function fsRenameFileCore(fpOld, fpNew, opt = {}) {
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(pahOld, 'pahOld') || chkFsPath(pahNew, 'pahNew')
-    if (msgPah) {
+    let msgPath = chkFsPath(fpOld, 'fpOld') || chkFsPath(fpNew, 'fpNew')
+    if (msgPath) {
         return {
-            error: msgPah,
+            error: msgPath,
         }
     }
 
@@ -48,21 +48,21 @@ function fsRenameFileCore(pahOld, pahNew, opt = {}) {
         }
 
         //check, 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
-        if (!fsIsFileCore(pahOld, { fs })) {
+        if (!fsIsFileCore(fpOld, { fs })) {
             return {
-                error: 'invalid pahOld: must be an existing file' //pahOld不是檔案則視為錯誤(訊息不帶路徑, V20)
+                error: 'invalid fpOld: must be an existing file' //fpOld不是檔案則視為錯誤(訊息不帶路徑, V20)
             }
         }
 
         //check
-        if (fsExistsCore(pahNew, { fs })) {
+        if (fsExistsCore(fpNew, { fs })) {
             return {
-                error: 'invalid pahNew: must not already exist' //pahNew存在則視為錯誤(訊息不帶路徑, V20)
+                error: 'invalid fpNew: must not already exist' //fpNew存在則視為錯誤(訊息不帶路徑, V20)
             }
         }
 
         //fd
-        let fd = getPathParent(pahNew)
+        let fd = getPathParent(fpNew)
 
         //check
         if (!fsIsFolderCore(fd, { fs })) {
@@ -70,7 +70,7 @@ function fsRenameFileCore(pahOld, pahNew, opt = {}) {
         }
 
         //renameSync
-        fs.renameSync(pahOld, pahNew)
+        fs.renameSync(fpOld, fpNew)
 
     }
     catch (err) {
@@ -80,7 +80,7 @@ function fsRenameFileCore(pahOld, pahNew, opt = {}) {
     }
 
     return {
-        success: 'done: ' + pahNew
+        success: 'done: ' + fpNew
     }
 }
 

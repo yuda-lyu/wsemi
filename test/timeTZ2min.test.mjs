@@ -312,9 +312,9 @@ describe(`timeTZ2min`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)' } when input NaN with returnWithStateAndMsg`, function() {
         let r = timeTZ2min(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid t' }
+        let rr = { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

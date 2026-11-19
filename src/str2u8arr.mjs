@@ -48,13 +48,13 @@ function str2u8arr(str, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid str')
+        return retError('invalid str: must be a non-empty string')
     }
 
     //check, 孤立代理碼元, TextEncoder會靜默換成U+FFFD而改變資料, 故視為失敗
     let bWellFormed = typeof str.isWellFormed === 'function' ? str.isWellFormed() : !reLoneSurrogate.test(str)
     if (!bWellFormed) {
-        return retError('invalid str, contains lone surrogates')
+        return retError('invalid str: must be a well-formed string without lone surrogates')
     }
 
     //r, 須攔截非預期錯誤, 否則會外拋至呼叫端

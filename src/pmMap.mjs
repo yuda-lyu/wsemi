@@ -383,7 +383,7 @@ function pmMap(rs, fun, takeLimit = 0, opt = {}) {
             if (trace) {
                 trace('reject', { i: -1 })
             }
-            pm.reject('rs is not an array or object')
+            pm.reject('invalid rs: must be an array or an object')
             return pm
         }
         rs = rd.items

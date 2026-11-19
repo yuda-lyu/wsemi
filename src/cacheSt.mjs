@@ -216,7 +216,7 @@ function cacheSt(opt = {}) {
 
         evEmit(ev, 'waitExist', [{ state: 'start' }], { tag: 'cacheSt' })
 
-        //waitFun 達 attemptNum 會 reject 'exceeded attemptNum[N]', 須包 catch 才能拋出自家較明確之 timeout 訊息
+        //waitFun 達 attemptNum 會 reject 'exceeded attemptNum', 須包 catch 才能拋出自家較明確之 timeout 訊息
         try {
             await waitFun(() => haskey(_gs, key), { attemptNum, timeInterval })
         }

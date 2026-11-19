@@ -8,9 +8,9 @@ import fsErrMsg from './_fsErrMsg.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFileSafe.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入路徑字串
+ * @param {String} fp 輸入路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Object} [opt.fs=fs] 輸入fs物件，須提供statSync、lstatSync、unlinkSync，預設為Node內建fs(供測試注入假fs；給undefined視為未給而取預設)；給null或缺少statSync時reject字串`opt.fs is invalid: ...`(不視為標的不存在)，缺少lstatSync(標的存在時)則reject字串'Error: invalid opt.fs: must be an object providing statSync, lstatSync'，缺少其他函數時其呼叫之TypeError以字串reject
+ * @param {Object} [opt.fs=fs] 輸入fs物件，須提供statSync、lstatSync、unlinkSync，預設為Node內建fs(供測試注入假fs；給undefined視為未給而取預設)；給null或缺少statSync時reject字串`invalid opt.fs: must be an object providing statSync`(不視為標的不存在)，缺少lstatSync(標的存在時)則reject字串'Error: invalid opt.fs: must be an object providing statSync, lstatSync'，缺少其他函數時其呼叫之TypeError以字串reject
  * @param {Integer} [opt.numRetry=5] 輸入嘗試刪除次數整數(1至4294967295，數字字串亦可)，預設5；非預期(0、負數、小數、Infinity、超過4294967295、'0x10'、包裝物件、非數字等)視為未給而改用預設5，不報錯(Infinity不代表無限重試)；遇EBUSY才重試，每次重試前等待300ms，最後一次嘗試失敗後不再等待而直接reject；opt.debug為true時，非預期之numRetry另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'attempt'時為即將呼叫unlinkSync嘗試刪除(含n為由1起算之嘗試序號)，'retry'時為第n次嘗試遇EBUSY而即將等待ms毫秒(固定300)(含n、code為'EBUSY'、ms；僅在之後還有下一次嘗試時通知，故n小於numRetry)，'done'時為第n次嘗試刪除成功而即將resolve(含n)，'skip'時為不需(再)刪除而即將resolve或reject(含n與reason；reason為'not-exist'代表前置檢查標的不存在而resolve、'not-file'代表前置檢查標的非檔案而reject，此二者n為0；reason為'vanished'代表第n次嘗試得ENOENT且標的確已不存在(重試期間被他方刪除)而resolve)，'giveup'時為重試耗盡仍遇EBUSY而即將reject(含n為numRetry、code為'EBUSY'；於最後一次嘗試失敗當下通知，不再等待)，'fail'時為前置檢查拋錯或opt.fs不合(n為0，opt.fs不合時code為null)或第n次嘗試遇不可重試之錯誤而即將reject(含n、code為該錯誤之code字串，無則null)；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響刪除，預設null
  * @returns {Promise} 回傳Promise，resolve回傳成功訊息，reject回傳錯誤訊息字串(含重試耗盡仍被占用)，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
@@ -51,7 +51,7 @@ import fsErrMsg from './_fsErrMsg.mjs'
  * // ms [ { 'fsDeleteFileSafe(before)': true }, { 'fsDeleteFileSafe(after)': false } ]
  *
  */
-async function fsDeleteFileSafe(pah, opt = {}) {
+async function fsDeleteFileSafe(fp, opt = {}) {
 
     //o, 展開置於try內: opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy)時展開即拋出, 於async函數內未捕捉即以Error物件reject
     let o = null
@@ -65,7 +65,7 @@ async function fsDeleteFileSafe(pah, opt = {}) {
         return Promise.reject(fsErrMsg(err)) //拋出者為Node原生錯誤時改固定詞彙加錯誤碼(W-23)
     }
 
-    return await fsDeleteFileSafeCore(pah, o)
+    return await fsDeleteFileSafeCore(fp, o)
 }
 
 

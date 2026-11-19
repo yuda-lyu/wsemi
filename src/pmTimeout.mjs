@@ -16,7 +16,7 @@ import getTrace from './getTrace.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmTimeout.test.mjs Github}
  * @memberOf wsemi
- * @param {Promise} pm 輸入Promise物件，非Promise時reject錯誤'invalid pm'
+ * @param {Promise} pm 輸入Promise物件，非Promise時reject錯誤'invalid pm: must be a Promise'
  * @param {Integer} ms 輸入逾時毫秒數，必須參數，須為有效整數且在0至2147483647(計時器上限)之內(數字字串亦可)，為0代表下一輪事件迴圈即逾時；非預期(負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)reject錯誤'invalid ms: must be an integer within 0 to 2147483647'(訊息固定、不帶輸入值)，不夾至上限
  * @param {Object} [opt={}] 輸入設定物件
  * @param {String} [opt.label=''] 輸入識別字串，將置於逾時錯誤訊息之前綴以利辨識來源，非有效字串時回退為空字串，預設''
@@ -77,7 +77,7 @@ async function pmTimeout(pm, ms, opt = {}) {
         if (trace) {
             trace('settle', { by: 'invalid', ok: false })
         }
-        throw new Error(`invalid pm`)
+        throw new Error('invalid pm: must be a Promise')
     }
 
     //check, 必須參數: 須為有效整數且在0至2147483647(計時器上限)之內(iseint, use: 'timer'), 超過上限、Infinity、'0x10'等非預期之輸入reject, 不夾至上限

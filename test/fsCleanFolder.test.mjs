@@ -144,11 +144,11 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         })
     }
 
-    it(`should return { error: 'input path is not a folder' } and keep the file when the target is a regular file [R-FS-RESULT-01]`, function() {
+    it(`should return { error: 'invalid fd: must be a folder or not exist' } and keep the file when the target is a regular file [R-FS-RESULT-01]`, function() {
         let fp = path.join(mkd('target-is-file'), 'afile')
         fs.writeFileSync(fp, 'x')
         let r = fsCleanFolder(fp)
-        assert.strict.deepStrictEqual(r, { error: 'input path is not a folder' })
+        assert.strict.deepStrictEqual(r, { error: 'invalid fd: must be a folder or not exist' })
         assert.strict.deepStrictEqual(fs.readFileSync(fp, 'utf8'), 'x')
     })
 
@@ -188,7 +188,7 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         assert.strict.deepStrictEqual(fs.readFileSync(path.join(fdOut, 'sub', 'deep.txt'), 'utf8'), 'deep')
     })
 
-    it(`should return { error: 'input path is not a folder' } and keep the pointed folder when the target itself is a junction [R-FS-RESULT-01]`, function() {
+    it(`should return { error: 'invalid fd: must be a folder or not exist' } and keep the pointed folder when the target itself is a junction [R-FS-RESULT-01]`, function() {
         //設計事實: 目標本身為連結(junction)時不經連結清空他處, 一律視為非資料夾
         let fdBase = mkd('target-is-junction')
         let fdReal = path.join(fdBase, 'real')
@@ -197,7 +197,7 @@ describe(`fsCleanFolder 結果物件(R-FS-RESULT-01)`, function() {
         fs.writeFileSync(path.join(fdReal, 'x.txt'), 'x')
         fs.symlinkSync(fdReal, fdLnk, 'junction')
         let r = fsCleanFolder(fdLnk)
-        assert.strict.deepStrictEqual(r, { error: 'input path is not a folder' })
+        assert.strict.deepStrictEqual(r, { error: 'invalid fd: must be a folder or not exist' })
         assert.strict.deepStrictEqual(fs.readdirSync(fdReal), ['x.txt'])
         assert.strict.deepStrictEqual(fs.lstatSync(fdLnk).isSymbolicLink(), true)
     })

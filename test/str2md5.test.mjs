@@ -95,9 +95,9 @@ describe(`str2md5`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = str2md5(NaN, false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid str' }
+        let rr = { state: 'error', msg: 'invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -161,9 +161,9 @@ describe(`obj2str`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data' } when input undefined with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data: must not be undefined' } when input undefined with returnWithStateAndMsg`, function() {
         let r = obj2str(undefined, 'Uint8Array', { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data' }
+        let rr = { state: 'error', msg: 'invalid data: must not be undefined' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

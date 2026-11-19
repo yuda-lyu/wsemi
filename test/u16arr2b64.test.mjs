@@ -72,9 +72,9 @@ describe(`u16arr2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid u16a' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid u16a: must be a Uint16Array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = u16arr2b64(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid u16a' }
+        let rr = { state: 'error', msg: 'invalid u16a: must be a Uint16Array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

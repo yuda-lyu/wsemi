@@ -7,7 +7,7 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
  * 由keys與二維陣列mdata轉ltdt
  *
  * keys之元素為空字串''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字(NaN、±Infinity)時，該欄連同其值略過，其餘位置不變；有限數字視同字串；keys重複時後者覆蓋前者；keys非陣列、為空陣列或元素全被略過時視為keys無效
- * mat之每一列(不限第一列)須為非空陣列，任一列非陣列(null、字串、物件、數字、空位)或為[]時視為mat無效，訊息指出第幾列(invalid mat, row[i] is not an effective array，只含索引不含值)；列只有一個空元素(['']、[null]、[{}])為有效列
+ * mat之每一列(不限第一列)須為非空陣列，任一列非陣列(null、字串、物件、數字、空位)或為[]時視為mat無效，訊息指出第幾列(invalid mat[i]: must be a non-empty array，只含索引不含值)；列只有一個空元素(['']、[null]、[{}])為有效列
  * 列短於keys時缺少之欄補''，列長於keys時多出之值丟棄；值為undefined或列內空位補''；值為函數時視為null(不執行、不複製)；其餘之值原樣放入(不複製)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/keysmat2ltdt.test.mjs Github}
@@ -38,10 +38,10 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
  * // => [{ a: null }, { a: '' }] (只有一個空元素之列為有效列)
  *
  * console.log(keysmat2ltdt(['a', 'b'], [[1, 2], 'xy'], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid mat, row[1] is not an effective array' }
+ * // => { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' }
  *
  * console.log(keysmat2ltdt([null, ''], [[1, 2]], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid keys' } (keys全被略過)
+ * // => { state: 'error', msg: 'invalid keys: must contain at least one non-empty string or finite number' } (keys全被略過)
  *
  */
 function keysmat2ltdt(keys, mat, opt = {}) {

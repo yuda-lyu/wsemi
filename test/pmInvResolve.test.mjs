@@ -161,10 +161,10 @@ describe(`pmInvResolve msg原樣傳遞與掛載(R-PM-SETTLE-01規則14)`, functi
         assert.strict.deepStrictEqual(await st(pmInvResolve(Promise.reject('x'))), { s: 'reject', v: 'x' })
     })
 
-    it(`pm非Promise時同步拋出Error('pm is not a promise') [規則12]`, function() {
+    it(`pm非Promise時同步拋出Error('invalid pm: must be a Promise') [規則12]`, function() {
         for (let v of [undefined, null, 0, 'abc', {}]) {
-            //R-PM-SETTLE-01 規則12: pmInvResolve之pm非Promise時同步拋出(寫入JSDoc); JSDoc pmInvResolve:13「pm非Promise時同步拋出Error('pm is not a promise')」
-            assert.strict.throws(() => pmInvResolve(v), (e) => e instanceof Error && e.message === 'pm is not a promise')
+            //R-PM-SETTLE-01 規則12: pmInvResolve之pm非Promise時同步拋出(寫入JSDoc); JSDoc pmInvResolve:13「pm非Promise時同步拋出Error('invalid pm: must be a Promise')」
+            assert.strict.throws(() => pmInvResolve(v), (e) => e instanceof Error && e.message === 'invalid pm: must be a Promise')
         }
     })
 

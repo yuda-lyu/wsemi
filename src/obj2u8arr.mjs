@@ -114,7 +114,7 @@ function obj2u8arr(data, opt = {}) {
 
     //check, 陣列以isarr1判「是陣列且長度大於0」, 不可用isearr, 因isearr於長度為1時會額外檢查該元素是否有效, 使['']、[null]這類單元素陣列被整個拒絕, 而['','a']卻可通過, 造成同型輸入因長度而結果不同
     if (!isarr1(data) && !iseobj(data)) {
-        return retError('invalid data, data is not an effective object or a non-empty array')
+        return retError('invalid data: must be a non-empty object or a non-empty array')
     }
 
     //addBin

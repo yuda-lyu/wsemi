@@ -15,7 +15,7 @@ import _setOwnKey from './_setOwnKey.mjs'
 
 
 //MSG_CELL, 儲存格不合{ value, style }格式之錯誤訊息(使用者2026-11-14裁定之固定訊息)
-let MSG_CELL = 'invalid ltdt, every row must have a cell {value, style} for every column'
+let MSG_CELL = 'invalid ltdt: must have a cell {value, style} for every column in every row'
 
 
 /**
@@ -30,7 +30,7 @@ let MSG_CELL = 'invalid ltdt, every row must have a cell {value, style} for ever
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Array|Object} 回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、ltdt任一元素非有效物件、或儲存格不合{ value, style }格式時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }，儲存格不合格式時為{ state: 'error', msg: 'invalid ltdt, every row must have a cell {value, style} for every column' }
+ * @returns {Array|Object} 回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、ltdt任一元素非有效物件、或儲存格不合{ value, style }格式時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }，儲存格不合格式時為{ state: 'error', msg: 'invalid ltdt: must have a cell {value, style} for every column in every row' }
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空陣列[]，而空陣列[]亦為合法輸入之結果(如ltdt2vrtsable([]))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(msg為錯誤訊息)
  * @example
  *
@@ -41,7 +41,7 @@ let MSG_CELL = 'invalid ltdt, every row must have a cell {value, style} for ever
  * // => [{"a":{"value":"x","style":{},"rowspan":2}},{"a":{"value":"x","style":{},"rowspan":null}}] (style可省略, 預設{})
  *
  * console.log(ltdt2vrtsable([{ a: { value: 1 }, b: { value: 2 } }, { a: { value: 1 } }], ['a'], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid ltdt, every row must have a cell {value, style} for every column' } (第2列缺欄b)
+ * // => { state: 'error', msg: 'invalid ltdt: must have a cell {value, style} for every column in every row' } (第2列缺欄b)
  *
  * console.log(ltdt2vrtsable([], [], { returnWithStateAndMsg: true }))
  * // => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)
@@ -71,10 +71,10 @@ function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
     //check, 原碼三種失敗皆回[], 與「本就轉出空陣列」無從分辨; ltdt為空陣列是合法資料(非失敗), 但mergerowkeys型別無效仍為失敗(型別檢測與資料有無無關)
     let isEmptyLtdt = isarr(ltdt) && ltdt.length === 0
     if (!isEmptyLtdt && !isearr(ltdt)) {
-        return retError('invalid ltdt')
+        return retError('invalid ltdt: must be an array of non-empty objects')
     }
     if (!isarr(mergerowkeys)) {
-        return retError('invalid mergerowkeys')
+        return retError('invalid mergerowkeys: must be an array')
     }
 
     //空陣列為合法資料, 轉出空陣列(每次新陣列)
@@ -91,14 +91,14 @@ function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
     }
 
     //check ltdt
-    let b = false
-    each(ltdt, function(v) {
-        if (!iseobj(v)) {
-            b = true
+    let b = -1 //第一個無效元素之實際索引, -1為皆有效
+    each(ltdt, function(v, i) {
+        if (b < 0 && !iseobj(v)) {
+            b = i
         }
     })
-    if (b) {
-        return retError('invalid ltdt, every element must be an effective object')
+    if (b >= 0) {
+        return retError(`invalid ltdt[${b}]: must be a non-empty object`)
     }
 
     //tabkeys

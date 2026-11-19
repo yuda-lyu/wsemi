@@ -38,13 +38,13 @@ function getCsv(mat, bom = true) {
  * 由陣列數據轉成為Excel(*.csv)的字串數據
  *
  * 空陣列為合法資料(內容為空)，不是失敗：data為空陣列時回傳空內容，bom開啟(預設)時為只含BOM(U+FEFF)之字串，bom關閉時為空字串。
- * data不是陣列(或為無效陣列，如[null]、[[]])時回傳{ error: 'no data' }物件。
+ * data不是陣列(或為無效陣列，如[null]、[[]])時回傳{ error: 'invalid data: must be an array of non-empty rows' }物件。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getCsvStrFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} data 輸入內容陣列，空陣列則回傳空內容
  * @param {Boolean} [bom=true] 輸入是否添加開頭BOM符號，預設true
- * @returns {String|Object} 回傳csv字串，data為空陣列時回傳空內容(bom開啟為只含BOM(U+FEFF)之字串、關閉為空字串)；data無效時回傳{ error: 'no data' }物件，轉換發生例外時回傳{ error }物件
+ * @returns {String|Object} 回傳csv字串，data為空陣列時回傳空內容(bom開啟為只含BOM(U+FEFF)之字串、關閉為空字串)；data無效時回傳{ error: 'invalid data: must be an array of non-empty rows' }物件，轉換發生例外時回傳{ error }物件
  * @example
  *
  * let data = [
@@ -66,14 +66,14 @@ function getCsv(mat, bom = true) {
  * // => true
  *
  * console.log(getCsvStrFromData('x'))
- * // => { error: 'no data' }
+ * // => { error: 'invalid data: must be an array of non-empty rows' }
  *
  */
 function getCsvStrFromData(data, bom = true) {
 
-    //check, 空陣列為合法資料(轉出空內容), 其餘無效者(非陣列、[null]、[[]]等)為no data
+    //check, 空陣列為合法資料(轉出空內容), 其餘無效者(非陣列、[null]、[[]]等)回{ error }(ws492j V19: 訊息原'no data')
     if (!(isarr(data) && data.length === 0) && !isearr(data)) {
-        let msg = 'no data'
+        let msg = 'invalid data: must be an array of non-empty rows'
         return {
             error: msg
         }

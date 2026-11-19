@@ -59,7 +59,7 @@ function str2obj(data, ext = 'Uint8Array', opt = {}) {
 
     //check, 原碼無此檢查, 非字串輸入交JSON.parse後由catch吞掉回{}
     if (!isstr(data)) {
-        return retError('invalid data')
+        return retError('invalid data: must be a string')
     }
 
     //ext, 無效時回退預設值
@@ -95,7 +95,7 @@ function str2obj(data, ext = 'Uint8Array', opt = {}) {
         s = JSON.parse(data, replacer)
     }
     catch (err) {
-        return retError(errToStr(err)) //replacer讀呼叫端之ext(Proxy陣列等)可拋出任意值, 不可直接err.toString()
+        return retError(err instanceof SyntaxError ? 'invalid data: must be a valid JSON text' : errToStr(err)) //SyntaxError之訊息帶輸入片段(V20), 改為固定訊息; replacer讀呼叫端之ext(Proxy陣列等)可拋出任意值, 不可直接err.toString()
     }
 
     if (returnWithStateAndMsg) {

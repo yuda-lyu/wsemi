@@ -22,7 +22,7 @@ import u8arr2b64 from './u8arr2b64.mjs'
  * // => 'CwBPAAYA'
  *
  * console.log(u16arr2b64('abc', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid u16a' }
+ * // => { state: 'error', msg: 'invalid u16a: must be a Uint16Array' }
  *
  */
 function u16arr2b64(u16a, opt = {}) {
@@ -48,7 +48,7 @@ function u16arr2b64(u16a, opt = {}) {
 
     //check
     if (!isu16arr(u16a)) {
-        return retError('invalid u16a')
+        return retError('invalid u16a: must be a Uint16Array')
     }
 
     //b64, 內部一律以returnWithStateAndMsg取狀態, 逐一判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端

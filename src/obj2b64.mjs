@@ -20,7 +20,7 @@ import str2b64 from './str2b64.mjs'
  * // => 'eyJhIjoxfQ=='
  *
  * console.log(obj2b64(undefined, { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'o2j: invalid v' }
+ * // => { state: 'error', msg: 'o2j: invalid v: must not be undefined' }
  *
  */
 function obj2b64(data, opt = {}) {

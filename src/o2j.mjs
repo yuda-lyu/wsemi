@@ -53,7 +53,7 @@ function o2j(v, bFormat = false, opt = {}) {
 
     //check
     if (isundefined(v)) {
-        return retError('invalid v')
+        return retError('invalid v: must not be undefined')
     }
 
     //c, 序列化失敗(如含BigInt、循環參照)原為catch吞掉回'', 與「本就轉出空字串」無從分辨

@@ -102,15 +102,15 @@ describe(`str2aes`, function() {
         assert.strict.deepStrictEqual(typeof r.msg === 'string' && r.msg.length > 0, true)
     })
 
-    it(`should return { state: 'error', msg: 'invalid str' } when str is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a non-empty string' } when str is not a string with returnWithStateAndMsg`, function() {
         let r = str2aes(NaN, 'k', false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid str' }
+        let rr = { state: 'error', msg: 'invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid key: must be a non-empty string' } when key is not a string with returnWithStateAndMsg`, function() {
         let r = str2aes('abc', NaN, false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid key' }
+        let rr = { state: 'error', msg: 'invalid key: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

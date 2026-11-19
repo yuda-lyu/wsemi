@@ -6,8 +6,8 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
 
 /**
  * 由mat第1行當head，其餘當data，轉ltdt
- * 表頭(mat第1列)之元素為字串或有限數字(視同字串)，其餘(''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字)連同該欄之值略過；表頭重複時後者覆蓋前者；表頭元素全被略過時回傳錯誤(keysmat2ltdt: invalid keys)
- * mat之每一列(含表頭)須為非空陣列，任一列無效時訊息指出mat之列號(invalid mat, row[i] is not an effective array，只含索引不含值)；列只有一個空元素(['']、[null])為有效列；只有表頭、無資料列為合法之空結果[]
+ * 表頭(mat第1列)之元素為字串或有限數字(視同字串)，其餘(''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字)連同該欄之值略過；表頭重複時後者覆蓋前者；表頭元素全被略過時回傳錯誤(keysmat2ltdt: invalid keys: must contain at least one non-empty string or finite number)
+ * mat之每一列(含表頭)須為非空陣列，任一列無效時訊息指出mat之列號(invalid mat[i]: must be a non-empty array，只含索引不含值)；列只有一個空元素(['']、[null])為有效列；只有表頭、無資料列為合法之空結果[]
  * 資料列之轉換同keysmat2ltdt：短於表頭補''、長於表頭丟棄多出之值、undefined與空位補''、函數視為null
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/mat2ltdt.test.mjs Github}
@@ -31,7 +31,7 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
  * // => { state: 'success', msg: [] } (只有表頭為合法之空結果)
  *
  * console.log(mat2ltdt([['a', 'b'], [1, 2], null], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid mat, row[2] is not an effective array' }
+ * // => { state: 'error', msg: 'invalid mat[2]: must be a non-empty array' }
  *
  */
 function mat2ltdt(mat, opt = {}) {
@@ -70,7 +70,7 @@ function mat2ltdt(mat, opt = {}) {
 
     //check, mat非陣列
     if (!isarr(mat)) {
-        return retError('invalid mat')
+        return retError('invalid mat: must be an array')
     }
 
     //check, 每列(含表頭)皆須為非空陣列, 訊息以mat計之列號(只含索引); rows為快照(每列只讀一次, 不呼叫mat之方法)
@@ -78,7 +78,7 @@ function mat2ltdt(mat, opt = {}) {
     for (let i = 0; i < mat.length; i++) {
         let r = mat[i]
         if (!isarr(r) || r.length === 0) {
-            return retError(`invalid mat, row[${i}] is not an effective array`)
+            return retError(`invalid mat[${i}]: must be a non-empty array`)
         }
         rows.push(r)
     }

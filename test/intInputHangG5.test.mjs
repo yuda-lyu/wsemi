@@ -21,12 +21,12 @@ describe('timer/flow Infinity input hang guards (child process)', function() {
 
     describe('waitFun (attemptNum default 200, timeInterval default 1000)', function() {
 
-        it('waitFun-attempt-inf should reject exceeded attemptNum[200] instead of polling forever', function() {
-            assert.strict.deepStrictEqual(runIntInputHangG5('waitFun-attempt-inf'), { msg: 'exceeded attemptNum[200]' })
+        it('waitFun-attempt-inf should reject exceeded attemptNum after 202 calls of fun (default attemptNum 200) instead of polling forever', function() {
+            assert.strict.deepStrictEqual(runIntInputHangG5('waitFun-attempt-inf'), { msg: 'exceeded attemptNum', calls: 202 })
         })
 
         it('waitFun-interval-2p40 should poll with the default 1000ms instead of the clamped 24.8 days', function() {
-            assert.strict.deepStrictEqual(runIntInputHangG5('waitFun-interval-2p40'), { msg: 'exceeded attemptNum[1]', fast: true })
+            assert.strict.deepStrictEqual(runIntInputHangG5('waitFun-interval-2p40'), { msg: 'exceeded attemptNum', calls: 3, fast: true })
         })
 
     })

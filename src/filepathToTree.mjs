@@ -636,7 +636,7 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r9.json', JSON.stringify(r9), 'utf8')
  * console.log(r9)
  * console.log('\n\n')
- * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a folder and a file
+ * // => Error: invalid fps[2].path: must not be both a folder and a file (conflicts with fps[1])
  *
  * //先建檔案再補建虛擬資料夾須報錯
  * let fps10 = [
@@ -654,7 +654,7 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r10.json', JSON.stringify(r10), 'utf8')
  * console.log(r10)
  * console.log('\n\n')
- * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder
+ * // => Error: invalid fps[2].path: must not be both a file and a folder (conflicts with fps[1])
  *
  * //先建檔案再補建資料夾須報錯
  * let fps11 = [
@@ -673,7 +673,7 @@ import haskey from './haskey.mjs'
  * fs.writeFileSync('r11.json', JSON.stringify(r11), 'utf8')
  * console.log(r11)
  * console.log('\n\n')
- * // => Error: invalid fps[2].path: conflicts with fps[1], the same path is both a file and a folder
+ * // => Error: invalid fps[2].path: must not be both a file and a folder (conflicts with fps[1])
  *
  * //項目無效須報錯(指出第幾個項目, 不含路徑)
  * try {
@@ -777,7 +777,7 @@ function filepathToTree(fps, opt = {}) {
         }
         for (let s of r.ss) {
             if (s.indexOf(delimiter) >= 0) {
-                throw new Error(`invalid fps[${k}].path: a path segment must not contain the delimiter, set opt.delimiter to another string`)
+                throw new Error(`invalid fps[${k}].path: must not have a path segment containing opt.delimiter (set opt.delimiter to another string)`)
             }
         }
         vps.push({ type: t, ss: r.ss })
@@ -982,22 +982,22 @@ function filepathToTree(fps, opt = {}) {
                 //update, 拋錯訊息不含路徑、指出第幾個項目, 不輸出內部物件至console(使用者2026-11-14, 第430項第二批)
                 if (!isFolderOld && isFolder) {
                     //過去已建檔案, 但現在須新建資料夾, 非預期須報錯
-                    throw new Error(`invalid fps[${v.ind}].path: conflicts with ${nameOld}, the same path is both a file and a folder`)
+                    throw new Error(`invalid fps[${v.ind}].path: must not be both a file and a folder (conflicts with ${nameOld})`)
                 }
                 else if (!isFolderOld && !isFolder) {
                     //過去已建檔案, 但現在又須新建為檔案, 數據有重複, 非預期須報錯
-                    throw new Error(`invalid fps[${v.ind}].path: duplicate file path of ${nameOld}`)
+                    throw new Error(`invalid fps[${v.ind}].path: must be a unique file path (duplicated with ${nameOld})`)
                 }
                 else if (isFolderOld && !isFolder) {
                     //過去已建資料夾或虛擬資料夾, 但現在又須新建為檔案, 數據不一致, 非預期須報錯
-                    throw new Error(`invalid fps[${v.ind}].path: conflicts with ${nameOld}, the same path is both a folder and a file`)
+                    throw new Error(`invalid fps[${v.ind}].path: must not be both a folder and a file (conflicts with ${nameOld})`)
                 }
                 else { //isFolderOld && isFolder
                     //過去已建資料夾但現在又須新建為資料夾, 預期上是兩次被視為虛擬資料夾
 
                     if (iseobj(kpLv[id].data) && iseobj(data)) {
                         //因視為資料夾data已為實際data, 但又出現新data, 非預期須報錯
-                        throw new Error(`invalid fps[${v.ind}].path: duplicate folder path of ${nameOld}`)
+                        throw new Error(`invalid fps[${v.ind}].path: must be a unique folder path (duplicated with ${nameOld})`)
                     }
                     else if (kpLv[id].data === null && iseobj(data)) {
                         //之前資料夾無data, 但出現資料夾且有data, 預期是原始數據先建置虛擬資料夾, 且後面又提供指定為資料夾數據
@@ -1132,9 +1132,7 @@ function filepathToTree(fps, opt = {}) {
 
             //check
             if (!isestr(k)) {
-                console.log('kpPathFd', kpPathFd)
-                console.log('v', v, v.parentId)
-                throw new Error(`invalid parentId[${v.parentId}] in folder`)
+                throw new Error('invalid parentId: must refer to an existing folder')
             }
 
             //chds
@@ -1195,9 +1193,7 @@ function filepathToTree(fps, opt = {}) {
 
             //check
             if (!isestr(k)) {
-                console.log('kpPathFd', kpPathFd)
-                console.log('v', v, v.parentId)
-                throw new Error(`invalid parentId[${v.parentId}] in file`)
+                throw new Error('invalid parentId: must refer to an existing folder')
             }
 
             //chds
@@ -1206,10 +1202,7 @@ function filepathToTree(fps, opt = {}) {
 
             //set
             if (!isarr(chds)) { //因先處理資料夾, 故此處一定需為資料夾
-                console.log('treeItems', treeItems)
-                console.log('k', k)
-                console.log('v', v)
-                throw new Error('無預先建置資料夾')
+                throw new Error('invalid parentId: must refer to a pre-built folder')
             }
 
             //chd

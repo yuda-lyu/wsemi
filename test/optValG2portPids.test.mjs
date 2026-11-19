@@ -8,9 +8,9 @@ import { resetWarned, capture, stubWarn } from './tools/numOptKit.mjs'
 
 //execProcessPortPids、execProcessPortPidsSync(共用內部_execPortPids.readInput) 之 port:
 //  必須參數(無預設、無回退): iseint(port, { use: 'port' }) 判定(有效整數且在1~65535, 數字字串亦可, 去頭尾空白), 取值Number(port); 非預期(含包裝物件、小數、0、超出範圍、Infinity、'0x50'、非數字、不可讀之值)報錯, 不視為未給、不改用預設
-//  處置不變: 非同步版reject 'port is not an integer between 1 and 65535'; 同步版回傳null且訊息由onTrace之settle事件取得; 皆不拋錯、不執行子指令(exec不被呼叫)
+//  處置不變(訊息改為V19固定格式): 非同步版reject 'invalid port: must be an integer from 1 to 65535'; 同步版回傳null且訊息由onTrace之settle事件取得; 皆不拋錯、不執行子指令(exec不被呼叫)
 //  原: 包裝物件(new Number、new String)以原型之valueOf拆包後判定而接受, 且'0x50'等經isint被接受; 現iseint不解包、不收其他進位寫法
-const MSG = 'port is not an integer between 1 and 65535'
+const MSG = 'invalid port: must be an integer from 1 to 65535'
 
 //有效埠號: [標籤, 輸入, 期望之埠號]
 const VALID = [

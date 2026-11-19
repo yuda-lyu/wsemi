@@ -102,13 +102,13 @@ describe(`waitFun`, function() {
 
 describe(`waitFun settle(R-PM-SETTLE-01)`, function() {
 
-    it(`waitFun: 輪詢中拋錯或reject即reject該錯誤並停止輪詢, 同立即呼叫; 超過次數reject'exceeded attemptNum[N]' [規則1、2、5、文件]`, function() {
+    it(`waitFun: 輪詢中拋錯或reject即reject該錯誤並停止輪詢, 同立即呼叫; 超過次數reject固定字串'exceeded attemptNum'(不帶數值) [規則1、2、5、文件]`, function() {
         let { r } = runPmSettle('waitFunIntervalFail')
         assert.strict.deepStrictEqual(r.out, {
             intervalReject: { s: 'reject', same: true, calls: 2 },
             intervalSyncThrow: { s: 'reject', same: true, calls: 2 },
             immediateReject: { s: 'reject', same: true },
-            exceeded: { s: 'reject', v: 'exceeded attemptNum[2]' },
+            exceeded: { s: 'reject', v: 'exceeded attemptNum' },
         })
         assert.strict.deepStrictEqual(r.unhandled, [])
     })
@@ -131,14 +131,14 @@ describe(`waitFun 輪詢不重疊(R-PM-SETTLE-01規則13)`, function() {
         })
 
         it(`fun(250ms, 恆false)慢於timeInterval(100ms): 最大並行1, 執行中之週期只計次不呼叫, 逾次於呼叫完成時reject, reject時無執行中之呼叫 [規則13]`, function() {
-            //R-PM-SETTLE-01 規則13: 前一次呼叫未完成時該週期不呼叫fun(只計次); 逾次於呼叫完成時判定; JSDoc waitFun:17「前一次呼叫未完成時該週期不呼叫fun(輪詢不重疊)但仍計入嘗試次數」、:18「超過最大嘗試次數時reject字串'exceeded attemptNum[最大嘗試次數]'」
+            //R-PM-SETTLE-01 規則13: 前一次呼叫未完成時該週期不呼叫fun(只計次); 逾次於呼叫完成時判定; JSDoc waitFun:17「前一次呼叫未完成時該週期不呼叫fun(輪詢不重疊)但仍計入嘗試次數」、:26「超過最大嘗試次數時reject固定字串'exceeded attemptNum'(不帶數值)」
             //以觀察回調之事件序列判定(R-TRACE-01 P2): 原斷言呼叫恰3次(立即1次後, 第1、4週期呼叫), 次數隨週期與fun耗時之真實比例而變, 負載下不穩; 改驗各週期之busy與呼叫之對應、計次與reject之時點
-            assert.strict.deepStrictEqual(r.out.s1, { s: 'reject', v: 'exceeded attemptNum[5]', maxConc: 1, inflightAtSettle: 0, overlapFree: true, ticksCounted: true, callsMatch: true, rejectAtResult: true })
+            assert.strict.deepStrictEqual(r.out.s1, { s: 'reject', v: 'exceeded attemptNum', maxConc: 1, inflightAtSettle: 0, overlapFree: true, ticksCounted: true, callsMatch: true, rejectAtResult: true })
         })
 
         it(`fun同步回傳false: 呼叫attemptNum+2次後reject [規則13]`, function() {
             //R-PM-SETTLE-01 規則13: fun最多被呼叫attemptNum+2次(立即1次+輪詢); JSDoc waitFun:16「故fun最多被呼叫attemptNum+2次」
-            assert.strict.deepStrictEqual(r.out.s3, { s: 'reject', v: 'exceeded attemptNum[5]', calls: 7 })
+            assert.strict.deepStrictEqual(r.out.s3, { s: 'reject', v: 'exceeded attemptNum', calls: 7 })
         })
 
         it(`先啟動之慢輪(500ms)回true, 其間之週期不呼叫: resolve [規則13]`, function() {
@@ -256,10 +256,10 @@ describe(`waitFun 輪詢不重疊(R-PM-SETTLE-01規則13)`, function() {
         }
         let expOut = {
             resolve3: ['resolve', 3],
-            exceeded: ['reject:exceeded attemptNum[2]', 4],
+            exceeded: ['reject:exceeded attemptNum', 4],
             tickError: ['reject:boom', 2],
-            slowBusy: ['reject:exceeded attemptNum[3]', 3],
-            invalid: ['reject:waitfunction需輸入函數f', 0],
+            slowBusy: ['reject:exceeded attemptNum', 3],
+            invalid: ['reject:invalid fun: must be a function', 0],
             immediateThrow: ['reject:first', 1],
         }
         assert.strict.deepStrictEqual([outs, un], [[expOut, expOut, expOut, expOut, expOut], []])
@@ -280,11 +280,11 @@ describe(`waitFun 輪詢不重疊(R-PM-SETTLE-01規則13)`, function() {
         assert.strict.deepStrictEqual(Object.values(recs).every((v) => v.events.every((e) => Object.isFrozen(e))), true)
     })
 
-    it(`fun非函數(7值)時reject字串'waitfunction需輸入函數f' [規則12]`, async function() {
+    it(`fun非函數(7值)時reject字串'invalid fun: must be a function' [規則12]`, async function() {
         for (let v of [undefined, null, 0, 'abc', {}, Promise.resolve(1), async function* () {}]) {
             let r = await waitFun(v).then(() => 'resolve', (e) => e)
-            //R-PM-SETTLE-01 規則12: waitFun reject字串(寫入JSDoc); JSDoc waitFun:18「fun非函數時reject字串'waitfunction需輸入函數f'」
-            assert.strict.deepStrictEqual(r, 'waitfunction需輸入函數f')
+            //R-PM-SETTLE-01 規則12: waitFun reject字串(寫入JSDoc); JSDoc waitFun:26「fun非函數時reject字串'invalid fun: must be a function'」
+            assert.strict.deepStrictEqual(r, 'invalid fun: must be a function')
         }
     })
 

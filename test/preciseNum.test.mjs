@@ -102,7 +102,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input ''`, function() {
+    it(`should return 'invalid v: must be a valid number' when input ''`, function() {
         let r = ''
         try {
             r = preciseNum('')
@@ -110,11 +110,11 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input false`, function() {
+    it(`should return 'invalid v: must be a valid number' when input false`, function() {
         let r = ''
         try {
             r = preciseNum(false)
@@ -122,11 +122,11 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input []`, function() {
+    it(`should return 'invalid v: must be a valid number' when input []`, function() {
         let r = ''
         try {
             r = preciseNum([])
@@ -134,11 +134,11 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input {}`, function() {
+    it(`should return 'invalid v: must be a valid number' when input {}`, function() {
         let r = ''
         try {
             r = preciseNum({})
@@ -146,11 +146,11 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input null`, function() {
+    it(`should return 'invalid v: must be a valid number' when input null`, function() {
         let r = ''
         try {
             r = preciseNum(null)
@@ -158,11 +158,11 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'v is not a number' when input undefined`, function() {
+    it(`should return 'invalid v: must be a valid number' when input undefined`, function() {
         let r = ''
         try {
             r = preciseNum(undefined)
@@ -170,7 +170,7 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -274,7 +274,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(preciseNum(123456789012345680), '123456789012345680')
         assert.strict.deepStrictEqual(preciseNum(123456789012345680, { returnDigit: true }), 0)
         //第221項第一批: Infinity不是有效數字(isenum), throw(修前整數路徑回'Infinity')
-        assert.throws(() => preciseNum(Infinity), { message: 'v is not a number' })
+        assert.throws(() => preciseNum(Infinity), { message: 'invalid v: must be a valid number' })
     })
 
     it(`should return '0.3' for 0.1 + 0.2 and keep 12 digits stable`, function() {
@@ -285,15 +285,15 @@ describe(`preciseNum`, function() {
     })
 
     //對應述語P5(第221項第一批改): 判定由isnum改isenum, 包裝物件不解包(R-WRAPPER-01規則4), 一律throw(修前放行並轉為原始數字)
-    it(`should throw v is not a number when input wrapper objects (isenum does not unwrap)`, function() {
-        assert.throws(() => preciseNum(new Number(1.5)), { message: 'v is not a number' })
-        assert.throws(() => preciseNum(new String('1.5')), { message: 'v is not a number' })
-        assert.throws(() => preciseNum(Object('1.5')), { message: 'v is not a number' })
-        assert.throws(() => preciseNum(new Number(1.5), { returnDigit: true }), { message: 'v is not a number' })
-        assert.throws(() => preciseNum(new Number(5)), { message: 'v is not a number' }) //整數路徑
-        assert.throws(() => preciseNum(vm.runInNewContext('new Number(1.5)')), { message: 'v is not a number' }) //跨領域
-        assert.throws(() => preciseNum(vm.runInNewContext('new String(" 2.25 ")')), { message: 'v is not a number' })
-        assert.throws(() => preciseNum(new Number(1e-11)), { message: 'v is not a number' })
+    it(`should throw invalid v: must be a valid number when input wrapper objects (isenum does not unwrap)`, function() {
+        assert.throws(() => preciseNum(new Number(1.5)), { message: 'invalid v: must be a valid number' })
+        assert.throws(() => preciseNum(new String('1.5')), { message: 'invalid v: must be a valid number' })
+        assert.throws(() => preciseNum(Object('1.5')), { message: 'invalid v: must be a valid number' })
+        assert.throws(() => preciseNum(new Number(1.5), { returnDigit: true }), { message: 'invalid v: must be a valid number' })
+        assert.throws(() => preciseNum(new Number(5)), { message: 'invalid v: must be a valid number' }) //整數路徑
+        assert.throws(() => preciseNum(vm.runInNewContext('new Number(1.5)')), { message: 'invalid v: must be a valid number' }) //跨領域
+        assert.throws(() => preciseNum(vm.runInNewContext('new String(" 2.25 ")')), { message: 'invalid v: must be a valid number' })
+        assert.throws(() => preciseNum(new Number(1e-11)), { message: 'invalid v: must be a valid number' })
     })
 
     //對應述語P6(第221項第一批改、第二批§11第16項B再改): 整數路徑之有效數字字串輸出正規化(去頭尾空白、不含指數記號, '1.5e3'得'1500'、'1e1'得'10'; 原樣返回'1.5e3'、'1e1');
@@ -303,8 +303,8 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(preciseNum(' 1.5e3 '), '1500')
         assert.strict.deepStrictEqual(preciseNum('1e1'), '10')
         for (let s of ['0x10', 'Infinity', '-Infinity', '1e400', '0b11', '0o7']) {
-            assert.throws(() => preciseNum(s), { message: 'v is not a number' }, s)
-            assert.throws(() => preciseNum(s, { returnDigit: true }), { message: 'v is not a number' }, s)
+            assert.throws(() => preciseNum(s), { message: 'invalid v: must be a valid number' }, s)
+            assert.throws(() => preciseNum(s, { returnDigit: true }), { message: 'invalid v: must be a valid number' }, s)
         }
     })
 
@@ -353,7 +353,7 @@ describe(`preciseNum`, function() {
         assert.strict.deepStrictEqual(preciseNum(123456.789012345), '123456.789012')
     })
 
-    it(`should return 'v is not a number' when input NaN`, function() {
+    it(`should return 'invalid v: must be a valid number' when input NaN`, function() {
         let r = ''
         try {
             r = preciseNum(NaN)
@@ -361,7 +361,7 @@ describe(`preciseNum`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'v is not a number'
+        let rr = 'invalid v: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 

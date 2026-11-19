@@ -98,7 +98,7 @@ describe(`preciseNum 整數路徑(第221項第二批 第16項)`, function() {
     //無效輸入仍throw(第一批), 不受整數路徑改動影響
     it(`should still throw for non valid numbers`, function() {
         for (let v of [Infinity, '0x10', '1e400', '-', '', null, undefined, true, new Number(1)]) { // eslint-disable-line no-new-wrappers
-            assert.throws(() => preciseNum(v), { message: 'v is not a number' })
+            assert.throws(() => preciseNum(v), { message: 'invalid v: must be a valid number' })
         }
     })
 

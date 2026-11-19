@@ -453,7 +453,7 @@ describe(`裁定表〈七〉iseobj`, function() {
     })
 
     it(`〈七-3〉should close the ltdtDiff/getltdtkeys mismatch: a row with only inherited keys is no longer a valid element of ltdtDiff`, function() {
-        throwsMsg(() => ltdtDiff([Object.create({ a: 1 })], [Object.create({ a: 1 })]), 'invalid ltdtOld: every element must be a non-empty object')
+        throwsMsg(() => ltdtDiff([Object.create({ a: 1 })], [Object.create({ a: 1 })]), 'invalid ltdtOld[0]: must be a non-empty object')
     })
 
     it(`〈七-2〉JSDoc should state own enumerable keys`, function() {
@@ -481,20 +481,20 @@ describe(`裁定表〈八〉ltdtDiffByKey`, function() {
 
     it(`〈八-2〉should throw when the primary key value is not a non-empty string or a finite number`, function() {
         for (let v of [undefined, null, '', NaN, {}, [], Infinity, true]) {
-            throwsMsg(() => ltdtDiffByKey([{ id: v }], [], 'id'), 'invalid ltdtOld[0]: primary key must be a non-empty string or a finite number')
+            throwsMsg(() => ltdtDiffByKey([{ id: v }], [], 'id'), 'invalid ltdtOld[0]: must have a primary key of a non-empty string or a finite number')
         }
         let r = ltdtDiffByKey([{ id: 'x' }, { id: 0 }, { id: -1.5 }], [], 'id')
         assert.strict.strictEqual(r.del.length, 3)
     })
 
     it(`〈八-3〉should throw for duplicated primary keys on the same side (old or new)`, function() {
-        throwsMsg(() => ltdtDiffByKey([{ id: 'SECRETK' }, { id: 'SECRETK' }], [], 'id'), 'invalid ltdtOld[1]: primary key must be unique, duplicated with ltdtOld[0]')
-        throwsMsg(() => ltdtDiffByKey([{ id: 1 }], [{ id: 2 }, { id: 3 }, { id: 2 }], 'id'), 'invalid ltdtNew[2]: primary key must be unique, duplicated with ltdtNew[0]')
+        throwsMsg(() => ltdtDiffByKey([{ id: 'SECRETK' }, { id: 'SECRETK' }], [], 'id'), 'invalid ltdtOld[1]: must have a unique primary key (duplicated with ltdtOld[0])')
+        throwsMsg(() => ltdtDiffByKey([{ id: 1 }], [{ id: 2 }, { id: 3 }, { id: 2 }], 'id'), 'invalid ltdtNew[2]: must have a unique primary key (duplicated with ltdtNew[0])')
     })
 
     it(`〈八-4〉should throw when key values have the same string but different types (1 and '1')`, function() {
-        throwsMsg(() => ltdtDiffByKey([{ id: 1 }], [{ id: '1' }], 'id'), 'invalid ltdtNew[0]: primary key must not mix a number and a string of the same text, conflicts with ltdtOld[0]')
-        throwsMsg(() => ltdtDiffByKey([{ id: '1' }, { id: 1 }], [], 'id'), 'invalid ltdtOld[1]: primary key must not mix a number and a string of the same text, conflicts with ltdtOld[0]')
+        throwsMsg(() => ltdtDiffByKey([{ id: 1 }], [{ id: '1' }], 'id'), 'invalid ltdtNew[0]: must not have a primary key that mixes a number and a string of the same text (conflicts with ltdtOld[0])')
+        throwsMsg(() => ltdtDiffByKey([{ id: '1' }, { id: 1 }], [], 'id'), 'invalid ltdtOld[1]: must not have a primary key that mixes a number and a string of the same text (conflicts with ltdtOld[0])')
     })
 
     it(`〈八-5〉should compare the content by key-sorted JSON (field order ignored, recursively), keeping JSON semantics for undefined, NaN/null and Date/ISO string`, function() {
@@ -534,7 +534,7 @@ describe(`裁定表〈八〉ltdtDiffByKey`, function() {
 
 describe(`裁定表〈九〉ltdt2vrtsable`, function() {
 
-    let MSG = 'invalid ltdt, every row must have a cell {value, style} for every column'
+    let MSG = 'invalid ltdt: must have a cell {value, style} for every column in every row'
 
     it(`〈九-1〉should accept a cell without style and give it {} (value is required)`, function() {
         assert.strict.deepStrictEqual(ltdt2vrtsable([{ a: { value: 1 } }], []), [{ a: { value: 1, style: {}, rowspan: 1 } }])
@@ -637,10 +637,10 @@ describe(`裁定表〈十〉filepathToTree`, function() {
 
     it(`〈十-4〉should still throw for duplicated paths and a path being both a folder and a file, without console output and with the item index instead of the path`, function() {
         let cases = [
-            [[{ type: 'file', path: '/SECRETP/a.txt' }, { type: 'file', path: '/SECRETP/a.txt' }], 'invalid fps[1].path: duplicate file path of fps[0]'],
-            [[{ type: 'folder', path: '/SECRETP', x: 1 }, { type: 'folder', path: '/SECRETP', x: 2 }], 'invalid fps[1].path: duplicate folder path of fps[0]'],
-            [[{ type: 'file', path: '/SECRETP' }, { type: 'folder', path: '/SECRETP' }], 'invalid fps[1].path: conflicts with fps[0], the same path is both a file and a folder'],
-            [[{ type: 'folder', path: '/SECRETP' }, { type: 'file', path: '/SECRETP' }], 'invalid fps[1].path: conflicts with fps[0], the same path is both a folder and a file'],
+            [[{ type: 'file', path: '/SECRETP/a.txt' }, { type: 'file', path: '/SECRETP/a.txt' }], 'invalid fps[1].path: must be a unique file path (duplicated with fps[0])'],
+            [[{ type: 'folder', path: '/SECRETP', x: 1 }, { type: 'folder', path: '/SECRETP', x: 2 }], 'invalid fps[1].path: must be a unique folder path (duplicated with fps[0])'],
+            [[{ type: 'file', path: '/SECRETP' }, { type: 'folder', path: '/SECRETP' }], 'invalid fps[1].path: must not be both a file and a folder (conflicts with fps[0])'],
+            [[{ type: 'folder', path: '/SECRETP' }, { type: 'file', path: '/SECRETP' }], 'invalid fps[1].path: must not be both a folder and a file (conflicts with fps[0])'],
         ]
         for (let [fps, msg] of cases) {
             let c = captureConsole(() => {
@@ -661,10 +661,10 @@ describe(`裁定表〈十〉filepathToTree`, function() {
     })
 
     it(`〈十-5〉should throw when a path segment contains the delimiter, suggesting opt.delimiter`, function() {
-        throwsMsg(() => filepathToTree([{ type: 'file', path: '/a❯b.txt' }]), 'invalid fps[0].path: a path segment must not contain the delimiter, set opt.delimiter to another string')
+        throwsMsg(() => filepathToTree([{ type: 'file', path: '/a❯b.txt' }]), 'invalid fps[0].path: must not have a path segment containing opt.delimiter (set opt.delimiter to another string)')
         let r = filepathToTree([{ type: 'file', path: '/a❯b.txt' }], { delimiter: '|' })
         assert.strict.deepStrictEqual(r.fpsNormalize, [{ type: 'file', path: '/root/a❯b.txt' }])
-        throwsMsg(() => filepathToTree([{ type: 'file', path: '/a|b.txt' }], { delimiter: '|' }), 'invalid fps[0].path: a path segment must not contain the delimiter, set opt.delimiter to another string')
+        throwsMsg(() => filepathToTree([{ type: 'file', path: '/a|b.txt' }], { delimiter: '|' }), 'invalid fps[0].path: must not have a path segment containing opt.delimiter (set opt.delimiter to another string)')
     })
 
     it(`〈十-6〉JSDoc behavior: '.' and '..' are ordinary names without path resolution`, function() {

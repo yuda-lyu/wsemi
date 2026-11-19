@@ -98,15 +98,15 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
             ['fsCopyFile(useSync:false)', () => fsCopyFile(fpNope, path.join(fdT, 'o3.txt'), { useSync: false }), 'invalid fpSrc: must be an existing file'],
             ['fsCopyFolder(來源不存在)', () => fsCopyFolder(fdNope, path.join(fdT, 'o4')), 'invalid fpSrc: must be an existing folder'],
             ['fsCopyFolder(useSync:false)', () => fsCopyFolder(fpFile, path.join(fdT, 'o5'), { useSync: false }), 'invalid fpSrc: must be an existing folder'],
-            ['fsCreateFile(已存在之檔)', () => fsCreateFile(fpFile, 'x'), 'invalid pah: must not already exist'],
-            ['fsCreateFile(已存在之資料夾)', () => fsCreateFile(fdSub, 'x'), 'invalid pah: must not already exist'],
-            ['fsCreateFolder(已存在之檔)', () => fsCreateFolder(fpFile), 'invalid pah: must be a folder or not exist'],
-            ['fsDeleteFile(為資料夾)', () => fsDeleteFile(fdSub), 'invalid pah: must be a file or not exist'],
-            ['fsDeleteFolder(為檔案)', () => fsDeleteFolder(fpFile), 'invalid pah: must be a folder or not exist'],
-            ['fsRenameFile(原路徑不存在)', () => fsRenameFile(fpNope, path.join(fdT, 'r1.txt')), 'invalid pahOld: must be an existing file'],
-            ['fsRenameFile(新路徑已存在)', () => fsRenameFile(fpFile, fdSub), 'invalid pahNew: must not already exist'],
-            ['fsRenameFolder(原路徑不存在)', () => fsRenameFolder(fdNope, path.join(fdT, 'r2')), 'invalid pahOld: must be an existing folder'],
-            ['fsRenameFolder(新路徑已存在)', () => fsRenameFolder(fdSub, fpFile), 'invalid pahNew: must not already exist'],
+            ['fsCreateFile(已存在之檔)', () => fsCreateFile(fpFile, 'x'), 'invalid fp: must not already exist'],
+            ['fsCreateFile(已存在之資料夾)', () => fsCreateFile(fdSub, 'x'), 'invalid fp: must not already exist'],
+            ['fsCreateFolder(已存在之檔)', () => fsCreateFolder(fpFile), 'invalid fd: must be a folder or not exist'],
+            ['fsDeleteFile(為資料夾)', () => fsDeleteFile(fdSub), 'invalid fp: must be a file or not exist'],
+            ['fsDeleteFolder(為檔案)', () => fsDeleteFolder(fpFile), 'invalid fd: must be a folder or not exist'],
+            ['fsRenameFile(原路徑不存在)', () => fsRenameFile(fpNope, path.join(fdT, 'r1.txt')), 'invalid fpOld: must be an existing file'],
+            ['fsRenameFile(新路徑已存在)', () => fsRenameFile(fpFile, fdSub), 'invalid fpNew: must not already exist'],
+            ['fsRenameFolder(原路徑不存在)', () => fsRenameFolder(fdNope, path.join(fdT, 'r2')), 'invalid fdOld: must be an existing folder'],
+            ['fsRenameFolder(新路徑已存在)', () => fsRenameFolder(fdSub, fpFile), 'invalid fdNew: must not already exist'],
             ['fsWriteJson(inp非物件)', () => fsWriteJson(path.join(fdT, 'j.json'), 5), 'invalid inp: must be an object or array'],
         ]
 
@@ -126,8 +126,8 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
 
         let fp = fpNope
         let rejCases = [
-            ['fsDeleteFileSafe(為資料夾)', () => fsDeleteFileSafe(fdSub), 'invalid pah: must be a file or not exist'],
-            ['fsDeleteFolderSafe(為檔案)', () => fsDeleteFolderSafe(fpFile), 'invalid pah: must be a folder or not exist'],
+            ['fsDeleteFileSafe(為資料夾)', () => fsDeleteFileSafe(fdSub), 'invalid fp: must be a file or not exist'],
+            ['fsDeleteFolderSafe(為檔案)', () => fsDeleteFolderSafe(fpFile), 'invalid fd: must be a folder or not exist'],
             ['fsGetFileHash(不存在)', () => fsGetFileHash(fp), 'invalid fp: must be an existing file'],
             ['fsGetFileBasicHash(不存在)', () => fsGetFileBasicHash(fp), 'invalid fp: must be an existing file'],
             ['fsGetFileXxHash(不存在)', () => fsGetFileXxHash(fp), 'invalid fp: must be an existing file'],
@@ -252,7 +252,7 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
             let r3 = fsCleanFolder(fpFile) //一般檔案: 走「不是資料夾」之固定字串分支(未經原生錯誤), 僅確認不帶路徑
             assert.strict.deepStrictEqual(r1.error.message, 'operation failed (code ENOENT)')
             assert.strict.deepStrictEqual(/^operation failed \(code (ENOTDIR|ENOENT)\)$/.test(r2.error.message), true, r2.error.message)
-            assert.strict.deepStrictEqual(r3.error, 'input path is not a folder')
+            assert.strict.deepStrictEqual(r3.error, 'invalid fd: must be a folder or not exist')
             for (let r of [r1, r2, r3]) {
                 noLeak(r.error, 'result')
             }
@@ -535,7 +535,7 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
 
         it(`should not echo the unknown names of opt.names`, async function() {
             let e = await rejE(mk([{ name: 'a.bin', url: 'https://github.com/o/r/releases/download/v1/a.bin', sha256: sha, size: 3 }]), { names: [`x-${tok}`] })
-            assert.strict.deepStrictEqual([e.code, e.message], ['E_ARG', 'fsEnsureBins[w-sec-test]: invalid opt.names: has names not in the manifest'])
+            assert.strict.deepStrictEqual([e.code, e.message], ['E_ARG', 'fsEnsureBins[w-sec-test]: invalid opt.names: must only contain names in the manifest'])
         })
 
     })

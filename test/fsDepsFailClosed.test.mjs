@@ -438,8 +438,8 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
         })
 
         it(`無效路徑仍先於相依檢查回報路徑錯誤(不帶值)`, function() {
-            assert.strictEqual(fsDeleteFileCore(null).error, 'invalid pah: must be a non-empty string')
-            assert.strictEqual(fsDeleteFolderCore('').error, 'invalid pah: must be a non-empty string')
+            assert.strictEqual(fsDeleteFileCore(null).error, 'invalid fp: must be a non-empty string')
+            assert.strictEqual(fsDeleteFolderCore('').error, 'invalid fd: must be a non-empty string')
         })
 
         it(`真實不存在之路徑傳齊fs: 仍為'does not exist'成功(無效與不存在分開)`, function() {
@@ -561,7 +561,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             reset()
             for (let o of [{ fs: null }, { fs: {} }]) {
                 let m = await fsDeleteFileSafe(R('a.txt'), o).then(() => 'resolved', (e) => e)
-                assert.ok(String(m).startsWith('opt.fs is invalid'), String(m))
+                assert.ok(String(m).startsWith('invalid opt.fs: '), String(m))
                 assert.ok(fs.existsSync(R('a.txt')))
             }
         })
@@ -576,7 +576,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
         it(`fsDeleteFolderSafe {fs:null}: reject, 資料夾仍在`, async function() {
             reset()
             let m = await fsDeleteFolderSafe(R('d'), { fs: null }).then(() => 'resolved', (e) => e)
-            assert.ok(String(m).startsWith('opt.fs is invalid'), String(m))
+            assert.ok(String(m).startsWith('invalid opt.fs: '), String(m))
             assert.ok(fs.existsSync(R('d/x.txt')))
         })
 

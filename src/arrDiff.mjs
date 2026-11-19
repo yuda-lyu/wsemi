@@ -93,7 +93,7 @@ function arrDiff2D(arrOld, arrNew) {
     for (let i = 0; i < arrOld.length; i++) {
         let v = arrOld[i]
         if (!isarr(v)) {
-            throw new Error(`invalid arrOld: every element must be an array when opt.mode is 'matrix'`)
+            throw new Error(`invalid arrOld[${i}]: must be an array when opt.mode is 'matrix'`)
         }
         rowsOld.push(texts(v))
     }
@@ -101,7 +101,7 @@ function arrDiff2D(arrOld, arrNew) {
     for (let i = 0; i < arrNew.length; i++) {
         let v = arrNew[i]
         if (!isarr(v)) {
-            throw new Error(`invalid arrNew: every element must be an array when opt.mode is 'matrix'`)
+            throw new Error(`invalid arrNew[${i}]: must be an array when opt.mode is 'matrix'`)
         }
         rowsNew.push(texts(v))
     }
@@ -152,7 +152,7 @@ function arrDiff2D(arrOld, arrNew) {
 /**
  * 比對新舊陣列差異處
  *
- * arrOld為第1參數：非陣列(含未給、null、字串、物件等)回傳同形之空結果{ diff: [], dfs: [] }，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查arrNew與opt。arrOld為陣列時arrNew為必須參數，須為陣列，非陣列throw Error('invalid arrNew: must be an array')，訊息不帶輸入值；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設；opt.mode為'matrix'時各元素須為陣列，否則throw Error("invalid arrOld: every element must be an array when opt.mode is 'matrix'")或Error("invalid arrNew: every element must be an array when opt.mode is 'matrix'")(arrOld整側先於arrNew整側)，訊息不帶輸入值，亦不輸出輸入資料至console
+ * arrOld為第1參數：非陣列(含未給、null、字串、物件等)回傳同形之空結果{ diff: [], dfs: [] }，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查arrNew與opt。arrOld為陣列時arrNew為必須參數，須為陣列，非陣列throw Error('invalid arrNew: must be an array')，訊息不帶輸入值；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)；opt內無效的鍵一律改用預設；opt.mode為'matrix'時各元素須為陣列，否則throw Error("invalid arrOld[i]: must be an array when opt.mode is 'matrix'")或Error("invalid arrNew[i]: must be an array when opt.mode is 'matrix'")(i為第一個非陣列元素之實際索引，arrOld整側先於arrNew整側)，訊息不帶輸入值，亦不輸出輸入資料至console
  * 以diff套件之diffArrays逐元素(一維)、逐列再逐格(矩陣)比對，不先把陣列串成文字，故值內含換行或任何字元皆不影響對齊；連續刪除與其後之新增依序配對為modify；矩陣模式之列以其各儲存格文字全同為同一列，modify之列再逐格比對(同一欄位且同一文字為同一格)
  * 以元素(儲存格)之文字比對、不比型別(1與'1'、true與'true'、null與'null'視為相同)：字串與有限數字為原文，布林為'true'或'false'，null為'null'，undefined與空位為''，NaN與±Infinity為字串'NaN'、'Infinity'、'-Infinity'，物件與陣列為鍵排序後之JSON(鍵之順序不同視為相同)，Date為ISO字串，函數視為null即'null'，BigInt為String(v)；dfs之vo、vn為此文字
  *
@@ -163,7 +163,7 @@ function arrDiff2D(arrOld, arrNew) {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode='array'] 輸入數據維度字串，可選為'array'與'matrix'，預設'array'
  * @returns {Object} 回傳比對結果物件{ diff, dfs }：diff為底層比對結果陣列(各段為{ count, added, removed, value }，value為該段之元素陣列，一維為各元素之比對文字，矩陣為各列之儲存格比對文字陣列)；dfs於一維為各元素之比對結果陣列[{ p, k, vo, vn }]，於矩陣為各列之各儲存格比對結果陣列，p為''(不變)、'remove'、'add'或'modify'；arrOld與arrNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} arrOld為陣列而arrNew非陣列時throw Error('invalid arrNew: must be an array')；opt.mode為'matrix'且有元素非陣列時throw Error("invalid arrOld: every element must be an array when opt.mode is 'matrix'")或Error("invalid arrNew: every element must be an array when opt.mode is 'matrix'")；訊息皆不帶輸入值
+ * @throws {Error} arrOld為陣列而arrNew非陣列時throw Error('invalid arrNew: must be an array')；opt.mode為'matrix'且有元素非陣列時throw Error("invalid arrOld[i]: must be an array when opt.mode is 'matrix'")或Error("invalid arrNew[i]: must be an array when opt.mode is 'matrix'")，i為第一個非陣列元素之實際索引；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -195,7 +195,7 @@ function arrDiff2D(arrOld, arrNew) {
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => invalid arrOld: every element must be an array when opt.mode is 'matrix'
+ *     // => invalid arrOld[0]: must be an array when opt.mode is 'matrix'
  * }
  *
  * if (true) {

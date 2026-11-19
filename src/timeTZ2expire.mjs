@@ -16,7 +16,7 @@ function addms(t) {
 /**
  * 秒時間轉到期時間
  *
- * err之值分兩類：'時間格式錯誤'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間已過'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
+ * err之值分兩類：'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間已過'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
  * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2expire.test.mjs Github}
@@ -25,7 +25,7 @@ function addms(t) {
  * @param {String} [tNow=null] 輸入現在秒時間字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Object} 回傳物件，含today、msg、err三欄位；t非有效秒時間字串時回傳{ today: null, msg: '', err: '時間格式錯誤' }，時間已過時回傳{ today: null, msg: '', err: '時間已過' }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，其中時間已過屬算得之結果故state仍為'success'
+ * @returns {Object} 回傳物件，含today、msg、err三欄位；t非有效秒時間字串時回傳{ today: null, msg: '', err: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)' }，時間已過時回傳{ today: null, msg: '', err: '時間已過' }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，其中時間已過屬算得之結果故state仍為'success'
  * @example
  *
  * let t
@@ -86,7 +86,7 @@ function timeTZ2expire(t, tNow = null, opt = {}) {
         returnWithStateAndMsg = false
     }
 
-    //retError, 預設模式沿用既有之{ today, msg, err }失敗形狀與其中文說明, 不改變既有行為
+    //retError, 預設模式沿用既有之{ today, msg, err }失敗形狀(err為失敗說明, t無效時與狀態模式之msg同一則訊息), 不改變既有行為
     let retError = (msg, errText) => {
         if (returnWithStateAndMsg) {
             return {
@@ -105,7 +105,8 @@ function timeTZ2expire(t, tNow = null, opt = {}) {
 
     //check
     if (!istimeTZ(t)) {
-        return retError('invalid t', '時間格式錯誤')
+        let msgT = 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)'
+        return retError(msgT, msgT) //狀態模式之msg與預設模式之err為同一則訊息
     }
 
     //addms, 須攔截非預期錯誤, 否則會外拋至呼叫端

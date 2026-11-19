@@ -18,8 +18,10 @@ import isfun from './isfun.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/verifyValue.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Function} type 輸入判斷資料類型字串或判斷函式，資料類型可選為'isstr','isnum','isp0num','isn0num','isint','ispint','isp0int','isnint','isn0int','isfun'
  * @param {*} value 輸入任意資料
+ * @param {String|Function} type 輸入判斷資料類型字串或判斷函式，資料類型可選為'isstr','isnum','isp0num','isn0num','isint','ispint','isp0int','isnint','isn0int','isfun'
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Function} [opt.funCustom] 輸入自訂判斷函式，僅於type為'custom'時使用且必須提供(非函式則拋錯)，以(value)呼叫，須回傳含err(布林)、errmsg(err為true時須為非空字串)、value(數字或字串)之物件
  * @returns {Object} 回傳判斷結果，屬性value為回傳資料類型的取值，屬性err為是否資料類型有錯，屬性errmsg為類型有錯時之錯誤訊息
  * @example
  *
@@ -121,17 +123,17 @@ function verifyValue(value, type, opt = {}) {
     else if (type === 'custom') {
         let funCustom = get(opt, 'funCustom')
         if (!isfun(funCustom)) {
-            throw new Error(`invalid opt.funCustom when type='custom'`)
+            throw new Error(`invalid opt.funCustom: must be a function when type is 'custom'`)
         }
         let r = funCustom(value)
         if (!isbol(r.err)) {
-            throw new Error(`invalid return.err for type='custom'`)
+            throw new Error(`invalid return.err: must be a boolean when type is 'custom'`)
         }
         if (r.err && !isestr(r.errmsg)) {
-            throw new Error(`invalid return.errmsg when return.err=true for type='custom'`)
+            throw new Error(`invalid return.errmsg: must be a non-empty string when return.err is true and type is 'custom'`)
         }
         if (!isnum(r.value) & !isstr(r.value)) {
-            throw new Error(`invalid return.value for type='custom'`)
+            throw new Error(`invalid return.value: must be a number or a string when type is 'custom'`)
         }
         err = r.err
         errmsg = r.errmsg

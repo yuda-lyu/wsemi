@@ -6,7 +6,7 @@ import arrDiff from './arrDiff.mjs'
 /**
  * 比對新舊二維陣列差異處
  *
- * matOld為第1參數：非陣列(含未給、null、字串、物件等)回傳同形之空結果{ diff: [], dfs: [] }，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查matNew。matOld為陣列時matNew為必須參數，須為陣列，非陣列throw Error('invalid matNew: must be an array')，訊息不帶輸入值；各列須為陣列(含陣列空洞視為非陣列)，否則throw Error('invalid matOld: row[i] is not an array')或Error('invalid matNew: row[i] is not an array')(i為列號，只含索引不含值)，檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)
+ * matOld為第1參數：非陣列(含未給、null、字串、物件等)回傳同形之空結果{ diff: [], dfs: [] }，不拋錯(輸入參數檢測機制C7，第1參數型別不對回輸出型別之空結果)，此時不檢查matNew。matOld為陣列時matNew為必須參數，須為陣列，非陣列throw Error('invalid matNew: must be an array')，訊息不帶輸入值；各列須為陣列(含陣列空洞視為非陣列)，否則throw Error('invalid matOld[i]: must be an array')或Error('invalid matNew[i]: must be an array')(i為列號，只含索引不含值)，檢測序為matOld陣列、matNew陣列、matOld各列、matNew各列，亦不輸出輸入資料至console；空陣列為合法輸入，只有一邊為空者照常回傳差異結果，兩邊皆為空陣列時回傳{ diff: [], dfs: [] }(與正常輸出同形，無差異)
  * 以arrDiff之矩陣模式逐列再逐格比對(值內含換行或任何字元皆不影響對齊)，儲存格以其文字比對、不比型別，文字表示法同arrDiff(字串與有限數字原文、布林'true'/'false'、null為'null'、undefined與空位為''、NaN與±Infinity為字串、物件與陣列為鍵排序後之JSON、Date為ISO字串、函數視為null、BigInt為String(v))
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/matDiff.test.mjs Github}
@@ -15,7 +15,7 @@ import arrDiff from './arrDiff.mjs'
  * @param {Array} matNew 輸入更新數據二維陣列，必須參數，非陣列或有列非陣列throw Error，[]為合法輸入；matOld非陣列時不檢查
  * @param {Object} [opt={}] 輸入設定物件(目前無可用之鍵，保留供日後擴充)，預設{}
  * @returns {Object} 回傳比對結果物件，回傳鍵值diff與dfs，其中diff為底層比對結果陣列(各段為{ count, added, removed, value }，value為該段各列之儲存格比對文字陣列)，dfs為各列比對結果陣列(每列為該列各儲存格比對結果陣列)；matOld與matNew皆為[]時回傳{ diff: [], dfs: [] }
- * @throws {Error} matOld為陣列而matNew非陣列時throw Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('invalid matOld: row[i] is not an array')或Error('invalid matNew: row[i] is not an array')；訊息皆不帶輸入值
+ * @throws {Error} matOld為陣列而matNew非陣列時throw Error('invalid matNew: must be an array')；有任一列非陣列時throw Error('invalid matOld[i]: must be an array')或Error('invalid matNew[i]: must be an array')；訊息皆不帶輸入值
  * @example
  *
  * let r
@@ -47,7 +47,7 @@ import arrDiff from './arrDiff.mjs'
  *     catch (err) {
  *         console.log(err.message)
  *     }
- *     // => invalid matOld: row[0] is not an array
+ *     // => invalid matOld[0]: must be an array
  * }
  *
  * if (true) {
@@ -495,7 +495,7 @@ function matDiff(matOld, matNew, opt = {}) {
         for (let i = 0; i < mat.length; i++) {
             let r = mat[i]
             if (!isarr(r)) {
-                throw new Error(`invalid ${name}: row[${i}] is not an array`)
+                throw new Error(`invalid ${name}[${i}]: must be an array`)
             }
             rows.push(r)
         }

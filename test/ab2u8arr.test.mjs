@@ -69,9 +69,9 @@ describe(`ab2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid ab' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid ab: must be an ArrayBuffer' } when input NaN with returnWithStateAndMsg`, function() {
         let r = ab2u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid ab' }
+        let rr = { state: 'error', msg: 'invalid ab: must be an ArrayBuffer' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

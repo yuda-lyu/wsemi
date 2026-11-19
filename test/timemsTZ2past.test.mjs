@@ -80,9 +80,15 @@ describe(`timemsTZ2past`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' } when input NaN with returnWithStateAndMsg`, function() {
         let r = timemsTZ2past(NaN, tNow, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid t' }
+        let rr = { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' }
+        assert.strict.deepStrictEqual(r, rr)
+    })
+
+    it(`should return the same V19 message in the err field (default mode) when input NaN`, function() {
+        let r = timemsTZ2past(NaN, tNow)
+        let rr = { today: null, msg: '', err: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

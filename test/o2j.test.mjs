@@ -103,9 +103,9 @@ describe(`o2j`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid v' } when input undefined with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid v: must not be undefined' } when input undefined with returnWithStateAndMsg`, function() {
         let r = o2j(undefined, false, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid v' }
+        let rr = { state: 'error', msg: 'invalid v: must not be undefined' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -47,7 +47,7 @@ function b642str(b64, opt = {}) {
 
     //check
     if (!isestr(b64)) {
-        return retError('invalid b64')
+        return retError('invalid b64: must be a non-empty string')
     }
 
     //str, 須攔截非預期錯誤(如b64非合法UTF-8時crypto-js會拋錯), 否則會外拋至呼叫端

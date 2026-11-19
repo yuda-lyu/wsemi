@@ -647,7 +647,7 @@ function buildCtx(opt) {
         for (let k of fnsFs) {
             let f = get(o.fsRaw, k)
             if (!isfun(f)) {
-                throw bad(`opt.fs is not an effective fs (needs ${fnsFs.join(', ')})`)
+                throw bad(`invalid opt.fs: must be an object providing ${fnsFs.join(', ')}`)
             }
             o.refs.push(f)
             o.fs[k] = f.bind(o.fsRaw)
@@ -657,7 +657,7 @@ function buildCtx(opt) {
         o.cryptoRaw = get(opt, 'crypto')
         let createHash = get(o.cryptoRaw, 'createHash')
         if (!isfun(createHash)) {
-            throw bad(`opt.crypto is not an effective crypto (needs createHash)`)
+            throw bad(`invalid opt.crypto: must be an object providing createHash`)
         }
         o.createHash = createHash.bind(o.cryptoRaw)
         o.ReadableRaw = get(opt, 'Readable')
@@ -665,25 +665,25 @@ function buildCtx(opt) {
         let fromWeb = get(o.ReadableRaw, 'fromWeb')
         let from = get(o.ReadableRaw, 'from')
         if (!isfun(toWeb) || !isfun(fromWeb) || !isfun(from)) {
-            throw bad(`opt.Readable is not an effective stream.Readable (needs toWeb, fromWeb, from)`)
+            throw bad(`invalid opt.Readable: must be an object providing toWeb, fromWeb and from`)
         }
         o.refs.push(createHash, toWeb, fromWeb, from)
         o.toWeb = toWeb.bind(o.ReadableRaw)
         o.pipeline = get(opt, 'pipeline')
         if (!isfun(o.pipeline)) {
-            throw bad(`opt.pipeline is not a function`)
+            throw bad(`invalid opt.pipeline: must be a function`)
         }
 
         //spawn(解壓), path
         o.spawn = get(opt, 'spawn')
         if (!isfun(o.spawn)) {
-            throw bad(`opt.spawn is not a function`)
+            throw bad(`invalid opt.spawn: must be a function`)
         }
         let pathRaw = get(opt, 'path')
         let resolve = get(pathRaw, 'resolve')
         let join = get(pathRaw, 'join')
         if (!isfun(resolve) || !isfun(join)) {
-            throw bad(`opt.path is not an effective path (needs resolve, join)`)
+            throw bad(`invalid opt.path: must be an object providing resolve and join`)
         }
         o.refs.push(resolve, join)
         o.path = { resolve: resolve.bind(pathRaw), join: join.bind(pathRaw) }
@@ -776,7 +776,7 @@ function buildCtx(opt) {
         if (isOwnErr(err)) {
             throw err
         }
-        throw bad(`opt can not be read: ${errMsg(err)}`, fsErrSan(err)) //cause: 使用端自拋之錯誤(無code)原物件保留, Node原生錯誤(帶code, 其path、syscall帶出路徑)改為固定詞彙加錯誤碼之新Error(V20)
+        throw bad(`invalid opt: must be a readable object`, fsErrSan(err)) //cause: 使用端自拋之錯誤(無code)原物件保留, Node原生錯誤(帶code, 其path、syscall帶出路徑)改為固定詞彙加錯誤碼之新Error(V20)
     }
 
     //平台
@@ -2756,7 +2756,7 @@ async function ensureAll(ctx, res, trace) {
             return !byName.has(n)
         })
         if (unknown.length > 0) {
-            throw mkErr('E_ARG', `fsEnsureBins[${ctx.pkg}]: invalid opt.names: has names not in the manifest`, { step: 'argument' })
+            throw mkErr('E_ARG', `fsEnsureBins[${ctx.pkg}]: invalid opt.names: must only contain names in the manifest`, { step: 'argument' })
         }
         sel = ctx.names.map((n) => {
             return byName.get(n)

@@ -14,7 +14,7 @@ const PRECISE_DIGITS = 12
  * 【範疇】
  * 計算類函數(judge、estimateTicks使用)。將數字(或數字字串)取12位有效數字後，以不含指數記號之十進位字串回傳，
  * 用以消除浮點運算誤差(如0.1 + 0.2為0.30000000000000004，得'0.3'；0.1累加1000次得99.9999999999986，得'100')，並可取得其小數位數。
- * 判定輸入用isenum(有效數字: 有限數字，或去頭尾空白後為十進位寫法之數字字串，可帶科學記號)，不收Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等，非有效數字throw Error('v is not a number')。
+ * 判定輸入用isenum(有效數字: 有限數字，或去頭尾空白後為十進位寫法之數字字串，可帶科學記號)，不收Infinity、'Infinity'、'0x10'、'1e400'、'-'、''、null、包裝物件等，非有效數字throw Error('invalid v: must be a valid number')。
  *
  * 【用法】
  * 1. 整數以原文(數字字串)或數值本身判定(decimal.js的isInteger，不經Number轉換)，保留全部位數並正規化後回傳，小數位數為0，不經12位有效數字處理；
@@ -91,7 +91,7 @@ function preciseNum(v, opt = {}) {
 
     //check
     if (!isenum(v)) {
-        throw new Error(`v is not a number`)
+        throw new Error(`invalid v: must be a valid number`)
     }
 
     //數字字串去頭尾空白, 其後一律使用去空白後之值(檢測之值即為使用之值)

@@ -86,7 +86,8 @@ describe(`fsSrlog 失敗回報(R-FS-REJECT-01)`, function() {
     it(`EV03 should log (console.log) instead of an unhandled rejection when the log file cannot be written (parent of fdLog is a file)`, function() {
         let { r } = runFsFail('EV03')
         //R-FS-REJECT-01 規則7: fsSrlog之core()須接rejection並以console.log記錄, 不得成unhandledRejection
-        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught, logged: logged(r, /E(NOENT|NOTDIR): /) }, { ...ev0, logged: true })
+        //ws492j(V20): 記錄之原因為固定詞彙加錯誤碼, 不再帶Node原生訊息(含log資料夾之路徑)
+        assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught, logged: logged(r, /operation failed \(code E(NOENT|NOTDIR)\)/), echoesPath: logged(r, /fsFail/) }, { ...ev0, logged: true, echoesPath: false })
     })
 
     it(`EV03 should not crash a process without handlers (exit code 0) when the log file cannot be written`, function() {

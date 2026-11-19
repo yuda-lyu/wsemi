@@ -46,10 +46,10 @@ function obj2pb64(data, key, opt = {}) {
 
     //check
     if (data === undefined) {
-        return retError('invalid data')
+        return retError('invalid data: must not be undefined')
     }
     if (!isestr(key)) {
-        return retError('invalid key')
+        return retError('invalid key: must be a non-empty string')
     }
 
     //b64, 內部一律以returnWithStateAndMsg取狀態, 判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端

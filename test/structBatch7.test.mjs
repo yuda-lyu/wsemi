@@ -136,20 +136,20 @@ describe(`W-16乙: C7結構運算第1參數型別不對回輸出型別之空結�
         assert.throws(() => matConcat([], 'x'), { message: 'invalid mat2: must be an array' })
         assert.throws(() => matat([], 'x'), { message: 'invalid istart: must be an integer index' })
         assert.throws(() => arrSep([], 0), { message: 'invalid opt: must be an object with numCount or numGroup' })
-        assert.throws(() => arrSep([], {}), { message: 'invalid opt.numCount or opt.numGroup' })
+        assert.throws(() => arrSep([], {}), { message: 'invalid opt: must be an object with numCount or numGroup' })
         assert.throws(() => objSortByKeys({}, 'x'), { message: 'invalid keys: must be an array' })
     })
 
     //元素層(陣列內之無效元素)依第二批「元素層依用途」不變
     it(`should keep the element-level rulings unchanged (throw naming the index)`, function() {
-        assert.throws(() => matat([1], 0), { message: 'invalid mat: row[0] is not an array' })
-        assert.throws(() => matConcat([1], [[1]]), { message: 'invalid mat1: row[0] is not an array' })
-        assert.throws(() => matDiff([1], [[1]]), { message: 'invalid matOld: row[0] is not an array' })
-        assert.throws(() => ltdtDiff([1], [{ a: 1 }]), { message: 'invalid ltdtOld: every element must be a non-empty object' })
-        assert.throws(() => ltdtpull([1], [], 'id'), { message: 'invalid ltdtAll: row[0] is not an object' })
+        assert.throws(() => matat([1], 0), { message: 'invalid mat[0]: must be an array' })
+        assert.throws(() => matConcat([1], [[1]]), { message: 'invalid mat1[0]: must be an array' })
+        assert.throws(() => matDiff([1], [[1]]), { message: 'invalid matOld[0]: must be an array' })
+        assert.throws(() => ltdtDiff([1], [{ a: 1 }]), { message: 'invalid ltdtOld[0]: must be a non-empty object' })
+        assert.throws(() => ltdtpull([1], [], 'id'), { message: 'invalid ltdtAll[0]: must be an object' })
         assert.throws(() => treeToFilepath([null]), { message: 'invalid data[0]: must be an object' })
         assert.throws(() => treeToFilepath([{}, 1]), { message: 'invalid data[1]: must be an object' })
-        assert.throws(() => arrDiff([1], [[2]], { mode: 'matrix' }), { message: `invalid arrOld: every element must be an array when opt.mode is 'matrix'` })
+        assert.throws(() => arrDiff([1], [[2]], { mode: 'matrix' }), { message: `invalid arrOld[0]: must be an array when opt.mode is 'matrix'` })
     })
 
     //已核實現況即符合者(不改程式), 以測試鎖定
@@ -293,12 +293,12 @@ describe(`W-19: 單一空元素([null]、[undefined]、[{}]、[''])視為一個�
         assert.strict.deepStrictEqual(arrPull([1, {}, 2], [{}]), [1, {}, 2])
     })
 
-    it(`getExcelU8ArrFromData: ${[`[null]`, `['']`, `[{}]`].join(', ')} are no longer reported as 'no data' (they are one element), an empty array still is`, async function() {
-        assert.strict.deepStrictEqual(await getExcelU8ArrFromData([]), { error: 'no data' })
-        assert.strict.deepStrictEqual(await getExcelU8ArrFromData(null), { error: 'no data' })
+    it(`getExcelU8ArrFromData: ${[`[null]`, `['']`, `[{}]`].join(', ')} are no longer reported as an invalid empty data error (they are one element), an empty array still is (message ws492j V19, formerly 'no data')`, async function() {
+        assert.strict.deepStrictEqual(await getExcelU8ArrFromData([]), { error: 'invalid data: must be a non-empty array' })
+        assert.strict.deepStrictEqual(await getExcelU8ArrFromData(null), { error: 'invalid data: must be a non-empty array' })
         for (let a of [[null], [''], [{}], [undefined], [[]], [NaN]]) {
             let r = await getExcelU8ArrFromData(a)
-            assert.notDeepStrictEqual(r, { error: 'no data' })
+            assert.notDeepStrictEqual(r, { error: 'invalid data: must be a non-empty array' })
         }
         let r2 = await getExcelU8ArrFromData([''])
         assert.ok(r2 instanceof Uint8Array)

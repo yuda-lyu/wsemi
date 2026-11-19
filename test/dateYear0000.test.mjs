@@ -185,7 +185,7 @@ describe(`date strings of year 0000 to 0099 (ws272c)`, function() {
         for (let s of ['0050-02-30T12:34:56', '0050-13-04T12:34:56', '0050-03-04T24:00:00', '0050-3-4T12:34:56']) {
             assert.strict.deepStrictEqual([time2day(s), time2hour(s), time2min(s)], ['', '', ''], s)
         }
-        assert.strict.deepStrictEqual(time2day('0050-02-30T12:34:56', { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid t' })
+        assert.strict.deepStrictEqual(time2day('0050-02-30T12:34:56', { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss' })
     })
 
     it(`day2cht should use the real year for the year 0050 (formerly 1950 was shown if the year were accepted), and refuse an invalid day`, function() {

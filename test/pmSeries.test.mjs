@@ -315,7 +315,7 @@ describe(`pmSeries 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
             assert.strict.deepStrictEqual({ empties, sparse, rb }, {
                 empties: [{ s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }, { s: 'resolve', v: [] }],
                 sparse: { s: 'resolve', v: [] }, //稀疏陣列之空缺不呼叫fun(reduce略過空缺)
-                rb: bads.map(() => ({ s: 'reject', v: 'rs is not an array or object' })),
+                rb: bads.map(() => ({ s: 'reject', v: 'invalid rs: must be an array or an object' })),
             })
         })
 
@@ -481,7 +481,7 @@ describe(`pmSeries 使用端物件之迭代(R-OBJ-ITER-01)`, function() {
 
         it(`Symbol.toStringTag讀取即拋錯: 型別無法判定(isobj、isarr不拋錯而回false, 批6裁定③), 視為非陣列或物件而以固定字串reject, 不同步拋出(修前以該錯誤reject)`, function() {
             let r = runChildCase(runner, 'tagGetterContainer').r
-            assert.strict.deepStrictEqual({ out: r.out.series, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'rs is not an array or object' }, unhandled: [], uncaught: [] })
+            assert.strict.deepStrictEqual({ out: r.out.series, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'invalid rs: must be an array or an object' }, unhandled: [], uncaught: [] })
         })
 
     })

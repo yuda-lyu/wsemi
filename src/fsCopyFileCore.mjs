@@ -174,10 +174,10 @@ function fsCopyFileCore(fpSrc, fpTar, opt = {}) {
     }
 
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(fpSrc, 'fpSrc') || chkFsPath(fpTar, 'fpTar')
-    if (msgPah) {
+    let msgPath = chkFsPath(fpSrc, 'fpSrc') || chkFsPath(fpTar, 'fpTar')
+    if (msgPath) {
         let rErr = {
-            error: msgPah,
+            error: msgPath,
         }
         return useSync ? rErr : Promise.resolve(rErr)
     }

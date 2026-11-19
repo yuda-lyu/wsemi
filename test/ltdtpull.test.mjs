@@ -4,13 +4,13 @@ import { NON_ARR, NON_OBJ_ELEM, LEAK, throwsMsg, throwsMsgNoLeak } from './tools
 
 
 const MSG_DEL = 'invalid ltdtDel: must be an array'
-//ws430c(裁定表〈九〉): 元素非物件之訊息改為指出row[i](原'… must be an array of objects'); key之訊息改為'… or a finite number'(原'invalid key: must be a non-empty string')
-const MSG_ALL_ROW = (i) => `invalid ltdtAll: row[${i}] is not an object`
-const MSG_DEL_ROW = (i) => `invalid ltdtDel: row[${i}] is not an object`
+//ws430c(裁定表〈九〉): 元素非物件之訊息改為指出索引(原'… must be an array of objects'); key之訊息改為'… or a finite number'(原'invalid key: must be a non-empty string')
+//ws492j V19/V20: 'invalid ltdtAll: row[i] is not an object' → 'invalid ltdtAll[i]: must be an object'; 'invalid ltdtDel: row[i] has no own key [k]'(帶呼叫端給之欄位名) → 'invalid ltdtDel[i]: must have the primary key as an own field'(不帶欄位名); 'has an invalid key value' → 'must have a primary key of a non-empty string or a finite number'
+const MSG_ALL_ROW = (i) => `invalid ltdtAll[${i}]: must be an object`
+const MSG_DEL_ROW = (i) => `invalid ltdtDel[${i}]: must be an object`
 const MSG_KEY = 'invalid key: must be a non-empty string or a finite number'
-//ws430c3(裁定表〈十六〉「ltdtpull 之訊息帶實際欄位名」): 原期望'… has no own key [key]' → 新期望帶欄位名(參數, 非資料值)
-const MSG_DEL_NOKEY = (i, k) => `invalid ltdtDel: row[${i}] has no own key [${k}]`
-const MSG_DEL_BADVAL = (i) => `invalid ltdtDel: row[${i}] has an invalid key value`
+const MSG_DEL_NOKEY = (i) => `invalid ltdtDel[${i}]: must have the primary key as an own field`
+const MSG_DEL_BADVAL = (i) => `invalid ltdtDel[${i}]: must have a primary key of a non-empty string or a finite number`
 
 
 describe(`ltdtpull`, function() {
@@ -168,13 +168,13 @@ describe(`ltdtpull`, function() {
 
         //ws430c(裁定表〈九〉「ltdtDel 之列缺該自有鍵 → 拋錯」): 原期望ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y')回[] → 新期望拋row[0] has no own key; 第二式不變
         it(`should return [] when nothing in ltdtAll matches, and throw when a row of ltdtDel has no own key even if ltdtAll is [] (ws430c 〈九〉)`, function() {
-            throwsMsg(() => ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y'), MSG_DEL_NOKEY(0, 'x.y'))
+            throwsMsg(() => ltdtpull([], [{ id: 1 }, { id: 2 }], 'x.y'), MSG_DEL_NOKEY(0))
             assert.strict.deepStrictEqual(ltdtpull([{ id: 1 }, { id: 2 }], [{ id: 3 }], 'id'), [{ id: 1 }, { id: 2 }])
         })
 
         //ws430c(裁定表〈九〉「只讀自有同名鍵, 不經 lodash differenceBy 之路徑解析('a.b' 為欄位名)」): 原期望'a.b'解析為巢狀路徑而刪除{a:{b:1}} → 新期望ltdtDel之{a:{b:1}}無自有'a.b'欄位而拋錯, 自有'a.b'欄位者依欄位名比對
         it(`should treat a dotted key as a field name, not a nested path (ws430c 〈九〉)`, function() {
-            throwsMsg(() => ltdtpull([{ a: { b: 1 } }, { a: { b: 2 } }], [{ a: { b: 1 } }], 'a.b'), MSG_DEL_NOKEY(0, 'a.b'))
+            throwsMsg(() => ltdtpull([{ a: { b: 1 } }, { a: { b: 2 } }], [{ a: { b: 1 } }], 'a.b'), MSG_DEL_NOKEY(0))
             assert.strict.deepStrictEqual(ltdtpull([{ 'a.b': 1 }, { 'a.b': 2 }, { a: { b: 1 } }], [{ 'a.b': 1 }], 'a.b'), [{ 'a.b': 2 }, { a: { b: 1 } }])
         })
 
@@ -258,8 +258,8 @@ describe(`ltdtpull`, function() {
             throwsMsgNoLeak(() => ltdtpull([], LEAK, 'id'), MSG_DEL)
             throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [LEAK], 'id'), MSG_DEL_ROW(0))
             throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ id: 1 }], { LEAK }), MSG_KEY)
-            throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: 1 }], LEAK), MSG_DEL_NOKEY(0, LEAK)) //ws430c3(〈十六〉): 欄位名為參數, 訊息帶之; 資料值仍不帶(下列)
-            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ v: LEAK }], 'id'), MSG_DEL_NOKEY(0, 'id'))
+            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ id: 1 }], LEAK), MSG_DEL_NOKEY(0)) //ws492j V20: 欄位名(呼叫端給之key)亦不帶入訊息(原ws430c3〈十六〉帶欄位名)
+            throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ v: LEAK }], 'id'), MSG_DEL_NOKEY(0))
             throwsMsgNoLeak(() => ltdtpull([{ id: 1 }], [{ id: { LEAK } }], 'id'), MSG_DEL_BADVAL(0))
         })
 

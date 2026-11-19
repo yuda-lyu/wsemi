@@ -53,7 +53,7 @@ function domIsClientXYIn(clientX, clientY, ele) {
         rt = ele.getBoundingClientRect()
     }
     catch (err) {
-        console.log('invalid ele for getBoundingClientRect', err)
+        console.log('invalid ele: must have a working getBoundingClientRect', err)
         return false
     }
 

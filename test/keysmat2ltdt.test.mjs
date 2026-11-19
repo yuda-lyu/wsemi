@@ -112,15 +112,15 @@ describe(`keysmat2ltdt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid keys' } when keys is invalid with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid keys: must be a non-empty array' } when keys is invalid with returnWithStateAndMsg`, function() {
         let r = keysmat2ltdt(NaN, [[1, 2]], { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid keys' }
+        let rr = { state: 'error', msg: 'invalid keys: must be a non-empty array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid mat' } when mat is invalid with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid mat: must be an array' } when mat is invalid with returnWithStateAndMsg`, function() {
         let r = keysmat2ltdt(['a', 'b'], NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid mat' }
+        let rr = { state: 'error', msg: 'invalid mat: must be an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -154,15 +154,15 @@ describe(`keysmat2ltdt`, function() {
         })
 
         for (let [lb, v] of NON_ARR) {
-            it(`should return { state: 'error', msg: 'invalid mat' } when mat is ${lb} with returnWithStateAndMsg (unchanged)`, function() {
-                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat' })
+            it(`should return { state: 'error', msg: 'invalid mat: must be an array' } when mat is ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat: must be an array' })
             })
             it(`should return [] in the plain mode when mat is ${lb} (unchanged)`, function() {
                 assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v), [])
             })
             //其他必須參數無效(keys), 即使mat為空陣列仍為失敗(型別檢測與資料有無無關)
-            it(`should return { state: 'error', msg: 'invalid keys' } when keys is ${lb} and mat is [] with returnWithStateAndMsg (unchanged)`, function() {
-                assert.strict.deepStrictEqual(keysmat2ltdt(v, [], D), { state: 'error', msg: 'invalid keys' })
+            it(`should return { state: 'error', msg: 'invalid keys: must be a non-empty array' } when keys is ${lb} and mat is [] with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(keysmat2ltdt(v, [], D), { state: 'error', msg: 'invalid keys: must be a non-empty array' })
             })
             it(`should return [] in the plain mode when keys is ${lb} and mat is [] (unchanged)`, function() {
                 assert.strict.deepStrictEqual(keysmat2ltdt(v, []), [])
@@ -171,13 +171,13 @@ describe(`keysmat2ltdt`, function() {
 
         //不在本輪: keys為空陣列(isearr視為無效)維持為失敗; 非空而無效之mat維持為失敗
         it(`should keep keys [] and non-empty invalid mat as error with returnWithStateAndMsg (unchanged)`, function() {
-            assert.strict.deepStrictEqual(keysmat2ltdt([], [], D), { state: 'error', msg: 'invalid keys' })
-            assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], D), { state: 'error', msg: 'invalid keys' })
+            assert.strict.deepStrictEqual(keysmat2ltdt([], [], D), { state: 'error', msg: 'invalid keys: must be a non-empty array' })
+            assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], D), { state: 'error', msg: 'invalid keys: must be a non-empty array' })
             //ws430c(裁定表〈一〉「mat 之任一列非陣列或為 [],不限第一列 → 訊息指出第幾列(invalid mat, row[i] is not an effective array)」): 原期望'invalid mat'、'invalid mat, the first row is not an effective array' → 新期望指出row[0]
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
+                assert.strict.deepStrictEqual(keysmat2ltdt(['a'], v, D), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
             }
-            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [1], D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [1], D), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
         })
 
         it(`should keep the result of a non-empty mat unchanged`, function() {

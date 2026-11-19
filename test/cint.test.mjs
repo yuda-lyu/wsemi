@@ -208,42 +208,42 @@ describe(`cint`, function() {
         let r = () => {
             return cint(Number.MAX_SAFE_INTEGER + 1, { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should throw when input Number.MIN_SAFE_INTEGER - 1 and opt.useLimitSafe=true`, function() {
         let r = () => {
             return cint(Number.MIN_SAFE_INTEGER - 1, { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should throw when input Infinity and opt.useLimitSafe=true`, function() {
         let r = () => {
             return cint(Infinity, { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should throw when input -Infinity and opt.useLimitSafe=true`, function() {
         let r = () => {
             return cint(-Infinity, { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should throw when input '1e400' and opt.useLimitSafe=true`, function() {
         let r = () => {
             return cint('1e400', { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should throw when input 1e308 and opt.useLimitSafe=true`, function() {
         let r = () => {
             return cint(1e308, { useLimitSafe: true })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should return 9007199254740992 when input Number.MAX_SAFE_INTEGER + 1 and opt.useLimitSafe='true'`, function() {
@@ -348,12 +348,12 @@ describe(`cint`, function() {
 
     it(`should return { state: 'error', msg } when input Infinity and opt.useLimitSafe=true and opt.returnWithStateAndMsg=true`, function() {
         let r = cint(Infinity, { useLimitSafe: true, returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'v[1.7976931348623157e+308] is not a safe integer' })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid v: must be a safe integer' })
     })
 
     it(`should return { state: 'error', msg } when input Number.MAX_SAFE_INTEGER + 1 and opt.useLimitSafe=true and opt.returnWithStateAndMsg=true`, function() {
         let r = cint(Number.MAX_SAFE_INTEGER + 1, { useLimitSafe: true, returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'v[9007199254740992] is not a safe integer' })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid v: must be a safe integer' })
     })
 
     it(`should return { state: 'success', msg: 9007199254740991 } when input Infinity and opt.useClampSafe=true and opt.returnWithStateAndMsg=true`, function() {
@@ -365,7 +365,7 @@ describe(`cint`, function() {
         let r = () => {
             return cint(Infinity, { useLimitSafe: true, returnWithStateAndMsg: false })
         }
-        assert.throws(r, /is not a safe integer/)
+        assert.throws(r, { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should return 2 when input 1.5 and opt.returnWithStateAndMsg='true'`, function() {
@@ -427,7 +427,7 @@ describe(`cint 包裝物件(R-WRAPPER-01, W-20: 轉型函數照舊拆包)`, func
     it(`should follow opt (useClampSafe, useLimitSafe, returnWithStateAndMsg) the same way for a wrapper`, function() {
         assert.strict.deepStrictEqual(cint(new Number(2 ** 60), { useClampSafe: true }), Number.MAX_SAFE_INTEGER)
         assert.strict.deepStrictEqual(cint(new String('1.5'), { returnWithStateAndMsg: true }), { state: 'success', msg: 2 })
-        assert.strict.throws(() => cint(new Number(Infinity), { useLimitSafe: true }), /is not a safe integer/)
+        assert.strict.throws(() => cint(new Number(Infinity), { useLimitSafe: true }), { message: 'invalid v: must be a safe integer' })
     })
 
     it(`should treat a wrapper in opt as not given (isbol only accepts primitives, W-20): new Boolean(true) does not turn on useClampSafe`, function() {

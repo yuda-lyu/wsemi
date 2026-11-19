@@ -101,8 +101,8 @@ describe(`execProcessPortPids`, function() {
             for (let v of [0, 65536, '80.3', '8093|1', undefined, null, 'abc', [80], 1.5]) {
                 let { evs, on } = recEvents()
                 let r = await settled(execProcessPortPids(v, { exec: never, onTrace: on }))
-                assert.strict.deepStrictEqual(r, { ok: false, v: 'port is not an integer between 1 and 65535' }, `port ${String(v)}`)
-                assert.strict.deepStrictEqual(evs, [{ type: 'settle', ok: false, reason: 'port', src: null, count: null, msg: 'port is not an integer between 1 and 65535' }])
+                assert.strict.deepStrictEqual(r, { ok: false, v: 'invalid port: must be an integer from 1 to 65535' }, `port ${String(v)}`)
+                assert.strict.deepStrictEqual(evs, [{ type: 'settle', ok: false, reason: 'port', src: null, count: null, msg: 'invalid port: must be an integer from 1 to 65535' }])
             }
         })
 
@@ -121,12 +121,14 @@ describe(`execProcessPortPids`, function() {
                 }
                 pm = execProcessPortPids(8080, opt)
             })
-            assert.strict.deepStrictEqual(await settled(pm), { ok: false, v: 'opt is not readable: exec getter boom' })
+            //固定訊息(V19), 不含呼叫端getter所拋出之文字(V20)
+            let r0 = await settled(pm)
+            assert.strict.deepStrictEqual(r0, { ok: false, v: 'invalid opt: must be a readable object' })
+            assert.strict.deepStrictEqual(r0.v.includes('exec getter boom'), false)
             let p = Proxy.revocable({}, {})
             p.revoke()
             let r = await settled(execProcessPortPids(8080, p.proxy))
-            assert.strict.deepStrictEqual(r.ok, false)
-            assert.strict.deepStrictEqual(r.v.indexOf('opt is not readable: '), 0)
+            assert.strict.deepStrictEqual(r, { ok: false, v: 'invalid opt: must be a readable object' })
         })
 
     })

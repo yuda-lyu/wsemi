@@ -62,7 +62,7 @@ function pad(n, len = 2) {
  * catch (err) {
  *     console.log(err.message)
  * }
- * // => genClockTZ 需要 IANA 時區字串（如 Asia/Taipei）
+ * // => invalid timeZone: must be an IANA time zone string
  *
  */
 function genClockTZ(timeZone) {
@@ -87,7 +87,7 @@ function genClockTZ(timeZone) {
         }
     }
     if (dtf === null) {
-        throw new Error('genClockTZ 需要 IANA 時區字串（如 Asia/Taipei）')
+        throw new Error('invalid timeZone: must be an IANA time zone string')
     }
 
     //now, 現在時間於指定時區之各欄位與UTC偏移(分鐘): 欄位取自Intl, 偏移為「該時區牆鐘時間視為UTC」與實際時刻之差, 皆不經系統本地時間

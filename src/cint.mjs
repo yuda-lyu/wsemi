@@ -44,11 +44,11 @@ import unbox from './_unbox.mjs'
  * }
  * catch (err) {
  *     console.log(err.message)
- *     // => v[1.7976931348623157e+308] is not a safe integer
+ *     // => invalid v: must be a safe integer
  * }
  *
  * console.log(cint(Infinity, { useLimitSafe: true, returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'v[1.7976931348623157e+308] is not a safe integer' }
+ * // => { state: 'error', msg: 'invalid v: must be a safe integer' }
  *
  * console.log(cint('1.5', { returnWithStateAndMsg: true }))
  * // => { state: 'success', msg: 2 }
@@ -134,7 +134,7 @@ function cint(v, opt = {}) {
     //check, 須於round之後檢查r而非之前檢查v, 因v為四捨五入前之數值可為小數(如1.5), 對其取Number.isSafeInteger必為false而誤報; 且useClampSafe為true時r已被鉗制至安全整數範圍, 故此處不會觸發
     if (useLimitSafe) {
         if (!Number.isSafeInteger(Number(r))) {
-            return retError(`v[${v}] is not a safe integer`)
+            return retError(`invalid v: must be a safe integer`) //V20: 不帶v之值
         }
     }
 

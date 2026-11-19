@@ -8,7 +8,7 @@ import fsReadTextCore from './fsReadTextCore.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsReadJson.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fp 輸入JSON檔案名稱
- * @returns {Object} 回傳結果物件，提供鍵success代表解析後之物件或陣列，提供鍵error代表錯誤訊息(讀檔或JSON解析之Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
+ * @returns {Object} 回傳結果物件，提供鍵success代表解析後之物件或陣列，提供鍵error代表錯誤訊息(讀檔之Error物件；JSON解析失敗為固定訊息'invalid json: must be a valid JSON text'之SyntaxError，不帶檔案內容片段)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
  *
@@ -59,7 +59,7 @@ function fsReadJson(fp) {
     }
     catch (err) {
         // console.log(err)
-        errTemp = err
+        errTemp = new SyntaxError('invalid json: must be a valid JSON text') //JSON.parse之SyntaxError訊息帶有檔案內容片段(V20), 改為固定訊息
     }
 
     if (errTemp !== null) {

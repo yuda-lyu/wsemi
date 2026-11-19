@@ -189,14 +189,14 @@ describe(`pmChain 輸入於進入時取值(R-PM-SETTLE-01規則17、R-OBJ-ITER-0
             assert.strict.deepStrictEqual({ out: r.out.chain, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', isTypeError: true }, unhandled: [], uncaught: [] })
         })
 
-        it(`Symbol.toStringTag讀取即拋錯: 陣列判定不讀標籤, 為not an array [規則17]`, function() {
+        it(`Symbol.toStringTag讀取即拋錯: 陣列判定不讀標籤, 為invalid pms: must be an array [規則17]`, function() {
             let r = runChildCase(runner, 'tagGetterContainer').r
-            assert.strict.deepStrictEqual({ out: r.out.chain, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'pms is not an array' }, unhandled: [], uncaught: [] })
+            assert.strict.deepStrictEqual({ out: r.out.chain, unhandled: r.unhandled, uncaught: r.uncaught }, { out: { syncThrow: false, s: 'reject', same: false, msg: 'invalid pms: must be an array' }, unhandled: [], uncaught: [] })
         })
 
     })
 
-    it(`should reject 'pms is not an array' for Symbol.toStringTag-faked arrays without calling their reduce (R-OBJ-ITER-01 規則2)`, async function() {
+    it(`should reject 'invalid pms: must be an array' for Symbol.toStringTag-faked arrays without calling their reduce (R-OBJ-ITER-01 規則2)`, async function() {
         let called = 0
         let fake = {
             [Symbol.toStringTag]: 'Array',
@@ -209,13 +209,13 @@ describe(`pmChain 輸入於進入時取值(R-PM-SETTLE-01規則17、R-OBJ-ITER-0
         let r = await call(() => pmChain(fake, 'init'))
         let noReduce = await call(() => pmChain({ [Symbol.toStringTag]: 'Array', length: 2 }, 'init'))
         assert.strict.deepStrictEqual({ r, called, noReduce }, {
-            r: { s: 'reject', v: 'pms is not an array' },
+            r: { s: 'reject', v: 'invalid pms: must be an array' },
             called: 0,
-            noReduce: { s: 'reject', v: 'pms is not an array' },
+            noReduce: { s: 'reject', v: 'invalid pms: must be an array' },
         })
     })
 
-    it(`should reject 'pms is not an array' for non-array inputs, including array-like objects`, async function() {
+    it(`should reject 'invalid pms: must be an array' for non-array inputs, including array-like objects`, async function() {
         let f = (v) => v + 'a'
         // eslint-disable-next-line no-new-wrappers
         let bads = [undefined, null, 0, 1, '', 'abc', true, () => {}, {}, { length: 2, 0: f, 1: f }, { length: 0 }, new Map(), new Set(), new Uint8Array(2), new String('ab'), Symbol('s'), 10n]
@@ -223,7 +223,7 @@ describe(`pmChain 輸入於進入時取值(R-PM-SETTLE-01規則17、R-OBJ-ITER-0
         for (let b of bads) {
             out.push(await call(() => pmChain(b, 'x')))
         }
-        assert.strict.deepStrictEqual(out, bads.map(() => ({ s: 'reject', v: 'pms is not an array' })))
+        assert.strict.deepStrictEqual(out, bads.map(() => ({ s: 'reject', v: 'invalid pms: must be an array' })))
     })
 
     it(`should keep the chain semantics: non-function elements are skipped, default initial is null, empty array resolves initial, holes are skipped`, async function() {

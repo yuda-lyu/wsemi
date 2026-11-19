@@ -7,7 +7,7 @@ import { runIntInputHang } from './tools/intInputHangRunner.mjs'
 //  失敗通道: sepInt無效throw(ws286b起, 原回[]); arrSep整數寫法無效throw(ws286e起, 原回[])、設定物件之numCount與numGroup皆無效throw; 雜湊函數之chunkSize為opt類, 非預期改用預設不報錯
 
 
-const MSG_INVALID_OPT = 'invalid opt.numCount or opt.numGroup'
+const MSG_INVALID_OPT = 'invalid opt: must be an object with numCount or numGroup' //ws492j V19: 設定物件兩鍵皆無效與整數opt統一為同一則訊息(原'invalid opt.numCount or opt.numGroup')
 const MSG_INVALID_NUM = 'invalid opt: must be an object with numCount or numGroup' //ws492h W-07: 舊式整數寫法已移除, 整數opt一律以此訊息throw(原'must be a positive integer or an object …')
 const MSG_SEPINT_N = 'invalid n: must be a positive integer'
 

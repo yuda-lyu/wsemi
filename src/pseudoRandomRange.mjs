@@ -15,7 +15,7 @@ import pseudoRandom from './pseudoRandom.mjs'
  * @param {Number|String} [vend=1] 輸入範圍最大值，規則同vstart，未給時用預設1，非預期之輸入throw Error('invalid vend: must be a valid number')；若vstart大於vend則拋出錯誤
  * @param {Integer|Number|String} [seed='start1'] 輸入種子seed，給予'start1'為使用初始值1並且隨呼叫次數自增，若為其他則代表使用為指定seed，預設'start1'
  * @returns {Number} 回傳位於指定範圍內隨機數字
- * @throws {Error} vstart或vend有給而非有效數字時throw Error('invalid vstart: must be a valid number')或Error('invalid vend: must be a valid number')(先檢vstart)；vstart大於vend時throw Error('vstart[<vstart>] > vend[<vend>]')
+ * @throws {Error} vstart或vend有給而非有效數字時throw Error('invalid vstart: must be a valid number')或Error('invalid vend: must be a valid number')(先檢vstart)；vstart大於vend時throw Error('invalid vstart: must be <= vend')(訊息不帶值)
  * @example
  *
  * let r
@@ -99,7 +99,7 @@ function pseudoRandomRange(vstart = 0, vend = 1, seed = 'start1') {
 
     //check
     if (vstart > vend) {
-        throw new Error(`vstart[${vstart}] > vend[${vend}]`)
+        throw new Error('invalid vstart: must be <= vend')
     }
 
     //pseudoRandom, [0,1)

@@ -71,7 +71,7 @@ function stru8arr2obj(data, opt = {}) {
 
     //check
     if (!iseobj(data)) {
-        return retError('invalid data')
+        return retError('invalid data: must be a non-empty object')
     }
 
     //results, binarys, 取值須攔截非預期錯誤(如data之getter拋錯), 否則會外拋至呼叫端
@@ -87,24 +87,32 @@ function stru8arr2obj(data, opt = {}) {
 
     //check
     if (!isestr(results)) {
-        return retError('invalid results')
+        return retError('invalid data.results: must be a non-empty string')
     }
     if (!isarr(binarys)) {
-        return retError('invalid binarys')
+        return retError('invalid data.binarys: must be an array')
     }
 
     //reMark, 標記須完整匹配整個字串(錨定^與$), 否則應用字串內只要夾雜標記文字即被誤判為二進位參照; 索引直接取自捕獲組, 不再以replace去頭後交cint推算(殘留文字會被cint吃成0而取到錯誤之binary)
     let reMark = /^\[BlazeFor(Uint8Array|Uint16Array|ArrayBuffer)\]::(\d+)$/
+
+    //own, 本函數自己拋出之Error(訊息已為V19固定詞彙), 於catch原樣取message, 不經errToStr而帶'Error: '前綴; 其餘拋出值(Proxy陣列之陷阱等)仍經errToStr
+    let own = new WeakSet()
+    let bad = (msg) => {
+        let e = new Error(msg)
+        own.add(e)
+        return e
+    }
 
     //restoreBin, 依標記所記之原型別還原二進位
     //經obj2u8arr打包者, binarys內為切出之原始位元組Uint8Array, 須依型別重建; 未經打包者(直接呼叫obj2stru8arr)binarys內即為原物件, 已是該型別故原樣回傳
     let restoreBin = (type, id, b) => {
         if (type === 'Uint16Array' && !isu16arr(b)) {
             if (!isu8arr(b)) {
-                throw new Error(`binarys[${id}] can not be restored to Uint16Array`)
+                throw bad(`invalid data.binarys[${id}]: must be a Uint16Array or a Uint8Array`)
             }
             if (b.byteLength % 2 !== 0) {
-                throw new Error(`binarys[${id}] byteLength[${b.byteLength}] is not even, can not be restored to Uint16Array`)
+                throw bad(`invalid data.binarys[${id}]: must have an even byteLength to be restored to a Uint16Array`)
             }
             //Uint16Array之視圖要求byteOffset對齊且長度相符, 不符者複製一份以取得對齊之buffer
             let bb = (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) ? b : new Uint8Array(b)
@@ -112,7 +120,7 @@ function stru8arr2obj(data, opt = {}) {
         }
         if (type === 'ArrayBuffer' && !isab(b)) {
             if (!isu8arr(b)) {
-                throw new Error(`binarys[${id}] can not be restored to ArrayBuffer`)
+                throw bad(`invalid data.binarys[${id}]: must be an ArrayBuffer or a Uint8Array`)
             }
             return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
         }
@@ -151,11 +159,11 @@ function stru8arr2obj(data, opt = {}) {
             //id, 須做界線檢查; 標記格式正確但索引不存在, 只可能為封包損毀或results與binarys不匹配, 故視為壞封包直接拋錯交由外層catch, 不可回undefined(reviver回undefined會使該鍵消失、陣列元素變null)而靜默毀損
             let id = Number(m[2])
             if (id >= binarys.length) {
-                throw new Error(`binary index out of range[${id}], binarys.length[${binarys.length}]`)
+                throw bad('invalid data.results: must only reference binary indexes that exist in data.binarys')
             }
 
             if (used.has(id)) {
-                throw new Error(`binary index referenced more than once[${id}]`)
+                throw bad('invalid data.results: must not reference the same binary index more than once')
             }
             used.add(id)
 
@@ -164,7 +172,7 @@ function stru8arr2obj(data, opt = {}) {
 
     }
     catch (err) {
-        return retError(errToStr(err)) //reviver內讀呼叫端之binarys(Proxy陣列等)可拋出任意值
+        return retError(own.has(err) ? err.message : (err instanceof SyntaxError ? 'invalid data.results: must be a valid JSON text' : errToStr(err))) //results非合法JSON之SyntaxError訊息帶輸入片段(V20), 改為固定訊息 //reviver內讀呼叫端之binarys(Proxy陣列等)可拋出任意值
     }
 
     if (returnWithStateAndMsg) {

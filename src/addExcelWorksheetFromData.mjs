@@ -38,12 +38,12 @@ function addExcelWorksheetFromData(wb, data, sheetName = 'data') {
     //check
     if (!iseobj(wb)) {
         return {
-            error: 'wb is not an effective object',
+            error: 'invalid wb: must be a non-empty object',
         }
     }
     if (!isarr(get(wb, 'sheets'))) {
         return {
-            error: 'wb.sheets is not an array',
+            error: 'invalid wb.sheets: must be an array',
         }
     }
     if (!isestr(sheetName)) {

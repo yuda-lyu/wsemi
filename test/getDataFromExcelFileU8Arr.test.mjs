@@ -156,8 +156,21 @@ describe(`getDataFromExcelFileU8Arr`, function() {
 
     it(`should return error object when u8a is not a valid xlsx binary`, async function() {
         //SheetJS舊實作會將垃圾bytes靜默fallback成csv解析而回假成功, 改用hucre後正確回報錯誤
-        let r = await getDataFromExcelFileU8Arr(new Uint8Array([1, 2, 3]), { fmt: 'array' })
-        assert.strict.deepStrictEqual(r.error, 'can not read data from u8a')
+        //ws492j V19/V20: 訊息改'invalid u8a: must be a readable Excel file'(原'can not read data from u8a'), console只輸出固定詞彙而不輸出解析套件之錯誤物件(其訊息含輸入檔內容)
+        let logs = []
+        let orig = console.log
+        console.log = (...args) => {
+            logs.push(args)
+        }
+        let r = null
+        try {
+            r = await getDataFromExcelFileU8Arr(new Uint8Array([1, 2, 3]), { fmt: 'array' })
+        }
+        finally {
+            console.log = orig
+        }
+        assert.strict.deepStrictEqual(r.error, 'invalid u8a: must be a readable Excel file')
+        assert.strict.deepStrictEqual(logs, [['error: invalid u8a: must be a readable Excel file']])
     })
 
     //ws492h(第492項第7批, N-B; dspec〈輸入參數之檢測機制〉K3、V5、B1): opt.fmt與opt.valueToString為非安全相關之opt, 非預期之輸入視為未給而改用預設('ltdt'、true), 不再回{ error }(原'opt.fmt is not one of …'與'opt.valueToString is not a boolean')

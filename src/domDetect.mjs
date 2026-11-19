@@ -528,7 +528,7 @@ function domDetectByPolling(f, opt = {}) {
 
     //check
     if (!isfun(f)) {
-        console.log('invalid f', f)
+        console.log('invalid f: must be a function')
         return null
     }
 
@@ -563,7 +563,7 @@ function domDetectByObserver(f, opt = {}) {
 
     //check
     if (!isfun(f)) {
-        console.log('invalid f', f)
+        console.log('invalid f: must be a function')
         return null
     }
 

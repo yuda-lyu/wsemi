@@ -727,9 +727,11 @@ describe(`execProcess`, function() {
             let b = await execProcess(nodeBin, ['-e', '1'], revoked()).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
             let opt3 = Object.defineProperty({}, 'onTrace', { enumerable: true, get: thrower(new Error('trace getter boom')) })
             let c = await execProcess(nodeBin, ['-e', '1'], opt3).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
-            assert.strict.deepStrictEqual(a, { s: 'reject', v: 'opt is not readable: getter boom' })
-            assert.strict.deepStrictEqual([b.s, b.v.startsWith('opt is not readable: ')], ['reject', true])
-            assert.strict.deepStrictEqual(c, { s: 'reject', v: 'opt is not readable: trace getter boom' })
+            //固定訊息(V19), 不含呼叫端getter所拋出之文字(V20)
+            assert.strict.deepStrictEqual(a, { s: 'reject', v: 'invalid opt: must be a readable object' })
+            assert.strict.deepStrictEqual(b, { s: 'reject', v: 'invalid opt: must be a readable object' })
+            assert.strict.deepStrictEqual(c, { s: 'reject', v: 'invalid opt: must be a readable object' })
+            assert.strict.deepStrictEqual([a.v.includes('getter boom'), c.v.includes('trace getter boom')], [false, false])
             assert.strict.deepStrictEqual(tr.events.length, 0)
         })
 
@@ -818,8 +820,8 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
     it(`execProcess: opt之getter拋錯、opt本身或其選項值、args、prog為已撤銷之Proxy時以reject說明字串回報, 不同步拋錯、不成為未捕捉例外 [R-EXEC-FAIL-01之5、13、15]`, function() {
         let { r } = runExecFail('inputUnreadableProc')
         assert.strict.deepStrictEqual(r.out, {
-            procGetter: { s: 'reject', v: 'opt is not readable: getter boom codeCmd' }, //規則13: reject 'opt is not readable: <訊息>'
-            procOptRevoked: { s: 'reject', v: 'opt is not readable: <revoked>' }, //規則13: 同上(opt本身不可讀)
+            procGetter: { s: 'reject', v: 'invalid opt: must be a readable object' }, //規則13: reject固定訊息(V19), 不含getter所拋之文字'getter boom codeCmd'(V20)
+            procOptRevoked: { s: 'reject', v: 'invalid opt: must be a readable object' }, //規則13: 同上(opt本身不可讀)
             procArgsRevoked: { s: 'reject', v: 'invalid args: must be an array or a string' }, //規則13、5: args判型拋錯視同型別不符, reject且不帶值(ws492f: V19格式)
             procProgRevoked: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //規則13: ws492f起prog須為原始字串, 已撤銷之Proxy(typeof為object)即無效, 不再觸及其內容(原為'spawn[UNKNOWN]:\n<訊息>')
             procProgRevokedAuto: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //同上, codeCmd為auto亦同(且先於取系統字碼頁之chcp)
@@ -842,14 +844,14 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不產生未處理之rejection
     })
 
-    it(`execProcess: opt之getter拋出非Error之值(null、undefined、字串)時, reject字串保留拋出值之文字、不同步拋錯; prog為getter拋字串之Proxy者為無效prog(不觸及其內容) [R-EXEC-FAIL-01之13]`, function() {
+    it(`execProcess: opt之getter拋出非Error之值(null、undefined、字串)時, reject固定訊息、不含拋出值之文字、不同步拋錯; prog為getter拋字串之Proxy者為無效prog(不觸及其內容) [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('procThrownValues')
-        //規則13: execProcess reject 'opt is not readable: <訊息>'(訊息取getErrorMessage, 為空退_errToStr)
-        let x = (m) => ({ s: 'reject', v: `opt is not readable: ${m}` })
+        //規則13: execProcess reject固定訊息'invalid opt: must be a readable object'(V19; 不帶拋出值之文字, V20)
+        let x = () => ({ s: 'reject', v: 'invalid opt: must be a readable object' })
         assert.strict.deepStrictEqual(r.out, {
-            null: x('null'), //規則13: 拋出null
-            undefined: x('undefined'), //規則13: 拋出undefined
-            string: x('thrown-x'), //規則13: 拋出字串
+            null: x(), //規則13: 拋出null
+            undefined: x(), //規則13: 拋出undefined
+            string: x(), //規則13: 拋出字串'thrown-x', 訊息不含該字串
             progThrowsString: { s: 'reject', v: 'invalid prog: must be a non-empty string' }, //ws492f: prog須為原始字串, Proxy(typeof為object)即無效, 不再觸及其內容(原為'spawn[UNKNOWN]:\nthrown-x')
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不同步拋錯、不成為未捕捉例外
@@ -858,7 +860,7 @@ describe(`execProcess 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 })
 
 
-//opt.cwd(JSDoc execProcess之opt.cwd; 同execCli, R-EXEC-FAIL-01規則7): 子進程之工作目錄, 三種模式皆生效; 非非空字串為本進程之工作目錄; 不存在或非資料夾時reject'spawn[ENOENT]:\ncwd is not an existing folder: <cwd>'
+//opt.cwd(JSDoc execProcess之opt.cwd; 同execCli, R-EXEC-FAIL-01規則7): 子進程之工作目錄, 三種模式皆生效; 非非空字串為本進程之工作目錄; 不存在或非資料夾時reject'spawn[ENOENT]:\ninvalid cwd: must be an existing folder'
 //夾具建於test/_tmp/execProcess-cwd/(含空白與中文之資料夾、檔案、指向資料夾之junction), after刪除
 describe(`execProcess opt.cwd`, function() {
 
@@ -917,7 +919,7 @@ describe(`execProcess opt.cwd`, function() {
         assert.strict.deepStrictEqual(rs, { spawn: want, exec: want, execFile: want })
     })
 
-    it(`should reject 'spawn[ENOENT]:\\ncwd is not an existing folder: <cwd>' when cwd is missing or is a file, with settle reason 'spawn'`, async function() {
+    it(`should reject 'spawn[ENOENT]:\\ninvalid cwd: must be an existing folder' (without the cwd value) when cwd is missing or is a file, with settle reason 'spawn'`, async function() {
         let rs = {}
         for (let mode of modes) {
             rs[mode] = []
@@ -927,15 +929,16 @@ describe(`execProcess opt.cwd`, function() {
                 rs[mode].push([r.s, r.v, settle.map((e) => `${e.ok}:${e.reason}`)])
             }
         }
-        //R-EXEC-FAIL-01規則7: 訊息改指cwd(碼仍為ENOENT); JSDoc: 未能啟動子程序, settle之reason為'spawn'(每次呼叫至多一個settle)
+        //R-EXEC-FAIL-01規則7: 訊息改指cwd(碼仍為ENOENT; V19固定格式, 不帶cwd之值, V20); JSDoc: 未能啟動子程序, settle之reason為'spawn'(每次呼叫至多一個settle)
         let want = [
-            ['reject', `spawn[ENOENT]:\ncwd is not an existing folder: ${fdMissing}`, ['false:spawn']],
-            ['reject', `spawn[ENOENT]:\ncwd is not an existing folder: ${fpFile}`, ['false:spawn']],
+            ['reject', `spawn[ENOENT]:\ninvalid cwd: must be an existing folder`, ['false:spawn']],
+            ['reject', `spawn[ENOENT]:\ninvalid cwd: must be an existing folder`, ['false:spawn']],
         ]
         assert.strict.deepStrictEqual(rs, { spawn: want, exec: want, execFile: want })
+        assert.strict.deepStrictEqual(modes.every((mode) => rs[mode][0][1].includes(fdMissing) === false && rs[mode][1][1].includes(fpFile) === false), true)
     })
 
-    it(`should reject 'opt is not readable' when the cwd getter throws, without throwing synchronously`, async function() {
+    it(`should reject 'invalid opt: must be a readable object' (without the thrown text) when the cwd getter throws, without throwing synchronously`, async function() {
         let opt = {}
         Object.defineProperty(opt, 'cwd', {
             get() {
@@ -943,8 +946,9 @@ describe(`execProcess opt.cwd`, function() {
             },
         })
         let r = await execProcess(process.execPath, ['-e', js], opt).then((v) => ({ s: 'resolve', v }), (v) => ({ s: 'reject', v }))
-        //R-EXEC-FAIL-01規則13: opt之選項值不可讀時reject 'opt is not readable: <訊息>'
-        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'opt is not readable: cwd getter boom' })
+        //R-EXEC-FAIL-01規則13: opt之選項值不可讀時reject固定訊息'invalid opt: must be a readable object'(V19; 不含getter所拋之文字'cwd getter boom', V20)
+        assert.strict.deepStrictEqual(r, { s: 'reject', v: 'invalid opt: must be a readable object' })
+        assert.strict.deepStrictEqual(r.v.includes('cwd getter boom'), false)
     })
 
 })
@@ -1101,7 +1105,7 @@ describe(`execProcess prog與args之輸入檢測(R-EXEC-ARG-01)`, function() {
             },
         })
         let r3 = await execProcess(undefined, 5, optBad).then((v) => v, (v) => v)
-        assert.strict.deepStrictEqual([r1, r2, r3], ['invalid prog: must be a non-empty string', 'invalid args: must be an array or a string', 'opt is not readable: getter boom'])
+        assert.strict.deepStrictEqual([r1, r2, r3], ['invalid prog: must be a non-empty string', 'invalid args: must be an array or a string', 'invalid opt: must be a readable object'])
     })
 
     it(`should not throw synchronously and should not echo prog, args or env for any failure path`, async function() {
@@ -1126,8 +1130,8 @@ describe(`execProcess prog與args之輸入檢測(R-EXEC-ARG-01)`, function() {
         assert.strict.deepStrictEqual(rs.filter(([, leak]) => leak), [])
     })
 
-    it(`should use the fixed wording with the code when the original error carries a code, in the unreadable-opt message too`, async function() {
-        //V20: opt之getter拋出帶錯誤碼之Error時訊息改固定詞彙加錯誤碼(其message可能含路徑); 無錯誤碼者仍保留拋出值之文字(呼叫端自拋)
+    it(`should use the fixed message without the thrown text or code when the opt getter throws an error carrying a code`, async function() {
+        //V20: opt之getter拋出帶錯誤碼之Error時(其message可能含路徑)訊息為固定'invalid opt: must be a readable object', 不含其message與錯誤碼; 其他不可讀者(不論拋出何值)亦同
         let opt = Object.defineProperty({}, 'mode', {
             enumerable: true,
             get() {
@@ -1135,7 +1139,8 @@ describe(`execProcess prog與args之輸入檢測(R-EXEC-ARG-01)`, function() {
             },
         })
         let r = await execProcess(nodeBin, ['-e', '1'], opt).then((v) => v, (v) => v)
-        assert.strict.deepStrictEqual(r, 'opt is not readable: operation failed (code EACCES)')
+        assert.strict.deepStrictEqual(r, 'invalid opt: must be a readable object')
+        assert.strict.deepStrictEqual([r.includes(SECRET), r.includes('EACCES')], [false, false])
     })
 
     //--- opt.codeCmd之K3: 不支援之編碼視為未給, 改用預設utf-8 ---

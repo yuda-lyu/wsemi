@@ -19,7 +19,7 @@ import isu8arr from './isu8arr.mjs'
  * // => 'abc'
  *
  * console.log(u8arr2bs('abc', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid u8a' }
+ * // => { state: 'error', msg: 'invalid u8a: must be a Uint8Array' }
  *
  */
 function u8arr2bs(u8a, opt = {}) {
@@ -45,7 +45,7 @@ function u8arr2bs(u8a, opt = {}) {
 
     //check
     if (!isu8arr(u8a)) {
-        return retError('invalid u8a')
+        return retError('invalid u8a: must be a Uint8Array')
     }
 
     //c, 須攔截非預期錯誤(如過大資料使字串超出長度上限), 否則會外拋至呼叫端

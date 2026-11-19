@@ -49,7 +49,7 @@ function str2md5(str, base64 = false, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid str')
+        return retError('invalid str: must be a non-empty string')
     }
 
     //check

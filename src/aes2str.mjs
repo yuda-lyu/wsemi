@@ -55,10 +55,10 @@ function aes2str(str, key, base64 = false, opt = {}) {
 
     //check
     if (!isestr(str)) {
-        return retError('invalid str')
+        return retError('invalid str: must be a non-empty string')
     }
     if (!isestr(key)) {
-        return retError('invalid key')
+        return retError('invalid key: must be a non-empty string')
     }
 
     //check

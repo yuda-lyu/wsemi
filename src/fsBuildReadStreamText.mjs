@@ -81,7 +81,7 @@ function fsBuildReadStreamText(fp) {
 
     //check
     if (!fsIsFile(fp)) {
-        throw new Error(`fp is not a file`)
+        throw new Error('invalid fp: must be an existing file')
     }
 
     //ev

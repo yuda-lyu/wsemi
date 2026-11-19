@@ -338,11 +338,13 @@ describe(`_execPortPids`, function() {
                 },
             }
             let r = kit.readInput(80, opt, ex)
-            assert.strict.deepStrictEqual(r.err, 'opt is not readable: opt boom')
+            //固定訊息(V19), 不含呼叫端getter所拋出之文字(V20)
+            assert.strict.deepStrictEqual(r.err, 'invalid opt: must be a readable object')
+            assert.strict.deepStrictEqual(r.err.includes('opt boom'), false)
             let p = Proxy.revocable({}, {})
             p.revoke()
             r = kit.readInput(80, p.proxy, ex)
-            assert.strict.deepStrictEqual(typeof r.err === 'string' && r.err.indexOf('opt is not readable: ') === 0, true)
+            assert.strict.deepStrictEqual(r.err, 'invalid opt: must be a readable object')
         })
 
     })

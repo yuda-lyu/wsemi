@@ -30,25 +30,25 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
 
         let ops = ['===', '!==', '>=', '<=', '>', '<']
 
-        //對應§7.2: 非有效數字throw, 訊息不改(x1、x2各自指名), 不論op與withPreciseNum
+        //對應§7.2: 非有效數字throw, x1、x2各自指名('invalid x1: must be a valid number'; ws492j V19, 原'x1 is not a number'), 不論op與withPreciseNum
         for (let [lb, v] of INVALID) {
-            it(`should throw x1 is not a number when x1 is ${lb}`, function() {
+            it(`should throw invalid x1: must be a valid number when x1 is ${lb}`, function() {
                 for (let op of ops) {
-                    assert.throws(() => judge(v, op, 1), isErr('x1 is not a number'))
-                    assert.throws(() => judge(v, op, 1, { withPreciseNum: false }), isErr('x1 is not a number'))
+                    assert.throws(() => judge(v, op, 1), isErr('invalid x1: must be a valid number'))
+                    assert.throws(() => judge(v, op, 1, { withPreciseNum: false }), isErr('invalid x1: must be a valid number'))
                 }
             })
-            it(`should throw x2 is not a number when x2 is ${lb}`, function() {
+            it(`should throw invalid x2: must be a valid number when x2 is ${lb}`, function() {
                 for (let op of ops) {
-                    assert.throws(() => judge(1, op, v), isErr('x2 is not a number'))
-                    assert.throws(() => judge(1, op, v, { withPreciseNum: false }), isErr('x2 is not a number'))
+                    assert.throws(() => judge(1, op, v), isErr('invalid x2: must be a valid number'))
+                    assert.throws(() => judge(1, op, v, { withPreciseNum: false }), isErr('invalid x2: must be a valid number'))
                 }
             })
         }
 
         //對應§7.2: 入口檢測依參數順序由左至右, 兩者皆無效時先報x1
         it(`should report x1 first when both x1 and x2 are invalid`, function() {
-            assert.throws(() => judge(Infinity, '===', '0x10'), isErr('x1 is not a number'))
+            assert.throws(() => judge(Infinity, '===', '0x10'), isErr('invalid x1: must be a valid number'))
         })
 
         //對應§3.1與K4: 數字字串(含頭尾空白、科學記號)可比較, withPreciseNum為true/false皆不洩漏[DecimalError]
@@ -70,25 +70,25 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
 
         //對應§7.1/R-WRAPPER-01規則4: 包裝物件不解包, 屬無效輸入throw(修前為true)
         it(`should throw when input wrapper objects (isenum does not unwrap)`, function() {
-            assert.throws(() => judge(new Number(1.5), '===', 1.5), isErr('x1 is not a number')) // eslint-disable-line no-new-wrappers
-            assert.throws(() => judge(1.5, '===', new String('1.5')), isErr('x2 is not a number')) // eslint-disable-line no-new-wrappers
+            assert.throws(() => judge(new Number(1.5), '===', 1.5), isErr('invalid x1: must be a valid number')) // eslint-disable-line no-new-wrappers
+            assert.throws(() => judge(1.5, '===', new String('1.5')), isErr('invalid x2: must be a valid number')) // eslint-disable-line no-new-wrappers
         })
 
         //對應修前: judge(Infinity,'>',1)為true、judge('0x10','>',1)為true; 現throw
         it(`should no longer treat Infinity and '0x10' as numbers`, function() {
-            assert.throws(() => judge(Infinity, '>', 1, { withPreciseNum: false }), isErr('x1 is not a number'))
-            assert.throws(() => judge('0x10', '>', 1), isErr('x1 is not a number'))
+            assert.throws(() => judge(Infinity, '>', 1, { withPreciseNum: false }), isErr('invalid x1: must be a valid number'))
+            assert.throws(() => judge('0x10', '>', 1), isErr('invalid x1: must be a valid number'))
         })
 
     })
 
     describe(`preciseNum`, function() {
 
-        //對應§7.2: 非有效數字throw('v is not a number'), 含returnDigit
+        //對應§7.2: 非有效數字throw('invalid v: must be a valid number'; ws492j V19, 原'v is not a number'), 含returnDigit
         for (let [lb, v] of INVALID) {
-            it(`should throw v is not a number when v is ${lb}`, function() {
-                assert.throws(() => preciseNum(v), isErr('v is not a number'))
-                assert.throws(() => preciseNum(v, { returnDigit: true }), isErr('v is not a number'))
+            it(`should throw invalid v: must be a valid number when v is ${lb}`, function() {
+                assert.throws(() => preciseNum(v), isErr('invalid v: must be a valid number'))
+                assert.throws(() => preciseNum(v, { returnDigit: true }), isErr('invalid v: must be a valid number'))
             })
         }
 
@@ -111,27 +111,27 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
 
         //對應R-WRAPPER-01規則4: 包裝物件throw(修前放行為'1.5')
         it(`should throw when input wrapper objects`, function() {
-            assert.throws(() => preciseNum(new Number(1.5)), isErr('v is not a number')) // eslint-disable-line no-new-wrappers
-            assert.throws(() => preciseNum(new String('1.5')), isErr('v is not a number')) // eslint-disable-line no-new-wrappers
-            assert.throws(() => preciseNum(Object('1.5')), isErr('v is not a number'))
+            assert.throws(() => preciseNum(new Number(1.5)), isErr('invalid v: must be a valid number')) // eslint-disable-line no-new-wrappers
+            assert.throws(() => preciseNum(new String('1.5')), isErr('invalid v: must be a valid number')) // eslint-disable-line no-new-wrappers
+            assert.throws(() => preciseNum(Object('1.5')), isErr('invalid v: must be a valid number'))
         })
 
     })
 
     describe(`estimateTicks`, function() {
 
-        //對應§7.2: rmin、rmax非有效數字throw(訊息不改), rmin先於rmax
+        //對應§7.2: rmin、rmax非有效數字throw('invalid rmin: must be a valid number'; ws492j V19, 原'rmin is not a number'), rmin先於rmax
         for (let [lb, v] of INVALID) {
-            it(`should throw rmin is not a number when rmin is ${lb}`, function() {
-                assert.throws(() => estimateTicks(v, 5), isErr('rmin is not a number'))
+            it(`should throw invalid rmin: must be a valid number when rmin is ${lb}`, function() {
+                assert.throws(() => estimateTicks(v, 5), isErr('invalid rmin: must be a valid number'))
             })
-            it(`should throw rmax is not a number when rmax is ${lb}`, function() {
-                assert.throws(() => estimateTicks(0, v), isErr('rmax is not a number'))
+            it(`should throw invalid rmax: must be a valid number when rmax is ${lb}`, function() {
+                assert.throws(() => estimateTicks(0, v), isErr('invalid rmax: must be a valid number'))
             })
         }
 
         it(`should report rmin first when both are invalid`, function() {
-            assert.throws(() => estimateTicks(Infinity, '0x10'), isErr('rmin is not a number'))
+            assert.throws(() => estimateTicks(Infinity, '0x10'), isErr('invalid rmin: must be a valid number'))
         })
 
         //對應K4: 數字字串(含頭尾空白、科學記號)同數值結果
@@ -148,8 +148,8 @@ describe(`計算函數改用isenum/iseint(第221項第一批)`, function() {
 
         //對應修前: rmax='0x10'得tickPositions [0, 8, 16]; 現throw
         it(`should no longer accept '0x10' and wrapper objects`, function() {
-            assert.throws(() => estimateTicks(0, '0x10'), isErr('rmax is not a number'))
-            assert.throws(() => estimateTicks(0, new Number(30)), isErr('rmax is not a number')) // eslint-disable-line no-new-wrappers
+            assert.throws(() => estimateTicks(0, '0x10'), isErr('invalid rmax: must be a valid number'))
+            assert.throws(() => estimateTicks(0, new Number(30)), isErr('invalid rmax: must be a valid number')) // eslint-disable-line no-new-wrappers
         })
 
         //對應§11: round之idig改為0~100(digits), rmin等於rmax時刻度間距之小數位數在100以內者結果不變

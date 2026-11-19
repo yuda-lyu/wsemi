@@ -232,7 +232,7 @@ let SITES = {
     },
     W4a: {
         title: 'W4 debounce: 輸入非函數',
-        label: '[wsemi debounce] func is not a function',
+        label: '[wsemi debounce] invalid func: must be a function',
         level: 'log',
         safe: undefined,
         noDetail: true,
@@ -244,7 +244,7 @@ let SITES = {
     },
     W4b: {
         title: 'W4 pmDebounce: 輸入非函數',
-        label: '[wsemi pmDebounce] func is not a function',
+        label: '[wsemi pmDebounce] invalid func: must be a function',
         level: 'log',
         safe: undefined,
         noDetail: true,

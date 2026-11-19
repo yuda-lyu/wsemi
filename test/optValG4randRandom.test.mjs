@@ -12,6 +12,7 @@ import { INVALID, VALID_STR } from './tools/enumInputs.mjs'
 import { defineOptParam, INVALID_EINT_EXTRA } from './tools/optValKit.mjs'
 import { defineRangeParam } from './tools/rangeParamKit.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
+import { BOUND_MSG, probeVstart, probeVend } from './tools/randBounds.mjs'
 
 
 //隨機系7函數(第一級發布A; 完整為10函數)之vstart、vend、n
@@ -19,12 +20,9 @@ import { runChildCase } from './tools/runChildCase.mjs'
 //    實數系(randomRange、randomsRange、pseudoRandomRange、pseudoRandomsRange)須為有效數字(isenum, 無範圍限制), 訊息'invalid vstart: must be a valid number'; 整數系須為有效整數(iseint, use: 'safe'), 訊息'invalid vstart: must be an integer'
 //  n: opt類位置參數(JSDoc [n=1]或程式碼有回退, 函數無opt物件故不帶debug, noDebug), 有效整數且為個數1~4294967295(iseint, use: 'count', min: 1), 非預期之輸入視為未給、改用預設1, 不報錯
 //  vstart > vend 之throw維持
-//  可觀察值: 隨機值本身不可預期, 故以「vstart > vend 之錯誤訊息 vstart[x] > vend[y]」取出實際採用之邊界(以極小vend取vstart、以極大vstart取vend), n以回傳陣列長度
+//  可觀察值: 隨機值本身不可預期, 故以「vstart <= vend 才不拋錯」之性質驗證實際採用之邊界(test/tools/randBounds.mjs; 訊息為固定詞彙'invalid vstart: must be <= vend', 不帶值), n以回傳陣列長度
 let runner = path.join(path.dirname(fileURLToPath(import.meta.url)), 'tools', 'optValG4randHugeNRunner.mjs')
 
-
-const REAL = { neg: -Number.MAX_VALUE, pos: Number.MAX_VALUE }
-const INT = { neg: -Number.MAX_SAFE_INTEGER, pos: Number.MAX_SAFE_INTEGER }
 
 //第一級發布A只納入下列7個(randomIntRange有下游站點、randomIntsNdpRange與pseudoRandomIntsNdpRange有Infinity邊界, 皆不在本輪, 其測試不在此; 下方ndp分支為保留之資料驅動分支, 本輪無ndp成員)
 const FNS = [
@@ -38,17 +36,7 @@ const FNS = [
 ]
 
 
-//bounds, 呼叫f並解析其 vstart > vend 之錯誤訊息, 回傳 [vstart, vend] (實際採用之值); 未拋錯回傳'NOTHROW', 其他錯誤回傳'ERR:訊息'
-function bounds(f) {
-    try {
-        f()
-        return 'NOTHROW'
-    }
-    catch (err) {
-        let m = /^vstart\[(.*)\] > vend\[(.*)\]$/.exec(err.message)
-        return m ? [Number(m[1]), Number(m[2])] : `ERR:${err.message}`
-    }
-}
+//實際採用之邊界之觀察見test/tools/randBounds.mjs(訊息不帶值後, 以 vstart <= vend 才不拋錯之性質驗證, ws492j)
 
 
 //超大值(Number > 1e5): 若被當作有效個數會近乎無限迴圈, 於程序內無法逾時中止, 故由子行程案例驗證, 程序內矩陣不含
@@ -70,7 +58,6 @@ let EINT_STR = VALID_STR.filter(([, , n]) => Number.isInteger(n))
 
 for (let { name, fn, kind, arr, ndp } of FNS) {
 
-    let K = kind === 'real' ? REAL : INT
     let defEnd = kind === 'real' ? 1 : 100
 
     //vstart: 以極小vend取出實際採用之vstart
@@ -96,10 +83,7 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
             name: 'vstart',
             def: 0,
             desc,
-            probe: (v) => {
-                let r = bounds(() => fn(v, K.neg))
-                return Array.isArray(r) ? r[0] : r
-            },
+            probe: (v, exp) => probeVstart(fn, kind, v, exp),
             valid: validStart,
             extraInvalid: kind === 'real' ? [] : extraInt,
         })
@@ -112,10 +96,7 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
             name: 'vend',
             def: defEnd,
             desc,
-            probe: (v) => {
-                let r = bounds(() => fn(K.pos, v))
-                return Array.isArray(r) ? r[1] : r
-            },
+            probe: (v, exp) => probeVend(fn, kind, v, exp),
             valid: validEnd,
             invalid: invalidEnd,
             extraInvalid: extraEnd,
@@ -167,18 +148,19 @@ for (let { name, fn, kind, arr, ndp } of FNS) {
                 let a = runChildCase(runner, name, { exitMode: 'n', timeout: 20000 })
                 assert.strict.deepStrictEqual(a.r.lens, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
                 let b = runChildCase(runner, name, { exitMode: 'vend', timeout: 20000 })
-                let want = `vstart[${Number.MAX_SAFE_INTEGER}] > vend[100]`
-                assert.strict.deepStrictEqual(b.r.msgs, [want, want, want, want, want, want, want])
+                // 採用之vend為預設100: fn(100, v)不拋錯且fn(101, v)因vstart > vend拋錯(以固定詞彙BOUND_MSG判定)
+                assert.strict.deepStrictEqual(b.r.adopted100, [true, true, true, true, true, true, true])
             })
         }
 
         it('should still throw when vstart > vend, using the effective values (not given → default), and report an invalid bound first', function() {
-            // vstart > vend 之throw維持; 訊息為實際採用之值(未給者為預設); 有給而無效之邊界先以invalid訊息拋錯(Q1-b, 2026-11-12), 先檢vstart
+            // vstart > vend 之throw維持; 訊息為固定詞彙(V19、V20, 不帶值; 以實際採用之值〔未給者為預設〕比較, 採用值由randBounds驗證); 有給而無效之邊界先以invalid訊息拋錯(Q1-b, 2026-11-12), 先檢vstart
             let big = kind === 'real' ? 5.5 : 150
-            assert.throws(() => fn(5, 3), /^Error: vstart\[5\] > vend\[3\]$/)
-            assert.throws(() => fn(null, -1), /^Error: vstart\[0\] > vend\[-1\]$/)
-            assert.throws(() => fn(big, null), new RegExp(`^Error: vstart\\[${big}\\] > vend\\[${defEnd}\\]$`))
-            assert.throws(() => fn(' 6 ', ' 2 '), /^Error: vstart\[6\] > vend\[2\]$/)
+            let msgBound = { message: BOUND_MSG }
+            assert.throws(() => fn(5, 3), msgBound)
+            assert.throws(() => fn(null, -1), msgBound)
+            assert.throws(() => fn(big, null), msgBound)
+            assert.throws(() => fn(' 6 ', ' 2 '), msgBound)
             assert.throws(() => fn('abc', -1), { message: `invalid vstart: must be ${desc}` })
             assert.throws(() => fn(big, 'abc'), { message: `invalid vend: must be ${desc}` })
             assert.throws(() => fn('abc', 'abc'), { message: `invalid vstart: must be ${desc}` })

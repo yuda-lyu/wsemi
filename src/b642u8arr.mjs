@@ -63,7 +63,7 @@ function b642u8arr(b64, opt = {}) {
 
     //check
     if (!isstr(b64)) {
-        return retError('invalid b64')
+        return retError('invalid b64: must be a string')
     }
 
     //注意: Nodejs 25起原生內建Uint8Array.fromBase64, 待升版後再改用
@@ -73,7 +73,7 @@ function b642u8arr(b64, opt = {}) {
 
     //check, 字母表與padding位置
     if (!reB64.test(b64c)) {
-        return retError('invalid b64, contains characters outside the base64 alphabet or misplaced padding')
+        return retError('invalid b64: must be a base64 string using only the base64 alphabet, with padding only at the end')
     }
 
     //check, 長度與padding數須配對; 末段採loose(即Uint8Array.fromBase64之預設, 允許末段2或3字元不補padding), 但長度模4為1之末段一律無效
@@ -81,13 +81,13 @@ function b642u8arr(b64, opt = {}) {
     let nBody = b64c.length - nPad
     let mod = nBody % 4
     if (nPad === 0 && mod === 1) {
-        return retError(`invalid b64, the last chunk has only 1 character[${b64c.length}]`)
+        return retError('invalid b64: must be a base64 string whose last chunk is not a single character')
     }
     if (nPad === 1 && mod !== 3) {
-        return retError(`invalid b64, malformed padding, 1 padding requires the last chunk to have 3 characters`)
+        return retError('invalid b64: must be a base64 string whose last chunk has 3 characters when it has 1 padding')
     }
     if (nPad === 2 && mod !== 2) {
-        return retError(`invalid b64, malformed padding, 2 paddings require the last chunk to have 2 characters`)
+        return retError('invalid b64: must be a base64 string whose last chunk has 2 characters when it has 2 paddings')
     }
 
     //u8a, 須攔截非預期錯誤, 否則會外拋至呼叫端

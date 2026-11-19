@@ -387,8 +387,8 @@ describe(`execCliJsonFile`, function() {
             const bad = await execCliJsonFile({ script, args: ['fail'], outputPath: outp('out2.json'), exe: node, timeoutMs: 30000, maxRetries: 1 })
             assert.strict.equal(bad.status, 'error')
             assert.match(bad.message, /共試 \d+ 次 → .*ENOENT: script missing/)
-            await assert.rejects(() => execCliJsonFile({ outputPath: 'x' }), /需要 script/)
-            await assert.rejects(() => execCliJsonFile({ script }), /需要 outputPath/)
+            await assert.rejects(() => execCliJsonFile({ outputPath: 'x' }), { name: 'Error', message: 'invalid opt.script: must be a non-empty string' })
+            await assert.rejects(() => execCliJsonFile({ script }), { name: 'Error', message: 'invalid opt.outputPath: must be a non-empty string' })
         })
 
     })
@@ -453,7 +453,7 @@ describe(`execCliJsonFile`, function() {
     //規格: 輸入參數之檢測機制 K2(必須參數不合即拋: 此為回傳Promise者, 故reject, 不同步throw) / K3(opt非預期輸入改用預設)
     describe(`輸入檢測(K2/K3)`, function() {
 
-        it(`should reject with 'execCliJsonFile 需要 script' when opt is not an object or script is missing or not a non-empty string`, async function() {
+        it(`should reject with 'invalid opt.script: must be a non-empty string' when opt is not an object or script is missing or not a non-empty string`, async function() {
             let marker = outp('marker-nospawn')
             fs.rmSync(marker, { force: true })
             let opts = [undefined, null, 'x', 5, true, [], () => 1, {}, { outputPath: 'o.json' }]
@@ -462,16 +462,16 @@ describe(`execCliJsonFile`, function() {
                 opts.push({ script: s, outputPath: outp('o-k2.json'), exe: node, args: [marker] })
             }
             for (let o of opts) {
-                await assert.rejects(execCliJsonFile(o), { name: 'Error', message: 'execCliJsonFile 需要 script' }, JSON.stringify(o))
+                await assert.rejects(execCliJsonFile(o), { name: 'Error', message: 'invalid opt.script: must be a non-empty string' }, JSON.stringify(o))
             }
             assert.strict.deepStrictEqual(fs.existsSync(marker), false)
         })
 
-        it(`should reject with 'execCliJsonFile 需要 outputPath' when outputPath is missing or not a non-empty string, without starting the process`, async function() {
+        it(`should reject with 'invalid opt.outputPath: must be a non-empty string' when outputPath is missing or not a non-empty string, without starting the process`, async function() {
             let marker = outp('marker-nospawn2')
             fs.rmSync(marker, { force: true })
             for (let p of [undefined, null, '', 5, true, {}, [], ['o.json'], Object(outp('o.json'))]) {
-                await assert.rejects(execCliJsonFile({ script: sc('marker.mjs'), outputPath: p, exe: node, args: [marker] }), { name: 'Error', message: 'execCliJsonFile 需要 outputPath' })
+                await assert.rejects(execCliJsonFile({ script: sc('marker.mjs'), outputPath: p, exe: node, args: [marker] }), { name: 'Error', message: 'invalid opt.outputPath: must be a non-empty string' })
             }
             assert.strict.deepStrictEqual(fs.existsSync(marker), false)
         })
@@ -482,7 +482,7 @@ describe(`execCliJsonFile`, function() {
                 p = execCliJsonFile()
             })
             assert.ok(p instanceof Promise)
-            return assert.rejects(p, /需要 script/)
+            return assert.rejects(p, { name: 'Error', message: 'invalid opt.script: must be a non-empty string' })
         })
 
         it(`should treat a non-array args as not given (no crash, only outputPath is passed)`, async function() {
@@ -547,7 +547,8 @@ describe(`execCliJsonFile`, function() {
         it(`should use opt.cwd only when it is an existing folder (the execCli rule), else report a structured error`, async function() {
             let r = await execCliJsonFile({ script: sc('echo.mjs'), outputPath: outp('o-cwd2.json'), exe: node, cwd: outp('no-such-folder') })
             assert.strict.deepStrictEqual(r.status, 'error')
-            assert.ok(r.message.includes('cwd is not an existing folder'), r.message)
+            assert.ok(r.message.startsWith('ENOENT: invalid cwd: must be an existing folder'), r.message)
+            assert.ok(r.message.includes('no-such-folder') === false, r.message) //V20: 訊息不含cwd之值
         })
 
     })

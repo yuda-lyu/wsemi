@@ -93,21 +93,21 @@ describe(`obj2stru8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data, data is not an object or array' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid o: must be an object or an array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = obj2stru8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data, data is not an object or array' }
+        let rr = { state: 'error', msg: 'invalid o: must be an object or an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data, data is an empty object or empty array' } when input {} with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid o: must not be an empty object or an empty array' } when input {} with returnWithStateAndMsg`, function() {
         let r = obj2stru8arr({}, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data, data is an empty object or empty array' }
+        let rr = { state: 'error', msg: 'invalid o: must not be an empty object or an empty array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data, data is an empty object or empty array' } when input [] with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid o: must not be an empty object or an empty array' } when input [] with returnWithStateAndMsg`, function() {
         let r = obj2stru8arr([], { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data, data is an empty object or empty array' }
+        let rr = { state: 'error', msg: 'invalid o: must not be an empty object or an empty array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

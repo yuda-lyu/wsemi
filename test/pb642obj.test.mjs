@@ -123,15 +123,15 @@ describe(`pb642obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid b64' } when b64 is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid b64: must be a non-empty string' } when b64 is not a string with returnWithStateAndMsg`, function() {
         let r = pb642obj(NaN, 'k', { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid b64' }
+        let rr = { state: 'error', msg: 'invalid b64: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid key: must be a non-empty string' } when key is not a string with returnWithStateAndMsg`, function() {
         let r = pb642obj('abc', NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid key' }
+        let rr = { state: 'error', msg: 'invalid key: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

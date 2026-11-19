@@ -2147,9 +2147,9 @@ describe(`timemsTZ2day`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid t' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' } when input NaN with returnWithStateAndMsg`, function() {
         let r = timemsTZ2day(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid t' }
+        let rr = { state: 'error', msg: 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

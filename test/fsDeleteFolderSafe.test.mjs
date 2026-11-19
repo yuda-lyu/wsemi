@@ -97,8 +97,8 @@ describe(`fsDeleteFolderSafe 失敗回報(R-FS-REJECT-01)`, function() {
 
     it(`DD02 (守門) should reject the description string when the path is a file`, function() {
         let { r } = runFsFail('DD02')
-        //R-FS-REJECT-01 規則1: 前置檢查為說明字串; ws492d V20: 固定訊息'invalid pah: must be a folder or not exist', 以invalid起頭且不帶路徑(舊為'input path is not a folder: <路徑>')
-        assert.strict.deepStrictEqual({ res: r.out.res, noPath: !String(r.out.res.v).includes(r.out.p), ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid pah: must be a folder or not exist' }, noPath: true, ...ev0 })
+        //R-FS-REJECT-01 規則1: 前置檢查為說明字串; ws492d V20: 固定訊息'invalid fd: must be a folder or not exist', 以invalid起頭且不帶路徑(舊為'input path is not a folder: <路徑>')
+        assert.strict.deepStrictEqual({ res: r.out.res, noPath: !String(r.out.res.v).includes(r.out.p), ...ev(r) }, { res: { s: 'reject', k: 'string', v: 'invalid fd: must be a folder or not exist' }, noPath: true, ...ev0 })
     })
 
     it(`DD03 should reject a string of the EPERM error and keep the folder when the folder is the cwd of another process`, function() {
@@ -217,12 +217,12 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         for (let [name, fsBad] of cases) {
             let tr = mkRec()
             let r = await runFake(() => fsDeleteFolderSafeCore('x', { fs: fsBad, onTrace: tr.on }), 0)
-            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && r.v.startsWith('opt.fs is invalid'), lines: tr.lines() }, { name, s: 'reject', str: true, lines: ['fail0/null@0'] })
+            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && r.v.startsWith('invalid opt.fs: '), lines: tr.lines() }, { name, s: 'reject', str: true, lines: ['fail0/null@0'] })
         }
         //JSDoc opt.fs: 缺少lstatSync或rmSync時其呼叫之TypeError不被吞, 以字串reject(不成功、不通知opt.fs不合)
         for (let [name, fsPart] of [['no rmSync', { statSync: full.statSync, lstatSync: full.lstatSync }], ['no lstatSync', { statSync: full.statSync, rmSync: () => {} }]]) {
             let r = await runFake(() => fsDeleteFolderSafeCore('x', { fs: fsPart }), 0)
-            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && !r.v.startsWith('opt.fs is invalid') }, { name, s: 'reject', str: true })
+            assert.strict.deepStrictEqual({ name, s: r.s, str: typeof r.v === 'string' && !r.v.startsWith('invalid opt.fs: ') }, { name, s: 'reject', str: true })
         }
     })
 
@@ -247,7 +247,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
         let a = await go([], { fakeOpt: { missing: true } })
         assert.strict.deepStrictEqual({ lines: a.tr.lines(), r: a.r, calls: a.st.calls }, { lines: ['skip:not-exist/0@0'], r: { s: 'resolve', v: 'folder does not exist: x' }, calls: 0 })
         let b = await go([], { fakeOpt: { wrongKind: true } })
-        assert.strict.deepStrictEqual({ lines: b.tr.lines(), r: b.r, calls: b.st.calls }, { lines: ['skip:not-folder/0@0'], r: { s: 'reject', v: 'invalid pah: must be a folder or not exist' }, calls: 0 }) //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: x')
+        assert.strict.deepStrictEqual({ lines: b.tr.lines(), r: b.r, calls: b.st.calls }, { lines: ['skip:not-folder/0@0'], r: { s: 'reject', v: 'invalid fd: must be a folder or not exist' }, calls: 0 }) //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: x')
     })
 
     it(`should notify fail with n 0 and reject the string when the pre-check throws (opt.fs.lstatSync throws)`, async function() {
@@ -365,7 +365,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
                 r1: 'done: ' + fd,
                 exists: false,
                 r2: 'folder does not exist: ' + fdt + 'nope',
-                r3: 'rejected: invalid pah: must be a folder or not exist', //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: <路徑>')
+                r3: 'rejected: invalid fd: must be a folder or not exist', //ws492d V20: 固定訊息不帶路徑(舊為'input path is not a folder: <路徑>')
                 lines: ['attempt1', 'done1', 'skip:not-exist/0', 'skip:not-folder/0'],
             })
         })
@@ -375,7 +375,7 @@ describe(`fsDeleteFolderSafe 觀察回調(R-TRACE-01)`, function() {
             let fd = fdt + 'keep'
             fs.mkdirSync(fd, { recursive: true })
             let r = await fsDeleteFolderSafe(fd, { fs: null }).then((v) => ({ s: 'resolve', v }), (e) => ({ s: 'reject', v: e }))
-            assert.strict.deepStrictEqual({ s: r.s, str: typeof r.v === 'string' && r.v.startsWith('opt.fs is invalid'), exists: fs.existsSync(fd) }, { s: 'reject', str: true, exists: true })
+            assert.strict.deepStrictEqual({ s: r.s, str: typeof r.v === 'string' && r.v.startsWith('invalid opt.fs: '), exists: fs.existsSync(fd) }, { s: 'reject', str: true, exists: true })
         })
 
     })

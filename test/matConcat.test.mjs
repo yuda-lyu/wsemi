@@ -4,9 +4,9 @@ import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.
 
 
 const MSG_M2 = 'invalid mat2: must be an array'
-//ws430c(裁定表〈十〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat1: must be an array of arrays' → 新'invalid mat1: row[i] is not an array'(mat2同)
-const MSG_M1_ROW = (i) => `invalid mat1: row[${i}] is not an array`
-const MSG_M2_ROW = (i) => `invalid mat2: row[${i}] is not an array`
+//ws430c(裁定表〈十〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出索引」): 原'invalid mat1: must be an array of arrays' → 'invalid mat1: row[i] is not an array' → ws492j V19新'invalid mat1[i]: must be an array'(mat2同)
+const MSG_M1_ROW = (i) => `invalid mat1[${i}]: must be an array`
+const MSG_M2_ROW = (i) => `invalid mat2[${i}]: must be an array`
 
 
 describe(`matConcat`, function() {

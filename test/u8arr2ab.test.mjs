@@ -85,9 +85,9 @@ describe(`u8arr2ab`, function() {
         assert.strict.deepStrictEqual(r.byteLength, 3)
     })
 
-    it(`should return { state: 'error', msg: 'invalid u8a' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid u8a: must be a Uint8Array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = u8arr2ab(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid u8a' }
+        let rr = { state: 'error', msg: 'invalid u8a: must be a Uint8Array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

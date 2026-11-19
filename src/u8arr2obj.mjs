@@ -12,7 +12,7 @@ import stru8arr2obj from './stru8arr2obj.mjs'
 //取自封包標頭(網路/檔案來源, 不可信), 須為非負整數且不逾封包資料區之位元組數: 小數與負數經slice被靜默截斷或自尾端算而得同一分割(非正規編碼), NaN與Infinity亦然
 function checkLenHead(lenHead, size) {
     if (!Number.isInteger(lenHead) || lenHead < 0 || lenHead > size) {
-        return 'head length must be a non-negative integer not exceeding the packet'
+        return 'must have a head length that is a non-negative integer not exceeding the packet'
     }
     return ''
 }
@@ -26,25 +26,25 @@ function checkLenHead(lenHead, size) {
 //  4. 分塊數量須與主區塊可容納之二進位標記數相符(見下)
 function checkPks(inds, size) {
     if (!Array.isArray(inds)) {
-        return 'not an array'
+        return 'must have chunk info that is an array'
     }
     for (let k = 0; k < inds.length; k++) {
         let n = inds[k]
         if (!Number.isInteger(n) || n < 0) {
-            return 'every item must be a non-negative finite integer'
+            return 'must have chunk info whose every item is a non-negative finite integer'
         }
     }
     let sum = 0
     for (let k = 0; k < inds.length; k++) {
         sum += inds[k]
         if (sum > size) {
-            return 'total length exceeds the packet'
+            return 'must have chunk info whose total length does not exceed the packet'
         }
     }
     //  4. 分塊數量: 首個分塊為主區塊(results文字), 其後每個分塊在主區塊內必有一個二進位標記字串(JSON字串形式至少25位元組, 如"[BlazeForUint8Array]::0"),
     //     故分塊數(扣除主區塊)乘25不得逾主區塊長度; 否則大量零長度或1位元組分塊(標頭每項約2位元組)會各配置一個Uint8Array而放大配置量(約為封包位元組數之百倍堆積)
     if (inds.length > 1 && (inds.length - 1) * 25 > inds[0]) {
-        return 'too many chunks for the main block'
+        return 'must not have too many chunks for the main block'
     }
     return ''
 }
@@ -73,7 +73,7 @@ function sliceU8arr(u8a, inds) {
  * @param {Uint8Array} u8a 輸入Uint8Array
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
- * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭記載之分塊資訊區長度非非負整數或逾封包資料區長度(含封包短於8位元組)、分塊資訊非真陣列、含非負有限整數以外之項、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid pks, <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
+ * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭記載之分塊資訊區長度非非負整數或逾封包資料區長度(含封包短於8位元組)、分塊資訊非真陣列、含非負有限整數以外之項、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid u8a: must <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空物件{}，而空物件{}亦為合法輸入之結果(如u8arr2obj(obj2u8arr({ a: undefined }))，值為undefined之欄位於序列化時省略)，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
  *
@@ -93,7 +93,7 @@ function sliceU8arr(u8a, inds) {
  * console.log(u8arr2obj(new Uint8Array([1, 2, 3]), { returnWithStateAndMsg: true }))
  * // => {
  * //     state: 'error',
- * //     msg: 'invalid pks, head length must be a non-negative integer not exceeding the packet'
+ * //     msg: 'invalid u8a: must have a head length that is a non-negative integer not exceeding the packet'
  * // }
  *
  */
@@ -121,7 +121,7 @@ function u8arr2obj(u8a, opt = {}) {
 
     //check
     if (!isu8arr(u8a)) {
-        return retError('invalid u8a')
+        return retError('invalid u8a: must be a Uint8Array')
     }
 
     try {
@@ -135,7 +135,7 @@ function u8arr2obj(u8a, opt = {}) {
         let lenHead = bufReadDbl(bHead) //讀取分塊資訊區長度
         let errHead = checkLenHead(lenHead, getBufferSize(bOthers)) //來自封包(不可信), 須先驗證才可用於切分
         if (errHead !== '') {
-            return retError(`invalid pks, ${errHead}`)
+            return retError(`invalid u8a: ${errHead}`)
         }
         let bvPks = bOthers.slice(0, lenHead) //分塊資訊區之二進位數據(Uint8Array)
         let bbPks = bOthers.slice(lenHead, getBufferSize(bOthers)) //各分塊區之二進位數據(Uint8Array)
@@ -146,12 +146,18 @@ function u8arr2obj(u8a, opt = {}) {
             return retError(`u8arr2str: ${rcvPks.msg}`)
         }
         let cvPks = rcvPks.msg
-        let vPks = JSON.parse(cvPks) //算得分塊資訊, 應為陣列, 各元素代表各分塊長度, 但來自封包不可信, 須經checkPks驗證
+        let vPks = null
+        try {
+            vPks = JSON.parse(cvPks) //算得分塊資訊, 應為陣列, 各元素代表各分塊長度, 但來自封包不可信, 須經checkPks驗證
+        }
+        catch (err) {
+            return retError('invalid u8a: must have chunk info that is a valid JSON text') //SyntaxError之訊息帶封包標頭文字(V20), 改為固定訊息
+        }
 
         //check vPks, 須先驗證才可迭代, 不依其內容配置記憶體
         let errPks = checkPks(vPks, getBufferSize(bbPks))
         if (errPks !== '') {
-            return retError(`invalid pks, ${errPks}`)
+            return retError(`invalid u8a: ${errPks}`)
         }
 
         //bPks

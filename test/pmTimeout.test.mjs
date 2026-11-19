@@ -151,10 +151,10 @@ describe(`pmTimeout`, function() {
         assert.strict.deepStrictEqual(hit.length, 0)
     })
 
-    it(`sould reject with 'invalid pm' when pm is not a promise`, async function() {
+    it(`sould reject with 'invalid pm: must be a Promise' when pm is not a promise`, async function() {
         //pmTimeout為async function, 參數錯誤以rejection傳出而非同步throw
         for (let v of [null, undefined, 123, 'abc', [], {}, () => {}, { then: () => {} }]) {
-            await assert.rejects(() => pmTimeout(v, 100), /^Error: invalid pm$/)
+            await assert.rejects(() => pmTimeout(v, 100), /^Error: invalid pm: must be a Promise$/)
         }
     })
 
@@ -176,7 +176,7 @@ describe(`pmTimeout`, function() {
             })
             .catch((err) => {
                 try {
-                    assert.strict.deepStrictEqual(err.message, 'invalid pm')
+                    assert.strict.deepStrictEqual(err.message, 'invalid pm: must be a Promise')
                     done()
                 }
                 catch (e) {
@@ -266,13 +266,13 @@ describe(`pmTimeout`, function() {
 
     it(`sould validate pm before ms`, async function() {
         //pm之檢核置於ms之前, 二者皆無效時傳出之訊息須為pm者
-        await assert.rejects(() => pmTimeout(null, -1), /^Error: invalid pm$/)
+        await assert.rejects(() => pmTimeout(null, -1), /^Error: invalid pm: must be a Promise$/)
     })
 
     it(`sould not start a timer when the arguments are invalid`, async function() {
         //參數檢核置於setTimeout之前, 故參數無效時不得留下計時器
         //以本測試能立即結束反證: 若誤在檢核前就建立60s計時器, mocha將被卡住至逾時
-        await assert.rejects(() => pmTimeout(null, 60000), /^Error: invalid pm$/)
+        await assert.rejects(() => pmTimeout(null, 60000), /^Error: invalid pm: must be a Promise$/)
         await assert.rejects(() => pmTimeout(Promise.resolve(), -1), { message: MSG_INVALID_MS })
     })
 
@@ -392,7 +392,7 @@ describe(`pmTimeout`, function() {
 
     it(`should notify settle(invalid) only, without start or timeout, when the arguments are invalid`, async function() {
         let a = await go('invalidPm')
-        assert.strict.deepStrictEqual(a.r, ['reject', 'undefined:invalid pm'])
+        assert.strict.deepStrictEqual(a.r, ['reject', 'undefined:invalid pm: must be a Promise'])
         assert.strict.deepStrictEqual(a.events.map(fmt), ['settle:invalid:ng'])
         let b = await go('invalidMs')
         assert.strict.deepStrictEqual(b.r, ['reject', `undefined:${MSG_INVALID_MS}`])
@@ -455,7 +455,7 @@ describe(`pmTimeout`, function() {
             timeoutFirst: ['reject', 'TIMEOUT:L timeout[100ms]'],
             pmJustBefore: ['resolve', 'ok'],
             pmReject: ['reject', 'strErr'],
-            invalidPm: ['reject', 'undefined:invalid pm'],
+            invalidPm: ['reject', 'undefined:invalid pm: must be a Promise'],
             invalidMs: ['reject', `undefined:${MSG_INVALID_MS}`],
         }
         assert.strict.deepStrictEqual([rs, un], [[exp, exp, exp, exp, exp, { omitted: ['reject', 'TIMEOUT:timeout[100ms]'] }], []])
@@ -500,9 +500,9 @@ describe(`pmTimeout`, function() {
 
 describe(`pmTimeout settle(R-PM-SETTLE-01)`, function() {
 
-    it(`ispm之使用端: pmTimeout輸入讀取即拋錯之值為invalid pm, waitFun謂詞回傳之視為未就緒 [規則8]`, function() {
+    it(`ispm之使用端: pmTimeout輸入讀取即拋錯之值為invalid pm: must be a Promise, waitFun謂詞回傳之視為未就緒 [規則8]`, function() {
         let { r } = runPmSettle('ispmCallers')
-        assert.strict.deepStrictEqual(r.out, { pmTimeout: { s: 'reject', msg: 'invalid pm' }, waitFun: { s: 'reject', v: 'exceeded attemptNum[2]' } })
+        assert.strict.deepStrictEqual(r.out, { pmTimeout: { s: 'reject', msg: 'invalid pm: must be a Promise' }, waitFun: { s: 'reject', v: 'exceeded attemptNum' } })
     })
 
 })

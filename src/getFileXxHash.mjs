@@ -76,8 +76,7 @@ async function getFileXxHash(inp, opt = {}) {
 
     //check
     if (!isblob(inp) && !isfile(inp)) {
-        console.log('inp', inp)
-        return Promise.reject(`inp is not a Blob or File`)
+        return Promise.reject('invalid inp: must be a Blob or a File')
     }
 
     //chunkSize, opt類參數(預設64mb), 須為有效整數且為1~2^30, 非預期(含Infinity、0、負數、小數、超過上限)視為未給、改用預設; 0或負數會使切片不前進而不終止

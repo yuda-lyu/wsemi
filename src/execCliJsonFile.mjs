@@ -87,7 +87,7 @@ function readInput(opt) {
  *
  * 失敗以結構化物件回報而不reject，呼叫端可在允許個別失敗之迴圈內逐筆處理：子進程失敗(未啟動、逾時、非零離開碼、重試用盡)回傳{ status: 'error', message }，message為execCli之error字串附上execCliFailDetail之摘要(嘗試次數與stderr前段，超長補刪節號)；成功離開後結果檔不存在、無法讀取或非有效JSON回傳{ status: 'error', message: 'JSON parse failed: ...' }；opt及其選項值不可讀(getter拋錯、已撤銷之Proxy等)時回傳{ status: 'error', message: '<錯誤碼>: <訊息>' }(同execCli，無錯誤碼者為UNKNOWN)。成功時回傳JSON.parse之結果原樣(不包裝)，故腳本自行寫入之內容若含status鍵，呼叫端須自行與失敗物件區分
  *
- * 必須參數(opt.script與opt.outputPath)缺漏或非非空原始字串時reject Error('execCliJsonFile 需要 script')或Error('execCliJsonFile 需要 outputPath')，此時不啟動子進程；其餘opt鍵之非預期輸入視為未給，改用預設。執行前不清除outputPath，若子進程離開碼為0卻未寫入，將讀到該路徑上原有內容，請於每次執行使用新路徑或由腳本確保寫入
+ * 必須參數(opt.script與opt.outputPath)缺漏或非非空原始字串時reject Error('invalid opt.script: must be a non-empty string')或Error('invalid opt.outputPath: must be a non-empty string')，此時不啟動子進程；其餘opt鍵之非預期輸入視為未給，改用預設。執行前不清除outputPath，若子進程離開碼為0卻未寫入，將讀到該路徑上原有內容，請於每次執行使用新路徑或由腳本確保寫入
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliJsonFile.test.mjs Github}
  * @memberOf wsemi
@@ -158,7 +158,7 @@ async function execCliJsonFile(opt) {
 
     //check, 必須參數(回傳Promise者以reject回報, 不同步拋出)
     if (missing !== '') {
-        throw new Error(`execCliJsonFile 需要 ${missing}`)
+        throw new Error(`invalid opt.${missing}: must be a non-empty string`)
     }
 
     //emitter, stdout與stderr各建一份(共用緩衝會互相插隊)

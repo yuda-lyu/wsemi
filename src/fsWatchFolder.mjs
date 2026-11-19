@@ -8,6 +8,7 @@ import evEmit from './evEmit.mjs'
 import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import toResultError from './_toResultError.mjs'
 
 
 //timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數屬非預期; timeInterval亦交給setInterval), 非預期改用預設(100、300), 比照fsWatchFile
@@ -280,7 +281,7 @@ function fsWatchFolder(fd, opt = {}) {
                 if (trace && !cleared) {
                     trace('error', { fun: 'watcher' })
                 }
-                evEmit(ev, 'error', [{ fun: 'watcher', msg: err }], { tag: 'fsWatchFolder' })
+                evEmit(ev, 'error', [{ fun: 'watcher', msg: toResultError(err) }], { tag: 'fsWatchFolder' })
             })
 
         //trace, 僅傳了onTrace才監聽ready與通知watch, 不影響原行為

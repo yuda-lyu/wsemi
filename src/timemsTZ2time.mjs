@@ -48,7 +48,7 @@ function timemsTZ2time(t, opt = {}) {
 
     //check
     if (!istimemsTZ(t)) {
-        return retError('invalid t')
+        return retError('invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)')
     }
 
     //r, 須攔截非預期錯誤(如delTZ或dayjs解析格式化異常), 否則會外拋至呼叫端

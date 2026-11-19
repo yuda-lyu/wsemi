@@ -45,7 +45,7 @@ function b642u16arr(b64, opt = {}) {
 
     //check
     if (!isstr(b64)) {
-        return retError('invalid b64')
+        return retError('invalid b64: must be a string')
     }
 
     //u16a, 內部一律以returnWithStateAndMsg取狀態, 判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤, 否則會外拋至呼叫端
@@ -61,7 +61,7 @@ function b642u16arr(b64, opt = {}) {
 
         //check, 位元組長度須為偶數才能組成Uint16Array
         if (u8a.byteLength % 2 !== 0) {
-            return retError(`byteLength[${u8a.byteLength}] is not even, can not be restored to Uint16Array`)
+            return retError('invalid b64: must decode to an even number of bytes')
         }
 
         //以位元組重建; b642u8arr產出之Uint8Array其byteOffset為0且涵蓋整個buffer, 故可直接取buffer, 否則須先複製以取得對齊

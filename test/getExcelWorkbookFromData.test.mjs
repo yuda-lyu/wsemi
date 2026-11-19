@@ -25,7 +25,7 @@ describe(`getExcelWorkbookFromData`, function() {
     it(`should return error object when data is not an array (element not supported anymore)`, function() {
         for (let v of [null, undefined, 123, 'abc', {}]) {
             let r = getExcelWorkbookFromData(v)
-            assert.strict.deepStrictEqual(r.error, 'data is not an array')
+            assert.strict.deepStrictEqual(r.error, 'invalid data: must be an array')
         }
     })
 

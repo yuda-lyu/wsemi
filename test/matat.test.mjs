@@ -3,8 +3,8 @@ import matat from '../src/matat.mjs'
 import { NON_ARR, LEAK, throwsMsg, throwsMsgNoLeak } from './tools/diffInputKit.mjs'
 
 
-//ws430c(裁定表〈十一〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出 row[i]」): 原'invalid mat: must be an array of arrays' → 新'invalid mat: row[i] is not an array'
-const MSG_MAT_ROW = (i) => `invalid mat: row[${i}] is not an array`
+//ws430c(裁定表〈十一〉「列非陣列(含外層空位) 結果不變(拋錯);訊息指出索引」): 原'invalid mat: must be an array of arrays' → 'invalid mat: row[i] is not an array' → ws492j V19新'invalid mat[i]: must be an array'
+const MSG_MAT_ROW = (i) => `invalid mat[${i}]: must be an array`
 const MSG_ISTART = 'invalid istart: must be an integer index'
 
 

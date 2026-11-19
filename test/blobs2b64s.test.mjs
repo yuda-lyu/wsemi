@@ -12,7 +12,7 @@ describe('blobs2b64s', function() {
     it('should reject with invalid bbs when input is not an array', async function() {
         //原碼以lodash之map處理非陣列會得[], 再Promise.all([])即靜默resolve [], 使無效輸入被當成功
         let r = await getRes(() => blobs2b64s(NaN))
-        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bbs' })
+        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bbs: must be an array' })
     })
 
     it('should resolve [] when input is an empty array', async function() {

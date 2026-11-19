@@ -12,7 +12,7 @@ describe('blob2ab', function() {
     it('should reject with invalid bb when input is not a blob', async function() {
         //輸入無效屬呼叫端錯誤, 須先於環境檢查回報, 否則於瀏覽器外一律得到no window而無從分辨
         let r = await getRes(() => blob2ab(NaN))
-        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bb' })
+        assert.strict.deepStrictEqual(r, { mode: 'reject', msg: 'invalid bb: must be a Blob' })
     })
 
     it('should reject with no window when not in a browser', async function() {

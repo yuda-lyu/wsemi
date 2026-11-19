@@ -38,9 +38,9 @@ function neq(x1, x2) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/judge.test.mjs Github}
  * @memberOf wsemi
- * @param {String|Number} x1 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x1 is not a number')
- * @param {String} op 輸入操作符號字串，可使用'==='、'!=='、'>='、'<='、'>'、'<'
- * @param {NuString|Number} x2 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('x2 is not a number')
+ * @param {String|Number} x1 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('invalid x1: must be a valid number')
+ * @param {String} op 輸入操作符號字串，可使用'==='、'!=='、'>='、'<='、'>'、'<'，否則throw Error("invalid op: must be one of '===', '!==', '>=', '<=', '>', '<'")，訊息不帶輸入值，亦不輸出輸入值至console
+ * @param {NuString|Number} x2 輸入數字字串或數字，若要精準判識得要用字串，需為有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw Error('invalid x2: must be a valid number')
  * @param {Object} [opt={}] 輸設定物件，預設{}
  * @param {Boolean} [opt.withPreciseNum=true] 輸是否自動轉原始精度之數字字串布林值，預設true
  * @returns {Number} 回傳判斷布林值
@@ -121,10 +121,10 @@ function judge(x1, op, x2, opt = {}) {
 
     //check
     if (!isenum(x1)) {
-        throw new Error(`x1 is not a number`)
+        throw new Error(`invalid x1: must be a valid number`)
     }
     if (!isenum(x2)) {
-        throw new Error(`x2 is not a number`)
+        throw new Error(`invalid x2: must be a valid number`)
     }
 
     //數字字串去頭尾空白(Decimal不接受前後空白), 其後一律使用去空白後之值(檢測之值即為使用之值); 不轉Number以保留精準判識
@@ -175,8 +175,7 @@ function judge(x1, op, x2, opt = {}) {
         return lt(x1, x2)
     }
     else {
-        console.log(op)
-        throw new Error(`invalid op[${op}]`)
+        throw new Error(`invalid op: must be one of '===', '!==', '>=', '<=', '>', '<'`)
     }
 }
 

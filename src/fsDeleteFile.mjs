@@ -7,7 +7,7 @@ import fsDeleteFileCore from './fsDeleteFileCore.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFile.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入路徑字串
+ * @param {String} fp 輸入路徑字串
  * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * need test in nodejs.
@@ -46,8 +46,8 @@ import fsDeleteFileCore from './fsDeleteFileCore.mjs'
  * // ms [ { 'fsDeleteFile(before)': true }, { 'fsDeleteFile(after)': false } ]
  *
  */
-function fsDeleteFile(pah) {
-    return fsDeleteFileCore(pah, { fs })
+function fsDeleteFile(fp) {
+    return fsDeleteFileCore(fp, { fs })
 }
 
 

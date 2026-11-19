@@ -37,9 +37,9 @@ let add = (o) => {
 }
 
 //判斷類
-add({ fn: 'fsIsFile', kind: 'bool', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nope.txt' })
-add({ fn: 'fsIsFolder', kind: 'bool', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nopedir' })
-add({ fn: 'fsExists', kind: 'bool', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nope.txt' })
+add({ fn: 'fsIsFile', kind: 'bool', params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
+add({ fn: 'fsIsFolder', kind: 'bool', params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
+add({ fn: 'fsExists', kind: 'bool', params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
 
 //同步結果物件
 add({ fn: 'fsReadText', kind: 'env', params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
@@ -47,19 +47,19 @@ add({ fn: 'fsReadJson', kind: 'env', core: false, params: [{ i: 0, name: 'fp' }]
 add({ fn: 'fsWriteText', kind: 'env', params: [{ i: 0, name: 'fp' }], args: (v) => [v, 'c'], ctl: 'nope.txt' })
 add({ fn: 'fsWriteJson', kind: 'env', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v, { a: 1 }], ctl: 'nope.json' })
 add({ fn: 'fsWriteTextAtomic', kind: 'env', params: [{ i: 0, name: 'fp' }], args: (v) => [v, 'c'], ctl: 'nope.txt' })
-add({ fn: 'fsCreateFile', kind: 'env', params: [{ i: 0, name: 'pah' }], args: (v) => [v, 'c'], ctl: 'nope.txt' })
-add({ fn: 'fsCreateFolder', kind: 'env', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nopedir' })
-add({ fn: 'fsDeleteFile', kind: 'env', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nope.txt' })
-add({ fn: 'fsDeleteFolder', kind: 'env', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nopedir' })
-add({ fn: 'fsCleanFolder', kind: 'env', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nopedir' })
+add({ fn: 'fsCreateFile', kind: 'env', params: [{ i: 0, name: 'fp' }], args: (v) => [v, 'c'], ctl: 'nope.txt' })
+add({ fn: 'fsCreateFolder', kind: 'env', params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
+add({ fn: 'fsDeleteFile', kind: 'env', params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
+add({ fn: 'fsDeleteFolder', kind: 'env', params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
+add({ fn: 'fsCleanFolder', kind: 'env', params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsCopyFile', kind: 'env', params: [{ i: 0, name: 'fpSrc', ctlMsg: 'invalid fpSrc: must be an existing file' }, { i: 1, name: 'fpTar' }], args: (v, i) => (i === 0 ? [v, 'b.txt'] : [F, v]), ctl: 'nope.txt' })
 add({ fn: 'fsCopyFolder', kind: 'env', params: [{ i: 0, name: 'fpSrc', ctlMsg: 'invalid fpSrc: must be an existing folder' }, { i: 1, name: 'fpTar' }], args: (v, i) => (i === 0 ? [v, 'd2'] : [D, v]), ctl: 'nopedir' })
-add({ fn: 'fsRenameFile', kind: 'env', params: [{ i: 0, name: 'pahOld', ctlMsg: 'invalid pahOld: must be an existing file' }, { i: 1, name: 'pahNew' }], args: (v, i) => (i === 0 ? [v, 'n.txt'] : [F, v]), ctl: 'nope.txt' })
-add({ fn: 'fsRenameFolder', kind: 'env', params: [{ i: 0, name: 'pahOld', ctlMsg: 'invalid pahOld: must be an existing folder' }, { i: 1, name: 'pahNew' }], args: (v, i) => (i === 0 ? [v, 'dn'] : [D, v]), ctl: 'nopedir' })
+add({ fn: 'fsRenameFile', kind: 'env', params: [{ i: 0, name: 'fpOld', ctlMsg: 'invalid fpOld: must be an existing file' }, { i: 1, name: 'fpNew' }], args: (v, i) => (i === 0 ? [v, 'n.txt'] : [F, v]), ctl: 'nope.txt' })
+add({ fn: 'fsRenameFolder', kind: 'env', params: [{ i: 0, name: 'fdOld', ctlMsg: 'invalid fdOld: must be an existing folder' }, { i: 1, name: 'fdNew' }], args: (v, i) => (i === 0 ? [v, 'dn'] : [D, v]), ctl: 'nopedir' })
 
 //Promise
-add({ fn: 'fsDeleteFileSafe', kind: 'rej', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nope.txt' })
-add({ fn: 'fsDeleteFolderSafe', kind: 'rej', params: [{ i: 0, name: 'pah' }], args: (v) => [v], ctl: 'nopedir' })
+add({ fn: 'fsDeleteFileSafe', kind: 'rej', params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
+add({ fn: 'fsDeleteFolderSafe', kind: 'rej', params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsSyncFolder', kind: 'rej', params: [{ i: 0, name: 'fdSrc', ctlMsg: 'invalid fdSrc: must be an existing folder' }, { i: 1, name: 'fdTar' }], args: (v, i) => (i === 0 ? [v, T] : [D, v]), ctl: 'nopedir' })
 add({ fn: 'fsMergeFiles', kind: 'rej', params: [{ i: 1, name: 'fpOut' }], args: (v) => [[F, J], v], ctl: 'out.txt' })
 add({ fn: 'fsMergeFiles', kind: 'rej', tag: 'fpsIn[0]', params: [{ i: 0, name: 'fpsIn[0]' }], args: (v) => [[v, J], 'out.txt'], ctl: F })
@@ -76,7 +76,7 @@ add({ fn: 'fsBuildWriteStreamText', kind: 'rej', core: false, tag: 'create', par
 add({ fn: 'fsGetFilesInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
 add({ fn: 'fsGetFoldersInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
 add({ fn: 'fsTreeFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
-add({ fn: 'fsBuildReadStreamText', kind: 'thr', core: false, params: [{ i: 0, name: 'fp', ctlMsg: 'fp is not a file' }], args: (v) => [v], ctl: 'nope.txt' })
+add({ fn: 'fsBuildReadStreamText', kind: 'thr', core: false, params: [{ i: 0, name: 'fp', ctlMsg: 'invalid fp: must be an existing file' }], args: (v) => [v], ctl: 'nope.txt' })
 add({ fn: 'fsWatchFolder', kind: 'thr', core: false, params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsWatchFile', kind: 'thr', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })
 add({ fn: 'fsTask', kind: 'thr', core: false, params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
@@ -84,7 +84,7 @@ add({ fn: 'fsTaskCp', kind: 'thr', core: false, params: [{ i: 0, name: 'fdSrc' }
 
 //既有專屬訊息(僅補NUL)
 add({ fn: 'fsDownloadFile', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v], coreArgs: (v) => [URL, v], own: { re: /^invalid fpOut: must (be a non-empty string|not contain a NUL character)$/ }, ctl: null })
-add({ fn: 'fsDownloadFileVerify', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v, { sha256: 'a'.repeat(64) }], coreArgs: (v) => [URL, v, { sha256: 'a'.repeat(64) }], own: { re: /^fpOut is not an effective file path$/ }, ctl: null })
+add({ fn: 'fsDownloadFileVerify', kind: 'own', params: [{ i: 1, name: 'fpOut' }], args: (v) => [URL, v, { sha256: 'a'.repeat(64) }], coreArgs: (v) => [URL, v, { sha256: 'a'.repeat(64) }], own: { re: /^invalid fpOut: must be a non-empty file path without NUL that does not end with a path separator$/ }, ctl: null })
 add({ fn: 'fsGetBinManifestEntry', kind: 'own', core: false, params: [{ i: 0, name: 'fp', ctlMsg: 'operation failed (code ENOENT)' }], args: (v) => [v], own: { re: /^invalid fp: must (be a non-empty string|not contain a NUL character)$/ }, ctl: 'nope.exe' }) //檔案不存在: 原生錯誤ENOENT(固定詞彙加錯誤碼, 'invalid fp: must be an existing file'為存在但非檔案者)
 
 

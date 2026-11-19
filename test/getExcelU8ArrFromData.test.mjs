@@ -63,7 +63,7 @@ describe(`getExcelU8ArrFromData`, function() {
     it(`should return error object when data is not an effective array`, async function() {
         for (let v of ['str', 123, null, undefined, {}, []]) {
             let r = await getExcelU8ArrFromData(v)
-            assert.strict.deepStrictEqual(r.error, 'no data')
+            assert.strict.deepStrictEqual(r.error, 'invalid data: must be a non-empty array')
         }
     })
 

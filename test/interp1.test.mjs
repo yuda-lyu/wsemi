@@ -56,24 +56,24 @@ describe(`interp1`, function() {
         keyY: 'b',
     }
 
-    it(`should return { 'err': 'ps(length=0) is not an effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] } when input psErr, 0`, function() {
+    it(`should return { 'err': 'invalid ps: must contain at least 1 point with a valid x and y', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] } when input psErr, 0`, function() {
         let r = interp1(psErr, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not an effective array', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must contain at least 1 point with a valid x and y', 'ps': [{ 'x': 'a', 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [] })
     })
 
-    it(`should return { 'err': 'ps(length=0) is not an effective array', 'ps': [], 'psEff': [] } when input psEmpty, 0`, function() {
+    it(`should return { 'err': 'invalid ps: must contain at least 1 point with a valid x and y', 'ps': [], 'psEff': [] } when input psEmpty, 0`, function() {
         let r = interp1(psEmpty, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=0) is not an effective array', 'ps': [], 'psEff': [] })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must contain at least 1 point with a valid x and y', 'ps': [], 'psEff': [] })
     })
 
-    it(`should return { 'err': 'ps(length=1) is one point only', 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [{ 'x': 1, 'y': 0.2 }] } when input psEffOne, 0`, function() {
+    it(`should return { 'err': 'invalid ps: must have at least 2 points', 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [{ 'x': 1, 'y': 0.2 }] } when input psEffOne, 0`, function() {
         let r = interp1(psEffOne, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps(length=1) is one point only', 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [{ 'x': 1, 'y': 0.2 }] })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must have at least 2 points', 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 'mnop', 'y': 1.2 }, { 'x': 'xyz', 'y': 2 }], 'psEff': [{ 'x': 1, 'y': 0.2 }] })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input ps, 0`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input ps, 0`, function() {
         let r = interp1(ps, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input ps, 1`, function() {
@@ -106,14 +106,14 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input ps, 5`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input ps, 5`, function() {
         let r = interp1(ps, 5)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psInv, 0`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psInv, 0`, function() {
         let r = interp1(psInv, 0)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input psInv, 1`, function() {
@@ -146,19 +146,19 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psInv, 5`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psInv, 5`, function() {
         let r = interp1(psInv, 5)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } } when input ps, -1, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } } when input ps, -1, optStairs`, function() {
         let r = interp1(ps, -1, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': -1, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } } when input ps, 0.51, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } } when input ps, 0.51, optStairs`, function() {
         let r = interp1(ps, 0.51, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0.51] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0.51, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input ps, 1, optStairs`, function() {
@@ -211,14 +211,14 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } } when input ps, 4.5, optStairs`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } } when input ps, 4.5, optStairs`, function() {
         let r = interp1(ps, 4.5, optStairs)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 4.5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } } when input ps, -1, optStairsWithLimit`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } } when input ps, -1, optStairsWithLimit`, function() {
         let r = interp1(ps, -1, optStairsWithLimit)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[-1] less than lower limit[0]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': -1, 'xmin': 0, 'xmax': 4.5 } })
     })
 
     it(`should return 0.2 when input ps, 0, optStairsWithLimit`, function() {
@@ -301,14 +301,14 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } } when input ps, 4.51, optStairsWithLimit`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } } when input ps, 4.51, optStairsWithLimit`, function() {
         let r = interp1(ps, 4.51, optStairsWithLimit)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[4.51] greater than upper limit[4.5]', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 0, 'y': 0.2 }, { 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }, { 'x': 4.5, 'y': 2 }], 'x': 4.51, 'xmin': 0, 'xmax': 4.5 } })
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psKey, 0, optStairsWithKey`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } } when input psKey, 0, optStairsWithKey`, function() {
         let r = interp1(psKey, 0, optStairsWithKey)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } })
     })
 
     it(`should return 0.2 when input psKey, 1, optStairsWithKey`, function() {
@@ -341,54 +341,54 @@ describe(`interp1`, function() {
         assert.strict.deepStrictEqual(r, 2)
     })
 
-    it(`should return { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psKey, 5, optStairsWithKey`, function() {
+    it(`should return { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } } when input psKey, 5, optStairsWithKey`, function() {
         let r = interp1(psKey, 5, optStairsWithKey)
-        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
+        assert.strict.deepStrictEqual(r, { 'err': 'out of x-range', 'msg': 'invalid px: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } })
     })
 
-    it(`should return [{"err":"out of x-range","msg":"x[0] less than lower limit[1]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}},0.2,0.7,1,1.2,1.6,2,{"err":"out of x-range","msg":"x[5] greater than upper limit[4]","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}] when input ps, px`, function() {
+    it(`should return [{"err":"out of x-range","msg":"invalid px[0]: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":0,"xmin":1,"xmax":4}},0.2,0.7,1,1.2,1.6,2,{"err":"out of x-range","msg":"invalid px[7]: must be within the x range of ps","data":{"ps":[{"x":1,"y":0.2},{"x":3,"y":1.2},{"x":4,"y":2}],"x":5,"xmin":1,"xmax":4}}] when input ps, px`, function() {
         let r = interp1(ps, px)
-        assert.strict.deepStrictEqual(r, [{ 'err': 'out of x-range', 'msg': 'x[0] less than lower limit[1]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } }, 0.2, 0.7, 1, 1.2, 1.6, 2, { 'err': 'out of x-range', 'msg': 'x[5] greater than upper limit[4]', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } }])
+        assert.strict.deepStrictEqual(r, [{ 'err': 'out of x-range', 'msg': 'invalid px[0]: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 0, 'xmin': 1, 'xmax': 4 } }, 0.2, 0.7, 1, 1.2, 1.6, 2, { 'err': 'out of x-range', 'msg': 'invalid px[7]: must be within the x range of ps', 'data': { 'ps': [{ 'x': 1, 'y': 0.2 }, { 'x': 3, 'y': 1.2 }, { 'x': 4, 'y': 2 }], 'x': 5, 'xmin': 1, 'xmax': 4 } }])
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input '1.25'`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input '1.25'`, function() {
         let r = interp1('1.25')
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input 2.25`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input 2.25`, function() {
         let r = interp1(2.25)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input ''`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input ''`, function() {
         let r = interp1('')
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'px is not a number or an array' } when input []`, function() {
+    it(`should return { 'err': 'invalid px: must be a valid number or an array' } when input []`, function() {
         let r = interp1([])
-        assert.strict.deepStrictEqual(r, { 'err': 'px is not a number or an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid px: must be a valid number or an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input {}`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input {}`, function() {
         let r = interp1({})
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input null`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input null`, function() {
         let r = interp1(null)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input undefined`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input undefined`, function() {
         let r = interp1(undefined)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
-    it(`should return { 'err': 'ps is not an array' } when input NaN`, function() {
+    it(`should return { 'err': 'invalid ps: must be an array' } when input NaN`, function() {
         let r = interp1(NaN)
-        assert.strict.deepStrictEqual(r, { 'err': 'ps is not an array' })
+        assert.strict.deepStrictEqual(r, { 'err': 'invalid ps: must be an array' })
     })
 
 })

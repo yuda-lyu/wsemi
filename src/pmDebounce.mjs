@@ -18,7 +18,7 @@ let RULE_MS = { fn: 'pmDebounce', name: 'ms', kind: 'eint', chk: { min: 1 } }
  *
  * 任務之結果經pm2resolve正規化，任務同步拋錯或其Promise被reject皆視為執行完畢，記錄而不外拋(不產生未處理之rejection)，不影響後續佇列
  *
- * 記錄經getDiag(opt)之出口(診斷輸出與遮罩之單一實作，規則R-DIAG-01)：任務拋出之值常含權杖、使用者識別或資料值，不得原樣輸出。預設以console.error只輸出固定詞彙之label'[wsemi pmDebounce] task threw'與安全摘要{ errType, errCode }；opt.logDetail為true時改輸出遮罩後之拋出值；opt.funLog為函數時輸出只交給它，不寫console。輸入非函數時以console.log輸出固定詞彙'[wsemi pmDebounce] func is not a function'(同樣可由opt.funLog接管)
+ * 記錄經getDiag(opt)之出口(診斷輸出與遮罩之單一實作，規則R-DIAG-01)：任務拋出之值常含權杖、使用者識別或資料值，不得原樣輸出。預設以console.error只輸出固定詞彙之label'[wsemi pmDebounce] task threw'與安全摘要{ errType, errCode }；opt.logDetail為true時改輸出遮罩後之拋出值；opt.funLog為函數時輸出只交給它，不寫console。輸入非函數時以console.log輸出固定詞彙'[wsemi pmDebounce] invalid func: must be a function'(同樣可由opt.funLog接管)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/pmDebounce.test.mjs Github}
  * @memberOf wsemi
@@ -28,7 +28,7 @@ let RULE_MS = { fn: 'pmDebounce', name: 'ms', kind: 'eint', chk: { min: 1 } }
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'push'時為任務排入佇列(含size為排入後之佇列長度)，'start'時為開始偵測(每20ms檢查一次是否已超過ms未有調用)，'run'時為已超過ms未有調用而即將執行最後之任務(含dropped為被捨棄之較早任務數)，'done'時為被執行之任務已執行完畢(含ok為是否成功，其後才恢復可執行下一批)，'stop'時為佇列已空而停止偵測；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響去除抖動，預設null
  * @param {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之任務拋出值，須為true才生效，同getDiag，建構時取快照，預設false(只輸出安全摘要)
  * @param {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，給予時記錄只交給它而不寫console，同getDiag，建構時取快照，預設null
- * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後等待執行，呼叫無回傳值，被執行任務之結果與錯誤皆不回傳給呼叫端，須由任務自行處理；輸入非函數時不排入佇列(不影響已排入之任務)，記錄'func is not a function'
+ * @returns {Function} 回傳Function，輸入為非同步函數與其輸入，會推入佇列後等待執行，呼叫無回傳值，被執行任務之結果與錯誤皆不回傳給呼叫端，須由任務自行處理；輸入非函數時不排入佇列(不影響已排入之任務)，記錄'invalid func: must be a function'
  * @example
  *
  * let dbc = pmDebounce(300)
@@ -243,7 +243,7 @@ function pmDebounce(ms = 300, opt = {}) {
 
             //check
             if (!isfun(func)) {
-                diag('[wsemi pmDebounce] func is not a function')
+                diag('[wsemi pmDebounce] invalid func: must be a function')
                 return
             }
             // console.log('call run ii', Date.now() - _tNow, 'ms', input)

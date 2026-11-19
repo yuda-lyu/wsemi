@@ -46,7 +46,7 @@ describe(`getExcelU8ArrFromWorkbook`, function() {
     it(`should return error object when wb is not an effective workbook`, async function() {
         for (let v of [null, undefined, 123, 'abc', {}]) {
             let r = await getExcelU8ArrFromWorkbook(v)
-            assert.strict.deepStrictEqual(typeof r.error === 'string', true)
+            assert.strict.deepStrictEqual(r.error, 'invalid wb: must be a non-empty object')
         }
     })
 

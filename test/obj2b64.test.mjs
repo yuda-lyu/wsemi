@@ -70,10 +70,10 @@ describe(`obj2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'o2j: invalid v' } when input undefined with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'o2j: invalid v: must not be undefined' } when input undefined with returnWithStateAndMsg`, function() {
         //內部呼叫之錯誤須前置來源函數名, 供辨識是哪一步出錯
         let r = obj2b64(undefined, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'o2j: invalid v' }
+        let rr = { state: 'error', msg: 'o2j: invalid v: must not be undefined' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -262,7 +262,11 @@ describe(`fsWatchFolder`, function() {
                     timeInterval: 20,
                 })
                 ev.on('change', (m) => order.push('change:' + m.type))
-                ev.on('error', (m) => order.push('error:' + m.fun + ':' + m.msg.code))
+                let errMsgs = []
+                ev.on('error', (m) => {
+                    errMsgs.push(m.msg.message)
+                    order.push('error:' + m.fun + ':' + m.msg.code)
+                })
                 await rec.wait((e) => e.type === 'watch')
                 let w = ws[0]
 
@@ -284,6 +288,8 @@ describe(`fsWatchFolder`, function() {
                 assert.strict.deepStrictEqual(es[4].fun, 'watcher')
                 //每個事件之回報皆早於對應之監聽器
                 assert.strict.deepStrictEqual(order, ['trace:watch', 'trace:ready', 'trace:emit', 'change:add', 'trace:emit', 'change:unlinkDir', 'trace:error', 'error:watcher:EPERM'])
+                // V20: Node原生錯誤(帶code)之訊息(含路徑)改為固定詞彙加錯誤碼, 本例之new Error('boom')+code為原生錯誤形狀
+                assert.strict.deepStrictEqual(errMsgs, ['operation failed (code EPERM)'])
 
                 //clear: clear→unwatch(以被監看路徑呼叫)→closed; 其後即使watcher再送事件亦不再通知
                 let iClear = rec.mark()

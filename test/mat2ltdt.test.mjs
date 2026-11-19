@@ -90,9 +90,9 @@ describe(`mat2ltdt`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid mat' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid mat: must be an array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = mat2ltdt(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid mat' }
+        let rr = { state: 'error', msg: 'invalid mat: must be an array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -105,7 +105,7 @@ describe(`mat2ltdt`, function() {
     it(`should return { state: 'error' } when any row is not an effective array with returnWithStateAndMsg`, function() {
         let r = mat2ltdt([['a', 'b'], NaN], { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('row') >= 0, true, `msg 應標明列無效, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid mat[1]: must be a non-empty array') //V19: 以索引標明無效之列(ws492j)
     })
 
     it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {
@@ -138,8 +138,8 @@ describe(`mat2ltdt`, function() {
         })
 
         for (let [lb, v] of NON_ARR) {
-            it(`should return { state: 'error', msg: 'invalid mat' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
-                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat' })
+            it(`should return { state: 'error', msg: 'invalid mat: must be an array' } when input ${lb} with returnWithStateAndMsg (unchanged)`, function() {
+                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat: must be an array' })
             })
             it(`should return [] in the plain mode when input ${lb} (unchanged)`, function() {
                 assert.strict.deepStrictEqual(mat2ltdt(v), [])
@@ -149,7 +149,7 @@ describe(`mat2ltdt`, function() {
         //ws430c(裁定表〈二〉「任一列無效 → 結果不變(error);訊息指出 mat 之列號」「只有表頭 → success []」): 原期望'invalid mat'與'at least 2 rows are required' → 新期望指出row[0]、只有表頭為success []
         it(`should keep non-empty invalid arrays as error with the row index, and the header-only mat as success [] (ws430c 〈二〉)`, function() {
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
+                assert.strict.deepStrictEqual(mat2ltdt(v, D), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
             }
             let r = mat2ltdt([['a', 'b']], D)
             assert.strict.deepStrictEqual(r, { state: 'success', msg: [] })

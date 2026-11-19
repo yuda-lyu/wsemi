@@ -12,7 +12,7 @@ import chkFsDeps from './_chkFsDeps.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsCleanFolderCore.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入欲清空資料夾路徑字串
+ * @param {String} fd 輸入欲清空資料夾路徑字串
  * @param {Object} opt 輸入設定物件，Core不自行匯入fs、path，須由呼叫端注入
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、readdirSync、rmSync、unlinkSync(逐項刪除，缺其一會使先刪之項目已消失而後項失敗，故先於刪除齊備；資料夾不存在時另用mkdirSync，用到時才檢查)；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, readdirSync, rmSync, unlinkSync'(不帶輸入值)
  * @param {Object} opt.path 輸入path物件，須提供join；缺漏同opt.fs，回傳error為說明字串'invalid opt.path: must be an object providing join'
@@ -23,12 +23,12 @@ import chkFsDeps from './_chkFsDeps.mjs'
  * //see fsCleanFolder
  *
  */
-function fsCleanFolderCore(pah, opt = {}) {
+function fsCleanFolderCore(fd, opt = {}) {
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(pah, 'pah')
-    if (msgPah) {
+    let msgPath = chkFsPath(fd, 'fd')
+    if (msgPath) {
         return {
-            error: msgPah,
+            error: msgPath,
         }
     }
 
@@ -47,10 +47,10 @@ function fsCleanFolderCore(pah, opt = {}) {
         }
 
         //check, 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
-        if (!fsExistsCore(pah, { fs })) {
+        if (!fsExistsCore(fd, { fs })) {
 
             //fsCreateFolderCore
-            let r = fsCreateFolderCore(pah, { fs }) //若不存在則自動建立, 故先執行
+            let r = fsCreateFolderCore(fd, { fs }) //若不存在則自動建立, 故先執行
 
             //check, 回傳結果物件本身({ error }), 與其他失敗出口一致; fsCreateFolderCore之error恆為truthy
             if (r.error) {
@@ -58,21 +58,21 @@ function fsCleanFolderCore(pah, opt = {}) {
             }
 
             return {
-                success: 'done: ' + pah
+                success: 'done: ' + fd
             }
         }
 
         //check
-        if (!fsIsFolderCore(pah, { fs })) {
+        if (!fsIsFolderCore(fd, { fs })) {
             return {
-                error: 'input path is not a folder' //若存在但又不是資料夾, 則一律視為錯誤
+                error: 'invalid fd: must be a folder or not exist' //若存在但又不是資料夾, 則一律視為錯誤
             }
         }
 
         //刪除資料夾內的全部資料夾與檔案
-        let entries = fs.readdirSync(pah)
+        let entries = fs.readdirSync(fd)
         for (let entry of entries) {
-            let curPath = path.join(pah, entry)
+            let curPath = path.join(fd, entry)
 
             //以lstatSync判型別(不跟隨連結): 資料夾以rmSync遞迴刪除, 檔案與連結(符號連結、junction, 含目標已不存在之懸空連結)以unlinkSync只移除本身
             //  原以statSync判型別, statSync會跟隨連結, 懸空連結即拋ENOENT而中止清空, 其後之項目亦未刪
@@ -95,7 +95,7 @@ function fsCleanFolderCore(pah, opt = {}) {
     }
 
     return {
-        success: 'done: ' + pah
+        success: 'done: ' + fd
     }
 }
 

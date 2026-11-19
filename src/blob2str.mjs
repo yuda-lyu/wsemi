@@ -28,7 +28,7 @@ function blob2str(bb) {
 
     //check, 輸入無效屬呼叫端錯誤, 須先於環境檢查回報, 否則於瀏覽器外一律得到no window而無從分辨
     if (!isblob(bb)) {
-        return Promise.reject('invalid bb')
+        return Promise.reject('invalid bb: must be a Blob')
     }
 
     //check, 原碼未做此檢查而直接new FileReader(), 於非瀏覽器會同步拋錯而非reject, 呼叫端之catch將完全接不到

@@ -17,14 +17,14 @@ import kit from './_execPortPids.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execProcessPortPids.test.mjs Github}
  * @memberOf wsemi
- * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，reject錯誤訊息`port is not an integer between 1 and 65535`，不視為未給、不改用預設
+ * @param {Integer|String} port 輸入埠號，必須參數(無預設)，須為有效整數且在1~65535(依iseint { use: 'port' }判定，數字字串亦可，去頭尾空白後取值)；非預期之輸入(非有效整數、小數、0、超出範圍、Infinity、'0x50'、包裝物件如new Number與new String、其餘物件、非數字)為不合法，reject錯誤訊息`invalid port: must be an integer from 1 to 65535`，不視為未給、不改用預設
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Number} [opt.timeout=10000] 輸入每個子指令之逾時毫秒數，須為大於0至2147483647(計時器上限)之內之有效數字，可為字串型數字，小數無條件進位為整數；非預期(0、負數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設值，不報錯、不夾至上限；逾時即強制結束該子指令並視為失敗。Windows下最多依序執行2個子指令，最久約為2倍timeout，預設10000；opt.debug為true時，非預期之timeout另以固定詞彙警告(不含輸入值，同一行程只警告一次，出口為opt.funLog或console.warn)
  * @param {Boolean} [opt.useBoth=false] 輸入Windows下netstat有查到時是否仍以PowerShell(作業系統API，退回Get-NetTCPConnection)再查並取聯集，為true時PowerShell查詢失敗即reject(不以netstat之部分結果代替)，預設false
  * @param {String} [opt.platform=process.platform] 輸入作業系統字串，'win32'走netstat與PowerShell，其餘走lsof，供測試，預設process.platform
  * @param {Function} [opt.exec=null] 輸入執行子指令之函數，供測試以固定輸出驗證，格式為(prog, args, { src, timeout, maxBuffer })=>result，src為資料來源字串'netstat'、'powershell'、'lsof'，result(或resolve之值)須為與child_process.spawnSync同形之物件{ status, stdout, error }：status為離開碼數字(因訊號結束者為null)、stdout為字串或Buffer(Buffer以latin1解碼)、error為無法啟動或逾時之Error物件(code為'ETIMEDOUT'者視為逾時)否則為null；拋錯、reject或回傳非物件皆視為該子指令失敗；回傳永不落定之Promise時本函數亦不落定(逾時由該函數自行負責)。預設null為內建之執行函數(隱藏視窗、不經shell、逾時或stdout超過64MB即強制結束子指令)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'run'時為即將執行子指令(含src為資料來源字串、timeout為逾時毫秒數)，'result'時為子指令已結束並判定(含src、ok為是否成功、reason為'ok'、'timeout'、'error'(無法啟動或輸出過大)、'code'(非預期之離開碼)、'parse'(輸出無法解析)、'exec'(執行函數拋錯或回傳不合)、code為離開碼數字或null、count為查到之PID數，失敗為null)，'settle'時為即將resolve或reject(含ok、reason為'ok'、'port'(埠號不合法)、'query'(查詢失敗)、src為採用之資料來源字串'netstat'、'powershell'、'netstat+powershell'、'lsof'(失敗為null)、count為PID數(失敗為null)、msg為reject之訊息字串(成功為空字串))；opt不可讀者屬取得回調前之失敗，reject說明字串且不通知；事件皆於resolve或reject之前通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
- * @returns {Promise} 回傳Promise，resolve回傳PID數字陣列(去重、由小到大)，空陣列代表無人監聽；reject回傳錯誤訊息字串：埠號不合法為`port is not an integer between 1 and 65535`，opt不可讀為`opt is not readable: 訊息`，查詢失敗為`port[N] listener query failed: 各資料來源之說明`(說明之格式不保證固定，呼叫端勿解析)
+ * @returns {Promise} 回傳Promise，resolve回傳PID數字陣列(去重、由小到大)，空陣列代表無人監聽；reject回傳錯誤訊息字串：埠號不合法為`invalid port: must be an integer from 1 to 65535`，opt不可讀為`invalid opt: must be a readable object`(不含呼叫端所拋出之文字)，查詢失敗為`port[N] listener query failed: 各資料來源之說明`(說明之格式不保證固定，呼叫端勿解析)
  * @example
  * //need test in nodejs
  *

@@ -99,9 +99,9 @@ describe(`obj2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data, data is not an effective object or a non-empty array' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data: must be a non-empty object or a non-empty array' } when input NaN with returnWithStateAndMsg`, function() {
         let r = obj2u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data, data is not an effective object or a non-empty array' }
+        let rr = { state: 'error', msg: 'invalid data: must be a non-empty object or a non-empty array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

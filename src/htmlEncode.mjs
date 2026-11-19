@@ -8,6 +8,7 @@ import { encode } from 'he'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/htmlEncode.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入html字串
+ * @param {Object} [opt={}] 輸入設定物件，原樣傳給he套件之encode(可用鍵見he套件說明)，預設{}
  * @returns {String} 回傳編碼後html字串
  * @example
  *

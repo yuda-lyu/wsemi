@@ -23,7 +23,7 @@ import ab2u8arr from './ab2u8arr.mjs'
  * // => Blob {size: 3, type: ""}
  *
  * console.log(ab2blob('abc', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid ab' }
+ * // => { state: 'error', msg: 'invalid ab: must be an ArrayBuffer' }
  *
  */
 function ab2blob(ab, opt = {}) {
@@ -49,7 +49,7 @@ function ab2blob(ab, opt = {}) {
 
     //check, 原碼無此檢查, 無效輸入會經ab2u8arr得空Uint8Array再包成空Blob, 使失敗無從辨識
     if (!isab(ab)) {
-        return retError('invalid ab')
+        return retError('invalid ab: must be an ArrayBuffer')
     }
 
     //bb, 內部一律以returnWithStateAndMsg取狀態, 判識後才把結果交給下一步, 錯誤訊息前置來源函數名以利分辨是哪一步出錯; 另須攔截非預期錯誤(如執行環境無Blob), 否則會外拋至呼叫端

@@ -71,7 +71,7 @@ function rang(rStart, rEnd, num = 2) {
     //num為opt類參數, 非預期改用預設2, 有效則取轉換值
     num = optVal(num, 2, RULE_NUM)
     if (num <= 0) {
-        throw new Error(`num[${num}] <= 0`)
+        throw new Error(`invalid num: must be a positive number`) //num已經optVal改用預設或轉為有效整數(min: 1), 此處為防禦性檢查, 經公開呼叫不會觸發
     }
 
     //dx

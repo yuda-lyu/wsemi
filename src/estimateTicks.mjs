@@ -13,7 +13,7 @@ import ceil from './ceil.mjs'
 import preciseNum from './preciseNum.mjs'
 
 
-let norm = (v) => {
+let norm = (v, name) => { //name為呼叫端之參數名(rmin或rmax), 僅用於無法正規化(絕對值超出約1e120)時之訊息
     let b = 1
     if (v < 0) {
         b = -1
@@ -54,7 +54,7 @@ let norm = (v) => {
     }
 
     if (rr === null) {
-        throw new Error(`can not normalize v[${v}]`)
+        throw new Error(`invalid ${name}: must be a normalizable number`)
     }
     return rr
 }
@@ -67,8 +67,8 @@ let norm = (v) => {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/./blob/master/test/estimateTicks.test.mjs Github}
  * @memberOf wsemi
- * @param {Number|String} rmin 輸入範圍最小值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('rmin is not a number')
- * @param {Number|String} rmax 輸入範圍最大值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('rmax is not a number')
+ * @param {Number|String} rmin 輸入範圍最小值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('invalid rmin: must be a valid number')；大於rmax時throw Error('invalid rmin: must be <= rmax')；絕對值達約1e120以上無法正規化時throw Error('invalid rmin: must be a normalizable number')(rmin等於rmax時不經正規化)
+ * @param {Number|String} rmax 輸入範圍最大值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，否則throw Error('invalid rmax: must be a valid number')；絕對值達約1e120以上無法正規化時throw Error('invalid rmax: must be a normalizable number')
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Array} [opt.testTickNums=[3, 4, 5]] 輸入可供測試刻度數量陣列，預設[3, 4, 5]
  * @returns {Object} 回傳繪圖刻度物件，包含刻度數量tickNum、刻度間距tickInterval、刻度位置tickPositions
@@ -230,13 +230,13 @@ function estimateTicks(rmin, rmax, opt = {}) {
 
     //check rmin
     if (!isenum(rmin)) {
-        throw new Error(`rmin is not a number`)
+        throw new Error(`invalid rmin: must be a valid number`)
     }
     rmin = Number(rmin) //檢測之值即為使用之值(去頭尾空白後Number)
 
     //check rmax
     if (!isenum(rmax)) {
-        throw new Error(`rmax is not a number`)
+        throw new Error(`invalid rmax: must be a valid number`)
     }
     rmax = Number(rmax)
 
@@ -262,7 +262,7 @@ function estimateTicks(rmin, rmax, opt = {}) {
 
     //check rmin>rmax
     if (rmin > rmax) {
-        throw new Error(`rmin[${rmin}] > rmax[${rmax}]`)
+        throw new Error(`invalid rmin: must be <= rmax`)
     }
 
     //testTickNums
@@ -276,8 +276,8 @@ function estimateTicks(rmin, rmax, opt = {}) {
     // console.log('vmin', vmin)
     // console.log('vmax', vmax)
 
-    let nmMin = norm(vmin)
-    let nmMax = norm(vmax)
+    let nmMin = norm(vmin, 'rmin')
+    let nmMax = norm(vmax, 'rmax')
     let rat = Math.max(nmMin.r, nmMax.r)
     let irat = Math.log10(rat)
     // console.log('rat', rat, 'irat', irat, 'nmMin.r', nmMin.r, 'nmMax.r', nmMax.r)

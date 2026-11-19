@@ -8,7 +8,7 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
 /**
  * 由物件陣列ltdt並使用keys取值轉二維陣列mat
  *
- * ltdt之每列須為物件，空物件{}與只有繼承鍵之物件為有效列(沒有自有欄位之紀錄，各欄給opt.empty)；任一列非物件(null、陣列、字串、空位等)時視為ltdt無效，訊息指出列號(invalid ltdt, row[i] is not an object，只含索引不含值)
+ * ltdt之每列須為物件，空物件{}與只有繼承鍵之物件為有效列(沒有自有欄位之紀錄，各欄給opt.empty)；任一列非物件(null、陣列、字串、空位等)時視為ltdt無效，訊息指出列號(invalid ltdt[i]: must be an object，只含索引不含值)
  * keys為null、undefined或[]時由ltdt提取(各列之自有可列舉字串鍵)；keys非陣列或其元素全部無效時視為keys無效；元素為''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字時該欄略過，有限數字視同字串，重複之鍵產生重複之欄
  * 取值只讀各列之自有同名欄位(不解析路徑、不讀繼承鍵)；缺該欄或其值為undefined時給opt.empty
  * 值之表示：字串與有限數字為原值，布林為'true'或'false'，null為'null'(可藉以與缺鍵區分)，NaN與±Infinity為字串'NaN'、'Infinity'、'-Infinity'，物件與陣列為JSON字串，Date為ISO字串(不帶引號)，函數視為null即'null'，BigInt為String(v)
@@ -31,7 +31,7 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  * // => { state: 'success', msg: [] } (空陣列為合法資料，不是失敗)
  *
  * console.log(ltdtkeys2mat('x', ['a', 'b'], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid ltdt' }
+ * // => { state: 'error', msg: 'invalid ltdt: must be an array' }
  *
  * console.log(ltdtkeys2mat([{ a: null, b: true }, {}], ['a', 'b']))
  * // => [['null', 'true'], ['', '']] ({}為有效列，各欄給opt.empty)
@@ -40,10 +40,10 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  * // => [['NaN', '{"y":1,"x":2}']] (略過''欄)
  *
  * console.log(ltdtkeys2mat([{ a: 1 }, null], ['a'], { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid ltdt, row[1] is not an object' }
+ * // => { state: 'error', msg: 'invalid ltdt[1]: must be an object' }
  *
  * console.log(ltdtkeys2mat([{ a: 1 }], 'a', { returnWithStateAndMsg: true }))
- * // => { state: 'error', msg: 'invalid keys' }
+ * // => { state: 'error', msg: 'invalid keys: must be an array' }
  *
  */
 function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
@@ -82,7 +82,7 @@ function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
 
     //check, 參數層非陣列
     if (!isarr(ltdt)) {
-        return retError('invalid ltdt')
+        return retError('invalid ltdt: must be an array')
     }
 
     //check, 列與keys

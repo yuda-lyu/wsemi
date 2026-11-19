@@ -65,9 +65,9 @@ describe(`str2u8arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid str' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid str: must be a non-empty string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = str2u8arr(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid str' }
+        let rr = { state: 'error', msg: 'invalid str: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -91,7 +91,7 @@ describe(`str2u8arr`, function() {
         //孤立代理碼元無法正確編碼為UTF-8, TextEncoder會靜默換成U+FFFD而改變資料, 故視為失敗
         for (let s of loneSurrogates) {
             assert.strict.deepStrictEqual(str2u8arr(s), new Uint8Array(), JSON.stringify(s))
-            assert.strict.deepStrictEqual(str2u8arr(s, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid str, contains lone surrogates' }, JSON.stringify(s))
+            assert.strict.deepStrictEqual(str2u8arr(s, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid str: must be a well-formed string without lone surrogates' }, JSON.stringify(s))
         }
     })
 
@@ -101,7 +101,7 @@ describe(`str2u8arr`, function() {
         delete String.prototype.isWellFormed
         try {
             for (let s of loneSurrogates) {
-                assert.strict.deepStrictEqual(str2u8arr(s, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid str, contains lone surrogates' }, JSON.stringify(s))
+                assert.strict.deepStrictEqual(str2u8arr(s, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid str: must be a well-formed string without lone surrogates' }, JSON.stringify(s))
             }
             assert.strict.deepStrictEqual(str2u8arr('a😀b'), new Uint8Array([0x61, 0xF0, 0x9F, 0x98, 0x80, 0x62]))
         }

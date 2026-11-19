@@ -44,7 +44,7 @@ function ab2u8arr(ab, opt = {}) {
 
     //check
     if (!isab(ab)) {
-        return retError('invalid ab')
+        return retError('invalid ab: must be an ArrayBuffer')
     }
 
     //u8a, 須攔截非預期錯誤, 否則會外拋至呼叫端

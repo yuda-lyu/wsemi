@@ -78,16 +78,25 @@ let cases = {
     },
 
     //waitFun: attemptNum為Infinity, 修前永遠輪詢（不終止）, 修後用預設200次; timeInterval超過上限, 修前夾至24.8天, 修後用預設1000毫秒
+    //reject訊息為固定詞彙'exceeded attemptNum'(不帶數值), 有效之attemptNum由fun被呼叫之次數(attemptNum+2: 立即1次+輪詢attemptNum+1次)判定
     'waitFun-attempt-inf': async () => {
-        let msg = await waitFun(() => false, { attemptNum: Infinity, timeInterval: 1 }).then(() => 'resolved', (e) => String(e))
-        return { msg }
+        let calls = 0
+        let msg = await waitFun(() => {
+            calls++
+            return false
+        }, { attemptNum: Infinity, timeInterval: 1 }).then(() => 'resolved', (e) => String(e))
+        return { msg, calls }
     },
     'waitFun-interval-2p40': async () => {
         let r = await timed(async () => {
-            let msg = await waitFun(() => false, { attemptNum: 1, timeInterval: 2 ** 40 }).then(() => 'resolved', (e) => String(e))
-            return { msg }
+            let calls = 0
+            let msg = await waitFun(() => {
+                calls++
+                return false
+            }, { attemptNum: 1, timeInterval: 2 ** 40 }).then(() => 'resolved', (e) => String(e))
+            return { msg, calls }
         })
-        return { msg: r.msg, fast: r.ms < 6000 }
+        return { msg: r.msg, calls: r.calls, fast: r.ms < 6000 }
     },
 
     //debounce、pmDebounce: ms為Infinity, 修前永不觸發, 修後用預設300毫秒

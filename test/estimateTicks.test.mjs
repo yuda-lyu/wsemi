@@ -147,7 +147,7 @@ describe(`estimateTicks`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin[1] > rmax[-1]' when input 1, -1`, function() {
+    it(`should return 'invalid rmin: must be <= rmax' when input 1, -1`, function() {
         let r = ''
         try {
             r = estimateTicks(1, -1)
@@ -155,11 +155,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin[1] > rmax[-1]'
+        let rr = 'invalid rmin: must be <= rmax'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input ''`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input ''`, function() {
         let r = ''
         try {
             r = estimateTicks('')
@@ -167,11 +167,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input false`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input false`, function() {
         let r = ''
         try {
             r = estimateTicks(false)
@@ -179,11 +179,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input []`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input []`, function() {
         let r = ''
         try {
             r = estimateTicks([])
@@ -191,11 +191,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input {}`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input {}`, function() {
         let r = ''
         try {
             r = estimateTicks({})
@@ -203,11 +203,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input null`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input null`, function() {
         let r = ''
         try {
             r = estimateTicks(null)
@@ -215,11 +215,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input undefined`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input undefined`, function() {
         let r = ''
         try {
             r = estimateTicks(undefined)
@@ -227,11 +227,11 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return 'rmin is not a number' when input NaN`, function() {
+    it(`should return 'invalid rmin: must be a valid number' when input NaN`, function() {
         let r = ''
         try {
             r = estimateTicks(NaN)
@@ -239,7 +239,7 @@ describe(`estimateTicks`, function() {
         catch (err) {
             r = err.message
         }
-        let rr = 'rmin is not a number'
+        let rr = 'invalid rmin: must be a valid number'
         assert.strict.deepStrictEqual(r, rr)
     })
 

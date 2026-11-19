@@ -141,7 +141,7 @@ function pmChain(pms, initial = null) {
         let rd = pmReadItems(pms, true)
         if (rd === null) {
             let pm = genPm()
-            pm.reject('pms is not an array')
+            pm.reject('invalid pms: must be an array')
             return pm
         }
         return rd.items.reduce((pm, v) => {

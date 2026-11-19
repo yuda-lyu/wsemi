@@ -14,14 +14,14 @@ import composeToTree from './composeToTree.mjs'
  * @memberOf wsemi
  * @param {Array|Object} data 輸入項目物件或陣列，須為非空物件或非空陣列，否則回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，轉為只含該元素之樹(不被當成空陣列)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [bindKey='id'] 輸入識別用欄位字串，預設'id'
- * @param {String} [bindParent='parentId'] 輸入存放父節點欄位字串，預設'parentId'
- * @param {String} [bindText='value'] 輸入存放值欄位字串，預設'value'
- * @param {String} [bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
- * @param {String} [bindType='type'] 輸入存放值種類欄位字串，預設'type'
- * @param {String} [bindNumOfChilren='numOfChilren'] 輸入存放值為物件或陣列時所屬子節點數量欄位字串，預設'numOfChilren'
- * @param {String} [bindRoot='root'] 輸入若為物件時，自動給予根節點鍵值字串，預設'root'
- * @param {Boolean} [saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
+ * @param {String} [opt.bindKey='id'] 輸入識別用欄位字串，預設'id'
+ * @param {String} [opt.bindParent='parentId'] 輸入存放父節點欄位字串，預設'parentId'
+ * @param {String} [opt.bindText='text'] 輸入存放值欄位字串，預設'text'
+ * @param {String} [opt.bindChildren='children'] 輸入產生樹狀物件時，各節點內存放子節點欄位字串，預設'children'
+ * @param {String} [opt.bindType='type'] 輸入存放值種類欄位字串，預設'type'
+ * @param {String} [opt.bindNumOfChilren='numOfChilren'] 輸入存放值為物件或陣列時所屬子節點數量欄位字串，預設'numOfChilren'
+ * @param {String} [opt.bindRoot='root'] 輸入若為物件時，自動給予根節點鍵值字串，預設'root'
+ * @param {Boolean} [opt.saveExtProps=false] 輸入是否儲存項目物件從屬資訊布林值，預設false
  * @returns {Array} 回傳樹狀陣列
  * @example
  *

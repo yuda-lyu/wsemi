@@ -47,6 +47,9 @@ describe(`optVal interp1 (ws271)`, function() {
     //單值之基準結果(同一輸入各自獨立內插)
     let one = (el, mode) => interp1(ps, el, { mode })
 
+    //陣列px之第i個元素超出範圍時, msg為'invalid px[i]: ...'(單值為'invalid px: ...'), 其餘欄位相同(V19: 陣列元素帶實際索引; ws492j)
+    let at = (r, i) => (r && typeof r.msg === 'string' ? { ...r, msg: r.msg.replace(/^invalid px:/, `invalid px[${i}]:`) } : r)
+
     let errAt = (i) => ({ err: `invalid px[${i}]: must be a valid number` })
 
     for (let mode of MODES) {
@@ -74,14 +77,14 @@ describe(`optVal interp1 (ws271)`, function() {
                 assert.strict.deepStrictEqual(r.length, px.length)
                 px.forEach((el, i) => {
                     let ok = typeof el === 'number' && Number.isFinite(el)
-                    assert.strict.deepStrictEqual(r[i], ok ? one(el, mode) : errAt(i), `index ${i}`)
+                    assert.strict.deepStrictEqual(r[i], ok ? at(one(el, mode), i) : errAt(i), `index ${i}`)
                 })
             })
 
             it(`should treat numeric strings as valid px elements (去頭尾空白, 科學記號) and give the same result as the number`, function() {
                 for (let [label, s, n] of VALID_STR) {
                     let r = interp1(ps, [s], { mode })
-                    assert.strict.deepStrictEqual(r, [one(n, mode)], label)
+                    assert.strict.deepStrictEqual(r, [at(one(n, mode), 0)], label)
                     assert.strict.deepStrictEqual(interp1(ps, s, { mode }), one(n, mode), label)
                 }
             })
@@ -92,8 +95,8 @@ describe(`optVal interp1 (ws271)`, function() {
 
     it(`should return [] for an empty px array and keep the ps-level failures as a single { err } object (unchanged)`, function() {
         assert.strict.deepStrictEqual(interp1(ps, []), [])
-        assert.strict.deepStrictEqual(interp1([], [1, Infinity]).err, 'ps(length=0) is not an effective array')
-        assert.strict.deepStrictEqual(interp1(ps, undefined), { err: 'px is not a number or an array' })
+        assert.strict.deepStrictEqual(interp1([], [1, Infinity]).err, 'invalid ps: must contain at least 1 point with a valid x and y')
+        assert.strict.deepStrictEqual(interp1(ps, undefined), { err: 'invalid px: must be a valid number or an array' })
     })
 
     it(`should output { err } in place for a hole of a sparse px array (read as undefined)`, function() {
@@ -102,16 +105,16 @@ describe(`optVal interp1 (ws271)`, function() {
         assert.strict.deepStrictEqual(r, [0.2, errAt(1), 1.2])
     })
 
-    it(`should return { err: 'px is not a number or an array' } for an invalid single px (formerly Infinity gave out-of-range and '0x10' was read as 16)`, function() {
+    it(`should return { err: 'invalid px: must be a valid number or an array' } for an invalid single px (formerly Infinity gave out-of-range and '0x10' was read as 16)`, function() {
         // 對應: px為單值且無效者照現行回{err}
         for (let [label, bad] of INVALID) {
             if (Array.isArray(bad)) {
                 continue //陣列為px陣列分支
             }
-            assert.strict.deepStrictEqual(interp1(ps, bad), { err: 'px is not a number or an array' }, label)
+            assert.strict.deepStrictEqual(interp1(ps, bad), { err: 'invalid px: must be a valid number or an array' }, label)
         }
-        assert.strict.deepStrictEqual(interp1(ps, Infinity), { err: 'px is not a number or an array' })
-        assert.strict.deepStrictEqual(interp1(ps, '0x10'), { err: 'px is not a number or an array' })
+        assert.strict.deepStrictEqual(interp1(ps, Infinity), { err: 'invalid px: must be a valid number or an array' })
+        assert.strict.deepStrictEqual(interp1(ps, '0x10'), { err: 'invalid px: must be a valid number or an array' })
     })
 
     it(`should keep reading the px element forms [x, …] and { x } (and opt.keyX) as before, judging the x by isenum`, function() {
@@ -187,7 +190,7 @@ describe(`optVal interp1 (ws271)`, function() {
 
     it(`should match the documented examples of the new px behavior`, function() {
         assert.strict.deepStrictEqual(interp1(ps, [1, Infinity, 'abc', 3]), [0.2, errAt(1), errAt(2), 1.2])
-        assert.strict.deepStrictEqual(interp1(ps, Infinity), { err: 'px is not a number or an array' })
+        assert.strict.deepStrictEqual(interp1(ps, Infinity), { err: 'invalid px: must be a valid number or an array' })
     })
 
     it(`should align a randomized mix of valid and invalid px elements (length and positions), oracle = independent single calls`, function() {
@@ -217,7 +220,7 @@ describe(`optVal interp1 (ws271)`, function() {
             let r = interp1(ps, px, { mode })
             assert.strict.deepStrictEqual(r.length, n)
             for (let i = 0; i < n; i++) {
-                let exp = okFlags[i] ? one(px[i], mode) : errAt(i)
+                let exp = okFlags[i] ? at(one(px[i], mode), i) : errAt(i)
                 assert.strict.deepStrictEqual(r[i], exp, `trial ${t} index ${i}`)
             }
         }

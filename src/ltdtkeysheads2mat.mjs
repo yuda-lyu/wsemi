@@ -9,7 +9,7 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
 /**
  * keys轉heads，物件陣列ltdt使用keys取值，兩者合併轉出二維陣列mat
  *
- * 資料列同ltdtkeys2mat：每列須為物件({}與只有繼承鍵者為有效列)，非物件之列訊息指出列號(invalid ltdt, row[i] is not an object)；keys為null、undefined或[]時由ltdt提取，非陣列或元素全部無效時為invalid keys，無效元素之欄略過(同位置之表頭一併略過)；取值只讀自有欄位，缺值給opt.empty；值之表示同ltdtkeys2mat
+ * 資料列同ltdtkeys2mat：每列須為物件({}與只有繼承鍵者為有效列)，非物件之列訊息指出列號(invalid ltdt[i]: must be an object)；keys為null、undefined或[]時由ltdt提取，非陣列時為'invalid keys: must be an array'，元素全部無效時為'invalid keys: must contain at least one non-empty string or finite number'，無效元素之欄略過(同位置之表頭一併略過)；取值只讀自有欄位，缺值給opt.empty；值之表示同ltdtkeys2mat
  * 表頭：kphead為有效物件(至少一個自有可列舉字串鍵)時，各欄之表頭取kphead之自有同名鍵之值(不解析路徑、不讀繼承鍵)並原樣放入(數字、null、''、陣列等皆原樣)，值為函數時視為null，kphead缺該鍵(或其值為undefined)時給opt.emptyHead；未給kphead或kphead無效(非物件、{}、只有繼承鍵者)時以鍵名當表頭
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/ltdtkeysheads2mat.test.mjs Github}
@@ -77,7 +77,7 @@ function ltdtkeysheads2mat(ltdt, keys = [], kphead = {}, opt = {}) {
 
     //check, 參數層非陣列
     if (!isarr(ltdt)) {
-        return retError('invalid ltdt')
+        return retError('invalid ltdt: must be an array')
     }
 
     //check, 列與keys, 與ltdtkeys2mat同一判定

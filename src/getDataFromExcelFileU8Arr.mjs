@@ -224,9 +224,9 @@ async function getDataFromExcelFileU8Arr(u8a, opt) {
         workbook = await readXlsx(u8a) //Uint8Array
     }
     catch (err) {
-        console.log('error: ', err)
+        console.log('error: invalid u8a: must be a readable Excel file') //V20: 不輸出解析套件之錯誤物件(其訊息含輸入檔內之分頁名稱、zip項目名稱等內容), 改輸出固定詞彙
         return {
-            error: 'can not read data from u8a'
+            error: 'invalid u8a: must be a readable Excel file'
         }
     }
 
@@ -244,7 +244,7 @@ async function getDataFromExcelFileU8Arr(u8a, opt) {
         }
     }
     catch (err) {
-        console.log('error: ', err)
+        console.log('error: can not convert data') //V20: 不輸出錯誤物件
         return {
             error: 'can not convert data'
         }

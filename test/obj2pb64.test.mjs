@@ -129,15 +129,15 @@ describe(`obj2pb64`, function() {
         assert.strict.deepStrictEqual(typeof r.msg === 'string' && r.msg.length > 0, true)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data' } when input undefined with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data: must not be undefined' } when input undefined with returnWithStateAndMsg`, function() {
         let r = obj2pb64(undefined, 'k', { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data' }
+        let rr = { state: 'error', msg: 'invalid data: must not be undefined' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid key' } when key is not a string with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid key: must be a non-empty string' } when key is not a string with returnWithStateAndMsg`, function() {
         let r = obj2pb64({ a: 1 }, NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid key' }
+        let rr = { state: 'error', msg: 'invalid key: must be a non-empty string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

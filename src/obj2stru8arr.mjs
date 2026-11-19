@@ -86,10 +86,10 @@ function obj2stru8arr(o, opt = {}) {
 
     //check, 物件與陣列皆支援(obj2u8arr之輸入契約為物件或陣列, 解碼端stru8arr2obj亦原就能還原陣列)
     if (!isobj(o) && !isarr(o)) {
-        return retError('invalid data, data is not an object or array')
+        return retError('invalid o: must be an object or an array')
     }
     if (isobj0(o) || isarr0(o)) {
-        return retError('invalid data, data is an empty object or empty array')
+        return retError('invalid o: must not be an empty object or an empty array')
     }
 
     //reNeedEsc, 應用字串若與標記格式完整相同(或已是跳脫過之外觀), 須前置跳脫記號, 否則解碼端會誤判為二進位參照; 允許重複跳脫故以*涵蓋多層

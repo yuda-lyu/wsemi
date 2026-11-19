@@ -36,22 +36,22 @@ describe(`genClockTZ`, function() {
         assert.strict.deepStrictEqual(typeof genClockTZ, 'function')
     })
 
-    //規格(建議檔§1): timeZone必填、無效即拋且訊息含IANA; 輸入參數規格K2(必須參數不合即拋)、V20(不回顯輸入值)
+    //規格(建議檔§1): timeZone必填、無效即拋且訊息為V19固定格式; 輸入參數規格K2(必須參數不合即拋)、V19、V20(不回顯輸入值)
     describe(`建立(timeZone為必須參數)`, function() {
 
-        it(`should throw an Error whose message contains IANA when timeZone is missing or not a non-empty string`, function() {
+        it(`should throw an Error 'invalid timeZone: must be an IANA time zone string' when timeZone is missing or not a non-empty string`, function() {
             let p = Proxy.revocable({}, {})
             p.revoke()
             let bads = [undefined, null, '', 5, true, {}, [], ['Asia/Taipei'], () => 'Asia/Taipei', Symbol('x'), 10n, NaN, Object('Asia/Taipei'), p.proxy] //包裝物件與已撤銷之Proxy亦拋(不收String包裝物件, 不因讀取而拋出非預期之TypeError)
             for (let v of bads) {
                 assert.throws(() => genClockTZ(v), (err) => {
-                    return err instanceof Error && err.message.includes('IANA')
+                    return err instanceof Error && err.message === 'invalid timeZone: must be an IANA time zone string'
                 }, `timeZone=${String(typeof v)}`)
             }
-            assert.throws(() => genClockTZ(), /IANA/)
+            assert.throws(() => genClockTZ(), { name: 'Error', message: 'invalid timeZone: must be an IANA time zone string' })
         })
 
-        it(`should throw an Error whose message contains IANA when timeZone is a string but not a valid IANA time zone, without echoing the value`, function() {
+        it(`should throw an Error 'invalid timeZone: must be an IANA time zone string' when timeZone is a string but not a valid IANA time zone, without echoing the value`, function() {
             for (let v of ['Not/AZone', 'Asia/Taipeii', ' ', 'UTC+8', 'GMT+99']) {
                 let msg = ''
                 try {
@@ -60,7 +60,7 @@ describe(`genClockTZ`, function() {
                 catch (err) {
                     msg = err.message
                 }
-                assert.ok(msg.includes('IANA'), `timeZone=${v}`)
+                assert.strict.deepStrictEqual(msg, 'invalid timeZone: must be an IANA time zone string', `timeZone=${v}`)
                 assert.ok(!msg.includes(v.trim()) || v.trim() === '', `message must not echo the value: ${v}`)
             }
         })

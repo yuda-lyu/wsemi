@@ -19,12 +19,12 @@ describe(`u8arr2blob`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid u8a' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid u8a: must be a Uint8Array' } when input NaN with returnWithStateAndMsg`, function() {
         if (typeof Blob === 'undefined') {
             this.skip()
         }
         let r = u8arr2blob(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid u8a' }
+        let rr = { state: 'error', msg: 'invalid u8a: must be a Uint8Array' }
         assert.strict.deepStrictEqual(r, rr)
     })
 

@@ -35,7 +35,7 @@ let PS_ERR = 'WSEMI-PORTPIDS-ERR'
 let PS_VIA = 'WSEMI-PORTPIDS-VIA'
 
 //MSG_PORT, 埠號不合法之訊息
-let MSG_PORT = 'port is not an integer between 1 and 65535'
+let MSG_PORT = 'invalid port: must be an integer from 1 to 65535'
 
 
 //splitHostPort, 以最後一個冒號切出位址與埠(IPv6位址含冒號與zone id亦適用), 埠須為數字或*, 否則回null
@@ -502,7 +502,7 @@ function readInput(port, opt, execDef) {
         cfg = { timeout, useBoth, platform, exec, trace, sysRoot }
     }
     catch (err) {
-        return { err: `opt is not readable: ${execThrownMsg(execSpawnError(err), err)}` }
+        return { err: 'invalid opt: must be a readable object' } //固定訊息, 不含呼叫端getter所拋出之文字(V20)
     }
 
     //port, 必須參數(無預設): 須為有效整數且為埠號(iseint, use: 'port', 1~65535, 數字字串亦可, 去頭尾空白後取值); 非預期(含包裝物件、小數、0、超出範圍、Infinity、'0x50'、非數字、不可讀之值)為null, 由呼叫端依原通道回報(非同步版reject、同步版回傳null)

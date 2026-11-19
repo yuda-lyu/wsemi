@@ -29,7 +29,7 @@ function blobs2u8arrs(bbs) {
 
     //check, 非陣列時lodash之map會得[], 再Promise.all([])即靜默resolve [], 使無效輸入被當成功
     if (!isarr(bbs)) {
-        return Promise.reject('invalid bbs')
+        return Promise.reject('invalid bbs: must be an array')
     }
 
     //check, 空陣列為合法輸入且對應空結果, 行為與下方Promise.all([])相同, 此處明示以與上方之非陣列拒絕區隔

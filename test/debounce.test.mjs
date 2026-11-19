@@ -339,9 +339,9 @@ describe(`debounce settle(R-PM-SETTLE-01)`, function() {
 
 describe(`debounce 非函數任務(R-PM-SETTLE-01規則12)`, function() {
 
-    it(`非函數之任務不排入佇列, 回傳undefined並經getDiag出口以console.log記錄'[wsemi debounce] func is not a function', 已排入之任務照常執行 [規則12]`, function() {
+    it(`非函數之任務不排入佇列, 回傳undefined並經getDiag出口以console.log記錄'[wsemi debounce] invalid func: must be a function', 已排入之任務照常執行 [規則12]`, function() {
         let { r } = runPmSettle('nonFunDebounce')
-        //R-PM-SETTLE-01 規則12: debounce回undefined並記錄(寫入JSDoc); JSDoc debounce「輸入非函數時不排入佇列(不影響已排入之任務)，記錄'func is not a function'」(R-DIAG-01: 固定詞彙label)
+        //R-PM-SETTLE-01 規則12: debounce回undefined並記錄(寫入JSDoc); JSDoc debounce「輸入非函數時不排入佇列(不影響已排入之任務)，記錄'invalid func: must be a function'」(R-DIAG-01: 固定詞彙label)
         assert.strict.deepStrictEqual(r.out, { ret: 'undefined', ran: true, logged: 1 })
         //R-PM-SETTLE-01 規則2
         assert.strict.deepStrictEqual({ unhandled: r.unhandled, uncaught: r.uncaught }, { unhandled: [], uncaught: [] })
@@ -404,7 +404,7 @@ describe(`debounce 通報經getDiag出口(R-DIAG-01規則14)`, function() {
         await r1.wait(1)
         await r2.wait(2)
         assert.strict.deepStrictEqual(r1.calls.map((c) => [c.args[0], c.args[1]]), [['[wsemi debounce] task threw', { errType: 'Error' }]])
-        assert.strict.deepStrictEqual(r2.calls.map((c) => [c.args[0], c.args[1]]), [['[wsemi debounce] func is not a function', undefined], ['[wsemi debounce] task threw', { errType: 'Error' }]])
+        assert.strict.deepStrictEqual(r2.calls.map((c) => [c.args[0], c.args[1]]), [['[wsemi debounce] invalid func: must be a function', undefined], ['[wsemi debounce] task threw', { errType: 'Error' }]])
         assert.strict.deepStrictEqual(rc.calls, [])
     })
 

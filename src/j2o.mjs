@@ -45,7 +45,7 @@ function j2o(v, opt = {}) {
 
     //check
     if (!isestr(v)) {
-        return retError('invalid v')
+        return retError('invalid v: must be a non-empty string')
     }
 
     //c, 解析失敗原為catch吞掉回{}, 與「輸入本就是{}」無從分辨
@@ -54,7 +54,7 @@ function j2o(v, opt = {}) {
         c = JSON.parse(v)
     }
     catch (err) {
-        return retError(err.toString())
+        return retError(err instanceof SyntaxError ? 'invalid v: must be a valid JSON text' : err.toString()) //SyntaxError之訊息帶輸入片段(V20), 改為固定訊息
     }
 
     if (returnWithStateAndMsg) {

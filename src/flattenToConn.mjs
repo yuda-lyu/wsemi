@@ -22,12 +22,12 @@ import treeObj from './treeObj.mjs'
  * @memberOf wsemi
  * @param {Array|Object} data 輸入項目物件或陣列，須為非空物件或非空陣列，否則回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，轉出該元素之節點(不被當成空陣列)
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {String} [bindKey='id'] 輸入識別用欄位字串，預設'id'
- * @param {String} [bindParent='parentId'] 輸入存放父節點識別用欄位字串，預設'parentId'
- * @param {String} [bindBelong='key'] 輸入當父節點為物件或陣列時，存放自身所屬鍵值字串，預設'key'
- * @param {String} [bindText='text'] 輸入存放值欄位字串，預設'text'
- * @param {String} [bindType='type'] 輸入存放值種類欄位字串，預設'type'
- * @param {String} [bindNumOfChilren='numOfChilren'] 輸入存放值為物件或陣列時所屬子節點數量欄位字串，預設'numOfChilren'
+ * @param {String} [opt.bindKey='id'] 輸入識別用欄位字串，預設'id'
+ * @param {String} [opt.bindParent='parentId'] 輸入存放父節點識別用欄位字串，預設'parentId'
+ * @param {String} [opt.bindBelong='key'] 輸入當父節點為物件或陣列時，存放自身所屬鍵值字串，預設'key'
+ * @param {String} [opt.bindText='text'] 輸入存放值欄位字串，預設'text'
+ * @param {String} [opt.bindType='type'] 輸入存放值種類欄位字串，預設'type'
+ * @param {String} [opt.bindNumOfChilren='numOfChilren'] 輸入存放值為物件或陣列時所屬子節點數量欄位字串，預設'numOfChilren'
  * @returns {Array} 回傳關聯陣列
  * @example
  *

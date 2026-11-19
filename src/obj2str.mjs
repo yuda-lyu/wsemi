@@ -57,7 +57,7 @@ function obj2str(data, ext = 'Uint8Array', opt = {}) {
 
     //check
     if (isundefined(data)) {
-        return retError('invalid data')
+        return retError('invalid data: must not be undefined')
     }
 
     //ext, 無效時回退預設值

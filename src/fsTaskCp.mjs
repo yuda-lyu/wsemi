@@ -192,9 +192,9 @@ import chkFsPath from './_chkFsPath.mjs'
 function fsTaskCp(fdSrc, fdTar, opt = {}) {
 
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
-    if (msgPah) {
-        throw new Error(msgPah)
+    let msgPath = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
+    if (msgPath) {
+        throw new Error(msgPath)
     }
 
     //check fdSrc

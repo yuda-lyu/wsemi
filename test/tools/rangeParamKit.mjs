@@ -1,5 +1,6 @@
 //rangeParamKit.mjs: 隨機系範圍參數(vstart、vend)之表驅動測試建構器(ws426)
 //  依據: dspec〈輸入參數之檢測機制〉§11 Q1-b(使用者2026-11-12定: C10隨機範圍無效即同步拋錯, 如randomIntRange('a', 2)不再回0)、K4(檢測之值即使用之值)、K9(訊息不帶值)、§6 V19
+//  probe之簽名(ws492j): probe(v, exp)——exp為期望之採用值, 採用值符合則回exp、否則回說明字串; exp為undefined(期望無效)時回'ERR:<訊息>'; 訊息不帶值後不再由vstart > vend之訊息取採用值, 改用test/tools/randBounds.mjs
 //  規則: undefined、null視為未給 → 預設; 有給而非有效 → throw Error(`invalid <name>: must be <desc>`)且訊息不含輸入值; 有效 → 轉換值
 //  同一helper只定義一次; 各測試檔以defineRangeParam逐參數宣告, probe回傳「實際採用之值」或'ERR:<訊息>'
 import assert from 'assert'
@@ -17,8 +18,8 @@ function defineRangeParam(spec) {
 
         it(`should use the default ${def} when not given (undefined, null)`, function() {
             // §1 未給: 範圍參數有預設(JSDoc [${name}=${def}]), undefined與null視為未給
-            assert.strict.deepStrictEqual(probe(undefined), def)
-            assert.strict.deepStrictEqual(probe(null), def)
+            assert.strict.deepStrictEqual(probe(undefined, def), def)
+            assert.strict.deepStrictEqual(probe(null, def), def)
         })
 
         for (let [label, v] of invalid) {
@@ -31,7 +32,7 @@ function defineRangeParam(spec) {
         for (let [label, v, exp] of valid) {
             it(`should use the value for the valid input ${label}`, function() {
                 // K4: 檢測之值即使用之值
-                assert.strict.deepStrictEqual(probe(v), exp)
+                assert.strict.deepStrictEqual(probe(v, exp), exp)
             })
         }
 

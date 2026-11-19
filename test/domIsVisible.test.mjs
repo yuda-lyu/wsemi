@@ -100,7 +100,7 @@ describe(`domIsVisible`, function() {
         catch (e) {
             e2 = e
         }
-        assert.strict.deepStrictEqual([e1, e2], ['invalid element', 'invalid IntersectionObserver'])
+        assert.strict.deepStrictEqual([e1, e2], ['invalid ele: must be an element', 'invalid IntersectionObserver'])
     })
 
     it(`should return an inert detector with the error in event mode for an invalid element or without IntersectionObserver`, async function() {
@@ -123,7 +123,7 @@ describe(`domIsVisible`, function() {
         }
         await tick()
         process.removeListener('unhandledRejection', onRej)
-        assert.strict.deepStrictEqual([ev1.error, ev2.error, got, ev1.dispose(), ev2.dispose(), rejections], ['invalid element', 'invalid IntersectionObserver', [], true, true, 0])
+        assert.strict.deepStrictEqual([ev1.error, ev2.error, got, ev1.dispose(), ev2.dispose(), rejections], ['invalid ele: must be an element', 'invalid IntersectionObserver', [], true, true, 0])
     })
 
     it(`should observe right after create, before any timer, and emit the latest entry of each callback`, async function() {

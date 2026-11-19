@@ -50,16 +50,16 @@ describe(`getCsvStrFromData`, function() {
 
         //非陣列維持為失敗(不變)
         for (let [lb, v] of NON_ARR) {
-            it(`should return { error: 'no data' } when input ${lb} (unchanged)`, function() {
-                assert.strict.deepStrictEqual(getCsvStrFromData(v), { error: 'no data' })
-                assert.strict.deepStrictEqual(getCsvStrFromData(v, false), { error: 'no data' })
+            it(`should return { error: 'invalid data: must be an array of non-empty rows' } when input ${lb} (channel unchanged; message ws492j V19, formerly 'no data')`, function() {
+                assert.strict.deepStrictEqual(getCsvStrFromData(v), { error: 'invalid data: must be an array of non-empty rows' })
+                assert.strict.deepStrictEqual(getCsvStrFromData(v, false), { error: 'invalid data: must be an array of non-empty rows' })
             })
         }
 
         //不在本輪: 非空而無效之陣列維持為失敗
-        it(`should keep non-empty invalid arrays as { error: 'no data' } (unchanged)`, function() {
+        it(`should keep non-empty invalid arrays as { error: 'invalid data: must be an array of non-empty rows' } (channel unchanged; message ws492j V19, formerly 'no data')`, function() {
             for (let v of [[{}], [null], [''], [[]]]) {
-                assert.strict.deepStrictEqual(getCsvStrFromData(v), { error: 'no data' })
+                assert.strict.deepStrictEqual(getCsvStrFromData(v), { error: 'invalid data: must be an array of non-empty rows' })
             }
         })
     })

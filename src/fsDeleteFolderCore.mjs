@@ -11,22 +11,22 @@ import chkFsDeps from './_chkFsDeps.mjs'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDeleteFolderCore.test.mjs Github}
  * @memberOf wsemi
- * @param {String} pah 輸入欲刪除資料夾路徑字串
+ * @param {String} fd 輸入欲刪除資料夾路徑字串
  * @param {Object} opt 輸入設定物件，Core不自行匯入fs，須由呼叫端注入
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、rmSync；缺漏(未給、null、非物件、缺少必要方法)為相依無效，回傳error為說明字串'invalid opt.fs: must be an object providing statSync, lstatSync, rmSync'(不帶輸入值)，不回傳success
- * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑存在但不是資料夾時error為說明字串'invalid pah: must be a folder or not exist'；Node原生錯誤(如EPERM、EBUSY)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code EPERM)'(保留其code，不保留path等屬性)；成功訊息('done: <pah>'、目標不存在之'folder does not exist: <pah>')維持
+ * @returns {Object} 回傳結果物件，提供鍵success代表成功訊息，提供鍵error代表錯誤訊息(說明字串或Error物件)，路徑參數須為非空字串且不含NUL字元，無效時回傳error為說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；路徑存在但不是資料夾時error為說明字串'invalid fd: must be a folder or not exist'；Node原生錯誤(如EPERM、EBUSY)之訊息帶出路徑，error改為Error物件，其message為固定詞彙加錯誤碼'operation failed (code EPERM)'(保留其code，不保留path等屬性)；成功訊息('done: <fd>'、目標不存在之'folder does not exist: <fd>')維持
  * @example
  * need test in nodejs.
  *
  * //see fsDeleteFolder
  *
  */
-function fsDeleteFolderCore(pah, opt = {}) {
+function fsDeleteFolderCore(fd, opt = {}) {
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
-    let msgPah = chkFsPath(pah, 'pah')
-    if (msgPah) {
+    let msgPath = chkFsPath(fd, 'fd')
+    if (msgPath) {
         return {
-            error: msgPah,
+            error: msgPath,
         }
     }
 
@@ -44,21 +44,21 @@ function fsDeleteFolderCore(pah, opt = {}) {
         }
 
         //check, 需先判斷; 前置檢查置於try內: 注入之fs之lstatSync可拋錯, 於try外即成同步拋錯
-        if (!fsExistsCore(pah, { fs })) {
+        if (!fsExistsCore(fd, { fs })) {
             return {
-                success: 'folder does not exist: ' + pah //目標不存在但仍算是刪除成功, 故需先判斷
+                success: 'folder does not exist: ' + fd //目標不存在但仍算是刪除成功, 故需先判斷
             }
         }
 
         //check
-        if (!fsIsFolderCore(pah, { fs })) {
+        if (!fsIsFolderCore(fd, { fs })) {
             return {
-                error: 'invalid pah: must be a folder or not exist' //若存在但又不是資料夾, 則視為錯誤(訊息不帶路徑, V20)
+                error: 'invalid fd: must be a folder or not exist' //若存在但又不是資料夾, 則視為錯誤(訊息不帶路徑, V20)
             }
         }
 
         //刪除資料夾內的全部資料夾與檔案
-        fs.rmSync(pah, { recursive: true, force: true })
+        fs.rmSync(fd, { recursive: true, force: true })
 
     }
     catch (err) {
@@ -68,7 +68,7 @@ function fsDeleteFolderCore(pah, opt = {}) {
     }
 
     return {
-        success: 'done: ' + pah
+        success: 'done: ' + fd
     }
 }
 

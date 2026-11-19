@@ -96,9 +96,9 @@ describe(`b642obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid b64' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid b64: must be a string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = b642obj(NaN, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid b64' }
+        let rr = { state: 'error', msg: 'invalid b64: must be a string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -106,7 +106,7 @@ describe(`b642obj`, function() {
         //內部呼叫之錯誤須前置來源函數名
         let r = b642obj('bm90LWpzb24=', { returnWithStateAndMsg: true }) //'not-json'之base64
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('j2o: ') === 0, true, `msg 應標明來源函數, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'j2o: invalid v: must be a valid JSON text') //來源函數前綴加V19固定訊息(不帶解碼後之文字)
     })
 
     it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {

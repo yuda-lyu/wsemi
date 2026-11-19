@@ -73,7 +73,7 @@ function blob2ab(bb) {
 
     //check, 輸入無效屬呼叫端錯誤, 須先於環境檢查回報, 否則於瀏覽器外一律得到no window而無從分辨
     if (!isblob(bb)) {
-        return Promise.reject('invalid bb')
+        return Promise.reject('invalid bb: must be a Blob')
     }
 
     //check

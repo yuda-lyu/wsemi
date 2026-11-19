@@ -40,7 +40,7 @@ import { isObjLike, isProxy, gd, hasOwn, arrVals, normLabel, normSafe, markHandl
  */
 function genDiagFunLog(write, opt) {
     if (typeof write !== 'function') {
-        throw new TypeError('write is not a function')
+        throw new TypeError('invalid write: must be a function')
     }
     let event = 'orm-diag'
     let safeKeys = null //null為未給: safe不依白名單過濾(只做正規化)

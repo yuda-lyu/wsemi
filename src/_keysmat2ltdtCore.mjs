@@ -12,8 +12,8 @@ import _setOwnKey from './_setOwnKey.mjs'
  * keysmat2ltdt之核心(單一擁有者, 供keysmat2ltdt與mat2ltdt共用), 一律回傳{ state, msg }, 由呼叫端轉為各自之回傳模式
  *
  * 規格: 使用者2026-11-15(排程第430項第三批, 裁定表〈一、keysmat2ltdt〉〈二、mat2ltdt〉):
- *   keys非陣列或[]、或元素全被略過(_normKey.field) → error 'invalid keys'; keys元素為''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字者該欄連同其值略過, 其餘位置不變; 有限數字視同字串; 重複者後者覆蓋前者
- *   mat為[] → success [](keys仍須有效); mat非陣列 → error 'invalid mat'; 任一列非陣列或為[](不限第一列) → error 'invalid mat, row[i] is not an effective array'(i以呼叫端之mat計, 只含索引)
+ *   keys非陣列或[] → error 'invalid keys: must be a non-empty array'、元素全被略過(_normKey.field) → error 'invalid keys: must contain at least one non-empty string or finite number'; keys元素為''、null、undefined、空位、物件、陣列、布林、Symbol、非有限數字者該欄連同其值略過, 其餘位置不變; 有限數字視同字串; 重複者後者覆蓋前者
+ *   mat為[] → success [](keys仍須有效); mat非陣列 → error 'invalid mat: must be an array'; 任一列非陣列或為[](不限第一列) → error 'invalid mat[i]: must be a non-empty array'(i以呼叫端之mat計, 只含索引)
  *   列只有一個空元素(['']、[null]、[{}])為有效列; 列短於keys補''、長於keys丟棄多出之值; 值為undefined或列內空位補''; 值為函數視為null(不執行、不複製)
  *   列長度與keys不同且opt.debug === true時, 經opt.funLog或console.warn提示列號與兩者長度(不含值; 同原因每個行程一次, 去重鍵<fn>|length|mat), 只在首次遇到長度不同時讀一次opt(V11)
  *
@@ -28,7 +28,7 @@ function _keysmat2ltdtCore(keys, mat, opt, ctx) {
 
     //keys, 參數層: 非陣列或[]無效
     if (!isarr(keys) || keys.length === 0) {
-        return { state: 'error', msg: 'invalid keys' }
+        return { state: 'error', msg: 'invalid keys: must be a non-empty array' }
     }
 
     //ks, 依位置正規化(略過者為null), 全被略過視同keys無效
@@ -42,7 +42,7 @@ function _keysmat2ltdtCore(keys, mat, opt, ctx) {
         }
     }
     if (nk === 0) {
-        return { state: 'error', msg: 'invalid keys' }
+        return { state: 'error', msg: 'invalid keys: must contain at least one non-empty string or finite number' }
     }
 
     //空陣列為合法資料, 不是失敗, 轉出空陣列(每次新陣列)
@@ -50,7 +50,7 @@ function _keysmat2ltdtCore(keys, mat, opt, ctx) {
         return { state: 'success', msg: [] }
     }
     if (!isarr(mat)) {
-        return { state: 'error', msg: 'invalid mat' }
+        return { state: 'error', msg: 'invalid mat: must be an array' }
     }
 
     //每列皆須為非空陣列(不限第一列; 空位視為非陣列), 先於任何轉換; rows為快照(每列只讀一次, 檢查之列即其後使用之列)
@@ -58,7 +58,7 @@ function _keysmat2ltdtCore(keys, mat, opt, ctx) {
     for (let i = 0; i < mat.length; i++) {
         let r = mat[i]
         if (!isarr(r) || r.length === 0) {
-            return { state: 'error', msg: `invalid mat, row[${i + rowOffset}] is not an effective array` }
+            return { state: 'error', msg: `invalid mat[${i + rowOffset}]: must be a non-empty array` }
         }
         rows.push(r)
     }

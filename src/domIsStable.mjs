@@ -3,7 +3,6 @@ import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
 import genPm from './genPm.mjs'
 import delay from './delay.mjs'
-import isenum from './isenum.mjs'
 import optVal from './_optVal.mjs'
 import detector from './_detector.mjs'
 import getTrace from './getTrace.mjs'
@@ -12,7 +11,7 @@ import getTrace from './getTrace.mjs'
 //tolerance: opt類參數, 有效數字且不小於0(isenum, use: 'nonnegative', 可帶小數), 非預期(含負數、Infinity、'0x10'、包裝物件等)視為未給、改用預設0, 不報錯; 欲「容許較大位移」者由呼叫端給足夠大之有限數
 let RULE_TOLERANCE = { fn: 'domIsStable', name: 'opt.tolerance', kind: 'enum', chk: { use: 'nonnegative' } }
 
-//timeDiff: opt類參數, 有效數字且為計時毫秒(isenum, use: 'timer', 0~2147483647, 可帶小數; 交給delay), 非預期(含Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設100, 不報錯、不夾至上限; 負數維持文件載明之視為0(見下方呼叫處)
+//timeDiff: opt類參數, 有效數字且為計時毫秒(isenum, use: 'timer', 0~2147483647, 可帶小數; 交給delay), 非預期(含Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設100, 不報錯、不夾至上限; 負數亦為非預期之輸入而改用預設100(ws492j, 依K3; 原視為0)
 let RULE_TIME_DIFF = { fn: 'domIsStable', name: 'opt.timeDiff', kind: 'enum', chk: { use: 'timer' } }
 
 //timeDetect: opt類參數, 有效數字且為大於0之計時毫秒(isenum, use: 'timer', gt: 0, 可帶小數; 交給setInterval), 非預期(含0、負數、Infinity、超過計時器上限、'0x10'、包裝物件等)視為未給、改用預設50, 不報錯、不夾至上限
@@ -26,7 +25,7 @@ let RULE_TIME_DETECT = { fn: 'domIsStable', name: 'opt.timeDetect', kind: 'enum'
  *
  * 已知限制：等待中之動畫若被暫停(未取消亦未結束)，該輪於其恢復或取消前不結束；未被繪製(未插入或display:none)之元素位置恆為0，判為穩定，須先確認被繪製者可用domIsRendered
  *
- * 元素無效或無getBoundingClientRect時：promise模式回傳被拒絕之Promise(原因為'invalid element'或'invalid element.getBoundingClientRect')；event模式仍回傳可使用create、on、dispose之物件但永不觸發，其error為原因，可偵測時error為null
+ * 元素無效或無getBoundingClientRect時：promise模式回傳被拒絕之Promise(原因為'invalid ele: must be an element'或'invalid ele: must have a getBoundingClientRect function')；event模式仍回傳可使用create、on、dispose之物件但永不觸發，其error為原因，可偵測時error為null
  *
  * event模式之create於microtask啟動第一輪(晚於本次同步流程，故create後才插入之元素亦從插入後量起)，重複呼叫無效，dispose後呼叫亦無效；stable之監聽器拋錯時有error監聽者則發出error事件，否則console.error，不中斷偵測
  *
@@ -36,7 +35,7 @@ let RULE_TIME_DETECT = { fn: 'domIsStable', name: 'opt.timeDetect', kind: 'enum'
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.mode='promise'] 輸入模式字串，可使用'promise'與'event'，'promise'代表一次性偵測並回傳Promise(resolve回傳該輪是否穩定布林值)，'event'代表持續性偵測並回傳EventEmitter，啟動時立即開始第一輪，之後每timeDetect啟動一輪(前一輪未完不重疊)，穩定狀態改變時emit('stable', bool)，初始視為不穩定故第一次穩定會emit true，預設'promise'
  * @param {Number} [opt.tolerance=0] 輸入位置容許誤差數字，單位px，須為不小於0之有效數字(可為數字字串)，非預期之輸入(負數、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不報錯；欲容許較大位移者請給足夠大之有限數，預設0表示須完全相同
- * @param {Number} [opt.timeDiff=100] 輸入位置前後比對之時間差數字，單位ms，須為0至2147483647(計時器上限)之有效數字(可為數字字串)，0為立即比對，負數視為0，其餘非預期之輸入(Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設100
+ * @param {Number} [opt.timeDiff=100] 輸入位置前後比對之時間差數字，單位ms，須為0至2147483647(計時器上限)之有效數字(可為數字字串)，0為立即比對，非預期之輸入(負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設100
  * @param {Number} [opt.timeDetect=50] 輸入event模式輪詢偵測間隔數字，單位ms，須為大於0至2147483647(計時器上限)之有效數字(可為數字字串)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設50
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.tolerance、opt.timeDiff、opt.timeDetect為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
@@ -69,23 +68,19 @@ function domIsStable(ele, opt = {}) {
 
     //check ele
     if (!isEle(ele)) {
-        return detector.detectorFail(mode, 'invalid element')
+        return detector.detectorFail(mode, 'invalid ele: must be an element')
     }
 
     //check getBoundingClientRect
     if (!isfun(ele.getBoundingClientRect)) {
-        return detector.detectorFail(mode, 'invalid element.getBoundingClientRect')
+        return detector.detectorFail(mode, 'invalid ele: must have a getBoundingClientRect function')
     }
 
     //tolerance, 位置容許誤差(px)
     let tolerance = optVal(get(opt, 'tolerance', null), 0, RULE_TOLERANCE, opt)
 
-    //timeDiff, 位置前後比對的時間差(ms), 0為有效(使用端如w-component-vue之v-domstable允許0), 有效之負數(文件載明)視為0
-    let vTimeDiff = get(opt, 'timeDiff', null)
-    if (isenum(vTimeDiff) && Number(vTimeDiff) < 0) {
-        vTimeDiff = 0
-    }
-    let timeDiff = optVal(vTimeDiff, 100, RULE_TIME_DIFF, opt)
+    //timeDiff, 位置前後比對的時間差(ms), 0為有效(使用端如w-component-vue之v-domstable允許0), 負數為非預期之輸入, 依K3改用預設100(ws492j; 原視為0)
+    let timeDiff = optVal(get(opt, 'timeDiff', null), 100, RULE_TIME_DIFF, opt)
 
     //timeDetect, 偵測時間差(ms), 須大於0, 否則為高頻輪詢
     let timeDetect = optVal(get(opt, 'timeDetect', null), 50, RULE_TIME_DETECT, opt)

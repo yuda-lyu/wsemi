@@ -732,7 +732,7 @@ function cache(opt = {}) {
             }
         }
         else {
-            emit('error', { fun: 'get', key, msg: 'invalid key' })
+            emit('error', { fun: 'get', key, msg: 'invalid key: must be a key that has been set' })
             if (trace) {
                 trace('get', { key, n: ++nGet, mode: 'invalid', timeDiff: null })
             }

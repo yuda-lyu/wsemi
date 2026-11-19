@@ -35,7 +35,7 @@ let RULE_STDERR_KEEP = { fn: 'execCliSession', name: 'opt.stderrKeep', kind: 'ei
  * @param {String} command 輸入執行檔名稱字串，可為註冊系統的全域指令或執行檔路徑
  * @param {Array} [args=[]] 輸入參數字串陣列，預設[]
  * @param {Object} [opt={}] 輸入設定物件
- * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以onExit與stop()之結果回報error為'ENOENT: cwd is not an existing folder: <cwd>'
+ * @param {String} [opt.cwd=process.cwd()] 輸入子進程工作目錄字串，預設process.cwd()；不存在或非資料夾時以onExit與stop()之結果回報error為'ENOENT: invalid cwd: must be an existing folder'
  * @param {Object} [opt.env=undefined] 輸入本次額外注入之環境變數物件，語意同execCli，預設undefined
  * @param {Number} [opt.timeoutMs=null] 輸入整體逾時毫秒正整數，須為有效整數且介於1至2147483647(計時器上限；iseint之use:'timer'，可為字串型數字)，逾時即樹殺並於結果標timeout:true，非預期之輸入(含Infinity、小數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設null即不限制，不夾至上限，預設null代表不限制(工作階段為長駐，不沿用execCli之120000)
  * @param {Number} [opt.exitGraceMs=2000] 輸入stop()關閉stdin後等待子進程自行退出之寬限毫秒非負整數，須為有效整數且介於0至2147483647(可為字串型數字)，逾期即樹殺，非預期之輸入(含Infinity、小數、負數、超過2147483647、'0x10'、包裝物件)視為未給而改用預設，不夾至上限，預設2000
@@ -291,7 +291,7 @@ function execCliSession(command, args = [], opt = {}) {
         s.writeLine = async () => false
         s.stop = stopNoProc
         setTimeout(() => {
-            settle({ error: 'command 須為非空字串' })
+            settle({ error: 'invalid command: must be a non-empty string' })
         }, 1)
         return s
     }

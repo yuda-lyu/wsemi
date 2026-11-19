@@ -47,14 +47,14 @@ describe(`addExcelWorksheetFromData`, function() {
     })
 
     it(`should return error object when wb is invalid`, function() {
-        assert.strict.deepStrictEqual(addExcelWorksheetFromData(null, data).error, 'wb is not an effective object')
-        assert.strict.deepStrictEqual(addExcelWorksheetFromData({ a: 1 }, data).error, 'wb.sheets is not an array')
+        assert.strict.deepStrictEqual(addExcelWorksheetFromData(null, data).error, 'invalid wb: must be a non-empty object')
+        assert.strict.deepStrictEqual(addExcelWorksheetFromData({ a: 1 }, data).error, 'invalid wb.sheets: must be an array')
     })
 
     it(`should return error object when data is invalid`, function() {
         let wb3 = createExcelWorkbook()
         let r = addExcelWorksheetFromData(wb3, 'not-array', 's1')
-        assert.strict.deepStrictEqual(r.error, 'data is not an array')
+        assert.strict.deepStrictEqual(r.error, 'invalid data: must be an array')
         assert.strict.deepStrictEqual(wb3.sheets.length, 0)
     })
 

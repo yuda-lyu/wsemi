@@ -6,7 +6,7 @@
 //      kind: 'len'(物件{length,a}); 'tag'(以Symbol.toStringTag偽稱Array之物件{length,a}: isarr為真而非真陣列, 不得依length迭代); 'keys'(length極大且另有100個自有鍵)
 //      修前之實作對物件依length次迭代並逐一建立元素, 限額下耗盡記憶體(離開碼134)
 //    'seriesGetter'、'chainGetter': 元素(陣列)或值(物件)之讀取即拋錯, 以該錯誤reject, 不同步拋出, fun(或函數鏈首項)一次都不被呼叫, 無未處理之rejection
-//    'revokedContainer'、'tagGetterContainer': 容器本身為已撤銷之Proxy、或Symbol.toStringTag讀取即拋錯, 三個函數皆以該錯誤reject(pmChain之後者為not an array字串)
+//    'revokedContainer'、'tagGetterContainer': 容器本身為已撤銷之Proxy、或Symbol.toStringTag讀取即拋錯, 三個函數皆以該錯誤reject(pmChain之後者為'invalid pms: must be an array'字串)
 import { safeStr, revoked } from './caseKit.mjs'
 import pmMap from '../../src/pmMap.mjs'
 import pmSeries from '../../src/pmSeries.mjs'
@@ -243,7 +243,7 @@ let cases = {
         }
     },
 
-    //三個函數: 容器之Symbol.toStringTag讀取即拋錯(批6裁定③後isobj、isarr對其不拋錯而回false, 故pmMap、pmSeries以固定字串'rs is not an array or object' reject, 修前為該錯誤本身); pmChain以Array.isArray判定而不讀標籤, 為not an array
+    //三個函數: 容器之Symbol.toStringTag讀取即拋錯(批6裁定③後isobj、isarr對其不拋錯而回false, 故pmMap、pmSeries以固定字串'invalid rs: must be an array or an object' reject, 修前為該錯誤本身); pmChain以Array.isArray判定而不讀標籤, 為'invalid pms: must be an array'
     tagGetterContainer: async () => {
         let e = new Error('tag boom')
         let mk = () => ({

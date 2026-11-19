@@ -224,7 +224,7 @@ describe('lowerFind: 綁定參數計數與opt.maxParams(L6, IR-03)', function() 
         let copy = cvOrmFind({ a: 1 })
         let bad = [undefined, null, 5, 'x', {}, { maxParams: 0 }, { maxParams: -1 }, { maxParams: NaN }, { maxParams: '5' }, { maxParams: null }, { maxParams: true }, { maxParams: [5] }, { checkColumn: () => '' }]
         bad.forEach((opt) => {
-            assert.throws(() => lowerFind(copy, opt), (err) => err.message === 'lowerFind: opt.maxParams is required (use Infinity for no limit)', String(JSON.stringify(opt)))
+            assert.throws(() => lowerFind(copy, opt), (err) => err.message === 'invalid opt.maxParams: must be a positive number (use Infinity for no limit)', String(JSON.stringify(opt))) //ws492j V19: 原'lowerFind: opt.maxParams is required (use Infinity for no limit)'
         })
     })
 
@@ -234,8 +234,8 @@ describe('lowerFind: 綁定參數計數與opt.maxParams(L6, IR-03)', function() 
         assert.doesNotThrow(() => lowerFind(cvOrmFind({ a: 1 }), { maxParams: 1.5 }))
         Object.prototype.maxParams = 99999
         try {
-            assert.throws(() => lowerFind(copy, {}), /maxParams is required/)
-            assert.throws(() => lowerFind(copy, undefined), /maxParams is required/)
+            assert.throws(() => lowerFind(copy, {}), { message: 'invalid opt.maxParams: must be a positive number (use Infinity for no limit)' })
+            assert.throws(() => lowerFind(copy, undefined), { message: 'invalid opt.maxParams: must be a positive number (use Infinity for no limit)' })
         }
         finally {
             delete Object.prototype.maxParams
@@ -667,7 +667,7 @@ describe('lowerFind: opt 之讀取、輸入前提與值之保真(外審補強)',
         let copy = cvOrmFind({ a: 1 })
         let hidden = {}
         Object.defineProperty(hidden, 'maxParams', { value: 5, enumerable: false })
-        assert.throws(() => lowerFind(copy, hidden), /maxParams is required/)
+        assert.throws(() => lowerFind(copy, hidden), { message: 'invalid opt.maxParams: must be a positive number (use Infinity for no limit)' })
         let n = 0
         let withGetter = {}
         Object.defineProperty(withGetter, 'maxParams', {
@@ -680,7 +680,7 @@ describe('lowerFind: opt 之讀取、輸入前提與值之保真(外審補強)',
         assert.doesNotThrow(() => lowerFind(copy, withGetter))
         assert.strictEqual(n, 1)
         let proto = { maxParams: 5 }
-        assert.throws(() => lowerFind(copy, Object.create(proto)), /maxParams is required/)
+        assert.throws(() => lowerFind(copy, Object.create(proto)), { message: 'invalid opt.maxParams: must be a positive number (use Infinity for no limit)' })
     })
 
     it('should keep a real negative zero in the IR (the sign survives; norm marks it, JSON alone would not)', function() {

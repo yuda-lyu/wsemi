@@ -58,13 +58,13 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     //  於開檔與刪除任何切片之前檢查, 否則逐片處理到無效項才發現時, 前面之切片已被合併並刪除; 訊息只帶索引不帶值
     //  讀取陣列與元素(isearr亦會讀取元素)置於try內: 元素為getter(或陣列為已撤銷之Proxy)而拋出時, 以訊息字串reject(原於try外即以Error物件reject, 違反字串reject契約)
     let isArr = false
-    let msgPah = null
+    let msgPath = null
     try {
         isArr = isearr(fpsIn)
         if (isArr) {
-            msgPah = chkFsPath(fpOut, 'fpOut')
-            for (let i = 0; msgPah === null && i < fpsIn.length; i++) {
-                msgPah = chkFsPath(fpsIn[i], `fpsIn[${i}]`)
+            msgPath = chkFsPath(fpOut, 'fpOut')
+            for (let i = 0; msgPath === null && i < fpsIn.length; i++) {
+                msgPath = chkFsPath(fpsIn[i], `fpsIn[${i}]`)
             }
         }
     }
@@ -74,8 +74,8 @@ async function fsMergeFilesCore(fpsIn, fpOut, opt = {}) {
     if (!isArr) {
         return Promise.reject('invalid fpsIn: must be a non-empty array')
     }
-    if (msgPah) {
-        return Promise.reject(msgPah)
+    if (msgPath) {
+        return Promise.reject(msgPath)
     }
 
     //getPathParent

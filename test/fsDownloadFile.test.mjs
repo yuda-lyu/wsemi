@@ -203,7 +203,7 @@ describe(`fsDownloadFile with a local server`, function() {
     })
 
     //2026-10-16 依R-FS-REJECT-01 規則1改寫: 原斷言以Error物件reject, 改為以說明字串reject(輸入檢查改為說明字串)
-    it(`should reject with a description string when urlIn is not an effective string`, async function() {
+    it(`should reject with a description string when urlIn is not a non-empty string`, async function() {
         let err = null
         try {
             await fsDownloadFile('', `${fdt}/x.bin`)

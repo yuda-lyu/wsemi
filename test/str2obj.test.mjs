@@ -150,9 +150,9 @@ describe(`str2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'invalid data' } when input NaN with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid data: must be a string' } when input NaN with returnWithStateAndMsg`, function() {
         let r = str2obj(NaN, 'Uint8Array', { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'invalid data' }
+        let rr = { state: 'error', msg: 'invalid data: must be a string' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -160,7 +160,7 @@ describe(`str2obj`, function() {
         //原碼catch吞掉解析錯誤而回{}, 與「輸入本就是{}」無從分辨
         let r = str2obj('not-json', 'Uint8Array', { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('SyntaxError') === 0, true, `msg 應為解析錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r.msg, 'invalid data: must be a valid JSON text') //V20: 固定訊息, 不帶輸入片段
     })
 
     it(`should fallback to the plain return value when returnWithStateAndMsg is not a boolean`, function() {

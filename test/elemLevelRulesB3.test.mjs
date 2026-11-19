@@ -87,11 +87,11 @@ describe(`裁定表〈一〉keysmat2ltdt`, function() {
     it(`〈一-1〉should be invalid (default [], state mode error with row[i]) when any row (not only the first) is not an array or is []`, function() {
         for (let [lb, row] of [['null', null], [`'xy'`, 'xy'], ['{}', {}], ['5', 5], ['[]', []]]) {
             assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], [[1, 2], row]), [], lb)
-            assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], [[1, 2], row], S), { state: 'error', msg: 'invalid mat, row[1] is not an effective array' }, lb)
+            assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], [[1, 2], row], S), { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' }, lb)
         }
         let h = holed(3, [[0, [1, 2]], [2, [3, 4]]])
-        assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], h, S), { state: 'error', msg: 'invalid mat, row[1] is not an effective array' })
-        assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], [null, [1, 2]], S), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
+        assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], h, S), { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(keysmat2ltdt(['a', 'b'], [null, [1, 2]], S), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
         assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [[1], [LEAK], LEAK], S).msg.includes(LEAK), false)
     })
 
@@ -181,14 +181,14 @@ describe(`裁定表〈一〉keysmat2ltdt`, function() {
     it(`〈一-11〉should treat keys as invalid ([] or state invalid keys) when all of them are skipped`, function() {
         for (let keys of [[null, ''], [{}, []], [true, NaN]]) {
             assert.strict.deepStrictEqual(keysmat2ltdt(keys, [[1, 2]]), [])
-            assert.strict.deepStrictEqual(keysmat2ltdt(keys, [[1, 2]], S), { state: 'error', msg: 'invalid keys' })
+            assert.strict.deepStrictEqual(keysmat2ltdt(keys, [[1, 2]], S), { state: 'error', msg: 'invalid keys: must contain at least one non-empty string or finite number' })
         }
     })
 
     it(`〈一-12〉should keep the other behaviors (invalid keys/mat at the parameter level, mat [], __proto__ and length keys, non-boolean returnWithStateAndMsg)`, function() {
-        assert.strict.deepStrictEqual(keysmat2ltdt('a', [[1]], S), { state: 'error', msg: 'invalid keys' })
-        assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], S), { state: 'error', msg: 'invalid keys' })
-        assert.strict.deepStrictEqual(keysmat2ltdt(['a'], 'x', S), { state: 'error', msg: 'invalid mat' })
+        assert.strict.deepStrictEqual(keysmat2ltdt('a', [[1]], S), { state: 'error', msg: 'invalid keys: must be a non-empty array' })
+        assert.strict.deepStrictEqual(keysmat2ltdt([], [[1]], S), { state: 'error', msg: 'invalid keys: must be a non-empty array' })
+        assert.strict.deepStrictEqual(keysmat2ltdt(['a'], 'x', S), { state: 'error', msg: 'invalid mat: must be an array' })
         assert.strict.deepStrictEqual(keysmat2ltdt(['a'], [], S), { state: 'success', msg: [] })
         let r = keysmat2ltdt(['__proto__', 'length'], [[1, 2]])
         assert.strict.deepStrictEqual(Object.keys(r[0]), ['__proto__', 'length'])
@@ -210,13 +210,13 @@ describe(`裁定表〈二〉mat2ltdt`, function() {
         assert.strict.deepStrictEqual(mat2ltdt([['a', 'b']]), [])
     })
 
-    it(`〈二-2〉should keep the error when any row is invalid, with the row index of mat (invalid mat, row[i] is not an effective array)`, function() {
-        assert.strict.deepStrictEqual(mat2ltdt([['a'], [1], null], S), { state: 'error', msg: 'invalid mat, row[2] is not an effective array' })
-        assert.strict.deepStrictEqual(mat2ltdt([['a'], []], S), { state: 'error', msg: 'invalid mat, row[1] is not an effective array' })
-        assert.strict.deepStrictEqual(mat2ltdt([['a'], 'xy'], S), { state: 'error', msg: 'invalid mat, row[1] is not an effective array' })
-        assert.strict.deepStrictEqual(mat2ltdt(holed(3, [[0, ['a']], [2, [1]]]), S), { state: 'error', msg: 'invalid mat, row[1] is not an effective array' })
-        assert.strict.deepStrictEqual(mat2ltdt([{ a: 1 }, [1]], S), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
-        assert.strict.deepStrictEqual(mat2ltdt([[]], S), { state: 'error', msg: 'invalid mat, row[0] is not an effective array' })
+    it(`〈二-2〉should keep the error when any row is invalid, with the row index of mat (invalid mat[i]: must be a non-empty array)`, function() {
+        assert.strict.deepStrictEqual(mat2ltdt([['a'], [1], null], S), { state: 'error', msg: 'invalid mat[2]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(mat2ltdt([['a'], []], S), { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(mat2ltdt([['a'], 'xy'], S), { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(mat2ltdt(holed(3, [[0, ['a']], [2, [1]]]), S), { state: 'error', msg: 'invalid mat[1]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(mat2ltdt([{ a: 1 }, [1]], S), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
+        assert.strict.deepStrictEqual(mat2ltdt([[]], S), { state: 'error', msg: 'invalid mat[0]: must be a non-empty array' })
         assert.strict.deepStrictEqual(mat2ltdt([['a'], [1], null]), [])
     })
 
@@ -239,11 +239,11 @@ describe(`裁定表〈二〉mat2ltdt`, function() {
         parseNumOpt.resetWarned()
     })
 
-    it(`〈二-5〉should follow keysmat2ltdt for function values and the header elements (skip, finite numbers, duplicates, all invalid → keysmat2ltdt: invalid keys)`, function() {
+    it(`〈二-5〉should follow keysmat2ltdt for function values and the header elements (skip, finite numbers, duplicates, all invalid → keysmat2ltdt: invalid keys: must contain at least one non-empty string or finite number)`, function() {
         assert.strict.deepStrictEqual(mat2ltdt([['a'], [() => 1]]), [{ a: null }])
         assert.strict.deepStrictEqual(mat2ltdt([['a', null, 1, 'a'], [1, 2, 3, 4]]), [{ 'a': 4, '1': 3 }])
-        assert.strict.deepStrictEqual(mat2ltdt([[null, ''], [1, 2]], S), { state: 'error', msg: 'keysmat2ltdt: invalid keys' })
-        assert.strict.deepStrictEqual(mat2ltdt([[null], [1]], S), { state: 'error', msg: 'keysmat2ltdt: invalid keys' })
+        assert.strict.deepStrictEqual(mat2ltdt([[null, ''], [1, 2]], S), { state: 'error', msg: 'keysmat2ltdt: invalid keys: must contain at least one non-empty string or finite number' })
+        assert.strict.deepStrictEqual(mat2ltdt([[null], [1]], S), { state: 'error', msg: 'keysmat2ltdt: invalid keys: must contain at least one non-empty string or finite number' })
     })
 
     it(`〈二-6〉JSDoc should say the header elements are strings or finite numbers, others skipped`, function() {
@@ -255,8 +255,8 @@ describe(`裁定表〈二〉mat2ltdt`, function() {
     it(`〈二-7〉should keep the other behaviors (normal, [], non-array, {0:1}, __proto__, non-boolean returnWithStateAndMsg, opt null)`, function() {
         assert.strict.deepStrictEqual(mat2ltdt([['a', 'b'], [12, 34.56], ['x', '12.34']]), [{ a: 12, b: 34.56 }, { a: 'x', b: '12.34' }])
         assert.strict.deepStrictEqual(mat2ltdt([], S), { state: 'success', msg: [] })
-        assert.strict.deepStrictEqual(mat2ltdt('x', S), { state: 'error', msg: 'invalid mat' })
-        assert.strict.deepStrictEqual(mat2ltdt({ 0: 1 }, S), { state: 'error', msg: 'invalid mat' })
+        assert.strict.deepStrictEqual(mat2ltdt('x', S), { state: 'error', msg: 'invalid mat: must be an array' })
+        assert.strict.deepStrictEqual(mat2ltdt({ 0: 1 }, S), { state: 'error', msg: 'invalid mat: must be an array' })
         let r = mat2ltdt([['__proto__'], [1]])
         assert.strict.deepStrictEqual(Object.keys(r[0]), ['__proto__'])
         assert.strict.deepStrictEqual(mat2ltdt([['a'], [1]], { returnWithStateAndMsg: 1 }), [{ a: 1 }])
@@ -357,10 +357,10 @@ describe(`裁定表〈四〉ltdtkeys2mat`, function() {
     })
 
     it(`〈四-2〉should keep the error for a non-object row (null, array, string), with the row index`, function() {
-        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, null], ['a'], S), { state: 'error', msg: 'invalid ltdt, row[1] is not an object' })
-        assert.strict.deepStrictEqual(ltdtkeys2mat([[1], { a: 1 }], ['a'], S), { state: 'error', msg: 'invalid ltdt, row[0] is not an object' })
-        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, { a: 2 }, LEAK], ['a'], S), { state: 'error', msg: 'invalid ltdt, row[2] is not an object' })
-        assert.strict.deepStrictEqual(ltdtkeys2mat(holed(2, [[0, { a: 1 }]]), ['a'], S), { state: 'error', msg: 'invalid ltdt, row[1] is not an object' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, null], ['a'], S), { state: 'error', msg: 'invalid ltdt[1]: must be an object' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat([[1], { a: 1 }], ['a'], S), { state: 'error', msg: 'invalid ltdt[0]: must be an object' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, { a: 2 }, LEAK], ['a'], S), { state: 'error', msg: 'invalid ltdt[2]: must be an object' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat(holed(2, [[0, { a: 1 }]]), ['a'], S), { state: 'error', msg: 'invalid ltdt[1]: must be an object' })
         assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }, null], ['a']), [])
     })
 
@@ -374,7 +374,7 @@ describe(`裁定表〈四〉ltdtkeys2mat`, function() {
     it(`〈四-4〉should treat keys as invalid when it is not an array ('a' etc.) or all of the given elements are invalid ([''], [{}], [['a']])`, function() {
         for (let keys of ['a', 5, {}, { a: 1 }, true, [''], [{}], [['a']]]) {
             assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], keys), [], JSON.stringify(keys))
-            assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], keys, S), { state: 'error', msg: 'invalid keys' }, JSON.stringify(keys))
+            assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], keys, S), { state: 'error', msg: Array.isArray(keys) ? 'invalid keys: must contain at least one non-empty string or finite number' : 'invalid keys: must be an array' }, JSON.stringify(keys))
         }
     })
 
@@ -422,8 +422,8 @@ describe(`裁定表〈四〉ltdtkeys2mat`, function() {
         assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: null, b: true, c: false, d: { y: 1, x: 2 }, e: [1, 'a'], f: 's', g: 1.5 }], ['a', 'b', 'c', 'd', 'e', 'f', 'g']), [['null', 'true', 'false', '{"y":1,"x":2}', '[1,"a"]', 's', 1.5]])
         assert.ok(getDoc('ltdtkeys2mat').includes(`null為'null'(可藉以與缺鍵區分)`))
         assert.strict.deepStrictEqual(ltdtkeys2mat([], ['a'], S), { state: 'success', msg: [] })
-        assert.strict.deepStrictEqual(ltdtkeys2mat('x', ['a'], S), { state: 'error', msg: 'invalid ltdt' })
-        assert.strict.deepStrictEqual(ltdtkeys2mat(null, ['a'], S), { state: 'error', msg: 'invalid ltdt' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat('x', ['a'], S), { state: 'error', msg: 'invalid ltdt: must be an array' })
+        assert.strict.deepStrictEqual(ltdtkeys2mat(null, ['a'], S), { state: 'error', msg: 'invalid ltdt: must be an array' })
         assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], ['a'], { returnWithStateAndMsg: 'yes' }), [[1]])
         assert.strict.deepStrictEqual(ltdtkeys2mat([{ a: 1 }], ['a'], null), [[1]])
     })
@@ -467,15 +467,15 @@ describe(`裁定表〈五〉ltdtkeysheads2mat`, function() {
 
     it(`〈五-7〉should follow ltdtkeys2mat for {} rows, non-object rows and invalid keys`, function() {
         assert.strict.deepStrictEqual(ltdtkeysheads2mat([{}], ['a'], { a: 'A' }, S), { state: 'success', msg: [['A'], ['']] })
-        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }, 'x'], ['a'], { a: 'A' }, S), { state: 'error', msg: 'invalid ltdt, row[1] is not an object' })
-        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }], 'a', { a: 'A' }, S), { state: 'error', msg: 'invalid keys' })
-        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }], [null, ''], { a: 'A' }, S), { state: 'error', msg: 'invalid keys' })
+        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }, 'x'], ['a'], { a: 'A' }, S), { state: 'error', msg: 'invalid ltdt[1]: must be an object' })
+        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }], 'a', { a: 'A' }, S), { state: 'error', msg: 'invalid keys: must be an array' })
+        assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 1 }], [null, ''], { a: 'A' }, S), { state: 'error', msg: 'invalid keys: must contain at least one non-empty string or finite number' })
     })
 
     it(`〈五-8〉should keep the other behaviors (normal, [], non-array ltdt, head values as is, duplicate keys, extra kphead keys, non-boolean returnWithStateAndMsg) and say heads are put as is in JSDoc`, function() {
         assert.strict.deepStrictEqual(ltdtkeysheads2mat([{ a: 12, b: 34.56 }, { a: '123', b: 'xyz' }], ['a', 'b'], { a: 'c1', b: 'c2' }), [['c1', 'c2'], [12, 34.56], ['123', 'xyz']])
         assert.strict.deepStrictEqual(ltdtkeysheads2mat([], ['a'], { a: 'A' }, S), { state: 'success', msg: [] })
-        assert.strict.deepStrictEqual(ltdtkeysheads2mat('x', ['a'], { a: 'A' }, S), { state: 'error', msg: 'invalid ltdt' })
+        assert.strict.deepStrictEqual(ltdtkeysheads2mat('x', ['a'], { a: 'A' }, S), { state: 'error', msg: 'invalid ltdt: must be an array' })
         let arrHead = [1, 2]
         let r = ltdtkeysheads2mat([{ a: 1, b: 2, c: 3, d: 4 }], ['a', 'b', 'c', 'd'], { a: 5, b: null, c: '', d: arrHead, z: 'extra' })
         assert.strict.deepStrictEqual(r, [[5, null, '', [1, 2]], [1, 2, 3, 4]])
@@ -492,9 +492,9 @@ describe(`裁定表〈六〉ltdtDiff`, function() {
 
     it(`〈六-1〉should return the empty result for a non-array ltdtOld (ws492h W-16乙, originally throwing), and keep throwing for {} elements, holes and objects with only inherited keys`, function() {
         assert.strict.deepStrictEqual(ltdtDiff('x', []), { diff: [], dfs: [] })
-        throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), 'invalid ltdtOld: every element must be a non-empty object')
-        throwsMsg(() => ltdtDiff([{ a: 1 }], holed(2, [[0, { a: 1 }]])), 'invalid ltdtNew: every element must be a non-empty object')
-        throwsMsg(() => ltdtDiff([Object.create({ a: 1 })], [{ a: 1 }]), 'invalid ltdtOld: every element must be a non-empty object')
+        throwsMsg(() => ltdtDiff([{ a: 1 }, {}], [{ a: 1 }]), 'invalid ltdtOld[1]: must be a non-empty object')
+        throwsMsg(() => ltdtDiff([{ a: 1 }], holed(2, [[0, { a: 1 }]])), 'invalid ltdtNew[1]: must be a non-empty object')
+        throwsMsg(() => ltdtDiff([Object.create({ a: 1 })], [{ a: 1 }]), 'invalid ltdtOld[0]: must be a non-empty object')
     })
 
     it(`〈六-2〉should follow ltdtkeys2mat: own undefined equals a missing key, NaN differs from null, a function is null, a Date shows without quotes`, function() {
@@ -599,8 +599,8 @@ describe(`裁定表〈七〉arrDiff`, function() {
     it(`〈七-6〉should keep the other behaviors (required parameters, non-array rows in matrix mode, invalid mode, normal comparison, added/removed rows and cells)`, function() {
         assert.strict.deepStrictEqual(arrDiff('x', []), { diff: [], dfs: [] }) //ws492h W-16乙: 第1參數arrOld非陣列回空結果(原throw)
         throwsMsg(() => arrDiff([], null), 'invalid arrNew: must be an array')
-        throwsMsg(() => arrDiff([1], [[2]], { mode: 'matrix' }), `invalid arrOld: every element must be an array when opt.mode is 'matrix'`)
-        throwsMsg(() => arrDiff([[1]], [2], { mode: 'matrix' }), `invalid arrNew: every element must be an array when opt.mode is 'matrix'`)
+        throwsMsg(() => arrDiff([1], [[2]], { mode: 'matrix' }), `invalid arrOld[0]: must be an array when opt.mode is 'matrix'`)
+        throwsMsg(() => arrDiff([[1]], [2], { mode: 'matrix' }), `invalid arrNew[0]: must be an array when opt.mode is 'matrix'`)
         assert.strict.deepStrictEqual(arrDiff([1, 2], [1, 3], { mode: 'x' }), arrDiff([1, 2], [1, 3]))
         assert.strict.deepStrictEqual(arrDiff([], []), { diff: [], dfs: [] })
         let r = arrDiff([-0.529408622, 0.839882385, 0.663059856, 0.49047221, 123, 0.395763265, 0.866151835], [-0.529408622, 0.1839882385, 0.663059856, 0.49047221, 0.395763265, 45.6, 0.866151835])
@@ -621,8 +621,8 @@ describe(`裁定表〈七〉arrDiff`, function() {
 describe(`裁定表〈八〉matDiff`, function() {
 
     it(`〈八-1〉should keep throwing for a non-array row (including holes), with the row index only`, function() {
-        throwsMsg(() => matDiff([[1], LEAK], [[1]]), 'invalid matOld: row[1] is not an array')
-        throwsMsg(() => matDiff([[1]], holed(2, [[0, [1]]])), 'invalid matNew: row[1] is not an array')
+        throwsMsg(() => matDiff([[1], LEAK], [[1]]), 'invalid matOld[1]: must be an array')
+        throwsMsg(() => matDiff([[1]], holed(2, [[0, [1]]])), 'invalid matNew[1]: must be an array')
     })
 
     it(`〈八-2〉should follow arrDiff (cell by cell; ⟋ and ∶ no longer misalign or truncate; objects as key-sorted JSON)`, function() {
@@ -650,20 +650,20 @@ describe(`裁定表〈九〉ltdtpull`, function() {
         assert.strict.deepStrictEqual(ltdtpull([{ 'a.b': 1 }, { a: { b: 1 } }], [{ 'a.b': 1 }], 'a.b'), [{ a: { b: 1 } }])
         let inh = Object.create({ id: 1 })
         assert.strict.deepStrictEqual(ltdtpull([inh, { id: 1 }, { id: 2 }], [{ id: 1 }], 'id'), [inh, { id: 2 }])
-        throwsMsg(() => ltdtpull([{ id: 1 }], [{}], 'toString'), 'invalid ltdtDel: row[0] has no own key [toString]')
+        throwsMsg(() => ltdtpull([{ id: 1 }], [{}], 'toString'), 'invalid ltdtDel[0]: must have the primary key as an own field')
     })
 
-    //ws430c3(裁定表〈十六〉): 訊息帶實際欄位名(原期望'[key]'為主控誤記之字面)
-    it(`〈九-2〉should throw when a row of ltdtDel has no own key (no longer deleting every row missing the key), naming the key field`, function() {
-        throwsMsg(() => ltdtpull([{ id: 1 }, { v: 1 }], [{ id: 1 }, { v: 2 }], 'id'), 'invalid ltdtDel: row[1] has no own key [id]')
-        throwsMsg(() => ltdtpull([{ id: 1 }], [Object.create({ id: 1 })], 'id'), 'invalid ltdtDel: row[0] has no own key [id]')
-        throwsMsg(() => ltdtpull([{ x: 1 }], [{ y: 1 }], 'x'), 'invalid ltdtDel: row[0] has no own key [x]')
-        throwsMsg(() => ltdtpull([{ 1: 'a' }], [{ 2: 'a' }], 1), 'invalid ltdtDel: row[0] has no own key [1]')
+    //ws430c3(裁定表〈十六〉): 原訊息帶實際欄位名; ws492j V20起訊息不帶key之欄位名(呼叫端給之值), 只指出索引
+    it(`〈九-2〉should throw when a row of ltdtDel has no own key (no longer deleting every row missing the key), naming the index only`, function() {
+        throwsMsg(() => ltdtpull([{ id: 1 }, { v: 1 }], [{ id: 1 }, { v: 2 }], 'id'), 'invalid ltdtDel[1]: must have the primary key as an own field')
+        throwsMsg(() => ltdtpull([{ id: 1 }], [Object.create({ id: 1 })], 'id'), 'invalid ltdtDel[0]: must have the primary key as an own field')
+        throwsMsg(() => ltdtpull([{ x: 1 }], [{ y: 1 }], 'x'), 'invalid ltdtDel[0]: must have the primary key as an own field')
+        throwsMsg(() => ltdtpull([{ 1: 'a' }], [{ 2: 'a' }], 1), 'invalid ltdtDel[0]: must have the primary key as an own field')
     })
 
     it(`〈九-3〉should throw when the key value of ltdtDel is invalid (valid: non-empty string or finite number)`, function() {
         for (let v of [NaN, null, undefined, '', {}, [], Infinity, true]) {
-            throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: v }], 'id'), 'invalid ltdtDel: row[0] has an invalid key value')
+            throwsMsg(() => ltdtpull([{ id: 1 }], [{ id: v }], 'id'), 'invalid ltdtDel[0]: must have a primary key of a non-empty string or a finite number')
         }
     })
 
@@ -687,8 +687,8 @@ describe(`裁定表〈九〉ltdtpull`, function() {
     })
 
     it(`〈九-7〉should keep throwing for a non-object element (holes, arrays), with row[i]`, function() {
-        throwsMsg(() => ltdtpull([{ id: 1 }, [1]], [], 'id'), 'invalid ltdtAll: row[1] is not an object')
-        throwsMsg(() => ltdtpull([], holed(2, [[1, { id: 1 }]]), 'id'), 'invalid ltdtDel: row[0] is not an object')
+        throwsMsg(() => ltdtpull([{ id: 1 }, [1]], [], 'id'), 'invalid ltdtAll[1]: must be an object')
+        throwsMsg(() => ltdtpull([], holed(2, [[1, { id: 1 }]]), 'id'), 'invalid ltdtDel[0]: must be an object')
     })
 
     it(`〈九-8〉should keep the other behaviors (required parameters, strict equality 1 vs '1', delete every row of the same key value, {} kept) and say so in JSDoc`, function() {
@@ -719,8 +719,8 @@ describe(`裁定表〈十〉matConcat`, function() {
     })
 
     it(`〈十-3〉should keep throwing for a non-array row (including outer holes), with row[i]`, function() {
-        throwsMsg(() => matConcat([['a'], LEAK], []), 'invalid mat1: row[1] is not an array')
-        throwsMsg(() => matConcat([], holed(2, [[0, ['a']]])), 'invalid mat2: row[1] is not an array')
+        throwsMsg(() => matConcat([['a'], LEAK], []), 'invalid mat1[1]: must be an array')
+        throwsMsg(() => matConcat([], holed(2, [[0, ['a']]])), 'invalid mat2[1]: must be an array')
     })
 
     it(`〈十-4〉should keep the other behaviors (row count is the larger one, [] valid, holes and undefined filled, null as is, cells not deep-copied, new rows) and say so in JSDoc`, function() {
@@ -759,8 +759,8 @@ describe(`裁定表〈十一〉matat`, function() {
     })
 
     it(`〈十一-5〉should keep throwing for a non-array row (including outer holes), with row[i]`, function() {
-        throwsMsg(() => matat([[1], LEAK], 0), 'invalid mat: row[1] is not an array')
-        throwsMsg(() => matat(holed(2, [[1, [1]]]), 0), 'invalid mat: row[0] is not an array')
+        throwsMsg(() => matat([[1], LEAK], 0), 'invalid mat[1]: must be an array')
+        throwsMsg(() => matat(holed(2, [[1, [1]]]), 0), 'invalid mat[0]: must be an array')
     })
 
     it(`〈十一-6〉should keep the other behaviors (required parameters and istart, numeric strings, invalid iend as not given, holes give undefined, cells beyond the row give []) and say so in JSDoc`, function() {
@@ -834,7 +834,8 @@ describe(`裁定表〈十三〉time*2* 18個之JSDoc`, function() {
     it(`〈十三-3〉the 4 past/expire functions should list the two kinds of err values`, function() {
         for (let n of g3) {
             let d = getDoc(n)
-            assert.ok(d.includes(`'時間格式錯誤'`) && d.includes(`'時間轉換失敗'為失敗`), n)
+            let msgT = n.startsWith('timems') ? 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)' : 'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)'
+            assert.ok(d.includes(`'${msgT}'`) && d.includes(`'時間轉換失敗'為失敗`), n)
             assert.ok(d.includes(n.endsWith('past') ? `'時間未到'為算得之結果` : `'時間已過'為算得之結果`), n)
         }
     })
