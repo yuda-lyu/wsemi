@@ -26,7 +26,8 @@
 | 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
-| 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01(ws492i 起: 判斷函數只收原始值、轉型函數照舊拆包)、R-FILETYPE-01 | 約 26 |
+| 事件派發: `evem` 只回裸 eventemitter3、計時器／串流／監視器回呼內之派發經 `evEmit`／`evEmitDelay`(使用者原則 2026-09-13;2026-11-22 自自動記憶提取) | `sgud/rule/rulebook_evem.md` | R-EVEM-RAW-01 | 約 5 |
+| 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01(ws492i 起: 判斷函數只收原始值、轉型函數照舊拆包)、R-FILETYPE-01、R-NUM-INPUT-01(數值輸入支援字串型數字、isnum 照字面、排序非數字放最末;使用者 2026-09-27)、R-JUDGE-SOURCE-01(布林與函數之判斷單一出處 isbol／isfun;使用者 2026-09-22;後二者 2026-11-22 自自動記憶提取) | 約 32 |
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
@@ -85,10 +86,13 @@
 - `R-ENUM-01` → `rulebook_judge.md`(站點全集另見 `rulebook_judge_sites_inv_a.md`、`rulebook_judge_sites_inv_b.md`,索引見 `rulebook_judge_sites.md`): R-ENUM-01 計算類函數判定數字／整數參數一律經 `isenum`／`iseint`(判斷類、單一擁有者、`opt.use` 範圍表單一來源 `_numRange`、opt 無效必拋且不帶值)
 - `R-ENUM-CALLERS-01` → `rulebook_judge.md`(已套／未套站點見 `rulebook_judge_sites_r1.md` 〈第 221 項第一批處置結果〉): R-ENUM-CALLERS-01 排程第 221 項第一批:24 個既有函數(三角 9、round/ceil/floor、dig 系、judge/preciseNum/estimateTicks/color、arrAdd/arrMulti/arrMax/arrMin)之數字／整數判定改經 `isenum`／`iseint`,失敗通道不變(null／''／throw),陣列計算非有效數字以預設值 0／1,arrMax/arrMin 無有效數字 throw
 - `R-ENV-01` → `rulebook_data.md`: R-ENV-01 環境判斷函數(回布林)於非目標環境回 false、不拋錯
+- `R-EVEM-RAW-01` → `rulebook_evem.md`: R-EVEM-RAW-01 evem 只回裸 eventemitter3(不包裝、不攔截監聽器);計時器、串流、監視器回呼內對使用者可掛監聽器之事件物件派發者,一律經 `evEmit`(同堆疊 try 攔截、pm 先 settle 再通報)或 `evEmitDelay`;timer 毫秒進 setTimeout 前須在上限內
 - `R-EXCEL-READ-01` → `rulebook_data.md`: R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 - `R-EXEC-FAIL-01` → `rulebook_exec.md`: R-EXEC-FAIL-01 執行外部程序之失敗回報:字串或結果物件、不含參數與環境變數之值、不崩潰
 - `R-EXEC-JSONFILE-01` → `rulebook_execfile.md`: R-EXEC-JSONFILE-01 結果走 JSON 檔之 CLI 執行一律經 `execCliJsonFile`;失敗摘要經 `execCliFailDetail`:失敗以結構化物件回報、必須參數缺漏 reject、半行不黏連、相對輸出路徑與子進程一致
 - `R-FILETYPE-01` → `rulebook_data.md`: R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
+- `R-JUDGE-SOURCE-01` → `rulebook_data.md`: R-JUDGE-SOURCE-01 布林與函數之判斷單一出處: `src/` 內只經 `isbol`／`isfun`,除 `src/isfun.mjs` 外不得 import lodash 之 `isFunction`,`isBoolean` 無例外
+- `R-NUM-INPUT-01` → `rulebook_data.md`: R-NUM-INPUT-01 數值輸入一律支援字串型數字;`isnum` 照字面(純空白為 false、前後帶空白為 true);排序函數支援非數字輸入時,無法轉數字或無法解析者放最末並維持原順序(同 Excel)
 - `R-FIND-01` → `rulebook_orm-find.md`: R-FIND-01 w-orm 系列條件(find)之形狀檢核: 單一擁有者 `cvOrmFind`、白名單、fail-closed、檢查之值即使用之值
 - `R-FS-ATOMIC-01` → `rulebook_fs.md`: R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 - `R-FS-EVEM-NAME-01` → `rulebook_fs.md`: R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達

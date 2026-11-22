@@ -115,3 +115,25 @@
 - 變更紀錄:
   - 2026-10-20: 新增 21 項、`getFileType` 不分大小寫(issue #7); 規則與破壞性變更紀錄第 34 條.
   - 2026-10-20(第 2 次執行,主控裁示): `heic` 之 `acp` 改 `image/heic`(規則 5); `getFileAccept` 判鍵改自有屬性(規則 6); 破壞性變更紀錄第 34 條補 ③④.
+
+## R-NUM-INPUT-01 數值輸入支援字串型數字;isnum 照字面;排序時無法轉數字者放最末
+
+- 依據: 使用者 2026-09-27 裁示之三條通則(2026-11-22 自本套件之 Claude Code 自動記憶提取).理由: 外部資料常為字串型數字(網頁 input、表格元件轉存、前後端傳遞);空白被當 0 會使數值欄排序退回字典序,或把空格當 0 參與計算.審查者曾主張 `domDrag` 之選項「只收數字以維持原合法集合」,被使用者否決.
+- 規則:
+  1. **數值輸入一律支援字串型數字**(如 `'12.34'`→12.34、`'5'`→5、`' 7 '`→7): 先轉數字再判定,不可因「原本只收數字」而拒收字串.新寫或修改任何接受數值之函數時預設接受數字字串.十六進位、指數、小數寫法不在本通則延伸範圍(`'0.999…9'`→1、`'1e-324'`→0 轉數字後失真);新式輸入判定 `isenum`／`iseint` 依 R-ENUM-01 另定(視為非預期).
+  2. **`isnum` 照字面**: 只有數字(NaN 除外)與數字字串為 true;空字串、純空白或多空白字串(含 tab、換行、全形空白)一律 false;數字前後帶空白者(`' 5 '`)維持 true(否則 `cdbl(' 5 ')` 會變 0).
+  3. **排序函數若支援非數字輸入**: 數字與數字字串依數值排最前,其他字串其次,無法轉數字或無法解析者(空格、null、undefined、NaN、布林、物件等)無法排序,一律放最末並維持原順序(同 Excel,空格排最後);已落實於 `arrSort`,`objSortBy` 以 `arrSort` 排序.
+- 盤點指令: `git grep -n -E "isnum\(" -- src`(核對呼叫端未把空白字串當 0);排序類 `git grep -n -E "arrSort|objSortBy" -- src`.改動 `isnum` 這類核心判斷後,以差分方式(舊版副本 vs 新版)全面檢查依賴者.
+- 測試: `test/isnum.test.mjs`(純空白字串為 false、前後帶空白為 true)、`test/arrSort.test.mjs`〈無法轉數字或無法解析者放最末〉(`arrSort([10, '', 9, 'N/A', ' ', null, 100])` → `[9, 10, 100, 'N/A', '', ' ', null]`)、`test/objSortBy.test.mjs`.
+- 現況(2026-11-22 實跑 src): `isnum('   ')`、`isnum('')`、`isnum('\t\n')`、`isnum('　')`、`isnum(NaN)` 為 false;`isnum(' 5 ')`、`isnum('12.34')` 為 true;`cdbl(' 5 ')` 為 5.
+- 變更紀錄: 2026-09-27 裁示並落實(`isnum` 純空白為 false、`arrSort` 非數字放最末、`objSortBy` 改用 `arrSort`);2026-11-16 W-20 起判斷函數只收原始值(R-WRAPPER-01),本規則對原始值之語意不變.
+
+## R-JUDGE-SOURCE-01 布林與函數之判斷單一出處: 只經 isbol／isfun
+
+- 依據: 使用者 2026-09-22 明示(2026-11-22 自本套件之 Claude Code 自動記憶提取): `src/` 內判斷布林與函數一律用自有 `isbol`／`isfun`,不得自行 import lodash 之 `isBoolean`／`isFunction`.理由: 同一判斷只有一個出處,之後要換實作(如 `isfun` 由 toString 標籤改委派 lodash)只改一檔.當日已把 `pmQueue`、`treeObj`、`domDragPointer`、`domDragBarAndScroll` 改齊.
+- 規則:
+  1. 除 `src/isfun.mjs`(委派 lodash `isFunction`)外,`src/` 內不得 import lodash 之 `isFunction`;`isBoolean` 無例外(2026-11 起 `isbol` 自身改以 `typeof v === 'boolean'` 判型,不再 import lodash,見 R-WRAPPER-01).
+  2. 其他 lodash 判斷函數(`isNumber` 等)不受本規則,依 R-WRAPPER-01 規則 4 與各檔既有用法.
+  3. `isfun` 委派 lodash 後與原實作之唯一差異: generator 函數為 true;async generator(`async function*`)於 lodash 4 仍為 false(已入 JSDoc);判定拋錯(已撤銷之 Proxy 等)回 false(R-JUDGE-NOTHROW-01).
+- 盤點指令: `git grep -n -E "lodash-es/(isBoolean|isFunction)" -- src`(2026-11-22 只命中 `src/isfun.mjs:1`).
+- 測試: `test/isbol.test.mjs`、`test/isfun.test.mjs`;本規則無專屬守門測試,以盤點指令核對.

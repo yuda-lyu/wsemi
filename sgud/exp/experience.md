@@ -95,6 +95,20 @@
 - fsDownloadFileVerify 假時鐘案偶發紅:虛擬時間追過真實 I/O(2026-11-07,主控任務 20261107181536,ws314)
 - 外部依賴跨主版號升級(chokidar 6、he 2):先差分實測再改測試,錯誤之平台假設不等於放寬(2026-11-09,主控任務 20261109223142,ws01)
 
+2026-11-22(自 Claude Code 自動記憶提取)補入: 2026-09-01 至 2026-10-13 初期工作之經驗(原僅存於依資料夾路徑存放之自動記憶,路徑更名即失聯)新建 `sgud/exp/experience_20261122.md`,本檔其餘各節不動.該檔之節:
+
+- 事件派發之定案與「連續補丁」之教訓(2026-09-07 至 2026-09-13)
+- fsMergeFilesCore 失敗路徑重寫(2026-09-07)
+- 下載與外部程序輸出解碼(2026-09-13)
+- execCliCore／execCliSession／execCliJsonRpc／strCompareForVersion 之提案審查(2026-09-05)
+- cache() 改版:共用 in-flight promise(2026-09-01)
+- domDragBarAndScroll 兩輪與改建於 domDragPointer(2026-09-22)
+- domDetect 改 ResizeObserver、擴充與 toleranceBounce(2026-09-25 至 2026-09-30)
+- dom 偵測器與 domDrag 重構(2026-09-27)
+- domIsStable 誤判修正(2026-09-14)
+- isEmail 重寫(2026-09-15)
+- isblob 收 File 與 UMD 之 diff2html 判定(2026-09-18)
+
 ## 假時鐘案的「推進終點」與效能時限案的「量 CPU 不量牆鐘」(2026-11-12,主控任務 20261112065727,ws290)
 
 - **ws314 的盤點漏了兩處**: 當時結論「其餘 `advanceUntil` 站點都是預期計時器觸發或被測碼無待完成之真實 I/O」不成立——停滯案(`stallMs` 判停滯後)與 5 秒 fallback 案,計時器觸發後仍有真實 I/O(中止後關閉寫入串流、移除暫存檔),而它們以 `settle` 為推進終點、以虛擬上限(2000／8000ms)判定 `advanced`,與真實 I/O 賽跑.盤點不要靠讀碼推論「哪裡沒有真實 I/O」,改用**注入真實 I/O 完成延遲**確定性掃全檔(`node --import` 預載模組把 `fs` 回呼式方法之回呼延後 D ms;同步方法不受影響): 修前 D≤3ms 綠、D=5ms 起紅,全檔 D=20ms 紅 2 案;修後 D=80ms 全檔 0 紅.注入法不需獨佔鎖、數秒到兩分鐘一輪,遠勝負載試驗(修前修後皆 0 紅,無從分辨).
