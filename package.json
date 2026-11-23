@@ -1,9 +1,9 @@
 {
   "name": "wsemi",
-  "version": "1.9.71",
+  "version": "1.9.72",
   "main": "dist/wsemi.umd.js",
   "dependencies": {
-    "@zumer/snapdom": "^3.7.5",
+    "@zumer/snapdom": "^3.7.6",
     "chokidar": "^6.0.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.23",
