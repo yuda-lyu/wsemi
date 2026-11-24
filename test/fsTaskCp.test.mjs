@@ -733,3 +733,96 @@ describe(`fsTaskCp 轉傳opt.logDetail、opt.funLog給內部之fsWatchFile(twsm1
     })
 
 })
+
+
+//排程第621項①(twsm2; R-DIAG-01規則20): 本函數自身派發set、remove(buildSrc)與change(buildTar)給使用端監聽器時之拋錯通報(evEmit), 改經建立時同一快照之opt.logDetail、opt.funLog(同twsm1c對fsWatchFile、fsWatchFolder之作法)
+//無error監聽者時: opt.funLog為函數者只交給它(label、安全摘要、細節), opt.logDetail為true者console.error輸出細節, 其餘console.error固定label與安全摘要
+describe(`fsTaskCp 自身派發之監聽器拋錯通報經opt.logDetail、opt.funLog(twsm2)`, function() {
+
+    let fdA = './test/_tmp/fsTaskCpEmitA'
+    let fdB = './test/_tmp/fsTaskCpEmitB'
+    let LB = '[wsemi fsTaskCp] listener threw'
+
+    after(function() {
+        fs.rmSync(fdA, { recursive: true, force: true })
+        fs.rmSync(fdB, { recursive: true, force: true })
+    })
+
+    //runSrc, buildSrc之set與remove各派發一次給拋錯之監聽器(同步派發), 回傳funLog之呼叫與console.error之記錄
+    let runSrc = (opt) => {
+        let rec = []
+        let calls = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        try {
+            let o = { ...opt }
+            if (opt.funLog === 'rec') {
+                o.funLog = (...a) => calls.push(a)
+            }
+            let ev = fsTaskCp(fdA, fdB, o).buildSrc()
+            ev.on('set', () => {
+                throw new Error('listener failed at SECRETDIR')
+            })
+            ev.on('remove', () => {
+                throw new Error('listener failed at SECRETDIR')
+            })
+            ev.set('a.txt', 'h1')
+            ev.remove('a.txt')
+        }
+        finally {
+            console.error = ce
+        }
+        return { calls, rec }
+    }
+
+    it(`should give the listener errors of set and remove only to opt.funLog with details, nothing to console.error`, function() {
+        let { calls, rec } = runSrc({ funLog: 'rec' })
+        assert.strict.deepStrictEqual(calls.map((c) => [c[0], c[1], c[2].event, c[2].err instanceof Error]), [[LB, { errType: 'Error' }, 'set', true], [LB, { errType: 'Error' }, 'remove', true]])
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    it(`should print the masked details of set and remove with opt.logDetail true, and only the fixed label and safe summary by default or for non-true logDetail or non-function funLog (K3)`, function() {
+        let { rec } = runSrc({ logDetail: true })
+        assert.strict.deepStrictEqual(rec.map((a) => [a[0], a[1].event, a[1].err instanceof Error]), [[LB, 'set', true], [LB, 'remove', true]]) //細節(遮罩後)
+        for (let o of [{}, { logDetail: 'true' }, { funLog: 'x' }]) {
+            let r = runSrc(o)
+            assert.strict.deepStrictEqual(r.rec, [[LB, { errType: 'Error' }], [LB, { errType: 'Error' }]], JSON.stringify(o))
+            assert.strict.deepStrictEqual(JSON.stringify(r.rec).includes('SECRETDIR'), false)
+        }
+    })
+
+    it(`should give the listener error of change (buildTar, real watcher) only to opt.funLog, after rejecting msg.pm`, async function() {
+        this.timeout(120000)
+        let calls = []
+        let fdS = './test/_tmp/fsTaskCpEmitC/src'
+        let fdT = './test/_tmp/fsTaskCpEmitC/tar'
+        fs.mkdirSync(fdS, { recursive: true })
+        fs.mkdirSync(fdT, { recursive: true })
+        let tr = traceRec({ guard: 40000 })
+        let otk = fsTaskCp(fdS, fdT, { onTrace: tr.on, funLog: (...a) => calls.push(a) })
+        let ev = otk.buildTar()
+        let pmRes = null
+        ev.on('change', (msg) => {
+            msg.pm.then(() => {
+                pmRes = 'resolved'
+            }, () => {
+                pmRes = 'rejected'
+            })
+            throw new Error('listener failed at SECRETDIR')
+        })
+        try {
+            fs.writeFileSync(join(fdS, 'fpHash.json'), '{"a.txt":"h1"}', 'utf8')
+            await tr.wait((e) => e.type === 'settle')
+        }
+        finally {
+            ev.clear()
+        }
+        assert.strict.deepStrictEqual(calls.map((c) => [c[0], c[1]]), [[LB, { errType: 'Error' }]])
+        assert.strict.equal(calls[0][2].event, 'change')
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'settle').map((e) => e.ok), [false])
+        await new Promise((resolve) => setImmediate(resolve))
+        assert.strict.equal(pmRes, 'rejected')
+        fs.rmSync('./test/_tmp/fsTaskCpEmitC', { recursive: true, force: true })
+    })
+
+})

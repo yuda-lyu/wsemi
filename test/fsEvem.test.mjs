@@ -480,3 +480,78 @@ describe(`fsEvem 轉傳opt.logDetail、opt.funLog給內部之fsWatchFolder(twsm1
     })
 
 })
+
+
+//排程第621項①(twsm2; R-DIAG-01規則20): 本函數自身於本程序派發事件給使用端監聽器時之拋錯通報(evEmit), 改經建立時同一快照之opt.logDetail、opt.funLog(同twsm1c對fsWatchFile、fsWatchFolder之作法)
+//無error監聽者時: opt.funLog為函數者只交給它, opt.logDetail為true者console.error輸出遮罩後之細節, 其餘console.error固定label與安全摘要
+describe(`fsEvem 自身派發之監聽器拋錯通報經opt.logDetail、opt.funLog(twsm2)`, function() {
+
+    let fdE = './test/_tmp/fsEvemEmitA'
+    let LB = '[wsemi fsEvem] listener threw'
+    let keySys = '[::pkg_content::]' //本地派發之包裝鍵(fsEvem之opt.keySys預設)
+
+    after(function() {
+        fs.rmSync(fdE, { recursive: true, force: true })
+    })
+
+    it(`should give a listener error of an event received through the real watcher only to opt.funLog with details, nothing to console.error`, async function() {
+        this.timeout(120000)
+        let calls = []
+        let rec = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        let tr = traceRec({ guard: 45000 })
+        let ev = fsEvem({ fd: fdE, onTrace: tr.on, funLog: (...a) => calls.push(a) })
+        try {
+            await tr.wait((e) => e.type === 'ready')
+            ev.on('ping', () => {
+                throw new Error('token=SECRET-9f3a')
+            })
+            ev.emit('ping', { n: 1 }) //寫事件檔→監看→本地派發
+            await tr.wait((e) => e.type === 'emit' && e.evName === 'ping')
+        }
+        finally {
+            ev.clear()
+            console.error = ce
+        }
+        assert.strict.deepStrictEqual(calls.map((c) => [c[0], c[1], c[2].event]), [[LB, { errType: 'Error' }, 'ping']])
+        assert.strict.deepStrictEqual(calls[0][2].err instanceof Error && calls[0][2].err.message, 'token=***')
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    //runLocal, 以本地派發(同上述之派發處: 包裝鍵之訊息不寫檔而直接派發)使拋錯之監聽器收到一次事件
+    let runLocal = (opt) => {
+        let rec = []
+        let calls = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        let o = { ...opt }
+        if (opt.funLog === 'rec') {
+            o.funLog = (...a) => calls.push(a)
+        }
+        let ev = fsEvem({ fd: fdE, ...o })
+        try {
+            ev.on('ping', () => {
+                throw new Error('token=SECRET-9f3a')
+            })
+            ev.emit('ping', { [keySys]: { pkg: { n: 1 }, time: 't' } })
+        }
+        finally {
+            ev.clear()
+            console.error = ce
+        }
+        return { calls, rec }
+    }
+
+    it(`should print the masked details with opt.logDetail true, and only the fixed label and safe summary by default or for non-true logDetail or non-function funLog (K3)`, function() {
+        let a = runLocal({ funLog: 'rec' })
+        assert.strict.deepStrictEqual([a.calls.map((c) => [c[0], c[1]]), a.rec.length], [[[LB, { errType: 'Error' }]], 0])
+        let b = runLocal({ logDetail: true })
+        assert.strict.deepStrictEqual(b.rec.map((v) => [v[0], v[1].event, v[1].err.message]), [[LB, 'ping', 'token=***']])
+        for (let o of [{}, { logDetail: 'true' }, { funLog: 'x' }]) {
+            let r = runLocal(o)
+            assert.strict.deepStrictEqual(r.rec, [[LB, { errType: 'Error' }]], JSON.stringify(o))
+        }
+    })
+
+})

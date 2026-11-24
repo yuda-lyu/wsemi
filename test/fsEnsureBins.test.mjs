@@ -1325,9 +1325,9 @@ describe(`fsEnsureBins with a local server`, function() {
         ])
         assert.strict.equal(eA.code, 'E_OFFLINE_MISSING')
         assert.strict.equal(fs.readFileSync(rB['tool.exe']).equals(tool), true)
-        //不同fetch各自取得
-        //三個呼叫皆須在任一回應寫入快取前送出請求(否則較慢者命中快取而少一筆請求): 由伺服器端閘門控制何時放行回應,
-        //放行條件為onTrace事件(三個呼叫皆已登記取得)與伺服器端已到達之請求數, 順序由事件因果決定, 不靠回應延遲多久
+        //不同fetch、不同fs物件: 不共用同一次取得(各自登記new)
+        //跨程序鎖(排程第632項, twsm2; 規則帳本R-BIN-ENSURE-01規則19)以快取內之取得單位為鍵, 同程序內不共用之呼叫亦依序: 先取得鎖者下載, 其餘等候鎖釋放後重新檢查快取(命中即用), 請求只有1次
+        //由伺服器端閘門控制何時放行回應; 放行條件為onTrace事件(三個呼叫皆已登記取得, 一個開始下載、兩個開始等候)與伺服器端已到達之請求數, 順序由事件因果決定, 不靠回應延遲多久
         let root = fx('sharefetch')
         let held = [] //已到達伺服器、尚未放行之請求
         let open = false
@@ -1369,16 +1369,21 @@ describe(`fsEnsureBins with a local server`, function() {
         ]
         try {
             let jobs = await Promise.all(trs.map((tr) => tr.wait((e) => e.type === 'job')))
-            await waitHeld(jobs.filter((e) => e.mode === 'new').length) //各自取得者之請求皆已到達伺服器(尚無任何回應)
             assert.strict.deepStrictEqual(jobs.map((e) => e.mode), ['new', 'new', 'new']) //不同fetch、不同fs物件不共用同一次取得
-            assert.strict.equal(held.length, 3)
+            let first = await Promise.all(trs.map((tr) => tr.wait((e) => e.type === 'download' || (e.type === 'lock-wait' && e.phase === 'start'))))
+            assert.strict.deepStrictEqual(first.map((e) => e.type).sort(), ['download', 'lock-wait', 'lock-wait']) //一個持鎖下載, 兩個等候
+            await waitHeld(1)
+            assert.strict.equal(held.length, 1)
         }
         finally {
             open = true //無論斷言成敗皆放行, 不使請求懸置
             held.forEach(respond)
         }
-        await Promise.all(pms)
-        assert.strict.equal(hits.filter((v) => v.endsWith('bin/tool.exe')).length, 3) //不同fetch、不同fs物件各自取得
+        let rs = await Promise.all(pms)
+        assert.strict.equal(rs.every((r) => fs.readFileSync(r['tool.exe']).equals(tool)), true)
+        assert.strict.equal(hits.filter((v) => v.endsWith('bin/tool.exe')).length, 1) //等候者於鎖釋放後重新檢查快取命中, 不再下載
+        let ends = trs.map((tr) => tr.events.filter((e) => e.type === 'lock-wait' && e.phase === 'end').map((e) => e.hit))
+        assert.strict.deepStrictEqual(ends.filter((v) => v.length > 0), [[true], [true]])
         //同一fs物件但兩次呼叫之間換了方法: 不共用
         let root2 = fx('sharemethod')
         hits = []
@@ -2016,6 +2021,9 @@ describe(`fsEnsureBins with a local server`, function() {
         tidy: ['n'],
         settle: ['ok', 'code'],
     }
+    TRACE_FIELDS['lock-wait'] = ['name', 'phase', 'hit'] //跨程序鎖(twsm2): 只在等候他方持有之鎖時通知
+    TRACE_FIELDS['lock-takeover'] = ['name', 'why'] //跨程序鎖(twsm2): 只在接手可接手之鎖時通知
+    TRACE_FIELDS['lock-skip'] = ['name', 'why'] //跨程序鎖(twsm2): 只在無法建立鎖而不加鎖時通知
     let checkEvents = (events) => {
         for (let e of events) {
             assert.strict.equal(Object.isFrozen(e), true, e.type)

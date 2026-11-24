@@ -8,7 +8,8 @@
 - **全庫 console 盤點**: 47 處 24 檔(twsm1 時 56 處 28 檔);「印捕獲之錯誤本體」剩瀏覽器端 DOM 與顏色 11 處,主控裁定後議.
 - **驗證數字**(2026-11-24 最終碼): 見本輪報告與下列;修前紅以 twsm1 之成果(本輪改動前之工作樹副本)為基準,本輪新增或改期望之測試皆紅;變異 25 項(以未植入變異之副本為對照組,只計對照組以外之新失敗)全數擊殺;全套與發布包全套之數字記於報告〈全套〉.
 - **twsm1c(主控對 twsm1b 需裁示之裁定 1 A、2 A,同一次發布)**: `fsWatchFile`／`fsWatchFolder` 之監聽器拋錯通報改用與停止監看錯誤同一快照之 logDetail/funLog(每個 evEmit 站點);`fsEvem`、`fsTaskCp` 以 `pickDiagOpt` 轉傳 logDetail/funLog 給內部監看.驗證:修前紅(twsm1b 之成果為基準)11 案紅、修後綠;變異 11 項全擊殺;全套數字見本輪報告.
-- **已知缺口**: `fsEvem`、`fsTaskCp` 自身派發給使用端監聽器時之拋錯通報仍依 evEmit 之預設(主控定不擴大範圍);瀏覽器端 11 處後議.
+- **已知缺口**: 瀏覽器端 11 處後議.(`fsEvem`、`fsTaskCp` 自身派發之通報已於 twsm2 改經同一快照,見下條.)
+- **twsm2(排程第 621 項①②,2026-11-24,與跨程序鎖同一次發布;未提交未發布)**: ①`fsEvem` 本地派發 1 站、`fsTaskCp` 之 set、remove、change 3 站之監聽器拋錯通報改經建立時同一快照之 `pickDiagOpt(opt)`(JSDoc 刪「不在此列」);②`getDiagBriefErr` 之 NODE 集合增 undici 之 `UND_ERR_CONNECT_TIMEOUT`、`UND_ERR_HEADERS_TIMEOUT`、`UND_ERR_BODY_TIMEOUT`、`UND_ERR_SOCKET`、`UND_ERR_HEADERS_OVERFLOW`、`UND_ERR_RES_CONTENT_LENGTH_MISMATCH`、`UND_ERR_CLOSED`、`UND_ERR_DESTROYED`、`UND_ERR_PRX_TLS` 與 `ERR_SSL_PROTOCOL_ERROR`(本機真實 fetch 實得 5 種;取捨寫於 `src/_diagCodes.mjs` 註解).規則 R-DIAG-01(`rulebook_diag.md` 規則 7、20 與測試紀錄);破壞性變更第 80 項②③.驗證: 修前紅 9/9;變異與全套數字見 twsm2 報告.
 
 ## 串流遮罩器、收錄評估與診斷輸出之擴充(排程第 486、610 項;主控任務 20261124085531 twsm1,2026-11-24;package.json version 1.9.72 之工作樹,未提交未發布)
 

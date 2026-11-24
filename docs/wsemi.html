@@ -57874,11 +57874,11 @@ await test()
 <p>主幹模式(mode為floating): 先取主幹清單(opt.floatingManifestUrl, 否則https://raw.githubusercontent.com/<repo>/master/<manifestPath>, 上限1MB, 時限同opt.stallMs), 同樣檢核schema且須為同一pkg與repo; 成功時其副本存於&lt;快取&gt;/manifest-last.json(紀錄, 不作為校驗依據); 失敗(含離線、無效)時, 有鏡像者先用鏡像之&lt;鏡像&gt;/<pkg>/manifest-last.json(鏡像管理者寫入之主幹清單原文, 信任錨為鏡像管理者; 同樣檢核, 上限1MB, 離線時http鏡像不追隨重導; 規格M5、F5), 無或拒用時用傳入之基準清單; 快取夾之副本只作紀錄, 不作退路(F6)。取得之檔(含解出、組合之檔)與清單不符(E_HASH_MISMATCH、E_SIZE_MISMATCH)、非離線且本次採用之清單亦為主幹模式時重取一次主幹清單再試(規格M5、F7, CDN約5分鐘不同步): raw.githubusercontent.com之CDN快取鍵不含查詢字串且不理會no-cache(2026-10-29實測), 故以https://api.github.com/repos/<repo>/commits/master(Accept: application/vnd.github.sha)解析主幹之提交, 改取該提交之清單, 其無commit之自有檔亦取自該提交; opt.floatingManifestUrl在https://raw.githubusercontent.com/<repo>/master/之下者同樣改取該提交之同一路徑, 其他分支或路徑者重取同一網址(不繞開CDN); 重取失敗時以原錯誤失敗, 重取後仍不符則以其錯誤失敗。主幹清單之信任錨為GitHub主幹(規格M5), 故opt.floatingManifestUrl只能是https://raw.githubusercontent.com/<repo>/之下(同一repo, 可改分支或路徑, 否則E_ARG), 套件之ensureBins不應轉傳使用者之值。</p>
 <p>壓縮檔: 於快取夾內本次專用之暫存夾(.work-<pid>-&lt;亂數&gt;)取得壓縮檔(或各分割檔各自校驗後依序組合並校驗assembled), 以tar解出成員(Windows為<SystemRoot>\System32\tar.exe即bsdtar, 其他系統為bsdtar或tar, zip須bsdtar[GNU tar不能解zip], tgz則bsdtar或GNU tar皆可, 格式由tar依內容辨識, 清單之type為宣告壓縮檔之類型[分割檔組合後之暫存檔名依之為assembled.zip或assembled.tgz], 參數皆為暫存夾內之相對路徑, 成員前加--, 只解出清單所列之成員[壓縮檔內其餘項目不解出; 成員路徑如build/Release/canvas.node, 不得含./段, 壓縮檔之項目若帶./前綴, bsdtar仍可比對, GNU tar比對不到而為E_EXTRACT, 故該類壓縮檔須有bsdtar], tgz因無法跳讀, 成員多而分批時每批各自自頭解壓縮), 解出之檔須為一般檔案[符號連結、資料夾、不在壓縮檔內者為E_EXTRACT]且符合extract之大小與SHA-256, 才原子移入快取; 暫存夾於結束時刪除, 刪不掉者(含下載核心刪不掉之暫存檔、主幹清單副本之暫存檔)列於結果之leftovers(不可列舉之屬性; 失敗時為錯誤物件之leftovers; 共用同一次取得者皆得到)。解壓時限同opt.totalMs, 逾時終止後等其結束至多5秒, 仍未結束則保留暫存夾並列入leftovers。解壓失敗為E_EXTRACT。</p>
 <p>清單與選項之字串一律須為原始字串(包裝物件new String與new Boolean不接受), 檢查之值即使用之值。離線時http(s)鏡像之重導不追隨(視為拒用)。</p>
-<p>併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者); 跨程序以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。</p>
-<p>錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from &lt;github|url&gt;); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[&lt;組名&gt;] file[&lt;同file之值&gt;])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。</p>
+<p>併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者)。跨程序(及同程序內來源設定不同而不共用者)以快取資料夾內之鎖只取得一次(規則帳本R-BIN-ENSURE-01規則19): 同一快取資料夾內同一取得單位(單一檔之<sha256>/<name>、檔案組之組識別)於快取未命中時取得鎖, 位置為&lt;快取&gt;/.lock-&lt;鍵&gt;(鍵為'f/<sha256>/<name>'或'b/&lt;組識別&gt;'[Windows轉小寫]之SHA-256前32碼), 為資料夾, 內含owner.json記持有者{ v: 1, pid, host, at(起始時刻毫秒), limitMs(持有上限), token }, 先於暫存資料夾寫好紀錄再一次更名放入(建立為原子, 已存在時更名失敗); 持鎖期間下載(含鏡像)、組合分割檔、解壓、校驗、發布, 成功、失敗、例外皆釋放(確認仍為本次之鎖才移走後刪除); 其他程序等候(檢查間隔50毫秒起漸增至1秒), 鎖釋放後重新檢查快取, 命中即用而不再下載, 未命中(持有者失敗)則自行取得; 可接手之鎖: 持有者已不在(本機PID不存在; 持有者與本程序之主機名[環境變數COMPUTERNAME或HOSTNAME]皆可取得且不同時不查PID)、持有逾其紀錄之上限、或紀錄無法解析且逾5秒, 以排他建立之接手標記使同一個鎖只有一個程序接手, 移走後核對確為所判定之鎖才刪除; 上限(持有與等候皆同)依本單位可能之下載次數(有鏡像者每個來源另加1次, 檔案組另加鏡像之組資料夾逐檔各1次)×opt.totalMs、解壓批數×(opt.totalMs＋5秒)與寬裕(opt.totalMs與60秒之小者)推得(opt.totalMs為每次下載之整體上限, 已含opt.maxAttempts之各次嘗試與重試間隔), 等候逾上限(每換一個持有者重新起算)reject E_LOCK_TIMEOUT; 離線且無鏡像者(無來源可取)只等候他方之鎖而不建立; 快取命中不取鎖; 無法建立鎖(快取資料夾不可寫等, 或建立之更名持續遇占用逾10秒)時不加鎖照舊取得; Windows下更名或讀紀錄遇EPERM、EBUSY、EACCES(及EMFILE等讀取錯誤)視為占用而重試, 只有紀錄內容非JSON才算無法解析。鎖之相關暫存名(.lock-&lt;鍵&gt;.new-、.old-、.rel-、.del-)皆在快取資料夾內, 不在<sha256>或組資料夾內, 不會被當成快取內容; 遭強制終止之程序留下之鎖由他程序依上述接手, 本次釋放不了之鎖列於leftovers。跨程序仍以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。</p>
+<p>錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取)、'E_LOCK_TIMEOUT'(等候他程序之取得逾上限, step為'lock', 另帶holderPid為持有者之PID或null; 訊息為固定詞彙, 不帶路徑與值), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from &lt;github|url&gt;); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[&lt;組名&gt;] file[&lt;同file之值&gt;])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。</p>
 <p>環境變數(本函數統一讀取process.env): W_BIN_CACHE(共用快取資料夾)、W_BIN_MIRROR(鏡像)、W_BIN_OFFLINE(1或true為離線)。</p>
 <p>破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking_39to44.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。</p>
-<p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs">Github</a>(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs)</p></li></ul></dd>
+<p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs">Github</a>(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs; 跨程序鎖: test/fsEnsureBinsLock.test.mjs)</p></li></ul></dd>
     
 
     
@@ -58376,7 +58376,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略</p></td>
+            <td class="description last"><p>輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'、'wait'[開始等候他程序持有之鎖, 含pid為持有者之PID或null]), name, ... }, 其拋錯皆忽略</p></td>
         </tr>
 
     
@@ -58416,7 +58416,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null</p></td>
+            <td class="description last"><p>輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null), 'lock-wait'(等候他方持有之跨程序鎖, 含name、phase為'start'[開始等候]、'end'[已取得鎖, 或只等候者之鎖已釋放, hit為其後重新檢查快取之結果]、'timeout'[逾等候上限], hit於start與timeout為null), 'lock-takeover'(接手可接手之鎖, 含name與why為'dead'[持有者已不在]、'expired'[持有逾其上限]、'invalid'[紀錄無法解析]), 'lock-skip'(無法建立鎖而不加鎖照舊取得, 含name與why為'fail'[快取資料夾不可寫等]、'busy'[建立之更名持續遇占用逾10秒]); 鎖未被他方持有且建立成功時(未等候、未接手)不通知鎖之事件, 取得鎖後重新檢查快取而命中時另通知一次'cache'(hit為true)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null</p></td>
         </tr>
 
     
@@ -58616,7 +58616,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入每個檔下載之整體時間上限毫秒數(交fsDownloadFileVerify)，亦為解壓之上限毫秒數，規則同stallMs</p></td>
+            <td class="description last"><p>輸入每個檔下載之整體時間上限毫秒數(交fsDownloadFileVerify)，亦為解壓之上限毫秒數，並為跨程序鎖之持有與等候上限之推算基準(見併發)，規則同stallMs</p></td>
         </tr>
 
     
@@ -58774,8 +58774,8 @@ await test()
 <p>主幹模式(mode為floating): 先取主幹清單(opt.floatingManifestUrl, 否則https://raw.githubusercontent.com/<repo>/master/<manifestPath>, 上限1MB, 時限同opt.stallMs), 同樣檢核schema且須為同一pkg與repo; 成功時其副本存於&lt;快取&gt;/manifest-last.json(紀錄, 不作為校驗依據); 失敗(含離線、無效)時, 有鏡像者先用鏡像之&lt;鏡像&gt;/<pkg>/manifest-last.json(鏡像管理者寫入之主幹清單原文, 信任錨為鏡像管理者; 同樣檢核, 上限1MB, 離線時http鏡像不追隨重導; 規格M5、F5), 無或拒用時用傳入之基準清單; 快取夾之副本只作紀錄, 不作退路(F6)。取得之檔(含解出、組合之檔)與清單不符(E_HASH_MISMATCH、E_SIZE_MISMATCH)、非離線且本次採用之清單亦為主幹模式時重取一次主幹清單再試(規格M5、F7, CDN約5分鐘不同步): raw.githubusercontent.com之CDN快取鍵不含查詢字串且不理會no-cache(2026-10-29實測), 故以https://api.github.com/repos/<repo>/commits/master(Accept: application/vnd.github.sha)解析主幹之提交, 改取該提交之清單, 其無commit之自有檔亦取自該提交; opt.floatingManifestUrl在https://raw.githubusercontent.com/<repo>/master/之下者同樣改取該提交之同一路徑, 其他分支或路徑者重取同一網址(不繞開CDN); 重取失敗時以原錯誤失敗, 重取後仍不符則以其錯誤失敗。主幹清單之信任錨為GitHub主幹(規格M5), 故opt.floatingManifestUrl只能是https://raw.githubusercontent.com/<repo>/之下(同一repo, 可改分支或路徑, 否則E_ARG), 套件之ensureBins不應轉傳使用者之值。</p>
 <p>壓縮檔: 於快取夾內本次專用之暫存夾(.work-<pid>-&lt;亂數&gt;)取得壓縮檔(或各分割檔各自校驗後依序組合並校驗assembled), 以tar解出成員(Windows為<SystemRoot>\System32\tar.exe即bsdtar, 其他系統為bsdtar或tar, zip須bsdtar[GNU tar不能解zip], tgz則bsdtar或GNU tar皆可, 格式由tar依內容辨識, 清單之type為宣告壓縮檔之類型[分割檔組合後之暫存檔名依之為assembled.zip或assembled.tgz], 參數皆為暫存夾內之相對路徑, 成員前加--, 只解出清單所列之成員[壓縮檔內其餘項目不解出; 成員路徑如build/Release/canvas.node, 不得含./段, 壓縮檔之項目若帶./前綴, bsdtar仍可比對, GNU tar比對不到而為E_EXTRACT, 故該類壓縮檔須有bsdtar], tgz因無法跳讀, 成員多而分批時每批各自自頭解壓縮), 解出之檔須為一般檔案[符號連結、資料夾、不在壓縮檔內者為E_EXTRACT]且符合extract之大小與SHA-256, 才原子移入快取; 暫存夾於結束時刪除, 刪不掉者(含下載核心刪不掉之暫存檔、主幹清單副本之暫存檔)列於結果之leftovers(不可列舉之屬性; 失敗時為錯誤物件之leftovers; 共用同一次取得者皆得到)。解壓時限同opt.totalMs, 逾時終止後等其結束至多5秒, 仍未結束則保留暫存夾並列入leftovers。解壓失敗為E_EXTRACT。</p>
 <p>清單與選項之字串一律須為原始字串(包裝物件new String與new Boolean不接受), 檢查之值即使用之值。離線時http(s)鏡像之重導不追隨(視為拒用)。</p>
-<p>併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者); 跨程序以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。</p>
-<p>錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from &lt;github|url&gt;); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[&lt;組名&gt;] file[&lt;同file之值&gt;])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。</p>
+<p>併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者)。跨程序(及同程序內來源設定不同而不共用者)以快取資料夾內之鎖只取得一次(規則帳本R-BIN-ENSURE-01規則19; 位置、格式、等候、接手、上限與事件見fsEnsureBins): 鎖為&lt;快取&gt;/.lock-&lt;鍵&gt;資料夾(內含owner.json), 快取未命中時才取, 持鎖期間取得、校驗、發布, 成功、失敗、例外皆釋放; 他程序等候, 鎖釋放後重新檢查快取, 命中即用; 持有者已不在、逾其上限、紀錄無法解析者可接手(同一個鎖只有一個程序接手); 等候逾上限reject E_LOCK_TIMEOUT; 離線且無鏡像者只等候不建立; 無法建立鎖時不加鎖照舊取得。跨程序仍以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。</p>
+<p>錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取)、'E_LOCK_TIMEOUT'(等候他程序之取得逾上限, step為'lock', 另帶holderPid為持有者之PID或null; 訊息為固定詞彙, 不帶路徑與值), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from &lt;github|url&gt;); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[&lt;組名&gt;] file[&lt;同file之值&gt;])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。</p>
 <p>破壞性變更(wsemi-run10, 規則帳本sgud/rule/rulebook_breaking_39to44.md第42項): 網址之釘選判定收緊(只收版本標籤之資產網址與40碼提交之原始檔網址); 名稱leftovers、manifest、entries、bundles拒收; 主幹模式於主幹清單取不到時先用鏡像之manifest-last.json, 取得之檔不符時另連api.github.com重取; E_OFFLINE_MISSING之missing各項另有bundle; 結果另有不可列舉之manifest、entries、bundles。</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/fsEnsureBins.test.mjs">Github</a>(檔案組: test/fsEnsureBinsBundle.test.mjs; 主幹模式、網址規則與採用之清單: test/fsEnsureBinsTrunk.test.mjs)</p></li></ul></dd>
     
@@ -58783,7 +58783,7 @@ await test()
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fsEnsureBinsCore.mjs.html">fsEnsureBinsCore.mjs</a>, <a href="fsEnsureBinsCore.mjs.html#line2614">line 2614</a>
+        <a href="fsEnsureBinsCore.mjs.html">fsEnsureBinsCore.mjs</a>, <a href="fsEnsureBinsCore.mjs.html#line3126">line 3126</a>
     </li></ul></dd>
     
 
@@ -59204,7 +59204,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'), name, ... }, 其拋錯皆忽略</p></td>
+            <td class="description last"><p>輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'、'wait'[開始等候他程序持有之鎖, 含pid為持有者之PID或null]), name, ... }, 其拋錯皆忽略</p></td>
         </tr>
 
     
@@ -59244,7 +59244,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null</p></td>
+            <td class="description last"><p>輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null), 'lock-wait'(等候他方持有之跨程序鎖, 含name、phase為'start'、'end'[hit為其後重新檢查快取之結果]、'timeout', hit於start與timeout為null), 'lock-takeover'(接手可接手之鎖, 含name與why為'dead'、'expired'、'invalid'), 'lock-skip'(無法建立鎖而不加鎖, 含name與why為'fail'、'busy'); 鎖未被他方持有且建立成功時不通知鎖之事件, 取得鎖後重新檢查快取而命中時另通知一次'cache'(hit為true)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null</p></td>
         </tr>
 
     
@@ -60162,7 +60162,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入內部監看(fsWatchFolder)之診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次並轉傳給內部之fsWatchFolder(停止監看錯誤之記錄、其監聽器拋錯之通報)，預設false(只輸出安全摘要)</p></td>
+            <td class="description last"><p>輸入診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次，用於內部監看(fsWatchFolder，轉傳)之停止監看錯誤之記錄與其監聽器拋錯之通報，以及本函數自身派發給使用端監聽器時之拋錯通報(同一快照)，預設false(只輸出安全摘要)</p></td>
         </tr>
 
     
@@ -60202,7 +60202,7 @@ await test()
                 </td>
             
 
-            <td class="description last"><p>輸入診斷與警告之出口函數：opt.debug之警告以(msg, { fn, reason, key })呼叫，未給則用console.warn；另建立時讀一次並轉傳給內部之fsWatchFolder，其停止監看錯誤之記錄與監聽器拋錯之通報以(label, { errType, errCode? }, detail)呼叫而不寫console；本函數自身派發給使用端監聽器時之拋錯通報不在此列(依evEmit之預設)，預設null</p></td>
+            <td class="description last"><p>輸入診斷與警告之出口函數：opt.debug之警告以(msg, { fn, reason, key })呼叫，未給則用console.warn；另建立時讀一次(同一快照)，內部監看(fsWatchFolder，轉傳)之停止監看錯誤之記錄與監聽器拋錯之通報、本函數自身派發給使用端監聽器時之拋錯通報(無error監聽者時)皆以(label, { errType, errCode? }, detail)呼叫而不寫console，預設null</p></td>
         </tr>
 
     
@@ -60275,7 +60275,7 @@ await test()
 
         
 <div class="param-desc">
-    <p>回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件(訊息如'invalid evName: must be a string'，不帶事件名稱)，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件(Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EPERM)'，保留其code)，呼叫端須自行try</p>
+    <p>回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則經opt.funLog(給予時只交給它)，否則console.error'[wsemi fsEvem] listener threw'與安全摘要(opt.logDetail為true時輸出遮罩後之細節)；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件(訊息如'invalid evName: must be a string'，不帶事件名稱)，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件(Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EPERM)'，保留其code)，呼叫端須自行try</p>
 </div>
 
 
@@ -71089,7 +71089,7 @@ opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只�
                 </td>
             
 
-            <td class="description last"><p>輸入偵測端內部監看(fsWatchFile)之診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次並轉傳給buildTar內部之fsWatchFile(停止監看錯誤之記錄、其監聽器拋錯之通報)，預設false(只輸出安全摘要)</p></td>
+            <td class="description last"><p>輸入診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次，用於偵測端內部監看(buildTar內部之fsWatchFile，轉傳)之停止監看錯誤之記錄與其監聽器拋錯之通報，以及本函數自身派發set、remove、change事件時之監聽器拋錯通報(同一快照)，預設false(只輸出安全摘要)</p></td>
         </tr>
 
     
@@ -71129,7 +71129,7 @@ opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只�
                 </td>
             
 
-            <td class="description last"><p>輸入偵測端內部監看之診斷輸出函數，格式為(label, safe, detail)=&gt;{}，須為函數才生效，建立時讀一次並轉傳給buildTar內部之fsWatchFile，給予時其停止監看錯誤之記錄與監聽器拋錯之通報只交給它而不寫console；本函數自身派發change等事件時之拋錯通報不在此列(依evEmit之預設)，預設null</p></td>
+            <td class="description last"><p>輸入診斷輸出函數，格式為(label, safe, detail)=&gt;{}，須為函數才生效，建立時讀一次(同一快照)，給予時偵測端內部監看之停止監看錯誤之記錄與監聽器拋錯之通報、本函數自身派發set、remove、change事件時之監聽器拋錯通報(無error監聽者時)皆只交給它而不寫console，預設null</p></td>
         </tr>
 
     
@@ -78627,11 +78627,11 @@ console.log(`select failed ${diag.brief(err, { format: 'text' })}`)
 可偵測之Proxy為'Proxy'(不觸發陷阱)；原生錯誤(util.types.isNativeError，含跨realm；無util時以有界原型鏈可達Error.prototype判定)取類別名
 (原型鏈首個name若為字串資料屬性且非Error即取之，否則首個自有資料constructor之自有資料name)，僅在內建錯誤類別名或opt.types所列者照列；類別名不在其中時，opt.types另以建構子名(首個自有資料constructor之自有資料name)比對，
 在opt.types者列建構子名(實例自設name者，如pg之DatabaseError實例之name為'error'，宣告types:['DatabaseError']即列DatabaseError)；其餘一律'Error'(建構子名只與opt.types比對，不與內建錯誤類別名之集合比對)；其他物件為'object'</p>
-<p>errCode: 取自有資料屬性code(不執行getter)，不在允許集合者依序取opt.nested各鍵所指物件之自有資料code(深度1)；允許集合為系統錯誤名(SYS)、Node內部與TLS代碼(NODE)與opt.codes所宣告之集合
+<p>errCode: 取自有資料屬性code(不執行getter)，不在允許集合者依序取opt.nested各鍵所指物件之自有資料code(深度1)；允許集合為系統錯誤名(SYS)、Node內部與TLS代碼及undici(Node內建fetch)之連線與回應層代碼(NODE，如UND_ERR_SOCKET、UND_ERR_CONNECT_TIMEOUT、UND_ERR_HEADERS_TIMEOUT、UND_ERR_BODY_TIMEOUT)與opt.codes所宣告之集合
 (sqlstate、sqlite、mysql、mssql、mongo、mongoServer、lmdb、level)，不用任何樣式，整數只收集合明列者(mongoServer、mssql)</p>
 <p>回傳以物件字面值一次建成{ errType }或{ errType, errCode }；內部任何失敗回{ errType: 'unknown' }；不執行使用端程式、永不拋錯</p>
 <p>opt.format恰為'text'時改回行內字串'(errType)'或'(errType errCode)'(如'(Error ENOENT)'、'(TypeError ECONNREFUSED)'，內部失敗為'(unknown)')，供把摘要嵌入一行log或固定詞彙之訊息(取代各自以JSON.stringify或自組類別名與代碼)，內容同物件格式(類別名與代碼皆為白名單內之識別字，不含空白以外之分隔)；其餘值(含未給)為物件格式(只讀自有資料屬性)</p>
-<p>fetch(Node之undici)之網路錯誤為TypeError('fetch failed')，系統錯誤碼(ECONNREFUSED、ENOTFOUND、ECONNRESET等)在其cause.code而非本身之code，須宣告opt.nested: ['cause']才取得(見範例)；cause為AggregateError(多位址皆連不上)時其自有code亦可取得</p>
+<p>fetch(Node之undici)之網路錯誤為TypeError('fetch failed')，系統錯誤碼(ECONNREFUSED、ENOTFOUND、ECONNRESET等)與undici之代碼(UND_ERR_SOCKET、UND_ERR_HEADERS_TIMEOUT等; 讀本體時中途斷線為TypeError('terminated'))在其cause.code而非本身之code，須宣告opt.nested: ['cause']才取得(見範例)；cause為AggregateError(多位址皆連不上)時其自有code亦可取得</p>
 <p>已知限制: 無util.types時Proxy不可偵測(判定原型鏈時其陷阱可能被執行)；跨realm錯誤於無util時以有界原型鏈判定</p>
 <p>Unit Test: <a href="https://github.com/yuda-lyu/wsemi/blob/master/test/getDiagBriefErr.test.mjs">Github</a></p></li></ul></dd>
     
@@ -138851,7 +138851,7 @@ console.log(u8arr2u16arr('abc', { returnWithStateAndMsg: true }))
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Tue Nov 24 2026 19:08:11 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Wed Nov 25 2026 01:28:22 GMT+0800 (台北標準時間) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

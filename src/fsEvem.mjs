@@ -75,10 +75,10 @@ function checkEvName(evName) {
  * @param {Number|String} [opt.timeInterval=100] 輸入偵測檔案變更間隔時間，opt類參數(有效整數，正整數計時毫秒1~2147483647，須為整數〔交給chokidar〕，數字字串亦可，去頭尾空白後取值)，同時為內部週期輪詢事件資料夾是否存在之週期，與代表chokidar開啟polling時的interval，單位為毫秒ms，非預期之輸入(非有效數字、小數、0、負數、超過2147483647、Infinity、'0x10'、包裝物件等)視為未給而改用預設，不夾至上限、不報錯，預設為100
  * @param {Number|String} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間，opt類參數(規則同opt.timeInterval)，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，非預期之輸入視為未給而改用預設，不夾至上限、不報錯，預設為300
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval或opt.timeBinaryInterval為非預期之輸入而改用預設時輸出警告，非布林視為false，警告為固定詞彙(不含傳入之值)，同一參數每個行程只警告一次，預設false
- * @param {Boolean} [opt.logDetail=false] 輸入內部監看(fsWatchFolder)之診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次並轉傳給內部之fsWatchFolder(停止監看錯誤之記錄、其監聽器拋錯之通報)，預設false(只輸出安全摘要)
- * @param {Function} [opt.funLog=null] 輸入診斷與警告之出口函數：opt.debug之警告以(msg, { fn, reason, key })呼叫，未給則用console.warn；另建立時讀一次並轉傳給內部之fsWatchFolder，其停止監看錯誤之記錄與監聽器拋錯之通報以(label, { errType, errCode? }, detail)呼叫而不寫console；本函數自身派發給使用端監聽器時之拋錯通報不在此列(依evEmit之預設)，預設null
+ * @param {Boolean} [opt.logDetail=false] 輸入診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次，用於內部監看(fsWatchFolder，轉傳)之停止監看錯誤之記錄與其監聽器拋錯之通報，以及本函數自身派發給使用端監聽器時之拋錯通報(同一快照)，預設false(只輸出安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入診斷與警告之出口函數：opt.debug之警告以(msg, { fn, reason, key })呼叫，未給則用console.warn；另建立時讀一次(同一快照)，內部監看(fsWatchFolder，轉傳)之停止監看錯誤之記錄與監聽器拋錯之通報、本函數自身派發給使用端監聽器時之拋錯通報(無error監聽者時)皆以(label, { errType, errCode? }, detail)呼叫而不寫console，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'write'時為emit已寫出事件檔案(含evName為事件名稱，即檔名)，'ready'時為內部監看事件檔案資料夾之watcher已就緒(初始掃描完成，此後寫入之事件檔案才經穩定期後確實被接收；僅傳了onTrace才監聽，不影響原行為，且不轉傳內部fsWatchFolder之事件流)，'skip'時為監看到檔案事件但略過(含reason為略過原因，'kind'代表事件種類非add與change如資料夾本身之addDir或事件檔之unlink，'content'代表檔案內容無法解析為非空物件；kind為監看事件之種類；evName為由檔名推得之事件名稱)，'emit'時為即將對本程序之監聽器派發一個事件(含evName為事件名稱；不含事件內容)，'clear'時為clear被呼叫(僅首次)；clear後不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響事件傳遞，預設null
- * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則console.error；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件(訊息如'invalid evName: must be a string'，不帶事件名稱)，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件(Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EPERM)'，保留其code)，呼叫端須自行try
+ * @returns {Object} 回傳事件物件，包含on、emit、clear函數，on可進行監聽指定事件，emit為跨程序發布事件(寫入事件檔案後由各程序之watcher接收再於本地派發)，clear為停止全部監聽，不須輸入。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改於本程序派發error事件{ fun: 'listener', name, msg, args }(僅本地不寫檔廣播)，無error監聽者則經opt.funLog(給予時只交給它)，否則console.error'[wsemi fsEvem] listener threw'與安全摘要(opt.logDetail為true時輸出遮罩後之細節)；故事件名稱請避免使用'error'。emit之事件名稱不合法(見上，如非字串、空字串、含路徑分隔字元、'..')時不寫出任何檔案並同步拋出Error物件(訊息如'invalid evName: must be a string'，不帶事件名稱)，寫入事件檔案失敗(如資料夾無法寫入)時亦同步拋出Error物件(Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code EPERM)'，保留其code)，呼叫端須自行try
  * @example
  * need test in nodejs.
  *
@@ -204,12 +204,15 @@ function fsEvem(opt = {}) {
 
     }
 
-    //optWatch, 診斷之兩鍵(opt.logDetail須===true、opt.funLog須為函數, 其餘視為未給; 建立時讀一次)轉傳給內部之fsWatchFolder(其停止監看錯誤之記錄與監聽器拋錯之通報)
+    //optDiag, 診斷之兩鍵(opt.logDetail須===true、opt.funLog須為函數, 其餘視為未給; 建立時讀一次), 轉傳給內部之fsWatchFolder(其停止監看錯誤之記錄與監聽器拋錯之通報), 並為本函數自身派發給使用端監聽器時之拋錯通報(evEmit)所用之同一快照(排程第621項①, R-DIAG-01規則20)
+    let optDiag = pickDiagOpt(opt)
+
+    //optWatch
     let optWatch = {
         polling,
         timeInterval,
         timeBinaryInterval,
-        ...pickDiagOpt(opt),
+        ...optDiag,
     }
     if (trace) {
         //僅轉為本函數之ready通知, 不轉傳內部fsWatchFolder之事件流
@@ -298,6 +301,7 @@ function fsEvem(opt = {}) {
             let self = this
             return evEmit(ev, evName, [pkg, time], {
                 tag: 'fsEvem',
+                ...optDiag, //監聽器拋錯之通報經同一快照之opt.logDetail、opt.funLog
                 funEmit: (nm, ...a) => {
                     return emt.call(self, nm, ...a)
                 },

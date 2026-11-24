@@ -246,3 +246,14 @@
 - **計時器之 fun 拋錯改經 getDiag 後,既有子行程執行器只攔 console.log**: 記錄改寫 console.error 後計數變 0 而紅;執行器之捕捉改收兩個通道、純物件以 JSON 記(`safeStr` 對物件只回 `<object>`,看不出安全摘要之內容).
 - **(twsm1c)同一包裝套到多個 evEmit 站點,逐站各寫一個只有它擋得住之變異**: fsWatchFile 之 change、error 兩站與 fsWatchFolder 之資料夾消失、change、error 三站各一;error 站以「error 監聽器本身拋錯」觸發(evEmit 對 'error' 事件之監聽器拋錯走診斷出口),資料夾消失站以假 watcher 加刪除資料夾觸發;`test/tools/fsWatchKit.mjs` 之 `withFakeChokidar` 讓 all、error 之送出與 unwatch/close 之失敗皆決定性(直接改假 watcher 實例之方法,不必改 FSWatcher 原型).
 - **變異錨點勿跨行**: 工作樹中部分 src 為 CRLF(`fsWatchFolder.mjs`、`fsEvem.mjs`),以 `\n` 串接之多行錨點計數為 0;跑器照規則報錨點失敗而非略過,改單行且唯一之錨點(必要時含行首縮排以區分同字串之他站).
+
+## 跨程序鎖:資料夾＋更名放入、接手標記、真多程序測試以子行程事件同步、複審抓到之讀取錯誤誤判(2026-11-24,主控任務 20261124223109,twsm2)
+
+- **原子建立且他方看到即已含紀錄**: 先建暫存資料夾寫好 `owner.json`,再一次 `renameSync` 為鎖資料夾;目錄更名到已存在之(非空)目錄於 Windows 為 EPERM、POSIX 為 ENOTEMPTY/EEXIST,皆當「占用」.以 `openSync('wx')` 之鎖檔則有「已建而未寫」之窗,讀者須另設寬限.釋放不就地 `rmSync(L, recursive)`(遞迴刪除期間他方放入之新鎖會被刪),改更名移走後再刪,並核對所移走者之 token.
+- **接手只一方**: 以「鎖身分(token)之雜湊」為名排他建立接手標記,持標記後再讀一次仍同一鎖才更名移走、核對後刪;只用「更名移走＋核對＋移回」者,多個等候者同時判定死鎖時,移回前之空窗可讓第三方建鎖而並存.
+- **讀取錯誤不得當成「紀錄無法解析」**(複審 D1): `readFileSync` 之 EMFILE、EIO 等若歸入無法解析,持續時連接手前之再讀、移走後之核對都讀不到而判為同一鎖,存活之鎖被刪;只有 `SyntaxError`／欄位不符才算無法解析,其餘一律稍後再讀.**Windows 防毒短暫占用剛建之資料夾**(複審 D2): 建立之更名重試以時間(10 秒)而非次數為限.
+- **真多程序測試之同步**: 子行程逐行印出 `EV <onTrace事件 JSON>`,父行程以 `traceRec` 接收並等「n-1 個子行程 lock-wait start」＋伺服器端「閘門路徑之請求已到達」才放行閘門;離線鏡像之持鎖者不發 download 事件,故不以「一個 download」為同步點.被終止之持鎖者以 `cp.kill()`(Windows 為 TerminateProcess)後鎖留原處,其餘等候者恰一個 `lock-takeover`(dead).
+- **同程序內兩次呼叫經同一把鎖**: 以不同之下載選項(如 `retryDelayMs` 10／11)使 `ensureEntry` 不共用同一次取得;手工建立之鎖以本測試行程之 pid 當「存活之他方」.原有「不共用者各自下載 3 次」之測試與新規則衝突,依規則改為斷言請求 1 次(破壞性變更).
+- **真實 fetch 失敗之 cause.code(Node v24、undici 7.30)**: 連上即斷為 ECONNRESET(非 UND_ERR_SOCKET);已收標頭而本體中途斷為 `TypeError('terminated')`＋`UND_ERR_SOCKET`;標頭逾 16KB 為 `UND_ERR_HEADERS_OVERFLOW`;本體短於 content-length 為 `UND_ERR_RES_CONTENT_LENGTH_MISMATCH`;https 連 http 服務為 `ERR_SSL_WRONG_VERSION_NUMBER`;標頭／本體逾時要 undici 套件之 `Agent({ headersTimeout })`(內建 fetch 預設 300 秒;其計時粒度約 1 秒,200ms 之設定實耗約 2.5 秒);Windows 本機連無人監聽之埠約 9ms 即拒絕,連線逾時無法本機重現.
+- **終止持鎖者後不得再讀鎖之狀態**: 「終止持鎖子行程 → await 其 close → 讀 owner.json 核對 pid」於整檔連跑 20 次中 1 次紅(單案連跑 30 次皆綠;當次失敗訊息未留,原因為推定,改後整檔連跑 40 次見 twsm2 報告): 等候者每 ≤1 秒輪詢,持有者一結束即可能被接手,`close` 事件到達測試行程之前後鎖已換人或不存在.持有者之核對須在終止之前(持鎖期間);終止後只斷言最終結果(接手次數、下載次數、皆成功).連跑腳本須記失敗訊息全文(初版只記案名,無從確認哪一條斷言).
+- **修前紅用 HEAD 副本**: `git archive HEAD src test package.json | tar -x -C ./tmp/<案>/head`,疊上新測試檔,以 `quiet-run --cwd <副本>` 跑;副本在 repo 之 `./tmp` 下,裸名匯入向上解析到 repo 之 `node_modules`(不必建連接點).

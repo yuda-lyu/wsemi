@@ -6,6 +6,12 @@
 
 ## 索引(哪類查哪檔)
 
+### `sgud/state/state_外部程序與檔案_第2輪.md`(外部程序與檔案,第 2 輪起;約 3KB;新增於 2026-11-24)
+
+查: `fsEnsureBins` 之跨程序只取得一次(鎖之位置與格式、等候、接手、上限、事件、測試、已知缺口).所含節:
+
+- `fsEnsureBins` 跨程序只取得一次(排程第 632 項;twsm2,2026-11-24)〔本節於 2026-11-24 新增〕
+
 ### `sgud/state/state_診斷與遮罩_第2輪.md`(診斷輸出與遮罩,第 2 輪起;約 5KB;新增於 2026-11-24)
 
 查: 串流遮罩器 `genDiagStreamMasker`、`maskDiagCtrl`、`maskDiagToken`、`pickDiagOpt` 之新增,`getDiag` 之 warn、行內摘要格式、`maskDiagText.credPatterns`、`downloadExcelFileFromData` 經 getDiag 出口,收錄判定(含 `logKey` 不收)、全庫 console 之 AST 盤點、驗證數字、待裁示與使用端改用清單.所含節:
