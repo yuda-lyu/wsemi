@@ -2024,6 +2024,7 @@ describe(`fsEnsureBins with a local server`, function() {
     TRACE_FIELDS['lock-wait'] = ['name', 'phase', 'hit'] //跨程序鎖(twsm2): 只在等候他方持有之鎖時通知
     TRACE_FIELDS['lock-takeover'] = ['name', 'why'] //跨程序鎖(twsm2): 只在接手可接手之鎖時通知
     TRACE_FIELDS['lock-skip'] = ['name', 'why'] //跨程序鎖(twsm2): 只在無法建立鎖而不加鎖時通知
+    TRACE_FIELDS['lock-orphan'] = ['name', 'work', 'part'] //跨程序鎖(twsm3, 排程第634項①): 只在持鎖時清除了確定無主之暫存時通知
     let checkEvents = (events) => {
         for (let e of events) {
             assert.strict.equal(Object.isFrozen(e), true, e.type)

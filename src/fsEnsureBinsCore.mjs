@@ -881,7 +881,8 @@ function buildCtx(opt) {
         extractMs: o.extractMs,
         refs: o.refs,
         leftovers: [],
-        fresh: [], //離線時記下「開始時尚不存在」之資料夾, 缺檔reject前把其中仍為空者清掉(見tidyFresh)
+        fresh: [], //離線(且有鏡像)時記下「開始時尚不存在」之上層資料夾(快取根等), 缺檔reject前把其中仍為空者清掉(見tidyFresh)
+        tidy: { n: 0 }, //持鎖時已清除之本單位之夾之個數(物件: 各次取得之脈絡共用), 併入tidy事件之n
         trace: null, //觀察回調(opt.onTrace), 由入口取得後設定
         pid,
         host: o.envHost,
@@ -1072,6 +1073,23 @@ function verifyOpt(ctx, extra) {
 }
 
 
+//verifyTo, 經fsDownloadFileVerifyCore取得至dest; 其建暫存檔遇ENOENT(E_FS, cause之code為ENOENT: 下載核心建夾之後、建暫存檔之前, 該夾被他程序之離線清除刪掉)時再試一次(下載核心於入口重建資料夾)
+//排程第639項: 同一sha256而不同檔名之兩個取得單位共用<sha256>夾而鎖不同, 一方持鎖清除其空夾時不得使另一方失敗(只多一次請求)
+async function verifyTo(ctx, url, dest, exp, vopt) {
+    try {
+        return await fsDownloadFileVerifyCore(url, dest, exp, vopt)
+    }
+    catch (err) {
+        //最終錯誤之cause為末次嘗試之錯誤(E_FS, step download), 其cause為固定詞彙加錯誤碼之Error(code ENOENT)
+        let c = get(err, 'cause')
+        if (codeOf(err) !== 'E_FS' || get(c, 'step') !== 'download' || codeOf(get(c, 'cause')) !== 'ENOENT') {
+            throw err
+        }
+        return await fsDownloadFileVerifyCore(url, dest, exp, vopt) //暫存檔未建成, 無暫存可留
+    }
+}
+
+
 //tagErr, 下載錯誤標註所屬之套件、檔名(檔案組為組名與組內路徑file)與來源(訊息前綴), 不改code
 function tagErr(ctx, err, name, source, file = null) {
     if (!isOwnErr(err) && !isStr(codeOf(err))) {
@@ -1158,7 +1176,7 @@ async function fromMirror(ctx, e, o, dest) {
             if (!st.isFile()) {
                 throw new Error('the mirror copy is not a file')
             }
-            let rv = await fsDownloadFileVerifyCore(at, dest, exp, verifyOpt(ctx, { fetch: localFetch(ctx, at), maxAttempts: 1, retryOnMismatch: false }))
+            let rv = await verifyTo(ctx, at, dest, exp, verifyOpt(ctx, { fetch: localFetch(ctx, at), maxAttempts: 1, retryOnMismatch: false }))
             addLeft(ctx, e, rv)
         }
         else {
@@ -1169,7 +1187,7 @@ async function fromMirror(ctx, e, o, dest) {
                     return fn(u, { ...init, redirect: 'manual' })
                 }
                 : ctx.fetchRaw
-            let rv = await fsDownloadFileVerifyCore(at, dest, exp, verifyOpt(ctx, { fetch: f, retryOnMismatch: false }))
+            let rv = await verifyTo(ctx, at, dest, exp, verifyOpt(ctx, { fetch: f, retryOnMismatch: false }))
             addLeft(ctx, e, rv)
         }
         emit(ctx, { step: 'mirror', name: e.name, file: fn, from: maskUrl(at), result: 'ok' })
@@ -1294,7 +1312,7 @@ async function obtain(ctx, e, o, dest, reasons) {
         ctx.trace('download', { name: e.name, file: fn })
     }
     try {
-        let rv = await fsDownloadFileVerifyCore(o.url, dest, { sha256: o.sha256, size: o.size }, verifyOpt(ctx, { fetch: ctx.fetchRaw }))
+        let rv = await verifyTo(ctx, o.url, dest, { sha256: o.sha256, size: o.size }, verifyOpt(ctx, { fetch: ctx.fetchRaw }))
         addLeft(ctx, e, rv) //成功前之嘗試刪不掉之暫存檔
     }
     catch (err) {
@@ -1557,8 +1575,17 @@ async function place(ctx, e, fpX, dirFinal, fpFinal) {
             if (await isExpected(ctx, fpFinal, e.final)) {
                 return
             }
-            if (!codesBusy.includes(codeOf(err)) || i === 5) {
+            let c = codeOf(err)
+            if ((!codesBusy.includes(c) && c !== 'ENOENT') || i === 5) {
                 throw mkErr('E_RENAME', `${labelOf(ctx, e)}: can not move the extracted file into the cache: ${errMsg(err)}`, { step: 'place', pkg: ctx.pkg, bin: e.name, cause: fsErrCause(err) })
+            }
+            if (c === 'ENOENT') {
+                //目的夾於建立之後被他程序之離線清除(空夾)刪掉(同一sha256而不同檔名之他單位; 排程第639項): 重建再試
+                try {
+                    ctx.fs.mkdirSync(dirFinal, { recursive: true })
+                }
+                catch (err2) {}
+                continue
             }
             await sleep(200 * i)
         }
@@ -1584,8 +1611,18 @@ function mkWork(ctx, e) {
             return fp
         }
         catch (err) {
-            if (codeOf(err) !== 'EEXIST' || i === 4) {
+            let c = codeOf(err)
+            if ((c !== 'EEXIST' && c !== 'ENOENT') || i === 4) {
                 throw fail(err)
+            }
+            if (c === 'ENOENT') {
+                //快取根於建立之後被他程序之離線清除(空夾)刪掉: 重建再試(排程第639項; 持鎖時快取根內有鎖而不會為空, 此為不加鎖時之保險)
+                try {
+                    ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
+                }
+                catch (err2) {
+                    throw fail(err2)
+                }
             }
         }
     }
@@ -1621,9 +1658,18 @@ function rmWork(ctx, e, work) {
 }
 
 
-//noteFresh, 離線時記下fd(本檔之<快取>/<sha256>夾)及其上層中「此刻尚不存在」之資料夾(自fd往上, 遇存在者即止)
-//供缺檔reject前tidyFresh清掉其中仍為空者; 原本已存在之夾不記; 讀不到狀態(權限等)則不記
+//mayTidy, 本次呼叫是否可能建立資料夾而須於離線缺檔時清除: 只有離線且有鏡像者(鏡像之取得經鎖、下載核心與暫存夾而建夾);
+//離線且無鏡像者不建任何資料夾(只等候他方之鎖, 先於建夾即回報缺檔), 其清除只會刪到他程序所建者(排程第639項之競態), 故不記也不清
+function mayTidy(ctx) {
+    return ctx.offline && ctx.mirrorKind !== ''
+}
+
+
+//noteFresh, 離線(且有鏡像)時記下fd(本檔之<快取>/<sha256>夾或檔案組之組資料夾)及其上層中「此刻尚不存在」之資料夾(自fd往上, 遇存在者即止)
+//回傳fd本身是否為此刻尚不存在(本單位之夾: 由runEntry/runBundle於持有本單位之鎖時清除, tidyUnit); 其上層(快取根等)記入ctx.fresh, 缺檔reject前由tidyFresh清除
+//原本已存在之夾不記; 讀不到狀態(權限等)則不記
 function noteFresh(ctx, fd) {
+    let unitFresh = false
     let cur = fd
     for (;;) {
         let st = null
@@ -1631,40 +1677,142 @@ function noteFresh(ctx, fd) {
             st = lstatOrNull(ctx, cur)
         }
         catch (err) {
-            return
+            return unitFresh
         }
         if (st !== null) {
-            return
+            return unitFresh
         }
-        if (!ctx.fresh.includes(cur)) {
+        if (cur === fd) {
+            unitFresh = true
+        }
+        else if (!ctx.fresh.includes(cur)) {
             ctx.fresh.push(cur)
         }
         let up = ctx.path.join(cur, '..')
         if (up === cur) {
-            return
+            return unitFresh
         }
         cur = up
     }
 }
 
 
-//tidyFresh, 離線缺檔reject前, 把noteFresh所記之資料夾中仍為空者刪除(由深而淺, 用rmdirSync只刪空夾, 非空或刪不掉者保留不報錯); 回傳刪除之個數
-//缺檔之嘗試(暫存夾、下載核心建立之<sha256>夾、鏡像失敗而留下之空夾)不得留下本次新建之空資料夾; 傳入之fs無rmdirSync者不處理
+//rmdirQuiet, 只刪空資料夾(rmdirSync; 非空或刪不掉者保留不報錯), 回傳是否刪除; 傳入之fs無rmdirSync者不處理
+function rmdirQuiet(ctx, fp) {
+    try {
+        let rmdir = get(ctx.fsRaw, 'rmdirSync')
+        if (isfun(rmdir)) {
+            rmdir.call(ctx.fsRaw, fp)
+            return true
+        }
+    }
+    catch (err) {}
+    return false
+}
+
+
+//tidyUnit, 離線缺檔時清除本單位之夾(noteFresh時尚不存在者)中仍為空者; 只在持有本單位之鎖時呼叫(排程第639項):
+//他程序取得同一單位必先持鎖, 故持鎖期間此夾不會是他程序下載中(下載核心已建夾而尚未建暫存檔)之夾
+function tidyUnit(ctx, fd) {
+    if (rmdirQuiet(ctx, fd)) {
+        ctx.tidy.n++
+    }
+}
+
+
+//tidyFresh, 離線缺檔reject前, 把noteFresh所記之上層資料夾(快取根及其上層)中仍為空者刪除(由深而淺, 用rmdirSync只刪空夾, 非空或刪不掉者保留不報錯); 回傳刪除之個數(含持鎖時已清除之本單位之夾)
+//缺檔之嘗試不得留下本次新建之空資料夾; 快取根只在為空時刪除(他程序之鎖、暫存夾、<sha256>夾皆在其內而使之非空), 他程序「建快取根後建其內之夾」之兩步遇快取根被刪(ENOENT)皆重建再試(tryLock、mkWork、writeLast), 故不因此失敗或不加鎖
 function tidyFresh(ctx) {
-    let n = 0
+    let n = ctx.tidy.n
+    ctx.tidy.n = 0
     let fps = [...ctx.fresh].sort((a, b) => b.length - a.length)
     ctx.fresh.length = 0
     for (let fp of fps) {
-        try {
-            let rmdir = get(ctx.fsRaw, 'rmdirSync')
-            if (isfun(rmdir)) {
-                rmdir.call(ctx.fsRaw, fp)
-                n++
-            }
+        if (rmdirQuiet(ctx, fp)) {
+            n++
         }
-        catch (err) {}
     }
     return n
+}
+
+
+//sweepOrphans, 持有本單位之鎖時(取得或接手後), 清除確定無主之暫存(排程第634項①): 快取根之.work-<pid>-<亂數>(暫存夾)與manifest-last.json.<pid>.<亂數>.part(主幹清單副本之暫存檔),
+//及fd(本檔之<sha256>夾; 檔案組為null)內本檔之<檔名>.<pid>.<亂數>.part(下載核心之暫存檔; 只認本檔之檔名, 同一sha256之他檔名之暫存與快取檔不動)
+//無主: pid不是本程序、不在任何現存之鎖之持有者紀錄內(含他主機之持有者), 且為本次接手之持有者(gone: 已不在或逾其上限), 或本機已不存在(ESRCH)且其修改時間逾本單位之預算(名稱不帶主機: 他主機之行程於本機必為ESRCH, 以時間排除其使用中者; 複審twsm3 D2);
+//傳入之fs無readdirSync者不清; 刪除失敗者保留不報錯; 有清除時通知lock-orphan
+function sweepOrphans(ctx, e, fd, gone) {
+    let readdir = get(ctx.fsRaw, 'readdirSync')
+    if (!isfun(readdir)) {
+        return
+    }
+    let ls = (d) => {
+        try {
+            let r = readdir.call(ctx.fsRaw, d)
+            return Array.isArray(r) ? r.filter((v) => typeof v === 'string') : []
+        }
+        catch (err) {
+            return []
+        }
+    }
+    let names = ls(ctx.cacheRoot)
+    let claimed = new Set([ctx.pid])
+    for (let n of names) {
+        if (/^\.lock-[0-9a-f]{32}$/.test(n)) {
+            let rd = readLock(ctx, ctx.path.join(ctx.cacheRoot, n))
+            if (rd.state !== 'held' || rd.rec === null) {
+                continue
+            }
+            claimed.add(rd.rec.pid)
+        }
+    }
+    let budget = lockBudget(ctx, e)
+    let stale = (fp) => {
+        try {
+            return Date.now() - ctx.fs.lstatSync(fp).mtimeMs > budget
+        }
+        catch (err) {
+            return false
+        }
+    }
+    let ownerless = (s, fp) => {
+        let pid = Number(s)
+        return Number.isSafeInteger(pid) && pid > 0 && !claimed.has(pid) && (gone.has(pid) || (!pidAlive(pid) && stale(fp)))
+    }
+    let unlinkQuiet = (fp) => {
+        try {
+            ctx.fs.unlinkSync(fp)
+            return true
+        }
+        catch (err) {
+            return false
+        }
+    }
+    let nWork = 0
+    let nPart = 0
+    for (let n of names) {
+        let fp = ctx.path.join(ctx.cacheRoot, n)
+        let m = /^\.work-(\d+)-[0-9a-z]+$/.exec(n)
+        if (m !== null && ownerless(m[1], fp) && rmQuiet(ctx, fp)) {
+            nWork++
+        }
+        let m2 = /^manifest-last\.json\.(\d+)\.[0-9a-z]+\.part$/.exec(n)
+        if (m2 !== null && ownerless(m2[1], fp) && unlinkQuiet(fp)) {
+            nPart++
+        }
+    }
+    if (fd !== null) {
+        let pre = `${e.final.name}.`
+        for (let n of ls(fd)) {
+            let m = n.startsWith(pre) ? /^(\d+)\.[0-9a-z]+\.part$/.exec(n.slice(pre.length)) : null
+            let fp = ctx.path.join(fd, n)
+            if (m !== null && ownerless(m[1], fp) && unlinkQuiet(fp)) {
+                nPart++
+            }
+        }
+    }
+    if (nWork + nPart > 0 && ctx.trace) {
+        ctx.trace('lock-orphan', { name: e.name, work: nWork, part: nPart })
+    }
 }
 
 
@@ -1694,8 +1842,13 @@ function lockKey(ctx, e) {
 //每次下載(fsDownloadFileVerifyCore)之整體上限為opt.totalMs(其截止時間於首次嘗試前即定, 已含opt.maxAttempts之各次嘗試與重試間隔, 故maxAttempts不再相乘); 每批解壓之上限亦為opt.totalMs, 另加終止後等其結束之KILL_WAIT_MS
 //下載次數: 有鏡像者每個來源先試鏡像(各1次)再試GitHub或廠商網址; 檔案組另加鏡像之組資料夾逐檔各1次; 壓縮檔者另加鏡像之最終檔1次; 另加校驗、更名、刪除暫存等非下載時間之寬裕(opt.totalMs與60秒之小者)
 function lockBudget(ctx, e) {
-    let T = ctx.extractMs //與fsDownloadFileVerifyCore之opt.totalMs同規則與預設(600000)之有效值
-    let m = ctx.mirrorKind !== '' ? 1 : 0
+    return unitBudget(e, ctx.extractMs, ctx.mirrorKind !== '') //ctx.extractMs與fsDownloadFileVerifyCore之opt.totalMs同規則與預設(600000)之有效值
+}
+
+
+//unitBudget, 一個取得單位(正規化後之清單項e)之取得預算(毫秒), T為opt.totalMs之有效值, hasMirror為是否使用鏡像; lockBudget與fsEnsureBinsBudget共用之單一算式(排程第634項③)
+function unitBudget(e, T, hasMirror) {
+    let m = hasMirror ? 1 : 0
     let nSrc = (a) => {
         return (a.parts !== null ? a.parts.length : 1) * (m + 1)
     }
@@ -1804,18 +1957,24 @@ function staleOf(ctx, rd, now) {
 //tryLock, 建立鎖: 先於快取夾內建暫存資料夾並寫入持有者紀錄, 再一次更名為L(L已存在時更名失敗: 鎖之建立為原子, 且他程序看到之鎖必已含紀錄)
 //回傳'ok'(已持有)、'busy'(L已存在或更名遇占用)、'fail'(無法建立: 快取夾不可寫等, 呼叫端不加鎖照舊取得, 既有之錯誤由其後之步驟回報)
 function tryLock(ctx, L, rec) {
-    try {
-        ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
-    }
-    catch (err) {
-        return 'fail'
-    }
     let tmp = `${L}.new-${rnd()}`
-    try {
-        ctx.fs.mkdirSync(tmp)
-    }
-    catch (err) {
-        return 'fail'
+    for (let i = 1; ; i++) {
+        try {
+            ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
+        }
+        catch (err) {
+            return 'fail'
+        }
+        try {
+            ctx.fs.mkdirSync(tmp)
+            break
+        }
+        catch (err) {
+            //快取根於建立之後被他程序之離線清除(空夾)刪掉(ENOENT): 重建再試, 不因他程序之清除而不加鎖(排程第639項)
+            if (codeOf(err) !== 'ENOENT' || i >= 5) {
+                return 'fail'
+            }
+        }
     }
     let fd = null
     try {
@@ -1917,11 +2076,12 @@ function lockTimeoutErr(ctx, e, rd) {
 
 
 //lockUnit, 取得單位e之跨程序鎖; hold為false時(離線且無鏡像: 無來源可取)只等候他程序之鎖釋放而不建立
-//回傳{ L, token, waited }: L為所持有之鎖(null為未持有: 不加鎖或只等候), waited為是否曾等候; 逾等候上限reject E_LOCK_TIMEOUT
+//回傳{ L, token, waited, gone }: L為所持有之鎖(null為未持有: 不加鎖或只等候), waited為是否曾等候, gone為本次接手之持有者(已不在或逾其上限)之pid集合(供sweepOrphans); 逾等候上限reject E_LOCK_TIMEOUT
 //等候上限為本程序之預算(lockBudget), 每換一個持有者重新起算; 可接手之鎖(持有者已不在、逾其上限、紀錄無法解析)先接手再建立
 async function lockUnit(ctx, e, hold) {
     let L = ''
     let budget = 0
+    let gone = new Set()
     try {
         L = ctx.path.join(ctx.cacheRoot, `${LOCK_PREFIX}${lockKey(ctx, e)}`)
         budget = lockBudget(ctx, e)
@@ -1931,7 +2091,7 @@ async function lockUnit(ctx, e, hold) {
         if (ctx.trace) {
             ctx.trace('lock-skip', { name: e.name, why: 'fail' })
         }
-        return { L: null, token: '', waited: false }
+        return { L: null, token: '', waited: false, gone }
     }
     let token = `${ctx.pid}-${rnd()}`
     let waited = false
@@ -1945,13 +2105,13 @@ async function lockUnit(ctx, e, hold) {
         if (ctx.trace) {
             ctx.trace('lock-skip', { name: e.name, why })
         }
-        return { L: null, token: '', waited }
+        return { L: null, token: '', waited, gone }
     }
     for (;;) {
         if (hold) {
             let r = tryLock(ctx, L, { v: 1, pid: ctx.pid, host: ctx.host, at: Date.now(), limitMs: budget, token })
             if (r === 'ok') {
-                return { L, token, waited }
+                return { L, token, waited, gone }
             }
             if (r === 'fail') {
                 return skip('fail') //無法建立鎖(快取資料夾不可寫等): 不加鎖照舊取得, 既有之錯誤由其後之步驟回報
@@ -1960,7 +2120,7 @@ async function lockUnit(ctx, e, hold) {
         rd = readLock(ctx, L)
         if (rd.state === 'absent') {
             if (!hold) {
-                return { L: null, token: '', waited }
+                return { L: null, token: '', waited, gone }
             }
             //更名遇占用而鎖已不存在(他程序剛釋放, 或Windows下防毒等短暫占用剛建立之資料夾): 稍後重試, 以時間而非次數為限(twsm2複審D2), 持續逾LOCK_GONE_MS才不加鎖
             if (goneAt === 0) {
@@ -1978,6 +2138,9 @@ async function lockUnit(ctx, e, hold) {
         if (rd.state === 'held') {
             let why = staleOf(ctx, rd, Date.now())
             if (why !== null && await takeover(ctx, e, L, rd, why)) {
+                if (why !== 'invalid' && rd.rec !== null) {
+                    gone.add(rd.rec.pid) //已不在或逾其上限之持有者: 其暫存夾與暫存檔視為無主(sweepOrphans)
+                }
                 continue
             }
             if (rd.id !== holder) {
@@ -2104,11 +2267,13 @@ async function runEntry(ctx, e, fd, fpFinal) {
         }
         return fpFinal
     }
-    if (ctx.offline) {
-        noteFresh(ctx, fd) //離線: 記下本檔之<sha256>夾與快取根(及其上層)中尚不存在者, 缺檔reject前把仍為空者清掉(鎖之建立在此之後, 其建立之快取根亦在其列)
-    }
+    //離線且有鏡像: 記下本檔之<sha256>夾與快取根(及其上層)中尚不存在者, 缺檔時清掉仍為空者(本檔之夾於持鎖時清, 上層於reject前清; 鎖之建立在此之後, 其建立之快取根亦在其列); 離線且無鏡像者不建任何夾, 不記不清(排程第639項)
+    let unitFresh = mayTidy(ctx) ? noteFresh(ctx, fd) : false
     let lk = await lockUnit(ctx, e, !(ctx.offline && ctx.mirrorKind === ''))
     try {
+        if (lk.L !== null) {
+            sweepOrphans(ctx, e, fd, lk.gone) //持鎖: 清除確定無主之暫存夾與暫存檔(排程第634項①)
+        }
         if (await lockRecheck(ctx, e, lk, () => checkCache(ctx, e, fpFinal))) {
             emit(ctx, { step: 'cache', name: e.name, fp: fpFinal, hit: true })
             if (ctx.trace) {
@@ -2118,9 +2283,21 @@ async function runEntry(ctx, e, fd, fpFinal) {
         }
         return await getEntry(ctx, e, fd, fpFinal)
     }
+    catch (err) {
+        if (unitFresh && lk.L !== null && isOfflineMissing(err)) {
+            tidyUnit(ctx, fd) //持有本單位之鎖時清除本檔之空<sha256>夾(他程序取得同一單位必先持鎖, 不會刪到其下載中之夾)
+        }
+        throw err
+    }
     finally {
         await unlockUnit(ctx, e, lk)
     }
+}
+
+
+//isOfflineMissing, 是否為離線缺檔之內部錯誤(missingOf、missingBundleOf所建, 由ensureAll彙整為E_OFFLINE_MISSING)
+function isOfflineMissing(err) {
+    return isOwnErr(err) && err.code === 'E_OFFLINE_MISSING' && err.step === 'offline'
 }
 
 
@@ -2393,9 +2570,8 @@ async function runBundle(ctx, b, dirB) {
     if (state === 'bad') {
         emit(ctx, { step: 'cache', name: b.name, fp: dirB, hit: false, reason: 'mismatch' })
     }
-    if (ctx.offline) {
-        noteFresh(ctx, dirB) //離線: 記下尚不存在之組資料夾與快取根, 缺檔reject前把仍為空者清掉(鎖之建立在此之後)
-    }
+    //離線且有鏡像: 記下尚不存在之組資料夾與快取根, 缺檔時清掉仍為空者(組資料夾於持鎖時清, 上層於reject前清); 離線且無鏡像者不記不清(排程第639項)
+    let unitFresh = mayTidy(ctx) ? noteFresh(ctx, dirB) : false
     let again = async () => {
         if (state === 'bad' && st0 !== null) {
             let st1 = null
@@ -2411,6 +2587,9 @@ async function runBundle(ctx, b, dirB) {
     }
     let lk = await lockUnit(ctx, b, !(ctx.offline && ctx.mirrorKind === ''))
     try {
+        if (lk.L !== null) {
+            sweepOrphans(ctx, b, null, lk.gone) //持鎖: 清除確定無主之暫存夾(檔案組之暫存檔皆在暫存夾內; 排程第634項①)
+        }
         if (await lockRecheck(ctx, b, lk, again)) {
             emit(ctx, { step: 'cache', name: b.name, fp: dirB, hit: true })
             if (ctx.trace) {
@@ -2419,6 +2598,12 @@ async function runBundle(ctx, b, dirB) {
             return dirB
         }
         return await getBundle(ctx, b, dirB)
+    }
+    catch (err) {
+        if (unitFresh && lk.L !== null && isOfflineMissing(err)) {
+            tidyUnit(ctx, dirB) //持有本單位之鎖時清除空之組資料夾
+        }
+        throw err
     }
     finally {
         await unlockUnit(ctx, b, lk)
@@ -2849,7 +3034,18 @@ function writeLast(ctx, text) {
     let renamed = false
     try {
         ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
-        let fd = ctx.fs.openSync(tmp, 'wx')
+        let fd = null
+        try {
+            fd = ctx.fs.openSync(tmp, 'wx')
+        }
+        catch (err) {
+            if (codeOf(err) !== 'ENOENT') {
+                throw err
+            }
+            //快取根於建立之後被他程序之離線清除(空夾)刪掉: 重建再試一次(排程第639項)
+            ctx.fs.mkdirSync(ctx.cacheRoot, { recursive: true })
+            fd = ctx.fs.openSync(tmp, 'wx')
+        }
         created = true
         try {
             writeFull(ctx, fd, new TextEncoder().encode(text))
@@ -3086,7 +3282,7 @@ function offlineErr(ctx, missing) {
  *
  * 清單與選項之字串一律須為原始字串(包裝物件new String與new Boolean不接受), 檢查之值即使用之值。離線時http(s)鏡像之重導不追隨(視為拒用)。
  *
- * 併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者)。跨程序(及同程序內來源設定不同而不共用者)以快取資料夾內之鎖只取得一次(規則帳本R-BIN-ENSURE-01規則19; 位置、格式、等候、接手、上限與事件見fsEnsureBins): 鎖為<快取>/.lock-<鍵>資料夾(內含owner.json), 快取未命中時才取, 持鎖期間取得、校驗、發布, 成功、失敗、例外皆釋放; 他程序等候, 鎖釋放後重新檢查快取, 命中即用; 持有者已不在、逾其上限、紀錄無法解析者可接手(同一個鎖只有一個程序接手); 等候逾上限reject E_LOCK_TIMEOUT; 離線且無鏡像者只等候不建立; 無法建立鎖時不加鎖照舊取得。跨程序仍以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。
+ * 併發: 同程序內同一最終檔且來源設定相同之併發呼叫共用同一次取得(其onProgress只通知最先呼叫者)。跨程序(及同程序內來源設定不同而不共用者)以快取資料夾內之鎖只取得一次(規則帳本R-BIN-ENSURE-01規則19; 位置、格式、等候、接手、上限與事件見fsEnsureBins): 鎖為<快取>/.lock-<鍵>資料夾(內含owner.json), 快取未命中時才取, 持鎖期間取得、校驗、發布, 成功、失敗、例外皆釋放; 他程序等候, 鎖釋放後重新檢查快取, 命中即用; 持有者已不在、逾其上限、紀錄無法解析者可接手(同一個鎖只有一個程序接手); 等候逾上限reject E_LOCK_TIMEOUT; 離線且無鏡像者只等候不建立; 無法建立鎖時不加鎖照舊取得; 持鎖時清除確定無主之暫存(.work-<pid>-*與<sha256>內之*.<pid>.*.part); 離線缺檔之清除只在離線且有鏡像時, 該單位之夾於持鎖時清、快取資料夾於reject前只刪空夾(規則20; 見fsEnsureBins)。取得預算見fsEnsureBinsBudget(同一算式)。跨程序仍以暫存檔與原子更名保證不讀到半檔, 更名失敗而最終檔已是期望內容視為成功。各檔依清單順序逐一取得。
  *
  * 錯誤: reject帶code之Error: 'E_ARG'(參數)、'E_MANIFEST'(清單, 帶field)、'E_OFFLINE_MISSING'(離線缺檔, 帶missing)、'E_EXTRACT'(解壓)、'E_RENAME'(移入快取)、'E_LOCK_TIMEOUT'(等候他程序之取得逾上限, step為'lock', 另帶holderPid為持有者之PID或null; 訊息為固定詞彙, 不帶路徑與值), 以及fsDownloadFileVerify之code('E_HTTP'、'E_NETWORK'、'E_TIMEOUT'、'E_TIMEOUT_TOTAL'、'E_SIZE_MISMATCH'、'E_HASH_MISMATCH'、'E_FS'等, 訊息前綴fsEnsureBins[<pkg>] file[<name>] from <github|url>); 皆帶step, 屬某檔者另帶pkg與bin(檔名; 檔案組為組名, 另帶file[組內直接來源檔之錯誤與解出成員之不符為組內路徑; 組之壓縮檔與分割檔之取得錯誤為該壓縮檔或分割檔之檔名; 解壓失敗只在該批只有一個成員時帶其組內路徑], 訊息前綴fsEnsureBins[<pkg>] bundle[<組名>] file[<同file之值>])。訊息與欄位內之網址帳密一律遮蔽(鏡像網址帶帳密者須傳入opt.fetch處理認證, 否則E_ARG)。訊息一律不帶路徑、網址與輸入值(V20): 清單之來源、欄位之值、鏡像與清單網址之值、快取與暫存之路徑、sha256與大小皆不在訊息內(清單欄位以位置如files[0].sha256標示, 實際值與期望值見錯誤物件之expected、actual欄位); Node原生錯誤(如ENOENT、EPERM)與網路錯誤之訊息帶出路徑、網址或主機, 改為固定詞彙加錯誤碼(如'operation failed (code ENOENT)'), cause亦為只含固定詞彙與錯誤碼之Error。安全相關之選項(opt.mirror、opt.offline、opt.fetch、opt.names、opt.floatingManifestUrl與注入之fs、crypto、Readable、pipeline、spawn、path)給了而無效即E_ARG拒絕(fail-closed), 不改用預設(包裝布林new Boolean亦無效); 非安全選項(opt.cacheDir、opt.onProgress)非預期時視為未給而改用預設。
  *
@@ -3103,7 +3299,7 @@ function offlineErr(ctx, missing) {
  * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE; 安全相關opt(決定是否連網), 給了而非原始布林(含字串'yes'、new Boolean)即E_ARG(不改用預設, 否則離線之意圖會靜默變成連網)
  * @param {Function} [opt.fetch=null] 輸入fetch函數(測試注入或處理認證), 未給時用全域fetch; 安全相關opt(決定如何連網), 給了而非函數即E_ARG(不改用全域fetch)
  * @param {Function} [opt.onProgress=null] 輸入進度通知函數, 非函數視為未給(不通知), 收到{ pkg, step('manifest'、'cache'、'mirror'、'download'、'extract'、'publish'[檔案組整組發布]、'ready'、'cleanup'、'wait'[開始等候他程序持有之鎖, 含pid為持有者之PID或null]), name, ... }, 其拋錯皆忽略
- * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null), 'lock-wait'(等候他方持有之跨程序鎖, 含name、phase為'start'、'end'[hit為其後重新檢查快取之結果]、'timeout', hit於start與timeout為null), 'lock-takeover'(接手可接手之鎖, 含name與why為'dead'、'expired'、'invalid'), 'lock-skip'(無法建立鎖而不加鎖, 含name與why為'fail'、'busy'); 鎖未被他方持有且建立成功時不通知鎖之事件, 取得鎖後重新檢查快取而命中時另通知一次'cache'(hit為true)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
+ * @param {Function} [opt.onTrace=null] 輸入觀察回調函數, 於內部事件發生當下同步呼叫, 傳入一個凍結之事件物件{ type, ... }, 供測試以事件(而非等待時間)同步與診斷; 與onProgress(給使用者之進度)分開, 不轉傳給內部之下載核心。type與其欄位為: 'manifest'(本次採用之清單已確定, 含source為'base'[釘選模式之傳入清單]、'remote'[取得主幹清單]、'mirror-last'[主幹模式改用鏡像之manifest-last.json]、'baseline'[主幹模式退回傳入之基準清單], 與files為該清單之項數[單一檔與檔案組]; 重取主幹清單後再通知一次), 'mirrorlast'(鏡像之manifest-last.json, 含result為'ok'、'miss'、'rejected'與code), 'refetch'(取得之檔不符而重取主幹清單, 含phase為'start'[code為不符之錯誤碼]、'ok'、'fail'[code為重取失敗之錯誤碼或null]), 'publish'(檔案組整組發布, 含name與result為'placed'、'replaced'[替換不符之舊組]、'exists'[他方已發布且整組校驗通過]), 檔案組之直接來源檔之'mirror'、'download'、'downloaded'之file為組內路徑, 其壓縮檔與分割檔者為該壓縮檔或分割檔之檔名(本地鏡像無組資料夾時'mirror'之file為null), 其'extract'、'extracted'為每批tar各一次, 'trunk'(主幹清單, 含phase為'fetch'[開始取, 時限計時器已建立]、'ok'[取得且檢核通過]、'fail'[失敗, 逾opt.stallMs而放棄者code為'E_TIMEOUT'], 與code為失敗之錯誤碼或null), 'cancel'(已取消主幹清單回應之本體, 含why為'unread'[讀取中途被中止]、'late'[放棄等待後才落定之回應]、'settled'[逾時勝出時已落定而未交出之回應]、'status'[非2xx之回應]), 'last'(主幹清單副本寫入manifest-last.json, 含ok), 'job'(各檔取得之登記, 含name與mode為'new'[新開一次取得]、'join'[共用同程序已在進行之同一次取得, 該次取得之其餘事件只通知最先呼叫者]、'solo'[選項無法序列化而不共用]), 'cache'(快取校驗結果, 含name與hit), 'mirror'(鏡像嘗試, 含name、file與result為'ok'、'miss'、'rejected'), 'offline'(離線缺檔之判定, 含name), 'work'(已建本次專用暫存夾, 含name), 'download'(開始自GitHub或廠商網址下載, 含name與file), 'downloaded'(下載結束, 含name、file、ok與code), 'extract'(開始解壓, 含name), 'kill'(解壓逾opt.totalMs而即將終止解壓程式, 含name), 'extracted'(解壓程式已結束或放棄等待, 含name、result為'exit'、'timeout'、'error', code為離開碼或null, exited為是否確認已結束或null), 'place'(解出檔已移入快取, 含name), 'cleanup'(暫存夾刪除結果, 含name與ok; 刪不掉或因解壓程式未結束而保留者ok為false), 'ready'(該檔已就緒, 含name), 'fail'(該檔失敗[離線缺檔除外], 含name與code), 'tidy'(離線缺檔reject前清除本次新建之空資料夾, 含n為清除個數[含持鎖時已清除之該檔之夾]; 離線且無鏡像者n恆為0), 'settle'(整體結果, 含ok與code; ok為false時code為錯誤碼或null), 'lock-wait'(等候他方持有之跨程序鎖, 含name、phase為'start'、'end'[hit為其後重新檢查快取之結果]、'timeout', hit於start與timeout為null), 'lock-takeover'(接手可接手之鎖, 含name與why為'dead'、'expired'、'invalid'), 'lock-skip'(無法建立鎖而不加鎖, 含name與why為'fail'、'busy'), 'lock-orphan'(持鎖時清除了確定無主之暫存, 含name、work、part為清除之暫存夾數與暫存檔數); 鎖未被他方持有且建立成功時不通知鎖之事件, 取得鎖後重新檢查快取而命中時另通知一次'cache'(hit為true)。事件皆於對應動作之後、resolve或reject之前通知, 回調不帶接收者呼叫, 其拋錯與回傳值皆忽略, 不影響取得, 預設null
  * @param {String} [opt.floatingManifestUrl=null] 輸入主幹模式之清單網址, 須在https://raw.githubusercontent.com/<repo>/之下, 預設由清單之repo與manifestPath組成
  * @param {Integer} [opt.maxAttempts=3] 輸入下載之最多嘗試次數(交fsDownloadFileVerify)
  * @param {Number} [opt.retryDelayMs=1000] 輸入下載之重試間隔基數毫秒(交fsDownloadFileVerify)
@@ -3135,15 +3331,8 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
     let ctx = null
     try {
 
-        //check, 清單檔路徑須為非空字串且不含NUL(R-FS-INVALID-PATH-01): 必須參數之無效先於讀取opt與呼叫任何注入之方法(buildCtx會呼叫注入之path.resolve), 於入口以E_ARG回報, 與「檔案不存在或無法讀取」(E_MANIFEST)分開; 訊息不帶輸入值
-        if (typeof manifest === 'string') {
-            if (manifest === '') {
-                throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must be a non-empty string`, { step: 'argument' })
-            }
-            if (manifest.includes('\0')) {
-                throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must not contain a NUL character`, { step: 'argument' })
-            }
-        }
+        //check, 清單檔路徑須為非空字串且不含NUL(R-FS-INVALID-PATH-01), 先於讀取opt
+        checkManifestArg(manifest)
 
         ctx = buildCtx(opt)
         ctx.trace = trace
@@ -3162,7 +3351,30 @@ async function fsEnsureBinsCore(manifest, opt = {}) {
 //ensureMain, fsEnsureBinsCore之主流程(成功時於回傳前通知settle, 失敗由呼叫端通知)
 async function ensureMain(ctx, manifest, trace) {
 
-    //清單, 物件或JSON檔路徑
+    //清單(檢核並定快取根)
+    let base = loadBase(ctx, manifest)
+
+    //主幹模式取清單(主幹 → 鏡像之manifest-last.json → 基準清單)
+    let res = await resolveManifest(ctx, base)
+    return ensureRest(ctx, base, res, trace)
+}
+
+
+//checkManifestArg, 清單檔路徑須為非空字串且不含NUL(R-FS-INVALID-PATH-01): 必須參數之無效先於讀取opt與呼叫任何注入之方法(buildCtx會呼叫注入之path.resolve), 以E_ARG回報, 與「檔案不存在或無法讀取」(E_MANIFEST)分開; 訊息不帶輸入值
+function checkManifestArg(manifest) {
+    if (typeof manifest === 'string') {
+        if (manifest === '') {
+            throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must be a non-empty string`, { step: 'argument' })
+        }
+        if (manifest.includes('\0')) {
+            throw mkErr('E_ARG', `fsEnsureBins: invalid manifest: must not contain a NUL character`, { step: 'argument' })
+        }
+    }
+}
+
+
+//loadBase, 清單(物件或JSON檔路徑)之讀取與檢核, 並定ctx.pkg與ctx.cacheRoot; fsEnsureBinsCore與fsEnsureBinsBudgetCore共用
+function loadBase(ctx, manifest) {
     let raw = manifest
     if (typeof manifest === 'string') {
         let fp = ctx.path.resolve(ctx.pkgRoot, manifest)
@@ -3178,9 +3390,12 @@ async function ensureMain(ctx, manifest, trace) {
     let base = normManifest(raw, normOpt(ctx))
     ctx.pkg = base.pkg
     ctx.cacheRoot = ctx.cacheDir !== '' ? ctx.cacheDir : ctx.envCache !== '' ? ctx.path.join(ctx.envCache, base.pkg) : ctx.path.join(ctx.pkgRoot, 'bin-cache')
+    return base
+}
 
-    //主幹模式取清單(主幹 → 鏡像之manifest-last.json → 基準清單)
-    let res = await resolveManifest(ctx, base)
+
+//ensureRest, 依採用之清單取得各項(不符時於主幹模式重取一次主幹清單), 組成結果
+async function ensureRest(ctx, base, res, trace) {
     let refetched = false
     let got = null
     try {
@@ -3250,6 +3465,26 @@ async function ensureMain(ctx, manifest, trace) {
 }
 
 
+//selectEntries, 依opt.names(預設全部)選取清單項, 依opt.names之順序; 名稱不在清單內為E_ARG; fsEnsureBinsCore與fsEnsureBinsBudgetCore共用
+function selectEntries(ctx, m) {
+    let byName = new Map(m.entries.map((e) => {
+        return [e.name, e]
+    }))
+    if (ctx.names === null) {
+        return m.entries
+    }
+    let unknown = ctx.names.filter((n) => {
+        return !byName.has(n)
+    })
+    if (unknown.length > 0) {
+        throw mkErr('E_ARG', `fsEnsureBins[${ctx.pkg}]: invalid opt.names: must only contain names in the manifest`, { step: 'argument' })
+    }
+    return ctx.names.map((n) => {
+        return byName.get(n)
+    })
+}
+
+
 //ensureAll, 依採用之清單res(resolveManifest或refetchTrunk之結果)取得所選各項(opt.names, 預設全部), 回傳{ pairs: [[name, 路徑]], done: [[清單項, 路徑]] }
 //各項依清單順序逐一取得; 離線缺檔者彙整為一個E_OFFLINE_MISSING
 async function ensureAll(ctx, res, trace) {
@@ -3259,21 +3494,7 @@ async function ensureAll(ctx, res, trace) {
     }
 
     //names
-    let byName = new Map(m.entries.map((e) => {
-        return [e.name, e]
-    }))
-    let sel = m.entries
-    if (ctx.names !== null) {
-        let unknown = ctx.names.filter((n) => {
-            return !byName.has(n)
-        })
-        if (unknown.length > 0) {
-            throw mkErr('E_ARG', `fsEnsureBins[${ctx.pkg}]: invalid opt.names: must only contain names in the manifest`, { step: 'argument' })
-        }
-        sel = ctx.names.map((n) => {
-            return byName.get(n)
-        })
-    }
+    let sel = selectEntries(ctx, m)
 
     //逐一取得; 離線缺檔者彙整後一併回報
     let pairs = []
@@ -3392,4 +3613,23 @@ function viewEntry(e) {
 }
 
 
+//fsEnsureBinsBudgetCore, fsEnsureBinsBudget之實作(同步): 依清單與選項回傳一次取得之預算毫秒數, 即所選各取得單位之lockBudget(與跨程序鎖之持有與等候上限同一算式unitBudget)之和, 主幹模式且非離線者另加取主幹清單之上限(opt.stallMs)
+//參數與清單之檢核同fsEnsureBinsCore(同一組函數: checkManifestArg、buildCtx、loadBase、selectEntries), 無效時同步拋出同樣之E_ARG、E_MANIFEST(帶code之Error); 不連網、不建資料夾、不讀快取
+function fsEnsureBinsBudgetCore(manifest, opt = {}) {
+    checkManifestArg(manifest)
+    let ctx = buildCtx(opt)
+    let base = loadBase(ctx, manifest)
+    let sel = selectEntries(ctx, base)
+    let sum = 0
+    for (let e of sel) {
+        sum += lockBudget(ctx, e)
+    }
+    if (base.mode === 'floating' && !ctx.offline && sel.length > 0) {
+        sum += ctx.manifestMs //取主幹清單之上限(同opt.stallMs)
+    }
+    return sum
+}
+
+
+export { fsEnsureBinsBudgetCore }
 export default fsEnsureBinsCore

@@ -61,6 +61,7 @@ describe(`fs invalid path (R-FS-INVALID-PATH-01)`, function() {
                 fsSrlog: '路徑為opt.fdSys與opt.fdLog(有預設值之opt類選項), 無路徑必要參數',
                 fsEnsureBins: '路徑為清單內之相對路徑與opt.cache等, 另由清單檢核(E_MANIFEST, R-BIN-ENSURE-01)',
                 fsEnsureBinsCore: '同fsEnsureBins',
+                fsEnsureBinsBudget: '同fsEnsureBins(清單與選項之檢核與fsEnsureBins共用同一組函數, 清單檔路徑無效為E_ARG; twsm3)',
             }
             let files = fs.readdirSync(path.resolve('./src')).filter((n) => /^fs.*\.mjs$/.test(n)).map((n) => n.replace(/\.mjs$/, ''))
             let covered = new Set(sites.map((s) => s.fn))

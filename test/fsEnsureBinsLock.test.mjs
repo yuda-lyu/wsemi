@@ -228,7 +228,8 @@ describe(`fsEnsureBins cross-process lock`, function() {
         let cp = spawn(process.execPath, [child, fpCfg], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] })
         kids.push(cp)
         let tr = traceRec({ guard: 60000 })
-        let ee = new EventEmitter() //每個事件另以'ev'轉發(供跨子行程計數之同步點)
+        let ee = new EventEmitter() //每個事件另以'ev'轉發(供跨子行程計數之同步點); 到達事件閘門時轉發'gate'
+        let gates = [] //子行程已到達(停住)之閘門id
         let rest = ''
         let result = null
         let err = ''
@@ -242,6 +243,10 @@ describe(`fsEnsureBins cross-process lock`, function() {
                     let e = JSON.parse(l.slice(3))
                     tr.on(e)
                     ee.emit('ev', e)
+                }
+                else if (l.startsWith('GATE ')) {
+                    gates.push(l.slice(5).trim())
+                    ee.emit('gate')
                 }
                 else if (l.startsWith('RESULT ')) {
                     result = JSON.parse(l.slice(7))
@@ -257,7 +262,56 @@ describe(`fsEnsureBins cross-process lock`, function() {
                 resolve({ code, result, err })
             })
         })
-        return { cp, pid: cp.pid, tr, ee, done }
+        return { cp, pid: cp.pid, tr, ee, gates, done }
+    }
+    //mkGate, 子行程之事件閘門(id與標記檔); waitGate等到子行程停在該閘門; passGate建立標記檔使其續行
+    let nGate = 0
+    let mkGate = (id) => {
+        nGate++
+        return { id, file: path.join(fdt, `gate-${nGate}-${id}`) }
+    }
+    let waitGate = (k, id) => {
+        return new Promise((resolve, reject) => {
+            let t = null
+            let on = () => {
+                if (k.gates.includes(id)) {
+                    realClearTimeout(t)
+                    k.ee.removeListener('gate', on)
+                    resolve()
+                }
+            }
+            t = realSetTimeout(() => {
+                k.ee.removeListener('gate', on)
+                reject(new Error(`waitGate: child did not reach gate ${id}`))
+            }, 60000)
+            k.ee.on('gate', on)
+            on()
+        })
+    }
+    let passGate = (g) => {
+        fs.writeFileSync(g.file, '1')
+    }
+    //gateOrDone, 等到子行程停在閘門id('gate')或已結束('done'), 先到者為準
+    let gateOrDone = (k, id) => {
+        return new Promise((resolve) => {
+            let fin = false
+            let on = () => {
+                if (!fin && k.gates.includes(id)) {
+                    fin = true
+                    k.ee.removeListener('gate', on)
+                    resolve('gate')
+                }
+            }
+            k.ee.on('gate', on)
+            k.done.then(() => {
+                if (!fin) {
+                    fin = true
+                    k.ee.removeListener('gate', on)
+                    resolve('done')
+                }
+            })
+            on()
+        })
     }
     //waitStarts, 等到ks之中k個子行程已開始等候鎖(lock-wait start), 回傳已等候者之索引集合(上限只防懸置)
     let waitStarts = (ks, k) => {
@@ -978,6 +1032,327 @@ describe(`fsEnsureBins cross-process lock`, function() {
             assert.strict.deepStrictEqual(Object.keys(e).sort(), ['type', ...FIELDS[e.type]].sort())
             assert.strict.equal(Object.values(e).every((v) => v === null || ['string', 'number', 'boolean'].includes(typeof v)), true)
         }
+    })
+
+    //---------------- 排程第639項: 離線試取之清除與他程序之取得交錯(規則20; 以事件閘門決定性構造, 不以加壓或延時) ----------------
+
+    it(`should not remove the <sha256> folder of another process's download when an offline call without a mirror misses (schedule 639 race 1, rule 20)`, async function() {
+        let root = fx('race-nomirror')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let fd = path.join(cacheRoot, sha(tool))
+        gate(P_TOOL)
+        //B: 離線且無鏡像(先離線試取之寫法); 停在判定缺檔(offline事件)之後、清除之前
+        let gB = mkGate('b-offline')
+        let B = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: { offline: true, mirror: '' }, gateTrace: [{ id: gB.id, type: 'offline', file: gB.file }] })
+        await waitGate(B, gB.id)
+        //A: 連網取得; 持鎖, 下載核心已建<sha256>夾而回應未至(尚無暫存檔, 夾為空)
+        let A = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: {} })
+        await A.tr.wait((e) => e.type === 'download')
+        await waitHits(P_TOOL, 1)
+        assert.strict.deepStrictEqual(fs.readdirSync(fd), [])
+        passGate(gB)
+        let rB = await B.done
+        assert.strict.equal(rB.result && rB.result.code, 'E_OFFLINE_MISSING')
+        assert.strict.deepStrictEqual(B.tr.events.filter((e) => e.type === 'tidy').map((e) => e.n), [0]) //不刪他程序所建之夾(離線且無鏡像者不建任何夾, 不清)
+        assert.strict.equal(fs.existsSync(fd), true)
+        openGate(P_TOOL)
+        let rA = await A.done
+        assert.strict.equal(rA.result && rA.result.ok, true, JSON.stringify(rA.result)) //持有者之下載不因他方之清除而失敗(舊碼: ENOENT而E_FS)
+        assert.strict.equal(rA.result.out['tool.exe'].ok, true)
+        assert.strict.equal(nHits(P_TOOL), 1)
+        assert.strict.equal(A.tr.events.some((e) => e.type === 'lock-skip'), false)
+        assert.strict.deepStrictEqual(locksIn(cacheRoot), [])
+    })
+
+    it(`should clear its own empty <sha256> folder only while holding the lock when an offline call with a mirror misses, not the folder of a later holder (schedule 639 race 2, rule 20)`, async function() {
+        let root = fx('race-mirror')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let fd = path.join(cacheRoot, sha(tool))
+        let mirror = path.join(root, 'mirror')
+        fs.mkdirSync(mirror)
+        let MP = `/mirror404/w-l/${sha(tool)}/tool.exe` //http鏡像回404: 下載核心先建<sha256>夾再請求, 缺檔時本單位之夾為空而須清除
+        gate(P_TOOL)
+        //B: 離線且有http鏡像(404); 每次刪除本檔之<sha256>夾之前皆停(第1次、第2次各一個閘門)
+        let gB = mkGate('b-rmdir-fd')
+        let gB2 = mkGate('b-rmdir-fd-2')
+        let gFd = (g) => ({ id: g.id, op: 'rmdirSync', path: fd, when: 'before', file: g.file })
+        let B = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: { offline: true, mirror: `http://127.0.0.1:${port}/mirror404` }, gateFs: [gFd(gB), gFd(gB2)] })
+        await waitGate(B, gB.id)
+        assert.strict.equal(nHits(MP), 1)
+        //A: 連網取得(新碼: B仍持鎖而A等候; 舊碼: B已釋放而A持鎖下載, 其<sha256>夾為空)
+        let A = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: {} })
+        let first = await A.tr.wait(isStartOrDownload)
+        if (first.type === 'download') {
+            await waitHits(P_TOOL, 1)
+        }
+        passGate(gB)
+        //B若於釋放鎖後再刪本檔之<sha256>夾(第2次): 待A持鎖下載(其夾為空)後才放行, 使交錯決定性成立
+        if ((await gateOrDone(B, gB2.id)) === 'gate') {
+            await waitHits(P_TOOL, 1)
+            passGate(gB2)
+        }
+        let rB = await B.done
+        assert.strict.equal(rB.result && rB.result.code, 'E_OFFLINE_MISSING')
+        await waitHits(P_TOOL, 1)
+        openGate(P_TOOL)
+        let rA = await A.done
+        assert.strict.equal(rA.result && rA.result.ok, true, JSON.stringify(rA.result)) //持有者之下載不因他方之清除而失敗
+        assert.strict.equal(nHits(P_TOOL), 1)
+        assert.strict.deepStrictEqual([first.type, first.phase], ['lock-wait', 'start']) //本單位之夾於持鎖時清除: 其間他程序等候
+        let nTidy = B.tr.events.filter((e) => e.type === 'tidy').map((e) => e.n)
+        assert.strict.equal(nTidy.length === 1 && nTidy[0] >= 1, true, JSON.stringify(nTidy)) //B清除自己(下載核心)所建之空夾(釋放後快取根若為空亦清, 故為1或2)
+        assert.strict.deepStrictEqual(locksIn(cacheRoot), [])
+    })
+
+    it(`should rebuild a cache root removed between creating it and creating the lock, so another process's clearing never causes lock-skip (schedule 639 race 3, rule 20)`, async function() {
+        let root = fx('race-root')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let mirror = path.join(root, 'mirror')
+        fs.mkdirSync(mirror)
+        gate(P_TOOL)
+        //B: 離線且有本地鏡像(無此檔); 已釋放鎖, 停在刪除空快取根之前
+        let gB = mkGate('b-rmdir-root')
+        let B = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: { offline: true, mirror }, gateFs: [{ id: gB.id, op: 'rmdirSync', path: cacheRoot, when: 'before', file: gB.file }] })
+        await waitGate(B, gB.id)
+        //A: 連網取得; 停在建鎖時「已建快取根、尚未建鎖之暫存夾」
+        let gA = mkGate('a-mkdir-root')
+        let A = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: {}, gateFs: [{ id: gA.id, op: 'mkdirSync', path: cacheRoot, when: 'after', file: gA.file }] })
+        await waitGate(A, gA.id)
+        passGate(gB)
+        let rB = await B.done
+        assert.strict.equal(rB.result && rB.result.code, 'E_OFFLINE_MISSING')
+        assert.strict.equal(fs.existsSync(cacheRoot), false) //B照舊清除本次新建之空快取根(無他方之內容)
+        passGate(gA)
+        await waitHits(P_TOOL, 1)
+        openGate(P_TOOL)
+        let rA = await A.done
+        assert.strict.equal(rA.result && rA.result.ok, true, JSON.stringify(rA.result))
+        assert.strict.deepStrictEqual(A.tr.events.filter((e) => e.type === 'lock-skip').map((e) => e.why), []) //快取根被刪後重建再建鎖, 不因他程序之清除而不加鎖(舊碼: lock-skip fail)
+        assert.strict.equal(nHits(P_TOOL), 1)
+        assert.strict.deepStrictEqual(locksIn(cacheRoot), [])
+    })
+
+    it(`should not touch a cache root that another process has just created when an offline call without a mirror misses (schedule 639 race 3b, rule 20)`, async function() {
+        let root = fx('race-root-nomirror')
+        let cacheRoot = path.join(root, 'bin-cache')
+        gate(P_TOOL)
+        //B: 離線且無鏡像; 快取根於其開始時尚不存在, 停在判定缺檔之後
+        let gB = mkGate('b-offline-root')
+        let B = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: { offline: true, mirror: '' }, gateTrace: [{ id: gB.id, type: 'offline', file: gB.file }] })
+        await waitGate(B, gB.id)
+        //A: 停在「已建快取根(此刻為空)、尚未建鎖之暫存夾」
+        let gA = mkGate('a-mkdir-root-2')
+        let A = spawnChild({ pkgRoot: root, manifest: mf([fTool()]), opt: {}, gateFs: [{ id: gA.id, op: 'mkdirSync', path: cacheRoot, when: 'after', file: gA.file }] })
+        await waitGate(A, gA.id)
+        assert.strict.deepStrictEqual(fs.readdirSync(cacheRoot), [])
+        passGate(gB)
+        let rB = await B.done
+        assert.strict.equal(rB.result && rB.result.code, 'E_OFFLINE_MISSING')
+        assert.strict.equal(fs.existsSync(cacheRoot), true) //離線且無鏡像者不清除: 他程序剛建之快取根不動
+        assert.strict.deepStrictEqual(B.tr.events.filter((e) => e.type === 'tidy').map((e) => e.n), [0])
+        passGate(gA)
+        await waitHits(P_TOOL, 1)
+        openGate(P_TOOL)
+        let rA = await A.done
+        assert.strict.equal(rA.result && rA.result.ok, true, JSON.stringify(rA.result))
+        assert.strict.equal(A.tr.events.some((e) => e.type === 'lock-skip'), false)
+    })
+
+    it(`should not fail the download of another file with the same sha256 (another name, another lock) when an offline call clears the shared empty <sha256> folder (schedule 639, review twsm3 D1)`, async function() {
+        let root = fx('race-samesha')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let fd = path.join(cacheRoot, sha(tool))
+        let P_COPY = `${RAW1}bin/toolcopy.exe`
+        routes[P_COPY] = tool
+        let m = mf([fTool(), { name: 'toolcopy.exe', path: 'bin/toolcopy.exe', sha256: sha(tool), size: tool.length }])
+        gate(P_COPY)
+        //B: 離線且有http鏡像(404)取tool.exe; 持其鎖時停在刪除共用之<sha256>夾之前
+        let gB = mkGate('b-rmdir-shared')
+        let B = spawnChild({ pkgRoot: root, manifest: m, opt: { offline: true, mirror: `http://127.0.0.1:${port}/mirror404`, names: 'tool.exe' }, gateFs: [{ id: gB.id, op: 'rmdirSync', path: fd, when: 'before', file: gB.file }] })
+        await waitGate(B, gB.id)
+        //A: 連網取toolcopy.exe(同一sha256, 另一把鎖); 下載核心已建(用)<sha256>夾而回應未至
+        let A = spawnChild({ pkgRoot: root, manifest: m, opt: { names: 'toolcopy.exe' } })
+        await A.tr.wait((e) => e.type === 'download')
+        await waitHits(P_COPY, 1)
+        assert.strict.deepStrictEqual(fs.readdirSync(fd), [])
+        passGate(gB)
+        let rB = await B.done
+        assert.strict.equal(rB.result && rB.result.code, 'E_OFFLINE_MISSING')
+        assert.strict.equal(fs.existsSync(fd), false) //B持tool.exe之鎖時清除了共用之空夾
+        openGate(P_COPY)
+        let rA = await A.done
+        assert.strict.equal(rA.result && rA.result.ok, true, JSON.stringify(rA.result)) //A之下載核心建暫存檔遇ENOENT而再試一次, 不失敗
+        assert.strict.equal(rA.result.out['toolcopy.exe'].ok, true)
+        assert.strict.equal(nHits(P_COPY), 2)
+        assert.strict.deepStrictEqual(locksIn(cacheRoot), [])
+    })
+
+    it(`should retry moving the extracted file into the cache when its <sha256> folder disappears just before (ENOENT; schedule 639)`, async function() {
+        let root = fx('enoent-place')
+        let fpFinal = path.join(root, 'bin-cache', sha(exe), 'k6.exe')
+        let nPlace = 0
+        let fsPlace = {
+            ...fs,
+            renameSync: (a, b) => {
+                if (String(b) === fpFinal && nPlace === 0) {
+                    nPlace++
+                    fs.rmdirSync(path.dirname(fpFinal)) //目的夾(空)於建立之後被刪
+                }
+                return fs.renameSync(a, b)
+            },
+        }
+        let r = await ens(mf([fK6()]), { pkgRoot: root, fs: fsPlace })
+        assert.strict.equal(r['k6.exe'], fpFinal)
+        assert.strict.equal(fs.readFileSync(fpFinal).equals(exe), true)
+        assert.strict.equal(nPlace, 1)
+    })
+
+    //---------------- 排程第634項①: 確定無主之暫存夾與暫存檔之清除 ----------------
+
+    let deadPidOf = async () => {
+        let cp = spawn(process.execPath, ['-e', ''], { windowsHide: true })
+        await new Promise((resolve) => cp.on('close', resolve))
+        return cp.pid
+    }
+    let aliveChild = () => {
+        let cp = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { windowsHide: true, stdio: 'ignore' })
+        kids.push(cp)
+        return cp
+    }
+
+    it(`should remove .work-<pid>-* and <sha256>/*.<pid>.*.part of processes that are gone when it holds the lock, keeping those of alive, lock-holding and own processes (schedule 634 ①, rule 20)`, async function() {
+        let root = fx('orphan')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let fd = path.join(cacheRoot, sha(tool))
+        let dead = await deadPidOf()
+        let dead2 = await deadPidOf()
+        let alive = aliveChild()
+        fs.mkdirSync(fd, { recursive: true })
+        //他主機之持有者(其pid於本機不存在)之鎖: 其暫存不得清除
+        putLock(lockDirOf(cacheRoot, `f/${sha(exe)}/k6.exe`), { pid: dead2, host: 'OTHER-HOST', at: Date.now(), limitMs: 3600000, token: 'crafted-remote' })
+        //修改時間: 除fresh外皆為一天前(已不在之行程之暫存須逾本單位之預算才清, 他主機之行程於本機亦為不存在, 以時間排除其使用中者)
+        let works = { dead: `.work-${dead}-aa11`, alive: `.work-${alive.pid}-bb22`, claimed: `.work-${dead2}-cc33`, own: `.work-${process.pid}-dd44`, fresh: `.work-${dead}-ll22` }
+        let parts = { dead: `tool.exe.${dead}.ee55.part`, alive: `tool.exe.${alive.pid}.ff66.part`, claimed: `tool.exe.${dead2}.gg77.part`, otherName: `tool2.exe.${dead}.mm33.part` }
+        let lastPart = `manifest-last.json.${dead}.nn44.part`
+        let old = new Date(Date.now() - 86400000)
+        for (let [k, n] of Object.entries(works)) {
+            fs.mkdirSync(path.join(cacheRoot, n, 'x'), { recursive: true })
+            if (k !== 'fresh') {
+                fs.utimesSync(path.join(cacheRoot, n), old, old)
+            }
+        }
+        for (let n of Object.values(parts)) {
+            fs.writeFileSync(path.join(fd, n), 'partial')
+            fs.utimesSync(path.join(fd, n), old, old)
+        }
+        fs.writeFileSync(path.join(cacheRoot, lastPart), '{}')
+        fs.utimesSync(path.join(cacheRoot, lastPart), old, old)
+        let tr = traceRec()
+        let r = await ens(mf([fTool()]), { pkgRoot: root, onTrace: tr.on, env: { COMPUTERNAME: 'THIS-HOST' } })
+        assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true)
+        assert.strict.deepStrictEqual(Object.entries(works).map(([k, n]) => [k, fs.existsSync(path.join(cacheRoot, n))]), [['dead', false], ['alive', true], ['claimed', true], ['own', true], ['fresh', true]])
+        assert.strict.deepStrictEqual(Object.entries(parts).map(([k, n]) => [k, fs.existsSync(path.join(fd, n))]), [['dead', false], ['alive', true], ['claimed', true], ['otherName', true]]) //只認本檔之檔名
+        assert.strict.equal(fs.existsSync(path.join(cacheRoot, lastPart)), false)
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'lock-orphan').map((e) => [e.work, e.part]), [[1, 2]])
+        alive.kill()
+    })
+
+    it(`should remove the temporary folder and files of a holder taken over for being over its limit, though its pid is alive (schedule 634 ①)`, async function() {
+        let root = fx('orphan-expired')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let fd = path.join(cacheRoot, sha(tool))
+        let held = aliveChild() //逾上限之持有者(pid存活)
+        let other = aliveChild() //另一個存活之行程(非本次接手者)
+        fs.mkdirSync(fd, { recursive: true })
+        putLock(lockDirOf(cacheRoot, `f/${sha(tool)}/tool.exe`), { pid: held.pid, at: Date.now() - 3600000, limitMs: 1000, token: 'crafted-expired2' })
+        fs.mkdirSync(path.join(cacheRoot, `.work-${held.pid}-hh88`))
+        fs.mkdirSync(path.join(cacheRoot, `.work-${other.pid}-ii99`))
+        fs.writeFileSync(path.join(fd, `tool.exe.${held.pid}.jj00.part`), 'partial')
+        let tr = traceRec()
+        let r = await ens(mf([fTool()]), { pkgRoot: root, onTrace: tr.on })
+        assert.strict.equal(fs.readFileSync(r['tool.exe']).equals(tool), true)
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type.startsWith('lock-')).map((e) => e.type), ['lock-takeover', 'lock-orphan'])
+        assert.strict.deepStrictEqual([fs.existsSync(path.join(cacheRoot, `.work-${held.pid}-hh88`)), fs.existsSync(path.join(fd, `tool.exe.${held.pid}.jj00.part`)), fs.existsSync(path.join(cacheRoot, `.work-${other.pid}-ii99`))], [false, false, true])
+        held.kill()
+        other.kill()
+    })
+
+    it(`should leave no temporary folder of a killed holder after a waiter takes over (multiple processes, zip; schedule 634 ①)`, async function() {
+        let root = fx('orphan-killed')
+        let cacheRoot = path.join(root, 'bin-cache')
+        gate(P_K6)
+        let ks = Array.from({ length: 3 }, () => spawnChild({ pkgRoot: root, manifest: mf([fK6()]), opt: {} }))
+        let got = await waitStarts(ks, 2)
+        await waitHits(P_K6, 1)
+        let iHolder = ks.findIndex((k, i) => !got.has(i))
+        let h = ks[iHolder]
+        assert.strict.deepStrictEqual(workIn(cacheRoot).filter((n) => n.startsWith(`.work-${h.pid}-`)).length, 1) //持鎖者之暫存夾(下載中)
+        h.cp.kill()
+        await h.done
+        openGate(P_K6)
+        let waiters = ks.filter((k, i) => i !== iHolder)
+        let rs = await Promise.all(waiters.map((k) => k.done))
+        assert.strict.deepStrictEqual(rs.map((r) => r.result && r.result.ok), [true, true])
+        assert.strict.deepStrictEqual(workIn(cacheRoot), []) //被終止者之暫存夾已由接手者清除
+        let orphans = waiters.flatMap((k) => k.tr.events.filter((e) => e.type === 'lock-orphan'))
+        assert.strict.deepStrictEqual(orphans.map((e) => e.work), [1])
+        assert.strict.deepStrictEqual(locksIn(cacheRoot), [])
+    })
+
+    it(`should remove the temporary folder of a process that is gone when it holds the lock of a bundle (schedule 634 ①)`, async function() {
+        let root = fx('orphan-bundle')
+        let cacheRoot = path.join(root, 'bin-cache')
+        let dead = await deadPidOf()
+        fs.mkdirSync(path.join(cacheRoot, `.work-${dead}-kk11`, 'b'), { recursive: true })
+        let old = new Date(Date.now() - 86400000)
+        fs.utimesSync(path.join(cacheRoot, `.work-${dead}-kk11`), old, old)
+        let tr = traceRec()
+        let r = await ens(mf(null, [bPk()]), { pkgRoot: root, onTrace: tr.on })
+        assert.strict.equal(fs.existsSync(path.join(r.pk, 'tool.exe')), true)
+        assert.strict.deepStrictEqual(workIn(cacheRoot), [])
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'lock-orphan').map((e) => [e.name, e.work, e.part]), [['pk', 1, 0]])
+    })
+
+    it(`should rebuild the cache root and retry when it disappears before creating the work folder or the copy of the trunk manifest (schedule 639, rule 20)`, async function() {
+        //暫存夾: 建立時遇ENOENT(快取根剛被他程序之離線清除刪掉)一次 → 重建快取根再試, 照常取得
+        let root = fx('enoent-work')
+        let nWork = 0
+        let fsWork = {
+            ...fs,
+            mkdirSync: (p, ...a) => {
+                if (String(p).includes('.work-') && nWork === 0) {
+                    nWork++
+                    throw Object.assign(new Error('ENOENT: no such file or directory, mkdir'), { code: 'ENOENT' })
+                }
+                return fs.mkdirSync(p, ...a)
+            },
+        }
+        let r = await ens(mf([fK6()]), { pkgRoot: root, fs: fsWork })
+        assert.strict.equal(fs.readFileSync(r['k6.exe']).equals(exe), true)
+        assert.strict.equal(nWork, 1)
+        //主幹清單之副本: 暫存檔開檔遇ENOENT一次 → 重建快取根再試, 副本照常寫入
+        resetRoutes()
+        let root2 = fx('enoent-last')
+        let mfF = { schema: 1, pkg: 'w-l', mode: 'floating', repo: 'yuda-lyu/w-l', files: [{ name: 'tool.exe', path: 'bin/tool.exe', sha256: sha(tool), size: tool.length }] }
+        routes['/raw.githubusercontent.com/yuda-lyu/w-l/master/bin/manifest.json'] = Buffer.from(JSON.stringify(mfF))
+        routes['/raw.githubusercontent.com/yuda-lyu/w-l/master/bin/tool.exe'] = tool
+        let nLast = 0
+        let fsLast = {
+            ...fs,
+            openSync: (p, ...a) => {
+                if (String(p).includes('manifest-last.json.') && nLast === 0) {
+                    nLast++
+                    throw Object.assign(new Error('ENOENT: no such file or directory, open'), { code: 'ENOENT' })
+                }
+                return fs.openSync(p, ...a)
+            },
+        }
+        let tr = traceRec()
+        let r2 = await ens(mfF, { pkgRoot: root2, fs: fsLast, onTrace: tr.on })
+        assert.strict.equal(fs.readFileSync(r2['tool.exe']).equals(tool), true)
+        assert.strict.equal(nLast, 1)
+        assert.strict.deepStrictEqual(tr.events.filter((e) => e.type === 'last').map((e) => e.ok), [true])
+        assert.strict.equal(fs.existsSync(path.join(root2, 'bin-cache', 'manifest-last.json')), true)
     })
 
     it(`should not produce unhandled rejections in this suite`, function() {
