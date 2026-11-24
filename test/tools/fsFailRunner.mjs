@@ -882,6 +882,14 @@ let cases = {
         await sleep(200)
         return { res }
     },
+    //EV04: useLoc=true而呼叫堆疊中無呼叫端之file:位置(以setImmediate直接排程呼叫log函數): 同步拋Error('can not parse stackLines')(JSDoc), 其前之診斷經getDiag出口(twsm1b: 只出label, 堆疊行不輸出)
+    EV04: async () => {
+        mkFx()
+        let f = (await imp('fsSrlog'))({ fdLog: fxp('log'), useLoc: true })
+        setImmediate(f, 'x')
+        await sleep(200)
+        return { done: true }
+    },
 
     //======== fsWriteJson ========
     RO17: async () => {
@@ -1130,15 +1138,18 @@ let wd = setTimeout(() => {
     process.exit(0)
 }, 40000)
 
-//logs, 案例期間console.log之內容(fsSrlog之失敗記錄, R-FS-REJECT-01之7), 結果行輸出前還原
+//logs, 案例期間console.log與console.error之內容(fsSrlog之失敗記錄, R-FS-REJECT-01之7; twsm1b起經getDiag出口寫console.error, 純物件之安全摘要以JSON記錄), 結果行輸出前還原
 let logs = []
 let clOrig = console.log
-console.log = (...a) => {
+let ceOrig = console.error
+let recLog = (...a) => {
     try {
-        logs.push(a.map((x) => (typeof x === 'string' ? x : safeStr(x))).join(' '))
+        logs.push(a.map((x) => (typeof x === 'string' ? x : (x !== null && typeof x === 'object' && Object.getPrototypeOf(x) === Object.prototype ? JSON.stringify(x) : safeStr(x)))).join(' '))
     }
     catch (e) {}
 }
+console.log = recLog
+console.error = recLog
 
 let out
 let cleanupError = null
@@ -1170,6 +1181,7 @@ finally {
 }
 await sleep(100) //收集延後之未處理rejection(nohandler模式下即於此使行程以離開碼1結束)
 console.log = clOrig
+console.error = ceOrig
 clearTimeout(wd)
 console.log('@@R@@' + JSON.stringify({ out, logs, unhandled, uncaught, cleanupError }))
 process.exit(0)

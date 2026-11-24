@@ -136,3 +136,47 @@ describe(`maskDiagText`, function() {
     diagSuite('maskDiagText')
 
 })
+
+
+//排程第486項(twsm1): opt.credPatterns恰為false時不用內建之憑證樣式(網址帳密、鍵值對與Bearer), 只遮已知秘密與opt.patterns; 只作用於maskDiagText(與串流遮罩器), 不影響maskDiagCopy、maskDiagErr
+describe(`maskDiagText credPatterns`, function() {
+
+    let s = 'use password=demo and Bearer abc.def at http://u1:pw1@h/x with sk-123456 and ID-42'
+    let pats = [{ re: /ID-\d+/ }]
+
+    it(`should mask only registered secrets and opt.patterns when credPatterns is false`, function() {
+        assert.strict.deepStrictEqual(maskDiagText(s, ['sk-123456'], { credPatterns: false, patterns: pats }), 'use password=demo and Bearer abc.def at http://u1:pw1@h/x with *** and ***')
+    })
+
+    it(`should keep the default (built-in patterns on) for every value other than exactly false, and not run an accessor`, function() {
+        let want = 'use password=*** and Bearer *** at http://***@h/x with *** and ***'
+        let n = 0
+        let acc = {}
+        Object.defineProperty(acc, 'credPatterns', {
+            get: () => {
+                n++; return false
+            },
+            enumerable: true
+        })
+        Object.defineProperty(acc, 'patterns', { value: pats, enumerable: true })
+        let inherited = Object.assign(Object.create({ credPatterns: false }), { patterns: pats })
+        let os = [{ patterns: pats }, { credPatterns: true, patterns: pats }, { credPatterns: 'false', patterns: pats }, { credPatterns: 0, patterns: pats }, { credPatterns: null, patterns: pats }, acc, inherited]
+        os.forEach((o, i) => {
+            assert.strict.deepStrictEqual(maskDiagText(s, ['sk-123456'], o), want, `case ${i}`) //訊息不序列化o(會執行其存取器)
+        })
+        assert.strict.deepStrictEqual(n, 0)
+    })
+
+    it(`should still fail closed with credPatterns false when the secrets list is unusable`, function() {
+        assert.strict.deepStrictEqual(maskDiagText(s, new Proxy([], {}), { credPatterns: false }), '***')
+    })
+
+    it(`should not affect maskDiagCopy and maskDiagErr (they never read credPatterns)`, async function() {
+        let maskDiagCopy = (await import('../src/maskDiagCopy.mjs')).default
+        let maskDiagErr = (await import('../src/maskDiagErr.mjs')).default
+        let e = new Error('password=demo')
+        assert.strict.deepStrictEqual(maskDiagErr(e, [], { credPatterns: false }).message, 'password=***')
+        assert.strict.deepStrictEqual(maskDiagCopy({ m: 'Bearer abc' }, [], { credPatterns: false }), { m: 'Bearer ***' })
+    })
+
+})

@@ -9,6 +9,8 @@ import getTrace from './getTrace.mjs'
 import optVal from './_optVal.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import toResultError from './_toResultError.mjs'
+import getDiag from './getDiag.mjs'
+import pickDiagOpt from './pickDiagOpt.mjs'
 
 
 //timeInterval、timeBinaryInterval: opt類參數, 有效整數且為正數計時毫秒(iseint, use: 'timer', min: 1; 交給chokidar, 其interval／binaryInterval經fs.watchFile須為uint32整數, 小數屬非預期; timeInterval亦交給setInterval), 非預期改用預設(100、300), 比照fsWatchFile
@@ -21,6 +23,10 @@ let RULE_TIME_BINARY_INTERVAL = { fn: 'fsWatchFolder', name: 'opt.timeBinaryInte
  *
  * 因使用chokidar，變更至少要3秒才能監測，不適用於頻繁觸發事件之工作
  *
+ * 停止監看(clear)時chokidar之unwatch同步拋錯或close被reject，記錄經getDiag(opt)之出口(R-DIAG-01規則14、20)：預設以console.error只輸出固定詞彙之label'[wsemi fsWatchFolder] can not unwatch'或'[wsemi fsWatchFolder] can not close watcher'與安全摘要{ errType, errCode }(不輸出錯誤本體、堆疊與路徑)；
+ * opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只交給它而不寫console；opt於建立時取快照。
+ * 監聽器拋錯之通報同此出口(經evEmit，opt.logDetail、opt.funLog與上同一快照)：有error監聽者時以error事件交給它(程式化通道，不經診斷出口)，否則預設console.error'[wsemi fsWatchFolder] listener threw'與安全摘要，opt.logDetail為true時輸出遮罩後之細節，opt.funLog為函數時只交給它
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsWatchFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fd 輸入偵測資料夾路徑字串
@@ -29,7 +35,8 @@ let RULE_TIME_BINARY_INTERVAL = { fn: 'fsWatchFolder', name: 'opt.timeBinaryInte
  * @param {Integer} [opt.timeInterval=100] 輸入當polling為true時偵測檔案變更間隔時間整數，代表chokidar開啟polling時的interval，單位為毫秒ms，預設為100；亦為週期輪詢監看路徑是否仍為資料夾之間隔；須為1至2147483647之有效整數(數字字串亦可)，非預期(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設100，不報錯、不夾至上限
  * @param {Integer} [opt.timeBinaryInterval=300] 輸入當polling為true時偵測二進位檔案變更間隔時間整數，代表chokidar開啟polling時的binaryInterval，單位為毫秒ms，預設為300；須為1至2147483647之有效整數(數字字串亦可)，非預期(0、負數、小數、Infinity、超過2147483647、'0x10'、包裝物件、非數字等)視為未給而改用預設300，不報錯
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval或opt.timeBinaryInterval為非預期之輸入時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數同一行程只警告一次，預設false
- * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
+ * @param {Boolean} [opt.logDetail=false] 輸入是否於console輸出遮罩後之細節(停止監看錯誤、監聽器拋錯之通報)，須為true才生效，同getDiag，建立時取快照，預設false(只輸出安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入診斷與警告之出口函數，格式為(label, safe, detail)=>{}：停止監看錯誤之記錄與監聽器拋錯之通報(無error監聽者時)以(label, { errType, errCode? }, detail)呼叫(同getDiag)，opt.debug之警告以(msg, { fn, reason, key })呼叫；給予時皆只交給它而不寫console，未給則記錄寫console.error、警告寫console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'tick'時為每次週期輪詢(每timeInterval一次；含watching為是否已有watcher、exists為監看路徑目前是否為資料夾)，'watch'時為chokidar之watcher剛建立，'ready'時為chokidar初始掃描完成(僅傳了onTrace才監聽chokidar之ready，不影響原行為)，'emit'時為即將對change監聽器派發一個事件(含kind為事件種類即change事件之type如add、change、unlink、addDir、unlinkDir，fp為path.resolve後之路徑字串，src為事件來源，'watcher'代表chokidar偵測到、'timer'代表週期輪詢發現監看資料夾已消失而合成之unlinkDir)，'error'時為chokidar之watcher自身出錯(含fun為'watcher'，錯誤物件不傳出，請由error事件取得)，'unwatch'時為unWatch被呼叫且watcher尚存在(開始關閉；關閉完成前重複呼叫會重複通知)，'closed'時為watcher.close()已完成且watcher已設為null(可再次建立watcher)，'clear'時為clear被呼叫(僅首次)；clear後僅會再通知unwatch與closed(資源釋放之回報)，其餘事件不再通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響監看，預設null
  * @returns {Object} 回傳事件物件，包含on、clear函數，on可進行監聽change、error事件，clear為停止全部監聽，不須輸入。chokidar之watcher自身出錯(如資料夾內含無權限之子資料夾EPERM、EACCES)以error事件回報{ fun: 'watcher', msg }。事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection，監聽器出錯會改以error事件回報{ fun: 'listener', name, msg, args }，監聽error時請先以fun欄位分流，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
@@ -176,6 +183,12 @@ function fsWatchFolder(fd, opt = {}) {
     //trace, 觀察回調(opt.onTrace), 未給時為null
     let trace = getTrace(opt)
 
+    //optDiag, opt.logDetail、opt.funLog之快照(各讀一次; 停止監看錯誤之診斷與監聽器拋錯之通報〔evEmit〕共用, R-DIAG-01規則14、20)
+    let optDiag = pickDiagOpt(opt)
+
+    //diag, 診斷輸出出口(停止監看錯誤不原樣console輸出; 永不拋錯)
+    let diag = getDiag(optDiag)
+
     //cleared, 是否已clear, 供trace於clear後不再通知(unwatch、closed除外)
     let cleared = false
 
@@ -213,7 +226,7 @@ function fsWatchFolder(fd, opt = {}) {
                     type: 'unlinkDir',
                     fp: fpr,
                     stats: undefined,
-                }], { tag: 'fsWatchFolder' })
+                }], { tag: 'fsWatchFolder', ...optDiag })
 
                 setTimeout(() => {
                     unWatch()
@@ -265,7 +278,7 @@ function fsWatchFolder(fd, opt = {}) {
                 if (trace && !cleared) {
                     trace('emit', { kind: type, fp, src: 'watcher' })
                 }
-                evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder' })
+                evEmit(ev, 'change', [{ type, fp, stats }], { tag: 'fsWatchFolder', ...optDiag })
 
                 //check
                 if (isRoot) {
@@ -281,7 +294,7 @@ function fsWatchFolder(fd, opt = {}) {
                 if (trace && !cleared) {
                     trace('error', { fun: 'watcher' })
                 }
-                evEmit(ev, 'error', [{ fun: 'watcher', msg: toResultError(err) }], { tag: 'fsWatchFolder' })
+                evEmit(ev, 'error', [{ fun: 'watcher', msg: toResultError(err) }], { tag: 'fsWatchFolder', ...optDiag })
             })
 
         //trace, 僅傳了onTrace才監聽ready與通知watch, 不影響原行為
@@ -310,12 +323,12 @@ function fsWatchFolder(fd, opt = {}) {
             watcher.unwatch(fpSpe)
         }
         catch (err) {
-            console.log(err)
+            diag('[wsemi fsWatchFolder] can not unwatch', diag.brief(err), () => err, 'error')
         }
         watcher.close()
             // .then(() => {})
             .catch((err) => {
-                console.log(err)
+                diag('[wsemi fsWatchFolder] can not close watcher', diag.brief(err), () => err, 'error')
             })
             .finally(() => {
                 watcher = null

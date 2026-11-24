@@ -19,13 +19,16 @@ import strdelleft from './strdelleft.mjs'
 import strdelright from './strdelright.mjs'
 import fsIsFolder from './fsIsFolder.mjs'
 import fsCreateFolder from './fsCreateFolder.mjs'
-import errToStr from './_errToStr.mjs'
-import toResultError from './_toResultError.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import getDiag from './getDiag.mjs'
 
 
 /**
  * 後端顯示與紀錄log訊息
+ *
+ * log函數之本務為以console.log顯示並寫入log檔；本函數自身之診斷(寫入log檔失敗、呼叫端位置無法解碼、useLoc=true而無法解析呼叫堆疊)經getDiag(opt)之出口(R-DIAG-01規則14、20)：
+ * 預設以console.error只輸出固定詞彙之label('[wsemi fsSrlog] can not save log'、'[wsemi fsSrlog] can not decode the caller location'、'[wsemi fsSrlog] can not parse stackLines')與安全摘要{ errType, errCode }(不輸出錯誤本體、路徑與堆疊行)；
+ * opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只交給它而不寫console；opt於建立時取快照
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsSrlog.test.mjs Github}
  * @memberOf wsemi
@@ -36,7 +39,9 @@ import chkFsPath from './_chkFsPath.mjs'
  * @param {Boolean} [opt.useTime=true] 輸入是否給予紀錄時間布林值，預設true
  * @param {Boolean} [opt.useLoc=true] 輸入是否紀錄觸發程式碼位置布林值，預設true
  * @param {Boolean} [opt.useLocRela=true] 輸入當useLoc=true時，是否紀錄觸發程式碼位置改用相對工作路徑之位置布林值，預設true
- * @returns {Function} 回傳log函數，比照console.log使用，寫入log檔失敗(如參數含循環參照、資料夾無法寫入)時以console.log記錄不外拋；useLoc=true而呼叫堆疊中無呼叫端之file:位置(如以setTimeout(srlog, 0, ...)直接排程呼叫)時，log函數同步拋出Error物件(can not parse stackLines)，呼叫端須自行try或改設useLoc=false
+ * @param {Boolean} [opt.logDetail=false] 輸入本函數自身之診斷是否於console輸出遮罩後之細節，須為true才生效，同getDiag，建立時取快照，預設false(只輸出安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入本函數自身之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷只交給它而不寫console(log函數本身之console.log顯示不受影響)，同getDiag，預設null
+ * @returns {Function} 回傳log函數，比照console.log使用，寫入log檔失敗(如參數含循環參照、資料夾無法寫入)時經診斷出口記錄不外拋；useLoc=true而呼叫堆疊中無呼叫端之file:位置(如以setTimeout(srlog, 0, ...)直接排程呼叫)時，log函數同步拋出Error物件(can not parse stackLines)，呼叫端須自行try或改設useLoc=false
  * @example
  * need test in nodejs.
  *
@@ -89,6 +94,9 @@ function fsSrlog(opt = {}) {
     if (!isbol(useLocRela)) {
         useLocRela = true
     }
+
+    //diag, 本函數自身之診斷出口(opt.logDetail、opt.funLog, 建立時取快照; 錯誤本體、路徑與堆疊行不原樣console輸出, R-DIAG-01規則14、20; 永不拋錯)
+    let diag = getDiag(opt)
 
     //gneFp
     let gneFp = () => {
@@ -202,7 +210,7 @@ function fsSrlog(opt = {}) {
                     locInfor = decodeURIComponent(locInfor)
                 }
                 catch (err) {
-                    console.log(err)
+                    diag('[wsemi fsSrlog] can not decode the caller location', diag.brief(err), () => err, 'error') //解碼失敗時照用原字串
                 }
 
                 // console.log('locInfor', locInfor, locInfor.length)
@@ -217,7 +225,8 @@ function fsSrlog(opt = {}) {
 
             }
             else {
-                console.log('stackLines', stackLines)
+                let lines = stackLines
+                diag('[wsemi fsSrlog] can not parse stackLines', undefined, () => ({ stackLines: lines }), 'error') //堆疊行含本機路徑, 只在logDetail或funLog時以遮罩後細節交出
                 throw new Error(`can not parse stackLines`)
             }
             // console.log('locInfor', locInfor)
@@ -254,13 +263,10 @@ function fsSrlog(opt = {}) {
         //show log
         console.log(...ags)
 
-        //save log, core為async且無人持有其Promise: 參數含循環參照(JSON.stringify拋錯)或寫檔失敗時即成unhandledRejection(未掛處理器之行程崩潰), 改以console.log記錄(記錄包try)
+        //save log, core為async且無人持有其Promise: 參數含循環參照(JSON.stringify拋錯)或寫檔失敗時即成unhandledRejection(未掛處理器之行程崩潰), 改經診斷出口記錄(diag永不拋錯; 預設只出label與{ errType, errCode }, 不帶路徑)
         core(time, loc, ...args)
             .catch((err) => {
-                try {
-                    console.log('fsSrlog: can not save log:', errToStr(toResultError(err)))
-                }
-                catch (e) {}
+                diag('[wsemi fsSrlog] can not save log', diag.brief(err), () => err, 'error')
             })
 
     }

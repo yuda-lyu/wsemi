@@ -27,10 +27,11 @@ describe(`setTimeoutHp`, function() {
 
 describe(`setTimeoutHp settle(R-PM-SETTLE-01)`, function() {
 
-    it(`setTimeoutHp: async回呼reject不產生未處理之rejection, 以console.log記錄 [規則2、10]`, function() {
+    it(`setTimeoutHp: async回呼reject不產生未處理之rejection, 經診斷出口記錄固定詞彙label且不含拋出值之訊息 [規則2、10; R-DIAG-01規則20, twsm1b]`, function() {
         let { r } = runPmSettle('hpAsyncReject')
-        let { loggedTimeout } = r.out
-        assert.strict.deepStrictEqual(loggedTimeout, true)
+        let { loggedTimeout, leaked } = r.out
+        //JSDoc「fun同步拋錯或其Promise被reject時經診斷出口記錄而不外拋」「預設…只輸出固定詞彙之label'[wsemi setTimeoutHp] fun threw'與安全摘要」: 記錄存在、拋出值之訊息不出現
+        assert.strict.deepStrictEqual({ loggedTimeout, leaked }, { loggedTimeout: true, leaked: false })
         assert.strict.deepStrictEqual(r.unhandled, [])
     })
 
@@ -108,14 +109,17 @@ describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
             calls,
             logs,
         })
-        let pick = (o) => ({ seq: o.seq, order: o.order, calls: o.calls, logs: o.logs.length === 1 && o.calls === 0 ? ['<one log>'] : o.logs })
+        let pick = (o) => ({ seq: o.seq, order: o.order, calls: o.calls, logs: o.logs })
+        //twsm1b(R-DIAG-01規則20): 記錄經getDiag出口, 預設為console.error之固定詞彙label與安全摘要, 拋出值之訊息(b1、b2)不輸出
+        let TH = '[wsemi setTimeoutHp] fun threw {"errType":"Error"}'
+        let NC = '[wsemi setTimeoutHp] fun can not be called {"errType":"Error"}' //pm2resolve(pmConvertResolve)對已撤銷之函數Proxy同步拋Error('invalid fn: must be a function')
         assert.strict.deepStrictEqual(Object.fromEntries(Object.entries(out).map(([k, v]) => [k, pick(v)])), {
             sync: ok('success', 1, []),
             async: ok('success', 1, []),
-            syncThrow: ok('error', 1, ['b1']),
-            asyncReject: ok('error', 1, ['b2']),
+            syncThrow: ok('error', 1, [TH]),
+            asyncReject: ok('error', 1, [TH]),
             cancelled: ok('cancelled', 1, []),
-            revoked: ok('invalid', 0, ['<one log>']), //建立後才被撤銷之函數Proxy: 不調用、記錄一筆(內容為引擎之原生錯誤, 不斷言)
+            revoked: ok('invalid', 0, [NC]), //建立後才被撤銷之函數Proxy: 不調用、記錄一筆(只輸出label與錯誤類別)
         })
         //JSDoc elapsed「必不小於interval」
         assert.strict.deepStrictEqual(Object.values(out).every((v) => v.minElapsed >= 20), true)
@@ -127,7 +131,7 @@ describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
         //假時鐘控制不了hrtime計時, 故五種模式於真實計時器下各跑同一情境, 以事件(fun被調用、記錄筆數)為同步點
         let r = runHp('timeoutP34')
         //fun非函數(W-15甲①)於五種模式皆同步拋Error('invalid fun: must be a function')且不記錄(logs只有boom)
-        let exp = { rets: [null, null], calls: 1, logs: ['boom'], thrownC: 'invalid fun: must be a function' }
+        let exp = { rets: [null, null], calls: 1, logs: ['[wsemi setTimeoutHp] fun threw {"errType":"Error"}'], thrownC: 'invalid fun: must be a function' } //twsm1b: 記錄為固定詞彙label與安全摘要(不含boom)
         assert.strict.deepStrictEqual(r.out.results, [exp, exp, exp, exp, exp])
         //紀錄器確實收到事件
         assert.strict.deepStrictEqual(r.out.recTypes, ['fire', 'result', 'start'])
@@ -146,6 +150,90 @@ describe(`setTimeoutHp 觀察回調(onTrace)`, function() {
             primitive: true,
             plain: true,
         })
+    })
+
+})
+
+
+//排程第610項⑤之常駐路徑(twsm1b; R-DIAG-01規則20): fun拋錯之記錄經getDiag(opt)出口——預設console.error只出固定詞彙label與安全摘要; opt.funLog為函數時只交給它(不寫console); opt.logDetail為true時console.error輸出遮罩後之拋出值
+describe(`setTimeoutHp 診斷出口(opt.funLog、opt.logDetail)`, function() {
+
+    //runOnce, 建立計時器(fun拋出thrown), 以第一筆診斷輸出(funLog或console.error)為同步點(防懸置上限3秒), 回傳funLog之呼叫與console之記錄
+    let runOnce = async (thrown, opt) => {
+        let fn = (await import('../src/setTimeoutHp.mjs')).default
+        let rec = { log: [], error: [] }
+        let calls = []
+        let raw = { log: console.log, error: console.error }
+        let stop = null
+        try {
+            await new Promise((resolve, reject) => {
+                let t = setTimeout(() => reject(new Error('no diag output within 3s')), 3000)
+                let done = () => {
+                    clearTimeout(t)
+                    resolve()
+                }
+                console.log = (...a) => rec.log.push(a)
+                console.error = (...a) => {
+                    rec.error.push(a)
+                    done()
+                }
+                let o = { ...opt }
+                if (opt.funLog === 'rec') {
+                    o.funLog = (...a) => {
+                        calls.push(a)
+                        done()
+                    }
+                }
+                let r = fn(() => {
+                    if (thrown && thrown.reject) {
+                        return Promise.reject(thrown.reject)
+                    }
+                    throw thrown
+                }, 1, o)
+                stop = typeof r === 'function' ? r : null
+            })
+        }
+        finally {
+            console.log = raw.log
+            console.error = raw.error
+            if (stop) {
+                stop()
+            }
+        }
+        return { calls, rec }
+    }
+
+    let SECRET = 'tok-SECRET-9f3a'
+
+    it(`should print only the fixed label and the safe summary to console.error by default (the thrown text is not printed)`, async function() {
+        let { rec } = await runOnce(new Error(`auth ${SECRET}`), {})
+        //JSDoc「預設以console.error只輸出固定詞彙之label'[wsemi setTimeoutHp] fun threw'…與安全摘要{ errType, errCode }」
+        assert.strict.deepStrictEqual(rec.error[0], ['[wsemi setTimeoutHp] fun threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(JSON.stringify(rec).includes('SECRET'), false)
+        assert.strict.deepStrictEqual(rec.log.length, 0)
+    })
+
+    it(`should summarize a rejected non-Error value by its type only`, async function() {
+        let { rec } = await runOnce({ reject: SECRET }, {})
+        assert.strict.deepStrictEqual(rec.error[0], ['[wsemi setTimeoutHp] fun threw', { errType: 'string' }])
+    })
+
+    it(`should hand the record only to opt.funLog as (label, safe, detail) with a masked detail, writing nothing to console`, async function() {
+        let { calls, rec } = await runOnce(new Error(`token=${SECRET}`), { funLog: 'rec' })
+        //JSDoc「opt.funLog為函數時輸出只交給它，不寫console」; 細節經maskDiagCopy遮罩(憑證樣式token=值)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi setTimeoutHp] fun threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(calls[0][2] instanceof Error && calls[0][2].message, 'token=***')
+        assert.strict.deepStrictEqual([rec.error.length, rec.log.length], [0, 0])
+    })
+
+    it(`should print the masked detail to console.error with opt.logDetail true, and treat non-true logDetail and non-function funLog as not given`, async function() {
+        let a = await runOnce(new Error(`token=${SECRET}`), { logDetail: true })
+        assert.strict.deepStrictEqual(a.rec.error[0][0], '[wsemi setTimeoutHp] fun threw')
+        assert.strict.deepStrictEqual(a.rec.error[0][1] instanceof Error && a.rec.error[0][1].message, 'token=***')
+        for (let o of [{ logDetail: 'true' }, { logDetail: 1 }, { funLog: 'x' }]) {
+            let b = await runOnce(new Error(`token=${SECRET}`), o)
+            assert.strict.deepStrictEqual(b.rec.error[0], ['[wsemi setTimeoutHp] fun threw', { errType: 'Error' }])
+        }
     })
 
 })

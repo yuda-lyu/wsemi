@@ -6,7 +6,7 @@ import { isObjLike, isProxy, gd, hasOwn, arrVals, normLabel, normSafe, markHandl
  * 伺服端轉接器：產生供ORM等產生端使用之funLog，把診斷輸出轉寫至伺服器日誌，只寫label與安全摘要(safe)，不讀細節
  *
  * 規則見sgud/rule/rulebook_diag.md之R-DIAG-01。回傳{ funLog, close }：funLog(label, safe)帶noDetail===true屬性(getDiag見之即不呼叫getDetail、不做拷貝)，不宣告也不讀第3引數；
- * 每次呼叫寫入write({ event, label, safe })：label經正規化(非字串為'(label)'，控制字元換?，至多200字元)，safe經正規化為物件(只取自有可列舉資料屬性，值限字串至多200字元、有限數字、布林、null、陣列至多20項與至多2層之純物件，bigint為'(bigint)'，循環為'[Circular]'，不可序列化者只影響該格)
+ * 每次呼叫寫入write({ event, label, safe })：label經正規化(非字串為'(label)'，控制字元、格式字元與行/段分隔符換?〔同maskDiagCtrl，含雙向覆寫與零寬字元〕，至多200字元)，safe經正規化為物件(只取自有可列舉資料屬性，值限字串至多200字元、有限數字、布林、null、陣列至多20項與至多2層之純物件，bigint為'(bigint)'，循環為'[Circular]'，不可序列化者只影響該格)
  *
  * opt.safeKeys(轉接器為寫入日誌之最後出口之第二道防線)：給了陣列就只留其所列之safe頂層鍵(恆含errType、errCode，同getDiag之cfg.safeKeys；名單外之鍵不讀描述子)，巢狀物件之鍵不過濾；未給(含值為undefined或null)時不依白名單過濾；
  * 宣告了而無法使用(存取器、非陣列、可偵測之Proxy)或opt無法讀取(可偵測之Proxy、已撤銷之Proxy)時視為空白名單(fail-closed，只留errType、errCode)；套件宣告只讀自有資料屬性，陣列之存取器之項與非字串之項略過

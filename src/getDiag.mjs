@@ -37,6 +37,21 @@ let readCfg = (cfg, k) => {
 }
 
 
+//readFormat, diag.brief之第2引數之format(只讀自有資料屬性; 恰為'text'者照傳, 其餘為undefined)
+let readFormat = (o) => {
+    try {
+        if (!isObjLike(o) || isProxy(o)) {
+            return undefined
+        }
+        let d = gd(o, 'format')
+        return d !== undefined && hasOwn(d, 'value') && d.value === 'text' ? 'text' : undefined
+    }
+    catch (err) {
+        return undefined
+    }
+}
+
+
 //arrItems, 宣告類陣列之項(自有資料屬性, 不執行getter, 存取器之項略過; 非陣列、可偵測之Proxy或讀取拋錯〔已撤銷之Proxy〕為null: 宣告類無法讀取者略過, 不影響秘密清單)
 let arrItems = (v) => {
     try {
@@ -172,8 +187,8 @@ let build = (snap, base, extra) => {
                 return
             }
 
-            //console, 預設為安全摘要; logDetail為true且有細節時改為細節
-            let m = level === 'error' ? 'error' : 'log'
+            //console, 預設為安全摘要; logDetail為true且有細節時改為細節; level為'error'寫console.error、'warn'寫console.warn, 其餘console.log
+            let m = level === 'error' ? 'error' : (level === 'warn' ? 'warn' : 'log')
             let fn = null
             try {
                 fn = console[m]
@@ -210,7 +225,8 @@ let build = (snap, base, extra) => {
     }
 
     //秘密清單取不到時fail-closed: 文字為***、拷貝為[Uncopyable]、對外錯誤值為new Error('***')
-    diag.brief = (err) => getDiagBriefErr(err, { codes, types, nested })
+    //(第2引數只讀其format: 恰為'text'時回行內字串, 同getDiagBriefErr)
+    diag.brief = (err, o) => getDiagBriefErr(err, { codes, types, nested, format: readFormat(o) })
     //形狀摘要(只輸出型別、長度與鍵名, 永不輸出值; 與秘密清單無關, 取不到清單時亦照常)
     diag.shape = (v, o) => getDiagShape(v, o)
     //(取不到時輸入不交出: 原生Promise以markDropped標記已處理)
@@ -266,13 +282,13 @@ let build = (snap, base, extra) => {
  * cfg為套件宣告：secrets(getDiagSecrets之結果、字串陣列，或回傳其一之函數——每次輸出時呼叫，如權杖簿)、codes、types、nested(同getDiagBriefErr)、patterns(同maskDiagText)、
  * safeKeys(safe會用到之鍵名陣列，恆含errType、errCode；白名單外之鍵丟棄，未宣告時只留errType、errCode)；套件宣告只讀自有資料屬性，無法讀取者不拋錯(秘密視為取不到)
  *
- * diag(label, safe, getDetail, level): label為固定詞彙(非字串為'(label)'，控制字元換?，至多200字元，不做文字遮罩)；safe為摘要純物件(只取自有可列舉資料屬性，值限字串至多200字元、有限數字、布林、null、陣列至多20項與至多2層之純物件，不做文字遮罩、不執行使用端程式)；
- * getDetail為回傳細節之函數(惰性，只在funLog或logDetail需要時呼叫一次，拋錯為'(unprintable)'，取得後必經maskDiagCopy以detail清單遮罩)；level為'error'時寫console.error，其餘任何值寫console.log
+ * diag(label, safe, getDetail, level): label為固定詞彙(非字串為'(label)'，控制字元、格式字元與行/段分隔符換?〔同maskDiagCtrl，含雙向覆寫與零寬字元〕，至多200字元，不做文字遮罩)；safe為摘要純物件(只取自有可列舉資料屬性，值限字串至多200字元、有限數字、布林、null、陣列至多20項與至多2層之純物件，不做文字遮罩、不執行使用端程式)；
+ * getDetail為回傳細節之函數(惰性，只在funLog或logDetail需要時呼叫一次，拋錯為'(unprintable)'，取得後必經maskDiagCopy以detail清單遮罩)；level為'error'時寫console.error，為'warn'時寫console.warn，其餘任何值寫console.log(level只決定console之通道，不傳給funLog)
  *
  * 出口：funLog→funLog(label, safe, detail)(無getDetail或noDetail時為2引數)，其回傳之原生Promise經_pmMarkHandled標記已處理(不呼叫一般thenable之then)、同步拋錯吞下；
  * 否則logDetail且有getDetail→console[level](label, detail)；否則console[level](label)或console[level](label, safe)；console拋錯時以(label, '(unprintable)')退一次，再失敗放棄
  *
- * 回傳之diag另帶: diag.brief(err)(getDiagBriefErr)、diag.shape(v, opt)(getDiagShape：資料值之形狀摘要，只輸出型別、長度與鍵名，永不輸出值，與秘密清單無關)、diag.mask(text)(對外文字之遮罩，用reject清單，不用路徑類樣式；非字串如Error依maskDiagErr之規則)、diag.copy(v)(maskDiagCopy，用detail清單)、diag.err(v)(maskDiagErr，用reject清單；對外reject、throw、'error'事件前必經)、
+ * 回傳之diag另帶: diag.brief(err, opt)(getDiagBriefErr，用套件宣告之codes、types、nested；opt只讀其format，恰為'text'時回行內字串'(errType errCode)')、diag.shape(v, opt)(getDiagShape：資料值之形狀摘要，只輸出型別、長度與鍵名，永不輸出值，與秘密清單無關)、diag.mask(text)(對外文字之遮罩，用reject清單，不用路徑類樣式；非字串如Error依maskDiagErr之規則)、diag.copy(v)(maskDiagCopy，用detail清單)、diag.err(v)(maskDiagErr，用reject清單；對外reject、throw、'error'事件前必經)、
  * diag.with(src)(回傳併入額外秘密來源之新diag)
  *
  * cfg之secrets讀自有或繼承(至Object.prototype止)之資料屬性；宣告類參數(codes、types、nested、patterns、safeKeys)無法讀取(已撤銷之Proxy等)者略過，不影響秘密清單
@@ -305,6 +321,12 @@ let build = (snap, base, extra) => {
  *
  * console.log(diag.err(err).message)
  * // => 'auth failed for ***'
+ *
+ * diag('opt.kpOld was removed, use opt.kpNew instead', undefined, undefined, 'warn')
+ * // console.warn('opt.kpOld was removed, use opt.kpNew instead')
+ *
+ * console.log(`select failed ${diag.brief(err, { format: 'text' })}`)
+ * // => 'select failed (Error)'
  *
  */
 function getDiag(opt, cfg) {

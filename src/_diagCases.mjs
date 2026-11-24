@@ -210,18 +210,21 @@ let txt = (api, ctx, s, list, opt) => api.maskDiagText(s, list === undefined ? a
 let cpy = (api, ctx, v, list, opt) => api.maskDiagCopy(v, list === undefined ? api.getDiagSecrets(ctx.src()) : list, opt)
 let rej = (api, ctx, v, list, opt) => api.maskDiagErr(v, list === undefined ? api.getDiagSecrets(ctx.src()) : list, opt)
 
-//capture, 暫時替換console之log與error以收集輸出(結束時還原)
+//capture, 暫時替換console之log、warn與error以收集輸出(結束時還原; warn自排程第610項⑥起為getDiag之通道之一)
 let capture = async (fn) => {
     let rs = []
     let ol = console.log
+    let ow = console.warn
     let oe = console.error
     console.log = (...args) => rs.push({ m: 'log', args })
+    console.warn = (...args) => rs.push({ m: 'warn', args })
     console.error = (...args) => rs.push({ m: 'error', args })
     try {
         await fn()
     }
     finally {
         console.log = ol
+        console.warn = ow
         console.error = oe
     }
     return rs
@@ -2021,13 +2024,13 @@ add('O13', 'getDiag', 'funLog回傳一般thenable, 其then未被呼叫', {
     },
     expect: { userCode: 0 },
 })
-add('O14', 'getDiag', 'level為true、warn時為console.log', {
+add('O14', 'getDiag', 'level為true時為console.log、warn時為console.warn(排程第610項⑥起; 原warn亦為console.log)', {
     call: async (api) => capture(() => {
         let diag = api.getDiag({}, {})
         diag('a', undefined, undefined, true)
         diag('b', undefined, undefined, 'warn')
     }),
-    expect: { check: (rs) => jeq(rs, [{ m: 'log', args: ['a'] }, { m: 'log', args: ['b'] }]) || JSON.stringify(rs) },
+    expect: { check: (rs) => jeq(rs, [{ m: 'log', args: ['a'] }, { m: 'warn', args: ['b'] }]) || JSON.stringify(rs) },
 })
 add('O15', 'getDiag', 'safe含白名單外之鍵password被丟棄', {
     make: (ctx) => ({ mode: 'select', password: ctx.sec.password, errType: 'Error', n: 3 }),

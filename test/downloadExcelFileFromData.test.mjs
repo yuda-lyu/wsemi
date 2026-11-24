@@ -114,4 +114,53 @@ describe(`downloadExcelFileFromData`, function() {
         assert.strict.deepStrictEqual(fs.existsSync(fp), true)
     })
 
+    //排程第610項⑤(twsm1): 寫成Excel位元組失敗(寫檔器拒絕, 如分頁名含Excel禁用字元)時, 原自行console.log錯誤本體(含堆疊與分頁名), 使用端關不掉;
+    //  改經getDiag(opt)之出口(R-DIAG-01): 預設只console.log固定詞彙label與安全摘要, opt.logDetail為true才輸出遮罩後之細節, opt.funLog為函數時只交給它; 回傳值({ error })不變
+    let captureAll = async (fn) => {
+        let rec = { log: [], warn: [], error: [] }
+        let raw = { log: console.log, warn: console.warn, error: console.error }
+        for (let k of Object.keys(rec)) {
+            console[k] = (...a) => rec[k].push(a)
+        }
+        try {
+            return { r: await fn(), rec }
+        }
+        finally {
+            for (let k of Object.keys(rec)) {
+                console[k] = raw[k]
+            }
+        }
+    }
+    let LABEL = '[wsemi downloadExcelFileFromData] can not convert workbook to Excel'
+
+    it(`should log only the fixed label and the safe summary (no error body, stack or sheet name) by default when the writer fails`, async function() {
+        let { r, rec } = await captureAll(() => downloadExcelFileFromData(`${fdt}/w1.xlsx`, 'SHEETSECRET/9f3a', [['a']]))
+        assert.strict.deepStrictEqual(r.error instanceof Error, true) //回傳值不變: 下游之{ error }
+        assert.strict.deepStrictEqual(rec.log, [[LABEL, { errType: 'Error' }]])
+        assert.strict.deepStrictEqual([rec.warn.length, rec.error.length], [0, 0])
+        assert.strict.deepStrictEqual(fs.existsSync(`${fdt}/w1.xlsx`), false)
+    })
+
+    it(`should hand the diagnosis only to opt.funLog (nothing on console) so the caller can silence or redirect it`, async function() {
+        let calls = []
+        let { rec } = await captureAll(() => downloadExcelFileFromData(`${fdt}/w2.xlsx`, 'a/b', [['a']], { funLog: (label, safe, detail) => calls.push([label, safe, detail]) }))
+        assert.strict.deepStrictEqual([rec.log.length, rec.warn.length, rec.error.length], [0, 0, 0])
+        assert.strict.deepStrictEqual(calls.length, 1)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], [LABEL, { errType: 'Error' }])
+        assert.strict.deepStrictEqual(calls[0][2] instanceof Error, true) //細節為遮罩後之拷貝(非原物件)
+        let silent = await captureAll(() => downloadExcelFileFromData(`${fdt}/w3.xlsx`, 'a/b', [['a']], { funLog: () => {} }))
+        assert.strict.deepStrictEqual([silent.rec.log.length, silent.rec.warn.length, silent.rec.error.length], [0, 0, 0])
+    })
+
+    it(`should log the masked detail with opt.logDetail true, and treat non-true logDetail and non-function funLog as not given`, async function() {
+        let { rec } = await captureAll(() => downloadExcelFileFromData(`${fdt}/w4.xlsx`, 'a/b', [['a']], { logDetail: true }))
+        assert.strict.deepStrictEqual(rec.log.length, 1)
+        assert.strict.deepStrictEqual(rec.log[0][0], LABEL)
+        assert.strict.deepStrictEqual(rec.log[0][1] instanceof Error && rec.log[0][1].message.includes('a/b'), true)
+        for (let o of [{ logDetail: 'true' }, { funLog: 'x' }, null, 5]) {
+            let x = await captureAll(() => downloadExcelFileFromData(`${fdt}/w5.xlsx`, 'a/b', [['a']], o))
+            assert.strict.deepStrictEqual(x.rec.log, [[LABEL, { errType: 'Error' }]], JSON.stringify(o))
+        }
+    })
+
 })

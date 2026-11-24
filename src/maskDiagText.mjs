@@ -1,4 +1,4 @@
-import { NONE, tryCall, isObjLike, isProxy, pickList, getCtx, maskStr, optMode, markDropped } from './_diagKit.mjs'
+import { NONE, tryCall, isObjLike, isProxy, ownData, pickList, getCtx, maskStr, optMode, markDropped } from './_diagKit.mjs'
 
 
 /**
@@ -17,6 +17,8 @@ import { NONE, tryCall, isObjLike, isProxy, pickList, getCtx, maskStr, optMode, 
  * re為RegExp(自動加g與d旗標，旗標以內建getter讀取)；group為要遮之群組名或索引(陣列者取第一個有參與比對者，未給為整段)；when(match)為同步判定是否遮(於取得區間之後呼叫，拋錯視為要遮)；
  * scope為'message'者只作用於第一個「換行加4空白at 」之前；detailOnly為true者只用於診斷輸出(路徑類樣式；對外錯誤值之遮罩不用，fsPathTail、receivedTail即是)
  *
+ * opt.credPatterns須恰為false才不用內建之憑證樣式(上列②網址帳密、③憑證鍵值對與Bearer)，只遮①已知秘密與④opt.patterns，供不宜以樣式判定之文字(如模型輸出之程式範例含password=字樣)只精確遮罩已登錄之秘密；未給或非false之值皆為預設true(只讀自有資料屬性)
+ *
  * 已知限制: 未登錄之秘密只依網址帳密、鍵值對與Bearer之樣式盡力遮罩；鍵值對之鍵名為子字串比對(如mytoken=亦遮)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/maskDiagText.test.mjs Github}
@@ -25,6 +27,7 @@ import { NONE, tryCall, isObjLike, isProxy, pickList, getCtx, maskStr, optMode, 
  * @param {Array|Object} [secrets=[]] 輸入秘密清單陣列，或getDiagSecrets回傳之物件(取detail)，預設[]
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Array} [opt.patterns=[]] 輸入套件樣式陣列，預設[]
+ * @param {Boolean} [opt.credPatterns=true] 輸入是否使用內建之憑證樣式(網址帳密、憑證鍵值對與Bearer)，須恰為false才不用，預設true
  * @returns {String} 回傳遮罩後字串，輸入非字串時原樣回傳(清單無法使用時為***)
  * @example
  *
@@ -37,11 +40,15 @@ import { NONE, tryCall, isObjLike, isProxy, pickList, getCtx, maskStr, optMode, 
  * console.log(maskDiagText(`PRAGMA key='k1'`, [], { patterns: ['pragmaKey'] }))
  * // => "PRAGMA key='***'"
  *
+ * console.log(maskDiagText('use password=demo with sk-123456', ['sk-123456'], { credPatterns: false }))
+ * // => 'use password=demo with ***'
+ *
  */
 function maskDiagText(s, secrets, opt) {
     let ctx
     try {
-        ctx = getCtx(pickList(secrets, 'detail'), opt, optMode(opt)) //清單無法使用者不論輸入型別皆fail-closed
+        //credPatterns須恰為false才不用內建樣式(②③); 只讀自有資料屬性, 其餘(含未給、非布林)為預設true
+        ctx = getCtx(pickList(secrets, 'detail'), opt, optMode(opt), ownData(opt, 'credPatterns') !== false) //清單無法使用者不論輸入型別皆fail-closed
     }
     catch (err) {
         markDropped(s) //輸入不交出: 原生Promise標記已處理

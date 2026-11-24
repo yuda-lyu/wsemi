@@ -54,3 +54,22 @@ describe(`_getDiff2Html`, function() {
     })
 
 })
+
+
+//主控裁定(twsm1b; R-DIAG-01規則20): 找不到模組時之console由印出模組物件與全域同名值(除錯殘留)改為固定詞彙
+describe(`_getDiff2Html 找不到模組時之輸出(twsm1b)`, function() {
+
+    it(`should print exactly one fixed-vocabulary line (no module object, no global value) before throwing`, function() {
+        let orig = console.log
+        let logs = []
+        console.log = (...a) => logs.push(a)
+        try {
+            assert.throws(() => getDiff2Html({ marker: 'MODULE-OBJECT-9f3a' }), /invalid Diff2Html/)
+        }
+        finally {
+            console.log = orig
+        }
+        assert.strict.deepStrictEqual(logs, [['[wsemi getDiff2Html] can not find the diff2html module']])
+    })
+
+})

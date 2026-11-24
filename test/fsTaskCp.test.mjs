@@ -661,3 +661,75 @@ describe(`fsTaskCp`, function() {
     })
 
 })
+
+
+//主控裁定(twsm1c, twsm1b需裁示2 A; R-DIAG-01規則20): opt增logDetail、funLog(logDetail須===true、funLog須為函數, 其餘視為未給), 轉傳給內部之fsWatchFile(其停止監看錯誤之記錄與監聽器拋錯之通報)
+//以假watcher(test/tools/fsWatchKit之withFakeChokidar)使unwatch同步拋錯、close被reject, 以funLog或console.error之第2筆為同步點
+describe(`fsTaskCp 轉傳opt.logDetail、opt.funLog給內部之fsWatchFile(twsm1c)`, function() {
+
+    let fdA = './test/_tmp/fsTaskCpDiagA'
+    let fdB = './test/_tmp/fsTaskCpDiagB'
+
+    after(function() {
+        fs.rmSync(fdA, { recursive: true, force: true })
+        fs.rmSync(fdB, { recursive: true, force: true })
+    })
+
+    //run, 建立後等內部之假watcher, 使其unwatch拋錯、close被reject, 再clear; 回傳funLog之呼叫與console.error之記錄
+    let run = async (opt) => {
+        let { withFakeChokidar: wfc, waitUntil: wu } = await import('./tools/fsWatchKit.mjs')
+        return wfc(async (ws) => {
+            let rec = []
+            let calls = []
+            let ce = console.error
+            console.error = (...a) => rec.push(a)
+            try {
+                let o = { ...opt }
+                if (opt.funLog === 'rec') {
+                    o.funLog = (...a) => calls.push(a)
+                }
+                let ev = (() => {
+                    fs.mkdirSync(fdA, { recursive: true })
+                    fs.writeFileSync(`${fdA}/fpHash.json`, '{}', 'utf8')
+                    return fsTaskCp(fdA, fdB, o).buildTar()
+                })()
+                await wu(() => ws.length > 0)
+                let w = ws[0]
+                w.unwatch = () => {
+                    throw new Error('unwatch failed at SECRETDIR')
+                }
+                w.close = () => Promise.reject(Object.assign(new Error('close failed at SECRETDIR'), { code: 'EPERM' }))
+                ev.clear()
+                await wu(() => calls.length + rec.length >= 2)
+            }
+            finally {
+                console.error = ce
+            }
+            return { calls, rec }
+        })
+    }
+
+    let LB = ['[wsemi fsWatchFile] can not unwatch', '[wsemi fsWatchFile] can not close watcher']
+    let SF = [{ errType: 'Error' }, { errType: 'Error', errCode: 'EPERM' }]
+
+    it(`should forward opt.funLog: both records go only to it with details, nothing to console.error`, async function() {
+        let { calls, rec } = await run({ funLog: 'rec' })
+        assert.strict.deepStrictEqual(calls.map((c) => [c[0], c[1]]), [[LB[0], SF[0]], [LB[1], SF[1]]])
+        assert.strict.deepStrictEqual(calls.every((c) => c[2] instanceof Error), true)
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    it(`should forward opt.logDetail true: console.error prints the masked details`, async function() {
+        let { rec } = await run({ logDetail: true })
+        assert.strict.deepStrictEqual([rec.map((a) => a[0]), rec.every((a) => a[1] instanceof Error)], [LB, true])
+    })
+
+    it(`should print only the fixed labels and safe summaries by default and for non-true logDetail or non-function funLog (K3)`, async function() {
+        for (let o of [{}, { logDetail: 'true' }, { logDetail: 1 }, { funLog: 'x' }]) {
+            let { rec } = await run(o)
+            assert.strict.deepStrictEqual(rec, [[LB[0], SF[0]], [LB[1], SF[1]]], JSON.stringify(o))
+            assert.strict.deepStrictEqual(JSON.stringify(rec).includes('SECRETDIR'), false)
+        }
+    })
+
+})

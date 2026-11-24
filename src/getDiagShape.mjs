@@ -1,4 +1,4 @@
-import { kindOf, ownData, tryCall, NONE, BL_AB, BL_SAB, BL_TA, BL_DV, SZ_MAP, SZ_SET, cutAt } from './_diagKit.mjs'
+import { kindOf, ownData, tryCall, NONE, BL_AB, BL_SAB, BL_TA, BL_DV, SZ_MAP, SZ_SET, cutAt, ctlToQ } from './_diagKit.mjs'
 
 
 //鍵數與鍵名長度之預設與硬上限(opt可調整, 超出硬上限或非整數者用預設)
@@ -15,14 +15,10 @@ let readInt = (opt, k, def, max) => {
 }
 
 
-//RE_CTL, 控制字元(Cc: C0、DEL、C1)、格式字元(Cf: 雙向覆寫U+202A~202E與U+2066~2069、零寬字元、BOM等, 可使log行重排或隱藏內容)與行/段分隔符(Zl、Zp: U+2028、U+2029)
-const RE_CTL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu
-
-
-//fmtKey, 鍵名之輸出(超過上限截斷並接..., 控制字元換?)
+//fmtKey, 鍵名之輸出(超過上限截斷並接..., 控制字元、格式字元與行/段分隔符換?; 規則為_diagKit之ctlToQ, 同maskDiagCtrl)
 let fmtKey = (k, maxLen) => {
     let s = k.length > maxLen ? `${cutAt(k, maxLen)}...` : k
-    return s.replace(RE_CTL, '?')
+    return ctlToQ(s)
 }
 
 

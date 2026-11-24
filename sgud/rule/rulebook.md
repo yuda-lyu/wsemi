@@ -31,7 +31,8 @@
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
-| 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 38.5 |
+| 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape、規則 16～20〔2026-11-24 twsm1: maskDiagCtrl、maskDiagToken、pickDiagOpt、warn 與行內摘要、函數內自行 console 之 AST 盤點;twsm1b: label 與 lowerFind 路徑之控制字元單一規則、常駐路徑 5 函數經 getDiag、除錯殘留〕;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 47.9 |
+| 串流遮罩器 `genDiagStreamMasker`(逐列、長列分段不切開命中、與切塊無關;兩份使用端實作之對照與改用要點;2026-11-24 twsm1 新增) | `sgud/rule/rulebook_diag_stream.md` | R-DIAG-02 | 6.6 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
 | 字串取代之取代值須字面化: `replace`／`replaceAll` 站點全集(`$&`、`$'`、`` $` ``、`$$` 不得被展開;2026-11-12 ws427 wsrep 新增) | `sgud/rule/rulebook_replace.md` | R-REPLACE-LITERAL-01 | 約 8 |
 | fs 路徑參數無效(非字串、空字串、含 NUL)之處置: 依失敗通道回報、不帶值、與不存在分開(第 216 項①) | `sgud/rule/rulebook_fspath.md` | R-FS-INVALID-PATH-01 | 約 8 |
@@ -80,6 +81,7 @@
 - `R-DOMALERT-01` → `rulebook_browser.md`: R-DOMALERT-01 `domAlert` 之輸入、關閉與事件綁定(D1～D7)
 - `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
+- `R-DIAG-02` → `rulebook_diag_stream.md`: R-DIAG-02 串流文字之遮罩一律經 `genDiagStreamMasker`(逐列、與 maskDiagText 同一套規則、長列分段不切開命中、與塊之切法無關)
 - `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
 - `R-DEP-MAJOR-01` → `rulebook_deps.md`: R-DEP-MAJOR-01 外部依賴跨主版號升級: 使用處全集、新舊差分、`close()` 後不沿用(每次新建 watcher)、he 具名匯入、UMD 打包驗證
 - `R-DL-VERIFY-01` → `rulebook_dl.md`: R-DL-VERIFY-01 下載執行檔或二進位資產一律經 `fsDownloadFileVerify` 驗證 SHA-256(與大小)

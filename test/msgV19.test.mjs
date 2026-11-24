@@ -373,24 +373,30 @@ describe('msgV19', function() {
                 let fdLog = path.join(fpFile, 'sublogs-SECRET-PATH') //檔案之下無法建資料夾
                 let calls = []
                 let saved = console.log
+                let savedErr = console.error
                 console.log = (...a) => {
                     calls.push(a)
                 }
+                console.error = (...a) => {
+                    calls.push(a)
+                }
+                let LB = '[wsemi fsSrlog] can not save log' //twsm1b(R-DIAG-01規則20): 經getDiag出口, console.error之固定詞彙label與安全摘要{ errType, errCode }
                 try {
                     let srlog = fsSrlog({ fdLog, useTime: false, useLoc: false })
                     srlog('hello')
                     let t0 = Date.now()
-                    while (!calls.some((a) => a[0] === 'fsSrlog: can not save log:') && Date.now() - t0 < 8000) {
+                    while (!calls.some((a) => a[0] === LB) && Date.now() - t0 < 8000) {
                         await new Promise((resolve) => setTimeout(resolve, 20))
                     }
                 }
                 finally {
                     console.log = saved
+                    console.error = savedErr
                 }
-                let c = calls.find((a) => a[0] === 'fsSrlog: can not save log:')
-                assert.ok(c, JSON.stringify(calls))
-                assert.ok(typeof c[1] === 'string' && /^(Error: )?operation failed \(code [A-Z]+\)$/.test(c[1]), String(c[1]))
-                assert.ok(!String(c[1]).includes('SECRET-PATH'))
+                let c = calls.find((a) => a[0] === LB)
+                assert.ok(c, 'no save-failure record')
+                assert.ok(c.length === 2 && c[1] !== null && typeof c[1] === 'object' && c[1].errType === 'Error' && /^E[A-Z]+$/.test(c[1].errCode), 'safe summary must be { errType, errCode }')
+                assert.ok(!JSON.stringify(calls).includes('SECRET-PATH'), 'the path of the log folder must not be printed')
             })
 
             it('fsDeleteFile / fsRenameFile: the parameter names are fp and fpOld/fpNew (formerly the misspelled pah)', function() {

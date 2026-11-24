@@ -14,6 +14,7 @@ import fsCreateFolder from './fsCreateFolder.mjs'
 import fsWatchFile from './fsWatchFile.mjs'
 import getTrace from './getTrace.mjs'
 import chkFsPath from './_chkFsPath.mjs'
+import pickDiagOpt from './pickDiagOpt.mjs'
 
 
 /**
@@ -25,6 +26,8 @@ import chkFsPath from './_chkFsPath.mjs'
  * @param {String} fdTar 輸入偵測端已紀錄之資料夾路徑字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，供buildTar所建立之偵測端使用，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'recv'時為收到來源端紀錄檔之變更(含kind為檔案監看事件種類'add'、'change'或'unlink'，隨後排入300ms之debounce)，'run'時為debounce到期而開始偵測，'skip'時為來源端無紀錄(紀錄檔不存在、內容為空物件或非物件)而不偵測(含reason為'no src')，'emit'時為即將派發change事件(含add、del、diff、same為kpCmp各類件數)，'settle'時為change之pm已settle而即將據以處理(含ok為任務是否成功)，'record'時為任務成功後偵測端紀錄檔已更新，'clear'時為已呼叫偵測端之clear；clear後不再通知(已排入debounce者仍會偵測與派發change，但不再通知)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，預設null
+ * @param {Boolean} [opt.logDetail=false] 輸入偵測端內部監看(fsWatchFile)之診斷是否於console輸出遮罩後之細節，須為true才生效，建立時讀一次並轉傳給buildTar內部之fsWatchFile(停止監看錯誤之記錄、其監聽器拋錯之通報)，預設false(只輸出安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入偵測端內部監看之診斷輸出函數，格式為(label, safe, detail)=>{}，須為函數才生效，建立時讀一次並轉傳給buildTar內部之fsWatchFile，給予時其停止監看錯誤之記錄與監聽器拋錯之通報只交給它而不寫console；本函數自身派發change等事件時之拋錯通報不在此列(依evEmit之預設)，預設null
  * @returns {Object} 回傳物件，包含buildSrc與buildTar函數，buildSrc回傳監聽事件物件ev, 可使用ev.set進行紀錄變更，buildTar回傳監聽事件物件，可監聽change事件，並使用接收事件資訊msg內的pm做為回傳執行成功與否狀態。兩事件物件皆為事件物件為原生EventEmitter(eventemitter3)。本模組於派發處以try攔截監聽器之同步拋錯故其不會使行程崩潰；惟依EventEmitter規範，同一次派發中先拋錯之監聽器會中止該次派發，其後之監聽器不再被呼叫。async監聽器之reject不被攔截(規範上emit不觀察監聽器回傳值)，須由監聽器自行處理，否則為unhandledRejection。change監聽器同步拋錯時會先reject該次msg.pm(視為執行失敗、不更新紀錄檔)再以error事件回報{ fun: 'listener', name, msg, args }，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
@@ -196,6 +199,9 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
     if (msgPath) {
         throw new Error(msgPath)
     }
+
+    //optDiag, 診斷之兩鍵(opt.logDetail須===true、opt.funLog須為函數, 其餘視為未給; 建立時讀一次), 轉傳給偵測端內部之fsWatchFile
+    let optDiag = pickDiagOpt(opt)
 
     //check fdSrc
     // let fdSrc = get(opt, 'fdSrc', '')
@@ -436,7 +442,7 @@ function fsTaskCp(fdSrc, fdTar, opt = {}) {
         }
 
         //evFile
-        let evFile = fsWatchFile(fpHashSrc)
+        let evFile = fsWatchFile(fpHashSrc, optDiag) //轉傳opt.logDetail、opt.funLog(停止監看錯誤之記錄與其監聽器拋錯之通報)
         evFile.on('change', (msg) => {
             // console.log(msg.type, getFileName(msg.fp))
 

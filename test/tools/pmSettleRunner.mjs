@@ -688,13 +688,17 @@ let cases = {
         return { series: { s: a.s, same: a.v === e1 }, map1: { s: b.s, same: b.v === e2 }, mapAbort: { s: c.s, same: c.v === e3 } }
     },
 
-    //setIntervalHp、setTimeoutHp: async回呼reject不產生未處理之rejection, 以console.log記錄(複審R03)
+    //setIntervalHp、setTimeoutHp: async回呼reject不產生未處理之rejection, 經getDiag出口記錄(twsm1b起: console.error之固定詞彙label與安全摘要, 不含拋出值之訊息; 原為console.log拋出值, 複審R03)
     hpAsyncReject: async () => {
         let SI = await imp('setIntervalHp')
         let ST = await imp('setTimeoutHp')
         let logs = []
         let cl = console.log
+        let ce = console.error
         console.log = (...a) => {
+            logs.push(a.map((x) => safeStr(x)).join(' '))
+        }
+        console.error = (...a) => {
             logs.push(a.map((x) => safeStr(x)).join(' '))
         }
         try {
@@ -709,10 +713,11 @@ let cases = {
                 throw new Error('timeout async boom')
             }, 10)
             await new Promise((resolve) => setTimeout(resolve, 80))
-            return { called: n > 0, loggedInterval: logs.some((s) => s.includes('interval async boom')), loggedTimeout: logs.some((s) => s.includes('timeout async boom')) }
+            return { called: n > 0, loggedInterval: logs.some((s) => s.includes('[wsemi setIntervalHp] fun threw')), loggedTimeout: logs.some((s) => s.includes('[wsemi setTimeoutHp] fun threw')), leaked: logs.some((s) => s.includes('async boom')) }
         }
         finally {
             console.log = cl
+            console.error = ce
         }
     },
 

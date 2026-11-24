@@ -31,6 +31,27 @@ let isCode = (c, names) => {
 }
 
 
+//readFormat, 讀設定之format(只讀自有資料屬性, 不執行getter; 可偵測之Proxy不讀): 恰為'text'者為行內字串格式, 其餘為物件
+let readFormat = (opt) => {
+    try {
+        if (!isObjLike(opt) || isProxy(opt)) {
+            return 'object'
+        }
+        let d = gd(opt, 'format')
+        return d !== undefined && hasOwn(d, 'value') && d.value === 'text' ? 'text' : 'object'
+    }
+    catch (err) {
+        return 'object'
+    }
+}
+
+
+//toText, 摘要物件轉行內字串: '(errType)'或'(errType errCode)'
+let toText = (b) => {
+    return b.errCode === undefined ? `(${b.errType})` : `(${b.errType} ${b.errCode})`
+}
+
+
 /**
  * 錯誤之安全摘要：只列錯誤類別與白名單內之錯誤代碼，不含訊息文字與資料值，供診斷輸出之預設摘要(safe)使用
  *
@@ -44,6 +65,10 @@ let isCode = (c, names) => {
  *
  * 回傳以物件字面值一次建成{ errType }或{ errType, errCode }；內部任何失敗回{ errType: 'unknown' }；不執行使用端程式、永不拋錯
  *
+ * opt.format恰為'text'時改回行內字串'(errType)'或'(errType errCode)'(如'(Error ENOENT)'、'(TypeError ECONNREFUSED)'，內部失敗為'(unknown)')，供把摘要嵌入一行log或固定詞彙之訊息(取代各自以JSON.stringify或自組類別名與代碼)，內容同物件格式(類別名與代碼皆為白名單內之識別字，不含空白以外之分隔)；其餘值(含未給)為物件格式(只讀自有資料屬性)
+ *
+ * fetch(Node之undici)之網路錯誤為TypeError('fetch failed')，系統錯誤碼(ECONNREFUSED、ENOTFOUND、ECONNRESET等)在其cause.code而非本身之code，須宣告opt.nested: ['cause']才取得(見範例)；cause為AggregateError(多位址皆連不上)時其自有code亦可取得
+ *
  * 已知限制: 無util.types時Proxy不可偵測(判定原型鏈時其陷阱可能被執行)；跨realm錯誤於無util時以有界原型鏈判定
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getDiagBriefErr.test.mjs Github}
@@ -52,8 +77,9 @@ let isCode = (c, names) => {
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Array} [opt.codes=[]] 輸入另允許之代碼集合名稱陣列，預設[]
  * @param {Array} [opt.types=[]] 輸入另允許之錯誤類別名陣列(與類別名及建構子名比對)，預設[]
- * @param {Array} [opt.nested=[]] 輸入另讀其code之巢狀錯誤鍵陣列，如['original','parent']，預設[]
- * @returns {Object} 回傳摘要物件{ errType, errCode? }
+ * @param {Array} [opt.nested=[]] 輸入另讀其code之巢狀錯誤鍵陣列，如['original','parent']、fetch之['cause']，預設[]
+ * @param {String} [opt.format='object'] 輸入回傳格式，恰為'text'時回傳行內字串'(errType errCode)'，其餘為物件，預設'object'
+ * @returns {Object|String} 回傳摘要物件{ errType, errCode? }，opt.format為'text'時回傳行內字串
  * @example
  *
  * let e = new Error('connect failed')
@@ -66,8 +92,28 @@ let isCode = (c, names) => {
  * console.log(getDiagBriefErr(e2), getDiagBriefErr(e2, { codes: ['sqlstate'] }))
  * // => { errType: 'Error' } { errType: 'Error', errCode: '23505' }
  *
+ * console.log(getDiagBriefErr(e, { format: 'text' }), getDiagBriefErr(new RangeError('x'), { format: 'text' }))
+ * // => '(Error ECONNREFUSED)' '(RangeError)'
+ *
+ * //fetch(undici)之系統錯誤碼在cause.code: 須宣告nested: ['cause']
+ * try {
+ *     await fetch('http://127.0.0.1:59999/') //無服務監聽之埠
+ * }
+ * catch (err) {
+ *     console.log(getDiagBriefErr(err), getDiagBriefErr(err, { nested: ['cause'] }))
+ *     // => { errType: 'TypeError' } { errType: 'TypeError', errCode: 'ECONNREFUSED' }
+ * }
+ *
  */
 function getDiagBriefErr(e, opt) {
+    let fmt = readFormat(opt)
+    let b = getBrief(e, opt)
+    return fmt === 'text' ? toText(b) : b
+}
+
+
+//getBrief, 摘要物件(內部任何失敗回{ errType: 'unknown' })
+function getBrief(e, opt) {
     try {
         let codes = readArr(opt, 'codes')
         let types = readArr(opt, 'types')

@@ -36,7 +36,7 @@ function getDiff2Html(mod = Diff2Html) {
         return _g_Diff2Html
     }
 
-    console.log('Diff2Html', mod, 'g.Diff2Html', get(g, 'Diff2Html'))
+    console.log('[wsemi getDiff2Html] can not find the diff2html module') //固定詞彙(原印出模組物件與全域之同名值, 為除錯殘留)
     throw new Error('invalid Diff2Html, g.Diff2Html, g.Diff2Html.default, use script for import')
 }
 

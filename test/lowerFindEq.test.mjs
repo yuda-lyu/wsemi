@@ -108,3 +108,33 @@ describe('lowerFindEq.mjs為可抽出之方言中立共用層(IR-06)', function(
     })
 
 })
+
+
+//主控裁定(twsm1b; R-DIAG-01規則16): 路徑(IR之p與訊息)中之控制字元替換改為同_diagKit之RE_CTL(Cc、Cf、Zl、Zp), 原只換C0與DEL; 本檔零import(L8), 故以同一正規式字面值, 下列核對其與RE_CTL相同
+describe(`lowerFindEq 路徑之控制字元與格式字元(twsm1b)`, function() {
+
+    it(`should use exactly the same pattern as RE_CTL of _diagKit (source and flags) for the path`, async function() {
+        let { ctlToQ } = await import('../src/_diagKit.mjs')
+        let src = fs.readFileSync(new URL('../src/lowerFindEq.mjs', import.meta.url), 'utf8')
+        let m = src.match(/let clean = \(s, n\) => \{\s*let t = String\(s\)\.replace\(\/(.+?)\/([a-z]*), '\?'\)/)
+        assert.ok(m !== null, 'clean must replace with a single regex literal')
+        let kit = fs.readFileSync(new URL('../src/_diagKit.mjs', import.meta.url), 'utf8')
+        let k = kit.match(/const RE_CTL = \/(.+?)\/([a-z]*)\n/)
+        assert.ok(k !== null, 'RE_CTL must be a regex literal')
+        assert.strict.deepStrictEqual([m[1], m[2]], [k[1], k[2]])
+        assert.strict.deepStrictEqual(typeof ctlToQ, 'function')
+    })
+
+    it(`should replace Cc, Cf, Zl and Zp characters of a column name in the path with ? and keep the column itself whole`, function() {
+        let repl = [0x0a, 0x7f, 0x85, 0xad, 0x200b, 0x202e, 0x2066, 0x206a, 0xfeff, 0x2028]
+        for (let cp of repl) {
+            let col = `x${String.fromCodePoint(cp)}y`
+            let ir = lowerFindEq(col, 2)
+            assert.strict.deepStrictEqual([ir.c, ir.p], [col, 'find.x?y'], cp.toString(16))
+        }
+        let col2 = `x${String.fromCodePoint(0x4e2d)} y`
+        let ir2 = lowerFindEq(col2, 2)
+        assert.strict.deepStrictEqual(ir2.p, `find.${col2}`)
+    })
+
+})

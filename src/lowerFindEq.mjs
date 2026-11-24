@@ -2,9 +2,9 @@
 //節點形狀與語意同src/lowerFind.mjs檔頭(cmp eq 或 bool eq, null原型, p為find.<欄名>), 與同一值經lowerFind所得IR相同(selectByPk與select共用快取鍵).
 //wsemi慣例一檔一個預設匯出, 故自lowerFind.mjs分出; 純JS, 零import, 下列clean/node為與lowerFind.mjs相同之兩個小函數, 由測試核對兩者輸出一致.
 
+//clean, 訊息中之欄位名: 控制字元、格式字元與行/段分隔符換?(同_diagKit之RE_CTL/ctlToQ, 本檔零import故以同一正規式字面值; test/lowerFindEq.test.mjs 核對其與RE_CTL相同), 超長截斷
 let clean = (s, n) => {
-    // eslint-disable-next-line no-control-regex
-    let t = String(s).replace(/[\u0000-\u001f\u007f]/g, '?')
+    let t = String(s).replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, '?')
     return t.length > n ? `${t.slice(0, n)}...` : t
 }
 let node = (o) => Object.assign(Object.create(null), o)

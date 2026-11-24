@@ -9,6 +9,7 @@ import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
 import ltdtkeysheads2mat from './ltdtkeysheads2mat.mjs'
 import isWindow from './isWindow.mjs'
 import fsErrMsg from './_fsErrMsg.mjs'
+import getDiag from './getDiag.mjs'
 
 
 /**
@@ -18,11 +19,17 @@ import fsErrMsg from './_fsErrMsg.mjs'
  *
  * 失敗一律resolve { error }(不reject、不拋錯)，error為固定字串、不含輸入值(V19、V20；原console.log帶出fileName與整份data，含NUL之檔名與寫檔失敗以Node原生錯誤reject而回顯路徑)：fileName非非空字串為'invalid fileName: must be a non-empty string'，fileName含NUL字元為'invalid fileName: must not contain a NUL character'，data非陣列為'invalid data: must be an array'，寫檔失敗為'operation failed (code <錯誤碼>)'(如ENOENT、EPERM，不帶路徑)；轉換失敗回傳下游之{ error }；檢測順序為fileName、data，且先於任何轉換與寫檔
  *
+ * 轉換失敗(建活頁簿或寫成Excel位元組失敗)時之診斷輸出經getDiag(opt)之出口(R-DIAG-01)：預設只以console.log輸出固定詞彙之label與安全摘要{ errType, errCode }(不輸出錯誤本體、堆疊與資料值)；
+ * opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只交給它而不寫console(可用以關閉輸出)；label為'[wsemi downloadExcelFileFromData] can not create workbook'或'[wsemi downloadExcelFileFromData] can not convert workbook to Excel'
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/downloadExcelFileFromData.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fileName 輸入檔名字串，後端可含路徑
  * @param {String} [sheetName='data'] 輸入分頁(sheet)名稱字串，預設為'data'
  * @param {Array} data 輸入內容陣列，可為二維陣列(mat)或由物件組成的一維陣列(ltdt)
+ * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Boolean} [opt.logDetail=false] 輸入轉換失敗時是否於console輸出遮罩後之細節，須為true才生效，同getDiag，預設false(只輸出固定詞彙與安全摘要)
+ * @param {Function} [opt.funLog=null] 輸入診斷輸出函數，格式為(label, safe, detail)=>{}，給予時轉換失敗之診斷只交給它而不寫console，同getDiag，預設null
  * @returns {Promise} 回傳Promise，resolve代表已觸發下載或寫檔完成，輸入無效或轉換失敗時resolve回傳{ error }物件
  * @example
  *
@@ -41,7 +48,7 @@ import fsErrMsg from './_fsErrMsg.mjs'
  * await downloadExcelFileFromData('data(ltdt).xlsx', 'data', data)
  *
  */
-async function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
+async function downloadExcelFileFromData(fileName, sheetName = 'data', data, opt = {}) {
 
     //check, 失敗走{ error }通道(Excel類既有通道), 訊息V19固定詞彙, 不回顯輸入值(V20; 原console.log帶出fileName與整份data)
     if (!isestr(fileName)) {
@@ -75,9 +82,11 @@ async function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
     //getExcelWorkbookFromData
     let wb = getExcelWorkbookFromData(data, sheetName)
 
-    //check
+    //check, 診斷輸出經getDiag出口(R-DIAG-01): 預設只出固定詞彙label與安全摘要, 錯誤本體(含堆疊)只在logDetail或funLog時以遮罩後細節交出
     if (haskey(wb, 'error')) {
-        console.log(wb.error)
+        let diag = getDiag(opt)
+        let e = wb.error
+        diag('[wsemi downloadExcelFileFromData] can not create workbook', diag.brief(e), () => e)
         return wb
     }
 
@@ -86,7 +95,9 @@ async function downloadExcelFileFromData(fileName, sheetName = 'data', data) {
 
     //check
     if (haskey(u8a, 'error')) {
-        console.log(u8a.error)
+        let diag = getDiag(opt)
+        let e = u8a.error
+        diag('[wsemi downloadExcelFileFromData] can not convert workbook to Excel', diag.brief(e), () => e)
         return u8a
     }
 

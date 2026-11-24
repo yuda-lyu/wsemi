@@ -812,7 +812,8 @@ let getMatcher = (list) => {
 
 //addUrlCred, 網址帳密(scheme://帳密@)之區間: 每個://往前須有scheme字元(含字母), 往後取至空白、/、?、#之前之最後一個@(引號亦視為帳密之一部分: 寧可多遮緊湊JSON之片段, 不漏遮含引號之密碼);
 //以掃描實作(不用比對式, 免長串字母之平方回溯)
-let addUrlCred = (s, ivs) => {
+//ext(選用)收整段命中範圍(scheme起至@止, 含判定所需之前文; 串流遮罩器之切點不得落在其內)
+let addUrlCred = (s, ivs, ext) => {
     let i = s.indexOf('://')
     while (i >= 0) {
         let j = i - 1
@@ -839,6 +840,12 @@ let addUrlCred = (s, ivs) => {
             }
             if (lastAt >= st) {
                 ivs.push([st, lastAt]) //空帳密段(scheme://@)亦置為***, 同原maskUrl
+                if (ext) {
+                    ext.push([j + 1, lastAt + 1])
+                }
+            }
+            if (ext && k >= s.length) {
+                ext.push([j + 1, s.length]) //掃至結尾仍未遇空白、/、?、#: 其後(窗外)可能仍有帳密之@, 整段為命中範圍(串流遮罩器之切點不落其內, 延伸至窗尾者fail-closed)
             }
             i = s.indexOf('://', i + 3) //下一個://可能位於本段帳密掃描範圍內(a://b://c@d), 自本次之後找; 掃描遇/即止, 總成本仍為線性
         }
@@ -917,13 +924,15 @@ let arrEnd = (s, i, sc) => {
 
 
 //addPairs, 憑證鍵值對與Bearer之區間(只遮值, 保留鍵、分隔與引號)
-let addPairs = (s, ivs) => {
+//ext(選用)收整段命中範圍(鍵起至值與其結尾引號或']'止; 串流遮罩器之切點不得落在其內, 否則鍵與值被分在兩段而值不被遮)
+let addPairs = (s, ivs, ext) => {
     let re = RE_PAIR //模組內共用之比對式(同步使用, 先重設lastIndex)
     re.lastIndex = 0
     let sc = { qf: 0 } //陣列值之掃描狀態(arrEnd)
     let m
     while ((m = re.exec(s)) !== null) {
         let st = m.index + m[1].length
+        let end = m.index + m[0].length
         if (m[2] !== undefined) {
             ivs.push([st + 2, st + 2 + m[2].length])
         }
@@ -938,9 +947,13 @@ let addPairs = (s, ivs) => {
             let e = arrEnd(s, st, sc)
             ivs.push([st + 1, e])
             re.lastIndex = Math.max(re.lastIndex, e)
+            end = Math.min(s.length, e + 1)
         }
         else if (m[6] !== undefined) {
             ivs.push([st, st + m[6].length])
+        }
+        if (ext) {
+            ext.push([m.index, end])
         }
         if (m[0].length === 0) {
             re.lastIndex++
@@ -953,6 +966,9 @@ let addPairs = (s, ivs) => {
             continue
         }
         ivs.push([m.index + m[1].length, m.index + m[0].length])
+        if (ext) {
+            ext.push([m.index, m.index + m[0].length])
+        }
     }
 }
 
@@ -1044,7 +1060,8 @@ let resolvePatterns = (patterns, mode) => {
 
 
 //addPatterns, 套件樣式之區間: group為名稱或索引(陣列者取第一個有參與比對者), 無d旗標或群組未參與時遮整段; when拋錯視為要遮
-let addPatterns = (s, pats, ivs) => {
+//ext(選用)收每個命中之整段範圍(不論群組與when; 串流遮罩器之切點不得落在其內)
+let addPatterns = (s, pats, ivs, ext) => {
     if (pats.length === 0) {
         return
     }
@@ -1061,6 +1078,9 @@ let addPatterns = (s, pats, ivs) => {
             }
             //先取區間再呼叫when(when只決定是否遮, 不能改變所遮之區間)
             let iv = [m.index, m.index + m[0].length]
+            if (ext && iv[1] > iv[0]) {
+                ext.push([iv[0], iv[1]])
+            }
             let ind = m.indices
             if (ind && p.group !== undefined && p.group !== null) {
                 let gs = Array.isArray(p.group) ? p.group : [p.group]
@@ -1125,6 +1145,17 @@ let applyIvs = (s, ivs, limit = Infinity) => {
 }
 
 
+//splitsPair, 在位置i切開s是否會切開代理對(i-1為高位碼元且i為低位碼元; 串流遮罩器之切點用, 同cutAt只比對碼元範圍, 非檢核)
+let splitsPair = (s, i) => {
+    if (i <= 0 || i >= s.length) {
+        return false
+    }
+    let a = s.charCodeAt(i - 1)
+    let b = s.charCodeAt(i)
+    return a >= 0xd800 && a <= 0xdbff && b >= 0xdc00 && b <= 0xdfff
+}
+
+
 //cutAt, 截至n個碼元(不切開代理對)
 let cutAt = (s, n) => {
     if (s.length <= n) {
@@ -1135,17 +1166,33 @@ let cutAt = (s, n) => {
 }
 
 
-//maskStr, 文字遮罩之主體(ctx為{ mt, pats }): 先截至「上限+最長秘密長度+1024」再於原文上求全部規則之命中區間, 合併後一次取代; 遮後超過上限者截短並接…(len=原長)
+//spansOf, 文字遮罩之全部規則於t上之命中區間(未合併; 文字遮罩與串流遮罩器之切點判定共用, 單一實作):
+//已知秘密、網址帳密、憑證鍵值對與Bearer(ctx.cred為false者不用此二項內建樣式)、套件樣式
+//ext(選用)另收各命中之整段範圍(遮罩區間加其判定所需之鍵、scheme等前文; 已知秘密即其區間), 供串流遮罩器避免切點落在命中之內
+let spansOf = (t, ctx, ext) => {
+    let ivs = []
+    addSecrets(t, ctx.mt, ivs)
+    if (ext) {
+        for (let x of ivs) {
+            ext.push([x[0], x[1]])
+        }
+    }
+    if (ctx.cred !== false) {
+        addUrlCred(t, ivs, ext)
+        addPairs(t, ivs, ext)
+    }
+    addPatterns(t, ctx.pats, ivs, ext)
+    return ivs
+}
+
+
+//maskStr, 文字遮罩之主體(ctx為{ mt, pats, mode, cred }): 先截至「上限+最長秘密長度+1024」再於原文上求全部規則之命中區間, 合併後一次取代; 遮後超過上限者截短並接…(len=原長)
 let maskStr = (s, ctx) => {
     let n = s.length
     //對外錯誤值(reject模式)不截長度(其長度即呼叫端原值之長度; 截短會使不含憑證之長字串亦被判為需處理)
     let cut = ctx.mode !== 'reject' && n > LIM.str
     let t = cut ? cutAt(s, LIM.str + ctx.mt.maxLen + 1024) : s
-    let ivs = []
-    addSecrets(t, ctx.mt, ivs)
-    addUrlCred(t, ivs)
-    addPairs(t, ivs)
-    addPatterns(t, ctx.pats, ivs)
+    let ivs = spansOf(t, ctx)
     if (!cut) {
         return applyIvs(t, ivs)
     }
@@ -1164,8 +1211,8 @@ let maskUrlCred = (s) => {
 }
 
 
-//getCtx, 由秘密清單與opt建文字遮罩之內容
-let getCtx = (list, opt, mode = 'detail') => {
+//getCtx, 由秘密清單與opt建文字遮罩之內容(cred為false者不用網址帳密、憑證鍵值對與Bearer之內建樣式; 只有maskDiagText與串流遮罩器之opt.credPatterns會傳false)
+let getCtx = (list, opt, mode = 'detail', cred = true) => {
     let pats = []
     try {
         pats = resolvePatterns(ownData(opt, 'patterns'), mode)
@@ -1173,7 +1220,17 @@ let getCtx = (list, opt, mode = 'detail') => {
     catch (err) {
         pats = []
     }
-    return { mt: getMatcher(list), pats, mode }
+    return { mt: getMatcher(list), pats, mode, cred: cred !== false }
+}
+
+
+//RE_CTL, 控制字元(Cc: C0、DEL、C1)、格式字元(Cf: 雙向覆寫U+202A~202E與U+2066~2069、零寬字元、BOM等, 可使log行重排或隱藏內容)與行/段分隔符(Zl、Zp: U+2028、U+2029)
+const RE_CTL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu
+
+
+//ctlToQ, 字串之控制字元、格式字元與行/段分隔符換成?(getDiagShape之鍵名、maskDiagCtrl、maskDiagToken共用, 單一實作)
+let ctlToQ = (s) => {
+    return s.replace(RE_CTL, '?')
 }
 
 
@@ -1185,11 +1242,10 @@ let optMode = (opt) => {
 }
 
 
-//normLabel, label正規化(console、funLog、轉接器同一規則): 非字串為'(label)', 控制字元換?, 至多200字元
+//normLabel, label正規化(console、funLog、轉接器同一規則): 非字串為'(label)', 控制字元、格式字元與行/段分隔符換?(ctlToQ, 同maskDiagCtrl; 2026-11-24 twsm1b起含Cf〔雙向覆寫、零寬字元等〕), 至多200字元
 let normLabel = (label) => {
     let s = typeof label === 'string' ? label : '(label)'
-    // eslint-disable-next-line no-control-regex
-    s = s.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, '?')
+    s = ctlToQ(s)
     return cutAt(s, LIM.label)
 }
 
@@ -1449,6 +1505,6 @@ export {
     MASK, LIM, TYPES, NONE, STACK_GETTER, ERR_CTORS, RE_INDEX,
     BL_AB, BL_SAB, BL_TA, BL_DV, SZ_MAP, SZ_SET, RE_SOURCE, DATE_TIME, MAP_ENTRIES, SET_VALUES, MAP_IT_NEXT, SET_IT_NEXT,
     gd, hasOwn, tryCall, isObjLike, isProxy, ownData, declOf, protoChain, isErr, unbox, kindOf, className, ctorName, errCtorOf, stackReadable, readStack,
-    isIndexKey, symDesc, isCredKey, pickList, getMatcher, getCtx, maskStr, maskUrlCred, applyIvs, addUrlCred, normLabel, normSafe, hasUtil, cutAt,
+    isIndexKey, symDesc, isCredKey, pickList, getMatcher, getCtx, maskStr, maskUrlCred, applyIvs, addUrlCred, addSecrets, spansOf, ctlToQ, normLabel, normSafe, hasUtil, cutAt, splitsPair,
     MODE_KEY, BUDGET_KEY, optMode, isClassProto, markHandled, markDropped, freeKey, defKey, arrVals, LIST_FAIL_ITEM
 }

@@ -37,9 +37,9 @@ let isDate = (v) => {
     }
 }
 let isObj = (v) => v !== null && typeof v === 'object'
+//clean, 訊息中之路徑: 控制字元、格式字元與行/段分隔符換?(同_diagKit之RE_CTL/ctlToQ, 本檔零import故以同一正規式字面值; test/lowerFind.test.mjs 核對其與RE_CTL相同), 超長截斷
 let clean = (s, n) => {
-    // eslint-disable-next-line no-control-regex
-    let t = String(s).replace(/[\u0000-\u001f\u007f]/g, '?')
+    let t = String(s).replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, '?')
     return t.length > n ? `${t.slice(0, n)}...` : t
 }
 let fail = (msg, path) => {

@@ -30,10 +30,11 @@ describe(`setIntervalHp`, function() {
 
 describe(`setIntervalHp settle(R-PM-SETTLE-01)`, function() {
 
-    it(`setIntervalHp: async回呼reject不產生未處理之rejection, 以console.log記錄 [規則2、10]`, function() {
+    it(`setIntervalHp: async回呼reject不產生未處理之rejection, 經診斷出口記錄固定詞彙label且不含拋出值之訊息 [規則2、10; R-DIAG-01規則20, twsm1b]`, function() {
         let { r } = runPmSettle('hpAsyncReject')
-        let { called, loggedInterval } = r.out
-        assert.strict.deepStrictEqual({ called, loggedInterval }, { called: true, loggedInterval: true })
+        let { called, loggedInterval, leaked } = r.out
+        //JSDoc「經診斷出口記錄而不外拋」「預設…只輸出固定詞彙之label'[wsemi setIntervalHp] fun threw'與安全摘要」
+        assert.strict.deepStrictEqual({ called, loggedInterval, leaked }, { called: true, loggedInterval: true, leaked: false })
         assert.strict.deepStrictEqual(r.unhandled, [])
     })
 
@@ -59,11 +60,14 @@ describe(`setIntervalHp 非函數(dspec §11 W-15甲①; 原R-PM-SETTLE-01規則
 
     it(`should notify and log an invalid result at each expiry for a fun revoked after creation, and stop notifying and logging once the stop function is called`, function() {
         let r = runHp('intervalRevokedAfterStart')
-        let { seq, nLogsAt2, minElapsed, minGap, after } = r.out
-        //JSDoc 'result'的state為'invalid'(到期時fun已無法判定為函數, 如建立後才被撤銷之Proxy, 即將console.log記錄); 建立時之無效fun已同步拋錯(見上案)
+        let { seq, nLogsAt2, logsAt2, minElapsed, minGap, after } = r.out
+        //JSDoc 'result'的state為'invalid'(到期時fun已無法判定為函數, 如建立後才被撤銷之Proxy, 即將經診斷出口記錄); 建立時之無效fun已同步拋錯(見上案)
         //每次到期皆記錄: 第2次到期之結果(即將記錄)時已記錄2筆, 到期與結果一一對應
         assert.strict.deepStrictEqual(seq, ['start', 'fire#1', 'result#1:invalid', 'fire#2', 'result#2:invalid', 'stop'])
         assert.strict.deepStrictEqual(nLogsAt2, 2)
+        //twsm1b(R-DIAG-01規則20): 記錄為固定詞彙label'[wsemi setIntervalHp] fun can not be called'與安全摘要(pm2resolve對已撤銷之Proxy同步拋Error)
+        let NC = '[wsemi setIntervalHp] fun can not be called {"errType":"Error"}'
+        assert.strict.deepStrictEqual(logsAt2, [NC, NC])
         //JSDoc interval「時間間隔」: 到期不早於interval(下界, 不受負載影響), 相鄰兩次到期之間隔亦不小於interval
         assert.strict.deepStrictEqual(minElapsed >= 20, true)
         assert.strict.deepStrictEqual(minGap >= 20 - tol, true)
@@ -121,8 +125,9 @@ describe(`setIntervalHp 觀察回調(onTrace)`, function() {
         //fire於調用fun之前、result於調用fun之後(每次到期各1次調用)
         assert.strict.deepStrictEqual(order, ['start', 'fire', 'call1', 'result', 'fire', 'call2', 'result', 'fire', 'call3', 'result', 'fire', 'call4', 'result', 'stop'])
         assert.strict.deepStrictEqual(calls, 4)
-        //JSDoc 「fun同步拋錯或其Promise被reject時以console.log記錄」: 同步拋錯與reject各記錄1筆, 成功與取消不記錄
-        assert.strict.deepStrictEqual(logs, ['boom2', 'boom4'])
+        //JSDoc 「fun同步拋錯或其Promise被reject時經診斷出口記錄」: 同步拋錯與reject各記錄1筆(固定詞彙label與安全摘要, 不含boom2、boom4, twsm1b), 成功與取消不記錄
+        let IH = '[wsemi setIntervalHp] fun threw {"errType":"Error"}'
+        assert.strict.deepStrictEqual(logs, [IH, IH])
         //JSDoc elapsed「必不小於interval」與相鄰到期之間隔(以調用後重新起算, 故不小於interval)
         assert.strict.deepStrictEqual(minElapsed >= 50, true)
         assert.strict.deepStrictEqual(minGap >= 50 - tol, true)
@@ -145,7 +150,7 @@ describe(`setIntervalHp 觀察回調(onTrace)`, function() {
         //假時鐘控制不了hrtime計時, 故五種模式於真實計時器下各跑同一情境, 以事件(fun之第3次調用、記錄筆數)為同步點
         let r = runHp('intervalP34')
         //fun非函數(W-15甲①)於五種模式皆同步拋Error('invalid fun: must be a function')、不通知回調(evB為0)且不記錄(logs只有boom2)
-        let exp = { calls: [1, 2, 3], logs: ['boom2'], stops: ['function'], thrownB: 'invalid fun: must be a function', evB: 0 }
+        let exp = { calls: [1, 2, 3], logs: ['[wsemi setIntervalHp] fun threw {"errType":"Error"}'], stops: ['function'], thrownB: 'invalid fun: must be a function', evB: 0 } //twsm1b: 記錄為固定詞彙label與安全摘要(不含boom2)
         assert.strict.deepStrictEqual(r.out.results, [exp, exp, exp, exp, exp])
         //紀錄器確實收到事件
         assert.strict.deepStrictEqual(r.out.recTypes, ['fire', 'result', 'start', 'stop'])
@@ -163,6 +168,90 @@ describe(`setIntervalHp 觀察回調(onTrace)`, function() {
         })
         assert.strict.deepStrictEqual(r.out.primitive, true)
         assert.strict.deepStrictEqual(r.out.plain, true)
+    })
+
+})
+
+
+//排程第610項⑤之常駐路徑(twsm1b; R-DIAG-01規則20): fun拋錯之記錄經getDiag(opt)出口——預設console.error只出固定詞彙label與安全摘要; opt.funLog為函數時只交給它(不寫console); opt.logDetail為true時console.error輸出遮罩後之拋出值
+describe(`setIntervalHp 診斷出口(opt.funLog、opt.logDetail)`, function() {
+
+    //runOnce, 建立計時器(fun拋出thrown), 以第一筆診斷輸出(funLog或console.error)為同步點(防懸置上限3秒), 回傳funLog之呼叫與console之記錄
+    let runOnce = async (thrown, opt) => {
+        let fn = (await import('../src/setIntervalHp.mjs')).default
+        let rec = { log: [], error: [] }
+        let calls = []
+        let raw = { log: console.log, error: console.error }
+        let stop = null
+        try {
+            await new Promise((resolve, reject) => {
+                let t = setTimeout(() => reject(new Error('no diag output within 3s')), 3000)
+                let done = () => {
+                    clearTimeout(t)
+                    resolve()
+                }
+                console.log = (...a) => rec.log.push(a)
+                console.error = (...a) => {
+                    rec.error.push(a)
+                    done()
+                }
+                let o = { ...opt }
+                if (opt.funLog === 'rec') {
+                    o.funLog = (...a) => {
+                        calls.push(a)
+                        done()
+                    }
+                }
+                let r = fn(() => {
+                    if (thrown && thrown.reject) {
+                        return Promise.reject(thrown.reject)
+                    }
+                    throw thrown
+                }, 1, o)
+                stop = typeof r === 'function' ? r : null
+            })
+        }
+        finally {
+            console.log = raw.log
+            console.error = raw.error
+            if (stop) {
+                stop()
+            }
+        }
+        return { calls, rec }
+    }
+
+    let SECRET = 'tok-SECRET-9f3a'
+
+    it(`should print only the fixed label and the safe summary to console.error by default (the thrown text is not printed)`, async function() {
+        let { rec } = await runOnce(new Error(`auth ${SECRET}`), {})
+        //JSDoc「預設以console.error只輸出固定詞彙之label'[wsemi setIntervalHp] fun threw'…與安全摘要{ errType, errCode }」
+        assert.strict.deepStrictEqual(rec.error[0], ['[wsemi setIntervalHp] fun threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(JSON.stringify(rec).includes('SECRET'), false)
+        assert.strict.deepStrictEqual(rec.log.length, 0)
+    })
+
+    it(`should summarize a rejected non-Error value by its type only`, async function() {
+        let { rec } = await runOnce({ reject: SECRET }, {})
+        assert.strict.deepStrictEqual(rec.error[0], ['[wsemi setIntervalHp] fun threw', { errType: 'string' }])
+    })
+
+    it(`should hand the record only to opt.funLog as (label, safe, detail) with a masked detail, writing nothing to console`, async function() {
+        let { calls, rec } = await runOnce(new Error(`token=${SECRET}`), { funLog: 'rec' })
+        //JSDoc「opt.funLog為函數時輸出只交給它，不寫console」; 細節經maskDiagCopy遮罩(憑證樣式token=值)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi setIntervalHp] fun threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(calls[0][2] instanceof Error && calls[0][2].message, 'token=***')
+        assert.strict.deepStrictEqual([rec.error.length, rec.log.length], [0, 0])
+    })
+
+    it(`should print the masked detail to console.error with opt.logDetail true, and treat non-true logDetail and non-function funLog as not given`, async function() {
+        let a = await runOnce(new Error(`token=${SECRET}`), { logDetail: true })
+        assert.strict.deepStrictEqual(a.rec.error[0][0], '[wsemi setIntervalHp] fun threw')
+        assert.strict.deepStrictEqual(a.rec.error[0][1] instanceof Error && a.rec.error[0][1].message, 'token=***')
+        for (let o of [{ logDetail: 'true' }, { logDetail: 1 }, { funLog: 'x' }]) {
+            let b = await runOnce(new Error(`token=${SECRET}`), o)
+            assert.strict.deepStrictEqual(b.rec.error[0], ['[wsemi setIntervalHp] fun threw', { errType: 'Error' }])
+        }
     })
 
 })

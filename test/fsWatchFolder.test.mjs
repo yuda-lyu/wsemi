@@ -680,3 +680,232 @@ describe(`fsWatchFolder`, function() {
     })
 
 })
+
+
+//排程第610項⑤之常駐路徑(twsm1b; R-DIAG-01規則20): 停止監看時chokidar之unwatch同步拋錯或close被reject, 記錄經getDiag(opt)出口——預設console.error只出固定詞彙label與安全摘要(不出錯誤本體與路徑); opt.funLog為函數時只交給它; opt.logDetail為true時輸出遮罩後之細節
+//以替身包住chokidar之FSWatcher.prototype之unwatch與close(先執行原方法再拋錯/reject, 監看資源照常釋放), 案例結束還原; 以onTrace之watch、closed事件同步
+describe(`fsWatchFolder 停止監看之診斷出口(opt.funLog、opt.logDetail)`, function() {
+
+    let fd = './test/_tmp/fsWatchFolderDiag'
+
+    before(function() {
+        fs.mkdirSync(fd, { recursive: true })
+        fs.writeFileSync(`${fd}/f.txt`, 'x', 'utf8')
+    })
+
+    after(function() {
+        fs.rmSync(fd, { recursive: true, force: true })
+    })
+
+    //runClear, 建監看、等watch事件後clear, 等closed事件; 回傳funLog之呼叫與console.error之記錄
+    let runClear = async (opt) => {
+        let fn = (await import('../src/fsWatchFolder.mjs')).default
+        let { FSWatcher } = await import('chokidar')
+        let pu = FSWatcher.prototype.unwatch
+        let pc = FSWatcher.prototype.close
+        FSWatcher.prototype.unwatch = function(...a) {
+            pu.apply(this, a)
+            throw new Error(`unwatch failed at ${fd}/SECRETDIR`)
+        }
+        FSWatcher.prototype.close = function(...a) {
+            return pc.apply(this, a).then(() => {
+                throw Object.assign(new Error(`close failed at ${fd}/SECRETDIR`), { code: 'EPERM' })
+            })
+        }
+        let rec = []
+        let calls = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        try {
+            await new Promise((resolve, reject) => {
+                let t = setTimeout(() => reject(new Error('watch/closed not received within 10s')), 10000)
+                let ev = null
+                let o = {
+                    timeInterval: 20,
+                    ...opt,
+                    onTrace: (e) => {
+                        if (e.type === 'watch') {
+                            setImmediate(() => ev.clear())
+                        }
+                        if (e.type === 'closed') {
+                            clearTimeout(t)
+                            resolve()
+                        }
+                    },
+                }
+                if (opt.funLog === 'rec') {
+                    o.funLog = (...a) => calls.push(a)
+                }
+                ev = fn(fd, o)
+            })
+        }
+        finally {
+            console.error = ce
+            FSWatcher.prototype.unwatch = pu
+            FSWatcher.prototype.close = pc
+        }
+        return { calls, rec }
+    }
+
+    it(`should print only the fixed labels and safe summaries to console.error by default (no error text, no path)`, async function() {
+        let { rec } = await runClear({})
+        assert.strict.deepStrictEqual(rec, [
+            ['[wsemi fsWatchFolder] can not unwatch', { errType: 'Error' }],
+            ['[wsemi fsWatchFolder] can not close watcher', { errType: 'Error', errCode: 'EPERM' }],
+        ])
+        assert.strict.deepStrictEqual(JSON.stringify(rec).includes('SECRETDIR'), false)
+    })
+
+    it(`should hand both records only to opt.funLog with details, writing nothing to console.error`, async function() {
+        let { calls, rec } = await runClear({ funLog: 'rec' })
+        assert.strict.deepStrictEqual(calls.map((c) => [c[0], c[1]]), [
+            ['[wsemi fsWatchFolder] can not unwatch', { errType: 'Error' }],
+            ['[wsemi fsWatchFolder] can not close watcher', { errType: 'Error', errCode: 'EPERM' }],
+        ])
+        assert.strict.deepStrictEqual(calls.every((c) => c[2] instanceof Error), true)
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    it(`should print the masked details to console.error with opt.logDetail true`, async function() {
+        let { rec } = await runClear({ logDetail: true })
+        assert.strict.deepStrictEqual(rec.map((a) => a[0]), ['[wsemi fsWatchFolder] can not unwatch', '[wsemi fsWatchFolder] can not close watcher'])
+        assert.strict.deepStrictEqual(rec.every((a) => a[1] instanceof Error), true)
+    })
+
+})
+
+
+//主控裁定(twsm1c, twsm1b需裁示1 A; R-DIAG-01規則20): 監聽器拋錯之通報(evEmit)與停止監看錯誤之記錄同一診斷出口——opt.logDetail、opt.funLog同一快照;
+//無error監聽者(或拋錯者即error監聽器)時: 預設console.error'[wsemi fsWatchFolder] listener threw'與安全摘要, opt.funLog為函數時只交給它, opt.logDetail為true時console.error輸出遮罩後之細節; 有error監聽者時仍以error事件交給它(程式化通道)
+//以假watcher決定性送出all、error事件(test/tools/fsWatchKit之withFakeChokidar)
+describe(`fsWatchFolder 監聽器拋錯之通報經同一診斷出口(twsm1c)`, function() {
+
+    let fd = './test/_tmp/fsWatchFolderListener'
+
+    before(function() {
+        fs.mkdirSync(fd, { recursive: true })
+        fs.writeFileSync(`${fd}/f.txt`, 'x', 'utf8')
+    })
+
+    after(function() {
+        fs.rmSync(fd, { recursive: true, force: true })
+    })
+
+    //runEmit, 建監看(假watcher)後執行act(ev, w); 回傳funLog之呼叫與console.error之記錄
+    let runEmit = async (opt, act) => withFakeChokidar(async (ws) => {
+        let rec = []
+        let calls = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        let ev = null
+        try {
+            let o = { timeInterval: 20, ...opt }
+            if (opt.funLog === 'rec') {
+                o.funLog = (...a) => calls.push(a)
+            }
+            ev = fsWatchFolder(fd, o)
+            await waitUntil(() => ws.length > 0)
+            await act(ev, ws[0])
+        }
+        finally {
+            console.error = ce
+            if (ev) {
+                ev.clear()
+            }
+        }
+        return { calls, rec }
+    })
+
+    let throwChange = (ev, w) => {
+        ev.on('change', () => {
+            throw new Error('token=SECRET-9f3a')
+        })
+        w.emit('all', 'change', `${fd}/f.txt`, undefined)
+    }
+
+    it(`should hand a change-listener throw only to opt.funLog as (label, safe, detail) when there is no error listener`, async function() {
+        let { calls, rec } = await runEmit({ funLog: 'rec' }, throwChange)
+        assert.strict.deepStrictEqual([calls.length, calls[0][0], calls[0][1]], [1, '[wsemi fsWatchFolder] listener threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(calls[0][2].event, 'change')
+        assert.strict.deepStrictEqual(calls[0][2].err instanceof Error && calls[0][2].err.message, 'token=***')
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    it(`should print the fixed label and the safe summary to console.error by default, and the masked detail with opt.logDetail true`, async function() {
+        let a = await runEmit({}, throwChange)
+        assert.strict.deepStrictEqual(a.rec, [['[wsemi fsWatchFolder] listener threw', { errType: 'Error' }]])
+        let b = await runEmit({ logDetail: true }, throwChange)
+        assert.strict.deepStrictEqual([b.rec.length, b.rec[0][0]], [1, '[wsemi fsWatchFolder] listener threw'])
+        assert.strict.deepStrictEqual(b.rec[0][1].err instanceof Error && b.rec[0][1].err.message, 'token=***')
+    })
+
+    it(`should treat non-true logDetail and non-function funLog as not given (K3)`, async function() {
+        for (let o of [{ logDetail: 'true' }, { logDetail: 1 }, { funLog: 'x' }]) {
+            let r = await runEmit(o, throwChange)
+            assert.strict.deepStrictEqual(r.rec, [['[wsemi fsWatchFolder] listener threw', { errType: 'Error' }]], JSON.stringify(o))
+        }
+    })
+
+    it(`should hand an error-listener throw (watcher error event) only to opt.funLog`, async function() {
+        let { calls, rec } = await runEmit({ funLog: 'rec' }, (ev, w) => {
+            ev.on('error', () => {
+                throw new Error('in error listener')
+            })
+            w.emit('error', Object.assign(new Error('boom'), { code: 'EPERM' }))
+        })
+        assert.strict.deepStrictEqual([calls.length, calls[0][0], calls[0][1]], [1, '[wsemi fsWatchFolder] listener threw', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+    it(`should still deliver a change-listener throw to an error listener (programmatic channel) and not to opt.funLog`, async function() {
+        let got = []
+        let { calls, rec } = await runEmit({ funLog: 'rec' }, (ev, w) => {
+            ev.on('error', (m) => got.push(m.fun))
+            throwChange(ev, w)
+        })
+        assert.strict.deepStrictEqual([got, calls.length, rec.length], [['listener'], 0, 0])
+    })
+
+})
+
+
+//主控裁定(twsm1c): 監看之資料夾本身消失時派發unlinkDir之change(計時器內之evEmit)亦經同一診斷出口
+describe(`fsWatchFolder 監看資料夾消失時之監聽器拋錯通報(twsm1c)`, function() {
+
+    let fd2 = './test/_tmp/fsWatchFolderRootGoneDiag'
+
+    after(function() {
+        fs.rmSync(fd2, { recursive: true, force: true })
+    })
+
+    it(`should hand an unlinkDir change-listener throw (root folder removed) only to opt.funLog`, async function() {
+        fs.mkdirSync(fd2, { recursive: true })
+        let calls = []
+        let rec = []
+        let ce = console.error
+        console.error = (...a) => rec.push(a)
+        let ev = null
+        try {
+            await withFakeChokidar(async (ws) => {
+                ev = fsWatchFolder(fd2, { timeInterval: 20, funLog: (...a) => calls.push(a) })
+                ev.on('change', (m) => {
+                    if (m.type === 'unlinkDir') {
+                        throw new Error('token=SECRET-9f3a')
+                    }
+                })
+                await waitUntil(() => ws.length > 0)
+                fs.rmSync(fd2, { recursive: true, force: true })
+                await waitUntil(() => calls.length > 0)
+            })
+        }
+        finally {
+            console.error = ce
+            if (ev) {
+                ev.clear()
+            }
+        }
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1], calls[0][2].event], ['[wsemi fsWatchFolder] listener threw', { errType: 'Error' }, 'change'])
+        assert.strict.deepStrictEqual(rec.length, 0)
+    })
+
+})

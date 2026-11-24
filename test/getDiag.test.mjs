@@ -255,3 +255,116 @@ describe(`getDiag`, function() {
     diagSuite('getDiag')
 
 })
+
+
+//排程第610項⑥①(twsm1): level為'warn'寫console.warn(其餘通道不變, funLog之引數不變); diag.brief(err, { format: 'text' })回行內字串
+describe(`getDiag warn level and brief text`, function() {
+
+    //capture, 攔console.log/warn/error, 回傳各通道之呼叫引數
+    let capture = (fn) => {
+        let rec = { log: [], warn: [], error: [] }
+        let raw = { log: console.log, warn: console.warn, error: console.error }
+        for (let k of Object.keys(rec)) {
+            console[k] = (...a) => rec[k].push(a)
+        }
+        try {
+            fn()
+        }
+        finally {
+            for (let k of Object.keys(rec)) {
+                console[k] = raw[k]
+            }
+        }
+        return rec
+    }
+
+    it(`should write to console.warn when level is 'warn' (label only, label with safe, and detail with logDetail)`, function() {
+        let e = Object.assign(new Error('token=abc123 failed'), { code: 'ENOENT' })
+        let r1 = capture(() => getDiag()('opt.kpOld was removed', undefined, undefined, 'warn'))
+        let r2 = capture(() => {
+            let diag = getDiag()
+            diag('x failed', diag.brief(e), () => e, 'warn')
+        })
+        let r3 = capture(() => getDiag({ logDetail: true })('x failed', {}, () => e, 'warn'))
+        assert.strict.deepStrictEqual([r1.warn, r1.log, r1.error], [[['opt.kpOld was removed']], [], []])
+        assert.strict.deepStrictEqual([r2.warn, r2.log, r2.error], [[['x failed', { errType: 'Error', errCode: 'ENOENT' }]], [], []])
+        assert.strict.deepStrictEqual([r3.warn.length, r3.log.length, r3.error.length], [1, 0, 0])
+        assert.strict.deepStrictEqual(r3.warn[0][1] instanceof Error && r3.warn[0][1].message, 'token=*** failed')
+    })
+
+    it(`should keep other levels unchanged: 'error' to console.error, anything else (including 'WARN', 'warning', undefined) to console.log`, function() {
+        for (let [lv, ch] of [['error', 'error'], ['WARN', 'log'], ['warning', 'log'], [undefined, 'log'], ['log', 'log'], [1, 'log']]) {
+            let r = capture(() => getDiag()('lb', undefined, undefined, lv))
+            let got = Object.keys(r).filter((k) => r[k].length > 0)
+            assert.strict.deepStrictEqual(got, [ch], String(lv))
+        }
+    })
+
+    it(`should not pass the level to funLog (funLog arguments unchanged: 2 without getDetail, 3 with getDetail)`, function() {
+        let calls = []
+        let fl = (...a) => calls.push(a.length)
+        let r = capture(() => {
+            let diag = getDiag({ funLog: fl })
+            diag('a', { errType: 'Error' }, undefined, 'warn')
+            diag('b', { errType: 'Error' }, () => 1, 'warn')
+        })
+        assert.strict.deepStrictEqual([calls, r.warn.length, r.log.length], [[2, 3], 0, 0])
+    })
+
+    it(`should return the inline text form from diag.brief(err, { format: 'text' }) using the declared codes, types and nested`, function() {
+        let diag = getDiag({}, { codes: ['sqlstate'], types: ['DbError'], nested: ['cause'] })
+        class DbError extends Error {}
+        let e1 = Object.assign(new DbError('dup'), { name: 'error', code: '23505' })
+        let e2 = Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('c'), { code: 'ECONNREFUSED' }) })
+        assert.strict.deepStrictEqual([diag.brief(e1, { format: 'text' }), diag.brief(e2, { format: 'text' })], ['(DbError 23505)', '(TypeError ECONNREFUSED)'])
+        assert.strict.deepStrictEqual([diag.brief(e1), diag.brief(e1, 'text'), diag.brief(e1, { format: 'TEXT' })], [{ errType: 'DbError', errCode: '23505' }, { errType: 'DbError', errCode: '23505' }, { errType: 'DbError', errCode: '23505' }])
+    })
+
+})
+
+
+//主控裁定(twsm1b; R-DIAG-01規則16): label之正規化(_diagKit之normLabel)改用ctlToQ——Unicode類別Cc、Cf、Zl、Zp之每個碼位換成?(同maskDiagCtrl、getDiagShape之鍵名), 原只換C0、DEL、C1與U+2028/2029(不換雙向覆寫、零寬字元等Cf)
+describe(`getDiag label之控制字元與格式字元(twsm1b)`, function() {
+
+    it(`should replace every Cc, Cf, Zl and Zp character of the label with ? on console and in genDiagFunLog, the same as maskDiagCtrl`, async function() {
+        let maskDiagCtrl = (await import('../src/maskDiagCtrl.mjs')).default
+        let genDiagFunLog = (await import('../src/genDiagFunLog.mjs')).default
+        let repl = [0x00, 0x1f, 0x7f, 0x85, 0x9f, 0xad, 0x61c, 0x200b, 0x200e, 0x202a, 0x202e, 0x2066, 0x2069, 0x206a, 0xfeff, 0x2028, 0x2029, 0xe0001]
+        let keep = [0x20, 0xa0, 0x2027, 0x4e2d, 0x1f600]
+        for (let cp of [...repl, ...keep]) {
+            let c = String.fromCodePoint(cp)
+            let label = `a${c}b`
+            let want = repl.includes(cp) ? 'a?b' : label
+            let got = null
+            let ol = console.log
+            console.log = (...a) => {
+                got = a[0]
+            }
+            try {
+                getDiag()(label)
+            }
+            finally {
+                console.log = ol
+            }
+            let rs = []
+            genDiagFunLog((o) => rs.push(o)).funLog(label, {})
+            assert.strict.deepStrictEqual([got, rs[0].label, maskDiagCtrl(label)], [want, want, want], cp.toString(16))
+        }
+    })
+
+    it(`should still cut the label to 200 characters after the replacement`, function() {
+        let got = null
+        let ol = console.log
+        console.log = (...a) => {
+            got = a[0]
+        }
+        try {
+            getDiag()(`${String.fromCodePoint(0x202e)}${'x'.repeat(300)}`)
+        }
+        finally {
+            console.log = ol
+        }
+        assert.strict.deepStrictEqual(got, `?${'x'.repeat(199)}`)
+    })
+
+})

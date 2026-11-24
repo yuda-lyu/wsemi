@@ -6,6 +6,13 @@
 
 ## 索引(哪類查哪檔)
 
+### `sgud/state/state_診斷與遮罩_第2輪.md`(診斷輸出與遮罩,第 2 輪起;約 5KB;新增於 2026-11-24)
+
+查: 串流遮罩器 `genDiagStreamMasker`、`maskDiagCtrl`、`maskDiagToken`、`pickDiagOpt` 之新增,`getDiag` 之 warn、行內摘要格式、`maskDiagText.credPatterns`、`downloadExcelFileFromData` 經 getDiag 出口,收錄判定(含 `logKey` 不收)、全庫 console 之 AST 盤點、驗證數字、待裁示與使用端改用清單.所含節:
+
+- 收尾輪:控制字元單一規則之補齊、常駐路徑之記錄經 getDiag、除錯殘留(主控裁定;twsm1b,2026-11-24;twsm1c 續:監看之監聽器拋錯通報與 fsEvem/fsTaskCp 之轉傳)〔本節於 2026-11-24 新增,置於該檔最前〕
+- 串流遮罩器、收錄評估與診斷輸出之擴充(排程第 486、610 項;twsm1,2026-11-24)〔本節於 2026-11-24 新增〕
+
 2026-11-02(ws265)依全域設定§14整理: 本檔原約 53.7KB(13 節),依功能類型拆為下列 5 檔(含同日新增之 `state_測試.md`),各節之節號與標題不變、內容逐字搬移;本檔只留索引.完成一項功能或結束一輪工作時,把現況寫入對應類型檔(無對應類型者新增 `state_<類型>.md` 並於下列增列),不再寫回本檔.2026-11-02(ws272c)另把 `state_數值與判斷.md` 之第 2 輪三節(ws272a、ws272b、ws272c)抽至 `state_數值與判斷_第2輪.md`(原檔約 31.3KB),現共 6 檔.
 
 ### `sgud/state/state_訊息格式與可讀性探針.md`(失敗訊息格式 V19／V20 與共用可讀性探針;約 6KB;新增於 2026-11-19)

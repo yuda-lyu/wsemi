@@ -79,13 +79,25 @@ function mkRec(order) {
     return { events, stamps, meta, on, wait }
 }
 
-//capLog, 攔截console.log, 回傳記錄陣列、wait(n)(等記錄達n筆)與還原函數
+//fmtArg, 記錄之引數轉字串: 字串照用、Error取message(供檢出拋出值之內容是否外洩)、純物件以JSON(診斷出口之安全摘要{ errType, errCode? }), 其餘同safeStr
+function fmtArg(x) {
+    try {
+        if (x !== null && typeof x === 'object' && !(x instanceof Error) && Object.getPrototypeOf(x) === Object.prototype) {
+            return JSON.stringify(x)
+        }
+    }
+    catch (e) {}
+    return safeStr(x)
+}
+
+//capLog, 攔截console.log與console.error(計時器之fun拋錯自twsm1b起經getDiag出口寫console.error), 回傳記錄陣列、wait(n)(等記錄達n筆)與還原函數
 function capLog() {
     let logs = []
     let waiters = []
     let cl = console.log
-    console.log = (...a) => {
-        logs.push(a.map((x) => safeStr(x)).join(' '))
+    let ce = console.error
+    let rec = (...a) => {
+        logs.push(a.map((x) => fmtArg(x)).join(' '))
         for (let w of waiters.slice()) {
             if (logs.length >= w.n) {
                 waiters.splice(waiters.indexOf(w), 1)
@@ -94,6 +106,8 @@ function capLog() {
             }
         }
     }
+    console.log = rec
+    console.error = rec
     let wait = (n) => {
         return new Promise((resolve, reject) => {
             if (logs.length >= n) {
@@ -110,6 +124,7 @@ function capLog() {
     }
     let restore = () => {
         console.log = cl
+        console.error = ce
     }
     return { logs, wait, restore }
 }
@@ -215,6 +230,7 @@ let cases = {
             return {
                 seq: rec.events.slice(0, nStop).map(brief),
                 nLogsAt2: logsAt2.length,
+                logsAt2: logsAt2.slice(0, 2), //記錄之內容(twsm1b: 經getDiag出口之固定詞彙label與安全摘要)
                 minElapsed: minElapsed(rec),
                 minGap: minGap(rec),
                 after: { events: rec.events.length - nStop, logs: cap.logs.length - nLogs },
