@@ -270,3 +270,16 @@
 - **測試缺口**: `domConvertToPic`(唯一用 snapdom 者)之 `test/domConvertToPic.test.mjs` 實無內容(import 被註解),全套測不到 snapdom;下游使用者亦無測試 ⇒ 主控排程立項補真瀏覽器之行為測試.
 - **升前代驗**: 以本庫 `toolg/gDistRollup.mjs` 建兩版 UMD,於 headless Chromium 對 28 種代表性輸出比對(文字與中文字型、CSS 背景邊框、內嵌 SVG、`<img>`、捲動容器、表單、scale／jpeg／svg、自訂字型、並行呼叫、DPR 2):24～25 個逐位元組相同;穩定差異 3 案皆新版較貼近 DOM(`<canvas>`、`<iframe>` 之外框尺寸;SVG 輸出少內聯預設值、光柵化後像素相同);壞圖(404)之首次呼叫高度兩版皆在兩值間飄(既有競態).
 - **既有缺陷(與版本無關)**: `<canvas>` 之**內容**兩版皆截不到(輸出為空白框)——使用端以 canvas 繪製之圖表截圖本就空白.
+
+## `domConvertToPic` 修正與真瀏覽器測試:先並排實證成因、猜測要驗、尺寸判準用版面真值(2026-11-25,主控任務 20261125225421,t642)
+
+- **成因一律以「原元素直交 snapdom」對「經本函數」並排實證**(同頁、同元素、同選項,以頁面內 `analyzePic` 量區塊平均色與尺寸):canvas 為空白時,直交可截到、經本函數不行 ⇒ 缺陷在本函數之 `cloneNode`,不在 snapdom.**派工書之推測要驗**: 主控推測「表單現值(input／textarea／checked)皆被 cloneNode 漏掉」不成立——Chromium 之 `cloneNode` 依 HTML 規格之 cloning steps 複製 input／textarea 之值與核取狀態,只有單選 `<select>` 之選取與 canvas 位圖遺失;複選 select 之選取 snapdom 本就不呈現(輸出像素與有無選取相同),不必處理.
+- **壞圖尺寸之判準是版面真值,不是「看起來完整」**: 前一輪冒煙把 57 當「底緣被裁」、82 當「完整」,方向相反——原元素失敗後之 `getBoundingClientRect().height`(43)加外距 14 才是 57;82 是複本 `<img>` 仍在載入、以 `width`／`height` 屬性之盒(68)排版時被量到.實測複本放入後 `complete === false`、約 2 ms 後 `error`;snapdom 前處理在同頁第 2 次起較快,量測恆落在 2 ms 之內(第 2 次起恆為失敗前版面,**確定性**),首次呼叫只約 4/30 落在其內(**機率性**).故測試之確定性紅用「同頁第 2 次起」,首次呼叫之 10 個新頁面為機率性紅(修前每輪約 76%).
+- **首次呼叫之競態無法以延遲 404 決定性重現**: 複本 `<img>` 之失敗走瀏覽器記憶體快取之失敗結果(不再發請求),被延遲的是 snapdom 自己之 `fetch`;曾寫「延遲複本請求」之案,修前亦綠,屬無鑑別力,已刪.
+- **等圖片之細節**: 只等 `complete === false` 者(已完成者如無 `src` 之 `<img>` 不再觸發事件,全等會空等至上限——首輪變異「不過濾 complete」存活,補「無 src 之 img」案才被殺);複本置於頁面頂端,遠離視窗之 `loading="lazy"` 圖不會觸發載入,不改 eager 則每次呼叫空等 5081 ms(改後 64 ms);snapdom 自身對圖片之 `fetch` 有約 3 秒逾時,故「永不載入」案須 lazy＋伺服端不回應才走得到本函數之上限(約 8 秒,測試中唯一慢案).
+- **獨立複審(sonnet,唯讀)抓到修前即有之副作用**: 同名(無表單)之單選鈕,複本放入頁面後與原件同組,複本之已勾選鈕使原件之勾選被取消——呼叫後頁面之單選狀態被改.以「複本內 radio 改用專用名稱」修,測試含並行呼叫與元素本身為 radio.**經驗**: 「複製再放回同一文件」之作法,凡「依名稱或 id 成組／唯一」之表單狀態(radio 群組、`id` 重複、`label for`)都要想一遍是否改到原件.
+- **真瀏覽器測試基建之取捨**: wsemi 為 Level 3,不得依賴 w-playwright／w-package-tools-e2e,故以外部套件 `playwright-core`(devDependencies,精確版同 w-playwright)自建最小版;載入原始碼用 `page.route` 虛擬主機＋import map(不開埠、不依賴 `./dist`);瀏覽器已安裝者直接啟動,缺才以 CLI 安裝(Playwright 自身之 `__dirlock` 序列化並行安裝);取不到即拋錯不 skip.`/node_modules/` 之檔須以 Node 解析慣例向上找套件資料夾(發布包解開之目錄之相依在其上層),否則發布包配置下頁面載入失敗.
+- **夾具陷阱**: `display:inline-block` 之外層放在區塊父層下,複本之絕對定位外層會含一行基線留白(輸出高度多 4 px);夾具改 `display:block;width:fit-content`.輸出尺寸含元素外距(既有行為;外層為絕對定位之區塊格式化脈絡,子元素外距不外溢)——已入 JSDoc 與測試.被污染(tainted)之 canvas: snapdom 於其四周畫 1px 灰框、框內空白,與原元素直交相同,不 reject.
+- **修前紅與變異之作法**: 以環境變數取代頁面載入之被測檔(`WSEMI_DOMCONVERTTOPIC_SRC`),修前版本與各單點變異檔皆用同一機制,不動 repo 內檔案;變異腳本以 Write 寫成檔、比對錨點須唯一(Windows 工作樹為 CRLF,錨點比對前先正規化換行).
+- **未獨立重現之限制**: undici 於 `Connection: close`＋大本體＋背壓之崩潰,實作端以 64 MB 本體、每 4 MB 延遲 20 ms 之純 fetch 試一次未崩潰;文字依主控查證載入 JSDoc／README,不寫成自己實測.
+- **eslint**: `operator-linebreak` 要求 `+` 在行尾(`npx eslint --fix` 可修);`no-new-wrappers` 擋 `new Boolean`,測包裝布林改 `Object(true)`;`brace-style` 擋單行 `{ get() { throw … } }`.

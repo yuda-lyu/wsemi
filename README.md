@@ -73,6 +73,8 @@ npm i wsemi
 
 > **Note:** Node.js >= 22.22 is required when running in Node.js, because the dependency `chokidar` 6 (file watching) requires it and `he` 2 (HTML entities) is ES module only.
 
+> **Known limitation:** On Node.js 24.22.1, the built-in `fetch` (undici) can crash the whole process with an uncaught assertion when a server replies with `Connection: close` and a large body while the consumer applies backpressure (slow writes). It reproduces with plain `fetch` and is not caused by wsemi, but `fsDownloadFileVerify` and `fsEnsureBins` (which downloads through it) are exposed to it and cannot catch it; `fsDownloadFile` also downloads with the global `fetch` and is exposed the same way (it has no `opt.fetch`). If a download source may reply this way, pass your own `opt.fetch` to `fsDownloadFileVerify` or `fsEnsureBins` (it must return a `Response` whose body is a WHATWG `ReadableStream`), or make the server reply without `Connection: close`.
+
 ### In a browser(UMD module):
 
 Add script for wsemi.

@@ -177,7 +177,55 @@ describe(`fsEnsureBinsBudget`, function() {
         }
     })
 
-    it(`should return '[10000,13000,660000]' when run the example`, function() {
+    //第642項(排程第634項④): opt.concurrent為true時回傳並行(兩個程序競爭同一單位)之最壞 = 2×各單位預算之和 ＋ 取主幹清單之上限(不乘2); 預設不倍乘
+    it(`should double the sum of the unit budgets with opt.concurrent true (worst case of two processes getting the same unit), and keep the default without it`, function() {
+        let o = { ...base, totalMs: T }
+        let units = [mf([fTool]), mf([fZip]), mf([fParts]), mfB([bPk]), mf([fTool, fZip, fParts], { bundles: [bPk] })]
+        for (let m of units) {
+            let one = fsEnsureBinsBudget(m, o)
+            assert.strict.equal(fsEnsureBinsBudget(m, { ...o, concurrent: true }), 2 * one)
+            assert.strict.equal(fsEnsureBinsBudget(m, { ...o, concurrent: false }), one)
+        }
+        //鏡像: 每單位之預算(含鏡像之次數)皆乘2
+        let om = { ...o, mirror: './mirror' }
+        assert.strict.equal(fsEnsureBinsBudget(mf([fZip]), { ...om, concurrent: true }), 2 * ((1 + 2) * T + (T + 5000) + S))
+        //預設totalMs(600000)與其上限60000
+        assert.strict.equal(fsEnsureBinsBudget(mf([fTool]), { ...base, concurrent: true }), 2 * (600000 + 60000))
+    })
+
+    it(`should not double the trunk manifest limit with opt.concurrent true (each process gets it once before taking the lock), and return 0 for an empty opt.names`, function() {
+        let fl2 = { schema: 1, pkg: 'w-bg', mode: 'floating', repo: 'yuda-lyu/w-bg', files: [fTool, fZip] }
+        let o = { ...base, totalMs: T, stallMs: 300, concurrent: true }
+        let units = (T + S) + (2 * T + 5000 + S)
+        assert.strict.equal(fsEnsureBinsBudget(fl2, o), 2 * units + 300)
+        assert.strict.equal(fsEnsureBinsBudget(fl2, { ...o, offline: true }), 2 * units) //離線不取主幹清單
+        assert.strict.equal(fsEnsureBinsBudget(fl2, { ...o, names: 'k6.exe' }), 2 * (2 * T + 5000 + S) + 300)
+        assert.strict.equal(fsEnsureBinsBudget(fl2, { ...o, names: [] }), 0)
+    })
+
+    it(`should treat an opt.concurrent other than the primitive true as not given (no error)`, function() {
+        let o = { ...base, totalMs: T }
+        let one = fsEnsureBinsBudget(mf([fTool, fZip]), o)
+        for (let v of [undefined, null, false, 0, 1, '', 'true', 'yes', [], {}, [true], Object(true), Symbol('x')]) { //Object(true)為包裝布林
+            assert.strict.equal(fsEnsureBinsBudget(mf([fTool, fZip]), { ...o, concurrent: v }), one, String(typeof v))
+        }
+    })
+
+    it(`should read opt.concurrent as not given when reading it throws (getter, revoked proxy) in the Core`, function() {
+        let o = { fs, path, crypto, Readable, pipeline, spawn, ...base, totalMs: T }
+        let one = fsEnsureBinsBudgetCore(mf([fTool]), o)
+        let withGetter = { ...o }
+        Object.defineProperty(withGetter, 'concurrent', {
+            get() {
+                throw new Error('boom')
+            },
+            enumerable: true,
+        })
+        assert.strict.equal(fsEnsureBinsBudgetCore(mf([fTool]), withGetter), one)
+        assert.strict.equal(fsEnsureBinsBudgetCore(mf([fTool]), { ...o, concurrent: true }), 2 * one)
+    })
+
+    it(`should return '[10000,13000,660000,20000]' when run the example`, function() {
         let manifest = {
             schema: 1,
             pkg: 'w-example',
@@ -193,8 +241,9 @@ describe(`fsEnsureBinsBudget`, function() {
             fsEnsureBinsBudget(manifest, { pkgRoot: '.', mirror: '', offline: false, totalMs: 1000 }),
             fsEnsureBinsBudget(manifest, { pkgRoot: '.', mirror: './mirror', offline: false, totalMs: 1000 }),
             fsEnsureBinsBudget(manifest, { pkgRoot: '.', names: 'tool.exe', mirror: '', offline: false }),
+            fsEnsureBinsBudget(manifest, { pkgRoot: '.', mirror: '', offline: false, totalMs: 1000, concurrent: true }),
         ]
-        assert.strict.deepStrictEqual(r, [10000, 13000, 660000])
+        assert.strict.deepStrictEqual(r, [10000, 13000, 660000, 20000])
     })
 
 })

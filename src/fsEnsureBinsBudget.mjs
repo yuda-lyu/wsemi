@@ -13,7 +13,7 @@ import mergeInject from './_mergeInject.mjs'
  *
  * 預算即fsEnsureBins跨程序鎖之持有與等候上限之同一算式(單一來源, 規則帳本R-BIN-ENSURE-01規則19、20): 所選各取得單位(單一檔、檔案組)之預算之和; 每單位為「可能之下載次數×T＋解壓批數×(T＋5000)＋min(T, 60000)」, T為opt.totalMs之有效值(非預期之輸入改用預設600000, 同fsEnsureBins), 下載次數: 單一直接檔1次、壓縮檔為各來源檔(壓縮檔1個或分割檔數)各1次, 使用鏡像(opt.mirror或W_BIN_MIRROR)者每個來源另加1次(先試鏡像), 壓縮檔另加鏡像之最終檔1次, 檔案組另加鏡像之組資料夾逐檔各1次; 解壓批數: 單一檔1批, 檔案組每個壓縮檔依成員參數總長分批(與fsEnsureBins之tar分批相同)。opt.maxAttempts不相乘(下載之整體上限opt.totalMs已含各次嘗試與重試間隔)。主幹模式(mode為floating)且非離線者另加取主幹清單之上限opt.stallMs; 主幹清單之項目於執行時才知, 預算依傳入之基準清單計算, 取得之檔不符而重取主幹清單時最壞約再加一倍。
  *
- * 他程序正在取得同一單位時, fsEnsureBins先等候其完成(上限即本預算)再重新檢查快取, 持有者失敗時才自行取得, 故並行之首次取得最壞約為本預算之兩倍。
+ * 他程序正在取得同一單位時, fsEnsureBins先等候其完成(上限即本預算)再重新檢查快取, 持有者失敗時才自行取得, 故並行之首次取得最壞約為本預算之兩倍(兩個程序競爭同一單位: 先等他方持鎖取得至其預算, 他方失敗後自行取得再一個預算)。預設不倍乘(只回傳單一程序取得之預算); 使用端之測試等會有程序同時取得同一單位者, 給opt.concurrent為true取得並行(兩個程序競爭同一單位)時之最壞: 2×(各單位預算之和)＋取主幹清單之上限(主幹模式且非離線者; 各程序於取鎖前各取一次、不在他方持鎖之等候內, 故不乘2)。不計等候期間持有者連續更換(每換一個持有者重新起算等候上限)之情形。
  *
  * 清單與選項之格式與檢核同fsEnsureBins(manifest為清單物件或JSON檔路徑, opt.pkgRoot必填, opt.names選取部分檔), 無效時同步拋出同樣之帶code之Error('E_ARG'、'E_MANIFEST', 訊息同fsEnsureBins); 環境變數(W_BIN_MIRROR、W_BIN_OFFLINE)由process.env讀取, 可以opt.env取代。
  *
@@ -27,6 +27,7 @@ import mergeInject from './_mergeInject.mjs'
  * @param {Boolean} [opt.offline=undefined] 輸入是否離線, 給了即優先於W_BIN_OFFLINE, 離線者不加取主幹清單之上限
  * @param {Number} [opt.totalMs=600000] 輸入每個檔下載之整體時間上限毫秒數, 規則同fsEnsureBins
  * @param {Number} [opt.stallMs=30000] 輸入停滯毫秒數(主幹模式取主幹清單之上限), 規則同fsEnsureBins
+ * @param {Boolean} [opt.concurrent=false] 輸入是否回傳並行取得(兩個程序競爭同一單位)之最壞預算, 須為原始布林true才生效(其餘值視為未給而取預設，不報錯)，true時回傳2×(各單位預算之和)＋取主幹清單之上限(主幹模式且非離線者)，預設false為單一程序取得之預算
  * @returns {Number} 回傳預算毫秒數(非負整數或含小數之數字, opt.totalMs帶小數時)
  * @example
  * //need test in nodejs
@@ -54,6 +55,10 @@ import mergeInject from './_mergeInject.mjs'
  * //只計部分檔, 預設totalMs(600000)
  * console.log(fsEnsureBinsBudget(manifest, { pkgRoot: '.', names: 'tool.exe', mirror: '', offline: false }))
  * // => 660000
+ *
+ * //並行取得時之最壞(opt.concurrent): 各單位預算之和(10000)乘2
+ * console.log(fsEnsureBinsBudget(manifest, { pkgRoot: '.', mirror: '', offline: false, totalMs: 1000, concurrent: true }))
+ * // => 20000
  *
  */
 function fsEnsureBinsBudget(manifest, opt = {}) {

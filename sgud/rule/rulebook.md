@@ -22,7 +22,7 @@
 | 顯式時區時鐘 `genClockTZ` | `sgud/rule/rulebook_clock.md` | R-CLOCK-01 | 約 6 |
 | 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
 | 帶期望雜湊之下載 | `sgud/rule/rulebook_dl.md` | R-DL-VERIFY-01 | 23.2 |
-| 外部執行檔取得 | `sgud/rule/rulebook_bin.md` | R-BIN-ENSURE-01 | 25.0 |
+| 外部執行檔取得(規則 22: `fsEnsureBinsBudget` 之 `opt.concurrent` 並行最壞預算,2026-11-25 t642) | `sgud/rule/rulebook_bin.md` | R-BIN-ENSURE-01 | 約 48 |
 | 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
@@ -40,7 +40,7 @@
 | `fsWatchFolder` 被監看資料夾本身消失之 `unlinkDir` 一次消失只派發一次(第 238 項) | `sgud/rule/rulebook_watch.md` | R-WATCH-ROOT-ONCE-01 | 約 4 |
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
-| 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01 | 約 4 |
+| 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項);真瀏覽器行為測試之基建: playwright-core(devDependencies)、`test/tools/browserKit.mjs`、不依賴 `./dist`、不比標準圖(第 642 項,2026-11-25 t642) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01、R-TEST-BROWSER-01 | 約 7 |
 | 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01 | 約 9 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
 | 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191)——主檔只留〈共通說明〉(風險代號)與本類之索引(2026-11-02 ws272c 拆為下列 5 檔,原約 81.2KB) | `sgud/rule/rulebook_judge_sites.md` | 標題、〈共通說明〉、索引 | 約 6.2 |
@@ -51,7 +51,7 @@
 | 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);第 221 項 §11 第 6 項 ws286a(DOM 4 個函數與 3 個呼叫端)、ws286b(`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize`);此檔已逾 30KB,其後新增節另開 `rulebook_judge_sites_r2d.md` | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271、ws286a、ws286b 處置結果 | 33.8 |
 | 同上——處置結果:第 221 項 §11 第 6 項 ws286c(差異比對子類 `strDiff`、`strDiffToHtml`、`arrDiff`、`matDiff`、`ltdtDiff` 與內部呼叫鏈逐站確認)、ws286d(空資料不是失敗:`arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數狀態模式、`getCsvStrFromData([])`;更正第 15 項「空陣列亦 throw」)、ws286e(陣列與結構子類 `arrFilterByENum`、`arrReverse`、`arrSep`、`matConcat`、`matat`、`ltdtpull` 必須參數無效即 throw、空資料照常);此檔 ws286e 後已逾 30KB,其後新增之處置結果節另開 `rulebook_judge_sites_r2e.md` | `sgud/rule/rulebook_judge_sites_r2d.md` | ws286c、ws286d、ws286e 處置結果 | 31.9 |
 | 同上——處置結果:第 426 項 ws426(R-SYNC-INVALID-01,同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值不回原值、C6 只補「失敗之辨識」文件;2026-11-12 新開);第 430 項 ws430(opt 數值改 `iseint` 14 站:`execCli` 4、`execCliJsonRpc` 1、`execCliSession` 4、`fsTreeFolderCore` 1、`isUserPw` 3、`dig` 1,逐站舊 → 新,R-OPT-VAL-01) | `sgud/rule/rulebook_judge_sites_r2e.md` | ws426、ws430 處置結果;第 492 項 ws492a(對外入口之數值參數以 `isenum` 判定、通過即 `cdbl` 轉型:`domIsClientXYIn` 無效回 `false`、`domGetBoudRectRefSelf`、`interp1` 之 stairs `xMin`／`xMax`,R-ENTRY-CONVERT-01,2026-11-16);第 492 項 ws492b(已裁定未落實:`objSortByKeys`、`treeToFilepath`、`arr2dt`,`pseudoRandomIntsNdpRange` 值域,JSDoc 文字修正,R-ENTRY-THROW-01、R-RANGE-VALUE-01,2026-11-16) | 約 33 |
-| 開分頁類函數(`browserView` 系、`openLink`)與彈窗訊息 `domAlert`: 無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲 60 秒釋放、協定與類型不設白名單而以文件載明責任;`domAlert` 之 D1～D7(2026-11-12 ws430 新增) | `sgud/rule/rulebook_browser.md` | R-BROWSER-OPEN-01、R-DOMALERT-01 | 約 8 |
+| 開分頁類函數(`browserView` 系、`openLink`)與彈窗訊息 `domAlert`: 無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲 60 秒釋放、協定與類型不設白名單而以文件載明責任;`domAlert` 之 D1～D7(2026-11-12 ws430 新增);`domConvertToPic`: 複本補回 canvas 位圖與單選 select 之選取、等複本 img 完成再截圖、成敗皆移除放入之節點(2026-11-25 t642 新增) | `sgud/rule/rulebook_browser.md` | R-BROWSER-OPEN-01、R-DOMALERT-01、R-DOMPIC-01 | 約 18 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
 | 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB;ws286b 起第 57 項後另開第 5 檔) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
@@ -69,7 +69,7 @@
 - **規則**:新增函數(或擴充既有函數之語意)須符合其一:①兩個以上自有套件實際共用(附使用端 `file:line` 全集);②基於本套件既有函數或家族之延伸(附延伸自何者,例:`fsWriteText` 加原子寫入、`execCli` 家族加結果走檔案之變體);③與領域無關之常見處理函數,且本套件無等價者(附 `Grep src/` 之查核).
 - **不收**:單一套件專用者;帶領域語意者(AI、管線、抓取、資料庫、通知通道,歸 w-dispatch-ai、w-data-pipeline、w-fetch-web、w-orm-* 等);行程層政策與設定載入慣例(屬應用層);與既有函數重複者(改用既有).
 - **處置**:收件(含主控轉交之建議)先判本條;不符者回覆理由與建議落點,不實作.已收而事後僅剩單一使用端者不主動移出,但不再擴充其語意.
-- **why**:使用者:「否則就會變成一堆下游自有套件把函數往wsemi塞, 這樣wsemi就會變大雜燴」.跨套件全文見主控 `C:\opensrcOper\dspec\wsemi收錄原則.md`.
+- **why**:使用者:「否則就會變成一堆下游自有套件把函數往wsemi塞, 這樣wsemi就會變大雜燴」.跨套件全文見主控 dspec 之〈wsemi 收錄原則〉.
 - **已收清單**(依本條判定後收錄者,附依據;新增時附於此):
   - 2026-11-01 wsemi41(Gitea #41,使用端自執行殼抽提,主控裁定): ①`genClockTZ`(顯式時區時鐘;②延伸 `now2str` 家族＋①w-dispatch-ai 要求注入之 `stamp`／`getDate`、w-data-pipeline #39 `createLogger`;`createTime` 之預設時區 `'Asia/Taipei'` **不收**,屬專案群慣例)→ `rulebook_clock.md` R-CLOCK-01.②`execCliJsonFile`(結果走 JSON 檔之 CLI 執行;②`execCli` 家族之變體＋①w-knowledge-capture、使用端;逐行切分器 `_makeLineEmitter` 為**內部模組不匯出**,單一使用端)→ `rulebook_execfile.md` R-EXEC-JSONFILE-01.③`fsWriteTextAtomic`／`fsWriteTextAtomicCore`(原子寫檔;②延伸 `fsWriteText`＋①5 個使用端;**採信封式**,`fsWriteText` 不改)→ `rulebook_fs.md` R-FS-ATOMIC-01.④`execCliFailDetail`(`execCli` 結果之失敗摘要;②＋①三個自有套件使用)→ `rulebook_execfile.md`.**不收**(同案已裁): `readJson`／`writeJson`(與 `fsReadJson`／`fsWriteJson` 重複)、`queueAge`、`firstLineClamp`(單一套件專用).
 

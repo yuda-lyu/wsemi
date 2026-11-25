@@ -28,6 +28,8 @@ import fsDownloadFileVerifyCore from './fsDownloadFileVerifyCore.mjs'
  *
  * 下載執行檔或二進位資產一律經本函數驗證(規則帳本R-DL-VERIFY-01); 不需驗證之一般下載用fsDownloadFile。
  *
+ * 已知限制(Node 24.22.1內建之fetch，即undici): 伺服端回應帶'Connection: close'、本體較大且消費端有背壓(寫入較慢)時，undici內部會以未捕獲之斷言崩潰整個行程(以純fetch即可重現，與本函數無關)，本函數之錯誤處理與重試皆攔不到。下載來源可能如此回應時，請改傳opt.fetch(如以http或https模組自建之fetch函數，須回傳本體為WHATWG ReadableStream之Response)，或使伺服端不帶'Connection: close'。經本函數下載之fsEnsureBins亦受同一限制。
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsDownloadFileVerify.test.mjs Github}
  * @memberOf wsemi
  * @param {String} urlIn 輸入下載網址字串

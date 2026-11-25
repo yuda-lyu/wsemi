@@ -6,11 +6,12 @@
 
 ## 索引(哪類查哪檔)
 
-### `sgud/state/state_外部程序與檔案_第2輪.md`(外部程序與檔案,第 2 輪起;約 3KB;新增於 2026-11-24)
+### `sgud/state/state_外部程序與檔案_第2輪.md`(外部程序與檔案,第 2 輪起;約 5KB;新增於 2026-11-24)
 
-查: `fsEnsureBins` 之跨程序只取得一次(鎖之位置與格式、等候、接手、上限、事件、測試、已知缺口)、離線試取清除之競態與無主暫存之清除、取得預算函數 `fsEnsureBinsBudget`.所含節:
+查: `fsEnsureBins` 之跨程序只取得一次(鎖之位置與格式、等候、接手、上限、事件、測試、已知缺口)、離線試取清除之競態與無主暫存之清除、取得預算函數 `fsEnsureBinsBudget` 與其並行最壞選項 `opt.concurrent`、`fsDownloadFileVerify` 之 Node 內建 fetch 已知限制.所含節:
 
-- `fsEnsureBins` 離線試取清除之競態、無主暫存之清除、取得預算函數(排程第 639 項、第 634 項①③;twsm3,2026-11-25)〔本節於 2026-11-25 新增,置於該檔最前〕
+- `fsEnsureBinsBudget` 之並行最壞選項 `opt.concurrent`、`fsDownloadFileVerify` 之 Node 內建 fetch 已知限制(排程第 634 項②④;t642,2026-11-25)〔本節於 2026-11-25 新增,置於該檔最前〕
+- `fsEnsureBins` 離線試取清除之競態、無主暫存之清除、取得預算函數(排程第 639 項、第 634 項①③;twsm3,2026-11-25)〔本節於 2026-11-25 新增,置於該檔次位〕
 
 - `fsEnsureBins` 跨程序只取得一次(排程第 632 項;twsm2,2026-11-24)〔本節於 2026-11-24 新增〕
 
@@ -65,10 +66,11 @@
 
 - fs 之安全相關 opt 與訊息(排程第 492 項第 3 批;ws492d,2026-11-17)〔本節於 2026-11-17 新增〕
 
-### `sgud/state/state_瀏覽器函數.md`(開分頁與彈窗訊息;約 3KB;新增於 2026-11-12)
+### `sgud/state/state_瀏覽器函數.md`(開分頁與彈窗訊息、`domConvertToPic`;約 5KB;新增於 2026-11-12)
 
-查: `browserView` 系、`openLink`、`domAlert` 之現況(規格第 199 項 C18).所含節:
+查: `browserView` 系、`openLink`、`domAlert` 之現況(規格第 199 項 C18);`domConvertToPic` 之 canvas 內容、壞圖首次呼叫輸出高度、select 選取、單選鈕副作用、殘留節點(排程第 642 項).所含節:
 
+- `domConvertToPic`: canvas 內容、壞圖首次呼叫輸出高度、select 選取、單選鈕副作用、殘留節點(排程第 642 項;t642,2026-11-25)〔本節於 2026-11-25 新增,置於該檔最前〕
 - 規格第 199 項 C18:`browserView` 系、`openLink`、`domAlert`(排程第 430 項第一批;ws430,2026-11-12)〔本節於 2026-11-12 新增〕
 
 ### `sgud/state/state_相依套件.md`(外部依賴升版;約 2.5KB)
@@ -124,8 +126,9 @@
 
 ### `sgud/state/state_測試.md`(測試;新增於 2026-11-02)
 
-查: 測試檔結構(測試檔互不 import、工具檔頂層不註冊)、全套案數一致、測試不得污染行程全域.所含節:
+查: 測試檔結構(測試檔互不 import、工具檔頂層不註冊)、全套案數一致、測試不得污染行程全域;真瀏覽器行為測試之基建(playwright-core、`browserKit`).所含節:
 
+- 真瀏覽器行為測試之基建(R-TEST-BROWSER-01;排程第 642 項;t642,2026-11-25)〔本節於 2026-11-25 新增,置於該檔最前〕
 - 全套案數一致與測試檔結構(R-TEST-STRUCT-01;排程第 254 項;ws265,2026-11-02)
 
 ### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 21.5KB)

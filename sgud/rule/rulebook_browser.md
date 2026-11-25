@@ -50,3 +50,37 @@
 - `test/domAlert.test.mjs`(26 案;含自訂標籤之 opt、debug 只於全部鍵讀完後讀一次、有效時不讀;每案以查詢字串載入新模組實例;計時以 `mock.timers` 之 `setInterval`／`setTimeout`／`Date`,以「推進虛擬時間後 Promise 是否已完成」判定;樣式以結構無關之 `styleTexts` 收集;D7 案保存並還原既有之全域描述符).
 - 修前紅 17 案(外審前之 23 案中);變異 M7～M11、M18、M19、M30～M32、M41、M42(12 個)皆被殺.
 - 真 Chromium(ws430 報告附): 外觀與位置並排相同、像素差 0;按 ✕ 修前 Promise 不完成、修後完成;嚴格 CSP 下修前 ✕ 與淡入失效(3 筆 CSP 違規)、修後可用;`time` 為 NaN／Infinity 修前永不關閉、修後 4 秒關閉;D1、D2、D5b 實測.
+
+## R-DOMPIC-01 `domConvertToPic`:複本補回 canvas 位圖與單選 select 之選取、等複本 img 完成再截圖、成敗皆移除放入之節點
+
+本節 2026-11-25 新增(排程第 642 項;snapdom 3.8.0 升版冒煙時發現之兩缺陷).索引見 `sgud/rule/rulebook.md`〈索引〉.
+
+### 成因(真 Chromium 實證,「原元素直交 snapdom」對「經本函數」並排)
+
+- **canvas 內容截不到**: 原元素直交 snapdom 可截到(紅藍各半之 canvas,區塊平均色 [255,0,0]、[0,0,255]),經本函數則該區為純白——本函數先 `cloneNode(true)` 再放入頁面,而 `cloneNode` 不複製 canvas 位圖(複本非透明像素 20000 → 0).**snapdom 本身無此缺陷**.
+- **壞圖(404 `<img>`)首次呼叫輸出高度飄移**: 複本之 `<img>` 放入頁面後重新載入,失敗前以 `width`／`height` 屬性之盒(如 60×40)排版,失敗後改為替代文字盒(如 46×21);實測放入後 `complete === false`、版面高 68,約 2 ms 後 `error`、高 43.snapdom 量測若落在其間,輸出為失敗前之版面.原元素直交 snapdom 恆為失敗後版面(原元素早已失敗).修前同頁首次呼叫 4／30 為失敗前版面(高 82),第 2 次起(snapdom 前處理較快)恆為失敗前版面;修後 30／30 與同頁連續 3 次皆為失敗後版面(高 57,含 14px 外距).**注意**: 使用端先前之描述「57 = 底緣被裁、82 = 完整」方向相反——57 才是失敗後之正確版面.
+- **主控推測之修正**: `input`／`textarea` 之 `value`、核取／單選鈕之 `checked`、range 之現值,`cloneNode` 已複製(HTML 規格之 cloning steps;Chromium 實測複本值同原件);只有單選 `<select>` 之選取遺失(複本回到第一項,輸出為第一項之文字).
+- **獨立複審另發現之既有副作用(修前即有,同日實證並修)**: 同名(無表單)之單選鈕,複本放入頁面後與頁面上之原件同組,複本之已勾選鈕使**原件之勾選被取消**(實測原件 `r2.checked` 由 `true` 變 `false`,修前修後之呼叫皆然,並行呼叫互相取消);有表單者因複本之表單為另一個表單擁有者而不受影響.
+
+### 規則
+
+1. **複製後補回 `cloneNode` 不帶走之狀態**(`copyCanvas`、`copySelect`;原件與複本結構相同,以 `listAll` 取本身與後代依文件順序,同索引互相對應): 各 `<canvas>` 於呼叫當下之內容 `drawImage` 至複本之 2D 環境;各單選 `<select>` 之 `selectedIndex` 複製至複本.**失敗不中斷**: 位圖寬或高為 0、控制權已轉移至 OffscreenCanvas、取不到 2D 環境者保留空白(try/catch,不 reject);跨源圖片使 canvas 被污染(tainted)者可畫入複本但內容無法讀出,輸出中該 canvas 區域為空白、由 snapdom 於四周畫 1px 灰框,**不 reject**(與原元素直交 snapdom 相同).複選 `<select>` 之選取 snapdom 不呈現於輸出(實測有無選取輸出像素相同),不處理.
+2. **放入頁面後等複本 `<img>` 完成**(`waitImg`): 只等 `complete === false` 者之 `load`／`error`(已完成者如無 `src` 之 `<img>` 不會再觸發事件,不可等);上限 `IMG_WAIT_MAX = 5000` ms,逾時不再等、直接截圖、不報錯;無須等待者不建計時器(假 DOM 之單元測試不受影響).**複本內 `loading="lazy"` 者改為 `eager`**(`loadImgNow`): 複本置於頁面頂端,其內遠離視窗者不會觸發延遲載入,否則每次呼叫空等至上限(實測遠端 lazy 圖: 不改 5081 ms、改後 64 ms).
+3. **成功或失敗皆移除本函數放入之節點**(`try/finally` 內 `domRemove(eleOut)`): 修前截圖拋錯時外層容器與複本殘留於 `body`.
+   - **複本內有名稱之單選鈕改用本次呼叫專用之名稱**(`isolateRadio`,`__domConvertToPic<序號>_<原名>`,元素本身為 radio 時亦處理): 複本內各鈕仍同組、勾選狀態與外觀不變,不再與頁面上之同名原件同組,原件之勾選不被改動(呼叫後頁面上之單選狀態不變).
+4. 輸出尺寸為複本之版面尺寸,**元素之外距計入**(複本外層為絕對定位之區塊格式化脈絡,子元素外距不外溢)——既有行為,JSDoc 載明,測試鎖定.
+
+### 站點全集與判準
+
+- 盤點指令: `Grep "cloneNode\(" src/`(2026-11-25: `domConvertToPic.mjs`、`domDragPreview.mjs` 兩處);`Grep "snapdom" src/`(只有 `domConvertToPic.mjs`).
+- `domConvertToPic.mjs`: 已套規則 1~4.`domDragPreview.mjs`: **刻意不套**——拖曳預覽(殘影)非截圖輸出,不在本規則範圍.
+
+### 已知限制(JSDoc 載明)
+
+- 元素內之捲動位置(`scrollTop`／`scrollLeft`)不帶入複本,輸出為未捲動之內容並含捲軸(實測: 原元素直交 snapdom 呈現捲動後位置且無捲軸).**未修**: 修正會改變下游現有輸出,另案由主控裁示.
+- 其餘依 snapdom 之能力(如跨網域 iframe 為占位、跨源污染之 canvas 為空白).
+
+### 測試
+
+- `test/domConvertToPic.test.mjs`(29 案,真 Chromium;基建見 `rulebook_test.md` R-TEST-BROWSER-01): 輸出(尺寸、`opt.scale`、`opt.picType`、`opt.toBase64`、外距)、DOM 殘留與並行、截圖失敗與無效輸入、canvas(紅藍區塊顏色、位圖尺寸≠CSS 尺寸、`scale`、元素本身為 canvas、多 canvas 巢狀、原 canvas 不被改動、跨源污染、OffscreenCanvas)、表單現值(select 以屬性設定 = 以 `selected` 設定之輸出像素雜湊相同,含元素本身為 select;input／checkbox／radio／textarea／range 同)、單選鈕(頁面上同名原件之勾選不被改動、複本之勾選仍呈現)、壞圖高度(10 個新頁面之首次呼叫、同頁第 2 次起)、已載入圖片、無 `src` 之 `<img>`、遠端 lazy 圖、永不載入之圖(上限).**不比對標準圖**,改以尺寸、指定區塊平均色與非白像素數、同次執行內兩輸出之像素雜湊.
+- 修前紅(以改前之 `src/domConvertToPic.mjs` 取代頁面載入之檔,環境變數 `WSEMI_DOMCONVERTTOPIC_SRC`): 29 案中 11 案紅(截圖失敗之殘留 1、canvas 5、select 2、單選鈕原件勾選 1、壞圖首次呼叫 1〔機率性,每輪 10 頁約 76%,實測兩輪皆紅〕與第 2 次起 1〔確定性〕).變異 14 項(`tmp` 內單點變異,以同一環境變數載入)中 12 項被殺、2 項存活皆為等價: ①複選 select 亦複製選取(其選取不呈現於輸出,見規則 1);②單選鈕只改名已勾選者(未勾選者加入同名群組不影響原件之勾選,可觀察行為相同;現行實作改名全部有名稱者,較單純).`complete` 過濾之變異須有「無 `src` 之 img」案才被殺(首輪存活,補案後被殺).

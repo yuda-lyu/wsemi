@@ -15,3 +15,17 @@
 - **測試**: `test/testStructure.test.mjs`(4 案,含 pattern 之正反例);變異 6 項全擊殺(blob2ab 又 import `blob2b64.test.mjs`、工具檔頂層 `describe`／`it.skip`、pattern 不抓 `import()`／`require()`、掃描不含 `test/tools`).
 - **不採**: 以測試跑 `mocha --parallel --jobs N` 驗案數恆定(測試內啟動 mocha,慢且巢狀);改以靜態結構檢查加報告內之 `--jobs` 矩陣與全套連跑證據.
 - **變更紀錄**: 2026-11-02(ws265)新增本規則(僅測試目錄,無對外行為變更).
+
+## R-TEST-BROWSER-01 真瀏覽器行為測試之基建: playwright-core(devDependencies)＋`test/tools/browserKit.mjs`,不依賴 `./dist`、不比標準圖
+
+- **依據**: 排程第 642 項(2026-11-25): `domConvertToPic` 之測試原為空殼(`import` 被註解、只斷言 `1 === 1`),snapdom 升版無任何自動化保護.限制: wsemi 為 Level 3,**不得依賴 w-playwright(Level 3)或 w-package-tools-e2e(Level 4)**(依賴即須升 Level 而連帶全庫改名);故以外部套件 `playwright-core` 自建最小基建.
+- **規則**:
+  1. **依賴**: `package.json` 之 `devDependencies` 有 `playwright-core`(版本取同 w-playwright 所依者之同一範圍,現為 `1.65.1` 精確版);`dependencies` 不增.
+  2. **瀏覽器之取得**(`browserKit.launchBrowser`): 先直接啟動 Playwright 受管之 headless shell,已安裝者不下載;錯誤訊息為 `Executable doesn't exist` 時才以 `playwright-core/cli.js install --no-remove --only-shell chromium` 安裝(子行程 `windowsHide: true`,`process.execPath` 執行,逾 `INSTALL_TIMEOUT`〔10 分鐘〕結束整個子行程樹並拋錯),裝完再啟動一次.**並行安裝由 Playwright 自身之目錄鎖序列化**(瀏覽器目錄內 `__dirlock`,`registry.install` 取鎖,重試約 10 分鐘;`playwright-core/lib/coreBundle.js` 之 `install`),共用其瀏覽器快取、不另設鎖.**取不到瀏覽器(離線、安裝失敗)即拋錯(fail-closed),不 skip**——skip 會使 passing 靜默少案而失去保護;離線環境預先安裝或設 `PLAYWRIGHT_BROWSERS_PATH`.不依 `dspec` 外部執行檔規格之 `fsEnsureBins`(該規格明列 playwright 受管瀏覽器為例外,由 playwright 統一處理).
+  3. **頁面載入 wsemi 原始碼**: `page.route` 供應虛擬主機 `http://wsemi.test/` 之 `/src/*`、`/node_modules/*`(讀本庫實檔,限此二前綴並擋路徑跳脫)＋ import map 解析 `@zumer/snapdom`、`lodash-es`(新增 src 之裸模組相依時須補 `IMPORT_MAP`),模組以 `window.mods[名稱]`(命名空間)暴露;**不開埠、不連網、不依賴 `./dist`、不寫入本庫任何檔案**.跨源資源用另一虛擬主機 `CROSS_HOST`(`opt.crossRoutes`).
+  4. **斷言為行為量測,不比標準圖**: 輸出尺寸、指定區塊之平均色與非白像素數、原始 RGBA 之透明度、同次執行內兩輸出之像素雜湊是否相同(`analyzePic`);snapdom 升版之反鋸齒差異不應使測試轉紅.
+  5. **修前紅驗證**: `openPage` 之 `opts.overrides` 可以他檔取代某路徑之內容;`test/domConvertToPic.test.mjs` 讀環境變數 `WSEMI_DOMCONVERTTOPIC_SRC`(指向改前之 `domConvertToPic.mjs`)即改載該檔,供修前紅與變異驗證;未設時載本庫現檔.`snapdomFailStub.mjs` 以同法取代 snapdom 使截圖必定失敗.
+  6. **清理**: 每案之 context 於 `afterEach` 關閉,瀏覽器於 `after` 關閉;結束後無遺留之 chrome／node 行程(實查).
+- **盤點**: `Grep "browserKit" test/`(現只有 `test/domConvertToPic.test.mjs`);新增真瀏覽器測試檔沿用本基建,不另寫一份.
+- **已知限制**: 首次取得瀏覽器須連網(Playwright 之 CDN);全套之 `--parallel` 下僅此一檔起瀏覽器.
+- **變更紀錄**: 2026-11-25(t642)新增本規則.
