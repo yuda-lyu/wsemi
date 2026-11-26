@@ -10,6 +10,7 @@ import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
 import iseint from './iseint.mjs'
 import haskey from './haskey.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //crypto-js沒有支援chunk或stream機制, 無法處理大量資料
@@ -40,7 +41,7 @@ let kpSha = {
  * @param {String} str 輸入一般字串，非有效字串時回傳空字串
  * @param {Integer|String} n 輸入演算法位數，必須參數(有效正整數，數字字串亦可)，僅可為1、224、256、384、512，其餘一律擲出錯誤，但opt.returnWithStateAndMsg為true時改以error狀態回報而不擲出
  * @param {Boolean} [base64=false] 輸入是否轉為base64字串，非布林值時回退為false，預設為false
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {String|Object} 回傳經SHA-n轉換後字串，str非有效字串時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空字串''；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
@@ -83,8 +84,11 @@ let kpSha = {
  */
 function str2sha(str, n, base64 = false, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

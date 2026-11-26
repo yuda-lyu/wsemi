@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import throttle from 'lodash-es/throttle.js'
 import isenum from './isenum.mjs'
 import evem from './evem.mjs'
+import evEmit from './evEmit.mjs'
 import isfun from './isfun.mjs'
 import domIsRendered from './domIsRendered.mjs'
 import optVal from './_optVal.mjs'
@@ -356,7 +357,18 @@ function createCore(ev, opt, onReobserve) {
             trace('emit', { seq, width: snew.width, height: snew.height, deferred })
         }
 
-        ev.emit('resize', {
+        //emit, 延後發出(deferred: setTimeout、節流之後續呼叫、refresh)於計時器內派發, 無呼叫端之堆疊, 監聽器拋錯須經evEmit攔截(同堆疊內try; 有error監聽者則emit('error', { fun: 'listener', name, msg, args }), 否則經getDiag輸出), 使resize之監聽器拋錯不成uncaught、不使其後之resizeWithWindow不發(R-EVEM-RAW-01規則2);
+        //  同步發出(於ResizeObserver回呼內, sync選項)維持直接派發: 監聽器拋錯外拋至瀏覽器之回呼(等待狀態於其前已更新, 見測試)
+        let emit = (name, payload) => {
+            if (deferred) {
+                evEmit(ev, name, [payload], { tag: 'domDetect' })
+            }
+            else {
+                ev.emit(name, payload)
+            }
+        }
+
+        emit('resize', {
             sold,
             snew,
             smode: sm,
@@ -368,7 +380,7 @@ function createCore(ev, opt, onReobserve) {
             return
         }
 
-        ev.emit('resizeWithWindow', {
+        emit('resizeWithWindow', {
             sold,
             snew,
             smode: sm,
@@ -773,7 +785,7 @@ function domDetectByObserver(f, opt = {}) {
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.timeInterval、opt.tolerancePixel、opt.toleranceBounce、opt.throttle為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於偵測器內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'check'時為每次量測與比較(含source為量測來源：'poll'輪詢、'observer'ResizeObserver回報、'inline'行內元素之定期量測、'refresh'；found為是否取得元素；width、height為比較用尺寸，取不到元素時為0；changed為是否判定為變化而交付發出；seq為判定為變化之序號，否則null)，'emit'時為即將發出resize事件(含seq、width、height，deferred為是否延後發出)，'skip'時為判定為變化而不發出(含seq，reason為'stale'已處理較新之量測、'zero'尺寸為0、'hidden'延後發出前元素已不被繪製、'base'延後發出前與getBase之尺寸已一致)，'inline'時為行內元素之定期量測開始或停止(含on)；節流期間併入後續發出之判定無emit或skip事件；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響偵測，clear後不再呼叫，預設null
- * @returns {Object} 回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件
+ * @returns {Object} 回傳物件，可使用on、refresh與clear函數，on可監聽resize與resizeWithWindow事件，refresh為立即重新量測並比較(延後發出，給throttle時併入節流而至多延後throttle毫秒)，供比較基準因尺寸以外之原因改變時使用，clear為釋放監聽，可於任何時點呼叫(含元素尚未取得)，並取消已排定之事件；延後發出(預設，於計時器內)之事件經evEmit派發，監聽器之同步拋錯不成為uncaught exception、不使其後之事件不發(有error監聽者時以error事件{ fun: 'listener', name, msg, args }通報，否則經getDiag輸出固定標籤與安全摘要)；opt.sync為true時於ResizeObserver回呼內直接派發，監聽器拋錯仍外拋至瀏覽器之回呼
  * @example
  * need test in browser
  *

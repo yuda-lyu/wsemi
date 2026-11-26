@@ -9,7 +9,7 @@ import strdelright from './strdelright.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getClearPathName.test.mjs Github}
  * @memberOf wsemi
  * @param {string} str 輸入檔案或資料夾位置字串
- * @returns {Object} 回傳物件{ path, isRoot }，path為清理後檔案或資料夾位置字串，isRoot為是否為根目錄之布林值；str非有效字串時回傳{ path: '', isRoot: false }
+ * @returns {Object} 回傳物件{ path, isRoot }，path為清理後檔案或資料夾位置字串，isRoot為是否為根目錄之布林值；str非有效字串(含空字串、String包裝物件等非原始字串)時回傳{ path: '', isRoot: false }
  * @example
  *
  * let c

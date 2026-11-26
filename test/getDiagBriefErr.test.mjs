@@ -1,5 +1,7 @@
 import assert from 'assert'
 import getDiagBriefErr from '../src/getDiagBriefErr.mjs'
+import { CODES } from '../src/_diagCodes.mjs'
+import strCompareForVersion from '../src/strCompareForVersion.mjs'
 import diagSuite from './tools/diagSuite.mjs'
 
 
@@ -88,7 +90,7 @@ describe(`getDiagBriefErr format text and fetch cause`, function() {
 })
 
 
-//排程第621項②(twsm2): NODE集合納入undici(Node內建fetch)之連線與回應層代碼與ERR_SSL_PROTOCOL_ERROR; 以真實fetch失敗(本機服務, 不連外網)之cause.code驗證
+//排程第621項②(twsm2): NODE集合納入undici(Node內建fetch)之連線與回應層代碼; 以真實fetch失敗(本機服務, 不連外網)之cause.code驗證(ERR_SSL_PROTOCOL_ERROR原亦列入, 第663項經主控裁定移除: 為Chromium之網路錯誤名, Node不產生)
 describe(`getDiagBriefErr undici codes of real fetch failures`, function() {
     this.timeout(30000)
 
@@ -209,10 +211,65 @@ describe(`getDiagBriefErr undici codes of real fetch failures`, function() {
         assert.strict.deepStrictEqual([brief(e1), brief(e2)], [{ errType: 'TypeError', errCode: 'UND_ERR_HEADERS_TIMEOUT' }, { errType: 'TypeError', errCode: 'UND_ERR_BODY_TIMEOUT' }])
     })
 
-    it(`should list the undici codes not reproducible locally and ERR_SSL_PROTOCOL_ERROR, and not list undici codes of argument or usage errors`, function() {
+    it(`should list the undici codes not reproducible locally, and not list undici codes of argument or usage errors nor ERR_SSL_PROTOCOL_ERROR (a Chromium network error name that Node does not produce; 第663項)`, function() {
         let f = (c) => brief(Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('x'), { code: c }) })).errCode
-        assert.strict.deepStrictEqual(['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_CLOSED', 'UND_ERR_DESTROYED', 'UND_ERR_PRX_TLS', 'ERR_SSL_PROTOCOL_ERROR'].map(f), ['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_CLOSED', 'UND_ERR_DESTROYED', 'UND_ERR_PRX_TLS', 'ERR_SSL_PROTOCOL_ERROR'])
-        assert.strict.deepStrictEqual(['UND_ERR_INVALID_ARG', 'UND_ERR_NOT_SUPPORTED', 'UND_ERR_INFO', 'HPE_INVALID_CONSTANT', 'UND_ERR_'].map(f), [undefined, undefined, undefined, undefined, undefined])
+        assert.strict.deepStrictEqual(['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_CLOSED', 'UND_ERR_DESTROYED', 'UND_ERR_PRX_TLS'].map(f), ['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_CLOSED', 'UND_ERR_DESTROYED', 'UND_ERR_PRX_TLS'])
+        assert.strict.deepStrictEqual(['UND_ERR_INVALID_ARG', 'UND_ERR_NOT_SUPPORTED', 'UND_ERR_INFO', 'HPE_INVALID_CONSTANT', 'UND_ERR_', 'ERR_SSL_PROTOCOL_ERROR'].map(f), [undefined, undefined, undefined, undefined, undefined, undefined])
+        assert.ok(!CODES.NODE.includes('ERR_SSL_PROTOCOL_ERROR'), 'ERR_SSL_PROTOCOL_ERROR must not be listed')
+    })
+
+    //第663項(主控裁定): NODE集合限以Node或undici實證之代碼; 以執行中之Node之內建原始碼(errors、undici、crypto與tls之常數)逐一核對, 唯OpenSSL之原因碼(ERR_SSL_*)只在握手時動態產生, 以真實連線核對
+    it(`(第663項) every code of CODES.NODE should be evidenced by the running Node: its built-in sources, or a real TLS handshake for the OpenSSL reason codes`, async function() {
+        let src = ''
+        try {
+            src = Object.values(process.binding('natives')).map((v) => String(v)).join('\n') // eslint-disable-line n/no-deprecated-api
+        }
+        catch (err) {
+            src = ''
+        }
+        assert.ok(src.length > 100000, 'the built-in sources of the running Node should be readable (process.binding natives)')
+        let dynamic = ['ERR_SSL_WRONG_VERSION_NUMBER'] //OpenSSL之原因碼, 於握手時動態產生為ERR_SSL_+原因
+        let missing = CODES.NODE.filter((c) => !dynamic.includes(c) && !src.includes(c))
+        assert.strict.deepStrictEqual(missing, [], `codes without evidence in the running Node: ${missing.join(' ')}`)
+
+        //ERR_SSL_WRONG_VERSION_NUMBER: 以內建fetch之https連到純http之本機服務(不連外網), cause.code為該碼(node:https之request則為EPROTO)
+        let sv = http.createServer((q, s) => s.end('x'))
+        let port = await listen(sv)
+        let got = null
+        try {
+            await fetch(`https://127.0.0.1:${port}/`)
+        }
+        catch (e) {
+            got = e && e.cause && e.cause.code
+        }
+        await new Promise((resolve) => sv.close(() => resolve()))
+        assert.strict.deepStrictEqual(got, 'ERR_SSL_WRONG_VERSION_NUMBER')
+        assert.ok(CODES.NODE.includes(got), 'the code obtained from the real handshake must be listed')
+    })
+
+    //排程第621項②複核(2026-11-27): 代碼集合以「執行中之Node所內建之undici」之實際代碼核對, 不憑記憶列
+    it(`(第621項) every listed UND_ERR_* code should exist in the undici bundled with the running Node, and UND_ERR_SOCKS (connection layer, as UND_ERR_PRX_TLS) should pass while UND_ERR_HTTP_PARSER should not`, function() {
+        let src = ''
+        try {
+            //內建之undici原始碼只能經process.binding('natives')讀出(無公開API); 唯讀、只取代碼字串; 日後Node移除此途徑時本案轉紅, 須改核對來源
+            src = String(process.binding('natives')['internal/deps/undici/undici'] || '') // eslint-disable-line n/no-deprecated-api
+        }
+        catch (err) {
+            src = ''
+        }
+        assert.ok(src.length > 0, 'the bundled undici source of the running Node should be readable (process.binding natives)')
+        let real = new Set(src.match(/UND_ERR_[A-Z_]+/g) || [])
+        let listed = CODES.NODE.filter((c) => c.startsWith('UND_ERR_'))
+        assert.ok(listed.length >= 10, 'listed UND_ERR_* codes should be found')
+        //NEWER, 只見於較新undici之代碼 → 核實所用之版本(npm之7.24.8尚無; 執行中之Node內建版低於此版時允許不在, 以免舊版Node誤紅)
+        let NEWER = { UND_ERR_SOCKS: '7.30.1' }
+        let ver = String(process.versions.undici || '0.0.0')
+        for (let c of listed) {
+            let older = NEWER[c] !== undefined && strCompareForVersion(ver, NEWER[c]) < 0
+            assert.ok(real.has(c) || older, `${c} should exist in the bundled undici ${ver}`)
+        }
+        let f = (c) => brief(Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('x'), { code: c }) })).errCode
+        assert.strict.deepStrictEqual([f('UND_ERR_SOCKS'), f('UND_ERR_HTTP_PARSER')], ['UND_ERR_SOCKS', undefined])
     })
 
 })

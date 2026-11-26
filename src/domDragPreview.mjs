@@ -5,6 +5,7 @@ import domGetPointFromEvent from './domGetPointFromEvent.mjs'
 import domGetBoudRect from './domGetBoudRect.mjs'
 import optVal from './_optVal.mjs'
 import getTrace from './getTrace.mjs'
+import { copyCanvas, copySelect } from './_domCloneFix.mjs'
 
 
 //containerOpacity, containerBorderWidth: opt類參數, 有效數字(isenum, 不限範圍), 非預期(含Infinity、'0x10'、包裝物件、非數字等)視為未給、改用預設0.4與1, 不報錯
@@ -17,7 +18,7 @@ let RULE_CONTAINER_BORDER_WIDTH = { fn: 'domDragPreview', name: 'opt.containerBo
  *
  * 同一時間只有一個預覽，createPreview時若已有預覽則先移除；預覽存在期間才監聽視窗之mousemove、touchmove(capture，內層元素stopPropagation仍跟隨指標)並定期確認來源元素仍在頁面中，來源被移出(例如可自我刪除之按鈕)時一併移除預覽；removeDragPreview與clear皆移除預覽並停止上述監聽與確認，可重複呼叫
  *
- * 預覽為來源元素之深拷貝：拷貝內之radio移除name，避免已勾選之拷貝插入頁面後取消原件之勾選
+ * 預覽為來源元素之深拷貝：拷貝內之radio移除name，避免已勾選之拷貝插入頁面後取消原件之勾選；cloneNode不複製canvas之位圖與單選select之選取，拷貝時補回(各canvas於建立預覽當下之內容畫入拷貝，無法讀出者如跨源污染之canvas為空白；單選select之選取複製至拷貝，複選select不處理)；input與textarea之現值、核取狀態cloneNode已複製
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/domDragPreview.test.mjs Github}
  * @memberOf wsemi
@@ -92,6 +93,10 @@ function domDragPreview(opt = {}) {
 
         //深複製
         let nd = ele.cloneNode(true)
+
+        //cloneNode不複製<canvas>之位圖與單選<select>之選取(拷貝為空白位圖、回到預設選取), 補回(與domConvertToPic同一出處_domCloneFix; 排程第647項)
+        copyCanvas(ele, nd)
+        copySelect(ele, nd)
 
         //儲存資訊
         nd.tShiftX = x - rt.left

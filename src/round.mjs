@@ -2,6 +2,7 @@ import Decimal from 'decimal.js'
 import get from 'lodash-es/get.js'
 import isenum from './isenum.mjs'
 import iseint from './iseint.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -14,7 +15,7 @@ import iseint from './iseint.mjs'
  * @memberOf wsemi
  * @param {Number|String} v 輸入數值，需為有效數字(數字或數字字串，定義見isenum，不收Infinity與'0x10'等)，非有效數字時回傳空字串
  * @param {Integer} [idig=0] 輸入指定位數，需為0~100之有效整數(數字或數字字串，定義見iseint之use為digits)，非有效時改用預設0，預設0
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {String} [opt.rounding='ROUND_HALF_UP'] 輸入取捨方式，可選'ROUND_HALF_UP'代表四捨五入或'ROUND_HALF_EVEN'代表四捨六入五成雙，預設'ROUND_HALF_UP'
  * @returns {Number} 回傳四捨五入的數字，v非有效數字時回傳空字串
  * @example
@@ -124,8 +125,11 @@ function round(v, idig = 0, opt = {}) {
     }
     idig = Number(idig)
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯
+    let optSnap = pickOpt(opt, ['rounding'], [])
+
     //rounding
-    let rounding = get(opt, 'rounding', '')
+    let rounding = get(optSnap, 'rounding', '')
     if (rounding !== 'ROUND_HALF_UP' && rounding !== 'ROUND_HALF_EVEN') {
         rounding = 'ROUND_HALF_UP'
     }

@@ -26,12 +26,16 @@
 | 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
-| 事件派發: `evem` 只回裸 eventemitter3、計時器／串流／監視器回呼內之派發經 `evEmit`／`evEmitDelay`(使用者原則 2026-09-13;2026-11-22 自自動記憶提取) | `sgud/rule/rulebook_evem.md` | R-EVEM-RAW-01 | 約 5 |
-| 資料與型別判定、格式轉換 | `sgud/rule/rulebook_data.md` | R-EXCEL-READ-01、R-UTF8-01、R-ENV-01、R-WRAPPER-01(ws492i 起: 判斷函數只收原始值、轉型函數照舊拆包)、R-FILETYPE-01、R-NUM-INPUT-01(數值輸入支援字串型數字、isnum 照字面、排序非數字放最末;使用者 2026-09-27)、R-JUDGE-SOURCE-01(布林與函數之判斷單一出處 isbol／isfun;使用者 2026-09-22;後二者 2026-11-22 自自動記憶提取) | 約 32 |
+| 事件派發: `evem` 只回裸 eventemitter3、計時器／串流／監視器回呼內之派發經 `evEmit`／`evEmitDelay`(使用者原則 2026-09-13;2026-11-22 自自動記憶提取) | `sgud/rule/rulebook_evem.md` | R-EVEM-RAW-01(2026-11-27 wsr2: 規則 2 明文涵蓋 Promise 鏈與 microtask 回呼、21 站逐站處置已落實) | 約 7 |
+| 資料與型別判定、字串編碼、環境判斷(2026-11-27 wsr1 依類型拆檔,原約 35.6KB: R-EXCEL-READ-01 移至 `rulebook_excel.md`、R-FILETYPE-01 移至 `rulebook_filetype.md`) | `sgud/rule/rulebook_data.md` | R-UTF8-01、R-ENV-01、R-WRAPPER-01(ws492i 起: 判斷函數只收原始值、轉型函數照舊拆包)、R-NUM-INPUT-01(數值輸入支援字串型數字、isnum 照字面、排序非數字放最末;使用者 2026-09-27)、R-JUDGE-SOURCE-01(布林與函數之判斷單一出處 isbol／isfun;使用者 2026-09-22;後二者 2026-11-22 自自動記憶提取;2026-11-27 wsr1 補 AST 守門測試) | 約 16 |
+| 讀取 Excel 之值(提取原值轉字串、`keepEmptyHeader`) | `sgud/rule/rulebook_excel.md` | R-EXCEL-READ-01 | 約 7 |
+| `getFileType` 副檔名對照表 | `sgud/rule/rulebook_filetype.md` | R-FILETYPE-01 | 約 14 |
 | w-orm 系列條件(find)之形狀檢核 | `sgud/rule/rulebook_orm-find.md` | R-FIND-01 | 38.5 |
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
-| 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape、規則 16～20〔2026-11-24 twsm1: maskDiagCtrl、maskDiagToken、pickDiagOpt、warn 與行內摘要、函數內自行 console 之 AST 盤點;twsm1b: label 與 lowerFind 路徑之控制字元單一規則、常駐路徑 5 函數經 getDiag、除錯殘留〕;單節,未拆) | `sgud/rule/rulebook_diag.md` | R-DIAG-01 | 47.9 |
+| 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape、規則 16～20〔2026-11-24 twsm1: maskDiagCtrl、maskDiagToken、pickDiagOpt、warn 與行內摘要、函數內自行 console 之 AST 盤點;twsm1b: label 與 lowerFind 路徑之控制字元單一規則、常駐路徑 5 函數經 getDiag、除錯殘留〕;規則 21 已知秘密內建 JSON 跳脫形、規則 22 NODE 代碼以內建 undici 核對〔2026-11-27 wsr1,第 650、621 項〕;**2026-11-27 wsr2 依規則類型拆為三檔**: 本檔留依據、單一擁有者與規則 1~12;規則 13~22 與盤點指令、站點全集、刻意與已知限制、實作輪自行決定、X65 見下列 `rulebook_diag_ext.md`;測試與變更紀錄見 `rulebook_diag_log.md`;三檔同為 R-DIAG-01,節號與標題不變) | `sgud/rule/rulebook_diag.md` | R-DIAG-01(規則 1~12) | 22.9 |
+| 診斷輸出與遮罩(續): R-DIAG-01 規則 13~22(通報站點經 getDiag、形狀摘要、控制字元、權杖遮罩、pickDiagOpt、warn 與行內摘要、console 盤點、JSON 跳脫形、NODE 代碼集合限以 Node 或 undici 實證)、盤點指令與站點全集、刻意與已知限制、實作輪自行決定、X65 之輸出差異 | `sgud/rule/rulebook_diag_ext.md` | R-DIAG-01(規則 13~22) | 22.7 |
+| 診斷輸出與遮罩(續): R-DIAG-01 之測試與變更紀錄 | `sgud/rule/rulebook_diag_log.md` | R-DIAG-01(測試、變更紀錄) | 9.2 |
 | 串流遮罩器 `genDiagStreamMasker`(逐列、長列分段不切開命中、與切塊無關;兩份使用端實作之對照與改用要點;2026-11-24 twsm1 新增) | `sgud/rule/rulebook_diag_stream.md` | R-DIAG-02 | 6.6 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
 | 字串取代之取代值須字面化: `replace`／`replaceAll` 站點全集(`$&`、`$'`、`` $` ``、`$$` 不得被展開;2026-11-12 ws427 wsrep 新增) | `sgud/rule/rulebook_replace.md` | R-REPLACE-LITERAL-01 | 約 8 |
@@ -41,7 +45,7 @@
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
 | 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項);真瀏覽器行為測試之基建: playwright-core(devDependencies)、`test/tools/browserKit.mjs`、不依賴 `./dist`、不比標準圖(第 642 項,2026-11-25 t642) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01、R-TEST-BROWSER-01 | 約 7 |
-| 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);轉型與驗證函數對惡意值不拋錯(`cstr`／`cint`／`isUserPw`,第 551 項)、判型改語言原生或內部槽(`isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`,第 552 項;第 492 項第 10 批 ws492k,2026-11-26);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01、R-C1-HOSTILE-01、R-JUDGE-NATIVE-01 | 約 17 |
+| 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);轉型與驗證函數對惡意值不拋錯(`cstr`／`cint`／`isUserPw`,第 551 項)、判型改語言原生或內部槽(`isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`,第 552 項;第 492 項第 10 批 ws492k,2026-11-26);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫);**第 663 項批 11(2026-11-27 wsr2)**: R-C1-HOSTILE-01 規則 3~6(62 個轉型／編碼／字串／時間字串轉換類函數與 fs 列舉同步 6 函數對惡意值之 opt 不拋錯、9 站 state 訊息改固定詞彙、AST 守門)、新增 R-OPT-READER-01(公開之 opt 讀取函數 `getOptReader` 之收錄評估與規則;有限數字判斷不收錄) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01、R-C1-HOSTILE-01、R-JUDGE-NATIVE-01、R-OPT-READER-01 | 約 33 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
 | 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191)——主檔只留〈共通說明〉(風險代號)與本類之索引(2026-11-02 ws272c 拆為下列 5 檔,原約 81.2KB) | `sgud/rule/rulebook_judge_sites.md` | 標題、〈共通說明〉、索引 | 約 6.2 |
 | 同上——§1~§5(計時毫秒、埠號、索引、個數、位元) | `sgud/rule/rulebook_judge_sites_inv_a.md` | R-ENUM-01 之站點全集(§1~§5) | 21.8 |
@@ -51,7 +55,7 @@
 | 同上——處置結果:第 221 項第 2 輪 ws272c(`_optNum` 退役、DOM 類、`fsTask`、ws272b 回報後續 6 項)、第 3 輪 ws271(`interp1`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`strTruncate`、`domFadeIn`);第 221 項 §11 第 6 項 ws286a(DOM 4 個函數與 3 個呼叫端)、ws286b(`getTimeRange`、`rep`、`replaceObj`、`replacePlus`、`sepInt`、`cfilesize`);此檔已逾 30KB,其後新增節另開 `rulebook_judge_sites_r2d.md` | `sgud/rule/rulebook_judge_sites_r2c.md` | ws272c、ws271、ws286a、ws286b 處置結果 | 33.8 |
 | 同上——處置結果:第 221 項 §11 第 6 項 ws286c(差異比對子類 `strDiff`、`strDiffToHtml`、`arrDiff`、`matDiff`、`ltdtDiff` 與內部呼叫鏈逐站確認)、ws286d(空資料不是失敗:`arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數狀態模式、`getCsvStrFromData([])`;更正第 15 項「空陣列亦 throw」)、ws286e(陣列與結構子類 `arrFilterByENum`、`arrReverse`、`arrSep`、`matConcat`、`matat`、`ltdtpull` 必須參數無效即 throw、空資料照常);此檔 ws286e 後已逾 30KB,其後新增之處置結果節另開 `rulebook_judge_sites_r2e.md` | `sgud/rule/rulebook_judge_sites_r2d.md` | ws286c、ws286d、ws286e 處置結果 | 31.9 |
 | 同上——處置結果:第 426 項 ws426(R-SYNC-INVALID-01,同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值不回原值、C6 只補「失敗之辨識」文件;2026-11-12 新開);第 430 項 ws430(opt 數值改 `iseint` 14 站:`execCli` 4、`execCliJsonRpc` 1、`execCliSession` 4、`fsTreeFolderCore` 1、`isUserPw` 3、`dig` 1,逐站舊 → 新,R-OPT-VAL-01) | `sgud/rule/rulebook_judge_sites_r2e.md` | ws426、ws430 處置結果;第 492 項 ws492a(對外入口之數值參數以 `isenum` 判定、通過即 `cdbl` 轉型:`domIsClientXYIn` 無效回 `false`、`domGetBoudRectRefSelf`、`interp1` 之 stairs `xMin`／`xMax`,R-ENTRY-CONVERT-01,2026-11-16);第 492 項 ws492b(已裁定未落實:`objSortByKeys`、`treeToFilepath`、`arr2dt`,`pseudoRandomIntsNdpRange` 值域,JSDoc 文字修正,R-ENTRY-THROW-01、R-RANGE-VALUE-01,2026-11-16) | 約 33 |
-| 開分頁類函數(`browserView` 系、`openLink`)與彈窗訊息 `domAlert`: 無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲 60 秒釋放、協定與類型不設白名單而以文件載明責任;`domAlert` 之 D1～D7(2026-11-12 ws430 新增);`domConvertToPic`: 複本補回 canvas 位圖與單選 select 之選取、等複本 img 完成再截圖、成敗皆移除放入之節點(2026-11-25 t642 新增) | `sgud/rule/rulebook_browser.md` | R-BROWSER-OPEN-01、R-DOMALERT-01、R-DOMPIC-01 | 約 18 |
+| 開分頁類函數(`browserView` 系、`openLink`)與彈窗訊息 `domAlert`: 無效即同步拋錯且先於副作用、開不成即拋錯、Blob 網址延遲 60 秒釋放、協定與類型不設白名單而以文件載明責任;`domAlert` 之 D1～D7(2026-11-12 ws430 新增);`domConvertToPic`: 複本補回 canvas 位圖與單選 select 之選取、等複本 img 完成再截圖、成敗皆移除放入之節點(2026-11-25 t642 新增);`domDragPreview` 之拷貝同補 canvas 與 select、複本補正之單一出處 `_domCloneFix`(2026-11-27 wsr1,第 647 項) | `sgud/rule/rulebook_browser.md` | R-BROWSER-OPEN-01、R-DOMALERT-01、R-DOMPIC-01 | 約 18 |
 | opt 類數值參數非預期之輸入改用預設(含超出範圍)、`opt.debug` 警告、廣義數字陣列之 `opt.base`、`preciseNum` 整數路徑、`arrFilterByENum`(第 221 項第二批第一級發布 A;ws270、ws272a、ws272b 起納入含 `Infinity` 邊界或有下游站點之函數) | `sgud/rule/rulebook_optval.md` | R-OPT-VAL-01 | 約 21 |
 | 破壞性變更紀錄——主檔只留標題、說明與依項號之索引(2026-11-02 ws272c 拆為下列 4 檔,原約 49.4KB;ws286b 起第 57 項後另開第 5 檔) | `sgud/rule/rulebook_breaking.md` | 破壞性變更紀錄(索引) | 約 1.1 |
 | 破壞性變更紀錄(第 1～38 項) | `sgud/rule/rulebook_breaking_20261021.md` | 破壞性變更紀錄 | 28.2 |
@@ -59,7 +63,8 @@
 | 破壞性變更紀錄(第 45～51 項) | `sgud/rule/rulebook_breaking_45to51.md` | 破壞性變更紀錄 | 23.4 |
 | 破壞性變更紀錄(第 52～56 項;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
 | 破壞性變更紀錄(第 57～64 項;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e、第 62 項為 ws290、第 63 項為 ws426、第 64 項為 ws427;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 約 26 |
-| 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b、第 67 項為 ws430c、第 68 項為 ws492a、第 69 項為 ws492b;新增之項附於此檔) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
+| 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b、第 67 項為 ws430c、第 68 項為 ws492a、第 69 項為 ws492b;其後之 `_71on`、`_74on`、`_77on` 各檔見 `rulebook_breaking.md` 之索引) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
+| 破壞性變更紀錄(第 84 項起;第 84 項為 wsr1〔第 428、650、621②、647 項〕、第 85 項為 wsr2〔第 663 項批 11 併 A 輪需裁示 ①②⑤〕;新增之項附於此檔,2026-11-27 起) | `sgud/rule/rulebook_breaking_84on.md` | 破壞性變更紀錄 | 約 5 |
 | 結構函數之元素層級與自有鍵: 參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵、欄位名正規化、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數;2026-11-14 ws430b 新增) | `sgud/rule/rulebook_elem.md` | R-ELEM-LEVEL-01 | 約 10 |
 | 結構函數第三批: 列之訊息指出 row[i]、單一空元素不當空陣列、中性可設定之預設值(`opt.empty`／`opt.emptyHead`)、範圍參數;儲存格文字表示法單一擁有者 `_cellText`;差異比對之 modify 配對單一擁有者 `_diffPair`(arrDiff 逐格比對);帶時區時刻依其時區驗證(排程第 430 項第三批 14 個函數;2026-11-15 ws430c 新增) | `sgud/rule/rulebook_elem_b3.md` | R-ELEM-LEVEL-02、R-CELL-TEXT-01、R-DIFF-PAIR-01、R-TZ-WALL-01 | 約 12 |
 | 結構運算與參數定義(排程第 492 項第 7 批 ws492h,2026-11-19): C7 第 1 參數型別不對回輸出型別之空結果、單一空元素視為一個元素(18 函數)、`arrSep` 只收設定物件、範圍型 opt 超出範圍改預設與帶預設值之位置參數視同 opt(N-B 19 列處置表)、W-06 簽名／JSDoc／行為一致 | `sgud/rule/rulebook_struct7.md` | R-STRUCT-ARG1-01、R-ELEM-LEVEL-03、R-ARRSEP-OBJ-01、R-OPT-RANGE-01 | 約 12 |
@@ -71,6 +76,7 @@
 - **處置**:收件(含主控轉交之建議)先判本條;不符者回覆理由與建議落點,不實作.已收而事後僅剩單一使用端者不主動移出,但不再擴充其語意.
 - **why**:使用者:「否則就會變成一堆下游自有套件把函數往wsemi塞, 這樣wsemi就會變大雜燴」.跨套件全文見主控 dspec 之〈wsemi 收錄原則〉.
 - **已收清單**(依本條判定後收錄者,附依據;新增時附於此):
+  - 2026-11-27 wsr2(排程第 663 項,主控派工「評估公開 opt 讀取函數」「評估原始 number 且有限之判斷函數」): ①**收** `getOptReader(tag, opt)`(判準 1: w-gis `geojsonToMultiPolygon.mjs:29`、w-ftp `downloadViaTemp.mjs:57`、w-dwdata-ftp `_optReader.mjs:54` 三套件語意相同;判準 2: 延伸 `_optVal` 之警告出口至任意種類;判準 3: 內部 203 處手寫)→ `rulebook_judge_nothrow.md` R-OPT-READER-01;②**不收** 「原始 number 且有限」之判斷函數(語言原生 `Number.isFinite(v)` 即此語意,單一使用端 w-gis `isCoord`,非既有函數之延伸).
   - 2026-11-01 wsemi41(Gitea #41,使用端自執行殼抽提,主控裁定): ①`genClockTZ`(顯式時區時鐘;②延伸 `now2str` 家族＋①w-dispatch-ai 要求注入之 `stamp`／`getDate`、w-data-pipeline #39 `createLogger`;`createTime` 之預設時區 `'Asia/Taipei'` **不收**,屬專案群慣例)→ `rulebook_clock.md` R-CLOCK-01.②`execCliJsonFile`(結果走 JSON 檔之 CLI 執行;②`execCli` 家族之變體＋①w-knowledge-capture、使用端;逐行切分器 `_makeLineEmitter` 為**內部模組不匯出**,單一使用端)→ `rulebook_execfile.md` R-EXEC-JSONFILE-01.③`fsWriteTextAtomic`／`fsWriteTextAtomicCore`(原子寫檔;②延伸 `fsWriteText`＋①5 個使用端;**採信封式**,`fsWriteText` 不改)→ `rulebook_fs.md` R-FS-ATOMIC-01.④`execCliFailDetail`(`execCli` 結果之失敗摘要;②＋①三個自有套件使用)→ `rulebook_execfile.md`.**不收**(同案已裁): `readJson`／`writeJson`(與 `fsReadJson`／`fsWriteJson` 重複)、`queueAge`、`firstLineClamp`(單一套件專用).
 
 各條目全標題:
@@ -82,17 +88,17 @@
 - `R-CLOCK-01` → `rulebook_clock.md`: R-CLOCK-01 需以指定時區取「現在」者一律經 `genClockTZ`:時間欄位取自 Intl、不隨系統時區、不改全域物件、無預設時區
 - `R-CODEC-ERR-01` → `rulebook_exec.md`: R-CODEC-ERR-01 codec 之錯誤值轉換與失敗回報:只轉真 Error、catch 不外拋
 - `R-DIAG-02` → `rulebook_diag_stream.md`: R-DIAG-02 串流文字之遮罩一律經 `genDiagStreamMasker`(逐列、與 maskDiagText 同一套規則、長列分段不切開命中、與塊之切法無關)
-- `R-DIAG-01` → `rulebook_diag.md`: R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
+- `R-DIAG-01` → `rulebook_diag.md`(規則 1~12)、`rulebook_diag_ext.md`(規則 13~22、盤點、限制)、`rulebook_diag_log.md`(測試、變更紀錄): R-DIAG-01 診斷輸出與遮罩一律經 wsemi 之共用函數(單一實作、預設不輸出資料值、對外錯誤值不含憑證、永不拋錯且有界、一份共用語料)
 - `R-DEP-MAJOR-01` → `rulebook_deps.md`: R-DEP-MAJOR-01 外部依賴跨主版號升級: 使用處全集、新舊差分、`close()` 後不沿用(每次新建 watcher)、he 具名匯入、UMD 打包驗證
 - `R-DL-VERIFY-01` → `rulebook_dl.md`: R-DL-VERIFY-01 下載執行檔或二進位資產一律經 `fsDownloadFileVerify` 驗證 SHA-256(與大小)
 - `R-ENUM-01` → `rulebook_judge.md`(站點全集另見 `rulebook_judge_sites_inv_a.md`、`rulebook_judge_sites_inv_b.md`,索引見 `rulebook_judge_sites.md`): R-ENUM-01 計算類函數判定數字／整數參數一律經 `isenum`／`iseint`(判斷類、單一擁有者、`opt.use` 範圍表單一來源 `_numRange`、opt 無效必拋且不帶值)
 - `R-ENUM-CALLERS-01` → `rulebook_judge.md`(已套／未套站點見 `rulebook_judge_sites_r1.md` 〈第 221 項第一批處置結果〉): R-ENUM-CALLERS-01 排程第 221 項第一批:24 個既有函數(三角 9、round/ceil/floor、dig 系、judge/preciseNum/estimateTicks/color、arrAdd/arrMulti/arrMax/arrMin)之數字／整數判定改經 `isenum`／`iseint`,失敗通道不變(null／''／throw),陣列計算非有效數字以預設值 0／1,arrMax/arrMin 無有效數字 throw
 - `R-ENV-01` → `rulebook_data.md`: R-ENV-01 環境判斷函數(回布林)於非目標環境回 false、不拋錯
-- `R-EVEM-RAW-01` → `rulebook_evem.md`: R-EVEM-RAW-01 evem 只回裸 eventemitter3(不包裝、不攔截監聽器);計時器、串流、監視器回呼內對使用者可掛監聽器之事件物件派發者,一律經 `evEmit`(同堆疊 try 攔截、pm 先 settle 再通報)或 `evEmitDelay`;timer 毫秒進 setTimeout 前須在上限內
-- `R-EXCEL-READ-01` → `rulebook_data.md`: R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
+- `R-EVEM-RAW-01` → `rulebook_evem.md`: R-EVEM-RAW-01 evem 只回裸 eventemitter3(不包裝、不攔截監聽器);計時器、串流、監視器、Promise 鏈之 catch、microtask 等無人承接之回呼內對使用者可掛監聽器之事件物件派發者,一律經 `evEmit`(同堆疊 try 攔截、pm 先 settle 再通報)或 `evEmitDelay`;timer 毫秒進 setTimeout 前須在上限內
+- `R-EXCEL-READ-01` → `rulebook_excel.md`(2026-11-27 自 `rulebook_data.md` 移入): R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 - `R-EXEC-FAIL-01` → `rulebook_exec.md`: R-EXEC-FAIL-01 執行外部程序之失敗回報:字串或結果物件、不含參數與環境變數之值、不崩潰
 - `R-EXEC-JSONFILE-01` → `rulebook_execfile.md`: R-EXEC-JSONFILE-01 結果走 JSON 檔之 CLI 執行一律經 `execCliJsonFile`;失敗摘要經 `execCliFailDetail`:失敗以結構化物件回報、必須參數缺漏 reject、半行不黏連、相對輸出路徑與子進程一致
-- `R-FILETYPE-01` → `rulebook_data.md`: R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
+- `R-FILETYPE-01` → `rulebook_filetype.md`(2026-11-27 自 `rulebook_data.md` 移入): R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
 - `R-JUDGE-SOURCE-01` → `rulebook_data.md`: R-JUDGE-SOURCE-01 布林與函數之判斷單一出處: `src/` 內只經 `isbol`／`isfun`,除 `src/isfun.mjs` 外不得 import lodash 之 `isFunction`,`isBoolean` 無例外
 - `R-NUM-INPUT-01` → `rulebook_data.md`: R-NUM-INPUT-01 數值輸入一律支援字串型數字;`isnum` 照字面(純空白為 false、前後帶空白為 true);排序函數支援非數字輸入時,無法轉數字或無法解析者放最末並維持原順序(同 Excel)
 - `R-FIND-01` → `rulebook_orm-find.md`: R-FIND-01 w-orm 系列條件(find)之形狀檢核: 單一擁有者 `cvOrmFind`、白名單、fail-closed、檢查之值即使用之值
@@ -143,7 +149,8 @@
 - `R-WRAPPER-01` → `rulebook_data.md`: R-WRAPPER-01 包裝物件(new String/Number/Boolean)之處理: 判斷函數只收原始值(包裝物件為 false)、轉型函數(cdbl/cint/cstr/cbol)照舊拆包、直接判型之入口依同原則(2026-11-19 ws492i 改寫,取代 A-lite)
 - `R-JUDGE-NOTHROW-01` → `rulebook_judge_nothrow.md`: R-JUDGE-NOTHROW-01 判斷函數(`is*`)對任何輸入皆不拋錯(型別無法判定回 false、內容檢查拋錯回 false);內部 `_isFunSafe` 已移除(ws492i)
 - `R-C1C2-DEF-01` → `rulebook_judge_nothrow.md`: R-C1C2-DEF-01 C1／C2 之定義: `cbol` 依 B2、`isDate` 收嚴、`cint` 行為不改而 JSDoc 寫明失真(ws492i)
-- `R-C1-HOSTILE-01` → `rulebook_judge_nothrow.md`: R-C1-HOSTILE-01 轉型與驗證函數對惡意值不拋錯(`cstr`、`cint`/`isUserPw` 之 opt 取快照 `_pickOpt`;ws492k)
+- `R-C1-HOSTILE-01` → `rulebook_judge_nothrow.md`: R-C1-HOSTILE-01 轉型與驗證函數對惡意值不拋錯(`cstr`、`cint`/`isUserPw` 之 opt 取快照 `_pickOpt`;ws492k;2026-11-27 wsr2 擴及 62 個轉型／編碼／字串／時間字串轉換類函數與 fs 列舉同步 6 函數,state 模式 9 站之失敗訊息改固定詞彙)
+- `R-OPT-READER-01` → `rulebook_judge_nothrow.md`: R-OPT-READER-01 公開之 opt 讀取函數 `getOptReader(tag, opt)`(讀取拋錯視為未給、給了就檢測、非預期取預設、`opt.debug` 警告同鍵每行程一次、`funLog` 出口;收錄評估與使用端對照;wsr2)
 - `R-JUDGE-NATIVE-01` → `rulebook_judge_nothrow.md`: R-JUDGE-NATIVE-01 判型改語言原生或內部槽(`isnull`/`isundefined`/`isbigint`/`isab`/`isu8arr`/`isu16arr`;`isarr`/`isobj`/`isblob`/`isfile` 停於該函數待裁示;ws492k)
 - `R-EXEC-FAIL-01` 規則 16 → `rulebook_exec.md`: exec 家族輸入不可讀(opt、args 元素、opt.env、requests)之 V19 固定訊息與入口快照(`_execSnap`)、command 含 NUL 入口擋下、`buildSpawnArgs` 非字串拋固定 TypeError(ws492k)
 - `R-MSG-V19-01` 規則 9 → `rulebook_msg.md`: 失敗訊息固定詞彙化與診斷出口 `_diagIfAsked`(`o2j` 族、Excel 寫檔器、`fsEnsureBinsCore` 未知鍵名、`fsReadJson`、`execCliJsonFile` 結果檔;ws492k)

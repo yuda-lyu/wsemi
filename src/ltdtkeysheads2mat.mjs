@@ -4,6 +4,7 @@ import isarr from './isarr.mjs'
 import iseobj from './iseobj.mjs'
 import _cellText from './_cellText.mjs'
 import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -17,7 +18,7 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [keys=[]] 輸入欄位名陣列(元素為字串或有限數字)，若為null、undefined或[]則由ltdt提取，預設[]
  * @param {Object} [kphead={}] 輸入字典物件，內含keys對應表頭之物件，供keys查詢得表頭，若不輸入或無效則以鍵名當表頭，預設為{}
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {*} [opt.emptyHead=''] 輸入kphead有給但缺某鍵之對應時給予之表頭(原樣放入)，函數視為null，預設''
  * @param {*} [opt.empty=''] 輸入資料列缺該欄或其值為undefined時給予之值(轉交ltdtkeys2mat之opt.empty)，函數視為null，預設''
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
@@ -43,8 +44,11 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  */
 function ltdtkeysheads2mat(ltdt, keys = [], kphead = {}, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

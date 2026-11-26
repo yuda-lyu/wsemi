@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import diagIfAsked from './_diagIfAsked.mjs'
 import isbol from './isbol.mjs'
 import isundefined from './isundefined.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -11,7 +12,7 @@ import isundefined from './isundefined.mjs'
  * @memberOf wsemi
  * @param {*} v 輸入任意資料；Error依JSON原生只保留可列舉自有欄位(一般Error為{})，記錄錯誤請先以getErrorMessage轉字串
  * @param {Boolean} [bFormat=false] 輸入是否格式化布林值，預設為false
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為固定訊息'invalid v: must be serializable to JSON'，不含原生錯誤之文字：循環參照之原生訊息帶構造器名與屬性名，toJSON所拋之文字亦可能含輸入內容)，預設false
  * @param {Boolean} [opt.logDetail=false] 輸入序列化失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
  * @param {Function} [opt.funLog=null] 輸入序列化失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi o2j] can not serialize')，同getDiag，預設null
@@ -31,11 +32,33 @@ import isundefined from './isundefined.mjs'
  *   "b": "abc"
  * }
  *
+ * //取回序列化失敗之原生錯誤並接為Error.cause: 狀態模式之msg為固定訊息(不含原生錯誤之文字)，原生錯誤只經opt.funLog(label, safe, detail)交出，detail為經getDiag遮罩後之副本；
+ * //以旗標而非cause是否為null判斷有無取回(拋出值可為null、undefined等任意值)；此funLog只為取回原因，不給logDetail，故不會另輸出至console
+ * let hasCause = false
+ * let cause = null
+ * let circ = {}
+ * circ.self = circ
+ * let r = o2j(circ, false, {
+ *     returnWithStateAndMsg: true,
+ *     funLog: (label, safe, detail) => {
+ *         hasCause = true
+ *         cause = detail
+ *     },
+ * })
+ * console.log(r)
+ * // => { state: 'error', msg: 'invalid v: must be serializable to JSON' }
+ * let err = hasCause ? new Error(r.msg, { cause }) : new Error(r.msg)
+ * console.log(err.message, err.cause instanceof TypeError)
+ * // => invalid v: must be serializable to JSON true
+ *
  */
 function o2j(v, bFormat = false, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

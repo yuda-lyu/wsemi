@@ -3,6 +3,7 @@ import libwa from 'crypto-js/lib-typedarrays.js'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isu8arr from './isu8arr.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //crypto-js沒有支援chunk或stream機制, 無法處理大量資料
@@ -14,7 +15,7 @@ import isu8arr from './isu8arr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2b64.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {String|Object} 回傳base64字串，輸入非Uint8Array時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空字串''，而空字串''亦為合法輸入之結果(如u8arr2b64(new Uint8Array(0)))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
@@ -29,8 +30,11 @@ import isu8arr from './isu8arr.mjs'
  */
 function u8arr2b64(u8a, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

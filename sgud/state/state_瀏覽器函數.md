@@ -2,6 +2,12 @@
 
 本檔 2026-11-12(ws430)新建(`state_dom與資料.md` 已約 29.8KB,依全域設定§14 另開類型檔);索引見 `sgud/state/state.md`.新增之現況附於本檔最前.
 
+## `domDragPreview`: 拷貝補回 canvas 與單選 select、複本補正單一出處(排程第 647 項;主控任務 20261127030143 wsr1,2026-11-27;package.json version 1.9.81 之工作樹,未提交未發布)
+
+- **核實(真 Chromium)**: 修前預覽之拷貝 canvas 為空白 `[0,0,0,0]`、單選 select 回第 0 項——屬實;同名無表單之 radio 原件勾選不被取消(拷貝原即移除 name)——不屬實.
+- **已改**(R-DOMPIC-01〈站點全集與判準〉;破壞性變更第 84 項⑤): `listAll`／`copyCanvas`／`copySelect`／`isolateRadio` 自 `domConvertToPic.mjs` 逐字搬至內部檔 `src/_domCloneFix.mjs`(`isolateRadio` 帶前綴參數,`domConvertToPic` 名稱不變);`domDragPreview` 之 `cloneNode` 後呼叫 `copyCanvas`、`copySelect`;radio 之處理不變.
+- **測試**: `test/domDragPreviewBrowser.test.mjs`(5 案;修前 2 failing,修後 5 passing);`test/domConvertToPic.test.mjs`、`test/domDragPreview.test.mjs`(假 DOM)回歸綠;變異 M14～M17 皆被殺.
+
 ## `domConvertToPic`: canvas 內容、壞圖首次呼叫輸出高度、select 選取、單選鈕副作用、殘留節點(排程第 642 項;主控任務 20261125225421 t642,2026-11-25;package.json version 1.9.77 之工作樹,未提交未發布)
 
 - 背景: snapdom 3.7.6→3.8.0 升版冒煙(升版已完成,依賴為 `^3.8.0`)時發現兩缺陷,且本函數之測試原為空殼(`import` 被註解、只斷言 `1 === 1`)而升版無任何自動化保護.

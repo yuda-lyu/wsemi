@@ -814,6 +814,38 @@ describe(`domDrag`, function() {
         assert.strict.deepStrictEqual(out, [[0, 1, 0.4], [0, 1, 0.4], [1, 1, 0.7], [0, 1, 0.4], [0, 1, 0.4]]) //第4筆(-5)原為[1, 1, 0.4](視為0), W-13改為預設120而與第1、2、5筆同
     })
 
+    //R-EVEM-RAW-01規則2(第663項): microtask路徑(拖曳來源解除後延後一個microtask確認而結束拖曳)之派發經evEmit; DOM事件路徑(放開、取消等)維持直接派發(監聽器拋錯外拋至瀏覽器之事件回呼, 見上之 drop listener throws 案)
+    it(`should isolate a throwing leave listener on the microtask path of a gone drag source: no unhandled rejection, the drag is cleared, reported to the error event [R-EVEM-RAW-01]`, async function() {
+        let un = watchUnhandled()
+        let errs = []
+        let env = mkFakeDom()
+        let [a, b] = mkItems(env, 2, 't663m')
+        all.push(a.d, b.d)
+        b.d.on('error', (m) => errs.push(m))
+        b.d.on('leave', () => {
+            throw new Error('consumer boom')
+        })
+        let m = mouse(env)
+        try {
+            m.press(a)
+            await sleep(20)
+            m.move(b.pt) //經過b(enter)
+            a.d.unbind() //來源解除且未重建: 延後一個microtask確認後結束拖曳, 對經過中之b派發leave
+            await tick()
+            await flush()
+            await flush()
+        }
+        finally {
+            un.stop()
+        }
+        assert.strict.deepStrictEqual(un.list, [])
+        assert.strict.deepStrictEqual(errs.map((e) => [e.fun, e.name, e.msg.message]), [['listener', 'leave', 'consumer boom']])
+        //拖曳已結束: 其後之放開不再派發
+        let n = b.rec.length
+        m.up(b.pt)
+        assert.strict.deepStrictEqual(b.rec.length, n)
+    })
+
 })
 
 

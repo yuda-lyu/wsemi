@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
 import tz from './_tz.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -13,7 +14,7 @@ import tz from './_tz.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timemsTZ2hour.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入毫秒時間字串，含時區
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {String|Object} 回傳時時間字串，t非有效毫秒時間字串或轉換失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
@@ -27,8 +28,11 @@ import tz from './_tz.mjs'
  */
 function timemsTZ2hour(t, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

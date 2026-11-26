@@ -3,6 +3,7 @@ import isfun from './isfun.mjs'
 import isestr from './isestr.mjs'
 import iseint from './iseint.mjs'
 import strleft from './strleft.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -16,7 +17,7 @@ import strleft from './strleft.mjs'
  * @memberOf wsemi
  * @param {String} str 輸入待裁切字串，非有效字串回傳空字串
  * @param {Integer|String} maxLen 輸入裁切後最大保留長度，必須參數(有效整數，0~4294967295，數字字串亦可)，不含刪節號與附註訊息，非預期之輸入throw Error
- * @param {Object} [opt={}] 輸入設定物件
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給
  * @param {Function} [opt.funWithMsg=null] 輸入生成附註訊息之函數，格式為(str, maxLen)=>String，其中str為原始未裁切字串，回傳字串將接於刪節號之後，回傳非有效字串視為無附註，預設null代表僅補刪節號
  * @returns {String} 回傳裁切後字串
  * @example
@@ -66,8 +67,11 @@ function strTruncate(str, maxLen, opt = {}) {
         return str
     }
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯
+    let optSnap = pickOpt(opt, ['funWithMsg'], [])
+
     //funWithMsg
-    let funWithMsg = get(opt, 'funWithMsg')
+    let funWithMsg = get(optSnap, 'funWithMsg')
 
     //se, 由funWithMsg生成附註訊息, 回傳非有效字串視為無附註
     let se = ''

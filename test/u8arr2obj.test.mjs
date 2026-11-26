@@ -211,13 +211,15 @@ describe(`u8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should not throw but return { state: 'error', msg: <TypeError> } when input a detached Uint8Array`, function() {
-        //解碼本體之非預期錯誤須被攔截, 不得外拋至呼叫端
+    it(`should not throw but return { state: 'error', msg: 'invalid u8a: must be readable binary' } when input a detached Uint8Array`, function() {
+        //解碼本體之非預期錯誤須被攔截, 不得外拋至呼叫端; 第663項(V20): msg為固定詞彙, 不轉出引擎錯誤之文字
         let bad = new Uint8Array([1, 2, 3])
         structuredClone(bad.buffer, { transfer: [bad.buffer] }) //使buffer分離
         let r = u8arr2obj(bad, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為型別錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid u8a: must be readable binary' })
+        let logs = []
+        u8arr2obj(bad, { funLog: (label) => logs.push(label) })
+        assert.strict.deepStrictEqual(logs, ['[wsemi u8arr2obj] can not read'])
     })
 
     it(`should return { state: 'error', msg: <SyntaxError> } when input a packet whose header block is not valid JSON with returnWithStateAndMsg`, function() {
@@ -267,7 +269,8 @@ describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         return u8a
     }
 
-    it(`讀取呼叫端之資料拋出null時, returnWithStateAndMsg回傳{ state: 'error', msg: 'null' }而不外拋 [R-CODEC-ERR-01之2]`, function() {
+    //第663項(V20): 狀態模式之msg為固定詞彙, 不轉出所拋值之文字(舊制為_errToStr之字串, 如'null')
+    it(`讀取呼叫端之資料拋出null時, returnWithStateAndMsg回傳{ state: 'error', msg: 'invalid u8a: must be readable binary' }而不外拋 [R-CODEC-ERR-01之2, 第663項]`, function() {
         let r = null
         let threw = null
         try {
@@ -276,7 +279,7 @@ describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         catch (err) {
             threw = String(err && err.message)
         }
-        assert.strict.deepStrictEqual(showDeep({ r, threw }), { r: { state: 'error', msg: 'null' }, threw: null })
+        assert.strict.deepStrictEqual(showDeep({ r, threw }), { r: { state: 'error', msg: 'invalid u8a: must be readable binary' }, threw: null })
     })
 
     it(`讀取呼叫端之資料拋出null時, 預設模式回傳失敗之預設值而不外拋 [R-CODEC-ERR-01之2]`, function() {

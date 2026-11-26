@@ -2,6 +2,7 @@ import encbase64 from 'crypto-js/enc-base64.js'
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //crypto-js沒有支援chunk或stream機制, 無法處理大量資料
@@ -30,7 +31,7 @@ let rePadTail = /=+$/
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/b642u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} b64 輸入base64字串
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非字串或非合法base64時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)，而空Uint8Array(長度0)亦為合法輸入之結果(如b642u8arr(''))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
@@ -42,8 +43,11 @@ let rePadTail = /=+$/
  */
 function b642u8arr(b64, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

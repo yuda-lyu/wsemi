@@ -64,7 +64,7 @@ let RE_WALL_MS = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})$/
 
 
 /**
- * 判斷已去除時區之時刻字串是否為有效之日曆時刻(供istimeTZ、istimemsTZ): 須為標準寫法'YYYY-MM-DDTHH:mm:ss'(withMs為true時'YYYY-MM-DDTHH:mm:ss.SSS'),
+ * 判斷已去除時區之時刻字串是否為有效之日曆時刻(供istimeTZ、istimemsTZ; 排程第428項起亦供不帶時區之istime、istimems): 須為標準寫法'YYYY-MM-DDTHH:mm:ss'(withMs為true時'YYYY-MM-DDTHH:mm:ss.SSS'),
  * 年0000~9999、月、日(依格里曆之閏年)、時、分、秒、毫秒皆在範圍內; 以其時區之固定偏移解析(以UTC建立並逐欄比對, 固定偏移無夏令時間), 不經本機時間往返比對,
  * 故不受執行環境之時區(含夏令空窗)影響(使用者2026-11-15, 排程第430項第三批裁定表〈十四〉)
  *
@@ -98,22 +98,36 @@ function isWallTime(t, withMs) {
 
 
 /**
- * 判斷時刻字串之時區是否為有效之偏移(供istimeTZ、istimemsTZ): 'Z', 或'+HH:mm'/'-HH:mm'且HH為00~23、mm為00~59(同Date可解析之範圍);
- * checkTZ另收'|'符號與超出範圍之偏移(如'+99:99'、'|08:00'), 該類輸入不屬「有效之帶時區時刻」, 由呼叫端維持修前之判定(ws430c2外審T6)
+ * 判斷日字串是否為有效之日曆日(供isday): 須為標準寫法'YYYY-MM-DD', 年0000~9999、月、日(依格里曆之閏年)皆在範圍內;
+ * 同isWallTime逐欄比對, 不經本機時間往返比對, 故不受執行環境之時區影響(原以本機時間往返比對, 於整日被跳過之時區如Pacific/Apia之2011-12-30誤判無效; 排程第428項)
  *
- * @param {String} v 輸入時刻字串(已通過checkTZ)
- * @returns {Boolean} 回傳是否為有效之偏移
+ * @param {String} t 輸入日字串
+ * @returns {Boolean} 回傳是否有效
  */
-function isValidOffset(v) {
-    if (strright(v, 1) === 'Z') {
-        return true
-    }
-    let m = /^[+-](\d\d):(\d\d)$/.exec(strright(v, 6))
-    if (m === null) {
+function isWallDay(t) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) {
         return false
     }
-    return Number(m[1]) <= 23 && Number(m[2]) <= 59
+    return isWallTime(`${t}T00:00:00`, false)
 }
+
+
+/**
+ * 判斷月字串是否為有效之日曆月(供ismonth): 須為標準寫法'YYYY-MM', 年0000~9999、月01~12;
+ * 同isWallTime逐欄比對, 不經本機時間往返比對, 故不受執行環境之時區影響(排程第428項)
+ *
+ * @param {String} t 輸入月字串
+ * @returns {Boolean} 回傳是否有效
+ */
+function isWallMonth(t) {
+    if (!/^\d{4}-\d{2}$/.test(t)) {
+        return false
+    }
+    return isWallTime(`${t}-01T00:00:00`, false)
+}
+
+
+//isValidOffset(判斷時區是否為有效偏移)已移除: 排程第428項起istimeTZ、istimemsTZ對checkTZ所收之全部時區(有效偏移與'|08:00'、'+99:99'等)皆以isWallTime逐欄驗證, 不再分流
 
 
 let tz = {
@@ -122,7 +136,8 @@ let tz = {
     normTZ,
     sepTZ,
     isWallTime,
-    isValidOffset,
+    isWallDay,
+    isWallMonth,
 }
 
 

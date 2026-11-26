@@ -210,8 +210,8 @@ describe(`stru8arr2obj`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should not throw but return { state: 'error', msg: <Error> } when input data has a throwing getter`, function() {
-        //取值之非預期錯誤須被攔截, 不得外拋至呼叫端
+    it(`should not throw but return { state: 'error', msg: 'invalid data: must be a readable object' } (not the getter text) when input data has a throwing getter`, function() {
+        //取值之非預期錯誤須被攔截, 不得外拋至呼叫端; 第663項(V20): msg為固定詞彙, 不轉出getter所拋之文字('boom-getter')
         let o = {
             get results() {
                 throw new Error('boom-getter')
@@ -219,7 +219,7 @@ describe(`stru8arr2obj`, function() {
             binarys: [],
         }
         let r = stru8arr2obj(o, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'Error: boom-getter' }
+        let rr = { state: 'error', msg: 'invalid data: must be a readable object' }
         assert.strict.deepStrictEqual(r, rr)
     })
 
@@ -275,12 +275,16 @@ describe(`stru8arr2obj 呼叫端物件拋出任意值(R-CODEC-ERR-01之2)`, func
 
     let results = '{"a":"[BlazeForUint8Array]::0"}'
 
-    it(`should not throw but return { state: 'error', msg: 'null' } when the results getter throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    //第663項(V20): 狀態模式之msg為固定詞彙, 不轉出所拋值之文字(舊制為_errToStr之字串, 如'null'); 細節經opt.funLog
+    it(`should not throw but return { state: 'error', msg: 'invalid data: must be a readable object' } when the results getter throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第663項]`, function() {
         let r = null
         assert.doesNotThrow(() => {
             r = stru8arr2obj(mkGetterData(null), { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid data: must be a readable object' })
+        let logs = []
+        stru8arr2obj(mkGetterData(new Error('SECRET-results-text')), { funLog: (label) => logs.push(label) })
+        assert.strict.deepStrictEqual(logs, ['[wsemi stru8arr2obj] can not read'])
     })
 
     it(`should not throw but return {} when the results getter throws null without opt [R-CODEC-ERR-01之2]`, function() {
@@ -291,12 +295,15 @@ describe(`stru8arr2obj 呼叫端物件拋出任意值(R-CODEC-ERR-01之2)`, func
         assert.strict.deepStrictEqual(showDeep(r), {})
     })
 
-    it(`should not throw but return { state: 'error', msg: 'null' } when reading the length of a Proxy binarys throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    it(`should not throw but return { state: 'error', msg: 'invalid data.binarys: must be a readable array' } when reading the length of a Proxy binarys throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第663項]`, function() {
         let r = null
         assert.doesNotThrow(() => {
             r = stru8arr2obj({ results, binarys: mkProxyBinarys(null) }, { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid data.binarys: must be a readable array' })
+        let logs = []
+        stru8arr2obj({ results, binarys: mkProxyBinarys(new Error('SECRET-binarys-text')) }, { funLog: (label) => logs.push(label) })
+        assert.strict.deepStrictEqual(logs, ['[wsemi stru8arr2obj] can not read'])
     })
 
     it(`should not throw but return {} when reading the length of a Proxy binarys throws null without opt [R-CODEC-ERR-01之2]`, function() {

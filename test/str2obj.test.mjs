@@ -217,12 +217,21 @@ describe(`str2obj ext拋出任意值(R-CODEC-ERR-01之2)`, function() {
         })
     }
 
-    it(`should not throw but return { state: 'error', msg: 'null' } when reading ext.indexOf of a Proxy ext throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    //第663項(V20): 狀態模式之msg為固定詞彙, 不轉出所拋值之文字(舊制為_errToStr之字串, 如'null')
+    it(`should not throw but return { state: 'error', msg: 'invalid ext: must be a readable array' } when reading ext.indexOf of a Proxy ext throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第663項]`, function() {
         let r = null
         assert.doesNotThrow(() => {
             r = str2obj('{"a":1}', mkProxyExt(null), { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid ext: must be a readable array' })
+    })
+
+    it(`第663項: the text thrown while reading ext is never echoed in the message and goes to opt.funLog only`, function() {
+        let r = str2obj('{"a":1}', mkProxyExt(new Error('SECRET-ext-text')), { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid ext: must be a readable array' })
+        let logs = []
+        str2obj('{"a":1}', mkProxyExt(new Error('SECRET-ext-text')), { funLog: (label) => logs.push(label) })
+        assert.strict.deepStrictEqual(logs, ['[wsemi str2obj] can not parse'])
     })
 
     it(`should not throw but return {} when reading ext.indexOf of a Proxy ext throws null without opt [R-CODEC-ERR-01之2]`, function() {

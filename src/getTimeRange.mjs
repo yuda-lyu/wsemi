@@ -1,4 +1,3 @@
-import ot from './_dayjs.mjs'
 import istime from './istime.mjs'
 import time2min from './time2min.mjs'
 
@@ -53,16 +52,12 @@ function getTimeRange(tstart, tend) {
         return ''
     }
 
-    //m1, m2
-    let m1 = ot(tstart, 'YYYY-MM-DDTHH:mm:ss')
-    let m2 = ot(tend, 'YYYY-MM-DDTHH:mm:ss')
-
-    //day
-    let ctstart = m1.format('YYYY-MM-DD')
-    let ctend = m2.format('YYYY-MM-DD')
+    //day, 直接取字串中之時刻欄位(所給之牆鐘時刻), 不經本機時間解析(原以本機時間解析再format, 於本機時區之夏令空窗內差1小時; 排程第428項); tstart、tend已經istime驗證為標準寫法
+    let ctstart = tstart.slice(0, 10) //'YYYY-MM-DD'
+    let ctend = tend.slice(0, 10)
 
     if (ctstart === ctend) { //同天
-        let h = m2.format('HH:mm')
+        let h = tend.slice(11, 16) //'HH:mm'
 
         if (tstart === tend) {
             return time2min(tstart) + ' 至 ' + '無'

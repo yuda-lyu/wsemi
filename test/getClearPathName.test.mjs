@@ -242,4 +242,11 @@ describe(`getClearPathName`, function() {
         assert.strict.deepStrictEqual(r, cout[j])
     })
 
+    //排程第428項同批小項(dspec 輸入參數之檢測機制 S1: 路徑之包裝物件為無效; P1: 輸出型別恆定, 失敗同為{ path: '', isRoot: false }): 現況即符合, 以本案鎖定
+    it(`should return { path: '', isRoot: false } for String wrapper objects (S1, P1), while the same primitive string is cleaned`, function() {
+        assert.strict.deepStrictEqual(getClearPathName(new String('C:\\temp\\')), { path: '', isRoot: false }) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(getClearPathName(Object('/tmp/')), { path: '', isRoot: false })
+        assert.strict.deepStrictEqual(getClearPathName('C:\\temp\\'), { path: 'C:\\temp', isRoot: false }) //對照
+    })
+
 })

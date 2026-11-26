@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //reLoneSurrogate, 孤立之代理碼元(高代理之後無低代理, 或低代理之前無高代理), 供不支援String.prototype.isWellFormed之環境判斷
@@ -15,7 +16,7 @@ let reLoneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效字串、含孤立代理碼元或轉換失敗時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
@@ -27,8 +28,11 @@ let reLoneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])
  */
 function str2u8arr(str, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

@@ -2,6 +2,7 @@ import filter from 'lodash-es/filter.js'
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
 import evem from './evem.mjs'
+import evEmit from './evEmit.mjs'
 import domCancelEvent from './domCancelEvent.mjs'
 import pmSeries from './pmSeries.mjs'
 import genPm from './genPm.mjs'
@@ -156,7 +157,7 @@ async function treeDataTransfer(dataTransfer) {
  * @param {HTMLElement} ele 輸入dom元素，非元素則拋錯
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；type為'in'時為收到dragenter、dragover或drop而即將依狀態決定是否派發dropIn(含emit為是否為自上次移出後首次移入而即將派發dropIn)，'out'時為收到dragleave或呼叫getFiles之cb而暫視為移出並排定100ms後判定(含by為'dragleave'或'cb'、ms固定為100)，'leave'時為100ms後之判定(含emit為期間未再移入而即將派發dropOut，false代表期間又收到in而不派發)，'drop'時為收到drop事件而開始讀取拖曳內容，'files'時為拖曳內容讀取完成而即將派發getFiles(含files為dataTransfer.files中有類型者之數量、filesTree為遍歷資料夾後之檔案數量、entries為遍歷後之檔案與資料夾項目總數)，'error'時為讀取失敗或getFiles之監聽器拋錯而即將派發error，'off'時為呼叫off；事件皆於派發對應事件之前通知；呼叫off之後不再通知(含off前已排定之100ms判定與讀取中者，其對ev之派發維持原行為)；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響拖曳處理，預設null
- * @returns {Object} 回傳事件物件(evem產生之EventEmitter)，以on監聽dropIn、dropOut、getFiles、error事件，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列，並呼叫其內回調函數cb，方能繼續觸發dropOut事件；其off為本函數覆寫之函數(不接受事件名)，呼叫後移除ele上之拖曳監聽、不再接收新之拖曳事件(呼叫前已排定之100ms判定與讀取中者，其對ev之派發維持原行為，見opt.onTrace說明)
+ * @returns {Object} 回傳事件物件(evem產生之EventEmitter)，以on監聽dropIn、dropOut、getFiles、error事件，通過監聽getFiles即可取得拖曳進指定元素的檔案陣列，並呼叫其內回調函數cb，方能繼續觸發dropOut事件；其off為本函數覆寫之函數(不接受事件名)，呼叫後移除ele上之拖曳監聽、不再接收新之拖曳事件(呼叫前已排定之100ms判定與讀取中者，其對ev之派發維持原行為，見opt.onTrace說明)；100ms判定後之dropOut與讀取失敗之error經evEmit派發，監聽器之同步拋錯不成為uncaught exception或unhandled rejection(有error監聽者時dropOut之拋錯以error事件{ fun: 'listener', name, msg, args }通報，否則經getDiag輸出固定標籤與安全摘要)；getFiles之監聽器拋錯仍轉為error事件(payload為該拋出值本身)
  * @throws {Error} ele非元素拋出Error('invalid ele: must be an element')，先於任何監聽之掛載與evem之建立，訊息不含輸入值
  * @example
  * need test in browser
@@ -224,7 +225,7 @@ function domDropFiles(ele, opt = {}) {
             }
             if (!bMouseInTemp) { //若100ms後仍為滑鼠移出狀態才emit事件
                 bMouseIn = false
-                ev.emit('dropOut', { ev: e })
+                evEmit(ev, 'dropOut', [{ ev: e }], { tag: 'domDropFiles' }) //計時器內派發(無呼叫端之堆疊), 監聽器拋錯經evEmit攔截(R-EVEM-RAW-01規則2)
             }
         }, 100)
     }
@@ -279,7 +280,7 @@ function domDropFiles(ele, opt = {}) {
                 if (trace) {
                     trace('error', {})
                 }
-                ev.emit('error', err)
+                evEmit(ev, 'error', [err], { tag: 'domDropFiles' }) //.catch之處理函數內派發(其拋錯無人承接而成unhandled rejection), 經evEmit攔截; error之監聽器拋錯時經getDiag輸出(R-EVEM-RAW-01規則2)
             })
 
     }

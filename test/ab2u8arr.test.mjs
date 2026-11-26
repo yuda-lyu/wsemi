@@ -124,11 +124,12 @@ describe(`ab2u8arr 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         }
     })
 
+    //第663項(V20): 狀態模式之msg為固定詞彙, 不轉出所拋值之文字(c.msg為舊制之_errToStr字串, 不得再出現)
     for (let c of thrownCases) {
-        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when the Uint8Array construction throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        it(`should not throw but return { state: 'error', msg: 'invalid ab: must be readable binary' } (not the thrown text) when the Uint8Array construction throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第663項]`, function() {
             let { r, threw } = withThrowingCtor(c.mk(), () => ab2u8arr(mkAb(), { returnWithStateAndMsg: true }))
             assert.strict.deepStrictEqual(threw, null)
-            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid ab: must be readable binary' })
         })
     }
 
@@ -145,9 +146,18 @@ describe(`ab2u8arr 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
         assert.strict.deepStrictEqual([r, hits], [{ state: 'error', msg: 'invalid ab: must be an ArrayBuffer' }, 0])
     })
 
-    it(`(守門) should return { state: 'error', msg: 'Error: boom' } (same as err.toString()) when the Uint8Array construction throws an Error with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    it(`(守門) should return the fixed message, never the text of the thrown Error ('boom'), when the Uint8Array construction throws an Error with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第663項]`, function() {
         let { r } = withThrowingCtor(new Error('boom'), () => ab2u8arr(mkAb(), { returnWithStateAndMsg: true }))
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'Error: boom' })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid ab: must be readable binary' })
+    })
+
+    it(`第663項: an already detached ArrayBuffer is reported with the fixed message and the detail goes to opt.funLog only`, function() {
+        let b = new ArrayBuffer(8)
+        structuredClone(b, { transfer: [b] })
+        assert.strict.deepStrictEqual(ab2u8arr(b, { returnWithStateAndMsg: true }), { state: 'error', msg: 'invalid ab: must be readable binary' })
+        let logs = []
+        ab2u8arr(b, { funLog: (label) => logs.push(label) })
+        assert.strict.deepStrictEqual(logs, ['[wsemi ab2u8arr] can not read'])
     })
 
 })

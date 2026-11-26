@@ -10,6 +10,7 @@ import isarr0 from './isarr0.mjs'
 import isu8arr from './isu8arr.mjs'
 import isu16arr from './isu16arr.mjs'
 import isab from './isab.mjs'
+import pickOpt from './_pickOpt.mjs'
 //import treeObj from './treeObj.mjs'
 
 
@@ -23,7 +24,7 @@ import isab from './isab.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2stru8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Object|Array} o 輸入物件或陣列資料
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為固定訊息'invalid o: must be serializable to JSON'，不含原生錯誤之文字)，預設false
  * @param {Boolean} [opt.logDetail=false] 輸入序列化失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
  * @param {Function} [opt.funLog=null] 輸入序列化失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi obj2stru8arr] can not serialize')，同getDiag，預設null
@@ -59,8 +60,11 @@ import isab from './isab.mjs'
  */
 function obj2stru8arr(o, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

@@ -49,4 +49,12 @@ describe(`strCompareForVersion`, function() {
         assert.strict.deepStrictEqual(strCompareForVersion(), null)
     })
 
+    //排程第428項同批小項(dspec 輸入參數之檢測機制 S1: 包裝物件為無效; P1: 輸出型別恆定, 失敗同為null): 現況即符合, 以本案鎖定
+    it(`should return null for String wrapper objects on either side (S1: a wrapper object is invalid; P1: the failure value stays null)`, function() {
+        assert.strict.deepStrictEqual(strCompareForVersion(new String('1.2.3'), '1.0.0'), null) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(strCompareForVersion('1.2.3', new String('1.0.0')), null) // eslint-disable-line no-new-wrappers
+        assert.strict.deepStrictEqual(strCompareForVersion(Object('2.0.0'), Object('1.0.0')), null)
+        assert.strict.deepStrictEqual(strCompareForVersion('1.2.3', '1.0.0'), 1) //同值之原始字串可比較(對照)
+    })
+
 })

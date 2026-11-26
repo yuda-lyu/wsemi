@@ -1,8 +1,8 @@
-import get from 'lodash-es/get.js'
 import path from 'path'
 import fs from 'fs'
 import fsGetFilesInFolderCore from './fsGetFilesInFolderCore.mjs'
 import chkFsLevelOpt from './_chkFsLevelOpt.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -12,7 +12,7 @@ import chkFsLevelOpt from './_chkFsLevelOpt.mjs'
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}；本參數原為levelLimit(列舉層數，預設1)，現改為設定物件，遷移期給了而非物件者(含舊寫法之數字如1、4294967295，以及陣列、函數、包裝物件)同步拋出Error(訊息為'invalid opt: must be an object'，不帶輸入值；fd無效者先報fd)，undefined、null視為未給，第3個引數有給(非undefined，如舊3參數形之opt)亦同步拋出Error(訊息為'invalid arguments: must be fd and opt only')；fs、path固定使用Node內建(opt.fs、opt.path不採用)
- * @param {Integer} [opt.levelLimit=null] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)才限定層數；未給或非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設，即不限層數而窮舉全部層級，預設null
+ * @param {Integer} [opt.levelLimit=null] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)才限定層數；未給或非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件，以及讀取拋錯之存取器或Proxy陷阱)視為未給而改用預設，即不限層數而窮舉全部層級，預設null
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.levelLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Array} 回傳列舉檔案陣列，若fd不是資料夾則同步拋出Error(訊息為'invalid fd: must be an existing folder'，不帶輸入值)，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出其Error，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
@@ -80,7 +80,8 @@ function fsGetFilesInFolder(fd, opt = {}) {
     }
 
     //以Node內建之fs、path注入(不採用呼叫端之opt.fs、opt.path); 只讀opt.levelLimit一次, opt本身轉交為optDbg(debug、funLog由fsTreeFolderCore於levelLimit非預期時才讀, V11)
-    return fsGetFilesInFolderCore(fd, { path, fs, levelLimit: get(opt, 'levelLimit'), optDbg: opt })
+    let optSnap = pickOpt(opt, ['levelLimit'], []) //opt.levelLimit讀取拋錯之存取器、陷阱視為未給(K3; 第663項)
+    return fsGetFilesInFolderCore(fd, { path, fs, levelLimit: optSnap.levelLimit, optDbg: opt })
 }
 
 

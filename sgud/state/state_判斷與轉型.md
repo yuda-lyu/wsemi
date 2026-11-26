@@ -2,6 +2,22 @@
 
 本檔 2026-11-19(ws492i)新增(排程第 492 項第 8 批): 判斷函數只收原始值、轉型函數照舊拆包、判斷函數不拋錯、`cbol`／`isDate`／`cint` 之定義之**現況**;索引見 `sgud/state/state.md`.
 
+## 第 663 項批 11:轉型／編碼／字串／時間字串轉換類 62 函數之 opt 讀取不拋錯、state 模式 9 站訊息固定詞彙、fs 列舉同步 6 函數讀鍵拋錯視為未給、公開 `getOptReader`(wsr2,2026-11-27,主控任務 20261127030143;package.json version 1.9.81 之工作樹,與 wsr1 同一次發布,未提交未發布)
+
+- **做到哪**(已實作,規則見 `sgud/rule/rulebook_judge_nothrow.md` R-C1-HOSTILE-01 規則 3~6、R-OPT-READER-01;破壞性變更第 85 項):
+  - 62 個函數(派工列 36 + 同機制同家族 26)入口以 `_pickOpt` 取快照(`optSnap`),已撤銷之 Proxy、陷阱拋錯之物件、存取器拋錯之鍵視為未給;`htmlDecode`／`htmlEncode` 改交 `he` 只含其可用鍵之自有鍵快照(`pickOpt` 第 4 參數 `onlyOwn`).
+  - state 模式 9 站(`ab2u8arr`、`str2obj`、`stru8arr2obj` 2、`u8arr2obj`、`timeTZ2expire`、`timeTZ2past`、`timemsTZ2expire`、`timemsTZ2past`)之失敗 `msg` 由原樣轉出 `errToStr(err)` 改固定詞彙,細節經 `diagIfAsked`(`opt.logDetail`／`opt.funLog`);`stru8arr2obj`、`str2obj` 之 catch 內 `instanceof` 包 try(獨立複審發現,修前即存在).
+  - fs 列舉同步 6 函數(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder` 及三個 Core)讀 `opt.levelLimit`／`path`／`fs`／`optDbg` 拋錯視為未給(`fs`、`path` 缺漏由相依檢查 fail-closed).
+  - 新增對外函數 `getOptReader(tag, opt)`(`src/getOptReader.mjs`;`src/index.mjs` 由 `node toolg/gPackageIndex.mjs` 重產,增 1 行);「原始 number 且有限」之判斷函數不收錄(`Number.isFinite` 即是,單一使用端).
+  - `o2j` JSDoc 補「以 `opt.funLog` 取回序列化失敗之原生錯誤並接為 `Error.cause`」範例(`test/optHostile663.test.mjs` 鎖定).
+- **測試**: `test/optHostile663.test.mjs`(138 案,含 AST 守門與自測)、`test/fsEnumOptRead663.test.mjs`(8 案)、`test/getOptReader.test.mjs`(33 案)、`test/tools/optReadScan.mjs`(新工具);`test/ab2u8arr.test.mjs`、`str2obj`、`stru8arr2obj`、`u8arr2obj` 之 R-CODEC-ERR-01 之 2 案改寫為固定訊息;`test/getDiagBriefErr.test.mjs` 改 `ERR_SSL_PROTOCOL_ERROR` 之案並增「NODE 集合每個代碼皆有 Node 實證」案.
+- **驗證**: 全套 `npm test` 34245 passing／8 pending／0 failing(約 2 分;前輪 A 輪 34057,+188 案),`npm pack` 發布包解開目錄(node_modules 以目錄連接點指向本庫,跑後已拆並回驗目標完好)同 34245／8／0;新測試於修前鏡像根(A 輪完成後之工作樹複本)紅: `optHostile663` 132 failing／6 passing、`fsEnumOptRead663` 6／2、`getDiagBriefErr` 2／37、`ab2u8arr` 7／14、`str2obj` 2／30、`stru8arr2obj` 3／43、`u8arr2obj` 2／153,含 `R-EVEM-RAW-01` 之 dom 三檔 7 failing／1 passing,`getOptReader` 為新模組(修前 `ERR_MODULE_NOT_FOUND`);修後全綠,新測試連跑 20 次皆綠;變異 `X01`～`X54`(53 項)52 被殺、1 等價(`X21`);eslint 改動與新增之檔 0 新增(`src/index.mjs` 之 `eol-last` 為 `gPackageIndex` 產出之既有行為);private-guard CLEAN;自派 sonnet 唯讀獨立複審 1 次(屬實 5 項已修: `instanceof` 外拋、JSDoc label、`getOptReader` 之淨化範圍／去重 id／`check` 非函數;列已知缺口 3 項).
+- **已知缺口與待裁示**:
+  1. `retError(err.toString())` 站點(全庫約 38 處)未動;讀呼叫端型別陣列者(`u8arr2ab`、`u8arr2bs`、`u8arr2blob` 等)於實例自有存取器拋錯時 `msg` 仍帶出所拋之文字(複審實證);建議另批比照 9 站改固定訊息.
+  2. 同形之其他讀 opt 函數未取快照: `arrGroupByMaxmin`、`arrLookupByMaxmin`、`arrMax`、`arrMin`、`treeObj`(已撤銷之 Proxy 作 opt 時拋錯);fs／exec／dom 系各有自家失敗通道,不套.
+  3. `domDropFiles` 之 `getFiles` 監聽器拋錯仍轉為 `error` 事件(文件化契約,刻意不套 `evEmit`),見 `state_事件派發.md`.
+  4. 下游收斂(主控另派): w-gis `src/geojsonToMultiPolygon.mjs:29`、w-dwdata-ftp `src/_optReader.mjs`、w-ftp `src/downloadViaTemp.mjs:57` 改用 `getOptReader`(對照見 R-OPT-READER-01).
+
 ## 第 492 項第 10 批(下):第 551 項轉型函數對惡意值不拋錯、第 552 項判型改原生或內部槽(ws492k,2026-11-26;package.json version 1.9.78 之工作樹,未提交未發布)
 
 - **做到哪**(已實作):
@@ -11,7 +27,7 @@
 - **測試與驗證**: 見 `state_訊息格式與可讀性探針.md` 同批(全套 33922 passing／8 pending／0 failing、修前紅、變異);`test/convHostile.test.mjs`、`test/judgeNativeTag.test.mjs`(新)、`test/isbigint.test.mjs`(翻轉)、`ab2u8arr`／`u8arr2obj`／`obj2u8arr` 之夾具改以真實例(Proxy 偽造標籤不再通過).
 - **已知缺口與待裁示**:
   1. `isarr`／`isobj`／`isblob`／`isfile` 仍可被偽造標籤通過(下游盤點見交件報告);若改,w-orm-lowdb 等五庫之寫入守門測試與 w-serv-orm `getMapOrm` 須同步(建議先改下游補探針:`chkReadable`)。
-  2. 36 個轉型／編碼函數對已撤銷 Proxy 之 opt 仍拋錯(見訊息檔已知缺口).
+  2. ~~36 個轉型／編碼函數對已撤銷 Proxy 之 opt 仍拋錯(見訊息檔已知缺口)~~(2026-11-27 wsr2 第 663 項已處置: 擴及 62 函數,見本檔最前節).
   3. 下游固定舊行為: w-orm-mongodb `test/api-readable.test.mjs:758`(`isu8arr` 改內部槽後讀標籤 0 次,原斷言 1 次).
 
 ## 第 492 項第 8 批:判斷與轉型(ws492i,2026-11-19;package.json version 1.9.68 之工作樹,未提交未發布)

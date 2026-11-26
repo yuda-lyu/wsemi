@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -9,7 +10,7 @@ import isstr from './isstr.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/str2hint.test.mjs Github}
  * @memberOf wsemi
  * @param {String} str 輸入一般字串
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Integer|Object} 回傳轉換後整數，輸入非字串時回傳null，輸入空字串時回傳0；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳null；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
@@ -33,8 +34,11 @@ import isstr from './isstr.mjs'
  */
 function str2hint(str, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

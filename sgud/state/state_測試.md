@@ -2,6 +2,16 @@
 
 本檔自 `sgud/state/state.md` 之索引分出(2026-11-02 ws265 新增類型): 測試檔結構與全套穩定性之現況;索引見 `sgud/state/state.md`.
 
+## R-C1-HOSTILE-01 之守門(opt 讀取與 state 訊息;排程第 663 項;主控任務 20261127030143 wsr2,2026-11-27;package.json version 1.9.81 之工作樹,未提交未發布)
+
+- **已建**: `test/optHostile663.test.mjs` 之 AST 守門 ＋ 掃描器 `test/tools/optReadScan.mjs`(acorn,不計註解與字串): `scanOptReads`(對 `opt` 之直接讀取: `get(opt, 'k')`／`opt.k`／`opt['k']`／`opt?.k`／解構,6 正例 3 反例之盲點自測)與 `scanErrEcho`(`retError(…errToStr(…)…)`,4 正例 4 反例).守門三則: ①62 個目標函數不得直接讀 `opt` 且須匯入 `_pickOpt`;②全庫讀 `returnWithStateAndMsg` 之檔(目前 58)皆匯入 `_pickOpt`;③全庫無 `retError(…errToStr(…)…)`.已知盲點: 先別名再讀、動態鍵之鍵名;`err.toString()` 站點不計.規則見 `sgud/rule/rulebook_judge_nothrow.md` R-C1-HOSTILE-01 規則 6.
+- **驗證**: 現行 src 通過;修前鏡像根三則皆紅(第三則列出 `retError(…errToStr(…)…)` 共 9 站: `ab2u8arr.mjs:56`、`str2obj.mjs:98`、`stru8arr2obj.mjs:85`、`:175`、`timemsTZ2expire.mjs:222`、`timemsTZ2past.mjs:217`、`timeTZ2expire.mjs:118`、`timeTZ2past.mjs:118`、`u8arr2obj.mjs:186`;第二則列出 58 檔中 57 檔未匯入 `_pickOpt`〔`cint` 已有〕);變異 `X03`～`X13`(各取一函數改回直接讀)、`X14`～`X20`(固定訊息改回原樣轉出)皆被殺.
+
+## R-JUDGE-SOURCE-01 之守門測試(排程第 599 項③;主控任務 20261127030143 wsr1,2026-11-27;package.json version 1.9.81 之工作樹,未提交未發布)
+
+- **已建**: `test/judgeSourceGuard.test.mjs`(2 案)＋掃描器 `test/tools/judgeSourceScan.mjs`(acorn,不計註解與字串;26 正例 10 反例之盲點自測,含獨立複審所補之彙整模組 `lang.js`／`lodash.default.js`、獨立套件 `lodash.isfunction`、require 類呼叫;掃描檔數 ≥500;允許站點釘住 `{ 'isfun.mjs': ['isFunction'] }`).規則見 `sgud/rule/rulebook_data.md` R-JUDGE-SOURCE-01.
+- **驗證**: 現行 src 通過;變異 M18(`isbol.mjs` 植入 `lodash-es/isBoolean.js`)、M19(`pmQueue.mjs` 植入 `import { isFunction } from 'lodash-es'`)皆被殺.
+
 ## 真瀏覽器行為測試之基建(R-TEST-BROWSER-01;排程第 642 項;主控任務 20261125225421 t642,2026-11-25;package.json version 1.9.77 之工作樹,未提交未發布)
 
 - 現況(已實作): `devDependencies` 新增 `playwright-core`(精確版 `1.65.1`,同 w-playwright 所依);`test/tools/browserKit.mjs`(`launchBrowser`、`installBrowser`、`openPage`、`analyzePic`)、`test/tools/snapdomFailStub.mjs`;首個使用者 `test/domConvertToPic.test.mjs`(29 案).頁面以 `page.route` 虛擬主機載入本庫 `src` 與相依(import map),不依賴 `./dist`、不開埠、不連網;瀏覽器已安裝者直接啟動,缺才以 playwright-core 之 CLI 安裝(並行由 Playwright 之 `__dirlock` 序列化,逾 10 分鐘結束子行程樹並拋錯);取不到即拋錯(不 skip).斷言為行為量測(尺寸、區塊平均色、非白像素數、像素雜湊),不比標準圖.環境變數 `WSEMI_DOMCONVERTTOPIC_SRC` 取代被測檔,供修前紅與變異驗證.

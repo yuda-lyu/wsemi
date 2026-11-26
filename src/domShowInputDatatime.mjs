@@ -1,4 +1,3 @@
-import ot from './_dayjs.mjs'
 import get from 'lodash-es/get.js'
 import genPm from './genPm.mjs'
 import genID from './genID.mjs'
@@ -92,8 +91,7 @@ function domShowInputDatatime(time, opt = {}) {
     else {
         if (istime(time)) {
             b = true
-            let vt = ot(time)
-            v = vt.format('YYYY-MM-DDTHH:mm')
+            v = time.slice(0, 16) //直接取字串中之時刻欄位'YYYY-MM-DDTHH:mm'(time已經istime驗證為標準寫法), 不經本機時間解析(原以本機時間解析再format, 於本機時區之夏令空窗內差1小時; 排程第428項)
         }
     }
     if (isestr(v)) {

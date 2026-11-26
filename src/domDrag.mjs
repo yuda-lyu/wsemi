@@ -7,6 +7,7 @@ import isfun from './isfun.mjs'
 import isEle from './isEle.mjs'
 import cint from './cint.mjs'
 import evem from './evem.mjs'
+import evEmit from './evEmit.mjs'
 import domGetBoudRectRefSelf from './domGetBoudRectRefSelf.mjs'
 import domDragPreview from './domDragPreview.mjs'
 import optVal from './_optVal.mjs'
@@ -108,17 +109,27 @@ function runAll(offs) {
 
 
 //deliver, 送達事件至元素目前之實例, 先change後該事件(同原本之順序); 無實例(已解除且未重建)則不發; change之監聽器內解除該實例時不再送該事件
-function deliver(g, ele, mode, build) {
+//  safe為true者(microtask路徑: scheduleTeardown、checkSourceLater經endDrag送leave)經evEmit派發, 該堆疊無呼叫端, 監聽器拋錯不成unhandled rejection(有error監聽者則emit('error', { fun: 'listener', name, msg, args }), 否則經getDiag輸出; R-EVEM-RAW-01規則2);
+//  DOM事件路徑(放開、取消、經過等)維持直接派發: 監聽器拋錯外拋至瀏覽器之事件回呼, 派發前狀態已清除
+function deliver(g, ele, mode, build, safe = false) {
     let inst = ele ? g.members.get(ele) : null
     if (!inst) {
         return
     }
+    let emit = (name, payload) => {
+        if (safe) {
+            evEmit(inst.ev, name, [payload], { tag: 'domDrag' })
+        }
+        else {
+            inst.ev.emit(name, payload)
+        }
+    }
     let msg = build(inst)
-    inst.ev.emit('change', { mode, ...msg })
+    emit('change', { mode, ...msg })
     if (g.members.get(ele) !== inst) {
         return
     }
-    inst.ev.emit(mode, msg)
+    emit(mode, msg)
 }
 
 
@@ -149,8 +160,8 @@ function hitTest(g, p) {
 
 //endDrag, 結束拖曳之唯一寫法: 先清狀態、計時器、會話監聽與預覽, 再發事件, 監聽器拋錯或於監聽器內再開始拖曳皆不受殘留狀態影響
 //  hit有值為放下: 經過中之項目與放下之項目不同時先對前者發leave, 再對落點發drop; 其餘結束(放開於項目外、取消、停用、解除等)若正經過某項目則發leave, 使enter必以leave或drop收尾
-//  reason為觀察回調(onTrace)通知用之結束原因
-function endDrag(g, e = null, hit = null, reason = 'cancel') {
+//  reason為觀察回調(onTrace)通知用之結束原因; safe為true時(microtask路徑)事件經evEmit派發, 見deliver
+function endDrag(g, e = null, hit = null, reason = 'cancel', safe = false) {
     let d = g.drag
     if (!d) {
         return
@@ -195,7 +206,7 @@ function endDrag(g, e = null, hit = null, reason = 'cancel') {
             endEle,
             tarInd: endInd,
             tarEid: inst.eid,
-        }))
+        }), safe)
     }
 
     //drop, 若拖曳至原拖曳項目上也要能觸發, 否則外部收不到滑鼠放掉訊息, 僅收得到拖曳至非拖曳項目的leave事件
@@ -208,7 +219,7 @@ function endDrag(g, e = null, hit = null, reason = 'cancel') {
             endEle: hit.ele,
             tarInd: hit.ind,
             tarEid: inst.eid,
-        }))
+        }), safe)
     }
 
 }
@@ -225,7 +236,7 @@ function scheduleTeardown(g) {
         if (g.members.size > 0) {
             return
         }
-        endDrag(g, null, null, 'teardown')
+        endDrag(g, null, null, 'teardown', true) //microtask路徑, 事件經evEmit派發(此時群組已無成員, 實際不會派發; 與checkSourceLater同一寫法)
         if (kpDgs.get(g.gid) === g) {
             kpDgs.delete(g.gid)
         }
@@ -237,7 +248,7 @@ function scheduleTeardown(g) {
 function checkSourceLater(g, d) {
     Promise.resolve().then(() => {
         if (g.drag === d && !g.members.has(d.startEle)) {
-            endDrag(g, null, null, 'source-gone')
+            endDrag(g, null, null, 'source-gone', true) //microtask路徑, 事件經evEmit派發: 對經過中之項目送leave, 其監聽器拋錯不成unhandled rejection
         }
     })
 }
@@ -635,7 +646,7 @@ function onPress(inst, e, touch) {
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {String} [opt.previewBorderColor='#f26'] 輸入預覽元素邊框顏色字串，預設'#f26'
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；一次拖曳之事件皆由起手元素之回調通知(落點元素之回調不通知)；type為'start'時為起手(含ind為起點順序指標、touch為布林代表觸控起手；先於start事件之派發通知)，'timer'時為延遲建立預覽之計時器(含phase與ms；phase為'set'代表已排定、'fire'代表到點且確認仍屬本次拖曳而將建立預覽、'cancel'代表拖曳於到點前結束而取消；ms為timeDragStartDelay解析後之毫秒數)，'preview'時為domDrag對預覽之建立或移除(含phase；phase為'create'代表已建立預覽、'remove'代表已移除預覽)，'end'時為拖曳已結束(含ind為起點順序指標、reason；reason為'drop'代表放開於項目上、'release'代表放開於項目外、'buttons'代表移動時主鍵已放開、'touchcancel'代表起手手指被取消、'blur'代表視窗失焦、'inactive'代表群組被停用、'source-gone'代表來源元素解除且未重建、'takeover'代表新的按下接手前一次未收尾之拖曳、'teardown'代表群組刪除時尚有拖曳；通知當下計時器、會話監聽與預覽皆已清除，且先於leave與drop之派發)，'unbind'時為本實例已解除(含drag為布林，代表解除當下是否有以本元素為來源之進行中拖曳；其後該拖曳之事件仍通知至結束，但不再起手新的拖曳，重複呼叫不通知)；內部建立之預覽(domDragPreview)不轉傳回調；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響拖曳，預設null
- * @returns {Object} 回傳物件，可使用on、unbind、clear與setIsActive函數，on可監聽change、start、move、enter、leave、drop事件，unbind與clear相同，為釋放監聽，setIsActive為設定群組是否可拖曳(群組層級，停用時取消進行中之拖曳，解除後呼叫無作用)
+ * @returns {Object} 回傳物件，可使用on、unbind、clear與setIsActive函數，on可監聽change、start、move、enter、leave、drop事件，unbind與clear相同，為釋放監聽，setIsActive為設定群組是否可拖曳(群組層級，停用時取消進行中之拖曳，解除後呼叫無作用)；事件於放開、取消等DOM事件路徑直接派發(監聽器拋錯外拋至瀏覽器之事件回呼，拖曳狀態已先清除)，於拖曳來源解除後延後一個microtask結束拖曳之路徑經evEmit派發(監聽器拋錯不成為unhandled rejection，有error監聽者時以error事件{ fun: 'listener', name, msg, args }通報，否則經getDiag輸出)
  * @example
  * need test in browser
  *

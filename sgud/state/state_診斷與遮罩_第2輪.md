@@ -2,6 +2,14 @@
 
 本檔 2026-11-24 新建(twsm1);第 1 輪(診斷輸出與遮罩之共用函數、通報站點、形狀摘要)之現況見 `sgud/state/state_計時與診斷.md`.只記現況、不寫過程(過程見 `sgud/exp/experience.md`).
 
+## 已知秘密內建 JSON 跳脫形、NODE 代碼以內建 undici 核對(排程第 650 項、第 621 項;主控任務 20261127030143 wsr1,2026-11-27;package.json version 1.9.81 之工作樹,未提交未發布)
+
+- **已改**(R-DIAG-01 規則 21、22;破壞性變更第 84 項③④): 比對器 `getMatcher` 對字串清單之每項另加 `JSON.stringify(s).slice(1, -1)`(遮罩器各入口同一出處,只增不減);`_diagCodes.mjs` 之 NODE 集合增 `UND_ERR_SOCKS`.
+- **第 621 項①②之核實**: twsm2(2026-11-24,已發布)已落實 `fsEvem` 1 站、`fsTaskCp` 3 站經 `pickDiagOpt(opt)` 與 9 個 `UND_ERR_*`;本輪以 twsm2 前一版(`98891adbf^` 之 `git archive`)重跑其測試得修前 10 failing,現行 78 passing;9 個代碼皆見於 Node 24.22.1 內建之 undici 7.30.1.
+- **測試**: `test/diagJsonEsc650.test.mjs`(7 案;修前 4 failing,修後 7 passing);`test/getDiagBriefErr.test.mjs` 增 1 案(以執行中 Node 內建之 undici 原始碼核對;修前 1 failing).變異 M11～M13 皆被殺.
+- **待裁示(已結,2026-11-27 wsr2,排程第 663 項)**: `ERR_SSL_PROTOCOL_ERROR` 無 Node 實得之證據(本機 OpenSSL 3.5.9 未見對應 reason)——主控裁定移除,已由 `_diagCodes.mjs` 之 NODE 集合移除(破壞性變更第 85 項④);NODE 集合限以 Node 或 undici 實證之代碼,`test/getDiagBriefErr.test.mjs` 新增「NODE 集合每個代碼皆有執行中 Node 之實證」案(41 個於內建原始碼、`ERR_SSL_WRONG_VERSION_NUMBER` 以真實 fetch 連純 http 服務核對);修前 2 failing／37 passing,變異 `X22`～`X24` 全被殺.
+- **下游**: w-dispatch-ai 之 `secretList` 自行展開之 JSON 跳脫形可刪除(主控另案通知).
+
 ## 收尾輪:控制字元單一規則之補齊、常駐路徑之記錄經 getDiag、除錯殘留(主控對 twsm1 需裁示之裁定;主控任務 20261124085531 twsm1b,2026-11-24;與下節同一次發布,package.json version 1.9.72 之工作樹,未提交未發布)
 
 - **已改**(R-DIAG-01 規則 16、20;破壞性變更第 79 項): `normLabel`(getDiag、genDiagFunLog 之 label)改 `ctlToQ`;`lowerFind`／`lowerFindEq` 之 `clean` 改與 `RE_CTL` 同一字面值(零 import,以測試核對);`setTimeoutHp`／`setIntervalHp`／`fsWatchFile`／`fsWatchFolder`／`fsSrlog` 之記錄經 `getDiag(opt)`(console.error 固定詞彙＋`{ errType, errCode? }`,opt 增 `logDetail`、既有 `funLog` 兼收);`_getDiff2Html`／`_getHtmlToText` 之除錯殘留改固定詞彙.權杖遮罩維持單一規則(裁定 A).

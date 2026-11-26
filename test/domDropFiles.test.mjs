@@ -333,4 +333,57 @@ describe(`domDropFiles 觀察回調(R-TRACE-01)`, function() {
         }
     })
 
+    //R-EVEM-RAW-01規則2(第663項): 計時器與Promise鏈之catch內(無呼叫端承接)之派發經evEmit
+    it(`should isolate a throwing dropOut listener in the 100ms timer: no uncaught exception, reported to the error event as { fun: 'listener', name: 'dropOut' } [R-EVEM-RAW-01]`, async function() {
+        let clock = useFakeClock()
+        try {
+            let { ele, ev, seq } = mk()
+            let errs = []
+            ev.on('error', (m) => errs.push(m))
+            ev.on('dropOut', () => {
+                throw new Error('consumer boom')
+            })
+            ele.dispatchEvent(mkDragEvent('dragenter'))
+            ele.dispatchEvent(mkDragEvent('dragleave'))
+            await clock.advance(100)
+            assert.strict.deepStrictEqual(errs.map((m) => [m.fun, m.name, m.msg.message]), [['listener', 'dropOut', 'consumer boom']])
+            assert.strict.deepStrictEqual(seq.filter((x) => x === 'ev:dropOut' || x === 'ev:error'), ['ev:dropOut', 'ev:error'])
+        }
+        finally {
+            clock.restore()
+        }
+    })
+
+    it(`should not leave an unhandled rejection when an error listener throws while the read failure is reported (the catch of the promise chain), and report it through the diagnostic output [R-EVEM-RAW-01]`, async function() {
+        let un = collectUnhandled()
+        let printed = []
+        let savedErr = console.error
+        console.error = (...a) => printed.push(a)
+        try {
+            let { ele, ev } = mk()
+            ev.on('error', () => {
+                throw new Error('error listener boom')
+            })
+            ele.dispatchEvent(mkDragEvent('drop', dtBad()))
+            await flush()
+            await flush()
+        }
+        finally {
+            console.error = savedErr
+            un.stop()
+        }
+        assert.strict.deepStrictEqual(un.list, [])
+        assert.strict.deepStrictEqual(printed.map((a) => a[0]), ['[wsemi domDropFiles] listener threw'])
+    })
+
+    //getFiles之監聽器拋錯轉為error事件為文件化之契約(JSDoc與onTrace之error說明), 鏈尾有.catch承接, 刻意不套evEmit(見帳本R-EVEM-RAW-01)
+    it(`should keep reporting a throwing getFiles listener as the plain error (documented contract, caught by the .catch of the chain) [R-EVEM-RAW-01]`, async function() {
+        let a = mk({ boom: true })
+        let errs = []
+        a.ev.on('error', (e) => errs.push(e))
+        a.ele.dispatchEvent(mkDragEvent('drop', dtOk()))
+        await a.tr.wait((e) => e.type === 'error')
+        assert.strict.deepStrictEqual(errs.map((e) => e.message), ['listener boom'])
+    })
+
 })

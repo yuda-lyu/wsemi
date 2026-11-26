@@ -1,11 +1,12 @@
 import get from 'lodash-es/get.js'
-import errToStr from './_errToStr.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 import isbol from './isbol.mjs'
 import isu8arr from './isu8arr.mjs'
 import getBufferSize from './getBufferSize.mjs'
 import bufReadDbl from './bufReadDbl.mjs'
 import u8arr2str from './u8arr2str.mjs'
 import stru8arr2obj from './stru8arr2obj.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //checkLenHead, 檢查封包標頭記載之分塊資訊區長度, 回傳不符原因字串, 符合則回傳空字串
@@ -71,8 +72,10 @@ function sliceU8arr(u8a, inds) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/u8arr2obj.test.mjs Github}
  * @memberOf wsemi
  * @param {Uint8Array} u8a 輸入Uint8Array
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入讀取呼叫端之值或轉換失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，狀態模式之msg為固定詞彙(不含呼叫端所拋出之文字)，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入讀取呼叫端之值或轉換失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi u8arr2obj] can not read'，同getDiag)，預設null
  * @returns {Object|Array} 回傳物件或陣列資料，其內二進位數據依標記所記之原型別還原，Uint8Array、Uint16Array、ArrayBuffer皆原型別原數值返回；輸入非Uint8Array或封包損毀時回傳空物件，封包標頭記載之分塊資訊區長度非非負整數或逾封包資料區長度(含封包短於8位元組)、分塊資訊非真陣列、含非負有限整數以外之項、總量逾封包長度、或分塊數量逾主區塊可容納之二進位標記數(每個分塊在主區塊內至少有一個25位元組之標記)亦視為損毀(msg為'invalid u8a: must <原因>')；同一二進位索引被引用多次亦視為損毀；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空物件{}，而空物件{}亦為合法輸入之結果(如u8arr2obj(obj2u8arr({ a: undefined }))，值為undefined之欄位於序列化時省略)，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
@@ -100,8 +103,11 @@ function sliceU8arr(u8a, inds) {
 function u8arr2obj(u8a, opt = {}) {
     let data = {}
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }
@@ -183,7 +189,9 @@ function u8arr2obj(u8a, opt = {}) {
 
     }
     catch (err) {
-        return retError(errToStr(err)) //try內會讀呼叫端之Uint8Array(偽造標籤之物件、覆寫slice者等)可拋出任意值, 不可直接err.toString()
+        //try內會讀呼叫端之Uint8Array(偽造標籤之物件、覆寫slice者等)可拋出任意值(含其文字); 訊息為固定詞彙(V19、V20), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi u8arr2obj] can not read', err)
+        return retError('invalid u8a: must be readable binary')
     }
 
     if (returnWithStateAndMsg) {

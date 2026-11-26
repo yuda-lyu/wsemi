@@ -6,6 +6,7 @@ import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
 import strdelleft from './strdelleft.mjs'
 import strdelright from './strdelright.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -14,7 +15,7 @@ import strdelright from './strdelright.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/trim.test.mjs Github}
  * @memberOf wsemi
  * @param {String} c 輸入字串
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.excludeString=false] 輸入是否頭尾去除非數字字串布林值，預設false
  * @returns {String} 回傳去除空白的字串
  * @example
@@ -43,8 +44,11 @@ import strdelright from './strdelright.mjs'
  */
 function trim(c, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯
+    let optSnap = pickOpt(opt, ['excludeString'], [])
+
     //excludeString
-    let excludeString = get(opt, 'excludeString')
+    let excludeString = get(optSnap, 'excludeString')
     if (!isbol(excludeString)) {
         excludeString = false
     }

@@ -3,6 +3,7 @@ import isarr from './isarr.mjs'
 import isbol from './isbol.mjs'
 import _cellText from './_cellText.mjs'
 import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -17,7 +18,7 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [keys=null] 輸入欄位名陣列(元素為字串或有限數字)，若為null、undefined或[]則由ltdt提取，預設為null
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {*} [opt.empty=''] 輸入缺該欄或其值為undefined時給予之值(原樣放入)，函數視為null，預設''
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Array|Object} 回傳資料陣列，ltdt為空陣列(合法資料)、無效、keys無效、無法取得keys或任一列非物件時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列時為{ state: 'success', msg: [] }，ltdt無效、keys無效、無法取得keys或任一列非物件時為{ state: 'error', msg }
@@ -48,8 +49,11 @@ import _ltdtkeys2matCore from './_ltdtkeys2matCore.mjs'
  */
 function ltdtkeys2mat(ltdt, keys = null, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg, 本函數原就有opt參數(opt.empty), 故併入同一opt而非新增參數
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

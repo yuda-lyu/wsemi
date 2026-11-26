@@ -73,7 +73,9 @@
 ### 站點全集與判準
 
 - 盤點指令: `Grep "cloneNode\(" src/`(2026-11-25: `domConvertToPic.mjs`、`domDragPreview.mjs` 兩處);`Grep "snapdom" src/`(只有 `domConvertToPic.mjs`).
-- `domConvertToPic.mjs`: 已套規則 1~4.`domDragPreview.mjs`: **刻意不套**——拖曳預覽(殘影)非截圖輸出,不在本規則範圍.
+- `domConvertToPic.mjs`: 已套規則 1~4.`domDragPreview.mjs`: ~~**刻意不套**——拖曳預覽(殘影)非截圖輸出,不在本規則範圍~~ → **2026-11-27(wsr1,排程第 647 項)規則 1 已套**: 真 Chromium 實證預覽之拷貝為空白 canvas(`[0,0,0,0]`)、單選 select 回到第 0 項(使用者所見之預覽與原件不同),屬實而補回;單選鈕之副作用不屬實(拷貝原即移除 name,原件之勾選不被取消,實證保持),不改;規則 2～4 不適用(預覽不截圖、由 `removeDragPreview`／`clear` 移除).
+- **單一出處(2026-11-27 wsr1)**: `listAll`、`copyCanvas`、`copySelect`、`isolateRadio` 自 `domConvertToPic.mjs` 逐字搬至內部檔 `src/_domCloneFix.mjs`(不由 index 匯出;`isolateRadio` 改帶前綴參數,`domConvertToPic` 傳 `'__domConvertToPic'`,名稱不變),兩函數皆經之.盤點: `Grep "from './_domCloneFix.mjs'" src/`(應為 `domConvertToPic.mjs`、`domDragPreview.mjs`).
+- 測試(第 647 項): `test/domDragPreviewBrowser.test.mjs`(5 案,真瀏覽器;`WSEMI_DOMDRAGPREVIEW_SRC` 指向舊版時頁面改載該檔;修前 2 failing〔canvas、select〕／3 passing〔前提、radio、清除〕,修後 5 passing;變異 M14～M17 皆被殺,含「拷貝不移除 radio 之 name」使原件勾選被取消之 M17).
 
 ### 已知限制(JSDoc 載明)
 

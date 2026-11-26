@@ -1175,6 +1175,45 @@ describe(`domDetect`, function() {
         assert.strict.deepStrictEqual(env.moActive(), 0)
     })
 
+    //R-EVEM-RAW-01規則2(第663項): 預設(非sync)之延後路徑於setTimeout內派發, 無呼叫端之堆疊, 監聽器拋錯須經evEmit攔截; sync之路徑於ResizeObserver回呼內, 維持外拋(見其下之案)
+    it(`should isolate a throwing resize listener on the deferred path: no uncaught exception, resizeWithWindow is still emitted, reported to the error event [R-EVEM-RAW-01]`, async function() {
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        let errs = []
+        r.d.on('error', (m) => errs.push(m))
+        r.d.on('resize', () => {
+            throw new Error('consumer boom')
+        })
+        let got = new Promise((resolve) => r.d.on('resizeWithWindow', resolve))
+        env.fireRO(el)
+        await got
+        assert.strict.deepStrictEqual(errs.map((m) => [m.fun, m.name, m.msg.message]), [['listener', 'resize', 'consumer boom']])
+        assert.strict.deepStrictEqual([r.resize.length, r.rww.length], [1, 1])
+    })
+
+    it(`should report a throwing listener of the deferred path through the diagnostic output when no error listener is registered [R-EVEM-RAW-01]`, async function() {
+        let env = mkEnv()
+        let el = new Ele(300, 40)
+        let r = env.dd(() => el)
+        let printed = []
+        let saved = console.error
+        console.error = (...a) => printed.push(a)
+        try {
+            //got先於拋錯之監聽器登記: 同一次派發內got先被呼叫, 其後之拋錯與通報於同一同步堆疊內完成, 故await got之後已可檢查
+            let got = new Promise((resolve) => r.d.on('resizeWithWindow', resolve))
+            r.d.on('resizeWithWindow', () => {
+                throw new Error('consumer boom')
+            })
+            env.fireRO(el)
+            await got
+        }
+        finally {
+            console.error = saved
+        }
+        assert.strict.deepStrictEqual(printed.map((a) => a[0]), ['[wsemi domDetect] listener threw'])
+    })
+
     it(`should update the waiting state even when a sync listener throws`, function() {
         //G9 sync時監聽器之拋錯會外拋至ResizeObserver回呼, 等待狀態仍須更新
         let env = mkEnv()
@@ -1555,11 +1594,14 @@ describe(`domDetect`, function() {
         assert.strict.deepStrictEqual([ws(r1), ws(r2), r2.rww.length], [[300], [], 0])
     })
 
-    it(`should keep emitting to other detectors when a listener throws, and still surface the error`, async function() {
-        //監聽器拋錯不得中斷同一批其他偵測器之發出, 錯誤自該次發出之task拋出而仍可察覺
+    it(`should keep emitting to other detectors and to its own next event when a listener throws, and still surface the error through evEmit [R-EVEM-RAW-01]`, async function() {
+        //監聽器拋錯不得中斷同一批其他偵測器之發出, 亦不使同一偵測器其後之resizeWithWindow不發; 第663項(R-EVEM-RAW-01規則2)起錯誤經evEmit通報(無error監聽者時經getDiag輸出固定label與安全摘要),
+        //  不再自計時器之task拋出成uncaught(原: 錯誤自該次發出之task拋出, 該偵測器之resizeWithWindow不發)
         let env = mkEnv()
         let caught = []
+        let printed = []
         let st = globalThis.setTimeout
+        let savedErr = console.error
         globalThis.setTimeout = (fn, ms) => st(() => {
             try {
                 fn()
@@ -1568,6 +1610,7 @@ describe(`domDetect`, function() {
                 caught.push(err.message)
             }
         }, ms)
+        console.error = (...a) => printed.push(a[0])
         try {
             let e1 = new Ele(300, 40)
             let e2 = new Ele(200, 40)
@@ -1579,10 +1622,11 @@ describe(`domDetect`, function() {
             env.frame()
             await sleep(10)
             await sleep(10) //事件迴圈忙碌時計時器可能與上一段等待同批到期, 再等一輪
-            assert.strict.deepStrictEqual([ws(r1), r1.rww.length, ws(r2), r2.rww.length, caught], [[300], 0, [200], 1, ['consumer boom']])
+            assert.strict.deepStrictEqual([ws(r1), r1.rww.length, ws(r2), r2.rww.length, caught, printed], [[300], 1, [200], 1, [], ['[wsemi domDetect] listener threw']])
         }
         finally {
             globalThis.setTimeout = st
+            console.error = savedErr
         }
     })
 

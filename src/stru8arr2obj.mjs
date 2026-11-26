@@ -1,5 +1,5 @@
 import get from 'lodash-es/get.js'
-import errToStr from './_errToStr.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 import isbol from './isbol.mjs'
 import iseobj from './iseobj.mjs'
 import isestr from './isestr.mjs'
@@ -7,6 +7,7 @@ import isarr from './isarr.mjs'
 import isu8arr from './isu8arr.mjs'
 import isu16arr from './isu16arr.mjs'
 import isab from './isab.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -16,8 +17,10 @@ import isab from './isab.mjs'
  * @memberOf wsemi
  * @param {String} data.results 輸入待反序列化字串，其內二進位數據之標記為'[BlazeForUint8Array]::<i>'、'[BlazeForUint16Array]::<i>'、'[BlazeForArrayBuffer]::<i>'，須完整匹配整個字串值才視為二進位參照，故應用字串內夾雜標記文字者不受影響；恰與標記格式完整相同之應用字串由編碼端前置'[BlazeForPreventEscape]'跳脫，此處會剝除一層還原；標記格式正確但索引越界者視為壞封包。注意不支援還原舊版之'[Uint8Array]::<i>'、'[Uint16Array]::<i>'、'[ArrayBuffer]::<i>'標記
  * @param {Array} data.binarys 輸入Uint8Array陣列
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入讀取呼叫端之值或轉換失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，狀態模式之msg為固定詞彙(不含呼叫端所拋出之文字)，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入讀取呼叫端之值或轉換失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi stru8arr2obj] can not read'，同getDiag)，預設null
  * @returns {*} 回傳任意物件，輸入無效或反序列化失敗(如results非合法JSON、同一二進位索引被引用多次)時回傳空物件；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空物件{}，而空物件{}亦為合法輸入之結果(如stru8arr2obj({ results: '{}', binarys: [] }))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
@@ -44,14 +47,17 @@ import isab from './isab.mjs'
  * console.log(stru8arr2obj({ results: 'not-json', binarys: [] }, { returnWithStateAndMsg: true }))
  * // => {
  * //     state: 'error',
- * //     msg: 'SyntaxError: Unexpected token \'o\', "not-json" is not valid JSON'
+ * //     msg: 'invalid data.results: must be a valid JSON text'
  * // }
  *
  */
 function stru8arr2obj(data, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }
@@ -82,7 +88,9 @@ function stru8arr2obj(data, opt = {}) {
         binarys = data.binarys
     }
     catch (err) {
-        return retError(errToStr(err)) //getter可拋出任意值(含null、無原型物件), 不可直接err.toString()
+        //data之getter可拋出任意值(含其文字); 訊息為固定詞彙(V19、V20), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi stru8arr2obj] can not read', err)
+        return retError('invalid data: must be a readable object')
     }
 
     //check
@@ -96,7 +104,7 @@ function stru8arr2obj(data, opt = {}) {
     //reMark, 標記須完整匹配整個字串(錨定^與$), 否則應用字串內只要夾雜標記文字即被誤判為二進位參照; 索引直接取自捕獲組, 不再以replace去頭後交cint推算(殘留文字會被cint吃成0而取到錯誤之binary)
     let reMark = /^\[BlazeFor(Uint8Array|Uint16Array|ArrayBuffer)\]::(\d+)$/
 
-    //own, 本函數自己拋出之Error(訊息已為V19固定詞彙), 於catch原樣取message, 不經errToStr而帶'Error: '前綴; 其餘拋出值(Proxy陣列之陷阱等)仍經errToStr
+    //own, 本函數自己拋出之Error(訊息已為V19固定詞彙), 於catch原樣取message; 其餘拋出值(Proxy陣列之陷阱等)為呼叫端所拋, 不轉出其文字, 改固定訊息(第663項)
     let own = new WeakSet()
     let bad = (msg) => {
         let e = new Error(msg)
@@ -172,7 +180,23 @@ function stru8arr2obj(data, opt = {}) {
 
     }
     catch (err) {
-        return retError(own.has(err) ? err.message : (err instanceof SyntaxError ? 'invalid data.results: must be a valid JSON text' : errToStr(err))) //results非合法JSON之SyntaxError訊息帶輸入片段(V20), 改為固定訊息 //reviver內讀呼叫端之binarys(Proxy陣列等)可拋出任意值
+        //own為本函數自己拋出(訊息已為固定詞彙); results非合法JSON之SyntaxError與巢狀過深之RangeError(引擎自身之錯誤)為固定詞彙;
+        //其餘為reviver內讀呼叫端之binarys(Proxy陣列、元素存取拋錯等)所拋之任意值(含其文字), 不可轉出(V20), 訊息為固定詞彙, 細節經opt之診斷出口(預設靜默)
+        if (own.has(err)) {
+            return retError(err.message)
+        }
+        let isEngine = false
+        try {
+            isEngine = err instanceof SyntaxError || err instanceof RangeError
+        }
+        catch (err2) {
+            //instanceof對呼叫端拋出之Proxy會觸發其getPrototypeOf陷阱而拋錯, 視為非引擎自身之錯誤(不外拋)
+        }
+        if (isEngine) {
+            return retError('invalid data.results: must be a valid JSON text')
+        }
+        diagIfAsked(opt, '[wsemi stru8arr2obj] can not read', err)
+        return retError('invalid data.binarys: must be a readable array')
     }
 
     if (returnWithStateAndMsg) {

@@ -817,11 +817,12 @@ describe(`裁定表〈十三〉time*2* 18個之JSDoc`, function() {
     let g2 = ['timeTZ2day', 'timeTZ2hour', 'timeTZ2min', 'timemsTZ2day', 'timemsTZ2hour', 'timemsTZ2min', 'timemsTZ2time']
     let g3 = ['timeTZ2past', 'timemsTZ2past', 'timeTZ2expire', 'timemsTZ2expire']
 
-    it(`〈十三-1〉the 7 functions without time zone should say '' means failure and they depend on the local time zone (DST gap invalid)`, function() {
+    //〈十三-1〉〈十三-4〉原規格為「不帶時區者依本機時區判定、夏令空窗內視為無效」, 排程第428項(主控裁示: 原誤判為無效者改為有效屬缺陷修正)改為逐欄驗證、直接取時刻欄位, JSDoc隨之
+    it(`〈十三-1〉the 7 functions without time zone should say '' means failure and they take the wall-clock fields without the local time zone (第428項)`, function() {
         for (let n of g1) {
             let d = getDoc(n)
             assert.ok(d.includes(`回傳''即失敗，有效輸入必得非空字串`), n)
-            assert.ok(d.includes('依本機時區判定') && d.includes('夏令空窗內不存在之本地時刻視為無效'), n)
+            assert.ok(d.includes('直接取字串中之時刻欄位') && d.includes('不經本機時間解析') && !d.includes('依本機時區判定'), n)
         }
     })
 
@@ -840,9 +841,10 @@ describe(`裁定表〈十三〉time*2* 18個之JSDoc`, function() {
         }
     })
 
-    it(`〈十三-4〉istime and istimems should say they depend on the local time zone`, function() {
+    it(`〈十三-4〉istime and istimems should say they are judged field by field without the local time zone (第428項)`, function() {
         for (let n of ['istime', 'istimems']) {
-            assert.ok(getDoc(n).includes('依本機時區判定'), n)
+            let d = getDoc(n)
+            assert.ok(d.includes('逐欄驗證') && d.includes('不經本機時間往返比對') && !d.includes('依本機時區判定'), n)
         }
     })
 
@@ -904,9 +906,10 @@ describe(`裁定表〈十四〉istimeTZ、istimemsTZ`, function() {
         }
     })
 
-    it(`〈十四-4〉istime and istimems should not change: no time zone, judged by the local time zone (a local DST-gap time is invalid in Asia/Taipei)`, function() {
+    //〈十四-4〉原規格為「istime、istimems不改(空窗內為false)」, 排程第428項改為逐欄驗證(空窗內之時刻為有效, 與執行環境之時區無關); 多時區矩陣另見test/timeWallGap428.test.mjs
+    it(`〈十四-4〉istime and istimems should accept a local DST-gap time in Asia/Taipei as in UTC (第428項, former false)`, function() {
         let r = run('Asia/Taipei', [['istime', '1979-07-01T00:48:15'], ['istimems', '1979-07-01T00:48:15.783'], ['istime', '2019-01-01T12:34:56'], ['istimems', '2019-01-01T12:34:56.789']])
-        assert.strict.deepStrictEqual(r.results, [false, false, true, true])
+        assert.strict.deepStrictEqual(r.results, [true, true, true, true])
         let r2 = run('UTC', [['istime', '1979-07-01T00:48:15'], ['istimems', '1979-07-01T00:48:15.783']])
         assert.strict.deepStrictEqual(r2.results, [true, true])
     })
@@ -916,7 +919,8 @@ describe(`裁定表〈十四〉istimeTZ、istimemsTZ`, function() {
         assert.strict.deepStrictEqual(istimemsTZ('1979-07-01T00:48:15.783+08:00'), true)
     })
 
-    it(`〈十四-6〉(外審T6) only a valid offset is validated in its own time zone; a suffix accepted by the former check but not a valid offset ('|08:00', '+99:99') keeps the former result`, function() {
+    //〈十四-6〉原規格為「非有效偏移者維持修前之本機判定(空窗內false)」, 排程第428項改為與有效偏移者同一逐欄驗證(checkTZ之寬鬆收錄不變: 非空窗者仍true, '+24:00'仍false)
+    it(`〈十四-6〉(外審T6, 第428項) a suffix accepted by the former check but not a valid offset ('|08:00', '+99:99') is still accepted, and its time fields are validated without the local time zone`, function() {
         let inputs = [
             ['istimeTZ', '1979-07-01T00:48:15+99:99'],
             ['istimeTZ', '1979-07-01T00:48:15|08:00'],
@@ -928,8 +932,8 @@ describe(`裁定表〈十四〉istimeTZ、istimemsTZ`, function() {
             ['istimeTZ', '1979-07-01T00:48:15+24:00'],
         ]
         let r = run('Asia/Taipei', inputs)
-        //空窗內而時區無效者維持修前false; 非空窗者修前即true(checkTZ寬鬆, 不變); +23:59為有效偏移
-        assert.strict.deepStrictEqual(r.results, [false, false, false, false, true, true, true, false])
+        //空窗內而時區無效者('+99:99'、'|08:00'、'+24:00'皆為checkTZ所收): 第428項起逐欄驗證為true(修前依本機時間往返而false); 非空窗者修前即true(checkTZ寬鬆, 不變); +23:59為有效偏移
+        assert.strict.deepStrictEqual(r.results, [true, true, true, true, true, true, true, true])
     })
 
 })

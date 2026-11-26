@@ -722,7 +722,18 @@ let escRe = (s) => {
 }
 
 
-//getMatcher, 由秘密清單建比對器: { re(前瞻交替式, 每個位置取最長之命中), long(以indexOf比對者), nums(數字秘密), maxLen, ss(正規化後之字串清單, 長者在前) }
+//jsonEscOf, 秘密於JSON字串內之跳脫形(不含首尾引號; 孤立代理碼元依JSON.stringify轉為\uXXXX), 無法取得者回''
+let jsonEscOf = (s) => {
+    try {
+        return JSON.stringify(s).slice(1, -1)
+    }
+    catch (err) {
+        return ''
+    }
+}
+
+
+//getMatcher, 由秘密清單建比對器: { re(前瞻交替式, 每個位置取最長之命中), long(以indexOf比對者), nums(數字秘密), maxLen, ss(正規化後之字串清單〔含內建之JSON跳脫形〕, 長者在前) }
 let getMatcher = (list) => {
     let frozen = false
     try {
@@ -747,6 +758,14 @@ let getMatcher = (list) => {
         }
         if (typeof s === 'string' && s !== '') {
             set.add(s)
+        }
+    }
+    //內建變體(只增不減, 既有之比對不變): 各秘密之JSON跳脫形(JSON.stringify(s).slice(1, -1)), 使含引號、反斜線、換行、控制字元之秘密於JSON文字內仍被遮(排程第650項);
+    //getDiagSecrets之清單原已含此形(variantsOf), 經Set去重而不重複
+    for (let s of [...set]) {
+        let j = jsonEscOf(s)
+        if (j !== '') {
+            set.add(j)
         }
     }
     let ss = [...set].sort((a, b) => b.length - a.length)

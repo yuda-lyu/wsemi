@@ -10,6 +10,7 @@ import getBufferSize from './getBufferSize.mjs'
 import obj2stru8arr from './obj2stru8arr.mjs'
 import str2u8arr from './str2u8arr.mjs'
 import bufWriteDbl from './bufWriteDbl.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //toU8arrView, 取得逐位元組之Uint8Array視圖
@@ -59,7 +60,7 @@ function mergeU8arrs(bs) {
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/obj2u8arr.test.mjs Github}
  * @memberOf wsemi
  * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，三者皆以逐位元組方式打包，並由標記記錄原型別，故u8arr2obj可原型別原數值還原
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為'obj2stru8arr: invalid o: must be serializable to JSON'，合併二進位時讀取失敗為'invalid data: must be readable binary'，皆不含呼叫端所拋出之文字)，預設false
  * @param {Boolean} [opt.logDetail=false] 輸入失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
  * @param {Function} [opt.funLog=null] 輸入失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它，同getDiag，預設null
@@ -96,8 +97,11 @@ function obj2u8arr(data, opt = {}) {
     let bs = []
     let r = new Uint8Array()
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

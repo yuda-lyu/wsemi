@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -14,7 +15,7 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
  * @memberOf wsemi
  * @param {Array} keys 輸入欄位名陣列，元素為字串或有限數字，其餘略過
  * @param {Array} mat 輸入資料陣列，每一列須為非空陣列
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @param {Boolean} [opt.debug=false] 輸入是否輸出除錯警告布林值，非布林視為false；為true且有列之長度與keys不同時，經opt.funLog(函數)或console.warn提示列號與兩者之長度(不含值；同原因每個行程只提示一次)，預設false
  * @param {Function} [opt.funLog=null] 輸入警告之出口函數，以(msg, info)呼叫，未給則用console.warn，預設null
@@ -46,8 +47,11 @@ import _keysmat2ltdtCore from './_keysmat2ltdtCore.mjs'
  */
 function keysmat2ltdt(keys, mat, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

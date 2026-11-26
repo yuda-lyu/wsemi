@@ -1,4 +1,3 @@
-import ot from './_dayjs.mjs'
 import isday from './isday.mjs'
 
 
@@ -23,13 +22,16 @@ function day2cht(t, bNoDisplayYear = false) {
         return ''
     }
 
-    let d = ot(t, 'YYYY-MM-DD')
+    //y, mo, d, 直接取字串中之年月日欄位(t已經isday驗證為標準寫法), 不經本機時間解析(原以本機時間解析, 於本機時區整日被跳過之日如Pacific/Apia之2011-12-30會轉成次日; 排程第428項)
+    let y = Number(t.slice(0, 4))
+    let mo = Number(t.slice(5, 7))
+    let d = Number(t.slice(8, 10))
     let r = ''
     if (bNoDisplayYear) {
-        r = (d.month() + 1) + '月' + d.date() + '日'
+        r = mo + '月' + d + '日'
     }
     else {
-        r = '民國 ' + (d.year() - 1911) + ' 年 ' + (d.month() + 1) + ' 月 ' + d.date() + ' 日'
+        r = '民國 ' + (y - 1911) + ' 年 ' + mo + ' 月 ' + d + ' 日'
     }
 
     return r

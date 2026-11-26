@@ -8,10 +8,11 @@
  *
  * @param {*} opt 輸入呼叫端之opt(任意值)
  * @param {Array} keys 輸入須讀取之鍵字串陣列
- * @param {Array} [lazyKeys=['debug', 'funLog']] 輸入須惰性讀取之鍵字串陣列
+ * @param {Array} [lazyKeys=['debug', 'funLog']] 輸入須惰性讀取之鍵字串陣列，無須惰性讀取者給[]
+ * @param {Boolean} [onlyOwn=false] 輸入是否只取自有鍵(Object.hasOwn)布林值，為true時繼承之鍵視為未給(供轉交給只認自有鍵之第三方函數，如he之encode、decode)，預設false
  * @returns {Object} 回傳opt之快照一般物件
  */
-function pickOpt(opt, keys, lazyKeys = ['debug', 'funLog']) {
+function pickOpt(opt, keys, lazyKeys = ['debug', 'funLog'], onlyOwn = false) {
     let o = {}
     let ok = opt !== null && opt !== undefined && (typeof opt === 'object' || typeof opt === 'function')
     if (!ok) {
@@ -19,6 +20,9 @@ function pickOpt(opt, keys, lazyKeys = ['debug', 'funLog']) {
     }
     for (let k of keys) {
         try {
+            if (onlyOwn && !Object.hasOwn(opt, k)) {
+                continue
+            }
             let v = opt[k]
             if (v !== undefined) {
                 o[k] = v

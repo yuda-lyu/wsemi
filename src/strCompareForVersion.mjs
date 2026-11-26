@@ -24,8 +24,8 @@ function parseVersion(v) {
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/strCompareForVersion.test.mjs Github}
  * @memberOf wsemi
- * @param {String} v1 輸入版本號字串
- * @param {String} v2 輸入版本號字串
+ * @param {String} v1 輸入版本號字串，須為原始字串(String包裝物件等非字串視為無法解析，回傳null)
+ * @param {String} v2 輸入版本號字串，須為原始字串(同v1)
  * @returns {Number|null} 回傳比較結果，v1大於v2回傳1，相等回傳0，小於回傳-1，任一方無法解析出三段版本號回傳null；注意null表示無法比較，JS中null >= 0為真(null轉為0)，故不可直接以回傳值比大小(如r >= 0)，也不可直接當Array.sort之比較子(null會被視為0即相等)，須先判斷回傳值是否為null
  * @example
  *

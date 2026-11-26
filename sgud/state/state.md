@@ -6,6 +6,36 @@
 
 ## 索引(哪類查哪檔)
 
+### wsr1 修正輪(2026-11-27,主控任務 20261127030143;package.json version 1.9.81 之工作樹,未提交未發布)之現況分在下列各檔,驗證數字(全套、發布包配置、變異、複審)見本輪報告與各檔:
+
+- `sgud/state/state_時間判斷與轉換.md`(新增): 第 428 項判斷與轉換不經本機時間往返,同批小項(包裝物件、`getltdtkeys`).
+- `sgud/state/state_診斷與遮罩_第2輪.md`(置於該檔最前): 第 650 項遮罩器內建 JSON 跳脫形、第 621 項之核實與 `UND_ERR_SOCKS`.
+- `sgud/state/state_瀏覽器函數.md`(置於該檔最前): 第 647 項 `domDragPreview` 補回 canvas 與 select、`_domCloneFix`.
+- `sgud/state/state_事件派發.md`(新增): 第 599 項② R-EVEM-RAW-01 之 21 站判定與 5＋2 站待辦.
+- `sgud/state/state_測試.md`(置於該檔最前): 第 599 項③ R-JUDGE-SOURCE-01 守門測試.
+- 文件整理: 第 599 項① `sgud/rule/rulebook_data.md` 依類型拆為本檔＋`rulebook_excel.md`＋`rulebook_filetype.md`;經驗檔 `sgud/exp/experience.md` 之 2026-11-12～11-25 之 17 節抽至 `experience_20261127.md`;破壞性變更紀錄另開 `rulebook_breaking_84on.md`(第 84 項).
+
+### wsr2 修正輪(2026-11-27,主控任務 20261127030143,B 輪;與 wsr1 同一次發布;package.json version 1.9.81 之工作樹,未提交未發布)之現況分在下列各檔:
+
+- `sgud/state/state_判斷與轉型.md`(置於該檔最前): 第 663 項批 11——62 個轉型／編碼／字串／時間字串轉換類函數之 opt 讀取不拋錯、state 模式 9 站訊息固定詞彙、fs 列舉同步 6 函數讀鍵拋錯視為未給、新增對外函數 `getOptReader`(有限數字判斷不收錄)、`o2j` 取回原因範例;驗證數字(全套 34245／8／0、發布包配置同、修前紅、變異、複審)與已知缺口.
+- `sgud/state/state_檔案系統列舉.md`: 已知缺口③(同步函數讀 `opt.levelLimit` 等拋錯)已處置.
+- `sgud/state/state_事件派發.md`(置於該檔最前): R-EVEM-RAW-01 之 7 站(未套 5＋部分 2)處置落實(6 站經 `evEmit`、1 站刻意不套)、規則 2 涵蓋 Promise 鏈與 microtask.
+- `sgud/state/state_診斷與遮罩_第2輪.md`: `ERR_SSL_PROTOCOL_ERROR` 已移除(NODE 集合限以 Node 或 undici 實證之代碼).
+- `sgud/state/state_測試.md`(置於該檔最前): R-C1-HOSTILE-01 之 AST 守門(`optReadScan`).
+- 文件整理(A 輪需裁示 ⑤): `sgud/state/state_dom與資料.md`(約 37.9KB)依功能類型拆為本檔＋`state_結構函數.md`＋`state_非計算類函數參數.md`;`sgud/rule/rulebook_diag.md`(單節 R-DIAG-01,約 52.7KB)依規則類型拆為本檔(規則 1~12)＋`rulebook_diag_ext.md`(規則 13~22、盤點、限制)＋`rulebook_diag_log.md`(測試、變更紀錄);節號與標題不變、內容逐字搬移,逐行驗證缺 0(`state_dom與資料` 非空 77 行、`rulebook_diag` 非空 60 行,新增之行僅標頭與說明).破壞性變更紀錄第 85 項附於 `rulebook_breaking_84on.md`.
+
+### `sgud/state/state_時間判斷與轉換.md`(時間字串之判斷與轉換;約 3KB;新增於 2026-11-27)
+
+查: `istime`／`istimems`／`isday`／`ismonth`／`istimeTZ`／`istimemsTZ` 之逐欄驗證、不帶時區之 7 個轉換函數與 `getTimeRange`、`day2cht`、`domShowInputDatatime` 直接取欄位、多時區矩陣測試、差分與變異數字、已知缺口.所含節:
+
+- 判斷與轉換不經本機時間往返(排程第 428 項;wsr1,2026-11-27)〔本節於 2026-11-27 新增〕
+
+### `sgud/state/state_事件派發.md`(事件派發;約 2KB;新增於 2026-11-27)
+
+查: R-EVEM-RAW-01 之直接 `.emit(` 21 站之判定與待辦.所含節:
+
+- R-EVEM-RAW-01 之站點逐站判定(排程第 599 項②;wsr1,2026-11-27)〔本節於 2026-11-27 新增〕
+
 ### `sgud/state/state_Excel讀取.md`(讀取 Excel;約 3KB;新增於 2026-11-26)
 
 查: `getDataFromExcelFileU8Arr` 於 `fmt:'ltdt'` 保留表頭空白之欄位之 `opt.keepEmptyHeader`(預設 `false`、命名 `__EMPTY` 系、碰撞規則與真實表頭不改名、非布林視為未給)、對應之規則帳本條目(R-EXCEL-READ-01 規則 5、6)與測試、驗證數字、已知缺口(重複表頭另案,排程第 671 項;Gitea #221).所含節:
@@ -145,21 +175,25 @@
 - 真瀏覽器行為測試之基建(R-TEST-BROWSER-01;排程第 642 項;t642,2026-11-25)〔本節於 2026-11-25 新增,置於該檔最前〕
 - 全套案數一致與測試檔結構(R-TEST-STRUCT-01;排程第 254 項;ws265,2026-11-02)
 
-### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 21.5KB)
+### `sgud/state/state_結構函數.md`(結構函數:元素層級、儲存格文字表示法、差異比對、空資料、陣列與結構子類;約 18.4KB;2026-11-27 wsr2 自 `state_dom與資料.md` 抽出)
 
-查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數,及 DOM 函數必須參數遇非預期之失敗通道.所含節:
+查: 結構函數第三批(14 函數儲存格文字表示法、arrDiff 逐格比對、帶時區時刻之驗證)、結構函數之元素層級與自有鍵(14 函數)、差異比對子類修訂、陣列與結構子類必須參數、空資料不是失敗之現況.所含節(節號與標題不變、逐字搬移):
 
-- 結構函數第三批:14 個函數依使用者逐函數裁定、儲存格文字表示法、arrDiff 逐格比對、帶時區時刻之驗證(R-ELEM-LEVEL-02、R-CELL-TEXT-01、R-DIFF-PAIR-01、R-TZ-WALL-01;排程第 430 項第三批;ws430c/ws430c2,2026-11-15)〔本節於 2026-11-15 新增,置於該檔最前〕
-- 結構函數之元素層級與自有鍵:14 個函數依使用者逐函數裁定(R-ELEM-LEVEL-01;排程第 430 項第二批;ws430b,2026-11-14)〔本節於 2026-11-14 新增,置於該檔最前〕
+- 結構函數第三批:14 個函數依使用者逐函數裁定、儲存格文字表示法、arrDiff 逐格比對、帶時區時刻之驗證(排程第 430 項第三批;ws430c/ws430c2,2026-11-15)
+- 結構函數之元素層級與自有鍵:14 個函數依使用者逐函數裁定(R-ELEM-LEVEL-01;排程第 430 項第二批;ws430b,2026-11-14)
+- 差異比對子類修訂:`ltdtDiff` 不支援空物件列、`matDiff`／`arrDiff` 錯誤訊息改 invalid 格式(排程第 290 項;ws290,2026-11-12)
+- 陣列與結構子類 6 個函數 `arrFilterByENum`／`arrReverse`／`arrSep`／`matConcat`／`matat`／`ltdtpull` 必須參數無效即 throw、空資料照常(排程第 286 項;ws286e,2026-11-03)
+- 空資料不是失敗:向量處理、5 個轉換函數狀態模式、`getCsvStrFromData([])`(排程第 286 項;ws286d,2026-11-03)
+
+### `sgud/state/state_非計算類函數參數.md`(非計算類函數必須參數遇非預期、同步工具函數遇無效輸入;約 13.6KB;2026-11-27 wsr2 自 `state_dom與資料.md` 抽出)
+
+查: 非計算類函數(差異比對 5 函數、`getTimeRange`／`rep`／`replaceObj`／`replacePlus`／`sepInt`／`cfilesize`、`domIsFocused`／`domAppend`／`domPrepend`／`copyStrToClipboard`)必須參數遇非預期之現況,及同步工具函數遇無效輸入之處置(C10、C7、C6;排程第 426 項).所含節(節號與標題不變、逐字搬移): 非計算類函數必須參數遇非預期之第一類、第二批、差異比對子類 3 節(排程第 286 項;ws286a／ws286b／ws286c,2026-11-02～03);同步工具函數遇無效輸入之處置(排程第 426 項;ws426,2026-11-12).
+
+### `sgud/state/state_dom與資料.md`(dom 與資料處理;約 7.1KB;2026-11-27 wsr2 拆檔後,原約 37.9KB)
+
+查: `*Dyn` 函數移除(XSS、UserAgent、dom 轉圖／看圖／Markdown 心智圖、Excel 讀寫)與其後續之瀏覽器端函數、字串取代之取代值字面化(`replace`／`replaceObj`,R-REPLACE-LITERAL-01).所含節(結構函數與非計算類函數各節已移至上列二檔):
 
 - 字串取代之取代值字面化:`replace` 之 `r` 為字面文字、`replaceObj` 不再預先逸出 `$`、`src/` 全庫 67 站點盤點(R-REPLACE-LITERAL-01;排程第 427 項之 wsemi 部分;ws427 wsrep,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
-- 同步工具函數遇無效輸入之處置:C10 隨機範圍無效即 throw、C7 非數值結構運算之次參數無效回空值、C6 只補文件(排程第 426 項;使用者 2026-11-12 裁示;ws426,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
 
-- 差異比對子類修訂:`ltdtDiff` 不支援空物件列、`matDiff`／`arrDiff` 錯誤訊息改 invalid 格式(排程第 290 項;使用者 2026-11-12 裁示;ws290,2026-11-12)〔本節於 2026-11-12 新增,置於該檔最前〕
-- 陣列與結構子類 6 個函數 `arrFilterByENum`／`arrReverse`／`arrSep`／`matConcat`／`matat`／`ltdtpull` 必須參數無效即 throw、空資料照常(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286e,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕
-- 空資料不是失敗:向量處理 `arrAdd`／`arrMulti`／`arrAccum` 空進空出、`arrProduct` 任一邊為空即 throw、5 個轉換函數(`ltdtkeys2mat`／`ltdtkeysheads2mat`／`ltdt2vrtsable`／`mat2ltdt`／`keysmat2ltdt`)狀態模式、`getCsvStrFromData([])`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286d,2026-11-03;更正第 221 項第二批第 15 項「空陣列亦 throw」)〔本節於 2026-11-03 新增,置於該檔最前〕
-- 非計算類函數必須參數遇非預期:差異比對子類 5 個函數 `strDiff`／`strDiffToHtml`／`arrDiff`／`matDiff`／`ltdtDiff`(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286c,2026-11-03)〔本節於 2026-11-03 新增,置於該檔最前〕
-- 非計算類函數必須參數遇非預期:第二批 `getTimeRange`／`rep`／`replaceObj`／`replacePlus`／`sepInt`／`cfilesize` 與 5 處文件修正(排程第 286 項〔第 221 項 §11 第 6 項〕;ws286b,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
-- 非計算類函數必須參數遇非預期:第一類 4 個函數 `domIsFocused`／`domAppend`／`domPrepend`／`copyStrToClipboard` 與三個內部呼叫端(排程第 286 項〔第 221 項 §11 第 6 項〕第一類;ws286a,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕
 - 移除全部 *Dyn 函數(使用者 2026-11-01 裁示;Gitea #44;主控任務 20261101202155 wsemi-rmdyn,2026-11-01;package.json version 1.9.39 之工作樹,未提交未發布)
 - getUserAgent 之 UMD 晚載入(R-UMD-EXTERNAL-01;排程第 258 項;ws265,2026-11-02)〔本節於 2026-11-02 新增,置於該檔最前〕

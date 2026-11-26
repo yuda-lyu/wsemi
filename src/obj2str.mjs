@@ -6,6 +6,7 @@ import isbol from './isbol.mjs'
 import isundefined from './isundefined.mjs'
 import isstr from './isstr.mjs'
 import isarr from './isarr.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -15,7 +16,7 @@ import isarr from './isarr.mjs'
  * @memberOf wsemi
  * @param {*} data 輸入任意資料，為undefined時回傳空字串；其中之真Error(含子類別)轉為'名稱: 訊息'字串，同obj2stru8arr
  * @param {String|Array} [ext='Uint8Array'] 輸入擴充數據種類字串或陣列，非字串亦非陣列時回退為'Uint8Array'，預設'Uint8Array'
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為固定訊息'invalid data: must be serializable to JSON'，不含原生錯誤之文字)，預設false
  * @param {Boolean} [opt.logDetail=false] 輸入序列化失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
  * @param {Function} [opt.funLog=null] 輸入序列化失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi obj2str] can not serialize')，同getDiag，預設null
@@ -38,8 +39,11 @@ import isarr from './isarr.mjs'
  */
 function obj2str(data, ext = 'Uint8Array', opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }

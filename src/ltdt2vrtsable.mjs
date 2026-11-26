@@ -12,6 +12,7 @@ import iseobj from './iseobj.mjs'
 import arrHas from './arrHas.mjs'
 import getltdtkeys from './getltdtkeys.mjs'
 import _setOwnKey from './_setOwnKey.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //MSG_CELL, 儲存格不合{ value, style }格式之錯誤訊息(使用者2026-11-14裁定之固定訊息)
@@ -28,7 +29,7 @@ let MSG_CELL = 'invalid ltdt: must have a cell {value, style} for every column i
  * @memberOf wsemi
  * @param {Array} ltdt 輸入物件陣列
  * @param {Array} [mergerowkeys=[]] 輸入需合併列的關鍵字keys，為字串陣列，預設為空陣列
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
  * @returns {Array|Object} 回傳物件陣列，ltdt為空陣列(合法資料)、ltdt或mergerowkeys無效、ltdt任一元素非有效物件、或儲存格不合{ value, style }格式時回傳空陣列；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件，ltdt為空陣列(且mergerowkeys有效)時為{ state: 'success', msg: [] }，ltdt或mergerowkeys無效、或ltdt任一元素非有效物件時為{ state: 'error', msg }，儲存格不合格式時為{ state: 'error', msg: 'invalid ltdt: must have a cell {value, style} for every column in every row' }
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空陣列[]，而空陣列[]亦為合法輸入之結果(如ltdt2vrtsable([]))，故不可由回傳值判斷成敗；須辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(msg為錯誤訊息)
@@ -49,8 +50,11 @@ let MSG_CELL = 'invalid ltdt: must have a cell {value, style} for every column i
  */
 function ltdt2vrtsable(ltdt, mergerowkeys = [], opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3: 無法轉型回預設值, 不拋錯)
+    let optSnap = pickOpt(opt, ['returnWithStateAndMsg'], [])
+
     //returnWithStateAndMsg
-    let returnWithStateAndMsg = get(opt, 'returnWithStateAndMsg', null)
+    let returnWithStateAndMsg = get(optSnap, 'returnWithStateAndMsg', null)
     if (!isbol(returnWithStateAndMsg)) {
         returnWithStateAndMsg = false
     }
