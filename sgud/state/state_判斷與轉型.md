@@ -2,6 +2,18 @@
 
 本檔 2026-11-19(ws492i)新增(排程第 492 項第 8 批): 判斷函數只收原始值、轉型函數照舊拆包、判斷函數不拋錯、`cbol`／`isDate`／`cint` 之定義之**現況**;索引見 `sgud/state/state.md`.
 
+## 第 492 項第 10 批(下):第 551 項轉型函數對惡意值不拋錯、第 552 項判型改原生或內部槽(ws492k,2026-11-26;package.json version 1.9.78 之工作樹,未提交未發布)
+
+- **做到哪**(已實作):
+  - 第 551 項(R-C1-HOSTILE-01): `cstr` 對已撤銷之 Proxy 等回 `''`(改 `typeof`,BigInt／Symbol 包裝物件照舊拆包);`cint`、`isUserPw` 之 opt 於入口取快照(`src/_pickOpt.mjs`,已撤銷之 Proxy 與鍵之存取器拋錯視為未給,`debug`／`funLog` 惰性讀取);`hostileValues` 19 值 × 4 轉型函數、× 3 個 opt 存取器鍵、`isUserPw` 16 鍵逐格鎖定;`cdbl`／`cbol`／`cfilesize`／`cfinancial`／`dig`／`digExp` 本即不拋,以測試鎖定.
+  - 第 552 項(R-JUDGE-NATIVE-01): `isnull`／`isundefined`／`isbigint` 語言原生;`isab`／`isu8arr`／`isu16arr` 內部槽(`src/_slotKind.mjs`);偽造 `Symbol.toStringTag` 不再通過,`Object(1n)` 為 `false`,Proxy 包裝之 ArrayBuffer 為 `false`.
+  - **停於該函數(下游有依賴現行語意,待裁示)**: `isarr`(標籤讀取拋錯之陣列 Proxy 判 `false` 為 w-orm-* 寫入守門所依賴)、`isobj`(偽造 `'Object'` 標籤者於 w-serv-orm `getMapOrm` 仍被掃描)、`isblob`／`isfile`(標籤判型為跨實作替身之設計).
+- **測試與驗證**: 見 `state_訊息格式與可讀性探針.md` 同批(全套 33922 passing／8 pending／0 failing、修前紅、變異);`test/convHostile.test.mjs`、`test/judgeNativeTag.test.mjs`(新)、`test/isbigint.test.mjs`(翻轉)、`ab2u8arr`／`u8arr2obj`／`obj2u8arr` 之夾具改以真實例(Proxy 偽造標籤不再通過).
+- **已知缺口與待裁示**:
+  1. `isarr`／`isobj`／`isblob`／`isfile` 仍可被偽造標籤通過(下游盤點見交件報告);若改,w-orm-lowdb 等五庫之寫入守門測試與 w-serv-orm `getMapOrm` 須同步(建議先改下游補探針:`chkReadable`)。
+  2. 36 個轉型／編碼函數對已撤銷 Proxy 之 opt 仍拋錯(見訊息檔已知缺口).
+  3. 下游固定舊行為: w-orm-mongodb `test/api-readable.test.mjs:758`(`isu8arr` 改內部槽後讀標籤 0 次,原斷言 1 次).
+
 ## 第 492 項第 8 批:判斷與轉型(ws492i,2026-11-19;package.json version 1.9.68 之工作樹,未提交未發布)
 
 - 現況(已實作):

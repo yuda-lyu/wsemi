@@ -149,16 +149,15 @@ describe(`obj2u8arr`, function() {
             },
         }
         let r = obj2u8arr(o, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'obj2stru8arr: Error: boom-getter' }
+        let rr = { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' } //第559項④: 轉交前綴('obj2stru8arr: ')為合規形式, 其後為固定訊息, 不含getter所拋之文字'boom-getter'(V20)
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: 'obj2stru8arr: <TypeError>' } when input an object with BigInt with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' } when input an object with BigInt with returnWithStateAndMsg`, function() {
         //內部呼叫之錯誤須前置來源函數名, 供辨識是哪一步出錯
         let r = obj2u8arr({ id: 1n, name: 'x' }, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(Object.keys(r).sort(), ['msg', 'state'])
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('obj2stru8arr: TypeError') === 0, true, `msg 應標明來源函數與序列化錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' })
     })
 
     it(`should return ${cu8a} when input ${cdata} with invalid returnWithStateAndMsg`, function() {
@@ -172,8 +171,18 @@ describe(`obj2u8arr`, function() {
 
 describe(`obj2u8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
 
-    //mkProxyAb, 讀取Symbol.iterator時拋出v之ArrayBuffer Proxy(isab對其為真, 打包時以new Uint8Array(b)轉位元組視圖才讀Symbol.iterator)
+    //mkProxyAb, 讀取buffer時拋出v之真Uint8Array(第552項: isab、isu8arr改以內部槽判定, 包裝成Proxy之ArrayBuffer不再被判為ArrayBuffer; 真Uint8Array通過判定後, 合併時toU8arrView以b.buffer取位元組視圖而讀到自有之buffer存取器)
+    //  函數名沿用mkProxyAb(原為讀取Symbol.iterator時拋出v之ArrayBuffer Proxy)
     let mkProxyAb = (v) => {
+        let u8a = new Uint8Array(4)
+        Object.defineProperty(u8a, 'buffer', {
+            get() {
+                throw v
+            },
+        })
+        return u8a
+    }
+    let mkProxyAbOld = (v) => {
         return new Proxy(new ArrayBuffer(4), {
             get(t, k) {
                 if (k === Symbol.iterator) {
@@ -184,15 +193,43 @@ describe(`obj2u8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
         })
     }
 
-    it(`should not throw but return { state: 'error', msg: 'null' } when packing a Proxy ArrayBuffer whose Symbol.iterator throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+    //第552項: isab以內部槽判定, Proxy包裝之ArrayBuffer(無內部槽)不再被判為ArrayBuffer, 依一般物件序列化(不進入打包步驟, 不拋錯)
+    it(`should treat a Proxy-wrapped ArrayBuffer as a plain object (not packed as binary, no error) [第552項]`, function() {
+        let r = obj2u8arr({ ab: mkProxyAbOld(null) }, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r.state, 'success')
+    })
+
+    //第559項④(V20): 合併二進位時讀取拋錯之msg為固定詞彙, 不含呼叫端所拋出之文字(原為拋出值之文字, 如'null'、'Error: boom'); 細節經opt.funLog之診斷出口(預設靜默)
+    it(`should not throw but return { state: 'error', msg: 'invalid data: must be readable binary' } (not the thrown text 'null') when packing a Uint8Array whose buffer getter throws null with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第559項④]`, function() {
         let r = null
         assert.doesNotThrow(() => {
             r = obj2u8arr({ ab: mkProxyAb(null) }, { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'null' })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid data: must be readable binary' })
     })
 
-    it(`should not throw but return new Uint8Array() when packing a Proxy ArrayBuffer whose Symbol.iterator throws null without opt [R-CODEC-ERR-01之2]`, function() {
+    it(`should hand the thrown detail only to opt.funLog and not leak the thrown text into msg`, function() {
+        let u8a = new Uint8Array(4)
+        Object.defineProperty(u8a, 'buffer', {
+            get() {
+                throw new Error('SECRET-559-merge')
+            },
+        })
+        let calls = []
+        let r = obj2u8arr({ b: u8a }, { returnWithStateAndMsg: true, funLog: (label, safe, detail) => calls.push([label, safe, detail]) })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid data: must be readable binary' })
+        assert.strict.deepStrictEqual(calls.length, 1)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi obj2u8arr] can not pack', { errType: 'Error' }])
+        //序列化失敗(obj2stru8arr)之診斷亦經同一funLog(opt.funLog轉交)
+        let calls2 = []
+        let o = {}
+        o.self = o
+        let r2 = obj2u8arr(o, { returnWithStateAndMsg: true, funLog: (label) => calls2.push(label) })
+        assert.strict.deepStrictEqual(r2, { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' })
+        assert.strict.deepStrictEqual(calls2, ['[wsemi obj2stru8arr] can not serialize'])
+    })
+
+    it(`should not throw but return new Uint8Array() when packing a Uint8Array whose buffer getter throws null without opt [R-CODEC-ERR-01之2]`, function() {
         let r = null
         assert.doesNotThrow(() => {
             r = obj2u8arr({ ab: mkProxyAb(null) })
@@ -201,14 +238,14 @@ describe(`obj2u8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
     })
 
     for (let c of thrownCases) {
-        it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: ${c.msg}' } when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
-            //序列化步驟(obj2stru8arr)之錯誤須前置來源函數名, 其後為_errToStr之結果
+        it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' } (not the thrown text '${c.msg}') when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第559項④]`, function() {
+            //序列化步驟(obj2stru8arr)之錯誤須前置來源函數名, 其後為obj2stru8arr之固定訊息(不含呼叫端所拋出之文字)
             let data = { a: { toJSON: thrower(c.mk()) } }
             let r = null
             assert.doesNotThrow(() => {
                 r = obj2u8arr(data, { returnWithStateAndMsg: true })
             })
-            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: `obj2stru8arr: ${c.msg}` })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' })
         })
     }
 

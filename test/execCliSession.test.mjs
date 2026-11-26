@@ -289,7 +289,7 @@ describe(`execCliSession`, function() {
         })
         let r = await s.stop()
         //P06c
-        assert.strict.deepStrictEqual([r.exited, r.pid, r.error.startsWith('UNKNOWN: ')], [true, null, true])
+        assert.strict.deepStrictEqual([r.exited, r.pid, r.error], [true, null, 'invalid args: must be a readable array']) //第559項①: 入口快照時即轉換失敗, 固定訊息(原為'UNKNOWN: <原生訊息>')
     })
 
 })
@@ -358,11 +358,12 @@ describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
     it(`execCliSession: onExit可讀而cwd、stderrKeep、onLine之getter拋錯或env為已撤銷之Proxy時, 不spawn且onExit被呼叫一次、其結果同stop() [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('sesOnExitInputUnreadable')
         //規則13: execCliSession不spawn(建立當下pid null、子進程之輸出未出現), 以onExit與stop()之結果回報(pid null, error '<碼>: <訊息>', 無碼者為UNKNOWN); onExit收到之結果即stop()之結果
-        let x = (m) => ({ error: `UNKNOWN: ${m}`, pid: null, pidAtCreate: null, onExitCalls: 1, onExitSameAsStop: true, lines: [] })
+        //第559項①: error為V19固定訊息'invalid opt: must be a readable object', 不含getter所拋之文字與錯誤碼(V20)
+        let x = () => ({ error: 'invalid opt: must be a readable object', pid: null, pidAtCreate: null, onExitCalls: 1, onExitSameAsStop: true, lines: [] })
         assert.strict.deepStrictEqual(r.out, {
-            cwdGetter: x('getter boom cwd'), //規則13: cwd不可讀
-            stderrKeepGetter: x('getter boom stderrKeep'), //規則13: stderrKeep不可讀
-            onLineGetter: x('getter boom onLine'), //規則13: 他項回調不可讀時, 可讀之onExit仍回報
+            cwdGetter: x(), //規則13: cwd不可讀(不含'getter boom cwd')
+            stderrKeepGetter: x(), //規則13: stderrKeep不可讀
+            onLineGetter: x(), //規則13: 他項回調不可讀時, 可讀之onExit仍回報
             //env為已撤銷之Proxy(批6裁定③: isobj對其回false而不拋錯): 非一般物件, 依K3視為未給而繼承環境變數, 子進程照常啟動並結束(修前判型時拋TypeError而不spawn)
             envRevoked: { error: '', pid: r.out.envRevoked.pid, pidAtCreate: r.out.envRevoked.pidAtCreate, onExitCalls: 1, onExitSameAsStop: true, lines: ['child-ran'] },
         })
@@ -370,14 +371,14 @@ describe(`execCliSession 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取與判型一律在try內, 不throw、不成為未捕捉例外
     })
 
-    it(`execCliSession: 選項getter拋出非Error之值(null、undefined、字串)時不spawn, 以onExit與stop()回報且error保留拋出值之文字 [R-EXEC-FAIL-01之13]`, function() {
+    it(`execCliSession: 選項getter拋出非Error之值(null、undefined、字串)時不spawn, 以onExit與stop()回報且error為固定訊息而不含拋出值之文字(V19、V20) [R-EXEC-FAIL-01之13, 第559項①]`, function() {
         let { r } = runExecFail('sesThrownValues')
-        //規則13: 輸入不可讀(getter拋錯)時不spawn(拋出之值可為null、undefined, 不得因而照常spawn), 以onExit與stop()之結果回報(pid null, error '<碼>: <訊息>', 無碼者為UNKNOWN; 訊息取getErrorMessage, 為空退_errToStr)
-        let x = (m) => ({ error: `UNKNOWN: ${m}`, pid: null, pidAtCreate: null, onExitCalls: 1, lines: [] })
+        //規則13: 輸入不可讀(getter拋錯)時不spawn(拋出之值可為null、undefined, 不得因而照常spawn), 以onExit與stop()之結果回報(pid null, error為固定訊息'invalid opt: must be a readable object', 不含呼叫端所拋出之文字)
+        let x = () => ({ error: 'invalid opt: must be a readable object', pid: null, pidAtCreate: null, onExitCalls: 1, lines: [] })
         assert.strict.deepStrictEqual(r.out, {
-            null: x('null'), //規則13: 拋出null
-            undefined: x('undefined'), //規則13: 拋出undefined
-            string: x('thrown-x'), //規則13: 拋出字串, 訊息保留該字串
+            null: x(), //規則13: 拋出null
+            undefined: x(), //規則13: 拋出undefined
+            string: x(), //規則13: 拋出字串, 其文字'thrown-x'不外露
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不throw、不成為未捕捉例外
     })
@@ -574,9 +575,9 @@ describe(`execCliSession 觀察回調(R-TRACE-01)`, function() {
         let b = await go(nodeBin, ['-e', '1', 'a\u0000x'], plain)
         assert.strict.deepStrictEqual([b.tr.types(), b.tr.events[0].error.startsWith('ERR_INVALID_ARG_VALUE: ')], [['settle'], true])
         let c = await go(nodeBin, ['-e', '1'], (tr, onExit) => badProp({ onExit, onTrace: tr.on }, 'cwd', 'getter boom cwd'))
-        assert.strict.deepStrictEqual([c.tr.events.map((e) => [e.type, e.error, e.exited]), c.sameExit], [[['settle', 'UNKNOWN: getter boom cwd', true]], true])
+        assert.strict.deepStrictEqual([c.tr.events.map((e) => [e.type, e.error, e.exited]), c.sameExit], [[['settle', 'invalid opt: must be a readable object', true]], true]) //第559項①: 固定訊息, 不含'getter boom cwd'
         let d = await go(nodeBin, ['-e', '1'], (tr, onExit) => badProp({ onExit }, 'onTrace', 'trace getter boom'))
-        assert.strict.deepStrictEqual([d.r.error, d.r.pid, d.sameExit], ['UNKNOWN: trace getter boom', null, true]) //不throw, onExit照常被呼叫
+        assert.strict.deepStrictEqual([d.r.error, d.r.pid, d.sameExit], ['invalid opt: must be a readable object', null, true]) //不throw, onExit照常被呼叫; 固定訊息, 不含'trace getter boom'
         let e = await go('non_existent_command_xyz_12345', ['arg'], plain)
         assert.strict.deepStrictEqual([e.tr.types().at(-1), e.tr.events.at(-1).error.includes('ENOENT'), e.tr.events.at(-1).exited, e.w, e.sameExit], ['settle', true, true, false, true])
         assert.strict.deepStrictEqual(e.tr.events.filter((x) => x.type === 'spawn').every((x) => x.pid === null), true) //未能啟動: pid為null

@@ -4,6 +4,7 @@ import isbol from './isbol.mjs'
 import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import unbox from './_unbox.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -55,6 +56,9 @@ import unbox from './_unbox.mjs'
  *
  */
 function cint(v, opt = {}) {
+
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1: 轉型函數無法轉型回預設值, 不拋錯)
+    opt = pickOpt(opt, ['useClampSafe', 'useLimitSafe', 'returnWithStateAndMsg'])
 
     //useClampSafe
     let useClampSafe = get(opt, 'useClampSafe', null)

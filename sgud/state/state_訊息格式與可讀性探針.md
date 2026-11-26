@@ -4,6 +4,21 @@
 
 - 第 492 項第 9 批:訊息格式與文件、第 558 項共用可讀性探針(ws492j,2026-11-19)〔本節於 2026-11-19 新增〕
 
+## 第 492 項第 10 批(上):第 559 項 exec 家族輸入不可讀、command 含 NUL、`getObjSize`、V20 已知缺口、`chkReadable.ownKeys`(ws492k,2026-11-26;package.json version 1.9.78 之工作樹,未提交未發布)
+
+- **基準**: wsemi 1.9.78(HEAD `cf3f5c74e`,工作樹原乾淨);**未提交、未發布、未改 `script.txt`、未改其他套件、未改 dspec**.規則見 `rulebook_exec.md` R-EXEC-FAIL-01 規則 13、14、16、`rulebook_msg.md` R-MSG-V19-01 規則 9、R-READABLE-01;破壞性變更第 82 項(`rulebook_breaking_77on.md`).
+- **做到哪**(已實作):
+  - exec 家族(`execCli`／`execCliSession`／`execCliJsonRpc`／`execCliJsonFile`)輸入不可讀之訊息為固定詞彙(`invalid opt: must be a readable object`、`invalid args: must be a readable array`、`invalid opt.env: must be a readable object`、JsonRpc 之 `invalid requests: …`／`invalid requests[i]: …`／`invalid requests[i].params: must be serializable to JSON`);args 與 `opt.env` 入口讀為字串快照(`src/_execSnap.mjs`);`command` 含 NUL 入口擋下(execCli attempts 0;JsonRpc errorType params);`execCliCore.buildSpawnArgs` 非字串／含 NUL 拋固定訊息 TypeError(各平台);`execCliJsonFile` 結果檔失敗訊息固定詞彙.
+  - `getObjSize` 無原型物件、自有鍵 `hasOwnProperty` 不拋錯,JSDoc 範例更正.
+  - V20 已知缺口: `fsEnsureBinsCore` 清單未知鍵名不回顯;Excel 寫檔器拒絕之 `{ error }` 為固定字串(`_writeXlsxSafe.mjs`);`o2j`／`obj2str`／`obj2stru8arr`／`obj2u8arr` 之 `msg` 固定詞彙;`fsReadJson` 新增 opt 診斷出口;診斷出口單一擁有者 `_diagIfAsked.mjs`;`fsWatchFolder`／`fsWatchFile` 現況已無直接 console(靜態防線 `noConsoleEcho559.test.mjs`).
+  - `chkReadable.opt.ownKeys`: 讀 Symbol 鍵描述子;列舉有界(型別陣列／Buffer／DataView／String 包裝物件不列舉,描述子讀取受 `maxReads` 限制).
+- **測試**: 新增 `execCliInputGuard`、`chkReadableBounded`、`noConsoleEcho559`(及判斷與轉型之 `convHostile`、`judgeNativeTag`)之 `.test.mjs`;更新既有 18 檔之期望(`execCli`／`execCliSession`／`execCliJsonRpc`／`execCliJsonFile`／`o2j`／`obj2str`／`obj2stru8arr`／`obj2u8arr`／`ab2u8arr`／`u8arr2obj`／`downloadExcelFileFromData`／`getExcelU8ArrFromWorkbook`／`getExcelU8ArrFromData`／`fsReadJson`／`getObjSize`／`fsEnsureBins`／`fsEnsureBinsBundle`／`isbigint` 與 runner `execFailRunner`).驗證: 全套 `npm test` **33922 passing／8 pending／0 failing**(約 2 分;另 `npm pack` 發布包解開之目錄同為 33922／8／0);修前紅(改前 `src` 搭配本批全部測試檔,23 檔)980 passing／158 failing;變異 47 項(含修正後補之 6 項)除 2 項等價外全擊殺;獨立複審 17 項發現,屬實者(F1、F2、F3、F4、F5 文件、F6、F7、F13、F16)已修.
+- **已知缺口與待裁示**:
+  1. 同形之 state 模式於內部例外原樣轉出 `errToStr(err)` 者(`stru8arr2obj`、`u8arr2obj`、`ab2u8arr`、`str2obj` 非 SyntaxError、`timeTZ2expire` 等 4 函數,約 9 站)與 36 個轉型／編碼函數對已撤銷 Proxy 之 opt 於 `get(opt, …)` 拋錯,見 R-MSG-V19-01 已知限制①;建議另批以 `_pickOpt`／`_diagIfAsked` 機械套用.
+  2. `execCliJsonRpc` 之 rpc／exit／notfound 錯誤仍前置呼叫端之 `<method>: `(輸入值之回顯,契約已載且測試鎖定),待裁示是否去除.
+  3. `validate` 自訂函數拋出之文字仍進結果之 `stderr`(既有設計,契約字面只管 `error` 欄).
+  4. 下游固定舊行為: w-aggrid-vue `test/unit-hucre-limits.test.mjs`(2 處斷言寫檔器 Error 原文)、w-converhp `test/tools/probeDiff.mjs`、w-orm-mongodb `test/api-readable.test.mjs`(讀標籤次數,見判斷與轉型檔);連動由主控後處理.
+
 ## 第 492 項第 9 批:訊息格式與文件、第 558 項共用可讀性探針(ws492j,2026-11-19)
 
 - **基準**: wsemi 1.9.69(HEAD `cd3ff5c61`,工作樹原乾淨);**未提交、未發布、未改 `script.txt`、未改其他套件、未改 dspec**.規則見 `rulebook_msg.md` R-MSG-V19-01、R-READABLE-01;破壞性變更第 77 項(`rulebook_breaking_77on.md`).

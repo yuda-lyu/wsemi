@@ -236,6 +236,18 @@ describe(`execCliJsonFile`, function() {
             assert.strict.deepStrictEqual(r.status, 'error')
             assert.ok(r.message.startsWith('JSON parse failed: '), r.message)
             assert.ok(r.message.length > 'JSON parse failed: '.length)
+            //第559項④(V20): 冒號後為固定詞彙, 不含檔案內容片段('not json{')與路徑(原為JSON.parse之SyntaxError原文, 帶內容片段)
+            assert.strict.deepStrictEqual(r.message, 'JSON parse failed: invalid output file: must be a valid JSON text')
+        })
+
+        it(`should not put the output path or the file content into the 'JSON parse failed' message (read failure and parse failure)`, async function() {
+            let o = outp('o-nowrite-559.json')
+            fs.rmSync(o, { force: true })
+            let r = await execCliJsonFile({ script: sc('nowrite.mjs'), outputPath: o, exe: node })
+            assert.strict.deepStrictEqual(r.message, 'JSON parse failed: operation failed (code ENOENT)')
+            assert.strict.deepStrictEqual(r.message.includes('o-nowrite-559'), false)
+            let r2 = await execCliJsonFile({ script: sc('badjson.mjs'), outputPath: outp('o-bad-559.json'), exe: node })
+            assert.strict.deepStrictEqual([r2.message.includes('not json'), r2.message.includes('o-bad-559')], [false, false])
         })
 
         it(`should return 'JSON parse failed: ...' when the output file is empty`, async function() {
@@ -535,7 +547,7 @@ describe(`execCliJsonFile`, function() {
                 let r = await execCliJsonFile(o)
                 assert.strict.deepStrictEqual(Object.keys(r), ['status', 'message'])
                 assert.strict.deepStrictEqual(r.status, 'error')
-                assert.ok(/^UNKNOWN: /.test(r.message), r.message)
+                assert.strict.deepStrictEqual(r.message, 'invalid opt: must be a readable object') //第559項①: V19固定訊息, 不含getter所拋之文字(如'getter-script')與錯誤碼
             }
 
             //args為已撤銷之Proxy(批6裁定③: isarr對其回false而不拋錯): 非陣列, 依K3視為未給(不帶引數), 腳本照常執行並回傳其輸出(修前isarr拋TypeError而以結構化錯誤回報)

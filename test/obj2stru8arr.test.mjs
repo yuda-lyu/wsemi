@@ -169,15 +169,14 @@ describe(`obj2stru8arr`, function() {
             },
         }
         let r = obj2stru8arr(o, { returnWithStateAndMsg: true })
-        let rr = { state: 'error', msg: 'Error: boom-getter' }
+        let rr = { state: 'error', msg: 'invalid o: must be serializable to JSON' } //第559項④: 固定訊息, 不含getter所拋之文字'boom-getter'(V20)
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should return { state: 'error', msg: <TypeError> } when input an object with BigInt with returnWithStateAndMsg`, function() {
+    it(`should return { state: 'error', msg: 'invalid o: must be serializable to JSON' } when input an object with BigInt with returnWithStateAndMsg`, function() {
         let r = obj2stru8arr({ id: 1n, name: 'x' }, { returnWithStateAndMsg: true })
         assert.strict.deepStrictEqual(Object.keys(r).sort(), ['msg', 'state'])
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為序列化錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid o: must be serializable to JSON' })
     })
 
     it(`should return ${cout} when input ${JSON.stringify(inp)} with invalid returnWithStateAndMsg`, function() {
@@ -231,22 +230,22 @@ describe(`obj2stru8arr Error轉換(R-CODEC-ERR-01之1)`, function() {
 
     }
 
-    it(`should not throw but return { state: 'error', msg: '${nameThrowsErrorCase.msg}' } when reading name of an Error without prototype throws [R-CODEC-ERR-01之1]`, function() {
-        //R-CODEC-ERR-01 規則1: Error.prototype.toString讀name/message拋錯時依codec之catch回報; 規則2: catch以_errToStr轉字串而不外拋
+    it(`should not throw but return { state: 'error', msg: 'invalid o: must be serializable to JSON' } (not '${nameThrowsErrorCase.msg}') when reading name of an Error without prototype throws [R-CODEC-ERR-01之1, 第559項④]`, function() {
+        //R-CODEC-ERR-01 規則1: Error.prototype.toString讀name/message拋錯時依codec之catch回報; 規則2: catch不外拋; 第559項④: msg為固定詞彙, 不含呼叫端所拋出之文字
         let r = null
         assert.doesNotThrow(() => {
             r = obj2stru8arr({ v: nameThrowsErrorCase.mk() }, { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: nameThrowsErrorCase.msg })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid o: must be serializable to JSON' })
     })
 
-    it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: ${nameThrowsErrorCase.msg}' } by obj2u8arr when reading name of an Error without prototype throws [R-CODEC-ERR-01之1]`, function() {
-        //R-CODEC-ERR-01 規則1: 同上, 依codec之catch回報; obj2u8arr既有契約: 經obj2stru8arr失敗時msg前置'obj2stru8arr: '(同test/obj2u8arr.test.mjs之R-CODEC-ERR-01之2段)
+    it(`should not throw but return { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' } by obj2u8arr when reading name of an Error without prototype throws [R-CODEC-ERR-01之1, 第559項④]`, function() {
+        //R-CODEC-ERR-01 規則1: 同上, 依codec之catch回報; obj2u8arr既有契約: 經obj2stru8arr失敗時msg前置'obj2stru8arr: '(轉交前綴為合規形式, 同test/obj2u8arr.test.mjs之R-CODEC-ERR-01之2段)
         let r = null
         assert.doesNotThrow(() => {
             r = obj2u8arr({ v: nameThrowsErrorCase.mk() }, { returnWithStateAndMsg: true })
         })
-        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: `obj2stru8arr: ${nameThrowsErrorCase.msg}` })
+        assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'obj2stru8arr: invalid o: must be serializable to JSON' })
     })
 
     describe(`執行環境無Error.isError時之退路(外審 opus F04)`, function() {
@@ -279,13 +278,13 @@ describe(`obj2stru8arr Error轉換(R-CODEC-ERR-01之1)`, function() {
 describe(`obj2stru8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function() {
 
     for (let c of thrownCases) {
-        it(`should not throw but return { state: 'error', msg: '${c.msg}' } when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2]`, function() {
+        it(`should not throw but return { state: 'error', msg: 'invalid o: must be serializable to JSON' } (not the thrown text '${c.msg}') when toJSON throws ${c.name} with returnWithStateAndMsg [R-CODEC-ERR-01之2, 第559項④]`, function() {
             let data = { a: { toJSON: thrower(c.mk()) } }
             let r = null
             assert.doesNotThrow(() => {
                 r = obj2stru8arr(data, { returnWithStateAndMsg: true })
             })
-            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: c.msg })
+            assert.strict.deepStrictEqual(showDeep(r), { state: 'error', msg: 'invalid o: must be serializable to JSON' })
         })
     }
 
@@ -300,10 +299,19 @@ describe(`obj2stru8arr 呼叫端拋出任意值(R-CODEC-ERR-01之2)`, function()
         })
     }
 
-    it(`should keep the TypeError msg of BigInt serialization (same before and after the fix) [R-CODEC-ERR-01之2]`, function() {
-        let r = obj2stru8arr({ id: 1n }, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.startsWith('TypeError: Do not know how to serialize a BigInt'), true, `msg 應為 BigInt 序列化錯誤, got ${r.msg}`)
+    //第559項④: 循環參照之原生訊息帶構造器名與屬性名, 改為固定訊息; 原生細節經opt.funLog之診斷出口(預設靜默)
+    it(`should not leak the constructor name and the property name of a circular structure in msg, and hand the detail only to opt.funLog [第559項④]`, function() {
+        let SECRET = function Sec3tCtor() {}
+        let o = new SECRET()
+        o.sec3tProp = o
+        let r = obj2stru8arr(o, { returnWithStateAndMsg: true })
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'invalid o: must be serializable to JSON' })
+        assert.strict.deepStrictEqual(JSON.stringify(r).includes('Sec3t'), false)
+        let calls = []
+        let r2 = obj2stru8arr(o, { returnWithStateAndMsg: true, funLog: (label, safe, detail) => calls.push([label, safe, detail]) })
+        assert.strict.deepStrictEqual(r2, r)
+        assert.strict.deepStrictEqual(calls.length, 1)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi obj2stru8arr] can not serialize', { errType: 'TypeError' }])
     })
 
 })

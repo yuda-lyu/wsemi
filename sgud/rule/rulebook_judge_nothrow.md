@@ -25,7 +25,28 @@
   3. **`opt.onlyCheckDateObject` 既有語意之核對**(使用者 2026-11-16「另於實作時核對」): 與修前相同者——僅判斷是否為 `Date` 物件、不解析字串與數字、無效日期(`Invalid Date`)與跨 realm(vm)之 `Date` 亦為 `true`、`opt` 非布林(含 `new Boolean(true)`、`'true'`、`1`)視為未給;**唯一差異**:修前以 `Object.prototype.toString.call(v) === '[object Date]'` 判定,偽造 `Symbol.toStringTag` 為 `'Date'` 之一般物件與 `Object.create(Date.prototype)` 為 `true`,修後以內部槽判定而為 `false`(偽造者本非 `Date`,下游 0 站,唯一本庫呼叫端 `getDataFromExcelFileU8Arr` 只收真 `Date`).
   4. **`cint` 行為不改**,JSDoc 寫明超出安全整數範圍(絕對值大於 `Number.MAX_SAFE_INTEGER`)會失真(`cint(2 ** 60)` 為 `1152921504606847000`、`cint('9007199254740993')` 為 `9007199254740992`),要精確先以 `iseint` 判斷(同 `cdbl(Infinity)` 之甲).
   5. **不改者**(使用者已裁): `isnum('0x10')`、`isnum('Infinity')` 為 `true`(2026-10-31、2026-11-12 裁定,`is*` 依數學定義、`ise*` 判可用值);`ispint(Infinity)`、`ispint(1e10)`、`ispint('0x10')` 為 `true`(下游 ftp492 提出,主控第 4 點裁定已涵蓋,JSDoc 已寫「要判可用、可計算之整數用 `iseint`」,以 `test/isintMathDefinition.test.mjs` 核實).
-- 盤點指令: `git grep -n -E "\bcbol\(|\bisDate\(" -- src`(本庫 `cbol` 0 站、`isDate` 1 站 `getDataFromExcelFileU8Arr`〔`onlyCheckDateObject`〕);下游 `C:/opensrc/*/*/` 之 `src/server/toolg/test`: `cbol` 2 站(`w-fetch-web getOpt` 先經 `isbol` 守門故不受影響、`w-web-task procCore` 之 `asTask` 來自 HTTP 載荷,外部呼叫端送 `1`／`"TRUE"` 時由開任務改為不開)、wsemi 之 `isDate` 0 站;固定舊行為之下游測試 0 處.
+- 盤點指令: `git grep -n -E "\bcbol\(|\bisDate\(" -- src`(本庫 `cbol` 0 站、`isDate` 1 站 `getDataFromExcelFileU8Arr`〔`onlyCheckDateObject`〕);下游全部自有套件之 `src/server/toolg/test`: `cbol` 2 站(`w-fetch-web getOpt` 先經 `isbol` 守門故不受影響、`w-web-task procCore` 之 `asTask` 來自 HTTP 載荷,外部呼叫端送 `1`／`"TRUE"` 時由開任務改為不開)、wsemi 之 `isDate` 0 站;固定舊行為之下游測試 0 處.
 - JSDoc: `cbol`(B2 表、例)、`isDate`(收嚴規則、例、`onlyCheckDateObject`)、`cint`(失真與 `iseint`)已改寫,舊例(`'2019'`、`'2019-01'` 等為 `true`)已移除.
 - 測試(2026-11-19 ws492i): `test/cbol.test.mjs`(改寫,B2 各值)、`test/isDateStrict.test.mjs`(新,正反例、不存在之日期、無效 `Date`、跨 realm、偽造、包裝物件、已撤銷 Proxy、`opt`)、`test/isDate.test.mjs`(既有 32 案依新規則翻轉為 `false`)、`test/cint.test.mjs`(失真行為不改、`iseint` 對照、JSDoc、包裝物件)、`test/isintMathDefinition.test.mjs`.
 - 已知限制: ①`isDate` 之字串判定依賴 dayjs(同 `isday` 等):UMD 未載入 dayjs 全域時拋 `invalid dayjs`(修前 `isDate` 以 `new Date` 解析不依賴 dayjs);②不帶時區之字串依本機時區判定,本機夏令空窗內不存在之本地時刻為 `false`(同 `istime` 契約);③`isDate` 不收 `YYYY-MM`(年月另以 `ismonth` 判斷).
+
+## R-C1-HOSTILE-01 轉型與驗證函數對惡意值不拋錯(C1;排程第 492 項第 10 批 ws492k,第 551 項;ws492i Q-3)
+
+- **規則**(dspec〈輸入參數之檢測機制〉§5.3 C1: 無法轉型者回預設值、不拋錯;K3: opt 給了而讀取即拋錯視為未給):
+  1. **主參數**: `cdbl`、`cint`、`cstr`、`cbol` 對 `test/tools/hostileValues.mjs` 全集(19 值: 已撤銷之 Proxy〔物件、函數、陣列〕、陷阱全拋錯之 Proxy、讀取內部標籤或常讀鍵即拋錯之物件、元素存取即拋錯之陣列)皆回預設值(`0`、`0`、`''`、`false`),不拋錯.`cstr` 原經 lodash `isSymbol` 對已撤銷之 Proxy 拋錯,改以 `typeof` 判 Symbol/BigInt;**BigInt 與 Symbol 之包裝物件照舊拆包**(內部槽 `BigInt.prototype.valueOf`、`Symbol.prototype.valueOf`;`cstr(Object(1n))` 仍為 `'1'`,偽造 `Symbol.toStringTag` 之物件為 `''`).
+  2. **opt**: `cint`、`isUserPw` 於入口以內部 `src/_pickOpt.mjs` 取快照(只讀所需之鍵、各鍵一次、讀取拋錯之鍵視為未給;opt 為已撤銷之 Proxy 等亦同);`debug`／`funLog` 以快照上之惰性存取器讀取(只有非預期輸入時才讀,時序同修前).`cint` 於 `useLimitSafe` 且非 `returnWithStateAndMsg` 時之拋錯為設定之契約(非惡意值),不變;`isUserPw` 僅 `pw` 無效依既有契約(C11 驗證器)同步拋固定訊息.
+  3. **同形盤點**(只列不改,見 ws492k 報告〈同形盤點〉): 以 `get(opt, …)` 讀 opt 而於已撤銷之 Proxy 拋錯之函數 36 個(編碼、時間字串、`o2j` 族、`str2*`、`u8arr2*`、`trim`、`htmlEncode`／`htmlDecode`、`round`、`strTruncate` 等;`rep`／`replaceObj`／`replacePlus`／`repObj`／`sepInt`／`strDiff`／`strDiffToHtml`／`strFindFuzz`／`strFindSimilar`／`cache` 為必須參數依設計拋錯,不在內);`cfilesize`、`cfinancial`、`dig`、`digExp` 已不拋錯,以測試鎖定.
+- **站點**: `src/cstr.mjs`、`src/cint.mjs`、`src/isUserPw.mjs`、`src/_pickOpt.mjs`(新).
+- **測試**: `test/convHostile.test.mjs`(19 值 × 4 轉型函數、19 值與 3 個存取器鍵作 `cint` 之 opt、`isUserPw` 之 19 值與 16 個鍵、`cstr` 包裝物件、`debug` 惰性讀取、8 個轉型與格式化函數 × 3 個引數位置);變異 `M27`～`M31`、`M39`～`M41`(`_pickOpt` 之 `M30`、`M41` 為等價變異).
+- **已知限制**: ①快照只對 `cint`、`isUserPw` 套用,同形之 36 函數待裁示;②`isUserPw` 之 `forbiddenChars`、`commonPasswordBlacklist` 等陣列值內之元素讀取拋錯不在本批(opt 本身之讀取已安全).
+
+## R-JUDGE-NATIVE-01 判型改語言原生或內部槽,不被偽造之 `Symbol.toStringTag` 通過(排程第 492 項第 10 批 ws492k,第 552 項;ws492i Q-4)
+
+- **規則**(比照 `isstr`,判斷函數只收原始值;C2 永不拋錯):
+  1. `isnull`(`v === null`)、`isundefined`(`v === undefined`)、`isbigint`(`typeof v === 'bigint'`,`Object(1n)` 為 `false`).
+  2. `isab`、`isu8arr`、`isu16arr`: 以內部槽判定(單一擁有者 `src/_slotKind.mjs`: `ArrayBuffer.prototype.byteLength` 存取器、`%TypedArray%.prototype[Symbol.toStringTag]` 存取器,載入時取得,其後被覆寫不影響;對非該類之物件〔含 Proxy、已撤銷之 Proxy、原始值〕拋 TypeError 一律視為否).偽造 `Symbol.toStringTag` 之一般物件為 `false`,被覆寫標籤之真實例與跨 realm(`vm`、iframe)之真實例為 `true`,Node 之 Buffer 為 `isu8arr` 真,SharedArrayBuffer 非 ArrayBuffer,**Proxy 包裝之 ArrayBuffer 為 `false`**(舊標籤判定為 `true`).缺存取器之極舊引擎退為標籤判定.
+  3. **停於該函數(下游有依賴現行語意而會改變結果,列需裁示)**: `isarr`(下游依賴 `Symbol.toStringTag` 讀取拋錯之陣列 Proxy 判為 `false` 之寫入守門;`Array.isArray` 對其為 `true`)、`isobj`(下游 w-serv-orm `getMapOrm` 巢狀節點分類依賴偽造 `'Object'` 標籤者仍被掃描)、`isblob`／`isfile`(以標籤判型為跨實作替身之設計);`ispm` 之標籤判定與 thenable 邏輯不變.
+- **站點**: `src/isnull.mjs`、`src/isundefined.mjs`、`src/isbigint.mjs`、`src/isab.mjs`、`src/isu8arr.mjs`、`src/isu16arr.mjs`、`src/_slotKind.mjs`(新);`src/_tagOf.mjs` 仍為 `isarr`／`isobj`／`isblob`／`isfile`／`_unbox` 所用.連帶: `cstr` 對 BigInt／Symbol 包裝物件改自拆包(行為不變).
+- **盤點指令**: `Grep "_tagOf" src/`(預期 `isarr`、`isobj`、`isblob`、`isfile`、`_unbox`);下游盤點見 ws492k 報告〈下游盤點〉(131 個自有套件、6134 檔: 直接呼叫 `isbigint` 0、`isab` 1〔w-gis〕、`isu8arr` 3、`isu16arr` 0、`isnull`／`isundefined` 約 10 站,皆以正常值呼叫).
+- **測試**: `test/judgeNativeTag.test.mjs`(6 函數: 真實例、偽造標籤〔屬性與 getter〕、被覆寫標籤、子類別、跨 realm、Proxy 包裝、Buffer、SharedArrayBuffer、hostileValues 19 值皆 `false`、載入後全域覆寫不影響)、`test/isbigint.test.mjs`(包裝物件翻轉)、`test/obj2u8arr.test.mjs`(Proxy 包裝之 ArrayBuffer 不再打包);變異 `M32`～`M38`.
+- **已知限制**: ①`isarr`／`isobj`／`isblob`／`isfile` 仍可被偽造標籤通過(待裁示);②Proxy 包裝之 ArrayBuffer 舊為 `true` 者(僅測試夾具使用)改 `false`.

@@ -488,7 +488,8 @@ describe(`execCli`, function() {
         //P04a、P04b
         assert.strict.deepStrictEqual('resolved' in r, true)
         assert.strict.deepStrictEqual([r.resolved.ok, r.resolved.code, r.resolved.pid, r.resolved.attempts], [false, null, undefined, 1])
-        assert.strict.deepStrictEqual(r.resolved.error.startsWith('UNKNOWN: '), true)
+        //第559項①: 無法轉為字串之元素於入口快照時即轉換失敗, 以固定訊息回報(不含原生之TypeError文字; 原於buildSpawnArgs拋錯而為'UNKNOWN: <原生訊息>')
+        assert.strict.deepStrictEqual(r.resolved.error, 'invalid args: must be a readable array')
     })
 
 })
@@ -628,11 +629,11 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
             s: 'resolve',
             ok: false,
             code: null,
-            error: 'UNKNOWN: env getter boom',
+            error: 'invalid opt.env: must be a readable object', //第559項①: V19固定訊息, 不含getter所拋之文字'env getter boom'(V20)
             attempts: 1,
             hasPidKey: true,
             pidType: 'undefined',
-            session: { error: 'UNKNOWN: env getter boom', pid: null, exited: true },
+            session: { error: 'invalid opt.env: must be a readable object', pid: null, exited: true },
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []])
     })
@@ -684,20 +685,20 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
 
     it(`execCli、execCliSession: opt之getter拋錯、opt本身或其選項值、command為已撤銷之Proxy時以結果物件回報(execCli不reject、execCliSession不throw), 回調不可讀者於入口即判定、不於監聽器內拋錯且stop()必落定 [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('inputUnreadable')
-        //規則13: execCli以規則4之結果物件回報(error '<碼>: <訊息>', 無碼者為UNKNOWN; attempts 1、pid鍵undefined)
-        let cli = (m) => ({ ok: false, code: null, error: `UNKNOWN: ${m}`, attempts: 1, hasPidKey: true, pidType: 'undefined' })
-        //規則13: execCliSession不spawn, 以onExit與stop()之結果回報(pid null, error同形)
-        let ses = (m) => ({ code: null, error: `UNKNOWN: ${m}`, pid: null, exited: true })
+        //規則13: execCli以規則4之結果物件回報(error為V19固定訊息'invalid opt: must be a readable object', 不含getter所拋之文字與錯誤碼; attempts 1、pid鍵undefined; 第559項①)
+        let cli = () => ({ ok: false, code: null, error: 'invalid opt: must be a readable object', attempts: 1, hasPidKey: true, pidType: 'undefined' })
+        //規則13: execCliSession不spawn, 以onExit與stop()之結果回報(pid null, error同為固定訊息)
+        let ses = () => ({ code: null, error: 'invalid opt: must be a readable object', pid: null, exited: true })
         //已撤銷之Proxy(批6裁定③: 判斷函數isobj、isstr、isfun對其回false而不拋錯)屬「非一般物件／非字串／非函數」之非預期輸入, 依K3視為未給, 照常執行(修前判型時拋TypeError, 以結果物件回報錯誤)
         let cliOk = { ok: true, code: 0, error: '', attempts: 1, hasPidKey: true, pidType: 'number' }
         let sesOk = { code: 0, error: '', pid: 'number', exited: true }
         assert.strict.deepStrictEqual(r.out, {
-            cliGetter: cli('getter boom cwd'), //getter拋錯仍為錯誤(讀取本身失敗, 非型別問題)
+            cliGetter: cli(), //getter拋錯仍為錯誤(讀取本身失敗, 非型別問題), 訊息為固定詞彙, 不含'getter boom cwd'
             cliOptRevoked: cliOk, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給
             cliEnvRevoked: cliOk, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數
             cliOnStdoutRevoked: cliOk, //onStdout為已撤銷之函數Proxy: 非函數, 視為未給
             cliCommandRevoked: { ok: false, code: null, error: 'invalid command: must be a non-empty string', attempts: 0, hasPidKey: false, pidType: 'undefined' }, //command為必須參數: 非字串即無效, 不啟動(attempts 0; 修前為UNKNOWN: <revoked>)
-            sesGetter: ses('getter boom onExit'),
+            sesGetter: ses(), //固定詞彙, 不含'getter boom onExit'
             sesOptRevoked: sesOk,
             sesEnvRevoked: sesOk,
             sesOnLineRevoked: sesOk,
@@ -719,14 +720,14 @@ describe(`execCli 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual(r.unhandled, []) //規則13: 不reject、不產生未處理之rejection
     })
 
-    it(`execCli: 選項getter拋出非Error之值(null、undefined、字串)時以結果物件回報, error保留拋出值之文字 [R-EXEC-FAIL-01之13]`, function() {
+    it(`execCli: 選項getter拋出非Error之值(null、undefined、字串)時以結果物件回報, error為固定訊息而不含拋出值之文字(V19、V20) [R-EXEC-FAIL-01之13, 第559項①]`, function() {
         let { r } = runExecFail('cliThrownValues')
-        //規則13: execCli以規則4之結果物件回報(error '<碼>: <訊息>', 無碼者為UNKNOWN; attempts 1、pid鍵undefined); 訊息取getErrorMessage, 為空退_errToStr(拋出值之文字不遺失)
-        let x = (m) => ({ ok: false, code: null, error: `UNKNOWN: ${m}`, attempts: 1, hasPidKey: true, pidType: 'undefined' })
+        //規則13: execCli以規則4之結果物件回報(attempts 1、pid鍵undefined); error為固定訊息'invalid opt: must be a readable object', 不含呼叫端所拋出之文字(修前保留拋出值之文字, 如'thrown-x')
+        let x = () => ({ ok: false, code: null, error: 'invalid opt: must be a readable object', attempts: 1, hasPidKey: true, pidType: 'undefined' })
         assert.strict.deepStrictEqual(r.out, {
-            null: x('null'), //規則13: 拋出null
-            undefined: x('undefined'), //規則13: 拋出undefined
-            string: x('thrown-x'), //規則13: 拋出字串
+            null: x(), //規則13: 拋出null
+            undefined: x(), //規則13: 拋出undefined
+            string: x(), //規則13: 拋出字串, 其文字'thrown-x'不外露
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })
@@ -905,8 +906,8 @@ describe(`execCli 觀察回調(R-TRACE-01)`, function() {
         let optTraceGetter = badProp({}, 'onTrace', 'trace getter boom')
         let r3 = await execCli(nodeBin, ['-e', '1'], optTraceGetter)
         assert.strict.deepStrictEqual([r1.ok, r1.error, r1.attempts], [false, 'invalid command: must be a non-empty string', 0])
-        assert.strict.deepStrictEqual([r2.ok, r2.error, r2.attempts], [false, 'UNKNOWN: cwd getter boom', 1])
-        assert.strict.deepStrictEqual([r3.ok, r3.error, r3.attempts], [false, 'UNKNOWN: trace getter boom', 1]) //onTrace屬性本身不可讀亦以結果物件回報, 不reject
+        assert.strict.deepStrictEqual([r2.ok, r2.error, r2.attempts], [false, 'invalid opt: must be a readable object', 1]) //第559項①: 固定訊息, 不含'cwd getter boom'
+        assert.strict.deepStrictEqual([r3.ok, r3.error, r3.attempts], [false, 'invalid opt: must be a readable object', 1]) //onTrace屬性本身不可讀亦以結果物件回報, 不reject; 固定訊息, 不含'trace getter boom'
         assert.strict.deepStrictEqual(tr.events, [])
     })
 

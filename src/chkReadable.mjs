@@ -18,6 +18,7 @@ let rHas = Reflect.has
 let hasOwn = call.bind(Object.prototype.hasOwnProperty)
 let isArray = Array.isArray
 let isView = ArrayBuffer.isView
+let strValueOf = call.bind(String.prototype.valueOf)
 let isSafeInt = Number.isSafeInteger
 let NewWeakSet = WeakSet
 let NewWeakMap = WeakMap
@@ -181,20 +182,44 @@ let hasToJSON = (x, cache) => {
 }
 
 
-//readKeys, ownKeys之讀取: 所有物件與函數讀自有鍵(Reflect.ownKeys); 標籤為[object Object]者另沿原型鏈逐層讀自有鍵與字串鍵之描述子(iseobj之for...in讀取之超集)
-let readKeys = (v, tag) => {
+//isVirtualKeyed, 自有索引鍵為虛擬者: 型別陣列(含Buffer)、DataView與String包裝物件; 其索引鍵不存在於物件中, Reflect.ownKeys會一次配置全部索引字串(長度大時耗盡記憶體), 且非Proxy之此類物件讀鍵與描述子不可能拋錯, 故不列舉(有界)
+//  以內部槽判定(ArrayBuffer.isView、String.prototype.valueOf), 偽造Symbol.toStringTag者不受影響; Proxy包裝者非此類(其鍵經陷阱讀取, 為呼叫端之程式, 無從先行得知大小), 照常讀取
+let isVirtualKeyed = (x) => {
     try {
-        rOwnKeys(v)
+        if (isView(x)) {
+            return true
+        }
+        strValueOf(x)
+        return true
+    }
+    catch (err) {
+        return false
+    }
+}
+
+
+//readKeys, ownKeys之讀取: 所有物件與函數讀自有鍵(Reflect.ownKeys); 標籤為[object Object]者另沿原型鏈逐層讀自有鍵與全部自有鍵(字串與Symbol)之描述子(iseobj之for...in讀取之超集)
+//  有界: 虛擬索引鍵者(isVirtualKeyed)不列舉; 描述子之讀取總量超過maxReads回'structure is too large'(同opt.deep); 原型鏈超過PROTO_MAX層回'keys are unreadable'; 回傳''或原因
+let readKeys = (v, tag, maxReads) => {
+    try {
+        if (!isVirtualKeyed(v)) {
+            rOwnKeys(v)
+        }
         if (tag === '[object Object]') {
             let p = v
             let n = 0
+            let reads = 0
             while (p !== null) {
                 if (n >= PROTO_MAX) {
-                    return false
+                    return R.keys
                 }
-                let ks = rOwnKeys(p)
-                for (let k of ks) {
-                    if (typeof k === 'string') {
+                if (!isVirtualKeyed(p)) {
+                    let ks = rOwnKeys(p)
+                    for (let k of ks) {
+                        reads++
+                        if (reads > maxReads) {
+                            return R.large
+                        }
                         rGetDesc(p, k)
                     }
                 }
@@ -202,10 +227,10 @@ let readKeys = (v, tag) => {
                 n++
             }
         }
-        return true
+        return ''
     }
     catch (err) {
-        return false
+        return R.keys
     }
 }
 
@@ -272,7 +297,7 @@ let readDeep = (root, max, maxReads) => {
         }
         let leaf = false
         try {
-            leaf = isView(x) || tag === '[object ArrayBuffer]' || tag === '[object SharedArrayBuffer]' || tag === '[object Error]' || tag === '[object DOMException]'
+            leaf = isView(x) || tag === '[object ArrayBuffer]' || tag === '[object SharedArrayBuffer]' || tag === '[object Error]' || tag === '[object DOMException]' || isVirtualKeyed(x) //String包裝物件(序列化器取其原始字串)亦為葉節點, 其虛擬索引鍵不列舉(有界)
         }
         catch (err) {
             leaf = false
@@ -368,9 +393,9 @@ let readDeep = (root, max, maxReads) => {
  * 4. 預設(不給opt)之讀取範圍：對物件與函數讀內部標籤Object.prototype.toString.call(v)，與isobj、isarr、isnull、isfun之前置讀取同源；不可讀回'tag is unreadable'。
  * 5. opt.fun：另做函數型之讀取(isfun所用lodash isFunction之讀取，唯不讀Symbol.toStringTag之值、不暫時改寫)，即Symbol.toStringTag之has與描述子；不可讀回'function type is unreadable'。lodash之getRawTag另會暫時改寫與刪除Symbol.toStringTag，本函數不做(不改寫受檢物)，故僅壞set或deleteProperty陷阱之Proxy，isfun為false而本函數回''。
  * 6. opt.has：對各鍵k做k in v(haskey之讀取，觸發Proxy之has陷阱)；不可讀回'key is unreadable'；只收字串、Symbol與數字之鍵(數字同haskey轉為字串鍵)、至多1000個。
- * 7. opt.ownKeys：讀自有鍵(Reflect.ownKeys，觸發ownKeys陷阱)；標籤為[object Object]者另沿原型鏈逐層讀自有鍵與字串鍵之描述子(觸發getPrototypeOf、getOwnPropertyDescriptor陷阱，為iseobj之for...in讀取之超集，原型鏈超過1000層視為不可讀)；不可讀回'keys are unreadable'。
+ * 7. opt.ownKeys：讀自有鍵(Reflect.ownKeys，觸發ownKeys陷阱)；標籤為[object Object]者另沿原型鏈逐層讀自有鍵與全部自有鍵(字串與Symbol)之描述子(觸發getPrototypeOf、getOwnPropertyDescriptor陷阱，為iseobj之for...in讀取之超集，原型鏈超過1000層視為不可讀)；不可讀回'keys are unreadable'。列舉有界：型別陣列(含Buffer)、DataView與String包裝物件之索引鍵為虛擬(Reflect.ownKeys會一次配置全部索引字串，長度大時耗盡記憶體)，且非Proxy之此類物件讀鍵不可能拋錯，故以內部槽判定後不列舉(原型鏈上之此類物件亦同，偽造Symbol.toStringTag者不受影響；Proxy包裝者照常經陷阱讀取)；描述子之讀取總量超過opt.maxReads回'structure is too large'。
  * 8. opt.elements：陣列之長度與元素。'none'(預設)不讀；'first'同isearr(讀length，為1時讀第0個元素)；'all'讀length(須為非負安全整數，否則回'length is not a non-negative safe integer'，超過opt.maxElements回'too many elements')並逐一讀取各元素(洞與存取器元素略過)。length不可讀回'length is unreadable'、元素不可讀回'element is unreadable'。'first'依內部標籤判陣列(同isarr)，'all'依Array.isArray；'first'以描述子加取值讀取，對Proxy較isearr(只讀length與[0])多觸發一次getOwnPropertyDescriptor陷阱(為其超集)。
- * 9. opt.deep：深探，迭代堆疊走訪(不遞迴，深層不致堆疊溢位)，WeakSet去重(循環與共享參照不算不可讀)；走訪範圍對齊序列化器會走到者：葉節點(函數、型別陣列與DataView、ArrayBuffer、SharedArrayBuffer、Error、DOMException、有toJSON者)不展開，陣列逐元素(同opt.elements='all'，含長度檢查)，其他物件取自有可列舉字串鍵之資料屬性值(先取描述子，資料屬性再經Reflect.get取值，Proxy之get陷阱拋錯即不可讀，與序列化器經[[Get]]讀取同；Symbol鍵、不可列舉鍵、存取器略過)；葉節點依內部標籤判定，偽造Symbol.toStringTag者其子圖不被走訪(同序列化器，已知限制)；走訪之讀取總量(節點、陣列元素、物件鍵各計一次)超過opt.maxReads回'structure is too large'；不可讀回'tag is unreadable'、'keys are unreadable'、'property is unreadable'、'length is unreadable'、'element is unreadable'等。opt.fun、opt.has、opt.ownKeys、opt.elements只作用於頂層之v，深探走訪之節點只讀標籤、陣列長度與元素。
+ * 9. opt.deep：深探，迭代堆疊走訪(不遞迴，深層不致堆疊溢位)，WeakSet去重(循環與共享參照不算不可讀)；走訪範圍對齊序列化器會走到者：葉節點(函數、型別陣列與DataView、String包裝物件、ArrayBuffer、SharedArrayBuffer、Error、DOMException、有toJSON者)不展開，陣列逐元素(同opt.elements='all'，含長度檢查)，其他物件取自有可列舉字串鍵之資料屬性值(先取描述子，資料屬性再經Reflect.get取值，Proxy之get陷阱拋錯即不可讀，與序列化器經[[Get]]讀取同；Symbol鍵、不可列舉鍵、存取器略過)；葉節點依內部標籤判定，偽造Symbol.toStringTag者其子圖不被走訪(同序列化器，已知限制)；走訪之讀取總量(節點、陣列元素、物件鍵各計一次)超過opt.maxReads回'structure is too large'；不可讀回'tag is unreadable'、'keys are unreadable'、'property is unreadable'、'length is unreadable'、'element is unreadable'等。opt.fun、opt.has、opt.ownKeys、opt.elements只作用於頂層之v，深探走訪之節點只讀標籤、陣列長度與元素。
  * 10. 原因字串為固定詞彙，不回顯輸入值與原例外訊息，供呼叫端組成'invalid args[1]: must be a readable value'等訊息。
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/chkReadable.test.mjs Github}
@@ -383,7 +408,7 @@ let readDeep = (root, max, maxReads) => {
  * @param {Array} [opt.has=[]] 輸入需做in探測之鍵(字串、Symbol或數字)陣列，預設[]
  * @param {String} [opt.elements='none'] 輸入陣列長度與元素之讀取方式字串，可選'none'、'first'、'all'，預設'none'
  * @param {Integer} [opt.maxElements=1000000] 輸入陣列長度上限(opt.elements為'all'與opt.deep時)非負整數，預設1000000
- * @param {Integer} [opt.maxReads=50000000] 輸入深探之讀取總量上限(opt.deep時)非負整數，預設50000000，需無上限者傳Number.MAX_SAFE_INTEGER
+ * @param {Integer} [opt.maxReads=50000000] 輸入讀取總量上限(opt.deep之走訪，與opt.ownKeys沿原型鏈之描述子讀取：原型鏈上Object.prototype等之自有鍵亦計入)非負整數，預設50000000，需無上限者傳Number.MAX_SAFE_INTEGER
  * @returns {String} 回傳''(可讀)，或原因字串'tag is unreadable'、'function type is unreadable'、'key is unreadable'、'keys are unreadable'、'length is unreadable'、'length is not a non-negative safe integer'、'too many elements'、'element is unreadable'、'property is unreadable'、'structure is too large'、'unreadable'(保險：未預期之例外)
  * @example
  *
@@ -460,8 +485,9 @@ function chkReadable(v, opt = {}) {
 
         //ownKeys
         if (o.ownKeys) {
-            if (!readKeys(v, tag)) {
-                return R.keys
+            let r = readKeys(v, tag, o.maxReads)
+            if (r !== '') {
+                return r
             }
         }
 

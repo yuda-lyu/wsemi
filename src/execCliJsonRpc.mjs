@@ -7,8 +7,6 @@ import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 import optVal from './_optVal.mjs'
 import execCliSession from './execCliSession.mjs'
-import execSpawnError from './_execSpawnError.mjs'
-import execThrownMsg from './_execThrownMsg.mjs'
 
 
 //opt.timeoutMs: opt類數值參數(iseint, 帳本G17、R-OPT-VAL-01), 計時毫秒1~2147483647, 非預期改用預設120000
@@ -18,7 +16,7 @@ let RULE_TIMEOUT_MS = { fn: 'execCliJsonRpc', name: 'opt.timeoutMs', kind: 'eint
 /**
  * 對stdio協定型CLI依序送出一行一則JSON之請求並收集回應(疊於execCliSession之上)，適用codex app-server、MCP之stdio伺服器等以換行分隔JSON之協定(LSP為Content-Length分幀，不適用)
  * 不內建任何協定知識，initialize/initialized等握手由呼叫端以請求陣列表達
- * 本函數不throw亦不reject，一律以結果物件之ok與error、errorType欄位回報成敗，error不含args與env之值；command、args、requests、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時不啟動子進程，errorType為params；請求之params無法序列化為JSON(如含BigInt、循環參照)時errorType亦為params，error為'<method>: 無法序列化為JSON: <訊息>'，已啟動之子進程照常經stop()結束
+ * 本函數不throw亦不reject，一律以結果物件之ok與error、errorType欄位回報成敗，error不含args與env之值；requests、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時不啟動子進程，errorType為params，error為固定訊息'invalid requests: must be a readable array'、'invalid requests[i]: must be a readable object'或'invalid opt: must be a readable object'(不含呼叫端所拋出之文字與錯誤碼)；command非非空字串或含NUL(空字元)時不啟動子進程，errorType為params，error為'invalid command: must be a non-empty string'或'invalid command: must not contain a NUL character'；請求之params無法序列化為JSON(如含BigInt、循環參照)時errorType亦為params，error為固定訊息'invalid requests[i].params: must be serializable to JSON'(以索引定位，不含method名稱)，已啟動之子進程照常經stop()結束
  *
  * 規則:
  *   - 請求物件含method者為請求，自動配id(自0遞增)並等待同id之回應；含notify者為通知，不配id，送出即繼續
@@ -44,7 +42,7 @@ let RULE_TIMEOUT_MS = { fn: 'execCliJsonRpc', name: 'opt.timeoutMs', kind: 'eint
  * @param {Function} [opt.onServerRequest=undefined] 輸入伺服器發給客戶端之請求(帶id且含method)回調函數，格式為(msg, session)=>{}，可用session.writeLine回覆，預設undefined
  * @param {Function} [opt.onStderr=undefined] 輸入stderr片段回調函數，格式為(chunk)=>{}，預設undefined。onNotify、onServerRequest、onStderr內拋出之錯誤不會被攔截，將成為未捕捉例外，請於回調內自行處理(該錯誤於回調返回後立即(微任務)原樣重拋，不影響其餘訊息之處理與本函數之結果)
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，原樣轉交execCliSession，事件即其工作階段之事件(type為spawn、data、write、stop、grace、timeout、kill、settle，欄位與時機見execCliSession之opt.onTrace，其中write為每則請求或通知寫入stdin一次，timeout之ms為本函數之timeoutMs，stop與grace之ms為exitGraceMs)，本函數自身無計時器亦不另通知；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數；opt.onTrace屬性本身不可讀(getter拋錯)與onStderr相同，errorType為params，預設null
- * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤，含輸入不可讀與params無法序列化)、notfound(子進程未能啟動，如命令不存在、npm shim之入口檔不存在、非有效執行檔、權限不足、cwd不存在、交execCliSession之cwd、env、exitGraceMs之值不可讀)、timeout(逾時)、exit(已啟動之子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否全部成功布林值)、results(以method為鍵之result物件，失敗者為null)、responses(依序之回應陣列，每項為{ id, method, result, error })、error(錯誤訊息字串，成功時為空字串)、errorType(錯誤類型字串: params(參數錯誤，含輸入不可讀與params無法序列化)、notfound(子進程未能啟動，如命令不存在、npm shim之入口檔不存在、非有效執行檔、權限不足、cwd不存在、交execCliSession之cwd、env、exitGraceMs之值不可讀，args之元素不可讀；error為'<method>: invalid args: must be a readable array'或'<method>: invalid opt.env: must be a readable object'等固定訊息)、timeout(逾時)、exit(已啟動之子進程於回應前結束)、rpc(回應含error)，成功時為空字串)、durationMs(耗時毫秒)、exitCode(子進程離開碼)
  * @example
  * //need test in nodejs
  *
@@ -118,12 +116,16 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
     let onServerRequest
     let optSession = {}
     let reqs = [] //requests之快照(入口逐項讀取之元素), 其後依序送出時迭代此陣列, 不再迭代呼叫端之陣列
+    let bad = 'opt: must be a readable object' //讀取拋錯時之固定訊息(V19, 接在'invalid '之後; 不含呼叫端所拋出之文字與錯誤碼, V20), 依讀取進度更新為requests或requests[i]
     try {
         let v
 
-        //command
+        //command, 非空字串且不含NUL(空字元; 含NUL者入口擋下, 不交給spawn之原生訊息)
         if (!isestr(command)) {
             return rFail('params', 'invalid command: must be a non-empty string')
+        }
+        if (command.includes('\0')) {
+            return rFail('params', 'invalid command: must not contain a NUL character')
         }
 
         //args
@@ -135,13 +137,17 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
         if (!isarr(requests)) {
             requests = []
         }
-        for (let i = 0; i < requests.length; i++) {
+        bad = 'requests: must be a readable array'
+        let nReq = requests.length //長度只讀一次(檢查之值即使用之值; 其後之迭代不再觸及requests之length, 故讀取拋錯之訊息不會誤指某一請求)
+        for (let i = 0; i < nReq; i++) {
+            bad = `requests[${i}]: must be a readable object`
             let q = requests[i]
             if (!isobj(q) || (!isestr(q.method) && !isestr(q.notify))) {
                 return rFail('params', `invalid requests[${i}]: must be an object with a non-empty string method or notify`)
             }
             reqs.push(q)
         }
+        bad = 'opt: must be a readable object'
 
         //opt
         if (!isobj(opt)) {
@@ -188,8 +194,7 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
 
     }
     catch (err) {
-        let e = execSpawnError(err)
-        return rFail('params', `${e.code}: ${execThrownMsg(e, err)}`)
+        return rFail('params', `invalid ${bad}`)
     }
 
     //state
@@ -289,9 +294,11 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
 
     //依序送出, 迭代入口之快照reqs(迭代呼叫端之陣列位於try外, 陷阱非決定性之Proxy陣列會於此拋出而reject且子進程殘留至逾時)
     let failed = null
-    for (let q of reqs) {
+    for (let iReq = 0; iReq < reqs.length; iReq++) {
+        let q = reqs[iReq]
 
         //line, 讀取請求物件並序列化須在try內: params無法序列化(BigInt、循環參照、toJSON拋錯、已撤銷之Proxy等)時以params回報並break, 交下方收尾之stop()結束子進程(不得直接拋出而使子進程殘留至逾時); 其後一律用讀取當下之快照
+        //  失敗訊息為固定詞彙(V19、V20): 以索引定位, 不含method名稱(呼叫端之字串)與呼叫端所拋出之文字
         let method
         let notify
         let isNotify
@@ -305,9 +312,7 @@ async function execCliJsonRpc(command, args = [], requests = [], opt = {}) {
             line = JSON.stringify(buildMsg(id, isNotify ? notify : method, q.params))
         }
         catch (err) {
-            let e = execSpawnError(err)
-            let name = typeof method === 'string' && method !== '' ? method : (typeof notify === 'string' ? notify : 'request') //catch內不再呼叫可拋錯之判型
-            failed = rFail('params', `${name}: 無法序列化為JSON: ${execThrownMsg(e, err)}`, { results, responses })
+            failed = rFail('params', `invalid requests[${iReq}].params: must be serializable to JSON`, { results, responses })
             break
         }
 

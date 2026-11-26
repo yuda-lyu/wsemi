@@ -888,12 +888,13 @@ describe(`fsEnsureBins with a local server`, function() {
         ['files empty', C((m) => {
             m.files = []
         }), 'files'],
+        //第559項④(V20): 未知之鍵名來自清單內容(輸入, 無長度上限), 不回顯; field只帶所在之位置
         ['unknown root field', C((m) => {
             m.extra = 1
-        }), '(root).extra'],
+        }), '(root)'],
         ['unknown file field (typo)', C((m) => {
             m.files[0].sah256 = 'x'
-        }), 'files[0].sah256'],
+        }), 'files[0]'],
         ['name with a path', C((m) => {
             m.files[0].name = '../tool.exe'
         }), 'files[0].name'],
@@ -1038,6 +1039,24 @@ describe(`fsEnsureBins with a local server`, function() {
             assert.strict.deepStrictEqual(fs.readdirSync(root), [])
         })
     }
+
+    it(`should not echo the name of an unknown manifest field (any length) in the E_MANIFEST message or field (V20, 第559項④)`, async function() {
+        let secret = 'sEcRet-field-name-' + 'x'.repeat(5000)
+        for (let place of ['root', 'file']) {
+            let m = mf([fTool(), fK6(), fFf()])
+            if (place === 'root') {
+                m[secret] = 1
+            }
+            else {
+                m.files[1][secret] = 1
+            }
+            let e = await catchErr(ens(m, { pkgRoot: fx('badkey'), fetch: failFetch }))
+            assert.strict.deepStrictEqual([e.code, e.step], ['E_MANIFEST', 'manifest'], place)
+            assert.strict.deepStrictEqual([e.field, e.message.includes('sEcRet'), String(e.field).includes('sEcRet')], [place === 'root' ? '(root)' : 'files[1]', false, false], place)
+            assert.strict.deepStrictEqual(e.message.length < 500, true, place)
+            assert.strict.deepStrictEqual(e.message.includes('must only have fields of schema 1 (allowed: '), true, e.message)
+        }
+    })
 
     it(`should accept a valid manifest of every source form, and a floating manifest without a commit (M1)`, async function() {
         let root = fx('good')

@@ -29,9 +29,14 @@ describe(`isbigint`, function() {
         assert.strict.deepStrictEqual(r, true)
     })
 
-    it(`should return true when input Object(123n) (boxed BigInt)`, function() {
+    //第552項: 判斷函數只收原始值(同isstr), BigInt包裝物件與偽造Symbol.toStringTag為'BigInt'之物件為false
+    it(`should return false when input Object(123n) (boxed BigInt, only primitive BigInt is accepted)`, function() {
         let r = isbigint(Object(123n))
-        assert.strict.deepStrictEqual(r, true)
+        assert.strict.deepStrictEqual(r, false)
+    })
+
+    it(`should return false when input an object whose Symbol.toStringTag is forged as 'BigInt'`, function() {
+        assert.strict.deepStrictEqual(isbigint({ [Symbol.toStringTag]: 'BigInt' }), false)
     })
 
     it(`should return false when input 0`, function() {

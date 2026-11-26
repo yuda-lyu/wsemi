@@ -5,7 +5,7 @@ import iseobj from './iseobj.mjs'
 import haskey from './haskey.mjs'
 import downloadFileFromBlob from './downloadFileFromBlob.mjs'
 import getExcelWorkbookFromData from './getExcelWorkbookFromData.mjs'
-import getExcelU8ArrFromWorkbook from './getExcelU8ArrFromWorkbook.mjs'
+import writeXlsxSafe from './_writeXlsxSafe.mjs'
 import ltdtkeysheads2mat from './ltdtkeysheads2mat.mjs'
 import isWindow from './isWindow.mjs'
 import fsErrMsg from './_fsErrMsg.mjs'
@@ -17,7 +17,7 @@ import getDiag from './getDiag.mjs'
  *
  * 本函數為async function，前端觸發瀏覽器下載，後端寫入檔案(fileName可含路徑)
  *
- * 失敗一律resolve { error }(不reject、不拋錯)，error為固定字串、不含輸入值(V19、V20；原console.log帶出fileName與整份data，含NUL之檔名與寫檔失敗以Node原生錯誤reject而回顯路徑)：fileName非非空字串為'invalid fileName: must be a non-empty string'，fileName含NUL字元為'invalid fileName: must not contain a NUL character'，data非陣列為'invalid data: must be an array'，寫檔失敗為'operation failed (code <錯誤碼>)'(如ENOENT、EPERM，不帶路徑)；轉換失敗回傳下游之{ error }；檢測順序為fileName、data，且先於任何轉換與寫檔
+ * 失敗一律resolve { error }(不reject、不拋錯)，error為固定字串、不含輸入值(V19、V20；原console.log帶出fileName與整份data，含NUL之檔名與寫檔失敗以Node原生錯誤reject而回顯路徑)：fileName非非空字串為'invalid fileName: must be a non-empty string'，fileName含NUL字元為'invalid fileName: must not contain a NUL character'，data非陣列為'invalid data: must be an array'，寫檔失敗為'operation failed (code <錯誤碼>)'(如ENOENT、EPERM，不帶路徑)；建活頁簿失敗回傳getExcelWorkbookFromData之{ error }(固定字串)，寫成Excel位元組失敗(如分頁名含Excel禁用字元、超過31字元)為'can not convert data to Excel'(不含分頁名稱；原回傳寫檔器之Error，其訊息帶出分頁名稱)；檢測順序為fileName、data，且先於任何轉換與寫檔
  *
  * 轉換失敗(建活頁簿或寫成Excel位元組失敗)時之診斷輸出經getDiag(opt)之出口(R-DIAG-01)：預設只以console.log輸出固定詞彙之label與安全摘要{ errType, errCode }(不輸出錯誤本體、堆疊與資料值)；
  * opt.logDetail為true時改輸出遮罩後之細節；opt.funLog為函數時只交給它而不寫console(可用以關閉輸出)；label為'[wsemi downloadExcelFileFromData] can not create workbook'或'[wsemi downloadExcelFileFromData] can not convert workbook to Excel'
@@ -90,14 +90,11 @@ async function downloadExcelFileFromData(fileName, sheetName = 'data', data, opt
         return wb
     }
 
-    //getExcelU8ArrFromWorkbook
-    let u8a = await getExcelU8ArrFromWorkbook(wb)
+    //writeXlsxSafe, 診斷輸出經getDiag(opt)之出口(R-DIAG-01): 預設只出固定詞彙label與安全摘要, 錯誤本體(含堆疊、分頁名)只在logDetail或funLog時以遮罩後細節交出; 寫檔器拒絕者回傳{ error }為固定字串, 不帶寫檔器之Error(其訊息帶出分頁名稱, V20)
+    let u8a = await writeXlsxSafe(wb, '[wsemi downloadExcelFileFromData] can not convert workbook to Excel', 'can not convert data to Excel', opt, true)
 
     //check
     if (haskey(u8a, 'error')) {
-        let diag = getDiag(opt)
-        let e = u8a.error
-        diag('[wsemi downloadExcelFileFromData] can not convert workbook to Excel', diag.brief(e), () => e)
         return u8a
     }
 

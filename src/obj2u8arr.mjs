@@ -1,6 +1,7 @@
 import get from 'lodash-es/get.js'
 import each from 'lodash-es/each.js'
-import errToStr from './_errToStr.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
+import pickDiagOpt from './pickDiagOpt.mjs'
 import isbol from './isbol.mjs'
 import isarr1 from './isarr1.mjs'
 import isab from './isab.mjs'
@@ -59,7 +60,9 @@ function mergeU8arrs(bs) {
  * @memberOf wsemi
  * @param {Object|Array} data 輸入物件或陣列資料，物件內可支援Uint8Array、Uint16Array、ArrayBuffer，三者皆以逐位元組方式打包，並由標記記錄原型別，故u8arr2obj可原型別原數值還原
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為'obj2stru8arr: invalid o: must be serializable to JSON'，合併二進位時讀取失敗為'invalid data: must be readable binary'，皆不含呼叫端所拋出之文字)，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它，同getDiag，預設null
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效物件或陣列、或序列化失敗(如含BigInt、循環參照)時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
@@ -85,7 +88,7 @@ function mergeU8arrs(bs) {
  * console.log(obj2u8arr({ id: 1n }, { returnWithStateAndMsg: true }))
  * // => {
  * //     state: 'error',
- * //     msg: 'obj2stru8arr: TypeError: Do not know how to serialize a BigInt'
+ * //     msg: 'obj2stru8arr: invalid o: must be serializable to JSON'
  * // }
  *
  */
@@ -128,7 +131,7 @@ function obj2u8arr(data, opt = {}) {
     try {
 
         //obj2stru8arr, 內部一律取狀態, 逐一判識後才把ret交給下一步; 序列化失敗時不得續產出封包(否則會編出一個結構合法但內容為空之封包, 解碼端無從辨識), 錯誤訊息前置來源函數名以利分辨是哪一步出錯
-        let rsb = obj2stru8arr(data, { returnWithStateAndMsg: true }) //序列化數據, 分別為無Uint8Array序列化字串(results), 以及各Uint8Array數據(binarys)
+        let rsb = obj2stru8arr(data, { returnWithStateAndMsg: true, ...pickDiagOpt(opt) }) //診斷之opt.logDetail與opt.funLog一併交給obj2stru8arr;序列化數據, 分別為無Uint8Array序列化字串(results), 以及各Uint8Array數據(binarys)
         if (rsb.state === 'error') {
             return retError(`obj2stru8arr: ${rsb.msg}`)
         }
@@ -167,7 +170,9 @@ function obj2u8arr(data, opt = {}) {
 
     }
     catch (err) {
-        return retError(errToStr(err)) //合併時讀呼叫端之二進位(Proxy之ArrayBuffer等)可拋出任意值, 不可直接err.toString()
+        //合併時讀呼叫端之二進位(帶存取器之型別陣列等)可拋出任意值(含其文字); 訊息為固定詞彙(V19、V20), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi obj2u8arr] can not pack', err)
+        return retError('invalid data: must be readable binary')
     }
 
     if (returnWithStateAndMsg) {

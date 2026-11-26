@@ -67,6 +67,23 @@ describe(`getExcelU8ArrFromData`, function() {
         }
     })
 
+    //第559項④(V20): 寫檔器拒絕(分頁名含Excel禁用字元等)時回固定字串, 不含分頁名稱(原回傳寫檔器之Error, 其訊息帶出分頁名稱)
+    it(`should return the fixed error string without the sheet name when the writer rejects the sheet name`, async function() {
+        for (let n of ['a:b-SECRET559', 'SECRET559'.repeat(5), '[x]SECRET559']) {
+            let r = await getExcelU8ArrFromData(data, n)
+            assert.strict.deepStrictEqual(r, { error: 'can not convert data to Excel' })
+            assert.strict.deepStrictEqual(JSON.stringify(r).includes('SECRET559'), false)
+        }
+    })
+
+    it(`should hand the diagnosis only to opt.funLog (silent by default)`, async function() {
+        let calls = []
+        let r = await getExcelU8ArrFromData(data, 'a:b', { funLog: (label, safe, detail) => calls.push([label, safe, detail]) })
+        assert.strict.deepStrictEqual(r, { error: 'can not convert data to Excel' })
+        assert.strict.deepStrictEqual(calls.length, 1)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi getExcelU8ArrFromData] can not convert data to Excel', { errType: 'Error' }])
+    })
+
     it(`should fallback sheetName to 'data' when sheetName is invalid`, async function() {
         let u8a = await getExcelU8ArrFromData([['a']], 123)
         let r = await getDataFromExcelFileU8Arr(u8a, { fmt: 'array' })

@@ -1017,9 +1017,10 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         ['no files and no bundles', (m) => {
             m.bundles = []
         }, 'files'],
+        //第559項④(V20): 未知之鍵名(清單內容, 無長度上限)不回顯, field只到所在之物件
         ['unknown bundle field', (m) => {
             m.bundles[0].member = 'x'
-        }, 'bundles[0].member'],
+        }, 'bundles[0]'],
         ['bundle name with a slash', (m) => {
             m.bundles[0].name = 'a/conn'
         }, 'bundles[0].name'],
@@ -1055,7 +1056,7 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         }, 'bundles[0].files[0].url'],
         ['file unknown field', (m) => {
             m.bundles[0].files[0].name = 'conn.exe'
-        }, 'bundles[0].files[0].name'],
+        }, 'bundles[0].files[0]'],
         ['file sha256 invalid', (m) => {
             m.bundles[0].files[0].sha256 = 'x'
         }, 'bundles[0].files[0].sha256'],
@@ -1066,7 +1067,7 @@ describe(`fsEnsureBins bundles (M6)`, function() {
         ['archive extract.member instead of files', (m) => {
             m.bundles[1] = bChrome()
             m.bundles[1].archives[0].extract = { type: 'zip', member: 'a.exe', sha256: sha(exeA), size: 1 }
-        }, 'bundles[1].archives[0].extract.member'],
+        }, 'bundles[1].archives[0].extract'],
         ['archive extract.files empty', (m) => {
             m.bundles[1] = bChrome()
             m.bundles[1].archives[0].extract.files = []

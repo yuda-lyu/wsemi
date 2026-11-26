@@ -50,4 +50,44 @@ describe(`getExcelU8ArrFromWorkbook`, function() {
         }
     })
 
+    //第559項④(V20): 寫檔器拒絕(分頁名含Excel禁用字元、超過31字元、保留名等)時原回傳寫檔器之Error, 其訊息帶出分頁名稱; 改為固定字串, 細節經opt之診斷出口(預設靜默)
+    let badNames = ['a:b-SECRET559', 'SECRET559'.repeat(5), '[x]SECRET559', '\'SECRET559\'', 'History']
+    for (let n of badNames) {
+        it(`should return the fixed error string without the sheet name when the writer rejects the name (${n.length} chars)`, async function() {
+            let wb = getExcelWorkbookFromData(data, n)
+            let r = await getExcelU8ArrFromWorkbook(wb)
+            assert.strict.deepStrictEqual(r, { error: 'can not convert wb to Excel' })
+            assert.strict.deepStrictEqual(JSON.stringify(r).includes('SECRET559'), false)
+        })
+    }
+
+    it(`should stay silent by default and hand the diagnosis only to opt.funLog (masked detail with opt.logDetail)`, async function() {
+        let wb = getExcelWorkbookFromData(data, 'a:b-SECRET559')
+        let rec = { log: [], warn: [], error: [] }
+        let raw = { log: console.log, warn: console.warn, error: console.error }
+        for (let k of Object.keys(rec)) {
+            console[k] = (...a) => rec[k].push(a)
+        }
+        let calls = []
+        let r1
+        let r2
+        let r3
+        try {
+            r1 = await getExcelU8ArrFromWorkbook(wb) //預設靜默(同原本)
+            r2 = await getExcelU8ArrFromWorkbook(wb, { funLog: (label, safe, detail) => calls.push([label, safe, detail]) })
+            r3 = await getExcelU8ArrFromWorkbook(wb, { logDetail: true })
+        }
+        finally {
+            for (let k of Object.keys(rec)) {
+                console[k] = raw[k]
+            }
+        }
+        assert.strict.deepStrictEqual([r1, r2, r3], [{ error: 'can not convert wb to Excel' }, { error: 'can not convert wb to Excel' }, { error: 'can not convert wb to Excel' }])
+        assert.strict.deepStrictEqual(calls.length, 1)
+        assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi getExcelU8ArrFromWorkbook] can not convert wb to Excel', { errType: 'Error' }])
+        assert.strict.deepStrictEqual(calls[0][2] instanceof Error, true) //細節為遮罩後之拷貝
+        assert.strict.deepStrictEqual(rec.log.length, 1) //只有logDetail為true之一次(r3)
+        assert.strict.deepStrictEqual([rec.warn.length, rec.error.length], [0, 0])
+    })
+
 })

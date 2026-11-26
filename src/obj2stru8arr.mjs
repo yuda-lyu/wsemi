@@ -1,5 +1,5 @@
 import get from 'lodash-es/get.js'
-import errToStr from './_errToStr.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 import realErrorToStr from './_realErrorToStr.mjs'
 import isbol from './isbol.mjs'
 import isobj from './isobj.mjs'
@@ -24,7 +24,9 @@ import isab from './isab.mjs'
  * @memberOf wsemi
  * @param {Object|Array} o 輸入物件或陣列資料
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串(序列化失敗為固定訊息'invalid o: must be serializable to JSON'，不含原生錯誤之文字)，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入序列化失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入序列化失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi obj2stru8arr] can not serialize')，同getDiag，預設null
  * @returns {Object} 回傳物件，results欄位儲存物件內非序列化文字，binarys欄位儲存各Uint8Array數據；二進位數據於results內以'[BlazeForUint8Array]::<i>'一類標記代表，應用字串若恰與標記格式完整相同則會被前置'[BlazeForPreventEscape]'跳脫，供解碼端還原時區分；輸入非物件非陣列、空物件空陣列或序列化失敗(如含BigInt、循環參照)時回傳{ results: '', binarys: [] }；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳{ results: '', binarys: [] }；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
@@ -51,7 +53,7 @@ import isab from './isab.mjs'
  * console.log(obj2stru8arr({ id: 1n }, { returnWithStateAndMsg: true }))
  * // => {
  * //     state: 'error',
- * //     msg: 'TypeError: Do not know how to serialize a BigInt'
+ * //     msg: 'invalid o: must be serializable to JSON'
  * // }
  *
  */
@@ -159,7 +161,9 @@ function obj2stru8arr(o, opt = {}) {
     }
     catch (err) {
         //JSON.stringify拋錯(如含BigInt、循環參照)時, bs可能已被推入部份數據, 故一律回乾淨之空值
-        return retError(errToStr(err)) //try內會執行呼叫端之toJSON、getter與Proxy陷阱, 可拋出任意值(含null、無原型物件), 不可直接err.toString()
+        //try內會執行呼叫端之toJSON、getter與Proxy陷阱, 可拋出任意值(含null、無原型物件); 原生訊息帶輸入內容(循環參照之構造器名與屬性名、toJSON所拋之文字), 故回固定訊息(V19、V20), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi obj2stru8arr] can not serialize', err)
+        return retError('invalid o: must be serializable to JSON')
     }
 
     if (returnWithStateAndMsg) {

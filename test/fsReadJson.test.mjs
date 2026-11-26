@@ -37,4 +37,41 @@ describe(`fsReadJson`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
+    //第559項④(V20): JSON解析失敗回傳固定訊息之SyntaxError(不帶檔案內容片段); 原SyntaxError(位置、堆疊)之細節經opt之診斷出口(預設靜默)
+    it(`should return the fixed SyntaxError without the file content, and hand the original detail only to opt.funLog (silent by default)`, async function() {
+        let fdt = './test/_tmp/fsReadJson559'
+        fsCreateFolder(fdt)
+        try {
+            let fp = `${fdt}/bad.json`
+            fsWriteText(fp, '{"secret559": tru}')
+            let rec = { log: [], warn: [], error: [] }
+            let raw = { log: console.log, warn: console.warn, error: console.error }
+            for (let k of Object.keys(rec)) {
+                console[k] = (...a) => rec[k].push(a)
+            }
+            let calls = []
+            let r1
+            let r2
+            try {
+                r1 = fsReadJson(fp) //預設靜默
+                r2 = fsReadJson(fp, { funLog: (label, safe, detail) => calls.push([label, safe, detail]) })
+            }
+            finally {
+                for (let k of Object.keys(rec)) {
+                    console[k] = raw[k]
+                }
+            }
+            for (let r of [r1, r2]) {
+                assert.strict.deepStrictEqual([r.error instanceof SyntaxError, r.error.message], [true, 'invalid json: must be a valid JSON text'])
+                assert.strict.deepStrictEqual(r.error.message.includes('secret559'), false)
+            }
+            assert.strict.deepStrictEqual([rec.log.length, rec.warn.length, rec.error.length], [0, 0, 0])
+            assert.strict.deepStrictEqual(calls.length, 1)
+            assert.strict.deepStrictEqual([calls[0][0], calls[0][1]], ['[wsemi fsReadJson] can not parse json', { errType: 'SyntaxError' }])
+        }
+        finally {
+            fsDeleteFolder(fdt)
+        }
+    })
+
 })

@@ -3,6 +3,7 @@ import size from 'lodash-es/size.js'
 import isbol from './isbol.mjs'
 import isstr from './isstr.mjs'
 import optVal from './_optVal.mjs'
+import pickOpt from './_pickOpt.mjs'
 import isarr from './isarr.mjs'
 import isStrHasCapital from './isStrHasCapital.mjs'
 import isStrHasLowerCase from './isStrHasLowerCase.mjs'
@@ -269,6 +270,9 @@ let defaultCommonPasswordBlacklist = [
  */
 function isUserPw(pw, opt = {}) {
     let err = []
+
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給(K3), 不拋錯; 本函數僅對pw無效依既有契約拋固定訊息
+    opt = pickOpt(opt, ['useKeyForError', 'useOnlyOneError', 'numLenMin', 'numLenMax', 'noSpace', 'onlyAscii', 'requireLetter', 'requireUppercase', 'requireLowercase', 'requireDigit', 'requireSpecial', 'forbiddenChars', 'commonPasswordBlacklist', 'account', 'noConsecutiveCharsFromAccount', 'consecutiveCharsMinMatch'])
 
     //useKeyForError
     let useKeyForError = get(opt, 'useKeyForError', null)

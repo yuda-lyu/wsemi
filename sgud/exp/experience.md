@@ -283,3 +283,13 @@
 - **修前紅與變異之作法**: 以環境變數取代頁面載入之被測檔(`WSEMI_DOMCONVERTTOPIC_SRC`),修前版本與各單點變異檔皆用同一機制,不動 repo 內檔案;變異腳本以 Write 寫成檔、比對錨點須唯一(Windows 工作樹為 CRLF,錨點比對前先正規化換行).
 - **未獨立重現之限制**: undici 於 `Connection: close`＋大本體＋背壓之崩潰,實作端以 64 MB 本體、每 4 MB 延遲 20 ms 之純 fetch 試一次未崩潰;文字依主控查證載入 JSDoc／README,不寫成自己實測.
 - **eslint**: `operator-linebreak` 要求 `+` 在行尾(`npx eslint --fix` 可修);`no-new-wrappers` 擋 `new Boolean`,測包裝布林改 `Object(true)`;`brace-style` 擋單行 `{ get() { throw … } }`.
+
+## 輸入不可讀之固定詞彙、判型改內部槽之連鎖、複審抓到之快照漏洞(2026-11-26,ws492k,排程第 492 項第 10 批)
+
+- **訊息改固定詞彙不等於消除外露**: 把 `catch` 內之 `${e.code}: ${msg}` 改成固定字串後,獨立複審另找到三條路徑仍把呼叫端所拋之文字帶出——①快照只複製參照,args 元素或 env 值之 `toString` 拋錯留到 spawn 時才由 node 原樣拋出;②`obj2u8arr` 自己之合併步驟 catch 仍 `errToStr(err)`;③`execCliJsonFile` 之 `JSON parse failed: ${原生訊息}` 帶絕對路徑與內容片段.作法:快照時即轉字串(`String(v)`,Symbol 原樣交 node 以免靜默改變失敗行為),轉換拋錯以標記錯誤(WeakMap 記固定訊息,不用 `instanceof`:已撤銷之 Proxy 於 catch 內 `instanceof` 會再拋)回報;改一個站點後,同函數家族之其餘 catch 與出口逐一核對.
+- **偽造標籤之類陣列物件作快照來源要有上限**: `isarr` 仍以標籤判型,`{ length: 1e9, [Symbol.toStringTag]: 'Array' }` 通過後逐元素讀取會耗盡記憶體;`snapArgs` 設個數上限 1e6(命令列長度遠先受限),並以「首元素存取器計數為 0」斷言上限先於讀取(只斷言錯誤訊息時,移除上限之變異會因記憶體耗盡被 try 吞掉而存活).
+- **判型改內部槽後,以「偽造標籤之 Proxy」觸發防禦性 catch 之測試全部不可達**: `ab2u8arr`、`u8arr2obj`、`obj2u8arr` 之夾具原以 `Proxy(ArrayBuffer)` 並於 `get` 陷阱回標籤通過 `isab`,改內部槽後被固定訊息拒絕(陷阱計數 0).改以真實例加自有存取器(`Object.defineProperty(u8a, 'buffer', { get() { throw v } })`)或暫換全域 `Uint8Array` 為 Proxy(只對首引數為 ArrayBuffer 者拋出,其餘 `Reflect.construct`),斷言於還原全域之後才做.
+- **`chkReadable.ownKeys` 有界**: 型別陣列、DataView、String 包裝物件之索引鍵為虛擬,`Reflect.ownKeys` 會一次配置全部索引字串;以 `ArrayBuffer.isView` 與 `String.prototype.valueOf` 內部槽判定後不列舉(原型鏈上亦同);Proxy 包裝者無從先行得知大小,照常經陷阱.證明「不列舉」不實際耗盡記憶體: 載入前換掉 `Reflect.ownKeys` 為記錄者(`import('…?x=n')` 載入新實例),斷言未以該物件呼叫.沿原型鏈之讀取量含 `Object.prototype` 之 12 個自有鍵,`maxReads` 測試須用 `Object.create(null)` 之物件.
+- **下游盤點之結論決定「停於該函數」**: 依任務書先盤下游再改;子代理(只給契約,不給結論)讀出 `isarr`(標籤讀取拋錯之陣列 Proxy 判 `false` 為 w-orm-* 寫入守門所依賴)與 `isobj`(偽造 `'Object'` 標籤者於 w-serv-orm 仍被掃描)有依賴現行語意者,故本批只改 `isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`;`Proxy(ArrayBuffer)` 舊判 `true` 為唯一意外之連帶(內部槽不認 Proxy).
+- **轉型函數 opt 取快照**: `_pickOpt(opt, keys)` 每鍵讀一次、拋錯視為未給,`debug`／`funLog` 以快照上之惰性存取器讀取(不改變「只有非預期輸入才讀 debug」之時序);測試以「業務鍵全有效時 `debug` getter 讀取數為 0」鎖定.另以小腳本把惡意值逐位置餵入全部同類函數,一次得 36 個 opt 讀取類同形缺陷(另 10 個為必須參數依設計拋錯;列待裁示,不擴大本批).
+- **變異腳本**: 錨點用單行字串(多行錨點遇縮排與換行差異即 `ANCHOR-FAIL`);改完碼後重跑全部變異;等價變異逐項寫理由(條件式賦值對 `get(…, 預設)` 無差別).`git status`／`diff` 對 CRLF 工作樹之警告無害.

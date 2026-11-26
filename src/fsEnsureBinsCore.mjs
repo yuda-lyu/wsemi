@@ -237,7 +237,7 @@ function normManifest(raw, nopt) {
     let keysOk = (o, keys, at) => {
         for (let k of Object.keys(o)) {
             if (!keys.includes(k)) {
-                throw bad(`${at}.${k}`, `is not a field of schema 1 (allowed: ${keys.join(', ')})`)
+                throw bad(at, `must only have fields of schema 1 (allowed: ${keys.join(', ')})`) //未知之鍵名來自清單內容(輸入, 無長度上限), 不回顯(V20), 只帶其所在之位置
             }
         }
     }

@@ -135,7 +135,8 @@ describe(`downloadExcelFileFromData`, function() {
 
     it(`should log only the fixed label and the safe summary (no error body, stack or sheet name) by default when the writer fails`, async function() {
         let { r, rec } = await captureAll(() => downloadExcelFileFromData(`${fdt}/w1.xlsx`, 'SHEETSECRET/9f3a', [['a']]))
-        assert.strict.deepStrictEqual(r.error instanceof Error, true) //回傳值不變: 下游之{ error }
+        assert.strict.deepStrictEqual(r, { error: 'can not convert data to Excel' }) //第559項④: 回傳值為固定字串(原回傳寫檔器之Error, 其訊息帶出分頁名稱'SHEETSECRET/9f3a')
+        assert.strict.deepStrictEqual(JSON.stringify(r).includes('SHEETSECRET'), false)
         assert.strict.deepStrictEqual(rec.log, [[LABEL, { errType: 'Error' }]])
         assert.strict.deepStrictEqual([rec.warn.length, rec.error.length], [0, 0])
         assert.strict.deepStrictEqual(fs.existsSync(`${fdt}/w1.xlsx`), false)

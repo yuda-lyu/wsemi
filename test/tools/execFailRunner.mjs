@@ -771,7 +771,7 @@ let cases = {
             let r = await settle(rpc(node, ['-e', sc], requests, { timeoutMs: 60000 }), 8000)
             await sleep(500)
             let alive = pidAlive(fpPid)
-            out[k] = res(r, (v) => ({ ok: v.ok, errorType: v.errorType, errorHead: v.error.split(':').slice(0, 2).join(':'), childAliveAfter: alive }))
+            out[k] = res(r, (v) => ({ ok: v.ok, errorType: v.errorType, error: v.error, childAliveAfter: alive }))
         }
         return out
     },

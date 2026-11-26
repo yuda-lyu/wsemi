@@ -275,7 +275,7 @@ function parseJsEntryFromCmd(cmdPath) {
  * 非Windows平台原樣回傳
  * 回傳物件三個分支一律帶opt鍵(無額外設定時為{}), 呼叫端可直接展開至spawn之選項物件
  *
- * @param {String} command 輸入執行檔名稱字串
+ * @param {String} command 輸入執行檔名稱非空字串，不可含NUL(空字元)，必須給定；非非空字串或含NUL時拋出TypeError，訊息為固定詞彙'invalid command: must be a non-empty string'或'invalid command: must not contain a NUL character'(不帶值)
  * @param {Array} [args=[]] 輸入參數陣列, 預設[]
  * @param {Object} [opt={}] 輸入設定物件, 預設{}
  * @param {String} [opt.cwd=undefined] 輸入子進程工作目錄字串, 用於解析只給檔名或相對路徑之.cmd/.bat並判定其是否存在, 預設undefined代表本進程之工作目錄
@@ -283,6 +283,14 @@ function parseJsEntryFromCmd(cmdPath) {
  * @returns {Object} 回傳spawn參數物件, 內含file(執行檔), args(參數陣列), opt(spawn額外選項物件); Windows下.cmd/.bat不存在時拋出code為'ENOENT'之錯誤(訊息同node之'spawn <路徑> ENOENT'); .cmd為npm shim(cmd-shim之執行行含"%dp0%\node_modules\...")而其入口檔不存在時亦拋出code為'ENOENT'之錯誤, 訊息為'spawn <入口檔路徑> ENOENT'
  */
 function buildSpawnArgs(command, args = [], opt = {}) {
+
+    //command, 須為非空字串且不含NUL(空字元): 入口即擋下, 不交給後續之路徑解析與spawn(Windows下node之原生TypeError訊息含該值之描述, 且各平台之驗證不一), 訊息固定不帶值(V19、V20)
+    if (!isestr(command)) {
+        throw new TypeError('invalid command: must be a non-empty string')
+    }
+    if (command.includes('\0')) {
+        throw new TypeError('invalid command: must not contain a NUL character')
+    }
 
     //args
     if (!isarr(args)) {

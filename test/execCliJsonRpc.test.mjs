@@ -275,7 +275,7 @@ describe(`execCliJsonRpc`, function() {
             //JSDoc opt.onTrace: opt.onTrace屬性本身不可讀與onStderr相同, errorType為params; 不reject
             let opt = badProp({}, 'onTrace', 'trace getter boom')
             let r = await execCliJsonRpc(nodeBin, ['-e', scServer], [{ method: 'x' }], opt)
-            assert.strict.deepStrictEqual([r.ok, r.errorType, r.error], [false, 'params', 'UNKNOWN: trace getter boom'])
+            assert.strict.deepStrictEqual([r.ok, r.errorType, r.error], [false, 'params', 'invalid opt: must be a readable object']) //第559項①: 固定訊息, 不含'trace getter boom'
         })
 
     })
@@ -303,7 +303,7 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
     it(`execCliJsonRpc: 自身讀取之opt(含回調)或requests不可讀時errorType為params且不啟動, 交execCliSession之env不可讀為notfound, 不reject、不成為未捕捉例外 [R-EXEC-FAIL-01之13]`, function() {
         let { r } = runExecFail('inputUnreadableRpc')
         assert.strict.deepStrictEqual(r.out, {
-            rpcGetter: { ok: false, errorType: 'params', error: 'UNKNOWN: getter boom timeoutMs' }, //規則13: 自身讀取失敗為errorType params
+            rpcGetter: { ok: false, errorType: 'params', error: 'invalid opt: must be a readable object' }, //規則13: 自身讀取失敗為errorType params, 訊息為V19固定詞彙(第559項①), 不含'getter boom timeoutMs'
             //已撤銷之Proxy(批6裁定③: 判斷函數對其回false而不拋錯)屬「非一般物件／非函數」之非預期輸入, 依K3視為未給(修前isobj、isfun於判型時拋TypeError, 以errorType params／notfound回報)
             rpcOptRevoked: { ok: true, errorType: '', error: '' }, //opt本身為已撤銷之Proxy: 非一般物件, 整份視為未給(修前params)
             rpcEnvRevoked: { ok: true, errorType: '', error: '' }, //env為已撤銷之Proxy: 非一般物件, 視為未給而繼承環境變數(修前notfound)
@@ -314,15 +314,15 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 不reject、不成為未捕捉例外
     })
 
-    it(`execCliJsonRpc: params無法序列化為JSON(BigInt、循環參照、toJSON拋錯、通知之params)時errorType為params、error為'<method>: 無法序列化為JSON: …', 不reject, 已啟動之子進程經stop()結束而不殘留至逾時 [R-EXEC-FAIL-01之14]`, function() {
+    it(`execCliJsonRpc: params無法序列化為JSON(BigInt、循環參照、toJSON拋錯、通知之params)時errorType為params、error為固定訊息'invalid requests[i].params: must be serializable to JSON'(以索引定位, 不含method名稱與原生訊息), 不reject, 已啟動之子進程經stop()結束而不殘留至逾時 [R-EXEC-FAIL-01之14, 第559項①]`, function() {
         let { r } = runExecFail('rpcParamsUnserializable')
-        //規則14: errorType params, error '<method>: 無法序列化為JSON: <訊息>'; 經stop()結束已啟動之子進程(childAliveAfter為false, 不得殘留至timeoutMs)
-        let x = (m) => ({ ok: false, errorType: 'params', errorHead: `${m}: 無法序列化為JSON`, childAliveAfter: false })
+        //規則14: errorType params, error為V19固定訊息(索引i為該請求於requests之位置); 經stop()結束已啟動之子進程(childAliveAfter為false, 不得殘留至timeoutMs)
+        let x = (i) => ({ ok: false, errorType: 'params', error: `invalid requests[${i}].params: must be serializable to JSON`, childAliveAfter: false })
         assert.strict.deepStrictEqual(r.out, {
-            bigint: x('initialize'), //規則14: BigInt
-            circularSecond: x('next'), //規則14: 循環參照(第2則, 子進程已回應第1則), error用讀取當下之method
-            toJSONThrows: x('initialize'), //規則14: toJSON拋錯
-            notifyBigint: x('initialized'), //規則14: 通知之params亦同
+            bigint: x(0), //規則14: BigInt
+            circularSecond: x(1), //規則14: 循環參照(第2則, 子進程已回應第1則), 原生訊息帶構造器名與屬性名而不外露
+            toJSONThrows: x(0), //規則14: toJSON拋錯
+            notifyBigint: x(0), //規則14: 通知之params亦同
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則14: 不reject
     })
@@ -347,15 +347,15 @@ describe(`execCliJsonRpc 失敗回報(R-EXEC-FAIL-01之6~14)`, function() {
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13: 讀取一律在try內(或用入口之快照), 不reject、不成為未捕捉例外
     })
 
-    it(`execCliJsonRpc: 選項getter拋出非Error之值(null、undefined、字串)時為params且error保留拋出值之文字, params之toJSON拋出字串時error保留該字串 [R-EXEC-FAIL-01之13、14]`, function() {
+    it(`execCliJsonRpc: 選項getter拋出非Error之值(null、undefined、字串)時為params且error為固定訊息, params之toJSON拋出字串時error亦為固定訊息而不含該字串(V19、V20) [R-EXEC-FAIL-01之13、14, 第559項①]`, function() {
         let { r } = runExecFail('rpcThrownValues')
-        //規則13: 自身讀取失敗為errorType params(error '<碼>: <訊息>', 無碼者為UNKNOWN; 訊息取getErrorMessage, 為空退_errToStr)
-        let x = (m) => ({ ok: false, errorType: 'params', error: `UNKNOWN: ${m}` })
+        //規則13: 自身讀取失敗為errorType params(error為固定訊息'invalid opt: must be a readable object', 不含拋出值之文字)
+        let x = () => ({ ok: false, errorType: 'params', error: 'invalid opt: must be a readable object' })
         assert.strict.deepStrictEqual(r.out, {
-            null: x('null'), //規則13: 拋出null
-            undefined: x('undefined'), //規則13: 拋出undefined
-            string: x('thrown-x'), //規則13: 拋出字串
-            toJSONThrowsString: { ok: false, errorType: 'params', error: 'initialize: 無法序列化為JSON: thrown-x' }, //規則14: error '<method>: 無法序列化為JSON: <訊息>'(toJSON拋出字串時訊息為該字串)
+            null: x(), //規則13: 拋出null
+            undefined: x(), //規則13: 拋出undefined
+            string: x(), //規則13: 拋出字串, 其文字'thrown-x'不外露
+            toJSONThrowsString: { ok: false, errorType: 'params', error: 'invalid requests[0].params: must be serializable to JSON' }, //規則14: toJSON拋出字串時, 該字串'thrown-x'與method名稱皆不外露
         })
         assert.strict.deepStrictEqual([r.unhandled, r.uncaught], [[], []]) //規則13、14: 不reject、不成為未捕捉例外
     })

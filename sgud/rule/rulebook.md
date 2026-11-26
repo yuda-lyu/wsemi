@@ -41,7 +41,7 @@
 | 外部依賴跨主版號升級: chokidar 6、he 2 之使用處全集、新舊差分、`close()` 後不沿用、UMD 打包驗證(2026-11-09 ws01) | `sgud/rule/rulebook_deps.md` | R-DEP-MAJOR-01 | 約 7 |
 | UMD 版 external(ua-parser-js、xss)晚載入須可用(第 258 項) | `sgud/rule/rulebook_umd.md` | R-UMD-EXTERNAL-01 | 約 4 |
 | 測試檔結構: 測試檔互不 import、工具檔頂層不註冊 describe(第 254 項);真瀏覽器行為測試之基建: playwright-core(devDependencies)、`test/tools/browserKit.mjs`、不依賴 `./dist`、不比標準圖(第 642 項,2026-11-25 t642) | `sgud/rule/rulebook_test.md` | R-TEST-STRUCT-01、R-TEST-BROWSER-01 | 約 7 |
-| 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01 | 約 9 |
+| 判斷函數不拋錯(惡意值集、`_tagOf`、`isfun` 不拋錯而移除 `_isFunSafe`)、C1／C2 之定義(`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc;第 492 項第 8 批 ws492i,2026-11-19);轉型與驗證函數對惡意值不拋錯(`cstr`／`cint`／`isUserPw`,第 551 項)、判型改語言原生或內部槽(`isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`,第 552 項;第 492 項第 10 批 ws492k,2026-11-26);包裝物件之處理見 `rulebook_data.md` R-WRAPPER-01(同批改寫) | `sgud/rule/rulebook_judge_nothrow.md` | R-JUDGE-NOTHROW-01、R-C1C2-DEF-01、R-C1-HOSTILE-01、R-JUDGE-NATIVE-01 | 約 17 |
 | 判斷類專用函數 `isenum`／`iseint`、`preciseNum` 精度,及既有函數改用第一批 | `sgud/rule/rulebook_judge.md` | R-ENUM-01、R-PRECISE-01、R-ENUM-CALLERS-01 | 約 24 |
 | 判斷類專用函數之改用站點全集(排程第 221 項輸入;217 站點、符合 191)——主檔只留〈共通說明〉(風險代號)與本類之索引(2026-11-02 ws272c 拆為下列 5 檔,原約 81.2KB) | `sgud/rule/rulebook_judge_sites.md` | 標題、〈共通說明〉、索引 | 約 6.2 |
 | 同上——§1~§5(計時毫秒、埠號、索引、個數、位元) | `sgud/rule/rulebook_judge_sites_inv_a.md` | R-ENUM-01 之站點全集(§1~§5) | 21.8 |
@@ -142,5 +142,9 @@
 - `R-WRAPPER-01` → `rulebook_data.md`: R-WRAPPER-01 包裝物件(new String/Number/Boolean)之處理: 判斷函數只收原始值(包裝物件為 false)、轉型函數(cdbl/cint/cstr/cbol)照舊拆包、直接判型之入口依同原則(2026-11-19 ws492i 改寫,取代 A-lite)
 - `R-JUDGE-NOTHROW-01` → `rulebook_judge_nothrow.md`: R-JUDGE-NOTHROW-01 判斷函數(`is*`)對任何輸入皆不拋錯(型別無法判定回 false、內容檢查拋錯回 false);內部 `_isFunSafe` 已移除(ws492i)
 - `R-C1C2-DEF-01` → `rulebook_judge_nothrow.md`: R-C1C2-DEF-01 C1／C2 之定義: `cbol` 依 B2、`isDate` 收嚴、`cint` 行為不改而 JSDoc 寫明失真(ws492i)
+- `R-C1-HOSTILE-01` → `rulebook_judge_nothrow.md`: R-C1-HOSTILE-01 轉型與驗證函數對惡意值不拋錯(`cstr`、`cint`/`isUserPw` 之 opt 取快照 `_pickOpt`;ws492k)
+- `R-JUDGE-NATIVE-01` → `rulebook_judge_nothrow.md`: R-JUDGE-NATIVE-01 判型改語言原生或內部槽(`isnull`/`isundefined`/`isbigint`/`isab`/`isu8arr`/`isu16arr`;`isarr`/`isobj`/`isblob`/`isfile` 停於該函數待裁示;ws492k)
+- `R-EXEC-FAIL-01` 規則 16 → `rulebook_exec.md`: exec 家族輸入不可讀(opt、args 元素、opt.env、requests)之 V19 固定訊息與入口快照(`_execSnap`)、command 含 NUL 入口擋下、`buildSpawnArgs` 非字串拋固定 TypeError(ws492k)
+- `R-MSG-V19-01` 規則 9 → `rulebook_msg.md`: 失敗訊息固定詞彙化與診斷出口 `_diagIfAsked`(`o2j` 族、Excel 寫檔器、`fsEnsureBinsCore` 未知鍵名、`fsReadJson`、`execCliJsonFile` 結果檔;ws492k)
 - `R-XSS-01` → `rulebook_xss.md`: R-XSS-01 js-xss 之取得與設定單一出處;偵測回報清洗會轉義或刪除之可疑項目
 - `R-XSS-WALK-01` → `rulebook_xss.md`: R-XSS-WALK-01 clearXSS 之走訪: 顯式堆疊、來源物件只處理一次、複製後依終態清除、型別處置表

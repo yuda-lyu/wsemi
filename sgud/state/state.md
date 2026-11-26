@@ -28,12 +28,14 @@
 
 查: 輸入無效之失敗訊息一律 `invalid <名稱>: must …` 且不帶輸入值(約 170 個對外函數)、移除帶值之 console、fs 系參數名 `pah` 更正為 `fp`／`fd`、`domIsStable.timeDiff` 負數改用預設、JSDoc `@param` 與簽名之全庫斷言、共用可讀性探針 `chkReadable` 之現況:驗證數字(全套／修前紅／變異)、獨立複審之處置、已知缺口與待裁示、下游固定舊行為(排程第 492 項第 9 批、第 558 項).所含節:
 
+- 第 492 項第 10 批(上):第 559 項 exec 家族輸入不可讀改 V19 固定詞彙與 args／env 入口快照、command 含 NUL 入口擋下、`getObjSize` 無原型物件、V20 已知缺口(清單未知鍵名、Excel 寫檔器、`o2j` 族、`fsReadJson`、`execCliJsonFile` 結果檔)、`chkReadable.ownKeys` 讀 Symbol 描述子且有界(ws492k,2026-11-26)〔本節於 2026-11-26 新增,置於該檔最前〕
 - 第 492 項第 9 批:訊息格式與文件、第 558 項共用可讀性探針(ws492j,2026-11-19)〔本節於 2026-11-19 新增〕
 
 ### `sgud/state/state_判斷與轉型.md`(判斷與轉型;約 5KB;新增於 2026-11-19)
 
 查: 判斷函數只收原始值(包裝物件一律 `false`,轉型函數 `cdbl`／`cint`／`cstr`／`cbol` 照舊拆包)、判斷函數不拋錯(`_tagOf`、`isfun` 不拋錯、`_isFunSafe` 已移除)、`cbol` 依 B2、`isDate` 收嚴、`cint` JSDoc 之現況:驗證數字(全套／HEAD 基準／修前紅／變異)、獨立複審之處置、已知缺口與待裁示、下游固定舊行為(排程第 492 項第 8 批).所含節:
 
+- 第 492 項第 10 批(下):第 551 項轉型函數對惡意值不拋錯(`cstr`／`cint`／`isUserPw`)、第 552 項判型改語言原生或內部槽(`isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`;`isarr`／`isobj`／`isblob`／`isfile` 停於該函數待裁示)(ws492k,2026-11-26)〔本節於 2026-11-26 新增,置於該檔最前〕
 - 第 492 項第 8 批:判斷與轉型(ws492i,2026-11-19)〔本節於 2026-11-19 新增〕
 
 ### `sgud/state/state_結構運算與參數定義.md`(結構運算與參數定義;約 6KB;新增於 2026-11-19)

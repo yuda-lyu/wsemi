@@ -9,7 +9,7 @@ import optVal from './_optVal.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
-import execThrownMsg from './_execThrownMsg.mjs'
+import { unreadableMsg, snapArgs, snapEnv } from './_execSnap.mjs'
 import callUser from './_callUser.mjs'
 import getTrace from './getTrace.mjs'
 
@@ -28,7 +28,7 @@ let RULE_STDERR_KEEP = { fn: 'execCliSession', name: 'opt.stderrKeep', kind: 'ei
 /**
  * 建立互動式stdio工作階段(session)，用於stdio協定型之長駐CLI(如MCP之stdio伺服器、codex app-server等一行一則JSON之程式)，與execCli「寫完input即關閉stdin並等待結束」之一次性契約不同，本函數維持stdin開啟，由呼叫端逐次write，直到呼叫stop()才關閉stdin並等待子進程自行退出，逾寬限期則以execProcessKillPid樹殺
  * Windows下npm全域安裝之命令為.cmd批次檔，內部經execCliCore.buildSpawnArgs解析為以node執行其JS入口，不使用shell:true，故樹殺可確實涵蓋子孫程序
- * 本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報，其error不含args與env之值；command、args、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦不spawn，同樣以onExit與stop()之結果回報(pid為null，error為'<錯誤碼>: <訊息>'，無錯誤碼者為UNKNOWN，拋出非Error之值時訊息為該值之文字；onExit本身不可讀時僅以stop()回報)
+ * 本函數不throw亦不reject，spawn失敗(如ENOENT)以onExit與stop()之結果物件回報，其error不含args與env之值；opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦不spawn，同樣以onExit與stop()之結果回報(pid為null，error為固定訊息'invalid opt: must be a readable object'，不含呼叫端所拋出之文字與錯誤碼，args之元素不可讀為'invalid args: must be a readable array'，opt.env不可讀為'invalid opt.env: must be a readable object'；onExit本身不可讀時僅以stop()回報)；command非非空字串或含NUL(空字元)時亦不spawn，error為'invalid command: must be a non-empty string'或'invalid command: must not contain a NUL character'
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCliSession.test.mjs Github}
  * @memberOf wsemi
@@ -105,6 +105,7 @@ function execCliSession(command, args = [], opt = {}) {
     let onExit
     let onTrace
     let bCommand = false
+    let msgCommand = 'invalid command: must be a non-empty string' //command無效時之固定訊息(V19)
     let bErrInput = false
     let errInput
     let setErrInput = (err) => {
@@ -149,21 +150,31 @@ function execCliSession(command, args = [], opt = {}) {
     try {
         let v
 
-        //command
+        //command, 非空字串且不含NUL(空字元; 含NUL者入口擋下, 不交給spawn之原生訊息)
         bCommand = isestr(command)
+        if (!bCommand) {
+            msgCommand = 'invalid command: must be a non-empty string'
+        }
+        else if (command.includes('\0')) {
+            bCommand = false
+            msgCommand = 'invalid command: must not contain a NUL character'
+        }
 
-        //args
+        //args, 元素於此逐一讀取為快照(讀取拋錯者以'invalid args: must be a readable array'回報, 其後不再觸及呼叫端之陣列)
         if (!isarr(args)) {
             args = []
+        }
+        else {
+            args = snapArgs(args)
         }
 
         //cwd
         v = get(opt, 'cwd')
         cwd = isestr(v) ? v : process.cwd()
 
-        //envExtra
+        //envExtra, 於此展開為快照(讀取拋錯者以'invalid opt.env: must be a readable object'回報)
         v = get(opt, 'env')
-        envExtra = isobj(v) ? v : undefined
+        envExtra = isobj(v) ? snapEnv(v) : undefined
 
         //timeoutMs、exitGraceMs、killWaitMs、stderrKeep: opt類數值參數以iseint判定(帳本G17、R-OPT-VAL-01), 有效則取Number(v), 非預期(含Infinity、小數、超出範圍、'0x10'、包裝物件)視為未給、改用預設, 不夾限
         //判定時只收集, 業務鍵讀完後才至多讀一次opt.debug(V11)
@@ -272,15 +283,14 @@ function execCliSession(command, args = [], opt = {}) {
         return pmStop
     }
 
-    //輸入不可讀: 不spawn, 同spawn同步錯誤以timer脫勾後settle(error為'碼: 訊息', pid為null), settle經callUser呼叫可讀之onExit
+    //輸入不可讀: 不spawn, 同spawn同步錯誤以timer脫勾後settle(error為固定訊息, pid為null), settle經callUser呼叫可讀之onExit
+    //  固定訊息(V19), 不含呼叫端getter所拋出之文字與錯誤碼(V20); 讀取呼叫端之值而可能拋錯者為opt、args之元素與opt.env(command以isestr、args以isarr判型皆不拋錯), errInput之值(拋出之例外)只用於辨識其是否為args、env之標記錯誤(取其固定訊息), 其文字不使用
     if (bErrInput) {
-        let e = execSpawnError(errInput)
-        let m = execThrownMsg(e, errInput)
         s.write = async () => false
         s.writeLine = async () => false
         s.stop = stopNoProc
         setTimeout(() => {
-            settle({ error: `${e.code}: ${m}` })
+            settle({ error: unreadableMsg(errInput, 'invalid opt: must be a readable object') })
         }, 1)
         return s
     }
@@ -291,7 +301,7 @@ function execCliSession(command, args = [], opt = {}) {
         s.writeLine = async () => false
         s.stop = stopNoProc
         setTimeout(() => {
-            settle({ error: 'invalid command: must be a non-empty string' })
+            settle({ error: msgCommand })
         }, 1)
         return s
     }

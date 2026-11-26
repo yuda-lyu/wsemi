@@ -17,7 +17,7 @@ import errToStr from './_errToStr.mjs'
 import execProcessKillPid from './execProcessKillPid.mjs'
 import execCliCore from './execCliCore.mjs'
 import execSpawnError from './_execSpawnError.mjs'
-import execThrownMsg from './_execThrownMsg.mjs'
+import { unreadableMsg, snapArgs, snapEnv } from './_execSnap.mjs'
 import callUser from './_callUser.mjs'
 import getTrace from './getTrace.mjs'
 
@@ -456,9 +456,27 @@ function parseInput(command, args, opt) {
         }
     }
 
-    //args: 若提供須為陣列, 否則回退為空陣列
+    //command含NUL(空字元): 入口即擋下, 不交給spawn(node之原生訊息含參數名稱與值之描述), 同command無效不啟動、attempts 0、不帶pid鍵
+    if (command.includes('\0')) {
+        return {
+            rInvalid: {
+                ok: false,
+                stdout: '',
+                stderr: '',
+                code: null,
+                error: 'invalid command: must not contain a NUL character',
+                durationMs: 0,
+                attempts: 0,
+            },
+        }
+    }
+
+    //args: 若提供須為陣列, 否則回退為空陣列; 元素於此逐一讀取為快照(讀取拋錯者以'invalid args: must be a readable array'回報, 其後不再觸及呼叫端之陣列)
     if (!isarr(args)) {
         args = []
+    }
+    else {
+        args = snapArgs(args)
     }
 
     //opt: 若提供須為物件, 否則回退為空物件
@@ -493,7 +511,7 @@ function parseInput(command, args, opt) {
         onceOpt.env = undefined
     }
     else {
-        onceOpt.env = env
+        onceOpt.env = snapEnv(env) //於此展開為快照(讀取拋錯者以'invalid opt.env: must be a readable object'回報), 各次嘗試不再觸及呼叫端之物件
     }
 
     //validate: 驗證規則字串或自訂函數, 於此經buildValidator判型並建立驗證函數一次(無有效規則為null = 不驗證), execCliOnce(含重試)直接使用而不再判型呼叫端之值
@@ -540,7 +558,7 @@ function parseInput(command, args, opt) {
  * 通用CLI子程序調用，封裝逾時、進程樹清理、輸出驗證、結構化錯誤回報與自動重試
  * 各參數原樣傳遞給目標CLI，支援中文
  * Windows下npm全域安裝之命令為.cmd批次檔，Node.js spawn無法直接執行(CVE-2024-27980安全修正後回EINVAL)，內部已參考cross-spawn自動解析.cmd入口並繞過cmd.exe，故可支援含多行文字之參數
- * 本函數不throw亦不reject，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)；command、args、opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦以結果物件回報，error為'<錯誤碼>: <訊息>'(無錯誤碼者為UNKNOWN，拋出非Error之值時訊息為該值之文字)
+ * 本函數不throw亦不reject，一律以結果物件之ok與error欄位回報成敗，error不含args與env之值(子程序自身之輸出另見stdout、stderr)；opt或其選項值不可讀(getter拋錯、已撤銷之Proxy等)時亦以結果物件回報，error為固定訊息'invalid opt: must be a readable object'(不含呼叫端所拋出之文字與錯誤碼；子進程未能啟動，code為null、attempts為1)，args之元素不可讀為'invalid args: must be a readable array'，opt.env不可讀為'invalid opt.env: must be a readable object'(皆於入口讀為快照，其後不再觸及呼叫端之值)；command含NUL(空字元)時不啟動，error為'invalid command: must not contain a NUL character'(attempts為0)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/execCli.test.mjs Github}
  * @memberOf wsemi
@@ -560,7 +578,7 @@ function parseInput(command, args, opt) {
  * @param {Boolean} [opt.debug=false] 輸入是否於opt.maxRetries、opt.retryDelayMs、opt.timeoutMs、opt.maxBuffer為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
  * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @param {Function} [opt.onTrace=null] 輸入觀察回調函數，於內部事件發生當下同步呼叫，傳入一個凍結之事件物件{ type, ... }，供測試以事件(而非等待時間)同步與診斷；欄位皆為原始值，不含stdout與stderr之內文(只有長度)；type為'attempt'時為即將啟動第n次嘗試(含n，由1起算)，'retry'時為上次嘗試失敗而即將等待ms毫秒後啟動第n次嘗試(含n、ms；n由2起算，ms即實際間隔)，'spawn'時為子進程已建立(含pid，未能啟動者為null)，'data'時為收到一段已解碼之輸出(含stream為'stdout'或'stderr'、len為該段字元數、size為處理後該串流已累積之字元數、kept為該段是否被累積；累積量已達maxBuffer者kept為false且size不變；子進程結束時殘餘之解碼不通知，settle之後亦不通知)，'full'時為該串流累積量首次達到maxBuffer(含stream、size)，'timeout'時為timeoutMs逾時計時器觸發而即將樹殺(含ms為timeoutMs)，'kill'時為即將以execProcessKillPid樹殺(含pid)，'settle'時為本次嘗試即將定案(含reason：'ok'為離開碼0且通過驗證，'exit'為非零離開碼或被訊號終止，'timeout'為逾時樹殺後close，'validate'為驗證失敗，'error'為子進程未能啟動，'stuck'為樹殺後3秒仍未收到close而強制定案；另含code為離開碼數字或null、signal為終止訊號字串或null)，'done'時為整個呼叫即將回傳(含n為實際嘗試次數、ok、reason：成功為'ok'，失敗為'spawn'(無法啟動子進程之同步錯誤)、'enoent'(命令不存在)、'code2'(離開碼2)等不可重試者，其餘含maxRetries為0者為'exhausted')；command無效或opt不可讀而在啟動前即回報者無事件；回調不帶接收者呼叫，其拋錯與回傳值皆忽略，不影響本函數，預設null
- * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、npm shim之入口檔不存在、cwd不存在、輸入不可讀等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串時不啟動，attempts為0且不帶pid鍵
+ * @returns {Promise} 回傳Promise，resolve回傳結果物件，內含ok(是否成功布林值)、stdout(標準輸出字串)、stderr(標準錯誤字串)、code(離開碼)、error(錯誤訊息字串，成功時為空字串)、durationMs(耗時毫秒)、pid(子進程pid)、attempts(實際嘗試次數)。子進程未能啟動時(spawn同步拋錯、'error'事件、不存在之.cmd/.bat、npm shim之入口檔不存在、cwd不存在、opt不可讀等)code為null且結果帶pid鍵、其值為undefined；已啟動者(含逾時、訊號結束、非零離開、驗證失敗)皆帶pid數值；command非非空字串或含NUL時不啟動，attempts為0且不帶pid鍵
  * @example
  * //need test in nodejs
  *
@@ -608,13 +626,12 @@ async function execCli(command, args = [], opt = {}) {
         p = parseInput(command, args, opt)
     }
     catch (err) {
-        let e = execSpawnError(err)
         return {
             ok: false,
             stdout: '',
             stderr: '',
             code: null,
-            error: `${e.code}: ${execThrownMsg(e, err)}`,
+            error: unreadableMsg(err, 'invalid opt: must be a readable object'), //固定訊息(V19), 不含呼叫端getter所拋出之文字與錯誤碼(V20); 讀取呼叫端之值而可能拋錯者為opt、args之元素與opt.env(command以isestr、args以isarr判型皆不拋錯)
             durationMs: Date.now() - startTime,
             pid: undefined, //同spawn同步錯誤: 未能啟動者帶pid鍵且其值為undefined(JSDoc契約)
             attempts: 1,

@@ -1,10 +1,8 @@
-import tagOf from './_tagOf.mjs'
-
-
 /**
  * 判斷是否為null
  *
- * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取內部標籤即拋錯之物件)，判定拋錯者回傳false
+ * 只有null為true(語言原生判定v === null，不讀Symbol.toStringTag)：偽造Symbol.toStringTag為'Null'之物件為false
+ * 對任何輸入皆不拋錯(含已撤銷之Proxy、讀取內部標籤即拋錯之物件)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/isnull.test.mjs Github}
  * @memberOf wsemi
@@ -17,8 +15,7 @@ import tagOf from './_tagOf.mjs'
  *
  */
 function isnull(v) {
-    let c = tagOf(v)
-    return c === '[object Null]'
+    return v === null
 }
 
 

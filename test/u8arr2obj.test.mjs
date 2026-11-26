@@ -254,20 +254,17 @@ describe(`u8arr2obj`, function() {
 
 describe(`u8arr2obj 非Error拋出值(R-CODEC-ERR-01之2)`, function() {
 
-    //偽造標籤為Uint8Array之Proxy, 讀slice、subarray、buffer時拋出null: try內讀呼叫端之資料可拋出任意值, catch不可再拋(修前catch內err.toString()對null拋TypeError而外拋)
+    //真Uint8Array(通過內部槽判定; 第552項: isu8arr不再讓偽造標籤之Proxy通過)帶自有存取器, 讀slice、subarray、buffer時拋出null: try內讀呼叫端之資料可拋出任意值, catch不可再拋(修前catch內err.toString()對null拋TypeError而外拋)
     let mk = () => {
-        return new Proxy(new Uint8Array(16), {
-            get(t, k) {
-                if (k === Symbol.toStringTag) {
-                    return 'Uint8Array'
-                }
-                if (k === 'slice' || k === 'subarray' || k === 'buffer') {
+        let u8a = new Uint8Array(16)
+        for (let k of ['slice', 'subarray', 'buffer']) {
+            Object.defineProperty(u8a, k, {
+                get() {
                     throw null // eslint-disable-line no-throw-literal
-                }
-                let v = Reflect.get(t, k)
-                return typeof v === 'function' ? v.bind(t) : v
-            },
-        })
+                },
+            })
+        }
+        return u8a
     }
 
     it(`讀取呼叫端之資料拋出null時, returnWithStateAndMsg回傳{ state: 'error', msg: 'null' }而不外拋 [R-CODEC-ERR-01之2]`, function() {
