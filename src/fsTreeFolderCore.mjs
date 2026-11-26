@@ -4,11 +4,12 @@ import optVal from './_optVal.mjs'
 import fsIsFolderCore from './fsIsFolderCore.mjs'
 import chkFsPath from './_chkFsPath.mjs'
 import chkFsDeps from './_chkFsDeps.mjs'
+import chkFsLevelOpt from './_chkFsLevelOpt.mjs'
 import { fsErrSan } from './_fsErrMsg.mjs'
 
 
-//levelLimit: 列舉層數(iseint, use: 'count', min: 1), 非預期(含null)改用預設1; 無窮遍歷請給大有限值(如4294967295)
-let RULE_LEVEL_LIMIT = { fn: 'fsTreeFolderCore', name: 'levelLimit', kind: 'eint', chk: { use: 'count', min: 1 } }
+//opt.levelLimit: 列舉層數(iseint, use: 'count', min: 1, 上限4294967295)有效才限定層數, 未給或非預期(含null、0、負數、小數、Infinity)改用預設null(不限層數, 窮舉全部)
+let RULE_LEVEL_LIMIT = { fn: 'fsTreeFolderCore', name: 'opt.levelLimit', kind: 'eint', chk: { use: 'count', min: 1 }, defDesc: 'null (no limit)' }
 
 
 /**
@@ -17,10 +18,12 @@ let RULE_LEVEL_LIMIT = { fn: 'fsTreeFolderCore', name: 'levelLimit', kind: 'eint
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsTreeFolderCore.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
- * @param {Integer} [levelLimit=1] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案或資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)，非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設1，null與Infinity皆不視為無窮遍歷(無窮遍歷請給大有限值，如4294967295)，預設1
- * @param {Object} opt 輸入設定物件，Core不自行匯入fs、path，須由呼叫端注入
+ * @param {Object} opt 輸入設定物件，Core不自行匯入fs、path，須由呼叫端注入；本參數原為levelLimit(列舉層數，預設1)，現改為設定物件，遷移期給了而非物件者(含舊寫法之數字如1、4294967295，以及陣列、函數、包裝物件)同步拋出Error(訊息為'invalid opt: must be an object'，不帶輸入值；fd無效者先報fd)，undefined、null視為未給，第3個引數有給(非undefined，如舊3參數形之opt)亦同步拋出Error(訊息為'invalid arguments: must be fd and opt only')
  * @param {Object} opt.fs 輸入fs物件，須提供statSync、lstatSync、readdirSync；缺漏(未給、null、非物件、缺少必要方法)為相依無效，同步拋出Error(訊息為'invalid opt.fs: must be an object providing …'，不帶輸入值)
  * @param {Object} opt.path 輸入path物件，須提供resolve、basename；缺漏同opt.fs，同步拋出Error(訊息為'invalid opt.path: must be an object providing resolve, basename')
+ * @param {Integer} [opt.levelLimit=null] 輸入列舉層數限制正整數，設定1為列舉資料夾下第一層的檔案或資料夾，須為有效整數且介於1至4294967295(iseint之use:'count'，可為字串型數字)才限定層數；未給或非預期之輸入(含null、0、負數、小數、超過4294967295、Infinity、'0x10'、包裝物件)視為未給而改用預設，即不限層數而窮舉全部層級，預設null
+ * @param {Boolean} [opt.debug=false] 輸入是否於opt.levelLimit為非預期之輸入而改用預設時輸出警告布林值，須為true才生效，警告為固定詞彙(不含輸入值)，同一參數每個行程只警告一次，預設false
+ * @param {Function} [opt.funLog=null] 輸入警告輸出函數，格式為(msg, { fn, reason, key })=>{}，未給則用console.warn，預設null
  * @returns {Array} 回傳列舉檔案或資料夾陣列，若fd不是資料夾則同步拋出Error(訊息為'invalid fd: must be an existing folder'，不帶輸入值)，列舉時讀取資料夾失敗(如無讀取權限之EPERM)亦同步拋出Error，其訊息為固定詞彙加錯誤碼'operation failed (code EPERM)'(原生錯誤之訊息帶出路徑，不回傳原文；保留其code)，路徑參數須為非空字串且不含NUL字元，無效時同步拋出Error(訊息如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)
  * @example
  * //need test in nodejs
@@ -28,8 +31,14 @@ let RULE_LEVEL_LIMIT = { fn: 'fsTreeFolderCore', name: 'levelLimit', kind: 'eint
  * //see fsTreeFolder
  *
  */
-function fsTreeFolderCore(fd, levelLimit = 1, opt = {}) {
+function fsTreeFolderCore(fd, opt = {}) {
     let level = 1
+
+    //check, 第2參數之遷移期檢查(R-LEVEL-LIMIT-02): 給了而非物件(舊寫法之levelLimit數字等)即同步拋出Error, fd無效者先報fd, 先於讀取opt之鍵
+    let msgOpt = chkFsLevelOpt(fd, opt, arguments[2])
+    if (msgOpt) {
+        throw new Error(msgOpt)
+    }
 
     //path, fs
     let path = get(opt, 'path')
@@ -52,10 +61,10 @@ function fsTreeFolderCore(fd, levelLimit = 1, opt = {}) {
         throw new Error('invalid fd: must be an existing folder')
     }
 
-    //levelLimit, opt類數值參數(JSDoc [levelLimit=1])以iseint判定(帳本G17、R-OPT-VAL-01): 須為有效整數且為個數並大於等於1, 有效則取Number(v), 非預期(含null、0、負數、小數、Infinity、'0x10'、包裝物件)視為未給、改用預設1(null不再為無窮遍歷, K3; 無窮遍歷請給大有限值如4294967295)
-    //debug警告: 來源為內部呼叫端轉交之opt.optDbg(有opt物件之對外函數如fsTreeFolderWithHash之opt), 未轉交者為本函數之opt; 只在非預期時讀一次debug(V11)
+    //levelLimit, opt.levelLimit以iseint判定(帳本G17、R-OPT-VAL-01、R-LEVEL-LIMIT-02): 須為有效整數且為個數並大於等於1, 有效則取Number(v)而限定層數, 未給或非預期(含null、0、負數、小數、Infinity、'0x10'、包裝物件)視為未給、改用預設null(不限層數, 窮舉全部; K3)
+    //debug警告: 來源為內部呼叫端轉交之opt.optDbg(對外函數之opt), 未轉交者為本函數之opt; 只在非預期時讀一次debug(V11)
     let optDbg = get(opt, 'optDbg')
-    levelLimit = optVal(levelLimit, 1, RULE_LEVEL_LIMIT, optDbg !== undefined ? optDbg : opt)
+    let levelLimit = optVal(get(opt, 'levelLimit'), null, RULE_LEVEL_LIMIT, optDbg !== undefined ? optDbg : opt)
 
     //tree
     function tree(fd) {
@@ -101,7 +110,7 @@ function fsTreeFolderCore(fd, levelLimit = 1, opt = {}) {
 
                 //tree
                 level += 1
-                if (level <= levelLimit) {
+                if (levelLimit === null || level <= levelLimit) {
                     rs = rs.concat(tree(fp))
                 }
 

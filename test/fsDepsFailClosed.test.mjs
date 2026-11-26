@@ -165,12 +165,12 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
         ['fsGetFileBasicHashCore', fsGetFileBasicHashCore, [R('a.txt')], 'rej', real],
         ['fsGetFileHashCore', fsGetFileHashCore, [R('a.txt')], 'rej', real],
         ['fsGetFileXxHashCore', fsGetFileXxHashCore, [R('a.txt')], 'rej', real],
-        ['fsGetFilesInFolderCore', (a, b, c) => fsGetFilesInFolderCore(a, 2, c), [R('d'), 0], 'thr', real],
-        ['fsGetFoldersInFolderCore', (a, b, c) => fsGetFoldersInFolderCore(a, 2, c), [R('d'), 0], 'thr', real],
-        ['fsTreeFolderCore', (a, b, c) => fsTreeFolderCore(a, 2, c), [R('d'), 0], 'thr', real],
-        ['fsGetFilesWithHashInFolderCore', (a, b, c) => fsGetFilesWithHashInFolderCore(a, 2, c), [R('d'), 0], 'rej', real],
+        ['fsGetFilesInFolderCore', fsGetFilesInFolderCore, [R('d')], 'thr', real], //第2參數即opt(R-LEVEL-LIMIT-02)
+        ['fsGetFoldersInFolderCore', fsGetFoldersInFolderCore, [R('d')], 'thr', real],
+        ['fsTreeFolderCore', fsTreeFolderCore, [R('d')], 'thr', real],
+        ['fsGetFilesWithHashInFolderCore', fsGetFilesWithHashInFolderCore, [R('d')], 'rej', real],
         ['fsGetFolderBasicHashCore', fsGetFolderBasicHashCore, [R('d')], 'rej', real],
-        ['fsTreeFolderWithHashCore', (a, b, c) => fsTreeFolderWithHashCore(a, 2, c), [R('d'), 0], 'rej', real],
+        ['fsTreeFolderWithHashCore', fsTreeFolderWithHashCore, [R('d')], 'rej', real],
         ['fsMergeFilesCore', fsMergeFilesCore, [[R('m.part1'), R('m.part2')], R('merged.txt')], 'rej', real],
         ['fsReadTextCore', fsReadTextCore, [R('a.txt')], 'env', real],
         ['fsRenameFileCore', fsRenameFileCore, [R('a.txt'), R('ren/a-r.txt')], 'env', real],
@@ -245,7 +245,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
     //======== A1b. 缺必要之「主操作方法」(fs 其餘方法齊全, 只少一個): 依通道fail-closed, 訊息列出方法清單 ========
     describe(`缺必要之主操作方法(opt.fs齊全, 只少一個方法)`, function() {
 
-        let wrap3 = (f) => (a, b, c) => f(a, 2, c) //列舉類: (fd, levelLimit, opt)
+        let wrap3 = (f) => (a, b, c) => f(a, { ...c, levelLimit: 2 }) //列舉類: (fd, opt), opt.levelLimit與注入相依同在opt(R-LEVEL-LIMIT-02)
         let opMiss = [
             ['fsCreateFolderCore', fsCreateFolderCore, [R('newd/n2')], 'env', 'mkdirSync'],
             ['fsCreateFileCore', fsCreateFileCore, [R('new1/new.txt'), 'abc'], 'env', 'writeFileSync'],
@@ -352,9 +352,9 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             reset()
             let m = 'invalid opt.crypto: must be an object providing createHash'
             let pick = (p) => p.then(() => 'resolved', (e) => e)
-            assert.strictEqual(await pick(fsGetFilesWithHashInFolderCore(R('e'), 1, { fs, path })), m)
+            assert.strictEqual(await pick(fsGetFilesWithHashInFolderCore(R('e'), { fs, path, levelLimit: 1 })), m)
             assert.strictEqual(await pick(fsGetFolderBasicHashCore(R('e'), { fs, path })), m)
-            assert.strictEqual(await pick(fsTreeFolderWithHashCore(R('e'), 1, { fs, path })), m)
+            assert.strictEqual(await pick(fsTreeFolderWithHashCore(R('e'), { fs, path, levelLimit: 1 })), m)
             assert.strictEqual(await pick(fsSyncFolderCore(R('e'), R('dst/sync-e'), { fs, path })), m)
         })
     })
@@ -367,19 +367,19 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             ['fsCopyFileCore path', 'env', () => fsCopyFileCore(R('a.txt'), R('dst/a2.txt'), { fs }), 'invalid opt.path: must be an object providing dirname'],
             ['fsCopyFolderCore path', 'env', () => fsCopyFolderCore(R('d'), R('dst/d2'), { fs }), 'invalid opt.path: must be an object providing dirname, resolve'],
             ['fsCopyFolderCore path(useSync=false)', 'envP', () => fsCopyFolderCore(R('d'), R('dst/d2'), { fs, useSync: false }), 'invalid opt.path: must be an object providing dirname, join'],
-            ['fsTreeFolderCore path', 'thr', () => fsTreeFolderCore(R('d'), 1, { fs }), 'invalid opt.path: must be an object providing resolve, basename'],
-            ['fsGetFilesInFolderCore path', 'thr', () => fsGetFilesInFolderCore(R('d'), 1, { fs }), 'invalid opt.path: must be an object providing resolve, basename'],
-            ['fsGetFoldersInFolderCore path', 'thr', () => fsGetFoldersInFolderCore(R('d'), 1, { fs }), 'invalid opt.path: must be an object providing resolve, basename'],
-            ['fsGetFilesWithHashInFolderCore path', 'rej', () => fsGetFilesWithHashInFolderCore(R('d'), 1, { fs, crypto }), 'invalid opt.path: must be an object providing resolve, basename'],
+            ['fsTreeFolderCore path', 'thr', () => fsTreeFolderCore(R('d'), { fs, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
+            ['fsGetFilesInFolderCore path', 'thr', () => fsGetFilesInFolderCore(R('d'), { fs, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
+            ['fsGetFoldersInFolderCore path', 'thr', () => fsGetFoldersInFolderCore(R('d'), { fs, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
+            ['fsGetFilesWithHashInFolderCore path', 'rej', () => fsGetFilesWithHashInFolderCore(R('d'), { fs, crypto, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
             ['fsGetFolderBasicHashCore path', 'rej', () => fsGetFolderBasicHashCore(R('d'), { fs, crypto }), 'invalid opt.path: must be an object providing resolve, basename'],
-            ['fsTreeFolderWithHashCore path', 'rej', () => fsTreeFolderWithHashCore(R('d'), 1, { fs, crypto }), 'invalid opt.path: must be an object providing resolve, basename'],
+            ['fsTreeFolderWithHashCore path', 'rej', () => fsTreeFolderWithHashCore(R('d'), { fs, crypto, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
             ['fsSyncFolderCore path', 'rej', () => fsSyncFolderCore(R('d'), R('dst/sync'), { fs, crypto }), 'invalid opt.path: must be an object providing resolve, dirname, join, basename, sep'],
             ['fsSyncFolderCore crypto', 'rej', () => fsSyncFolderCore(R('d'), R('dst/sync'), { fs, path }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsGetFileBasicHashCore crypto', 'rej', () => fsGetFileBasicHashCore(R('a.txt'), { fs }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsGetFileHashCore crypto(sha512)', 'rej', () => fsGetFileHashCore(R('a.txt'), { fs }), 'invalid opt.crypto: must be an object providing createHash'],
-            ['fsGetFilesWithHashInFolderCore crypto', 'rej', () => fsGetFilesWithHashInFolderCore(R('d'), 1, { fs, path }), 'invalid opt.crypto: must be an object providing createHash'],
+            ['fsGetFilesWithHashInFolderCore crypto', 'rej', () => fsGetFilesWithHashInFolderCore(R('d'), { fs, path, levelLimit: 1 }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsGetFolderBasicHashCore crypto', 'rej', () => fsGetFolderBasicHashCore(R('d'), { fs, path }), 'invalid opt.crypto: must be an object providing createHash'],
-            ['fsTreeFolderWithHashCore crypto', 'rej', () => fsTreeFolderWithHashCore(R('d'), 1, { fs, path }), 'invalid opt.crypto: must be an object providing createHash'],
+            ['fsTreeFolderWithHashCore crypto', 'rej', () => fsTreeFolderWithHashCore(R('d'), { fs, path, levelLimit: 1 }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsDownloadFileCore Readable', 'rej', () => fsDownloadFileCore('http://127.0.0.1:1/x', R('dl/dl.bin'), { fs, pipeline }), 'invalid opt.Readable: must be an object providing fromWeb'],
             ['fsDownloadFileCore pipeline', 'rej', () => fsDownloadFileCore('http://127.0.0.1:1/x', R('dl/dl.bin'), { fs, Readable }), 'invalid opt.pipeline: must be a function'],
             ['fsDownloadFileCore pipeline非函數', 'rej', () => fsDownloadFileCore('http://127.0.0.1:1/x', R('dl/dl.bin'), { fs, Readable, pipeline: {} }), 'invalid opt.pipeline: must be a function'],
@@ -406,7 +406,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
 
         it(`fsGetFilesWithHashInFolderCore type為xxhash64時不需crypto`, async function() {
             reset()
-            let rs = await fsGetFilesWithHashInFolderCore(R('d'), 1, { fs, path, type: 'xxhash64' })
+            let rs = await fsGetFilesWithHashInFolderCore(R('d'), { fs, path, type: 'xxhash64', levelLimit: 1 })
             assert.strictEqual(rs.length, 1)
             assert.ok(/^[0-9a-f]{16}$/.test(rs[0].hash))
         })
@@ -886,7 +886,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             }
             for (let f of [fsGetFilesInFolderCore, fsGetFoldersInFolderCore]) {
                 for (let target of [R('nope'), R('d')]) {
-                    assert.throws(() => f(target, 1, { fs: fsSpy, path: undefined }), /^Error: invalid opt\.path: must be an object providing resolve, basename$/)
+                    assert.throws(() => f(target, { fs: fsSpy, path: undefined, levelLimit: 1 }), /^Error: invalid opt\.path: must be an object providing resolve, basename$/)
                 }
             }
             assert.strictEqual(calls, 0)
@@ -968,11 +968,11 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             let h = await fsGetFileHashCore(R('a.txt'), real)
             assert.strictEqual(h, crypto.createHash('sha512').update('hello').digest('hex'))
             assert.strictEqual(await fsGetFileBasicHashCore(R('a.txt'), real), h)
-            assert.strictEqual(fsTreeFolderCore(R('d'), 2, real).length, 3)
-            assert.strictEqual(fsGetFilesInFolderCore(R('d'), 2, real).length, 2)
-            assert.strictEqual(fsGetFoldersInFolderCore(R('d'), 2, real).length, 1)
-            assert.strictEqual((await fsGetFilesWithHashInFolderCore(R('d'), 2, real)).length, 2)
-            assert.strictEqual((await fsTreeFolderWithHashCore(R('d'), 2, real)).length, 3) //資料夾項目亦列入(forFolder僅決定是否算其雜湊)
+            assert.strictEqual(fsTreeFolderCore(R('d'), { ...real, levelLimit: 2 }).length, 3)
+            assert.strictEqual(fsGetFilesInFolderCore(R('d'), { ...real, levelLimit: 2 }).length, 2)
+            assert.strictEqual(fsGetFoldersInFolderCore(R('d'), { ...real, levelLimit: 2 }).length, 1)
+            assert.strictEqual((await fsGetFilesWithHashInFolderCore(R('d'), { ...real, levelLimit: 2 })).length, 2)
+            assert.strictEqual((await fsTreeFolderWithHashCore(R('d'), { ...real, levelLimit: 2 })).length, 3) //資料夾項目亦列入(forFolder僅決定是否算其雜湊)
             assert.ok((await fsGetFolderBasicHashCore(R('d'), real)).length > 0)
             let m = await fsMergeFilesCore([R('m.part1'), R('m.part2')], R('mg/merged.txt'), real)
             assert.strictEqual(m.filename, 'merged.txt')

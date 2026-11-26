@@ -1,0 +1,12 @@
+# 狀態(檔案系統列舉函數之第 2 參數 opt)
+
+本檔收排程第 667 項(Gitea #220)之現況;只記現況、不寫過程(過程見 `sgud/exp/experience.md`).索引見 `sgud/state/state.md`.
+
+## fs 列舉家族之第 2 參數由 `levelLimit` 改為 `opt`(排程第 667 項,t667,2026-11-26;package.json version 1.9.79 之工作樹,未提交未發布)
+
+- 現況(已實作): 10 函數(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`、`fsTreeFolderWithHash`、`fsGetFilesWithHashInFolder` 及各 `*Core`)簽章為 `(fd, opt = {})`;`opt.levelLimit` 為有效正整數(`iseint` 之 `use: 'count'`,1～4294967295,可為數字字串)才限定層數,**未給、`{}`、`null`、無效值一律窮舉全部**;`*Core` 之注入相依與 `levelLimit`、`debug`、`funLog` 同在一個 opt.遷移期防護: 第 2 參數給了而非物件報 `invalid opt: must be an object`、第 3 個引數有給報 `invalid arguments: must be fd and opt only`(同步回陣列之 6 函數同步拋 `Error`,回傳 Promise 之 4 函數 reject 字串;訊息不帶值;檢測順序 fd → 第 2 參數 → 第 3 個引數).內部單一擁有者 `src/_chkFsLevelOpt.mjs`(`chkFsLevelOpt(fd, opt, extra)`),10 個函數各自於入口呼叫.
+- 內部呼叫端(行為不變): `fsGetFolderBasicHashCore`、`fsSyncFolderCore`(來源端與目標端)不給 `opt.levelLimit`(窮舉全部);`fsTask` 之 `opt.levelLimit` **預設維持 1**,以 `{ levelLimit, type }` 轉交 `fsGetFilesWithHashInFolder`(JSDoc 註明與列舉函數預設不同).
+- 規則: `sgud/rule/rulebook_fsdeps.md` R-LEVEL-LIMIT-02(R-LEVEL-LIMIT-01 之 10 函數部分被取代,`fsTask` 部分仍有效);破壞性變更紀錄第 83 項(`sgud/rule/rulebook_breaking_77on.md`,含下游遷移對照).
+- 測試: 新 `test/fsLevelLimitOpt.test.mjs`(102 案: 10 函數 × [窮舉、有效值、無效值、非物件報錯、第 3 個引數報錯、順序、debug 警告],注入 fs、不採用 `opt.fs`、對外函數只讀必要之鍵、類別實例之原型存取器);`test/fsLevelLimitOptPath.test.mjs`(內部呼叫端,含目標端深層檔案例);其餘 10 個既有測試檔隨簽章改寫(`fsDepsFailClosed`、`fsGetFilesInFolder`、`fsGetFilesWithHashInFolder`、`fsGetFoldersInFolder`、`fsMsgNoValue`、`fsSecurityOpts`、`fsTreeFolder`、`fsTreeFolderWithHash`、`optValG17eint`、`test/tools/fsHashFailRunner.mjs`、`test/tools/fsPathSites.mjs`).
+- 驗證(2026-11-26): 新測試於修前版(自工作樹複製之鏡像根)102 案為 1 passing／101 failing(唯一綠者為「Core 缺注入相依仍 fail-closed」之行為保持案),內部呼叫端 9 案修前後皆綠(行為保持);修後新測試連跑 20 次皆綠(111 案含內部呼叫端);變異 68 項(層數比較與預設 6、`opt.levelLimit` 判定 1、遷移期防護 9、對外函數接線 27、Core 接線 19、內部呼叫端 6)全擊殺、0 存活;全套 `npm test` 34003 passing／8 pending／0 failing(約 2 分),`npm pack` 發布包解開目錄(複製 `node_modules`、不建連結)同 34003／8／0;eslint 改動檔 0 項;`toolfp` 與 `toolg` 之 bundle 於鏡像根建置後實探(含 babel 轉譯之 async 函數): `arguments[2]` 與預設參數行為同原始碼.
+- 已知缺口與待辦: ①「未給第 2 參數」之舊呼叫端(依賴舊預設 1 層)無從攔截,行為靜默改為窮舉全部,下游須逐處改給 `{ levelLimit: 1 }`(主控裁定不設過渡);②`toolfp/dist/wsemip.umd.js` 為修前原始碼所建(遇物件之第 2 參數視為無效層數而取 1 層),下游(w-package-tools)換 bundle 由主控另派;③同步 3 個對外函數讀 `opt.levelLimit` 之存取器拋錯者原樣外拋(同 Core 對 `opt.fs`／`opt.path` 既有之處置);④`sgud/exp/experience.md` 約 69KB 逾整理門檻(見 `sgud/feedback/feedback.md`).

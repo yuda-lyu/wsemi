@@ -164,16 +164,24 @@ function itNoHandler(ids) {
  * 依函數名稱定義「opt不可讀」之mocha之it(於describe內呼叫): 每個函數一案(本檔cases之'OU-<函數>'), 子行程內以getter拋錯與已撤銷之Proxy兩形之opt呼叫, 斷言皆不同步拋出而以字串reject, 且無未捕捉例外與未處理rejection(RULE.r2opt)
  *
  * @param {Array} names 輸入函數名稱陣列(對外與Core, 如['fsGetFileBasicHash', 'fsGetFileBasicHashCore'])
+ * @param {Object} [opt={}] 輸入設定物件，opt.revokedMsg為已撤銷之Proxy之期望reject字串(fs列舉家族之第2參數適用遷移期檢查: 已撤銷之Proxy非物件(isobj為false), 依R-LEVEL-LIMIT-02以'invalid opt: must be an object'reject)，未給則期望'TypeError: …'
  */
-function itOptUnreadable(names) {
+function itOptUnreadable(names, opt = {}) {
+    let revokedMsg = opt.revokedMsg
     for (let nm of names) {
         it(`OU-${nm} opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy) [${RULE.r2opt}]`, function() {
             let r = runFsHashFail('OU-' + nm)
             //RULE.r2opt、RULE.r1err: getter拋Error('getter boom')者不同步拋出而以字串reject, 其值為String(err)
             assert.strict.deepStrictEqual(r.out.got.getter, rejected('Error: getter boom'))
-            //RULE.r2opt、RULE.r1err: 已撤銷之Proxy(展開或讀取即拋TypeError)者不同步拋出而以字串reject, 其值為String(err)即'TypeError: 訊息'(訊息全文為引擎之陷阱描述, 不屬規格)
             let rv = r.out.got.revoked
-            assert.strict.deepStrictEqual({ s: rv.s, t: rv.t, typeErrorStr: /^TypeError: /.test(String(rv.v)) }, { s: 'reject', t: 'string', typeErrorStr: true })
+            if (typeof revokedMsg === 'string') {
+                //RULE.r2opt、R-LEVEL-LIMIT-02: 已撤銷之Proxy於遷移期檢查即判為非物件, 不同步拋出而以固定說明字串reject(不讀其鍵)
+                assert.strict.deepStrictEqual(rv, rejected(revokedMsg))
+            }
+            else {
+                //RULE.r2opt、RULE.r1err: 已撤銷之Proxy(展開或讀取即拋TypeError)者不同步拋出而以字串reject, 其值為String(err)即'TypeError: 訊息'(訊息全文為引擎之陷阱描述, 不屬規格)
+                assert.strict.deepStrictEqual({ s: rv.s, t: rv.t, typeErrorStr: /^TypeError: /.test(String(rv.v)) }, { s: 'reject', t: 'string', typeErrorStr: true })
+            }
             //RULE.stray: 不得產生unhandledRejection或uncaughtException
             assert.strict.deepStrictEqual(r.stray, [])
         })
@@ -676,7 +684,7 @@ async function main() {
             let sub = path.join(fd, 'sub')
             mkFile(path.join(sub, 'a.txt'))
             let fpDangling = mkDangling(sub, 'dj2')
-            return { fpDangling, got: await run(() => f(fd, 1, { forFile: false, forFolder: true })) }
+            return { fpDangling, got: await run(() => f(fd, { levelLimit: 1, forFile: false, forFolder: true })) }
         },
 
         //TW04: 夾內有檔案而type不支援, 入口即以固定說明字串reject(R-HASH-TYPE-01)
@@ -684,7 +692,7 @@ async function main() {
             let f = await imp('fsTreeFolderWithHash')
             let fd = mkFx()
             mkFile(path.join(fd, 'a.txt'))
-            return { got: await run(() => f(fd, 1, { type: 'nope' })) }
+            return { got: await run(() => f(fd, { levelLimit: 1, type: 'nope' })) }
         },
 
         TW05: async () => {
@@ -693,13 +701,13 @@ async function main() {
             let sub = path.join(fd, 'sub')
             fs.mkdirSync(sub)
             denyRead(sub)
-            return { errStr: errReaddir(sub), got: await run(() => f(fd, 4294967295)) }
+            return { errStr: errReaddir(sub), got: await run(() => f(fd)) }
         },
 
         //TW06(補列): 對外函數+opt.fs之lstatSync拋null
         TW06: async () => {
             let f = await imp('fsTreeFolderWithHash')
-            return { got: await run(() => f('x', 1, { fs: fsLstatThrows(null) })) }
+            return { got: await run(() => f('x', { levelLimit: 1, fs: fsLstatThrows(null) })) }
         },
 
         //======== fsGetFilesWithHashInFolder(Core) ========
@@ -723,7 +731,7 @@ async function main() {
             let f = await imp('fsGetFilesWithHashInFolder')
             let fd = mkFx()
             mkFile(path.join(fd, 'a.txt'))
-            return { got: await run(() => f(fd, 1, { type: 'nope' })) }
+            return { got: await run(() => f(fd, { levelLimit: 1, type: 'nope' })) }
         },
 
         FW04: async () => {
@@ -731,7 +739,7 @@ async function main() {
             let fd = mkFx()
             let fp = mkFile(path.join(fd, 'deny.txt'))
             denyRead(fp)
-            return { errStr: errOpen(fp), got: await run(() => f(fd, 1, { type: 'xxhash64' })) }
+            return { errStr: errOpen(fp), got: await run(() => f(fd, { levelLimit: 1, type: 'xxhash64' })) }
         },
 
         FW05: async () => {
@@ -739,7 +747,7 @@ async function main() {
             let fd = mkFx()
             let fp = mkFile(path.join(fd, 'deny.txt'))
             denyRead(fp)
-            return { errStr: errOpen(fp), got: await run(() => f(fd, 1)) }
+            return { errStr: errOpen(fp), got: await run(() => f(fd, { levelLimit: 1 })) }
         },
 
         FW06: async () => {
@@ -748,13 +756,13 @@ async function main() {
             let sub = path.join(fd, 'sub')
             fs.mkdirSync(sub)
             denyRead(sub)
-            return { errStr: errReaddir(sub), got: await run(() => f(fd, 4294967295)) }
+            return { errStr: errReaddir(sub), got: await run(() => f(fd)) }
         },
 
         //FW07(補列): 對外函數+opt.fs之lstatSync拋null
         FW07: async () => {
             let f = await imp('fsGetFilesWithHashInFolder')
-            return { got: await run(() => f('x', 1, { fs: fsLstatThrows(null) })) }
+            return { got: await run(() => f('x', { levelLimit: 1, fs: fsLstatThrows(null) })) }
         },
 
         //======== fsSyncFolder(Core) ========
@@ -895,8 +903,8 @@ async function main() {
         fsGetFileXxHash: () => [path.join(fx, 'nope.txt')],
         fsGetFileHash: () => [path.join(fx, 'nope.txt')],
         fsGetFolderBasicHash: () => [path.join(fx, 'nopeDir')],
-        fsTreeFolderWithHash: () => [path.join(fx, 'nopeDir'), 1],
-        fsGetFilesWithHashInFolder: () => [path.join(fx, 'nopeDir'), 1],
+        fsTreeFolderWithHash: () => [path.join(fx, 'nopeDir')], //第2參數即opt(R-LEVEL-LIMIT-02)
+        fsGetFilesWithHashInFolder: () => [path.join(fx, 'nopeDir')], //第2參數即opt(R-LEVEL-LIMIT-02)
         fsSyncFolder: () => [path.join(fx, 'nopeSrc'), path.join(fx, 'nopeTar')],
     }
     for (let [name, args] of Object.entries(ouArgs)) {

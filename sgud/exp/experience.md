@@ -293,3 +293,13 @@
 - **下游盤點之結論決定「停於該函數」**: 依任務書先盤下游再改;子代理(只給契約,不給結論)讀出 `isarr`(標籤讀取拋錯之陣列 Proxy 判 `false` 為 w-orm-* 寫入守門所依賴)與 `isobj`(偽造 `'Object'` 標籤者於 w-serv-orm 仍被掃描)有依賴現行語意者,故本批只改 `isnull`／`isundefined`／`isbigint`／`isab`／`isu8arr`／`isu16arr`;`Proxy(ArrayBuffer)` 舊判 `true` 為唯一意外之連帶(內部槽不認 Proxy).
 - **轉型函數 opt 取快照**: `_pickOpt(opt, keys)` 每鍵讀一次、拋錯視為未給,`debug`／`funLog` 以快照上之惰性存取器讀取(不改變「只有非預期輸入才讀 debug」之時序);測試以「業務鍵全有效時 `debug` getter 讀取數為 0」鎖定.另以小腳本把惡意值逐位置餵入全部同類函數,一次得 36 個 opt 讀取類同形缺陷(另 10 個為必須參數依設計拋錯;列待裁示,不擴大本批).
 - **變異腳本**: 錨點用單行字串(多行錨點遇縮排與換行差異即 `ANCHOR-FAIL`);改完碼後重跑全部變異;等價變異逐項寫理由(條件式賦值對 `get(…, 預設)` 無差別).`git status`／`diff` 對 CRLF 工作樹之警告無害.
+
+## 位置參數改 opt 之遷移期防護、對外函數只讀必要之鍵、內部呼叫端之變異缺口(2026-11-26,t667,排程第 667 項)
+
+- **遷移期防護要看「舊簽章全部之位置」而非只看被改之那一個**: 舊 `(fd, levelLimit, opt)` 改為 `(fd, opt)` 後,第 2 參數非物件即拋錯只攔得下數字寫法;舊寫法 `fn(fd, null, { type })` 之第 2 參數為 `null`／`undefined` 視為未給,第 3 參數(舊 opt)被靜默忽略.故一併要求第 3 個引數有給即報錯(訊息 `invalid arguments: must be fd and opt only`);簽章不增參數,以 `arguments[2]` 取得——`test/jsdocFixes.test.mjs` 全庫斷言 `@param` 頂層名稱與簽名一致,多一個具名參數就得在對外 JSDoc 宣告一個不該存在之參數.檢測順序固定 fd → 第 2 參數 → 第 3 個引數,各以一案鎖定.
+- **對外函數須自行檢測,不把原值交 Core 代報**: 草案之作法是第 2 參數非物件時把原值原樣交 Core 報錯;一旦對外函數另重組傳給 Core 之物件(只取必要之鍵),原值不會到達 Core,且第 3 個引數 Core 也看不到.故 5 個對外函數與 5 個 Core 各自呼叫 `chkFsLevelOpt(fd, opt, arguments[2])`,每處以變異(拿掉檢查、不檢第 3 個引數)各驗一次.
+- **對外函數以 `{ ...opt, path, fs }` 展開整個 opt 有三個副作用**(獨立複審抓到): ①讀走全部鍵,含 `debug` 存取器(有效值時應為 0 次);②使用者自帶之內部鍵 `optDbg` 被帶入,可控制警告出口;③只展開自有鍵,類別實例之原型上存取器 `levelLimit` 漏掉而變窮舉全部,與 Core 直呼不一致.改為 `{ path, fs, levelLimit: get(opt, 'levelLimit'), optDbg: opt }`(屬性讀取一次,opt 本身作 `optDbg` 惰性轉交);`get` 對 `null` 回 `undefined`,免得 `opt.levelLimit` 於 `opt = null` 時拋 TypeError.`*WithHash*` 兩個仍以 `mergeInject` 展開(既有寫法,至多讀一次).
+- **內部呼叫端之變異常在既有測試下存活**: `fsSyncFolderCore` 對來源端與目標端各列舉一次,既有測試只讓目標端為空,把目標端改限 1 層之變異存活;補「目標端深層檔內容相異被覆蓋、深層多出檔被移除」一案後才被擊殺.凡成對之呼叫站點,各植一變異.
+- **預設由 1 層改窮舉之函數,以「深於第 1 層之夾具＋逐層相異之名稱」測**: 夾具檔名含層級(`f1`～`f5`),期望名單由夾具資料表以 `level <= lv` 過濾產生,並在案內斷言「窮舉全部與第 1 層之結果相異」(鑑別力前提),免得夾具退化後預設改回 1 層仍綠.
+- **`toolfp` 之 bundle 對物件之第 2 參數視為無效層數而取 1 層**: 現行(修前原始碼所建)bundle 遇 `fn(fd, { levelLimit: 2 })` 仍只列第 1 層(忽略 opt),換新 bundle 前下游改寫為 opt 寫法不會報錯但層數被忽略;新 bundle 於鏡像根以 `toolfp/gDistRollup.mjs` 同一設定建置後實探,`arguments[2]` 經壓縮仍有效(數字第 2 參數拋 `invalid opt: must be an object`、`fn(fd, null, {})` 拋 `invalid arguments: must be fd and opt only`).
+- **修前紅與變異皆於 `./tmp/` 之鏡像根跑**: 修前基準以 `git ls-files -z -- src test package.json | tar --null -T - -cf - | tar -xf - -C <鏡像>` 自工作樹取原位元組(CRLF 工作樹不用 `git archive`),`quiet-run --lock --cwd <鏡像> --log <路徑>` 以鏡像根為工作目錄(相依由上層 `node_modules` 解析,不建連結);新測試 89 案於修前版 1 passing／88 failing(唯一綠者為「Core 缺注入相依仍報錯」之行為保持案).帶 CR 之差異附件以 `git apply -p1` 於 CRLF 工作樹可乾淨套用;Edit 工具之多行錨點會保持 CRLF.

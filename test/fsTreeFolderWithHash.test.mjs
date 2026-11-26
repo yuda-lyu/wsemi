@@ -35,25 +35,25 @@ describe(`fsTreeFolderWithHash`, function() {
             return vfps
         }
 
-        let vfps1 = await fsTreeFolderWithHash(fdt)
+        let vfps1 = await fsTreeFolderWithHash(fdt, { levelLimit: 1 })
         vfps1 = clns(vfps1)
         // console.log('fsTreeFolderWithHash(1,file,md5)', vfps1)
         ms.push({ 'fsTreeFolderWithHash(1,file,md5)': vfps1 })
 
-        let vfps2 = await fsTreeFolderWithHash(fdt, 4294967295)
+        let vfps2 = await fsTreeFolderWithHash(fdt)
         vfps2 = clns(vfps2)
-        // console.log('fsTreeFolderWithHash(4294967295,file,md5)', vfps2)
-        ms.push({ 'fsTreeFolderWithHash(4294967295,file,md5)': vfps2 })
+        // console.log('fsTreeFolderWithHash(unset,file,md5)', vfps2)
+        ms.push({ 'fsTreeFolderWithHash(unset,file,md5)': vfps2 })
 
-        let vfps3 = await fsTreeFolderWithHash(fdt, 1, { type: 'sha256' })
+        let vfps3 = await fsTreeFolderWithHash(fdt, { levelLimit: 1, type: 'sha256' })
         vfps3 = clns(vfps3)
         // console.log('fsTreeFolderWithHash(1,file,sha256)', vfps3)
         ms.push({ 'fsTreeFolderWithHash(1,file,sha256)': vfps3 })
 
-        let vfps4 = await fsTreeFolderWithHash(fdt, 4294967295, { forFile: true, forFolder: true })
+        let vfps4 = await fsTreeFolderWithHash(fdt, { forFile: true, forFolder: true })
         vfps4 = clns(vfps4)
-        // console.log('fsTreeFolderWithHash(4294967295,file+folder,md5)', vfps4)
-        ms.push({ 'fsTreeFolderWithHash(4294967295,file+folder,md5)': vfps4 })
+        // console.log('fsTreeFolderWithHash(unset,file+folder,md5)', vfps4)
+        ms.push({ 'fsTreeFolderWithHash(unset,file+folder,md5)': vfps4 })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -74,7 +74,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     hash: '809d4580aaed41565abc38d58f77f840'
     //   }
     // ]
-    // fsTreeFolderWithHash(4294967295,file,md5) [
+    // fsTreeFolderWithHash(unset,file,md5) [
     //   { isFolder: true, level: 1, name: 'abc', hash: '' },
     //   {
     //     isFolder: false,
@@ -107,7 +107,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     hash: '512f26ada3c3d634ac3c6b12b7b33cb50bb0963c3f6d9924241619c84ec78ff2'
     //   }
     // ]
-    // fsTreeFolderWithHash(4294967295,file+folder,md5) [
+    // fsTreeFolderWithHash(unset,file+folder,md5) [
     //   {
     //     isFolder: true,
     //     level: 1,
@@ -169,7 +169,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     ]
     //   },
     //   {
-    //     "fsTreeFolderWithHash(4294967295,file,md5)": [
+    //     "fsTreeFolderWithHash(unset,file,md5)": [
     //       {
     //         "isFolder": true,
     //         "level": 1,
@@ -231,7 +231,7 @@ describe(`fsTreeFolderWithHash`, function() {
     //     ]
     //   },
     //   {
-    //     "fsTreeFolderWithHash(4294967295,file+folder,md5)": [
+    //     "fsTreeFolderWithHash(unset,file+folder,md5)": [
     //       {
     //         "isFolder": true,
     //         "level": 1,
@@ -295,7 +295,7 @@ describe(`fsTreeFolderWithHash`, function() {
             ]
         },
         {
-            'fsTreeFolderWithHash(4294967295,file,md5)': [
+            'fsTreeFolderWithHash(unset,file,md5)': [
                 {
                     'isFolder': true,
                     'level': 1,
@@ -357,7 +357,7 @@ describe(`fsTreeFolderWithHash`, function() {
             ]
         },
         {
-            'fsTreeFolderWithHash(4294967295,file+folder,md5)': [
+            'fsTreeFolderWithHash(unset,file+folder,md5)': [
                 {
                     'isFolder': true,
                     'level': 1,
@@ -426,6 +426,7 @@ describe(`fsTreeFolderWithHash 失敗回報(R-FS-REJECT-01)`, function() {
     ])
 
     //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: RULE.r2opt)
-    itOptUnreadable(['fsTreeFolderWithHash', 'fsTreeFolderWithHashCore'])
+    //已撤銷之Proxy於第2參數(opt)之遷移期檢查即判為非物件(R-LEVEL-LIMIT-02), 以固定說明字串reject
+    itOptUnreadable(['fsTreeFolderWithHash', 'fsTreeFolderWithHashCore'], { revokedMsg: 'invalid opt: must be an object' })
 
 })

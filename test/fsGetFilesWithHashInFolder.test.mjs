@@ -38,13 +38,13 @@ describe(`fsGetFilesWithHashInFolder`, function() {
         fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
         fsCreateFolder(`${fdt}/mno/pqr`)
 
-        let r1 = await fsGetFilesWithHashInFolder(fdt, 1)
+        let r1 = await fsGetFilesWithHashInFolder(fdt, { levelLimit: 1 })
         // console.log('fsGetFilesWithHashInFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = await fsGetFilesWithHashInFolder(fdt, 4294967295)
-        // console.log('fsGetFilesWithHashInFolder(levelLimit=4294967295)', ftpaths(rall))
-        ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=4294967295)': ftpaths(rall) })
+        let rall = await fsGetFilesWithHashInFolder(fdt)
+        // console.log('fsGetFilesWithHashInFolder(levelLimit=unset)', ftpaths(rall))
+        ms.push({ 'fsGetFilesWithHashInFolder(evelLimit=unset)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -64,7 +64,7 @@ describe(`fsGetFilesWithHashInFolder`, function() {
     //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
     //   }
     // ]
-    // fsGetFilesWithHashInFolder(levelLimit=4294967295) [
+    // fsGetFilesWithHashInFolder(levelLimit=unset) [
     //   {
     //     level: 2,
     //     path: './abc/z2.txt',
@@ -87,7 +87,7 @@ describe(`fsGetFilesWithHashInFolder`, function() {
     //     hash: '3b770ebe9b04f171f0ead0e07d8e2882'
     //   }
     // ]
-    let ms = [{ 'fsGetFilesWithHashInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }, { 'fsGetFilesWithHashInFolder(evelLimit=4294967295)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt', 'hashType': 'md5', 'hash': '5cb7e380d019de63c643aef55b8534d0' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt', 'hashType': 'md5', 'hash': 'a61d1457beb4684e254ce60379c8ae7b' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }]
+    let ms = [{ 'fsGetFilesWithHashInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }, { 'fsGetFilesWithHashInFolder(evelLimit=unset)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt', 'hashType': 'md5', 'hash': '5cb7e380d019de63c643aef55b8534d0' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt', 'hashType': 'md5', 'hash': 'a61d1457beb4684e254ce60379c8ae7b' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt', 'hashType': 'md5', 'hash': '3b770ebe9b04f171f0ead0e07d8e2882' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = await test()
@@ -118,6 +118,7 @@ describe(`fsGetFilesWithHashInFolder 失敗回報(R-FS-REJECT-01)`, function() {
     ])
 
     //opt本身或其屬性不可讀(getter拋錯、已撤銷之Proxy), 對外與Core各一案(外審 opus F02; 斷言與規則句見itOptUnreadable: RULE.r2opt)
-    itOptUnreadable(['fsGetFilesWithHashInFolder', 'fsGetFilesWithHashInFolderCore'])
+    //已撤銷之Proxy於第2參數(opt)之遷移期檢查即判為非物件(R-LEVEL-LIMIT-02), 以固定說明字串reject
+    itOptUnreadable(['fsGetFilesWithHashInFolder', 'fsGetFilesWithHashInFolderCore'], { revokedMsg: 'invalid opt: must be an object' })
 
 })

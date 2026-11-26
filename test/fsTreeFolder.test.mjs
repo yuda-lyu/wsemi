@@ -37,13 +37,13 @@ describe(`fsTreeFolder`, function() {
         fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
         fsCreateFolder(`${fdt}/mno/pqr`)
 
-        let r1 = fsTreeFolder(fdt, 1)
+        let r1 = fsTreeFolder(fdt, { levelLimit: 1 })
         // console.log('fsTreeFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsTreeFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = fsTreeFolder(fdt, 4294967295)
-        // console.log('fsTreeFolder(levelLimit=4294967295)', ftpaths(rall))
-        ms.push({ 'fsTreeFolder(evelLimit=4294967295)': ftpaths(rall) })
+        let rall = fsTreeFolder(fdt)
+        // console.log('fsTreeFolder(levelLimit=unset)', ftpaths(rall))
+        ms.push({ 'fsTreeFolder(evelLimit=unset)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -57,7 +57,7 @@ describe(`fsTreeFolder`, function() {
     //   { isFolder: true, level: 1, path: './mno', name: 'mno' },
     //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
     // ]
-    // fsTreeFolder(levelLimit=4294967295) [
+    // fsTreeFolder(levelLimit=unset) [
     //   { isFolder: true, level: 1, path: './abc', name: 'abc' },
     //   { isFolder: false, level: 2, path: './abc/z2.txt', name: 'z2.txt' },
     //   { isFolder: true, level: 1, path: './def', name: 'def' },
@@ -72,7 +72,7 @@ describe(`fsTreeFolder`, function() {
     //   { isFolder: true, level: 2, path: './mno/pqr', name: 'pqr' },
     //   { isFolder: false, level: 1, path: './z1.txt', name: 'z1.txt' }
     // ]
-    let ms = [{ 'fsTreeFolder(evelLimit=1)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsTreeFolder(evelLimit=4294967295)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': false, 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 2, 'path': './def/ijk', 'name': 'ijk' }, { 'isFolder': false, 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': true, 'level': 2, 'path': './mno/pqr', 'name': 'pqr' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
+    let ms = [{ 'fsTreeFolder(evelLimit=1)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsTreeFolder(evelLimit=unset)': [{ 'isFolder': true, 'level': 1, 'path': './abc', 'name': 'abc' }, { 'isFolder': false, 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'isFolder': true, 'level': 1, 'path': './def', 'name': 'def' }, { 'isFolder': true, 'level': 2, 'path': './def/ijk', 'name': 'ijk' }, { 'isFolder': false, 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'isFolder': true, 'level': 1, 'path': './mno', 'name': 'mno' }, { 'isFolder': true, 'level': 2, 'path': './mno/pqr', 'name': 'pqr' }, { 'isFolder': false, 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()

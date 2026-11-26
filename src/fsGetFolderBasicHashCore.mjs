@@ -68,8 +68,8 @@ async function fsGetFolderBasicHashCore(fd, opt = {}) {
             return Promise.reject('invalid fd: must be an existing folder')
         }
 
-        //全部層級: levelLimit之null改取預設1(K3), 無窮遍歷以大有限值(iseint use:'count'之上限)表示
-        let vfps = fsTreeFolderCore(fd, 4294967295, { path, fs })
+        //全部層級: 不給opt.levelLimit即窮舉全部(R-LEVEL-LIMIT-02)
+        let vfps = fsTreeFolderCore(fd, { path, fs })
         await pmSeries(vfps, async (v) => {
 
             //check

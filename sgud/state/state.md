@@ -6,6 +6,12 @@
 
 ## 索引(哪類查哪檔)
 
+### `sgud/state/state_檔案系統列舉.md`(fs 列舉函數之第 2 參數 opt;約 4KB;新增於 2026-11-26)
+
+查: 10 個列舉函數(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`、`fsTreeFolderWithHash`、`fsGetFilesWithHashInFolder` 及各 `*Core`)之第 2 參數由 `levelLimit` 改為 `opt`(未給 `opt.levelLimit` 即窮舉全部)、遷移期防護(第 2 參數非物件、第 3 個引數有給即報錯)、內部呼叫端與 `fsTask` 預設維持 1、驗證數字(修前紅／變異／全套／發布包配置)、`toolfp` bundle 之影響、已知缺口(排程第 667 項,Gitea #220).所含節:
+
+- fs 列舉家族之第 2 參數由 `levelLimit` 改為 `opt`(排程第 667 項;t667,2026-11-26)〔本節於 2026-11-26 新增〕
+
 ### `sgud/state/state_外部程序與檔案_第2輪.md`(外部程序與檔案,第 2 輪起;約 5KB;新增於 2026-11-24)
 
 查: `fsEnsureBins` 之跨程序只取得一次(鎖之位置與格式、等候、接手、上限、事件、測試、已知缺口)、離線試取清除之競態與無主暫存之清除、取得預算函數 `fsEnsureBinsBudget` 與其並行最壞選項 `opt.concurrent`、`fsDownloadFileVerify` 之 Node 內建 fetch 已知限制.所含節:

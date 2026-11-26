@@ -1,18 +1,6 @@
-/* eslint-disable no-new-wrappers */ //本檔刻意以包裝物件(new Number)作為無效輸入
 import assert from 'assert'
 import fs from 'fs'
 import path from 'path'
-import crypto from 'crypto'
-import fsTreeFolder from '../src/fsTreeFolder.mjs'
-import fsTreeFolderCore from '../src/fsTreeFolderCore.mjs'
-import fsTreeFolderWithHash from '../src/fsTreeFolderWithHash.mjs'
-import fsTreeFolderWithHashCore from '../src/fsTreeFolderWithHashCore.mjs'
-import fsGetFilesInFolder from '../src/fsGetFilesInFolder.mjs'
-import fsGetFilesInFolderCore from '../src/fsGetFilesInFolderCore.mjs'
-import fsGetFoldersInFolder from '../src/fsGetFoldersInFolder.mjs'
-import fsGetFoldersInFolderCore from '../src/fsGetFoldersInFolderCore.mjs'
-import fsGetFilesWithHashInFolder from '../src/fsGetFilesWithHashInFolder.mjs'
-import fsGetFilesWithHashInFolderCore from '../src/fsGetFilesWithHashInFolderCore.mjs'
 import fsGetFolderBasicHash from '../src/fsGetFolderBasicHash.mjs'
 import fsSyncFolder from '../src/fsSyncFolder.mjs'
 import fsTask from '../src/fsTask.mjs'
@@ -20,11 +8,11 @@ import { traceRec } from './tools/timeKit.mjs'
 import { runChildCase } from './tools/runChildCase.mjs'
 
 
-//W-11(排程第492項第2批 ws492c): levelLimit之null依K3取預設1(與0、負、小數、Infinity同), 不再為無窮遍歷; 無窮遍歷由呼叫端給大有限值(4294967295)
-//  fs列舉家族10函數(fsTreeFolder(Core)、fsTreeFolderWithHash(Core)、fsGetFilesInFolder(Core)、fsGetFoldersInFolder(Core)、fsGetFilesWithHashInFolder(Core))與fsTask一致
-//  內部需全部層級者(fsGetFolderBasicHash、fsSyncFolder)改給大有限值, 行為不變
+//W-11(排程第492項第2批 ws492c)之fs列舉家族10函數部分已由R-LEVEL-LIMIT-02取代(第2參數改為opt, 未給opt.levelLimit即窮舉全部), 其測試移至test/fsLevelLimitOpt.test.mjs
+//  內部需全部層級者(fsGetFolderBasicHash、fsSyncFolder)改為不給opt.levelLimit, 行為不變(本檔保留)
+//  fsTask之opt.levelLimit(預設1)不在R-LEVEL-LIMIT-02之列, 行為不變(本檔保留)
 //W-12: 路徑型opt鍵(fsSrlog.fdLog、fsTask.fdStorage、fsEvem.fd)非字串、空字串、含NUL視為非預期, 改用預設
-describe(`levelLimit之null取預設與路徑型opt鍵(W-11、W-12)`, function() {
+describe(`內部全部層級、fsTask之levelLimit與路徑型opt鍵(W-11、W-12)`, function() {
 
     let fd = path.resolve('./test/_tmp/fsLevelLimitOptPath')
     let R = (p) => `${fd}/${p}`
@@ -48,56 +36,7 @@ describe(`levelLimit之null取預設與路徑型opt鍵(W-11、W-12)`, function()
         fs.rmSync(fd, { recursive: true, force: true })
     })
 
-    let names = (arr) => arr.map((v) => v.name).sort()
-
-    //funs: [名稱, (levelLimit) => 結果之名稱陣列(排序後)], 同步與非同步皆以await統一
-    let real = { fs, path, crypto }
-    let funs = [
-        ['fsTreeFolder', async (lv) => names(fsTreeFolder(R('t'), lv))],
-        ['fsTreeFolderCore', async (lv) => names(fsTreeFolderCore(R('t'), lv, real))],
-        ['fsTreeFolderWithHash', async (lv) => names(await fsTreeFolderWithHash(R('t'), lv))],
-        ['fsTreeFolderWithHashCore', async (lv) => names(await fsTreeFolderWithHashCore(R('t'), lv, real))],
-        ['fsGetFilesInFolder', async (lv) => names(fsGetFilesInFolder(R('t'), lv))],
-        ['fsGetFilesInFolderCore', async (lv) => names(fsGetFilesInFolderCore(R('t'), lv, real))],
-        ['fsGetFoldersInFolder', async (lv) => names(fsGetFoldersInFolder(R('t'), lv))],
-        ['fsGetFoldersInFolderCore', async (lv) => names(fsGetFoldersInFolderCore(R('t'), lv, real))],
-        ['fsGetFilesWithHashInFolder', async (lv) => names(await fsGetFilesWithHashInFolder(R('t'), lv))],
-        ['fsGetFilesWithHashInFolderCore', async (lv) => names(await fsGetFilesWithHashInFolderCore(R('t'), lv, real))],
-    ]
-
-    describe(`fs列舉家族10函數: levelLimit之null與預設1相同, 與大有限值不同`, function() {
-        for (let [name, f] of funs) {
-            it(`${name}: null同未給、同1(不遍歷下層), 異於${BIG}`, async function() {
-                let l1 = await f(1)
-                let lNull = await f(null)
-                let lUndef = await f(undefined)
-                let lBig = await f(BIG)
-                assert.deepStrictEqual(lNull, l1, `${name}(null) must equal level 1`)
-                assert.deepStrictEqual(lUndef, l1)
-                assert.ok(lBig.length > l1.length, `${name}(${BIG}) must go deeper than level 1`)
-            })
-
-            it(`${name}: 0、負、小數、Infinity、'0x10'、包裝物件與null同(皆取預設1)`, async function() {
-                let l1 = await f(1)
-                for (let v of [0, -1, 1.5, Infinity, '0x10', new Number(3), NaN, 'abc', true, {}, []]) {
-                    assert.deepStrictEqual(await f(v), l1, `${name}(${String(typeof v)}) must equal level 1`)
-                }
-            })
-        }
-
-        it(`大有限值4294967295遍歷全部層級(檔案4個、資料夾3個)`, async function() {
-            assert.deepStrictEqual(await funs[4][1](BIG), ['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt'])
-            assert.deepStrictEqual(await funs[6][1](BIG), ['a', 'b', 'c'])
-            assert.strictEqual((await funs[0][1](BIG)).length, 7)
-        })
-
-        it(`null不再為無窮遍歷: 與修前相反之案例(深層檔不在null之結果內)`, async function() {
-            assert.deepStrictEqual(await funs[4][1](null), ['f1.txt'])
-            assert.deepStrictEqual(await funs[6][1](null), ['a'])
-        })
-    })
-
-    describe(`內部需全部層級者行為不變(改給大有限值)`, function() {
+    describe(`內部需全部層級者行為不變(不給opt.levelLimit即窮舉全部)`, function() {
 
         it(`fsGetFolderBasicHash: 深層(層4)檔案內容改變, 雜湊必變`, async function() {
             mkTree()
@@ -117,6 +56,21 @@ describe(`levelLimit之null取預設與路徑型opt鍵(W-11、W-12)`, function()
             assert.strictEqual(fs.readFileSync(R('tar/a/b/c/f4.txt'), 'utf8'), 'f4')
             assert.strictEqual(fs.readFileSync(R('tar/a/b/f3.txt'), 'utf8'), 'f3')
             assert.ok(!fs.existsSync(R('tar/old.txt')), 'extra file in target is removed')
+        })
+
+        it(`fsSyncFolder: 目標端深層(層4)之內容相異檔被覆蓋、多出檔被移除(來源端與目標端兩次列舉皆窮舉全部)`, async function() {
+            mkTree()
+            fs.mkdirSync(R('tar/a/b/c'), { recursive: true })
+            fs.writeFileSync(R('tar/a/b/f3.txt'), 'f3') //與來源相同, 保留
+            fs.writeFileSync(R('tar/a/b/c/f4.txt'), 'OLD4') //與來源相異, 應被覆蓋
+            fs.writeFileSync(R('tar/a/b/c/x9.txt'), 'x9') //來源無, 應被移除
+            let b = await fsSyncFolder(R('t'), R('tar'))
+            assert.strictEqual(b, true)
+            assert.strictEqual(fs.readFileSync(R('tar/a/b/c/f4.txt'), 'utf8'), 'f4', 'deep differing file in target is overwritten')
+            assert.ok(!fs.existsSync(R('tar/a/b/c/x9.txt')), 'deep extra file in target is removed')
+            assert.strictEqual(fs.readFileSync(R('tar/a/b/f3.txt'), 'utf8'), 'f3')
+            assert.strictEqual(fs.readFileSync(R('tar/f1.txt'), 'utf8'), 'f1')
+            assert.strictEqual(fs.readFileSync(R('tar/a/f2.txt'), 'utf8'), 'f2')
         })
     })
 

@@ -146,10 +146,10 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
         { fn: 'fsGetFileBasicHashCore', xx: false, call: (p, o) => fsGetFileBasicHashCore(p.file, { fs, crypto, ...o }) },
         { fn: 'fsGetFolderBasicHash', xx: false, folder: true, call: (p, o) => fsGetFolderBasicHash(p.folder, o) },
         { fn: 'fsGetFolderBasicHashCore', xx: false, folder: true, call: (p, o) => fsGetFolderBasicHashCore(p.folder, { fs, path, crypto, ...o }) },
-        { fn: 'fsGetFilesWithHashInFolder', xx: true, folder: true, call: (p, o) => fsGetFilesWithHashInFolder(p.folder, 1, o) },
-        { fn: 'fsGetFilesWithHashInFolderCore', xx: true, folder: true, call: (p, o) => fsGetFilesWithHashInFolderCore(p.folder, 1, { fs, path, crypto, ...o }) },
-        { fn: 'fsTreeFolderWithHash', xx: false, folder: true, call: (p, o) => fsTreeFolderWithHash(p.folder, 1, o) },
-        { fn: 'fsTreeFolderWithHashCore', xx: false, folder: true, call: (p, o) => fsTreeFolderWithHashCore(p.folder, 1, { fs, path, crypto, ...o }) },
+        { fn: 'fsGetFilesWithHashInFolder', xx: true, folder: true, call: (p, o) => fsGetFilesWithHashInFolder(p.folder, { levelLimit: 1, ...o }) }, //第2參數即opt(R-LEVEL-LIMIT-02)
+        { fn: 'fsGetFilesWithHashInFolderCore', xx: true, folder: true, call: (p, o) => fsGetFilesWithHashInFolderCore(p.folder, { fs, path, crypto, levelLimit: 1, ...o }) },
+        { fn: 'fsTreeFolderWithHash', xx: false, folder: true, call: (p, o) => fsTreeFolderWithHash(p.folder, { levelLimit: 1, ...o }) },
+        { fn: 'fsTreeFolderWithHashCore', xx: false, folder: true, call: (p, o) => fsTreeFolderWithHashCore(p.folder, { fs, path, crypto, levelLimit: 1, ...o }) },
         { fn: 'fsSyncFolder', xx: false, folder: true, call: (p, o) => fsSyncFolder(p.folder, p.tar, o) },
         { fn: 'fsSyncFolderCore', xx: false, folder: true, call: (p, o) => fsSyncFolderCore(p.folder, p.tar, { fs, path, crypto, ...o }) },
     ]
@@ -178,9 +178,9 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
                 assert.strict.deepStrictEqual(await fsGetFileHash(fpA, { type: t }), hexOf('sha512', 'abc'))
                 assert.strict.deepStrictEqual(await fsGetFileBasicHash(fpA, { type: t }), hexOf('sha512', 'abc'))
                 assert.strict.deepStrictEqual(await fsGetFolderBasicHash(fdFull, { type: t }), [hexOf('md5', 'abc'), hexOf('md5', 'defg')].join('|'))
-                let ls = await fsGetFilesWithHashInFolder(fdFull, 1, { type: t })
+                let ls = await fsGetFilesWithHashInFolder(fdFull, { levelLimit: 1, type: t })
                 assert.strict.deepStrictEqual(ls.map((v) => [v.name, v.hashType, v.hash]), [['a.txt', 'md5', hexOf('md5', 'abc')], ['b.txt', 'md5', hexOf('md5', 'defg')]])
-                let ts = await fsTreeFolderWithHash(fdFull, 1, { type: t })
+                let ts = await fsTreeFolderWithHash(fdFull, { levelLimit: 1, type: t })
                 assert.strict.deepStrictEqual(ts.map((v) => [v.name, v.hash]), [['a.txt', hexOf('md5', 'abc')], ['b.txt', hexOf('md5', 'defg')]])
             }
         })
@@ -191,7 +191,7 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
             assert.strict.deepStrictEqual(await fsGetFolderBasicHash(fdFull, { type: 'sha256' }), [hexOf('sha256', 'abc'), hexOf('sha256', 'defg')].join('|'))
             let h = await fsGetFileHash(fpA, { type: 'xxhash64' })
             assert.strict.deepStrictEqual(/^[0-9a-f]{16}$/.test(h), true)
-            let ls = await fsGetFilesWithHashInFolder(fdFull, 1, { type: 'xxhash64' })
+            let ls = await fsGetFilesWithHashInFolder(fdFull, { levelLimit: 1, type: 'xxhash64' })
             assert.strict.deepStrictEqual(ls.map((v) => v.hashType), ['xxhash64', 'xxhash64'])
         })
 
@@ -222,8 +222,8 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
 
         it(`should reject an invalid type of the folder functions even when the folder has no file (原: 空資料夾不呼叫createHash而回空雜湊)`, async function() {
             let r1 = await rej(fsGetFolderBasicHash(fdEmpty, { type: 'foo' }))
-            let r2 = await rej(fsTreeFolderWithHash(fdEmpty, 1, { type: 'foo' }))
-            let r3 = await rej(fsGetFilesWithHashInFolder(fdEmpty, 1, { type: 'foo' }))
+            let r2 = await rej(fsTreeFolderWithHash(fdEmpty, { levelLimit: 1, type: 'foo' }))
+            let r3 = await rej(fsGetFilesWithHashInFolder(fdEmpty, { levelLimit: 1, type: 'foo' }))
             assert.strict.deepStrictEqual([r1, r2, r3], [MSG_NODE, MSG_NODE, MSG_XX])
         })
 
@@ -574,8 +574,8 @@ describe(`fs 安全相關opt與注入鍵(R-HASH-TYPE-01、R-SEC-OPT-01)`, functi
             assert.strict.deepStrictEqual(await fsGetFileBasicHash(fp, { ...u, type: 'sha256' }), hexOf('sha256', 'abc'))
             assert.strict.deepStrictEqual(/^[0-9a-f]{16}$/.test(await fsGetFileXxHash(fp, { fs: undefined })), true)
             assert.strict.deepStrictEqual(await fsGetFolderBasicHash(fd, { ...u, type: 'sha256' }), [hexOf('sha256', 'abc'), hexOf('sha256', 'def')].join('|'))
-            assert.strict.deepStrictEqual((await fsGetFilesWithHashInFolder(fd, 2, { ...u, type: 'sha256' })).map((v) => v.hash).sort(), [hexOf('sha256', 'def'), hexOf('sha256', 'abc')].sort())
-            assert.strict.deepStrictEqual((await fsTreeFolderWithHash(fd, 1, { ...u })).map((v) => v.name), ['p1.txt', 'sub'])
+            assert.strict.deepStrictEqual((await fsGetFilesWithHashInFolder(fd, { ...u, levelLimit: 2, type: 'sha256' })).map((v) => v.hash).sort(), [hexOf('sha256', 'def'), hexOf('sha256', 'abc')].sort())
+            assert.strict.deepStrictEqual((await fsTreeFolderWithHash(fd, { ...u, levelLimit: 1 })).map((v) => v.name), ['p1.txt', 'sub'])
         })
 
         it(`fsSyncFolder should sync when opt.fs, opt.path and opt.crypto are undefined`, async function() {

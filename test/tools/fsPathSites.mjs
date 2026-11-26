@@ -64,8 +64,8 @@ add({ fn: 'fsSyncFolder', kind: 'rej', params: [{ i: 0, name: 'fdSrc', ctlMsg: '
 add({ fn: 'fsMergeFiles', kind: 'rej', params: [{ i: 1, name: 'fpOut' }], args: (v) => [[F, J], v], ctl: 'out.txt' })
 add({ fn: 'fsMergeFiles', kind: 'rej', tag: 'fpsIn[0]', params: [{ i: 0, name: 'fpsIn[0]' }], args: (v) => [[v, J], 'out.txt'], ctl: F })
 add({ fn: 'fsMergeFiles', kind: 'rej', tag: 'fpsIn[1]', params: [{ i: 0, name: 'fpsIn[1]' }], args: (v) => [[F, v], 'out.txt'], ctl: J })
-add({ fn: 'fsGetFilesWithHashInFolder', kind: 'rej', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
-add({ fn: 'fsTreeFolderWithHash', kind: 'rej', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
+add({ fn: 'fsGetFilesWithHashInFolder', kind: 'rej', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, { fs: null }], ctl: 'nopedir' }) //第2參數即opt(R-LEVEL-LIMIT-02)
+add({ fn: 'fsTreeFolderWithHash', kind: 'rej', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, { fs: null }], ctl: 'nopedir' }) //第2參數即opt(R-LEVEL-LIMIT-02)
 add({ fn: 'fsGetFileBasicHash', kind: 'rej', params: [{ i: 0, name: 'fp', ctlMsg: 'invalid fp: must be an existing file' }], args: (v) => [v], ctl: 'nope.txt' })
 add({ fn: 'fsGetFolderBasicHash', kind: 'rej', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsGetFileHash', kind: 'rej', params: [{ i: 0, name: 'fp', ctlMsg: 'invalid fp: must be an existing file' }], args: (v) => [v], ctl: 'nope.txt' })
@@ -73,9 +73,9 @@ add({ fn: 'fsGetFileXxHash', kind: 'rej', params: [{ i: 0, name: 'fp', ctlMsg: '
 add({ fn: 'fsBuildWriteStreamText', kind: 'rej', core: false, tag: 'create', params: [{ i: 0, name: 'fp', ctlMsg: 'operation failed (code ENOENT)' }], args: (v) => [v], call: (mod, args) => mod().create(...args), ctl: 'nopedir/w.txt' }) //上層資料夾不存在: 原生錯誤ENOENT(固定詞彙加錯誤碼, R-FS-ERRMSG-01)
 
 //同步拋出
-add({ fn: 'fsGetFilesInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
-add({ fn: 'fsGetFoldersInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
-add({ fn: 'fsTreeFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, 1, { fs: null }], ctl: 'nopedir' })
+add({ fn: 'fsGetFilesInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, { fs: null }], ctl: 'nopedir' }) //第2參數即opt(R-LEVEL-LIMIT-02)
+add({ fn: 'fsGetFoldersInFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, { fs: null }], ctl: 'nopedir' }) //第2參數即opt(R-LEVEL-LIMIT-02)
+add({ fn: 'fsTreeFolder', kind: 'thr', params: [{ i: 0, name: 'fd', ctlMsg: 'invalid fd: must be an existing folder' }], args: (v) => [v], coreArgs: (v) => [v, { fs: null }], ctl: 'nopedir' }) //第2參數即opt(R-LEVEL-LIMIT-02)
 add({ fn: 'fsBuildReadStreamText', kind: 'thr', core: false, params: [{ i: 0, name: 'fp', ctlMsg: 'invalid fp: must be an existing file' }], args: (v) => [v], ctl: 'nope.txt' })
 add({ fn: 'fsWatchFolder', kind: 'thr', core: false, params: [{ i: 0, name: 'fd' }], args: (v) => [v], ctl: 'nopedir' })
 add({ fn: 'fsWatchFile', kind: 'thr', core: false, params: [{ i: 0, name: 'fp' }], args: (v) => [v], ctl: 'nope.txt' })

@@ -302,8 +302,8 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
                 ['fsGetFileBasicHash', () => fsGetFileBasicHash(fpFile, opt)],
                 ['fsGetFileXxHash', () => fsGetFileXxHash(fpFile, opt)],
                 ['fsGetFolderBasicHash', () => fsGetFolderBasicHash(fdSub, opt)],
-                ['fsGetFilesWithHashInFolder', () => fsGetFilesWithHashInFolder(fdSub, 1, opt)],
-                ['fsTreeFolderWithHash', () => fsTreeFolderWithHash(fdSub, 1, opt)],
+                ['fsGetFilesWithHashInFolder', () => fsGetFilesWithHashInFolder(fdSub, opt)], //第2參數即opt(R-LEVEL-LIMIT-02)
+                ['fsTreeFolderWithHash', () => fsTreeFolderWithHash(fdSub, opt)],
                 ['fsSyncFolder', () => fsSyncFolder(fdSub, path.join(fdT, 'sync-tar'), opt)],
                 ['fsMergeFiles', () => fsMergeFiles([fpFile], fpOut, opt)],
                 ['fsDeleteFileSafe', () => fsDeleteFileSafe(fpFile, opt)],
@@ -364,7 +364,8 @@ describe(`fs 訊息不帶值(V20)與原生錯誤固定詞彙(R-FS-ERRMSG-01)`, f
 
         it(`fsTreeFolderCore should throw a new Error with the fixed message when readdirSync fails with a native error`, function() {
             let e0 = nativeErr('EPERM', fdSub)
-            let r = thr(() => fsTreeFolderCore(fdSub, 1, {
+            let r = thr(() => fsTreeFolderCore(fdSub, {
+                levelLimit: 1,
                 path,
                 fs: {
                     ...fs,

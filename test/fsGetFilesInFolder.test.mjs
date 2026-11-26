@@ -37,13 +37,13 @@ describe(`fsGetFilesInFolder`, function() {
         fsWriteText(`${fdt}/def/ijk/z3.txt`, 'z3')
         fsCreateFolder(`${fdt}/mno/pqr`)
 
-        let r1 = fsGetFilesInFolder(fdt, 1)
+        let r1 = fsGetFilesInFolder(fdt, { levelLimit: 1 })
         // console.log('fsGetFilesInFolder(levelLimit=1)', ftpaths(r1))
         ms.push({ 'fsGetFilesInFolder(evelLimit=1)': ftpaths(r1) })
 
-        let rall = fsGetFilesInFolder(fdt, 4294967295)
-        // console.log('fsGetFilesInFolder(levelLimit=4294967295)', ftpaths(rall))
-        ms.push({ 'fsGetFilesInFolder(evelLimit=4294967295)': ftpaths(rall) })
+        let rall = fsGetFilesInFolder(fdt)
+        // console.log('fsGetFilesInFolder(levelLimit=unset)', ftpaths(rall))
+        ms.push({ 'fsGetFilesInFolder(evelLimit=unset)': ftpaths(rall) })
 
         fsDeleteFolder(fdt) //刪除臨時任務資料夾
 
@@ -52,12 +52,12 @@ describe(`fsGetFilesInFolder`, function() {
     }
     // test()
     // fsGetFilesInFolder(levelLimit=1) [ { level: 1, path: './z1.txt', name: 'z1.txt' } ]
-    // fsGetFilesInFolder(levelLimit=4294967295) [
+    // fsGetFilesInFolder(levelLimit=unset) [
     //   { level: 2, path: './abc/z2.txt', name: 'z2.txt' },
     //   { level: 3, path: './def/ijk/z3.txt', name: 'z3.txt' },
     //   { level: 1, path: './z1.txt', name: 'z1.txt' }
     // ]
-    let ms = [{ 'fsGetFilesInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsGetFilesInFolder(evelLimit=4294967295)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
+    let ms = [{ 'fsGetFilesInFolder(evelLimit=1)': [{ 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }, { 'fsGetFilesInFolder(evelLimit=unset)': [{ 'level': 2, 'path': './abc/z2.txt', 'name': 'z2.txt' }, { 'level': 3, 'path': './def/ijk/z3.txt', 'name': 'z3.txt' }, { 'level': 1, 'path': './z1.txt', 'name': 'z1.txt' }] }]
 
     it(`should return '${JSON.stringify(ms)}' when run test`, async function() {
         let r = test()

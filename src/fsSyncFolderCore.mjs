@@ -64,7 +64,6 @@ function resultFailed(rc) {
 
 //core, 差異同步; 任何失敗由fsSyncFolderCore統一轉字串reject
 async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
-    let levelLimit = 4294967295 //全部層級: levelLimit之null取預設1(K3), 無窮遍歷以大有限值(iseint use:'count'之上限)表示
 
     //check, 路徑須為非空字串(無效與不存在分開判定, 不走到fs, 不回顯輸入值; R-FS-INVALID-PATH-01)
     let msgPath = chkFsPath(fdSrc, 'fdSrc') || chkFsPath(fdTar, 'fdTar')
@@ -141,12 +140,12 @@ async function core(fdSrc, fdTar, { path, fs, crypto, type }) {
     }
 
     //vfpsSrc
-    let vfpsSrc = await fsTreeFolderWithHashCore(fdSrc, levelLimit, { path, fs, crypto, type, forFile: true, forFolder: false })
+    let vfpsSrc = await fsTreeFolderWithHashCore(fdSrc, { path, fs, crypto, type, forFile: true, forFolder: false }) //全部層級: 不給opt.levelLimit即窮舉全部(R-LEVEL-LIMIT-02)
     vfpsSrc = cvs(vfpsSrc, path.resolve(fdSrc))
     // console.log('vfpsSrc', vfpsSrc)
 
     //vfpsTar
-    let vfpsTar = await fsTreeFolderWithHashCore(fdTar, levelLimit, { path, fs, crypto, type, forFile: true, forFolder: false })
+    let vfpsTar = await fsTreeFolderWithHashCore(fdTar, { path, fs, crypto, type, forFile: true, forFolder: false })
     vfpsTar = cvs(vfpsTar, path.resolve(fdTar))
     // console.log('vfpsTar', vfpsTar)
 

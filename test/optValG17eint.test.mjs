@@ -334,30 +334,35 @@ describe(`opt numeric values judged by iseint(G17): execCliJsonRpc, execCliSessi
         try {
             //Core直呼: 有效值不讀、無效值讀一次
             let n = 0
+            //R-LEVEL-LIMIT-02: levelLimit改為opt.levelLimit, 與debug同在opt
             let optCore = {
                 path,
                 fs,
                 crypto,
+                levelLimit: 1,
                 get debug() {
                     n++
                     return false
                 },
             }
-            await fsTreeFolderWithHashCore(fd2, 1, optCore)
+            await fsTreeFolderWithHashCore(fd2, optCore)
             let n1 = n
-            await fsTreeFolderWithHashCore(fd2, Infinity, optCore)
+            optCore.levelLimit = Infinity
+            await fsTreeFolderWithHashCore(fd2, optCore)
             let n2 = n
             //公開包裝以{ ...opt }展開(既有寫法)時已讀各鍵一次, 其後只用副本: 每次呼叫至多讀一次
             let m = 0
             let opt = {
+                levelLimit: 1,
                 get debug() {
                     m++
                     return false
                 },
             }
-            await fsTreeFolderWithHash(fd2, 1, opt)
+            await fsTreeFolderWithHash(fd2, opt)
             let m1 = m
-            await fsTreeFolderWithHash(fd2, Infinity, opt)
+            opt.levelLimit = Infinity
+            await fsTreeFolderWithHash(fd2, opt)
             assert.strict.deepStrictEqual([n1, n2, m1, m], [0, 1, 1, 2])
         }
         finally {
@@ -432,37 +437,37 @@ describe(`opt numeric values judged by iseint(G17): fsTreeFolderCore levelLimit`
 
     let maxLevel = (rs) => Math.max(...rs.map((v) => v.level))
 
-    //levelLimit: Infinity、小數、'0x10'、包裝物件改用預設1(修前: Infinity與'0x10'為無窮遍歷、2.5為2層、包裝物件採其值)
-    it(`levelLimit: Infinity, 2.5, '0x10', new Number(3), 0, -1, 'abc' should use default 1 [§11第19～21項]`, function() {
+    //opt.levelLimit(R-LEVEL-LIMIT-02): Infinity、小數、'0x10'、包裝物件、0、負數、'abc'視為未給而改用預設(不限層數, 窮舉全部4層)
+    it(`opt.levelLimit: Infinity, 2.5, '0x10', new Number(3), 0, -1, 'abc' should use the default (no limit, all 4 levels) [§11第19～21項, R-LEVEL-LIMIT-02]`, function() {
         let vs = [Infinity, 2.5, '0x10', new Number(3), 0, -1, 'abc']
-        let out = vs.map((v) => maxLevel(fsTreeFolder(fd, v)))
-        assert.strict.deepStrictEqual(out, vs.map(() => 1))
+        let out = vs.map((v) => maxLevel(fsTreeFolder(fd, { levelLimit: v })))
+        assert.strict.deepStrictEqual(out, vs.map(() => 4))
     })
 
-    //count上限(外審terra 16): 4294967295有效(遍歷全部4層), 4294967296非預期改用預設1
-    it(`levelLimit: 4294967295 is valid, 4294967296 uses default 1 [count 上限]`, function() {
-        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, 4294967295)), maxLevel(fsTreeFolder(fd, 4294967296))], [4, 1])
+    //count上限(外審terra 16): 4294967295有效(遍歷全部4層), 4294967296非預期改用預設(不限層數); 以3限定層數之對照證明有效值確實被採用
+    it(`opt.levelLimit: 4294967295 is valid, 4294967296 uses the default (no limit), 3 limits to 3 levels [count 上限]`, function() {
+        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, { levelLimit: 4294967295 })), maxLevel(fsTreeFolder(fd, { levelLimit: 4294967296 })), maxLevel(fsTreeFolder(fd, { levelLimit: 3 }))], [4, 4, 3])
     })
 
     //有opt物件之對外函數轉交debug、funLog(外審terra 7, R-OPT-VAL-01規則4): fsTreeFolderWithHash、fsGetFilesWithHashInFolder
-    it(`fsTreeFolderWithHash and fsGetFilesWithHashInFolder should warn on invalid levelLimit when opt.debug is true, and use default 1 [R-OPT-VAL-01 debug, 接線]`, async function() {
+    it(`fsTreeFolderWithHash and fsGetFilesWithHashInFolder should warn on invalid opt.levelLimit when opt.debug is true, and use the default (no limit) [R-OPT-VAL-01 debug, 接線]`, async function() {
         let out = []
         for (let f of [fsTreeFolderWithHash, fsGetFilesWithHashInFolder]) {
             parseNumOpt.resetWarned()
             let w = mkWarn()
-            let rs = await f(fd, Infinity, { ...w.opt })
-            out.push([maxLevel(rs), w.ms.filter((m) => m.startsWith('[wsemi fsTreeFolderCore] invalid levelLimit: must be a valid integer') && m.endsWith('using default 1')).length])
+            let rs = await f(fd, { levelLimit: Infinity, ...w.opt })
+            out.push([maxLevel(rs), w.ms.filter((m) => m.startsWith('[wsemi fsTreeFolderCore] invalid opt.levelLimit: must be a valid integer') && m.endsWith('using default null (no limit)')).length])
         }
-        assert.strict.deepStrictEqual(out, [[1, 1], [1, 1]])
+        assert.strict.deepStrictEqual(out, [[4, 1], [4, 1]])
     })
 
-    it(`levelLimit: null should use default 1 (K3; no longer traverses all levels), 4294967295 traverses all levels, valid values(2, '3') should be used [第492項第2批W-11]`, function() {
-        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, null)), maxLevel(fsTreeFolder(fd, 4294967295)), maxLevel(fsTreeFolder(fd, 2)), maxLevel(fsTreeFolder(fd, '3'))], [1, 4, 2, 3])
+    it(`opt.levelLimit: null and not given should use the default (no limit, all levels); valid values(1, 2, '3') should be used [R-LEVEL-LIMIT-02]`, function() {
+        assert.strict.deepStrictEqual([maxLevel(fsTreeFolder(fd, { levelLimit: null })), maxLevel(fsTreeFolder(fd)), maxLevel(fsTreeFolder(fd, { levelLimit: 1 })), maxLevel(fsTreeFolder(fd, { levelLimit: 2 })), maxLevel(fsTreeFolder(fd, { levelLimit: '3' }))], [4, 4, 1, 2, 3])
     })
 
-    it(`fsGetFilesInFolder should pass levelLimit to fsTreeFolderCore(Infinity and null use default 1) [接線]`, function() {
+    it(`fsGetFilesInFolder should pass opt.levelLimit to fsTreeFolderCore(Infinity and null use the default, no limit) [接線]`, function() {
         let names = (rs) => rs.map((v) => v.name).sort()
-        assert.strict.deepStrictEqual([names(fsGetFilesInFolder(fd, Infinity)), names(fsGetFilesInFolder(fd, null)), names(fsGetFilesInFolder(fd, 4294967295))], [['f1.txt'], ['f1.txt'], ['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt']])
+        assert.strict.deepStrictEqual([names(fsGetFilesInFolder(fd, { levelLimit: Infinity })), names(fsGetFilesInFolder(fd, { levelLimit: null })), names(fsGetFilesInFolder(fd, { levelLimit: 1 }))], [['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt'], ['f1.txt', 'f2.txt', 'f3.txt', 'f4.txt'], ['f1.txt']])
     })
 
 })

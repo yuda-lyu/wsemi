@@ -37,7 +37,7 @@ let RULE_TIME_INTERVAL = { fn: 'fsTask', name: 'opt.timeInterval', kind: 'enum',
  * @memberOf wsemi
  * @param {String} fd 輸入欲列舉的資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
- * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，須為1至4294967295之有效整數(可為數字字串)，設定1為列舉資料夾下第一層的檔案，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、null等)視為未給而改用預設，不報錯(給Infinity不代表無窮遍歷)，預設1
+ * @param {Integer} [opt.levelLimit=1] 輸入列舉層數限制正整數，須為1至4294967295之有效整數(可為數字字串)，設定1為列舉資料夾下第一層的檔案，非預期之輸入(0、負數、小數、Infinity、'0x10'、包裝物件、null等)視為未給而改用預設，不報錯(給Infinity不代表無窮遍歷)，預設1；注意本選項之預設為1(只偵測第一層)，與fsGetFilesWithHashInFolder、fsTreeFolder等列舉函數之opt.levelLimit未給即窮舉全部層級不同(本函數預設維持1)；本函數內部以fsGetFilesWithHashInFolder列舉，並將已解析之層數轉交其opt.levelLimit
  * @param {String} [opt.typeHash='md5'] 輸入計算HASH方法字串，如'md5'、'sha1'、'sha256'，預設'md5'；選項名為typeHash，給opt.type無作用；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為'xxhash64'或crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時同步拋出Error('invalid opt.typeHash: must be \'xxhash64\' or one of crypto.getHashes()'，不帶輸入值)，不改用預設、先於建立紀錄資料夾與啟動計時器
  * @param {String} [opt.fdStorage='./_tkfs'] 輸入紀錄檔儲存資料夾路徑字串，存放紀錄各檔案雜湊之fpHash.json與任務關聯結果之fpResult.json，須為非空字串且不含NUL字元，非預期之輸入(非字串、空字串、含NUL字元)視為未給而改用預設，不報錯；有效字串但無法建立或使用為資料夾者(如該路徑已是檔案、無寫入權限)同步拋出Error('fsTask: opt.fdStorage can not be created or used as a folder')，不靜默(否則紀錄寫不出而每輪重複派發同一檔)，預設'./_tkfs'
  * @param {Number} [opt.timeInterval=60000] 輸入定時器偵測時長數字，單位為毫秒ms，須為大於0至2147483647(計時器上限)之有效數字(可帶小數、數字字串，小數直接使用不四捨五入)，非預期之輸入(0、負數、Infinity、超過2147483647、'0x10'、包裝物件等)視為未給而改用預設，不報錯、不夾至上限，預設60000，為1分鐘
@@ -297,7 +297,7 @@ function fsTask(fd, opt = {}) {
         }
 
         //fsGetFilesWithHashInFolder
-        let fps = await fsGetFilesWithHashInFolder(fd, levelLimit, { type: typeHash })
+        let fps = await fsGetFilesWithHashInFolder(fd, { levelLimit, type: typeHash }) //levelLimit為已解析之有效整數(預設1), 經opt.levelLimit限定層數
         // console.log('fps', fps)
 
         //push

@@ -1,6 +1,6 @@
 # 規則帳本(fs 系 Core 之注入相依、levelLimit 之 null、路徑型 opt 鍵、入口檢測)
 
-本檔收排程第 492 項第 2 批(ws492c,2026-11-17,主控任務 20261116102625;盤點報告 W-02、W-10、W-11、W-12、W-18 與〈不符清單〉N-A 之 fs 函數)之處置規則.索引見 `sgud/rule/rulebook.md`〈索引〉.依據: 輸入規格 `C:\opensrcOper\dspec\輸入參數之檢測機制.md` K2、K3、K4、P4、V5、V17、V19、V20、C12、S4、R-FS-INVALID-PATH-01 與專案原則 1(預設拒絕)、14(自有套件不做舊版相容,破壞性變更由下游連帶修正).
+本檔收排程第 492 項第 2 批(ws492c,2026-11-17,主控任務 20261116102625;盤點報告 W-02、W-10、W-11、W-12、W-18 與〈不符清單〉N-A 之 fs 函數)之處置規則.索引見 `sgud/rule/rulebook.md`〈索引〉.依據: 輸入規格 dspec〈輸入參數之檢測機制〉K2、K3、K4、P4、V5、V17、V19、V20、C12、S4、R-FS-INVALID-PATH-01 與專案原則 1(預設拒絕)、14(自有套件不做舊版相容,破壞性變更由下游連帶修正).
 
 ## R-FS-DEPS-01 fs 系 Core 缺注入相依(opt.fs、opt.path、opt.crypto、opt.Readable、opt.pipeline)須依其家族通道 fail-closed,不得回成功、不得動檔案;對外函數之注入鍵給 undefined 取 Node 內建
 
@@ -58,6 +58,23 @@
 - **盤點指令**: `Grep "levelLimit === null|, null," src/fs*.mjs` 預期 0 命中(內部呼叫端無以 `null` 表無窮者).
 - **下游**(自有套件 `src`,2026-11-17): w-zip `src/mZip.mjs:236` `fsTreeFolder(fpSrc, null)`、w-ftp `src/ftpTreeFilesInLocalAndRemote.mjs:71` `fsTreeFolder(fdLocal, levelLimit)`(`levelLimit` 於非正整數時為 `null` 表無窮)原依 `null` 無窮遍歷,**行為會變**(只列第 1 層),須依專案原則 14 自行改給 `4294967295`.
 - **測試**: `test/fsLevelLimitOptPath.test.mjs`(10 函數 × [`null`／未給同 `1`、異於 `4294967295`;`0`、負、小數、`Infinity`、`'0x10'`、包裝物件、`NaN` 等同 `1`];`fsGetFolderBasicHash` 深層檔變動雜湊必變;`fsSyncFolder` 深層同步;`fsTask` 以觀察回調核對首輪掃描檔數).
+- **已被取代(2026-11-26)**: 10 函數之部分由 R-LEVEL-LIMIT-02 取代(其 10 函數之測試移至 `test/fsLevelLimitOpt.test.mjs`);`fsTask` 之 `opt.levelLimit`(預設 1、`null` 取預設 1)仍依本條.
+
+## R-LEVEL-LIMIT-02 fs 列舉家族之第 2 參數改為 opt:未給 `opt.levelLimit` 即窮舉全部;遷移期非物件即報錯
+
+- **依據**: 使用者 2026-11-26 裁定(「把 `levelLimit` 位置參數改為 `opt = {}`;有給 `opt.levelLimit` 且為整數才限定層數,否則一律窮舉全部」,破壞性變更,下游統一處理);dspec〈輸入參數之檢測機制〉K3 之例外〈原位置參數改為 opt 之遷移期〉(使用者 2026-11-26 裁示甲,第 667 項,Gitea #220)、V4、V11、V19、V20;主控對〈須主責判斷之處〉之裁定: `null` 取預設不報錯;同步回陣列者拋 Error、回傳 Promise 者 reject 字串;「未給第 2 參數」無從攔截者不設過渡(不加相容層與過渡警告);第 3 個引數有給即報錯;同步 3 個對外函數之注入維持固定 Node 內建;`fsTask` 之 `opt.levelLimit` 預設維持 1;已撤銷之 Proxy 作 opt 時 WithHash 兩個 reject `invalid opt: must be an object`.
+- **規則**:
+  1. **簽章**: `fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`、`fsGetFilesWithHashInFolder`、`fsTreeFolderWithHash` 為 `(fd, opt = {})`;其 Core 亦為 `(fd, opt = {})`,注入相依(`fs`、`path`、`crypto`)與 `levelLimit`、`debug`、`funLog` 同在一個 opt.
+  2. **`opt.levelLimit`**: 以 `iseint(v, { use: 'count', min: 1 })`(上限 4294967295,可為數字字串)判定,有效才限定層數;未給或非預期(`null`、`0`、負數、小數、`NaN`、`Infinity`、超過上限、`'0x10'`、包裝物件、假值等)視為未給,改用預設 `null`(不限層數,窮舉全部);`opt.debug === true` 時警告 `[wsemi fsTreeFolderCore] invalid opt.levelLimit: must be a valid integer (use 'count', min 1), using default null (no limit)`(K3、V11: 有效時不讀 debug).單一擁有者 `fsTreeFolderCore` 之 `optVal`(`RULE_LEVEL_LIMIT`).
+  3. **遷移期檢查**(dspec K3 之例外): 第 2 參數給了(非 `undefined`／`null`)而非物件(`isobj` 為 false: 數字、字串、布林、BigInt、Symbol、陣列、函數、包裝物件、已撤銷之 Proxy)者,依家族通道報錯 `invalid opt: must be an object`(不帶輸入值;同步回陣列者同步拋 Error,回傳 Promise 者 reject 說明字串),不依 K3 視為未給;`fd` 無效者先報 `fd`;先於讀取 opt 之鍵、相依檢查與存在判斷.`undefined`、`null` 視為未給(取預設,即窮舉全部).單一擁有者 `src/_chkFsLevelOpt.mjs`(`chkFsLevelOpt(fd, opt, extra)`,回傳訊息字串或 `null`),10 個函數(5 個對外函數與 5 個 Core)各於入口自行呼叫一次(對外函數不把原值交 Core 代報,因其轉交 Core 之物件已重組,第 2 參數之原值不會到達 Core).
+  4. **第 3 個引數有給(非 `undefined`)即報錯 `invalid arguments: must be fd and opt only`**(主控裁定,V19 固定詞彙、不帶值;通道同規則 3): 舊 3 參數形 `fn(fd, levelLimit, opt)` 之第 2 參數為 `null`／`undefined` 時不會被規則 3 攔下,其第 3 參數(舊 opt,如 `{ type }`)將被靜默忽略,故第 3 個引數一律不接受;呼叫端以 `arguments[2]` 取得(簽章不增參數,`jsdocFixes` 全庫斷言 `@param` 與簽名一致).檢測順序: `fd` 無效 → 第 2 參數非物件 → 第 3 個引數.
+  5. **對外函數之注入與讀取**: `fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder` 固定使用 Node 內建 `fs`、`path`(`opt.fs`、`opt.path` 不採用,同改版前),**只讀 `opt.levelLimit` 一次**(屬性讀取,含原型上之存取器),`opt` 本身經內部鍵 `optDbg` 轉交,`debug`／`funLog` 於 `levelLimit` 非預期時才由 `fsTreeFolderCore` 讀(V11),使用者自帶之 `optDbg` 不採用(不展開整個 opt);`fsGetFilesWithHashInFolder`、`fsTreeFolderWithHash` 維持 `_mergeInject`(R-FS-DEPS-01 規則 5,展開讀各鍵至多一次,既有寫法).
+  6. **內部呼叫端**: `fsGetFolderBasicHashCore`、`fsSyncFolderCore`(來源端與目標端兩次)不給 `opt.levelLimit`(窮舉全部,行為不變);`fsTask` 以 `{ levelLimit, type }` 轉交其已解析之 `opt.levelLimit`(**預設維持 1**,行為不變,仍依 R-LEVEL-LIMIT-01;其 JSDoc 註明與列舉函數預設不同).
+  7. **已知(未處理)**: 同步函數讀 `opt.levelLimit` 之存取器拋錯者原樣外拋(非 Error 之值亦然,且先於 `fd` 檢查),同 Core 對 `opt.fs`／`opt.path` 既有之處置;「未給第 2 參數」之舊呼叫端(依賴舊預設 1 層)無從攔截,行為靜默改為窮舉全部(下游須逐處改給 `{ levelLimit: 1 }`).
+- **站點全集(10 函數 + 4 處內部呼叫端)**: 上列 10 函數;`fsGetFolderBasicHashCore`、`fsSyncFolderCore`(2 處)、`fsTask`.`src` 內呼叫此 10 函數者共 13 處: 對外函數轉 Core 5(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`、`fsTreeFolderWithHash`、`fsGetFilesWithHashInFolder`)、Core 轉 Core 4(`fsGetFilesInFolderCore`、`fsGetFoldersInFolderCore`、`fsGetFilesWithHashInFolderCore`、`fsTreeFolderWithHashCore`)、內部呼叫端 4(`fsGetFolderBasicHashCore:72`、`fsSyncFolderCore:143,148`、`fsTask:300`);`toolfp` 之 bundle 含其中 3 個對外函數(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`),須換 bundle 後使用端(w-package-tools)才生效.
+- **盤點指令**: ①`git grep -nE "\b(fsTreeFolder|fsGetFilesInFolder|fsGetFoldersInFolder|fsGetFilesWithHashInFolder|fsTreeFolderWithHash)(Core)?\(" -- src ':!src/index.mjs' | grep -vE ":[0-9]+:\s*(//|\*)" | grep -vE ":[0-9]+:(async )?function "` 預期 13 筆,第 2 引數皆為物件字面或 `mergeInject(...)`(無任何以數字、`null`、`levelLimit` 變數為第 2 引數者);②`Grep "chkFsLevelOpt\(" src` 預期 11 筆(`_chkFsLevelOpt.mjs` 定義 1 + 5 對外函數 + 5 Core),其中 10 筆呼叫皆帶 `arguments[2]`.
+- **下游**: 使用端第 2 參數給數字者(舊寫法)遷移後改 `{ levelLimit: N }`;未給者(舊預設 1 層)**行為會變為窮舉全部**且無訊息(遷移期檢查無從攔截),須逐處改給 `{ levelLimit: 1 }`;給 `4294967295` 或 `null` 表全部者改為不給.
+- **測試**: `test/fsLevelLimitOpt.test.mjs`(10 函數 × [未給 opt／`{}`／`undefined`／`null` 窮舉;`opt.levelLimit` 1、2、`'3'`、`' 3 '`、4、4294967295;19 種無效值窮舉;19 種非物件之第 2 參數與舊 3 參數形報錯、訊息不帶值;fd 無效先報 fd;第 3 個引數有給報錯〔9 種值 × 第 2 參數為 `null`／`undefined`／`{}`〕與檢測順序;debug 警告];Core 注入 fs 被使用;同步 3 對外函數不採用 `opt.fs`、原型上之存取器 `levelLimit` 照常採用;5 個對外函數有效值不讀 `opt.debug`、不採用使用者自帶之 `optDbg`;缺相依仍 fail-closed);`test/fsLevelLimitOptPath.test.mjs`(內部呼叫端: `fsGetFolderBasicHash` 深層檔變動雜湊必變、`fsSyncFolder` 來源端與目標端深層檔皆處理、`fsTask` 預設只掃第 1 層且 `opt.levelLimit` 有效值被採用);`test/jsdocFixes.test.mjs`(`@param` 與簽名一致,全庫斷言).變異驗證(2026-11-26,第 667 項)與修前紅之數字見 `sgud/state/state.md`.
 
 ## R-FS-OPT-PATH-01 路徑型 opt 鍵(`fsSrlog.opt.fdLog`、`fsTask.opt.fdStorage`、`fsEvem.opt.fd`)非字串、空字串、含 NUL 視為非預期而改用預設
 
