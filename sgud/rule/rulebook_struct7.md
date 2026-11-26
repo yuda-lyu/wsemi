@@ -69,7 +69,7 @@
 | `strFindFuzz` | 本批改(`strkey` 數字) | `src/strFindFuzz.mjs:66-69` |
 | `arrSep` | 本批改(R-ARRSEP-OBJ-01) | `src/arrSep.mjs:72-99` |
 | `getTimeBetween`／`getTimeObject` | 本批改(`unit`) | `src/getTimeBetween.mjs:36-40`、`src/getTimeObject.mjs:52-56` |
-| `getDataFromExcelFileU8Arr` | 本批改(`fmt`、`valueToString`) | `src/getDataFromExcelFileU8Arr.mjs:209-219` |
+| `getDataFromExcelFileU8Arr` | 本批改(`fmt`、`valueToString`) | `src/getDataFromExcelFileU8Arr.mjs:244-254`(第 670 項新增之 `keepEmptyHeader` 另在 `:256-260`) |
 | `getFileAccept` | 本批改(`groupBy`) | `src/getFileAccept.mjs:33-42` |
 
 ### W-06 簽名、JSDoc、行為一致(依第 221 項第 5 項判定原則)

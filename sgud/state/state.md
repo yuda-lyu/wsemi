@@ -6,6 +6,12 @@
 
 ## 索引(哪類查哪檔)
 
+### `sgud/state/state_Excel讀取.md`(讀取 Excel;約 3KB;新增於 2026-11-26)
+
+查: `getDataFromExcelFileU8Arr` 於 `fmt:'ltdt'` 保留表頭空白之欄位之 `opt.keepEmptyHeader`(預設 `false`、命名 `__EMPTY` 系、碰撞規則與真實表頭不改名、非布林視為未給)、對應之規則帳本條目(R-EXCEL-READ-01 規則 5、6)與測試、驗證數字、已知缺口(重複表頭另案,排程第 671 項;Gitea #221).所含節:
+
+- `getDataFromExcelFileU8Arr` 新增 `opt.keepEmptyHeader`(排程第 670 項;t670,2026-11-26)〔本節於 2026-11-26 新增〕
+
 ### `sgud/state/state_檔案系統列舉.md`(fs 列舉函數之第 2 參數 opt;約 4KB;新增於 2026-11-26)
 
 查: 10 個列舉函數(`fsTreeFolder`、`fsGetFilesInFolder`、`fsGetFoldersInFolder`、`fsTreeFolderWithHash`、`fsGetFilesWithHashInFolder` 及各 `*Core`)之第 2 參數由 `levelLimit` 改為 `opt`(未給 `opt.levelLimit` 即窮舉全部)、遷移期防護(第 2 參數非物件、第 3 個引數有給即報錯)、內部呼叫端與 `fsTask` 預設維持 1、驗證數字(修前紅／變異／全套／發布包配置)、`toolfp` bundle 之影響、已知缺口(排程第 667 項,Gitea #220).所含節:

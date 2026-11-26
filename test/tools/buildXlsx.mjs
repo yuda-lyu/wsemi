@@ -11,6 +11,7 @@
 //  { d: 'ISO字串', fmt }        日期型儲存格t="d"
 //  { fmt }                     有格式之空格
 //opt.date1904為true時為1904日期系統
+//opt.merges為合併儲存格範圍陣列(如['C1:E1']), 如同Excel存檔: 只有左上角儲存格有值, 範圍內其餘儲存格不給(null)
 
 
 //crc32, zip所需之校驗碼
@@ -103,6 +104,7 @@ function colName(c) {
 
 function buildXlsx(rows, opt = {}) {
     let date1904 = opt.date1904 === true
+    let merges = Array.isArray(opt.merges) ? opt.merges : []
 
     //sst, 共用字串(以xml去重)
     let sst = []
@@ -182,7 +184,7 @@ function buildXlsx(rows, opt = {}) {
     let nsr = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
     let nsp = 'http://schemas.openxmlformats.org/package/2006/relationships'
     let head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-    let sheet = `${head}<worksheet xmlns="${ns}" xmlns:r="${nsr}"><dimension ref="A1:${colName(Math.max(nc - 1, 0))}${Math.max(rows.length, 1)}"/><sheetData>${rowsXml}</sheetData></worksheet>`
+    let sheet = `${head}<worksheet xmlns="${ns}" xmlns:r="${nsr}"><dimension ref="A1:${colName(Math.max(nc - 1, 0))}${Math.max(rows.length, 1)}"/><sheetData>${rowsXml}</sheetData>${merges.length > 0 ? `<mergeCells count="${merges.length}">${merges.map((ref) => `<mergeCell ref="${esc(ref)}"/>`).join('')}</mergeCells>` : ''}</worksheet>`
     let sstXml = `${head}<sst xmlns="${ns}" count="${sst.length}" uniqueCount="${sst.length}">${sst.join('')}</sst>`
     let styles = `${head}<styleSheet xmlns="${ns}">${customs.length > 0 ? `<numFmts count="${customs.length}">${customs.map(([id, code]) => `<numFmt numFmtId="${id}" formatCode="${esc(code)}"/>`).join('')}</numFmts>` : ''}<fonts count="1"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.map((id) => `<xf numFmtId="${id}" fontId="0" fillId="0" borderId="0" xfId="0"${id ? ' applyNumberFormat="1"' : ''}/>`).join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`
     let workbook = `${head}<workbook xmlns="${ns}" xmlns:r="${nsr}"><workbookPr${date1904 ? ' date1904="1"' : ''}/><sheets><sheet name="data" sheetId="1" r:id="rId1"/></sheets></workbook>`

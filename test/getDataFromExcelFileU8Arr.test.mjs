@@ -5,6 +5,9 @@ import buildXlsx from './tools/buildXlsx.mjs'
 import replace from '../src/replace.mjs'
 import b642u8arr from '../src/b642u8arr.mjs'
 import getExcelU8ArrFromData from '../src/getExcelU8ArrFromData.mjs'
+import createExcelWorkbook from '../src/createExcelWorkbook.mjs'
+import addExcelWorksheetFromData from '../src/addExcelWorksheetFromData.mjs'
+import getExcelU8ArrFromWorkbook from '../src/getExcelU8ArrFromWorkbook.mjs'
 import getDataFromExcelFileU8Arr from '../src/getDataFromExcelFileU8Arr.mjs'
 
 
@@ -359,6 +362,323 @@ describe(`getDataFromExcelFileU8Arr`, function() {
             let r = await getDataFromExcelFileU8Arr(buildXlsx([[{ s: 'a' }], [{ s: '1' }]]), { fmt: 'csv' })
             assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: '"a"\r\n"1"\r\n' }])
         })
+    })
+
+    //opt.keepEmptyHeader: fmt='ltdt'時是否保留表頭為空白(空cell或轉字串後為'')之欄位; 預設false維持整欄跳過(新增此選項前之行為), true時依序命名為__EMPTY、__EMPTY_1…(同SheetJS之sheet_to_json), 命名與真實表頭相同者序號續增, 真實表頭不被改名
+    //測試用xlsx一律合成: 以test/tools/buildXlsx.mjs(合併儲存格用opt.merges, 如Excel存檔只有左上角儲存格有值)或wsemi之寫Excel函數產生, 不用任何專案之真實資料
+    describe(`opt.keepEmptyHeader (blank header columns, fmt='ltdt')`, function() {
+
+        //跨欄表頭之表: 表頭'span'合併3欄(B1:D1, 內容為數值、文字、數值), 被合併之後2欄其表頭cell為空白; 欄數(5)與資料列數(3)取不相等, 各欄(含各列)之值逐筆相異
+        let rowsRange = [
+            [{ s: 'id' }, { s: 'span' }, null, null, { s: 'val' }],
+            [{ s: 'r1' }, { n: 10 }, { s: 'a1' }, { n: 1.5 }, { n: 7 }],
+            [{ s: 'r2' }, { n: 20 }, { s: 'a2' }, { n: 2.5 }, { n: 9 }],
+            [{ s: 'r3' }, { n: 30 }, { s: 'a3' }, { n: 3.5 }, { n: 12 }],
+        ]
+        let u8aMerged = buildXlsx(rowsRange, { merges: ['B1:D1'] })
+        let u8aPlain = buildXlsx(rowsRange) //同樣之空白表頭cell, 但未宣告合併
+        let expDrop = [
+            { 'id': 'r1', 'span': '10', 'val': '7' },
+            { 'id': 'r2', 'span': '20', 'val': '9' },
+            { 'id': 'r3', 'span': '30', 'val': '12' },
+        ]
+        let expKeep = [
+            { 'id': 'r1', 'span': '10', '__EMPTY': 'a1', '__EMPTY_1': '1.5', 'val': '7' },
+            { 'id': 'r2', 'span': '20', '__EMPTY': 'a2', '__EMPTY_1': '2.5', 'val': '9' },
+            { 'id': 'r3', 'span': '30', '__EMPTY': 'a3', '__EMPTY_1': '3.5', 'val': '12' },
+        ]
+        let expKeepRaw = [
+            { 'id': 'r1', 'span': 10, '__EMPTY': 'a1', '__EMPTY_1': 1.5, 'val': 7 },
+            { 'id': 'r2', 'span': 20, '__EMPTY': 'a2', '__EMPTY_1': 2.5, 'val': 9 },
+            { 'id': 'r3', 'span': 30, '__EMPTY': 'a3', '__EMPTY_1': 3.5, 'val': 12 },
+        ]
+        let get = getDataFromExcelFileU8Arr
+
+        it(`fixture check: the blank-header columns hold values in the data rows (fmt='array' keeps them)`, async function() {
+            //夾具鑑別力: 表頭列之B、C、D欄為['span','','']且C、D欄之資料列有值, 否則下列各案不具意義
+            for (let u of [u8aMerged, u8aPlain]) {
+                let r = await get(u, { fmt: 'array' })
+                assert.strict.deepStrictEqual(r[0].data[0], ['id', 'span', '', '', 'val'])
+                assert.strict.deepStrictEqual(r[0].data[1], ['r1', '10', 'a1', '1.5', '7'])
+            }
+        })
+
+        it(`should drop the blank-header columns (same as before this option existed) when keepEmptyHeader is not given or is false`, async function() {
+            //規則5(sgud R-EXCEL-READ-01): 預設(未給或false)之行為不變, 空表頭之欄位整欄跳過
+            for (let u of [u8aMerged, u8aPlain]) {
+                for (let opt of [undefined, {}, { fmt: 'ltdt' }, { keepEmptyHeader: false }, { fmt: 'ltdt', keepEmptyHeader: false }]) {
+                    let r = await get(u, opt)
+                    assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expDrop }])
+                }
+            }
+        })
+
+        it(`should keep the blank-header columns named '__EMPTY' and '__EMPTY_1' with their values when keepEmptyHeader is true`, async function() {
+            //規則6: 合併儲存格之表頭(被合併之欄表頭cell為空白), 與同樣空白但未合併者, 皆依由左至右之順序命名並保留值
+            for (let u of [u8aMerged, u8aPlain]) {
+                for (let opt of [{ keepEmptyHeader: true }, { fmt: 'ltdt', keepEmptyHeader: true }, { fmt: 'ltdt', valueToString: true, keepEmptyHeader: true }]) {
+                    let r = await get(u, opt)
+                    assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expKeep }])
+                    //欄位順序與表頭列之欄位順序相同
+                    assert.strict.deepStrictEqual(Object.keys(r[0].data[0]), ['id', 'span', '__EMPTY', '__EMPTY_1', 'val'])
+                }
+            }
+        })
+
+        it(`should keep the blank-header columns with raw values when keepEmptyHeader is true and valueToString is false`, async function() {
+            let r = await get(u8aMerged, { fmt: 'ltdt', valueToString: false, keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expKeepRaw }])
+            let r0 = await get(u8aMerged, { fmt: 'ltdt', valueToString: false })
+            assert.strict.deepStrictEqual(r0[0].data.map((dt) => Object.keys(dt)), [['id', 'span', 'val'], ['id', 'span', 'val'], ['id', 'span', 'val']])
+        })
+
+        it(`should not let a generated name collide with a real header, including a real header on its right, and should not rename real headers`, async function() {
+            //規則6(碰撞): 真實表頭'__EMPTY'(A欄)、'__EMPTY_2'(E欄)已存在, 空白表頭(B、D、F欄)依序取未被占用之名稱, 真實表頭之值不被覆蓋或改名
+            let u = buildXlsx([
+                [{ s: '__EMPTY' }, null, { s: 'x' }, null, { s: '__EMPTY_2' }, null],
+                [{ s: 'a1' }, { s: 'b1' }, { s: 'c1' }, { s: 'd1' }, { s: 'e1' }, { s: 'f1' }],
+                [{ s: 'a2' }, { s: 'b2' }, { s: 'c2' }, { s: 'd2' }, { s: 'e2' }, { s: 'f2' }],
+            ])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [
+                { '__EMPTY': 'a1', '__EMPTY_1': 'b1', 'x': 'c1', '__EMPTY_3': 'd1', '__EMPTY_2': 'e1', '__EMPTY_4': 'f1' },
+                { '__EMPTY': 'a2', '__EMPTY_1': 'b2', 'x': 'c2', '__EMPTY_3': 'd2', '__EMPTY_2': 'e2', '__EMPTY_4': 'f2' },
+            ])
+            assert.strict.deepStrictEqual(Object.keys(r[0].data[0]), ['__EMPTY', '__EMPTY_1', 'x', '__EMPTY_3', '__EMPTY_2', '__EMPTY_4'])
+        })
+
+        it(`should keep a real header '__EMPTY' on the right of a blank header (the blank one takes '__EMPTY_1')`, async function() {
+            //與SheetJS之差異: SheetJS由左至右命名, 左側空白表頭先占'__EMPTY'而使右側真實表頭被改名為'__EMPTY_1'; 此處真實表頭不改名
+            let u = buildXlsx([
+                [null, { s: '__EMPTY' }],
+                [{ s: 'l1' }, { s: 'r1' }],
+            ])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [{ '__EMPTY_1': 'l1', '__EMPTY': 'r1' }])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{ '__EMPTY': 'r1' }])
+        })
+
+        it(`should treat a header converted to '' (invalid date) as blank, and a whitespace-only header as a real header`, async function() {
+            //空表頭之定義不變: 空cell(null)或轉字串後為''(如日期格式之超大數值為無效日期); 只有空白字元之表頭為真實表頭(原樣為鍵)
+            let u = buildXlsx([
+                [{ s: 'make' }, { n: 1e12, fmt: 14 }, { s: ' ' }, { n: 45292, fmt: 14 }],
+                [{ s: 'BMW' }, { n: 20 }, { n: 30 }, { n: 10 }],
+            ])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{ 'make': 'BMW', ' ': '30', '2024-01-01T00:00:00.000': '10' }])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [{ 'make': 'BMW', '__EMPTY': '20', ' ': '30', '2024-01-01T00:00:00.000': '10' }])
+        })
+
+        it(`should keep omitting keys of blank cells and keeping '' cells under the named blank-header columns, and skip blank rows`, async function() {
+            //命名後之欄位其儲存格語意不變: 空cell為略鍵, 空字串cell保留鍵且值為'', 全空列跳過; 表頭空白且各列皆空cell之欄(E欄)不產生鍵
+            let u = buildXlsx([
+                [{ s: 'a' }, null, { s: 'c' }, null, null],
+                [{ s: 'a1' }, null, { s: 'c1' }, { s: '' }, null],
+                [null, null, null, null, null],
+                [{ s: 'a2' }, { s: 'b2' }, { s: 'c2' }, null, null],
+            ])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [
+                { 'a': 'a1', 'c': 'c1', '__EMPTY_1': '' },
+                { 'a': 'a2', '__EMPTY': 'b2', 'c': 'c2' },
+            ])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{ 'a': 'a1', 'c': 'c1' }, { 'a': 'a2', 'c': 'c2' }])
+        })
+
+        it(`should name the blank-header columns of each worksheet independently`, async function() {
+            //各分頁各自由'__EMPTY'起算
+            let wb = createExcelWorkbook()
+            addExcelWorksheetFromData(wb, [['a', null, 'b'], [1, 2, 3]], 's1')
+            addExcelWorksheetFromData(wb, [[null, null, 'c'], [4, 5, 6]], 's2')
+            let u = await getExcelU8ArrFromWorkbook(wb)
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r, [
+                { sheetname: 's1', data: [{ 'a': '1', '__EMPTY': '2', 'b': '3' }] },
+                { sheetname: 's2', data: [{ '__EMPTY': '4', '__EMPTY_1': '5', 'c': '6' }] },
+            ])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0, [
+                { sheetname: 's1', data: [{ 'a': '1', 'b': '3' }] },
+                { sheetname: 's2', data: [{ 'c': '6' }] },
+            ])
+        })
+
+        it(`should name all columns when the first row is blank, and still give {} rows when keepEmptyHeader is not true`, async function() {
+            //首列全空時每欄皆為空表頭: 預設各列為{}(不變), true時各欄以'__EMPTY'系名稱保留
+            let u = buildXlsx([[null, null], [{ s: 'p1' }, { s: 'q1' }]])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{}])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [{ '__EMPTY': 'p1', '__EMPTY_1': 'q1' }])
+        })
+
+        it(`should give the same result as false when no header is blank, including a real header named '__EMPTY'`, async function() {
+            //無空表頭時true無作用: 不新增欄位、不改既有鍵名(真實表頭恰為'__EMPTY'者亦不改名)
+            let u = buildXlsx([
+                [{ s: 'k1' }, { s: '__EMPTY' }, { s: 'k3' }],
+                [{ s: 'v11' }, { s: 'v12' }, { s: 'v13' }],
+                [{ s: 'v21' }, { s: 'v22' }, { s: 'v23' }],
+            ])
+            let exp = [
+                { 'k1': 'v11', '__EMPTY': 'v12', 'k3': 'v13' },
+                { 'k1': 'v21', '__EMPTY': 'v22', 'k3': 'v23' },
+            ]
+            for (let valueToString of [true, false]) {
+                let r0 = await get(u, { fmt: 'ltdt', valueToString })
+                let r = await get(u, { fmt: 'ltdt', valueToString, keepEmptyHeader: true })
+                assert.strict.deepStrictEqual(r0, [{ sheetname: 'data', data: exp }])
+                assert.strict.deepStrictEqual(r, r0)
+            }
+        })
+
+        it(`should return the same data as false for a sheet with no rows or with only a header row when keepEmptyHeader is true`, async function() {
+            //無列或只有表頭列之分頁: 無資料列故兩者結果相同(data為[]), 不因命名而產生列
+            for (let rows of [[], [[{ s: 'a' }, null, { s: 'b' }]], [[null, null]]]) {
+                let u = buildXlsx(rows)
+                let r0 = await get(u, { fmt: 'ltdt' })
+                let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+                assert.strict.deepStrictEqual(r0, [{ sheetname: 'data', data: [] }], JSON.stringify(rows))
+                assert.strict.deepStrictEqual(r, r0, JSON.stringify(rows))
+            }
+        })
+
+        it(`should number many blank headers consecutively across two digits and skip a number held by a real header`, async function() {
+            //表頭列為id加13欄, 其中第5欄(k=4)為真實表頭'__EMPTY_10', 其餘12欄為空白表頭:依序'__EMPTY'、'__EMPTY_1'…'__EMPTY_9'後跳過被占用之'__EMPTY_10'而取'__EMPTY_11'、'__EMPTY_12'
+            let head = [{ s: 'id' }]
+            let row = [{ s: 'i1' }]
+            for (let k = 0; k < 13; k++) {
+                head.push(k === 4 ? { s: '__EMPTY_10' } : null)
+                row.push({ s: `c${k}` })
+            }
+            let u = buildXlsx([head, row])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [{
+                'id': 'i1',
+                '__EMPTY': 'c0',
+                '__EMPTY_1': 'c1',
+                '__EMPTY_2': 'c2',
+                '__EMPTY_3': 'c3',
+                '__EMPTY_10': 'c4',
+                '__EMPTY_4': 'c5',
+                '__EMPTY_5': 'c6',
+                '__EMPTY_6': 'c7',
+                '__EMPTY_7': 'c8',
+                '__EMPTY_8': 'c9',
+                '__EMPTY_9': 'c10',
+                '__EMPTY_11': 'c11',
+                '__EMPTY_12': 'c12',
+            }])
+            assert.strict.deepStrictEqual(Object.keys(r[0].data[0]), ['id', '__EMPTY', '__EMPTY_1', '__EMPTY_2', '__EMPTY_3', '__EMPTY_10', '__EMPTY_4', '__EMPTY_5', '__EMPTY_6', '__EMPTY_7', '__EMPTY_8', '__EMPTY_9', '__EMPTY_11', '__EMPTY_12'])
+        })
+
+        it(`should name the columns beyond the header row when a data row is wider than the header row`, async function() {
+            //資料列較表頭列寬時, 超出表頭列之欄位其表頭cell為空(同空表頭之定義): false時整欄跳過, true時依序命名並保留值
+            let u = buildXlsx([
+                [{ s: 'h1' }, { s: 'h2' }],
+                [{ s: 'p1' }, { s: 'q1' }, { s: 'x1' }, { s: 'y1' }],
+                [{ s: 'p2' }, { s: 'q2' }, { s: 'x2' }, { s: 'y2' }],
+            ])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{ 'h1': 'p1', 'h2': 'q1' }, { 'h1': 'p2', 'h2': 'q2' }])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [
+                { 'h1': 'p1', 'h2': 'q1', '__EMPTY': 'x1', '__EMPTY_1': 'y1' },
+                { 'h1': 'p2', 'h2': 'q2', '__EMPTY': 'x2', '__EMPTY_1': 'y2' },
+            ])
+        })
+
+        it(`should check name collisions only against the real headers of the same worksheet`, async function() {
+            //碰撞只對同一分頁之真實表頭: 分頁s1有真實表頭'__EMPTY', 分頁s2之空白表頭仍取'__EMPTY'(不受s1影響)
+            let wb = createExcelWorkbook()
+            addExcelWorksheetFromData(wb, [['__EMPTY', null], ['p1', 'q1']], 's1')
+            addExcelWorksheetFromData(wb, [[null, 'x'], ['p2', 'q2']], 's2')
+            let u = await getExcelU8ArrFromWorkbook(wb)
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r, [
+                { sheetname: 's1', data: [{ '__EMPTY': 'p1', '__EMPTY_1': 'q1' }] },
+                { sheetname: 's2', data: [{ '__EMPTY': 'p2', 'x': 'q2' }] },
+            ])
+        })
+
+        it(`should read opt without modifying it (a frozen opt works and stays unchanged)`, async function() {
+            //dspec V9: 不改寫呼叫端之opt
+            let opt = Object.freeze({ fmt: 'ltdt', valueToString: true, keepEmptyHeader: true })
+            let r = await get(u8aMerged, opt)
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expKeep }])
+            assert.strict.deepStrictEqual(opt, { fmt: 'ltdt', valueToString: true, keepEmptyHeader: true })
+            let optBad = { keepEmptyHeader: 'true' }
+            let r0 = await get(u8aMerged, optBad)
+            assert.strict.deepStrictEqual(r0, [{ sheetname: 'data', data: expDrop }])
+            assert.strict.deepStrictEqual(optBad, { keepEmptyHeader: 'true' })
+        })
+
+        it(`should leave duplicate headers as is (the later column overwrites the earlier one) even when keepEmptyHeader is true`, async function() {
+            //範疇: 本參數只處理空白表頭, 不處理重複表頭(JSDoc與帳本R-EXCEL-READ-01規則5:重複表頭後者覆蓋前者); 日後若另案處理重複表頭須連同本案改寫
+            let u = buildXlsx([[{ s: 'a' }, { s: 'a' }, null], [{ s: '1' }, { s: '2' }, { s: '3' }]])
+            let r0 = await get(u, { fmt: 'ltdt' })
+            assert.strict.deepStrictEqual(r0[0].data, [{ 'a': '2' }])
+            let r = await get(u, { fmt: 'ltdt', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r[0].data, [{ 'a': '2', '__EMPTY': '3' }])
+        })
+
+        it(`should not affect fmt='array' and fmt='csv'`, async function() {
+            //規則6: array與csv本就保留全部欄位(空表頭為''), 本參數不影響其結果
+            for (let u of [u8aMerged, u8aPlain]) {
+                for (let fmt of ['array', 'csv']) {
+                    for (let valueToString of [true, false]) {
+                        let base = await get(u, { fmt, valueToString })
+                        for (let keepEmptyHeader of [true, false]) {
+                            let r = await get(u, { fmt, valueToString, keepEmptyHeader })
+                            assert.strict.deepStrictEqual(r, base, `${fmt} ${valueToString} ${keepEmptyHeader}`)
+                        }
+                    }
+                }
+            }
+            let ra = await get(u8aMerged, { fmt: 'array', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(ra[0].data[0], ['id', 'span', '', '', 'val'])
+            let rc = await get(u8aMerged, { fmt: 'csv', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(rc[0].data.split('\r\n')[0], '"id","span","","","val"')
+        })
+
+        it(`should use the default false (no error object) when opt.keepEmptyHeader is not a boolean`, async function() {
+            //規則6(dspec K3、V5、K5、B1): 非布林視為未給而改用預設false, 不報錯; 'true'、1、'y'、包裝物件皆非布林
+            let vs = ['true', 'false', 'y', 'n', '', 1, 0, -1, null, undefined, {}, [], [true], NaN, Infinity, () => true, new Boolean(true)] // eslint-disable-line no-new-wrappers
+            for (let i = 0; i < vs.length; i++) {
+                let r = await get(u8aMerged, { fmt: 'ltdt', keepEmptyHeader: vs[i] })
+                assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expDrop }], `case ${i}`)
+            }
+        })
+
+        it(`should treat opt null or a non-object as {} (keepEmptyHeader false) without throwing`, async function() {
+            for (let v of [null, undefined, 5, 'x', true, []]) {
+                let r = await get(u8aMerged, v)
+                assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expDrop }])
+            }
+        })
+
+        it(`should honor keepEmptyHeader together with the other opts and keep the error object for an unreadable u8a`, async function() {
+            //與fmt、valueToString之無效值並用: 各鍵獨立判定
+            let r = await get(u8aMerged, { fmt: 'xxx', valueToString: 'y', keepEmptyHeader: true })
+            assert.strict.deepStrictEqual(r, [{ sheetname: 'data', data: expKeep }])
+            let logs = []
+            let orig = console.log
+            console.log = (...args) => {
+                logs.push(args)
+            }
+            let re = null
+            try {
+                re = await get(new Uint8Array([1, 2, 3]), { fmt: 'ltdt', keepEmptyHeader: true })
+            }
+            finally {
+                console.log = orig
+            }
+            assert.strict.deepStrictEqual(re, { error: 'invalid u8a: must be a readable Excel file' })
+            assert.strict.deepStrictEqual(logs, [['error: invalid u8a: must be a readable Excel file']])
+        })
+
     })
 
 })
