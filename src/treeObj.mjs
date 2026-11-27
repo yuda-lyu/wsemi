@@ -6,6 +6,7 @@ import isarr from './isarr.mjs'
 import isobj from './isobj.mjs'
 import isbol from './isbol.mjs'
 import isfun from './isfun.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 //performance for traverseObj and runObj
@@ -243,7 +244,7 @@ function traverseObj(data, f, keepSymbols = false) {
  * @memberOf wsemi
  * @param {*} data 輸入任意資料
  * @param {Function} [hookFun=null] 輸入攔截處理函數，預設null
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.force=false] 輸入是否允許鍵值為Symbol類型布林值，預設false
  * @returns {*} 回傳複製後的任意資料
  * @example
@@ -362,8 +363,11 @@ function treeObj(data, hookFun = null, opt = {}) {
         }
     }
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3, 第676項)
+    let optSnap = pickOpt(opt, ['force'], [])
+
     //force
-    let force = get(opt, 'force', false)
+    let force = get(optSnap, 'force', false)
     if (!isbol(force)) {
         force = false
     }

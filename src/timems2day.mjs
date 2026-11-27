@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import istimems from './istimems.mjs'
 import pickOpt from './_pickOpt.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 
 
 /**
@@ -15,6 +16,8 @@ import pickOpt from './_pickOpt.mjs'
  * @param {String} t 輸入毫秒時間字串，不含時區
  * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入轉換失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，狀態模式之msg為固定詞彙(不含原生錯誤之文字)，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入轉換失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi timems2day] can not convert time'，同getDiag)，預設null
  * @returns {String|Object} 回傳日時間字串，t非有效毫秒時間字串或轉換失敗時回傳空字串；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
@@ -58,7 +61,9 @@ function timems2day(t, opt = {}) {
         r = t.slice(0, 10) //'YYYY-MM-DD'
     }
     catch (err) {
-        return retError(err.toString())
+        //訊息為固定詞彙(V19、V20, 不轉出原生錯誤之文字), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi timems2day] can not convert time', err)
+        return retError('can not convert time')
     }
 
     if (returnWithStateAndMsg) {

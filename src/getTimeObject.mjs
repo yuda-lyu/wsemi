@@ -1,6 +1,7 @@
 import ot from './_dayjs.mjs'
 import isestr from './isestr.mjs'
 import getTimeFromUnit from './getTimeFromUnit.mjs'
+import tz from './_tz.mjs'
 
 
 function parseTime(t, unit) {
@@ -30,6 +31,9 @@ function parseTime(t, unit) {
 /**
  * 輸入時間字串，單位為unit，回傳解析後之時間物件
  *
+ * 有效性之判定：逐欄驗證(標準寫法，年0000～9999、月、日依格里曆之閏年、時、分、秒皆在範圍內)，不經本機時間往返比對，故不受執行環境之時區(含夏令空窗與整日被跳過之日)影響；本機時區之夏令空窗內之時刻(如America/New_York之'2026-03-08T02:30:00')為有效，不回傳null
+ * 回傳之時間物件為dayjs物件(依本機時區之本機時間，對外語意不變)：本機時區之夏令空窗內之時刻，物件依JS規則推移為空窗後之本機時刻(如上例之物件為03:30)；須依牆鐘欄位做日曆運算(如列舉區間)時請用getTimeBetween，不要對本物件做本機時間加減
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeObject.test.mjs Github}
  * @memberOf wsemi
  * @param {String} t 輸入時間字串，不含時區
@@ -56,20 +60,18 @@ function getTimeObject(t, unit = 'days') {
         unit = 'days'
     }
 
-    //o
-    let o = parseTime(t, unit)
+    //dayjs不可用(UMD未載入dayjs全域)時維持修前之拋錯(原經dayjs解析而拋'invalid dayjs'), 使呼叫端之失敗形式不變
+    ot.assertDayjs()
 
-    //fmt
-    let fmt = getTimeFromUnit(unit)
-
-    //check unit
-    let m = o.format(fmt)
-    let b = (t === m)
-    if (b) {
-        return o
+    //check, 逐欄驗證(標準寫法、年月日時分秒皆在日曆範圍內), 不經本機時間往返比對(原以本機時區解析再format比對, 於本機時區夏令空窗內之時刻或整日被跳過之日誤判無效回傳null; 排程第675項, 同第428項)
+    if (tz.parseWallUnit(t, unit) === null) {
+        return null
     }
 
-    return null
+    //o, 本機時間之dayjs物件(對外語意不變); 本機時區夏令空窗內之時刻依JS規則推移為空窗後之本機時刻
+    let o = parseTime(t, unit)
+
+    return o
 }
 
 

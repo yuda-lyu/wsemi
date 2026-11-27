@@ -44,7 +44,7 @@ let merge = (ivs) => {
  * chunk：字串照用；Uint8Array等ArrayBuffer視圖與ArrayBuffer以UTF-8串流解碼(多位元組字元被切在兩塊之間亦正確，flush時補完不完整之位元組為U+FFFD)；數字、布林、bigint以String轉換；undefined與null視為空；
  * 包裝字串解包；其他(Symbol、函數、一般物件、可偵測之Proxy、無法解碼之二進位)無法檢查其內容，以***取代該塊(fail-closed，不執行其toString)
  *
- * secrets同maskDiagText(字串陣列或getDiagSecrets之結果，取其detail清單；各秘密內建其JSON跳脫形，如逐列之JSON紀錄內含引號、反斜線、換行之金鑰亦被遮)，於建立時取快照(其後清單之變動不影響)；清單無法使用(可偵測之Proxy、存取器之項、來源無法讀取之getDiagSecrets結果、型別不合)時每段皆輸出***(fail-closed)。
+ * secrets同maskDiagText(字串陣列或getDiagSecrets之結果，取其detail清單；各秘密內建其JSON跳脫形(一層與兩層)，如逐列之JSON紀錄(含巢狀之JSON字串)內含引號、反斜線、換行之金鑰亦被遮)，於建立時取快照(其後清單之變動不影響)；清單無法使用(可偵測之Proxy、存取器之項、來源無法讀取之getDiagSecrets結果、型別不合)時每段皆輸出***(fail-closed)。
  * opt同maskDiagText(patterns、credPatterns，只讀自有資料屬性)；opt.credPatterns為false時只遮已知秘密與opt.patterns(供模型輸出等不宜以樣式判定之文字)
  *
  * 與maskDiagText之差異：①長列分段輸出全文而不截斷(maskDiagText對超過20000字元者只輸出前20000字元並接…(len=原長))；②樣式之scope為'message'者在逐列輸入下作用於每一列(單列不含換行加4空白at)；③引號或中括號未閉合之憑證值只遮至該列(段)結尾，不跨列；

@@ -23,7 +23,8 @@
 | 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
 | 帶期望雜湊之下載 | `sgud/rule/rulebook_dl.md` | R-DL-VERIFY-01 | 23.2 |
 | 外部執行檔取得(規則 22: `fsEnsureBinsBudget` 之 `opt.concurrent` 並行最壞預算,2026-11-25 t642) | `sgud/rule/rulebook_bin.md` | R-BIN-ENSURE-01 | 約 48 |
-| 執行外部程序與編碼 | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01 | 30.6 |
+| 執行外部程序與編碼(含 `execProcessKillPid` 於 Windows 不開視窗) | `sgud/rule/rulebook_exec.md` | R-EXEC-FAIL-01、R-CODEC-ERR-01、R-EXEC-WINHIDE-01 | 約 35 |
+| catch 不轉出原生錯誤文字(38 站＋`j2o` 改固定詞彙 `can not convert <種類>`、細節只經診斷出口)、5 函數(`arrMax`、`arrMin`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`treeObj`)之 opt 讀取不拋錯 | `sgud/rule/rulebook_catch_text.md` | R-CATCH-TEXT-01 | 約 9 |
 | XSS 偵測與清洗 | `sgud/rule/rulebook_xss.md` | R-XSS-01、R-XSS-WALK-01 | 19.7 |
 | 物件迭代與鍵表 | `sgud/rule/rulebook_obj.md` | R-KEYMAP-01、R-OBJ-ITER-01 | 24.1 |
 | 事件派發: `evem` 只回裸 eventemitter3、計時器／串流／監視器回呼內之派發經 `evEmit`／`evEmitDelay`(使用者原則 2026-09-13;2026-11-22 自自動記憶提取) | `sgud/rule/rulebook_evem.md` | R-EVEM-RAW-01(2026-11-27 wsr2: 規則 2 明文涵蓋 Promise 鏈與 microtask 回呼、21 站逐站處置已落實) | 約 7 |
@@ -34,7 +35,7 @@
 | w-orm 系列字串良構 | `sgud/rule/rulebook_orm-str.md` | R-ORMSTR-01 | 36.9 |
 | SQL 族後端共用之方言中立條件 IR | `sgud/rule/rulebook_orm-lower.md` | R-LOWER-01 | 18.7 |
 | 診斷輸出與遮罩(含規則 14 通報站點經 getDiag、規則 15 形狀摘要 getDiagShape、規則 16～20〔2026-11-24 twsm1: maskDiagCtrl、maskDiagToken、pickDiagOpt、warn 與行內摘要、函數內自行 console 之 AST 盤點;twsm1b: label 與 lowerFind 路徑之控制字元單一規則、常駐路徑 5 函數經 getDiag、除錯殘留〕;規則 21 已知秘密內建 JSON 跳脫形、規則 22 NODE 代碼以內建 undici 核對〔2026-11-27 wsr1,第 650、621 項〕;**2026-11-27 wsr2 依規則類型拆為三檔**: 本檔留依據、單一擁有者與規則 1~12;規則 13~22 與盤點指令、站點全集、刻意與已知限制、實作輪自行決定、X65 見下列 `rulebook_diag_ext.md`;測試與變更紀錄見 `rulebook_diag_log.md`;三檔同為 R-DIAG-01,節號與標題不變) | `sgud/rule/rulebook_diag.md` | R-DIAG-01(規則 1~12) | 22.9 |
-| 診斷輸出與遮罩(續): R-DIAG-01 規則 13~22(通報站點經 getDiag、形狀摘要、控制字元、權杖遮罩、pickDiagOpt、warn 與行內摘要、console 盤點、JSON 跳脫形、NODE 代碼集合限以 Node 或 undici 實證)、盤點指令與站點全集、刻意與已知限制、實作輪自行決定、X65 之輸出差異 | `sgud/rule/rulebook_diag_ext.md` | R-DIAG-01(規則 13~22) | 22.7 |
+| 診斷輸出與遮罩(續): R-DIAG-01 規則 13~23(通報站點經 getDiag、形狀摘要、控制字元、權杖遮罩、pickDiagOpt、warn 與行內摘要、console 盤點、JSON 跳脫形、NODE 代碼集合限以 Node 或 undici 實證、兩層 JSON 跳脫形與成本上限)、盤點指令與站點全集、刻意與已知限制、實作輪自行決定、X65 之輸出差異 | `sgud/rule/rulebook_diag_ext.md` | R-DIAG-01(規則 13~23) | 約 27 |
 | 診斷輸出與遮罩(續): R-DIAG-01 之測試與變更紀錄 | `sgud/rule/rulebook_diag_log.md` | R-DIAG-01(測試、變更紀錄) | 9.2 |
 | 串流遮罩器 `genDiagStreamMasker`(逐列、長列分段不切開命中、與切塊無關;兩份使用端實作之對照與改用要點;2026-11-24 twsm1 新增) | `sgud/rule/rulebook_diag_stream.md` | R-DIAG-02 | 6.6 |
 | 查詢埠之監聽者 | `sgud/rule/rulebook_port.md` | R-PORT-PIDS-01 | 16.0 |
@@ -97,6 +98,8 @@
 - `R-EVEM-RAW-01` → `rulebook_evem.md`: R-EVEM-RAW-01 evem 只回裸 eventemitter3(不包裝、不攔截監聽器);計時器、串流、監視器、Promise 鏈之 catch、microtask 等無人承接之回呼內對使用者可掛監聽器之事件物件派發者,一律經 `evEmit`(同堆疊 try 攔截、pm 先 settle 再通報)或 `evEmitDelay`;timer 毫秒進 setTimeout 前須在上限內
 - `R-EXCEL-READ-01` → `rulebook_excel.md`(2026-11-27 自 `rulebook_data.md` 移入): R-EXCEL-READ-01 讀取Excel之值:提取原值轉字串
 - `R-EXEC-FAIL-01` → `rulebook_exec.md`: R-EXEC-FAIL-01 執行外部程序之失敗回報:字串或結果物件、不含參數與環境變數之值、不崩潰
+- `R-EXEC-WINHIDE-01` → `rulebook_exec.md`: 起子行程一律 `windowsHide: true`,含經第三方庫起者(`execProcessKillPid` 於 Windows 自行 `spawn('taskkill', …)`;實測 detached 背景行程呼叫時修前閃出終端機視窗)
+- `R-CATCH-TEXT-01` → `rulebook_catch_text.md`: 轉換函數之 catch 不得把捕捉到之原生錯誤文字轉出為回傳值(V19 固定詞彙、V20 不回顯),細節只經 `diagIfAsked`;允許之例外各 1 站、以各檔數釘住;含 5 函數之 opt 讀取不拋錯
 - `R-EXEC-JSONFILE-01` → `rulebook_execfile.md`: R-EXEC-JSONFILE-01 結果走 JSON 檔之 CLI 執行一律經 `execCliJsonFile`;失敗摘要經 `execCliFailDetail`:失敗以結構化物件回報、必須參數缺漏 reject、半行不黏連、相對輸出路徑與子進程一致
 - `R-FILETYPE-01` → `rulebook_filetype.md`(2026-11-27 自 `rulebook_data.md` 移入): R-FILETYPE-01 getFileType 副檔名對照表: 鍵為小寫副檔名、比對不分大小寫、新增項目附於表尾、既有項目逐項不變
 - `R-JUDGE-SOURCE-01` → `rulebook_data.md`: R-JUDGE-SOURCE-01 布林與函數之判斷單一出處: `src/` 內只經 `isbol`／`isfun`,除 `src/isfun.mjs` 外不得 import lodash 之 `isFunction`,`isBoolean` 無例外

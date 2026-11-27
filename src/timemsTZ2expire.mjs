@@ -5,6 +5,7 @@ import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
 import diagIfAsked from './_diagIfAsked.mjs'
 import pickOpt from './_pickOpt.mjs'
+import calDayDiff from './_calDayDiff.mjs'
 
 
 //core, 實際計算; 抽為獨立函數以便由呼叫端統一以try catch攔截非預期錯誤, 而不必將整段運算內縮
@@ -31,17 +32,31 @@ function core(t, tNow) {
     //day
     let nowday = mnow.format('YYYY-MM-DD')
     let timeday = mtime.format('YYYY-MM-DD')
-    let mnowday = ot(nowday, 'YYYY-MM-DD')
-    let mtimeday = ot(timeday, 'YYYY-MM-DD')
 
-    //diff
+    //diff, 秒、分、時為時刻(毫秒)差; 天、周、月、年為兩日之日曆差(日期欄位於UTC日曆運算, 不經本機時間: 原以本機時間之午夜物件diff, 於午夜不存在之日〔夏令於00:00起跳之時區〕少算1天; 排程第675項同機制盤點)
     let iseconds = mtime.diff(mnow, 'seconds')
     let iminutes = mtime.diff(mnow, 'minutes')
     let ihours = mtime.diff(mnow, 'hours')
-    let idays = mtimeday.diff(mnowday, 'days')
-    let iweeks = mtimeday.diff(mnowday, 'weeks')
-    let imonths = mtimeday.diff(mnowday, 'months')
-    let iyears = mtimeday.diff(mnowday, 'years')
+    let dd = calDayDiff(timeday, nowday)
+    let idays
+    let iweeks
+    let imonths
+    let iyears
+    if (dd !== null) {
+        idays = dd.days
+        iweeks = dd.weeks
+        imonths = dd.months
+        iyears = dd.years
+    }
+    else {
+        //日期非標準寫法(如本機時區使年份超出0000~9999)時維持原算法
+        let mnowday = ot(nowday, 'YYYY-MM-DD')
+        let mtimeday = ot(timeday, 'YYYY-MM-DD')
+        idays = mtimeday.diff(mnowday, 'days')
+        iweeks = mtimeday.diff(mnowday, 'weeks')
+        imonths = mtimeday.diff(mnowday, 'months')
+        iyears = mtimeday.diff(mnowday, 'years')
+    }
 
     //c
     let today
@@ -99,7 +114,7 @@ function core(t, tNow) {
  * 毫秒時間轉到期時間
  *
  * err之值分兩類：'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間已過'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
- * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區
+ * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區；天、周、月、年數為兩日(本機時區之日期)之日曆差(以日期欄位運算，不受夏令影響，如夏令於00:00起跳之日亦不少算)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timemsTZ2expire.test.mjs Github}
  * @memberOf wsemi

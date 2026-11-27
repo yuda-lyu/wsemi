@@ -2,6 +2,15 @@
 
 本檔 2026-11-19(ws492i)新增(排程第 492 項第 8 批): 判斷函數只收原始值、轉型函數照舊拆包、判斷函數不拋錯、`cbol`／`isDate`／`cint` 之定義之**現況**;索引見 `sgud/state/state.md`.
 
+## 第 676 項:38 站＋`j2o` 之 catch 不轉出原生錯誤文字、5 函數之 opt 讀取不拋錯(主控任務 20261127121903 wsr3,2026-11-27;package.json version 1.9.82 之工作樹,未提交未發布)
+
+- **已改**(規則 `sgud/rule/rulebook_catch_text.md` R-CATCH-TEXT-01;破壞性變更第 86 項③④):
+  - 38 站 `retError(err.toString())`(轉型、編碼、字串雜湊與加解密、時間字串轉換類;站點全集見規則)與 `j2o` 之非 SyntaxError 分支改固定詞彙 `can not convert <種類>`(`aes2str` 取其既有之解密失敗訊息),細節只經 `diagIfAsked`(`opt.logDetail`／`opt.funLog`,預設靜默);JSDoc 補兩個 opt 鍵.`cint` 之預設模式拋出之 `Error` 之訊息亦為固定詞彙.
+  - `arrMax`、`arrMin`、`arrGroupByMaxmin`、`arrLookupByMaxmin`、`treeObj` 之 opt 讀取取 `_pickOpt` 快照(讀取拋錯視為未給,每鍵一次).
+- **守門**: AST 掃描(`test/tools/catchErrTextScan.mjs`)全庫 catch 內轉出錯誤文字之站點恰為 4 個已判定之允許站點(`_diagCases`、`cacheSt`、`fsMergeFiles`、`stru8arr2obj` 各 1).
+- **測試**: `test/catchErrText676.test.mjs`(149 案;34 站逐站故障注入＋5 站鏡像複本注入;修前 109 failing／40 passing)、`test/optHostile676.test.mjs`(15 案;修前 14 failing);變異 M09～M16、M26～M28 皆被殺.
+- **待辦**: dspec V19 詞彙表補列新詞彙(`can not convert <來源> to <目標>`,轉主控);fs／exec 之 `errToStr`／`fsErrMsg` 路徑屬 R-FS-ERRMSG-01、R-CODEC-ERR-01 之設計,不在本規則.
+
 ## 第 663 項批 11:轉型／編碼／字串／時間字串轉換類 62 函數之 opt 讀取不拋錯、state 模式 9 站訊息固定詞彙、fs 列舉同步 6 函數讀鍵拋錯視為未給、公開 `getOptReader`(wsr2,2026-11-27,主控任務 20261127030143;package.json version 1.9.81 之工作樹,與 wsr1 同一次發布,未提交未發布)
 
 - **做到哪**(已實作,規則見 `sgud/rule/rulebook_judge_nothrow.md` R-C1-HOSTILE-01 規則 3~6、R-OPT-READER-01;破壞性變更第 85 項):

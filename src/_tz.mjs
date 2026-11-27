@@ -127,6 +127,57 @@ function isWallMonth(t) {
 }
 
 
+/**
+ * 依單位逐欄驗證不含時區之時間字串並取出各欄位(供getTimeObject、getTimeBetween; 排程第675項): 字串須為該單位之標準寫法
+ * (years為'YYYY'、months為'YYYY-MM'、days為'YYYY-MM-DD'、hours為'YYYY-MM-DDTHH'、minutes為'YYYY-MM-DDTHH:mm'、seconds為'YYYY-MM-DDTHH:mm:ss'),
+ * 補齊至秒後以isWallTime逐欄驗證(年0000~9999、月、日依格里曆之閏年、時、分、秒皆在範圍內), 不經本機時間往返比對, 故不受執行環境之時區(含夏令空窗與整日跳過)影響;
+ * 另回傳牆鐘時刻視為UTC之毫秒數ms(以setUTCFullYear建立, 年份0~99不對映為1900~1999), 供日曆運算(牆鐘時刻之加減於UTC進行, 無夏令時間)
+ *
+ * @param {String} t 輸入時間字串
+ * @param {String} unit 輸入單位字串，須為'years'、'months'、'days'、'hours'、'minutes'、'seconds'之一(呼叫端已正規化)
+ * @returns {Object} 回傳{ y, mo, d, h, mi, s, ms }，字串無效或單位不在可選集合時回傳null
+ */
+function parseWallUnit(t, unit) {
+    let e = null
+    if (unit === 'years') {
+        e = '-01-01T00:00:00'
+    }
+    else if (unit === 'months') {
+        e = '-01T00:00:00'
+    }
+    else if (unit === 'days') {
+        e = 'T00:00:00'
+    }
+    else if (unit === 'hours') {
+        e = ':00:00'
+    }
+    else if (unit === 'minutes') {
+        e = ':00'
+    }
+    else if (unit === 'seconds') {
+        e = ''
+    }
+    if (e === null || typeof t !== 'string') {
+        return null
+    }
+    let full = t + e
+    if (!isWallTime(full, false)) {
+        return null
+    }
+    let m = RE_WALL.exec(full)
+    let y = Number(m[1])
+    let mo = Number(m[2])
+    let d = Number(m[3])
+    let h = Number(m[4])
+    let mi = Number(m[5])
+    let s = Number(m[6])
+    let dt = new Date(0)
+    dt.setUTCFullYear(y, mo - 1, d)
+    dt.setUTCHours(h, mi, s, 0)
+    return { y, mo, d, h, mi, s, ms: dt.getTime() }
+}
+
+
 //isValidOffset(判斷時區是否為有效偏移)已移除: 排程第428項起istimeTZ、istimemsTZ對checkTZ所收之全部時區(有效偏移與'|08:00'、'+99:99'等)皆以isWallTime逐欄驗證, 不再分流
 
 
@@ -138,6 +189,7 @@ let tz = {
     isWallTime,
     isWallDay,
     isWallMonth,
+    parseWallUnit,
 }
 
 

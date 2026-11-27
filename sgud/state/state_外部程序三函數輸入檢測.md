@@ -2,6 +2,12 @@
 
 本檔記 `execProcess`、`execProcessKillPid`、`execJsCode` 輸入檢測之現況(自 `sgud/state/state.md` 之索引指入;只記現況,過程見 `sgud/exp/experience.md`).
 
+## `execProcessKillPid` 於 Windows 不開視窗(排程第 681 項〔低〕;主控任務 20261127121903 wsr3,2026-11-27;package.json version 1.9.82 之工作樹,未提交未發布)
+
+- **已改**(規則 `sgud/rule/rulebook_exec.md` R-EXEC-WINHIDE-01;破壞性變更第 86 項⑥): Windows 自行 `cp.spawn('taskkill', ['/pid', N, '/T', '/F'], { windowsHide: true })`(原經 `tree-kill` 之 `exec`,無 `windowsHide`,detached 背景行程呼叫時閃出終端機視窗,實測 2 次重現;修後 0 個);其餘平台仍 `tree-kill`.訊息格式、`onTrace` 事件序列不變;spawn 失敗(含 EMFILE)以同格式 reject.
+- **盤點**: 本庫 `dependencies` 只有 `tree-kill` 使用 `child_process`;本庫自身 9 處呼叫皆帶 `windowsHide: true`(AST 掃描釘住).
+- **測試**: `test/execProcessKillPid681.test.mjs`(7 案,攔截替身子行程;修前 5 failing／2 passing);既有 `execProcessKillPid.test.mjs` 全綠(真實殺子行程與孫行程之樹殺);變異 M19～M25 皆被殺.視窗實測(非自動化)之證據在報告.
+
 ## 第 492 項第 5 批:外部程序(ws492f;盤點報告〈不符清單〉`execProcess`、`execProcessKillPid`、`execJsCode` 三列與 W-05;主控任務 20261116102625,2026-11-18;package.json version 1.9.65 之工作樹,未提交未發布)〔本節於 2026-11-18 新增〕
 
 - **現況(已實作)**:

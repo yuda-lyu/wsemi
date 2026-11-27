@@ -2,6 +2,12 @@
 
 本檔自 `sgud/state/state.md` 之索引分出(2026-11-02 ws265 新增類型): 測試檔結構與全套穩定性之現況;索引見 `sgud/state/state.md`.
 
+## R-CATCH-TEXT-01、R-EXEC-WINHIDE-01 之守門(排程第 676、681 項;主控任務 20261127121903 wsr3,2026-11-27;package.json version 1.9.82 之工作樹,未提交未發布)
+
+- **已建**: ①`test/tools/catchErrTextScan.mjs`(`scanCatchErrText`,acorn: catch 內對 catch 參數之 `.toString`／`.message`、`String()`、樣板字串嵌入、`+` 串接;自測 12 案)＋`test/catchErrText676.test.mjs` 之全庫掃描(掃描檔數 > 400,結果須恰為 4 個允許站點之各檔數);②`test/tools/catchSiteKit.mjs`(逐站故障注入: 於 try 內內建函數之第一次呼叫拋出一次、全域類別 `Proxy` 拋出一次、分離之 buffer,及 src 鏡像複本內相依模組換為呼叫即拋之替身);③`test/tools/cpHideScan.mjs`(`scanCpHide`: 對 `child_process` 之 7 個函數之呼叫是否帶 `windowsHide: true` 字面值,自測 7 案)＋`test/execProcessKillPid681.test.mjs` 之全庫各檔站點數釘住(共 9 處);④`test/tools/killWinRunner.mjs`(攔截 `child_process` 與 `process.kill` 之子行程執行器,替身恆不呼叫真實函數).
+- **盲點**: 掃描器皆為 AST 且不抓「先別名再轉／呼叫」、動態鍵、`eval`;`cpHideScan` 不含注入之 `spawn`(`fsEnsureBinsCore`、`execCliCore` 之參數,已人工核對).
+- **驗證**: 現行 src 通過;修前鏡像根(`WSEMI_ERR676_SRC`、`WSEMI_KILL681_SRC` 等環境變數指向修前 src)之紅數見各規則之〈測試〉.
+
 ## R-C1-HOSTILE-01 之守門(opt 讀取與 state 訊息;排程第 663 項;主控任務 20261127030143 wsr2,2026-11-27;package.json version 1.9.81 之工作樹,未提交未發布)
 
 - **已建**: `test/optHostile663.test.mjs` 之 AST 守門 ＋ 掃描器 `test/tools/optReadScan.mjs`(acorn,不計註解與字串): `scanOptReads`(對 `opt` 之直接讀取: `get(opt, 'k')`／`opt.k`／`opt['k']`／`opt?.k`／解構,6 正例 3 反例之盲點自測)與 `scanErrEcho`(`retError(…errToStr(…)…)`,4 正例 4 反例).守門三則: ①62 個目標函數不得直接讀 `opt` 且須匯入 `_pickOpt`;②全庫讀 `returnWithStateAndMsg` 之檔(目前 58)皆匯入 `_pickOpt`;③全庫無 `retError(…errToStr(…)…)`.已知盲點: 先別名再讀、動態鍵之鍵名;`err.toString()` 站點不計.規則見 `sgud/rule/rulebook_judge_nothrow.md` R-C1-HOSTILE-01 規則 6.

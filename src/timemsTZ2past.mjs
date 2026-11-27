@@ -5,13 +5,14 @@ import isfun from './isfun.mjs'
 import istimemsTZ from './istimemsTZ.mjs'
 import diagIfAsked from './_diagIfAsked.mjs'
 import pickOpt from './_pickOpt.mjs'
+import calDayDiff from './_calDayDiff.mjs'
 
 
 /**
  * 毫秒時間轉過去時間
  *
  * err之值分兩類：'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss.SSS with a time zone (Z, +HH:mm or -HH:mm)'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間未到'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
- * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區
+ * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區；天、周、月、年數為兩日(本機時區之日期)之日曆差(以日期欄位運算，不受夏令影響，如夏令於00:00起跳之日亦不少算)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timemsTZ2past.test.mjs Github}
  * @memberOf wsemi
@@ -103,17 +104,31 @@ function core(t, tNow) {
     //day
     let nowday = mnow.format('YYYY-MM-DD')
     let timeday = mtime.format('YYYY-MM-DD')
-    let mnowday = ot(nowday, 'YYYY-MM-DD')
-    let mtimeday = ot(timeday, 'YYYY-MM-DD')
 
-    //diff
+    //diff, 秒、分、時為時刻(毫秒)差; 天、周、月、年為兩日之日曆差(日期欄位於UTC日曆運算, 不經本機時間: 原以本機時間之午夜物件diff, 於午夜不存在之日〔夏令於00:00起跳之時區〕少算1天; 排程第675項同機制盤點)
     let iseconds = mnow.diff(mtime, 'seconds')
     let iminutes = mnow.diff(mtime, 'minutes')
     let ihours = mnow.diff(mtime, 'hours')
-    let idays = mnowday.diff(mtimeday, 'days')
-    let iweeks = mnowday.diff(mtimeday, 'weeks')
-    let imonths = mnowday.diff(mtimeday, 'months')
-    let iyears = mnowday.diff(mtimeday, 'years')
+    let dd = calDayDiff(nowday, timeday)
+    let idays
+    let iweeks
+    let imonths
+    let iyears
+    if (dd !== null) {
+        idays = dd.days
+        iweeks = dd.weeks
+        imonths = dd.months
+        iyears = dd.years
+    }
+    else {
+        //日期非標準寫法(如本機時區使年份超出0000~9999)時維持原算法
+        let mnowday = ot(nowday, 'YYYY-MM-DD')
+        let mtimeday = ot(timeday, 'YYYY-MM-DD')
+        idays = mnowday.diff(mtimeday, 'days')
+        iweeks = mnowday.diff(mtimeday, 'weeks')
+        imonths = mnowday.diff(mtimeday, 'months')
+        iyears = mnowday.diff(mtimeday, 'years')
+    }
 
     //c
     let today = false

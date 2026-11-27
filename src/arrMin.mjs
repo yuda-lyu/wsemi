@@ -5,6 +5,7 @@ import isestr from './isestr.mjs'
 import isbol from './isbol.mjs'
 import isenum from './isenum.mjs'
 import arrReduce from './arrReduce.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -16,7 +17,7 @@ import arrReduce from './arrReduce.mjs'
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/arrMin.test.mjs Github}
  * @memberOf wsemi
  * @param {Array} vall 輸入原始陣列，需含至少一個有效數字(定義見isenum，不收Infinity與'0x10'等)，否則throw
- * @param {Object} [opt={}] 輸入設定物件，預設{}
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnIndex=false] 輸入是否回傳排序指標陣列布林值，預設false
  * @param {String} [opt.compareKey=null] 輸入當vall為物件陣列時，指定取compareKey欄位出來排序，compareKey需為有效字串，預設null
  * @returns {Number|Object} 回傳最小值數字或判斷具有最小值之物件，沒有任何有效數字時throw
@@ -97,14 +98,17 @@ function arrMin(vall, opt = {}) {
         throw new Error('invalid vall: must be an array')
     }
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3, 第676項)
+    let optSnap = pickOpt(opt, ['returnIndex', 'compareKey'], [])
+
     //returnIndex
-    let returnIndex = get(opt, 'returnIndex')
+    let returnIndex = get(optSnap, 'returnIndex')
     if (!isbol(returnIndex)) {
         returnIndex = false
     }
 
     //compareKey
-    let compareKey = get(opt, 'compareKey', null)
+    let compareKey = get(optSnap, 'compareKey', null)
 
     //vallTrans
     let vallTrans = vall

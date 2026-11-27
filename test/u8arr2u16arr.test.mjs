@@ -72,13 +72,13 @@ describe(`u8arr2u16arr`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should not throw but return { state: 'error', msg: <TypeError> } when input a detached Uint8Array`, function() {
+    it(`should not throw but return { state: 'error', msg: 'can not convert u8a to u16a' } (the fixed message, not the TypeError text) when input a detached Uint8Array`, function() {
         //轉換本體之非預期錯誤須被攔截, 不得外拋至呼叫端
+        //第676項(R-CATCH-TEXT-01): msg為固定詞彙(V19、V20), 不再轉出原生錯誤之文字(原為'TypeError: ...'); 細節經opt之診斷出口
         let u8a = new Uint8Array([1, 2, 3])
         structuredClone(u8a.buffer, { transfer: [u8a.buffer] }) //使buffer分離
         let r = u8arr2u16arr(u8a, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為型別錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'can not convert u8a to u16a' })
     })
 
     it(`should not throw but return new Uint16Array() when input a detached Uint8Array by default`, function() {

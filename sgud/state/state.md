@@ -24,7 +24,15 @@
 - `sgud/state/state_測試.md`(置於該檔最前): R-C1-HOSTILE-01 之 AST 守門(`optReadScan`).
 - 文件整理(A 輪需裁示 ⑤): `sgud/state/state_dom與資料.md`(約 37.9KB)依功能類型拆為本檔＋`state_結構函數.md`＋`state_非計算類函數參數.md`;`sgud/rule/rulebook_diag.md`(單節 R-DIAG-01,約 52.7KB)依規則類型拆為本檔(規則 1~12)＋`rulebook_diag_ext.md`(規則 13~22、盤點、限制)＋`rulebook_diag_log.md`(測試、變更紀錄);節號與標題不變、內容逐字搬移,逐行驗證缺 0(`state_dom與資料` 非空 77 行、`rulebook_diag` 非空 60 行,新增之行僅標頭與說明).破壞性變更紀錄第 85 項附於 `rulebook_breaking_84on.md`.
 
-### `sgud/state/state_時間判斷與轉換.md`(時間字串之判斷與轉換;約 3KB;新增於 2026-11-27)
+### wsr3 修正輪(2026-11-27,主控任務 20261127121903;package.json version 1.9.82 之工作樹,未提交未發布)之現況分在下列各檔(驗證數字見該輪報告):
+
+- `sgud/state/state_時間判斷與轉換.md`(置於該檔最前): 第 675 項 `getTimeBetween`／`getTimeObject` 不經本機時間(`_tz.parseWallUnit`)、`timemsTZ2past`／`expire` 之天周月年改日曆差(`_calDayDiff.mjs`)、同機制盤點(`addMonth` 窮舉無缺陷).
+- `sgud/state/state_判斷與轉型.md`(置於該檔最前): 第 676 項 38 站＋`j2o` 之 catch 改固定詞彙(R-CATCH-TEXT-01,規則檔 `sgud/rule/rulebook_catch_text.md`)、5 函數之 opt 讀取不拋錯.
+- `sgud/state/state_診斷與遮罩_第2輪.md`(置於該檔最前): 第 678 項遮罩器內建兩層 JSON 跳脫形(R-DIAG-01 規則 23,含評估數據與成本上限).
+- `sgud/state/state_外部程序三函數輸入檢測.md`(置於該檔最前): 第 681 項 `execProcessKillPid` 於 Windows 自行 `spawn(windowsHide)`(R-EXEC-WINHIDE-01).
+- `sgud/state/state_測試.md`(置於該檔最前): 第 676、681 項之守門(`catchErrTextScan`、`cpHideScan`、`catchSiteKit` 故障注入).
+
+### `sgud/state/state_時間判斷與轉換.md`(時間字串之判斷與轉換;約 6KB;新增於 2026-11-27)
 
 查: `istime`／`istimems`／`isday`／`ismonth`／`istimeTZ`／`istimemsTZ` 之逐欄驗證、不帶時區之 7 個轉換函數與 `getTimeRange`、`day2cht`、`domShowInputDatatime` 直接取欄位、多時區矩陣測試、差分與變異數字、已知缺口.所含節:
 

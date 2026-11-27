@@ -78,13 +78,13 @@ describe(`u16arr2b64`, function() {
         assert.strict.deepStrictEqual(r, rr)
     })
 
-    it(`should not throw but return { state: 'error', msg: 'u16arr2u8arr: <TypeError>' } when input a detached Uint16Array`, function() {
+    it(`should not throw but return { state: 'error', msg: 'can not convert u16a to b64' } (the fixed message, not the TypeError text) when input a detached Uint16Array`, function() {
         //轉換本體之非預期錯誤須被攔截; 改為自取位元組視圖後不再經u16arr2u8arr, 故錯誤來自本函數自身
+        //第676項(R-CATCH-TEXT-01): msg為固定詞彙(V19、V20), 不再轉出原生錯誤之文字(原為'TypeError: ...'); 細節經opt之診斷出口
         let u16a = new Uint16Array([1, 2, 3])
         structuredClone(u16a.buffer, { transfer: [u16a.buffer] }) //使buffer分離
         let r = u16arr2b64(u16a, { returnWithStateAndMsg: true })
-        assert.strict.deepStrictEqual(r.state, 'error')
-        assert.strict.deepStrictEqual(r.msg.indexOf('TypeError') === 0, true, `msg 應為型別錯誤, got ${r.msg}`)
+        assert.strict.deepStrictEqual(r, { state: 'error', msg: 'can not convert u16a to b64' })
     })
 
     it(`should return 'QgBhAHMA' when input new Uint16Array([66, 97, 115]) with invalid returnWithStateAndMsg`, function() {

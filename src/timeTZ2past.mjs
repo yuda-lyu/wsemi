@@ -18,7 +18,7 @@ function addms(t) {
  * 秒時間轉過去時間
  *
  * err之值分兩類：'invalid t: must be a time string YYYY-MM-DDTHH:mm:ss with a time zone (Z, +HH:mm or -HH:mm)'(t無效)、'時間轉換失敗'為失敗(狀態模式下為state: 'error')；'時間未到'為算得之結果(狀態模式下為state: 'success')；正常算得時err為''
- * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區
+ * 轉換方式：時刻依其時區之固定偏移解析為絕對時刻(不經本機時間往返)後計算時間差；「今天、昨天、明天」之日界與顯示之時:分依本機時區；天、周、月、年數為兩日(本機時區之日期)之日曆差(以日期欄位運算，不受夏令影響，如夏令於00:00起跳之日亦不少算)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/timeTZ2past.test.mjs Github}
  * @memberOf wsemi

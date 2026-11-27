@@ -1,11 +1,13 @@
 import map from 'lodash-es/map.js'
 import times from 'lodash-es/times.js'
 import getTimeFromUnit from './getTimeFromUnit.mjs'
-import getTimeObject from './getTimeObject.mjs'
+import tz from './_tz.mjs'
 
 
 /**
  * 輸入兩時間，單位皆為unit，由兩時間之間回傳以unit分切的時間點，回傳時間單位一樣為unit
+ *
+ * 計算方式：兩時間為不含時區之牆鐘時刻，逐欄驗證後以日曆欄位運算(牆鐘時刻之加減於UTC進行)，不經本機時間，故結果不受執行環境之時區(含夏令空窗與重疊時段、整日被跳過之日)影響：各時區之結果皆相同，序列不缺項、不重複(如hours單位於America/New_York之'2026-03-08T00'至'2026-03-08T04'為T00至T04共5項)
  *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/getTimeBetween.test.mjs Github}
  * @memberOf wsemi
@@ -38,28 +40,44 @@ function getTimeBetween(tstart, tend, unit = 'days') {
         unit = 'days'
     }
 
-    //fmt
-    let fmt = getTimeFromUnit(unit)
-
-    //m1, m2
-    let m1 = getTimeObject(tstart, unit)
-    let m2 = getTimeObject(tend, unit)
+    //p1, p2, 逐欄驗證並取出欄位, 不經本機時間(排程第675項: 原以本機時間之dayjs物件diff與add, 於本機時區夏令空窗或重疊時段序列缺項或重複)
+    let p1 = tz.parseWallUnit(tstart, unit)
+    let p2 = tz.parseWallUnit(tend, unit)
 
     //check
-    if (m1 === null || m2 === null) {
+    if (p1 === null || p2 === null) {
         return []
     }
     if (tstart >= tend) {
         return []
     }
 
-    //diff
-    let n = m2.diff(m1, unit) + 1
+    //n, 項數(含頭尾); 起訖皆已對齊單位, 以牆鐘時刻視為UTC之日曆運算, 無夏令時間
+    let len = 0
+    let n = 0
+    let step = 0
+    if (unit === 'years') {
+        n = p2.y - p1.y + 1
+    }
+    else if (unit === 'months') {
+        n = (p2.y * 12 + p2.mo) - (p1.y * 12 + p1.mo) + 1
+    }
+    else {
+        step = unit === 'days' ? 86400000 : unit === 'hours' ? 3600000 : unit === 'minutes' ? 60000 : 1000
+        n = (p2.ms - p1.ms) / step + 1
+        len = unit === 'days' ? 10 : unit === 'hours' ? 13 : unit === 'minutes' ? 16 : 19
+    }
 
     //r
     let r = map(times(n), function(i) {
-        let m = m1.clone() //clone
-        return m.add(i, unit).format(fmt) //add
+        if (unit === 'years') {
+            return String(p1.y + i).padStart(4, '0')
+        }
+        if (unit === 'months') {
+            let k = p1.y * 12 + (p1.mo - 1) + i
+            return String(Math.floor(k / 12)).padStart(4, '0') + '-' + String(k % 12 + 1).padStart(2, '0')
+        }
+        return new Date(p1.ms + i * step).toISOString().slice(0, len) //牆鐘時刻視為UTC, 年份0000~9999皆為4位數
     })
 
     return r

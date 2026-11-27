@@ -8,6 +8,7 @@ import iseobj from './iseobj.mjs'
 import isfun from './isfun.mjs'
 import haskey from './haskey.mjs'
 import maxminsLimits from './_maxminsLimits.mjs'
+import pickOpt from './_pickOpt.mjs'
 
 
 /**
@@ -17,7 +18,7 @@ import maxminsLimits from './_maxminsLimits.mjs'
  * @memberOf wsemi
  * @param {Array} arr 輸入要被切割的陣列，需為物件陣列，否則無法添加查找結果；各元素之keyValue欄位須為有效數字(有限數字或十進位數字字串，去頭尾空白後取值；Infinity、'Infinity'、'0x10'、包裝物件、null、非數字字串皆非有效數字)，非有效數字之元素略過不查找(不添加keyItems)；非陣列、空陣列或首元素非有效物件(含單一空元素之陣列[null]、['']、[{}])回傳[]，結果與多個空元素([null, null])相同，非因被當成空陣列
  * @param {Array} maxmins 輸入要切分的最大最小值物件陣列，每個元素需為物件，至少得要包含keyMax與keyMin欄位，其值須為有效數字(同上，數字字串亦可)；maxmins屬設定，上下限無效(未給、null、Infinity、'0x10'、包裝物件、非數字字串等)即throw Error(`invalid maxmins[索引].鍵: must be a valid number`，訊息不帶輸入值)，且不論arr內容；欲表示「無上限或無下限」請自行給適當之有限極值(如1e20、-1e20)；maxmins非陣列或空陣列回傳[]；單一空元素之陣列([null]、['']、[{}])視為一個元素，缺上下限而throw(同[null, null])，不被當成空陣列
- * @param {Object} [opt={}] 輸入設定物件
+ * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給
  * @param {String} [opt.keyMax='max'] 輸入maxmins內各元素中，儲存最大值欄位字串，預設'max'
  * @param {String} [opt.keyMin='min'] 輸入maxmins內各元素中，儲存最小值欄位字串，預設'min'
  * @param {String} [opt.keyValue='value'] 輸入arr內各元素中，若為物件，則儲存欲判斷數值之欄位字串，預設'value'
@@ -562,32 +563,35 @@ import maxminsLimits from './_maxminsLimits.mjs'
  */
 function arrLookupByMaxmin(arr, maxmins, opt = {}) {
 
+    //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1/K3, 第676項)
+    let optSnap = pickOpt(opt, ['keyMax', 'keyMin', 'keyValue', 'keyItems', 'beforeAddResult'], [])
+
     //keyMax in maxmins
-    let keyMax = get(opt, 'keyMax')
+    let keyMax = get(optSnap, 'keyMax')
     if (!isestr(keyMax)) {
         keyMax = 'max'
     }
 
     //keyMin in maxmins
-    let keyMin = get(opt, 'keyMin')
+    let keyMin = get(optSnap, 'keyMin')
     if (!isestr(keyMin)) {
         keyMin = 'min'
     }
 
     //keyValue in arr
-    let keyValue = get(opt, 'keyValue')
+    let keyValue = get(optSnap, 'keyValue')
     if (!isestr(keyValue)) {
         keyValue = 'value'
     }
 
     //keyItems for items from arr
-    let keyItems = get(opt, 'keyItems')
+    let keyItems = get(optSnap, 'keyItems')
     if (!isestr(keyItems)) {
         keyItems = 'items'
     }
 
     //beforeAddResult for items from maxmins
-    let beforeAddResult = get(opt, 'beforeAddResult', null)
+    let beforeAddResult = get(optSnap, 'beforeAddResult', null)
 
     //check, maxmins不是陣列或為空陣列時維持回傳空陣列; 單一空元素([null]、['']、[{}])為一個元素, 交limits檢測上下限而throw, 不得被當成空陣列(W-19, 比照第三批)
     if (!isarr(maxmins) || maxmins.length === 0) {

@@ -2,6 +2,7 @@ import get from 'lodash-es/get.js'
 import isbol from './isbol.mjs'
 import isestr from './isestr.mjs'
 import pickOpt from './_pickOpt.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 
 
 //reLoneSurrogate, 孤立之代理碼元(高代理之後無低代理, 或低代理之前無高代理), 供不支援String.prototype.isWellFormed之環境判斷
@@ -18,6 +19,8 @@ let reLoneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])
  * @param {String} str 輸入一般字串
  * @param {Object} [opt={}] 輸入設定物件，讀取拋錯(已撤銷之Proxy、存取器拋錯)者視為未給，預設{}
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false
+ * @param {Boolean} [opt.logDetail=false] 輸入轉換失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，狀態模式之msg為固定詞彙(不含原生錯誤之文字)，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入轉換失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi str2u8arr] can not convert str to u8a'，同getDiag)，預設null
  * @returns {Uint8Array|Object} 回傳Uint8Array，輸入非有效字串、含孤立代理碼元或轉換失敗時回傳空Uint8Array；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * 失敗之辨識：預設模式於本函數所偵測之失敗(輸入無效或轉換失敗)時不拋錯而回傳空Uint8Array(長度0)；須可靠辨識失敗時請設opt.returnWithStateAndMsg為true，以回傳之state === 'error'判定(只涵蓋本函數所偵測之失敗，msg為錯誤訊息)
  * @example
@@ -67,7 +70,9 @@ function str2u8arr(str, opt = {}) {
         r = new TextEncoder().encode(str)
     }
     catch (err) {
-        return retError(err.toString())
+        //訊息為固定詞彙(V19、V20, 不轉出原生錯誤之文字), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(opt, '[wsemi str2u8arr] can not convert str to u8a', err)
+        return retError('can not convert str to u8a')
     }
 
     if (returnWithStateAndMsg) {

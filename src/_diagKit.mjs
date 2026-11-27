@@ -762,10 +762,17 @@ let getMatcher = (list) => {
     }
     //內建變體(只增不減, 既有之比對不變): 各秘密之JSON跳脫形(JSON.stringify(s).slice(1, -1)), 使含引號、反斜線、換行、控制字元之秘密於JSON文字內仍被遮(排程第650項);
     //getDiagSecrets之清單原已含此形(variantsOf), 經Set去重而不重複
+    //第二層(排程第678項): JSON字串內再嵌JSON(如派工之stream-json夾帶工具結果: 內層JSON文字為外層JSON之字串值)時之跳脫形JSON.stringify(JSON.stringify(s).slice(1, -1)).slice(1, -1);
+    //秘密不含需跳脫之字元者其兩層跳脫形皆同秘密本身, 經Set去重而不增項; 只對含引號、反斜線、換行、控制字元(或孤立代理碼元)之秘密各增至多1項(實測: 20個含特殊字元之秘密, 變體數33→46、遮罩時間不變、400份不含秘密之文字輸出逐位相同);
+    //每個清單項只增兩層, 不遞迴增第三層(字串清單之秘密得秘密、一層、兩層共3項; getDiagSecrets之清單原已含一層形, 其項各再增兩層, 故涵蓋至三層)
     for (let s of [...set]) {
         let j = jsonEscOf(s)
         if (j !== '') {
             set.add(j)
+            let jj = jsonEscOf(j)
+            if (jj !== '') {
+                set.add(jj)
+            }
         }
     }
     let ss = [...set].sort((a, b) => b.length - a.length)

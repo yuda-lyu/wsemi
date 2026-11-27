@@ -5,6 +5,7 @@ import isnum from './isnum.mjs'
 import cdbl from './cdbl.mjs'
 import unbox from './_unbox.mjs'
 import pickOpt from './_pickOpt.mjs'
+import diagIfAsked from './_diagIfAsked.mjs'
 
 
 /**
@@ -22,6 +23,8 @@ import pickOpt from './_pickOpt.mjs'
  * @param {Boolean} [opt.useClampSafe=false] 輸入是否鉗制至安全整數範圍布林值，若為true則四捨五入後之整數超出安全整數範圍時取邊界值，大於Number.MAX_SAFE_INTEGER者取Number.MAX_SAFE_INTEGER、小於Number.MIN_SAFE_INTEGER者取Number.MIN_SAFE_INTEGER，預設false
  * @param {Boolean} [opt.useLimitSafe=false] 輸入是否限制須為安全整數布林值，若為true則四捨五入後之整數超出安全整數範圍(即Number.isSafeInteger為false，含Infinity、-Infinity與絕對值大於Number.MAX_SAFE_INTEGER者)時視為錯誤，預設false。與opt.useClampSafe同時為true時因已先鉗制至安全整數範圍故不會觸發
  * @param {Boolean} [opt.returnWithStateAndMsg=false] 輸入是否回傳含狀態與訊息物件布林值，若為true則回傳{ state, msg }物件，state為'success'或'error'，msg於success時為回傳結果、於error時為錯誤訊息字串，預設false。預設false時錯誤仍以拋出錯誤表達，行為不變
+ * @param {Boolean} [opt.logDetail=false] 輸入轉換失敗時是否輸出遮罩後之細節布林值(經getDiag之出口)，須為true才生效，msg(含預設模式拋出之Error之訊息)為固定詞彙(不含原生錯誤之文字)，預設false(靜默)
+ * @param {Function} [opt.funLog=null] 輸入轉換失敗時之診斷輸出函數，格式為(label, safe, detail)=>{}，給予時診斷交給它(label為'[wsemi cint] can not convert v to integer'，同getDiag)，預設null
  * @returns {Integer} 回傳四捨五入後整數；若opt.returnWithStateAndMsg為true則回傳{ state, msg }物件
  * @example
  *
@@ -58,6 +61,8 @@ import pickOpt from './_pickOpt.mjs'
 function cint(v, opt = {}) {
 
     //opt, 取快照: 讀取拋錯(已撤銷之Proxy、getter拋錯、陷阱拋錯)之opt或其鍵視為未給, 不拋錯(C1: 轉型函數無法轉型回預設值, 不拋錯)
+    //optRaw, 診斷出口(diagIfAsked)須讀原opt之logDetail、funLog(快照只含業務鍵與惰性之debug、funLog)
+    let optRaw = opt
     opt = pickOpt(opt, ['useClampSafe', 'useLimitSafe', 'returnWithStateAndMsg'])
 
     //useClampSafe
@@ -132,7 +137,9 @@ function cint(v, opt = {}) {
 
     }
     catch (err) {
-        return retError(err.toString())
+        //訊息為固定詞彙(V19、V20, 不轉出原生錯誤之文字; 預設模式拋出之Error亦同), 細節經opt之診斷出口(預設靜默)
+        diagIfAsked(optRaw, '[wsemi cint] can not convert v to integer', err)
+        return retError('can not convert v to integer')
     }
 
     //check, 須於round之後檢查r而非之前檢查v, 因v為四捨五入前之數值可為小數(如1.5), 對其取Number.isSafeInteger必為false而誤報; 且useClampSafe為true時r已被鉗制至安全整數範圍, 故此處不會觸發
