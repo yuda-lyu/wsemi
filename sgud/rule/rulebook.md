@@ -19,6 +19,7 @@
 | DOM 與下載函數之輸入檢測:改畫面者同步拋固定訊息、查詢類回空、回 Promise 者 reject;opt 逐鍵檢測(`domAlert` 樣式字串 opt 與 `type`、`domScroll*`、`domFade*`);下載族同一通道;`color` 之 `amount`／`w1`／`w2` 與訊息不帶值(第 492 項第 4 批 ws492e,2026-11-18) | `sgud/rule/rulebook_domarg.md` | R-DOM-ARG-01、R-DOM-OPT-01、R-DL-ARG-01、R-COLOR-ARG-01 | 約 14 |
 | 執行外部程序三函數之輸入檢測:`execProcess` 之 `prog`(三模式一致,exec 不再轉型)與 `args`、`opt.codeCmd` 依 K3、原生錯誤固定詞彙;`execProcessKillPid` 之 `pid` 須 1~2147483647 之整數(0、負數 fail-closed 先於殺程序);`execJsCode` 之 `fpJsCode` 與 `opt` 直通(第 492 項第 5 批 ws492f,2026-11-18) | `sgud/rule/rulebook_execarg.md` | R-EXEC-ARG-01 | 約 10 |
 | 檔案系統(含 `fsWriteTextAtomic` 原子寫檔) | `sgud/rule/rulebook_fs.md` | R-FS-RESULT-01、R-FS-REJECT-01、R-FS-EVEM-NAME-01、R-FS-ATOMIC-01 | 約 28 |
+| 資料夾差異同步之路徑處理: 反斜線只在其為分隔字元之平台換成 `/`,刪除與寫入之目標須嚴格位於目標資料夾內,且不經過目標內之連結(排程第 719 項,2026-11-29 ws719、ws719b) | `sgud/rule/rulebook_fssync.md` | R-FS-SYNC-PATH-01、R-FS-SYNC-LINK-01 | 約 8 |
 | 顯式時區時鐘 `genClockTZ` | `sgud/rule/rulebook_clock.md` | R-CLOCK-01 | 約 6 |
 | 結果走 JSON 檔之 CLI 執行 `execCliJsonFile` 與失敗摘要 `execCliFailDetail` | `sgud/rule/rulebook_execfile.md` | R-EXEC-JSONFILE-01 | 約 7 |
 | 帶期望雜湊之下載 | `sgud/rule/rulebook_dl.md` | R-DL-VERIFY-01 | 23.2 |
@@ -65,7 +66,7 @@
 | 破壞性變更紀錄(第 52～56 項;第 52 項為 ws270、第 53 項為 ws272a、第 54 項為 ws272b、第 55 項為 ws272c、第 56 項為 ws271) | `sgud/rule/rulebook_breaking_52on.md` | 破壞性變更紀錄 | 23.9 |
 | 破壞性變更紀錄(第 57～64 項;第 57 項為 ws286a、第 58 項為 ws286b、第 59 項為 ws286c、第 60 項為 ws286d、第 61 項為 ws286e、第 62 項為 ws290、第 63 項為 ws426、第 64 項為 ws427;第 64 項後封存) | `sgud/rule/rulebook_breaking_57on.md` | 破壞性變更紀錄 | 約 26 |
 | 破壞性變更紀錄(第 65 項起;第 65 項為 ws430、第 66 項為 ws430b、第 67 項為 ws430c、第 68 項為 ws492a、第 69 項為 ws492b;其後之 `_71on`、`_74on`、`_77on` 各檔見 `rulebook_breaking.md` 之索引) | `sgud/rule/rulebook_breaking_65on.md` | 破壞性變更紀錄 | 約 15 |
-| 破壞性變更紀錄(第 84 項起;第 84 項為 wsr1〔第 428、650、621②、647 項〕、第 85 項為 wsr2〔第 663 項批 11 併 A 輪需裁示 ①②⑤〕;新增之項附於此檔,2026-11-27 起) | `sgud/rule/rulebook_breaking_84on.md` | 破壞性變更紀錄 | 約 5 |
+| 破壞性變更紀錄(第 84 項起;第 84 項為 wsr1〔第 428、650、621②、647 項〕、第 85 項為 wsr2〔第 663 項批 11 併 A 輪需裁示 ①②⑤〕、第 86 項為 wsr3、第 87 項為 ws719、第 88 項為 ws719b;新增之項附於此檔,2026-11-27 起) | `sgud/rule/rulebook_breaking_84on.md` | 破壞性變更紀錄 | 約 21 |
 | 結構函數之元素層級與自有鍵: 參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵、欄位名正規化、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數;2026-11-14 ws430b 新增) | `sgud/rule/rulebook_elem.md` | R-ELEM-LEVEL-01 | 約 10 |
 | 結構函數第三批: 列之訊息指出 row[i]、單一空元素不當空陣列、中性可設定之預設值(`opt.empty`／`opt.emptyHead`)、範圍參數;儲存格文字表示法單一擁有者 `_cellText`;差異比對之 modify 配對單一擁有者 `_diffPair`(arrDiff 逐格比對);帶時區時刻依其時區驗證(排程第 430 項第三批 14 個函數;2026-11-15 ws430c 新增) | `sgud/rule/rulebook_elem_b3.md` | R-ELEM-LEVEL-02、R-CELL-TEXT-01、R-DIFF-PAIR-01、R-TZ-WALL-01 | 約 12 |
 | 結構運算與參數定義(排程第 492 項第 7 批 ws492h,2026-11-19): C7 第 1 參數型別不對回輸出型別之空結果、單一空元素視為一個元素(18 函數)、`arrSep` 只收設定物件、範圍型 opt 超出範圍改預設與帶預設值之位置參數視同 opt(N-B 19 列處置表)、W-06 簽名／JSDoc／行為一致 | `sgud/rule/rulebook_struct7.md` | R-STRUCT-ARG1-01、R-ELEM-LEVEL-03、R-ARRSEP-OBJ-01、R-OPT-RANGE-01 | 約 12 |
@@ -107,6 +108,8 @@
 - `R-FIND-01` → `rulebook_orm-find.md`: R-FIND-01 w-orm 系列條件(find)之形狀檢核: 單一擁有者 `cvOrmFind`、白名單、fail-closed、檢查之值即使用之值
 - `R-FS-ATOMIC-01` → `rulebook_fs.md`: R-FS-ATOMIC-01 需「寫到一半中止不留半份」之文字檔寫入經 `fsWriteTextAtomic`:暫存檔加 rename、占用類錯誤重試、信封式回報、任何失敗路徑不留暫存檔
 - `R-FS-EVEM-NAME-01` → `rulebook_fs.md`: R-FS-EVEM-NAME-01 fsEvem 之事件名稱即事件檔案檔名: 須為單一安全檔名,寫入不得離開事件資料夾,含 `.` 之名稱原樣送達
+- `R-FS-SYNC-LINK-01` → `rulebook_fssync.md`: R-FS-SYNC-LINK-01 資料夾同步之刪除與寫入不經過目標資料夾內之連結(逐段 `lstatSync`,目標資料夾本身除外);整份複製分支另拒收含連結之來源;皆先於任何刪除與寫入,不合即 reject 固定訊息
+- `R-FS-SYNC-PATH-01` → `rulebook_fssync.md`: R-FS-SYNC-PATH-01 差異同步之反斜線只在 `path.sep` 為反斜線時換成 `/`;刪除與寫入之目標以 `path.relative`／`isAbsolute` 核對須嚴格位於目標資料夾內,先於任何刪除與寫入,不合即 reject 固定訊息
 - `R-FS-REJECT-01` → `rulebook_fs.md`: R-FS-REJECT-01 fs 系回傳 Promise 者: 拒絕值一律為字串、不同步拋出、失敗不偽成功、不懸置、不殘留資源
 - `R-ELEM-LEVEL-01` → `rulebook_elem.md`: R-ELEM-LEVEL-01 結構函數:參數層回空結果、元素層依用途拋錯或佔位、鍵只看自有可列舉字串鍵(`__proto__` 經 `_setOwnKey`)、欄位名經 `_normKey`、函數值視為 null、長度不符之 `opt.debug` 提示(排程第 430 項第二批 14 個函數,ws430b)
 - `R-ELEM-LEVEL-02` → `rulebook_elem_b3.md`: R-ELEM-LEVEL-02 結構函數第三批:列之訊息指出位置、單一空元素不當空陣列、欄位鍵經 `_normKey.field`、只讀自有可列舉同名欄位、中性可設定之預設值(`_cellText.readFill`)、函數值視為 null、長度不符之 `opt.debug`、範圍參數(排程第 430 項第三批 14 個函數,ws430c)

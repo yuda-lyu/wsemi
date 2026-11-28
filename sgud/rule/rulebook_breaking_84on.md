@@ -30,3 +30,16 @@
    - **⑥`execProcessKillPid` 於 Windows 改自行 `spawn('taskkill', ['/pid', N, '/T', '/F'], { windowsHide: true })`(第 681 項)**: 原經 `tree-kill`(內部以 `exec` 起 `taskkill` 而不帶 `windowsHide`),由無主控台之 detached 背景行程呼叫時於桌面閃出終端機視窗(實測 2 次皆重現: 約 0.5 秒時新出現 WindowsTerminal 與 OpenConsole 視窗;修後 0 個)→ 不開視窗.resolve 訊息 `pid[N] killed`、reject 訊息 `pid[N] kill failed: Command failed: taskkill /pid N /T /F\n<taskkill 之 stderr>`、`onTrace` 事件序列皆不變;spawn 本身失敗(如 ENOENT、EMFILE)改以同格式 reject(不同步拋、不留未接之 error 事件).Linux／macOS 仍用 `tree-kill`.
    - **⑦文件**: `getTimeBetween`、`getTimeObject`(有效性、回傳物件於空窗之行為)、`timemsTZ2past`／`expire`／`timeTZ2past`／`expire`(日曆差)、38 站＋`j2o`(`opt.logDetail`、`opt.funLog` 與固定訊息)、5 函數(opt 讀取拋錯視為未給)、`maskDiagText`／`genDiagStreamMasker`(兩層跳脫形與三層以上不內建)、`execProcessKillPid`(實作與 `onTrace` 之說明)之 JSDoc.
    - **⑧下游盤點建議**: 依賴「`getTimeBetween` 於夏令空窗缺項或重複」者(極少,屬缺陷之結果);依賴 `getTimeObject` 對空窗時刻回 `null` 以分流者須改以他法(物件於空窗內為推移後之本機時刻,不可據以取牆鐘欄位,取欄位請用字串);比對 38 站舊 `msg` 前綴者改以 `state === 'error'` 與固定訊息判定;依賴 `execProcessKillPid` 於 Windows 之 `tree-kill` 內部行為者(無公開契約)不受影響.
+
+87.(2026-11-29,ws719,排程第 719 項;主控裁示: 反斜線只在 Windows 換成 `/`、另加落點核對;規則見 `rulebook_fssync.md` R-FS-SYNC-PATH-01)逐項舊 → 新:
+   - **①`fsSyncFolder`／`fsSyncFolderCore` 之反斜線**: 原不分平台把相對路徑之反斜線換成 `/` → 只在 `path.sep` 為反斜線(Windows)時換;其他平台含反斜線之名稱照原樣比對、刪除與寫入(同步結果隨之改變: 例如同時有資料夾內之檔與字面含反斜線之檔名時,原以主鍵重複而 reject,現各自同步).**不變**: Windows 上經內建 fs 之結果、不含反斜線之名稱(新舊隨機對拍 0 差異).
+   - **②落點核對**: 目標資料夾存在而做差異同步時,刪除與寫入之目標不嚴格位於目標資料夾內者,原照做 → reject `'invalid sync target: must be strictly inside fdTar'`,此次不做任何刪除與寫入.以內建 fs 之正常列舉不會觸發.
+   - **③相依**: 自給 `opt.path` 須另提供 `relative`、`isAbsolute`,缺者 reject 相依訊息(訊息之方法清單增此二項);`node:path` 本身(含 `path.posix`、`path.win32`)已具備.
+   - **④下游盤點建議**: 自給 `opt.path` 之使用端補兩方法;比對舊相依訊息字面者改新字面.本庫以外自有套件經靜態盤點(只呼叫 `fsSyncFolder`、未自給 `opt.path`)不需修改.
+
+88.(2026-11-29,ws719b,排程第 719 項之接續;主控裁示: 目標資料夾內之連結使同步整批 reject、整份複製分支一併處置;規則見 `rulebook_fssync.md` R-FS-SYNC-LINK-01)逐項舊 → 新:
+   - **①差異同步之目標路徑經過連結**: 本次要刪除或寫入之路徑(目標資料夾之下)經過或本身為連結(含 Windows junction)者,原照做或於執行中途 reject → 於任何刪除與寫入之前 reject `'invalid sync target: must not be or cross a link inside fdTar'`.**改變者含原回成功者**: 例如目標多出之資料夾內含連結(原遞迴刪除該資料夾而回 `true`)現 reject,須先自行移除該連結.目標資料夾本身為連結者與目標內未被經過之連結,結果不變.
+   - **②整份複製分支(目標不是資料夾)之來源含連結**: 原把連結照樣建到目標(Windows 無建立符號連結之權限時於中途 reject `operation failed (code EPERM)`) → 於任何寫入之前 reject `'invalid fdSrc: must not contain a link'`.
+   - **③整份複製分支之目標內連結**(目標資料夾本身為連結而其內另有連結): 寫入之對應路徑為連結者 → 於任何寫入之前 reject ①之訊息;複製期間才出現之路徑經過連結者(來源與目標重疊等)於該次寫入前 reject,已寫入目標內之項目保留.
+   - **不變**: 不含連結之來源與目標之結果;差異同步分支對來源連結之處置;`fsCopyFolder`／`fsCopyFolderCore`.必要相依方法清單不增.
+   - **下游盤點建議**: 使用 `fsSyncFolder` 且在目標資料夾內放置連結、或來源含連結而目標尚不存在者,須移除連結或改以連結之實際路徑為目標資料夾.

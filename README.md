@@ -118,3 +118,12 @@ Add script for wsemi.
 ```alias
 <script src="https://cdn.jsdelivr.net/npm/htmlparser@1.7.7/lib/htmlparser.min.js"></script>
 ```
+
+## Changelog
+
+### Next release
+- `fsSyncFolder` / `fsSyncFolderCore`: backslashes in relative paths are converted to `/` only when `path.sep` is `\` (Windows). On other platforms `\` is a legal file name character, so names containing it are now compared, deleted and copied as they are. Results on Windows with the built-in `fs` are unchanged.
+- `fsSyncFolder` / `fsSyncFolderCore`: when the target folder already exists, every path to be deleted or written must be strictly inside it. Otherwise the call is rejected with `invalid sync target: must be strictly inside fdTar` and nothing is deleted or written.
+- `fsSyncFolder` / `fsSyncFolderCore`: a custom `opt.path` must now also provide `relative` and `isAbsolute` (the Node.js `path` module already does), and the error message for an incomplete `opt.path` lists them.
+- `fsSyncFolder` / `fsSyncFolderCore`: nothing is deleted or written through a symbolic link (including a Windows junction) inside the target folder. If any path to be deleted or written, below the target folder, is a link or goes through one, the call is rejected with `invalid sync target: must not be or cross a link inside fdTar` and nothing is deleted or written. The target folder itself may be a link.
+- `fsSyncFolder` / `fsSyncFolderCore`: when the target is not an existing folder (missing, a file, or a link) and the whole source is copied, a source containing any symbolic link or junction is rejected with `invalid fdSrc: must not contain a link`, and a link at a destination path below the target is rejected as above, in both cases before anything is written.

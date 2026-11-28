@@ -304,9 +304,9 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             reset()
             let before = snap()
             for (let sep of ['', undefined, null, 5]) {
-                let p2 = { resolve: path.resolve, dirname: path.dirname, join: path.join, basename: path.basename, sep }
+                let p2 = { resolve: path.resolve, dirname: path.dirname, join: path.join, basename: path.basename, relative: path.relative, isAbsolute: path.isAbsolute, sep }
                 let m = await fsSyncFolderCore(R('d'), R('dst'), { ...real, path: p2 }).then(() => 'resolved', (e) => e)
-                assert.strictEqual(m, 'invalid opt.path: must be an object providing resolve, dirname, join, basename, sep')
+                assert.strictEqual(m, 'invalid opt.path: must be an object providing resolve, dirname, join, basename, relative, isAbsolute, sep')
             }
             assert.strictEqual(snap(), before)
         })
@@ -373,7 +373,7 @@ describe(`fs deps fail-closed (R-FS-DEPS-01)`, function() {
             ['fsGetFilesWithHashInFolderCore path', 'rej', () => fsGetFilesWithHashInFolderCore(R('d'), { fs, crypto, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
             ['fsGetFolderBasicHashCore path', 'rej', () => fsGetFolderBasicHashCore(R('d'), { fs, crypto }), 'invalid opt.path: must be an object providing resolve, basename'],
             ['fsTreeFolderWithHashCore path', 'rej', () => fsTreeFolderWithHashCore(R('d'), { fs, crypto, levelLimit: 1 }), 'invalid opt.path: must be an object providing resolve, basename'],
-            ['fsSyncFolderCore path', 'rej', () => fsSyncFolderCore(R('d'), R('dst/sync'), { fs, crypto }), 'invalid opt.path: must be an object providing resolve, dirname, join, basename, sep'],
+            ['fsSyncFolderCore path', 'rej', () => fsSyncFolderCore(R('d'), R('dst/sync'), { fs, crypto }), 'invalid opt.path: must be an object providing resolve, dirname, join, basename, relative, isAbsolute, sep'],
             ['fsSyncFolderCore crypto', 'rej', () => fsSyncFolderCore(R('d'), R('dst/sync'), { fs, path }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsGetFileBasicHashCore crypto', 'rej', () => fsGetFileBasicHashCore(R('a.txt'), { fs }), 'invalid opt.crypto: must be an object providing createHash'],
             ['fsGetFileHashCore crypto(sha512)', 'rej', () => fsGetFileHashCore(R('a.txt'), { fs }), 'invalid opt.crypto: must be an object providing createHash'],

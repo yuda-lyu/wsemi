@@ -9,13 +9,20 @@ import mergeInject from './_mergeInject.mjs'
 /**
  * 後端nodejs針對新舊資料夾進行差異同步
  *
+ * 比對之相對路徑僅於Windows(path.sep為反斜線)把反斜線換成'/'；其他平台之反斜線為合法之檔名字元，照原樣比對、刪除與寫入
+ * 目標資料夾存在而做差異同步時，將刪除與寫入之路徑字串須嚴格位於目標資料夾內，任一不合即reject說明字串'invalid sync target: must be strictly inside fdTar'(不帶輸入值)，此次不做任何刪除與寫入
+ * 寫入與刪除不經過目標資料夾內之連結：本次要刪除與寫入之各目標路徑，自目標資料夾之下一段起逐段以lstatSync判定，任一段(含目標本身)為連結(符號連結、Windows之junction)即reject說明字串'invalid sync target: must not be or cross a link inside fdTar'(不帶輸入值)，此次不做任何刪除與寫入；目標資料夾本身(使用者指定之路徑)為連結者允許
+ * 目標不是資料夾(不存在、為檔案或本身為連結)時整份複製(不刪除目標多出之項目)：來源任一層含連結即reject說明字串'invalid fdSrc: must not contain a link'，寫入目標之對應路徑(目標資料夾本身除外)含連結即reject同上之目標訊息，皆不做任何寫入；複製期間每次建資料夾與寫檔前再判定一次且不建立任何連結，此時才發現者亦reject(已寫入目標內之項目保留)
+ * 差異同步之來源內含目錄連結者視為不含檔案之資料夾(不進入列舉)；任一端之檔案連結於列舉雜湊時reject
+ * 連結之判定以lstatSync之isSymbolicLink()為準，判定回非'ENOENT'、'ENOTDIR'之錯誤即reject
+ *
  * Unit Test: {@link https://github.com/yuda-lyu/wsemi/blob/master/test/fsSyncFolder.test.mjs Github}
  * @memberOf wsemi
  * @param {String} fdSrc 輸入來源資料夾字串
  * @param {String} fdTar 輸入目標資料夾字串
  * @param {Object} [opt={}] 輸入設定物件，預設{}
  * @param {String} [opt.type='md5'] 輸入計算HASH方法字串，預設'md5'；雜湊演算法屬安全相關opt，為opt類參數「非預期改用預設」之例外：未給(undefined、null)取預設，給了須為crypto.getHashes()之成員(原始字串，包裝物件、數字、空字串皆無效)，無效時reject說明字串'invalid opt.type: must be one of crypto.getHashes()'(不帶輸入值)，不改用預設、先於任何複製與刪除，目標資料夾不存在而整份複製時亦檢查
- * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗；Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)')，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；來源不是資料夾時reject說明字串'invalid fdSrc: must be an existing folder'；opt.path、opt.fs、opt.crypto給undefined視為未給而取Node內建
+ * @returns {Promise} 回傳Promise，resolve回傳是否有進行同步的布林值，reject回傳錯誤訊息字串(含複製失敗，與刪除目標內多出之檔案或資料夾失敗；Node原生錯誤之訊息帶出路徑，改為固定詞彙加錯誤碼'operation failed (code ENOENT)')，路徑參數須為非空字串且不含NUL字元，無效時reject說明字串(如'invalid <參數名>: must be a non-empty string'，不帶輸入值，與路徑不存在分開)；來源不是資料夾時reject說明字串'invalid fdSrc: must be an existing folder'；opt.path、opt.fs、opt.crypto給undefined視為未給而取Node內建(自給opt.path者須提供resolve、dirname、join、basename、relative、isAbsolute與非空字串sep)
  * @example
  * //need test in nodejs
  *
